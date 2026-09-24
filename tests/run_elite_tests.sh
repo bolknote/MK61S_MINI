@@ -12,5 +12,5 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-cpp 
   "$root/code/mk61emu_core.cpp" "$root/code/language_workspace.cpp" \
   "$root/code/shared_memory.cpp" "$root/code/workspace_swap.cpp" \
   "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
-  "$root/code/base91.cpp" "$root/code/zx0_stream.cpp" "$root/code/program_load.cpp" -o "$out"
+  "$root/code/zx0_stream.cpp" "$root/code/program_load.cpp" -o "$out"
 python3 "$root/tests/elite_game_test.py" "$out"

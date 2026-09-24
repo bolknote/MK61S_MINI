@@ -20,7 +20,7 @@
 void elite_tracked_step();
 
 namespace {
-struct File { std::string name, text; };
+struct File { std::string name, text; program_store::ProgramType type; };
 std::vector<File> files;
 std::filesystem::path directory;
 unsigned elapsed = 0;
@@ -41,18 +41,25 @@ void press(int x, int y) {
 }
 
 namespace program_store {
-int count(ProgramType type) { return type==ProgramType::MK61 ? files.size() : 0; }
-bool entry(ProgramType type, int index, Entry& out) {
-  if(type!=ProgramType::MK61 || index<0 || size_t(index)>=files.size()) return false;
-  out={}; out.type=type; out.kind=NodeKind::FILE;
-  out.id=index; out.parent_id=ROOT_ID; out.data_len=files[index].text.size();
-  std::strncpy(out.name,files[index].name.c_str(),NAME_SIZE-1);
+bool entry_by_id(u16 id, Entry& out) {
+  if(id>=files.size()) return false;
+  out={}; out.type=files[id].type; out.kind=NodeKind::FILE;
+  out.id=id; out.parent_id=ROOT_ID; out.data_len=files[id].text.size();
+  std::strncpy(out.name,files[id].name.c_str(),NAME_SIZE-1);
   return true;
 }
-bool entry_by_id(u16 id, Entry& out) { return entry(ProgramType::MK61,id,out); }
+int count(ProgramType type) {
+  return std::count_if(files.begin(),files.end(),[type](const File& f){return f.type==type;});
+}
+bool entry(ProgramType type, int index, Entry& out) {
+  if(index<0) return false;
+  for(size_t i=0;i<files.size();++i)
+    if(files[i].type==type && index--==0) return entry_by_id(i,out);
+  return false;
+}
 int child_count(u16 parent) { return parent==ROOT_ID ? files.size() : 0; }
 bool child(u16 parent, int index, Entry& out) {
-  return parent==ROOT_ID && entry(ProgramType::MK61,index,out);
+  return parent==ROOT_ID && index>=0 && entry_by_id(index,out);
 }
 bool read_range_id(u16 id, u16 offset, u8* data, u16 length, u16* got) {
   if(got) *got=0;
@@ -67,12 +74,6 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 length, u16* got) {
 }
 
 bool OpenStoredFile(const char* name) {
-  // Alternate the production name/id entry points to exercise both.
-  if(std::string(name)=="part01.m61") {
-    for(size_t i=0;i<files.size();++i)
-      if(files[i].name==name) return m61_text::open_program(u16(i));
-    return false;
-  }
   return m61_text::open_program(name);
 }
 u8 m61_text_host_open_file(const char* name) {
@@ -98,13 +99,7 @@ terminal_protocol::Result execute(const char* line, bool) {
   if(std::strncmp(line,"open ",5)==0) return Result::action(ResultKind::OPEN_FILE,line+5);
   if(std::strcmp(line,"reinit")==0) return Result::action(ResultKind::REINIT_CALCULATOR,"");
   if(std::strcmp(line,"run")==0) return Result::action(ResultKind::RUN_PROGRAM,"");
-  if(std::strncmp(line,"ztart ",6)==0)
-    return program_load::start(line+6,10000) ? Result::ok() : Result::error();
-  if(std::strncmp(line,"zin ",4)==0) {
-    const bool ok=program_load::data(line+4);
-    written_bytes=program_load::written();
-    return ok ? Result::ok() : Result::error();
-  }
+  if(std::strncmp(line,"load ",5)==0) return Result::action(ResultKind::LOAD_BINARY,line+5);
   std::istringstream input(line);
   std::string op, hex, extra; unsigned address;
   if(!(input>>op>>address>>hex) || op!="hin" || input>>extra || hex.size()%2) return Result::error();
@@ -117,12 +112,26 @@ terminal_protocol::Result execute(const char* line, bool) {
 }
 }
 
+bool load_binary_program(u16, const char* args) {
+  program_load::Request request={};
+  if(program_load::parse(args,request)!=program_load::Syntax::BINARY)
+    return program_load::reject("Invalid binary load");
+  for(size_t i=0;i<files.size();++i) {
+    if(files[i].name!=request.path) continue;
+    const bool ok=program_load::load(i,request.address,10000);
+    written_bytes+=program_load::written();
+    return ok;
+  }
+  return program_load::reject("Cannot open binary program");
+}
+
 unsigned elite_load_game(const char* path) {
   directory=path;
   for(const auto& p:std::filesystem::directory_iterator(directory)) {
-    if(p.path().extension()!=".m61") continue;
-    std::ifstream f(p.path());
-    files.push_back({p.path().filename().string(),{std::istreambuf_iterator<char>(f),{}}});
+    if(p.path().extension()!=".m61" && p.path().extension()!=".bin") continue;
+    std::ifstream f(p.path(),std::ios::binary);
+    files.push_back({p.path().filename().string(),{std::istreambuf_iterator<char>(f),{}},
+      p.path().extension()==".bin" ? program_store::ProgramType::MK61_BINARY : program_store::ProgramType::MK61});
   }
   core_61::set_expanded_program_mode(true); core_61::enable();
   // A previous program must be discarded by the new root loader.

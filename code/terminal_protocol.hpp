@@ -12,6 +12,7 @@ enum class ResultKind : u8 {
   RUN_PROGRAM,
   OPEN_FILE,
   LOAD_SLOT,
+  LOAD_BINARY,
   GOTO_LABEL,
   WAIT,
   RETURN_SCRIPT,

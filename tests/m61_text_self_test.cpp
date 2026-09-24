@@ -2,7 +2,6 @@
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "program_load.hpp"
-#include "base91.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
 
@@ -19,6 +18,7 @@ struct StoredScript {
   std::string name;
   std::string source;
   u16 parent_id;
+  program_store::ProgramType type = program_store::ProgramType::MK61;
 };
 
 static std::vector<StoredScript> scripts;
@@ -67,24 +67,22 @@ static int calculator_redraw_count = 0;
 
 namespace program_store {
 
-int count(ProgramType type) {
-  return type == ProgramType::MK61 ? (int) scripts.size() : 0;
-}
-
-bool entry(ProgramType type, int index, Entry& out) {
-  if(type != ProgramType::MK61 || index < 0 || index >= (int) scripts.size()) return false;
-  out.type = type;
-  std::strncpy(out.name, scripts[(usize) index].name.c_str(), NAME_SIZE - 1);
-  out.name[NAME_SIZE - 1] = 0;
-  out.data_len = (u16) scripts[(usize) index].source.size();
-  out.id = (u16) index;
-  out.parent_id = scripts[(usize) index].parent_id;
-  out.kind = NodeKind::FILE;
+bool entry_by_id(u16 id, Entry& out) {
+  if(id>=scripts.size()) return false;
+  out={}; out.type=scripts[id].type;
+  std::strncpy(out.name,scripts[id].name.c_str(),NAME_SIZE-1);
+  out.data_len=scripts[id].source.size(); out.id=id;
+  out.parent_id=scripts[id].parent_id; out.kind=NodeKind::FILE;
   return true;
 }
-
-bool entry_by_id(u16 id, Entry& out) {
-  return entry(ProgramType::MK61, id, out);
+int count(ProgramType type) {
+  int n=0; for(const auto& f:scripts) if(f.type==type) ++n; return n;
+}
+bool entry(ProgramType type, int index, Entry& out) {
+  if(index<0) return false;
+  for(usize i=0;i<scripts.size();++i)
+    if(scripts[i].type==type && index--==0) return entry_by_id(i,out);
+  return false;
 }
 
 int child_count(u16 parent_id) {
@@ -98,7 +96,7 @@ int child_count(u16 parent_id) {
 bool child(u16 parent_id, int index, Entry& out) {
   for(usize i = 0; i < scripts.size(); i++) {
     if(scripts[i].parent_id != parent_id) continue;
-    if(index-- == 0) return entry(ProgramType::MK61, (int) i, out);
+    if(index-- == 0) return entry_by_id(i, out);
   }
   return false;
 }
@@ -321,10 +319,11 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
     return terminal_protocol::Result::wait(500);
   }
   if(std::strcmp(line, "bad") == 0) return terminal_protocol::Result::error();
-  if(std::strncmp(line,"ztart ",6)==0)
-    return program_load::start(line+6,10000) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
-  if(std::strncmp(line,"zin ",4)==0)
-    return program_load::data(line+4) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+  if(std::strncmp(line,"load ",5)==0) {
+    program_load::Request request={};
+    if(program_load::parse(line+5,request)!=program_load::Syntax::LEGACY)
+      return terminal_protocol::Result::action(terminal_protocol::ResultKind::LOAD_BINARY,line+5);
+  }
   if(std::strcmp(line, "run") == 0) return terminal_protocol::Result::action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
   if(std::strncmp(line, "run :", 5) == 0) {
     return terminal_protocol::Result::action(terminal_protocol::ResultKind::GOTO_LABEL, line + 5);
@@ -1316,67 +1315,65 @@ static void test_nested_open_preserves_program_and_root_still_clears(void) {
   assert(clear_count==2); // A fresh launch still starts with empty memory.
 }
 
-static void test_compressed_load_spans_children_and_blocks_incomplete_run() {
+static std::vector<u16> binary_directories;
+bool load_binary_program(u16 directory, const char* args) {
+  binary_directories.push_back(directory);
+  program_load::Request request={};
+  if(program_load::parse(args,request)!=program_load::Syntax::BINARY)
+    return program_load::reject("Invalid binary load syntax");
+  for(usize i=0;i<scripts.size();++i)
+    if(scripts[i].parent_id==directory && scripts[i].name==request.path)
+      return program_load::load(i,request.address,10000);
+  return program_load::reject("Cannot open binary program");
+}
+
+static void test_binary_load_uses_script_directory_and_reports_failure() {
   const u8 expected[]={1,2,3,4,5,1,2,3,4,5,0x50};
-  // Fixture produced by the independent desktop optimal ZX0 compressor.
-  const char* encoded="ND#(:C?hHI~d.D";
-  u8 packed[32]; usize size;
-  assert(base91::decode(encoded,std::strlen(encoded),packed,sizeof(packed),size));
-  std::vector<std::string> lines;
-  for(usize i=0;i<size;++i) {
-    std::string line="zin ";
-    assert(base91::encode(packed+i,1,{&line,[](void* p,char ch) {
-      static_cast<std::string*>(p)->push_back(ch); return true;
-    }}));
-    lines.push_back(line+'\n');
-  }
-  std::string first="ztart 0000 F33F81CF\n", second;
-  for(usize i=0;i<lines.size();++i) (i<lines.size()/2 ? first : second)+=lines[i];
-  reset_host();
-  add_script("ROOT","open FIRST\nopen SECOND\nret\n");
-  add_script("FIRST",first.c_str());
-  add_script("SECOND",second.c_str());
+  // Independent desktop optimal ZX0 fixture, with little-endian CRC32.
+  const u8 encoded[]={0xcf,0x81,0x3f,0xf3,0x1e,0x01,0x02,0x03,0x04,0x05,0xf6,0x2d,0x50,0x55,0x56};
+  const std::string binary(reinterpret_cast<const char*>(encoded),sizeof(encoded));
+  reset_host(); binary_directories.clear();
+  add_script("ROOT","load 0109 payload.bin\nopen CHILD\nload 0500 payload.bin\nret\n",17);
+  add_script("CHILD","load 0224 payload.bin\nret\n",88);
+  scripts.push_back({"payload.bin",binary,17,program_store::ProgramType::MK61_BINARY});
+  scripts.push_back({"payload.bin",binary,88,program_store::ProgramType::MK61_BINARY});
   assert(m61_text::load_program("ROOT"));
   for(int i=0;i<20 && m61_text::active();++i) m61_text::service();
   assert(!m61_text::active() && !program_load::blocked());
-  assert(std::memcmp(loaded_program,expected,sizeof(expected))==0);
-  assert(clear_count==1);
+  for(unsigned address:{109,224,500})
+    assert(std::memcmp(loaded_program+address,expected,sizeof(expected))==0);
+  assert(clear_count==1 && loaded_program[108]==0 && loaded_program[520]==0);
+  assert((binary_directories==std::vector<u16>{17,88,17}));
   m61_text::Error error;
   assert(!m61_text::last_error(error));
 
-  for(const char* tail:{"", "ret\n", "run\n"}) {
+  for(unsigned mode=0;mode<4;++mode) {
     reset_host();
-    const std::string script="open FIRST\n"+std::string(tail);
-    add_script("ROOT",script.c_str());
-    add_script("FIRST",first.c_str());
-    (void)m61_text::load_program("ROOT");
-    for(int i=0;i<20 && m61_text::active();++i) m61_text::service();
-    assert(m61_text::last_error(error));
-    assert(std::strstr(error.message,"Incomplete")!=nullptr);
-    assert(!core_61::is_RUN() && program_load::blocked());
-    // A new root clears both the banks and a failed loader session.
+    std::string bad=binary;
+    if(mode==0) bad[0]^=1;
+    if(mode==1) bad.pop_back();
+    if(mode==2) bad.push_back(0);
+    add_script("BAD","ok\nload 0000 payload.bin\nrun\n");
+    if(mode!=3) scripts.push_back({"payload.bin",bad,program_store::ROOT_ID,program_store::ProgramType::MK61_BINARY});
+    assert(!m61_text::load_program("BAD"));
+    assert(m61_text::last_error(error) && error.line==2);
+    assert(!core_61::is_RUN());
+    assert(executed_lines.back()=="load 0000 payload.bin");
+    if(mode==0) assert(std::strstr(error.message,"CRC32"));
+    if(mode<3) assert(program_load::blocked());
+    // A fresh root resets the failed load along with the calculator memory.
     add_script("FRESH","ret\n");
-    assert(m61_text::load_program("FRESH"));
-    assert(!program_load::blocked());
+    assert(m61_text::load_program("FRESH") && !program_load::blocked());
   }
   reset_host();
-  add_script("BADCRC","ztart 0000 F33F81CE\nzin ND#(:C?hHI~d.D\nrun\n");
-  assert(!m61_text::load_program("BADCRC"));
-  assert(m61_text::last_error(error) && error.line==2);
-  assert(std::strstr(error.message,"CRC32") && !core_61::is_RUN());
-
-  reset_host();
-  add_script("CANCEL","ztart 0000 F33F81CF\nwait 500\nrun\n");
-  assert(m61_text::load_program("CANCEL"));
-  m61_text::cancel();
-  assert(program_load::blocked() && !core_61::is_RUN());
-  reset_host();
-  add_script("RESET","ztart 0000 F33F81CF\nreinit\nret\n");
-  assert(m61_text::load_program("RESET") && !program_load::blocked());
+  add_script("REINIT","reinit\nload 0000 payload.bin\nret\n");
+  scripts.push_back({"payload.bin",binary,program_store::ROOT_ID,program_store::ProgramType::MK61_BINARY});
+  assert(m61_text::load_program("REINIT") && !program_load::blocked());
+  assert(reinit_count==1 && std::memcmp(loaded_program,expected,sizeof(expected))==0);
 }
 
 int main(void) {
-  test_compressed_load_spans_children_and_blocks_incomplete_run();
+  test_binary_load_uses_script_directory_and_reports_failure();
   test_nested_open_preserves_program_and_root_still_clears();
   test_nested_interpreter_esc_cancels_scenario_silently();
   test_optional_open_skips_missing_content_but_keeps_strict_open();

@@ -10,6 +10,7 @@
 #include "focal.hpp"
 #include "file_handlers.hpp"
 #include "program_store.hpp"
+#include "program_load.hpp"
 #include "m61_text.hpp"
 #include "shared_scratch.hpp"
 #include "settings_journal.hpp"
@@ -114,6 +115,9 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
     case program_store::ProgramType::CHIP8:
       return file_handlers::open(entry) ==
              loadable_module::FileOpenResult::OK;
+    case program_store::ProgramType::MK61_BINARY:
+      // A binary image has no implicit load address or entry point.
+      return false;
   }
   return false;
 }
@@ -201,6 +205,25 @@ void ensure_program_memory_for_write(usize linear_addr, u8 opcode) {
       linear_addr >= core_61::CLASSIC_PROGRAM_STEP ||
       program_memory_policy::opcode_needs_expanded_memory(opcode);
   if(force_expanded) apply_program_memory_auto(NULL, 0, true, true);
+}
+
+bool load_binary_program(u16 directory, const char* args) {
+  program_load::Request request = {};
+  if(program_load::parse(args, request) != program_load::Syntax::BINARY)
+    return program_load::reject("Usage: load <four-digit-address> <path.bin>");
+  if(core_61::is_RUN()) return program_load::reject("Stop calculator before binary load");
+  if(program_load::blocked()) return false;
+  program_store::Entry entry;
+  if(storage_path::resolve_file(directory, request.path,
+         program_store::ProgramType::MK61_BINARY, entry) != storage_path::Status::OK ||
+     entry.type != program_store::ProgramType::MK61_BINARY)
+    return program_load::reject("Cannot open binary program");
+  if(entry.data_len <= 4 || entry.data_len > program_store::MAX_MK61_BINARY_SIZE)
+    return program_load::reject("Invalid binary program file");
+  const u16 limit = library_mk61::program_memory_mode() == ProgramMemoryMode::CLASSIC_105
+      ? core_61::CLASSIC_PROGRAM_STEP : core_61::EXTENDED_ADDRESS_LIMIT;
+  apply_program_memory_auto(nullptr, 0, true, true);
+  return program_load::load(entry.id, request.address, limit);
 }
 
 static void Show_DFU_splash(void) {

@@ -62,6 +62,9 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "R") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "se") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "smap") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "ztart 0000 12345678") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "zin AA") == CMD_UNKNOWN);
+  assert(terminal_catalog::lookup((const u8*) "load 0000 demo.bin") == CMD_LOAD);
   assert(terminal_catalog::lookup((const u8*) "sdir") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "snm") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);

@@ -211,12 +211,14 @@ static constexpr usize NAME_SIZE = 32;
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_TINYBASIC_TEXT_SIZE = 3584,
                      MAX_FONT_SIZE = 8192, MAX_IMAGE1_SIZE = 1600,
                      MAX_CHIP8_SIZE = 3584,
+                     MAX_MK61_BINARY_SIZE = 4096,
                      MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
 static constexpr u8 MAX_FAT_EXTENTS_PER_FILE = 10;
 static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
 static constexpr u16 ROOT_ID = 0xFFFF, INVALID_ID = 0xFFFF;
 enum class ProgramType : u8 { MK61 = 0, FOCAL = 2, TINYBASIC = 3, TEXT = 4,
-  MK61_STATE = 5, FONT = 6, IMAGE1 = 7, APP = 8, CHIP8 = 9, MARKDOWN = 10 };
+  MK61_STATE = 5, FONT = 6, IMAGE1 = 7, APP = 8, CHIP8 = 9, MARKDOWN = 10,
+  MK61_BINARY = 11 };
 enum class NodeKind : u8 { FILE = 0, DIRECTORY = 1, DIRECTORY_EXTENT = 2, FILE_EXTENT = 3 };
 struct Entry { ProgramType type; char name[NAME_SIZE]; u16 data_len, id, parent_id; NodeKind kind; };
 struct FileSource {

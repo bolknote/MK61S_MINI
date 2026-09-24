@@ -319,6 +319,8 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           return program_store::MAX_IMAGE1_SIZE;
         case program_store::ProgramType::CHIP8:
           return program_store::MAX_CHIP8_SIZE;
+        case program_store::ProgramType::MK61_BINARY:
+          return program_store::MAX_MK61_BINARY_SIZE;
         case program_store::ProgramType::APP:
           return program_store::MAX_APP_FILE_SIZE;
         default:

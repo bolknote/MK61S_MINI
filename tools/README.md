@@ -27,9 +27,9 @@
   на компьютере; [инструкция](.fmk-font/README-preview.md).
 - `build_mk61_module_pack.sh` — низкоуровневый ZX0-упаковщик APP.
 - `build_mk61_program_pack.sh` — сборка нативного упаковщика больших программ
-  МК-61 для воспроизводимой загрузки командами `ztart`/`zin`.
-- `program_pack.py` — переносимый Python-упаковщик того же формата для систем,
-  где нативный C++-инструмент собирать неудобно.
+  МК-61 в бинарный формат CRC32 + ZX0 для `load <адрес> <путь.bin>`.
+- `program_pack.py` — Python-обёртка с автоматической сборкой этого упаковщика:
+  `python3 tools/program_pack.py raw-image.bin program.bin`.
 - `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и
   независимая проверка CRC/content ID resident BIN для release-сборщиков.
 - `release-contract.json` — версии зависимостей, профили и ресурсные бюджеты

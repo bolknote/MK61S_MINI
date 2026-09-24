@@ -2225,6 +2225,99 @@ static void test_chip8_over_quota_is_rejected(void) {
   expect_rejected_pending_recovered();
 }
 
+static void test_binary_import_export_uses_full_quota(void) {
+  fresh();
+  virtual_fat::end_session();
+  alignas(4) static u8 display_cache[8192];
+  assert(virtual_fat::set_external_cache(display_cache,
+                                         sizeof(display_cache)));
+  assert(virtual_fat::reset_session());
+  const Layout fs = layout();
+  const u16 file_cluster = 221;
+  const u8 cluster_count = (u8) (
+      (program_store::MAX_MK61_BINARY_SIZE +
+       (u32) fs.sectors_per_cluster * virtual_fat::SECTOR_SIZE - 1U) /
+      ((u32) fs.sectors_per_cluster * virtual_fat::SECTOR_SIZE));
+  assert(cluster_count >= 1);
+
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  for(u8 index = 0; index < cluster_count; index++) {
+    set_fat12_value(
+        fat, (u16) (file_cluster + index),
+        index + 1U < cluster_count
+            ? (u16) (file_cluster + index + 1U) : 0xFFF);
+  }
+
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'F','U','S','E',' ',' ',' ',' ','B','I','N'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "fuse.bin", short_name, false,
+      file_cluster, program_store::MAX_MK61_BINARY_SIZE);
+  root[slot * 32] = 0;
+
+  std::vector<u8> rom(program_store::MAX_MK61_BINARY_SIZE);
+  u32 state = 0x27182818UL;
+  for(usize block = 0; block < rom.size() / 256U; block++) {
+    const usize base = block * 256U;
+    for(usize index = 0; index < 160; index++) {
+      state ^= state << 13;
+      state ^= state >> 17;
+      state ^= state << 5;
+      rom[base + index] = (u8) state;
+    }
+    memcpy(rom.data() + base + 160, rom.data() + base, 96);
+  }
+  assert(virtual_fat::write_cached_sectors(
+      cluster_lba(fs, file_cluster), rom.data(),
+      (u16) (rom.size() / virtual_fat::SECTOR_SIZE)));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  expect_flush();
+
+  program_store::Entry entry = {};
+  assert(program_store::entry_by_id((u16) (file_cluster - 2), entry));
+  assert(entry.type == program_store::ProgramType::MK61_BINARY);
+  assert(strcmp(entry.name, "fuse") == 0);
+  assert(entry.data_len == program_store::MAX_MK61_BINARY_SIZE);
+  u16 stored_len = 0;
+  bool large = false;
+  bool zx0 = false;
+  assert(program_store::test_file_storage_info(
+      entry.id, stored_len, large, zx0));
+  assert(!zx0 && large);
+  assert(stored_len > program_store::MAX_IMAGE1_SIZE);
+  assert(stored_len == rom.size());
+  expect_large_file(entry.id, rom);
+}
+
+static void test_binary_over_quota_is_rejected(void) {
+  fresh();
+  const Layout fs = layout();
+  const u16 file_cluster = 221;
+  u8 fat[512];
+  assert(virtual_fat::read_sector(1, fat));
+  set_fat12_value(fat, file_cluster, 0xFFF);
+  u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  static const char short_name[11] =
+      {'L','A','R','G','E',' ',' ',' ','B','I','N'};
+  const u8 slot = append_ascii_entry(
+      root, (u8) first_free_slot(root), "large.bin", short_name, false,
+      file_cluster, (u32) program_store::MAX_MK61_BINARY_SIZE + 1U);
+  root[slot * 32] = 0;
+  assert(virtual_fat::write_sector(fs.root_start, root));
+  assert(virtual_fat::write_sector(1, fat));
+  assert(!virtual_fat::finalize_pending());
+  assert(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::FILE_TOO_LARGE);
+  assert(virtual_fat::diagnostic().actual == 4097);
+  assert(virtual_fat::diagnostic().limit == 4096);
+  assert(program_store::total_count() == 0);
+  expect_rejected_pending_recovered();
+}
+
 static void test_f411_large_font_import_is_streamed(void) {
   if(program_store::MAX_FONT_SIZE <= program_store::MAX_IMAGE1_SIZE) return;
   fresh();
@@ -2840,6 +2933,8 @@ int main(void) {
   test_wbmp_over_quota_is_rejected();
   test_markdown_over_quota_does_not_poison_next_session();
   test_wbmp_short_name_alias();
+  test_binary_import_export_uses_full_quota();
+  test_binary_over_quota_is_rejected();
   test_chip8_import_uses_full_quota_and_large_zx0();
   test_chip8_over_quota_is_rejected();
   test_f411_large_font_import_is_streamed();

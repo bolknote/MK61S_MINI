@@ -1,7 +1,7 @@
-#include "base91.hpp"
 #include "crc32.hpp"
 #include "mk61emu_core.h"
 #include "program_load.hpp"
+#include "program_store.hpp"
 #include "zx0.hpp"
 #include <algorithm>
 #include <array>
@@ -13,6 +13,12 @@
 
 static std::array<u8,10000> memory;
 static unsigned write_limit = 10000;
+IK1302 m_IK1302 = {};
+static std::vector<u8> file;
+static unsigned fail_read_at = 10000;
+static bool short_read = false;
+static unsigned reads = 0;
+static program_store::ProgramType file_type = program_store::ProgramType::MK61_BINARY;
 namespace core_61 {
 bool read_absolute_program(u16 address, u8& value) {
   if(address >= memory.size()) return false;
@@ -23,16 +29,24 @@ bool write_absolute_program(u16 address, u8 value) {
   memory[address] = value; return true;
 }
 }
-
-static std::string b91(const u8* data, usize size) {
-  std::string result;
-  assert(base91::encode(data,size,{&result,[](void* p,char v) {
-    static_cast<std::string*>(p)->push_back(v); return true;
-  }}));
-  return result;
+namespace program_store {
+bool entry_by_id(u16 id, Entry& out) {
+  if(id != 1) return false;
+  out = {}; out.id = id; out.type = file_type;
+  out.kind = NodeKind::FILE; out.data_len = file.size(); return true;
+}
+bool read_range_id(u16 id, u16 offset, u8* out, u16 count, u16* got) {
+  ++reads;
+  if(id != 1 || offset > file.size() || offset >= fail_read_at) return false;
+  const auto n = std::min<usize>(count,file.size()-offset);
+  std::copy_n(file.data()+offset,n,out); *got = n - (short_read && n ? 1 : 0);
+  return true;
+}
 }
 static std::vector<u8> pack(const std::vector<u8>& source) {
-  std::vector<u8> compressed, workspace(4*(source.size()+1));
+  const u32 crc=mk61_crc32::calculate(source.data(),source.size());
+  std::vector<u8> compressed={u8(crc),u8(crc>>8),u8(crc>>16),u8(crc>>24)};
+  std::vector<u8> workspace(4*(source.size()+1));
   zx0::EncodeResult result;
   assert(zx0::encode(source.data(),source.size(),workspace.data(),workspace.size(),
       {&compressed,[](void* p,u8 v) {
@@ -40,103 +54,85 @@ static std::vector<u8> pack(const std::vector<u8>& source) {
       }},result));
   return compressed;
 }
-static void start(const std::vector<u8>& source, unsigned address=0, unsigned limit=10000, bool corrupt=false) {
-  program_load::reset();
-  const auto crc=mk61_crc32::finish(mk61_crc32::extend(
-      mk61_crc32::INITIAL_STATE,source.data(),source.size()));
-  char header[40]; std::snprintf(header,sizeof(header),"%04u %08X",address,crc^unsigned(corrupt));
-  assert(program_load::start(header,limit));
-  assert(program_load::blocked());
-}
-static bool send(const std::vector<u8>& packed, usize chunk, usize count) {
-  for(usize i=0;i<count;i+=chunk) {
-    const auto line=b91(packed.data()+i,std::min(chunk,count-i));
-    if(!program_load::data(line.c_str())) return false;
-  }
-  return true;
-}
-static void roundtrip(const std::vector<u8>& source, usize chunk, unsigned address=0) {
-  memory.fill(0xA5);
-  const auto packed=pack(source);
-  start(source,address);
-  assert(send(packed,chunk,packed.size()));
+static void roundtrip(const std::vector<u8>& source, unsigned address=0) {
+  memory.fill(0xA5); file=pack(source); reads=0; program_load::reset();
+  assert(program_load::load(1,address,10000));
   assert(!program_load::blocked());
   assert(program_load::written()==source.size());
   assert(std::equal(source.begin(),source.end(),memory.begin()+address));
   for(unsigned i=0;i<address;++i) assert(memory[i]==0xA5);
   for(usize i=address+source.size();i<memory.size();++i) assert(memory[i]==0xA5);
+  assert(reads==1+(file.size()-4+127)/128);
 }
 
 int main() {
+  program_load::Request request={};
+  using Syntax=program_load::Syntax;
+  for(const char* arg:{"", "03", "0000", "3 ", "demo.m61", "2026.m61", "dir/a b.m61",
+                      "2026 demo.m61", "1 demo.M61 ", "\"2026 demo.m61\""})
+    assert(program_load::parse(arg,request)==Syntax::LEGACY);
+  for(const char* arg:{"0 a.bin", "123 a.bin", "10000 a.bin", "99999999999999999999999 a.bin"})
+    assert(program_load::parse(arg,request)==Syntax::INVALID);
+  assert(program_load::parse(" 0250 dir/a b.bin",request)==Syntax::BINARY);
+  assert(request.address==250 && std::string(request.path)=="dir/a b.bin");
+  assert(program_load::parse("9999 last.bin",request)==Syntax::BINARY && request.address==9999);
+
   std::mt19937 rng(0x9100);
-  // Canonical base91 covers both 13- and 14-bit pairs, odd tails, all bytes.
-  for(unsigned size=1;size<=205;++size) {
-    std::vector<u8> raw(size), check(size);
-    for(auto& b:raw) b=rng();
-    const auto text=b91(raw.data(),raw.size());
-    usize got;
-    assert(base91::decode(text.data(),text.size(),check.data(),check.size(),got));
-    assert(got==raw.size() && raw==check);
-    assert(!base91::decode(text.data(),text.size(),check.data(),size-1,got));
-  }
-  for(const auto* invalid:{"", "A", "A'", "A-", "A\\", "AA ", "~\""}) {
-    u8 raw[8]; usize got;
-    assert(!base91::decode(invalid,std::string(invalid).size(),raw,sizeof(raw),got));
-  }
-  assert(b91(reinterpret_cast<const u8*>("test"),4)=="fPNKd");
   for(unsigned size:{1,2,3,7,16,112,513,3584}) {
     for(unsigned pattern=0;pattern<4;++pattern) {
       std::vector<u8> source(size);
-      for(unsigned i=0;i<size;++i) source[i]=pattern==0 ? 0 : pattern==1 ? 255 : pattern==2 ? i%251 : rng();
-      for(usize chunk:{1,2,3,7,176,190}) roundtrip(source,chunk,5);
+      for(unsigned i=0;i<size;++i) source[i]=pattern==0 ? 0 : pattern==1 ? 255 : pattern==2 ? i%256 : rng();
+      roundtrip(source,5);
     }
   }
   for(unsigned trial=0;trial<100;++trial) {
     std::vector<u8> source(1+rng()%1024);
     for(auto& b:source) b=rng()%8;
-    roundtrip(source,1+rng()%190,1000);
+    roundtrip(source,1000);
   }
   const std::vector<u8> source={1,2,3,4,5,6,1,2,3,4,5,6,0x50};
   const auto packed=pack(source);
-  // Every truncated byte prefix is unfinished, including a valid line tail.
+  roundtrip(source,110); // Cross a bank and then load a separate range, without clearing.
+  file=pack({42});
+  assert(program_load::load(1,9999,10000));
+  assert(memory[9999]==42 && std::equal(source.begin(),source.end(),memory.begin()+110));
   for(usize length=0;length<packed.size();++length) {
-    start(source);
-    assert(send(packed,3,length));
-    assert(program_load::blocked());
-    program_load::cancel();
-    assert(program_load::blocked());
+    program_load::reset(); file.assign(packed.begin(),packed.begin()+length);
+    assert(!program_load::load(1,0,10000));
+    if(length>4) assert(program_load::blocked());
   }
-  start(source,0,10000,true);
-  assert(!send(packed,3,packed.size()));
+  program_load::reset(); file=packed; file[0]^=1;
+  assert(!program_load::load(1,0,10000));
   assert(std::string(program_load::error()).find("CRC32")!=std::string::npos);
   assert(program_load::blocked());
-  start(source,9990);
-  assert(!send(packed,3,packed.size()));
-  start(source,100,105);
-  assert(!send(packed,3,packed.size()));
-  start(source);
-  write_limit=4;
-  assert(!send(packed,3,packed.size()));
+  file=packed; assert(!program_load::load(1,0,10000)); // Explicit reset required.
+  program_load::reset(); assert(!program_load::load(1,9990,10000));
+  program_load::reset(); assert(!program_load::load(1,100,105));
+  program_load::reset(); write_limit=4;
+  assert(!program_load::load(1,0,10000)); assert(program_load::written()==4);
   write_limit=10000;
-  auto extra=packed; extra.push_back(0);
-  start(source);
-  assert(!send(extra,190,extra.size()));
-  start(source);
-  assert(send(packed,190,packed.size()));
-  assert(!program_load::data("AA"));
-  program_load::reset();
-  assert(!program_load::data("AA"));
-  for(const char* bad:{"", "0 12345678", "00000 12345678", "0000 1234567", "0000 123456789", "0000 1234567G", "0000 12345678 junk"}) {
-    program_load::reset();
-    assert(!program_load::start(bad,10000));
-  }
-  // Malformed gamma/back-reference streams must terminate with bounded writes.
+  program_load::reset(); file=packed; file.push_back(0);
+  assert(!program_load::load(1,0,10000));
+  assert(std::string(program_load::error()).find("after ZX0")!=std::string::npos);
+  program_load::reset(); file=packed; fail_read_at=4;
+  assert(!program_load::load(1,0,10000) && program_load::blocked());
+  fail_read_at=10000; program_load::reset(); short_read=true;
+  assert(!program_load::load(1,0,10000)); short_read=false;
+  program_load::reset(); m_IK1302.comma=core_61::COMMA_RUN_POSITION; memory.fill(0xA5);
+  assert(!program_load::load(1,0,10000)); m_IK1302.comma=0;
+  assert(memory[0]==0xA5);
+  assert(!program_load::load(0,0,10000));
+  assert(!program_load::load(1,10000,10000));
+  assert(!program_load::load(1,0,10001));
+  file_type=program_store::ProgramType::MK61;
+  assert(!program_load::load(1,0,10000)); file_type=program_store::ProgramType::MK61_BINARY;
+  file.resize(4097); assert(!program_load::load(1,0,10000));
+  // Malformed gamma/back-references must terminate with bounded writes.
   for(unsigned trial=0;trial<2000;++trial) {
-    std::vector<u8> noise(1+rng()%190);
-    for(auto& b:noise) b=rng();
-    start(source);
-    (void)send(noise,190,noise.size());
+    file.resize(5+rng()%190);
+    for(auto& b:file) b=rng();
+    program_load::reset(); (void)program_load::load(1,0,10000);
     assert(program_load::written()<=10000);
   }
-  std::puts("program load: Base91, fragmented ZX0, CRC, bounds, truncation and malformed streams PASS");
+  std::puts("binary load: file I/O, ZX0, CRC, separate ranges, bounds, truncation and malformed streams PASS");
 }

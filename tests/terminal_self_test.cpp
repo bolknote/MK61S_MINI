@@ -363,10 +363,8 @@ static void test_terminal_mnemonic_front_coding(void) {
 
 static void test_script_allowlist_is_explicit(void) {
   assert(terminal_command_allowed_in_script(CMD_HIN));
-  assert(terminal_command_allowed_in_script(CMD_ZTART));
-  assert(terminal_command_allowed_in_script(CMD_ZIN));
-  assert(!terminal_command_allowed_in_trap(CMD_ZTART));
-  assert(!terminal_command_allowed_in_trap(CMD_ZIN));
+  assert(terminal_command_allowed_in_script(CMD_LOAD));
+  assert(!terminal_command_allowed_in_trap(CMD_LOAD));
   assert(terminal_command_allowed_in_script(CMD_ASM));
   assert(terminal_command_allowed_in_script(CMD_RUN));
   assert(terminal_command_allowed_in_script(CMD_REG_SET));

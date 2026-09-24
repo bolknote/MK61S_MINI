@@ -257,6 +257,7 @@ const char* file_extension(ProgramType type) {
     case ProgramType::APP: return "app";
     case ProgramType::CHIP8: return "ch8";
     case ProgramType::MARKDOWN: return "md";
+    case ProgramType::MK61_BINARY: return "bin";
   }
   return "bin";
 }

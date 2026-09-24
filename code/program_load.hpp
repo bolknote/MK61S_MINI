@@ -2,12 +2,14 @@
 #define MK61_PROGRAM_LOAD_HPP
 #include "rust_types.h"
 
-// Shared by the interactive terminal and all nested M61 scripts.
+// Synchronous CRC32 + ZX0 file loading, shared by terminal and M61.
 namespace program_load {
-bool start(const char* args, u16 address_limit);
-bool data(const char* args);
+enum class Syntax : u8 { LEGACY, BINARY, INVALID };
+struct Request { u16 address; const char* path; };
+Syntax parse(const char* args, Request& request);
+bool load(u16 file_id, u16 address, u16 address_limit);
+bool reject(const char* message);
 void reset();
-void cancel();
 bool blocked();
 const char* error();
 u16 written();

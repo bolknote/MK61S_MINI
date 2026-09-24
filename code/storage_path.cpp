@@ -178,6 +178,7 @@ static const Extension EXTENSIONS[] = {
   { ".fmk",       program_store::ProgramType::FONT },
   { ".app",       program_store::ProgramType::APP },
   { ".ch8",       program_store::ProgramType::CHIP8 },
+  { ".bin",       program_store::ProgramType::MK61_BINARY },
   { ".wbmp",      program_store::ProgramType::IMAGE1 },
   // Старые терминальные псевдонимы по-прежнему принимаются, но каноническая
   // запись использует расширения из program_store::file_extension().

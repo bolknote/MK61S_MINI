@@ -1,6 +1,6 @@
 {
-  "occupied_bytes": 3118,
-  "free_bytes": 466,
+  "occupied_bytes": 3100,
+  "free_bytes": 484,
   "labels": {
     "start": 0,
     "new_game": 19,
@@ -65,10 +65,11 @@
     "bar_alphabet": 2544,
     "range_alphabet": 2552,
     "init_pilot": 112,
-    "init_hold": 141,
-    "sum_hold": 160,
-    "trade_hold": 173,
-    "trade_money": 186,
+    "init_hold": 137,
+    "sum_hold": 156,
+    "trade_hold": 169,
+    "buy_done": 190,
+    "trade_money": 191,
     "world": 560,
     "world_ready": 589,
     "select_world": 590,
@@ -77,32 +78,34 @@
     "price": 672,
     "price_market": 686,
     "price_wrapped": 700,
-    "price_ready": 738,
+    "price_clamp": 735,
+    "price_ready": 737,
     "trade": 784,
     "clamp0_7_10": 801,
     "trade_quote": 802,
     "sell_checks": 847,
-    "trade_commit": 884,
-    "trade_price_ready": 537,
+    "trade_commit": 497,
+    "trade_price_clamp": 534,
+    "trade_price_ready": 536,
     "station": 2128,
     "service_hull": 2190,
     "service_missile": 2200,
     "service_ready": 2212,
-    "service_pay": 745,
-    "pay": 762,
-    "pay_done": 782,
+    "service_pay": 744,
+    "pay": 761,
+    "pay_done": 781,
     "distance": 1008,
     "distance_view": 1059,
     "jump": 1120,
-    "alien_contact": 1209,
-    "pirate_contact": 1215,
-    "arrive": 1221,
-    "jump_tick": 2402,
+    "alien_contact": 1211,
+    "pirate_contact": 1217,
+    "arrive": 1069,
+    "jump_tick": 1091,
     "start_contact": 1232,
     "init_enemy": 1290,
     "enemy_fields": 1315,
     "init_drones": 1328,
-    "drones_done": 2460,
+    "drones_done": 106,
     "combat_input": 1456,
     "fight_command": 1484,
     "choose_target": 1516,
@@ -138,9 +141,9 @@
     "clamp0_15_69": 1763,
     "enemy_hit_done": 1765,
     "drone_tick": 1772,
-    "drones_hit": 1075,
-    "clamp0_15_106": 1091,
-    "drones_ready": 1101,
+    "drones_hit": 2390,
+    "clamp0_15_106": 2406,
+    "drones_ready": 2416,
     "combat_view": 1792,
     "range_view": 1817,
     "target_view": 1827,
@@ -155,8 +158,8 @@
   },
   "banks": {
     "0": {
-      "module": "kernel",
-      "used": 91
+      "module": "kernel / contacts",
+      "used": 109
     },
     "12": {
       "module": "input",
@@ -171,8 +174,8 @@
       "used": 108
     },
     "21": {
-      "module": " / views / flight / contacts",
-      "used": 111
+      "module": " / views / enemies",
+      "used": 67
     },
     "2": {
       "module": "name alphabet",
@@ -188,7 +191,7 @@
     },
     "4": {
       "module": "arithmetic / trade",
-      "used": 96
+      "used": 95
     },
     "18": {
       "module": "messages",
@@ -204,7 +207,7 @@
     },
     "1": {
       "module": "initialization",
-      "used": 82
+      "used": 87
     },
     "5": {
       "module": "world",
@@ -212,7 +215,7 @@
     },
     "6": {
       "module": "prices / station",
-      "used": 111
+      "used": 110
     },
     "7": {
       "module": "trade",
@@ -223,12 +226,12 @@
       "used": 110
     },
     "9": {
-      "module": "navigation / enemies",
-      "used": 96
+      "module": "navigation / flight",
+      "used": 107
     },
     "10": {
       "module": "flight",
-      "used": 109
+      "used": 103
     },
     "11": {
       "module": "contacts",

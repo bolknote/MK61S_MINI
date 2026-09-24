@@ -446,6 +446,7 @@ static const char* short_extension(program_store::ProgramType type) {
     case program_store::ProgramType::APP: return "APP";
     case program_store::ProgramType::CHIP8: return "CH8";
     case program_store::ProgramType::MARKDOWN: return "MD ";
+    case program_store::ProgramType::MK61_BINARY: return "BIN";
   }
   return "BIN";
 }
@@ -467,6 +468,7 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     {".fmk", program_store::ProgramType::FONT},
     {".app", program_store::ProgramType::APP},
     {".ch8", program_store::ProgramType::CHIP8},
+    {".bin", program_store::ProgramType::MK61_BINARY},
     {".wbmp", program_store::ProgramType::IMAGE1},
     // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
     {".wbm", program_store::ProgramType::IMAGE1}
@@ -499,6 +501,9 @@ static u32 maximum_file_size(program_store::ProgramType type) {
   }
   if(type == program_store::ProgramType::CHIP8) {
     return program_store::MAX_CHIP8_SIZE;
+  }
+  if(type == program_store::ProgramType::MK61_BINARY) {
+    return program_store::MAX_MK61_BINARY_SIZE;
   }
   if(type == program_store::ProgramType::APP) {
     return program_store::MAX_APP_FILE_SIZE;

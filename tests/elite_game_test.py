@@ -131,7 +131,7 @@ def test_worlds_and_display():
     title,port,credits,again=play(START+['input 1','input 1'])
     assert title['frame']==[73,0,121,56,6,120,121,0,73,0,57,55]
     assert port['frame']==screen('dAdnAA    СП')
-    assert port['pages'][0]==[1000,3160320,3160320,0,84,60,40,0,12345]
+    assert port['pages'][0]==[1000,3160320,3160320,0,84,60,40,0,12345%16]
     number(credits,'C',1000)
     assert again['revision']==credits['revision']
     # Catch a return of the slow ROM loops that took 657/1142/1180 core steps.
@@ -214,6 +214,83 @@ def test_price_equivalence():
     assert s['pages'][2][2]==world//1048576,s
     number(s,'1',16+world//1048576)
     print('ELITE: 480 original-formula quotes, minimum-price trades and arrival cache OK',flush=True)
+
+def test_price_clamp_boundaries():
+    commands=START.copy()
+    expected=[]
+    for economy in range(16):
+        commands += [f'set 26 2 {economy}']
+        for good in range(6):
+            base=((good+1)*(good+2)*10*(80+5*((economy+2*good)%16)))//100
+            for raw in (-2,-1,0,1,2,3):
+                # Choose real market stocks on both sides of the clamp.
+                # Odd/even quotes cannot all be reached in one economy.
+                if (base-raw)%2:continue
+                stock=30+(base-raw)//2
+                if not 0<=stock<=99:continue
+                commands += [f'set 26 {3+good} {stock}',f'input {10+good}']
+                expected.append((good,stock,raw))
+    for s,(good,stock,raw) in zip(play(commands)[2:],expected):
+        number(s,str(good+1),max(1,raw))
+        assert s['pages'][2][3+good]==stock and s['pages'][0][3]==0,s
+    assert {raw for _,_,raw in expected}=={-2,-1,0,1,2,3}
+    print(f'ELITE: {len(expected)} integer-price clamp boundaries OK',flush=True)
+
+def test_projected_rng():
+    # Independent integer proof for every original 16-bit seed, followed
+    # by actual ROM execution for every state of the smaller recurrence.
+    for seed in range(65536):
+        old_next=(253*seed+13849)%65536
+        assert old_next%16==(13*(seed%16)+9)%16
+    for seed in range(16):
+        s=play(encounter(seed)+['input 44']*4+['run'])
+        expected=((253*seed+13849)%65536)%16
+        assert s[3]['pages'][0][8]==expected and s[-1]['pages'][0][8]==expected
+        assert game_mode(s[-1])==1,s[-1]
+
+    # Multiple complete cycles, including real encounters and escapes.
+    # Restore resources only; the program advances its own RNG state.
+    commands=START.copy()
+    for i in range(32):
+        commands += ['set 24 4 99','set 24 6 99',f'input {71 if i%2==0 else 70}',
+                     'input 60']+['input 44']*4+['run']
+    rows=play(commands)[2:]
+    seed=12345
+    for i in range(32):
+        seed=(253*seed+13849)%65536
+        jump,arrived=rows[7*i+1],rows[7*i+6]
+        assert jump['pages'][0][8]==arrived['pages'][0][8]==seed%16
+        assert game_mode(arrived)==1,arrived
+    print('ELITE: 65536 seed identities, 16 ROM states and 32 consecutive jumps OK',flush=True)
+
+def test_trade_transactions():
+    for good in range(6):
+        s=play(START+['set 24 0 999999']+[f'input {30+good}']*21+
+               ['input 7']+[f'input {40+good}']*21+['input 7'])
+        for i,row in enumerate(s[2:23]):
+            assert row['pages'][1][good]==min(i+1,20)
+            assert sum(row['pages'][1][:6])==min(i+1,20)
+        assert state(s[21])==state(s[22]),('full purchase changed data',good,s[22])
+        for i,row in enumerate(s[24:45]):
+            assert row['pages'][1][good]==max(19-i,0)
+        assert state(s[43])==state(s[44]),('empty sale changed data',good,s[44])
+        assert s[-1]['pages'][0][3]==40 and s[-1]['pages'][2][3+good]==30
+
+        # Also exercise negative, not just zero, free capacity. A rejected
+        # purchase must not mutate HOLD before returning to the caller.
+        s=play(START+['set 24 0 999999',f'set 25 {good} 21','dump',
+                     f'input {30+good}',f'input {40+good}'])
+        assert state(s[2])==state(s[3]) and s[4]['pages'][1][good]==20
+
+    commands=START+['set 24 0 999999']+[f'input {30+i%6}' for i in range(20)]
+    commands += ['input 30','input 7','set 24 8 8','input 71','input 60']+['input 44']*4+['run','input 7']
+    commands += ['set 24 8 8','input 70','input 60','set 24 4 1','set 24 5 0','input 21','run','input 7']
+    s=play(commands)
+    assert state(s[21])==state(s[22]) and sum(s[31]['pages'][1][:6])==20
+    assert game_mode(s[-3])==4 and sum(s[-3]['pages'][1][:6])==20
+    assert game_mode(s[-1])==1 and s[-1]['pages'][1][:6]==[0]*6
+    assert s[-1]['pages'][0][8]==12345%16
+    print('ELITE: all six goods, full/overfull/empty holds, travel and restart OK',flush=True)
 
 def test_navigation_and_input():
     s=play(START+['input 71','input 9','input 60'])
@@ -389,20 +466,18 @@ def test_instruments_and_formation():
 
 def main():
     directory=ROOT/'programs/games/ELITE'
-    parts=sorted(directory.glob('part[0-9][0-9].m61'))
-    assert len(parts)==2 and not list(directory.glob('b[0-9][0-9].m61'))
-    expected=['open? manual.md','reinit']+[f'open {p.name}' for p in parts]+['run']
+    assert not list(directory.glob('part*.m61')) and not list(directory.glob('b[0-9][0-9].m61'))
+    expected=['open? manual.md','reinit','load 0000 elite.bin','run']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
-    # The real M61/core loader decodes all zin records before every scenario;
-    # its checked CRC must describe the complete linked bank image.
+    # Every scenario executes the real binary decoder and checks the CRC of
+    # the actual destination. The header describes the complete linked image.
     banks,info=create_game().link()
     check_layout(info)
     assert set(info['banks'])=={str(bank) for bank in banks}
     image=b''.join(banks.get(bank,bytes(112)) for bank in range(32))
-    records=[line for part in parts for line in part.read_text().splitlines()]
-    assert records[0]==f'ztart 0000 {zlib.crc32(image):08X}'
-    assert all(line.startswith('zin ') for line in records[1:])
-    assert sum(path.stat().st_size for path in parts)<2800
+    binary=(directory/'elite.bin').read_bytes()
+    assert int.from_bytes(binary[:4],'little')==zlib.crc32(image)
+    assert len(binary)<2300
     for path in directory.glob('*.m61'):
         assert path.stat().st_size<=1536
         assert all(len(line)<=239 for line in path.read_text().splitlines())
@@ -410,7 +485,7 @@ def main():
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
            test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
-           test_instruments_and_formation)
+           test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

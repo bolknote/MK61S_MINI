@@ -12,7 +12,9 @@ The test creates one unique Russian long-name UTF-8 text file, fsyncs it, asks
 macOS to eject the exact selected disk, verifies automatic MSC->CDC recovery
 and reads the corresponding M8 bytes back through C6/CDC.  After a warm reset
 it exports that M8 file through MSC again and requires the original UTF-8 name
-and content. Finally it removes only that reserved file through the terminal
+and content. With --binary, the same roundtrip instead checks a 4096-byte .bin file
+containing every possible byte value, without text conversion.
+Finally it removes only that reserved file through the terminal
 and requires the original root listing to be restored.
 """
 
@@ -405,6 +407,8 @@ def terminal_report(target: Target, command: str, timeout: float = 6.0) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", required=True)
+    parser.add_argument("--binary", action="store_true",
+                        help="roundtrip a 4096-byte binary program file")
     parser.add_argument("--public-id", default="")
     parser.add_argument("--msc-timeout", type=float, default=25.0)
     parser.add_argument("--reconnect-timeout", type=float, default=20.0)
@@ -432,11 +436,14 @@ def main() -> int:
     tree = usb_tree()
     location_id = find_cdc_location(tree, identity)
     baseline = whole_disks()
-    fixture_name = f"Проверка-{identity.short[-4:]}.txt"
+    extension = "bin" if args.binary else "txt"
+    fixture_name = f"Проверка-{identity.short[-4:]}.{extension}"
     host_payload = (
         f"Проверка USB {identity.public}: Ёжик, стрелка →, число 123.\n"
     ).encode("utf-8")
-    m8_payload = encode_m8(host_payload.decode("utf-8"))
+    if args.binary:
+        host_payload = bytes(range(256)) * 16
+    stored_payload = host_payload if args.binary else encode_m8(host_payload.decode("utf-8"))
     if any(line.casefold().endswith(fixture_name.casefold())
            for line in initial_entries):
         raise AssertionError(
@@ -487,7 +494,7 @@ def main() -> int:
             )
         require_file_contents(
             terminal_report(target, f'fsget "/{fixture_name}"', timeout=10.0),
-            m8_payload,
+            stored_payload,
         )
         vlog = terminal_report(target, "vlog", timeout=10.0)
         diagnostic = parse_vfat_diagnostic(vlog)
@@ -506,12 +513,11 @@ def main() -> int:
             )
         require_file_contents(
             terminal_report(target, f'fsget "/{fixture_name}"', timeout=10.0),
-            m8_payload,
+            stored_payload,
         )
 
-        # Re-export the persisted M8 object. This is the reverse half of the
-        # conversion contract: C6 M8 name/content must become UTF-16 LFN and
-        # UTF-8 file bytes without loss.
+        # Re-export the persisted object: UTF-16 LFN and either unchanged
+        # binary bytes or text converted from M8 back to UTF-8.
         baseline = whole_disks()
         enter_usb_disk(target)
         disk_identifier, info = wait_for_msc_disk(
@@ -524,7 +530,7 @@ def main() -> int:
                 f"Russian LFN was not exported: {fixture_name}"
             )
         if exported.read_bytes() != host_payload:
-            raise AssertionError("M8-to-UTF-8 export changed text bytes")
+            raise AssertionError("C6-to-USB export changed file bytes")
         eject = run_text(
             ["diskutil", "eject", disk_identifier], timeout=30.0
         )
@@ -555,7 +561,7 @@ def main() -> int:
             f"public={identity.public} profile={identity.profile} "
             f"build={identity.build} "
             f"location=0x{location_id:08X} fixture={fixture_name} "
-            f"utf8={len(host_payload)} m8={len(m8_payload)} "
+            f"host_bytes={len(host_payload)} stored_bytes={len(stored_payload)} "
             "c6_readback=2/2 lfn=1 import=1 export=1 "
             "eject=2 cdc=2 reset=1 cleanup=1",
             flush=True,

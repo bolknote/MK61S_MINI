@@ -16,8 +16,6 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "asm",     CMD_ASM,           "asm [TA] <mnemonics> - assemble line" },
   { "ins",     CMD_INS,           "ins <step> <opcode> - insert into program" },
   { "hin",     CMD_HIN,           "hin <addr> <hex> - write program memory" },
-  { "ztart",   CMD_ZTART,         "ztart <addr> <CRC32> - begin ZX0 load" },
-  { "zin",     CMD_ZIN,           "zin <Base91> - continue ZX0 load" },
   { "hout",    CMD_HOUT,          "program memory as hin lines" },
   { "reg",     CMD_REG_DUMP,      "dump R0..RE registers" },
   { "stk",     CMD_STACK,         "dump stack X,Y,Z,T,X1" },

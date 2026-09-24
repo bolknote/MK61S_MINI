@@ -1,8 +1,6 @@
-#include "base91.hpp"
 #include "crc32.hpp"
 #include "zx0.hpp"
 #include "zx0.h"
-#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -16,22 +14,15 @@ static bool next(void* context, u8& value) {
   value = r.data[r.position++];
   return true;
 }
-static bool put(void* context, char value) {
-  return bool(static_cast<std::ofstream*>(context)->put(value));
-}
-
 int main(int argc, char** argv) {
-  if(argc != 3 && argc != 4) {
-    std::fprintf(stderr, "Usage: mk61_program_pack input.bin output.m61 [decimal-address]\n");
+  if(argc != 3) {
+    std::fprintf(stderr, "Usage: mk61_program_pack raw-image.bin program.bin\n");
     return 1;
   }
-  char* end = nullptr;
-  const long address = argc == 4 ? std::strtol(argv[3], &end, 10) : 0;
-  if(address < 0 || address >= 10000 || (argc == 4 && (*argv[3] == 0 || *end != 0))) return 2;
   std::ifstream in(argv[1], std::ios::binary);
   if(!in) return 2;
   std::vector<u8> data{std::istreambuf_iterator<char>(in), {}};
-  if(data.empty() || data.size() > usize(10000 - address)) return 2;
+  if(data.empty() || data.size() > 32U * 112U) return 2;
 
   BLOCK* optimal = optimize(data.data(), int(data.size()), 0, 32640);
   int size = 0, delta = 0;
@@ -48,19 +39,10 @@ int main(int argc, char** argv) {
   std::ofstream out(argv[2], std::ios::binary);
   const u32 crc = mk61_crc32::finish(mk61_crc32::extend(
       mk61_crc32::INITIAL_STATE, data.data(), data.size()));
-  char header[32];
-  std::snprintf(header, sizeof(header), "ztart %04ld %08lX\n", address, (unsigned long) crc);
-  out << header;
-  for(int i = 0; i < size; i += 176) {
-    out << "zin ";
-    if(!base91::encode(compressed + i, std::min(176, size - i), {&out, put})) {
-      std::free(compressed);
-      return 5;
-    }
-    out << '\n';
-  }
+  for(unsigned shift = 0; shift < 32; shift += 8) out.put(char(crc >> shift));
+  out.write(reinterpret_cast<const char*>(compressed), size);
   std::free(compressed);
   out.close();
   if(!out) return 5;
-  std::printf("%zu program bytes -> %d ZX0 bytes; CRC32 %08lX\n", data.size(), size, (unsigned long) crc);
+  std::printf("%zu program bytes -> %d binary bytes; CRC32 %08lX\n", data.size(), size + 4, (unsigned long) crc);
 }

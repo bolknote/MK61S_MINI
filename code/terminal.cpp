@@ -2691,6 +2691,9 @@ u16 class_terminal::file_capacity(program_store::ProgramType type) {
       if(type == program_store::ProgramType::CHIP8) {
         return program_store::MAX_CHIP8_SIZE;
       }
+      if(type == program_store::ProgramType::MK61_BINARY) {
+        return program_store::MAX_MK61_BINARY_SIZE;
+      }
       if(type == program_store::ProgramType::APP) {
         return program_store::MAX_APP_FILE_SIZE;
       }
@@ -3877,7 +3880,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
            (command_id == CMD_HIN || command_id == CMD_SET_CODE ||
             command_id == CMD_ASM || command_id == CMD_INS ||
             command_id == CMD_KBD || command_id == CMD_CMD)) {
-          program_load::cancel();
           Serial.println(program_load::error());
           recive_pos = 0;
           return terminal_protocol::Result::error();
@@ -4148,6 +4150,14 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_LOAD: {
               const char* args = command_args();
+              program_load::Request request = {};
+              if(program_load::parse(args, request) != program_load::Syntax::LEGACY) {
+                if(script_mode) return script_action(terminal_protocol::ResultKind::LOAD_BINARY, args);
+                const bool ok = load_binary_program(current_directory, args);
+                if(!ok) Serial.println(program_load::error());
+                recive_pos = 0;
+                return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
+              }
               usize number = 0;
               if(terminal_parse_quick_number(args, number)) {
                 // В скрипте числовой файл выполняется вложенно
@@ -4636,26 +4646,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
             break;
-          case CMD_ZTART:
-          case CMD_ZIN: {
-              bool ok;
-              if(command_id == CMD_ZTART) {
-                if(core_61::is_RUN()) {
-                  Serial.println("Stop calculator before ztart");
-                  recive_pos = 0;
-                  return terminal_protocol::Result::error();
-                }
-                const u16 limit = library_mk61::program_memory_mode() ==
-                    ProgramMemoryMode::CLASSIC_105 ? core_61::CLASSIC_PROGRAM_STEP :
-                    core_61::EXTENDED_ADDRESS_LIMIT;
-                ok = program_load::start(command_args(), limit);
-                // No output size is sent: in AUTO select banked memory up front.
-                if(ok) apply_program_memory_auto(nullptr, 0, true, true);
-              } else ok = program_load::data(command_args());
-              if(!ok) Serial.println(program_load::error());
-              recive_pos = 0;
-              return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
-            }
           case  CMD_HIN:
           case  CMD_SET_CODE:
               if(!GetHexString(command_id == CMD_SET_CODE ? (const char*) &input_buffer[4] : command_args())) {

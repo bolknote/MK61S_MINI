@@ -543,13 +543,14 @@ static int type_index(ProgramType type) {
     case ProgramType::APP: return -1; // счётчик APP вычисляется по inode
     case ProgramType::CHIP8: return -1; // счётчик CHIP-8 вычисляется по inode
     case ProgramType::MARKDOWN: return -1; // новый тип без миграции каталога
+    case ProgramType::MK61_BINARY: return -1;
   }
   return -1;
 }
 
 static bool supported_type(ProgramType type) {
   return type == ProgramType::APP || type == ProgramType::CHIP8 ||
-         type == ProgramType::MARKDOWN ||
+         type == ProgramType::MARKDOWN || type == ProgramType::MK61_BINARY ||
          type_index(type) >= 0;
 }
 
@@ -558,6 +559,7 @@ static u16 maximum_data_len(ProgramType type) {
   if(type == ProgramType::FONT) return MAX_FONT_SIZE;
   if(type == ProgramType::IMAGE1) return MAX_IMAGE1_SIZE;
   if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;
+  if(type == ProgramType::MK61_BINARY) return MAX_MK61_BINARY_SIZE;
   if(type == ProgramType::APP) return MAX_APP_FILE_SIZE;
   return MAX_MK61_TEXT_SIZE;
 }
@@ -574,6 +576,7 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::APP: return "app";
     case ProgramType::CHIP8: return "ch8";
     case ProgramType::MARKDOWN: return "md";
+    case ProgramType::MK61_BINARY: return "bin";
   }
   return "bin";
 }
@@ -590,6 +593,7 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::APP: return "A1";
     case ProgramType::CHIP8: return "C1";
     case ProgramType::MARKDOWN: return "T2";
+    case ProgramType::MK61_BINARY: return "M3";
   }
   return "??";
 }
@@ -2884,7 +2888,8 @@ bool type_from_magic(TypeMagic magic, ProgramType& type) {
     ProgramType::IMAGE1,
     ProgramType::APP,
     ProgramType::CHIP8,
-    ProgramType::MARKDOWN
+    ProgramType::MARKDOWN,
+    ProgramType::MK61_BINARY
   };
   for(const ProgramType candidate : TYPES) {
     if(type_magic(candidate) != magic) continue;
@@ -3561,6 +3566,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   const u16 stored_len = zx0 ? compression_plan.stored_len : data_len;
   const bool large =
       (type == ProgramType::APP || type == ProgramType::CHIP8 ||
+       type == ProgramType::MK61_BINARY ||
        (MAX_FONT_SIZE > MAX_IMAGE1_SIZE && type == ProgramType::FONT)) &&
       stored_len > MAX_IMAGE1_SIZE;
 

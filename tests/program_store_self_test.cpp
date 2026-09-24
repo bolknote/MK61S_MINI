@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <initializer_list>
 #include <stdio.h>
 #include <string.h>
 
@@ -2761,6 +2762,49 @@ static void test_large_app_roundtrip_ranges_rename_and_reboot(void) {
   }
 }
 
+static void test_mk61_binary_roundtrip_quota_and_paths(void) {
+  static u8 source[program_store::MAX_MK61_BINARY_SIZE];
+  static u8 recovered[program_store::MAX_MK61_BINARY_SIZE];
+  for(usize i=0;i<sizeof(source);++i) source[i]=(u8)i;
+  assert(!program_store::text_content(ProgramType::MK61_BINARY));
+  assert(!program_store::transparent_compression_enabled(ProgramType::MK61_BINARY));
+  assert(strcmp(program_store::file_extension(ProgramType::MK61_BINARY),"bin")==0);
+  assert(program_store::type_magic(ProgramType::MK61_BINARY)==program_store::TYPE_MAGIC_MK61_BINARY);
+  ProgramType type;
+  assert(program_store::type_from_magic(program_store::make_type_magic('M','3'),type));
+  assert(type==ProgramType::MK61_BINARY);
+  for(u32 capacity:{512U*1024U,16U*1024U*1024U}) {
+    fresh(capacity);
+    u16 dir=0,id=0;
+    assert(program_store::create_directory(program_store::ROOT_ID,"Images",program_store::INVALID_ID,&dir));
+    assert(program_store::write_file(dir,program_store::INVALID_ID,type,"demo",source,sizeof(source),&id));
+    assert(program_store::count(type)==1);
+    u16 stored=0; bool large=false,zx0=false;
+    assert(program_store::test_file_storage_info(id,stored,large,zx0));
+    assert(large && !zx0 && stored==sizeof(source));
+    Entry entry={};
+    assert(storage_path::resolve_file(dir,"demo.BIN",entry)==storage_path::Status::OK);
+    assert(entry.id==id && entry.type==type);
+    assert(storage_path::resolve_file(program_store::ROOT_ID,"Images/demo.bin",entry)==storage_path::Status::OK);
+    assert(entry.id==id);
+    for(u16 offset:{0,111,2047,4063,4095}) {
+      u16 got=0; u8 part[112];
+      assert(program_store::read_range_id(id,offset,part,sizeof(part),&got));
+      const u16 expected=sizeof(source)-offset<sizeof(part) ? sizeof(source)-offset : sizeof(part);
+      assert(got==expected && memcmp(part,source+offset,got)==0);
+    }
+    program_store::init();
+    assert(program_store::ready() && program_store::move_rename(id,dir,"renamed"));
+    u16 got=0;
+    assert(program_store::read_id(id,recovered,sizeof(recovered),&got));
+    assert(got==sizeof(source) && memcmp(source,recovered,got)==0);
+    assert(!program_store::write_file(dir,id,type,"renamed",source,sizeof(source)+1,nullptr));
+    assert(program_store::read_id(id,recovered,sizeof(recovered),&got));
+    assert(memcmp(source,recovered,got)==0);
+    assert(program_store::remove_id(id) && program_store::count(type)==0);
+  }
+}
+
 static void test_max_app_replacement_uses_full_wal_capacity(void) {
   static u8 original[program_store::MAX_APP_FILE_SIZE];
   static u8 replacement[program_store::MAX_APP_FILE_SIZE];
@@ -3053,6 +3097,7 @@ static void test_two_hundred_apps_have_no_fixed_slot_limit(void) {
 } // безымянное пространство имён
 
 int main(void) {
+  test_mk61_binary_roundtrip_quota_and_paths();
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
   test_tinybasic_expanded_source_quota();

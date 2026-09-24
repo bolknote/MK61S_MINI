@@ -23,6 +23,7 @@ u8 m61_text_host_open_file(const char* args);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
+bool load_binary_program(u16 directory, const char* args);
 u32 m61_text_host_millis(void);
 i32 program_store_text_font_begin(void);
 i32 program_store_text_font_load_from(const char* name,
@@ -528,7 +529,6 @@ static void close_text_font_session(void) {
 }
 
 static void stop_runner(void) {
-  program_load::cancel();
   close_text_font_session();
   clear_trap_runtime(true);
   clear_bind_runtime();
@@ -1411,6 +1411,13 @@ static const char* optional_open_arguments(const char* line) {
   return skip_spaces(p + length);
 }
 
+static u16 current_script_directory(void) {
+  program_store::Entry entry;
+  return script_id != program_store::INVALID_ID &&
+      program_store::entry_by_id(script_id, entry)
+      ? entry.parent_id : program_store::ROOT_ID;
+}
+
 #if M61_TEXT_FONT_COMMAND
 static bool loadfont_arguments(const char* line, const char*& args) {
   static const char keyword[] = "loadfont";
@@ -1420,13 +1427,6 @@ static bool loadfont_arguments(const char* line, const char*& args) {
      (!is_space(p[length]) && !is_line_end(p[length]))) return false;
   args = skip_spaces(p + length);
   return true;
-}
-
-static u16 current_script_directory(void) {
-  program_store::Entry entry;
-  return script_id != program_store::INVALID_ID &&
-      program_store::entry_by_id(script_id, entry)
-      ? entry.parent_id : program_store::ROOT_ID;
 }
 
 static bool execute_loadfont(const char* args) {
@@ -1637,6 +1637,14 @@ static bool execute_script_line(const char* raw_line) {
     case terminal_protocol::ResultKind::LOAD_SLOT:
       if(open_slot(result.args)) return true;
       line_error_message = "cannot load nested slot";
+      return false;
+    case terminal_protocol::ResultKind::LOAD_BINARY:
+      if(trap_context_valid()) {
+        line_error_message = "binary load is not allowed in a trap handler";
+        return false;
+      }
+      if(load_binary_program(current_script_directory(), result.args)) return true;
+      line_error_message = program_load::error();
       return false;
     case terminal_protocol::ResultKind::GOTO_LABEL:
       if(goto_label(result.args)) return true;

@@ -167,6 +167,7 @@ extern usize  seek_program_END(u8* code_page);
 extern  void  insert_cmd_in_program(usize into_step, usize opcode);
 extern  bool  program_needs_expanded_memory(const u8* code_page, usize code_len);
 extern  void  apply_program_memory_auto(const u8* code_page, usize code_len, bool preserve_program, bool force_expanded = false);
+extern bool load_binary_program(u16 directory, const char* args);
 extern  void  ensure_program_memory_for_write(usize linear_addr, u8 opcode);
 
 inline void ErrorReaction(void) {

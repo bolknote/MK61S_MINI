@@ -18,9 +18,13 @@ def add_economy(a):
     m.label('sum_hold').ld(0)
     for i in range(1,6):m.ld(i).op('+')
     m.st('C').op('ret')
-    # HOLD callback: RB good -> RD held, RC free capacity, in one opening.
+    # Purchase callback: money and market stock were checked by the caller.
+    # RB good -> RC old free capacity. Only a positive capacity commits the
+    # item here; this avoids opening HOLD a second time after paying.
     m.label('trade_hold').raw(0xDB).st('D').call('sum_hold')
-    m.ld(6).call('mod100').ld('C').op('-').st('C').op('ret')
+    m.ld(6).call('mod100').ld('C').op('-').st('C').jneg('buy_done').jz('buy_done')
+    m.ld('D').n(1).op('+').raw(0xBB)
+    m.label('buy_done').op('ret')
     m.label('trade_money').ld('C').st(0).add(3,1).op('ret')
 
     m=a.module(5,'world')
@@ -49,8 +53,10 @@ def add_economy(a):
     # Keep 16+e below the triangular factor in the stack; no RD spill/reload.
     m.ld('B').n(1).op('+','square').raw(0x0F).op('+').n(2).op('/','*').st('D')
     m.ld('B').raw(0x20).op('+').st('B').n(30).raw(0xDB).st('E')
-    m.op('-').n(2).op('*').ld('D').op('+').st('D').st('C').n(1).op('-').jge('price_ready')
-    m.set('C',1).label('price_ready').op('ret')
+    # Quotes are integers: positive means >=1, without materializing and
+    # subtracting one. Keep the unclamped RD for the post-trade quote.
+    m.op('-').n(2).op('*').ld('D').op('+').st('D').st('C').jneg('price_clamp').jnz('price_ready')
+    m.label('price_clamp').set('C',1).label('price_ready').op('ret')
 
     m=a.module(7,'trade')
     m.label('trade').call('price').st(3).ld('E').st(6).ld(7).jge('trade_quote')
@@ -60,19 +66,21 @@ def add_economy(a):
     m.label('trade_quote').get(24,0).st(4)
     m.ld(7).jneg('sell_checks')
     m.ld(4).ld(3).op('-').jneg('bad_action').ld(6).jz('bad_action')
-    m.ld(1).st('B').visit(25,'trade_hold').ld('D').st(5)
+    m.ld(1).st('B').visit(25,'trade_hold')
     m.ld('C').jz('bad_action').jneg('bad_action')
     m.jump('trade_commit')
     m.label('sell_checks');dynamic_get(m,25,1)
     m.st(5).jz('bad_action').ld(6).n(99).op('-').jge('bad_action')
     m.n(99999999).ld(3).op('-').ld(4).op('-').jneg('bad_action')
+    # Only a sale reaches this write. Purchases already updated HOLD after
+    # passing every guard; both paths now pay and update market stock.
+    m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
     # Keep credits beneath the product in Y instead of swapping afterwards.
     m.label('trade_commit').ld(4).ld(3).ld(7).op('*','-').st('C').visit(24,'trade_money')
-    m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
     m.ld(6).ld(7).op('-').st('C').ld(1).raw(0x20).op('+').st('B').far(0x53,26*112+WRITE)
     # Keep the unclamped quote: at saturated stocks max(1, raw)+2 is wrong.
-    m.ld(2).ld(7).n(2).op('*','+').st('C').n(1).op('-').jge('trade_price_ready')
-    m.set('C',1)
+    m.ld(2).ld(7).n(2).op('*','+').st('C').jneg('trade_price_clamp').jnz('trade_price_ready')
+    m.label('trade_price_clamp').set('C',1)
     m.label('trade_price_ready').ld(1).n(30).op('+').st('A').op('ret')
 
     m=a.module(19,'station')
@@ -106,9 +114,13 @@ def add_economy(a):
     m.ld(3).op('swap','-').jneg('pirate_contact').jump('arrive')
     m.label('alien_contact').n(4).jump('start_contact')
     m.label('pirate_contact').n(2).jump('start_contact')
-    m.label('arrive').visit(24,'arrived_pilot').visit(26,'init_market').ptr(9,'port_input_entry',lift=False).set('A',0).op('ret')
+    # Keeping this entry whole avoids a bridge after victory or escape.
+    m.label('arrive',keep_block=True).visit(24,'arrived_pilot').visit(26,'init_market').ptr(9,'port_input_entry',lift=False).set('A',0).op('ret')
     m.label('jump_tick').ld(6).ld('C').op('-').st(6).add(3,1)
-    m.ld(8).n(253).op('*').n(13849).op('+').mod(65536).st(8).call('mod16').st('C').op('ret')
+    # Encounters observe only the old 16-bit generator's low four bits.
+    # (253*s+13849) mod 16 == (13*(s mod 16)+9) mod 16. Store only that
+    # projected state; 13*r+9 is at most 204, so mod16 stays exact.
+    m.ld(8).n(13).op('*').n(9).op('+').call('mod16').st(8).st('C').op('ret')
 
     m=a.module(11,'contacts')
     # Equipment cannot change in flight. Decode the laser once per contact;

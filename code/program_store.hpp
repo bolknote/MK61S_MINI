@@ -30,6 +30,8 @@ static constexpr u16 MAX_IMAGE1_SIZE = 1600;
 // CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
 // классический ROM занимает не более 4096 - 0x200 = 3584 байт.
 static constexpr u16 MAX_CHIP8_SIZE = 3584;
+// CRC32 followed by ZX0: enough for an incompressible 32-bank image.
+static constexpr u16 MAX_MK61_BINARY_SIZE = 4096;
 // Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
 // Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
 static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
@@ -58,7 +60,8 @@ enum class ProgramType : u8 {
   CHIP8 = 9,
   // T2: Markdown в M8. Тип сканируется по inode и не расширяет сохранённый
   // массив счётчиков каталога.
-  MARKDOWN = 10
+  MARKDOWN = 10,
+  MK61_BINARY = 11
 };
 
 constexpr bool text_content(ProgramType type) {
@@ -74,6 +77,7 @@ constexpr bool text_content(ProgramType type) {
     case ProgramType::IMAGE1:
     case ProgramType::APP:
     case ProgramType::CHIP8:
+    case ProgramType::MK61_BINARY:
       return false;
   }
   return false;
@@ -94,6 +98,7 @@ constexpr bool transparent_compression_enabled(ProgramType type) {
     case ProgramType::MK61:
     case ProgramType::FONT:
     case ProgramType::APP:
+    case ProgramType::MK61_BINARY:
       return false;
   }
   return false;
@@ -109,6 +114,7 @@ static constexpr TypeMagic TYPE_MAGIC_NONE = 0;
 static constexpr TypeMagic TYPE_MAGIC_IMAGE1 = make_type_magic('I', '1');
 static constexpr TypeMagic TYPE_MAGIC_CHIP8 = make_type_magic('C', '1');
 static constexpr TypeMagic TYPE_MAGIC_MARKDOWN = make_type_magic('T', '2');
+static constexpr TypeMagic TYPE_MAGIC_MK61_BINARY = make_type_magic('M', '3');
 
 enum class NodeKind : u8 {
   FILE = 0,
