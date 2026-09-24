@@ -7,10 +7,11 @@ struct StartupDiagnostic {
   unsigned stage;
 };
 bool init(void);
-// Opens the virtual FAT implementation (resident on F411, USBDISK.APP on
-// F401), acquires its caches and validates the session while CDC is still
-// available. init() may call this itself, but the mode switch uses the
-// explicit phase so only the short USB-core handoff happens after Serial.end().
+// Opens the virtual FAT implementation (resident by default on F411,
+// USBDISK.APP on F401 or an explicitly externalized F411), acquires its caches
+// and validates the session while CDC is still available. init() may call this
+// itself, but the mode switch uses the explicit phase so only the short
+// USB-core handoff happens after Serial.end().
 bool prepare(void);
 bool deinit(void);
 bool active(void);

@@ -55,7 +55,7 @@ if [[ "$allow_fmk" == 0 ]]; then
 fi
 
 # FAT12 directory synthesis, LFN conversion and the transactional import plan
-# belong to USBDISK.APP on F401. F411 deliberately embeds the same sources.
+# belong either to USBDISK.APP or to a deliberately resident implementation.
 if [[ "$allow_usbdisk" == 0 ]]; then
   fat_unexpected="$({ grep -E \
     'virtual_fat::.*(render_node_dirent|walk_directory|parse_lfn|apply_file|process_node|prune_tree|ensure_all_directory_extents)' \
@@ -70,7 +70,7 @@ else
     'virtual_fat::.*(walk_directory|parse_lfn|prune_tree|ensure_all_directory_extents)' \
     <<<"$symbols" || true; })"
   if [[ -z "$fat_present" ]]; then
-    echo 'resident USBDISK ELF check: F411 FAT/LFN implementation is missing' >&2
+    echo 'resident USBDISK ELF check: expected FAT/LFN implementation is missing' >&2
     exit 1
   fi
 fi

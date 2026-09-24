@@ -29,9 +29,11 @@ python3 tools/build_system_app_bundle.py \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
 
-По умолчанию он собирает `SETUP.APP` и `USBDISK.APP`; для F411 сборщик
-прошивки передаёт `--setup 0 --usbdisk 0`, поскольку оба базовых сервиса уже
-встроены в resident.
+По умолчанию он собирает `SETUP.APP` и `USBDISK.APP`. Для F411 сборщик
+прошивки всегда передаёт `--setup 0`: SETUP встроен в resident. В штатном
+режиме он также передаёт `--usbdisk 0`; явный ключ
+`MK61_EXTERNALIZE_USBDISK=1` меняет это значение на `--usbdisk 1` и добавляет
+`USBDISK.APP` в F411-комплект.
 Сборщик извлекает из служебной INFO-секции resident согласованные
 `HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
 атомарно заменяет только принадлежащие ему канонические файлы. Оболочка
@@ -40,6 +42,7 @@ python3 tools/build_system_app_bundle.py \
 
 Имена остаются стабильными: `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
 `MARKDOWN.APP`, `CHIP8.APP`, а на F401 также `USBDISK.APP` и `SETUP.APP`.
+Внешний режим F411 добавляет к этому списку `USBDISK.APP`.
 После прошивки resident скопируйте
 весь каталог `/System` из того же комплекта. ABI 2/3/4/5 намеренно не
 исполняются; старые APP нужно один раз пересобрать.

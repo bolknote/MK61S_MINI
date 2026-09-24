@@ -92,8 +92,15 @@ int main(void) {
 #if defined(STM32F411xE)
   static_assert(!MK61_SETUP_IS_LOADABLE,
                 "F411 settings must work without SETUP.APP");
-  static_assert(!MK61_USBDISK_IS_LOADABLE && MK61_USBDISK_IS_BUILTIN,
-                "F411 USB disk must work without USBDISK.APP");
+  #if defined(MK61_CONFIG_EXPECT_EXTERNAL_USBDISK)
+  static_assert(MK61_EXTERNALIZE_USBDISK == 1 &&
+                MK61_USBDISK_IS_LOADABLE && !MK61_USBDISK_IS_BUILTIN,
+                "explicit F411 USB disk APP selection was ignored");
+  #else
+  static_assert(MK61_EXTERNALIZE_USBDISK == 0 &&
+                !MK61_USBDISK_IS_LOADABLE && MK61_USBDISK_IS_BUILTIN,
+                "F411 USB disk must be resident by default");
+  #endif
   static_assert(MK61_ENABLE_PROFILE_SAVE == 1,
                 "F411 qualification builds must retain prof save");
 #else

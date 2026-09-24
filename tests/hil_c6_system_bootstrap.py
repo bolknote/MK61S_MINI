@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 """Install and byte-verify an ABI 6 System bundle over the CDC terminal.
 
-This is the bootstrap path for a freshly formatted F401 C6 volume, where
-USBDISK.APP must be copied before USB MSC can start.  F411 embeds USB disk and
-passes ``--resident-usbdisk``.  The target is pinned by its canonical public
-identity. Existing files are never removed; replacement must be requested
-explicitly.
+This is the bootstrap path for a freshly formatted C6 volume whose firmware
+uses external USBDISK.APP. A firmware with resident USB disk passes
+``--resident-usbdisk``. The target is pinned by its canonical public identity.
+Existing files are never removed; replacement must be requested explicitly.
 """
 
 from __future__ import annotations
@@ -85,7 +84,7 @@ def main() -> int:
     parser.add_argument("--bundle", type=Path, required=True)
     parser.add_argument("--replace", action="store_true")
     parser.add_argument("--resident-usbdisk", action="store_true",
-                        help="accept an F411 bundle without USBDISK.APP")
+                        help="accept a bundle whose USB disk is resident")
     args = parser.parse_args()
 
     expected_id = args.public_id.upper()

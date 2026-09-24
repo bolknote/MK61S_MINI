@@ -326,7 +326,23 @@
 // IDE не запускает post-build для /System, а запаса Flash на F411 достаточно.
 // На F401 он остаётся внешним, чтобы сохранить запас Flash.
 #ifdef MK61_EXTERNALIZE_SYSTEM_APPS
-  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; SETUP residency is selected by MCU"
+  #error "MK61_EXTERNALIZE_SYSTEM_APPS was removed; use MK61_EXTERNALIZE_USBDISK"
+#endif
+
+// FAT/LFN USB-диска по умолчанию встроен в F411, но лабораторная или
+// специализированная сборка может явно вынести только его в USBDISK.APP.
+// F401 по умолчанию оставляет этот крупный компонент внешним. Отдельный ключ
+// нужен в том числе упаковщику: наличие файла в /System должно точно совпадать
+// с тем, какую реализацию ожидает resident.
+#ifndef MK61_EXTERNALIZE_USBDISK
+  #if defined(STM32F411xE)
+    #define MK61_EXTERNALIZE_USBDISK 0
+  #else
+    #define MK61_EXTERNALIZE_USBDISK 1
+  #endif
+#endif
+#if MK61_EXTERNALIZE_USBDISK != 0 && MK61_EXTERNALIZE_USBDISK != 1
+  #error "MK61_EXTERNALIZE_USBDISK must be 0 or 1"
 #endif
 
 // Ключ каждого системного компонента остаётся главным: выключенный компонент
@@ -345,11 +361,10 @@
 #define MK61_CHIP8_IS_LOADABLE (MK61_ENABLE_CHIP8)
 #if defined(STM32F411xE)
   #define MK61_SETUP_IS_LOADABLE 0
-  #define MK61_USBDISK_IS_LOADABLE 0
 #else
   #define MK61_SETUP_IS_LOADABLE 1
-  #define MK61_USBDISK_IS_LOADABLE 1
 #endif
+#define MK61_USBDISK_IS_LOADABLE (MK61_EXTERNALIZE_USBDISK)
 // Терминальная справка остаётся отдельным ресурсом на обеих платформах.
 #define MK61_TERMINAL_HELP_IS_EXTERNAL 1
 #define MK61_ANY_LOADABLE_MODULE 1
