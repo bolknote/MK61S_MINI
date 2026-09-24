@@ -63,4 +63,15 @@ if [[ -n "$unexpected_font_assets" ]]; then
   exit 1
 fi
 
+# README.markdown is intentionally visible on GitHub but ignored by the
+# programs-to-device deployment. A README.md here would be copied to MK61s.
+unexpected_device_readmes="$(
+  find "$root/programs" -type f -name 'README.md' -print
+)"
+if [[ -n "$unexpected_device_readmes" ]]; then
+  printf 'README.md would be copied to MK61s; use README.markdown instead:\n%s\n' \
+    "$unexpected_device_readmes" >&2
+  exit 1
+fi
+
 printf 'tools_layout_tests: ok\n'
