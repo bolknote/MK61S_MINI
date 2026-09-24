@@ -958,18 +958,34 @@ function Get-RemoteEntries {
         return @($entries.ToArray())
     }
 
-    # На только что открытом STM32 CDC иногда теряется начало первого ответа.
-    # Итоговая строка `ls` содержит точное число записей: при несовпадении
-    # перечитываем каталог вместо показа молча усечённой правой панели.
+    # CDC is one shared stream. Another terminal client can emit a complete
+    # `ls` between our write and read, so entries are accepted only after the
+    # exact echo of our request. A foreign command in the response invalidates
+    # that attempt instead of mixing two directory listings.
     $expected = $null
+    $request = 'ls ' + (Format-RemoteQuotedPath $Path)
+    $sawEcho = $false
+    $conflict = $false
     for ($attempt = 0; $attempt -lt 3; $attempt++) {
         $entries = New-Object 'System.Collections.Generic.List[object]'
-        if (-not (Send-RemoteLine ('ls ' + (Format-RemoteQuotedPath $Path)))) {
+        $expected = $null
+        $sawEcho = $false
+        $conflict = $false
+        if (-not (Send-RemoteLine $request)) {
             throw $script:StatusText
         }
         for ($count = 0; $count -lt 10000; $count++) {
             if (-not (Read-SerialLine 8000)) { break }
             $line = $script:SerialLine
+            if ($line -match '^/.*> $') {
+                if ($sawEcho) { break }
+                continue
+            }
+            if ($line -match '^/.*> (.*)$') { $line = $Matches[1] }
+            if (-not $sawEcho) {
+                if ($line -eq $request) { $sawEcho = $true }
+                continue
+            }
             if ($line -match '^d\t(.*)/$') {
                 $entries.Add((New-PanelEntry $Matches[1] 'd'))
                 continue
@@ -987,9 +1003,17 @@ function Get-RemoteEntries {
                 $script:StatusText = $line
                 throw $line
             }
+            if (-not [string]::IsNullOrEmpty($line)) {
+                $conflict = $true
+                break
+            }
         }
     }
-    if ($null -ne $expected) {
+    if ($conflict) {
+        $script:StatusText = "Другой клиент использует терминал MK61s; не удалось прочитать $Path"
+    } elseif (-not $sawEcho) {
+        $script:StatusText = "Не получено подтверждение ls $Path"
+    } elseif ($null -ne $expected) {
         $script:StatusText = "Неполный ответ ls $Path`: получено $($entries.Count) из $expected"
     } else {
         $script:StatusText = "Нет полного ответа на ls $Path"
@@ -999,21 +1023,42 @@ function Get-RemoteEntries {
 
 function Invoke-RemoteSimple {
     param([string]$Command)
-    if (-not (Send-RemoteLine $Command) -or -not (Send-RemoteLine 'ls "/"')) { return $false }
+    $sentinel = 'ls "/"'
+    if (-not (Send-RemoteLine $Command) -or -not (Send-RemoteLine $sentinel)) { return $false }
     $failed = $false
+    $state = 0
     for ($count = 0; $count -lt 10000; $count++) {
         if (-not (Read-SerialLine 12000)) {
             $script:StatusText = 'Нет ответа калькулятора'
             return $false
         }
         $line = $script:SerialLine
-        if ($line -match '^(mkdir:|mv:|rm:|rmdir:|Unknown command:)') {
-            $script:StatusText = $line
-            $failed = $true
+        if (Test-RemotePromptLine $line) { continue }
+        if ($line -match '^/.*> (.*)$') { $line = $Matches[1] }
+        if ($state -eq 0) {
+            if ($line -eq $Command) { $state = 1 }
+            continue
         }
-        if ($line -match ' entr(y|ies)\.$') { return -not $failed }
+        if ($state -eq 1) {
+            if ($line -eq $sentinel) { $state = 2; continue }
+            if ($line -match '^(mkdir:|mv:|rm:|rmdir:|Unknown command:)') {
+                $script:StatusText = $line
+                $failed = $true
+                continue
+            }
+            if ([string]::IsNullOrEmpty($line)) { continue }
+            $script:StatusText = 'Другой клиент использует терминал MK61s; результат операции не подтверждён'
+            return $false
+        }
+        if ($line -match '^(ls:|Unknown command:)') {
+            $script:StatusText = $line
+            return $false
+        }
+        if ($line -match '^[0-9]+ entr(y|ies)\.$') { return -not $failed }
     }
-    $script:StatusText = 'Операция не завершилась'
+    if ($state -eq 0) { $script:StatusText = 'Не получено подтверждение команды MK61s' }
+    elseif ($state -eq 1) { $script:StatusText = 'Не получено подтверждение контрольного ls' }
+    else { $script:StatusText = 'Операция не завершилась' }
     return $false
 }
 
@@ -2148,19 +2193,25 @@ function Invoke-RemoteCaptureCommand {
     $sawEcho = $false
     for ($count = 0; $count -lt 2000; $count++) {
         if (-not (Read-SerialLine 8000)) {
-            $script:StatusText = 'Таймаут ответа терминала MK61s'
+            if (-not $sawEcho) { $script:StatusText = 'Не получено подтверждение команды терминала MK61s' }
+            else { $script:StatusText = 'Таймаут ответа терминала MK61s' }
             $lines.Add('[' + $script:StatusText + ']')
             return [pscustomobject]@{ Success = $false; Lines = $lines.ToArray() }
         }
         $line = $script:SerialLine
-        if ($sawEcho -and (Test-RemotePromptLine $line)) {
-            return [pscustomobject]@{ Success = $true; Lines = $lines.ToArray() }
+        if (Test-RemotePromptLine $line) {
+            if ($sawEcho) {
+                return [pscustomobject]@{ Success = $true; Lines = $lines.ToArray() }
+            }
+            $script:RemoteCapturePath = $script:RemotePath
+            continue
         }
         if ($line -match '^(/.*|\.\.\.)> (.*)$') { $line = $Matches[2] }
         if (-not $sawEcho) {
             if ($line -eq $Command) { $sawEcho = $true; continue }
-            if (Test-RemotePromptLine $line) { continue }
-            $sawEcho = $true
+            # Ignore a complete response left by another reader until the
+            # exact echo of this command proves ownership of the stream.
+            continue
         }
         $lines.Add($line)
     }

@@ -493,8 +493,10 @@ try {
             Assert-True ($script:SerialLine -eq "f`t4 B`tdemo.foc") 'direct COM read did not trim CR'
 
             $fakeSerial.Writes.Clear()
+            $fakeSerial.Lines.Enqueue('/> ls "/"' + "`r")
             $fakeSerial.Lines.Enqueue("f`t4 B`tsecond.m61`r")
             $fakeSerial.Lines.Enqueue("2 entries.`r")
+            $fakeSerial.Lines.Enqueue('/> ls "/"' + "`r")
             $fakeSerial.Lines.Enqueue("f`t3 B`tfirst.m61`r")
             $fakeSerial.Lines.Enqueue("f`t4 B`tsecond.m61`r")
             $fakeSerial.Lines.Enqueue("2 entries.`r")
@@ -503,6 +505,50 @@ try {
             Assert-True ($retriedEntries.Count -eq 2) 'incomplete COM listing was accepted'
             Assert-True ($retriedEntries[0].Name -eq 'first.m61') 'listing retry still lost its first entry'
             Assert-True (@($fakeSerial.Writes | Where-Object { $_ -eq "ls `"/`"`r" }).Count -eq 2) 'incomplete COM listing was not retried'
+
+            $fakeSerial.Writes.Clear()
+            $fakeSerial.Lines.Enqueue('/> ls "/"' + "`r")
+            $fakeSerial.Lines.Enqueue("d`tlibrary/`r")
+            $fakeSerial.Lines.Enqueue("d`tgames/`r")
+            $fakeSerial.Lines.Enqueue("2 entries.`r")
+            $fakeSerial.Lines.Enqueue('/games> ls "/games"' + "`r")
+            $fakeSerial.Lines.Enqueue("d`tELITE/`r")
+            $fakeSerial.Lines.Enqueue("d`tWumpus/`r")
+            $fakeSerial.Lines.Enqueue("2 entries.`r")
+            $sharedEntries = @(Get-RemoteEntries '/games')
+            Assert-True ($sharedEntries.Count -eq 2) 'foreign COM listing replaced our directory'
+            Assert-True ($sharedEntries[0].Name -eq 'ELITE' -and $sharedEntries[1].Name -eq 'Wumpus') `
+                'foreign COM listing was mixed into our directory'
+            Assert-True (@($fakeSerial.Writes | Where-Object { $_ -eq "ls `"/games`"`r" }).Count -eq 1) `
+                'shared-stream listing issued an unexpected retry'
+
+            $fakeSerial.Writes.Clear()
+            $fakeSerial.Lines.Enqueue('/> help' + "`r")
+            $fakeSerial.Lines.Enqueue("Foreign terminal output`r")
+            $fakeSerial.Lines.Enqueue('/> ' + "`r")
+            $fakeSerial.Lines.Enqueue('/games> df' + "`r")
+            $fakeSerial.Lines.Enqueue("Flash: 16777216 bytes`r")
+            $fakeSerial.Lines.Enqueue("Nodes: 9 used`r")
+            $fakeSerial.Lines.Enqueue('/games> ' + "`r")
+            $script:RemotePath = '/games'
+            $capture = Invoke-RemoteCaptureCommand 'df'
+            Assert-True ($capture.Success) 'shared-stream terminal command failed'
+            Assert-True (($capture.Lines -join "`n") -eq "Flash: 16777216 bytes`nNodes: 9 used") `
+                'foreign terminal output leaked into our command result'
+            Assert-True ($script:RemoteCapturePath -eq '/games') 'foreign prompt changed the captured path'
+
+            $fakeSerial.Writes.Clear()
+            $fakeSerial.Lines.Enqueue('/> ls "/"' + "`r")
+            $fakeSerial.Lines.Enqueue("d`tlibrary/`r")
+            $fakeSerial.Lines.Enqueue("1 entry.`r")
+            $fakeSerial.Lines.Enqueue('/> mkdir -p "/Denied"' + "`r")
+            $fakeSerial.Lines.Enqueue("mkdir: denied`r")
+            $fakeSerial.Lines.Enqueue('/> ls "/"' + "`r")
+            $fakeSerial.Lines.Enqueue("d`tlibrary/`r")
+            $fakeSerial.Lines.Enqueue("1 entry.`r")
+            Assert-True (-not (Invoke-RemoteSimple 'mkdir -p "/Denied"')) `
+                'stale foreign ls falsely confirmed a failed mutation'
+            Assert-True ($script:StatusText -eq 'mkdir: denied') 'mutation error was replaced or lost'
         } finally {
             $script:DirectSerial = $oldDirectSerial
             $script:MockRoot = $oldMockRoot

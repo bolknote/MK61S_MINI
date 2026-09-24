@@ -354,8 +354,10 @@ test "$(awk '$1 == "fsput" && $2 == "data" { print length($4) }' \
 # Потеря первой строки сразу после открытия CDC не должна превращаться в
 # тихо усечённую правую панель: число в финале `ls` заставляет сделать retry.
 {
+  printf '/> ls "/"\n'
   printf 'f\t4 B\tsecond.m61\n'
   printf '2 entries.\n'
+  printf '/> ls "/"\n'
   printf 'f\t3 B\tfirst.m61\n'
   printf 'f\t4 B\tsecond.m61\n'
   printf '2 entries.\n'
@@ -371,25 +373,79 @@ test "$(cat "$work/list-retry.output")" = \
   "$(printf 'f\t3\tfirst.m61\nf\t4\tsecond.m61')"
 test "$(tr '\r' '\n' < "$work/list-retry.commands" | grep -c '^ls "/"$')" = 2
 
+# CDC is shared by every terminal client. A complete foreign response may be
+# waiting before the echo of our own command; it must never be displayed under
+# our current path (the historical symptom was `/games` with the root listing).
+{
+  printf '/> ls "/"\n'
+  printf 'd\tlibrary/\n'
+  printf 'd\tgames/\n'
+  printf '2 entries.\n'
+  printf '/games> ls "/games"\n'
+  printf 'd\tELITE/\n'
+  printf 'd\tWumpus/\n'
+  printf '2 entries.\n'
+} > "$work/list-shared-cdc.responses"
+exec 7> "$work/list-shared-cdc.commands"
+exec 8< "$work/list-shared-cdc.responses"
+MONITOR_INPUT_FD=7
+MONITOR_OUTPUT_FD=8
+remote_list_raw /games "$work/list-shared-cdc.output"
+exec 7>&-
+exec 8<&-
+test "$(cat "$work/list-shared-cdc.output")" = \
+  "$(printf 'd\t0\tELITE\nd\t0\tWumpus')"
+test "$(tr '\r' '\n' < "$work/list-shared-cdc.commands")" = 'ls "/games"'
+
 # Произвольная команда правой панели должна отделять старый prompt, эхо
 # команды и следующий prompt от текста, который увидит встроенный просмотрщик.
+# Полный чужой ответ перед нашим echo также не должен попасть в просмотрщик.
 {
-  printf '/> df\n'
+  printf '/> help\n'
+  printf 'Foreign terminal output\n'
+  printf '/> \n'
+  printf '/games> df\n'
   printf 'Flash: 16777216 bytes\n'
   printf 'Nodes: 9 used\n'
-  printf '/> \n'
+  printf '/games> \n'
 } > "$work/terminal.responses"
 exec 7> "$work/terminal.commands"
 exec 8< "$work/terminal.responses"
 MONITOR_INPUT_FD=7
 MONITOR_OUTPUT_FD=8
-REMOTE_PATH=/
+REMOTE_PATH=/games
 remote_capture_command df "$work/terminal.output"
 exec 7>&-
 exec 8<&-
 test "$(cat "$work/terminal.output")" = "$(printf 'Flash: 16777216 bytes\nNodes: 9 used')"
-test "$REMOTE_CAPTURE_PATH" = /
+test "$REMOTE_CAPTURE_PATH" = /games
 test "$(tr '\r' '\n' < "$work/terminal.commands")" = df
+
+# A stale foreign `ls` completion must not confirm a following mutating command.
+# We deliberately return an error for our mkdir after that stale count.
+{
+  printf '/> ls "/"\n'
+  printf 'd\tlibrary/\n'
+  printf '1 entry.\n'
+  printf '/> mkdir -p "/Denied"\n'
+  printf 'mkdir: denied\n'
+  printf '/> ls "/"\n'
+  printf 'd\tlibrary/\n'
+  printf '1 entry.\n'
+} > "$work/simple-shared-cdc.responses"
+exec 7> "$work/simple-shared-cdc.commands"
+exec 8< "$work/simple-shared-cdc.responses"
+MONITOR_INPUT_FD=7
+MONITOR_OUTPUT_FD=8
+if remote_simple_real 'mkdir -p "/Denied"'; then
+  echo 'mkc: stale foreign ls falsely confirmed a failed mutation' >&2
+  exit 1
+fi
+exec 7>&-
+exec 8<&-
+test "$STATUS_TEXT" = 'mkdir: denied'
+test "$(tr '\r' '\n' < "$work/simple-shared-cdc.commands")" = \
+  "$(printf 'mkdir -p "/Denied"\nls "/"')"
 MOCK_ROOT="$work/device"
 
 # Исполнитель нижней строки однозначно определяется активной панелью.

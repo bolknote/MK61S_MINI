@@ -757,7 +757,7 @@ mock_path() {
 # Пишет каталог в машинном формате: kind<TAB>size<TAB>name.
 remote_list_raw() {
   local path=$1 output=$2 line rest kind size name entry physical
-  local attempt=0 line_count received expected
+  local attempt=0 line_count received expected request saw_echo conflict
   : > "$output" || return 1
   if [ -n "$MOCK_ROOT" ]; then
     physical=$(mock_path "$path")
@@ -780,17 +780,34 @@ remote_list_raw() {
   fi
 
   # На только что открытом STM32 CDC иногда теряется начало первого ответа.
-  # `ls` завершает вывод точным числом записей, поэтому неполный каталог можно
-  # обнаружить и безопасно запросить заново, не показывая тихо усечённую панель.
+  # При этом CDC — один общий поток: другой терминальный клиент может вывести
+  # свой полный `ls` между нашей отправкой и чтением. Поэтому принимаем записи
+  # только после точного echo нашей команды. Чужую команду внутри ответа
+  # считаем конфликтом и повторяем запрос, не смешивая два каталога.
+  request="ls \"$path\""
   while [ "$attempt" -lt 3 ]; do
     : > "$output" || return 1
     line_count=0
     received=0
     expected=
-    remote_send "ls \"$path\"" || return 1
+    saw_echo=0
+    conflict=0
+    remote_send "$request" || return 1
     while [ "$line_count" -lt 10000 ]; do
       serial_read_line 8 || break
       line=$SERIAL_LINE
+      if remote_line_is_prompt "$line"; then
+        [ "$saw_echo" -eq 0 ] && { line_count=$((line_count + 1)); continue; }
+        break
+      fi
+      case "$line" in
+        /*'> '*) line=${line#*> } ;;
+      esac
+      if [ "$saw_echo" -eq 0 ]; then
+        if [ "$line" = "$request" ]; then saw_echo=1; fi
+        line_count=$((line_count + 1))
+        continue
+      fi
       case "$line" in
         $'d\t'*)
           name=${line#$'d\t'}
@@ -819,12 +836,18 @@ remote_list_raw() {
           break
           ;;
         ls:\ *|Unknown\ command:*) STATUS_TEXT=$line; return 1 ;;
+        '') ;;
+        *) conflict=1; break ;;
       esac
       line_count=$((line_count + 1))
     done
     attempt=$((attempt + 1))
   done
-  if [ -n "$expected" ]; then
+  if [ "$conflict" -eq 1 ]; then
+    STATUS_TEXT="Другой клиент использует терминал MK61s; не удалось прочитать $path"
+  elif [ "$saw_echo" -eq 0 ]; then
+    STATUS_TEXT="Не получено подтверждение ls $path"
+  elif [ -n "$expected" ]; then
     STATUS_TEXT="Неполный ответ ls $path: получено $received из $expected"
   else
     STATUS_TEXT="Нет полного ответа на ls $path"
@@ -833,19 +856,51 @@ remote_list_raw() {
 }
 
 remote_simple_real() {
-  local command=$1 line failed=0 count=0
+  local command=$1 sentinel='ls "/"' line failed=0 count=0 state=0
   remote_send "$command" || return 1
-  remote_send 'ls "/"' || return 1
+  remote_send "$sentinel" || return 1
   while [ "$count" -lt 10000 ]; do
     serial_read_line 12 || { STATUS_TEXT='Нет ответа калькулятора'; return 1; }
     line=$SERIAL_LINE
+    if remote_line_is_prompt "$line"; then
+      count=$((count + 1))
+      continue
+    fi
+    case "$line" in /*'> '*) line=${line#*> } ;; esac
+    if [ "$state" -eq 0 ]; then
+      [ "$line" = "$command" ] && state=1
+      count=$((count + 1))
+      continue
+    fi
+    if [ "$state" -eq 1 ]; then
+      if [ "$line" = "$sentinel" ]; then
+        state=2
+      else
+        case "$line" in
+          mkdir:\ *|mv:\ *|rm:\ *|rmdir:\ *|Unknown\ command:*) STATUS_TEXT=$line; failed=1 ;;
+          '') ;;
+          *) STATUS_TEXT='Другой клиент использует терминал MK61s; результат операции не подтверждён'; return 1 ;;
+        esac
+      fi
+      count=$((count + 1))
+      continue
+    fi
     case "$line" in
-      *' entry.'|*' entries.') [ "$failed" -eq 0 ]; return ;;
-      mkdir:\ *|mv:\ *|rm:\ *|rmdir:\ *|Unknown\ command:*) STATUS_TEXT=$line; failed=1 ;;
+      [0-9]*' entry.'|[0-9]*' entries.')
+        [ "$failed" -eq 0 ] && return 0
+        return 1
+        ;;
+      ls:\ *|Unknown\ command:*) STATUS_TEXT=$line; return 1 ;;
     esac
     count=$((count + 1))
   done
-  STATUS_TEXT='Операция не завершилась'
+  if [ "$state" -eq 0 ]; then
+    STATUS_TEXT='Не получено подтверждение команды MK61s'
+  elif [ "$state" -eq 1 ]; then
+    STATUS_TEXT='Не получено подтверждение контрольного ls'
+  else
+    STATUS_TEXT='Операция не завершилась'
+  fi
   return 1
 }
 
@@ -2149,21 +2204,31 @@ remote_capture_command() {
 
   while [ "$count" -lt 2000 ]; do
     if ! serial_read_line 8; then
-      STATUS_TEXT='Таймаут ответа терминала MK61s'
+      if [ "$saw_echo" -eq 0 ]; then
+        STATUS_TEXT='Не получено подтверждение команды терминала MK61s'
+      else
+        STATUS_TEXT='Таймаут ответа терминала MK61s'
+      fi
       printf '\n[%s]\n' "$STATUS_TEXT" >> "$output"
       return 1
     fi
     line=$SERIAL_LINE
-    if [ "$saw_echo" -eq 1 ] && remote_line_is_prompt "$line"; then return 0; fi
+    if remote_line_is_prompt "$line"; then
+      if [ "$saw_echo" -eq 1 ]; then return 0; fi
+      REMOTE_CAPTURE_PATH=$REMOTE_PATH
+      count=$((count + 1))
+      continue
+    fi
     case "$line" in
       /*'> '*) line=${line#*> } ;;
       '...> '*) line=${line#*> } ;;
     esac
     if [ "$saw_echo" -eq 0 ]; then
       if [ "$line" = "$command" ]; then saw_echo=1; continue; fi
-      # Полный старый prompt мог остаться после внешнего терминального клиента.
-      if remote_line_is_prompt "$line"; then count=$((count + 1)); continue; fi
-      saw_echo=1
+      # До точного echo нашей команды в общем CDC-потоке может находиться
+      # полный ответ другого клиента. Он не относится к этому окну вывода.
+      count=$((count + 1))
+      continue
     fi
     printf '%s\n' "$line" >> "$output"
     count=$((count + 1))
