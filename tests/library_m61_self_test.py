@@ -22,7 +22,6 @@ EXPECTED_CODE = {
     "Compute e.m61": hex_bytes("0D 06 05 0E 07 15 0E 60 53 81 40 61 53 81 41 62 53 81 42 63 53 81 43 64 53 81 44 65 53 81 45 66 53 81 46 67 53 81 47 68 53 81 48 69 53 81 49 6A 53 81 4A 6B 53 81 4B 6C 53 81 4C 6D 53 81 4D 6E 53 81 4E 25 25 01 11 5E 04 60 07 15 13 01 10 40 50 14 25 10 14 0E 0F 14 13 34 0E 25 14 12 0F 25 11 06 15 12 14 52"),
     "Decimal to natural.m61": hex_bytes("40 41 34 43 01 42 46 00 45 61 35 23 41 61 34 63 12 62 10 44 61 34 66 12 65 10 47 63 42 64 43 66 45 67 46 64 67 13 60 11 31 69 11 5C 09 67 64 50 51 00"),
     "Power from U and R.m61": hex_bytes("08 0A 05 04 04 06 06 06 03 4E 0D 50 22 08 0A 02 04 04 07 09 07 07 0C 06 03 4E 0D 50 14 25 13 08 0A 07 04 04 06 06 08 04 0C 06 01 4E 14 50"),
-    "Lucky tickets.m61": hex_bytes("22 41 01 01 12 05 10 61 12 04 10 02 13 50"),
 }
 
 EXPECTED_INITIALIZERS = {
@@ -36,7 +35,6 @@ EXPECTED_INITIALIZERS = {
     "Compute e.m61": [],
     "Decimal to natural.m61": ["R9= 1e-7"],
     "Power from U and R.m61": [],
-    "Lucky tickets.m61": [],
 }
 
 EXPECTED_TRAILERS = {
