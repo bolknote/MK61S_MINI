@@ -1413,10 +1413,51 @@ static bool far_x_condition(u8 opcode) {
       (opcode & 0xF0U) == 0xC0 || (opcode & 0xF0U) == 0xE0;
 }
 
+static bool execute_far_ms_exchange(u16 absolute) {
+  const u16 next = absolute + 3U;
+  u8 bank = 0;
+  if(next >= core_61::EXTENDED_ADDRESS_LIMIT ||
+     !core_61::read_absolute_program(absolute + 2U, bank) ||
+     (u32) bank * core_61::MAX_PROGRAM_STEP + MK61_EXPANDED_MS_PROGRAM_STEPS >
+         core_61::EXTENDED_ADDRESS_LIMIT) return false;
+
+  // Reserve all storage before changing Ms or program bytes. The following
+  // instruction may be across a bank seam, including in the exchanged bank.
+  const u8 active = extended_program.active_bank;
+  const u8 following = (u8) (next / core_61::MAX_PROGRAM_STEP);
+  if(bank != active || following != active) {
+    const u8 needed[] = {active, bank, following};
+    u8 missing = 0;
+    for(u8 index = 0; index < 3; ++index) {
+      bool duplicate = false;
+      for(u8 prior = 0; prior < index; ++prior)
+        duplicate |= needed[index] == needed[prior];
+      if(!duplicate && extended_program.banks[needed[index]] == nullptr)
+        ++missing;
+    }
+    if(extended_program.bank_slots_used + missing > EXTENDED_BANK_SLOT_COUNT)
+      return false;
+    for(u8 needed_bank : needed) (void) ensure_extended_bank(needed_bank);
+  }
+
+  for(usize offset = 0; offset < MK61_EXPANDED_MS_PROGRAM_STEPS; ++offset) {
+    const int program_address = (int) core_61::get_ring_address(offset);
+    const u8 incoming = bank == active ? core_61::get_code(program_address) :
+        extended_program.banks[bank][offset];
+    const u8 saved = core_61::get_code(program_address - 1);
+    if(bank == active) MK61Emu_SetCode(program_address, saved);
+    else extended_program.banks[bank][offset] = saved;
+    MK61Emu_SetCode(program_address - 1, incoming);
+  }
+  return set_extended_next_pc(next);
+}
+
 static bool execute_far_prefix(u16 absolute) {
   u8 opcode = 0;
   if(!core_61::read_absolute_program((u16) (absolute + 1U), opcode))
     return false;
+  if(opcode == MK61_EXCHANGE_PROGRAM_WITH_MS)
+    return execute_far_ms_exchange(absolute);
 
   const bool direct = opcode == 0x51 || opcode == 0x53 ||
       opcode == 0x57 || opcode == 0x59 || opcode == 0x5C || opcode == 0x5E;
@@ -1745,7 +1786,10 @@ static inline bool __attribute__((always_inline)) handle_mk61_command_prefetch(
               core_61::MAX_PROGRAM_STEP + program_address);
           u8 far_opcode = 0;
           if(core_61::read_absolute_program((u16) (absolute + 1U), far_opcode) &&
-             far_x_condition(far_opcode)) {
+             (far_x_condition(far_opcode) ||
+              far_opcode == MK61_EXCHANGE_PROGRAM_WITH_MS)) {
+            // Resolve the three-byte exchange at the next fetch as well:
+            // its bank operand must never become a ROM command/operand.
             extended_program.pending_prefix = absolute + 1U;
             success = true;
           } else if(far_loop_opcode(far_opcode)) {

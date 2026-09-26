@@ -3,11 +3,12 @@
 This builds calculator opcodes, not a host implementation of the game.
 """
 from dataclasses import dataclass
+from copy import deepcopy
 import json
 
 BANK_SIZE = 112
 DATA_BANKS = range(24, 30)
-READ, WRITE, CALL, DATA_END = 63, 70, 76, 82
+READ, WRITE, DATA_END = 63, 70, 63
 GLYPHS = dict(zip('0123456789', [63, 6, 91, 79, 102, 109, 125, 7, 127, 111]))
 GLYPHS.update({' ':0, '-':64, 'A':119, 'b':124, 'C':57, 'd':94,
                'E':121, 'F':113, 'G':61, 'H':118, 'I':6, 'L':56,
@@ -51,10 +52,11 @@ def pack_number(value):
     t += [9 if negative else 0, exponent % 10, exponent // 10, 0, 0, 0]
     return bytes((t[h] << 4) | t[h-1] for h in (13,1,3,5,7,9,11))
 
-def data_page(values):
+def data_page(values, helpers):
     assert len(values) == 9
-    # Three entries share the close/return sequence at +67. 55/56 preserve X.
-    access = bytes.fromhex('56 55 DB 4C 55 56 52 56 55 6C BB 51 67 56 55 1F AF 51 67')
+    # Only repeated READ/WRITE callers need these entries. Page operations
+    # use 1F 56 directly and no longer need a per-bank callback trampoline.
+    access = bytes.fromhex('56 55 DB 4C 55 56 52 56 55 6C BB 51 67') if helpers else b''
     return b''.join(pack_number(x) for x in values) + access
 
 @dataclass
@@ -67,6 +69,7 @@ class Item:
     negate: bool = False
     lift: bool = True
     keep_block: bool = False
+    inline: bool = False
 
 class Module:
     def __init__(self, bank, name):
@@ -115,9 +118,18 @@ class Module:
         return self.st('C').set('B',field).far(0x53,bank*112+WRITE)
     def putn(self, bank, field, value): return self.n(value).put(bank,field)
     def visit(self, bank, callback):
-        # Callback arguments live in registers. All callers close number
-        # entry before VISIT; the old X and its stack lift are not needed.
-        return self.ptr('F',callback,lift=False).far(0x53,bank*112+CALL)
+        self.items.append(Item('visit',bank,callback)); return self
+    def open_page(self, bank): return self.raw(0x1F,0x56,bank,0x55)
+    def close_page(self, bank): return self.raw(0x55,0x1F,0x56,bank)
+    def page_bytes(self, bank, *code):
+        """A short operation kept whole between the two Ms exchanges."""
+        return self.raw(0x1F,0x56,bank,0x55,*code,0x55,0x1F,0x56,bank)
+    def page(self, bank, name, *, inline=True):
+        """A page operation with one final RET; its internal labels move with it."""
+        self.items.append(Item('page',bank,name,inline=inline))
+        return self.label(name)
+    def end_page(self):
+        self.items.append(Item('end_page',None)); return self
     def max0(self):
         target=f'clamp0_{self.bank}_{len(self.items)}'
         return self.jge(target).op('cx').label(target)
@@ -131,6 +143,56 @@ class Assembler:
     def __init__(self):
         self.modules = []
         self.data = {}
+        self.data_helpers = set()
+
+    def data_end(self, bank):
+        return DATA_END + (13 if bank in self.data_helpers else 0)
+
+    def lower_pages(self):
+        """Inline single-use page bodies; share larger/repeated operations.
+
+        The source keeps each operation in its gameplay module. Expansion
+        replaces the old RF callback setup with direct Ms/bank exchanges.
+        Unmarked helpers (such as sum_hold, also called inside a page) stay
+        ordinary subroutines and are wrapped at the visit site.
+        """
+        pages = {}
+        for module in self.modules:
+            result=[]; index=0
+            while index<len(module.items):
+                item=module.items[index]; index+=1
+                if item.kind!='page':
+                    if item.kind=='end_page':raise ValueError('unmatched page end')
+                    result.append(item);continue
+                body=[]
+                while index<len(module.items) and module.items[index].kind!='end_page':
+                    body.append(module.items[index]);index+=1
+                if index==len(module.items) or not body or body[-1].kind!='bytes' or body[-1].value!=[0x52]:
+                    raise ValueError('page operation requires a final RET: '+item.target)
+                index+=1
+                if item.target in pages:raise ValueError('duplicate page operation: '+item.target)
+                pages[item.target]=(item.value,item.inline,body)
+                if not item.inline:
+                    result += [body[0],Item('bytes',[0x1F,0x56,item.value,0x55]),
+                               *body[1:-1],Item('bytes',[0x55,0x1F,0x56,item.value]),body[-1]]
+            module.items=result
+        used=set()
+        for module in self.modules:
+            result=[]
+            for item in module.items:
+                if item.kind!='visit':result.append(item);continue
+                bank=item.value
+                page=pages.get(item.target)
+                if page and page[0]!=bank:raise ValueError('wrong page for '+item.target)
+                if page and not page[1]:
+                    result.append(Item('branch',0x53,item.target));continue
+                result.append(Item('bytes',[0x1F,0x56,bank,0x55]))
+                if page:
+                    if item.target in used:raise ValueError('inline page has multiple callers: '+item.target)
+                    used.add(item.target);result+=deepcopy(page[2][:-1])
+                else:result.append(Item('branch',0x53,item.target))
+                result.append(Item('bytes',[0x55,0x1F,0x56,bank]))
+            module.items=result
 
     def module(self, bank, name):
         m=Module(bank,name); self.modules.append(m); return m
@@ -191,6 +253,9 @@ class Assembler:
         if item.kind=='branch':return item.value==0x51
         if item.kind!='bytes':return False
         value=item.value
+        if len(value)>=3 and value[-3:-1]==[0x1F,0x56]:
+            # A bank operand of 52 is not RET, also after a leading 55.
+            return False
         if value[0]==0x1F:
             # Address bytes are operands, even when one is 52.
             return ((len(value)==4 and value[1]==0x51) or
@@ -201,7 +266,7 @@ class Assembler:
         labels, placements, bridges, usage = {}, [], [], {}
         preferred={m.bank for m in self.modules}
         free=[(b,0) for b in range(32) if b not in preferred and b not in self.data]
-        free += [(b,DATA_END) for b in self.data]
+        free += [(b,self.data_end(b)) for b in self.data]
         for module in self.modules:
             bank, offset = module.bank, 0
             if bank in usage or bank in self.data:
@@ -311,6 +376,7 @@ class Assembler:
             else:return result
 
     def link(self):
+        self.lower_pages()
         self.fold_tail_calls()
         self.fold_fallthrough_jumps()
         for m in self.modules:
@@ -327,9 +393,9 @@ class Assembler:
             occupied.update(positions)
         for b,values in self.data.items():
             banks.setdefault(b,bytearray(112))
-            usage.setdefault(b,['data',DATA_END])
-            claim(b*112,DATA_END)
-            banks[b][:DATA_END]=data_page(values)
+            usage.setdefault(b,['data',self.data_end(b)])
+            claim(b*112,self.data_end(b))
+            banks[b][:self.data_end(b)]=data_page(values,b in self.data_helpers)
         for address,target in bridges:
             claim(address,4)
             banks[address//112][address%112:address%112+4]=bytes([0x1F,0x51,*bcd(target)])

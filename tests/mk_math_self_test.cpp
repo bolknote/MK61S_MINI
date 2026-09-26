@@ -1436,6 +1436,151 @@ static void test_display_strobe_writeback(void) {
   check_true("pending strobes survive context save/restore, including bank seams",resumable);
 }
 
+static void test_far_ms_exchange(void) {
+  std::printf("far Ms exchange 1F 56 bank:\n");
+  struct ExchangeProbe {
+    u8 bank, calls;
+    u8 program[112], ms[63];
+    double registers[16], x;
+    char stack_before[5][15];
+    bool stack_ok;
+  };
+  bool matrix_ok = true;
+  // Every full bank and arbitrary byte patterns, including non-BCD nibbles.
+  // Run either one exchange or a pair; keep executing above the 63 bytes.
+  for(u8 bank = 0; bank <= 88; ++bank) for(bool pair : {false, true}) {
+    bool case_ok = true;
+    core_61::set_expanded_program_mode(true);
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    u8 page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+    u8 original[112] = {}, hidden[63] = {};
+    for(usize i = 0; i < 112; ++i) {
+      original[i] = (u8) (i * 37U + bank);
+      // A RUN with Ms used as a numeric page needs ordinary numeric words.
+      // Raw code/hex Ms contents are also checked by the single exchange.
+      if(pair && i < 63) {
+        const usize slot = i % 7;
+        original[i] = slot == 0 || slot >= 5 ? 0 :
+            (u8) (((i % 10) << 4) | ((i + bank) % 10));
+      }
+    }
+    for(usize i = 0; i < 63; ++i) {
+      hidden[i] = (u8) (i * 73U + 11U);
+      set_ms_program_byte(i, hidden[i]);
+    }
+    std::memset(page, 0x50, 112);
+    if(bank == 0) std::memcpy(page, original, 112);
+    page[0] = 0x51; page[1] = 0x80;
+    page[80] = 0x1F; page[81] = 0x56; page[82] = bank;
+    page[83] = pair ? 0x1F : 0x50;
+    page[84] = 0x56; page[85] = bank; page[86] = 0x50;
+    if(bank == 0) std::memcpy(original, page, 112);
+    else for(usize i = 0; i < 112; ++i)
+      case_ok &= core_61::write_absolute_program(bank * 112U + i, original[i]);
+    for(u8 reg = 0; reg < 16; ++reg) set_register_integer(reg, 1234U + reg);
+    for(u8 reg = 0; reg < 5; ++reg) {
+      const core_61::bcd_value value = {0x11111111U * (reg + 1U), 0};
+      core_61::set_stack_register((stack) reg, &value);
+    }
+    set_x_bcd(0x00001234U);
+    ExchangeProbe probe = {}; probe.bank = bank; probe.stack_ok = true;
+    const auto before = core_61::register_mk61_command_hook(
+        0x1F, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
+        [](core_61::Mk61CommandHookContext&, void* data) {
+          auto& result = *static_cast<ExchangeProbe*>(data);
+          for(u8 reg = 0; reg < 5; ++reg)
+            read_stack_register((stack) reg, result.stack_before[reg], SYMBOLS);
+        }, &probe);
+    const auto hook = core_61::register_mk61_command_hook(
+        0x1F, core_61::Mk61CommandHookPhase::AFTER_EXECUTE,
+        [](core_61::Mk61CommandHookContext&, void* data) {
+          auto& result = *static_cast<ExchangeProbe*>(data);
+          ++result.calls;
+          for(u16 i = 0; i < 112; ++i)
+            core_61::read_absolute_program(result.bank * 112U + i, result.program[i]);
+          for(u16 i = 0; i < 63; ++i) result.ms[i] = get_ms_program_byte(i);
+          for(u8 reg = 0; reg < 16; ++reg) result.registers[reg] = read_register_decimal(reg);
+          result.x = read_live_x();
+          char after[5][15] = {};
+          for(u8 reg = 0; reg < 5; ++reg)
+            read_stack_register((stack) reg, after[reg], SYMBOLS);
+          result.stack_ok &= std::memcmp(after, result.stack_before, sizeof(after)) == 0;
+        }, &probe);
+    case_ok &= before != core_61::INVALID_MK61_COMMAND_HOOK &&
+        hook != core_61::INVALID_MK61_COMMAND_HOOK && run_program(page, 112, true);
+    case_ok &= core_61::unregister_mk61_command_hook(hook);
+    case_ok &= core_61::unregister_mk61_command_hook(before);
+    case_ok &= probe.calls == (pair ? 2 : 1) && probe.stack_ok && !core_61::extended_program_error() &&
+        core_61::active_program_bank() == 0 && std::fabs(probe.x - 4.321) < 1e-8;
+    for(u8 reg = 0; reg < 16; ++reg)
+      case_ok &= probe.registers[reg] == 1234U + reg;
+    for(usize i = 0; i < 112; ++i) {
+      case_ok &= probe.program[i] == (i < 63 && !pair ? hidden[i] : original[i]);
+      if(i < 63) case_ok &= probe.ms[i] == (pair ? hidden[i] : original[i]);
+    }
+    if(!case_ok && matrix_ok) std::printf("    matrix bank=%u pair=%d calls=%u\n",bank,pair,probe.calls);
+    matrix_ok &= case_ok;
+  }
+  check_true("all 89 full banks: exact reversible 63-byte exchange, registers/X/context preserved", matrix_ok);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  for(usize i = 0; i < 63; ++i) set_ms_program_byte(i, (u8) (i + 1));
+  const u8 empty[] = {0x1F, 0x56, 0x1F, 0x50}; // binary 31, not BCD 31
+  run_program(empty, sizeof(empty));
+  bool empty_ok = !core_61::extended_program_error() && core_61::get_IP() == 4;
+  for(usize i = 0; i < 112; ++i) {
+    u8 value = 0;
+    empty_ok &= core_61::read_absolute_program(31U * 112U + i, value) &&
+        value == (i < 63 ? i + 1 : 0);
+    if(i < 63) empty_ok &= get_ms_program_byte(i) == 0;
+  }
+  check_true("unallocated binary bank 1F is zero-filled; operand is not a prefix", empty_ok);
+
+  bool bounds_ok = true;
+  for(u8 bank : {u8(89), u8(90), u8(255)}) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    for(usize i = 0; i < 63; ++i) set_ms_program_byte(i, (u8) (i + 1));
+    const u8 invalid[] = {0x1F, 0x56, bank, 0x50};
+    run_program(invalid, sizeof(invalid));
+    bounds_ok &= core_61::is_CALC() && core_61::extended_program_error();
+    for(usize i = 0; i < 63; ++i) bounds_ok &= get_ms_program_byte(i) == i + 1;
+  }
+  check_true("partial/out-of-range banks rejected before modifying Ms", bounds_ok);
+
+  core_61::enable();
+  core_61::clear_extended_program_banks();
+  for(u16 bank = 1; bank < 32; ++bank)
+    check_true("fill bank pool", core_61::write_absolute_program(bank * 112U, 0xA5));
+  set_ms_program_byte(0, 0x7B);
+  const u8 full[] = {0x1F, 0x56, 32, 0x50};
+  run_program(full, sizeof(full));
+  u8 value = 1;
+  check_true("full pool fails atomically",
+      core_61::extended_program_error() && get_ms_program_byte(0) == 0x7B &&
+      core_61::read_absolute_program(32U * 112U, value) && value == 0);
+
+  // Both operand seams, including a destination overlapping the next fetch.
+  bool seams_ok = true;
+  for(u8 start : {u8(109), u8(110), u8(111)}) {
+    core_61::enable();
+    core_61::clear_extended_program_banks();
+    for(usize i = 0; i < 63; ++i) set_ms_program_byte(i, 0x50);
+    for(u16 i = 0; i < 112; ++i) core_61::write_absolute_program(i, 0x50);
+    core_61::write_absolute_program(start, 0x1F);
+    core_61::write_absolute_program(start + 1U, 0x56);
+    core_61::write_absolute_program(start + 2U, 1);
+    core_61::set_IP(start);
+    press_matrix({2, 9});
+    for(int i = 0; i < 256 && core_61::is_RUN(); ++i) core_61::step();
+    seams_ok &= core_61::is_CALC() && !core_61::extended_program_error() &&
+        core_61::active_program_bank() == 1 && core_61::get_IP() % 112U == start + 4U - 112U;
+  }
+  check_true("prefix/operand bank seams fetch the exchanged continuation", seams_ok);
+}
+
 static void test_extended_prefixes(void) {
   std::printf("expanded far-address and display prefixes:\n");
   static const u8 prefixes[] = {0x1FU, 0x2FU};
@@ -2721,6 +2866,7 @@ int main(void) {
   test_mk61_command_lengths();
   test_mk61_command_hooks();
   test_ms_exchange_commands();
+  test_far_ms_exchange();
   test_random_seed_hook();
   test_program_boundary_yield();
   test_core_boundaries();

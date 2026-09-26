@@ -9,23 +9,25 @@ def dynamic_put(m,bank,index):
 
 def add_economy(a):
     m=a.module(1,'initialization')
-    m.label('init_pilot')
+    m.page(24,'init_pilot',inline=False)
     for i,v in enumerate(a.data[24]):m.set(i,v)
-    m.op('ret').label('init_hold')
+    m.op('ret').end_page().page(25,'init_hold',inline=False)
     m.op('cx')
     for i in (0,1,2,3,4,5,8):m.st(i)
     m.set(6,a.data[25][6]).set(7,3).op('ret')
-    m.label('sum_hold').ld(0)
+    m.end_page().label('sum_hold').ld(0)
     for i in range(1,6):m.ld(i).op('+')
     m.st('C').op('ret')
     # Purchase callback: money and market stock were checked by the caller.
     # RB good -> RC old free capacity. Only a positive capacity commits the
     # item here; this avoids opening HOLD a second time after paying.
-    m.label('trade_hold').raw(0xDB).st('D').call('sum_hold')
+    m.page(25,'trade_hold').raw(0xDB).st('D').call('sum_hold')
     m.ld(6).n(100).op('/','frac').n(100).op('*').ld('C').op('-').st('C').jneg('buy_done').jz('buy_done')
     m.ld('D').n(1).op('+').raw(0xBB)
     m.label('buy_done').op('ret')
-    m.label('trade_money').ld('C').st(0).add(3,1).op('ret')
+    m.end_page().page(24,'trade_money',inline=False).ld('C').st(0).add(3,1).op('ret')
+
+    m.end_page()
 
     m=a.module(5,'world')
     # For i in 0..255 the packed world is (64257*i+3160320) mod 2**24.
@@ -35,17 +37,19 @@ def add_economy(a):
     m.label('world_ready').op('ret')
     m.label('select_world').ld(0).n(70).op('-').call('world').put(24,2).set('A',8).op('ret')
     # Decode the world's economy once on arrival, in the formerly reserved R2.
-    m.label('init_market').ld('C').st(0).n(1048576).op('/','int').st(2).ld('D').st(1).n(30)
+    m.page(26,'init_market').ld('C').st(0).n(1048576).op('/','int').st(2).ld('D').st(1).n(30)
     for i in range(3,9):m.st(i)
     m.op('ret')
-    m.label('arrived_pilot').ld(2).st(1).st('C').ld(3).st('D').set(5,60).set(7,0).op('ret')
+    m.end_page().page(24,'arrived_pilot').ld(2).st(1).st('C').ld(3).st('D').set(5,60).set(7,0).op('ret')
+
+    m.end_page()
 
     m=a.module(6,'prices')
     # A single open market page supplies both economy and stock. RD retains
     # the unclamped quote; R2 carries it back to a trade for its next display.
     m.label('price').ld(1).st('B').visit(26,'price_market').ld('D').st(2).ld('C').op('ret')
     # economy + 2*good is in 0..25: one subtraction replaces general mod 16.
-    m.label('price_market').ld('B').n(2).op('*').ld(2).op('+').n(16).op('-').jge('price_wrapped')
+    m.page(26,'price_market').ld('B').n(2).op('*').ld(2).op('+').n(16).op('-').jge('price_wrapped')
     m.raw(0x0F).op('+')
     m.label('price_wrapped').raw(0x0F).op('+')
     # Consecutive factors give an even product. This is exactly the original
@@ -57,6 +61,8 @@ def add_economy(a):
     # subtracting one. Keep the unclamped RD for the post-trade quote.
     m.op('-').n(2).op('*').ld('D').op('+').st('D').st('C').jneg('price_clamp').jnz('price_ready')
     m.label('price_clamp').set('C',1).label('price_ready').op('ret')
+
+    m.end_page()
 
     m=a.module(7,'trade')
     m.label('trade').call('price').st(3).ld('E').st(6).ld(7).jge('trade_quote')
@@ -77,7 +83,7 @@ def add_economy(a):
     m.ld(5).ld(7).op('+');dynamic_put(m,25,1)
     # Keep credits beneath the product in Y instead of swapping afterwards.
     m.label('trade_commit').ld(4).ld(3).ld(7).op('*','-').st('C').visit(24,'trade_money')
-    m.ld(6).ld(7).op('-').st('C').ld(1).raw(0x20).op('+').st('B').far(0x53,26*112+WRITE)
+    m.ld(6).ld(7).op('-').st('C').ld(1).raw(0x20).op('+').st('B').page_bytes(26,0x6C,0xBB)
     # Keep the unclamped quote: at saturated stocks max(1, raw)+2 is wrong.
     m.ld(2).ld(7).n(2).op('*','+').st('C').jneg('trade_price_clamp').jnz('trade_price_ready')
     m.label('trade_price_clamp').set('C',1)
@@ -116,11 +122,13 @@ def add_economy(a):
     m.label('pirate_contact').n(2).jump('start_contact')
     # Keeping this entry whole avoids a bridge after victory or escape.
     m.label('arrive',keep_block=True).visit(24,'arrived_pilot').visit(26,'init_market').ptr(9,'port_input_entry',lift=False).set('A',0).op('ret')
-    m.label('jump_tick').ld(6).ld('C').op('-').st(6).add(3,1)
+    m.page(24,'jump_tick').ld(6).ld('C').op('-').st(6).add(3,1)
     # Encounters observe only the old 16-bit generator's low four bits.
     # (253*s+13849) mod 16 == (13*(s mod 16)+9) mod 16. Store only that
     # projected state; 13*r+9 is at most 204, so mod16 stays exact.
     m.ld(8).n(13).op('*').n(9).op('+').call('mod16').st(8).st('C').op('ret')
+
+    m.end_page()
 
     m=a.module(11,'contacts')
     # Equipment cannot change in flight. Decode the laser once per contact;
@@ -128,11 +136,12 @@ def add_economy(a):
     m.label('start_contact').st(1).get(25,6).n(1).op('swap','roll').raw(0x0C).n(12).op('*').n(20).op('+').st('D')
     m.ld(1).st('C').visit(27,'init_enemy').visit(28,'init_drones').ld('D').st(6).ld('E').st(8)
     m.set(5,0).set(7,GLYPHS['H']+65).ptr(9,'combat_input_entry',negate=True,lift=False).set('A',0).op('ret')
-    m.label('init_enemy').ld('D').st(8).ld('C').st(0).n(2).op('*').n(10).op('+').st(7)
+    m.page(27,'init_enemy').ld('D').st(8).ld('C').st(0).n(2).op('*').n(10).op('+').st(7)
     m.set(1,60).ld(0).n(4).op('-').jnz('enemy_fields').set(1,120)
     m.label('enemy_fields').ld(1).st('E').set(2,14).op('cx')
     for i in range(3,7):m.st(i)
-    m.set(3,3).op('ret').label('init_drones').op('cx')
+    m.set(3,3).op('ret').end_page().page(28,'init_drones').op('cx')
     for i in range(9):m.st(i)
     m.ld('C').n(4).op('-').jnz('drones_done').set(0,18).set(1,18).set(5,1).set(6,2)
     m.label('drones_done').ld(6).st('D').op('ret')
+    m.end_page()

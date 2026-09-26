@@ -58,7 +58,7 @@ def add_combat(a):
     # -> player hull RC, outgoing shot RD. Shield boost precedes the hit.
     # Assign the final outgoing RD in each arm and read incoming RE directly.
     # Saturation reuses the comparison's bound in X1 (60 / 99999999).
-    m.label('weapon').ld(7).n(10).op('-').max0().st(7)
+    m.page(24,'weapon',inline=False).ld(7).n(10).op('-').max0().st(7)
     m.ld('C').n(1).op('-').jz('laser')
     m.n(1).op('-').jz('missile')
     m.n(1).op('-').jnz('no_shot')
@@ -70,15 +70,17 @@ def add_combat(a):
     m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
     m.ld(4).op('+').max0().st(4).set(5,0)
     m.label('shield_holds').add(3,1).ld(4).st('C').op('ret')
-    m.label('reward').add(0,250).n(99999999).op('-').jneg('reward_done').raw(0x0F).st(0)
+    m.end_page().page(24,'reward').add(0,250).n(99999999).op('-').jneg('reward_done').raw(0x0F).st(0)
     m.label('reward_done').op('ret')
-    m.label('count_kill').add(8,1).op('ret')
+    m.end_page().page(25,'count_kill').add(8,1).op('ret')
+
+    m.end_page()
 
     m=a.module(15,'enemies')
     # COMBAT callback: maneuver RC, action RD. Return target RC, range RD,
     # carrier's pre-hit attack RE, launch flag RF, laser damage RB.
     # All shots are simultaneous.
-    m.label('enemy_tick').ld('C').st(4).n(4).op('-').jz('motion_ready')
+    m.page(27,'enemy_tick',inline=False).ld('C').st(4).n(4).op('-').jz('motion_ready')
     m.n(2).op('+').jz('motion_ready').raw(0x0F).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
     m.label('motion_ready').ld('D').n(4).op('-').jnz('charge_reset')
@@ -92,17 +94,19 @@ def add_combat(a):
     m.label('enemy_ready').ld(8).ld(2).op('-').st('B').ld(5).st('C').ld(2).st('D').op('ret')
     # RE arrives from drone_tick with the selected drone's remaining hull.
     # Return selected hull RC, carrier hull RD, escape charge RE.
-    m.label('enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').max0().st(1).st('E')
+    m.end_page().page(27,'enemy_hit').ld(5).jnz('enemy_hit_done').ld(1).ld('C').op('-').max0().st(1).st('E')
     m.label('enemy_hit_done').ld('E').st('C').ld(1).st('D').ld(6).st('E').op('ret')
     # DRONES callback: shot RC, target RD, launch RE. R0..4 are hulls;
     # the formation shares the carrier's range. R5 last launched index,
     # R6 alive. K STO 5 increments R5 before writing the next drone's hull.
-    m.label('drone_tick').ld('E').jz('drones_hit').ld(5).n(4).op('-').jge('drones_hit')
+    m.end_page().page(28,'drone_tick').ld('E').jz('drones_hit').ld(5).n(4).op('-').jge('drones_hit')
     m.n(18).raw(0xB5).add(6,1)
     m.label('drones_hit').ld('D').jz('drones_ready')
     m.n(1).op('-').st('B').raw(0xDB).st('E').jz('drones_ready')
     m.ld('C').op('-').max0().raw(0xBB).st('E').jnz('drones_ready').add(6,-1)
     m.label('drones_ready').ld(6).st('D').op('ret')
+
+    m.end_page()
 
     m=a.module(16,'combat views')
     m.label('combat_view').ld('A').jz('contact_name')
@@ -121,5 +125,5 @@ def add_combat(a):
     m.label('show_result').ld('A').st('F').jump('show_message')
     # X target index -> X/RC hull. R0..8 are preserved for command parsing.
     m.label('target_hp').jz('carrier_hp')
-    m.n(1).op('-').st('B').far(0x53,28*112+63).op('ret')
+    m.n(1).op('-').st('B').page_bytes(28,0xDB,0x4C).op('ret')
     m.label('carrier_hp').get(27,1).op('ret')

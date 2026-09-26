@@ -14,6 +14,7 @@ def create_game():
         28:[0]*9,
         29:[0]*7+[1048576,FRAME_SUFFIX_WORD],
     }
+    a.data_helpers={24,25,27}
     m=a.module(0,'kernel')
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)
     show_text(m,'title');m.op('cx','stop')

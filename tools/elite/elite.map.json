@@ -1,16 +1,16 @@
 {
-  "occupied_bytes": 3092,
-  "free_bytes": 492,
+  "occupied_bytes": 3034,
+  "free_bytes": 550,
   "labels": {
     "start": 0,
     "new_game": 19,
-    "redraw": 51,
-    "main": 57,
-    "result_input_entry": 65,
-    "port_input_entry": 71,
-    "combat_input_entry": 77,
-    "input_invalid": 83,
-    "bad_action": 87,
+    "redraw": 43,
+    "main": 49,
+    "result_input_entry": 57,
+    "port_input_entry": 63,
+    "combat_input_entry": 69,
+    "input_invalid": 75,
+    "bad_action": 79,
     "port_input": 1344,
     "station_check": 1402,
     "select_check": 1413,
@@ -21,15 +21,17 @@
     "show_price": 1997,
     "good_prefix": 2008,
     "show_stat": 2249,
-    "stat_get": 2276,
-    "show_missiles": 2304,
-    "show_credits": 2317,
-    "show_hold": 2324,
-    "show_world": 2338,
+    "stat_get": 2274,
+    "show_missiles": 2302,
+    "show_credits": 2315,
+    "show_hold": 2322,
+    "show_world": 2340,
     "show_destination": 2352,
     "draw_name": 2358,
-    "draw_number": 2367,
-    "show_invalid": 2375,
+    "name_frame": 2363,
+    "draw_number": 2382,
+    "number_frame": 2386,
+    "show_invalid": 2401,
     "name_alphabet": 224,
     "glyph_table": 336,
     "glyph": 364,
@@ -48,120 +50,118 @@
     "thargoid": 2649,
     "text_end": 2671,
     "show_message": 2676,
-    "number_frame": 896,
-    "name_frame": 907,
-    "battle_frame": 922,
-    "formation_ready": 957,
-    "gauge_frame": 968,
-    "instrument_frame": 979,
-    "draw_gauge": 2464,
-    "range_frame": 2486,
-    "draw_range": 2513,
-    "range_far": 2527,
-    "range_index": 2528,
-    "drone_alphabet": 2542,
-    "bar_alphabet": 2544,
-    "range_alphabet": 2552,
+    "draw_gauge": 896,
+    "gauge_frame": 914,
+    "instrument_frame": 925,
+    "draw_range": 948,
+    "range_far": 962,
+    "range_index": 963,
+    "range_frame": 972,
+    "drone_alphabet": 1429,
+    "bar_alphabet": 1431,
+    "range_alphabet": 1439,
     "init_pilot": 112,
-    "init_hold": 137,
-    "sum_hold": 156,
-    "trade_hold": 169,
-    "buy_done": 197,
-    "trade_money": 198,
+    "init_hold": 145,
+    "sum_hold": 172,
+    "trade_money": 185,
     "world": 560,
     "world_ready": 589,
     "select_world": 590,
-    "init_market": 607,
-    "arrived_pilot": 632,
     "price": 672,
-    "price_market": 686,
-    "price_wrapped": 700,
-    "price_clamp": 735,
-    "price_ready": 737,
+    "price_market": 678,
+    "price_wrapped": 692,
+    "price_clamp": 727,
+    "price_ready": 729,
     "trade": 784,
     "clamp0_7_10": 801,
     "trade_quote": 802,
-    "sell_checks": 847,
-    "trade_commit": 2388,
-    "trade_price_clamp": 2425,
-    "trade_price_ready": 2427,
+    "trade_hold": 830,
+    "buy_done": 860,
+    "sell_checks": 877,
+    "trade_commit": 503,
+    "trade_price_clamp": 542,
+    "trade_price_ready": 544,
     "station": 2128,
     "service_hull": 2190,
     "service_missile": 2200,
     "service_ready": 2212,
-    "service_pay": 744,
-    "pay": 761,
-    "pay_done": 781,
+    "service_pay": 743,
+    "pay": 760,
+    "pay_done": 776,
     "distance": 1008,
     "distance_view": 1059,
     "jump": 1120,
-    "alien_contact": 1218,
-    "pirate_contact": 1224,
-    "arrive": 1069,
-    "jump_tick": 1091,
+    "jump_tick": 1175,
+    "alien_contact": 252,
+    "pirate_contact": 258,
+    "arrive": 264,
+    "arrived_pilot": 268,
+    "init_market": 286,
     "start_contact": 1232,
-    "init_enemy": 1290,
-    "enemy_fields": 1315,
-    "init_drones": 1328,
-    "drones_done": 221,
+    "init_enemy": 1259,
+    "enemy_fields": 1284,
+    "init_drones": 1304,
+    "drones_done": 1330,
     "combat_input": 1456,
     "fight_command": 1484,
     "choose_target": 1516,
     "store_target": 1535,
     "fight": 1558,
-    "ammo_ready": 3395,
-    "incoming_ready": 3429,
-    "weapon_ready": 3441,
-    "shot_ready": 3478,
-    "apply_damage": 3495,
-    "won": 3526,
-    "escaped": 3553,
-    "lost": 3562,
+    "ammo_ready": 2499,
+    "incoming_ready": 2528,
+    "weapon_ready": 2540,
+    "shot_ready": 2566,
+    "drone_tick": 3364,
+    "drones_hit": 3382,
+    "clamp0_15_111": 3398,
+    "drones_ready": 3408,
+    "apply_damage": 3416,
+    "enemy_hit": 3422,
+    "clamp0_15_72": 3431,
+    "enemy_hit_done": 3433,
+    "won": 3472,
+    "reward": 3476,
+    "reward_done": 3497,
+    "count_kill": 3505,
+    "escaped": 3523,
+    "lost": 3532,
     "weapon": 1568,
-    "clamp0_14_4": 1576,
-    "no_shot": 1607,
-    "laser": 1611,
-    "missile": 1626,
-    "weapon_done": 1635,
-    "player_hit": 1635,
-    "clamp0_14_57": 1646,
-    "shield_holds": 1649,
-    "reward": 1657,
-    "reward_done": 3577,
-    "count_kill": 3578,
+    "clamp0_14_5": 1580,
+    "no_shot": 1611,
+    "laser": 1615,
+    "missile": 1630,
+    "weapon_done": 1639,
+    "player_hit": 1639,
+    "clamp0_14_58": 1650,
+    "shield_holds": 1653,
     "enemy_tick": 1680,
-    "clamp0_15_13": 1699,
-    "motion_ready": 1710,
-    "charge_reset": 1723,
-    "charge_ready": 1725,
-    "enemy_ready": 1745,
-    "enemy_hit": 1754,
-    "clamp0_15_69": 1763,
-    "enemy_hit_done": 1765,
-    "drone_tick": 1772,
-    "drones_hit": 477,
-    "clamp0_15_106": 493,
-    "drones_ready": 503,
+    "clamp0_15_14": 1703,
+    "motion_ready": 1714,
+    "charge_reset": 1727,
+    "charge_ready": 1729,
+    "enemy_ready": 1749,
     "combat_view": 1792,
-    "range_view": 1817,
-    "target_view": 1827,
-    "drones_view": 1841,
-    "charge_view": 1850,
-    "target_number": 1864,
-    "contact_name": 1878,
-    "alien_name": 414,
-    "show_result": 423,
-    "target_hp": 429,
-    "carrier_hp": 439
+    "range_view": 1823,
+    "target_view": 1833,
+    "battle_frame": 1843,
+    "formation_ready": 1878,
+    "drones_view": 1893,
+    "charge_view": 607,
+    "target_number": 621,
+    "contact_name": 635,
+    "alien_name": 655,
+    "show_result": 664,
+    "target_hp": 201,
+    "carrier_hp": 218
   },
   "banks": {
     "0": {
       "module": "kernel",
-      "used": 91
+      "used": 83
     },
     "12": {
-      "module": "input",
-      "used": 85
+      "module": "input / format",
+      "used": 111
     },
     "17": {
       "module": "views",
@@ -169,27 +169,27 @@
     },
     "20": {
       "module": " / views",
-      "used": 108
+      "used": 110
     },
     "21": {
-      "module": " / views / trade",
-      "used": 82
+      "module": " / views",
+      "used": 58
     },
     "2": {
-      "module": "name alphabet",
-      "used": 16
+      "module": "name alphabet / flight / contacts",
+      "used": 109
     },
     "3": {
-      "module": "glyphs / combat views",
-      "used": 109
+      "module": "glyphs",
+      "used": 78
     },
     "23": {
       "module": "range table / messages",
-      "used": 104
+      "used": 111
     },
     "4": {
-      "module": "arithmetic / enemies",
-      "used": 58
+      "module": "arithmetic / trade",
+      "used": 103
     },
     "18": {
       "module": "messages",
@@ -197,91 +197,91 @@
     },
     "8": {
       "module": "format",
-      "used": 102
-    },
-    "22": {
-      "module": " / format",
-      "used": 104
+      "used": 107
     },
     "1": {
-      "module": "initialization / contacts",
+      "module": "initialization / combat views",
       "used": 112
     },
     "5": {
-      "module": "world",
-      "used": 83
+      "module": "world / combat views",
+      "used": 110
     },
     "6": {
       "module": "prices / station",
-      "used": 110
+      "used": 105
     },
     "7": {
       "module": "trade",
-      "used": 110
+      "used": 112
     },
     "19": {
       "module": "station",
       "used": 110
     },
     "9": {
-      "module": "navigation / flight",
-      "used": 107
+      "module": "navigation",
+      "used": 61
     },
     "10": {
       "module": "flight",
-      "used": 110
+      "used": 112
     },
     "11": {
       "module": "contacts",
-      "used": 111
+      "used": 112
     },
     "13": {
       "module": "combat",
       "used": 110
     },
-    "30": {
+    "22": {
       "module": " / combat",
       "used": 112
     },
+    "30": {
+      "module": " / combat",
+      "used": 109
+    },
     "31": {
-      "module": " / combat / weapons",
-      "used": 112
+      "module": " / combat",
+      "used": 69
     },
     "14": {
       "module": "weapons",
-      "used": 110
+      "used": 97
     },
     "15": {
       "module": "enemies",
-      "used": 112
+      "used": 82
     },
     "16": {
       "module": "combat views",
-      "used": 108
+      "used": 110
     },
     "24": {
       "module": "data",
-      "used": 82
+      "used": 76
     },
     "25": {
       "module": "data",
-      "used": 82
+      "used": 76
     },
     "26": {
       "module": "data",
-      "used": 82
+      "used": 63
     },
     "27": {
       "module": "data",
-      "used": 82
+      "used": 76
     },
     "28": {
       "module": "data",
-      "used": 82
+      "used": 63
     },
     "29": {
       "module": "data",
-      "used": 82
+      "used": 63
     }
   }
 }

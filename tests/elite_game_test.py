@@ -110,6 +110,11 @@ def test_assembler_continuations():
     # The independent entry instead moves as one block, without a bridge.
     assert info['labels']['helper']==112 and info['occupied_bytes']==114
     assert banks[1][:13]==bytes([0x54]*12+[0x52])
+    a=Assembler();m=a.module(0,'page exchange operand')
+    m.raw(*([0x54]*104)).close_page(0x52).raw(*([0x54]*8)).op('ret')
+    banks,_=a.link()
+    # A far Ms exchange ending in byte 52 must retain the continuation.
+    assert banks[0][108:112]==bytes([0x1F,0x51,0x01,0x12])
     a=Assembler();m=a.module(0,'fallthrough into whole entry')
     m.raw(*([0x54]*100)).label('helper',keep_block=True)
     for _ in range(12):m.raw(0x54)
@@ -473,6 +478,8 @@ def main():
     # the actual destination. The header describes the complete linked image.
     banks,info=create_game().link()
     check_layout(info)
+    relink=create_game()
+    assert relink.link()==relink.link(), 'page expansion must be deterministic'
     assert set(info['banks'])=={str(bank) for bank in banks}
     image=b''.join(banks.get(bank,bytes(112)) for bank in range(32))
     binary=(directory/'elite.bin').read_bytes()
