@@ -104,7 +104,10 @@ python3 "$root/tests/check_app_memory_elf.py" \
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
 [[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed size: $sealed_size"
 headroom=$((524288 - sealed_size))
-minimum_headroom=65536
+# F411 now keeps the optional product modules resident by default.  Preserve a
+# meaningful reserve for the largest manual -O3 profile without measuring it
+# against the obsolete APP-by-default layout.
+minimum_headroom=49152
 if ((headroom < minimum_headroom)); then
   fail "sealed Flash headroom too small: $headroom < $minimum_headroom bytes"
 fi

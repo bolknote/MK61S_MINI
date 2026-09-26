@@ -64,7 +64,7 @@ if grep -Fq 'usb=CDCgen,opt=o3lto' "$matrix"; then
 fi
 grep -Fq 'usb=CDCgen,opt=o3std' "$o3_build"
 grep -Fq 'MK61_REQUIRE_MIXED_OPTIMIZATION=1' "$o3_build"
-grep -Fq 'minimum_headroom=65536' "$o3_build"
+grep -Fq 'minimum_headroom=49152' "$o3_build"
 grep -Fq 'BLACKPILL_F401CC' "$stock_linker_build"
 grep -Fq 'BLACKPILL_F411CE' "$stock_linker_build"
 grep -Fq 'opt=oslto' "$stock_linker_build"
