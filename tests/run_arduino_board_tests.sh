@@ -164,6 +164,10 @@ grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
 grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
 grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
+grep -q '^mk61_f401_app\.build\.st_extra_flags=-pipe ' \
+  "$target/boards.txt"
+grep -q '^mk61_f411\.build\.st_extra_flags=-pipe ' \
+  "$target/boards.txt"
 grep -q -- '-DMK61_EXTERNALIZE_USBDISK={build.mk61_usbdisk_app}' \
   "$target/boards.txt"
 grep -q -- '-DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}' \

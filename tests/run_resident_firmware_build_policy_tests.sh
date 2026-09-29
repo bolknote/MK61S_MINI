@@ -103,6 +103,8 @@ require_text "$root/tools/build_portable_app.py" 'analyze_stack_usage.py'
 require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
 
 require_text "$board" 'MK61_REQUIRE_RESIDENT_CRC=1'
+require_text "$board" 'mk61_f401_app.build.st_extra_flags=-pipe '
+require_text "$board" 'mk61_f411.build.st_extra_flags=-pipe '
 require_text "$board_hook_sh" 'seal_resident "$resident_bin"'
 require_text "$board_hook_ps" "'seal-firmware.ps1'"
 require_text "$board_hook_sh" 'seal-firmware-elf.py'
