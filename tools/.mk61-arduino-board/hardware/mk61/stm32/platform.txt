@@ -21,4 +21,9 @@ tools.mk61Upload.upload.params.quiet=
 tools.mk61Upload.upload.pattern="{busybox}" sh "{runtime.tools.STM32Tools.path}/stm32CubeProg.sh" -i {upload.protocol} -f "{build.path}/{build.project_name}.bin" -o {build.flash_offset} {upload.options}
 tools.mk61Upload.upload.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-app-upload.ps1" -Busybox "{busybox}" -Stm32Script "{runtime.tools.STM32Tools.path}/stm32CubeProg.sh" -BuildPath "{build.path}" -Project "{build.project_name}" -Bundle "mk61s-M-{build.mk61_platform_id}-{build.mk61_display_id}-{build.mk61_mcu_id}" -Profile "{build.mk61_platform_id}-{build.mk61_display_id}" -Mcu "{build.mk61_mcu_id}" -RequireUsbDisk "{build.mk61_usbdisk_app}" -Protocol "{upload.protocol}" -FlashOffset "{build.flash_offset}" -Vid "{upload.vid}" -UsbPid "{upload.pid}" -Address "{upload.address}" -Start "{upload.start}" -Port "{serial.port}"
 
-compiler.c.elf.extra_flags=-save-temps=obj "-Wl,--default-script={build.path}/mk61-portable.ld"
+# GCC 14's Windows LTO linker still uses TEMP even with -pipe. Run only the
+# Windows link command with an ASCII build-local TEMP so Cyrillic Windows user
+# names cannot break collect2/lto-wrapper temporary files.
+recipe.c.combine.pattern.windows=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "{runtime.platform.path}/tools/mk61-safe-tool.ps1" "{build.path}" "{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} "-Wl,--default-script={build.variant.path}/{build.ldscript}" "-Wl,--script={build.system.path}/ldscript.ld" "-Wl,-Map,{build.path}/{build.project_name}.map" {compiler.c.elf.extra_flags} {compiler.ldflags} -o "{build.path}/{build.project_name}.elf" "-L{build.path}" -Wl,--start-group {object_files} {compiler.libraries.ldflags} "{archive_file_path}" -lc -Wl,--end-group -lm -lgcc -lstdc++
+
+compiler.c.elf.extra_flags="-Wl,--default-script={build.path}/mk61-portable.ld"

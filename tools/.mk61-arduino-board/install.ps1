@@ -300,6 +300,7 @@ function Test-InstalledPlatform {
         [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.sh')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-postbuild.ps1')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61-app-upload.ps1')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\mk61-safe-tool.ps1')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61_firmware_seal.cpp')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\resident_firmware_format.hpp')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\rust_types.h')) -and
@@ -352,6 +353,8 @@ function Test-InstalledPlatformCurrent {
           (Join-Path $Target 'tools\mk61-app-postbuild.ps1')),
         @((Join-Path $SourcePlatform 'tools\mk61-app-upload.ps1'),
           (Join-Path $Target 'tools\mk61-app-upload.ps1')),
+        @((Join-Path $SourcePlatform 'tools\mk61-safe-tool.ps1'),
+          (Join-Path $Target 'tools\mk61-safe-tool.ps1')),
         @((Join-Path $ProjectRoot 'tools/.mk61-firmware-seal/mk61_firmware_seal.cpp'),
           (Join-Path $Target 'tools\mk61_firmware_seal.cpp')),
         @((Join-Path $ProjectRoot 'code/resident_firmware_format.hpp'),
@@ -486,7 +489,8 @@ try {
         'mk61_module.ld',
         'mk61-app-postbuild.sh',
         'mk61-app-postbuild.ps1',
-        'mk61-app-upload.ps1'
+        'mk61-app-upload.ps1',
+        'mk61-safe-tool.ps1'
     )) {
         Copy-Item -LiteralPath (Join-Path $sourcePlatform "tools\$name") `
             -Destination (Join-Path $targetTools $name) -Force
