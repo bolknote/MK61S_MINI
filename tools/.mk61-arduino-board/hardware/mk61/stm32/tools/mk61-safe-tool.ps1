@@ -21,5 +21,18 @@ $env:TEMP = $safeTemp
 $env:TMP = $safeTemp
 $env:TMPDIR = $safeTemp
 
-& $tool @toolArguments
+# Windows PowerShell 5 rebuilds native command lines and can split options
+# such as -LC:\path while forwarding a large splatted array. GCC response
+# files avoid that legacy quoting layer. Forward slashes also keep GCC's
+# response-file parser from treating Windows path separators as escapes.
+$responseFile = Join-Path $safeTemp 'mk61-link.rsp'
+$responseLines = foreach ($argument in $toolArguments) {
+    $normalized = ([string]$argument).Replace('\', '/')
+    '"' + $normalized.Replace('"', '\"') + '"'
+}
+[IO.File]::WriteAllLines(
+    $responseFile, $responseLines, [Text.Encoding]::Default)
+
+$responseArgument = '@' + $responseFile.Replace('\', '/')
+& $tool $responseArgument
 exit $LASTEXITCODE
