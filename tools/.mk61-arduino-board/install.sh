@@ -10,7 +10,7 @@ check_only=0
 
 usage() {
   cat <<'EOF'
-Install the "MK61s F401 + APP" board into an Arduino IDE sketchbook.
+Install the "MK61s F401 + APP" and "MK61s F411 + APP" boards into an Arduino IDE sketchbook.
 
 Usage:
   tools/mk61-arduino-board.cmd [--sketchbook DIR]
@@ -100,16 +100,16 @@ platform_current() {
 if [ "$check_only" -eq 1 ]; then
   if platform_installed; then
     if ! platform_current; then
-      printf 'MK61s F401 + APP is installed but stale in:\n  %s\n' \
+      printf 'MK61s Arduino boards are installed but stale in:\n  %s\n' \
         "$target" >&2
       printf '%s\n' \
         'Run tools/mk61-arduino-board.cmd without --check, then restart Arduino IDE.' >&2
       exit 1
     fi
-    printf 'MK61s F401 + APP is installed in:\n  %s\n' "$target"
+    printf 'MK61s F401/F411 boards are installed in:\n  %s\n' "$target"
     exit 0
   fi
-  printf 'MK61s F401 + APP is not installed in:\n  %s\n' "$target" >&2
+  printf 'MK61s F401/F411 boards are not installed in:\n  %s\n' "$target" >&2
   exit 1
 fi
 
@@ -145,7 +145,7 @@ chmod +x "$target/tools/mk61-app-postbuild.sh"
 platform_installed && platform_current ||
   die "installed board verification failed: $target"
 
-printf 'MK61s F401 + APP installed in:\n  %s\n' "$target"
+printf 'MK61s F401/F411 boards installed in:\n  %s\n' "$target"
 printf 'Verified uploader: mk61Upload (DFU + automatic /System install).\n'
-printf 'Restart Arduino IDE, then select Tools > Board > MK61s F401 + APP.\n'
+printf 'Restart Arduino IDE, then select MK61s F401 + APP or MK61s F411 + APP.\n'
 printf 'STM32 MCU based boards core 2.12.0 is required.\n'

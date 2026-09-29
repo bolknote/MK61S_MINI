@@ -257,7 +257,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (-not $boards.Contains('mk61:stm32:mk61_f401_app')) {
             throw (
-              'MK61 board is not visible from the configured Unicode ' +
+              'MK61 F401 board is not visible from the configured Unicode ' +
+              'Arduino IDE sketchbook')
+          }
+          if (-not $boards.Contains('mk61:stm32:mk61_f411')) {
+            throw (
+              'MK61 F411 board is not visible from the configured Unicode ' +
               'Arduino IDE sketchbook')
           }
 
@@ -284,6 +289,17 @@ jobs:
           if ($properties -notmatch `
               '(?m)^tools\.mk61Upload\.upload\.pattern=.*mk61-app-upload\.ps1') {
             throw 'Windows Upload recipe bypasses System APP installation'
+          }
+          $f411Properties = (& arduino-cli --config-file $ideConfig compile `
+            --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' `
+            --build-path (Join-Path $env:RUNNER_TEMP 'mk61-upload-properties-f411') `
+            --show-properties=expanded code | Out-String)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($f411Properties -notmatch '(?m)^upload\.tool=mk61Upload\r?$' -or
+              $f411Properties -notmatch 'mk61-app-upload\.ps1' -or
+              $f411Properties -notmatch '-Mcu "f411"' -or
+              $f411Properties -notmatch '-RequireUsbDisk "0"') {
+            throw 'F411 Arduino board does not use its resident-aware compound uploader'
           }
 
       - name: Verify Windows font-license cleanup preserves its parent
@@ -412,6 +428,57 @@ jobs:
           )) {
             if (-not $flags.Contains($required)) {
               throw "Arduino IDE V2 bundle is missing build flag: $required"
+            }
+          }
+
+      - name: Compile resident-default F411 mini V2 through the Arduino IDE recipe
+        shell: pwsh
+        run: |
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          $bundleName = 'mk61s-M-mini-v2-lcd1602-a00-f411'
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig `
+            config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($safeCache)) {
+            throw 'Arduino IDE build cache is unavailable'
+          }
+          $buildPath = Join-Path $safeCache 'arduino-ide-f411-mini-v2'
+          & arduino-cli --config-file $ideConfig compile `
+            --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' `
+            --build-path $buildPath code
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $bundle = Join-Path $env:GITHUB_WORKSPACE "binary/$bundleName"
+          foreach ($name in @(
+            "$bundleName.bin", 'build.flags', 'build.apps',
+            'System/HELP0.TXT', 'System/HELP1.TXT'
+          )) {
+            $artifact = Join-Path $bundle $name
+            if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+                (Get-Item -LiteralPath $artifact).Length -eq 0) {
+              throw "F411 Arduino IDE bundle did not produce $name"
+            }
+          }
+          foreach ($name in @(
+            'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP',
+            'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP'
+          )) {
+            if (Test-Path -LiteralPath (Join-Path $bundle "System/$name")) {
+              throw "resident-default F411 bundle contains System/$name"
+            }
+          }
+          $flags = Get-Content -LiteralPath (Join-Path $bundle 'build.flags') -Raw
+          foreach ($required in @(
+            '-DSTM32F411xE', '-DREVISION_V2',
+            '-DMK61_FOCAL_AS_APP=0', '-DMK61_TINYBASIC_AS_APP=0',
+            '-DMK61_MARKDOWN_VIEWER_AS_APP=0', '-DMK61_SETUP_AS_APP=0',
+            '-DMK61_EXPLORER_AS_APP=0', '-DMK61_EXTERNALIZE_USBDISK=0',
+            '-DMK61_MATH_BACKEND=0'
+          )) {
+            if (-not $flags.Contains($required)) {
+              throw "F411 Arduino IDE bundle is missing build flag: $required"
             }
           }
 

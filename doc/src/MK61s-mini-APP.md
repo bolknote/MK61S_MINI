@@ -19,9 +19,9 @@ FOCAL, TinyBASIC, WBMP, Markdown и CHIP-8 независимо выбирают
 `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`, `MARKDOWN.APP`, `CHIP8.APP`.
 На F411 они встроены по умолчанию, на F401 по умолчанию вынесены в APP.
 На F401 в `/System` также находятся `SETUP.APP` и `USBDISK.APP`.
-На F411 SETUP всегда встроен в resident, а USB-диск встроен
-по умолчанию. Опция `MK61_EXTERNALIZE_USBDISK=1` выносит его в
-`/System/USBDISK.APP`.
+На F411 SETUP и USB-диск встроены по умолчанию. `MK61_SETUP_AS_APP=1`
+выносит SETUP, а `MK61_EXTERNALIZE_USBDISK=1` — USB-диск в соответствующий
+файл `/System`.
 APPLICATION можно хранить под любым допустимым M8-именем в любом каталоге
 C6; `/Apps` — только
 удобное соглашение.

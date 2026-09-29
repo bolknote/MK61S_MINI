@@ -275,7 +275,7 @@ function Write-Stm32CoreStatus {
 
 function Show-Usage {
     @'
-Install the "MK61s F401 + APP" board into an Arduino IDE sketchbook.
+Install the "MK61s F401 + APP" and "MK61s F411 + APP" boards into an Arduino IDE sketchbook.
 
 Usage:
   tools\mk61-arduino-board.cmd [-Sketchbook DIR]
@@ -410,12 +410,12 @@ try {
             if (-not (Test-InstalledPlatformCurrent `
                     $sourcePlatform $projectRoot $target)) {
                 [Console]::Error.WriteLine(
-                    "MK61s F401 + APP is installed but stale in:`n  $target`n" +
+                    "MK61s Arduino boards are installed but stale in:`n  $target`n" +
                     'Close Arduino IDE, run tools\mk61-arduino-board.cmd ' +
                     'without -Check, then restart Arduino IDE.')
                 exit 1
             }
-            Write-Host 'MK61s F401 + APP is installed in:'
+            Write-Host 'MK61s F401/F411 boards are installed in:'
             Write-Host "  $target"
             Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
             if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
@@ -425,7 +425,7 @@ try {
             exit 0
         }
         [Console]::Error.WriteLine(
-            "MK61s F401 + APP is not installed in:`n  $target")
+            "MK61s F401/F411 boards are not installed in:`n  $target")
         exit 1
     }
 
@@ -468,7 +468,7 @@ try {
         throw "Installed board verification failed: $target"
     }
 
-    Write-Host 'MK61s F401 + APP installed in:'
+    Write-Host 'MK61s F401/F411 boards installed in:'
     Write-Host "  $target"
     Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
     Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
@@ -480,6 +480,7 @@ try {
     Write-Host ('Open Board Selector (or Tools > Board > Select Other Board ' +
                 'and Port) and search for the exact name:')
     Write-Host '  MK61s F401 + APP'
+    Write-Host '  MK61s F411 + APP'
     Write-Host ('Do not search for this manually installed board in Boards ' +
                 'Manager; only the STM32 core is listed there.')
 } catch {

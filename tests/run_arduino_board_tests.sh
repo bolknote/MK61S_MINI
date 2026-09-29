@@ -17,6 +17,7 @@ bash -n "$hook"
 
 "$launcher" --help > "$work/help.txt"
 grep -q 'MK61s F401 + APP' "$work/help.txt"
+grep -q 'MK61s F411 + APP' "$work/help.txt"
 grep -q -- '--sketchbook DIR' "$work/help.txt"
 grep -q 'does not install Arduino CLI' "$work/help.txt"
 grep -q 'not in Boards Manager' "$work/help.txt"
@@ -59,6 +60,12 @@ grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
+grep -q '^mk61_f411.name=MK61s F411 + APP$' "$target/boards.txt"
+grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
+grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
+grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
+grep -q '^mk61_f411.upload.maximum_data_size=131072$' "$target/boards.txt"
+grep -q '^mk61_f411.upload.tool=mk61Upload$' "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_platform.mini_v3=' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_platform.mini_v2=' \
@@ -103,6 +110,20 @@ grep -q '^mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8_app=0$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0$' \
   "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_basic.builtin.build.mk61_basic_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_documents.markdown_builtin.build.mk61_markdown_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_setup.builtin.build.mk61_setup_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_explorer_module.builtin.build.mk61_explorer_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_usbdisk.builtin.build.mk61_usbdisk_app=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.menu.mk61_usbdisk.app.build.mk61_usbdisk_app=1$' \
+  "$target/boards.txt"
 grep -q 'recipe.hooks.objcopy.postobjcopy.20.pattern.windows=' \
   "$target/platform.txt"
 grep -q '^tools.mk61Upload.upload.pattern=' "$target/platform.txt"
@@ -115,6 +136,8 @@ grep -q -- '-DMK61_REQUIRE_RESIDENT_CRC=1' "$target/boards.txt"
 grep -q -- '-DMK61_ENABLE_LOADABLE_MODULES=1' "$target/boards.txt"
 grep -q -- '-DMK61_F401_PRODUCT_BUILD=1' "$target/boards.txt"
 grep -q -- '-DMK61_REQUIRE_F401_SELECTIVE_O3=1' "$target/boards.txt"
+grep -q -- '-DMK61_EXTERNALIZE_USBDISK={build.mk61_usbdisk_app}' \
+  "$target/boards.txt"
 grep -q -- '-DMK61_APP_LOCAL_FLOAT_MATH={build.mk61_app_math}' \
   "$target/boards.txt"
 for key in focal basic wbmp markdown chip8; do
@@ -146,7 +169,10 @@ grep -q -- '--wbmp "{build.mk61_wbmp_app}"' "$target/platform.txt"
 grep -q -- '--markdown "{build.mk61_markdown_app}"' "$target/platform.txt"
 grep -q -- '--chip8 "{build.mk61_chip8_app}"' "$target/platform.txt"
 grep -q -- '--setup "{build.mk61_setup_app}"' "$target/platform.txt"
+grep -q -- '--usbdisk "{build.mk61_usbdisk_app}"' "$target/platform.txt"
 grep -q -- '--explorer "{build.mk61_explorer_app}"' "$target/platform.txt"
+grep -q -- '--mcu "{build.mk61_mcu_id}"' "$target/platform.txt"
+grep -q -- '--max-size "{upload.maximum_size}"' "$target/platform.txt"
 
 "$hook" check-profile --platform mini-v3 --display lcd1602-a00 \
   --sketch "$root/code"
@@ -291,6 +317,23 @@ EOF
     echo 'Arduino upload accepted a mismatched System APP profile' >&2
     exit 1
   fi
+  mock_f411_stage="$mock_build/mk61-system-apps/mk61s-M-mini-v2-lcd1602-a00-f411"
+  mock_f411_system="$mock_f411_stage/System"
+  mkdir -p "$mock_f411_system"
+  printf 'resident help\n' > "$mock_f411_system/HELP0.TXT"
+  cp "$root/tools/.mkc/mkc.ps1" \
+    "$mock_f411_stage/mk61-system-installer.ps1"
+  printf 'stale APP' > "$mock_device/System/USBDISK.APP"
+  pwsh -NoLogo -NoProfile -File \
+    "$platform/tools/mk61-app-upload.ps1" \
+    -BuildPath "$mock_build" -Project code.ino \
+    -Bundle mk61s-M-mini-v2-lcd1602-a00-f411 \
+    -Profile mini-v2-lcd1602-a00 -Mcu f411 -RequireUsbDisk 0 \
+    -TestMockDevice "$mock_device" > "$work/mock-upload-f411.txt"
+  test ! -e "$mock_device/System/USBDISK.APP"
+  test -s "$mock_device/System/HELP0.TXT"
+  grep -q 'Resident and System APP upload complete' \
+    "$work/mock-upload-f411.txt"
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code"
@@ -455,6 +498,31 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test ! -e "$direct_system/CHIP8.APP"
   test "$(od -An -tx1 -j56 -N2 "$direct_system/MARKDOWN.APP" |
       tr -d '[:space:]')" = 5432
+
+  # F411 is a first-class Arduino board, not a Generic STM32 workaround.
+  # Its menu defaults keep the large system components resident while still
+  # producing the same ABI 6 bundle and external help resources.
+  mkdir -p "$work/build-f411"
+  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
+    --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' \
+    --build-path "$work/build-f411" "$shell_sketchbook/sketches/code"
+  f411_bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f411"
+  test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
+  for resource in HELP0.TXT HELP1.TXT; do
+    test -s "$f411_bundle/System/$resource"
+  done
+  for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
+      SETUP.APP USBDISK.APP EXPLORER.APP; do
+    test ! -e "$f411_bundle/System/$app"
+  done
+  grep -q -- '-DSTM32F411xE' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_FOCAL_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_TINYBASIC_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_MARKDOWN_VIEWER_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_SETUP_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_EXPLORER_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_EXTERNALIZE_USBDISK=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_MATH_BACKEND=0' "$f411_bundle/build.flags"
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \

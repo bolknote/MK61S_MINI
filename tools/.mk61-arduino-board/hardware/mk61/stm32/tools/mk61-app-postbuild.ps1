@@ -11,12 +11,16 @@ param(
     [string]$VariantLd,
     [string]$Project,
     [string]$Bundle,
+    [ValidateSet('f401', 'f411')]
+    [string]$Mcu,
+    [string]$MaxSize,
     [string]$Focal,
     [string]$Basic,
     [string]$Wbmp,
     [string]$Markdown,
     [string]$Chip8,
     [string]$Setup,
+    [string]$UsbDisk,
     [string]$Explorer,
     [string]$LocalFloatMath,
     [string]$CompileFlags
@@ -27,7 +31,7 @@ $ErrorActionPreference = 'Stop'
 
 function Stop-Mk61Build {
     param([Parameter(Mandatory = $true)][string]$Message)
-    throw "MK61s F401 + APP: $Message"
+    throw "MK61s Arduino board: $Message"
 }
 
 function Get-Python {
@@ -172,11 +176,22 @@ function Build-Mk61Bundle {
         [string]::IsNullOrWhiteSpace($Bundle)) {
         Stop-Mk61Build 'Arduino project or bundle name is missing'
     }
+    $expectedSize = if ($Mcu -eq 'f401') { '262144' } else { '524288' }
+    if ($MaxSize -cne $expectedSize) {
+        Stop-Mk61Build "invalid MCU/Flash pair: $Mcu / $MaxSize"
+    }
+    if (-not $Bundle.EndsWith("-$Mcu", [StringComparison]::Ordinal)) {
+        Stop-Mk61Build "bundle $Bundle does not match MCU $Mcu"
+    }
     if ($Focal -notmatch '^[01]$' -or $Basic -notmatch '^[01]$' -or
         $Wbmp -notmatch '^[01]$' -or $Markdown -notmatch '^[01]$' -or
         $Chip8 -notmatch '^[01]$' -or $Setup -notmatch '^[01]$' -or
+        $UsbDisk -notmatch '^[01]$' -or
         $Explorer -notmatch '^[01]$' -or $LocalFloatMath -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
+    }
+    if ($Mcu -eq 'f401' -and $UsbDisk -ne '1') {
+        Stop-Mk61Build 'F401 requires USBDISK.APP'
     }
     if ($Markdown -eq '1') { $Wbmp = '0' }
     if ($LocalFloatMath -eq '1' -and
@@ -197,10 +212,10 @@ function Build-Mk61Bundle {
     } else { (Get-Process -Id $PID).Path }
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
-        '-InputFile', $residentBin, '-MaxSize', '262144')
+        '-InputFile', $residentBin, '-MaxSize', $MaxSize)
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
-        '-InputFile', $residentBin, '-MaxSize', '262144')
+        '-InputFile', $residentBin, '-MaxSize', $MaxSize)
 
     $stageRoot = Join-Path $build 'mk61-system-apps'
     $script:Stage = [IO.Path]::GetFullPath((Join-Path $stageRoot $Bundle))
@@ -242,10 +257,15 @@ function Build-Mk61Bundle {
         '--graphics', $graphics, '--ui-fonts', $uiFonts,
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
         '--markdown', $Markdown, '--chip8', $Chip8,
-        '--setup', $Setup, '--usbdisk', '1', '--explorer', $Explorer,
+        '--setup', $Setup, '--usbdisk', $UsbDisk, '--explorer', $Explorer,
         '--local-float-math', $LocalFloatMath)
-    Test-RequiredFile (Join-Path (Join-Path $script:Stage 'System') `
-        'USBDISK.APP') 'mandatory USBDISK.APP; reinstall the MK61s board'
+    $stagedUsbDisk = Join-Path (Join-Path $script:Stage 'System') 'USBDISK.APP'
+    if ($UsbDisk -eq '1') {
+        Test-RequiredFile $stagedUsbDisk `
+            'selected USBDISK.APP; reinstall the MK61s board'
+    } elseif ([IO.File]::Exists($stagedUsbDisk)) {
+        Stop-Mk61Build 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
+    }
 
     $output = Join-Path ([IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))) $Bundle
     $outputSystem = Join-Path $output 'System'
@@ -263,8 +283,12 @@ function Build-Mk61Bundle {
             Remove-Item -LiteralPath $target -Force
         }
     }
-    Test-RequiredFile (Join-Path $outputSystem 'USBDISK.APP') `
-        'published USBDISK.APP'
+    $publishedUsbDisk = Join-Path $outputSystem 'USBDISK.APP'
+    if ($UsbDisk -eq '1') {
+        Test-RequiredFile $publishedUsbDisk 'published USBDISK.APP'
+    } elseif ([IO.File]::Exists($publishedUsbDisk)) {
+        Stop-Mk61Build 'published resident USB-disk bundle contains stale USBDISK.APP'
+    }
     Remove-Mk61BundledUiFontLicenses -Output $output
     if ($uiFonts -eq '1') {
         Invoke-Mk61Python @(
@@ -281,7 +305,7 @@ function Build-Mk61Bundle {
         'format 1' + [Environment]::NewLine +
             'abi 6' + [Environment]::NewLine, $utf8)
     Write-Host ''
-    Write-Host 'MK61s F401 unified ABI 6 bundle built by Arduino IDE:'
+    Write-Host "MK61s $($Mcu.ToUpperInvariant()) unified ABI 6 bundle built by Arduino IDE:"
     Write-Host "  $output"
     Write-Host 'Arduino IDE Upload will flash resident and install System APP through CDC.'
     Write-Host ''

@@ -126,8 +126,9 @@ APP можно хранить под любым допустимым имене�
 содержит 200 APP. Для системных компонентов F401 используются канонические
 пути `/System/FOCAL.APP`, `/System/BASIC.APP`, `/System/WBMP.APP`,
 `/System/MARKDOWN.APP`, `/System/CHIP8.APP` (при включённой консоли). На F401 к ним
-добавляются `/System/SETUP.APP` и `/System/USBDISK.APP`. На F411 SETUP встроен
-всегда, а `/System/USBDISK.APP` добавляется только при `MK61_EXTERNALIZE_USBDISK=1`.
+добавляются `/System/SETUP.APP` и `/System/USBDISK.APP`. На F411 оба встроены
+по умолчанию и добавляются в `/System` только при выборе соответствующего
+режима APP.
 Файлы `HELP0.TXT` и `HELP1.TXT`
 содержат справку
 для той же прошивки; копируйте их вместе с APP. Каталог `System` остаётся видимым и копируется через F5

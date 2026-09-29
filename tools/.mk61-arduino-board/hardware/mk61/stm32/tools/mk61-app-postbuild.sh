@@ -2,7 +2,7 @@
 set -euo pipefail
 
 die() {
-  printf 'MK61s F401 + APP: %s\n' "$*" >&2
+  printf 'MK61s Arduino board: %s\n' "$*" >&2
   exit 1
 }
 
@@ -42,7 +42,7 @@ check_profile() {
 }
 
 seal_resident() {
-  local resident=$1 tool_dir host_cxx sealer_root sealer temporary
+  local resident=$1 max_size=$2 tool_dir host_cxx sealer_root sealer temporary
   tool_dir="$(cd "$(dirname "$0")" && pwd)"
   host_cxx=${MK61_HOST_CXX:-${CXX:-c++}}
   command -v "$host_cxx" >/dev/null 2>&1 ||
@@ -64,13 +64,13 @@ seal_resident() {
       die 'could not build the resident firmware sealer'
     mv "$temporary" "$sealer"
   fi
-  "$sealer" seal --max-size 262144 "$resident"
-  "$sealer" check --max-size 262144 "$resident"
+  "$sealer" seal --max-size "$max_size" "$resident"
+  "$sealer" check --max-size "$max_size" "$resident"
 }
 
 build_bundle() {
-  local compiler= build_path_arg= sketch= project= bundle=
-  local focal= basic= wbmp= markdown= chip8= setup= explorer=
+  local compiler= build_path_arg= sketch= project= bundle= mcu= max_size=
+  local focal= basic= wbmp= markdown= chip8= setup= usbdisk= explorer=
   local local_float_math= compile_flags=
   while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -79,12 +79,15 @@ build_bundle() {
       --sketch) require_value "$@"; sketch=$2; shift 2 ;;
       --project) require_value "$@"; project=$2; shift 2 ;;
       --bundle) require_value "$@"; bundle=$2; shift 2 ;;
+      --mcu) require_value "$@"; mcu=$2; shift 2 ;;
+      --max-size) require_value "$@"; max_size=$2; shift 2 ;;
       --focal) require_value "$@"; focal=$2; shift 2 ;;
       --basic) require_value "$@"; basic=$2; shift 2 ;;
       --wbmp) require_value "$@"; wbmp=$2; shift 2 ;;
       --markdown) require_value "$@"; markdown=$2; shift 2 ;;
       --chip8) require_value "$@"; chip8=$2; shift 2 ;;
       --setup) require_value "$@"; setup=$2; shift 2 ;;
+      --usbdisk) require_value "$@"; usbdisk=$2; shift 2 ;;
       --explorer) require_value "$@"; explorer=$2; shift 2 ;;
       --local-float-math) require_value "$@"; local_float_math=$2; shift 2 ;;
       --compile-flags) require_value "$@"; compile_flags=$2; shift 2 ;;
@@ -96,10 +99,20 @@ build_bundle() {
   [ -d "$build_path_arg" ] || die 'Arduino build path was not found'
   [ -n "$project" ] && [ -n "$bundle" ] ||
     die 'Arduino project or bundle name is missing'
-  case "$focal:$basic:$wbmp:$markdown:$chip8:$setup:$explorer:$local_float_math" in
-    [01]:[01]:[01]:[01]:[01]:[01]:[01]:[01]) ;;
+  case "$mcu:$max_size" in
+    f401:262144|f411:524288) ;;
+    *) die "invalid MCU/Flash pair: $mcu / $max_size" ;;
+  esac
+  case "$bundle" in
+    *-"$mcu") ;;
+    *) die "bundle $bundle does not match MCU $mcu" ;;
+  esac
+  case "$focal:$basic:$wbmp:$markdown:$chip8:$setup:$usbdisk:$explorer:$local_float_math" in
+    [01]:[01]:[01]:[01]:[01]:[01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
+  [ "$mcu" != f401 ] || [ "$usbdisk" -eq 1 ] ||
+    die 'F401 requires USBDISK.APP'
   if [ "$markdown" -eq 1 ]; then wbmp=0; fi
   if [ "$local_float_math" -eq 1 ] &&
      [[ "$compile_flags" != *MK61_MATH_BACKEND=1* ]]; then
@@ -111,7 +124,7 @@ build_bundle() {
   local resident_bin="$build_path/$project.bin"
   [ -s "$resident_elf" ] && [ -s "$resident_bin" ] ||
     die 'Arduino did not produce resident ELF and BIN files'
-  seal_resident "$resident_bin"
+  seal_resident "$resident_bin" "$max_size"
 
   stage="$build_path/mk61-system-apps/$bundle"
   case "$stage" in "$build_path"/*) ;; *) die 'unsafe staging path' ;; esac
@@ -139,10 +152,15 @@ build_bundle() {
     --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8" \
-    --setup "$setup" --usbdisk 1 --explorer "$explorer" \
+    --setup "$setup" --usbdisk "$usbdisk" --explorer "$explorer" \
     --local-float-math "$local_float_math"
-  [ -s "$stage/System/USBDISK.APP" ] ||
-    die 'mandatory USBDISK.APP is missing; reinstall the MK61s board'
+  if [ "$usbdisk" -eq 1 ]; then
+    [ -s "$stage/System/USBDISK.APP" ] ||
+      die 'selected USBDISK.APP is missing; reinstall the MK61s board'
+  else
+    [ ! -e "$stage/System/USBDISK.APP" ] ||
+      die 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
+  fi
 
   local output_root output canonical
   output_root="$(cd "$sketch/.." && pwd)/binary"
@@ -157,8 +175,13 @@ build_bundle() {
       rm -f "$output/System/$canonical"
     fi
   done
-  [ -s "$output/System/USBDISK.APP" ] ||
-    die 'published USBDISK.APP is missing'
+  if [ "$usbdisk" -eq 1 ]; then
+    [ -s "$output/System/USBDISK.APP" ] ||
+      die 'published USBDISK.APP is missing'
+  else
+    [ ! -e "$output/System/USBDISK.APP" ] ||
+      die 'published resident USB-disk bundle contains stale USBDISK.APP'
+  fi
   rm -rf "$output/licenses/ui-fonts"
   if [ "$ui_fonts" -eq 1 ]; then
     python3 "$sketch/../tools/.fmk-font/package_ui_font_licenses.py" \
@@ -167,7 +190,8 @@ build_bundle() {
   printf '%s -DMK61_PORTABLE_UI_FONTS=%s -DMK61_APP_LOCAL_FLOAT_MATH=%s\n' \
     "$compile_flags" "$ui_fonts" "$local_float_math" > "$output/build.flags"
   printf 'format 1\nabi 6\n' > "$output/build.apps"
-  printf '\nMK61s F401 unified ABI 6 bundle built by Arduino IDE:\n  %s\n' "$output"
+  printf '\nMK61s %s unified ABI 6 bundle built by Arduino IDE:\n  %s\n' \
+    "$mcu" "$output"
   printf 'After Upload, copy the generated System directory to /System on MK61S C6.\n\n'
 }
 

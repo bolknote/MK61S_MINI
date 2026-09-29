@@ -110,6 +110,29 @@ try {
     Assert-True ($bootstrapText.IndexOf('Removed disabled /System/CHIP8.APP') -lt
         $bootstrapText.IndexOf('Installed and verified /System/USBDISK.APP')) `
         'System bootstrap did not free stale APP space before USBDISK.APP'
+
+    $residentSystemBundle = Join-Path $tempRoot 'resident-system-bundle'
+    [void](New-Item -ItemType Directory -Path $residentSystemBundle)
+    [IO.File]::WriteAllText((Join-Path $residentSystemBundle 'HELP1.TXT'),
+        "Resident help`n", [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllBytes((Join-Path $device 'System/USBDISK.APP'),
+        [byte[]]::new(64))
+    [IO.File]::WriteAllBytes((Join-Path $device 'System/EXPLORER.APP'),
+        [byte[]]::new(64))
+    $residentBootstrap = Invoke-MkcTool @('--mock', $device,
+        '--install-system', $residentSystemBundle, '--resident-usbdisk')
+    Assert-True ($residentBootstrap.ExitCode -eq 0 -and
+        ($residentBootstrap.Output -join ' ') -match
+            'System installation through CDC: OK') `
+        'resident USB-disk System bootstrap failed'
+    Assert-True (-not [IO.File]::Exists(
+        (Join-Path $device 'System/USBDISK.APP'))) `
+        'resident USB-disk bootstrap kept stale USBDISK.APP'
+    Assert-True (-not [IO.File]::Exists(
+        (Join-Path $device 'System/EXPLORER.APP'))) `
+        'System bootstrap kept stale EXPLORER.APP'
+    Assert-True ([IO.File]::Exists((Join-Path $device 'System/HELP1.TXT'))) `
+        'resident USB-disk bootstrap did not install help'
     $app = Invoke-MkcTool @('--classify', (Join-Path $local 'DEMO.APP'))
     Assert-True ($app.ExitCode -eq 0 -and ($app.Output -join '') -eq 'supported') 'PowerShell classifier rejected APP'
     $chip8 = Invoke-MkcTool @('--classify', (Join-Path $local 'game.ch8'))

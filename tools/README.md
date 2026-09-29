@@ -4,7 +4,8 @@
 
 - `mk61-firmware.cmd` — сборка, DFU-загрузка и установка System APP;
 - `build-gcc.cmd` — каноническая прямая GCC-сборка STM32F401;
-- `mk61-arduino-board.cmd` — установка платы `MK61s F401 + APP` в Arduino IDE;
+- `mk61-arduino-board.cmd` — установка плат `MK61s F401 + APP` и
+  `MK61s F411 + APP` в Arduino IDE;
 - `mkc.cmd` — двухпанельный файловый менеджер устройства;
 - `build_f401_bundle.sh` — F401-комплект с System и custom manifest APP;
 - `build_system_app_bundle.py` — общий для F401/F411/Arduino сборщик

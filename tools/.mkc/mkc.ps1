@@ -63,6 +63,7 @@ $script:ClassifyOnly = ''
 $script:ListPortsOnly = $false
 $script:InstallSystemDir = ''
 $script:ExpectedProfile = ''
+$script:ResidentUsbDisk = $false
 $script:StatusText = ''
 $script:SessionDir = ''
 $script:Monitor = $null
@@ -119,7 +120,7 @@ Usage:
   tools\mkc.cmd [--port COMx] [--device ID] [--local DIRECTORY]
   tools\mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools\mkc.cmd --classify FILE
-  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID]
+  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID] [--resident-usbdisk]
 
 Keys:
   Tab       switch panel        Enter     open directory
@@ -172,6 +173,7 @@ function Parse-Arguments {
                 if (++$i -ge $Arguments.Count) { throw '--expect-profile requires an ID' }
                 $script:ExpectedProfile = [string]$Arguments[$i]
             }
+            '--resident-usbdisk' { $script:ResidentUsbDisk = $true }
             '--list-ports' { $script:ListPortsOnly = $true }
             { $_ -in @('-h','--help','/?') } { Show-Usage | Write-Host; return $false }
             default { throw "Unknown argument: $arg" }
@@ -1228,13 +1230,19 @@ function Receive-RemoteFile {
 function Install-SystemBundle {
     param([string]$Directory)
     $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP',
-        'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'HELP0.TXT', 'HELP1.TXT')
+        'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'EXPLORER.APP',
+        'HELP0.TXT', 'HELP1.TXT')
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
         throw "нет каталога System: $Directory"
     }
     $system = (Resolve-Path -LiteralPath $Directory).Path
-    if (-not (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
+    if (-not $script:ResidentUsbDisk -and
+        -not (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
         throw "нет обязательного USBDISK.APP в $system"
+    }
+    if ($script:ResidentUsbDisk -and
+        (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
+        throw "resident USB-диск не должен содержать USBDISK.APP: $system"
     }
     if (-not [string]::IsNullOrEmpty($script:ExpectedProfile) -and
         [string]::IsNullOrEmpty($script:MockRoot) -and

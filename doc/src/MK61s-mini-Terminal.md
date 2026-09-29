@@ -299,8 +299,9 @@ help
 `HELP1.TXT`. Сборщик извлекает их из ELF той же прошивки, не занимая
 её Flash. Оба файла начинаются с подписи набора команд; устанавливайте их
 вместе со всем `/System` из одного комплекта. На F401 в него также входят
-`SETUP.APP` и `USBDISK.APP`. На F411 SETUP resident всегда, а USB-диск resident по
-умолчанию или внешний при `MK61_EXTERNALIZE_USBDISK=1`. Если справка отсутствует, устарела или
+`SETUP.APP` и `USBDISK.APP`. На F411 оба компонента resident по умолчанию;
+SETUP становится внешним при `MK61_SETUP_AS_APP=1`, а USB-диск — при
+`MK61_EXTERNALIZE_USBDISK=1`. Если справка отсутствует, устарела или
 C6 занят, `help` печатает список имён команд и синтаксис восстановления
 файлов через `fsput`. Команды терминала остаются доступными; второй копии полной
 справки в resident Flash нет ни на F401, ни на F411.
@@ -853,8 +854,9 @@ APP может иметь любое допустимое имя и находи
 и Markdown и консоль CHIP-8 ищутся под каноническими путями
 `/System/FOCAL.APP`, `/System/BASIC.APP`, `/System/WBMP.APP`,
 `/System/MARKDOWN.APP` и `/System/CHIP8.APP`. На F401 добавляются
-`/System/SETUP.APP` и `/System/USBDISK.APP`. На F411 SETUP resident всегда, а
-`USBDISK.APP` требуется только при `MK61_EXTERNALIZE_USBDISK=1`. `System` — обычный видимый
+`/System/SETUP.APP` и `/System/USBDISK.APP`. На F411 они требуются только при
+`MK61_SETUP_AS_APP=1` и `MK61_EXTERNALIZE_USBDISK=1` соответственно.
+`System` — обычный видимый
 каталог: его можно создать и
 копировать целиком через USB или MKC. Фиксированного числа APP нет: предел
 задают свободное место, общая квота inode и ёмкость каталога. Host-тест создаёт

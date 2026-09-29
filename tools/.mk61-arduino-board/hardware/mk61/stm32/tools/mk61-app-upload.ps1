@@ -4,6 +4,10 @@ param(
     [Parameter(Mandatory = $true)][string]$Project,
     [Parameter(Mandatory = $true)][string]$Bundle,
     [Parameter(Mandatory = $true)][string]$Profile,
+    [ValidateSet('f401', 'f411')]
+    [string]$Mcu = 'f401',
+    [ValidateSet('0', '1')]
+    [string]$RequireUsbDisk = '1',
     # Kept optional for compatibility with already installed platform.txt.
     # Arduino IDE may expand build.source.path relative to its own directory
     # during Upload, so it must not be used to locate host-side tools.
@@ -27,7 +31,7 @@ $closePortMessage = 'Close every program using the MK61s COM port.'
 
 function Stop-Mk61Upload {
     param([string]$Message)
-    throw "MK61s F401 + APP upload: $Message"
+    throw "MK61s Arduino upload: $Message"
 }
 
 function Wait-Mk61SerialPortAccess {
@@ -73,16 +77,23 @@ function Wait-Mk61SerialPortAccess {
 
 $system = ''
 try {
-    $expectedBundle = "mk61s-M-$Profile-f401"
+    if ($Mcu -eq 'f401' -and $RequireUsbDisk -ne '1') {
+        Stop-Mk61Upload 'F401 requires System/USBDISK.APP'
+    }
+    $expectedBundle = "mk61s-M-$Profile-$Mcu"
     if ($Bundle -cne $expectedBundle) {
         Stop-Mk61Upload "bundle $Bundle does not match profile $Profile"
     }
     $system = Join-Path (Join-Path (Join-Path $BuildPath 'mk61-system-apps') `
         $Bundle) 'System'
     $usbDisk = Join-Path $system 'USBDISK.APP'
-    if (-not [IO.File]::Exists($usbDisk) -or
-        (Get-Item -LiteralPath $usbDisk).Length -eq 0) {
-        Stop-Mk61Upload "current build has no System/USBDISK.APP: $system"
+    if ($RequireUsbDisk -eq '1') {
+        if (-not [IO.File]::Exists($usbDisk) -or
+            (Get-Item -LiteralPath $usbDisk).Length -eq 0) {
+            Stop-Mk61Upload "current build has no selected System/USBDISK.APP: $system"
+        }
+    } elseif ([IO.File]::Exists($usbDisk)) {
+        Stop-Mk61Upload "resident USB-disk build contains stale System/USBDISK.APP: $system"
     }
     $stage = Split-Path -Parent $system
     $mkc = Join-Path $stage 'mk61-system-installer.ps1'
@@ -124,6 +135,9 @@ try {
     $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
         '-File', $mkc,
         '--install-system', $system, '--expect-profile', $Profile)
+    if ($RequireUsbDisk -eq '0') {
+        $installerArgs += '--resident-usbdisk'
+    }
     if (-not [string]::IsNullOrEmpty($TestMockDevice)) {
         $installerArgs += @('--mock', $TestMockDevice)
     } elseif (-not [string]::IsNullOrEmpty($Port)) {
@@ -139,8 +153,11 @@ try {
     [Console]::Error.WriteLine($_.Exception.Message)
     if (-not [string]::IsNullOrEmpty($system) -and
         [IO.Directory]::Exists($system)) {
+        $residentUsbDisk = if ($RequireUsbDisk -eq '0') {
+            ' --resident-usbdisk'
+        } else { '' }
         [Console]::Error.WriteLine(
-            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile --port COMx")
+            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile$residentUsbDisk --port COMx")
     }
     exit 1
 }

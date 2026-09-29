@@ -1,10 +1,12 @@
-# MK61s F401 + APP в Arduino IDE
+# MK61s F401/F411 + APP в Arduino IDE
 
-Версия документа: 23.09.2026
+Версия документа: 29.09.2026
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
-комплект для STM32F401CC. Ниже показан полный пример mini с включёнными
-USB-экраном и всеми опциональными компонентами в режиме APP:
+комплект для STM32F401CC или STM32F411CE. Устанавливаются две отдельные
+платы с одним набором меню: `MK61s F401 + APP` и `MK61s F411 + APP`.
+Ниже показан полный пример F401 mini с включёнными USB-экраном и всеми
+опциональными компонентами в режиме APP:
 
 ```text
 binary/mk61s-M-mini-v3-lcd1602-a00-f401/
@@ -94,16 +96,19 @@ tools\mk61-arduino-board.cmd -Check
 является копией служебных файлов. Перед установкой закройте все окна Arduino
 IDE, после неё запустите IDE заново.
 
-`MK61s F401 + APP` — вручную установленная плата, поэтому её не будет в
-Boards Manager. В Boards Manager должен быть виден только зависимый пакет
-`STM32 MCU based boards 2.12.0`. Саму плату ищите по точному имени в Board
-Selector либо через `Tools → Board → Select Other Board and Port`.
+`MK61s F401 + APP` и `MK61s F411 + APP` — вручную установленные платы,
+поэтому их не будет в Boards Manager. В Boards Manager должен быть виден
+только зависимый пакет `STM32 MCU based boards 2.12.0`. Нужную плату ищите
+по точному имени в Board Selector либо через
+`Tools → Board → Select Other Board and Port`.
 
 ## Выбор профиля
 
 1. Откройте файл `code/code.ino`. Это служебный основной tab Arduino; код
    прошивки остаётся в соседнем `mk61s-M.ino`.
-2. В Board Selector найдите `MK61s F401 + APP`.
+2. В Board Selector выберите плату строго по установленному контроллеру:
+   `MK61s F401 + APP` для STM32F401CC или `MK61s F411 + APP` для
+   STM32F411CE.
 3. В меню Tools выберите платформу:
    `mini V3`, `mini V2`, `Classic V3`, `Classic V2` или `40th`.
 4. Отдельно выберите экран:
@@ -113,7 +118,16 @@ Selector либо через `Tools → Board → Select Other Board and Port`.
    `Markdown + WBMP viewer` и CHIP-8. Отдельный `WBMP viewer` выбирайте
    только при выключенном Markdown.
 6. При необходимости задайте USB-экран, расширенные
-   настройки шрифта, быстрый Explorer и математический backend.
+   настройки шрифта, быстрый Explorer и математический backend. На F411
+   также можно оставить USB-диск встроенным (штатно) либо выбрать
+   `USBDISK.APP`.
+
+На F411 FOCAL, TinyBASIC, Markdown, SETUP, Проводник и USB-диск по умолчанию
+встроены, математика использует `libm`. На F401 крупные компоненты по
+умолчанию вынесены в APP, USB-диск обязательно остаётся `USBDISK.APP`, а
+математика использует компактный CORE. Любой доступный компонент можно
+переопределить через те же меню, если выбранная комбинация помещается во
+Flash.
 
 CHIP-8 по умолчанию выключен. Пользовательские APP всегда поддерживаются
 единым загрузчиком и отдельного разрешающего переключателя не имеют.
@@ -159,9 +173,11 @@ WS0010-профиль предназначен для Winstar WEH001602A с ин
 
 - `.bin` resident-прошивки;
 - только выбранные именно как APP `System/FOCAL.APP`, `System/BASIC.APP`,
-  `System/WBMP.APP`, `System/MARKDOWN.APP`, `System/CHIP8.APP`;
-- обязательные для этой F401-платы `System/SETUP.APP`, `System/USBDISK.APP`,
-  `System/HELP0.TXT` и `System/HELP1.TXT`;
+  `System/WBMP.APP`, `System/MARKDOWN.APP`, `System/CHIP8.APP`,
+  `System/SETUP.APP`, `System/USBDISK.APP` и `System/EXPLORER.APP`;
+- обязательные для обеих плат `System/HELP0.TXT` и `System/HELP1.TXT`;
+  штатная F411-сборка не создаёт System APP, потому что все включённые по
+  умолчанию компоненты встроены;
 - `build.flags` с точными compile-time ключами.
 
 `WBMP.APP` и `MARKDOWN.APP` вместе не создаются. Графический
@@ -175,8 +191,9 @@ WS0010-профиль предназначен для Winstar WEH001602A с ин
 На Windows кнопка Upload собирает комплект, прошивает resident `.bin` через
 DFU, ждёт возвращения последовательного порта и через терминальный протокол
 MKC устанавливает и проверяет файлы этого же комплекта в `/System`. Отдельно
-открывать USB-диск не нужно — это работает и сразу после форматирования C6,
-когда `USBDISK.APP` ещё отсутствует. Выбранные в IDE APP загружаются,
+открывать USB-диск не нужно. На F401 это работает и сразу после форматирования
+C6, когда `USBDISK.APP` ещё отсутствует; на F411 используется встроенный
+USB-диск. Выбранные в IDE APP загружаются,
 выключенные штатные APP удаляются; пользовательские файлы не трогаются.
 Плата использует собственный uploader `mk61Upload`, поэтому наследуемый
 рецепт STM32CubeProgrammer не может незаметно обойти второй этап.
@@ -203,11 +220,18 @@ APP от другой платформы или экрана. Перед Upload 
 находиться один MK61s. При ошибке IDE покажет неуспешную загрузку, даже если
 resident уже прошился; повторно прошивать его для установки APP не надо.
 
-Восстановление без DFU для Classic V2/UC1609 (путь замените на каталог
+Восстановление без DFU для F401 Classic V2/UC1609 (путь замените на каталог
 `System` своей сборки, а COM9 — на порт своего устройства):
 
 ```bat
 tools\mkc.cmd --install-system "binary\mk61s-M-classic-v2-uc1609-f401\System" --expect-profile classic-v2-uc1609 --port COM9
+```
+
+Для штатной F411-сборки со встроенным USB-диском добавляется явный ключ,
+разрешающий отсутствие `USBDISK.APP` и удаляющий его старую внешнюю копию:
+
+```bat
+tools\mkc.cmd --install-system "binary\mk61s-M-mini-v2-lcd1602-a00-f411\System" --expect-profile mini-v2-lcd1602-a00 --resident-usbdisk --port COM9
 ```
 
 На macOS/Linux Upload пока прошивает только resident. Там по-прежнему нужно
@@ -222,7 +246,8 @@ Legacy-путь `tools/build_f401_bundle.sh` запускает отдельны
 LTO и host-упаковщик ZX0. Он оставлен для пользовательских manifest APP, где
 пока нужны `arduino-cli`, Bash и отдельный C++17-компилятор.
 
-Плата `MK61s F401 + APP` вызывает тот же самостоятельный SDK ABI 6, что
+Платы `MK61s F401 + APP` и `MK61s F411 + APP` вызывают тот же
+самостоятельный SDK ABI 6, что
 и командные сборщики. Каждый System APP связывается для виртуальной
 базы `0x20000000`, без импорта адресов из resident ELF. Загрузчик арендует
 его размер и исправляет указатели по таблице релокаций. Упаковщик выбирает
@@ -244,7 +269,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 
 | Сообщение | Что проверить |
 | --- | --- |
-| Плата не видна | Закрыть все окна IDE, повторить установщик и сверить напечатанный sketchbook с `File → Preferences → Sketchbook location`; после запуска искать `MK61s F401 + APP` в Board Selector/`Tools → Board`, а не в Boards Manager. |
+| Плата не видна | Закрыть все окна IDE, повторить установщик и сверить напечатанный sketchbook с `File → Preferences → Sketchbook location`; после запуска искать `MK61s F401 + APP` или `MK61s F411 + APP` в Board Selector/`Tools → Board`, а не в Boards Manager. |
 | `LiquidCrystal.h: No such file` | Установить `LiquidCrystal 1.0.7` через Library Manager. |
 | Не найден `STM32duino RTC` | Установить `STM32duino RTC 1.9.0`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |
@@ -255,6 +280,6 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
 | `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются Python-скриптом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
 | `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
-| Upload не находит устройство | Перевести STM32F401 в системный DFU и повторить Upload. |
+| Upload не находит устройство | Проверить, что выбрана плата для реально установленного F401/F411, перевести контроллер в системный DFU и повторить Upload. |
 | `MKC terminal installer not found: C:\Program Files\Arduino IDE\tools\.mkc\mkc.ps1` | Используется старый uploader, который ошибочно полагается на `build.source.path` во время Upload. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и заново соберите проект. Если resident уже прошит, достаточно приведённой выше команды `mkc.cmd --install-system`; повторный DFU не нужен. |
 | `System APP installation failed` | Resident уже может быть прошит. Проверьте COM-порт и закройте все программы, использующие его, затем выполните показанную выше команду `mkc.cmd --install-system` без повторного DFU. |
