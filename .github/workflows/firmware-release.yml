@@ -279,7 +279,7 @@ jobs:
           $ideConfig = Join-Path `
             (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
           $properties = (& arduino-cli --config-file $ideConfig compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path (Join-Path $env:RUNNER_TEMP 'mk61-upload-properties') `
             --show-properties=expanded code | Out-String)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -349,7 +349,7 @@ jobs:
           }
           $buildPath = Join-Path $safeCache 'arduino-ide-f401-mini-v2'
           & arduino-cli --config-file $ideConfig compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 

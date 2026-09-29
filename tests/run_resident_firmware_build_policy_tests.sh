@@ -149,5 +149,9 @@ if printf '%s\n' "$arduino_ide_job" |
     grep -Fq -- 'mk61_documents=disabled'; then
   fail 'Windows Arduino IDE V2 job disables the document APP'
 fi
+if printf '%s\n' "$arduino_ide_job" |
+    grep -Fq -- 'mk61_font_settings='; then
+  fail 'Windows Arduino IDE job passes the removed font-settings menu option'
+fi
 
 printf 'resident_firmware_build_policy_tests: ok\n'
