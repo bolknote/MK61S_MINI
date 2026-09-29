@@ -37,11 +37,12 @@ board_hook_ps="$root/tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-ap
 board_install_sh="$root/tools/.mk61-arduino-board/install.sh"
 board_install_ps="$root/tools/.mk61-arduino-board/install.ps1"
 release_workflow="$root/.github/workflows/firmware-release.yml"
+sketch="$root/code/mk61s-M.ino"
 
 for file in "$f411_matrix" "$f411_o3_check" "$f401_check" "$f401_bundle" \
     "$firmware_sh" "$firmware_ps" "$gcc_cmake" "$gcc_ps" "$board" \
     "$board_hook_sh" "$board_hook_ps" "$board_install_sh" \
-    "$board_install_ps" "$release_workflow"; do
+    "$board_install_ps" "$release_workflow" "$sketch"; do
   test -s "$file" || fail "missing build path: $file"
 done
 
@@ -105,6 +106,8 @@ require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
 require_text "$board" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$board" 'mk61_f401_app.build.st_extra_flags=-pipe '
 require_text "$board" 'mk61_f411.build.st_extra_flags=-pipe '
+require_text "$sketch" 'void mk61_display_refresh(void);'
+require_text "$sketch" 'void idle_main_process(void);'
 require_text "$board_hook_sh" 'seal_resident "$resident_bin"'
 require_text "$board_hook_ps" "'seal-firmware.ps1'"
 require_text "$board_hook_sh" 'seal-firmware-elf.py'

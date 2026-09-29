@@ -269,6 +269,8 @@ const   char* const mnemo[COUNT_EXT_COMMAND] = {"empty ", "0.2 sec", "0.5 sec", 
 /*===============================================================================================================*/
 
 static void service_m61_controls(void);
+void mk61_display_refresh(void);
+void idle_main_process(void);
 
 void reset_ext_program_state(void) {
   memset(&ext61_program, 0, sizeof(ext61_program));
