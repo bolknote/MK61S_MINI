@@ -615,6 +615,65 @@ def test_restart_initialization():
         number(rows[-1],'r',0)
     print('ELITE: complete restart from hot/upgraded ships after both enemy types OK',flush=True)
 
+def test_input_dispatch_domain():
+    # Check every gap between command families, and recover from each error
+    # with a free query. Literal-entry shortcuts must not change acceptance.
+    port=set(range(16))|set(range(20,26))|set(range(30,36))|set(range(40,46))
+    port |= set(range(50,54))|{60}|set(range(70,100))
+    battle=set(range(10))|set(range(16,20))|set(range(80,86))
+    battle |= {10*m+a for m in range(1,5) for a in range(1,5)}
+    extra=['-1','-0.5','0.5','9.5','15.5','30.5','80.5','99.5','326','1000','99999999']
+    count=0
+    for setup,accepted in ((START,port),(encounter(3),battle)):
+        invalid=[str(n) for n in range(100) if n not in accepted]+extra
+        commands=setup+['dump']
+        for value in invalid:commands += [f'input {value}','input 0']
+        rows=play(commands)
+        start=sum(not c.startswith('set ') for c in setup)
+        before=rows[start]
+        for index,value in enumerate(invalid):
+            error,recovered=rows[start+1+2*index:start+3+2*index]
+            assert state(error)==state(recovered)==state(before),(value,error,recovered)
+            assert error['frame']==screen('ErrOr     СП'),(value,error)
+            assert recovered['frame']==before['frame'],(value,recovered)
+        count+=len(invalid)
+    print(f'ELITE: {count} invalid command boundaries and recovery queries OK',flush=True)
+
+def test_target_selection_transitions():
+    # Launch all five drones through normal turns, then exercise every pair
+    # of live targets and selection/refusal after each drone is destroyed.
+    setup=encounter(3)+['set 27 2 30']+['input 23']*9
+    commands=setup+['dump'];events=[]
+    def select(target):
+        commands.append(f'input {80+target}');events.append(('select',target))
+    for current in range(6):
+        for target in range(6):select(current);select(target)
+    for target in range(1,6):
+        select(target)
+        commands += ['set 27 2 14','set 24 4 99','set 24 5 60','set 24 7 0','input 21']
+        events.append(('shot',target))
+        for choice in range(6):select(choice)
+    rows=play(commands)
+    start=sum(not c.startswith('set ') for c in setup)
+    before=rows[start]
+    assert before['pages'][4][:7]==[18,18,18,18,18,4,5],before
+    assert len(rows)==start+1+len(events)
+    for (kind,target),after in zip(events,rows[start+1:]):
+        if kind=='shot':
+            assert after['pages'][4][target-1]==0,after
+            assert after['pages'][4][6]==5-target,after
+        else:
+            hp=before['pages'][3][1] if target==0 else before['pages'][4][target-1]
+            expected=[page.copy() for page in state(before)]
+            if hp:
+                expected[3][5]=target
+                number(after,'H',hp)
+            else:
+                assert after['frame']==screen('ErrOr     СП'),after
+            assert state(after)==expected,(target,before,after)
+        before=after
+    print('ELITE: all 36 live target transitions and five successive casualties OK',flush=True)
+
 def main():
     directory=ROOT/'programs/games/ELITE'
     assert not list(directory.glob('part*.m61')) and not list(directory.glob('b[0-9][0-9].m61'))
@@ -640,7 +699,7 @@ def main():
            test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
            test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
            test_page_transaction_boundaries,test_station_transaction_boundaries,test_market_reserved_fields,test_trade_credit_boundaries,
-           test_restart_initialization)
+           test_restart_initialization,test_input_dispatch_domain,test_target_selection_transitions)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

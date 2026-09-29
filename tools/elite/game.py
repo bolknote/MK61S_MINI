@@ -32,15 +32,17 @@ def create_game():
     m.label('bad_action').set('A',99).op('ret')
 
     m=a.module(12,'input')
-    m.label('port_input').ld(0).n(10).op('-').jneg('set_view')
-    m.n(60).op('-').jge('select_check')
-    m.n(10).op('+').jz('jump')
-    m.n(10).op('+').jge('station_check')
-    m.ld(0).st(1).raw(0x0C).st(1).n(6).op('-').jge('bad_action')
-    m.ld(0).ld(1).op('-').st(8).n(30).op('-').jneg('set_view')
-    m.n(5).op('swap','-').raw(0x32).st(7).jump('trade')
-    m.label('station_check').n(4).op('-').jge('bad_action').jump('station')
-    m.label('select_check').n(256).op('-').jge('bad_action').jump('select_world')
+    # These literals follow closed operations and use automatic stack lift.
+    # Keep stores around ВП: commodity extraction still depends on X2.
+    m.label('port_input').ld(0).raw(1,0).op('-').jneg('set_view')
+    m.raw(6,0).op('-').jge('select_check')
+    m.raw(1,0).op('+').jz('jump')
+    m.raw(1,0).op('+').jge('station_check')
+    m.ld(0).st(1).raw(0x0C).st(1).raw(6).op('-').jge('bad_action')
+    m.ld(0).ld(1).op('-').st(8).raw(3,0).op('-').jneg('set_view')
+    m.raw(5).op('swap','-').raw(0x32).st(7).jump('trade')
+    m.label('station_check').raw(4).op('-').jge('bad_action').jump('station')
+    m.label('select_check').raw(2,5,6).op('-').jge('bad_action').jump('select_world')
     m.label('set_view').ld(0).st('A').op('ret')
 
     m=a.module(17,'views')

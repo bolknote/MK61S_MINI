@@ -5,18 +5,20 @@ from economy import dynamic_get
 
 def add_combat(a):
     m=a.module(13,'combat')
-    m.label('combat_input').ld(0).n(10).op('-').jneg('set_view')
-    m.n(70).op('-').jge('choose_target')
-    m.n(64).op('+').jneg('fight_command')
-    m.n(4).op('-').jneg('set_view')
+    # Closed recalls/conditions supply automatic lift for these literals;
+    # parsing exports R1/R2, not the lower stack. Keep the X2 extractor.
+    m.label('combat_input').ld(0).raw(1,0).op('-').jneg('set_view')
+    m.raw(7,0).op('-').jge('choose_target')
+    m.raw(6,4).op('+').jneg('fight_command')
+    m.raw(4).op('-').jneg('set_view')
     m.label('fight_command').ld(0).st(2).raw(0x0C).st(2).jz('bad_action')
-    m.n(5).op('-').jge('bad_action')
-    m.ld(0).ld(2).op('-').n(10).op('/').st(1).n(5).op('-').jge('bad_action').jump('fight')
-    m.label('choose_target').n(6).op('-').jge('bad_action')
+    m.raw(5).op('-').jge('bad_action')
+    m.ld(0).ld(2).op('-').raw(1,0).op('/').st(1).raw(5).op('-').jge('bad_action').jump('fight')
+    m.label('choose_target').raw(6).op('-').jge('bad_action')
     # X1 retains 6 from the bound check; Lx undoes that subtraction.
-    m.raw(0x0F).op('+').st(1).call('target_hp').jz('bad_action').st(8)
-    m.label('store_target').ld(1).st(5).put(27,5)
-    m.ld(1).call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
+    m.raw(0x0F).op('+').st('C').visit(27,'select_target').jz('bad_action').st(8)
+    m.ld('C').st(1).st(5)
+    m.call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
 
     # Outside page callbacks: R1 maneuver, R2 action.
     # Between commands R5/R6/R7/R8 cache target / live drones / target glyph
@@ -37,9 +39,8 @@ def add_combat(a):
     m.open_page(27).call('enemy_tick')
     # enemy_tick returns action RC, laser RD, incoming RE, launch RF.
     m.visit(24,'weapon')
-    # PILOT returns hull RC and shot RD. Keep the hull outside R0..8
-    # while DRONES is nested; move launch RF into its RE input first.
-    m.ld('F').st('E').ld('C').st('F').ld('D').st('C')
+    # PILOT exports shot RC, launch RE and hull RF for the next page.
+    # No caller-side shuffle is needed before nesting DRONES.
     m.ld(4).n(4).op('-').jnz('shot_ready').ld('C').n(2).op('/','int').st('C')
     m.label('shot_ready').ld(5).st('D').visit(28,'drone_tick')
     # DRONES leaves shot RC, live count RD, selected hull RE, player hull RF.
@@ -55,9 +56,9 @@ def add_combat(a):
     m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat',lift=False).op('ret')
 
     m=a.module(14,'weapons')
-    # PILOT callback: action RC, laser damage RD, incoming RE
-    # -> player hull RC, outgoing shot RD. Shield boost precedes the hit.
-    # Assign the final outgoing RD in each arm and read incoming RE directly.
+    # PILOT callback: action RC, laser damage RD, incoming RE, launch RF
+    # -> outgoing shot RC, launch RE, player hull RF. Shield precedes the hit.
+    # Each arm first sets RD; after applying incoming RE, export the results.
     # Saturation reuses the comparison's bound in X1 (60 / 99999999).
     m.page(24,'weapon',inline=False).ld(7).n(10).op('-').max0().st(7)
     m.ld('C').n(1).op('-').jz('laser')
@@ -71,7 +72,7 @@ def add_combat(a):
     m.label('weapon_done')
     m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
     m.ld(4).op('+').max0().st(4).set(5,0)
-    m.label('shield_holds').add(3,1).ld(4).st('C').op('ret')
+    m.label('shield_holds').add(3,1).ld('F').st('E').ld('D').st('C').ld(4).st('F').op('ret')
     m.end_page().page(24,'reward').add(0,250).n(99999999).op('-').jneg('reward_done').raw(0x0F).st(0)
     m.label('reward_done').op('ret')
     m.end_page().page(25,'count_kill').add(8,1).op('ret')
@@ -108,23 +109,29 @@ def add_combat(a):
 
     m.end_page()
 
-    m.label('carrier_hp').get(27,1).op('ret')
-
     m=a.module(16,'combat views')
+    # As in port_view, each condition closes entry before the next literal.
     m.label('combat_view').ld('A').jz('contact_name')
-    m.n(9).op('-').jz('range_view')
-    m.n(7).op('-').jz('target_view')
-    m.n(1).op('-').jz('drones_view')
-    m.n(1).op('-').jz('charge_view').jump('target_number')
+    m.raw(9).op('-').jz('range_view')
+    m.raw(7).op('-').jz('target_view')
+    m.raw(1).op('-').jz('drones_view')
+    m.raw(1).op('-').jz('charge_view').jump('target_number')
     m.label('range_view').get(27,2).jump('draw_range')
     m.label('target_view').ld(8).st('C').ld(7).st('D').ld(6).st('B').visit(29,'battle_frame').op('ret')
     m.label('drones_view').ld(6).st('C').set('D',GLYPHS['d']).jump('draw_number')
     m.label('charge_view').get(27,6).set('D',GLYPHS['P']).jump('draw_number')
     m.label('target_number').ld(5).st('C').set('D',GLYPHS['t']).jump('draw_number')
-    m.label('contact_name').get(27,0).n(4).op('-').jz('alien_name')
+    m.label('contact_name').get(27,0).raw(4).op('-').jz('alien_name')
     show_text(m,'pirate');m.op('ret')
     m.label('alien_name');show_text(m,'thargoid');m.op('ret')
     m.label('show_result').ld('A').st('F').jump('show_message')
-    # X target index -> X/RC hull. R0..8 are preserved for command parsing.
-    m.label('target_hp').jz('carrier_hp')
-    m.n(1).op('-').st('B').page_bytes(28,0xDB,0x4C).op('ret')
+    # RC target -> X/RD hull. COMBAT remains open from the hull check to
+    # the target write; a drone read temporarily nests DRONES. Rejecting a
+    # dead target changes no page or cache. Both read paths already leave
+    # the hull in X, and the outer close preserves it for the caller.
+    m.page(27,'select_target').ld('C').jz('select_carrier')
+    m.raw(1).op('-').st('B').page_bytes(28,0xDB,0x4D).jump('select_hp')
+    m.label('select_carrier').ld(1).st('D')
+    # This existing far condition avoids a slower native branch on refusals.
+    m.label('select_hp').jz('select_done',far=True).ld('C').st(5).ld('D')
+    m.label('select_done').op('ret').end_page()
