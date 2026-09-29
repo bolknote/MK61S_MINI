@@ -13,6 +13,17 @@ static void check_system_window(const char* top, const char* bottom,
   lcd_ru::scan_text(map, top, width);
   lcd_ru::scan_text(map, bottom, width);
   assert(!map.overflow);
+
+  const char* lines[] = {top, bottom};
+  for(const char* line : lines) {
+    for(u8 used = 0; *line != 0 && used < width; ++used) {
+      const u16 codepoint = lcd_ru::display_codepoint(lcd_ru::read_text(line));
+      u8 character = 0;
+      if(lcd_ru::rom_char(codepoint, character)) continue;
+      if(lcd_ru::slot_for(map, codepoint) >= 0) continue;
+      assert(lcd_ru::fallback_char(codepoint, character) && character != '?');
+    }
+  }
 }
 
 int main() {
@@ -20,6 +31,7 @@ int main() {
   // fit alongside the selection marker without exhausting its eight CGRAM
   // slots on either the A00 or A02 controller.
   check_system_window(M8("Разработка"), M8("Система"), 15);
+  check_system_window(M8("DFU прошивка"), M8("USB-диск"), 15);
   check_system_window(M8("Перезагрузка"), M8("Информация"), 15);
   check_system_window(M8("Информация"), M8("Плата"), 15);
   check_system_window(M8("Плата"), M8("Формат диска"), 15);

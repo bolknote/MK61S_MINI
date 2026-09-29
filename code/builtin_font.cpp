@@ -153,6 +153,61 @@ struct PackedCyrillic5x8 {
 
 static constexpr PackedCyrillic5x8 PACKED_CYRILLIC_5X8;
 
+#if defined(MK61_LCD1602_A00)
+// A build may serve both an A00 character panel and a graphical USB surface.
+// The graphical face keeps the complete Cyrillic alphabet packed, while the
+// physical panel still needs stable row-major rasters for letters absent from
+// its CGROM.  Derive that small subset at compile time: retaining CYRILLIC
+// itself here would put the complete uncompressed alphabet back into Flash.
+static constexpr usize A00_CGRAM_CYRILLIC_COUNT = 19;
+
+constexpr bool a00NeedsCgram(u16 codepoint) {
+  switch(codepoint) {
+    case 0x0411: // Б
+    case 0x0413: // Г
+    case 0x0414: // Д
+    case 0x0416: // Ж
+    case 0x0418: // И
+    case 0x0419: // Й
+    case 0x041B: // Л
+    case 0x041F: // П
+    case 0x0423: // У
+    case 0x0424: // Ф
+    case 0x0426: // Ц
+    case 0x0427: // Ч
+    case 0x0428: // Ш
+    case 0x0429: // Щ
+    case 0x042A: // Ъ
+    case 0x042B: // Ы
+    case 0x042D: // Э
+    case 0x042E: // Ю
+    case 0x042F: // Я
+      return true;
+    default:
+      return false;
+  }
+}
+
+struct A00CgramCyrillic {
+  Glyph5x8 glyphs[A00_CGRAM_CYRILLIC_COUNT] = {};
+
+  constexpr A00CgramCyrillic() {
+    usize output = 0;
+    for(usize index = 0; index < STANDARD_CYRILLIC_COUNT; ++index) {
+      if(a00NeedsCgram(CYRILLIC[index].codepoint)) {
+        glyphs[output++] = CYRILLIC[index];
+      }
+    }
+  }
+};
+
+static constexpr A00CgramCyrillic A00_CGRAM_CYRILLIC;
+static_assert(A00_CGRAM_CYRILLIC.glyphs[0].codepoint == 0x0411 &&
+              A00_CGRAM_CYRILLIC.glyphs[A00_CGRAM_CYRILLIC_COUNT - 1]
+                  .codepoint == 0x042F,
+              "A00 Cyrillic CGRAM subset changed");
+#endif
+
 static i16 standardCyrillicIndex(u16 codepoint) {
   if(codepoint >= 0x0410 && codepoint <= 0x0415) {
     return (i16) (codepoint - 0x0410);
@@ -269,6 +324,12 @@ const u8* rows5x8(u16 codepoint) {
 #if MK61_BUILTIN_HAS_STANDARD_CYRILLIC && !MK61_BUILTIN_FULL_CYRILLIC
   for(usize i = 0; i < sizeof(CYRILLIC) / sizeof(CYRILLIC[0]); i++) {
     if(CYRILLIC[i].codepoint == codepoint) return CYRILLIC[i].rows;
+  }
+#elif MK61_BUILTIN_FULL_CYRILLIC && defined(MK61_LCD1602_A00)
+  for(usize i = 0; i < A00_CGRAM_CYRILLIC_COUNT; ++i) {
+    if(A00_CGRAM_CYRILLIC.glyphs[i].codepoint == codepoint) {
+      return A00_CGRAM_CYRILLIC.glyphs[i].rows;
+    }
   }
 #endif
   return NULL;

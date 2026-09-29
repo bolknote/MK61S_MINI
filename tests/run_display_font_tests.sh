@@ -56,13 +56,19 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 
 "$ws0010_out"
 
-for profile in a00 a02 ws0010; do
+for profile in a00 a00-usb-screen a02 ws0010; do
   profile_flags=()
   case "$profile" in
     a00) profile_flags=(-DMK61_LCD1602_A00) ;;
+    a00-usb-screen)
+      profile_flags=(-DMK61_LCD1602_A00 -DMK61_ENABLE_USB_SCREEN=1) ;;
     a02) profile_flags=(-DMK61_LCD1602_A02) ;;
     ws0010) profile_flags=(-DMK61_OLED1602_WS0010 -DMK61_WS0010_GRAPHICS_100X16=0) ;;
   esac
+  profile_sources=()
+  if [[ "$profile" == a00-usb-screen ]]; then
+    profile_sources+=("$root/code/ERM19264_graphics_font.cpp")
+  fi
   clang++ -std=c++17 -Wall -Wextra -Werror \
     "${sanitizer_flags[@]}" \
     -DARDUINO=100 \
@@ -71,6 +77,7 @@ for profile in a00 a02 ws0010; do
     -I"$root/tests/mk_math_shim" \
     "$root/tests/builtin_font_profile_self_test.cpp" \
     "$root/code/builtin_font.cpp" \
+    "${profile_sources[@]}" \
     -o "$profile_out"
   "$profile_out"
 
@@ -84,6 +91,7 @@ for profile in a00 a02 ws0010; do
     -I"$root/tests/mk_math_shim" \
     "$root/tests/lcd_ru_m8_self_test.cpp" \
     "$root/code/builtin_font.cpp" \
+    "${profile_sources[@]}" \
     -o "$lcd_ru_out"
   "$lcd_ru_out"
 done
