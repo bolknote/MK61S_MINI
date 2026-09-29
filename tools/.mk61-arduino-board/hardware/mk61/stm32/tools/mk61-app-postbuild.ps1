@@ -182,6 +182,19 @@ function Build-Mk61Bundle {
         -not [IO.Directory]::Exists($BuildPath)) {
         Stop-Mk61Build 'Arduino build path was not found'
     }
+
+    # GCC also creates private assembler files while the portable APPs are
+    # built after the resident image.  On Windows those files still follow
+    # TEMP/TMP, independently of Arduino's --build-path and the resident-link
+    # wrapper.  Keep every child process below Arduino's ASCII-only build
+    # directory so a Cyrillic Windows user profile cannot break APP packing.
+    $safeToolTemp = [IO.Path]::GetFullPath(
+        (Join-Path $BuildPath 'mk61-tool-temp'))
+    [IO.Directory]::CreateDirectory($safeToolTemp) | Out-Null
+    $env:TEMP = $safeToolTemp
+    $env:TMP = $safeToolTemp
+    $env:TMPDIR = $safeToolTemp
+
     if ([string]::IsNullOrWhiteSpace($Project) -or
         [string]::IsNullOrWhiteSpace($Bundle)) {
         Stop-Mk61Build 'Arduino project or bundle name is missing'
