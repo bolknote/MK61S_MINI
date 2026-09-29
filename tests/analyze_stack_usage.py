@@ -27,6 +27,13 @@ DROP_OPTIONS = {"-MMD", "-MD", "-MP", "-MG", "-ffat-lto-objects",
                 "-fno-fat-lto-objects", "-fstack-usage", "-fno-lto"}
 
 
+def analysis_workspace(compile_commands: Path):
+    """Keep compiler outputs beside the caller's vetted build directory."""
+    return tempfile.TemporaryDirectory(
+        prefix=".mk61-stack-analysis-",
+        dir=compile_commands.resolve().parent)
+
+
 def windows_command_line(command: str) -> list[str]:
     # ctypes defaults DLL return values to C int, which loses pointers on
     # Win64. Bind both allocation and release with their actual pointer types.
@@ -182,7 +189,7 @@ def main() -> int:
         entries = selected_entries(raw, args.source_root, args.source)
         if not entries:
             raise ValueError("no selected translation units in compile database")
-        with tempfile.TemporaryDirectory(prefix="mk61-stack-analysis-") as temporary:
+        with analysis_workspace(args.compile_commands) as temporary:
             work = Path(temporary)
             with concurrent.futures.ThreadPoolExecutor(
                 max_workers=min(args.jobs, len(entries))

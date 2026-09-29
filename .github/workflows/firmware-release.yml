@@ -390,6 +390,12 @@ jobs:
           & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command $check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Verify concurrent System APP catalog on Windows
+        shell: pwsh
+        run: |
+          python tests/system_app_catalog_self_test.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
       # Windows IDE installation needs only Python, not Visual Studio/MinGW.
@@ -410,6 +416,13 @@ jobs:
               $safeCache -match '[^\x20-\x7e]') {
             throw "Arduino IDE build cache is not ASCII-only: $safeCache"
           }
+          # Python's default temporary directory normally lives below the
+          # Windows user profile. Keep it deliberately non-ASCII here: every
+          # ARM compiler output must still stay below the safe build cache.
+          $unicodeTemp = Join-Path $env:RUNNER_TEMP 'Temp пользователя Роман'
+          [IO.Directory]::CreateDirectory($unicodeTemp) | Out-Null
+          $env:TEMP = $unicodeTemp
+          $env:TMP = $unicodeTemp
           $buildPath = Join-Path $safeCache 'arduino-ide-f401-mini-v2'
           & arduino-cli --config-file $ideConfig compile `
             --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' `

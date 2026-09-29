@@ -139,6 +139,22 @@ class AnalyzeStackUsageSelfTest(unittest.TestCase):
                 {Path(entry["file"]) for entry in selected}, {inside, exact}
             )
 
+    def test_analysis_workspace_stays_beside_compile_database(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            unsafe_default = root / "Пользователь" / "Temp"
+            unsafe_default.mkdir(parents=True)
+            safe_build = root / "ascii-build"
+            safe_build.mkdir()
+            database = safe_build / "compile_commands.json"
+            with patch.object(analysis.tempfile, "tempdir",
+                              str(unsafe_default)):
+                with analysis.analysis_workspace(database) as temporary:
+                    work = Path(temporary)
+                    self.assertEqual(work.parent, safe_build.resolve())
+                    self.assertTrue(work.name.startswith(
+                        ".mk61-stack-analysis-"))
+
 
 if __name__ == "__main__":
     unittest.main()

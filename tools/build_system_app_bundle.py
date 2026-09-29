@@ -2,6 +2,8 @@
 """Build the canonical /System directory with the unified current APP ABI."""
 
 import argparse
+from contextlib import contextmanager
+import errno
 import hashlib
 import json
 import os
@@ -11,6 +13,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from m8_codec import decode as decode_m8
@@ -31,6 +34,93 @@ MODULES = (
     ("usbdisk", "USBDISK.APP", "usbdisk"),
     ("explorer", "EXPLORER.APP", "explorer"),
 )
+CATALOG_LOCK_TIMEOUT_SECONDS = 120.0
+
+
+def empty_catalog() -> dict:
+    return {"format": 1, "abi": 6, "apps": []}
+
+
+def atomic_write(path: Path, payload: bytes) -> None:
+    """Replace *path* with a complete same-directory temporary file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+                prefix=f".{path.name}.", suffix=".tmp",
+                dir=path.parent, delete=False) as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+            temporary = Path(stream.name)
+        os.replace(temporary, path)
+        temporary = None
+    finally:
+        if temporary is not None:
+            try:
+                temporary.unlink()
+            except FileNotFoundError:
+                pass
+
+
+@contextmanager
+def catalog_lock(catalog: Path):
+    """Serialize manifest/object publication across Arduino IDE processes."""
+    catalog.mkdir(parents=True, exist_ok=True)
+    lock_path = catalog / ".catalog.lock"
+    stream = lock_path.open("a+b")
+    locked = False
+    try:
+        # Windows byte-range locks require the byte to exist. Two creators may
+        # write the same sentinel concurrently; both writes are harmless.
+        stream.seek(0, os.SEEK_END)
+        if stream.tell() == 0:
+            stream.write(b"\0")
+            stream.flush()
+        stream.seek(0)
+        if os.name == "nt":
+            import msvcrt
+            deadline = time.monotonic() + CATALOG_LOCK_TIMEOUT_SECONDS
+            while True:
+                try:
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError as error:
+                    if error.errno not in (errno.EACCES, errno.EAGAIN,
+                                            errno.EDEADLK):
+                        raise
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(
+                            f"timed out waiting for APP catalog lock: "
+                            f"{lock_path}") from error
+                    time.sleep(0.05)
+        else:
+            import fcntl
+            fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+        locked = True
+        yield
+    finally:
+        if locked:
+            stream.seek(0)
+            if os.name == "nt":
+                import msvcrt
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+        stream.close()
+
+
+def write_catalog(catalog: Path, manifest: dict) -> None:
+    payload = (json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode(
+        "utf-8")
+    atomic_write(catalog / "catalog.json", payload)
+
+
+def system_app_workspace(output: Path):
+    """Keep ARM GCC outputs under Arduino's already-vetted build path."""
+    return tempfile.TemporaryDirectory(
+        prefix=".mk61-system-app-", dir=output.resolve().parent)
 
 
 def app_variant(system: str, args: argparse.Namespace) -> str:
@@ -45,20 +135,27 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
 def read_catalog(catalog: Path) -> dict:
     manifest_path = catalog / "catalog.json"
     if not manifest_path.exists():
-        return {"format": 1, "abi": 6, "apps": []}
+        return empty_catalog()
     try:
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
         raise ValueError(f"invalid APP catalog: {manifest_path}: {error}")
-    if manifest.get("format") != 1 or manifest.get("abi") != 6 or \
+    if not isinstance(manifest, dict) or manifest.get("format") != 1 or \
+            manifest.get("abi") != 6 or \
             not isinstance(manifest.get("apps"), list):
         raise ValueError(f"unsupported APP catalog: {manifest_path}")
+    for record in manifest["apps"]:
+        if not isinstance(record, dict) or not all(
+                isinstance(record.get(field), str)
+                for field in ("name", "system", "variant", "build_key",
+                              "sha256", "path")) or \
+                not isinstance(record.get("size"), int):
+            raise ValueError(f"invalid APP catalog record: {manifest_path}")
     return manifest
 
 
-def catalog_source_key(args: argparse.Namespace, toolchain: Path) -> str:
-    """Fingerprint every input that may change a portable System APP."""
-    digest = hashlib.sha256()
+def catalog_source_inputs() -> list[Path]:
+    """Return every source and policy file that can accept/reject an APP."""
     inputs: list[Path] = []
     build_suffixes = {
         ".S", ".c", ".cpp", ".def", ".h", ".hpp", ".inc", ".ino",
@@ -71,8 +168,16 @@ def catalog_source_key(args: argparse.Namespace, toolchain: Path) -> str:
                    path.suffix in build_suffixes]
     inputs += [Path(__file__).resolve(),
                ROOT / "tools/build_portable_app.py",
-               ROOT / "tools/build_mk61_module_pack.sh"]
-    for path in sorted(set(inputs), key=lambda item: item.as_posix()):
+               ROOT / "tools/build_mk61_module_pack.sh",
+               ROOT / "tests/analyze_stack_usage.py",
+               ROOT / "tests/check_stack_usage.py"]
+    return sorted(set(inputs), key=lambda item: item.as_posix())
+
+
+def catalog_source_key(args: argparse.Namespace, toolchain: Path) -> str:
+    """Fingerprint every input that may change a portable System APP."""
+    digest = hashlib.sha256()
+    for path in catalog_source_inputs():
         relative = path.relative_to(ROOT).as_posix().encode("utf-8")
         payload = path.read_bytes()
         digest.update(struct.pack("<I", len(relative)))
@@ -107,81 +212,103 @@ def app_build_key(source_key: str, filename: str, system: str,
     return hashlib.sha256(identity.encode("utf-8")).hexdigest()
 
 
-def cached_catalog_app(filename: str, system: str, build_key: str,
-                       args: argparse.Namespace) -> Path | None:
+def cached_catalog_payload(filename: str, system: str, build_key: str,
+                           args: argparse.Namespace) -> bytes | None:
     catalog = args.catalog_dir.resolve()
-    manifest = read_catalog(catalog)
-    variant = app_variant(system, args)
-    for record in manifest["apps"]:
-        if record.get("name") != filename or \
-                record.get("variant") != variant or \
-                record.get("build_key") != build_key:
-            continue
-        digest = record.get("sha256", "")
-        relative = record.get("path", "")
-        if not isinstance(digest, str) or len(digest) != 64 or \
-                relative != f"objects/{digest}.APP":
-            raise ValueError(f"invalid APP catalog record: {filename}")
-        stored = catalog / relative
-        if not stored.is_file():
-            raise ValueError(f"APP catalog object is missing: {stored}")
-        payload = stored.read_bytes()
-        if hashlib.sha256(payload).hexdigest() != digest or \
-                len(payload) != record.get("size"):
-            raise ValueError(f"APP catalog object is corrupted: {stored}")
-        if len(payload) < 64 or payload[:8] != b"MK61APP\0" or \
-                struct.unpack_from("<H", payload, 12)[0] != 6:
-            raise ValueError(f"APP catalog object has invalid ABI: {stored}")
-        return stored
+    with catalog_lock(catalog):
+        try:
+            manifest = read_catalog(catalog)
+        except (OSError, ValueError) as error:
+            print(f"System APP cache ignored and will be rebuilt: {error}",
+                  file=sys.stderr)
+            try:
+                (catalog / "catalog.json").unlink()
+            except FileNotFoundError:
+                pass
+            return None
+        variant = app_variant(system, args)
+        for record in manifest["apps"]:
+            if record.get("name") != filename or \
+                    record.get("variant") != variant or \
+                    record.get("build_key") != build_key:
+                continue
+            try:
+                digest = record.get("sha256", "")
+                relative = record.get("path", "")
+                if len(digest) != 64 or relative != f"objects/{digest}.APP":
+                    raise ValueError(
+                        f"invalid APP catalog record: {filename}")
+                stored = catalog / relative
+                if not stored.is_file():
+                    raise ValueError(
+                        f"APP catalog object is missing: {stored}")
+                payload = stored.read_bytes()
+                if hashlib.sha256(payload).hexdigest() != digest or \
+                        len(payload) != record.get("size"):
+                    raise ValueError(
+                        f"APP catalog object is corrupted: {stored}")
+                if len(payload) < 64 or payload[:8] != b"MK61APP\0" or \
+                        struct.unpack_from("<H", payload, 12)[0] != 6:
+                    raise ValueError(
+                        f"APP catalog object has invalid ABI: {stored}")
+                # Materialize the complete object while the catalog is
+                # locked. A later publisher may then safely prune this
+                # content-addressed file without racing this build.
+                return payload
+            except (OSError, ValueError) as error:
+                print(f"System APP cache entry ignored and will be rebuilt: "
+                      f"{error}", file=sys.stderr)
+                manifest["apps"] = [item for item in manifest["apps"]
+                                    if item is not record]
+                write_catalog(catalog, manifest)
+                return None
     return None
 
 
 def publish_catalog(source: Path, filename: str, system: str,
                     build_key: str, args: argparse.Namespace) -> Path:
     catalog = args.catalog_dir.resolve()
-    objects = catalog / "objects"
-    objects.mkdir(parents=True, exist_ok=True)
     payload = source.read_bytes()
     digest = hashlib.sha256(payload).hexdigest()
-    stored = objects / (digest + ".APP")
-    if stored.exists():
-        if stored.read_bytes() != payload:
-            raise ValueError(f"APP catalog hash collision: {stored}")
-    else:
-        temporary = objects / (stored.name + ".tmp")
-        temporary.write_bytes(payload)
-        os.replace(temporary, stored)
+    with catalog_lock(catalog):
+        objects = catalog / "objects"
+        objects.mkdir(parents=True, exist_ok=True)
+        stored = objects / (digest + ".APP")
+        if stored.exists():
+            if stored.read_bytes() != payload:
+                raise ValueError(f"APP catalog hash collision: {stored}")
+        else:
+            atomic_write(stored, payload)
 
-    manifest_path = catalog / "catalog.json"
-    manifest = read_catalog(catalog)
+        try:
+            manifest = read_catalog(catalog)
+        except (OSError, ValueError) as error:
+            print(f"System APP catalog was invalid and has been reset: {error}",
+                  file=sys.stderr)
+            manifest = empty_catalog()
 
-    variant = app_variant(system, args)
-    record = {
-        "name": filename,
-        "system": system,
-        "variant": variant,
-        "build_key": build_key,
-        "sha256": digest,
-        "size": len(payload),
-        "path": f"objects/{stored.name}",
-    }
-    records = [item for item in manifest.get("apps", [])
-               if not (item.get("name") == filename and
-                       item.get("variant") == variant)]
-    records.append(record)
-    records.sort(key=lambda item: (item["name"], item["variant"]))
-    manifest["apps"] = records
-    temporary_manifest = catalog / "catalog.json.tmp"
-    temporary_manifest.write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8")
-    os.replace(temporary_manifest, manifest_path)
+        variant = app_variant(system, args)
+        record = {
+            "name": filename,
+            "system": system,
+            "variant": variant,
+            "build_key": build_key,
+            "sha256": digest,
+            "size": len(payload),
+            "path": f"objects/{stored.name}",
+        }
+        records = [item for item in manifest.get("apps", [])
+                   if not (item.get("name") == filename and
+                           item.get("variant") == variant)]
+        records.append(record)
+        records.sort(key=lambda item: (item["name"], item["variant"]))
+        manifest["apps"] = records
+        write_catalog(catalog, manifest)
 
-    referenced = {item["path"] for item in records}
-    for candidate in objects.glob("*.APP"):
-        relative = f"objects/{candidate.name}"
-        if relative not in referenced:
-            candidate.unlink()
+        referenced = {item["path"] for item in records}
+        for candidate in objects.glob("*.APP"):
+            if f"objects/{candidate.name}" not in referenced:
+                candidate.unlink()
     return stored
 
 
@@ -257,7 +384,7 @@ def build(args: argparse.Namespace) -> dict:
     catalog_hits: list[str] = []
     source_key = (catalog_source_key(args, toolchain)
                   if args.catalog_dir else None)
-    with tempfile.TemporaryDirectory(prefix="mk61-system-app-") as temporary:
+    with system_app_workspace(output) as temporary:
         work = Path(temporary)
         stage = work / "System"
         stage.mkdir()
@@ -266,7 +393,7 @@ def build(args: argparse.Namespace) -> dict:
                 continue
             build_key = (app_build_key(source_key, filename, system, args)
                          if source_key else None)
-            source = (cached_catalog_app(filename, system, build_key, args)
+            cached = (cached_catalog_payload(filename, system, build_key, args)
                       if build_key else None)
             command: list[str | Path] = [
                 sys.executable, ROOT / "tools/build_portable_app.py",
@@ -282,15 +409,16 @@ def build(args: argparse.Namespace) -> dict:
                 command.append("--text-only")
             if args.local_float_math and system in ("focal", "tinybasic"):
                 command.append("--local-float-math")
-            if source is None:
+            destination = stage / filename
+            if cached is None:
                 run(command)
                 source = work / key / filename
                 if build_key:
-                    source = publish_catalog(
-                        source, filename, system, build_key, args)
+                    publish_catalog(source, filename, system, build_key, args)
+                shutil.copy2(source, destination)
             else:
                 catalog_hits.append(filename)
-            shutil.copy2(source, stage / filename)
+                destination.write_bytes(cached)
             built.append(filename)
 
         run([sys.executable, ROOT / "tools/.mk61-app/build_terminal_help.py",

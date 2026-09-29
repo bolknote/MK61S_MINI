@@ -152,6 +152,12 @@ for required in \
 done
 printf '%s\n' "$arduino_ide_job" | grep -Fq -- 'build_cache.path' ||
   fail 'Windows Arduino IDE job does not verify its ASCII build cache'
+printf '%s\n' "$arduino_ide_job" |
+  grep -Fq -- 'tests/system_app_catalog_self_test.py' ||
+  fail 'Windows Arduino IDE job does not exercise the concurrent APP cache'
+printf '%s\n' "$arduino_ide_job" |
+  grep -Fq -- 'Temp пользователя Роман' ||
+  fail 'Windows Arduino IDE job does not compile with a Unicode TEMP path'
 if printf '%s\n' "$arduino_ide_job" |
     grep -Fq -- 'mk61_documents=disabled'; then
   fail 'Windows Arduino IDE V2 job disables the document APP'
