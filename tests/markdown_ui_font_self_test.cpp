@@ -127,6 +127,32 @@ int main() {
     }
   }
 
+  family = 4;
+  size = 16;
+  const markdown_ui_font::Source classic_source;
+  assert(classic_source.enabled() && classic_source.height() == 16 &&
+         classic_source.ascent() == 16 && classic_source.line_gap() == 0);
+  mk61_service_ui_glyph classic_glyph = {};
+  assert(classic_source.glyph('A', classic_glyph));
+  assert(classic_glyph.family == 4 && classic_glyph.size == 16 &&
+         classic_glyph.width == 10 && classic_glyph.height == 16 &&
+         classic_glyph.bearing_y == 16 && classic_glyph.advance == 12 &&
+         !classic_glyph.fallback);
+  builtin_font::Raster classic_base = {};
+  builtin_font::Raster classic_scaled = {};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                              'A', classic_base));
+  assert(builtin_font::scale2x(classic_base, classic_scaled));
+  for(u8 y = 0; y < classic_glyph.height; ++y) {
+    for(u8 x = 0; x < classic_glyph.width; ++x) {
+      assert(markdown_ui_font::Source::pixel(classic_glyph, x, y) ==
+             fmk::bitmapPixel(classic_scaled.data, classic_scaled.width,
+                              x, y));
+    }
+  }
+  assert(classic_source.glyph(0x2603, classic_glyph) &&
+         classic_glyph.fallback);
+
   uint8_t external_bytes[39];
   make_external_ui_font(external_bytes);
   fmk::Face source;

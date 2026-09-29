@@ -49,7 +49,8 @@ def main() -> None:
           (MK61_ENABLE_EXTENDED_FONT_SETTINGS ? MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE : 0) |
           (ui_fonts_available ? MK61_SETUP_FEATURE_UI_FONT : 0) |
           (ui_text_mode_available ? MK61_SETUP_FEATURE_UI_TEXT_MODE : 0) |
-          (ui_font_catalog_available ? MK61_SETUP_FEATURE_UI_FONT_CATALOG : 0);
+          (ui_font_catalog_available ? MK61_SETUP_FEATURE_UI_FONT_CATALOG : 0) |
+          (ui_classic_font_available ? MK61_SETUP_FEATURE_CLASSIC_UI_FONT : 0);
       if(op == MK61_SETUP_UI_FONT_READ) {
         if(!p || !ui_fonts_available) return 0;
         *(mk61_setup_ui_font*) p = surface.ui_font;
@@ -58,7 +59,8 @@ def main() -> None:
       if(op == MK61_SETUP_UI_FONT_APPLY) {
         if(!p || !ui_fonts_available) return 0;
         const mk61_setup_ui_font next = *(const mk61_setup_ui_font*) p;
-        if(next.family > 3 || (next.size != 12 && next.size != 14 && next.size != 16)) return 0;
+        if(next.family > 4 || (next.family == 4 && next.size != 16) ||
+           (next.size != 12 && next.size != 14 && next.size != 16)) return 0;
         surface.ui_font = next;
         selected_ui_font_key = 0;
         return 1;
@@ -138,7 +140,7 @@ def main() -> None:
       assert(false); return 0;
     }""")
     pieces.append(body(menu, "struct UiFontChoice", True))
-    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
+    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static bool uiClassicFontAvailable(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
         pieces.append(body(menu, marker))
     pieces.append(body(root / "development.cpp", "static u16 ui_editor_window_start("))
     settings_source = (root / "menu.cpp").read_text()

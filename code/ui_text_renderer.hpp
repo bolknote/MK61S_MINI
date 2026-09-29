@@ -20,6 +20,7 @@ static constexpr u8 CELL_WIDTH = 12;
 
 struct Style {
   bool font_enabled;
+  bool classic_10x16;
   ui_font::Face face;
   const prepared_font::Face* external;
   const u8 (*custom_glyphs)[8];

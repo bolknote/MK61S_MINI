@@ -40,6 +40,7 @@ bool privateM8Symbol(u16 codepoint) {
 }
 
 LineMetrics lineMetrics(const Style& style, u8 rows) {
+  if(style.classic_10x16) return {16U, 16U, 0U, 0U};
   if(!style.font_enabled) return {8U, 8U, 8U, 5U};
 
   u8 height = 0;
@@ -95,9 +96,19 @@ bool fixedGlyph(const Style& style, u16 value, bool custom, bool pixels,
         !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
                               '?', raster))) return false;
   }
-  if(pixels) memcpy(out.bitmap, raster.data, sizeof(out.bitmap));
-  out.glyph = {pixels ? out.bitmap : NULL, raster.width, raster.height,
-               0, 8, 6, font_glyph::BitmapLayout::ROW_MSB, false};
+  if(style.classic_10x16) {
+    if(pixels) {
+      builtin_font::Raster scaled = {};
+      if(!builtin_font::scale2x(raster, scaled)) return false;
+      memcpy(out.bitmap, scaled.data, sizeof(out.bitmap));
+    }
+    out.glyph = {pixels ? out.bitmap : NULL, 10, 16,
+                 0, 16, 12, font_glyph::BitmapLayout::ROW_MSB, false};
+  } else {
+    if(pixels) memcpy(out.bitmap, raster.data, sizeof(out.bitmap));
+    out.glyph = {pixels ? out.bitmap : NULL, raster.width, raster.height,
+                 0, 8, 6, font_glyph::BitmapLayout::ROW_MSB, false};
+  }
   return true;
 }
 
@@ -116,7 +127,7 @@ bool externalGlyph(const Style& style, const prepared_font::Glyph& source,
 bool resolveGlyph(const Style& style, u16 value, bool custom, bool pixels,
                   ResolvedGlyph& out) {
   memset(&out, 0, sizeof(out));
-  if(custom || !style.font_enabled) {
+  if(custom || !style.font_enabled || style.classic_10x16) {
     return fixedGlyph(style, value, custom, pixels, out);
   }
 
@@ -195,14 +206,15 @@ void renderPage(const text_screen::Grid& grid, const Style& style,
        text_top + metrics.height <= page_y) continue;
     const bool gutter = (style.row_gutters & ((u16) 1U << row)) != 0;
     const bool tail = (style.row_tails & ((u16) 1U << row)) != 0;
-    i16 pen = UI_MARGIN;
+    i16 pen = style.classic_10x16 ? 0 : UI_MARGIN;
 
     for(u8 col = 0; col < grid.cols(); ++col) {
+      const i16 margin = style.classic_10x16 ? 0 : UI_MARGIN;
       const bool tail_cell = tail && col == grid.cols() - 1U;
-      if(tail_cell) pen = SCREEN_WIDTH - UI_MARGIN - UI_GUTTER;
+      if(tail_cell) pen = SCREEN_WIDTH - margin - UI_GUTTER;
       const i16 right = tail && !tail_cell
-          ? SCREEN_WIDTH - UI_MARGIN - UI_GUTTER
-          : SCREEN_WIDTH - UI_MARGIN;
+          ? SCREEN_WIDTH - margin - UI_GUTTER
+          : SCREEN_WIDTH - margin;
       const u16 value = grid.cell(col, row);
       const bool custom = grid.cellIsCustom(col, row);
       ResolvedGlyph resolved = {};

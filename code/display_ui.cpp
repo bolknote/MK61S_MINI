@@ -24,7 +24,8 @@ u16 nextCodepoint(const char* text, u16 length, u16& offset) {
 
 void MK61Display::setUiFont(u8 family, u8 size) {
   if(family == 2) family = 1; // migrate the retired Roboto setting
-  if(family > 3) family = 0;
+  if(family > 4) family = 0;
+  if(family == 4) size = 16;
   if(size != 12 && size != 14 && size != 16) size = 14;
 #if MK61_FIXED_CALCULATOR_FACE
   const u8 preserved = ui_font_state & 24U;
@@ -32,7 +33,9 @@ void MK61Display::setUiFont(u8 family, u8 size) {
   const u8 preserved = ui_font_state & 8U;
 #endif
   const u8 size_bits = size == 16 ? 32U : (size == 14 ? 4U : 0U);
-  const u8 next = (u8) (preserved | family | size_bits);
+  const u8 stored_family = family == 4 ? 0U : family;
+  const u8 classic = family == 4 ? 64U : 0U;
+  const u8 next = (u8) (preserved | stored_family | size_bits | classic);
   if(next == ui_font_state) return;
   ui_font_state = next;
 #if MK61_ENABLE_USB_SCREEN
@@ -43,7 +46,8 @@ void MK61Display::setUiFont(u8 family, u8 size) {
     usb_surface.setFont(external);
     usb_surface.setTextLayout(
         {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
-    usb_surface.setUiTextStyle(true, uiFontEnabled(), uiFontFace());
+    usb_surface.setUiTextStyle(
+        true, uiFontEnabled(), uiFontClassic10x16(), uiFontFace());
     usb_surface.clear();
     usb_surface.flush(millis());
     return;
@@ -53,6 +57,7 @@ void MK61Display::setUiFont(u8 family, u8 size) {
 }
 
 u8 MK61Display::uiLineGap(void) const {
+  if(uiFontClassic10x16()) return 0U;
   if(uiFontFamily() == 3) {
     if(const prepared_font::Face* external = externalUiFont()) {
       return external->metrics().line_gap;
@@ -62,6 +67,7 @@ u8 MK61Display::uiLineGap(void) const {
 }
 
 u8 MK61Display::uiHeight(void) const {
+  if(uiFontClassic10x16()) return 16U;
   if(uiFontFamily() == 3) {
     if(const prepared_font::Face* external = externalUiFont()) {
       return external->metrics().height;
@@ -71,6 +77,7 @@ u8 MK61Display::uiHeight(void) const {
 }
 
 u8 MK61Display::uiRows(void) const {
+  if(uiFontClassic10x16()) return 4U;
   if(!uiFontEnabled()) return 4U;
   const u8 height = uiHeight();
   const u8 line_gap = uiLineGap();
@@ -80,6 +87,7 @@ u8 MK61Display::uiRows(void) const {
 }
 
 u8 MK61Display::uiCols(void) const {
+  if(uiFontClassic10x16()) return 16U;
   const u8 capacity_cols = (u8) (text_screen::CELL_CAPACITY / uiRows());
   u8 pixel_cols = text_screen::MAX_COLS;
   if(uiFontFamily() == 3) {
@@ -103,6 +111,7 @@ u8 MK61Display::uiCols(void) const {
 }
 
 u8 MK61Display::uiTop(void) const {
+  if(uiFontClassic10x16()) return 0U;
   if(!uiFontEnabled()) return 1U;
   const u8 height = uiHeight();
   const u8 line_gap = uiLineGap();
@@ -133,7 +142,8 @@ void MK61Display::beginUiText(void) {
     usb_surface.setFont(external);
     usb_surface.setTextLayout(
         {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
-    usb_surface.setUiTextStyle(true, uiFontEnabled(), uiFontFace());
+    usb_surface.setUiTextStyle(
+        true, uiFontEnabled(), uiFontClassic10x16(), uiFontFace());
     if(!was_context) usb_surface.clear();
     usb_surface.flush(millis());
     return;
@@ -151,7 +161,7 @@ void MK61Display::endUiText(void) {
   if(usbScreenActive()) {
     const bool was_context = uiTextContext();
     ui_font_state &= (u8) ~8U;
-    usb_surface.setUiTextStyle(false, false, uiFontFace());
+    usb_surface.setUiTextStyle(false, false, false, uiFontFace());
     usb_surface.setFont(selectedFont());
     usb_surface.setTextLayout(
         {active_profile.rows, active_profile.glyph_width,
@@ -207,7 +217,7 @@ void MK61Display::invalidateCalculatorFace(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
 u8 MK61Display::uiAdvance(u16 codepoint, bool custom) const {
   const ui_text_renderer::Style style = {
-    uiFontEnabled(), uiFontFace(),
+    uiFontEnabled(), uiFontClassic10x16(), uiFontFace(),
     uiFontFamily() == 3 ? externalUiFont() : NULL,
     custom_glyphs, custom_valid, ui_row_gutters, ui_row_tails,
     grid.cursorX(), grid.cursorY(), cursor_underline,
@@ -228,8 +238,9 @@ u16 MK61Display::measureUiText(const char* text, u16 length) const {
 }
 
 u16 MK61Display::uiTextWidth(void) const {
+  const u16 margin = uiFontClassic10x16() ? 0U : UI_MARGIN;
   return uiTextActive()
-      ? (u16) (lcd_display::PIXEL_WIDTH - 2U * UI_MARGIN) : 0U;
+      ? (u16) (lcd_display::PIXEL_WIDTH - 2U * margin) : 0U;
 }
 
 void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailing) {
@@ -249,7 +260,8 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
       usb_surface.writeCodepoint((u8) marker);
     }
     const u8 end_col = trailing ? cols - 1U : cols;
-    const u16 width = lcd_display::PIXEL_WIDTH - 2U*UI_MARGIN -
+    const u16 margin = uiFontClassic10x16() ? 0U : UI_MARGIN;
+    const u16 width = lcd_display::PIXEL_WIDTH - 2U*margin -
         (marker ? UI_GUTTER : 0U) - (trailing ? UI_GUTTER : 0U);
     u16 length = textLength(text);
     while(length && text[length - 1U] == ' ') --length;
@@ -306,7 +318,8 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
     grid.writeCodepoint((u8) marker);
   }
   const u8 end_col = trailing ? cols - 1U : cols;
-  const u16 width = lcd_display::PIXEL_WIDTH - 2U*UI_MARGIN -
+  const u16 margin = uiFontClassic10x16() ? 0U : UI_MARGIN;
+  const u16 width = lcd_display::PIXEL_WIDTH - 2U*margin -
       (marker ? UI_GUTTER : 0U) - (trailing ? UI_GUTTER : 0U);
   u16 length = textLength(text);
   while(length && text[length - 1U] == ' ') --length;
@@ -352,7 +365,7 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   const prepared_font::Face* const external = uiFontFamily() == 3
       ? externalUiFont() : NULL;
   const ui_text_renderer::Style style = {
-    uiFontEnabled(), uiFontFace(), external,
+    uiFontEnabled(), uiFontClassic10x16(), uiFontFace(), external,
     custom_glyphs, custom_valid, ui_row_gutters, ui_row_tails,
     grid.cursorX(), grid.cursorY(), cursor_underline,
     cursor_blink && cursor_blink_phase

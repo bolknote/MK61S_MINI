@@ -397,6 +397,11 @@ static bool uiFontCatalogAvailable(void) {
           MK61_SETUP_FEATURE_UI_FONT_CATALOG) != 0;
 }
 
+static bool uiClassicFontAvailable(void) {
+  return (service(MK61_SETUP_FEATURES) &
+          MK61_SETUP_FEATURE_CLASSIC_UI_FONT) != 0;
+}
+
 static mk61_setup_ui_font readUiFont(void) {
   mk61_setup_ui_font value = {0, 14};
   if(uiFontSettingsAvailable()) service(MK61_SETUP_UI_FONT_READ, 0, 0, &value);
@@ -422,6 +427,10 @@ static void formatUiFontLine(char* out, usize size, u8 field,
                              const UiFontChoice& choice) {
   const bool russian = library_mk61::language_is_ru();
   if(field == 0) {
+    if(choice.setting.family == 4) {
+      snprintf(out, size, "Classic 10x16");
+      return;
+    }
     const char* name = choice.setting.family == 3 &&
         choice.external.name[0] != 0 ? choice.external.name :
       (choice.setting.family == 3 ? "FMK" :
@@ -640,17 +649,24 @@ static bool calculatorFontSetup(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(const UiFontChoice& choice) {
   // Calculator digits have a separate fixed face.  This dialog controls only
-  // the UI: 5x8 is exact, Pixel has three resident sizes, and each catalog
-  // FMK is already a complete raster with its own intrinsic height.
-  if(choice.setting.family == 0) return 1U;
+  // the UI: 5x8 and Classic 10x16 are exact, Pixel has three resident sizes,
+  // and each catalog FMK is already a complete raster with its own height.
+  if(choice.setting.family == 0 || choice.setting.family == 4) return 1U;
   if(choice.setting.family == 3 && uiFontCatalogAvailable()) return 1U;
   return 2U;
 }
 
 static u8 stepLegacyUiFontFamily(u8 family, i8 delta) {
-  static constexpr u8 families[] = {0, 1, 3};
-  u8 index = family == 1 ? 1U : (family == 3 ? 2U : 0U);
-  index = (u8) ((index + (delta < 0 ? 2U : 1U)) % 3U);
+  static constexpr u8 old_families[] = {0, 1, 3};
+  static constexpr u8 families[] = {0, 4, 1, 3};
+  if(!uiClassicFontAvailable()) {
+    u8 index = family == 1 ? 1U : (family == 3 ? 2U : 0U);
+    index = (u8) ((index + (delta < 0 ? 2U : 1U)) % 3U);
+    return old_families[index];
+  }
+  u8 index = family == 4 ? 1U :
+      (family == 1 || family == 2 ? 2U : (family == 3 ? 3U : 0U));
+  index = (u8) ((index + (delta < 0 ? 3U : 1U)) % 4U);
   return families[index];
 }
 
@@ -673,6 +689,8 @@ static bool uiFontCatalogStep(u32 key, i8 delta,
 static bool applyBuiltinUiFont(UiFontChoice& choice, u8 family) {
   mk61_setup_ui_font next = choice.setting;
   next.family = family;
+  if(family == 0) next.size = 14;
+  if(family == 4) next.size = 16;
   if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &next)) return false;
   choice = readUiFontChoice();
   return true;
@@ -698,13 +716,18 @@ static bool stepUiFontChoice(UiFontChoice& choice, i8 delta) {
   mk61_setup_ui_font_item item = {};
   const u8 family = choice.setting.family;
   if(family == 0) {
-    if(delta > 0) return applyBuiltinUiFont(choice, 1);
+    if(delta > 0) return applyBuiltinUiFont(
+        choice, uiClassicFontAvailable() ? 4U : 1U);
     return uiFontCatalogStep(0, -1, item)
         ? applyCatalogUiFont(choice, item)
         : applyBuiltinUiFont(choice, 1);
   }
+  if(family == 4) {
+    return applyBuiltinUiFont(choice, delta > 0 ? 1U : 0U);
+  }
   if(family == 1 || family == 2) {
-    if(delta < 0) return applyBuiltinUiFont(choice, 0);
+    if(delta < 0) return applyBuiltinUiFont(
+        choice, uiClassicFontAvailable() ? 4U : 0U);
     return uiFontCatalogStep(0, 1, item)
         ? applyCatalogUiFont(choice, item)
         : applyBuiltinUiFont(choice, 0);

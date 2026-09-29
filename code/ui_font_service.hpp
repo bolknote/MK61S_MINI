@@ -2,6 +2,7 @@
 #define MK61_UI_FONT_SERVICE_HPP
 
 #include "loadable_app_services.h"
+#include "builtin_font.hpp"
 #include "prepared_font.hpp"
 #include "ui_font.hpp"
 #include <string.h>
@@ -21,7 +22,8 @@ inline bool valid_choice(uint8_t family, uint8_t size,
                          const prepared_font::Face* external = nullptr) {
   return (size == 12 || size == 14 || size == 16) &&
       ((family == 1 || family == 2) ||
-       (family == 3 && valid_external(external, size)));
+       (family == 3 && valid_external(external, size)) ||
+       (family == 4 && size == 16));
 }
 
 inline ui_font::Face face(uint8_t family, uint8_t size) {
@@ -41,7 +43,9 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
     if(capacity != sizeof(mk61_service_ui_font_info)) return 0;
     auto& out = *static_cast<mk61_service_ui_font_info*>(payload);
     out = {};
-    if(family == 3 && valid_choice(family, size, external)) {
+    if(family == 4 && valid_choice(family, size)) {
+      out = {family, size, 16, 0, 0, 16};
+    } else if(family == 3 && valid_choice(family, size, external)) {
       const auto& metrics = external->metrics();
       out = {family, size, metrics.height, 0,
              metrics.line_gap, metrics.height};
@@ -56,6 +60,28 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
      capacity != sizeof(mk61_service_ui_glyph)) return 0;
   auto& out = *static_cast<mk61_service_ui_glyph*>(payload);
   if(!valid_choice(out.family, out.size, external)) return 0;
+  if(out.family == 4) {
+    builtin_font::Raster source = {};
+    bool fallback = codepoint > 0xFFFFU ||
+        !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+                              (u16) codepoint, source);
+    if(fallback &&
+       !builtin_font::decode(builtin_font::FaceId::FONT_5X8, '?', source)) {
+      return 0;
+    }
+    builtin_font::Raster scaled = {};
+    if(!builtin_font::scale2x(source, scaled)) return 0;
+    out = {};
+    out.family = 4;
+    out.size = 16;
+    out.width = scaled.width;
+    out.height = scaled.height;
+    out.bearing_y = 16;
+    out.advance = 12;
+    out.fallback = fallback ? 1 : 0;
+    memcpy(out.pixels, scaled.data, sizeof(out.pixels));
+    return 1;
+  }
   if(out.family == 3) {
     prepared_font::Glyph glyph = {};
     bool fallback = false;

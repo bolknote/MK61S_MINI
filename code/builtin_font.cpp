@@ -385,6 +385,31 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
 #endif
 }
 
+bool scale2x(const Raster& source, Raster& out) {
+  if(source.width == 0 || source.height == 0 || source.width > 8 ||
+     source.height > 8) return false;
+  out.width = (u8) (source.width * 2U);
+  out.height = (u8) (source.height * 2U);
+  memset(out.data, 0, sizeof(out.data));
+  const usize source_stride = (source.width + 7U) / 8U;
+  const usize output_stride = (out.width + 7U) / 8U;
+  for(u8 y = 0; y < source.height; ++y) {
+    for(u8 x = 0; x < source.width; ++x) {
+      if((source.data[(usize) y * source_stride + x / 8U] &
+          (u8) (0x80U >> (x & 7U))) == 0) continue;
+      for(u8 dy = 0; dy < 2; ++dy) {
+        for(u8 dx = 0; dx < 2; ++dx) {
+          const u8 px = (u8) (x * 2U + dx);
+          const u8 py = (u8) (y * 2U + dy);
+          out.data[(usize) py * output_stride + px / 8U] |=
+              (u8) (0x80U >> (px & 7U));
+        }
+      }
+    }
+  }
+  return true;
+}
+
 } // пространство имён builtin_font
 
 #undef MK61_BUILTIN_HAS_STANDARD_CYRILLIC

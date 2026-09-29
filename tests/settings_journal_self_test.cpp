@@ -77,23 +77,30 @@ void test_legacy_v3_compatibility(void) {
 void test_ui_font_settings_are_independent_and_bounded(void) {
   for(unsigned raw = 0; raw < 256; ++raw) {
     const auto value = normalize_ui_font_settings((u8) raw);
-    const bool valid = raw <= 11;
-    const u8 expected = valid
-      ? (u8) (((raw & 3U) == 2U) ? ((raw & ~3U) | 1U) : raw)
-      : UiFontSettings::DEFAULT_PRESET;
+    const bool classic = raw == UiFontSettings::CLASSIC_10X16_PRESET;
+    const bool valid = raw <= 11 || classic;
+    const u8 expected = classic ? UiFontSettings::CLASSIC_10X16_PRESET :
+      (valid ? (u8) (((raw & 3U) == 2U) ? ((raw & ~3U) | 1U) : raw)
+             : UiFontSettings::DEFAULT_PRESET);
     assert(value.raw == expected);
-    assert(value.family() <= 3 && value.family() != 2);
+    assert(value.family() <= 4 && value.family() != 2);
     assert(value.size() == 12 || value.size() == 14 || value.size() == 16);
   }
   const u8 sizes[] = {12, 14, 16};
-  for(u8 family = 0; family < 4; ++family) {
+  for(u8 family = 0; family < 5; ++family) {
     for(u8 size : sizes) {
       const auto value = make_ui_font_settings(family, size);
-      assert(value.family() == (family == 2 ? 1 : family) &&
-             value.size() == size);
+      if(family == 4 && size != 16) {
+        assert(value.raw == UiFontSettings::DEFAULT_PRESET);
+      } else {
+        assert(value.family() == (family == 2 ? 1 : family) &&
+               value.size() == size);
+      }
     }
   }
   assert(make_ui_font_settings(4, 12).raw == UiFontSettings::DEFAULT_PRESET);
+  assert(make_ui_font_settings(4, 16).raw ==
+         UiFontSettings::CLASSIC_10X16_PRESET);
   assert(make_ui_font_settings(1, 13).raw == UiFontSettings::DEFAULT_PRESET);
 }
 
@@ -139,6 +146,24 @@ void test_v6_ui_font_commit_and_legacy_migration(void) {
   interrupted.consume(record);
   assert(interrupted.has_value() && interrupted.latest().counter == 10);
   assert(!interrupted.latest().ui_font_stored && interrupted.needs_reclaim());
+}
+
+void test_v6_classic_ui_font_round_trip(void) {
+  auto data = fixture(13);
+  data.oled_stored = false;
+  data.ui_font = make_ui_font_settings(4, 16).raw;
+  data.ui_font_stored = true;
+  u8 record[settings_journal::RECORD_SIZE];
+  settings_journal::encode_uncommitted(data, record);
+  commit(record);
+
+  settings_journal::RecordData decoded = {};
+  assert(settings_journal::decode(record, decoded) ==
+         settings_journal::RecordStatus::VALID);
+  assert(decoded.ui_font_stored);
+  const UiFontSettings restored = normalize_ui_font_settings(decoded.ui_font);
+  assert(restored.family() == 4 && restored.size() == 16 &&
+         restored.classic10x16());
 }
 
 void test_v6_external_ui_font_key(void) {
@@ -324,6 +349,7 @@ int main(void) {
   test_v4_commit_and_corruption();
   test_ui_font_settings_are_independent_and_bounded();
   test_v6_ui_font_commit_and_legacy_migration();
+  test_v6_classic_ui_font_round_trip();
   test_v6_external_ui_font_key();
   test_v5_ui_font_is_still_readable();
   test_v6_legacy_external_does_not_forge_a_filename_key();

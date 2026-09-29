@@ -290,6 +290,21 @@ void referenceMono(Frame& frame, u16 cp, int pen, u8 row) {
   }
 }
 
+void referenceClassic10x16(Frame& frame, u16 cp, int pen, u8 row) {
+  builtin_font::Raster raster{};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, cp, raster));
+  for(u8 y = 0; y < raster.height; ++y) {
+    for(u8 x = 0; x < raster.width; ++x) {
+      if(!fmk::bitmapPixel(raster.data, raster.width, x, y)) continue;
+      for(u8 dy = 0; dy < 2; ++dy) {
+        for(u8 dx = 0; dx < 2; ++dx) {
+          putPixel(frame, pen + x * 2 + dx, row * 16 + y * 2 + dy);
+        }
+      }
+    }
+  }
+}
+
 template<std::size_t N>
 void referenceText(Frame& frame, ui_font::Face face, const u16 (&text)[N],
                     u8 row, int left = 2, int right = 190) {
@@ -316,7 +331,8 @@ void startUi(MK61Display& display, u8 family = 1, u8 size = 14) {
   display.begin();
   display.setUiFont(family, size);
   display.beginUiText();
-  const u8 expected_rows = family == 0 ? 4U : referenceUiRows(display.uiFontFace());
+  const u8 expected_rows = (family == 0 || family == 4)
+      ? 4U : referenceUiRows(display.uiFontFace());
   assert(display.uiTextActive() && display.rows() == expected_rows);
 }
 
@@ -353,6 +369,9 @@ void test_profile_and_scope() {
     assert(display.uiTextActive() && display.rows() == 4);
     display.setUiFont(1, 16);
     assert(display.uiTextActive() && display.rows() == 3);
+    display.setUiFont(4, 12);
+    assert(display.uiFontFamily() == 4 && display.uiFontSize() == 16 &&
+           display.rows() == 4 && display.cols() == 16);
   }
   assert(!display.uiTextActive() && display.rows() == 10);
   assert(sameProfile(display.textProfile(), calculator));
@@ -456,6 +475,39 @@ void test_mono_ui_is_fixed_and_independent() {
   expectFrame(expected);
   assert(ui_display_test::frame == at_14);
   assert(display.measureUiText("WWW") == display.measureUiText("iii"));
+}
+
+void test_classic_ui_is_exact_2x_builtin() {
+  MK61Display display;
+  startUi(display, 4, 16);
+  assert(display.uiFontClassic10x16());
+  assert(display.uiTextWidth() == 192);
+  assert(display.cols() == 16 && display.rows() == 4);
+  assert(display.measureUiText("WWW") == 36);
+  assert(display.measureUiText("iii") == 36);
+
+  display.printUiLine(0, "Awi");
+  display.printUiLine(1, "Settings", '>');
+  display.printUiLine(2, "Classic", 0, 'M');
+  Frame expected{};
+  int pen = 0;
+  for(u16 cp : {u16('A'), u16('w'), u16('i')}) {
+    referenceClassic10x16(expected, cp, pen, 0);
+    pen += 12;
+  }
+  referenceClassic10x16(expected, '>', 0, 1);
+  pen = 12;
+  for(const char* text = "Settings"; *text; ++text) {
+    referenceClassic10x16(expected, (u8) *text, pen, 1);
+    pen += 12;
+  }
+  pen = 0;
+  for(const char* text = "Classic"; *text; ++text) {
+    referenceClassic10x16(expected, (u8) *text, pen, 2);
+    pen += 12;
+  }
+  referenceClassic10x16(expected, 'M', 180, 2);
+  expectFrame(expected);
 }
 
 void writeGridLine(text_screen::Grid& grid, u8 row, u8 column,
@@ -1218,6 +1270,38 @@ void test_usb_return_to_ui_geometry() {
   expectFrame(expected);
 }
 
+void test_usb_classic_10x16_parity() {
+  MK61Display display;
+  startUi(display, 4, 16);
+  display.printUiLine(0, "Classic");
+  Frame expected{};
+  int pen = 0;
+  for(const char* text = "Classic"; *text; ++text) {
+    referenceClassic10x16(expected, (u8) *text, pen, 0);
+    pen += 12;
+  }
+  expectFrame(expected);
+  assert(display.enterUsbScreen());
+  assert(display.usbScreenActive() && display.uiTextActive());
+  assert(display.rows() == 4 && display.cols() == 16);
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
+  display.printUiLine(1, "Settings", '>');
+  referenceClassic10x16(expected, '>', 0, 1);
+  pen = 12;
+  for(const char* text = "Settings"; *text; ++text) {
+    referenceClassic10x16(expected, (u8) *text, pen, 1);
+    pen += 12;
+  }
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(),
+                     expected.size()) == 0);
+  display.leaveUsbScreen();
+  assert(display.uiTextActive() && display.uiFontClassic10x16());
+  display.printUiLine(0, "Classic");
+  display.printUiLine(1, "Settings", '>');
+  expectFrame(expected);
+}
+
 void test_usb_calculator_to_runtime_font_switches_renderer() {
   u8 font[28];
   makeExternalRuntimeFont(font);
@@ -1276,6 +1360,7 @@ int main() {
   test_preview_of_same_calculator_profile();
   test_live_ui_font_sample();
   test_mono_ui_is_fixed_and_independent();
+  test_classic_ui_is_exact_2x_builtin();
   test_fixed_calculator_face();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
@@ -1294,6 +1379,7 @@ int main() {
 #if MK61_ENABLE_USB_SCREEN
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
+  test_usb_classic_10x16_parity();
   test_usb_calculator_to_runtime_font_switches_renderer();
 #endif
   allocation_forbidden = false;
