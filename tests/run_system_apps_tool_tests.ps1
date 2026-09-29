@@ -81,6 +81,12 @@ Assert-True ($commonText -match 'HELP0\.TXT.+HELP1\.TXT') `
     'terminal help is missing from the common bundle'
 Assert-True ($commonText -match '"abi": 6') `
     'common bundle does not report current ABI 6'
+Assert-True ($commonText -match 'catalog\.json') `
+    'common bundle does not publish the shared ABI 6 APP catalog'
+Assert-True ($commonText -match 'catalog_hits') `
+    'common bundle does not reuse matching portable APP builds'
+Assert-True ($wrapperText -match 'CatalogDirectory') `
+    'PowerShell wrapper does not expose the shared APP catalog'
 Assert-True ($wrapperText -match 'LocalFloatMath') `
     'PowerShell wrapper does not expose local APP float math'
 Assert-True ($commonText -match 'local.float.math') `
@@ -118,11 +124,16 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
     $integrationBuild = [IO.Path]::GetFullPath($integrationBuild)
     $output = Join-Path ([IO.Path]::GetTempPath()) (
         'mk61-system-apps-' + [guid]::NewGuid().ToString('N'))
+    $cachedOutput = Join-Path ([IO.Path]::GetTempPath()) (
+        'mk61-system-apps-cached-' + [guid]::NewGuid().ToString('N'))
+    $catalog = Join-Path ([IO.Path]::GetTempPath()) (
+        'mk61-app-catalog-' + [guid]::NewGuid().ToString('N'))
     try {
         $powerShell = (Get-Process -Id $PID).Path
         & $powerShell -NoLogo -NoProfile -File $wrapper `
             -BuildPath $integrationBuild `
             -OutputDirectory $output `
+            -CatalogDirectory $catalog `
             -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1 `
             -Setup 1 -UsbDisk 1 -Explorer 1
         Assert-True ($LASTEXITCODE -eq 0) 'real unified System APP build failed'
@@ -165,8 +176,51 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             Assert-True (Test-Path -LiteralPath (Join-Path $output $name)) `
                 "$name missing"
         }
+        $catalogManifest = Join-Path $catalog 'catalog.json'
+        Assert-True (Test-Path -LiteralPath $catalogManifest -PathType Leaf) `
+            'shared APP catalog manifest is missing'
+        $manifest = Get-Content -LiteralPath $catalogManifest -Raw |
+            ConvertFrom-Json
+        Assert-True ($manifest.abi -eq 6) 'shared APP catalog ABI differs'
+        Assert-True (@($manifest.apps).Count -eq $expected.Count) `
+            'shared APP catalog has an unexpected selection'
+        foreach ($record in @($manifest.apps)) {
+            $relativeObject = ([string]$record.path).Replace(
+                '/', [IO.Path]::DirectorySeparatorChar)
+            $object = Join-Path $catalog $relativeObject
+            Assert-True (Test-Path -LiteralPath $object -PathType Leaf) `
+                "catalog object is missing: $($record.path)"
+            Assert-True ((Get-FileHash -Algorithm SHA256 $object).Hash.ToLowerInvariant() `
+                -eq $record.sha256) "catalog hash differs: $($record.name)"
+            Assert-True ((Get-FileHash -Algorithm SHA256 `
+                (Join-Path $output $record.name)).Hash -eq `
+                (Get-FileHash -Algorithm SHA256 $object).Hash) `
+                "bundle does not use catalog payload: $($record.name)"
+        }
+
+        $cachedLog = (& $powerShell -NoLogo -NoProfile -File $wrapper `
+            -BuildPath $integrationBuild `
+            -OutputDirectory $cachedOutput `
+            -CatalogDirectory $catalog `
+            -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1 `
+            -Setup 1 -UsbDisk 1 -Explorer 1 2>&1 | Out-String)
+        Assert-True ($LASTEXITCODE -eq 0) `
+            'cached unified System APP build failed'
+        $hitMatch = [regex]::Match(
+            $cachedLog, '"catalog_hits"\s*:\s*\[(?<body>.*?)\]',
+            [Text.RegularExpressions.RegexOptions]::Singleline)
+        Assert-True $hitMatch.Success 'cached build did not report catalog hits'
+        foreach ($name in $expected.Keys) {
+            Assert-True ($hitMatch.Groups['body'].Value -match
+                [regex]::Escape('"' + $name + '"')) `
+                "cached build recompiled $name"
+        }
     } finally {
         Remove-Item -LiteralPath $output -Recurse -Force `
+            -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $cachedOutput -Recurse -Force `
+            -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $catalog -Recurse -Force `
             -ErrorAction SilentlyContinue
     }
 }

@@ -323,6 +323,14 @@ profile_artifact_path() {
   printf '%s/%s' "$(profile_bundle_dir "$1")" "$artifact"
 }
 
+remove_legacy_flat_artifacts() {
+  local artifact
+  artifact=$(profile_artifact_name "$1" "$MCU") || return 1
+  # The current format is binary/<profile>/<profile>.bin.  A flat artifact
+  # with the same name can only be residue from the old output layout.
+  rm -f "$OUTPUT_DIR/$artifact" "$OUTPUT_DIR/$artifact.flags"
+}
+
 list_profiles() {
   local id
   for id in mini-v3-a00 mini-v3-a02 mini-v3-ws0010 mini-v2-a00 mini-v2-a02 classic-v2 classic-v3 40th; do
@@ -2259,18 +2267,20 @@ build_system_app_bundle() {
     --wbmp "$((ENABLE_WBMP_VIEWER * WBMP_VIEWER_AS_APP))" \
     --markdown "$((ENABLE_MARKDOWN_VIEWER * MARKDOWN_VIEWER_AS_APP))" \
     --chip8 "$((ENABLE_CHIP8 * CHIP8_AS_APP))" \
-    --local-float-math "$APP_LOCAL_FLOAT"
+    --local-float-math "$APP_LOCAL_FLOAT" \
+    --catalog-dir "$OUTPUT_DIR/apps/abi6"
 }
 
 prepare_and_compile_f411_worker() {
   local profile=$1
   local sketch_dir="$BUILD_ROOT/sketch/$profile/mk61s-M"
-  local build_dir flags signature artifact bundle source_artifact resident_link_flags
+  local build_dir flags signature artifact elf_artifact bundle source_artifact resident_link_flags
   flags=$(all_compile_flags "$profile") || return 1
   signature=$(printf '%s\n' "$flags" | cksum | awk '{print $1}')
   build_dir="$BUILD_ROOT/build/$profile-$signature"
   bundle=$(profile_bundle_dir "$profile") || return 1
   artifact="$bundle/$(profile_artifact_name "$profile" f411)"
+  elf_artifact="${artifact%.bin}.elf"
 
   rm -rf "$BUILD_ROOT/sketch/$profile"
   mkdir -p "$sketch_dir" "$build_dir" "$OUTPUT_DIR" || return 1
@@ -2318,10 +2328,15 @@ prepare_and_compile_f411_worker() {
     "$source_artifact" || return 1
   "$PROJECT_ROOT/tools/seal-firmware.sh" check --max-size 524288 \
     "$source_artifact" || return 1
+  python3 "$PROJECT_ROOT/tools/seal-firmware-elf.py" \
+    --bin "$source_artifact" --elf "$build_dir/mk61s-M.ino.elf" \
+    --compile-commands "$build_dir/compile_commands.json" || return 1
   build_system_app_bundle "$profile" "$build_dir" "$bundle" || return 1
   mkdir -p "$bundle" || return 1
   cp "$source_artifact" "$artifact.tmp" || return 1
   mv "$artifact.tmp" "$artifact" || return 1
+  cp "$build_dir/mk61s-M.ino.elf" "$elf_artifact.tmp" || return 1
+  mv "$elf_artifact.tmp" "$elf_artifact" || return 1
   printf '%s\n' "$flags" > "$bundle/build.flags.tmp" || return 1
   mv "$bundle/build.flags.tmp" "$bundle/build.flags" || return 1
   printf 'format 1\nabi 6\n' > "$bundle/build.apps.tmp" || return 1
@@ -2367,6 +2382,7 @@ prepare_and_compile_f401_worker() {
 }
 
 prepare_and_compile_worker() {
+  remove_legacy_flat_artifacts "$1" || return 1
   if [ "$MCU" = f401 ]; then
     prepare_and_compile_f401_worker "$1"
   else

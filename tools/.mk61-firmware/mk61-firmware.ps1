@@ -239,6 +239,17 @@ function Get-ProfileArtifactPath {
     return Join-Path (Get-ProfileBundleDir $Profile) $name
 }
 
+function Remove-LegacyFlatArtifacts {
+    param([string]$Profile)
+    $name = Get-ProfileArtifactName $Profile $script:State.Mcu
+    $legacy = Join-Path $script:OutputDir $name
+    foreach ($path in @($legacy, "$legacy.flags")) {
+        if ([IO.File]::Exists($path)) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+}
+
 function Test-HardwareCompatible {
     param([string]$Platform, [string]$Screen)
     switch ("$Platform`:$Screen") {
@@ -2314,7 +2325,8 @@ function Invoke-SystemAppBundleBuild {
             '--wbmp', $(if ($script:State.EnableWbmp -eq 1 -and $script:State.WbmpAsApp -eq 1) { '1' } else { '0' }),
             '--markdown', $(if ($script:State.EnableMarkdown -eq 1 -and $script:State.MarkdownAsApp -eq 1) { '1' } else { '0' }),
             '--chip8', $(if ($script:State.EnableChip8 -eq 1 -and $script:State.Chip8AsApp -eq 1) { '1' } else { '0' }),
-            '--local-float-math', [string]$script:State.AppLocalFloat))
+            '--local-float-math', [string]$script:State.AppLocalFloat,
+            '--catalog-dir', (Join-Path $script:OutputDir 'apps/abi6')))
     return Invoke-ExternalWithProgress 'System APP' `
         'Собираю единый ABI 6 комплект' $script:LastLog 'indeterminate' `
         $python.Executable $arguments -Append
@@ -2330,6 +2342,7 @@ function Build-Selected {
     }
 
     $profile = $script:State.Profile
+    Remove-LegacyFlatArtifacts $profile
     if ($script:State.Mcu -eq 'f401') {
         if (-not (Invoke-F401BundleBuild $profile)) {
             if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
@@ -2486,6 +2499,22 @@ function Build-Selected {
         return $false
     }
 
+    $residentElf = Join-Path $buildDir 'mk61s-M.ino.elf'
+    $elfSealerArguments = [string[]](
+        @($python.PrefixArguments) + @(
+            (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
+            '--bin', $sourceArtifact, '--elf', $residentElf,
+            '--compile-commands',
+            (Join-Path $buildDir 'compile_commands.json')))
+    if (-not (Invoke-ExternalWithProgress 'ELF прошивки' `
+        'Запечатываю адресный ELF' $script:LastLog 'indeterminate' `
+        $python.Executable $elfSealerArguments -Append)) {
+        if ($script:State.Interactive) {
+            Show-Log 'Ошибка ELF прошивки' $script:LastLog
+        } else { Show-LastLogTail }
+        return $false
+    }
+
     $bundle = Get-ProfileBundleDir $profile
     if (-not (Invoke-SystemAppBundleBuild $profile $buildDir $bundle)) {
         if ($script:State.Interactive) { Show-Log 'Ошибка сборки System APP' $script:LastLog }
@@ -2496,6 +2525,11 @@ function Build-Selected {
     try {
         Copy-Item -LiteralPath $sourceArtifact -Destination "$artifact.tmp" -Force
         Move-Item -LiteralPath "$artifact.tmp" -Destination $artifact -Force
+        $elfArtifact = [IO.Path]::ChangeExtension($artifact, '.elf')
+        Copy-Item -LiteralPath $residentElf `
+            -Destination "$elfArtifact.tmp" -Force
+        Move-Item -LiteralPath "$elfArtifact.tmp" `
+            -Destination $elfArtifact -Force
         $flagsPath = Join-Path $bundle 'build.flags'
         $appsPath = Join-Path $bundle 'build.apps'
         [IO.File]::WriteAllText("$flagsPath.tmp", $flags + [Environment]::NewLine, $script:Utf8NoBom)

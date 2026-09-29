@@ -42,12 +42,18 @@ while IFS=$'\t' read -r \
     _headroom _ram_capacity _ram_limit _stack _product publish _rest; do
   [[ "$publish" == 1 ]] || continue
   image="$firmware_output/$artifact-preflight.bin"
+  elf="$firmware_output/$artifact-preflight.elf"
   [[ -s "$image" ]] || {
     printf 'Missing F411 preflight artifact: %s-preflight.bin\n' \
       "$artifact" >&2
     exit 1
   }
   "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" "$image"
+  [[ -s "$elf" ]] || {
+    printf 'Missing F411 preflight artifact: %s-preflight.elf\n' \
+      "$artifact" >&2
+    exit 1
+  }
 done < <(python3 "$contract" cases --group f411-release --format tsv)
 
 printf '\n=== Arduino F401 Classic V3 UC1609 ===\n'

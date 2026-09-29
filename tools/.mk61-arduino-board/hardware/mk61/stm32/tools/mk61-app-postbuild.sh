@@ -82,7 +82,7 @@ seal_resident() {
 build_bundle() {
   local compiler= build_path_arg= sketch= project= bundle= mcu= max_size=
   local focal= basic= wbmp= markdown= chip8= setup= usbdisk= explorer=
-  local local_float_math= compile_flags=
+  local local_float_math= compile_flags= output_root output canonical legacy_resident
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --compiler) require_value "$@"; compiler=$2; shift 2 ;;
@@ -133,15 +133,24 @@ build_bundle() {
   build_path=$build_path_arg
   local resident_elf="$build_path/$project.elf"
   local resident_bin="$build_path/$project.bin"
+  local tool_dir objcopy
   [ -s "$resident_elf" ] && [ -s "$resident_bin" ] ||
     die 'Arduino did not produce resident ELF and BIN files'
   seal_resident "$resident_bin" "$max_size"
+  tool_dir="$(cd "$(dirname "$0")" && pwd)"
+  objcopy="$(dirname "$compiler")/arm-none-eabi-objcopy"
+  [ -x "$objcopy" ] || die "ARM objcopy not found: $objcopy"
+  [ -f "$tool_dir/seal-firmware-elf.py" ] ||
+    die 'resident ELF sealer is missing; reinstall the MK61s board'
+  python3 "$tool_dir/seal-firmware-elf.py" \
+    --bin "$resident_bin" --elf "$resident_elf" --objcopy "$objcopy"
 
   stage="$build_path/mk61-system-apps/$bundle"
   case "$stage" in "$build_path"/*) ;; *) die 'unsafe staging path' ;; esac
   rm -rf "$stage"
   mkdir -p "$stage/System"
   cp "$resident_bin" "$stage/$bundle.bin"
+  cp "$resident_elf" "$stage/$bundle.elf"
 
   local graphics=0 ui_fonts=0
   if [[ "$compile_flags" == *MK61_BOARD_CLASSIC* ]] ||
@@ -156,6 +165,7 @@ build_bundle() {
      [[ "$compile_flags" == *DISPLAY_UC1609* ]]; then
     ui_fonts=1
   fi
+  output_root="$(cd "$sketch/.." && pwd)/binary"
   python3 "$sketch/../tools/build_system_app_bundle.py" \
     --resident-elf "$resident_elf" \
     --arm-toolchain-bin "$(dirname "$compiler")" \
@@ -164,7 +174,8 @@ build_bundle() {
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8" \
     --setup "$setup" --usbdisk "$usbdisk" --explorer "$explorer" \
-    --local-float-math "$local_float_math"
+    --local-float-math "$local_float_math" \
+    --catalog-dir "$output_root/apps/abi6"
   if [ "$usbdisk" -eq 1 ]; then
     [ -s "$stage/System/USBDISK.APP" ] ||
       die 'selected USBDISK.APP is missing; reinstall the MK61s board'
@@ -173,11 +184,16 @@ build_bundle() {
       die 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
   fi
 
-  local output_root output canonical
-  output_root="$(cd "$sketch/.." && pwd)/binary"
+  # Builds before the unified-bundle layout wrote a same-named BIN directly
+  # into binary/.  Leaving it beside the current directory is dangerous: a
+  # user can quite reasonably pick the stale flat file after a successful
+  # compile.  Remove only the legacy files for the profile just built.
+  legacy_resident="$output_root/$bundle.bin"
+  rm -f "$legacy_resident" "$legacy_resident.flags"
   output="$output_root/$bundle"
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
+  cp "$stage/$bundle.elf" "$output/$bundle.elf"
   for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
                    SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
     if [ -f "$stage/System/$canonical" ]; then

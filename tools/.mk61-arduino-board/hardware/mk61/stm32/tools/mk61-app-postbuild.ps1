@@ -226,6 +226,20 @@ function Build-Mk61Bundle {
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
         '-InputFile', $residentBin, '-MaxSize', $MaxSize)
+    $objcopyName = if ([IO.Path]::GetExtension($Compiler) -ieq '.exe') {
+        'arm-none-eabi-objcopy.exe'
+    } else { 'arm-none-eabi-objcopy' }
+    $objcopy = Resolve-Mk61Executable (
+        Join-Path ([IO.Path]::GetDirectoryName($Compiler)) $objcopyName)
+    if ([string]::IsNullOrWhiteSpace($objcopy)) {
+        Stop-Mk61Build "ARM objcopy not found beside compiler: $Compiler"
+    }
+    $elfSealer = Join-Path $PSScriptRoot 'seal-firmware-elf.py'
+    Test-RequiredFile $elfSealer `
+        'resident ELF sealer; reinstall the MK61s board'
+    Invoke-Mk61Python @(
+        $elfSealer, '--bin', $residentBin, '--elf', $residentElf,
+        '--objcopy', $objcopy)
 
     $stageRoot = Join-Path $build 'mk61-system-apps'
     $script:Stage = [IO.Path]::GetFullPath((Join-Path $stageRoot $Bundle))
@@ -243,6 +257,8 @@ function Build-Mk61Bundle {
     [IO.Directory]::CreateDirectory((Join-Path $script:Stage 'System')) | Out-Null
     Copy-Item -LiteralPath $residentBin `
         -Destination (Join-Path $script:Stage "$Bundle.bin")
+    Copy-Item -LiteralPath $residentElf `
+        -Destination (Join-Path $script:Stage "$Bundle.elf")
 
     # Arduino's Upload recipe does not reliably retain build.source.path on
     # Windows.  Keep the exact terminal installer used by this build beside
@@ -259,6 +275,7 @@ function Build-Mk61Bundle {
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609|MK61_ENABLE_USB_SCREEN=1|MK61_WS0010_GRAPHICS_100X16=1') { '1' } else { '0' }
     $uiFonts = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609') { '1' } else { '0' }
+    $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))
     Invoke-Mk61Python @(
         (Join-Path $Sketch '../tools/build_system_app_bundle.py'),
         '--resident-elf', $residentElf,
@@ -268,7 +285,8 @@ function Build-Mk61Bundle {
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
         '--markdown', $Markdown, '--chip8', $Chip8,
         '--setup', $Setup, '--usbdisk', $UsbDisk, '--explorer', $Explorer,
-        '--local-float-math', $LocalFloatMath)
+        '--local-float-math', $LocalFloatMath,
+        '--catalog-dir', (Join-Path $outputRoot 'apps\abi6'))
     $stagedUsbDisk = Join-Path (Join-Path $script:Stage 'System') 'USBDISK.APP'
     if ($UsbDisk -eq '1') {
         Test-RequiredFile $stagedUsbDisk `
@@ -277,11 +295,22 @@ function Build-Mk61Bundle {
         Stop-Mk61Build 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
     }
 
-    $output = Join-Path ([IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))) $Bundle
+    # Older builders put a same-named BIN directly in binary/.  It is not the
+    # result of this compile and is easily mistaken for the fresh bundle.
+    # Remove only the obsolete flat files for the profile just built.
+    $legacyResident = Join-Path $outputRoot "$Bundle.bin"
+    foreach ($legacyPath in @($legacyResident, "$legacyResident.flags")) {
+        if ([IO.File]::Exists($legacyPath)) {
+            Remove-Item -LiteralPath $legacyPath -Force
+        }
+    }
+    $output = Join-Path $outputRoot $Bundle
     $outputSystem = Join-Path $output 'System'
     [IO.Directory]::CreateDirectory($outputSystem) | Out-Null
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.bin") `
         -Destination (Join-Path $output "$Bundle.bin") -Force
+    Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.elf") `
+        -Destination (Join-Path $output "$Bundle.elf") -Force
     foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP',
             'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP',
             'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT')) {

@@ -47,6 +47,8 @@ cmp "$root/code/resident_firmware_format.hpp" \
 cmp "$root/code/rust_types.h" "$target/tools/rust_types.h"
 cmp "$root/tools/seal-firmware.ps1" \
     "$target/tools/seal-firmware.ps1"
+cmp "$root/tools/seal-firmware-elf.py" \
+    "$target/tools/seal-firmware-elf.py"
 
 # Presence alone is not enough: an old copied platform silently falls back to
 # STM32CubeProgrammer and never installs System APP.  --check must reject it.
@@ -359,7 +361,8 @@ EOF
       -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
       -TestMockDevice "$mock_device" -TestMockDfu \
       > "$work/mock-upload-dfu-fallback.txt"
-  grep -Fq 'stm32CubeProg.sh -i dfu' "$mock_dfu_log"
+  grep -Fq 'stm32CubeProg.sh --interface=dfu' "$mock_dfu_log"
+  grep -Fq -- "--file=$mock_build/code.ino.bin" "$mock_dfu_log"
   grep -q 'Resident and System APP upload complete' \
     "$work/mock-upload-dfu-fallback.txt"
 
@@ -575,8 +578,11 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f401"
   resident="$bundle/mk61s-M-mini-v2-lcd1602-a00-f401.bin"
+  published_elf="$bundle/mk61s-M-mini-v2-lcd1602-a00-f401.elf"
   resident_elf="$work/build/code.ino.elf"
   test -s "$resident"
+  test -s "$published_elf"
+  cmp "$resident_elf" "$published_elf"
   grep -qx 'abi 6' "$bundle/build.apps"
   test -s "$resident_elf"
   "$root/tests/check_core_native_hot_paths_elf.sh" "$resident_elf"
@@ -630,12 +636,19 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   # F411 is a first-class Arduino board, not a Generic STM32 workaround.
   # Its menu defaults keep the large system components resident while still
   # producing the same ABI 6 bundle and external help resources.
+  legacy_f411="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
+  mkdir -p "$(dirname "$legacy_f411")"
+  printf 'stale flat resident\n' > "$legacy_f411"
+  printf 'stale flat flags\n' > "$legacy_f411.flags"
   mkdir -p "$work/build-f411"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' \
     --build-path "$work/build-f411" "$shell_sketchbook/sketches/code"
   f411_bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f411"
+  test ! -e "$legacy_f411"
+  test ! -e "$legacy_f411.flags"
   test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
+  test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.elf"
   for resource in HELP0.TXT HELP1.TXT; do
     test -s "$f411_bundle/System/$resource"
   done

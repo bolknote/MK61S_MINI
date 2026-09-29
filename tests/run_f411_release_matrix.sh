@@ -161,8 +161,10 @@ package_system_apps() {
     --basic "$((basic * basic_app))" \
     --wbmp "$((wbmp * wbmp_app))" \
     --markdown "$((markdown * markdown_app))" \
-    --chip8 "$((chip8 * chip8_app))"
+    --chip8 "$((chip8 * chip8_app))" \
+    --catalog-dir "$output_dir/apps/abi6"
   cp "$build_path/mk61s-M.ino.bin" "$bundle/$bundle_name.bin"
+  cp "$build_path/mk61s-M.ino.elf" "$bundle/$bundle_name.elf"
   printf '%s\n' "$board_flags $platform_ram_flags $strict_flags" > "$bundle/build.flags"
   printf 'format 1\nabi 6\n' > "$bundle/build.apps"
   local expected=()
@@ -281,6 +283,10 @@ compile_variant() {
     "$build_path/mk61s-M.ino.bin"
   "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
+  python3 "$root/tools/seal-firmware-elf.py" \
+    --bin "$build_path/mk61s-M.ino.bin" \
+    --elf "$build_path/mk61s-M.ino.elf" \
+    --compile-commands "$build_path/compile_commands.json"
   python3 "$contract" resource-report \
     --case "$case_id" \
     --elf "$build_path/mk61s-M.ino.elf" \
@@ -329,6 +335,8 @@ compile_variant() {
   if [[ -n "$output_dir" && "$publish" == 1 ]]; then
     cp "$build_path/mk61s-M.ino.bin" \
       "$output_dir/${artifact_name}-${firmware_tag}.bin"
+    cp "$build_path/mk61s-M.ino.elf" \
+      "$output_dir/${artifact_name}-${firmware_tag}.elf"
     package_system_apps "$profile" "$board_flags" "$artifact_name" \
       "$build_path" "$expect_ws0010_graphics"
   fi

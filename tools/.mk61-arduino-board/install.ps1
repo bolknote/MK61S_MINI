@@ -304,6 +304,7 @@ function Test-InstalledPlatform {
         [IO.File]::Exists((Join-Path $Path 'tools\resident_firmware_format.hpp')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\rust_types.h')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware.ps1')) -and
+        [IO.File]::Exists((Join-Path $Path 'tools\seal-firmware-elf.py')) -and
         [IO.File]::Exists((Join-Path $Path 'tools\mk61_module.ld'))
     )
 }
@@ -358,7 +359,9 @@ function Test-InstalledPlatformCurrent {
         @((Join-Path $ProjectRoot 'code/rust_types.h'),
           (Join-Path $Target 'tools\rust_types.h')),
         @((Join-Path $ProjectRoot 'tools/seal-firmware.ps1'),
-          (Join-Path $Target 'tools\seal-firmware.ps1'))
+          (Join-Path $Target 'tools\seal-firmware.ps1')),
+        @((Join-Path $ProjectRoot 'tools/seal-firmware-elf.py'),
+          (Join-Path $Target 'tools\seal-firmware-elf.py'))
     )
     foreach ($pair in $files) {
         if (-not (Test-Mk61SameFile $pair[0] $pair[1])) {
@@ -498,6 +501,8 @@ try {
         -Destination (Join-Path $targetTools 'rust_types.h') -Force
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware.ps1') `
         -Destination (Join-Path $targetTools 'seal-firmware.ps1') -Force
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware-elf.py') `
+        -Destination (Join-Path $targetTools 'seal-firmware-elf.py') -Force
 
     if ($installFontSettingsCompatibility) {
         Install-Mk61FontSettingsCompatibility `

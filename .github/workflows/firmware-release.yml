@@ -331,7 +331,13 @@ jobs:
             -Destination (Join-Path $fakeTools 'win\busybox.exe')
           [IO.File]::WriteAllText(
             (Join-Path $fakeTools 'stm32CubeProg.sh'),
-            "#!/bin/sh`nexit 0`n",
+            ("#!/bin/sh`n" +
+             "FILE=`n" +
+             "for ARG in `"`$@`"; do`n" +
+             "  case `"`$ARG`" in --file=*) FILE=`"`${ARG#--file=}`" ;; esac`n" +
+             "done`n" +
+             "[ -n `"`$FILE`" ] && [ -r `"`$FILE`" ] || exit 41`n" +
+             "exit 0`n"),
             (New-Object Text.UTF8Encoding($false)))
 
           $build = Join-Path $env:RUNNER_TEMP 'ide1-dfu-fallback-build'
@@ -619,7 +625,7 @@ jobs:
           RELEASE_TAG: firmware-${{ github.run_number }}-${{ github.sha }}
         run: |
           gh release create "$RELEASE_TAG" \
-            firmware/*.bin firmware/*.zip firmware/SHA256SUMS.txt \
+            firmware/*.bin firmware/*.elf firmware/*.zip firmware/SHA256SUMS.txt \
             --target "$GITHUB_SHA" \
             --title "Firmware ${GITHUB_SHA::7}" \
             --notes "Automated firmware build for ${GITHUB_SHA}. UI font license notices accompany the F411 binaries in UI_FONT_LICENSES.zip."

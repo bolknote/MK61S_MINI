@@ -218,8 +218,25 @@ try {
         Write-Host 'System APP installation needs exclusive COM-port access.'
         Write-Host $closePortMessage
         Write-Host "Uploading resident via STM32 DFU: $resident"
-        & $dfuTools.Busybox sh $dfuTools.Script -i $Protocol -f $resident `
-            -o $FlashOffset -v $Vid -p $UsbPid -a $Address -s $Start
+        # Pass every option and its value as one token. Windows PowerShell 5.1
+        # can otherwise hand BusyBox/getopt a detached -f without its path;
+        # STM32's wrapper then reports a misleading "missing binary file".
+        # Forward slashes also keep the subsequent shell eval from treating
+        # backslashes in C:\Users\... as escapes.
+        $scriptForShell = $dfuTools.Script.Replace('\', '/')
+        $residentForShell = $resident.Replace('\', '/')
+        $dfuArguments = @(
+            'sh',
+            $scriptForShell,
+            "--interface=$Protocol",
+            "--file=$residentForShell",
+            "--offset=$FlashOffset",
+            "--vid=$Vid",
+            "--pid=$UsbPid",
+            "--address=$Address",
+            "--start=$Start"
+        )
+        & $dfuTools.Busybox @dfuArguments
         if ($LASTEXITCODE -ne 0) {
             Stop-Mk61Upload "STM32 DFU failed with exit code $LASTEXITCODE"
         }

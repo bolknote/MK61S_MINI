@@ -91,11 +91,13 @@ build_group() {
     if [[ "$publish" == 1 ]]; then
       local bundle_root="$output_dir/$artifact"
       local resident="$bundle_root/$artifact.bin"
+      local resident_elf="$bundle_root/$artifact.elf"
       local expected_ui_fonts=0
       case "$profile" in
         classic-v2|classic-v3|40th) expected_ui_fonts=1 ;;
       esac
       [[ -s "$resident" ]] || fail "missing product BIN: $resident"
+      [[ -s "$resident_elf" ]] || fail "missing product ELF: $resident_elf"
       "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \
         "$resident"
       for file in build.flags build.apps System/FOCAL.APP System/BASIC.APP \

@@ -26,8 +26,20 @@ python3 tools/build_system_app_bundle.py \
   --resident-elf .build/resident.elf \
   --compile-commands .build/compile_commands.json \
   --output-dir binary/profile/System \
+  --catalog-dir binary/apps/abi6 \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
+
+`binary/apps/abi6` — общий контентно-адресуемый каталог переносимых APP.
+Одинаковый payload хранится в нём один раз по SHA-256, а `catalog.json`
+сопоставляет каноническое имя и вариант с объектом. Профильные каталоги
+`System` содержат только выбранный для установки состав. Отдельные варианты
+остаются лишь там, где меняется код: CORE/локальный FLOAT у FOCAL и BASIC,
+текстовый/графический Markdown и SETUP с/без графических UI-шрифтов.
+Платформа mini/Classic и точный CRC resident в ключ каталога не входят.
+Ключ сборки включает исходники, вариант и версию ARM-компилятора: следующий
+профиль повторно использует уже собранный APP, а изменение кода автоматически
+делает запись устаревшей и пересобирает её.
 
 Какие роли собирать, всегда решает конфигурация той же прошивки. Для SETUP
 доступны три состояния: выключен (`MK61_ENABLE_SETUP=0`), встроен и APP

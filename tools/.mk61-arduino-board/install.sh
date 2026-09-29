@@ -103,6 +103,7 @@ platform_installed() {
     [ -f "$target/tools/resident_firmware_format.hpp" ] &&
     [ -f "$target/tools/rust_types.h" ] &&
     [ -f "$target/tools/seal-firmware.ps1" ] &&
+    [ -f "$target/tools/seal-firmware-elf.py" ] &&
     [ -f "$target/tools/mk61_module.ld" ]
 }
 
@@ -124,7 +125,9 @@ platform_current() {
     cmp -s "$project_root/code/rust_types.h" \
       "$target/tools/rust_types.h" &&
     cmp -s "$project_root/tools/seal-firmware.ps1" \
-      "$target/tools/seal-firmware.ps1"
+      "$target/tools/seal-firmware.ps1" &&
+    cmp -s "$project_root/tools/seal-firmware-elf.py" \
+      "$target/tools/seal-firmware-elf.py"
 }
 
 if [ "$check_only" -eq 1 ]; then
@@ -149,7 +152,8 @@ fi
   [ -f "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" ] &&
   [ -f "$project_root/code/resident_firmware_format.hpp" ] &&
   [ -f "$project_root/code/rust_types.h" ] &&
-  [ -f "$project_root/tools/seal-firmware.ps1" ] ||
+  [ -f "$project_root/tools/seal-firmware.ps1" ] &&
+  [ -f "$project_root/tools/seal-firmware-elf.py" ] ||
   die 'the board package is incomplete'
 
 mkdir -p "$target/tools"
@@ -171,6 +175,8 @@ cp "$project_root/code/rust_types.h" \
    "$target/tools/rust_types.h"
 cp "$project_root/tools/seal-firmware.ps1" \
    "$target/tools/seal-firmware.ps1"
+cp "$project_root/tools/seal-firmware-elf.py" \
+   "$target/tools/seal-firmware-elf.py"
 chmod +x "$target/tools/mk61-app-postbuild.sh"
 install_legacy_font_settings_menu
 

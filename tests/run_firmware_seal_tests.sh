@@ -38,6 +38,32 @@ cp "$work/sealed.bin" "$work/resealed.bin"
 "$work/seal" seal "$work/resealed.bin" >/dev/null
 cmp "$work/sealed.bin" "$work/resealed.bin"
 
+# The released ELF must contain the same post-link footer as the sealed BIN.
+# A tiny deterministic objcopy stand-in extracts the 512-byte load image from
+# this host fixture, so the test does not depend on an installed ARM toolchain.
+printf 'FAKEELF\000' > "$work/unsealed.elf"
+dd if=/dev/zero bs=1 count=56 status=none >> "$work/unsealed.elf"
+cat "$work/unsealed.bin" >> "$work/unsealed.elf"
+dd if=/dev/zero bs=1 count=32 status=none >> "$work/unsealed.elf"
+python3 "$root/tools/seal-firmware-elf.py" \
+  --bin "$work/sealed.bin" --elf "$work/unsealed.elf" \
+  --output "$work/sealed.elf" \
+  --objcopy "$root/tests/fake_firmware_objcopy.py" >/dev/null
+"$root/tests/fake_firmware_objcopy.py" -O binary \
+  "$work/sealed.elf" "$work/from-elf.bin"
+cmp "$work/sealed.bin" "$work/from-elf.bin"
+
+cp "$work/unsealed.elf" "$work/mismatched.elf"
+printf '\001' | dd of="$work/mismatched.elf" bs=1 seek=81 conv=notrunc \
+  status=none
+if python3 "$root/tools/seal-firmware-elf.py" \
+    --bin "$work/sealed.bin" --elf "$work/mismatched.elf" \
+    --output "$work/rejected.elf" \
+    --objcopy "$root/tests/fake_firmware_objcopy.py" >/dev/null 2>&1; then
+  echo 'ELF sealer accepted an ELF that does not reproduce its BIN' >&2
+  exit 1
+fi
+
 cp "$work/sealed.bin" "$work/corrupt.bin"
 printf '\001' | dd of="$work/corrupt.bin" bs=1 seek=17 conv=notrunc \
   status=none

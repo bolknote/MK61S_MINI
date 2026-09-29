@@ -68,6 +68,7 @@ require_text "$f411_matrix" 'check_no_resident_fmk_decoder_elf.sh'
 require_text "$f401_bundle" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$f401_bundle" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$f401_bundle" 'seal-firmware.sh" seal --max-size 262144'
+require_text "$f401_bundle" 'seal-firmware-elf.py'
 require_text "$f401_bundle" 'analyze_stack_usage.py'
 require_text "$f401_bundle" 'opt=oslto'
 require_text "$f401_bundle" 'MK61_ENABLE_LOADABLE_MODULES=1'
@@ -82,15 +83,18 @@ require_order "$f401_bundle" 'seal-firmware.sh" seal' 'build_system_app_bundle.p
 
 require_text "$firmware_sh" "RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$firmware_sh" 'seal-firmware.sh" seal --max-size 524288'
+require_text "$firmware_sh" 'seal-firmware-elf.py'
 require_text "$firmware_ps" "ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$firmware_ps" "'tools/seal-firmware.ps1'"
 require_text "$firmware_ps" "'-InputFile', \$sourceArtifact, '-MaxSize', '524288'"
+require_text "$firmware_ps" "'tools/seal-firmware-elf.py'"
 
 require_text "$gcc_cmake" 'MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}'
 require_text "$gcc_cmake" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$gcc_cmake" 'analyze_stack_usage.py'
 require_text "$gcc_ps" "'-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$gcc_ps" "'tools/seal-firmware.ps1'"
+require_text "$gcc_ps" "'tools/seal-firmware-elf.py'"
 require_order "$gcc_ps" "'seal'," "'System APP builder'"
 require_text "$gcc_ps" "'--change-addresses', '0x08000000'"
 require_text "$root/system_apps/.tool/build.ps1" 'build_system_app_bundle.py'
@@ -101,11 +105,14 @@ require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
 require_text "$board" 'MK61_REQUIRE_RESIDENT_CRC=1'
 require_text "$board_hook_sh" 'seal_resident "$resident_bin"'
 require_text "$board_hook_ps" "'seal-firmware.ps1'"
+require_text "$board_hook_sh" 'seal-firmware-elf.py'
+require_text "$board_hook_ps" "'seal-firmware-elf.py'"
 for installer in "$board_install_sh" "$board_install_ps"; do
   require_text "$installer" 'mk61_firmware_seal.cpp'
   require_text "$installer" 'resident_firmware_format.hpp'
   require_text "$installer" 'rust_types.h'
   require_text "$installer" 'seal-firmware.ps1'
+  require_text "$installer" 'seal-firmware-elf.py'
 done
 require_text "$board_install_ps" 'build_cache:'
 require_text "$board_install_ps" 'selected a separate ASCII-only directory:'

@@ -552,6 +552,13 @@ compiler=$(normalize_host_path "$compiler_path$compiler_cpp")
   printf 'Error: required STM32 compiler is missing: %s\n' "$compiler" >&2
   exit 1
 }
+objcopy="$(dirname "$compiler")/arm-none-eabi-objcopy"
+[ -x "$objcopy" ] || {
+  printf 'Error: required STM32 objcopy is missing: %s\n' "$objcopy" >&2
+  exit 1
+}
+python3 "$root/tools/seal-firmware-elf.py" \
+  --bin "$resident_bin" --elf "$resident_elf" --objcopy "$objcopy"
 
 build_custom_app() {
   custom_index=$1
@@ -572,7 +579,9 @@ build_custom_app() {
   cp "$custom_out/$custom_name.APP" "$bundle_stage/Apps/$custom_name.APP"
 }
 
+firmware_elf_name=${firmware_name%.bin}.elf
 cp "$resident_bin" "$bundle_stage/$firmware_name"
+cp "$resident_elf" "$bundle_stage/$firmware_elf_name"
 python3 "$root/tools/build_system_app_bundle.py" \
   --resident-elf "$resident_elf" \
   --arm-toolchain-bin "$(dirname "$compiler")" \
@@ -586,7 +595,8 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --setup "$((enable_setup * setup_as_app))" \
   --usbdisk 1 \
   --explorer "$explorer_as_app" \
-  --local-float-math "$app_local_float"
+  --local-float-math "$app_local_float" \
+  --catalog-dir "$output_root/apps/abi6"
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
 done
@@ -602,7 +612,8 @@ rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
       "$bundle_dir/System/USBDISK.APP" "$bundle_dir/System/EXPLORER.APP" \
       "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
-      "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
+      "$bundle_dir/$firmware_name" "$bundle_dir/$firmware_elf_name" \
+      "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then
   rmdir "$bundle_dir/System" 2>/dev/null || true
 fi

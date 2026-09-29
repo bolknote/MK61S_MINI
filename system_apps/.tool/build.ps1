@@ -7,6 +7,7 @@ param(
     [string]$ResidentElf,
     [string]$CompileCommands,
     [string]$OutputDirectory,
+    [string]$CatalogDirectory,
     [string]$ModulePacker,
     [ValidateSet('0', '1')][string]$Graphics = '1',
     [ValidateSet('0', '1')][string]$UiFonts = '1',
@@ -86,6 +87,10 @@ try {
         '--usbdisk', $UsbDisk,
         '--explorer', $Explorer,
         '--local-float-math', $LocalFloatMath)
+    if (-not [string]::IsNullOrWhiteSpace($CatalogDirectory)) {
+        $arguments += @(
+            '--catalog-dir', [IO.Path]::GetFullPath($CatalogDirectory))
+    }
     if (-not [string]::IsNullOrWhiteSpace($ModulePacker)) {
         $arguments += @('--packer', [IO.Path]::GetFullPath($ModulePacker))
     }

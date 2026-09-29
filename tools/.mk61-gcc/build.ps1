@@ -323,7 +323,9 @@ function Test-SafeBuildDirectory {
 
 function Remove-GeneratedBundleFiles {
     param([string]$Directory, [string]$ResidentName)
-    foreach ($name in @($ResidentName, 'build.flags', 'build.apps')) {
+    $residentElfName = [IO.Path]::ChangeExtension($ResidentName, '.elf')
+    foreach ($name in @(
+            $ResidentName, $residentElfName, 'build.flags', 'build.apps')) {
         $path = Join-Path $Directory $name
         if ([IO.File]::Exists($path)) {
             Remove-Item -LiteralPath $path -Force
@@ -663,6 +665,13 @@ try {
         '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
         '-InputFile', $residentBin, '-MaxSize', $flashCapacity)
 
+    $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
+    Test-RequiredFile $objcopy 'GNU Arm objcopy'
+    Invoke-GccTool $python @(
+        (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
+        '--bin', $residentBin, '--elf', $residentElf,
+        '--objcopy', $objcopy)
+
     if ($null -ne $releaseCaseInfo) {
         $sizeTool = Join-Path $toolchainBin "arm-none-eabi-size$toolSuffix"
         $nmTool = Join-Path $toolchainBin "arm-none-eabi-nm$toolSuffix"
@@ -682,8 +691,6 @@ try {
     # CMake emitted HEX before the post-link footer was sealed. Regenerate it
     # from the authoritative sealed BIN so neither public format can bypass
     # the startup integrity check.
-    $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
-    Test-RequiredFile $objcopy 'GNU Arm objcopy'
     Invoke-GccTool $objcopy @(
         '-I', 'binary', '-O', 'ihex', '--change-addresses', '0x08000000',
         $residentBin, $residentHex)
@@ -707,6 +714,7 @@ try {
             '-ResidentElf', $residentElf,
             '-CompileCommands', $compileCommands,
             '-OutputDirectory', (Join-Path $stage 'System'),
+            '-CatalogDirectory', (Join-Path $OutputDirectory 'apps/abi6'),
             '-Focal', $focalApp,
             '-Basic', $basicApp,
             '-Wbmp', $wbmpApp,
@@ -738,6 +746,9 @@ try {
     Remove-GeneratedBundleFiles $outputBundle $residentName
     Copy-Item -LiteralPath $residentBin `
         -Destination (Join-Path $outputBundle $residentName)
+    Copy-Item -LiteralPath $residentElf `
+        -Destination (Join-Path $outputBundle `
+            ([IO.Path]::ChangeExtension($residentName, '.elf')))
     if ([IO.Directory]::Exists((Join-Path $stage 'System'))) {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
             -Destination $outputBundle -Recurse

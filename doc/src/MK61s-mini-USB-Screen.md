@@ -280,9 +280,9 @@ MK61_ENABLE_CHIP8=1
 ./tools/mk61-firmware.cmd --profile mini-v3-a00 --build
 ```
 
-Готовый файл появляется в `binary/`, рядом создаётся файл `.flags` с точным
-набором `-D`-ключей. Имя A00-артефакта:
-`binary/mk61s-M-mini-v3-lcd1602-a00-f411.bin`.
+Готовый комплект появляется в отдельном каталоге `binary/`, где
+`build.flags` содержит точный набор `-D`-ключей. Имя A00-артефакта:
+`binary/mk61s-M-mini-v3-lcd1602-a00-f411/mk61s-M-mini-v3-lcd1602-a00-f411.bin`.
 
 ### Прямая сборка через arduino-cli
 
