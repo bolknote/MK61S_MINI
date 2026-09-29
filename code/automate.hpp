@@ -1,3 +1,5 @@
+#include "program_execution.hpp"
+
 static constexpr usize hz_STOP_SIGNAL  =   200;  // Hz
 static constexpr usize ms_STOP_SIGNAL  =   850;  // ms
 
@@ -20,6 +22,8 @@ inline  void  return_auto_mode(void) { // возвращение в режим �
 static constexpr i32 MK61_REQUEST_IDLE_LOOP  =   1;  // любое положительное число
 static constexpr i32 MK61_REQUEST_BASE_LOOP  =  -1;  // любое отрицательное число
 static i32 mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;
+static t_time_ms runtime_started_at;
+static bool runtime_measurement_active;
 
 inline bool mk61_calculator_is_idle(void) {
   return core_61::is_CALC() && mk61_sending_keycode == MK61_REQUEST_BASE_LOOP;
@@ -27,7 +31,10 @@ inline bool mk61_calculator_is_idle(void) {
 
 inline  void  event_stop_in_prg_mk61(void) {
   classic_timer::synchronize(false);
-  runtime_ms = millis() - runtime_ms;
+  if(runtime_measurement_active) {
+    runtime_ms = millis() - runtime_started_at;
+    runtime_measurement_active = false;
+  }
   #ifdef DEBUG_MEASURE
     char mk61_display[14];
     core_61::update_indicator(&mk61_display[0], terminal_symbols);
@@ -60,13 +67,15 @@ inline  void  event_stop_in_prg_mk61(void) {
 
 }
 
-inline void  event_start_prg_mk61(void) {
+void mk61_program_started(void) {
   dbgln(MINI, "PRG: first step dt = ", runtime_ms,
         " classic_period_us = ",
         classic_timer::configured_period_us());
   MnemoLabel.disable();
   disassembler.disable("RUN");
-  runtime_ms = millis();
+  runtime_ms = 0;
+  runtime_started_at = millis();
+  runtime_measurement_active = true;
   classic_timer::synchronize(library_mk61::speed_is_classic());
 }
 
@@ -130,7 +139,7 @@ inline void mk61_automate(void) {
           core_61::step();
 
           if(core_61::is_RUN()) {
-              event_start_prg_mk61();                 // обработка события "СТАРТ ПРОГРАММЫ"
+              mk61_program_started();                 // обработка события "СТАРТ ПРОГРАММЫ"
               mk61_sending_keycode = MK61_REQUEST_IDLE_LOOP;    // планируем после останова программы дообработать нажатую кнопку в холостых циклах
           } else if(core_61::is_displayed()) {
               mk61_sending_keycode = MK61_REQUEST_BASE_LOOP;    // нет необходимости в "холостых" циклах - выход в основной цикл

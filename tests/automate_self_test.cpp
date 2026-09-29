@@ -133,6 +133,8 @@ static void reset_fakes(void) {
   cancel_during_service = false;
   service_count = 0;
   runtime_ms = 0;
+  runtime_started_at = 0;
+  runtime_measurement_active = false;
   library_mk61::maximum = false;
   core_61::running = true;
   core_61::boundary_yielded = false;
@@ -207,8 +209,11 @@ static void test_maximum_mode_runs_the_fast_batch(void) {
 
 static void test_every_run_updates_last_runtime(void) {
   reset_fakes();
-  event_start_prg_mk61();
-  assert(runtime_ms == 1000U);
+  runtime_ms = 777U; // результат предыдущего запуска
+  mk61_program_started();
+  assert(runtime_ms == 0U);
+  assert(runtime_started_at == 1000U);
+  assert(runtime_measurement_active);
 
   fake_millis = 1423;
   core_61::step_action = core_61::StepAction::STOP;
@@ -218,7 +223,7 @@ static void test_every_run_updates_last_runtime(void) {
   core_61::running = true;
   core_61::step_action = core_61::StepAction::STOP;
   fake_millis = 2000;
-  event_start_prg_mk61();
+  mk61_program_started();
   fake_millis = 2017;
   run_program_steps();
   assert(runtime_ms == 17U);
@@ -227,10 +232,22 @@ static void test_every_run_updates_last_runtime(void) {
 static void test_runtime_elapsed_time_wraps_safely(void) {
   reset_fakes();
   fake_millis = 0xFFFFFFF0U;
-  event_start_prg_mk61();
+  mk61_program_started();
   fake_millis = 0x00000010U;
   event_stop_in_prg_mk61();
   assert(runtime_ms == 32U);
+}
+
+static void test_stop_without_matching_start_keeps_last_runtime(void) {
+  reset_fakes();
+  runtime_ms = 496746U;
+  // The old overloaded variable produced 1868678 - 496746 = 1371932 ms.
+  fake_millis = 1868678U;
+
+  event_stop_in_prg_mk61();
+
+  assert(runtime_ms == 496746U);
+  assert(!runtime_measurement_active);
 }
 
 int main(void) {
@@ -241,6 +258,7 @@ int main(void) {
   test_maximum_mode_runs_the_fast_batch();
   test_every_run_updates_last_runtime();
   test_runtime_elapsed_time_wraps_safely();
+  test_stop_without_matching_start_keeps_last_runtime();
   printf("automate_self_test: ok\n");
   return 0;
 }

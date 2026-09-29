@@ -4,6 +4,7 @@
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "program_load.hpp"
+#include "program_execution.hpp"
 #include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
@@ -1167,6 +1168,11 @@ static bool start_current_program(void) {
   // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
   // дойти до первого кода программы, особенно в режиме MAXIMUM.
   hidden_start_loaded_program();
+  if(!core_61::is_RUN()) {
+    runner_state = RunnerState::EXECUTING;
+    return false;
+  }
+  mk61_program_started();
   return true;
 }
 

@@ -80,7 +80,7 @@ class_disassm_mk61 disassembler;
 static constexpr t_time_ms  ANGLE_SAVE_UPDATE_MS   =   3000;  // Время (мс) для запуска процесса сохранения переключателя угловых единиц Р-ГРД-Г
 static constexpr t_time_ms  IDLE_SIGNAL_DELAY_MS   = 300000;  // 5 минут до сигнала бездействия
 
-t_time_ms   runtime_ms; // время последнего выполнения программы в ms
+t_time_ms   runtime_ms; // время последнего завершённого выполнения программы, ms
 
 static  t_time_ms   idle_signal_at;
 static  DeferredSave angle_save;

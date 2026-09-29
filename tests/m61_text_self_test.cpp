@@ -45,6 +45,8 @@ static int reinit_count = 0;
 static AngleUnit host_angle_unit = DEGREE;
 static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
+static int program_start_count = 0;
+static u32 program_started_at = 0;
 static std::vector<std::string> executed_lines;
 static std::vector<bool> executed_in_trap;
 struct HostFontRule {
@@ -237,6 +239,11 @@ void hidden_start_loaded_program(void) {
   m_IK1302.comma = core_61::COMMA_RUN_POSITION;
 }
 
+void mk61_program_started(void) {
+  program_start_count++;
+  program_started_at = fake_millis;
+}
+
 void MK61Emu_ClearCodePage(void) {
   clear_count++;
   std::memset(loaded_program,0,sizeof(loaded_program));
@@ -364,6 +371,8 @@ static void reset_host(void) {
   host_angle_unit = DEGREE;
   saved_context_angle = DEGREE;
   fake_millis = 0;
+  program_start_count = 0;
+  program_started_at = 0;
   executed_lines.clear();
   executed_in_trap.clear();
   font_rules.clear();
@@ -661,6 +670,20 @@ static void test_print_owns_display_until_root_script_finishes(void) {
   m61_text::service();
   assert(!m61_text::active());
   assert(!m61_text::display_owned());
+}
+
+static void test_m61_run_uses_common_program_start_hook(void) {
+  reset_host();
+  fake_millis = 1371932U;
+  add_script("TIMED", "run\nret\n");
+
+  assert(m61_text::load_program("TIMED"));
+  assert(program_start_count == 1);
+  assert(program_started_at == 1371932U);
+
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(!m61_text::active());
 }
 
 static void test_print_off_and_on_control_display_ownership(void) {
@@ -1387,6 +1410,7 @@ int main(void) {
   test_indexed_loop_is_budgeted_and_uses_block_reads();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
+  test_m61_run_uses_common_program_start_hook();
   test_print_owns_display_until_root_script_finishes();
   test_print_off_and_on_control_display_ownership();
   test_trap_wait_holds_snapshot_and_resumes_at_deadline();
