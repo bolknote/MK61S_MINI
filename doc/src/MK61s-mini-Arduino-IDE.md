@@ -271,6 +271,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | Сообщение | Что проверить |
 | --- | --- |
 | Плата не видна | Закрыть все окна IDE, повторить установщик и сверить напечатанный sketchbook с `File → Preferences → Sketchbook location`; после запуска искать `MK61s F401 + APP` или `MK61s F411 + APP` в Board Selector/`Tools → Board`, а не в Boards Manager. |
+| `Invalid FQBN` / `недопустимый параметр 'mk61_font_settings'` | Arduino IDE сохранила в FQBN удалённую настройку старой версии платы. Закрыть все окна IDE, обновить репозиторий, повторно выполнить `tools\mk61-arduino-board.cmd` и запустить IDE. Установщик добавит безвредную совместимость со старыми `disabled`/`enabled`; сбрасывать все настройки IDE не нужно. |
 | `LiquidCrystal.h: No such file` | Установить `LiquidCrystal 1.0.7` через Library Manager. |
 | Не найден `STM32duino RTC` | Установить `STM32duino RTC 1.9.0`. |
 | `incompatible platform/display pair` | Выбрать LCD для mini либо UC1609 для Classic/40th. |

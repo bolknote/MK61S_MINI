@@ -1,5 +1,5 @@
 name=MK61s F401/F411
-version=1.1.0
+version=1.1.1
 
 # The rest of platform.txt is inherited from the referenced
 # STMicroelectronics:arduino core. These hooks add MK61s F401/F411 profile

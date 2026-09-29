@@ -5,6 +5,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 project_root="$(cd "$script_dir/../.." && pwd)"
 source_platform="$script_dir/hardware/mk61/stm32"
+font_settings_compat_source="$script_dir/font-settings-compat.boards.local.txt"
 sketchbook=${MK61_ARDUINO_SKETCHBOOK:-}
 check_only=0
 
@@ -62,6 +63,35 @@ if [ -z "$sketchbook" ]; then
 fi
 
 target="$sketchbook/hardware/mk61/stm32"
+font_settings_compat_target="$target/boards.local.txt"
+
+# Arduino IDE persists the complete FQBN per sketch.  If an installed board is
+# being upgraded, that FQBN may still contain the removed
+# mk61_font_settings=disabled/enabled option.  Preserve a local compatibility
+# menu only for upgrades; clean installations must not expose the obsolete
+# setting.
+install_font_settings_compat=0
+if [ -f "$target/boards.txt" ] ||
+   { [ -f "$font_settings_compat_target" ] &&
+     grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' \
+       "$font_settings_compat_target"; }; then
+  install_font_settings_compat=1
+fi
+
+install_legacy_font_settings_menu() {
+  [ "$install_font_settings_compat" -eq 1 ] || return 0
+  if [ -f "$font_settings_compat_target" ] &&
+     grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' \
+       "$font_settings_compat_target"; then
+    return 0
+  fi
+  if [ -s "$font_settings_compat_target" ]; then
+    printf '\n' >> "$font_settings_compat_target"
+    cat "$font_settings_compat_source" >> "$font_settings_compat_target"
+  else
+    cp "$font_settings_compat_source" "$font_settings_compat_target"
+  fi
+}
 
 platform_installed() {
   [ -f "$target/boards.txt" ] &&
@@ -115,6 +145,7 @@ fi
 
 [ -f "$source_platform/boards.txt" ] &&
   [ -f "$source_platform/platform.txt" ] &&
+  [ -f "$font_settings_compat_source" ] &&
   [ -f "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" ] &&
   [ -f "$project_root/code/resident_firmware_format.hpp" ] &&
   [ -f "$project_root/code/rust_types.h" ] &&
@@ -141,11 +172,16 @@ cp "$project_root/code/rust_types.h" \
 cp "$project_root/tools/seal-firmware.ps1" \
    "$target/tools/seal-firmware.ps1"
 chmod +x "$target/tools/mk61-app-postbuild.sh"
+install_legacy_font_settings_menu
 
 platform_installed && platform_current ||
   die "installed board verification failed: $target"
 
 printf 'MK61s F401/F411 boards installed in:\n  %s\n' "$target"
 printf 'Verified uploader: mk61Upload (DFU + automatic /System install).\n'
+if [ "$install_font_settings_compat" -eq 1 ]; then
+  printf '%s\n' \
+    'Accepted obsolete Arduino IDE font options saved by an earlier installation.'
+fi
 printf 'Restart Arduino IDE, then select MK61s F401 + APP or MK61s F411 + APP.\n'
 printf 'STM32 MCU based boards core 2.12.0 is required.\n'

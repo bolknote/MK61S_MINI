@@ -368,6 +368,32 @@ function Test-InstalledPlatformCurrent {
     return $true
 }
 
+function Install-Mk61FontSettingsCompatibility {
+    param(
+        [string]$Source,
+        [string]$Target
+    )
+
+    $marker = '# MK61_FONT_SETTINGS_COMPAT_BEGIN'
+    if ([IO.File]::Exists($Target)) {
+        $existing = [IO.File]::ReadAllText($Target)
+        if ($existing.Contains($marker)) {
+            return
+        }
+        if ($existing.Length -gt 0 -and
+            -not $existing.EndsWith("`n")) {
+            $existing += [Environment]::NewLine
+        }
+        $compatibility = [IO.File]::ReadAllText($Source)
+        [IO.File]::WriteAllText(
+            $Target,
+            $existing + [Environment]::NewLine + $compatibility,
+            [Text.UTF8Encoding]::new($false))
+        return
+    }
+    Copy-Item -LiteralPath $Source -Destination $Target
+}
+
 try {
     if ($Help) {
         Show-Usage
@@ -402,8 +428,18 @@ try {
         $configPath -ReadOnly:$Check
 
     $sourcePlatform = Join-Path $PSScriptRoot 'hardware\mk61\stm32'
+    $fontSettingsCompatibilitySource = Join-Path $PSScriptRoot `
+        'font-settings-compat.boards.local.txt'
     $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $target = Join-Path $Sketchbook 'hardware\mk61\stm32'
+    $fontSettingsCompatibilityTarget = Join-Path $target 'boards.local.txt'
+    $installFontSettingsCompatibility =
+        [IO.File]::Exists((Join-Path $target 'boards.txt'))
+    if ([IO.File]::Exists($fontSettingsCompatibilityTarget) -and
+        [IO.File]::ReadAllText($fontSettingsCompatibilityTarget).Contains(
+            '# MK61_FONT_SETTINGS_COMPAT_BEGIN')) {
+        $installFontSettingsCompatibility = $true
+    }
 
     if ($Check) {
         if (Test-InstalledPlatform $target) {
@@ -432,7 +468,8 @@ try {
     if (-not [IO.File]::Exists(
         (Join-Path $sourcePlatform 'boards.txt')) -or
         -not [IO.File]::Exists(
-        (Join-Path $sourcePlatform 'platform.txt'))) {
+        (Join-Path $sourcePlatform 'platform.txt')) -or
+        -not [IO.File]::Exists($fontSettingsCompatibilitySource)) {
         throw 'The MK61s board package is incomplete.'
     }
 
@@ -462,6 +499,11 @@ try {
     Copy-Item -LiteralPath (Join-Path $projectRoot 'tools/seal-firmware.ps1') `
         -Destination (Join-Path $targetTools 'seal-firmware.ps1') -Force
 
+    if ($installFontSettingsCompatibility) {
+        Install-Mk61FontSettingsCompatibility `
+            $fontSettingsCompatibilitySource $fontSettingsCompatibilityTarget
+    }
+
     if (-not (Test-InstalledPlatform $target) -or
         -not (Test-InstalledPlatformCurrent `
             $sourcePlatform $projectRoot $target)) {
@@ -471,6 +513,10 @@ try {
     Write-Host 'MK61s F401/F411 boards installed in:'
     Write-Host "  $target"
     Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
+    if ($installFontSettingsCompatibility) {
+        Write-Host ('Accepted obsolete Arduino IDE font options saved by ' +
+                    'an earlier installation.')
+    }
     Write-Host "Arduino IDE sketchbook source: $sketchbookSource"
     if (-not [string]::IsNullOrWhiteSpace($buildCacheDirectory)) {
         Write-Host "Arduino IDE build cache: $buildCacheDirectory"

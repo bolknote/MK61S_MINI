@@ -5,6 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 launcher="$root/tools/mk61-arduino-board.cmd"
 package="$root/tools/.mk61-arduino-board"
 platform="$package/hardware/mk61/stm32"
+font_settings_compat="$package/font-settings-compat.boards.local.txt"
 hook="$platform/tools/mk61-app-postbuild.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-arduino-board-test.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
@@ -12,6 +13,7 @@ trap 'rm -rf "$work"' EXIT
 test -x "$launcher"
 test -x "$package/install.sh"
 test -x "$hook"
+test -f "$font_settings_compat"
 bash -n "$package/install.sh"
 bash -n "$hook"
 python3 -c 'from pathlib import Path; import sys; assert Path(sys.argv[1]).read_bytes().startswith(b"\xef\xbb\xbf")' \
@@ -26,6 +28,7 @@ grep -q 'not in Boards Manager' "$work/help.txt"
 
 shell_sketchbook="$work/shell-sketchbook"
 "$launcher" --sketchbook "$shell_sketchbook" > "$work/install.txt"
+test ! -e "$shell_sketchbook/hardware/mk61/stm32/boards.local.txt"
 "$launcher" --check --sketchbook "$shell_sketchbook" > "$work/check.txt"
 target="$shell_sketchbook/hardware/mk61/stm32"
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
@@ -57,6 +60,21 @@ fi
 grep -q 'installed but stale' "$work/stale-check.txt"
 "$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall.txt"
 cmp "$work/current-platform.txt" "$target/platform.txt"
+test -f "$target/boards.local.txt"
+grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' "$target/boards.local.txt"
+grep -Fq \
+  'mk61_f401_app.menu.mk61_font_settings.disabled.build.mk61_font_settings=0' \
+  "$target/boards.local.txt"
+grep -Fq \
+  'mk61_f401_app.menu.mk61_font_settings.enabled.build.mk61_font_settings=0' \
+  "$target/boards.local.txt"
+grep -Fq \
+  'mk61_f411.menu.mk61_font_settings.disabled.build.mk61_font_settings=0' \
+  "$target/boards.local.txt"
+grep -Fq \
+  'mk61_f411.menu.mk61_font_settings.enabled.build.mk61_font_settings=0' \
+  "$target/boards.local.txt"
+grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
 grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
@@ -225,6 +243,7 @@ if command -v pwsh >/dev/null 2>&1; then
   ps_sketchbook="$work/powershell-sketchbook"
   pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
     -Sketchbook "$ps_sketchbook" > "$work/install-ps.txt"
+  test ! -e "$ps_sketchbook/hardware/mk61/stm32/boards.local.txt"
   pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
     -Check -Sketchbook "$ps_sketchbook" > "$work/check-ps.txt"
   grep -q 'Verified uploader: mk61Upload' "$work/install-ps.txt"
@@ -245,6 +264,14 @@ if command -v pwsh >/dev/null 2>&1; then
     -Sketchbook "$ps_sketchbook" > "$work/reinstall-ps.txt"
   cmp "$platform/platform.txt" \
       "$ps_sketchbook/hardware/mk61/stm32/platform.txt"
+  ps_compat="$ps_sketchbook/hardware/mk61/stm32/boards.local.txt"
+  test -f "$ps_compat"
+  grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' "$ps_compat"
+  grep -Fq \
+    'mk61_f401_app.menu.mk61_font_settings.enabled.build.mk61_font_settings=0' \
+    "$ps_compat"
+  grep -q 'Accepted obsolete Arduino IDE font options' \
+    "$work/reinstall-ps.txt"
 
   # Arduino IDE 2 stores its real sketchbook in arduino-cli.yaml.  This is
   # commonly different from Documents\Arduino on Windows because of OneDrive
@@ -477,6 +504,14 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   mkdir -p "$shell_sketchbook/sketches/code" "$work/build"
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
   ln -s "$root/tools" "$shell_sketchbook/sketches/tools"
+  for legacy_font_setting in disabled enabled; do
+    ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli board details \
+      --fqbn "mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_font_settings=$legacy_font_setting" \
+      > "$work/legacy-font-$legacy_font_setting.txt"
+  done
+  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli board details \
+    --fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_font_settings=enabled' \
+    > "$work/legacy-font-f411.txt"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"

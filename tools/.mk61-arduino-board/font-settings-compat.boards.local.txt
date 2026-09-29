@@ -1,0 +1,17 @@
+# MK61_FONT_SETTINGS_COMPAT_BEGIN
+# Arduino IDE may retain the complete FQBN after a board platform update.
+# Keep both removed option values valid for upgraded installations.  They are
+# deliberately equivalent: extended UI fonts are now selected at runtime and
+# this obsolete build option must not alter the firmware.
+menu.mk61_font_settings=Старая настройка IDE
+
+mk61_f401_app.menu.mk61_font_settings.disabled=Обычные (не влияет)
+mk61_f401_app.menu.mk61_font_settings.disabled.build.mk61_font_settings=0
+mk61_f401_app.menu.mk61_font_settings.enabled=Расширенные (не влияет)
+mk61_f401_app.menu.mk61_font_settings.enabled.build.mk61_font_settings=0
+
+mk61_f411.menu.mk61_font_settings.disabled=Обычные (не влияет)
+mk61_f411.menu.mk61_font_settings.disabled.build.mk61_font_settings=0
+mk61_f411.menu.mk61_font_settings.enabled=Расширенные (не влияет)
+mk61_f411.menu.mk61_font_settings.enabled.build.mk61_font_settings=0
+# MK61_FONT_SETTINGS_COMPAT_END
