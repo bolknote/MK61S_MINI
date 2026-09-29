@@ -70,6 +70,7 @@ class Item:
     lift: bool = True
     keep_block: bool = False
     inline: bool = False
+    force_far: bool = False
 
 class Module:
     def __init__(self, bank, name):
@@ -103,11 +104,13 @@ class Module:
         # lift=False is an assignment: the caller guarantees closed number
         # entry and a dead prior X. A negative pointer can also be a flag.
         self.items.append(Item('ptr', reg(r), label, negate=negate, lift=lift)); return self
-    def branch(self, opcode, label):
-        self.items.append(Item('branch', opcode, label)); return self
+    def branch(self, opcode, label, *, far=False):
+        # A measured hot condition may be faster in the existing 1F form
+        # even when its destination is local. Preserve that choice on relink.
+        self.items.append(Item('branch', opcode, label, force_far=far)); return self
     def call(self, label): return self.branch(0x53, label)
     def jump(self, label): return self.branch(0x51, label)
-    def jz(self, label): return self.branch(0x57, label)
+    def jz(self, label, *, far=False): return self.branch(0x57, label, far=far)
     def jnz(self, label): return self.branch(0x5E, label)
     def jneg(self, label): return self.branch(0x59, label)
     def jge(self, label): return self.branch(0x5C, label)
@@ -340,7 +343,7 @@ class Assembler:
                 if item.kind=='ptr' and item.digits<len(str(labels[item.target])):
                     item.digits=len(str(labels[item.target]));changed=True
                 if item.kind=='branch':
-                    desired=address//112==labels[item.target]//112
+                    desired=not item.force_far and address//112==labels[item.target]//112
                     if item.short and not desired:
                         item.short=False; changed=True
             if not changed: break
@@ -352,6 +355,7 @@ class Assembler:
 
         Relocation can make other branches far. Re-run widening and accept
         only a strictly smaller complete artifact, otherwise restore all flags.
+        Explicit far branches keep their measured execution cost.
         """
         result=self.expand_branches()
         branches=[i for m in self.modules for i in m.items if i.kind=='branch']
@@ -361,7 +365,7 @@ class Assembler:
         while True:
             labels,placements,_,_=result
             baseline_cost=cost(result)
-            candidates=[i for address,i in placements if i.kind=='branch' and
+            candidates=[i for address,i in placements if i.kind=='branch' and not i.force_far and
                         not i.short and address//112==labels[i.target]//112]
             for candidate in candidates:
                 flags=[i.short for i in branches]
@@ -381,7 +385,7 @@ class Assembler:
         self.fold_fallthrough_jumps()
         for m in self.modules:
             for i in m.items:
-                if i.kind=='branch':i.short=True
+                if i.kind=='branch':i.short=not i.force_far
                 if i.kind=='ptr':i.digits=1
         labels,placements,bridges,usage=self.relax_branches()
         banks={b:bytearray(112) for b in usage}

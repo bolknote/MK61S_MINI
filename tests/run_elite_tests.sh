@@ -14,3 +14,4 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Wno-unused -Wno-unused-parameter -Wno-cpp 
   "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
   "$root/code/zx0_stream.cpp" "$root/code/program_load.cpp" -o "$out"
 python3 "$root/tests/elite_game_test.py" "$out"
+python3 "$root/tests/mk61_ms_selfmod_test.py" "$out"

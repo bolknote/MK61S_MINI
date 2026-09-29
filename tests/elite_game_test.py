@@ -91,6 +91,12 @@ def test_assembler_continuations():
     assert not m.items[0].short
     after=a.relax_branches()
     assert m.items[0].short and after[0]['target']==before[0]['target']-2
+    a=Assembler();m=a.module(0,'preserve measured far condition')
+    m.jz('target',far=True).raw(0x54).label('target').op('ret')
+    banks,info=a.link()
+    assert info['labels']['target']==5
+    assert banks[0][:4]==bytes([0x1F,0x57,0,5])
+    assert a.link()[0]==banks, 're-link must preserve explicitly far conditions'
     a=Assembler();m=a.module(0,'closed-entry fallthrough')
     m.n(3).st(0).jump('next').label('next').ld(0).op('ret')
     banks,_=a.link()
@@ -469,6 +475,145 @@ def test_instruments_and_formation():
     assert rows[-1]['pages'][4][6]==0 and rows[-1]['pages'][3][1]==120
     print('ELITE: instrument boundaries, 100 range diagrams, five targets and cached formation OK',flush=True)
 
+def test_page_transaction_boundaries():
+    # A missile refusal must close HOLD before returning. The last missile
+    # is usable once; the repeated command must neither advance enemies nor
+    # consume heat/shield/time. Cover all four manoeuvres and the stock cap.
+    for ammo in (0,1,9):
+        for maneuver in (1,2,3,4):
+            s=play(encounter()+[f'set 25 7 {ammo}','dump',
+                               f'input {maneuver}2',f'input {maneuver}2'])
+            assert s[-2]['pages'][1][7]==max(0,ammo-1),s[-2]
+            assert s[-1]['pages'][1][7]==max(0,ammo-2),s[-1]
+            if ammo==0:
+                assert state(s[-2])==state(s[-3]),s[-2]
+                assert s[-2]['frame']==screen('ErrOr     СП'),s[-2]
+            if ammo<=1:
+                assert state(s[-1])==state(s[-2]),s[-1]
+                assert s[-1]['frame']==screen('ErrOr     СП'),s[-1]
+
+    # Two reads share an open PILOT page. Cover both coordinate components,
+    # zero distance, maximum distance and exact fuel equality. A rejected
+    # jump must not change fuel, elapsed turns, the random state or cargo.
+    for index in (0,1,15,16,17,255):
+        distance=index//16+index%16
+        code=(((251*index+12345)%65536)<<8)|index
+        for fuel in sorted({0,max(0,distance-1),distance,distance+1}):
+            commands=START+[f'set 24 2 {code}',f'set 24 6 {fuel}',
+                            'set 24 8 1','set 25 6 1013120','input 9','input 60']
+            s=play(commands)
+            number(s[-2],'r',distance)
+            if distance==0 or fuel<distance:
+                assert state(s[-1])==state(s[-2]),(index,fuel,s[-1])
+                assert s[-1]['frame']==screen('ErrOr     СП'),s[-1]
+            else:
+                assert s[-1]['pages'][0][1:4]==[code,code,1],s[-1]
+                assert s[-1]['pages'][0][6]==fuel-distance,s[-1]
+                assert s[-1]['pages'][0][8]==6,s[-1]
+                assert s[-1]['pages'][1]==s[-2]['pages'][1],s[-1]
+    print('ELITE: atomic missile and jump transactions at zero/exact/cap boundaries OK',flush=True)
+
+def test_station_transaction_boundaries():
+    # Services nest HOLD inside PILOT. Check every failure path closes both
+    # pages without charging or advancing time; equality may commit.
+    commands=START.copy();cases=[]
+    for cmd,bank,field,cap,increment,cost,values in (
+            (50,24,6,99,1,5,(0,97,98,99,100)),
+            (51,24,4,99,10,20,(0,88,89,90,98,99,100)),
+            (52,25,7,9,1,60,(0,7,8,9,10)),
+            (53,25,6,3010420,1000000,300,(1010420,2010420,3010419,3010420,3010421))):
+        for value in values:
+            for credits in (0,cost-1,cost,cost+1,99999999):
+                cases.append((bank,field,cap,increment,cost,value,credits))
+                commands += [f'set {bank} {field} {value}',f'set 24 0 {credits}',
+                             'set 24 3 7','dump',f'input {cmd}']
+    rows=play(commands)
+    for case,index in zip(cases,range(2,len(rows),2)):
+        bank,field,cap,increment,cost,value,credits=case
+        before,after=rows[index:index+2]
+        expected=[page.copy() for page in state(before)]
+        if value<cap and credits>=cost:
+            expected[bank-24][field]=min(cap,value+increment)
+            expected[0][0]=credits-cost;expected[0][3]=8
+            number(after,'C',credits-cost)
+        else:
+            assert after['frame']==screen('ErrOr     СП'),(case,after)
+        assert state(after)==expected,(case,before,after)
+    print('ELITE: 110 atomic service boundaries, money equality and field caps OK',flush=True)
+
+def test_market_reserved_fields():
+    # Former world/time copies are unused. Sentinel values must survive
+    # quotes and arrival, without affecting prices, gameplay or the frame.
+    actions=['dump']+[f'input {10+i}' for i in range(6)]+['input 71','input 60','input 10']
+    clean=play(START+['set 24 8 1']+actions)
+    marked=play(START+['set 24 8 1','set 26 0 87654321','set 26 1 12345678']+actions)
+    for before,after in zip(clean[2:],marked[2:]):
+        assert after['pages'][2][:2]==[87654321,12345678],after
+        left=[page.copy() for page in before['pages']]
+        right=[page.copy() for page in after['pages']]
+        left[2][:2]=right[2][:2]=[0,0]
+        assert left==right,(before,after)
+        assert before['frame']==after['frame'] and game_mode(before)==game_mode(after)
+    assert marked[-1]['pages'][0][1]==marked[-1]['pages'][0][2],marked[-1]
+    print('ELITE: reserved MARKET fields do not affect prices or arrival OK',flush=True)
+
+def test_trade_credit_boundaries():
+    # An eight-digit balance must be exact below and at its cap. Comparing
+    # a near-cap sum to 1e8 loses the units on the ROM and can reject valid
+    # sales; exercise all goods, zero payouts and the market stock cap.
+    commands=list(START);cases=[]
+    for good in range(6):
+        for economy in (0,7,15):
+            for stock in (0,30,95,98,99):
+                base=(good+1)*(good+2)//2*(16+(economy+2*good)%16)
+                quote=max(0,max(1,base+2*(30-stock))-4)
+                for gap in (-1,0,1):
+                    credits=99999999-quote+gap
+                    if credits>99999999:continue
+                    commands += [f'set 24 0 {credits}','set 24 3 7',f'set 26 2 {economy}']
+                    for field in range(6):
+                        commands += [f'set 25 {field} {int(field==good)}',
+                                     f'set 26 {field+3} {stock if field==good else 30}']
+                    commands += ['dump',f'input {40+good}']
+                    cases.append((good,stock,quote,credits,gap,base))
+    rows=play(commands)
+    for case,index in zip(cases,range(2,len(rows),2)):
+        good,stock,quote,credits,gap,base=case
+        before,after=rows[index:index+2]
+        expected=[page.copy() for page in state(before)]
+        if stock<99 and gap<=0:
+            expected[0][0]=credits+quote;expected[0][3]=8
+            expected[1][good]=0;expected[2][good+3]=stock+1
+            number(after,str(good+1),max(1,base+2*(29-stock)))
+        else:
+            assert after['frame']==screen('ErrOr     СП'),(case,after)
+        assert state(after)==expected,(case,before,after)
+    print('ELITE: 246 exact trade credit boundaries and stock caps OK',flush=True)
+
+
+def test_restart_initialization():
+    # The initial world is emitted as a literal and the restart skips the
+    # normal arrival's PILOT rewrite. Every pilot/cargo field must still be
+    # reset after either enemy type, including a hot laser and upgraded ship.
+    for seed in (8,3):
+        commands=encounter(seed)
+        pilot=(87654321,6565656,11223344,999,1,0,9,99,15)
+        hold=(0,1,2,3,4,5,3010420,0,999)
+        for bank,fields in ((24,pilot),(25,hold)):
+            commands += [f'set {bank} {i} {v}' for i,v in enumerate(fields)]
+        commands += ['input 21','run','input 1','input 10','input 9']
+        rows=play(commands)
+        dead,restart=rows[-5:-3]
+        assert dead['frame']==screen('dEAd      СП'),dead
+        assert restart['frame']==screen('dAdnAA    СП'),restart
+        assert restart['pages'][0]==[1000,3160320,3160320,0,84,60,40,0,9],restart
+        assert restart['pages'][1]==[0,0,0,0,0,0,1010420,3,0],restart
+        assert restart['pages'][2][2:]==[3,30,30,30,30,30,30],restart
+        number(rows[-3],'C',1000)
+        number(rows[-2],'1',19)
+        number(rows[-1],'r',0)
+    print('ELITE: complete restart from hot/upgraded ships after both enemy types OK',flush=True)
+
 def main():
     directory=ROOT/'programs/games/ELITE'
     assert not list(directory.glob('part*.m61')) and not list(directory.glob('b[0-9][0-9].m61'))
@@ -492,7 +637,9 @@ def main():
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
            test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
-           test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions)
+           test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
+           test_page_transaction_boundaries,test_station_transaction_boundaries,test_market_reserved_fields,test_trade_credit_boundaries,
+           test_restart_initialization)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)

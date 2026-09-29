@@ -19,7 +19,7 @@ def create_game():
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)
     show_text(m,'title');m.op('cx','stop')
     m.label('new_game').visit(24,'init_pilot').visit(25,'init_hold')
-    m.op('cx').call('world').put(24,2).call('arrive')
+    m.call('finish_arrive')
     m.label('redraw').call('show').op('cx','stop')
     m.label('main').st(0).op('frac').jnz('input_invalid')
     # R9 is a local handler address as well as the mode flag. Combat uses
@@ -57,22 +57,28 @@ def create_game():
     # Views 30..35 are one-use trade results in RC. Restore the normal price
     # view before drawing, so the next command uses the usual dispatch.
     m.label('show_cached_price').ld('A').n(20).op('-').st('A').jump('good_prefix')
-    m.label('show_price').ld('A').n(10).op('-').st(1).call('price').st('C')
-    m.label('good_prefix').ld(1).n(1).op('+').call('glyph').st('D').jump('draw_number')
-    m.label('show_stat').ld('A').n(7).op('-').jz('show_hold')
-    m.ld('A').n(6).op('-').jz('show_missiles')
-    m.ld('A').n(2).op('+').st('B').ld('A').n(1).op('-').jnz('stat_get').set('B',0)
+    m.label('show_price').ld('A').n(10).op('-').st(1).call('price')
+    # Cursor 5 wraps the last digit of 2F 6D into slot 0. number_common
+    # overwrites the other seven digits and owns the single FRAME close.
+    m.label('good_prefix').ld(1).n(1).op('+').st('D').open_page(29).op('cx').st(0).raw(0x2F,0x05,0x2F,0x6D).jump('number_common')
+    # Native local conditions cost more ROM steps here; retain 1F forms.
+    m.label('show_stat').ld('A').n(7).op('-').jz('show_hold',far=True)
+    # Reuse RA-7: successive adjustments produce RA-6, RA-1, then RA+2.
+    # Credits take their own read path, so gauges need no second RA==1 test.
+    m.n(1).op('+').jz('show_missiles',far=True)
+    m.n(5).op('+').jz('read_credits')
+    m.n(3).op('+').st('B')
     m.label('stat_get').far(0x53,24*112+63)
-    m.ld('A').n(1).op('-').jz('show_credits')
     m.set('E',20).ld('A').n(3).op('-').jnz('draw_gauge').set('E',12).jump('draw_gauge')
     m.label('show_missiles').get(25,7).set('D',GLYPHS['r']).jump('draw_number')
+    m.label('read_credits').get(24,0)
     m.label('show_credits').set('D',GLYPHS['C']).jump('draw_number')
     m.label('show_hold').visit(25,'sum_hold').set('E',4).jump('draw_gauge')
-    m.label('show_world').get(24,1).jump('draw_name')
-    m.label('show_destination').get(24,2)
+    m.label('show_world',keep_block=True).page_bytes(24,0x61,0x4C).jump('draw_name')
+    m.label('show_destination').page_bytes(24,0x62,0x4C)
     m.label('draw_name');show_name(m);m.op('ret')
     m.label('draw_number').visit(29,'number_frame').op('ret')
-    m.label('show_invalid');show_text(m,'invalid');m.op('ret')
+    m.label('show_invalid').visit(29,'invalid_frame').op('ret')
     add_ui(a)
     add_economy(a)
     add_combat(a)

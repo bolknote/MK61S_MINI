@@ -50,17 +50,26 @@ def add_ui(a):
     m=a.module(18,'messages')
     for label,text in [('title','三 ELItE 三 СП'),('victory','YES. CLEAr СП'),
                        ('defeat','dEAd      СП'),('escape','SAFE      СП'),
-                       ('invalid','ErrOr     СП'),('pirate','PIrAtE    СП'),
+                       ('pirate','PIrAtE    СП'),
                        ('thargoid','tHArGOId  СП')]:
         m.label(label)
-        for i,v in enumerate(chunks(text)[:3]):m.set(i,v)
-        m.jump('text_end')
+        values=chunks(text)[:3]
+        for i,v in enumerate(values[:2] if values[2]==0 else values):m.set(i,v)
+        m.jump('text_zero' if values[2]==0 else 'text_end')
+    m.label('text_zero').op('cx').st(2)
     m.label('text_end').ld(8).st(3).raw(0x2F,0x53).op('ret')
     m.label('show_message').page_bytes(29,0x1F,0xAF).op('ret')
+    # The error frame has one caller and a fixed message: inline its page
+    # operation instead of constructing RF and using the message trampoline.
+    # show_invalid is entered with X=RA-99=0; page exchanges preserve X.
+    m.page(29,'invalid_frame').st(2)
+    for i,v in enumerate(chunks('ErrOr     СП')[:2]):m.set(i,v)
+    m.ld(8).st(3).raw(0x2F,0x53).op('ret').end_page()
 
     # FRAME source stays together; single-use operations move to their callers.
     m=a.module(8,'format')
-    m.page(29,'number_frame').ld('D').st(0).ld(8).st(3)
+    m.page(29,'number_frame').ld('D').st(0)
+    m.label('number_common').ld(8).st(3)
     m.raw(0x2F,0x02,0x2F,0x6C,0x2F,0x53).op('ret')
     m.end_page().page(29,'name_frame')
     m.op('cx').st(2).ld(8).st(3)
@@ -111,4 +120,5 @@ def show_number(m, prefix):
     m.st('C').set('D',GLYPHS[prefix]).visit(29,'number_frame')
 
 def show_name(m):
-    m.st('C').visit(29,'name_frame')
+    # The world READ already returns the packed name in both X and RC.
+    m.visit(29,'name_frame')
