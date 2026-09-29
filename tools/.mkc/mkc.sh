@@ -1284,12 +1284,14 @@ plan_local_tree() {
           break
         fi
       done
-      if [ -z "$system_usb" ]; then
-        PLAN_ERROR='System: нет обязательного USBDISK.APP'
-        return 1
+      # F401 and an explicitly externalized F411 need this APP first.  The
+      # normal F411 build keeps USB-disk support resident, so a valid System
+      # directory may omit it.  The strict unattended installer knows the
+      # selected placement; generic F5 only preserves ordering when present.
+      if [ -n "$system_usb" ]; then
+        name=${system_usb##*/}
+        plan_local_tree "$system_usb" "$(remote_join "$destination" "$name")" || return 1
       fi
-      name=${system_usb##*/}
-      plan_local_tree "$system_usb" "$(remote_join "$destination" "$name")" || return 1
     fi
     for child in "${children[@]}"; do
       [ -e "$child" ] || [ -L "$child" ] || continue

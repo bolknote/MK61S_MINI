@@ -486,11 +486,10 @@ test "${#PLAN_KINDS[@]}" -eq 3
 test "${PLAN_DESTINATIONS[1]}" = /System/USBDISK.APP
 rm "$work/local/System/USBDISK.APP"
 plan_reset
-if plan_local_tree "$work/local/System" /System; then
-  echo 'mkc: System directory without USBDISK.APP was accepted' >&2
-  exit 1
-fi
-case "$PLAN_ERROR" in *USBDISK.APP*) ;; *) exit 1 ;; esac
+plan_local_tree "$work/local/System" /System
+test "${#PLAN_KINDS[@]}" -eq 2
+test "${PLAN_DESTINATIONS[1]}" = /System/BASIC.APP
+test -z "$PLAN_ERROR"
 
 plan_reset
 plan_local_tree "$work/local/DEMO.APP" /Applications/DEMO.APP

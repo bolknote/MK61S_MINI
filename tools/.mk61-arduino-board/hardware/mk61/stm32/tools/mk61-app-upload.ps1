@@ -134,7 +134,8 @@ try {
     $hostPowerShell = (Get-Process -Id $PID).Path
     $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
         '-File', $mkc,
-        '--install-system', $system, '--expect-profile', $Profile)
+        '--install-system', $system, '--expect-profile', $Profile,
+        '--wait-ready', '45')
     if ($RequireUsbDisk -eq '0') {
         $installerArgs += '--resident-usbdisk'
     }
@@ -157,7 +158,7 @@ try {
             ' --resident-usbdisk'
         } else { '' }
         [Console]::Error.WriteLine(
-            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile$residentUsbDisk --port COMx")
+            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile$residentUsbDisk --wait-ready 45 --port COMx")
     }
     exit 1
 }

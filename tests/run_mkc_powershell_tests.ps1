@@ -216,6 +216,30 @@ try {
     $probeSerial.NextLine = 'another STM32 firmware'
     Assert-True (-not (Test-DirectSerialMk61Identity $probeSerial 200 4)) 'unrelated serial firmware passed the probe'
 
+    $delayedProbe = [pscustomobject]@{
+        ReadTimeout = 777
+        Identity = $identityLine
+        Writes = [Collections.Generic.List[string]]::new()
+    }
+    $delayedProbe | Add-Member -MemberType ScriptMethod -Name Write -Value {
+        param([string]$Text)
+        $this.Writes.Add($Text)
+    }
+    $delayedProbe | Add-Member -MemberType ScriptMethod -Name ReadLine -Value {
+        if ($this.Writes.Count -lt 2) {
+            [Threading.Thread]::Sleep(30)
+            return 'booting'
+        }
+        return $this.Identity
+    }
+    $delayedIdentity = Get-DirectSerialMk61Identity $delayedProbe 500 24 40
+    Assert-True ($null -ne $delayedIdentity) `
+        'MK61s serial probe did not survive delayed firmware readiness'
+    Assert-True ($delayedProbe.Writes.Count -ge 2) `
+        'MK61s serial probe did not repeat identity while waiting'
+    Assert-True ($delayedProbe.ReadTimeout -eq 777) `
+        'delayed MK61s serial probe did not restore timeout'
+
     & {
         function Get-CdcPorts { return @('COM12','COM16') }
         function Start-Sleep { param([int]$Milliseconds) }
@@ -273,8 +297,69 @@ try {
         }
     }
 
+    & {
+        function Get-CdcPorts { return @() }
+        function Start-Sleep { param([int]$Milliseconds) }
+        $script:readyProbeCreated = 0
+        function New-ConfiguredSerialPort {
+            param([string]$PortName)
+            $script:readyProbeCreated++
+            $identity = if ($script:readyProbeCreated -ge 2) {
+                'MK61s-Classic-V2 ver. Aug 02 2026(12:34:56)'
+            } else { 'booting' }
+            $serial = [pscustomobject]@{
+                PortName = $PortName
+                IsOpen = $false
+                ReadTimeout = 777
+                Identity = $identity
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Open -Value {
+                $this.IsOpen = $true
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Close -Value {
+                $this.IsOpen = $false
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name Dispose -Value {}
+            $serial | Add-Member -MemberType ScriptMethod -Name Write -Value {
+                param([string]$Text)
+            }
+            $serial | Add-Member -MemberType ScriptMethod -Name ReadLine -Value {
+                return $this.Identity
+            }
+            return $serial
+        }
+
+        $oldPort = $script:Port
+        $oldPortExplicit = $script:PortExplicit
+        $oldReadyWaitSeconds = $script:ReadyWaitSeconds
+        $oldDirectSerial = $script:DirectSerial
+        $oldStatusText = $script:StatusText
+        try {
+            $script:Port = 'COM5'
+            $script:PortExplicit = $true
+            $script:ReadyWaitSeconds = 1
+            $script:DirectSerial = $null
+            Assert-True (Start-DirectSerial) `
+                'readiness wait did not retry a booting explicit COM port'
+            Assert-True ($script:readyProbeCreated -ge 3) `
+                'readiness wait did not reopen COM after a failed identity probe'
+            Assert-True ($script:DirectSerial.PortName -eq 'COM5') `
+                'readiness wait retained the wrong COM port'
+        } finally {
+            Close-DirectSerialPort $script:DirectSerial
+            $script:Port = $oldPort
+            $script:PortExplicit = $oldPortExplicit
+            $script:ReadyWaitSeconds = $oldReadyWaitSeconds
+            $script:DirectSerial = $oldDirectSerial
+            $script:StatusText = $oldStatusText
+            Remove-Variable -Scope Script -Name readyProbeCreated `
+                -ErrorAction SilentlyContinue
+        }
+    }
+
     $oldPort = $script:Port
     $oldPortExplicit = $script:PortExplicit
+    $oldReadyWaitSeconds = $script:ReadyWaitSeconds
     try {
         $script:Port = 'COM12'
         $script:PortExplicit = $false
@@ -283,9 +368,18 @@ try {
         Assert-True (Parse-Arguments @('--device','89ABCDEF')) '--device parsing failed'
         Assert-True ($script:DeviceSelector -eq '89ABCDEF' -and
             $script:DeviceSelectorExplicit) '--device was not marked explicit'
+        Assert-True (Parse-Arguments @('--wait-ready','45')) `
+            '--wait-ready parsing failed'
+        Assert-True ($script:ReadyWaitSeconds -eq 45) `
+            '--wait-ready value was not retained'
+        $invalidReadyWait = $false
+        try { [void](Parse-Arguments @('--wait-ready','121')) }
+        catch { $invalidReadyWait = $true }
+        Assert-True $invalidReadyWait '--wait-ready accepted an unsafe timeout'
     } finally {
         $script:Port = $oldPort
         $script:PortExplicit = $oldPortExplicit
+        $script:ReadyWaitSeconds = $oldReadyWaitSeconds
     }
     $crc = Get-PosixChecksumBytes ([Text.Encoding]::ASCII.GetBytes('123456789'))
     Assert-True ($crc -eq 930766865) 'POSIX cksum implementation differs'
@@ -466,10 +560,13 @@ try {
         'manual System copy does not install USBDISK.APP first'
     Remove-Item -LiteralPath (Join-Path $manualSystem 'USBDISK.APP')
     Reset-CopyPlan
-    Assert-True (-not (Add-LocalTreeToPlan $manualSystem '/System')) `
-        'manual System copy without USBDISK.APP was accepted'
-    Assert-True ($script:PlanError -match 'USBDISK\.APP') `
-        'missing mandatory USBDISK.APP was not explained'
+    Assert-True (Add-LocalTreeToPlan $manualSystem '/System') `
+        'resident-USB F411 System directory was rejected'
+    Assert-True ($script:CopyPlan.Count -eq 2 -and
+        $script:CopyPlan[1].Destination -eq '/System/BASIC.APP') `
+        'resident-USB F411 System copy plan differs'
+    Assert-True ([string]::IsNullOrEmpty($script:PlanError)) `
+        'resident-USB F411 System copy reported a false error'
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'DEMO.APP') '/Applications/DEMO.APP') 'APP upload outside root was rejected'
     Reset-CopyPlan

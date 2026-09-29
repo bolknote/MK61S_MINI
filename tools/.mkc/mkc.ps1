@@ -64,6 +64,7 @@ $script:ListPortsOnly = $false
 $script:InstallSystemDir = ''
 $script:ExpectedProfile = ''
 $script:ResidentUsbDisk = $false
+$script:ReadyWaitSeconds = 0
 $script:StatusText = ''
 $script:SessionDir = ''
 $script:Monitor = $null
@@ -120,7 +121,7 @@ Usage:
   tools\mkc.cmd [--port COMx] [--device ID] [--local DIRECTORY]
   tools\mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools\mkc.cmd --classify FILE
-  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID] [--resident-usbdisk]
+  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID] [--resident-usbdisk] [--wait-ready SECONDS]
 
 Keys:
   Tab       switch panel        Enter     open directory
@@ -172,6 +173,15 @@ function Parse-Arguments {
             '--expect-profile' {
                 if (++$i -ge $Arguments.Count) { throw '--expect-profile requires an ID' }
                 $script:ExpectedProfile = [string]$Arguments[$i]
+            }
+            '--wait-ready' {
+                if (++$i -ge $Arguments.Count) { throw '--wait-ready requires seconds' }
+                [int]$seconds = 0
+                if (-not [int]::TryParse([string]$Arguments[$i], [ref]$seconds) -or
+                    $seconds -lt 0 -or $seconds -gt 120) {
+                    throw '--wait-ready must be an integer from 0 to 120'
+                }
+                $script:ReadyWaitSeconds = $seconds
             }
             '--resident-usbdisk' { $script:ResidentUsbDisk = $true }
             '--list-ports' { $script:ListPortsOnly = $true }
@@ -395,21 +405,31 @@ function Get-DirectSerialMk61Identity {
     param(
         [object]$Serial,
         [int]$TimeoutMilliseconds = 1800,
-        [int]$MaximumLines = 24
+        [int]$MaximumLines = 24,
+        [int]$RetryMilliseconds = 750
     )
-    if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or $MaximumLines -le 0) {
+    if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or
+        $MaximumLines -le 0 -or $RetryMilliseconds -le 0) {
         return $null
     }
     $oldTimeout = $Serial.ReadTimeout
     try {
         try { $Serial.DiscardInBuffer() } catch {}
-        $Serial.ReadTimeout = [Math]::Max(50, [Math]::Min(300, $TimeoutMilliseconds))
-        [void]$Serial.Write("identity`rver`r")
+        $Serial.ReadTimeout = [Math]::Max(
+            50, [Math]::Min(300, $TimeoutMilliseconds))
         $deadline = [DateTime]::UtcNow.AddMilliseconds($TimeoutMilliseconds)
-        for ($lineIndex = 0; $lineIndex -lt $MaximumLines -and
-             [DateTime]::UtcNow -lt $deadline; $lineIndex++) {
+        $nextRequest = [DateTime]::MinValue
+        $linesRead = 0
+        while ($linesRead -lt $MaximumLines -and
+               [DateTime]::UtcNow -lt $deadline) {
+            $now = [DateTime]::UtcNow
+            if ($now -ge $nextRequest) {
+                [void]$Serial.Write("identity`rver`r")
+                $nextRequest = $now.AddMilliseconds($RetryMilliseconds)
+            }
             try {
                 $line = [string]$Serial.ReadLine()
+                $linesRead++
                 $identity = ConvertFrom-Mk61IdentityLine $line
                 if ($null -ne $identity) { return $identity }
             } catch [TimeoutException] {
@@ -494,20 +514,56 @@ function Start-DirectSerial {
     $failures = [Collections.Generic.List[string]]::new()
     $matches = [Collections.Generic.List[object]]::new()
     foreach ($candidate in $candidates) {
-        $serial = $null
-        try {
-            $serial = New-ConfiguredSerialPort $candidate
-            $serial.Open()
-            Start-Sleep -Milliseconds 300
-            $identity = Get-DirectSerialMk61Identity $serial
-            if ($null -ne $identity) {
-                $matches.Add([pscustomobject]@{ Port = $candidate; Identity = $identity })
-            } else { $failures.Add("${candidate}: это не MK61s") }
-        } catch {
-            $message = Get-SerialOpenFailureText $_.Exception
-            $failures.Add("${candidate}: $message")
-        } finally {
-            Close-DirectSerialPort $serial
+        $readyWait = $script:ReadyWaitSeconds -gt 0 -and
+            $candidates.Count -eq 1 -and
+            $candidate.Equals($script:Port,
+                [StringComparison]::OrdinalIgnoreCase)
+        $readyDeadline = [DateTime]::UtcNow.AddSeconds(
+            $(if ($readyWait) { $script:ReadyWaitSeconds } else { 0 }))
+        $identity = $null
+        $lastFailure = 'это не MK61s'
+        if ($readyWait) {
+            [Console]::WriteLine(
+                "Ожидание готовности MK61s на $candidate " +
+                "(до $($script:ReadyWaitSeconds) с)...")
+        }
+        while ($true) {
+            $serial = $null
+            try {
+                $serial = New-ConfiguredSerialPort $candidate
+                $serial.Open()
+                Start-Sleep -Milliseconds 300
+                $probeMilliseconds = 1800
+                if ($readyWait) {
+                    $remaining = [int][Math]::Ceiling(
+                        ($readyDeadline - [DateTime]::UtcNow).TotalMilliseconds)
+                    if ($remaining -le 0) { break }
+                    $probeMilliseconds = [Math]::Min(
+                        $probeMilliseconds, $remaining)
+                }
+                $identity = Get-DirectSerialMk61Identity `
+                    $serial $probeMilliseconds 24
+                if ($null -ne $identity) { break }
+                $lastFailure = 'нет ответа identity'
+            } catch {
+                $lastFailure = Get-SerialOpenFailureText $_.Exception
+            } finally {
+                Close-DirectSerialPort $serial
+            }
+            if (-not $readyWait -or
+                [DateTime]::UtcNow -ge $readyDeadline) { break }
+            Start-Sleep -Milliseconds 250
+        }
+        if ($null -ne $identity) {
+            $matches.Add([pscustomobject]@{
+                Port = $candidate; Identity = $identity
+            })
+        } elseif ($readyWait) {
+            $failures.Add(
+                "${candidate}: MK61s не ответил за " +
+                "$($script:ReadyWaitSeconds) с ($lastFailure)")
+        } else {
+            $failures.Add("${candidate}: $lastFailure")
         }
     }
     if ($matches.Count -eq 0) {
@@ -1435,15 +1491,17 @@ function Add-LocalTreeToPlan {
         $usbDisk = @($children | Where-Object {
             $_.Name -ieq 'USBDISK.APP' -and (Get-LocalItemKind $_) -eq 'f'
         } | Select-Object -First 1)
-        if ($usbDisk.Count -eq 0) {
-            $script:PlanError = 'System: нет обязательного USBDISK.APP'
-            return $false
+        # F401 and an explicitly externalized F411 need USBDISK.APP first;
+        # the normal F411 build has the same backend resident and therefore
+        # legitimately has no such file.  A generic F5 copy cannot infer the
+        # firmware placement, so order the APP when present and accept the
+        # resident bundle when absent.  --install-system remains strict
+        # because its caller passes --resident-usbdisk explicitly.
+        if ($usbDisk.Count -ne 0) {
+            $children = @($usbDisk[0]) + @($children | Where-Object {
+                $_.FullName -ne $usbDisk[0].FullName
+            })
         }
-        # A generic F5 copy must preserve the same invariant as
-        # --install-system: the backend needed to expose the disk goes first.
-        $children = @($usbDisk[0]) + @($children | Where-Object {
-            $_.FullName -ne $usbDisk[0].FullName
-        })
     }
     foreach ($child in $children) {
         if (-not (Add-LocalTreeToPlan $child.FullName (Join-RemotePath $Destination $child.Name))) {

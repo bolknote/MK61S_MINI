@@ -5,6 +5,7 @@ param(
     [string]$Command,
     [string]$Platform,
     [string]$Display,
+    [string]$UsbScreen = '0',
     [string]$Sketch,
     [string]$Compiler,
     [string]$BuildPath,
@@ -18,7 +19,7 @@ param(
     [string]$Basic,
     [string]$Wbmp,
     [string]$Markdown,
-    [string]$Chip8,
+    [string]$Chip8 = '0',
     [string]$Setup,
     [string]$UsbDisk,
     [string]$Explorer,
@@ -148,6 +149,15 @@ function Remove-Mk61BundledUiFontLicenses {
 function Check-Mk61Profile {
     if (-not (Test-Mk61Profile $Platform $Display)) {
         Stop-Mk61Build "incompatible platform/display pair: $Platform + $Display"
+    }
+    if ($UsbScreen -notmatch '^[01]$' -or $Chip8 -notmatch '^[01]$') {
+        Stop-Mk61Build 'USB Screen and CHIP-8 selections must be 0 or 1'
+    }
+    if ($Chip8 -eq '1' -and $Display -ne 'uc1609' -and
+        $UsbScreen -ne '1') {
+        Stop-Mk61Build (
+            'CHIP-8 выбран без графического экрана; для A00/A02 ' +
+            'выберите «CHIP-8: Выключен» либо «USB-экран: Включён»')
     }
     if ([string]::IsNullOrWhiteSpace($Sketch) -or
         -not [IO.File]::Exists((Join-Path $Sketch 'mk61s-M.ino')) -or

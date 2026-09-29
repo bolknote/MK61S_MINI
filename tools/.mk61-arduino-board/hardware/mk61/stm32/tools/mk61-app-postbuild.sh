@@ -21,10 +21,13 @@ profile_valid() {
 
 check_profile() {
   local platform= display= sketch= build_path= variant_ld=
+  local usb_screen=0 chip8=0
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --platform) require_value "$@"; platform=$2; shift 2 ;;
       --display) require_value "$@"; display=$2; shift 2 ;;
+      --usb-screen) require_value "$@"; usb_screen=$2; shift 2 ;;
+      --chip8) require_value "$@"; chip8=$2; shift 2 ;;
       --sketch) require_value "$@"; sketch=$2; shift 2 ;;
       --build-path) require_value "$@"; build_path=$2; shift 2 ;;
       --variant-ld) require_value "$@"; variant_ld=$2; shift 2 ;;
@@ -33,6 +36,14 @@ check_profile() {
   done
   profile_valid "$platform" "$display" ||
     die "incompatible platform/display pair: $platform + $display"
+  case "$usb_screen:$chip8" in
+    [01]:[01]) ;;
+    *) die 'USB Screen and CHIP-8 selections must be 0 or 1' ;;
+  esac
+  if [ "$chip8" -eq 1 ] && [ "$display" != uc1609 ] &&
+     [ "$usb_screen" -ne 1 ]; then
+    die 'CHIP-8 выбран без графического экрана; для A00/A02 выберите «CHIP-8: Выключен» либо «USB-экран: Включён»'
+  fi
   [ -f "$sketch/mk61s-M.ino" ] && [ -f "$sketch/config.h" ] ||
     die 'open code/mk61s-M.ino before selecting this board'
   [ -n "$variant_ld" ] || return 0

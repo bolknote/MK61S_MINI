@@ -110,6 +110,12 @@ grep -q '^mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8_app=0$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_chip8.disabled.build.mk61_chip8=0$' \
   "$target/boards.txt"
+grep -q '^mk61_f401_app.build.mk61_font_settings=0$' \
+  "$target/boards.txt"
+grep -q '^mk61_f411.build.mk61_font_settings=0$' \
+  "$target/boards.txt"
+! grep -q '^menu.mk61_font_settings=' "$target/boards.txt"
+! grep -q '\.menu\.mk61_font_settings\.' "$target/boards.txt"
 grep -q '^mk61_f411.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
   "$target/boards.txt"
 grep -q '^mk61_f411.menu.mk61_basic.builtin.build.mk61_basic_app=0$' \
@@ -178,6 +184,16 @@ grep -q -- '--max-size "{upload.maximum_size}"' "$target/platform.txt"
   --sketch "$root/code"
 "$hook" check-profile --platform mini-v3 --display oled1602-ws0010 \
   --sketch "$root/code"
+"$hook" check-profile --platform mini-v2 --display lcd1602-a00 \
+  --usb-screen 1 --chip8 1 --sketch "$root/code"
+if "$hook" check-profile --platform mini-v2 --display lcd1602-a00 \
+    --usb-screen 0 --chip8 1 --sketch "$root/code" \
+    > "$work/chip8-without-graphics.txt" 2>&1; then
+  echo 'Arduino profile accepted CHIP-8 without a graphical display' >&2
+  exit 1
+fi
+grep -q 'CHIP-8 выбран без графического экрана' \
+  "$work/chip8-without-graphics.txt"
 if "$hook" check-profile --platform mini-v3 --display uc1609 \
     --sketch "$root/code" >/dev/null 2>&1; then
   echo 'invalid Arduino platform/display pair was accepted' >&2
@@ -297,6 +313,11 @@ EOF
     echo 'Arduino uploader does not wait for exclusive COM-port access' >&2
     exit 1
   fi
+  if ! grep -Fq -- "'--wait-ready', '45'" \
+      "$platform/tools/mk61-app-upload.ps1"; then
+    echo 'Arduino uploader does not wait for MK61s terminal readiness' >&2
+    exit 1
+  fi
   mv "$mock_system/USBDISK.APP" "$work/missing-usbdisk.app"
   if pwsh -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-upload.ps1" \
@@ -340,6 +361,19 @@ EOF
   pwsh -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display oled1602-ws0010 -Sketch "$root/code"
+  pwsh -NoLogo -NoProfile -File \
+    "$platform/tools/mk61-app-postbuild.ps1" check-profile \
+    -Platform mini-v2 -Display lcd1602-a00 -UsbScreen 1 -Chip8 1 \
+    -Sketch "$root/code"
+  if pwsh -NoLogo -NoProfile -File \
+      "$platform/tools/mk61-app-postbuild.ps1" check-profile \
+      -Platform mini-v2 -Display lcd1602-a00 -UsbScreen 0 -Chip8 1 \
+      -Sketch "$root/code" > "$work/chip8-without-graphics-ps.txt" 2>&1; then
+    echo 'PowerShell profile accepted CHIP-8 without graphics' >&2
+    exit 1
+  fi
+  grep -q 'CHIP-8 выбран без графического экрана' \
+    "$work/chip8-without-graphics-ps.txt"
 
   # A Windows Store App Execution Alias is visible to Get-Command but exits
   # with 9009.  The PowerShell hook must use the working `py -3` launcher
@@ -442,7 +476,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   cp -R "$root/code/." "$shell_sketchbook/sketches/code/"
   ln -s "$root/tools" "$shell_sketchbook/sketches/tools"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f401"
@@ -526,7 +560,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-all-options"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=enabled,mk61_font_settings=enabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=enabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-all-options" "$shell_sketchbook/sketches/code"
   for app in FOCAL.APP BASIC.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
       USBDISK.APP EXPLORER.APP; do
@@ -538,7 +572,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-disabled"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=disabled,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-disabled" "$shell_sketchbook/sketches/code"
   for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
     test -s "$bundle/System/$resource"
@@ -552,7 +586,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-classic"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=app,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-classic" "$shell_sketchbook/sketches/code"
   classic_bundle="$shell_sketchbook/sketches/binary/mk61s-M-classic-v2-uc1609-f401"
   test -s "$classic_bundle/mk61s-M-classic-v2-uc1609-f401.bin"
@@ -568,7 +602,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
 
   mkdir -p "$work/build-classic-wbmp"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=wbmp,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=classic_v2,mk61_display=uc1609,mk61_focal=disabled,mk61_basic=disabled,mk61_documents=wbmp,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build-classic-wbmp" "$shell_sketchbook/sketches/code"
   test -s "$classic_bundle/System/WBMP.APP"
   test ! -e "$classic_bundle/System/MARKDOWN.APP"
