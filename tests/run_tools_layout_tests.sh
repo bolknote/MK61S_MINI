@@ -31,6 +31,7 @@ expected="$(
     release-contract.json \
     release_contract.py \
     vfat_diagnostic.py \
+    seal-firmware-elf.py \
     seal-firmware.ps1 \
     seal-firmware.sh |
     LC_ALL=C sort
