@@ -304,6 +304,61 @@ jobs:
             throw 'F411 Arduino board does not use its resident-aware compound uploader'
           }
 
+      - name: Verify Arduino IDE 1 DFU-tool fallback on Windows PowerShell
+        shell: powershell
+        run: |
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $arduinoData = (& arduino-cli --config-file $ideConfig `
+            config get directories.data | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($arduinoData)) {
+            throw 'Cannot locate the Arduino data directory'
+          }
+          $sourceBusybox = Get-ChildItem -Path (Join-Path $arduinoData `
+            'packages\STMicroelectronics\tools\STM32Tools\*\win\busybox.exe') |
+            Select-Object -First 1
+          if ($null -eq $sourceBusybox) {
+            throw 'Pinned STM32Tools package has no Windows BusyBox'
+          }
+
+          $fakeData = Join-Path $env:RUNNER_TEMP 'arduino-ide1-data'
+          $fakeTools = Join-Path $fakeData `
+            'packages\STMicroelectronics\tools\STM32Tools\2.4.0'
+          [IO.Directory]::CreateDirectory((Join-Path $fakeTools 'win')) |
+            Out-Null
+          Copy-Item -LiteralPath $sourceBusybox.FullName `
+            -Destination (Join-Path $fakeTools 'win\busybox.exe')
+          [IO.File]::WriteAllText(
+            (Join-Path $fakeTools 'stm32CubeProg.sh'),
+            "#!/bin/sh`nexit 0`n",
+            (New-Object Text.UTF8Encoding($false)))
+
+          $build = Join-Path $env:RUNNER_TEMP 'ide1-dfu-fallback-build'
+          $bundle = 'mk61s-M-classic-v2-uc1609-f401'
+          $stage = Join-Path (Join-Path $build 'mk61-system-apps') $bundle
+          $system = Join-Path $stage 'System'
+          $mockDevice = Join-Path $env:RUNNER_TEMP 'ide1-mock-device'
+          [IO.Directory]::CreateDirectory($system) | Out-Null
+          [IO.Directory]::CreateDirectory($mockDevice) | Out-Null
+          [IO.File]::WriteAllText((Join-Path $system 'USBDISK.APP'), 'APP')
+          [IO.File]::WriteAllText((Join-Path $build 'code.ino.bin'), 'resident')
+          Copy-Item tools/.mkc/mkc.ps1 `
+            (Join-Path $stage 'mk61-system-installer.ps1')
+
+          $env:MK61_ARDUINO_DATA_DIR = $fakeData
+          & tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-upload.ps1 `
+            -BuildPath $build -Project code.ino -Bundle $bundle `
+            -Profile classic-v2-uc1609 `
+            -Busybox '{busybox}' `
+            -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' `
+            -TestMockDevice $mockDevice -TestMockDfu
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path -LiteralPath `
+              (Join-Path $mockDevice 'System\USBDISK.APP') -PathType Leaf)) {
+            throw 'IDE 1 fallback did not complete the compound upload'
+          }
+
       - name: Verify Windows font-license cleanup preserves its parent
         shell: pwsh
         run: |

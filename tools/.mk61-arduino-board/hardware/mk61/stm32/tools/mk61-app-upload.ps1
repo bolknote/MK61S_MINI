@@ -22,7 +22,9 @@ param(
     [string]$Start = '0x8000000',
     [string]$Port,
     # Exercise the complete CDC installation in tests without touching DFU.
-    [string]$TestMockDevice
+    [string]$TestMockDevice,
+    # Also exercise DFU tool discovery with a fake tool from the test tree.
+    [switch]$TestMockDfu
 )
 
 Set-StrictMode -Version 2.0
@@ -32,6 +34,110 @@ $closePortMessage = 'Close every program using the MK61s COM port.'
 function Stop-Mk61Upload {
     param([string]$Message)
     throw "MK61s Arduino upload: $Message"
+}
+
+function Add-Mk61UniquePath {
+    param(
+        [Collections.Generic.List[string]]$Paths,
+        [Collections.Generic.HashSet[string]]$Seen,
+        [string]$Path
+    )
+    if ([string]::IsNullOrWhiteSpace($Path)) { return }
+    try { $full = [IO.Path]::GetFullPath($Path) } catch { return }
+    if ($Seen.Add($full)) { $Paths.Add($full) }
+}
+
+function Find-Mk61Stm32DfuTools {
+    param([string]$RequestedBusybox, [string]$RequestedScript)
+
+    $resolvedBusybox = $RequestedBusybox
+    $resolvedScript = $RequestedScript
+
+    # When Arduino expanded only one of the inherited STM32 platform
+    # properties, derive the other path from the same STM32Tools package.
+    if ([IO.File]::Exists($resolvedScript) -and
+        -not [IO.File]::Exists($resolvedBusybox)) {
+        $candidate = Join-Path (Split-Path -Parent $resolvedScript) `
+            'win\busybox.exe'
+        if ([IO.File]::Exists($candidate)) { $resolvedBusybox = $candidate }
+    }
+    if ([IO.File]::Exists($resolvedBusybox) -and
+        -not [IO.File]::Exists($resolvedScript)) {
+        $busyboxDirectory = Split-Path -Parent $resolvedBusybox
+        $candidate = Join-Path (Split-Path -Parent $busyboxDirectory) `
+            'stm32CubeProg.sh'
+        if ([IO.File]::Exists($candidate)) { $resolvedScript = $candidate }
+    }
+    if ([IO.File]::Exists($resolvedBusybox) -and
+        [IO.File]::Exists($resolvedScript)) {
+        return [pscustomobject]@{
+            Busybox = [IO.Path]::GetFullPath($resolvedBusybox)
+            Script = [IO.Path]::GetFullPath($resolvedScript)
+            Searched = @()
+        }
+    }
+
+    # Arduino IDE 1.x does not reliably export inherited runtime.tools.*
+    # properties to a manually installed hardware platform. Locate the exact
+    # package that Boards Manager installed instead of requiring that property.
+    $dataDirectories = New-Object 'Collections.Generic.List[string]'
+    $seenDataDirectories = New-Object `
+        'Collections.Generic.HashSet[string]' `
+        ([StringComparer]::OrdinalIgnoreCase)
+    Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
+        $env:MK61_ARDUINO_DATA_DIR
+    $localData = [Environment]::GetFolderPath('LocalApplicationData')
+    if (-not [string]::IsNullOrWhiteSpace($localData)) {
+        Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
+            (Join-Path $localData 'Arduino15')
+    }
+    $profile = [Environment]::GetFolderPath('UserProfile')
+    if (-not [string]::IsNullOrWhiteSpace($profile)) {
+        Add-Mk61UniquePath $dataDirectories $seenDataDirectories `
+            (Join-Path $profile '.arduino15')
+    }
+
+    $searched = New-Object 'Collections.Generic.List[string]'
+    foreach ($dataDirectory in $dataDirectories) {
+        $toolsDirectory = Join-Path $dataDirectory `
+            'packages\STMicroelectronics\tools\STM32Tools'
+        $searched.Add($toolsDirectory)
+        if (-not [IO.Directory]::Exists($toolsDirectory)) { continue }
+        $versions = @(Get-ChildItem -LiteralPath $toolsDirectory `
+            -Directory -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTimeUtc -Descending)
+        foreach ($version in $versions) {
+            $candidateScript = Join-Path $version.FullName `
+                'stm32CubeProg.sh'
+            $candidateBusybox = Join-Path $version.FullName `
+                'win\busybox.exe'
+            if ([IO.File]::Exists($candidateScript) -and
+                [IO.File]::Exists($candidateBusybox)) {
+                return [pscustomobject]@{
+                    Busybox = $candidateBusybox
+                    Script = $candidateScript
+                    Searched = $searched.ToArray()
+                }
+            }
+        }
+    }
+
+    $busyboxDescription = if (
+        [string]::IsNullOrWhiteSpace($RequestedBusybox)) {
+        '<empty>'
+    } else { $RequestedBusybox }
+    $scriptDescription = if (
+        [string]::IsNullOrWhiteSpace($RequestedScript)) {
+        '<empty>'
+    } else { $RequestedScript }
+    $searchedDescription = if ($searched.Count -eq 0) {
+        '<no Arduino data directory found>'
+    } else { $searched -join '; ' }
+    Stop-Mk61Upload (
+        "STM32 DFU tools not found. BusyBox from Arduino: " +
+        "'$busyboxDescription'; STM32 script from Arduino: " +
+        "'$scriptDescription'; searched: $searchedDescription. " +
+        'Install STM32 MCU based boards 2.12.0 in Boards Manager')
 }
 
 function Wait-Mk61SerialPortAccess {
@@ -76,6 +182,7 @@ function Wait-Mk61SerialPortAccess {
 }
 
 $system = ''
+$residentUploaded = $false
 try {
     if ($Mcu -eq 'f401' -and $RequireUsbDisk -ne '1') {
         Stop-Mk61Upload 'F401 requires System/USBDISK.APP'
@@ -103,22 +210,22 @@ try {
             'Recompile with the current MK61s board package')
     }
     $resident = Join-Path $BuildPath "$Project.bin"
-    if ([string]::IsNullOrEmpty($TestMockDevice)) {
+    if ([string]::IsNullOrEmpty($TestMockDevice) -or $TestMockDfu) {
         if (-not [IO.File]::Exists($resident)) {
             Stop-Mk61Upload "resident image not found: $resident"
         }
-        if (-not [IO.File]::Exists($Busybox) -or
-            -not [IO.File]::Exists($Stm32Script)) {
-            Stop-Mk61Upload 'STM32 DFU tools not found'
-        }
+        $dfuTools = Find-Mk61Stm32DfuTools $Busybox $Stm32Script
         Write-Host 'System APP installation needs exclusive COM-port access.'
         Write-Host $closePortMessage
         Write-Host "Uploading resident via STM32 DFU: $resident"
-        & $Busybox sh $Stm32Script -i $Protocol -f $resident `
+        & $dfuTools.Busybox sh $dfuTools.Script -i $Protocol -f $resident `
             -o $FlashOffset -v $Vid -p $UsbPid -a $Address -s $Start
         if ($LASTEXITCODE -ne 0) {
             Stop-Mk61Upload "STM32 DFU failed with exit code $LASTEXITCODE"
         }
+        $residentUploaded = $true
+    }
+    if ([string]::IsNullOrEmpty($TestMockDevice)) {
         if (-not [string]::IsNullOrWhiteSpace($Port) -and
             $Port -notmatch '^\{.*\}$') {
             if ($Port -notmatch '^COM[0-9]+$') {
@@ -152,13 +259,18 @@ try {
     Write-Host 'Resident and System APP upload complete.'
 } catch {
     [Console]::Error.WriteLine($_.Exception.Message)
-    if (-not [string]::IsNullOrEmpty($system) -and
+    if ($residentUploaded -and
+        -not [string]::IsNullOrEmpty($system) -and
         [IO.Directory]::Exists($system)) {
         $residentUsbDisk = if ($RequireUsbDisk -eq '0') {
             ' --resident-usbdisk'
         } else { '' }
         [Console]::Error.WriteLine(
             "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile$residentUsbDisk --wait-ready 45 --port COMx")
+    } elseif (-not [string]::IsNullOrEmpty($system) -and
+        [IO.Directory]::Exists($system)) {
+        [Console]::Error.WriteLine(
+            'Resident firmware was not uploaded; correct the DFU setup and retry Upload.')
     }
     exit 1
 }

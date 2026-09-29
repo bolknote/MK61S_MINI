@@ -332,6 +332,63 @@ EOF
     -TestMockDevice "$mock_device" > "$work/mock-upload.txt"
   cmp "$mock_system/USBDISK.APP" "$mock_device/System/USBDISK.APP"
   grep -q 'Resident and System APP upload complete' "$work/mock-upload.txt"
+
+  # Arduino IDE 1.x can leave the inherited {busybox} and
+  # {runtime.tools.STM32Tools.path} properties unexpanded for a manually
+  # installed platform. The uploader must recover the package from Arduino15.
+  mock_arduino_data="$work/mock-arduino15"
+  mock_stm32_tools="$mock_arduino_data/packages/STMicroelectronics/tools/STM32Tools/2.4.0"
+  mock_dfu_log="$work/mock-dfu.log"
+  mkdir -p "$mock_stm32_tools/win"
+  printf '%s\n' \
+    '#!/usr/bin/env bash' \
+    'printf "%s\\n" "$*" > "$MK61_TEST_DFU_LOG"' \
+    'exit 0' > "$mock_stm32_tools/win/busybox.exe"
+  chmod +x "$mock_stm32_tools/win/busybox.exe"
+  printf '%s\n' '# mock STM32CubeProgrammer wrapper' > \
+    "$mock_stm32_tools/stm32CubeProg.sh"
+  printf 'resident firmware\n' > "$mock_build/code.ino.bin"
+  MK61_ARDUINO_DATA_DIR="$mock_arduino_data" \
+    MK61_TEST_DFU_LOG="$mock_dfu_log" \
+    pwsh -NoLogo -NoProfile -File \
+      "$platform/tools/mk61-app-upload.ps1" \
+      -BuildPath "$mock_build" -Project code.ino \
+      -Bundle mk61s-M-classic-v2-uc1609-f401 \
+      -Profile classic-v2-uc1609 \
+      -Busybox '{busybox}' \
+      -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
+      -TestMockDevice "$mock_device" -TestMockDfu \
+      > "$work/mock-upload-dfu-fallback.txt"
+  grep -Fq 'stm32CubeProg.sh -i dfu' "$mock_dfu_log"
+  grep -q 'Resident and System APP upload complete' \
+    "$work/mock-upload-dfu-fallback.txt"
+
+  missing_arduino_data="$work/missing-arduino15"
+  mkdir -p "$missing_arduino_data"
+  if MK61_ARDUINO_DATA_DIR="$missing_arduino_data" \
+      LOCALAPPDATA="$work/missing-local-data" USERPROFILE="$work/missing-profile" \
+      pwsh -NoLogo -NoProfile -File \
+        "$platform/tools/mk61-app-upload.ps1" \
+        -BuildPath "$mock_build" -Project code.ino \
+        -Bundle mk61s-M-classic-v2-uc1609-f401 \
+        -Profile classic-v2-uc1609 \
+        -Busybox '{busybox}' \
+        -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
+        -TestMockDevice "$mock_device" -TestMockDfu \
+        > "$work/missing-dfu-tools.txt" 2>&1; then
+    echo 'Arduino uploader accepted missing STM32 DFU tools' >&2
+    exit 1
+  fi
+  grep -Fq "BusyBox from Arduino: '{busybox}'" \
+    "$work/missing-dfu-tools.txt"
+  grep -Fq 'Install STM32 MCU based boards 2.12.0' \
+    "$work/missing-dfu-tools.txt"
+  grep -Fq 'Resident firmware was not uploaded' \
+    "$work/missing-dfu-tools.txt"
+  if grep -Fq 'Recovery without reflashing' "$work/missing-dfu-tools.txt"; then
+    echo 'Arduino uploader offered System-only recovery before DFU succeeded' >&2
+    exit 1
+  fi
   if ! grep -Fq 'Close every program using the MK61s COM port' \
       "$platform/tools/mk61-app-upload.ps1"; then
     echo 'Arduino uploader lacks the generic busy COM-port instruction' >&2

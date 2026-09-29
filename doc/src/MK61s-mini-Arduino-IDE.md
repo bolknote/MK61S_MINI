@@ -60,10 +60,12 @@ tools\mk61-arduino-board.cmd
 
 Это полиглотный launcher: в macOS/Linux он запускает shell-установщик, а в
 Windows — PowerShell. Он копирует маленький пакет платы в sketchbook и ничего
-не загружает из сети. В Windows установщик читает фактический
+не загружает из сети. Для Arduino IDE 2 в Windows установщик читает фактический
 `directories.user` из `%USERPROFILE%\.arduinoIDE\arduino-cli.yaml`, поэтому
 перенесённый sketchbook и каталог Documents под OneDrive не требуют ручной
-догадки. Если стандартный `build_cache.path` проходит через имя пользователя
+догадки. Arduino IDE 1 такого файла не создаёт: для неё используется штатный
+`Documents\Arduino`, а нестандартный sketchbook нужно один раз передать ключом
+`-Sketchbook`, как показано ниже. Если стандартный `build_cache.path` проходит через имя пользователя
 с кириллицей или другими не-ASCII символами, установщик записывает в тот же
 файл отдельный реальный кэш вида
 `C:\Users\Public\Documents\MK61Arduino\build-cache-...`. Это не короткое имя и не
@@ -201,6 +203,10 @@ USB-диск. Выбранные в IDE APP загружаются,
 Windows-сборка кладёт `mk61-system-installer.ps1` рядом с временным каталогом
 `System`, и Upload запускает эту копию. Поэтому второй этап не зависит от
 `build.source.path`, который IDE может разрешить от `C:\Program Files\Arduino IDE`.
+Arduino IDE 1 также может не раскрыть у вручную установленной платы пути
+`busybox` и `STM32Tools`, унаследованные от STM32 Core. Загрузчик в этом случае
+сам находит установленный Boards Manager пакет в `Arduino15`; устанавливать
+отдельный CubeProgrammer для этого не требуется.
 После обновления исходников повторно установите плату командой
 `tools\mk61-arduino-board.cmd` и перезапустите IDE: старая копия `platform.txt`
 в sketchbook сама не обновится. Команда с `-Check` не ограничивается наличием
@@ -282,6 +288,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
 | `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются Python-скриптом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
 | `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
+| `STM32 DFU tools not found` | Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Свежий uploader находит STM32Tools в `Arduino15` даже при нераскрытых свойствах Arduino IDE 1 и при настоящем отсутствии пакета печатает проверенные пути. Выбранный COM-порт к этой ошибке отношения не имеет. |
 | Upload не находит устройство | Проверить, что выбрана плата для реально установленного F401/F411, перевести контроллер в системный DFU и повторить Upload. |
 | `MKC terminal installer not found: C:\Program Files\Arduino IDE\tools\.mkc\mkc.ps1` | Используется старый uploader, который ошибочно полагается на `build.source.path` во время Upload. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и заново соберите проект. Если resident уже прошит, достаточно приведённой выше команды `mkc.cmd --install-system`; повторный DFU не нужен. |
 | `System APP installation failed` | Resident уже может быть прошит. Проверьте COM-порт и закройте все программы, использующие его, затем выполните показанную выше команду `mkc.cmd --install-system` без повторного DFU. |

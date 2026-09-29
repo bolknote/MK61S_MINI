@@ -402,9 +402,11 @@ tools\mk61-arduino-board.cmd
 самой Arduino IDE должен быть установлен
 `STM32 MCU based boards 2.12.0`, а в Library Manager —
 `LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`.
-На Windows путь sketchbook берётся из конфигурации самой IDE, включая OneDrive
-и перенесённые каталоги. Закройте IDE перед установкой и запустите её заново
-после. `MK61s F401 + APP` и `MK61s F411 + APP` ищутся в Board Selector/
+На Windows путь sketchbook берётся из конфигурации Arduino IDE 2, включая
+OneDrive и перенесённые каталоги. Для Arduino IDE 1 используется стандартный
+`Documents\Arduino`; нестандартный путь передайте установщику ключом
+`-Sketchbook`. Закройте IDE перед установкой и запустите её заново после.
+`MK61s F401 + APP` и `MK61s F411 + APP` ищутся в Board Selector/
 `Tools > Board`, а не в Boards Manager: там отображается только зависимый
 STM32 core.
 
