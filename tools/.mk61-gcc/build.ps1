@@ -547,7 +547,10 @@ try {
         [version]$Matches[1] -lt [version]'3.21') {
         Stop-GccBuild 'CMake 3.21 or newer is required'
     }
-    if ($systemRequested) {
+    # build_portable_app.py uses the repository's dependency-free Python ZX0
+    # packer on Windows.  A native host C++ compiler is only required by the
+    # optimal packer used on macOS/Linux.
+    if ($systemRequested -and $env:OS -ne 'Windows_NT') {
         $hostPackerBuilder = Join-Path $script:ProjectRoot `
             'tools/.mk61-app/build.ps1'
         Test-RequiredFile $hostPackerBuilder 'MK61 APP host packer builder'

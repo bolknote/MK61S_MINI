@@ -97,6 +97,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP `
+            'deliberately-missing-host-cxx.exe'
           $env:MK61_CONFIG_FILE = Join-Path $env:RUNNER_TEMP 'f401.conf'
           $env:MK61_BUILD_ROOT = Join-Path $env:RUNNER_TEMP 'f401-work'
           $env:MK61_OUTPUT_DIR = Join-Path $env:RUNNER_TEMP 'f401-output'

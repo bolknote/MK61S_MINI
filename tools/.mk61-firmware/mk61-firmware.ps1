@@ -1391,6 +1391,7 @@ function Test-BuildDependenciesReady {
     $pythonReady = $script:State.Mcu -ne 'f411' -or
         $null -ne (Get-Python3Command)
     $hostCompilerReady = $script:State.Mcu -ne 'f411' -or
+        $script:IsWindowsHost -or
         (Test-CommandAvailable 'c++')
     return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
         (Test-F401HostToolsReady) -and $pythonReady -and $hostCompilerReady
@@ -1418,25 +1419,31 @@ function Get-DependencyReport {
             }
         }
     } else {
-        if (Test-CommandAvailable $script:ArduinoCli) {
+        $arduinoCliReady = Test-CommandAvailable $script:ArduinoCli
+        if ($arduinoCliReady) {
             $version = Invoke-NativeCapture $script:ArduinoCli @('version')
             $firstLine = @($version.Output -split "\r?\n")[0]
             $lines.Add("arduino-cli: $firstLine")
         } else {
             $lines.Add('arduino-cli: НЕ НАЙДЕН')
         }
-        if (Test-ArduinoCoreReady) {
-            $lines.Add("STM32 Arduino Core: $($script:Stm32CoreVersion)")
+        if (-not $arduinoCliReady) {
+            $lines.Add('STM32 Arduino Core: не проверен (нужен arduino-cli)')
+            $lines.Add('Библиотеки: не проверены (нужен arduino-cli)')
         } else {
-            $lines.Add(
-                "STM32 Arduino Core: нужен $($script:Stm32CoreVersion)")
-        }
-        if (Test-ArduinoLibrariesReady) {
-            $lines.Add('LiquidCrystal: 1.0.7')
-            $lines.Add('STM32duino RTC: 1.9.0')
-        } else {
-            $lines.Add(
-                'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+            if (Test-ArduinoCoreReady) {
+                $lines.Add("STM32 Arduino Core: $($script:Stm32CoreVersion)")
+            } else {
+                $lines.Add(
+                    "STM32 Arduino Core: нужен $($script:Stm32CoreVersion)")
+            }
+            if (Test-ArduinoLibrariesReady) {
+                $lines.Add('LiquidCrystal: 1.0.7')
+                $lines.Add('STM32duino RTC: 1.9.0')
+            } else {
+                $lines.Add(
+                    'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+            }
         }
         if ($script:State.Mcu -eq 'f411') {
             $python = Get-Python3Command
@@ -1445,7 +1452,9 @@ function Get-DependencyReport {
             } else {
                 $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
             }
-            if (Test-CommandAvailable 'c++') {
+            if ($script:IsWindowsHost) {
+                $lines.Add('APP/ZX0 packer: Python (host C++ не нужен)')
+            } elseif (Test-CommandAvailable 'c++') {
                 $lines.Add('Host C++17 compiler: найден')
             } else {
                 $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)')
@@ -1474,10 +1483,16 @@ function Get-DependencyReport {
         }
     }
     if ($script:IsWindowsHost) {
-        if (Find-Stm32CubeProgrammer) {
+        $arduinoCliReady = Test-CommandAvailable $script:ArduinoCli
+        $cubeProgrammerReady = Find-Stm32CubeProgrammer
+        if ($arduinoCliReady -and $cubeProgrammerReady) {
             $lines.Add("DFU uploader: arduino-cli → $script:CubeProgrammerExecutable")
-        } else {
+        } elseif (-not $arduinoCliReady -and $cubeProgrammerReady) {
+            $lines.Add('DFU uploader: STM32CubeProgrammer найден; нужен arduino-cli')
+        } elseif ($arduinoCliReady) {
             $lines.Add('DFU uploader: нужен STM32CubeProgrammer')
+        } else {
+            $lines.Add('DFU uploader: нужны arduino-cli и STM32CubeProgrammer')
         }
     } elseif (Find-DfuUtil) {
         $lines.Add("DFU uploader: $script:DfuExecutable")

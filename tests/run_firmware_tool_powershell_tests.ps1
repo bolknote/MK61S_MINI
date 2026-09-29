@@ -537,6 +537,53 @@ try {
     }
     $f401Upload = Get-UploadInvocation 'C:\firmware\mk61-f401.bin'
     Assert-True (($f401Upload.Arguments -join '|') -eq "upload|--fqbn|$($script:FqbnF401)|--input-file|C:\firmware\mk61-f401.bin") 'Windows F401 upload arguments differ'
+
+    # Windows packages APP with the repository's Python ZX0 implementation.
+    # A missing desktop C++ compiler must neither block F411 nor be reported
+    # as a missing dependency.
+    $script:State.Mcu = 'f411'
+    $script:IsWindowsHost = $true
+    function Test-ArduinoCoreReady { return $true }
+    function Test-ArduinoLibrariesReady { return $true }
+    function Test-F401HostToolsReady { return $true }
+    function Get-Python3Command {
+        return [pscustomobject]@{
+            Executable = 'python.exe'
+            PrefixArguments = @()
+        }
+    }
+    function Test-CommandAvailable {
+        param([string]$Name)
+        return $Name -ne 'c++'
+    }
+    function Invoke-NativeCapture {
+        param([string]$Executable, [object[]]$Arguments)
+        return [pscustomobject]@{
+            ExitCode = 0
+            Output = 'arduino-cli Version: test'
+        }
+    }
+    Assert-True (Test-BuildDependenciesReady) `
+        'Windows F411 still requires a native host C++ compiler'
+    $dependencyReport = Get-DependencyReport
+    Assert-True ($dependencyReport -match
+        'APP/ZX0 packer: Python \(host C\+\+ не нужен\)') `
+        'Windows dependency report does not explain its Python APP packer'
+    Assert-True ($dependencyReport -notmatch
+        'Host C\+\+17 compiler: НЕ НАЙДЕН') `
+        'Windows dependency report still demands a native host compiler'
+
+    function Test-CommandAvailable { return $false }
+    $missingCliReport = Get-DependencyReport
+    Assert-True ($missingCliReport -match
+        'STM32 Arduino Core: не проверен \(нужен arduino-cli\)') `
+        'missing Arduino CLI is misreported as a missing STM32 Core'
+    Assert-True ($missingCliReport -match
+        'Библиотеки: не проверены \(нужен arduino-cli\)') `
+        'missing Arduino CLI is misreported as missing Arduino libraries'
+    Assert-True ($missingCliReport -match
+        'DFU uploader: .*arduino-cli') `
+        'missing Arduino CLI is hidden by an installed CubeProgrammer'
 } finally {
     $env:MK61_POWERSHELL_IMPORT_ONLY = $oldImportOnly
 }

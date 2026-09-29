@@ -159,6 +159,12 @@ Assert-True ($backendText -notmatch
     '(?i)Get-CommandPath\s+[''"]arduino-cli(?:\.exe)?[''"]') `
     'direct GCC backend invokes arduino-cli'
 Assert-True ($backendText -match
+    "if \(\`$systemRequested -and \`$env:OS -ne 'Windows_NT'\)") `
+    'Windows direct GCC build still requires a native host APP packer'
+Assert-True ($releaseWorkflowText -match
+    'deliberately-missing-host-cxx\.exe') `
+    'Windows direct GCC CI does not prove that the Python APP packer is enough'
+Assert-True ($backendText -match
     "Join-Path \`$Directory 'Apps'[\s\S]+Remove-Item " +
     '-LiteralPath \$customApps -Recurse -Force') `
     'direct GCC backend can leave stale custom APP in a rebuilt bundle'
