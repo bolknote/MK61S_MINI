@@ -3,6 +3,9 @@
 #include "Arduino.h"
 #include "bounded_string.hpp"
 #include "config.h"
+#if MK61_EXPLORER_IS_LOADABLE
+#include "loadable_module_runtime.hpp"
+#endif
 #include "explorer_autoexec.hpp"
 #include "exclusive_buffer.hpp"
 #include "file_handlers.hpp"
@@ -501,12 +504,13 @@ static int matching_position(u16 directory_id, int active,
   return -1;
 }
 
-static int first_matching_index(u16 directory_id, const char* search_text) {
+[[maybe_unused]] static int first_matching_index(
+    u16 directory_id, const char* search_text) {
   return matching_index_at(directory_id, 0, search_text);
 }
 
-static int next_matching_index(u16 directory_id, int active,
-                               const char* search_text) {
+[[maybe_unused]] static int next_matching_index(
+    u16 directory_id, int active, const char* search_text) {
   const int count = explorer_count(directory_id);
   if(count <= 0) return active;
   if(!search_active(search_text)) return (active + 1 < count) ? active + 1 : 0;
@@ -519,8 +523,8 @@ static int next_matching_index(u16 directory_id, int active,
   return active;
 }
 
-static int previous_matching_index(u16 directory_id, int active,
-                                   const char* search_text) {
+[[maybe_unused]] static int previous_matching_index(
+    u16 directory_id, int active, const char* search_text) {
   const int count = explorer_count(directory_id);
   if(count <= 0) return active;
   if(!search_active(search_text)) return (active > 0) ? active - 1 : count - 1;
@@ -733,9 +737,9 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                     : type_marker(entry.type)));
 }
 
-static u16 draw_explorer(u16 directory_id, int active, ExplorerScroll& scroll,
-                         const char* search_text = NULL,
-                         u8* cursor_row_out = NULL) {
+[[maybe_unused]] static u16 draw_explorer(
+    u16 directory_id, int active, ExplorerScroll& scroll,
+    const char* search_text = NULL, u8* cursor_row_out = NULL) {
   main_lcd().beginUiText();
   if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
@@ -1837,7 +1841,8 @@ static void explorer_search_backspace(ExplorerSearch& search) {
   if(search.len > 0) text_editor::backspace(search.text, search.len, cursor);
 }
 
-static bool explorer_search_handle_key(ExplorerSearch& search, i32 key) {
+[[maybe_unused]] static bool explorer_search_handle_key(
+    ExplorerSearch& search, i32 key) {
   const u32 now = millis();
   explorer_search_expire_sms(search, now);
 
@@ -2111,7 +2116,7 @@ static bool run_entry(const program_store::Entry& entry) {
   return ok;
 }
 
-static bool run_directory_autoexec(u16 directory_id) {
+[[maybe_unused]] static bool run_directory_autoexec(u16 directory_id) {
   program_store::Entry autoexec = {};
   return explorer_autoexec::find(directory_id, autoexec) &&
          run_entry(autoexec);
@@ -2158,8 +2163,8 @@ static void edit_entry(const program_store::Entry& entry) {
   }
 }
 
-static bool explorer_item_menu(u16 directory_id,
-                               const program_store::Entry& entry) {
+[[maybe_unused]] static bool explorer_item_menu(
+    u16 directory_id, const program_store::Entry& entry) {
   ItemMenuAction actions[ITEM_MENU_ACTION_CAPACITY];
   const int count = item_menu_actions(entry, actions,
                                       ITEM_MENU_ACTION_CAPACITY);
@@ -2317,6 +2322,16 @@ static constexpr t_punct RU_TINYBASIC_DEV_PUNCT = {.size = 15, .action = &tinyba
 
 } // анонимное пространство имён
 
+u32 program_store_explorer_actions(const program_store::Entry& entry) {
+  u32 result = 0;
+  if(entry_can_load(entry)) result |= loadable_module::EXPLORER_CAN_LOAD;
+  if(entry_can_run(entry)) result |= loadable_module::EXPLORER_CAN_RUN;
+  if(entry.kind == program_store::NodeKind::FILE)
+    result |= loadable_module::EXPLORER_CAN_VIEW;
+  if(entry_can_edit(entry)) result |= loadable_module::EXPLORER_CAN_EDIT;
+  return result;
+}
+
 ProgramStoreFileDialogResult program_store_choose_file(
     program_store::ProgramType type, u16 start_directory, bool allow_new,
     program_store::Entry& out_entry, u16& out_directory) {
@@ -2366,6 +2381,7 @@ bool program_store_choose_save_target(program_store::ProgramType type,
 
 bool program_store_explorer_select(void) {
   MK61DisplayTextScope text_scope(main_lcd());
+#if MK61_EXPLORER_IS_BUILTIN
   u16 directory_id = program_store::ROOT_ID;
   int active = 0;
   ExplorerSearch search;
@@ -2481,6 +2497,68 @@ bool program_store_explorer_select(void) {
       }
     }
   }
+#else
+  loadable_module::ExplorerSession session = {
+      sizeof(loadable_module::ExplorerSession),
+      program_store::ROOT_ID,
+      program_store::INVALID_ID,
+      0,
+      loadable_module::ExplorerAction::NONE,
+      0,
+      {0}};
+  while(true) {
+    u32 result = 1;
+    const loadable_module::RuntimeStatus status = loadable_module::invoke(
+        loadable_module::Kind::EXPLORER,
+        loadable_module::Command::EXPLORER_SELECT,
+        (u32) (usize) &session, sizeof(session), 0, 0, result);
+    if(status != loadable_module::RuntimeStatus::OK || result != 0) {
+      show_message("Explorer error", M8("Нет проводника"),
+                   loadable_module::status_text(status),
+                   M8("System/EXPLORER.APP"));
+      kbd::get_key_wait();
+      return action::MENU_BACK;
+    }
+    if(session.action == loadable_module::ExplorerAction::EXIT)
+      return action::MENU_BACK;
+
+    program_store::Entry entry = {};
+    const bool has_entry = session.selected_id != program_store::INVALID_ID &&
+        program_store::entry_by_id(session.selected_id, entry);
+    switch(session.action) {
+      case loadable_module::ExplorerAction::LOAD:
+        if(has_entry && load_mk61_entry(entry)) return action::MENU_EXIT;
+        break;
+      case loadable_module::ExplorerAction::RUN:
+      case loadable_module::ExplorerAction::AUTOEXEC:
+        if(has_entry && run_entry(entry)) return action::MENU_EXIT;
+        break;
+      case loadable_module::ExplorerAction::VIEW:
+        if(has_entry) view_entry(entry);
+        break;
+      case loadable_module::ExplorerAction::EDIT:
+        if(has_entry) edit_entry(entry);
+        break;
+      case loadable_module::ExplorerAction::NEW_DIRECTORY:
+        create_directory(session.directory_id);
+        break;
+      case loadable_module::ExplorerAction::RENAME:
+        if(has_entry) rename_entry(entry);
+        break;
+      case loadable_module::ExplorerAction::MOVE:
+        if(has_entry) move_entry(entry);
+        break;
+      case loadable_module::ExplorerAction::DELETE_ENTRY:
+        if(has_entry) delete_entry(entry);
+        break;
+      case loadable_module::ExplorerAction::NONE:
+      case loadable_module::ExplorerAction::EXIT:
+        break;
+    }
+    session.action = loadable_module::ExplorerAction::NONE;
+    session.selected_id = program_store::INVALID_ID;
+  }
+#endif
 }
 
 bool program_store_view_entry(const program_store::Entry& entry) {

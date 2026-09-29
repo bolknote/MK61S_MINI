@@ -1,5 +1,5 @@
 #include "config.h"
-#if MK61_SETUP_IS_LOADABLE
+#if !MK61_SETUP_IS_BUILTIN
 #include "setup_ui.hpp"
 #include "loadable_module_runtime.hpp"
 #include "loadable_app_services.h"
@@ -10,7 +10,8 @@ static bool invoke(loadable_module::Command command, u32 a = 0, u32 b = 0,
                    u32 c = 0, u32* command_result = nullptr,
                    bool report_error = true) {
   u32 result = 0;
-  if(loadable_module::invoke(loadable_module::Kind::SETUP, command, a, b, c, 0, result)
+  if(!MK61_SETUP_IS_LOADABLE ||
+     loadable_module::invoke(loadable_module::Kind::SETUP, command, a, b, c, 0, result)
       != loadable_module::RuntimeStatus::OK) {
     if(report_error) {
       lcd_ru::print_lines("System/SETUP.APP", "unavailable");

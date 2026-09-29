@@ -87,7 +87,10 @@ int main(void) {
                     (MK61_ENABLE_MARKDOWN_VIEWER &&
                      MK61_MARKDOWN_VIEWER_AS_APP) &&
                 MK61_CHIP8_IS_LOADABLE ==
-                    (MK61_ENABLE_CHIP8 && MK61_CHIP8_AS_APP),
+                    (MK61_ENABLE_CHIP8 && MK61_CHIP8_AS_APP) &&
+                MK61_SETUP_IS_LOADABLE ==
+                    (MK61_ENABLE_SETUP && MK61_SETUP_AS_APP) &&
+                MK61_EXPLORER_IS_LOADABLE == MK61_EXPLORER_AS_APP,
                 "graphical placement must follow its independent APP flag");
   static_assert(MK61_FOCAL_IS_BUILTIN ==
                     (MK61_ENABLE_FOCAL && !MK61_FOCAL_AS_APP) &&
@@ -100,24 +103,27 @@ int main(void) {
                     (MK61_ENABLE_MARKDOWN_VIEWER &&
                      !MK61_MARKDOWN_VIEWER_AS_APP) &&
                 MK61_CHIP8_IS_BUILTIN ==
-                    (MK61_ENABLE_CHIP8 && !MK61_CHIP8_AS_APP),
+                    (MK61_ENABLE_CHIP8 && !MK61_CHIP8_AS_APP) &&
+                MK61_SETUP_IS_BUILTIN ==
+                    (MK61_ENABLE_SETUP && !MK61_SETUP_AS_APP) &&
+                MK61_EXPLORER_IS_BUILTIN == !MK61_EXPLORER_AS_APP,
                 "builtin placement must be the inverse of APP placement");
 #if defined(MK61_CONFIG_EXPECT_DEFAULT_COMPONENT_PLACEMENT)
   #if defined(STM32F411xE)
   static_assert(!MK61_FOCAL_AS_APP && !MK61_TINYBASIC_AS_APP &&
                 !MK61_WBMP_VIEWER_AS_APP && !MK61_MARKDOWN_VIEWER_AS_APP &&
-                !MK61_CHIP8_AS_APP,
+                !MK61_CHIP8_AS_APP && !MK61_SETUP_AS_APP &&
+                !MK61_EXPLORER_AS_APP,
                 "F411 must embed optional components by default");
   #else
   static_assert(MK61_FOCAL_AS_APP && MK61_TINYBASIC_AS_APP &&
                 MK61_WBMP_VIEWER_AS_APP && MK61_MARKDOWN_VIEWER_AS_APP &&
-                MK61_CHIP8_AS_APP,
+                MK61_CHIP8_AS_APP && MK61_SETUP_AS_APP &&
+                MK61_EXPLORER_AS_APP,
                 "non-F411 builds must externalize optional components by default");
   #endif
 #endif
 #if defined(STM32F411xE)
-  static_assert(!MK61_SETUP_IS_LOADABLE,
-                "F411 settings must work without SETUP.APP");
   #if defined(MK61_CONFIG_EXPECT_EXTERNAL_USBDISK)
   static_assert(MK61_EXTERNALIZE_USBDISK == 1 &&
                 MK61_USBDISK_IS_LOADABLE && !MK61_USBDISK_IS_BUILTIN,
@@ -130,8 +136,6 @@ int main(void) {
   static_assert(MK61_ENABLE_PROFILE_SAVE == 1,
                 "F411 qualification builds must retain prof save");
 #else
-  static_assert(MK61_SETUP_IS_LOADABLE,
-                "F401 settings must remain external");
   static_assert(MK61_USBDISK_IS_LOADABLE && !MK61_USBDISK_IS_BUILTIN,
                 "F401 USB disk must remain external");
   #if defined(STM32F401xC) || defined(STM32F401xE)
@@ -158,6 +162,8 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS)
   static_assert(MK61_SETUP_IS_LOADABLE == 1,
                 "external System APP must include SETUP");
+  static_assert(MK61_EXPLORER_IS_LOADABLE == 1,
+                "external System APP must include Explorer");
   static_assert(MK61_USBDISK_IS_LOADABLE == 1,
                 "external F401 System APP must include USBDISK");
 #endif

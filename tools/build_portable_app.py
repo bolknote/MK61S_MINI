@@ -27,6 +27,8 @@ SYSTEM_MODULES = {
     "chip8": ("CHIP8", "CHIP8", ["chip8.cpp", "chip8_runner.cpp", "chip8_module_entry.cpp"], "C1"),
     "usbdisk": ("USBDISK", "USBDISK", ["virtual_fat.cpp",
         "virtual_fat_diagnostic.cpp", "usbdisk_module_entry.cpp"], None),
+    "explorer": ("EXPLORER", "EXPLORER", ["explorer_module_ui.cpp",
+        "explorer_module_entry.cpp"], None),
 }
 
 # These ceilings protect intentionally compact system interpreters from silent
@@ -37,6 +39,7 @@ SYSTEM_SIZE_BUDGETS = {
     # the 20-KiB APP arena for that decoder plus its full 8-KiB source buffer.
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
+    "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},

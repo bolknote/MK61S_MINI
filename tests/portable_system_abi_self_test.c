@@ -20,7 +20,13 @@ _Static_assert(sizeof(mk61_system_edit_key) == 124, "editor state wire layout");
 _Static_assert(MK61_RUNTIME_COUNT == 26, "runtime service slots are append-only");
 _Static_assert(MK61_SERVICE_DISPLAY_END_UI_TEXT == 15 &&
                MK61_SERVICE_DISPLAY_WRITE_CODEPOINT == 16 &&
-               MK61_SERVICE_DISPLAY_FLOW_TEXT == 17,
+               MK61_SERVICE_DISPLAY_FLOW_TEXT == 17 &&
+               MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT == 18 &&
+               MK61_SERVICE_DISPLAY_UI_TEXT_ACTIVE == 19 &&
+               MK61_SERVICE_DISPLAY_UI_LINE == 20 &&
+               MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT == 21 &&
+               MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH == 22 &&
+               MK61_SERVICE_DISPLAY_BLINK_ON == 23,
                "display operations are append-only");
 _Static_assert(sizeof(mk61_system_text_flow) == 20 &&
                offsetof(mk61_system_text_flow, text) == 0 &&
@@ -92,6 +98,11 @@ _Static_assert(sizeof(mk61_service_float_convert) == 16 &&
 _Static_assert(MK61_SERVICE_USBDISK == 33 &&
                MK61_SERVICE_CAP_USBDISK == (1U << 15),
                "append-only private USBDISK service");
+_Static_assert(MK61_SERVICE_FILE_CHILD_COUNT == 34 &&
+               MK61_SERVICE_FILE_CHILD == 35 &&
+               MK61_SERVICE_FILE_ACTIONS == 36 &&
+               MK61_SERVICE_CAP_EXPLORER == (1U << 16),
+               "append-only Explorer services");
 _Static_assert(sizeof(mk61_service_usbdisk_geometry) == 64 &&
                offsetof(mk61_service_usbdisk_geometry, logical_sectors) == 60,
                "USBDISK geometry wire layout");

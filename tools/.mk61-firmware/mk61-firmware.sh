@@ -54,11 +54,14 @@ ENABLE_TINYBASIC=1
 ENABLE_WBMP_VIEWER=0
 ENABLE_MARKDOWN_VIEWER=1
 ENABLE_CHIP8=0
+ENABLE_SETUP=1
 FOCAL_AS_APP=-1
 TINYBASIC_AS_APP=-1
 WBMP_VIEWER_AS_APP=-1
 MARKDOWN_VIEWER_AS_APP=-1
 CHIP8_AS_APP=-1
+SETUP_AS_APP=-1
+EXPLORER_AS_APP=-1
 ENABLE_USB_SCREEN=0
 EXTERNALIZE_USBDISK=0
 ENABLE_EXTENDED_FONT_SETTINGS=0
@@ -1250,6 +1253,8 @@ normalize_component_placements() {
   boolean_valid "$WBMP_VIEWER_AS_APP" || WBMP_VIEWER_AS_APP=$default
   boolean_valid "$MARKDOWN_VIEWER_AS_APP" || MARKDOWN_VIEWER_AS_APP=$default
   boolean_valid "$CHIP8_AS_APP" || CHIP8_AS_APP=$default
+  boolean_valid "$SETUP_AS_APP" || SETUP_AS_APP=$default
+  boolean_valid "$EXPLORER_AS_APP" || EXPLORER_AS_APP=$default
 }
 
 reset_component_placements_for_mcu() {
@@ -1260,6 +1265,8 @@ reset_component_placements_for_mcu() {
   WBMP_VIEWER_AS_APP=$default
   MARKDOWN_VIEWER_AS_APP=$default
   CHIP8_AS_APP=$default
+  SETUP_AS_APP=$default
+  EXPLORER_AS_APP=$default
 }
 
 math_backend_valid() {
@@ -1331,6 +1338,9 @@ load_config() {
       MK61_ENABLE_CHIP8)
         boolean_valid "$value" && ENABLE_CHIP8=$value
         ;;
+      MK61_ENABLE_SETUP)
+        boolean_valid "$value" && ENABLE_SETUP=$value
+        ;;
       MK61_FOCAL_AS_APP)
         boolean_valid "$value" && FOCAL_AS_APP=$value
         ;;
@@ -1345,6 +1355,12 @@ load_config() {
         ;;
       MK61_CHIP8_AS_APP)
         boolean_valid "$value" && CHIP8_AS_APP=$value
+        ;;
+      MK61_SETUP_AS_APP)
+        boolean_valid "$value" && SETUP_AS_APP=$value
+        ;;
+      MK61_EXPLORER_AS_APP)
+        boolean_valid "$value" && EXPLORER_AS_APP=$value
         ;;
       MK61_ENABLE_USB_SCREEN)
         boolean_valid "$value" && ENABLE_USB_SCREEN=$value
@@ -1405,11 +1421,14 @@ save_config() {
     printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
     printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
     printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
+    printf 'MK61_ENABLE_SETUP=%s\n' "$ENABLE_SETUP"
     printf 'MK61_FOCAL_AS_APP=%s\n' "$FOCAL_AS_APP"
     printf 'MK61_TINYBASIC_AS_APP=%s\n' "$TINYBASIC_AS_APP"
     printf 'MK61_WBMP_VIEWER_AS_APP=%s\n' "$WBMP_VIEWER_AS_APP"
     printf 'MK61_MARKDOWN_VIEWER_AS_APP=%s\n' "$MARKDOWN_VIEWER_AS_APP"
     printf 'MK61_CHIP8_AS_APP=%s\n' "$CHIP8_AS_APP"
+    printf 'MK61_SETUP_AS_APP=%s\n' "$SETUP_AS_APP"
+    printf 'MK61_EXPLORER_AS_APP=%s\n' "$EXPLORER_AS_APP"
     printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
     printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$EXTERNALIZE_USBDISK"
     # This is part of the firmware format contract, not a user-selectable
@@ -1515,11 +1534,14 @@ compile_option_flags() {
     " -DMK61_ENABLE_WBMP_VIEWER=$ENABLE_WBMP_VIEWER" \
     " -DMK61_ENABLE_MARKDOWN_VIEWER=$ENABLE_MARKDOWN_VIEWER" \
     " -DMK61_ENABLE_CHIP8=$ENABLE_CHIP8" \
+    " -DMK61_ENABLE_SETUP=$ENABLE_SETUP" \
     " -DMK61_FOCAL_AS_APP=$FOCAL_AS_APP" \
     " -DMK61_TINYBASIC_AS_APP=$TINYBASIC_AS_APP" \
     " -DMK61_WBMP_VIEWER_AS_APP=$WBMP_VIEWER_AS_APP" \
     " -DMK61_MARKDOWN_VIEWER_AS_APP=$MARKDOWN_VIEWER_AS_APP" \
     " -DMK61_CHIP8_AS_APP=$CHIP8_AS_APP" \
+    " -DMK61_SETUP_AS_APP=$SETUP_AS_APP" \
+    " -DMK61_EXPLORER_AS_APP=$EXPLORER_AS_APP" \
     " -DMK61_ENABLE_USB_SCREEN=$ENABLE_USB_SCREEN" \
     " -DMK61_EXTERNALIZE_USBDISK=$(externalize_usbdisk_value)" \
     " -DMK61_ENABLE_LOADABLE_MODULES=1" \
@@ -1537,12 +1559,14 @@ all_compile_flags() {
 }
 
 compile_options_summary() {
-  printf 'FOCAL:%s · BASIC:%s · WBMP:%s · MD:%s · CHIP-8:%s · %s USB · %s MSCAPP · %s FONT · %s USER · MATH %s' \
+  printf 'FOCAL:%s · BASIC:%s · WBMP:%s · MD:%s · CHIP-8:%s · SETUP:%s · EXPL:%s · %s USB · %s MSCAPP · %s FONT · %s USER · MATH %s' \
     "$(component_mode_label "$ENABLE_FOCAL" "$FOCAL_AS_APP")" \
     "$(component_mode_label "$ENABLE_TINYBASIC" "$TINYBASIC_AS_APP")" \
     "$(component_mode_label "$ENABLE_WBMP_VIEWER" "$WBMP_VIEWER_AS_APP")" \
     "$(component_mode_label "$ENABLE_MARKDOWN_VIEWER" "$MARKDOWN_VIEWER_AS_APP")" \
     "$(component_mode_label "$ENABLE_CHIP8" "$CHIP8_AS_APP")" \
+    "$(component_mode_label "$ENABLE_SETUP" "$SETUP_AS_APP")" \
+    "$(component_mode_label 1 "$EXPLORER_AS_APP")" \
     "$(checkbox_marker "$ENABLE_USB_SCREEN")" \
     "$(checkbox_marker "$(externalize_usbdisk_value)")" \
     "$(checkbox_marker "$ENABLE_EXTENDED_FONT_SETTINGS")" \
@@ -1558,6 +1582,10 @@ compile_options_details() {
   printf 'Markdown + WBMP viewer: %s (MK61_ENABLE_MARKDOWN_VIEWER, MK61_MARKDOWN_VIEWER_AS_APP)\n' \
     "$(component_mode_label "$ENABLE_MARKDOWN_VIEWER" "$MARKDOWN_VIEWER_AS_APP")"
   printf 'CHIP-8: %s (MK61_ENABLE_CHIP8, MK61_CHIP8_AS_APP)\n' "$(component_mode_label "$ENABLE_CHIP8" "$CHIP8_AS_APP")"
+  printf 'Настройки: %s (MK61_ENABLE_SETUP, MK61_SETUP_AS_APP)\n' \
+    "$(component_mode_label "$ENABLE_SETUP" "$SETUP_AS_APP")"
+  printf 'Проводник: %s (MK61_EXPLORER_AS_APP)\n' \
+    "$(component_mode_label 1 "$EXPLORER_AS_APP")"
   printf '%s USB-экран (MK61_ENABLE_USB_SCREEN)\n' "$(checkbox_marker "$ENABLE_USB_SCREEN")"
   printf '%s USB-диск как USBDISK.APP (MK61_EXTERNALIZE_USBDISK)\n' \
     "$(checkbox_marker "$(externalize_usbdisk_value)")"
@@ -1583,11 +1611,14 @@ show_config() {
   printf 'MK61_ENABLE_WBMP_VIEWER=%s\n' "$ENABLE_WBMP_VIEWER"
   printf 'MK61_ENABLE_MARKDOWN_VIEWER=%s\n' "$ENABLE_MARKDOWN_VIEWER"
   printf 'MK61_ENABLE_CHIP8=%s\n' "$ENABLE_CHIP8"
+  printf 'MK61_ENABLE_SETUP=%s\n' "$ENABLE_SETUP"
   printf 'MK61_FOCAL_AS_APP=%s\n' "$FOCAL_AS_APP"
   printf 'MK61_TINYBASIC_AS_APP=%s\n' "$TINYBASIC_AS_APP"
   printf 'MK61_WBMP_VIEWER_AS_APP=%s\n' "$WBMP_VIEWER_AS_APP"
   printf 'MK61_MARKDOWN_VIEWER_AS_APP=%s\n' "$MARKDOWN_VIEWER_AS_APP"
   printf 'MK61_CHIP8_AS_APP=%s\n' "$CHIP8_AS_APP"
+  printf 'MK61_SETUP_AS_APP=%s\n' "$SETUP_AS_APP"
+  printf 'MK61_EXPLORER_AS_APP=%s\n' "$EXPLORER_AS_APP"
   printf 'MK61_ENABLE_USB_SCREEN=%s\n' "$ENABLE_USB_SCREEN"
   printf 'MK61_EXTERNALIZE_USBDISK=%s\n' "$(externalize_usbdisk_value)"
   printf 'MK61_ENABLE_LOADABLE_MODULES=1\n'
@@ -1682,15 +1713,18 @@ choose_compile_options() {
   local wbmp=$ENABLE_WBMP_VIEWER
   local markdown=$ENABLE_MARKDOWN_VIEWER
   local chip8=$ENABLE_CHIP8
+  local setup=$ENABLE_SETUP
   local focal_as_app=$FOCAL_AS_APP
   local tinybasic_as_app=$TINYBASIC_AS_APP
   local wbmp_as_app=$WBMP_VIEWER_AS_APP
   local markdown_as_app=$MARKDOWN_VIEWER_AS_APP
   local chip8_as_app=$CHIP8_AS_APP
+  local setup_as_app=$SETUP_AS_APP
+  local explorer_as_app=$EXPLORER_AS_APP
   local usb_screen=$ENABLE_USB_SCREEN
   local externalize_usbdisk=$EXTERNALIZE_USBDISK
   local fonts=$ENABLE_EXTENDED_FONT_SETTINGS
-  local explorer=$ENABLE_USER_EXPLORER
+  local explorer_shortcut=$ENABLE_USER_EXPLORER
   local math_backend=$MATH_BACKEND
   local app_float=$APP_LOCAL_FLOAT
   local selection=focal
@@ -1710,10 +1744,12 @@ choose_compile_options() {
       wbmp       "WBMP viewer без Markdown · $(component_mode_label "$wbmp" "$wbmp_as_app")" \
       markdown   "Markdown + WBMP viewer · $(component_mode_label "$markdown" "$markdown_as_app")" \
       chip8      "CHIP-8 · $(component_mode_label "$chip8" "$chip8_as_app")" \
+      setup      "Настройки · $(component_mode_label "$setup" "$setup_as_app")" \
+      explorer_app "Проводник · $(component_mode_label 1 "$explorer_as_app")" \
       usb_screen "$(checkbox_marker "$usb_screen") USB-экран" \
       usbdisk_app "$(checkbox_marker "$usbdisk_app_value") USB-диск как USBDISK.APP" \
       fonts      "$(checkbox_marker "$fonts") Расширенные настройки шрифта" \
-      explorer   "$(checkbox_marker "$explorer") Клавиша USER открывает Explorer" \
+      explorer_shortcut "$(checkbox_marker "$explorer_shortcut") Клавиша USER открывает Explorer" \
       math       "◉ Математика: $(math_backend_label_for "$math_backend" "$app_float")  ›" \
       save       '✓ Сохранить и вернуться') || return 1
 
@@ -1729,6 +1765,8 @@ choose_compile_options() {
         [ "$markdown" -eq 1 ] && wbmp=0
         ;;
       chip8) cycle_component_mode chip8 chip8_as_app ;;
+      setup) cycle_component_mode setup setup_as_app ;;
+      explorer_app) explorer_as_app=$((1 - explorer_as_app)) ;;
       usb_screen) usb_screen=$((1 - usb_screen)) ;;
       usbdisk_app)
         if [ "$MCU" = f401 ]; then
@@ -1739,7 +1777,7 @@ choose_compile_options() {
         fi
         ;;
       fonts) fonts=$((1 - fonts)) ;;
-      explorer) explorer=$((1 - explorer)) ;;
+      explorer_shortcut) explorer_shortcut=$((1 - explorer_shortcut)) ;;
       math)
         math_choice=$(ui_radiolist 'Математика' \
           'Выберите точность и размер математической библиотеки:' \
@@ -1761,15 +1799,18 @@ choose_compile_options() {
         ENABLE_WBMP_VIEWER=$wbmp
         ENABLE_MARKDOWN_VIEWER=$markdown
         ENABLE_CHIP8=$chip8
+        ENABLE_SETUP=$setup
         FOCAL_AS_APP=$focal_as_app
         TINYBASIC_AS_APP=$tinybasic_as_app
         WBMP_VIEWER_AS_APP=$wbmp_as_app
         MARKDOWN_VIEWER_AS_APP=$markdown_as_app
         CHIP8_AS_APP=$chip8_as_app
+        SETUP_AS_APP=$setup_as_app
+        EXPLORER_AS_APP=$explorer_as_app
         ENABLE_USB_SCREEN=$usb_screen
         EXTERNALIZE_USBDISK=$externalize_usbdisk
         ENABLE_EXTENDED_FONT_SETTINGS=$fonts
-        ENABLE_USER_EXPLORER=$explorer
+        ENABLE_USER_EXPLORER=$explorer_shortcut
         MATH_BACKEND=$math_backend
         APP_LOCAL_FLOAT=$app_float
         save_config
@@ -1807,11 +1848,14 @@ f401_gcc_arguments() {
     -Wbmp "$ENABLE_WBMP_VIEWER" \
     -Markdown "$ENABLE_MARKDOWN_VIEWER" \
     -Chip8 "$ENABLE_CHIP8" \
+    -Setup "$ENABLE_SETUP" \
     -FocalAsApp "$FOCAL_AS_APP" \
     -BasicAsApp "$TINYBASIC_AS_APP" \
     -WbmpAsApp "$WBMP_VIEWER_AS_APP" \
     -MarkdownAsApp "$MARKDOWN_VIEWER_AS_APP" \
     -Chip8AsApp "$CHIP8_AS_APP" \
+    -SetupAsApp "$SETUP_AS_APP" \
+    -ExplorerAsApp "$EXPLORER_AS_APP" \
     -UsbScreen "$ENABLE_USB_SCREEN" \
     -ExtendedFontSettings "$ENABLE_EXTENDED_FONT_SETTINGS" \
     -UserExplorer "$ENABLE_USER_EXPLORER" \
@@ -2205,8 +2249,9 @@ build_system_app_bundle() {
     --resident-elf "$resident_elf" \
     --compile-commands "$compile_commands" \
     --output-dir "$bundle/System" \
-    --setup 0 \
+    --setup "$((ENABLE_SETUP * SETUP_AS_APP))" \
     --usbdisk "$(externalize_usbdisk_value)" \
+    --explorer "$EXPLORER_AS_APP" \
     --graphics "$(system_bundle_graphics "$profile")" \
     --ui-fonts "$(system_bundle_ui_fonts "$profile")" \
     --focal "$((ENABLE_FOCAL * FOCAL_AS_APP))" \
@@ -2302,11 +2347,14 @@ prepare_and_compile_f401_worker() {
     MK61_ENABLE_WBMP_VIEWER="$ENABLE_WBMP_VIEWER" \
     MK61_ENABLE_MARKDOWN_VIEWER="$ENABLE_MARKDOWN_VIEWER" \
     MK61_ENABLE_CHIP8="$ENABLE_CHIP8" \
+    MK61_ENABLE_SETUP="$ENABLE_SETUP" \
     MK61_FOCAL_AS_APP="$FOCAL_AS_APP" \
     MK61_TINYBASIC_AS_APP="$TINYBASIC_AS_APP" \
     MK61_WBMP_VIEWER_AS_APP="$WBMP_VIEWER_AS_APP" \
     MK61_MARKDOWN_VIEWER_AS_APP="$MARKDOWN_VIEWER_AS_APP" \
     MK61_CHIP8_AS_APP="$CHIP8_AS_APP" \
+    MK61_SETUP_AS_APP="$SETUP_AS_APP" \
+    MK61_EXPLORER_AS_APP="$EXPLORER_AS_APP" \
     MK61_ENABLE_USB_SCREEN="$ENABLE_USB_SCREEN" \
     MK61_ENABLE_EXTENDED_FONT_SETTINGS="$ENABLE_EXTENDED_FONT_SETTINGS" \
     MK61_USER_EXPLORER_SHORTCUT="$ENABLE_USER_EXPLORER" \
@@ -2327,8 +2375,9 @@ prepare_and_compile_worker() {
 }
 
 expected_system_app_names() {
-  [ "$MCU" = f401 ] && printf '%s\n' SETUP.APP
+  [ "$ENABLE_SETUP" -eq 1 ] && [ "$SETUP_AS_APP" -eq 1 ] && printf '%s\n' SETUP.APP
   [ "$(externalize_usbdisk_value)" -eq 1 ] && printf '%s\n' USBDISK.APP
+  [ "$EXPLORER_AS_APP" -eq 1 ] && printf '%s\n' EXPLORER.APP
   printf '%s\n' HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] && printf '%s\n' BASIC.APP
@@ -2340,7 +2389,7 @@ expected_system_app_names() {
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT
 }
 
 system_app_enabled() {
@@ -2354,8 +2403,9 @@ system_app_enabled() {
       ;;
     MARKDOWN.APP) [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && [ "$MARKDOWN_VIEWER_AS_APP" -eq 1 ] ;;
     CHIP8.APP) [ "$ENABLE_CHIP8" -eq 1 ] && [ "$CHIP8_AS_APP" -eq 1 ] ;;
-    SETUP.APP) [ "$MCU" = f401 ] ;;
+    SETUP.APP) [ "$ENABLE_SETUP" -eq 1 ] && [ "$SETUP_AS_APP" -eq 1 ] ;;
     USBDISK.APP) [ "$(externalize_usbdisk_value)" -eq 1 ] ;;
+    EXPLORER.APP) [ "$EXPLORER_AS_APP" -eq 1 ] ;;
     HELP0.TXT|HELP1.TXT) return 0 ;;
     *) return 1 ;;
   esac

@@ -35,23 +35,36 @@ static constexpr int MENU_SYSTEM   = 5;
 
 static constexpr int SYSTEM_RESTART = 0;
 static constexpr int SYSTEM_INFO = 1;
+#if MK61_ENABLE_SETUP
 static constexpr int SYSTEM_HARDWARE = 2;
 static constexpr int SYSTEM_FORMAT = 3;
 static constexpr int SYSTEM_FULL_RESET = 4;
+#else
+static constexpr int SYSTEM_FORMAT = 2;
+static constexpr int SYSTEM_FULL_RESET = 3;
+#endif
 
 static constexpr int SETTINGS_VOLUME  = 0;
 static constexpr int SETTINGS_IDLE_SIGNAL = 1;
 static constexpr int SETTINGS_SPEED   = 2;
 static constexpr int SETTINGS_MEMORY  = 3;
 static constexpr int SETTINGS_RANDOM  = 4;
+#if MK61_ENABLE_SETUP
 static constexpr int SETTINGS_DATE_TIME = 5;
 static constexpr int SETTINGS_RTC_CALIBRATION = 6;
 static constexpr int SETTINGS_LANGUAGE = 7;
-#if defined(MK61_OLED1602_WS0010)
-static constexpr int SETTINGS_OLED_TIMEOUT = 8;
-static constexpr int SETTINGS_DISPLAY_ROWS = 9;
 #else
-static constexpr int SETTINGS_DISPLAY_ROWS = 8;
+static constexpr int SETTINGS_LANGUAGE = 5;
+#endif
+#if defined(MK61_OLED1602_WS0010)
+static constexpr int SETTINGS_OLED_TIMEOUT = SETTINGS_LANGUAGE + 1;
+#endif
+#if MK61_ENABLE_SETUP && MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+  #if defined(MK61_OLED1602_WS0010)
+static constexpr int SETTINGS_DISPLAY_ROWS = SETTINGS_OLED_TIMEOUT + 1;
+  #else
+static constexpr int SETTINGS_DISPLAY_ROWS = SETTINGS_LANGUAGE + 1;
+  #endif
 #endif
 
 static u8 sound_volume_state = 10;
@@ -255,7 +268,9 @@ extern const int COUNT_PUNCTS = sizeof(MENU) / sizeof(MENU[0]);
 t_punct* SYSTEM_MENU[] = {
       (t_punct*) &RESET_punct,
       (t_punct*) &FLASH_punct,
+#if MK61_ENABLE_SETUP
       (t_punct*) &HARDWARE_punct,
+#endif
       (t_punct*) &FORMAT_punct,
       (t_punct*) &ERASE_punct
 };
@@ -270,13 +285,15 @@ t_punct* SETTINGS_MENU[] = {
       (t_punct*) &SPEED_MAXIMUM_punct,
       (t_punct*) &MEMORY_AUTO_punct,
       (t_punct*) &RANDOM_MK61_punct,
+#if MK61_ENABLE_SETUP
       (t_punct*) &DATE_TIME_punct,
       (t_punct*) &RTC_CALIBRATION_punct,
+#endif
       (t_punct*) &LANGUAGE_EN_punct,
 #if defined(MK61_OLED1602_WS0010)
       (t_punct*) &OLED_TIMEOUT_15M_punct,
 #endif
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+#if MK61_ENABLE_SETUP && MK61_HAS_GRAPHICAL_TEXT_SETTINGS
       (t_punct*) &ROWS_punct,
 #endif
 };
@@ -284,7 +301,8 @@ t_punct* SETTINGS_MENU[] = {
 extern const int COUNT_SETTINGS_PUNCTS = sizeof(SETTINGS_MENU) / sizeof(SETTINGS_MENU[0]);
 
 int current_settings_punct_count(void) {
-#if defined(MK61_DISPLAY_LCD1602) && MK61_ENABLE_USB_SCREEN
+#if MK61_ENABLE_SETUP && MK61_HAS_GRAPHICAL_TEXT_SETTINGS && \
+    defined(MK61_DISPLAY_LCD1602) && MK61_ENABLE_USB_SCREEN
   if(main_lcd().graphicsMode()) return COUNT_SETTINGS_PUNCTS;
   #if defined(MK61_OLED1602_WS0010)
     return SETTINGS_OLED_TIMEOUT + 1;
@@ -508,7 +526,9 @@ void refresh_menu_text(void) {
 
   SYSTEM_MENU[SYSTEM_RESTART] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_RESET_punct) : &RESET_punct);
   SYSTEM_MENU[SYSTEM_INFO] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_FLASH_punct) : &FLASH_punct);
+#if MK61_ENABLE_SETUP
   SYSTEM_MENU[SYSTEM_HARDWARE] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_HARDWARE_punct) : &HARDWARE_punct);
+#endif
   SYSTEM_MENU[SYSTEM_FORMAT] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_FORMAT_punct) : &FORMAT_punct);
   SYSTEM_MENU[SYSTEM_FULL_RESET] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_ERASE_punct) : &ERASE_punct);
 
@@ -517,14 +537,16 @@ void refresh_menu_text(void) {
   SETTINGS_MENU[SETTINGS_SPEED]    = speed_punct();
   SETTINGS_MENU[SETTINGS_MEMORY]   = memory_punct();
   SETTINGS_MENU[SETTINGS_RANDOM]   = random_punct();
+#if MK61_ENABLE_SETUP
   SETTINGS_MENU[SETTINGS_DATE_TIME] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(RU_DATE_TIME_punct) : &DATE_TIME_punct);
   SETTINGS_MENU[SETTINGS_RTC_CALIBRATION] = (t_punct*) (
     russian_language ? mk8::punct_view<t_punct>(RU_RTC_CALIBRATION_punct) : &RTC_CALIBRATION_punct);
+#endif
   SETTINGS_MENU[SETTINGS_LANGUAGE] = (t_punct*) (russian_language ? mk8::punct_view<t_punct>(LANGUAGE_RU_punct) : &LANGUAGE_EN_punct);
 #if defined(MK61_OLED1602_WS0010)
   SETTINGS_MENU[SETTINGS_OLED_TIMEOUT] = oled_timeout_punct();
 #endif
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+#if MK61_ENABLE_SETUP && MK61_HAS_GRAPHICAL_TEXT_SETTINGS
   SETTINGS_MENU[SETTINGS_DISPLAY_ROWS] = display_rows_punct();
 #endif
 }
@@ -1199,7 +1221,7 @@ bool class_menu::handle_settings_adjustment(i32 key) {
       break;
 #endif
 
-#if MK61_HAS_GRAPHICAL_TEXT_SETTINGS
+#if MK61_ENABLE_SETUP && MK61_HAS_GRAPHICAL_TEXT_SETTINGS
     case library_mk61::SETTINGS_DISPLAY_ROWS:
       if(key == KEY_OK_PRESS) {
         FontSetup();

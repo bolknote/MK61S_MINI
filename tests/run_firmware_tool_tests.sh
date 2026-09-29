@@ -68,6 +68,9 @@ printf '%s\n' \
   'MK61_ENABLE_WBMP_VIEWER=0' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=0' \
+  'MK61_ENABLE_SETUP=1' \
+  'MK61_SETUP_AS_APP=0' \
+  'MK61_EXPLORER_AS_APP=0' \
   'MK61_ENABLE_USB_SCREEN=0' \
   'MK61_EXTERNALIZE_USBDISK=0' \
   'MK61_ENABLE_LOADABLE_MODULES=1' \
@@ -235,6 +238,9 @@ grep -q '^MK61_TINYBASIC_AS_APP=0$' <<< "$config"
 grep -q '^MK61_WBMP_VIEWER_AS_APP=0$' <<< "$config"
 grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=0$' <<< "$config"
 grep -q '^MK61_CHIP8_AS_APP=0$' <<< "$config"
+grep -q '^MK61_ENABLE_SETUP=1$' <<< "$config"
+grep -q '^MK61_SETUP_AS_APP=0$' <<< "$config"
+grep -q '^MK61_EXPLORER_AS_APP=0$' <<< "$config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' <<< "$config"
 grep -q '^MK61_EXTERNALIZE_USBDISK=0$' <<< "$config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' <<< "$config"
@@ -271,6 +277,9 @@ grep -q '^MK61_TINYBASIC_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_WBMP_VIEWER_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=1$' <<< "$hybrid"
 grep -q '^MK61_CHIP8_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_ENABLE_SETUP=1$' <<< "$hybrid"
+grep -q '^MK61_SETUP_AS_APP=1$' <<< "$hybrid"
+grep -q '^MK61_EXPLORER_AS_APP=1$' <<< "$hybrid"
 grep -q -- 'COMPILE_FLAGS=.*-DMK61_MATH_BACKEND=1 -DMK61_APP_LOCAL_FLOAT_MATH=1 ' <<< "$hybrid"
 grep -q -- "-LocalFloatMath.*State.AppLocalFloat" "$root/tools/.mk61-firmware/mk61-firmware.ps1"
 grep -q -- '-LocalFloatMath "$APP_LOCAL_FLOAT"' "$tool"
@@ -296,6 +305,9 @@ grep -q '^MK61_TINYBASIC_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_WBMP_VIEWER_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_CHIP8_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_ENABLE_SETUP=1$' "$legacy_config"
+grep -q '^MK61_SETUP_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_EXPLORER_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_USB_SCREEN=0$' "$legacy_config"
 grep -q '^MK61_EXTERNALIZE_USBDISK=0$' "$legacy_config"
 grep -q '^MK61_ENABLE_LOADABLE_MODULES=1$' "$legacy_config"
@@ -320,6 +332,9 @@ printf '%s\n' \
   'MK61_WBMP_VIEWER_AS_APP=1' \
   'MK61_MARKDOWN_VIEWER_AS_APP=1' \
   'MK61_CHIP8_AS_APP=1' \
+  'MK61_ENABLE_SETUP=1' \
+  'MK61_SETUP_AS_APP=1' \
+  'MK61_EXPLORER_AS_APP=1' \
   'MK61_ENABLE_USB_SCREEN=1' \
   'MK61_ENABLE_LOADABLE_MODULES=1' \
   'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0' \
@@ -334,7 +349,7 @@ printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
 printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
 printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
-for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
   printf 'service-resource\n' > "$bundle/System/$resource"
 done
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
@@ -368,7 +383,7 @@ disabled_result=$(MK61_CONFIG_FILE="$install_config" \
   MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
   "$tool" --install-apps)
 grep -q 'Synchronized and verified' <<< "$disabled_result"
-for resource in SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
   cmp "$bundle/System/$resource" "$install_mount/System/$resource"
 done
 test ! -e "$install_mount/System/FOCAL.APP"
@@ -380,7 +395,12 @@ grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 
 f411_bundle="$install_output/mk61s-M-mini-v3-lcd1602-a00-f411"
 mkdir -p "$f411_bundle/System"
-f411_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" \
+f411_config="$installer_root/f411.conf"
+sed -e 's/^MCU=f401$/MCU=f411/' \
+    -e 's/^MK61_SETUP_AS_APP=1$/MK61_SETUP_AS_APP=0/' \
+    -e 's/^MK61_EXPLORER_AS_APP=1$/MK61_EXPLORER_AS_APP=0/' \
+    "$install_config" > "$f411_config"
+f411_selection=$(MK61_CONFIG_FILE="$f411_config" "$tool" \
   --mcu f411 --profile mini-v3-a00 --show-config)
 f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$f411_selection")
 printf '%s\n' "$f411_flags" > "$f411_bundle/build.flags"
@@ -389,16 +409,17 @@ printf 'resident-f411\n' > "$f411_bundle/mk61s-M-mini-v3-lcd1602-a00-f411.bin"
 for resource in HELP0.TXT HELP1.TXT; do
   printf 'f411-resource\n' > "$f411_bundle/System/$resource"
 done
-MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
+MK61_CONFIG_FILE="$f411_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C6_MOUNT="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 test ! -e "$install_mount/System/SETUP.APP"
 test ! -e "$install_mount/System/USBDISK.APP"
+test ! -e "$install_mount/System/EXPLORER.APP"
 
 # A stale artifact from an older external-USBDISK build must not be accepted
 # as a current default F411 bundle.
 printf 'stale-usbdisk\n' > "$f411_bundle/System/USBDISK.APP"
-if MK61_CONFIG_FILE="$install_config" MK61_OUTPUT_DIR="$install_output" \
+if MK61_CONFIG_FILE="$f411_config" MK61_OUTPUT_DIR="$install_output" \
     MK61_C6_MOUNT="$install_mount" "$tool" \
     --mcu f411 --profile mini-v3-a00 --install-apps \
     > "$installer_root/stale-f411.txt" 2>&1; then
@@ -409,17 +430,26 @@ grep -q 'stale disabled file' "$installer_root/stale-f411.txt"
 
 # Explicit opt-in makes the same canonical module required and installable.
 external_f411_config="$installer_root/f411-external.conf"
-cp "$install_config" "$external_f411_config"
-printf 'MK61_EXTERNALIZE_USBDISK=1\n' >> "$external_f411_config"
+cp "$f411_config" "$external_f411_config"
+printf '%s\n' \
+  'MK61_EXTERNALIZE_USBDISK=1' \
+  'MK61_SETUP_AS_APP=1' \
+  'MK61_EXPLORER_AS_APP=1' >> "$external_f411_config"
 external_f411_selection=$(MK61_CONFIG_FILE="$external_f411_config" "$tool" \
   --mcu f411 --profile mini-v3-a00 --show-config)
 grep -q '^MK61_EXTERNALIZE_USBDISK=1$' <<< "$external_f411_selection"
+grep -q '^MK61_SETUP_AS_APP=1$' <<< "$external_f411_selection"
+grep -q '^MK61_EXPLORER_AS_APP=1$' <<< "$external_f411_selection"
 external_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$external_f411_selection")
 printf '%s\n' "$external_f411_flags" > "$f411_bundle/build.flags"
+printf 'external-setup\n' > "$f411_bundle/System/SETUP.APP"
+printf 'external-explorer\n' > "$f411_bundle/System/EXPLORER.APP"
 MK61_CONFIG_FILE="$external_f411_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C6_MOUNT="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
+cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
+cmp "$f411_bundle/System/EXPLORER.APP" "$install_mount/System/EXPLORER.APP"
 
 # Component placement is independent on F411 as well: keep TinyBASIC and
 # Markdown resident, but install only FOCAL as a canonical APP.
@@ -438,12 +468,16 @@ printf '%s\n' \
   'MK61_WBMP_VIEWER_AS_APP=0' \
   'MK61_MARKDOWN_VIEWER_AS_APP=0' \
   'MK61_CHIP8_AS_APP=0' \
+  'MK61_ENABLE_SETUP=1' \
+  'MK61_SETUP_AS_APP=0' \
+  'MK61_EXPLORER_AS_APP=0' \
   'MK61_EXTERNALIZE_USBDISK=0' > "$f411_mixed_config"
 mixed_f411_selection=$(MK61_CONFIG_FILE="$f411_mixed_config" "$tool" \
   --mcu f411 --profile mini-v3-a00 --show-config)
 mixed_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$mixed_f411_selection")
 printf '%s\n' "$mixed_f411_flags" > "$f411_bundle/build.flags"
-rm -f "$f411_bundle/System/USBDISK.APP"
+rm -f "$f411_bundle/System/SETUP.APP" \
+  "$f411_bundle/System/USBDISK.APP" "$f411_bundle/System/EXPLORER.APP"
 printf 'focal-app\n' > "$f411_bundle/System/FOCAL.APP"
 MK61_CONFIG_FILE="$f411_mixed_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_C6_MOUNT="$install_mount" "$tool" \
@@ -454,5 +488,7 @@ test ! -e "$install_mount/System/WBMP.APP"
 test ! -e "$install_mount/System/MARKDOWN.APP"
 test ! -e "$install_mount/System/CHIP8.APP"
 test ! -e "$install_mount/System/USBDISK.APP"
+test ! -e "$install_mount/System/SETUP.APP"
+test ! -e "$install_mount/System/EXPLORER.APP"
 
 printf 'firmware_tool_tests: ok\n'

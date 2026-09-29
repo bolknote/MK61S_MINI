@@ -87,6 +87,9 @@ try {
         'MK61_ENABLE_WBMP_VIEWER=0'
         'MK61_ENABLE_MARKDOWN_VIEWER=1'
         'MK61_ENABLE_CHIP8=0'
+        'MK61_ENABLE_SETUP=1'
+        'MK61_SETUP_AS_APP=0'
+        'MK61_EXPLORER_AS_APP=0'
         'MK61_ENABLE_USB_SCREEN=0'
         'MK61_EXTERNALIZE_USBDISK=0'
         'MK61_ENABLE_LOADABLE_MODULES=1'
@@ -111,7 +114,8 @@ try {
     foreach ($name in @(
         'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
         'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
-        'MK61_CHIP8_AS_APP')) {
+        'MK61_CHIP8_AS_APP', 'MK61_SETUP_AS_APP',
+        'MK61_EXPLORER_AS_APP')) {
         Assert-True ($configText -match "(?m)^${name}=0$") `
             "F411 legacy migration did not embed ${name}"
     }
@@ -152,7 +156,8 @@ try {
     foreach ($name in @(
         'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
         'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
-        'MK61_CHIP8_AS_APP')) {
+        'MK61_CHIP8_AS_APP', 'MK61_SETUP_AS_APP',
+        'MK61_EXPLORER_AS_APP')) {
         Assert-True ($hybridText -match "(?m)^${name}=1$") `
             "fresh F401 config did not default ${name} to APP"
     }
@@ -187,6 +192,9 @@ try {
         'MK61_WBMP_VIEWER_AS_APP=1'
         'MK61_MARKDOWN_VIEWER_AS_APP=1'
         'MK61_CHIP8_AS_APP=1'
+        'MK61_ENABLE_SETUP=1'
+        'MK61_SETUP_AS_APP=1'
+        'MK61_EXPLORER_AS_APP=1'
         'MK61_ENABLE_USB_SCREEN=1'
         'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
@@ -208,7 +216,9 @@ try {
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
-    foreach ($resource in @('SETUP.APP', 'USBDISK.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+    foreach ($resource in @(
+        'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP',
+        'HELP0.TXT', 'HELP1.TXT')) {
         [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resource`n")
     }
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
@@ -248,6 +258,9 @@ try {
         'MK61_ENABLE_WBMP_VIEWER=0'
         'MK61_ENABLE_MARKDOWN_VIEWER=0'
         'MK61_ENABLE_CHIP8=0'
+        'MK61_ENABLE_SETUP=1'
+        'MK61_SETUP_AS_APP=1'
+        'MK61_EXPLORER_AS_APP=1'
         'MK61_ENABLE_USB_SCREEN=0'
         'MK61_ENABLE_LOADABLE_MODULES=1'
         'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
@@ -277,6 +290,26 @@ try {
     $f411Bundle = Join-Path $outputRoot 'mk61s-M-mini-v3-lcd1602-a00-f411'
     $f411System = Join-Path $f411Bundle 'System'
     [void](New-Item -ItemType Directory -Force -Path $f411System)
+    $f411Config = @(
+        'MCU=f411'
+        'PLATFORM=mini-v3'
+        'SCREEN=lcd1602-a00'
+        'MK61_ENABLE_FOCAL=0'
+        'MK61_ENABLE_TINYBASIC=0'
+        'MK61_ENABLE_WBMP_VIEWER=0'
+        'MK61_ENABLE_MARKDOWN_VIEWER=0'
+        'MK61_ENABLE_CHIP8=0'
+        'MK61_ENABLE_SETUP=1'
+        'MK61_SETUP_AS_APP=0'
+        'MK61_EXPLORER_AS_APP=0'
+        'MK61_ENABLE_USB_SCREEN=0'
+        'MK61_EXTERNALIZE_USBDISK=0'
+        'MK61_ENABLE_LOADABLE_MODULES=1'
+        'MK61_ENABLE_EXTENDED_FONT_SETTINGS=0'
+        'MK61_USER_EXPLORER_SHORTCUT=1'
+        'MK61_MATH_BACKEND=0'
+    )
+    [IO.File]::WriteAllLines($config, $f411Config)
     $f411Selection = Invoke-Tool @('--mcu','f411','--profile','mini-v3-a00','--show-config')
     $f411FlagLine = @($f411Selection.Output |
         Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
@@ -301,6 +334,9 @@ try {
     Assert-True (-not (Test-Path -LiteralPath (
         Join-Path $targetSystem 'USBDISK.APP'))) `
         'F411 must not need an external USBDISK.APP'
+    Assert-True (-not (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'EXPLORER.APP'))) `
+        'F411 must not need an external EXPLORER.APP'
 
     [IO.File]::WriteAllText(
         (Join-Path $f411System 'USBDISK.APP'), "stale-usbdisk`n")
@@ -311,14 +347,25 @@ try {
     Assert-True (($staleF411.Output -join "`n") -match 'stale disabled file') `
         'stale F411 USBDISK.APP rejection was not explained'
 
-    [IO.File]::WriteAllLines(
-        $config, [string[]]@($disabledConfig + 'MK61_EXTERNALIZE_USBDISK=1'))
+    [IO.File]::WriteAllLines($config, [string[]]@(
+        $f411Config +
+        'MK61_EXTERNALIZE_USBDISK=1' +
+        'MK61_SETUP_AS_APP=1' +
+        'MK61_EXPLORER_AS_APP=1'))
+    [IO.File]::WriteAllText(
+        (Join-Path $f411System 'SETUP.APP'), "external-setup`n")
+    [IO.File]::WriteAllText(
+        (Join-Path $f411System 'EXPLORER.APP'), "external-explorer`n")
     $externalF411 = Invoke-Tool @(
         '--mcu','f411','--profile','mini-v3-a00','--show-config')
     $externalF411Text = $externalF411.Output -join "`n"
     Assert-True ($externalF411Text -match
         '(?m)^MK61_EXTERNALIZE_USBDISK=1$') `
         'explicit F411 USBDISK.APP mode was not selected'
+    Assert-True ($externalF411Text -match '(?m)^MK61_SETUP_AS_APP=1$') `
+        'explicit F411 SETUP.APP mode was not selected'
+    Assert-True ($externalF411Text -match '(?m)^MK61_EXPLORER_AS_APP=1$') `
+        'explicit F411 EXPLORER.APP mode was not selected'
     $externalFlagLine = @($externalF411.Output |
         Where-Object { $_ -like 'COMPILE_FLAGS=*' })[0]
     [IO.File]::WriteAllText(
@@ -332,6 +379,12 @@ try {
     Assert-True (Test-Path -LiteralPath (
         Join-Path $targetSystem 'USBDISK.APP') -PathType Leaf) `
         'explicit F411 USBDISK.APP is missing from C6'
+    Assert-True (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'SETUP.APP') -PathType Leaf) `
+        'explicit F411 SETUP.APP is missing from C6'
+    Assert-True (Test-Path -LiteralPath (
+        Join-Path $targetSystem 'EXPLORER.APP') -PathType Leaf) `
+        'explicit F411 EXPLORER.APP is missing from C6'
 } finally {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild
@@ -358,7 +411,9 @@ try {
         $script:State.TinyBasicAsApp -eq 0 -and
         $script:State.WbmpAsApp -eq 0 -and
         $script:State.MarkdownAsApp -eq 0 -and
-        $script:State.Chip8AsApp -eq 0) `
+        $script:State.Chip8AsApp -eq 0 -and
+        $script:State.SetupAsApp -eq 0 -and
+        $script:State.ExplorerAsApp -eq 0) `
         'F411 components must be resident by default'
     $next = Get-NextComponentMode 1 0
     Assert-True ($next.Enabled -eq 1 -and $next.AsApp -eq 1) `
@@ -375,7 +430,9 @@ try {
         $script:State.TinyBasicAsApp -eq 1 -and
         $script:State.WbmpAsApp -eq 1 -and
         $script:State.MarkdownAsApp -eq 1 -and
-        $script:State.Chip8AsApp -eq 1) `
+        $script:State.Chip8AsApp -eq 1 -and
+        $script:State.SetupAsApp -eq 1 -and
+        $script:State.ExplorerAsApp -eq 1) `
         'selecting F401 did not apply its APP placement defaults'
     Set-DefaultComponentPlacements 'f411'
     Assert-True ((Get-ProfileArtifactName 'mini-v3-a00' 'f401') -eq 'mk61s-M-mini-v3-lcd1602-a00-f401.bin') 'F401 artifact name differs'
@@ -393,6 +450,10 @@ try {
         'USB disk APP selection is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_MARKDOWN_VIEWER') 'Markdown is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_CHIP8') 'CHIP-8 is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_SETUP') `
+        'Settings placement is missing from Windows option details'
+    Assert-True ((Get-CompileOptionsDetails) -match 'MK61_EXPLORER_AS_APP') `
+        'Explorer placement is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_LOADABLE_MODULES') `
         'unified APP runtime is missing from Windows option details'
     $script:State.EnableWbmp = 1

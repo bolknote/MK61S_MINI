@@ -2,6 +2,7 @@
 #define MK61_LOADABLE_MODULE_ABI_HPP
 
 #include "rust_types.h"
+#include <stddef.h>
 
 namespace loadable_module {
 
@@ -72,8 +73,48 @@ enum class Command : u32 {
   USBDISK_CLEAR_DIAGNOSTIC,
   // argument0 = const virtual_fat::Diagnostic*, argument1 = sizeof(value).
   // Restores the resident-retained report after this APP was evicted.
-  USBDISK_RESTORE_DIAGNOSTIC
+  USBDISK_RESTORE_DIAGNOSTIC,
+
+  // The Explorer UI never starts a second APP while its image is active.
+  // It updates ExplorerSession and returns one requested resident action;
+  // resident unloads/evicts it as needed, performs the action, then may resume
+  // with the same session value.
+  EXPLORER_SELECT = 0x600
 };
+
+enum class ExplorerAction : u8 {
+  NONE = 0,
+  EXIT,
+  LOAD,
+  RUN,
+  VIEW,
+  EDIT,
+  NEW_DIRECTORY,
+  RENAME,
+  MOVE,
+  DELETE_ENTRY,
+  AUTOEXEC
+};
+
+enum ExplorerActionMask : u32 {
+  EXPLORER_CAN_LOAD = 1U << 0,
+  EXPLORER_CAN_RUN = 1U << 1,
+  EXPLORER_CAN_VIEW = 1U << 2,
+  EXPLORER_CAN_EDIT = 1U << 3
+};
+
+struct ExplorerSession {
+  u32 size;
+  u16 directory_id;
+  u16 selected_id;
+  i16 active;
+  ExplorerAction action;
+  u8 reserved;
+  char search[32];
+};
+static_assert(sizeof(ExplorerSession) == 44 &&
+              offsetof(ExplorerSession, search) == 12,
+              "Explorer handoff ABI must stay append-only");
 
 // Общий результат FILE_OPEN позволяет проводнику одинаково показывать ошибки
 // встроенных обработчиков, System APP и пользовательских APPLICATION.

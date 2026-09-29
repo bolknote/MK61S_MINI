@@ -98,7 +98,26 @@ void MK61Display::flush() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_FLUSH); }
 void MK61Display::beginUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_BEGIN_UPDATE); }
 void MK61Display::endUpdate() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UPDATE); }
 void MK61Display::endShiftedViewport() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_VIEWPORT); }
+void MK61Display::beginUiText() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_BEGIN_UI_TEXT); }
 void MK61Display::endUiText() { call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_END_UI_TEXT); }
+bool MK61Display::uiTextActive() const {
+  return call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_UI_TEXT_ACTIVE);
+}
+void MK61Display::printUiLine(u8 row, const char* text, char marker,
+                              u16 trailing) {
+  call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_UI_LINE, row,
+       (u32) (u8) marker | ((u32) trailing << 8), (void*) text);
+}
+u16 MK61Display::measureUiText(const char* text) const {
+  return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_MEASURE_UI_TEXT,
+                    0, 0, (void*) text);
+}
+u16 MK61Display::uiTextWidth() const {
+  return (u16) call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_UI_TEXT_WIDTH);
+}
+void MK61Display::blinkOn() {
+  call(MK61_SYS_DISPLAY, MK61_SYS_DISPLAY_BLINK_ON);
+}
 u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
                                  u8 max_rows, bool tail,
                                  bool empty_line) {
@@ -140,6 +159,18 @@ bool entry_by_id(u16 id, Entry& out) {
   mk61_system_file file = {};
   if(!call(MK61_SYS_FILE_ENTRY, 0, id, 0, &file)) return false;
   import_file(file, out); return true;
+}
+int child_count(u16 parent) {
+  return (int) call(MK61_SYS_FILE_CHILD_COUNT, parent);
+}
+bool child(u16 parent, int index, Entry& out) {
+  if(index < 0) return false;
+  mk61_system_file file = {};
+  if(!call(MK61_SYS_FILE_CHILD, parent, (u32) index, 0, &file)) return false;
+  import_file(file, out); return true;
+}
+u32 explorer_actions(u16 id) {
+  return call(MK61_SYS_FILE_ACTIONS, id);
 }
 bool read_range_id(u16 id, u16 offset, u8* data, u16 size, u16* length) {
   const u32 read = portable_system::app->file_read(id, offset, data, size);

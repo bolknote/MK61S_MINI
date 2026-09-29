@@ -72,9 +72,11 @@ Assert-True ($wrapperText -notmatch 'arm-none-eabi-(?:g\+\+|objcopy|nm)') `
 Assert-True ($commonText -match 'tools/build_portable_app\.py') `
     'System bundle does not use the ordinary APP builder'
 Assert-True ($commonText -match '"setup", "SETUP\.APP"') `
-    'mandatory SETUP.APP is missing from the common bundle'
+    'selectable SETUP.APP is missing from the common bundle'
 Assert-True ($commonText -match '"usbdisk", "USBDISK\.APP"') `
-    'mandatory USBDISK.APP is missing from the common bundle'
+    'selectable USBDISK.APP is missing from the common bundle'
+Assert-True ($commonText -match '"explorer", "EXPLORER\.APP"') `
+    'selectable EXPLORER.APP is missing from the common bundle'
 Assert-True ($commonText -match 'HELP0\.TXT.+HELP1\.TXT') `
     'terminal help is missing from the common bundle'
 Assert-True ($commonText -match '"abi": 6') `
@@ -121,7 +123,8 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
         & $powerShell -NoLogo -NoProfile -File $wrapper `
             -BuildPath $integrationBuild `
             -OutputDirectory $output `
-            -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1
+            -Focal 1 -Basic 1 -Wbmp 1 -Markdown 1 -Chip8 1 `
+            -Setup 1 -UsbDisk 1 -Explorer 1
         Assert-True ($LASTEXITCODE -eq 0) 'real unified System APP build failed'
 
         Assert-True (-not (Test-Path -LiteralPath (
@@ -134,6 +137,7 @@ if (-not [string]::IsNullOrWhiteSpace($integrationBuild)) {
             'CHIP8.APP' = 5
             'SETUP.APP' = 7
             'USBDISK.APP' = 8
+            'EXPLORER.APP' = 9
         }
         foreach ($name in $expected.Keys) {
             $path = Join-Path $output $name

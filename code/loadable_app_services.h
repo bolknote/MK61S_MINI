@@ -31,7 +31,9 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_TEXT_FONT = 1U << 13,
   MK61_SERVICE_CAP_FLOAT_CONVERT = 1U << 14,
   /* Private storage primitives used only by the canonical USBDISK.APP. */
-  MK61_SERVICE_CAP_USBDISK = 1U << 15
+  MK61_SERVICE_CAP_USBDISK = 1U << 15,
+  /* Directory traversal and handoff policy used by EXPLORER.APP. */
+  MK61_SERVICE_CAP_EXPLORER = 1U << 16
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -72,7 +74,12 @@ enum mk61_service_operation {
   MK61_SERVICE_REF_PARSE,
   MK61_SERVICE_TEXT_FONT,
   MK61_SERVICE_FLOAT_CONVERT,
-  MK61_SERVICE_USBDISK
+  MK61_SERVICE_USBDISK,
+  /* Append-only Explorer primitives. FILE_ENTRY remains the common wire
+   * representation; CHILD only changes how that entry is addressed. */
+  MK61_SERVICE_FILE_CHILD_COUNT,
+  MK61_SERVICE_FILE_CHILD,
+  MK61_SERVICE_FILE_ACTIONS
 };
 
 /* Narrow resident C6 backend for USBDISK.APP. FAT, LFN, conversion and commit
@@ -196,7 +203,15 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_WRITE_CODEPOINT,
   // Resident-owned M8 word flow. Languages hand the complete logical line
   // to the display owner instead of copying font metrics and wrap policy.
-  MK61_SERVICE_DISPLAY_FLOW_TEXT
+  MK61_SERVICE_DISPLAY_FLOW_TEXT,
+  // Proportional menu surface. Character displays accept BEGIN as a no-op;
+  // EXPLORER.APP can therefore keep one UI implementation for every panel.
+  MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT,
+  MK61_SERVICE_DISPLAY_UI_TEXT_ACTIVE,
+  MK61_SERVICE_DISPLAY_UI_LINE,
+  MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT,
+  MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH,
+  MK61_SERVICE_DISPLAY_BLINK_ON
 };
 enum mk61_service_text_flow_flag {
   MK61_SERVICE_TEXT_FLOW_TAIL = 1U,

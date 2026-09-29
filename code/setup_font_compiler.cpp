@@ -1,5 +1,5 @@
 #include "config.h"
-#if (defined(MK61_BUILD_SETUP_MODULE) || !MK61_SETUP_IS_LOADABLE) && MK61_UI_FONT_CLIENT
+#if (defined(MK61_BUILD_SETUP_MODULE) || MK61_SETUP_IS_BUILTIN) && MK61_UI_FONT_CLIENT
 
 #include "setup_font_compiler.hpp"
 

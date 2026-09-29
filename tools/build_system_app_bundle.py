@@ -17,7 +17,7 @@ from m8_codec import decode as decode_m8
 ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
-    "SETUP.APP", "USBDISK.APP", "HELP0.TXT", "HELP1.TXT",
+    "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
 )
 MODULES = (
     ("setup", "SETUP.APP", "setup"),
@@ -27,6 +27,7 @@ MODULES = (
     ("markdown", "MARKDOWN.APP", "markdown-viewer"),
     ("chip8", "CHIP8.APP", "chip8"),
     ("usbdisk", "USBDISK.APP", "usbdisk"),
+    ("explorer", "EXPLORER.APP", "explorer"),
 )
 
 
@@ -96,6 +97,7 @@ def build(args: argparse.Namespace) -> dict:
         "markdown": args.markdown,
         "chip8": args.chip8,
         "usbdisk": args.usbdisk,
+        "explorer": args.explorer,
     }
     built: list[str] = []
     with tempfile.TemporaryDirectory(prefix="mk61-system-app-") as temporary:
@@ -165,6 +167,8 @@ def main() -> None:
                         help="build SETUP.APP (0 when setup is resident on F411)")
     parser.add_argument("--usbdisk", type=boolean, default=True,
                         help="build USBDISK.APP (0 when USB disk is resident)")
+    parser.add_argument("--explorer", type=boolean, default=False,
+                        help="build EXPLORER.APP (0 when Explorer is resident)")
     parser.add_argument("--ui-fonts", type=boolean, default=True)
     parser.add_argument("--focal", type=boolean, default=True)
     parser.add_argument("--basic", type=boolean, default=True)

@@ -24,12 +24,13 @@ enum class Kind : u8 {
   CHIP8 = 5,
   MARKDOWN_VIEWER = 6,
   SETUP = 7,
-  USBDISK = 8
+  USBDISK = 8,
+  EXPLORER = 9
 };
 
 // Только системные APP имеют канонические имена. Пользовательских APPLICATION
 // может быть сколько угодно, и их M8-имена задаются самим файлом в C6.
-static constexpr u8 KIND_COUNT = 7;
+static constexpr u8 KIND_COUNT = 8;
 static constexpr char SYSTEM_DIRECTORY_NAME[] = "System";
 
 enum class Compression : u8 {

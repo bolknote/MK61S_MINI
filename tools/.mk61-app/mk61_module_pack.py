@@ -35,6 +35,7 @@ KINDS = {
     "markdown-viewer": 6,
     "setup": 7,
     "usbdisk": 8,
+    "explorer": 9,
 }
 
 

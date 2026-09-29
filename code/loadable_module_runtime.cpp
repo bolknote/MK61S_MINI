@@ -37,7 +37,8 @@ static_assert((u8) Kind::FOCAL == MK61_APP_KIND_FOCAL &&
               (u8) Kind::CHIP8 == MK61_APP_KIND_CHIP8 &&
               (u8) Kind::MARKDOWN_VIEWER == MK61_APP_KIND_MARKDOWN_VIEWER &&
               (u8) Kind::SETUP == MK61_APP_KIND_SETUP &&
-              (u8) Kind::USBDISK == MK61_APP_KIND_USBDISK,
+              (u8) Kind::USBDISK == MK61_APP_KIND_USBDISK &&
+              (u8) Kind::EXPLORER == MK61_APP_KIND_EXPLORER,
               "public APP kinds must match the container ABI");
 
 static bool resident_matches(const Header& header) {
@@ -252,6 +253,7 @@ bool enabled(Kind kind) {
   switch(kind) {
     case Kind::SETUP: return MK61_SETUP_IS_LOADABLE != 0;
     case Kind::USBDISK: return MK61_USBDISK_IS_LOADABLE != 0;
+    case Kind::EXPLORER: return MK61_EXPLORER_IS_LOADABLE != 0;
     case Kind::FOCAL: return MK61_FOCAL_IS_LOADABLE != 0;
     case Kind::TINYBASIC: return MK61_TINYBASIC_IS_LOADABLE != 0;
     case Kind::WBMP_VIEWER: return MK61_WBMP_VIEWER_IS_LOADABLE != 0;

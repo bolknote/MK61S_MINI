@@ -6,6 +6,9 @@
 
 bool development_select(void);
 bool program_store_explorer_select(void);
+// Resident policy queried by EXPLORER.APP before it builds the contextual
+// action menu. The APP returns a request; only resident code executes it.
+u32 program_store_explorer_actions(const program_store::Entry& entry);
 
 enum class ProgramStoreFileDialogResult : u8 {
   CANCELLED = 0,

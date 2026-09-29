@@ -71,10 +71,18 @@ clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
 
 clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
   -DMK61_FOCAL_AS_APP=1 -DMK61_TINYBASIC_AS_APP=0 \
-  -DMK61_MARKDOWN_VIEWER_AS_APP=1 \
+  -DMK61_MARKDOWN_VIEWER_AS_APP=1 -DMK61_SETUP_AS_APP=1 \
+  -DMK61_EXPLORER_AS_APP=1 \
   -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
   -o "$out-f411-mixed-component-placement"
 "$out-f411-mixed-component-placement"
+
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_ENABLE_SETUP=0 -DMK61_SETUP_AS_APP=1 \
+  -DMK61_EXPLORER_AS_APP=1 \
+  -DMK61_CONFIG_EXPECT_V3 -DMK61_CONFIG_EXPECT_LOADABLE_MODULES \
+  -o "$out-f411-no-setup-external-explorer"
+"$out-f411-no-setup-external-explorer"
 
 clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
   -DMK61_EXTERNALIZE_USBDISK=1 \
@@ -242,7 +250,7 @@ if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
   exit 1
 fi
 
-for placement in FOCAL TINYBASIC WBMP_VIEWER MARKDOWN_VIEWER CHIP8; do
+for placement in FOCAL TINYBASIC WBMP_VIEWER MARKDOWN_VIEWER CHIP8 SETUP EXPLORER; do
   if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
       "-DMK61_${placement}_AS_APP=2" \
       -o "$out-invalid-$placement-placement" >/dev/null 2>&1; then
@@ -250,6 +258,13 @@ for placement in FOCAL TINYBASIC WBMP_VIEWER MARKDOWN_VIEWER CHIP8; do
     exit 1
   fi
 done
+
+if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
+    -DMK61_ENABLE_SETUP=2 -o "$out-invalid-setup" \
+    >/dev/null 2>&1; then
+  echo "invalid SETUP flag unexpectedly compiled" >&2
+  exit 1
+fi
 
 if clang++ "${common[@]}" -DREVISION_V3 -DMK61_CONFIG_EXPECT_V3 \
     -DMK61_ENABLE_USER_APPS=1 -o "$out-obsolete-user-apps" \

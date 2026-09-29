@@ -15,6 +15,9 @@ param(
     [ValidateSet('0', '1')][string]$Wbmp = '1',
     [ValidateSet('0', '1')][string]$Markdown = '1',
     [ValidateSet('0', '1')][string]$Chip8 = '1',
+    [ValidateSet('0', '1')][string]$Setup = '1',
+    [ValidateSet('0', '1')][string]$UsbDisk = '1',
+    [ValidateSet('0', '1')][string]$Explorer = '0',
     [ValidateSet('0', '1')][string]$LocalFloatMath = '0',
     [switch]$KeepBuild
 )
@@ -79,6 +82,9 @@ try {
         '--wbmp', $Wbmp,
         '--markdown', $Markdown,
         '--chip8', $Chip8,
+        '--setup', $Setup,
+        '--usbdisk', $UsbDisk,
+        '--explorer', $Explorer,
         '--local-float-math', $LocalFloatMath)
     if (-not [string]::IsNullOrWhiteSpace($ModulePacker)) {
         $arguments += @('--packer', [IO.Path]::GetFullPath($ModulePacker))

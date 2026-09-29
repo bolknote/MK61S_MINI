@@ -21,6 +21,9 @@ tinybasic_as_app=${MK61_TINYBASIC_AS_APP:-1}
 wbmp_as_app=${MK61_WBMP_VIEWER_AS_APP:-1}
 markdown_as_app=${MK61_MARKDOWN_VIEWER_AS_APP:-1}
 chip8_as_app=${MK61_CHIP8_AS_APP:-1}
+enable_setup=${MK61_ENABLE_SETUP:-1}
+setup_as_app=${MK61_SETUP_AS_APP:-1}
+explorer_as_app=${MK61_EXPLORER_AS_APP:-1}
 enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
@@ -57,12 +60,13 @@ Profiles:
 
 Feature environment variables (0 or 1):
   MK61_ENABLE_FOCAL, MK61_ENABLE_TINYBASIC, MK61_ENABLE_WBMP_VIEWER,
-  MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8,
+  MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8, MK61_ENABLE_SETUP,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT
 Placement variables (0 = resident, 1 = APP):
   MK61_FOCAL_AS_APP, MK61_TINYBASIC_AS_APP, MK61_WBMP_VIEWER_AS_APP,
-  MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP
+  MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP, MK61_SETUP_AS_APP,
+  MK61_EXPLORER_AS_APP
 Math backend: MK61_MATH_BACKEND=0 (LIBM) or 1 (CORE).
 APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCAL/BASIC.
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
@@ -411,7 +415,8 @@ fi
 for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$enable_markdown" "$enable_chip8" \
              "$focal_as_app" "$tinybasic_as_app" "$wbmp_as_app" \
-             "$markdown_as_app" "$chip8_as_app" \
+             "$markdown_as_app" "$chip8_as_app" "$enable_setup" \
+             "$setup_as_app" "$explorer_as_app" \
              "$enable_usb_screen" "$enable_extended_font" \
              "$enable_user_explorer" "$app_local_float"; do
   boolean_valid "$value" || {
@@ -474,6 +479,9 @@ compile_flags="$compile_flags -DMK61_TINYBASIC_AS_APP=$tinybasic_as_app"
 compile_flags="$compile_flags -DMK61_WBMP_VIEWER_AS_APP=$wbmp_as_app"
 compile_flags="$compile_flags -DMK61_MARKDOWN_VIEWER_AS_APP=$markdown_as_app"
 compile_flags="$compile_flags -DMK61_CHIP8_AS_APP=$chip8_as_app"
+compile_flags="$compile_flags -DMK61_ENABLE_SETUP=$enable_setup"
+compile_flags="$compile_flags -DMK61_SETUP_AS_APP=$setup_as_app"
+compile_flags="$compile_flags -DMK61_EXPLORER_AS_APP=$explorer_as_app"
 compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
 compile_flags="$compile_flags -DMK61_EXTERNALIZE_USBDISK=1"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
@@ -575,6 +583,9 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --wbmp "$((enable_wbmp * wbmp_as_app))" \
   --markdown "$((enable_markdown * markdown_as_app))" \
   --chip8 "$((enable_chip8 * chip8_as_app))" \
+  --setup "$((enable_setup * setup_as_app))" \
+  --usbdisk 1 \
+  --explorer "$explorer_as_app" \
   --local-float-math "$app_local_float"
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
@@ -589,7 +600,7 @@ rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/BASIC.APP" "$bundle_dir/System/WBMP.APP" \
       "$bundle_dir/System/MARKDOWN.APP" \
       "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
-      "$bundle_dir/System/USBDISK.APP" \
+      "$bundle_dir/System/USBDISK.APP" "$bundle_dir/System/EXPLORER.APP" \
       "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
       "$bundle_dir/$firmware_name" "$bundle_dir/build.apps"
 if [ -d "$bundle_dir/System" ]; then

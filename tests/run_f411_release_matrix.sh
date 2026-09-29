@@ -117,8 +117,8 @@ define_value() {
 package_system_apps() {
   local profile="$1" board_flags="$2" artifact_name="$3" build_path="$4"
   local expect_ws0010_graphics="$5"
-  local focal basic markdown wbmp chip8 usb external_usbdisk graphics ui_fonts
-  local focal_app basic_app wbmp_app markdown_app chip8_app
+  local focal basic markdown wbmp chip8 setup usb external_usbdisk graphics ui_fonts
+  local focal_app basic_app wbmp_app markdown_app chip8_app setup_app explorer_app
   local bundle_name bundle
   focal="$(define_value "$board_flags" MK61_ENABLE_FOCAL 1)"
   basic="$(define_value "$board_flags" MK61_ENABLE_TINYBASIC 1)"
@@ -129,6 +129,9 @@ package_system_apps() {
   wbmp_app="$(define_value "$board_flags" MK61_WBMP_VIEWER_AS_APP 0)"
   markdown_app="$(define_value "$board_flags" MK61_MARKDOWN_VIEWER_AS_APP 0)"
   chip8_app="$(define_value "$board_flags" MK61_CHIP8_AS_APP 0)"
+  setup="$(define_value "$board_flags" MK61_ENABLE_SETUP 1)"
+  setup_app="$(define_value "$board_flags" MK61_SETUP_AS_APP 0)"
+  explorer_app="$(define_value "$board_flags" MK61_EXPLORER_AS_APP 0)"
   usb="$(define_value "$board_flags" MK61_ENABLE_USB_SCREEN 0)"
   external_usbdisk="$(define_value "$board_flags" \
     MK61_EXTERNALIZE_USBDISK 0)"
@@ -150,8 +153,9 @@ package_system_apps() {
     --resident-elf "$build_path/mk61s-M.ino.elf" \
     --compile-commands "$build_path/compile_commands.json" \
     --output-dir "$bundle/System" \
-    --setup 0 \
+    --setup "$((setup * setup_app))" \
     --usbdisk "$external_usbdisk" \
+    --explorer "$explorer_app" \
     --graphics "$graphics" --ui-fonts "$ui_fonts" \
     --focal "$((focal * focal_app))" \
     --basic "$((basic * basic_app))" \
@@ -167,14 +171,16 @@ package_system_apps() {
   [[ "$wbmp" == 0 || "$wbmp_app" == 0 || "$markdown" == 1 ]] || expected+=(WBMP.APP)
   [[ "$markdown" == 0 || "$markdown_app" == 0 ]] || expected+=(MARKDOWN.APP)
   [[ "$chip8" == 0 || "$chip8_app" == 0 ]] || expected+=(CHIP8.APP)
+  [[ "$setup" == 0 || "$setup_app" == 0 ]] || expected+=(SETUP.APP)
   [[ "$external_usbdisk" == 0 ]] || expected+=(USBDISK.APP)
+  [[ "$explorer_app" == 0 ]] || expected+=(EXPLORER.APP)
   local file wanted expected_file
   for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do
     [[ -s "$bundle/System/$file" ]] ||
       fail "missing product artifact: $bundle_name/System/$file"
   done
   for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
-      USBDISK.APP; do
+      USBDISK.APP EXPLORER.APP; do
     wanted=0
     for expected_file in "${expected[@]}"; do
       [[ "$file" != "$expected_file" ]] || wanted=1

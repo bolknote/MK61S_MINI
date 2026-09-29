@@ -16,6 +16,8 @@ param(
     [string]$Wbmp,
     [string]$Markdown,
     [string]$Chip8,
+    [string]$Setup,
+    [string]$Explorer,
     [string]$LocalFloatMath,
     [string]$CompileFlags
 )
@@ -172,7 +174,8 @@ function Build-Mk61Bundle {
     }
     if ($Focal -notmatch '^[01]$' -or $Basic -notmatch '^[01]$' -or
         $Wbmp -notmatch '^[01]$' -or $Markdown -notmatch '^[01]$' -or
-        $Chip8 -notmatch '^[01]$' -or $LocalFloatMath -notmatch '^[01]$') {
+        $Chip8 -notmatch '^[01]$' -or $Setup -notmatch '^[01]$' -or
+        $Explorer -notmatch '^[01]$' -or $LocalFloatMath -notmatch '^[01]$') {
         Stop-Mk61Build 'System APP selections must be 0 or 1'
     }
     if ($Markdown -eq '1') { $Wbmp = '0' }
@@ -239,6 +242,7 @@ function Build-Mk61Bundle {
         '--graphics', $graphics, '--ui-fonts', $uiFonts,
         '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
         '--markdown', $Markdown, '--chip8', $Chip8,
+        '--setup', $Setup, '--usbdisk', '1', '--explorer', $Explorer,
         '--local-float-math', $LocalFloatMath)
     Test-RequiredFile (Join-Path (Join-Path $script:Stage 'System') `
         'USBDISK.APP') 'mandatory USBDISK.APP; reinstall the MK61s board'
@@ -250,7 +254,7 @@ function Build-Mk61Bundle {
         -Destination (Join-Path $output "$Bundle.bin") -Force
     foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP',
             'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP',
-            'HELP0.TXT', 'HELP1.TXT')) {
+            'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT')) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical
         if ([IO.File]::Exists($source)) {

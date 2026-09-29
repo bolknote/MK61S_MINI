@@ -26,6 +26,7 @@
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE 1
 #define MK61_CHIP8_IS_LOADABLE 1
 #define MK61_USBDISK_IS_LOADABLE 1
+#define MK61_EXPLORER_IS_LOADABLE 1
 #define MK61_MARKDOWN_VIEWER_IS_BUILTIN 0
 #define MK61_CHIP8_IS_BUILTIN 0
 #define MK61_WBMP_DECODER_IS_BUILTIN 0
@@ -163,7 +164,14 @@ class MK61Display {
   void beginUpdate();
   void endUpdate();
   void endShiftedViewport();
+  void beginUiText();
   void endUiText();
+  bool uiTextActive() const;
+  void printUiLine(u8 row, const char* text, char marker = 0,
+                   u16 trailing = 0);
+  u16 measureUiText(const char* text) const;
+  u16 uiTextWidth() const;
+  void blinkOn();
   u8 printWrappedText(const char* text, u16 length, u8 first_row,
                       u8 max_rows, bool tail = false,
                       bool empty_line = false);
@@ -257,6 +265,7 @@ bool entry(ProgramType type, int index, Entry& out);
 bool entry_by_id(u16 id, Entry& out);
 int child_count(u16 parent);
 bool child(u16 parent, int index, Entry& out);
+u32 explorer_actions(u16 id);
 bool read_id(u16 id, u8* data, u16 capacity, u16* length);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 size, u16* length);
 bool exists(ProgramType type, const char* name);

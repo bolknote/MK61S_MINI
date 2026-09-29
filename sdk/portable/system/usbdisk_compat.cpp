@@ -108,17 +108,6 @@ static bool refresh_stage_cache() {
   return true;
 }
 
-static void import_file(const mk61_system_file& source,
-                        program_store::Entry& output) {
-  output = {};
-  output.type = (program_store::ProgramType) source.type;
-  output.kind = (program_store::NodeKind) source.kind;
-  output.id = (u16) source.id;
-  output.parent_id = (u16) source.parent;
-  output.data_len = (u16) source.size;
-  memcpy(output.name, source.name, sizeof(output.name));
-}
-
 static void import_geometry(const mk61_system_usbdisk_geometry& source,
                             storage_geometry::Geometry& output) {
   output = {};
@@ -260,19 +249,6 @@ const char* file_extension(ProgramType type) {
     case ProgramType::MK61_BINARY: return "bin";
   }
   return "bin";
-}
-
-int child_count(u16 parent) {
-  return (int) call(MK61_SYS_USBDISK, MK61_USBDISK_CHILD_COUNT, parent);
-}
-
-bool child(u16 parent, int index, Entry& output) {
-  if(index < 0) return false;
-  mk61_system_file wire = {};
-  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_CHILD, parent,
-           (u32) index, &wire)) return false;
-  import_file(wire, output);
-  return true;
 }
 
 bool create_directory(u16 parent, const char* name, u16 preferred, u16* id) {

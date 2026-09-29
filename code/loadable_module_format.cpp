@@ -173,7 +173,8 @@ bool valid_kind(Kind kind) {
   return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
          kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
          kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER ||
-         kind == Kind::SETUP || kind == Kind::USBDISK;
+         kind == Kind::SETUP || kind == Kind::USBDISK ||
+         kind == Kind::EXPLORER;
 }
 
 bool valid_compression(Compression compression) {
@@ -190,6 +191,7 @@ Kind kind_at(u8 index) {
     case 4: return Kind::MARKDOWN_VIEWER;
     case 5: return Kind::SETUP;
     case 6: return Kind::USBDISK;
+    case 7: return Kind::EXPLORER;
   }
   return (Kind) 0;
 }
@@ -207,6 +209,7 @@ const char* file_name(Kind kind) {
     case Kind::MARKDOWN_VIEWER: return "MARKDOWN.APP";
     case Kind::SETUP: return "SETUP.APP";
     case Kind::USBDISK: return "USBDISK.APP";
+    case Kind::EXPLORER: return "EXPLORER.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;

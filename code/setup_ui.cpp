@@ -1,6 +1,6 @@
 #include "config.h"
 #include "setup_ui.hpp"
-#if !MK61_SETUP_IS_LOADABLE || defined(MK61_BUILD_SETUP_MODULE)
+#if MK61_SETUP_IS_BUILTIN || defined(MK61_BUILD_SETUP_MODULE)
 #include "menu.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
@@ -929,7 +929,7 @@ void preview(const char* name, const u8* data, u16 len) {
 }
 
 
-#if !MK61_SETUP_IS_LOADABLE
+#if MK61_SETUP_IS_BUILTIN
 i32 compile_font(u16 id, u8 role, u8 expected_height,
                  u32 ui_key, u8 flags) {
 #if MK61_UI_FONT_CLIENT

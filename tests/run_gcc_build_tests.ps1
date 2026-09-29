@@ -92,6 +92,8 @@ Assert-True ($helpText -match '-Markdown 0\|1\s+default 1') `
     'help does not expose the Markdown System APP'
 Assert-True ($helpText -match '-FocalAsApp 0\|1.+-BasicAsApp 0\|1') `
     'help does not expose independent component placement'
+Assert-True ($helpText -match '-SetupAsApp 0\|1, -ExplorerAsApp 0\|1') `
+    'help does not expose Settings and Explorer placement'
 Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-ProductBuild 0\|1') `
@@ -189,7 +191,8 @@ Assert-True ($cmakeText -match 'MK61_ENABLE_MARKDOWN_VIEWER') `
 foreach ($setting in @(
     'MK61_FOCAL_AS_APP', 'MK61_TINYBASIC_AS_APP',
     'MK61_WBMP_VIEWER_AS_APP', 'MK61_MARKDOWN_VIEWER_AS_APP',
-    'MK61_CHIP8_AS_APP')) {
+    'MK61_CHIP8_AS_APP', 'MK61_SETUP_AS_APP',
+    'MK61_EXPLORER_AS_APP')) {
     Assert-True ($cmakeText -match [regex]::Escape($setting)) `
         "CMake build does not forward $setting"
     Assert-True ($backendText -match [regex]::Escape($setting)) `
@@ -263,6 +266,9 @@ foreach ($setting in @(
     'MK61_WBMP_VIEWER_AS_APP=1',
     'MK61_MARKDOWN_VIEWER_AS_APP=1',
     'MK61_CHIP8_AS_APP=1',
+    'MK61_ENABLE_SETUP=1',
+    'MK61_SETUP_AS_APP=1',
+    'MK61_EXPLORER_AS_APP=1',
     'MK61_ENABLE_USB_SCREEN=1',
     'MK61_EXTERNALIZE_USBDISK=1',
     'MK61_ENABLE_LOADABLE_MODULES=1',
@@ -274,6 +280,7 @@ foreach ($setting in @(
     'System/CHIP8.APP',
     'System/SETUP.APP',
     'System/USBDISK.APP',
+    'System/EXPLORER.APP',
     'System/HELP0.TXT',
     'System/HELP1.TXT'
 )) {
@@ -287,7 +294,8 @@ Assert-True ($f401ReleaseMatrixText -match '-ReleaseCase "\$case_id"') `
     'F401 GCC builds are not bound to their selected release case'
 Assert-True ($f401ReleaseMatrixText -match
     '(?s)-FocalAsApp 1.+?-BasicAsApp 1.+?-WbmpAsApp 1.+?' +
-    '-MarkdownAsApp 1.+?-Chip8AsApp 1') `
+    '-MarkdownAsApp 1.+?-Chip8AsApp 1.+?-SetupAsApp 1.+?' +
+    '-ExplorerAsApp 1') `
     'F401 release matrix does not pin APP placement explicitly'
 Assert-True ($releaseWorkflowText -match
     '(?s)run: tests/run_f401_release_matrix\.sh.+?' +

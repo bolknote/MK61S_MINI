@@ -1,6 +1,6 @@
 # MK61s System APP
 
-FOCAL, BASIC, WBMP, Markdown, CHIP-8, SETUP и USBDISK собираются в те же
+FOCAL, BASIC, WBMP, Markdown, CHIP-8, SETUP, USBDISK и EXPLORER собираются в те же
 перемещаемые контейнеры ABI 6, что и обычные APPLICATION. У них общий
 SDK startup, публичные
 таблицы API и сервисов, проверка контейнера, релокации, динамическое размещение,
@@ -15,7 +15,7 @@ python3 tools/build_portable_app.py --system focal \
 ```
 
 Значения `--system`: `focal`, `tinybasic`, `wbmp-viewer`, `markdown-viewer`,
-`chip8`, `setup`, `usbdisk`. Для компактного Markdown на символьном экране добавьте
+`chip8`, `setup`, `usbdisk`, `explorer`. Для компактного Markdown на символьном экране добавьте
 `--text-only`. Графический Markdown также открывает WBMP; в таком комплекте
 отдельный `WBMP.APP` не нужен. CHIP-8 требует графического экрана.
 
@@ -29,11 +29,13 @@ python3 tools/build_system_app_bundle.py \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
 
-По умолчанию он собирает `SETUP.APP` и `USBDISK.APP`. Для F411 сборщик
-прошивки всегда передаёт `--setup 0`: SETUP встроен в resident. В штатном
-режиме он также передаёт `--usbdisk 0`; явный ключ
-`MK61_EXTERNALIZE_USBDISK=1` меняет это значение на `--usbdisk 1` и добавляет
-`USBDISK.APP` в F411-комплект.
+Какие роли собирать, всегда решает конфигурация той же прошивки. Для SETUP
+доступны три состояния: выключен (`MK61_ENABLE_SETUP=0`), встроен и APP
+(`MK61_SETUP_AS_APP=1`). Проводник выбирается между встроенным вариантом и
+`EXPLORER.APP` ключом `MK61_EXPLORER_AS_APP`. На F411 обе роли по умолчанию
+встроены, на F401 — внешние. USB-диск управляется отдельным ключом
+`MK61_EXTERNALIZE_USBDISK`: значение 1 добавляет `USBDISK.APP`, значение 0
+оставляет реализацию в resident.
 Сборщик извлекает из служебной INFO-секции resident согласованные
 `HELP0.TXT` и `HELP1.TXT`, добавляет включённые роли и
 атомарно заменяет только принадлежащие ему канонические файлы. Оболочка
@@ -41,8 +43,9 @@ python3 tools/build_system_app_bundle.py \
 `mk61-firmware` не имеют собственных реализаций упаковки System APP.
 
 Имена остаются стабильными: `/System/FOCAL.APP`, `BASIC.APP`, `WBMP.APP`,
-`MARKDOWN.APP`, `CHIP8.APP`, а на F401 также `USBDISK.APP` и `SETUP.APP`.
-Внешний режим F411 добавляет к этому списку `USBDISK.APP`.
+`MARKDOWN.APP`, `CHIP8.APP`, `SETUP.APP`, `USBDISK.APP` и `EXPLORER.APP`.
+Файл присутствует в комплекте только тогда, когда соответствующая роль
+включена и выбрана как APP.
 После прошивки resident скопируйте
 весь каталог `/System` из того же комплекта. ABI 2/3/4/5 намеренно не
 исполняются; старые APP нужно один раз пересобрать.

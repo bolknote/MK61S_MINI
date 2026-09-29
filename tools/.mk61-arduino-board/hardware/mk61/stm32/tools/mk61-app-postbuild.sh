@@ -70,7 +70,8 @@ seal_resident() {
 
 build_bundle() {
   local compiler= build_path_arg= sketch= project= bundle=
-  local focal= basic= wbmp= markdown= chip8= local_float_math= compile_flags=
+  local focal= basic= wbmp= markdown= chip8= setup= explorer=
+  local local_float_math= compile_flags=
   while [ "$#" -gt 0 ]; do
     case "$1" in
       --compiler) require_value "$@"; compiler=$2; shift 2 ;;
@@ -83,6 +84,8 @@ build_bundle() {
       --wbmp) require_value "$@"; wbmp=$2; shift 2 ;;
       --markdown) require_value "$@"; markdown=$2; shift 2 ;;
       --chip8) require_value "$@"; chip8=$2; shift 2 ;;
+      --setup) require_value "$@"; setup=$2; shift 2 ;;
+      --explorer) require_value "$@"; explorer=$2; shift 2 ;;
       --local-float-math) require_value "$@"; local_float_math=$2; shift 2 ;;
       --compile-flags) require_value "$@"; compile_flags=$2; shift 2 ;;
       *) die "unknown build option: $1" ;;
@@ -93,8 +96,8 @@ build_bundle() {
   [ -d "$build_path_arg" ] || die 'Arduino build path was not found'
   [ -n "$project" ] && [ -n "$bundle" ] ||
     die 'Arduino project or bundle name is missing'
-  case "$focal:$basic:$wbmp:$markdown:$chip8:$local_float_math" in
-    [01]:[01]:[01]:[01]:[01]:[01]) ;;
+  case "$focal:$basic:$wbmp:$markdown:$chip8:$setup:$explorer:$local_float_math" in
+    [01]:[01]:[01]:[01]:[01]:[01]:[01]:[01]) ;;
     *) die 'System APP selections must be 0 or 1' ;;
   esac
   if [ "$markdown" -eq 1 ]; then wbmp=0; fi
@@ -136,6 +139,7 @@ build_bundle() {
     --ui-fonts "$ui_fonts" \
     --focal "$focal" --basic "$basic" --wbmp "$wbmp" \
     --markdown "$markdown" --chip8 "$chip8" \
+    --setup "$setup" --usbdisk 1 --explorer "$explorer" \
     --local-float-math "$local_float_math"
   [ -s "$stage/System/USBDISK.APP" ] ||
     die 'mandatory USBDISK.APP is missing; reinstall the MK61s board'
@@ -146,7 +150,7 @@ build_bundle() {
   mkdir -p "$output/System"
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
   for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
-                   SETUP.APP USBDISK.APP HELP0.TXT HELP1.TXT; do
+                   SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else

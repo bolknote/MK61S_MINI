@@ -59,6 +59,9 @@ build_group() {
       -WbmpAsApp 1 \
       -MarkdownAsApp 1 \
       -Chip8AsApp 1 \
+      -Setup 1 \
+      -SetupAsApp 1 \
+      -ExplorerAsApp 1 \
       -UsbScreen "$usb_screen" \
       -Ws0010Graphics "$ws0010_graphics" \
       -ExtendedFontSettings "$extended_font" \
@@ -97,7 +100,7 @@ build_group() {
         "$resident"
       for file in build.flags build.apps System/FOCAL.APP System/BASIC.APP \
           System/MARKDOWN.APP System/SETUP.APP System/USBDISK.APP \
-          System/HELP0.TXT System/HELP1.TXT; do
+          System/EXPLORER.APP System/HELP0.TXT System/HELP1.TXT; do
         [[ -s "$bundle_root/$file" ]] ||
           fail "missing product artifact: $artifact/$file"
       done
@@ -106,7 +109,7 @@ build_group() {
           fail "disabled APP was packaged: $artifact/$file"
       done
       for file in System/FOCAL.APP System/BASIC.APP System/MARKDOWN.APP \
-          System/SETUP.APP System/USBDISK.APP; do
+          System/SETUP.APP System/USBDISK.APP System/EXPLORER.APP; do
         local codec
         codec="$(od -An -tu1 -j15 -N1 "$bundle_root/$file" | tr -d '[:space:]')"
         [[ "$codec" == 1 ]] || fail "System APP is not ZX0: $artifact/$file"
@@ -133,6 +136,9 @@ PY
           '-DMK61_WBMP_VIEWER_AS_APP=1' \
           '-DMK61_MARKDOWN_VIEWER_AS_APP=1' \
           '-DMK61_CHIP8_AS_APP=1' \
+          '-DMK61_ENABLE_SETUP=1' \
+          '-DMK61_SETUP_AS_APP=1' \
+          '-DMK61_EXPLORER_AS_APP=1' \
           "-DMK61_MATH_BACKEND=$math_backend" \
           "-DMK61_ENABLE_LTO=$lto"; do
         grep -Fq -- "$flag" "$bundle_root/build.flags" ||

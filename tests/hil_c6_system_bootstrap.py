@@ -33,7 +33,10 @@ CANONICAL_FILES = (
     "BASIC.APP",
     "MARKDOWN.APP",
 )
-OPTIONAL_FILES = ("SETUP.APP",)  # resident on F411, external on F401
+OPTIONAL_FILES = (
+    "SETUP.APP",
+    "EXPLORER.APP",
+)  # normally resident on F411 and external on F401
 CHUNK_SIZE = 48
 
 

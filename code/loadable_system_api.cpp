@@ -41,7 +41,7 @@ static_assert(sizeof(shared_scratch::Lease) <= MK61_SYSTEM_LEASE_BYTES,
               "increase the versioned opaque lease storage");
 static_assert(alignof(mk61_system_lease) >= alignof(language_workspace::Lease),
               "opaque lease alignment");
-static u32 workspace_image_crc[(u8) Kind::USBDISK + 1U];
+static u32 workspace_image_crc[(u8) Kind::EXPLORER + 1U];
 #define MK61_RUNTIME(name) extern "C" void service_##name() asm(#name);
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
@@ -61,6 +61,7 @@ static language_workspace::Owner owner(u32 kind) {
     case Kind::APPLICATION: return language_workspace::Owner::APPLICATION;
     case Kind::SETUP: return language_workspace::Owner::SETUP;
     case Kind::USBDISK: return language_workspace::Owner::USB_DISK;
+    case Kind::EXPLORER: return language_workspace::Owner::NONE;
     default: return language_workspace::Owner::NONE;
   }
 }
@@ -108,6 +109,22 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   switch(operation) {
     case MK61_SYS_DISPLAY_CLEAR: lcd.clear(); break;
     case MK61_SYS_DISPLAY_END_UI_TEXT: lcd.endUiText(); break;
+    case MK61_SYS_DISPLAY_BEGIN_UI_TEXT: lcd.beginUiText(); break;
+    case MK61_SYS_DISPLAY_UI_TEXT_ACTIVE: return lcd.uiTextActive();
+    case MK61_SYS_DISPLAY_UI_LINE: {
+      const char* text = (const char*) payload;
+      usize length = 0;
+      if(b >= lcd.rows() || !bounded_m8(text, 0x100U, length)) return 0;
+      lcd.printUiLine((u8) b, text, (char) (u8) c, (u16) (c >> 8));
+      break;
+    }
+    case MK61_SYS_DISPLAY_MEASURE_UI_TEXT: {
+      const char* text = (const char*) payload;
+      usize length = 0;
+      return bounded_m8(text, 0x100U, length) ? lcd.measureUiText(text) : 0;
+    }
+    case MK61_SYS_DISPLAY_UI_TEXT_WIDTH: return lcd.uiTextWidth();
+    case MK61_SYS_DISPLAY_BLINK_ON: lcd.blinkOn(); break;
     case MK61_SYS_DISPLAY_CURSOR: lcd.setCursor((u8) b, (u8) c); break;
     case MK61_SYS_DISPLAY_WRITE:
       return b <= 0xFFU && display_write_m8_byte(lcd, (u8) b);
@@ -182,10 +199,16 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
   switch(operation) {
     case MK61_SERVICE_CAPABILITIES:
       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES |
-          MK61_SERVICE_CAP_MEMORY | MK61_SERVICE_CAP_SETUP |
+          MK61_SERVICE_CAP_MEMORY |
+#if MK61_ENABLE_SETUP
+          MK61_SERVICE_CAP_SETUP |
+#endif
           MK61_SERVICE_CAP_FORMAT | MK61_SERVICE_CAP_DIALOGS |
           MK61_SERVICE_CAP_EDITOR | MK61_SERVICE_CAP_REGISTERS |
           MK61_SERVICE_CAP_MATH | MK61_SERVICE_CAP_RUNTIME
+#if MK61_EXPLORER_IS_LOADABLE
+          | MK61_SERVICE_CAP_EXPLORER
+#endif
 #if MK61_USBDISK_IS_LOADABLE
           | MK61_SERVICE_CAP_USBDISK
 #endif
@@ -228,7 +251,9 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           return (u32) MK61_TEXT_FONT_INVALID;
       }
 #endif
+#if MK61_ENABLE_SETUP
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
+#endif
 #if MK61_USBDISK_IS_LOADABLE
     case MK61_SYS_USBDISK: return usbdisk_backend::call(a, b, c, 0, payload);
 #endif
@@ -273,6 +298,27 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       if(ok) export_file(entry, *(mk61_system_file*) payload);
       return ok;
     }
+    // Both EXPLORER.APP and USBDISK.APP traverse the resident catalog through
+    // this common API.  Keep it when either consumer is external.
+#if MK61_EXPLORER_IS_LOADABLE || MK61_USBDISK_IS_LOADABLE
+    case MK61_SYS_FILE_CHILD_COUNT:
+      return a <= 0xFFFFU ? (u32) program_store::child_count((u16) a) : 0;
+    case MK61_SYS_FILE_CHILD: {
+      if(!payload || a > 0xFFFFU || b > 0x7FFFFFFFU) return 0;
+      program_store::Entry entry = {};
+      const bool ok = program_store::child((u16) a, (int) b, entry);
+      if(ok) export_file(entry, *(mk61_system_file*) payload);
+      return ok;
+    }
+#endif
+#if MK61_EXPLORER_IS_LOADABLE
+    case MK61_SYS_FILE_ACTIONS: {
+      if(a > 0xFFFFU) return 0;
+      program_store::Entry entry = {};
+      return program_store::entry_by_id((u16) a, entry)
+          ? program_store_explorer_actions(entry) : 0;
+    }
+#endif
     case MK61_SYS_FILE_RESOLVE: {
       if(!payload || !c || a > 0xFFFFU) return (u32) storage_path::Status::NOT_FOUND;
       program_store::Entry entry = {};
@@ -297,7 +343,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
         usb_mass_storage::note_startup_stage(202U);
         if(!lease->ok()) { lease->~Lease(); return 0; }
         out.data = (u8*) lease->data(); out.size = lease->size(); out.fresh = lease->fresh();
-        if(b > 0 && b <= (u32) Kind::USBDISK) {
+        if(b > 0 && b <= (u32) Kind::EXPLORER) {
           usb_mass_storage::note_startup_stage(203U);
           u32& stamp = workspace_image_crc[b];
           if(stamp != out.image_crc) { out.fresh = 1; stamp = out.image_crc; }

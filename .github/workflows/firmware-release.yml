@@ -65,11 +65,14 @@ jobs:
             'MK61_ENABLE_WBMP_VIEWER=0',
             'MK61_ENABLE_MARKDOWN_VIEWER=1',
             'MK61_ENABLE_CHIP8=1',
+            'MK61_ENABLE_SETUP=1',
             'MK61_FOCAL_AS_APP=1',
             'MK61_TINYBASIC_AS_APP=1',
             'MK61_WBMP_VIEWER_AS_APP=1',
             'MK61_MARKDOWN_VIEWER_AS_APP=1',
             'MK61_CHIP8_AS_APP=1',
+            'MK61_SETUP_AS_APP=1',
+            'MK61_EXPLORER_AS_APP=1',
             'MK61_ENABLE_USB_SCREEN=1',
             'MK61_EXTERNALIZE_USBDISK=1',
             'MK61_ENABLE_LOADABLE_MODULES=1',
@@ -134,6 +137,7 @@ jobs:
             'System/CHIP8.APP',
             'System/SETUP.APP',
             'System/USBDISK.APP',
+            'System/EXPLORER.APP',
             'System/HELP0.TXT',
             'System/HELP1.TXT'
           ) | ForEach-Object {
@@ -164,7 +168,9 @@ jobs:
             '-DMK61_TINYBASIC_AS_APP=1',
             '-DMK61_WBMP_VIEWER_AS_APP=1',
             '-DMK61_MARKDOWN_VIEWER_AS_APP=1',
-            '-DMK61_CHIP8_AS_APP=1'
+            '-DMK61_CHIP8_AS_APP=1',
+            '-DMK61_SETUP_AS_APP=1',
+            '-DMK61_EXPLORER_AS_APP=1'
           )) {
             if (-not $flags.Contains($required)) {
               throw "Missing F401 build flag: $required"
@@ -268,7 +274,7 @@ jobs:
           $ideConfig = Join-Path `
             (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
           $properties = (& arduino-cli --config-file $ideConfig compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path (Join-Path $env:RUNNER_TEMP 'mk61-upload-properties') `
             --show-properties=expanded code | Out-String)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -327,7 +333,7 @@ jobs:
           }
           $buildPath = Join-Path $safeCache 'arduino-ide-f401-mini-v2'
           & arduino-cli --config-file $ideConfig compile `
-            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
+            --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_font_settings=disabled,mk61_explorer=enabled,mk61_math=core' `
             --build-path $buildPath code
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
@@ -360,6 +366,7 @@ jobs:
             'MARKDOWN.APP' = 6
             'SETUP.APP' = 7
             'USBDISK.APP' = 8
+            'EXPLORER.APP' = 9
           }
           foreach ($entry in $expectedKinds.GetEnumerator()) {
             $artifact = Join-Path $bundle "System/$($entry.Key)"
@@ -396,6 +403,9 @@ jobs:
             '-DMK61_WBMP_VIEWER_AS_APP=0',
             '-DMK61_MARKDOWN_VIEWER_AS_APP=1',
             '-DMK61_CHIP8_AS_APP=0',
+            '-DMK61_ENABLE_SETUP=1',
+            '-DMK61_SETUP_AS_APP=1',
+            '-DMK61_EXPLORER_AS_APP=1',
             '-DMK61_MATH_BACKEND=1',
             '-DMK61_APP_LOCAL_FLOAT_MATH=0',
             '-DMK61_PORTABLE_UI_FONTS=0'
