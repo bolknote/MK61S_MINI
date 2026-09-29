@@ -17,18 +17,19 @@ def add_ui(a):
     m.label('name_alphabet').raw(*(GLYPHS[ch] for ch in ALPHABET))
 
     m=a.module(3,'glyphs')
-    # Entry zero is the carrier; 1..6 also serve the commodity prefixes.
+    # Entry zero is the carrier; 1..5 identify drones. Commodity prefixes
+    # use 2F 6D directly, so there is no sixth numeric glyph here.
     # Start at local 00: 4*index is already a native indirect address.
     m.label('glyph_table')
-    for ch in 'H123456':
+    for ch in 'H12345':
         m.raw(*(int(d) for d in f'{GLYPHS[ch]:03d}'),0x52)
 
     m.label('glyph').n(4).op('*').st('E').raw(0x8E)
 
-    # Seven four-byte glyph records and the five-byte lookup leave local 33.
+    # Six four-byte glyph records and the five-byte lookup leave local 29.
     m.label('bar_patterns').raw(*(byte for value in (0,65536,69632,69888,69904,69905)
                                 for byte in [*(int(d) for d in f'{value:05d}'),0x52]))
-    m.label('bar_pattern').n(6).op('*').n(33).op('+').st('E').raw(0x8E)
+    m.label('bar_pattern').n(6).op('*').n(29).op('+').st('E').raw(0x8E)
 
     m=a.module(23,'range table')
     # A second table at local 00 avoids constructing an absolute pointer.

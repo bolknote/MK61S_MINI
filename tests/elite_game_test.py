@@ -515,12 +515,13 @@ def test_page_transaction_boundaries():
 
 def test_station_transaction_boundaries():
     # Services nest HOLD inside PILOT. Check every failure path closes both
-    # pages without charging or advancing time; equality may commit.
+    # pages without charging or advancing time; equality may commit. Exhaust
+    # the integer fuel/hull/ammunition domains to cover the delta-based clamp.
     commands=START.copy();cases=[]
     for cmd,bank,field,cap,increment,cost,values in (
-            (50,24,6,99,1,5,(0,97,98,99,100)),
-            (51,24,4,99,10,20,(0,88,89,90,98,99,100)),
-            (52,25,7,9,1,60,(0,7,8,9,10)),
+            (50,24,6,99,1,5,range(101)),
+            (51,24,4,99,10,20,range(101)),
+            (52,25,7,9,1,60,range(11)),
             (53,25,6,3010420,1000000,300,(1010420,2010420,3010419,3010420,3010421))):
         for value in values:
             for credits in (0,cost-1,cost,cost+1,99999999):
@@ -539,7 +540,7 @@ def test_station_transaction_boundaries():
         else:
             assert after['frame']==screen('ErrOr     СП'),(case,after)
         assert state(after)==expected,(case,before,after)
-    print('ELITE: 110 atomic service boundaries, money equality and field caps OK',flush=True)
+    print(f'ELITE: {len(cases)} atomic service boundaries, money equality and field caps OK',flush=True)
 
 def test_market_reserved_fields():
     # Former world/time copies are unused. Sentinel values must survive

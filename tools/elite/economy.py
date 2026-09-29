@@ -111,12 +111,11 @@ def add_economy(a):
     m.label('service_hold').open_page(25).call('service_check').close_page(25).jneg('service_done')
     m.label('service_commit').ld('C').st(0).add(3,1)
     m.label('service_done').close_page(24).jneg('bad_action').set('A',1).op('ret')
-    # K RCL B leaves the old field in X. After checking its cap, Lx adds
-    # back the subtracted bound; a full field needs no temporary store.
+    # Keep old-cap in X: min(0, old-cap+increment)+cap is the saturated
+    # result. No temporary result or restoration of old is needed.
     m.label('service_check').raw(0xDB).ld('E').op('-').jge('service_full')
-    m.raw(0x0F).op('+').ld('D').op('+').st('D').ld('E').op('-').jneg('service_checked')
-    m.ld('E').st('D')
-    m.label('service_checked').ld('D').raw(0xBB).op('cx','ret')
+    m.ld('D').op('+').jneg('service_checked').op('cx')
+    m.label('service_checked').ld('E').op('+').raw(0xBB).op('cx','ret')
     m.label('service_full').raw(1,0x0B).op('ret')
 
     m=a.module(9,'navigation')
@@ -163,7 +162,7 @@ def add_economy(a):
     # Types 2/4 imply hull 60/120 and initial drone count 0/2.
     m.ld(0).n(30).op('*').st(1)
     m.label('enemy_fields').ld(1).st('E').set(2,14).op('cx')
-    for i in range(3,7):m.st(i)
+    for i in range(4,7):m.st(i)
     m.set(3,3).op('ret').end_page().page(28,'init_drones').op('cx')
     for i in range(9):m.st(i)
     m.ld('C').n(2).op('-').st(6).jz('drones_done').set(0,18).st(1).set(5,1)

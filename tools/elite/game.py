@@ -47,20 +47,26 @@ def create_game():
     m.label('show').ld('A').n(99).op('-').jz('show_invalid').jge('show_result')
     m.ld(9).jge('port_view')
     m.ld('A').jz('combat_view').n(9).op('-').jge('combat_view')
-    m.label('port_view').ld('A').n(9).op('-').jz('distance_view')
-    m.ld('A').jz('show_world').ld('A').n(8).op('-').jz('show_destination')
-    m.ld('A').n(10).op('-').jneg('show_stat')
-    m.ld('A').n(20).op('-').jneg('show_price')
-    m.n(10).op('-').jge('show_cached_price')
-    m.ld('A').n(20).op('-').st(1);dynamic_get(m,25,1)
+    # Reuse each comparison's delta instead of recalling RA. These digits
+    # follow a closed conditional and use automatic stack lift; no earlier
+    # stack operand is live in any of the selected view handlers.
+    m.label('port_view').ld('A').jz('show_world')
+    m.raw(9).op('-').jz('distance_view')
+    m.raw(1).op('+').jz('show_destination')
+    m.raw(2).op('-').jneg('show_stat')
+    m.raw(1,0).op('-').jneg('show_price')
+    m.raw(1,0).op('-').jge('show_cached_price')
+    m.raw(1,0).op('+').st(1);dynamic_get(m,25,1)
     m.jump('good_prefix')
     # Views 30..35 are one-use trade results in RC. Restore the normal price
     # view before drawing, so the next command uses the usual dispatch.
-    m.label('show_cached_price').ld('A').n(20).op('-').st('A').jump('good_prefix')
-    m.label('show_price').ld('A').n(10).op('-').st(1).call('price')
+    m.label('show_cached_price').raw(1,0).op('+').st('A').jump('good_prefix')
+    m.label('show_price').raw(1,0).op('+').st(1).call('price')
     # Cursor 5 wraps the last digit of 2F 6D into slot 0. number_common
     # overwrites the other seven digits and owns the single FRAME close.
     m.label('good_prefix').ld(1).n(1).op('+').st('D').open_page(29).op('cx').st(0).raw(0x2F,0x05,0x2F,0x6D).jump('number_common')
+    # This placement removes a bank bridge and shortens nearby transfers.
+    m.label('draw_number').visit(29,'number_frame').op('ret')
     # Native local conditions cost more ROM steps here; retain 1F forms.
     m.label('show_stat').ld('A').n(7).op('-').jz('show_hold',far=True)
     # Reuse RA-7: successive adjustments produce RA-6, RA-1, then RA+2.
@@ -77,7 +83,6 @@ def create_game():
     m.label('show_world',keep_block=True).page_bytes(24,0x61,0x4C).jump('draw_name')
     m.label('show_destination').page_bytes(24,0x62,0x4C)
     m.label('draw_name');show_name(m);m.op('ret')
-    m.label('draw_number').visit(29,'number_frame').op('ret')
     m.label('show_invalid').visit(29,'invalid_frame').op('ret')
     add_ui(a)
     add_economy(a)
@@ -88,7 +93,7 @@ def create_game():
 def check_layout(info):
     """Guard addresses embedded in the native, one-byte indirect jumps."""
     labels=info['labels']
-    exact={'glyph_table':3*112, 'bar_patterns':3*112+33,
+    exact={'glyph_table':3*112, 'bar_patterns':3*112+29,
            'range_patterns':23*112}
     for label,address in exact.items():
         if labels[label]!=address:

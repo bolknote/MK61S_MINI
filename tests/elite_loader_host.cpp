@@ -5,6 +5,7 @@
 #include "mk61emu_core.h"
 #include "program_store.hpp"
 #include "program_load.hpp"
+#include "program_execution.hpp"
 #include "terminal_script.hpp"
 #include <algorithm>
 #include <cassert>
@@ -82,6 +83,8 @@ u8 m61_text_host_open_file(const char* name) {
   return OpenStoredFile(name) ? 0 : 2;
 }
 void hidden_start_loaded_program() { core_61::set_IP(0); press(2,9); }
+// Firmware updates its UI/timer here; the host measures core steps instead.
+void mk61_program_started() { assert(core_61::is_RUN()); }
 void reinit_mk61_calculator_state() {
   core_61::clear_extended_program_banks(); core_61::enable();
 }
