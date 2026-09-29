@@ -14,6 +14,8 @@ test -x "$package/install.sh"
 test -x "$hook"
 bash -n "$package/install.sh"
 bash -n "$hook"
+python3 -c 'from pathlib import Path; import sys; assert Path(sys.argv[1]).read_bytes().startswith(b"\xef\xbb\xbf")' \
+  "$platform/tools/mk61-app-postbuild.ps1"
 
 "$launcher" --help > "$work/help.txt"
 grep -q 'MK61s F401 + APP' "$work/help.txt"
