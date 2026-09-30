@@ -283,7 +283,8 @@ enum mk61_setup_feature {
   MK61_SETUP_FEATURE_UI_TEXT_MODE = 1u << 3,
   MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE = 1u << 4,
   MK61_SETUP_FEATURE_UI_FONT_CATALOG = 1u << 5,
-  MK61_SETUP_FEATURE_CLASSIC_UI_FONT = 1u << 6
+  MK61_SETUP_FEATURE_CLASSIC_UI_FONT = 1u << 6,
+  MK61_SETUP_FEATURE_COMPACT_UI_FONT = 1u << 7
 };
 typedef struct mk61_setup_datetime {
   uint32_t year, month, day, hour, minute, second;
@@ -376,7 +377,8 @@ typedef struct mk61_service_glyph {
  * INFO returns 1 even when family=0 (disabled). GLYPH takes family/size as
  * inputs so one document keeps consistent metrics if settings change later.
  * Families: 1=resident Pixel, 2=legacy Pixel alias, 3=active external FMK,
- * 4=resident Classic 10x16 (the built-in 5x8 bitmap scaled exactly 2x).
+ * 4=resident Classic 10x16 (the built-in 5x8 bitmap scaled exactly 2x),
+ * 5=resident Compact 3x5.
  * All outputs contain values/bytes only, never resident Flash pointers. */
 enum mk61_service_ui_font_operation { MK61_UI_FONT_INFO, MK61_UI_FONT_GLYPH };
 typedef struct mk61_service_ui_font_info {

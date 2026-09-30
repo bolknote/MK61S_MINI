@@ -75,9 +75,9 @@ class Source {
   mk61_service_ui_font_info info;
   bool valid() const {
     const uint8_t line_height = info.height ? info.height : info.size;
-    return (info.family == 1 || info.family == 2 || info.family == 3 ||
-            info.family == 4) &&
-      (info.size == 12 || info.size == 14 || info.size == 16) &&
+    const bool compact = info.family == 5 && info.size == 5;
+    return ((info.family >= 1 && info.family <= 4) || compact) &&
+      (compact || info.size == 12 || info.size == 14 || info.size == 16) &&
       line_height >= info.size && line_height <= 17 &&
       info.ascent + info.descent == line_height && info.ascent > 0 &&
       info.line_gap <= 4;

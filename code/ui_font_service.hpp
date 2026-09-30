@@ -20,10 +20,11 @@ inline bool valid_external(const prepared_font::Face* external, uint8_t size) {
 
 inline bool valid_choice(uint8_t family, uint8_t size,
                          const prepared_font::Face* external = nullptr) {
-  return (size == 12 || size == 14 || size == 16) &&
+  return (family == 5 && size == 5) ||
+      ((size == 12 || size == 14 || size == 16) &&
       ((family == 1 || family == 2) ||
        (family == 3 && valid_external(external, size)) ||
-       (family == 4 && size == 16));
+       (family == 4 && size == 16)));
 }
 
 inline ui_font::Face face(uint8_t family, uint8_t size) {
@@ -45,6 +46,8 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
     out = {};
     if(family == 4 && valid_choice(family, size)) {
       out = {family, size, 16, 0, 0, 16};
+    } else if(family == 5 && valid_choice(family, size)) {
+      out = {family, size, 5, 0, 1, 5};
     } else if(family == 3 && valid_choice(family, size, external)) {
       const auto& metrics = external->metrics();
       out = {family, size, metrics.height, 0,
@@ -60,26 +63,30 @@ inline uint32_t call(uint8_t family, uint8_t size, uint32_t operation,
      capacity != sizeof(mk61_service_ui_glyph)) return 0;
   auto& out = *static_cast<mk61_service_ui_glyph*>(payload);
   if(!valid_choice(out.family, out.size, external)) return 0;
-  if(out.family == 4) {
+  if(out.family == 4 || out.family == 5) {
+    const bool compact = out.family == 5;
     builtin_font::Raster source = {};
     bool fallback = codepoint > 0xFFFFU ||
-        !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
+        !builtin_font::decode(compact ? builtin_font::FaceId::FONT_3X5
+                                     : builtin_font::FaceId::FONT_5X8,
                               (u16) codepoint, source);
     if(fallback &&
-       !builtin_font::decode(builtin_font::FaceId::FONT_5X8, '?', source)) {
+       !builtin_font::decode(compact ? builtin_font::FaceId::FONT_3X5
+                                    : builtin_font::FaceId::FONT_5X8,
+                             '?', source)) {
       return 0;
     }
-    builtin_font::Raster scaled = {};
-    if(!builtin_font::scale2x(source, scaled)) return 0;
+    builtin_font::Raster raster = source;
+    if(!compact && !builtin_font::scale2x(source, raster)) return 0;
     out = {};
-    out.family = 4;
-    out.size = 16;
-    out.width = scaled.width;
-    out.height = scaled.height;
-    out.bearing_y = 16;
-    out.advance = 12;
+    out.family = compact ? 5 : 4;
+    out.size = compact ? 5 : 16;
+    out.width = raster.width;
+    out.height = raster.height;
+    out.bearing_y = compact ? 5 : 16;
+    out.advance = compact ? 4 : 12;
     out.fallback = fallback ? 1 : 0;
-    memcpy(out.pixels, scaled.data, sizeof(out.pixels));
+    memcpy(out.pixels, raster.data, sizeof(out.pixels));
     return 1;
   }
   if(out.family == 3) {

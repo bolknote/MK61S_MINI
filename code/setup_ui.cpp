@@ -402,6 +402,11 @@ static bool uiClassicFontAvailable(void) {
           MK61_SETUP_FEATURE_CLASSIC_UI_FONT) != 0;
 }
 
+static bool uiCompactFontAvailable(void) {
+  return (service(MK61_SETUP_FEATURES) &
+          MK61_SETUP_FEATURE_COMPACT_UI_FONT) != 0;
+}
+
 static mk61_setup_ui_font readUiFont(void) {
   mk61_setup_ui_font value = {0, 14};
   if(uiFontSettingsAvailable()) service(MK61_SETUP_UI_FONT_READ, 0, 0, &value);
@@ -429,6 +434,10 @@ static void formatUiFontLine(char* out, usize size, u8 field,
   if(field == 0) {
     if(choice.setting.family == 4) {
       snprintf(out, size, "Classic 10x16");
+      return;
+    }
+    if(choice.setting.family == 5) {
+      snprintf(out, size, "Compact 3x5");
       return;
     }
     const char* name = choice.setting.family == 3 &&
@@ -649,24 +658,27 @@ static bool calculatorFontSetup(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(const UiFontChoice& choice) {
   // Calculator digits have a separate fixed face.  This dialog controls only
-  // the UI: 5x8 and Classic 10x16 are exact, Pixel has three resident sizes,
-  // and each catalog FMK is already a complete raster with its own height.
-  if(choice.setting.family == 0 || choice.setting.family == 4) return 1U;
+  // the UI: the fixed 5x8, Classic 10x16 and Compact 3x5 faces are exact,
+  // Pixel has three resident sizes, and each catalog FMK is complete.
+  if(choice.setting.family == 0 || choice.setting.family == 4 ||
+     choice.setting.family == 5) return 1U;
   if(choice.setting.family == 3 && uiFontCatalogAvailable()) return 1U;
   return 2U;
 }
 
 static u8 stepLegacyUiFontFamily(u8 family, i8 delta) {
-  static constexpr u8 old_families[] = {0, 1, 3};
-  static constexpr u8 families[] = {0, 4, 1, 3};
-  if(!uiClassicFontAvailable()) {
-    u8 index = family == 1 ? 1U : (family == 3 ? 2U : 0U);
-    index = (u8) ((index + (delta < 0 ? 2U : 1U)) % 3U);
-    return old_families[index];
-  }
-  u8 index = family == 4 ? 1U :
-      (family == 1 || family == 2 ? 2U : (family == 3 ? 3U : 0U));
-  index = (u8) ((index + (delta < 0 ? 3U : 1U)) % 4U);
+  u8 families[5] = {0};
+  u8 count = 0;
+  families[count++] = 0;
+  if(uiClassicFontAvailable()) families[count++] = 4;
+  if(uiCompactFontAvailable()) families[count++] = 5;
+  families[count++] = 1;
+  families[count++] = 3;
+  if(family == 2) family = 1;
+  u8 index = 0;
+  while(index < count && families[index] != family) ++index;
+  if(index == count) index = 0;
+  index = (u8) ((index + (delta < 0 ? count - 1U : 1U)) % count);
   return families[index];
 }
 
@@ -690,7 +702,9 @@ static bool applyBuiltinUiFont(UiFontChoice& choice, u8 family) {
   mk61_setup_ui_font next = choice.setting;
   next.family = family;
   if(family == 0) next.size = 14;
+  if((family == 1 || family == 2) && next.size == 5) next.size = 14;
   if(family == 4) next.size = 16;
+  if(family == 5) next.size = 5;
   if(!service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &next)) return false;
   choice = readUiFontChoice();
   return true;
@@ -716,18 +730,26 @@ static bool stepUiFontChoice(UiFontChoice& choice, i8 delta) {
   mk61_setup_ui_font_item item = {};
   const u8 family = choice.setting.family;
   if(family == 0) {
-    if(delta > 0) return applyBuiltinUiFont(
-        choice, uiClassicFontAvailable() ? 4U : 1U);
+    if(delta > 0) return applyBuiltinUiFont(choice,
+        uiClassicFontAvailable() ? 4U :
+        (uiCompactFontAvailable() ? 5U : 1U));
     return uiFontCatalogStep(0, -1, item)
         ? applyCatalogUiFont(choice, item)
         : applyBuiltinUiFont(choice, 1);
   }
   if(family == 4) {
-    return applyBuiltinUiFont(choice, delta > 0 ? 1U : 0U);
+    return applyBuiltinUiFont(choice,
+        delta > 0 && uiCompactFontAvailable() ? 5U :
+        (delta > 0 ? 1U : 0U));
+  }
+  if(family == 5) {
+    return applyBuiltinUiFont(choice, delta > 0 ? 1U :
+        (uiClassicFontAvailable() ? 4U : 0U));
   }
   if(family == 1 || family == 2) {
-    if(delta < 0) return applyBuiltinUiFont(
-        choice, uiClassicFontAvailable() ? 4U : 0U);
+    if(delta < 0) return applyBuiltinUiFont(choice,
+        uiCompactFontAvailable() ? 5U :
+        (uiClassicFontAvailable() ? 4U : 0U));
     return uiFontCatalogStep(0, 1, item)
         ? applyCatalogUiFont(choice, item)
         : applyBuiltinUiFont(choice, 0);
@@ -806,10 +828,9 @@ bool font(void) {
         if(uiFontCatalogAvailable()) {
           applied = stepUiFontChoice(ui_font, delta);
         } else {
-          ui_font.setting.family = stepLegacyUiFontFamily(
+          const u8 family = stepLegacyUiFontFamily(
               ui_font.setting.family, delta);
-          applied = service(MK61_SETUP_UI_FONT_APPLY, 0, 0,
-                            &ui_font.setting) != 0;
+          applied = applyBuiltinUiFont(ui_font, family);
         }
       } else {
         ui_font.setting.size = stepUiFontSize(ui_font.setting.size, delta);

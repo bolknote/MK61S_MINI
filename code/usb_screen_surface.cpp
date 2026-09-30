@@ -64,6 +64,7 @@ Surface::Surface(u8* framebuffer)
     , ui_text_active_(false),
     ui_font_enabled_(false),
     ui_classic_10x16_(false),
+    ui_compact_3x5_(false),
     ui_face_{ui_font::Family::PIXEL, ui_font::Size::PX12},
     ui_row_gutters_(0),
     ui_row_tails_(0)
@@ -92,6 +93,7 @@ void Surface::begin(TextProfile profile) {
   ui_text_active_ = false;
   ui_font_enabled_ = false;
   ui_classic_10x16_ = false;
+  ui_compact_3x5_ = false;
   ui_row_gutters_ = 0;
   ui_row_tails_ = 0;
 #endif
@@ -122,6 +124,8 @@ void Surface::end(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
   ui_text_active_ = false;
   ui_font_enabled_ = false;
+  ui_classic_10x16_ = false;
+  ui_compact_3x5_ = false;
   ui_row_gutters_ = 0;
   ui_row_tails_ = 0;
 #endif
@@ -364,13 +368,16 @@ void Surface::setFont(const prepared_font::Face* font) {
 
 #if MK61_PROPORTIONAL_UI_FONTS
 void Surface::setUiTextStyle(bool active, bool font_enabled,
-                             bool classic_10x16, ui_font::Face face) {
+                             bool classic_10x16, bool compact_3x5,
+                             ui_font::Face face) {
   if(ui_text_active_ == active && ui_font_enabled_ == font_enabled &&
      ui_classic_10x16_ == classic_10x16 &&
+     ui_compact_3x5_ == compact_3x5 &&
      ui_face_.family == face.family && ui_face_.size == face.size) return;
   ui_text_active_ = active;
   ui_font_enabled_ = font_enabled;
   ui_classic_10x16_ = classic_10x16;
+  ui_compact_3x5_ = compact_3x5;
   ui_face_ = face;
   ui_row_gutters_ = 0;
   ui_row_tails_ = 0;
@@ -692,7 +699,7 @@ void Surface::render(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
 void Surface::renderUi(void) {
   const ui_text_renderer::Style style = {
-    ui_font_enabled_, ui_classic_10x16_, ui_face_, font_,
+    ui_font_enabled_, ui_classic_10x16_, ui_compact_3x5_, ui_face_, font_,
     custom_glyphs_, custom_valid_,
     ui_row_gutters_, ui_row_tails_, grid_.cursorX(), grid_.cursorY(),
     cursor_underline_, cursor_blink_ && cursor_blink_phase_

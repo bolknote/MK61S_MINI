@@ -1,6 +1,6 @@
-# Optional proportional UI glyph service
+# Optional UI glyph service
 
-UC1609 resident firmware with the optional proportional UI implementation
+UC1609 resident firmware with the optional selectable UI-font implementation
 advertises `MK61_SERVICE_CAP_UI_FONT` in the unchanged common service table.
 The added operation is `MK61_SERVICE_UI_FONT` (27); existing operation numbers,
 ABI version and the common table's binary layout are unchanged.
@@ -22,19 +22,24 @@ FMK UI face selected from a direct child `Fonts/*.FMK`; the C6 filename is its
 user-visible name. `family=4`, advertised to SETUP by
 `MK61_SETUP_FEATURE_CLASSIC_UI_FONT`, is the resident Classic 10x16 face: the
 canonical `UC_Font_One` 5x8 bitmap enlarged by exact 2x nearest-neighbour
-pixels, with a 12-pixel advance and a four-row 192x64 layout. Legacy root files
+pixels, with a 12-pixel advance and a four-row 192x64 layout. `family=5`,
+advertised by `MK61_SETUP_FEATURE_COMPACT_UI_FONT`, exposes the resident
+Compact 3x5 bitmap already used by compact internal views. It has a 4-pixel
+advance, a ten-row 192x64 layout, Russian letters and the MK-61 private
+symbols. Legacy root files
 `UI12.FMK`, `UI14.FMK` and `UI16.FMK`
 remain a migration fallback for an old saved selection but are not the catalog.
-Family 0 ignores the stored 12/14/16 size. On every UC1609 configuration,
-calculator digits use a separate fixed twelve-position renderer and never
-consume this font service. The same proportional UI implementation is used on
-F401 and F411.
+Families 0, 4 and 5 are fixed resident bitmaps; family 0 ignores the stored
+12/14/16 size, family 4 uses size 16 and family 5 uses size 5. On every UC1609
+configuration, calculator digits use a separate fixed twelve-position renderer
+and never consume this font service. The same UI implementation is used on F401
+and F411.
 Size is the stable UI selection, not a request to scale outlines. For Pixel it
 chooses native Ark strikes 10/12/16 px whose complete Russian line envelopes are
 12/14/17 px. For family 3 it reports the selected file's intrinsic 12/14/16
-height; each size is a separate catalog face and is never scaled. Family 4 is
-the deliberate bitmap-only exception: it reports size/height/ascent 16, zero
-descent and zero line gap. INFO supplies
+height; each size is a separate catalog face and is never scaled. Family 4
+reports size/height/ascent 16, zero descent and zero line gap. Family 5 reports
+size/height/ascent 5, zero descent and a one-pixel line gap. INFO supplies
 ascent, descent, interline gap and real `height`
 in its formerly reserved last byte. A zero `height` from an older resident
 means `size`. The gap is one pixel for size 12 and two for 14/16. On unsupported

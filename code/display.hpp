@@ -205,17 +205,19 @@ class MK61Display : public Print {
     void restoreTextProfile(lcd_display::TextProfile profile);
     lcd_display::TextProfile textProfile(void) const;
 #if defined(MK61_DISPLAY_UC1609) && MK61_PROPORTIONAL_UI_FONTS
-    // Family 0 is the fixed 5x8 UI; family 1 is native Ark Pixel; family 4 is
-    // the original UC_Font_One enlarged exactly 2x to a 10x16 glyph.
+    // Family 0 is fixed 5x8, family 1 is Ark Pixel, family 4 is UC_Font_One
+    // enlarged exactly 2x, and family 5 is the resident compact 3x5 face.
     void setUiFont(u8 family, u8 size);
     u8 uiFontFamily(void) const {
-      return (ui_font_state & 64U) ? 4U : (ui_font_state & 3U);
+      return (ui_font_state & 128U) ? 5U :
+          ((ui_font_state & 64U) ? 4U : (ui_font_state & 3U));
     }
     u8 uiFontSize(void) const {
-      return uiFontClassic10x16() ? 16U :
-        ((ui_font_state & 32U) ? 16U : ((ui_font_state & 4U) ? 14U : 12U));
+      return uiFontCompact3x5() ? 5U : (uiFontClassic10x16() ? 16U :
+        ((ui_font_state & 32U) ? 16U : ((ui_font_state & 4U) ? 14U : 12U)));
     }
     bool uiFontClassic10x16(void) const { return (ui_font_state & 64U) != 0; }
+    bool uiFontCompact3x5(void) const { return (ui_font_state & 128U) != 0; }
     bool uiFontEnabled(void) const { return uiFontFamily() != 0; }
     bool uiTextContext(void) const { return (ui_font_state & 8U) != 0; }
     bool uiTextActive(void) const {
@@ -244,6 +246,7 @@ class MK61Display : public Print {
     u8 uiFontFamily(void) const { return 0; }
     u8 uiFontSize(void) const { return 14; }
     bool uiFontClassic10x16(void) const { return false; }
+    bool uiFontCompact3x5(void) const { return false; }
     bool uiFontEnabled(void) const { return false; }
     bool uiTextContext(void) const { return false; }
     bool uiTextActive(void) const { return false; }

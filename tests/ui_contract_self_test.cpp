@@ -26,6 +26,7 @@ bool ui_fonts_available = false;
 bool ui_text_mode_available = false;
 bool ui_font_catalog_available = false;
 bool ui_classic_font_available = false;
+bool ui_compact_font_available = false;
 u32 selected_ui_font_key = 0;
 std::vector<mk61_setup_ui_font_item> ui_font_catalog;
 lcd_display::TextProfile settings = lcd_display::textProfile5x8();
@@ -43,8 +44,9 @@ struct Surface {
   u8 row = 0;
   bool uiTextActive() const { return ui_text_context; }
   u8 rows() const {
-    if(!uiTextActive() || ui_font.family == 0 || ui_font.family == 4)
-      return uiTextActive() ? 4 : profile.rows;
+    if(!uiTextActive()) return profile.rows;
+    if(ui_font.family == 0 || ui_font.family == 4) return 4;
+    if(ui_font.family == 5) return 10;
     return ui_font.size == 12 ? 5 : (ui_font.size == 16 ? 3 : 4);
   }
   void clear() {
@@ -211,12 +213,18 @@ static void test_ui_font_capabilities() {
   ui_classic_font_available = true;
   assert(uiClassicFontAvailable());
   ui_classic_font_available = false;
+  ui_compact_font_available = false;
+  assert(!uiCompactFontAvailable());
+  ui_compact_font_available = true;
+  assert(uiCompactFontAvailable());
+  ui_compact_font_available = false;
   ui_fonts_available = ui_text_mode_available = false;
 }
 
 static void test_ui_font_catalog() {
   ui_fonts_available = ui_text_mode_available = ui_font_catalog_available = true;
   ui_classic_font_available = true;
+  ui_compact_font_available = true;
   ui_font_catalog = {
     {0x11111111U, 12, {0, 0, 0}, "Alpha-12"},
     {0x22222222U, 14, {0, 0, 0}, "DejaVu-14"}
@@ -232,7 +240,9 @@ static void test_ui_font_catalog() {
   assert(stepUiFontChoice(choice, 1));
   assert(choice.setting.family == 4 && choice.setting.size == 16);
   assert(stepUiFontChoice(choice, 1));
-  assert(choice.setting.family == 1 && choice.setting.size == 16);
+  assert(choice.setting.family == 5 && choice.setting.size == 5);
+  assert(stepUiFontChoice(choice, 1));
+  assert(choice.setting.family == 1 && choice.setting.size == 14);
   assert(stepUiFontChoice(choice, 1));
   assert(choice.setting.family == 3 && choice.setting.size == 12);
   assert(choice.external.key == 0x11111111U);
@@ -252,6 +262,7 @@ static void test_ui_font_catalog() {
   ui_font_catalog.clear();
   ui_font_catalog_available = false;
   ui_classic_font_available = false;
+  ui_compact_font_available = false;
   selected_ui_font_key = 0;
   surface = Surface{};
   ui_fonts_available = ui_text_mode_available = false;
@@ -263,12 +274,13 @@ static void test_ui_font_layout() {
   for(bool ru : {false, true}) {
     russian = ru;
     for(u8 calculator_rows : {2, 4, 10}) {
-      for(u8 family : {0, 4, 1, 3}) {
-        for(u8 size : {12, 14, 16}) {
+      for(u8 family : {0, 4, 5, 1, 3}) {
+        for(u8 size : {5, 12, 14, 16}) {
+          if((family == 5) != (size == 5)) continue;
           if(family == 4 && size != 16) continue;
           const UiFontChoice font = {{family, size}, {}};
           assert(uiFontFieldCount(font) ==
-                 ((family == 0 || family == 4) ? 1U : 2U));
+                 ((family == 0 || family == 4 || family == 5) ? 1U : 2U));
           for(u8 active = 0; active < uiFontFieldCount(font); ++active) {
             surface.profile = {calculator_rows, 10,
                                (u8) (calculator_rows == 2 ? 32 : 5), 0};
@@ -281,8 +293,9 @@ static void test_ui_font_layout() {
             phases.clear();
             drawUiFontSetup(active, font);
 
-            const u8 rows = (family == 0 || family == 4) ? 4U :
-                (size == 12 ? 5U : (size == 16 ? 3U : 4U));
+            const u8 rows = family == 5 ? 10U :
+                ((family == 0 || family == 4) ? 4U :
+                (size == 12 ? 5U : (size == 16 ? 3U : 4U)));
             assert(surface.rows() == rows);
             assert(surface.ui_text_context);
             assert(surface.uiTextActive());
@@ -297,9 +310,10 @@ static void test_ui_font_layout() {
 
             const char* family_name = family == 0 ? "5x8" :
                 (family == 4 ? "Classic 10x16" :
-                 (family == 3 ? "FMK" : "Pixel"));
+                 (family == 5 ? "Compact 3x5" :
+                  (family == 3 ? "FMK" : "Pixel")));
             char family_line[32];
-            if(family == 4) {
+            if(family == 4 || family == 5) {
               snprintf(family_line, sizeof(family_line), "%s", family_name);
             } else {
               snprintf(family_line, sizeof(family_line),
@@ -350,19 +364,23 @@ static void test_ui_font_layout() {
   assert(stepLegacyUiFontFamily(0, -1) == 3);
   assert(stepLegacyUiFontFamily(3, -1) == 1);
   ui_classic_font_available = true;
+  ui_compact_font_available = true;
   assert(stepLegacyUiFontFamily(0, 1) == 4);
-  assert(stepLegacyUiFontFamily(4, 1) == 1);
+  assert(stepLegacyUiFontFamily(4, 1) == 5);
+  assert(stepLegacyUiFontFamily(5, 1) == 1);
   assert(stepLegacyUiFontFamily(1, 1) == 3);
   assert(stepLegacyUiFontFamily(3, 1) == 0);
   assert(stepLegacyUiFontFamily(0, -1) == 3);
   assert(stepLegacyUiFontFamily(3, -1) == 1);
-  assert(stepLegacyUiFontFamily(1, -1) == 4);
+  assert(stepLegacyUiFontFamily(1, -1) == 5);
+  assert(stepLegacyUiFontFamily(5, -1) == 4);
   assert(stepLegacyUiFontFamily(4, -1) == 0);
   // Restore the recording surface for independent calculator-profile tests.
   surface = Surface{};
   russian = false;
   ui_fonts_available = ui_text_mode_available = false;
   ui_classic_font_available = false;
+  ui_compact_font_available = false;
   calls.clear();
   phases.clear();
 }

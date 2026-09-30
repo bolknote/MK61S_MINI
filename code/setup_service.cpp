@@ -44,7 +44,8 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
              | (u32) MK61_SETUP_FEATURE_UI_FONT |
              (u32) MK61_SETUP_FEATURE_UI_TEXT_MODE |
              (u32) MK61_SETUP_FEATURE_UI_FONT_CATALOG |
-             (u32) MK61_SETUP_FEATURE_CLASSIC_UI_FONT
+             (u32) MK61_SETUP_FEATURE_CLASSIC_UI_FONT |
+             (u32) MK61_SETUP_FEATURE_COMPACT_UI_FONT
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
              | (u32) MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE
@@ -112,8 +113,10 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       if(!payload) return 0;
       {
         const auto& in = *(const mk61_setup_ui_font*) payload;
-        if(in.family > 4 || (in.family == 4 && in.size != 16) ||
-           (in.size != 12 && in.size != 14 && in.size != 16)) return 0;
+        if(in.family > 5 || (in.family == 4 && in.size != 16) ||
+           (in.family == 5 && in.size != 5) ||
+           (in.family != 5 && in.size != 12 && in.size != 14 &&
+            in.size != 16)) return 0;
         if(library_mk61::ui_font_family() == in.family &&
            library_mk61::ui_font_size() == in.size) return 1;
         if(!library_mk61::set_ui_font(in.family, in.size)) return 0;

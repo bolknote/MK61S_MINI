@@ -22,15 +22,10 @@
  #define PROGMEM
 #endif
 #endif
- 
-#define UC1609_Font_One
-
 // Font data is in the cpp file.  The default table is exported directly so
 // using it does not spend a mutable pointer in .data/RAM.
-#ifdef UC1609_Font_One
 extern const unsigned char UC_Font_One[];
 // Row-major, MSB-first, 15 useful bits in two bytes.
 const unsigned char* font3x5Bitmap(uint16_t codepoint);
-#endif
 
 #endif // font file guard header

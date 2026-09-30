@@ -61,7 +61,8 @@ _Static_assert(MK61_SETUP_FEATURE_TEXT_PROFILE == 1 &&
                MK61_SETUP_FEATURE_UI_TEXT_MODE == 8 &&
                MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE == 16 &&
                MK61_SETUP_FEATURE_UI_FONT_CATALOG == 32 &&
-               MK61_SETUP_FEATURE_CLASSIC_UI_FONT == 64,
+               MK61_SETUP_FEATURE_CLASSIC_UI_FONT == 64 &&
+               MK61_SETUP_FEATURE_COMPACT_UI_FONT == 128,
                "append-only SETUP feature bits");
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");

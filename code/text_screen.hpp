@@ -35,7 +35,7 @@ class Grid {
     Grid(void);
 
     // Rows and columns share one bounded backing store. Graphical builds keep
-    // enough tokens for the narrowest supported 40x10 text face; character
+    // enough tokens for the narrowest supported 64x10 text face; character
     // displays retain the original 16x10 allocation.
     void reset(u8 rows, u8 cols = COLS);
     void clear(void);

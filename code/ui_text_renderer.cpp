@@ -41,6 +41,7 @@ bool privateM8Symbol(u16 codepoint) {
 
 LineMetrics lineMetrics(const Style& style, u8 rows) {
   if(style.classic_10x16) return {16U, 16U, 0U, 0U};
+  if(style.compact_3x5) return {5U, 5U, 1U, 2U};
   if(!style.font_enabled) return {8U, 8U, 8U, 5U};
 
   u8 height = 0;
@@ -65,6 +66,12 @@ LineMetrics lineMetrics(const Style& style, u8 rows) {
 bool fixedGlyph(const Style& style, u16 value, bool custom, bool pixels,
                 ResolvedGlyph& out) {
   builtin_font::Raster raster = {};
+  // LCD custom glyphs are 5x8. They have no meaningful lossless 3x5 form, so
+  // the compact UI uses its canonical question-mark fallback instead.
+  if(custom && style.compact_3x5) {
+    value = '?';
+    custom = false;
+  }
   if(custom) {
     const u8 slot = (u8) value;
     if(style.custom_glyphs != NULL && style.custom_valid != NULL &&
@@ -87,14 +94,15 @@ bool fixedGlyph(const Style& style, u16 value, bool custom, bool pixels,
     }
   }
   if(!custom) {
-    raster.width = 5;
-    raster.height = 8;
+    const builtin_font::FaceId face = style.compact_3x5
+        ? builtin_font::FaceId::FONT_3X5
+        : builtin_font::FaceId::FONT_5X8;
+    raster.width = style.compact_3x5 ? 3U : 5U;
+    raster.height = style.compact_3x5 ? 5U : 8U;
     if(pixels &&
-       !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
-                             value, raster) &&
+       !builtin_font::decode(face, value, raster) &&
        (value == '?' ||
-        !builtin_font::decode(builtin_font::FaceId::FONT_5X8,
-                              '?', raster))) return false;
+        !builtin_font::decode(face, '?', raster))) return false;
   }
   if(style.classic_10x16) {
     if(pixels) {
@@ -104,6 +112,10 @@ bool fixedGlyph(const Style& style, u16 value, bool custom, bool pixels,
     }
     out.glyph = {pixels ? out.bitmap : NULL, 10, 16,
                  0, 16, 12, font_glyph::BitmapLayout::ROW_MSB, false};
+  } else if(style.compact_3x5) {
+    if(pixels) memcpy(out.bitmap, raster.data, sizeof(out.bitmap));
+    out.glyph = {pixels ? out.bitmap : NULL, 3, 5,
+                 0, 5, 4, font_glyph::BitmapLayout::ROW_MSB, false};
   } else {
     if(pixels) memcpy(out.bitmap, raster.data, sizeof(out.bitmap));
     out.glyph = {pixels ? out.bitmap : NULL, raster.width, raster.height,
@@ -127,7 +139,8 @@ bool externalGlyph(const Style& style, const prepared_font::Glyph& source,
 bool resolveGlyph(const Style& style, u16 value, bool custom, bool pixels,
                   ResolvedGlyph& out) {
   memset(&out, 0, sizeof(out));
-  if(custom || !style.font_enabled || style.classic_10x16) {
+  if(custom || !style.font_enabled || style.classic_10x16 ||
+     style.compact_3x5) {
     return fixedGlyph(style, value, custom, pixels, out);
   }
 

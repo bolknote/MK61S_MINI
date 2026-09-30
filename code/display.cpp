@@ -3678,7 +3678,8 @@ bool MK61Display::enterUsbScreen(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
   usb_surface.setFont(usb_font);
   usb_surface.setUiTextStyle(
-      uiTextContext(), uiFontEnabled(), uiFontClassic10x16(), uiFontFace());
+      uiTextContext(), uiFontEnabled(), uiFontClassic10x16(),
+      uiFontCompact3x5(), uiFontFace());
 #else
   usb_surface.setFont(selectedFont());
 #endif

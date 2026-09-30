@@ -153,6 +153,30 @@ int main() {
   assert(classic_source.glyph(0x2603, classic_glyph) &&
          classic_glyph.fallback);
 
+  family = 5;
+  size = 5;
+  const markdown_ui_font::Source compact_source;
+  assert(compact_source.enabled() && compact_source.height() == 5 &&
+         compact_source.ascent() == 5 && compact_source.line_gap() == 1);
+  mk61_service_ui_glyph compact_glyph = {};
+  assert(compact_source.glyph(0x041F, compact_glyph));
+  assert(compact_glyph.family == 5 && compact_glyph.size == 5 &&
+         compact_glyph.width == 3 && compact_glyph.height == 5 &&
+         compact_glyph.bearing_y == 5 && compact_glyph.advance == 4 &&
+         !compact_glyph.fallback);
+  builtin_font::Raster compact_native = {};
+  assert(builtin_font::decode(builtin_font::FaceId::FONT_3X5,
+                              0x041F, compact_native));
+  for(u8 y = 0; y < compact_glyph.height; ++y) {
+    for(u8 x = 0; x < compact_glyph.width; ++x) {
+      assert(markdown_ui_font::Source::pixel(compact_glyph, x, y) ==
+             fmk::bitmapPixel(compact_native.data, compact_native.width,
+                              x, y));
+    }
+  }
+  assert(compact_source.glyph(0x2603, compact_glyph) &&
+         compact_glyph.fallback);
+
   uint8_t external_bytes[39];
   make_external_ui_font(external_bytes);
   fmk::Face source;

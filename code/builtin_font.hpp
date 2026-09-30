@@ -21,7 +21,7 @@ FaceId closest(u8 width, u8 height);
 bool decode(FaceId face, u16 codepoint, Raster& out);
 // Nearest-neighbour 2x enlargement used by the Classic 10x16 UI.  Keeping it
 // beside the canonical decoder makes the physical and portable renderers use
-// exactly the same pixels as UC1609Font_Default with setTextSize(2).
+// exactly the same pixels as UC_Font_One enlarged by an integer factor of two.
 bool scale2x(const Raster& source, Raster& out);
 
 } // пространство имён builtin_font

@@ -100,7 +100,7 @@ class Surface {
     // the finished bitmap, so its firmware-side surface must use the same
     // layout instead of falling back to fixed character cells.
     void setUiTextStyle(bool active, bool font_enabled, bool classic_10x16,
-                        ui_font::Face face);
+                        bool compact_3x5, ui_font::Face face);
     void setUiLineDecorations(u8 row, bool leading_gutter,
                               bool trailing_gutter);
     bool uiTextActive(void) const { return ui_text_active_; }
@@ -149,6 +149,7 @@ class Surface {
     bool ui_text_active_;
     bool ui_font_enabled_;
     bool ui_classic_10x16_;
+    bool ui_compact_3x5_;
     ui_font::Face ui_face_;
     u16 ui_row_gutters_;
     u16 ui_row_tails_;

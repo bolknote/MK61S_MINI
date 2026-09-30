@@ -11,9 +11,6 @@
 
 #include "ERM19264_graphics_font.h"
 
-#ifdef UC1609_Font_One
-
-
 /*! Default Standard extended ASCII 5x8 font. */
 const unsigned char UC_Font_One[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00,   
@@ -299,8 +296,5 @@ const unsigned char* font3x5Bitmap(uint16_t codepoint) {
 	const int16_t index = font3x5Index(codepoint);
 	return index >= 0 ? &PACKED_FONT_3X5.bytes[(uint16_t) index * 2U] : NULL;
 }
-
-#endif //font one
-
 
 #endif
