@@ -2611,8 +2611,10 @@ function Build-Selected {
             return $false
         }
         $elfSealerExecutable = $powerShell
+        $elfSealer = Join-Path $script:ProjectRoot `
+            'tools/seal-firmware-elf.ps1'
         $elfSealerArguments = @(
-            '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+            '-NoLogo', '-NoProfile', '-File', $elfSealer,
             '-InputFile', $sourceArtifact, '-ElfFile', $residentElf,
             '-Objcopy', $objcopy, '-MaxSize', '524288')
     } else {

@@ -33,8 +33,9 @@
   `python3 tools/program_pack.py raw-image.bin program.bin`.
 - `seal-firmware.sh`, `seal-firmware.ps1` — post-link запечатывание и
   независимая проверка CRC/content ID resident BIN для release-сборщиков.
-- `seal-firmware-elf.py` — переносит проверенный footer в ELF и доказывает
-  обратным `objcopy`, что ELF и запечатанный BIN описывают одни байты Flash.
+- `seal-firmware-elf.py`, `seal-firmware-elf.ps1` — переносят проверенный
+  footer в ELF и доказывают обратным `objcopy`, что ELF и запечатанный BIN
+  описывают одни байты Flash; PowerShell-вариант используется на Windows.
 - `release-contract.json` — версии зависимостей, профили и ресурсные бюджеты
   всех release/capability-сборок; `release_contract.py` проверяет контракт,
   выдаёт cases сборщикам и формирует отчёты по ELF и запечатанному BIN.

@@ -687,8 +687,10 @@ try {
 
     $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
     Test-RequiredFile $objcopy 'GNU Arm objcopy'
+    $elfSealer = Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.ps1'
+    Test-RequiredFile $elfSealer 'resident ELF sealer'
     Invoke-GccTool $powerShell @(
-        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+        '-NoLogo', '-NoProfile', '-File', $elfSealer,
         '-InputFile', $residentBin, '-ElfFile', $residentElf,
         '-Objcopy', $objcopy, '-MaxSize', $flashCapacity)
 

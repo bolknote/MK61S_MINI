@@ -204,10 +204,13 @@ function Build-Mk61Bundle {
     if ([string]::IsNullOrWhiteSpace($objcopy)) {
         Stop-Mk61Build "ARM objcopy not found beside compiler: $Compiler"
     }
+    $elfSealer = Join-Path $PSScriptRoot 'seal-firmware-elf.ps1'
+    Test-RequiredFile $elfSealer `
+        'resident ELF sealer; reinstall the MK61s board'
     Invoke-Mk61Tool $powerShell @(
-        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+        '-NoLogo', '-NoProfile', '-File', $elfSealer,
         '-InputFile', $residentBin, '-ElfFile', $residentElf,
-        '-Objcopy', $objcopy)
+        '-Objcopy', $objcopy, '-MaxSize', $MaxSize)
 
     $stageRoot = Join-Path $build 'mk61-system-apps'
     $script:Stage = [IO.Path]::GetFullPath((Join-Path $stageRoot $Bundle))

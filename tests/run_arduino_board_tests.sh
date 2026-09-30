@@ -47,6 +47,8 @@ cmp "$root/code/resident_firmware_format.hpp" \
 cmp "$root/code/rust_types.h" "$target/tools/rust_types.h"
 cmp "$root/tools/seal-firmware.ps1" \
     "$target/tools/seal-firmware.ps1"
+cmp "$root/tools/seal-firmware-elf.ps1" \
+    "$target/tools/seal-firmware-elf.ps1"
 cmp "$root/tools/seal-firmware-elf.py" \
     "$target/tools/seal-firmware-elf.py"
 

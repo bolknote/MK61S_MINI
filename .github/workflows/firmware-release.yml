@@ -403,6 +403,13 @@ jobs:
           & ./tests/system_app_catalog_powershell_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Verify firmware sealing on Windows PowerShell 5.1
+        shell: pwsh
+        run: |
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/firmware_seal_powershell_self_test.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison Python and MK61_HOST_CXX: this proves that
       # a normal Windows IDE installation needs neither Python nor
