@@ -1,5 +1,6 @@
 // Compare the actual decoder with the actual shortcuts, without exporting
 // private chip state or adding test code/data to an Arduino build.
+#include <algorithm>
 #include <array>
 #include <cstdio>
 #include <cstdlib>
@@ -800,6 +801,46 @@ static void check_pending_far_context() {
   require(observed,"test never suspended a pending far condition");
   std::printf("PASS pending far conditions survive context save/restore and scalar/native replay\n");
 }
+
+static void check_far_bank_zero_branch() {
+  scenario = "far entry at bank zero followed by native branches";
+  for(u8 transfer : {0x51, 0x53}) {
+    initialize(true);
+    // Enter B31:00, then reach the native condition at local 47. Leaving
+    // the ROM counter at 112 makes it overflow at the condition's operand
+    // (160), so the branch fails even though early commands look correct.
+    const u8 caller[] = {0x1F, transfer, 0x34, 0x72, 0x50};
+    program(caller, sizeof(caller));
+    std::array<u8, 53> callee;
+    callee.fill(0x54);
+    callee[0] = 0x01;
+    callee[45] = 0x59; callee[46] = 0x49;
+    callee[47] = 0x5E; callee[48] = 0x51;
+    callee[49] = 0x07; callee[50] = 0x50; // Wrong path: 7; STOP.
+    callee[51] = 0x04;
+    callee[52] = transfer == 0x53 ? 0x52 : 0x50;
+    for(usize offset = 0; offset < callee.size(); ++offset)
+      require(core_61::write_absolute_program(31 * core_61::MAX_PROGRAM_STEP +
+          offset, callee[offset]), "cannot install bank-zero branch probe");
+    require(core_61::set_mk61_program_boundary_hook(program_hook),
+        "cannot register bank-zero branch hook");
+    yield_address = -1;
+    program_addresses.clear();
+    press(2, 9);
+    finish_program();
+    core_61::bcd_value x = {};
+    core_61::get_stack_register(stack::X, x);
+    require(!core_61::extended_program_error() && x.mantissa == 0x00000004 &&
+        x.signs_and_pow == 0, "far bank-zero entry corrupted a later native branch");
+    const auto branch = std::find(program_addresses.begin(), program_addresses.end(), 47);
+    require(branch != program_addresses.end() && branch + 1 != program_addresses.end() &&
+        *(branch + 1) == 51, "native bank-zero condition did not reach its target");
+    require(core_61::active_program_bank() == (transfer == 0x53 ? 0 : 31),
+        "bank-zero branch did not preserve its caller/target bank");
+    core_61::clear_mk61_program_boundary_hook();
+  }
+  std::printf("PASS far JMP/CALL to bank:00 followed by native conditions and RETURN\n");
+}
 } // namespace native_test
 
 int main() {
@@ -822,6 +863,7 @@ int main() {
   for(auto count : rom_events) require(count != 0, "ROM hook for a chip not covered");
   require(yields != 0, "program yield events not covered");
   check_pending_far_context();
+  check_far_bank_zero_branch();
   std::printf("PASS native verification: %llu body cases, %llu steps, %llu frames; "
       "9 defect types detected in both ring modes\n", body_cases, compared_steps, compared_frames);
 #if MK61_CORE_PREDECODED_ROM

@@ -1692,7 +1692,15 @@ static inline u8 __attribute__((always_inline)) prefetched_program_address(void)
   if(steps == 0) return 0;
   // По адресу ПЗУ 06 код уже достиг R30/R33, а эмулируемый IP всё ещё указывает
   // на него. Выборка операнда продвинет IP позднее.
-  return (u8) ((usize) core_61::get_IP() % steps);
+  const u8 address = (u8) ((usize) core_61::get_IP() % steps);
+  // A far transfer to bank:00 starts at 111 before the ROM increment. The
+  // ring wraps after 112 cells, but the ROM counter keeps counting 112,
+  // 113... and overflows at 160. Normalize the live counter as well as the
+  // hook address before a later native branch reads its operand. Preserve
+  // the original ROM's dark-address behavior in classic mode.
+  if(expanded_program_mode && core_61::get_IP() >= steps)
+    core_61::set_IP(address);
+  return address;
 }
 
 static bool dispatch_mk61_program_boundary(u8 program_address, u8 opcode) {
