@@ -1696,9 +1696,10 @@ static inline u8 __attribute__((always_inline)) prefetched_program_address(void)
   // A far transfer to bank:00 starts at 111 before the ROM increment. The
   // ring wraps after 112 cells, but the ROM counter keeps counting 112,
   // 113... and overflows at 160. Normalize the live counter as well as the
-  // hook address before a later native branch reads its operand. Preserve
-  // the original ROM's dark-address behavior in classic mode.
-  if(expanded_program_mode && core_61::get_IP() >= steps)
+  // hook address before a later native branch reads its operand. Only 112 is
+  // this synthetic wrap state: higher ROM counters are valid dark addresses
+  // whose original behavior must remain intact in both modes.
+  if(expanded_program_mode && core_61::get_IP() == steps)
     core_61::set_IP(address);
   return address;
 }
