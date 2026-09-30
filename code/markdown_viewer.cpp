@@ -37,6 +37,15 @@ static constexpr i32 VIEWER_KEY_NONE = -1;
 static constexpr u16 PLAIN_CAPACITY = 2048;
 static constexpr u16 NO_LINK = 0xFFFFU;
 
+static constexpr bool link_is_selected(u16 link, u16 selected_link) {
+  return selected_link != NO_LINK && link == selected_link;
+}
+
+static_assert(!link_is_selected(NO_LINK, NO_LINK),
+              "no link selection must leave ordinary text unchanged");
+static_assert(link_is_selected(0, 0),
+              "an explicitly selected link must be highlighted");
+
 #if MK61_MARKDOWN_USES_WBMP
 
 static constexpr u16 MAX_DISPLAY_WIDTH = 192;
@@ -1036,7 +1045,7 @@ class GraphicLayout {
     i16 x = content_x;
     for(u8 index = 0; index < count; index++) {
       note_link(cells[index].link, y);
-      const u8 glyph_style = cells[index].link == selected_link
+      const u8 glyph_style = link_is_selected(cells[index].link, selected_link)
           ? (u8) (cells[index].style | STYLE_SELECTED)
           : cells[index].style;
       draw_glyph(cells[index].codepoint, glyph_style, x, (i16) y,
