@@ -1,0 +1,18 @@
+# MK61_MODULE_OPTION_COMPAT_BEGIN
+# Arduino IDE may retain the complete FQBN after a board platform update.
+# Before the embedded/APP/disabled split, "enabled" meant an external APP.
+# Keep that saved value valid on upgraded F401 installations; new installs
+# expose only the current app/builtin/disabled choices from boards.txt.
+
+mk61_f401_app.menu.mk61_focal.enabled=APP (старое значение)
+mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal=1
+mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal_app=1
+
+mk61_f401_app.menu.mk61_basic.enabled=APP (старое значение)
+mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1
+mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic_app=1
+
+mk61_f401_app.menu.mk61_chip8.enabled=APP (старое значение) · нужен UC1609/USB
+mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8=1
+mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8_app=1
+# MK61_MODULE_OPTION_COMPAT_END
