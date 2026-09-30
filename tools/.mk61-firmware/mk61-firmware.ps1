@@ -1138,6 +1138,46 @@ function Get-Python3Command {
     return $null
 }
 
+function Get-ArmToolchainFromDatabase {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "compile database not found: $Path"
+    }
+    $entries = @(ConvertFrom-Json -InputObject (
+        [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)))
+    foreach ($entry in $entries) {
+        $compiler = $null
+        $argumentsProperty = $entry.PSObject.Properties['arguments']
+        $commandProperty = $entry.PSObject.Properties['command']
+        if ($null -ne $argumentsProperty -and
+            @($argumentsProperty.Value).Count -gt 0) {
+            $compiler = [string]@($argumentsProperty.Value)[0]
+        } elseif ($null -ne $commandProperty -and
+                  -not [string]::IsNullOrWhiteSpace(
+                      [string]$commandProperty.Value)) {
+            $command = [string]$commandProperty.Value
+            if ($command -match '^"([^"]+)"') {
+                $compiler = $Matches[1]
+            } elseif ($command -match '^(\S+)') {
+                $compiler = $Matches[1]
+            }
+        }
+        if ([string]::IsNullOrWhiteSpace($compiler)) { continue }
+        $candidate = $compiler
+        if (-not [IO.File]::Exists($candidate) -and
+            [IO.File]::Exists("$candidate.exe")) {
+            $candidate = "$candidate.exe"
+        }
+        if ([IO.File]::Exists($candidate) -and
+            [IO.Path]::GetFileName($candidate) -match
+                '^arm-none-eabi-(?:gcc|g\+\+)(?:\.exe)?$') {
+            return [IO.Path]::GetDirectoryName(
+                [IO.Path]::GetFullPath($candidate))
+        }
+    }
+    throw "ARM compiler is missing from compile database: $Path"
+}
+
 function Get-LogPercent {
     param([string]$Path)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return -1 }
@@ -1400,7 +1440,7 @@ function Test-BuildDependenciesReady {
         return Test-F401HostToolsReady
     }
     $pythonReady = $script:State.Mcu -ne 'f411' -or
-        $null -ne (Get-Python3Command)
+        $script:IsWindowsHost -or $null -ne (Get-Python3Command)
     $hostCompilerReady = $script:State.Mcu -ne 'f411' -or
         $script:IsWindowsHost -or
         (Test-CommandAvailable 'c++')
@@ -1457,17 +1497,25 @@ function Get-DependencyReport {
             }
         }
         if ($script:State.Mcu -eq 'f411') {
-            $python = Get-Python3Command
-            if ($null -ne $python) {
-                $lines.Add("Python 3 (APP builder): $($python.Executable)")
-            } else {
-                $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
-            }
             if ($script:IsWindowsHost) {
-                $lines.Add('APP/ZX0 packer: Python (host C++ не нужен)')
+                $lines.Add(
+                    'APP/ZX0 packer: PowerShell/.NET ' +
+                    '(Python и host C++ не нужны)')
             } elseif (Test-CommandAvailable 'c++') {
+                $python = Get-Python3Command
+                if ($null -ne $python) {
+                    $lines.Add("Python 3 (APP builder): $($python.Executable)")
+                } else {
+                    $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
+                }
                 $lines.Add('Host C++17 compiler: найден')
             } else {
+                $python = Get-Python3Command
+                if ($null -ne $python) {
+                    $lines.Add("Python 3 (APP builder): $($python.Executable)")
+                } else {
+                    $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
+                }
                 $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)')
             }
         }
@@ -2299,16 +2347,52 @@ function Invoke-F401BundleBuild {
 
 function Invoke-SystemAppBundleBuild {
     param([string]$Profile, [string]$BuildDirectory, [string]$Bundle)
-    $python = Get-Python3Command
-    if ($null -eq $python) {
-        Write-LastLog 'Python 3 is required to build ABI 6 System APP.' -Append
-        return $false
-    }
     $graphics = if ($Profile -in @(
             'classic-v2', 'classic-v3', '40th', 'mini-v3-ws0010') -or
             $script:State.EnableUsbScreen -eq 1) { '1' } else { '0' }
     $uiFonts = if ($Profile -in @(
             'classic-v2', 'classic-v3', '40th')) { '1' } else { '0' }
+    if ($script:IsWindowsHost) {
+        try {
+            $compileCommands = Join-Path $BuildDirectory `
+                'compile_commands.json'
+            $toolchain = Get-ArmToolchainFromDatabase $compileCommands
+        } catch {
+            Write-LastLog $_.Exception.Message -Append
+            return $false
+        }
+        $powerShell = Get-CurrentPowerShellExecutable
+        if ([string]::IsNullOrEmpty($powerShell)) {
+            Write-LastLog 'PowerShell 5.1 or newer is required to build System APP.' -Append
+            return $false
+        }
+        $arguments = @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $script:ProjectRoot 'tools/build-system-app-bundle.ps1'),
+            '-ResidentElf', (Join-Path $BuildDirectory 'mk61s-M.ino.elf'),
+            '-ArmToolchainBin', $toolchain,
+            '-OutputDirectory', (Join-Path $Bundle 'System'),
+            '-Graphics', $graphics,
+            '-Setup', $(if ($script:State.EnableSetup -eq 1 -and $script:State.SetupAsApp -eq 1) { '1' } else { '0' }),
+            '-UsbDisk', [string](Get-ExternalizeUsbDiskValue),
+            '-Explorer', [string]$script:State.ExplorerAsApp,
+            '-UiFonts', $uiFonts,
+            '-Focal', $(if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { '1' } else { '0' }),
+            '-Basic', $(if ($script:State.EnableTinyBasic -eq 1 -and $script:State.TinyBasicAsApp -eq 1) { '1' } else { '0' }),
+            '-Wbmp', $(if ($script:State.EnableWbmp -eq 1 -and $script:State.WbmpAsApp -eq 1) { '1' } else { '0' }),
+            '-Markdown', $(if ($script:State.EnableMarkdown -eq 1 -and $script:State.MarkdownAsApp -eq 1) { '1' } else { '0' }),
+            '-Chip8', $(if ($script:State.EnableChip8 -eq 1 -and $script:State.Chip8AsApp -eq 1) { '1' } else { '0' }),
+            '-LocalFloatMath', [string]$script:State.AppLocalFloat,
+            '-CatalogDirectory', (Join-Path $script:OutputDir 'apps/abi6'))
+        return Invoke-ExternalWithProgress 'System APP' `
+            'Собираю единый ABI 6 комплект' $script:LastLog `
+            'indeterminate' $powerShell $arguments -Append
+    }
+    $python = Get-Python3Command
+    if ($null -eq $python) {
+        Write-LastLog 'Python 3 is required to build ABI 6 System APP.' -Append
+        return $false
+    }
     $arguments = [string[]](
         @($python.PrefixArguments) + @(
             (Join-Path $script:ProjectRoot 'tools/build_system_app_bundle.py'),
@@ -2403,58 +2487,72 @@ function Build-Selected {
     }
 
     $residentLinkFlags = '-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-    $python = Get-Python3Command
+    $python = $null
+    if (-not $script:IsWindowsHost) {
+        $python = Get-Python3Command
         if ($null -eq $python) {
             Write-LastLog 'Python 3 is required to prepare the F411 APP linker script.'
             if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
             else { Show-LastLogTail }
             return $false
         }
-        $propertiesBuild = Join-Path $buildDir 'properties-layout'
-        [void](New-Item -ItemType Directory -Force -Path $propertiesBuild)
-        $properties = Invoke-NativeCapture $script:ArduinoCli @(
-            'compile', '--fqbn', $script:FqbnF411,
-            '--build-path', $propertiesBuild,
-            '--show-properties=expanded', $sketchDir)
-        if ($properties.ExitCode -ne 0) {
-            Write-LastLog $properties.Output
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $variantMatch = [regex]::Match(
-            $properties.Output, '(?m)^build\.variant\.path=(.+?)\r?$')
-        $linkerMatch = [regex]::Match(
-            $properties.Output, '(?m)^build\.ldscript=(.+?)\r?$')
-        if (-not $variantMatch.Success -or -not $linkerMatch.Success) {
-            Write-LastLog 'Cannot resolve the STM32F411 linker script from Arduino build properties.'
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $sourceLinker = Join-Path $variantMatch.Groups[1].Value.Trim() `
-            $linkerMatch.Groups[1].Value.Trim()
-        if (-not (Test-Path -LiteralPath $sourceLinker -PathType Leaf)) {
-            Write-LastLog "STM32F411 linker script was not found: $sourceLinker"
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $portableLinker = Join-Path $buildDir 'mk61-portable.ld'
+    }
+    $propertiesBuild = Join-Path $buildDir 'properties-layout'
+    [void](New-Item -ItemType Directory -Force -Path $propertiesBuild)
+    $properties = Invoke-NativeCapture $script:ArduinoCli @(
+        'compile', '--fqbn', $script:FqbnF411,
+        '--build-path', $propertiesBuild,
+        '--show-properties=expanded', $sketchDir)
+    if ($properties.ExitCode -ne 0) {
+        Write-LastLog $properties.Output
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $variantMatch = [regex]::Match(
+        $properties.Output, '(?m)^build\.variant\.path=(.+?)\r?$')
+    $linkerMatch = [regex]::Match(
+        $properties.Output, '(?m)^build\.ldscript=(.+?)\r?$')
+    if (-not $variantMatch.Success -or -not $linkerMatch.Success) {
+        Write-LastLog 'Cannot resolve the STM32F411 linker script from Arduino build properties.'
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $sourceLinker = Join-Path $variantMatch.Groups[1].Value.Trim() `
+        $linkerMatch.Groups[1].Value.Trim()
+    if (-not (Test-Path -LiteralPath $sourceLinker -PathType Leaf)) {
+        Write-LastLog "STM32F411 linker script was not found: $sourceLinker"
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $portableLinker = Join-Path $buildDir 'mk61-portable.ld'
+    if ($script:IsWindowsHost) {
+        $powerShell = Get-CurrentPowerShellExecutable
+        $layout = Invoke-NativeCapture $powerShell @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $script:ProjectRoot `
+                'tools/.mk61-gcc/portable-layout.ps1'),
+            '-InputFile', $sourceLinker,
+            '-OutputFile', $portableLinker)
+    } else {
         $pythonArguments = [string[]](
             @($python.PrefixArguments) +
-            @((Join-Path $script:ProjectRoot 'tools/.mk61-gcc/portable-layout.py'),
+            @((Join-Path $script:ProjectRoot `
+                'tools/.mk61-gcc/portable-layout.py'),
               $sourceLinker, $portableLinker))
         $layout = Invoke-NativeCapture $python.Executable $pythonArguments
-        if ($layout.ExitCode -ne 0 -or
-            -not (Test-Path -LiteralPath $portableLinker -PathType Leaf)) {
-            Write-LastLog $layout.Output
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $linkerFlagPath = $portableLinker.Replace('\', '/')
-        $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
+    }
+    if ($layout.ExitCode -ne 0 -or
+        -not (Test-Path -LiteralPath $portableLinker -PathType Leaf)) {
+        Write-LastLog $layout.Output
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
+    }
+    $linkerFlagPath = $portableLinker.Replace('\', '/')
+    $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
 
     $arguments = @(
         'compile', '--fqbn', $script:FqbnF411,
@@ -2500,15 +2598,35 @@ function Build-Selected {
     }
 
     $residentElf = Join-Path $buildDir 'mk61s-M.ino.elf'
-    $elfSealerArguments = [string[]](
-        @($python.PrefixArguments) + @(
-            (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
-            '--bin', $sourceArtifact, '--elf', $residentElf,
-            '--compile-commands',
-            (Join-Path $buildDir 'compile_commands.json')))
+    if ($script:IsWindowsHost) {
+        try {
+            $toolchain = Get-ArmToolchainFromDatabase (
+                Join-Path $buildDir 'compile_commands.json')
+            $objcopy = Join-Path $toolchain 'arm-none-eabi-objcopy.exe'
+            if (-not (Test-Path -LiteralPath $objcopy -PathType Leaf)) {
+                throw "ARM objcopy not found: $objcopy"
+            }
+        } catch {
+            Write-LastLog $_.Exception.Message -Append
+            return $false
+        }
+        $elfSealerExecutable = $powerShell
+        $elfSealerArguments = @(
+            '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+            '-InputFile', $sourceArtifact, '-ElfFile', $residentElf,
+            '-Objcopy', $objcopy, '-MaxSize', '524288')
+    } else {
+        $elfSealerExecutable = $python.Executable
+        $elfSealerArguments = [string[]](
+            @($python.PrefixArguments) + @(
+                (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
+                '--bin', $sourceArtifact, '--elf', $residentElf,
+                '--compile-commands',
+                (Join-Path $buildDir 'compile_commands.json')))
+    }
     if (-not (Invoke-ExternalWithProgress 'ELF прошивки' `
         'Запечатываю адресный ELF' $script:LastLog 'indeterminate' `
-        $python.Executable $elfSealerArguments -Append)) {
+        $elfSealerExecutable $elfSealerArguments -Append)) {
         if ($script:State.Interactive) {
             Show-Log 'Ошибка ELF прошивки' $script:LastLog
         } else { Show-LastLogTail }

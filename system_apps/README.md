@@ -14,6 +14,14 @@ python3 tools/build_portable_app.py --system focal \
   --arm-toolchain-bin /path/to/arm-gcc/bin --output-dir .build/FOCAL
 ```
 
+На Windows тот же модуль без Python собирает PowerShell-вариант:
+
+```powershell
+tools\build-portable-app.ps1 -System focal `
+  -ArmToolchainBin C:\path\to\arm-gcc\bin `
+  -OutputDirectory .build\FOCAL
+```
+
 Значения `--system`: `focal`, `tinybasic`, `wbmp-viewer`, `markdown-viewer`,
 `chip8`, `setup`, `usbdisk`, `explorer`. Для компактного Markdown на символьном экране добавьте
 `--text-only`. Графический Markdown также открывает WBMP; в таком комплекте
@@ -29,6 +37,10 @@ python3 tools/build_system_app_bundle.py \
   --catalog-dir binary/apps/abi6 \
   --graphics 1 --focal 1 --basic 1 --wbmp 1 --markdown 1 --chip8 0
 ```
+
+Windows-вариант полного каталога вызывается через `system_apps\build.cmd`;
+оболочка получает toolchain из `compile_commands.json` и использует
+`tools\build-system-app-bundle.ps1`.
 
 `binary/apps/abi6` — общий контентно-адресуемый каталог переносимых APP.
 Одинаковый payload хранится в нём один раз по SHA-256, а `catalog.json`

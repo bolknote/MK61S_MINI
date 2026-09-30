@@ -88,18 +88,25 @@ require_text "$firmware_sh" 'seal-firmware-elf.py'
 require_text "$firmware_ps" "ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$firmware_ps" "'tools/seal-firmware.ps1'"
 require_text "$firmware_ps" "'-InputFile', \$sourceArtifact, '-MaxSize', '524288'"
-require_text "$firmware_ps" "'tools/seal-firmware-elf.py'"
+require_text "$firmware_ps" "'tools/build-system-app-bundle.ps1'"
+require_text "$firmware_ps" "'tools/.mk61-gcc/portable-layout.ps1'"
+require_text "$firmware_ps" "'seal-elf'"
 
 require_text "$gcc_cmake" 'MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}'
 require_text "$gcc_cmake" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'
 require_text "$gcc_cmake" 'analyze_stack_usage.py'
+require_text "$gcc_cmake" 'analyze-stack-usage.ps1'
+require_text "$gcc_cmake" 'CMAKE_HOST_WIN32'
 require_text "$gcc_ps" "'-DMK61_REQUIRE_RESIDENT_CRC=1'"
 require_text "$gcc_ps" "'tools/seal-firmware.ps1'"
-require_text "$gcc_ps" "'tools/seal-firmware-elf.py'"
+require_text "$gcc_ps" "'tools/release-contract.ps1'"
+require_text "$gcc_ps" "'seal-elf'"
 require_order "$gcc_ps" "'seal'," "'System APP builder'"
 require_text "$gcc_ps" "'--change-addresses', '0x08000000'"
 require_text "$root/system_apps/.tool/build.ps1" 'build_system_app_bundle.py'
+require_text "$root/system_apps/.tool/build.ps1" 'build-system-app-bundle.ps1'
 require_text "$root/tools/build_system_app_bundle.py" 'build_portable_app.py'
+require_text "$root/tools/build-system-app-bundle.ps1" 'build-portable-app.ps1'
 require_text "$root/tools/build_portable_app.py" 'analyze_stack_usage.py'
 require_text "$root/tools/build_portable_app.py" '"-fipa-pta"'
 
@@ -111,14 +118,18 @@ require_text "$sketch" 'void idle_main_process(void);'
 require_text "$board_hook_sh" 'seal_resident "$resident_bin"'
 require_text "$board_hook_ps" "'seal-firmware.ps1'"
 require_text "$board_hook_sh" 'seal-firmware-elf.py'
-require_text "$board_hook_ps" "'seal-firmware-elf.py'"
+require_text "$board_hook_ps" "'seal-elf'"
+require_text "$board_hook_ps" 'build-system-app-bundle.ps1'
+if grep -Eiq 'python|\.py' "$board_hook_ps"; then
+  fail 'Windows Arduino hook still invokes Python'
+fi
 for installer in "$board_install_sh" "$board_install_ps"; do
   require_text "$installer" 'mk61_firmware_seal.cpp'
   require_text "$installer" 'resident_firmware_format.hpp'
   require_text "$installer" 'rust_types.h'
   require_text "$installer" 'seal-firmware.ps1'
-  require_text "$installer" 'seal-firmware-elf.py'
 done
+require_text "$board_install_sh" 'seal-firmware-elf.py'
 require_text "$board_install_ps" 'build_cache:'
 require_text "$board_install_ps" 'selected a separate ASCII-only directory:'
 require_text "$board_install_ps" 'MK61Arduino\build-cache-'
@@ -158,8 +169,8 @@ done
 printf '%s\n' "$arduino_ide_job" | grep -Fq -- 'build_cache.path' ||
   fail 'Windows Arduino IDE job does not verify its ASCII build cache'
 printf '%s\n' "$arduino_ide_job" |
-  grep -Fq -- 'tests/system_app_catalog_self_test.py' ||
-  fail 'Windows Arduino IDE job does not exercise the concurrent APP cache'
+  grep -Fq -- 'tests/system_app_catalog_powershell_self_test.ps1' ||
+  fail 'Windows Arduino IDE job does not exercise the PowerShell APP cache'
 printf '%s\n' "$arduino_ide_job" |
   grep -Fq -- 'Temp пользователя Роман' ||
   fail 'Windows Arduino IDE job does not compile with a Unicode TEMP path'

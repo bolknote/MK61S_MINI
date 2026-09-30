@@ -34,18 +34,23 @@ class PackagingTest(unittest.TestCase):
     def test_release_builders_include_notices(self):
         self.assertIn("tools/.fmk-font/package_ui_font_licenses.py",
                       (ROOT / "tests/run_f411_release_matrix.sh").read_text())
-        for name in ("tools/build_f401_bundle.sh", "tools/.mk61-gcc/build.ps1"):
-            text = (ROOT / name).read_text()
-            self.assertIn("tools/.fmk-font/package_ui_font_licenses.py", text)
-            self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
-        for name in (
+        shell_builders = (
+            "tools/build_f401_bundle.sh",
             "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
             "mk61-app-postbuild.sh",
-            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
-            "mk61-app-postbuild.ps1",
-        ):
+        )
+        for name in shell_builders:
             text = (ROOT / name).read_text()
             self.assertIn("package_ui_font_licenses.py", text)
+            self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
+        powershell_builders = (
+            "tools/.mk61-gcc/build.ps1",
+            "tools/.mk61-arduino-board/hardware/mk61/stm32/tools/"
+            "mk61-app-postbuild.ps1",
+        )
+        for name in powershell_builders:
+            text = (ROOT / name).read_text()
+            self.assertIn("package-ui-font-licenses.ps1", text)
             self.assertIn("MK61_PORTABLE_UI_FONTS=", text)
         wrapper = (ROOT / "system_apps/.tool/build.ps1").read_text()
         self.assertIn("'--ui-fonts', $UiFonts", wrapper)

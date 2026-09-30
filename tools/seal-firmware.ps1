@@ -3,13 +3,17 @@
 [CmdletBinding()]
 param(
     [Parameter(Position = 0, Mandatory = $true)]
-    [ValidateSet('seal', 'check')]
+    [ValidateSet('seal', 'check', 'seal-elf')]
     [string]$Mode,
 
     [Parameter(Mandatory = $true)]
     [string]$InputFile,
 
     [string]$OutputFile,
+
+    [string]$ElfFile,
+
+    [string]$Objcopy,
 
     [ValidateRange(1, 1048576)]
     [int]$MaxSize = 524288
@@ -173,6 +177,75 @@ try {
     }
     if ($build -eq 0 -or $build -ne $expected) {
         throw 'resident firmware build identity mismatch'
+    }
+    if ($Mode -eq 'seal-elf') {
+        if ([string]::IsNullOrWhiteSpace($ElfFile) -or
+            -not [IO.File]::Exists([IO.Path]::GetFullPath($ElfFile))) {
+            throw "resident ELF not found: $ElfFile"
+        }
+        if ([string]::IsNullOrWhiteSpace($Objcopy) -or
+            -not [IO.File]::Exists([IO.Path]::GetFullPath($Objcopy))) {
+            throw "ARM objcopy not found: $Objcopy"
+        }
+        $elfPath = [IO.Path]::GetFullPath($ElfFile)
+        $objcopyPath = [IO.Path]::GetFullPath($Objcopy)
+        [byte[]]$elfBytes = [IO.File]::ReadAllBytes($elfPath)
+        $elfFooter = Find-Footer $elfBytes
+        if ((Get-Le32 $elfBytes ($elfFooter + 28)) -ne $profile -or
+            (Get-Le32 $elfBytes ($elfFooter + 32)) -ne $flags -or
+            (Get-Le32 $elfBytes ($elfFooter + 36)) -ne $reserved) {
+            throw 'BIN and ELF resident footers do not match'
+        }
+        [Array]::Copy($bytes, $footer + $ImageSizeOffset,
+            $elfBytes, $elfFooter + $ImageSizeOffset, 12)
+        $outputPath = if ([string]::IsNullOrWhiteSpace($OutputFile)) {
+            $elfPath
+        } else { [IO.Path]::GetFullPath($OutputFile) }
+        [IO.Directory]::CreateDirectory(
+            [IO.Path]::GetDirectoryName($outputPath)) | Out-Null
+        $token = "$PID.$([guid]::NewGuid().ToString('N'))"
+        $temporaryElf = "$outputPath.$token.tmp"
+        $temporaryBin = "$outputPath.$token.verify.bin"
+        try {
+            [IO.File]::WriteAllBytes($temporaryElf, $elfBytes)
+            & $objcopyPath '-O' 'binary' $temporaryElf $temporaryBin
+            if ($LASTEXITCODE -ne 0) {
+                throw "$([IO.Path]::GetFileName($objcopyPath)) failed with " +
+                    "exit code $LASTEXITCODE"
+            }
+            [byte[]]$rebuilt = [IO.File]::ReadAllBytes($temporaryBin)
+            $same = $rebuilt.Length -eq $bytes.Length
+            $mismatch = [Math]::Min($rebuilt.Length, $bytes.Length)
+            if ($same) {
+                for ($index = 0; $index -lt $bytes.Length; $index++) {
+                    if ($rebuilt[$index] -ne $bytes[$index]) {
+                        $same = $false
+                        $mismatch = $index
+                        break
+                    }
+                }
+            }
+            if (-not $same) {
+                throw ('sealed ELF does not reproduce sealed BIN exactly ' +
+                    "(first mismatch $mismatch, ELF BIN $($rebuilt.Length) " +
+                    "bytes, expected $($bytes.Length) bytes)")
+            }
+            Move-Item -LiteralPath $temporaryElf `
+                -Destination $outputPath -Force
+            $temporaryElf = $null
+        } finally {
+            foreach ($temporary in @($temporaryElf, $temporaryBin)) {
+                if ($null -ne $temporary -and
+                    [IO.File]::Exists($temporary)) {
+                    Remove-Item -LiteralPath $temporary -Force
+                }
+            }
+        }
+        [Console]::WriteLine(
+            ('resident firmware ELF: sealed size={0} footer={1} ' +
+             'crc={2:X8} profile={3:X8}'),
+            $bytes.Length, $footer, $expected, $profile)
+        exit 0
     }
     $state = if ($Mode -eq 'seal') { 'sealed' } else { 'valid' }
     [Console]::WriteLine(

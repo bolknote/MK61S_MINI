@@ -20,7 +20,19 @@ endif()
 
 project(mk61s_f401_gcc LANGUAGES C CXX ASM)
 
-find_package(Python3 3 REQUIRED COMPONENTS Interpreter)
+if(CMAKE_HOST_WIN32)
+  if(NOT DEFINED MK61_POWERSHELL OR
+     NOT EXISTS "${MK61_POWERSHELL}")
+    message(FATAL_ERROR
+      "MK61_POWERSHELL must name Windows PowerShell 5.1 or newer")
+  endif()
+  if(NOT DEFINED MK61_PROFILE_DEFINITIONS)
+    message(FATAL_ERROR
+      "MK61_PROFILE_DEFINITIONS is required on Windows")
+  endif()
+else()
+  find_package(Python3 3 REQUIRED COMPONENTS Interpreter)
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -91,17 +103,21 @@ if(NOT DEFINED MK61_MATH_BACKEND OR
   message(FATAL_ERROR "MK61_MATH_BACKEND must be 0 or 1")
 endif()
 
-execute_process(
-  COMMAND "${Python3_EXECUTABLE}"
-    "${MK61_PROJECT_ROOT}/tools/release_contract.py"
-    profile --id "${MK61_PROFILE}" --format cmake
-  RESULT_VARIABLE _mk61_profile_result
-  OUTPUT_VARIABLE _mk61_profile_definitions
-  ERROR_VARIABLE _mk61_profile_error
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-if(NOT _mk61_profile_result EQUAL 0)
-  message(FATAL_ERROR
-    "Unsupported MK61_PROFILE ${MK61_PROFILE}: ${_mk61_profile_error}")
+if(CMAKE_HOST_WIN32)
+  set(_mk61_profile_definitions "${MK61_PROFILE_DEFINITIONS}")
+else()
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}"
+      "${MK61_PROJECT_ROOT}/tools/release_contract.py"
+      profile --id "${MK61_PROFILE}" --format cmake
+    RESULT_VARIABLE _mk61_profile_result
+    OUTPUT_VARIABLE _mk61_profile_definitions
+    ERROR_VARIABLE _mk61_profile_error
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(NOT _mk61_profile_result EQUAL 0)
+    message(FATAL_ERROR
+      "Unsupported MK61_PROFILE ${MK61_PROFILE}: ${_mk61_profile_error}")
+  endif()
 endif()
 
 # Reuse the board, core, HAL and Arduino-library targets shipped with the
@@ -109,11 +125,20 @@ endif()
 # build never invokes Arduino CLI or the database updater.
 include("${CORE_PATH}/cmake/boards_db.cmake")
 set(_mk61_portable_ld "${CMAKE_BINARY_DIR}/portable-resident.ld")
-execute_process(
-  COMMAND "${Python3_EXECUTABLE}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
-    "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld" "${_mk61_portable_ld}"
-  COMMAND_ERROR_IS_FATAL ANY)
+if(CMAKE_HOST_WIN32)
+  execute_process(
+    COMMAND "${MK61_POWERSHELL}" -NoLogo -NoProfile -File
+      "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.ps1"
+      "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld"
+      "${_mk61_portable_ld}"
+    COMMAND_ERROR_IS_FATAL ANY)
+else()
+  execute_process(
+    COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
+      "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld" "${_mk61_portable_ld}"
+    COMMAND_ERROR_IS_FATAL ANY)
+endif()
 get_target_property(_mk61_board_link BLACKPILL_F401CC INTERFACE_LINK_OPTIONS)
 list(REMOVE_ITEM _mk61_board_link
   "LINKER:--default-script=${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
@@ -121,8 +146,14 @@ list(APPEND _mk61_board_link "LINKER:--default-script=${_mk61_portable_ld}")
 set_property(TARGET BLACKPILL_F401CC PROPERTY
   INTERFACE_LINK_OPTIONS "${_mk61_board_link}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-  "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
   "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
+if(CMAKE_HOST_WIN32)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.ps1")
+else()
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py")
+endif()
 add_library(board ALIAS BLACKPILL_F401CC)
 set(BUILD_VARIANT_PATH "${BLACKPILL_F401CC_VARIANT_PATH}")
 set(BOARD_MAXSIZE "${BLACKPILL_F401CC_MAXSIZE}")
@@ -254,13 +285,26 @@ set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/check-flash.cmake")
 set_property(TARGET resident APPEND PROPERTY LINK_DEPENDS "${_mk61_portable_ld}")
 
-add_custom_command(TARGET resident POST_BUILD
-  COMMAND "${Python3_EXECUTABLE}"
+if(CMAKE_HOST_WIN32)
+  set(_mk61_stack_analysis_command
+    "${MK61_POWERSHELL}" -NoLogo -NoProfile -File
+    "${MK61_PROJECT_ROOT}/tests/analyze-stack-usage.ps1"
+    -CompileCommands "${CMAKE_BINARY_DIR}/compile_commands.json"
+    -SourceRoot "${MK61_PROJECT_ROOT}/code" -Top 3
+    -MaxFrame "${MK61_STACK_FRAME_LIMIT}"
+    -SummaryJson "${CMAKE_BINARY_DIR}/stack-usage.json")
+else()
+  set(_mk61_stack_analysis_command
+    "${Python3_EXECUTABLE}"
     "${MK61_PROJECT_ROOT}/tests/analyze_stack_usage.py"
     --compile-commands "${CMAKE_BINARY_DIR}/compile_commands.json"
     --source-root "${MK61_PROJECT_ROOT}/code" --top 3
     --max-frame "${MK61_STACK_FRAME_LIMIT}"
-    --summary-json "${CMAKE_BINARY_DIR}/stack-usage.json"
+    --summary-json "${CMAKE_BINARY_DIR}/stack-usage.json")
+endif()
+
+add_custom_command(TARGET resident POST_BUILD
+  COMMAND ${_mk61_stack_analysis_command}
   COMMAND "${CMAKE_OBJCOPY}" -O binary
     "$<TARGET_FILE:resident>" "${CMAKE_BINARY_DIR}/resident.bin"
   COMMAND "${CMAKE_OBJCOPY}" -O ihex

@@ -35,51 +35,6 @@ function Stop-Mk61Build {
     throw "MK61s Arduino board: $Message"
 }
 
-function Get-Python {
-    # Windows commonly exposes python.exe/python3.exe App Execution Aliases
-    # even when Python is not installed.  Get-Command sees those stubs, but
-    # starting one fails with exit code 9009.  Probe every candidate before
-    # using it and support the standard Windows Python launcher (`py -3`).
-    $candidates = @(
-        [pscustomobject]@{
-            Executable = 'py'
-            PrefixArguments = [string[]]@('-3')
-        },
-        [pscustomobject]@{
-            Executable = 'python'
-            PrefixArguments = [string[]]@()
-        },
-        [pscustomobject]@{
-            Executable = 'python3'
-            PrefixArguments = [string[]]@()
-        }
-    )
-    foreach ($candidate in $candidates) {
-        $found = Get-Command $candidate.Executable -CommandType Application `
-            -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($null -eq $found) { continue }
-        try {
-            $output = & $found.Source @($candidate.PrefixArguments) `
-                '--version' 2>&1 | Out-String
-            $exitCode = $LASTEXITCODE
-        } catch {
-            continue
-        }
-        $version = [regex]::Match(
-            [string]$output, '(?m)^Python 3\.(\d+)(?:\.\d+)?')
-        if ($exitCode -eq 0 -and $version.Success -and
-            [int]$version.Groups[1].Value -ge 10) {
-            return [pscustomobject]@{
-                Executable = $found.Source
-                PrefixArguments = [string[]]$candidate.PrefixArguments
-            }
-        }
-    }
-    Stop-Mk61Build (
-        'Python 3.10+ is required for APP builds. On Windows install it ' +
-        'from python.org or with winget; the py -3 launcher is supported.')
-}
-
 function Test-Mk61Profile {
     param([string]$PlatformId, [string]$DisplayId)
     return "${PlatformId}:${DisplayId}" -in @(
@@ -127,11 +82,14 @@ function Invoke-Mk61Tool {
     }
 }
 
-function Invoke-Mk61Python {
-    param([Parameter(Mandatory = $true)][string[]]$Arguments)
-    $python = Get-Python
-    Invoke-Mk61Tool $python.Executable `
-        (@($python.PrefixArguments) + $Arguments)
+function Get-Mk61PowerShell {
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        $candidate = Join-Path $PSHOME 'powershell.exe'
+    } else {
+        $candidate = (Get-Process -Id $PID).Path
+    }
+    Test-RequiredFile $candidate 'PowerShell'
+    return $candidate
 }
 
 function Remove-Mk61BundledUiFontLicenses {
@@ -166,8 +124,9 @@ function Check-Mk61Profile {
     }
     if (-not [string]::IsNullOrWhiteSpace($VariantLd)) {
         [IO.Directory]::CreateDirectory($BuildPath) | Out-Null
-        Invoke-Mk61Python @(
-            (Join-Path $Sketch '../tools/.mk61-gcc/portable-layout.py'),
+        Invoke-Mk61Tool (Get-Mk61PowerShell) @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $Sketch '../tools/.mk61-gcc/portable-layout.ps1'),
             $VariantLd, (Join-Path $BuildPath 'mk61-portable.ld'))
     }
 }
@@ -230,9 +189,7 @@ function Build-Mk61Bundle {
 
     $sealer = Join-Path $PSScriptRoot 'seal-firmware.ps1'
     Test-RequiredFile $sealer 'resident firmware sealer; reinstall the MK61s board'
-    $powerShell = if ($PSVersionTable.PSEdition -eq 'Desktop') {
-        Join-Path $PSHOME 'powershell.exe'
-    } else { (Get-Process -Id $PID).Path }
+    $powerShell = Get-Mk61PowerShell
     Invoke-Mk61Tool $powerShell @(
         '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
         '-InputFile', $residentBin, '-MaxSize', $MaxSize)
@@ -247,12 +204,10 @@ function Build-Mk61Bundle {
     if ([string]::IsNullOrWhiteSpace($objcopy)) {
         Stop-Mk61Build "ARM objcopy not found beside compiler: $Compiler"
     }
-    $elfSealer = Join-Path $PSScriptRoot 'seal-firmware-elf.py'
-    Test-RequiredFile $elfSealer `
-        'resident ELF sealer; reinstall the MK61s board'
-    Invoke-Mk61Python @(
-        $elfSealer, '--bin', $residentBin, '--elf', $residentElf,
-        '--objcopy', $objcopy)
+    Invoke-Mk61Tool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+        '-InputFile', $residentBin, '-ElfFile', $residentElf,
+        '-Objcopy', $objcopy)
 
     $stageRoot = Join-Path $build 'mk61-system-apps'
     $script:Stage = [IO.Path]::GetFullPath((Join-Path $stageRoot $Bundle))
@@ -289,17 +244,18 @@ function Build-Mk61Bundle {
     $uiFonts = if ($CompileFlags -match
         'MK61_BOARD_CLASSIC|MK61_BOARD_40TH|DISPLAY_UC1609') { '1' } else { '0' }
     $outputRoot = [IO.Path]::GetFullPath((Join-Path $Sketch '..\binary'))
-    Invoke-Mk61Python @(
-        (Join-Path $Sketch '../tools/build_system_app_bundle.py'),
-        '--resident-elf', $residentElf,
-        '--arm-toolchain-bin', [IO.Path]::GetDirectoryName($Compiler),
-        '--output-dir', (Join-Path $script:Stage 'System'),
-        '--graphics', $graphics, '--ui-fonts', $uiFonts,
-        '--focal', $Focal, '--basic', $Basic, '--wbmp', $Wbmp,
-        '--markdown', $Markdown, '--chip8', $Chip8,
-        '--setup', $Setup, '--usbdisk', $UsbDisk, '--explorer', $Explorer,
-        '--local-float-math', $LocalFloatMath,
-        '--catalog-dir', (Join-Path $outputRoot 'apps\abi6'))
+    Invoke-Mk61Tool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File',
+        (Join-Path $Sketch '../tools/build-system-app-bundle.ps1'),
+        '-ResidentElf', $residentElf,
+        '-ArmToolchainBin', [IO.Path]::GetDirectoryName($Compiler),
+        '-OutputDirectory', (Join-Path $script:Stage 'System'),
+        '-Graphics', $graphics, '-UiFonts', $uiFonts,
+        '-Focal', $Focal, '-Basic', $Basic, '-Wbmp', $Wbmp,
+        '-Markdown', $Markdown, '-Chip8', $Chip8,
+        '-Setup', $Setup, '-UsbDisk', $UsbDisk, '-Explorer', $Explorer,
+        '-LocalFloatMath', $LocalFloatMath,
+        '-CatalogDirectory', (Join-Path $outputRoot 'apps\abi6'))
     $stagedUsbDisk = Join-Path (Join-Path $script:Stage 'System') 'USBDISK.APP'
     if ($UsbDisk -eq '1') {
         Test-RequiredFile $stagedUsbDisk `
@@ -343,10 +299,11 @@ function Build-Mk61Bundle {
     }
     Remove-Mk61BundledUiFontLicenses -Output $output
     if ($uiFonts -eq '1') {
-        Invoke-Mk61Python @(
+        Invoke-Mk61Tool $powerShell @(
+            '-NoLogo', '-NoProfile', '-File',
             (Join-Path $Sketch `
-                '../tools/.fmk-font/package_ui_font_licenses.py'),
-            '--bundle', $output)
+                '../tools/.fmk-font/package-ui-font-licenses.ps1'),
+            '-Bundle', $output)
     }
     $utf8 = New-Object Text.UTF8Encoding($false)
     [IO.File]::WriteAllText((Join-Path $output 'build.flags'),

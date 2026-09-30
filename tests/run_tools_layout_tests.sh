@@ -14,7 +14,9 @@ expected="$(
     build_fmk_from_ui_atlas.py \
     build_mk61_module_pack.sh \
     build_mk61_program_pack.sh \
+    build-portable-app.ps1 \
     build_portable_app.py \
+    build-system-app-bundle.ps1 \
     build_system_app_bundle.py \
     convert_fmk1_to_fmk2.py \
     build-gcc.cmd \
@@ -29,6 +31,7 @@ expected="$(
     mkc.cmd \
     program_pack.py \
     release-contract.json \
+    release-contract.ps1 \
     release_contract.py \
     vfat_diagnostic.py \
     seal-firmware-elf.py \
@@ -46,6 +49,11 @@ fi
 test -f "$root/tools/.mk61-app/mk61_module_pack.cpp"
 test -f "$root/tools/.mk61-app/mk61_module.ld"
 test -f "$root/tools/.mk61-app/build.ps1"
+test -f "$root/tools/.mk61-app/Mk61AppPacker.cs"
+test -f "$root/tools/.mk61-app/mk61-module-pack.ps1"
+test -f "$root/tools/.mk61-app/build-terminal-help.ps1"
+test -f "$root/tools/.mk61-gcc/portable-layout.ps1"
+test -f "$root/tools/.fmk-font/package-ui-font-licenses.ps1"
 test -f "$root/tools/.fmk-font/fmk_font.cpp"
 test -f "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp"
 test ! -e "$root/tools/fmk_font"

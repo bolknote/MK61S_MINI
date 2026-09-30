@@ -14,6 +14,10 @@ def run(command):
                           text=True, check=True).stdout
 
 
+def packer_command(args, *arguments):
+    return [*args.packer_prefix, args.packer, *arguments]
+
+
 def relocation_checks(args, work):
     image, app, memory, table = (work / x for x in ('reloc.bin', 'reloc.APP', 'relocated.bin', 'table.rel'))
     base, memory_size = 0x20000000, 64
@@ -23,9 +27,10 @@ def relocation_checks(args, work):
     for offset, value in ((0, base + 4), (8, base + 17), (12, base + 64), (20, base + 8)):
         struct.pack_into('<I', original, offset, value)
     image.write_bytes(original); table.write_bytes(bytes((0, 4, 0)))
-    command = [args.packer, '--portable', '--kind', 'app', '--image', image,
-               '--memory-size', memory_size, '--entry-offset', 0,
-               '--relocations', table, '--output', app]
+    command = packer_command(
+        args, '--portable', '--kind', 'app', '--image', image,
+        '--memory-size', memory_size, '--entry-offset', 0,
+        '--relocations', table, '--output', app)
     run(command)
     good = app.read_bytes()
     assert struct.unpack_from('<H', good, 12)[0] == 6 and good[16] & 4
@@ -67,9 +72,10 @@ def relocation_checks(args, work):
         while gap >= 128:
             encoded.append((gap & 127) | 128); gap >>= 7
         encoded.append(gap); table.write_bytes(encoded)
-        expanded = [args.packer, '--portable', '--kind', 'app', '--image', image,
-                    '--memory-size', 20480, '--entry-offset', 0,
-                    '--relocations', table, '--output', app]
+        expanded = packer_command(
+            args, '--portable', '--kind', 'app', '--image', image,
+            '--memory-size', 20480, '--entry-offset', 0,
+            '--relocations', table, '--output', app)
         run(expanded)
         run([args.reader, app, memory, hex(base + 8)])
         struct.pack_into('<I', large, offset, base + 20488)
@@ -79,6 +85,8 @@ def relocation_checks(args, work):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--packer-prefix', action='append', default=[],
+                        help='one command argument prepended before PACKER')
     parser.add_argument("packer", type=Path)
     parser.add_argument("reader", type=Path)
     args = parser.parse_args()
@@ -96,10 +104,11 @@ def main():
                     (bytes.fromhex("00f000f8") * 256, "plain")]
         for original, choice in fixtures:
             image.write_bytes(original)
-            command = [args.packer, "--kind", "app", "--image", image,
-                       "--relocations", relocations,
-                       "--memory-size", len(original) + 37, "--entry-offset", 0,
-                       "--output", app]
+            command = packer_command(
+                args, "--kind", "app", "--image", image,
+                "--relocations", relocations,
+                "--memory-size", len(original) + 37, "--entry-offset", 0,
+                "--output", app)
             report = run(command)
             match = re.search(r"plain=(\d+) BCJ=(\d+); selected=(\w+)", report)
             assert match, report

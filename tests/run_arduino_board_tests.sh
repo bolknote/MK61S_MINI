@@ -227,7 +227,7 @@ if "$hook" check-profile --platform mini-v3 --display uc1609 \
 fi
 
 grep -q 'build_system_app_bundle.py' "$hook"
-grep -q 'build_system_app_bundle.py' \
+grep -q 'build-system-app-bundle.ps1' \
   "$platform/tools/mk61-app-postbuild.ps1"
 grep -Fq 'SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT' "$hook"
 grep -Fq "'SETUP.APP', 'USBDISK.APP'," \
@@ -238,8 +238,13 @@ grep -Fq "printf 'format 1\\nabi 6\\n'" "$hook"
 grep -Fq "'abi 6' + [Environment]::NewLine" \
   "$platform/tools/mk61-app-postbuild.ps1"
 grep -q 'package_ui_font_licenses.py' "$hook"
-grep -q 'package_ui_font_licenses.py' \
+grep -q 'package-ui-font-licenses.ps1' \
   "$platform/tools/mk61-app-postbuild.ps1"
+if grep -Eiq 'python|\.py' \
+    "$platform/tools/mk61-app-postbuild.ps1"; then
+  echo 'Windows Arduino post-build hook still invokes Python' >&2
+  exit 1
+fi
 for obsolete in focal basic wbmp markdown chip8; do
   test ! -e "$root/code/mk61_ide_${obsolete}_app.cpp"
 done
@@ -468,24 +473,20 @@ EOF
   grep -q 'CHIP-8 выбран без графического экрана' \
     "$work/chip8-without-graphics-ps.txt"
 
-  # A Windows Store App Execution Alias is visible to Get-Command but exits
-  # with 9009.  The PowerShell hook must use the working `py -3` launcher
-  # instead and preserve its prefix argument for both probing and execution.
+  # Keep broken Python launchers ahead of the host tools.  The Windows hook
+  # must still prepare the portable linker script without invoking any of
+  # them: Arduino IDE builds now use only PowerShell/.NET host helpers.
   launcher_dir="$work/python-launcher"
   launcher_log="$work/python-launcher.log"
   launcher_build="$work/python-launcher-build"
   mkdir -p "$launcher_dir" "$launcher_build"
-  for alias in python python3; do
-    printf '%s\n' '#!/usr/bin/env bash' 'exit 73' > "$launcher_dir/$alias"
+  for alias in python python3 py; do
+    printf '%s\n' \
+      '#!/usr/bin/env bash' \
+      'printf "%s\\n" "$*" >> "$MK61_TEST_PY_LOG"' \
+      'exit 73' > "$launcher_dir/$alias"
     chmod +x "$launcher_dir/$alias"
   done
-  printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'printf "%s\\n" "$*" >> "$MK61_TEST_PY_LOG"' \
-    'test "$1" = -3 || exit 74' \
-    'shift' \
-    'exec "$MK61_TEST_REAL_PYTHON" "$@"' > "$launcher_dir/py"
-  chmod +x "$launcher_dir/py"
   printf '%s\n' \
     'SECTIONS' \
     '{' \
@@ -493,15 +494,13 @@ EOF
     '    *(.bss)' \
     '}' > "$work/variant.ld"
   MK61_TEST_PY_LOG="$launcher_log" \
-  MK61_TEST_REAL_PYTHON="$(command -v python3)" \
   PATH="$launcher_dir:$PATH" \
     pwsh -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-postbuild.ps1" check-profile \
       -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
       -BuildPath "$launcher_build" -VariantLd "$work/variant.ld"
   test -s "$launcher_build/mk61-portable.ld"
-  grep -q '^-3 --version$' "$launcher_log"
-  grep -q '^-3 .*portable-layout.py ' "$launcher_log"
+  test ! -e "$launcher_log"
 
   # STM32's Windows platform passes compiler.cpp.cmd without `.exe`, even
   # though the packaged executable has that suffix.  Exercise the resolver

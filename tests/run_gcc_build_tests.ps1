@@ -19,6 +19,7 @@ $releaseWorkflow = Join-Path $root `
     '.github/workflows/firmware-release.yml'
 $releaseManifest = Join-Path $root 'tools/release-contract.json'
 $releaseContract = Join-Path $root 'tools/release_contract.py'
+$releaseContractPowerShell = Join-Path $root 'tools/release-contract.ps1'
 $f401ReleaseMatrix = Join-Path $root 'tests/run_f401_release_matrix.sh'
 $arduinoSetupAction = Join-Path $root `
     '.github/actions/setup-arduino-cli/action.yml'
@@ -54,6 +55,7 @@ foreach ($file in @(
     $releaseWorkflow,
     $releaseManifest,
     $releaseContract,
+    $releaseContractPowerShell,
     $f401ReleaseMatrix,
     $arduinoSetupAction,
     $arduinoSetupScript,
@@ -163,7 +165,13 @@ Assert-True ($backendText -match
     'Windows direct GCC build still requires a native host APP packer'
 Assert-True ($releaseWorkflowText -match
     'deliberately-missing-host-cxx\.exe') `
-    'Windows direct GCC CI does not prove that the Python APP packer is enough'
+    'Windows direct GCC CI does not prove that no host C++ compiler is needed'
+Assert-True ($releaseWorkflowText -match 'mk61-no-python') `
+    'Windows build CI does not prove that Python is absent from the build path'
+Assert-True ($backendText -match 'tools/release-contract\.ps1') `
+    'Windows direct GCC build does not use the PowerShell release contract'
+Assert-True ($backendText -match 'package-ui-font-licenses\.ps1') `
+    'Windows direct GCC build does not use the PowerShell font packager'
 Assert-True ($backendText -match
     "Join-Path \`$Directory 'Apps'[\s\S]+Remove-Item " +
     '-LiteralPath \$customApps -Recurse -Force') `
@@ -173,6 +181,12 @@ Assert-True ($cmakeText -match
     'CMake build does not select the F401 board'
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
+Assert-True ($cmakeText -match
+    'CMAKE_HOST_WIN32[\s\S]+analyze-stack-usage\.ps1') `
+    'Windows CMake path still lacks PowerShell stack analysis'
+Assert-True ($cmakeText -match
+    'MK61_PROFILE_DEFINITIONS is required on Windows') `
+    'Windows CMake path still relies on Python for profile lookup'
 Assert-True ($cmakeText -match
     'MK61_GLOBAL_RAM_LIMIT=\$\{MK61_GLOBAL_RAM_LIMIT\}') `
     'canonical F401 build does not consume its selected RAM budget'

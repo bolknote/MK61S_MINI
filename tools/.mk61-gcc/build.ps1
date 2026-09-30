@@ -106,7 +106,7 @@ Usage:
   tools\build-gcc.cmd [-Profile ID] [options]
 
 Profiles and release budgets are defined by tools/release-contract.json.
-Run `python3 tools/release_contract.py profiles` to list profile IDs.
+Run `powershell -File tools/release-contract.ps1 profiles` to list profile IDs.
 
 System APP:
   -Focal 0|1       default 1
@@ -146,7 +146,7 @@ Other:
 
 Required in PATH: CMake 3.21 or newer and Ninja. When at least one System APP
 is enabled, macOS/Linux also requires a host C++17 compiler; Windows uses the
-Python APP packer.
+repository's PowerShell/.NET APP packer and needs neither Python nor host C++.
 Required versions are read from tools/release-contract.json.
 
 Environment overrides:
@@ -278,6 +278,7 @@ function Get-ProfileInfo {
     return @{
         Bundle = [string]$selected.artifacts.f401
         Flags = @($selected.defines | ForEach-Object { "-D$_" })
+        Definitions = @($selected.defines | ForEach-Object { [string]$_ })
         Graphics = [bool]$selected.graphics
         UiFonts = [bool]$selected.graphics
     }
@@ -377,11 +378,25 @@ if ($Help) {
 
 try {
     $manifestPath = Join-Path $script:ProjectRoot 'tools/release-contract.json'
-    $contractTool = Join-Path $script:ProjectRoot 'tools/release_contract.py'
     Test-RequiredFile $manifestPath 'release contract manifest'
-    Test-RequiredFile $contractTool 'release contract tool'
-    $python = Get-CommandPath 'python3' 'Python 3'
-    Invoke-GccTool $python @($contractTool, 'validate')
+    $python = $null
+    $contractTool = $null
+    $powerShell = Get-CurrentPowerShell
+    $powerShellContractTool = Join-Path $script:ProjectRoot `
+        'tools/release-contract.ps1'
+    if ($env:OS -eq 'Windows_NT') {
+        Test-RequiredFile $powerShellContractTool `
+            'PowerShell release contract tool'
+        Invoke-GccTool $powerShell @(
+            '-NoLogo', '-NoProfile', '-File', $powerShellContractTool,
+            'validate', '-Manifest', $manifestPath)
+    } else {
+        $contractTool = Join-Path $script:ProjectRoot `
+            'tools/release_contract.py'
+        Test-RequiredFile $contractTool 'release contract tool'
+        $python = Get-CommandPath 'python3' 'Python 3'
+        Invoke-GccTool $python @($contractTool, 'validate')
+    }
     $script:ReleaseManifest = ConvertFrom-Json -InputObject (
         [IO.File]::ReadAllText($manifestPath))
     $script:CoreVersion = [string]$script:ReleaseManifest.toolchain.stm32_core
@@ -549,9 +564,9 @@ try {
         [version]$Matches[1] -lt [version]'3.21') {
         Stop-GccBuild 'CMake 3.21 or newer is required'
     }
-    # build_portable_app.py uses the repository's dependency-free Python ZX0
-    # packer on Windows.  A native host C++ compiler is only required by the
-    # optimal packer used on macOS/Linux.
+    # Windows packages APP with the repository's dependency-free
+    # PowerShell/.NET implementation. A native host C++ compiler is only
+    # required by the optimal packer used on macOS/Linux.
     if ($systemRequested -and $env:OS -ne 'Windows_NT') {
         $hostPackerBuilder = Join-Path $script:ProjectRoot `
             'tools/.mk61-app/build.ps1'
@@ -641,6 +656,11 @@ try {
         "-DMK61_GLOBAL_RAM_LIMIT=$ramLimit",
         "-DMK61_STACK_FRAME_LIMIT=$stackFrameLimit"
     )
+    if ($env:OS -eq 'Windows_NT') {
+        $configureArguments += @(
+            "-DMK61_POWERSHELL=$powerShell",
+            "-DMK61_PROFILE_DEFINITIONS=$($profileInfo.Definitions -join ';')")
+    }
     Invoke-GccTool $cmake $configureArguments
     Invoke-GccTool $cmake @(
         '--build', $buildDirectory,
@@ -667,25 +687,38 @@ try {
 
     $objcopy = Join-Path $toolchainBin "arm-none-eabi-objcopy$toolSuffix"
     Test-RequiredFile $objcopy 'GNU Arm objcopy'
-    Invoke-GccTool $python @(
-        (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
-        '--bin', $residentBin, '--elf', $residentElf,
-        '--objcopy', $objcopy)
+    Invoke-GccTool $powerShell @(
+        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal-elf',
+        '-InputFile', $residentBin, '-ElfFile', $residentElf,
+        '-Objcopy', $objcopy, '-MaxSize', $flashCapacity)
 
     if ($null -ne $releaseCaseInfo) {
         $sizeTool = Join-Path $toolchainBin "arm-none-eabi-size$toolSuffix"
         $nmTool = Join-Path $toolchainBin "arm-none-eabi-nm$toolSuffix"
         Test-RequiredFile $sizeTool 'GNU Arm size tool'
         Test-RequiredFile $nmTool 'GNU Arm nm tool'
-        Invoke-GccTool $python @(
-            $contractTool, 'resource-report',
-            '--case', $ReleaseCase,
-            '--elf', $residentElf,
-            '--bin', $residentBin,
-            '--size-tool', $sizeTool,
-            '--nm-tool', $nmTool,
-            '--stack-summary', (Join-Path $buildDirectory 'stack-usage.json'),
-            '--output-prefix', (Join-Path $buildDirectory 'resource-report'))
+        if ($env:OS -eq 'Windows_NT') {
+            Invoke-GccTool $powerShell @(
+                '-NoLogo', '-NoProfile', '-File', $powerShellContractTool,
+                'resource-report', '-Manifest', $manifestPath,
+                '-Case', $ReleaseCase,
+                '-Elf', $residentElf,
+                '-Bin', $residentBin,
+                '-SizeTool', $sizeTool,
+                '-NmTool', $nmTool,
+                '-StackSummary', (Join-Path $buildDirectory 'stack-usage.json'),
+                '-OutputPrefix', (Join-Path $buildDirectory 'resource-report'))
+        } else {
+            Invoke-GccTool $python @(
+                $contractTool, 'resource-report',
+                '--case', $ReleaseCase,
+                '--elf', $residentElf,
+                '--bin', $residentBin,
+                '--size-tool', $sizeTool,
+                '--nm-tool', $nmTool,
+                '--stack-summary', (Join-Path $buildDirectory 'stack-usage.json'),
+                '--output-prefix', (Join-Path $buildDirectory 'resource-report'))
+        }
     }
 
     # CMake emitted HEX before the post-link footer was sealed. Regenerate it
@@ -754,10 +787,11 @@ try {
             -Destination $outputBundle -Recurse
     }
     if ($uiFonts -eq '1') {
-        Invoke-GccTool $python @(
+        Invoke-GccTool $powerShell @(
+            '-NoLogo', '-NoProfile', '-File',
             (Join-Path $script:ProjectRoot `
-                'tools/.fmk-font/package_ui_font_licenses.py'),
-            '--bundle', $outputBundle)
+                'tools/.fmk-font/package-ui-font-licenses.ps1'),
+            '-Bundle', $outputBundle)
     }
 
     $flagValues = New-Object 'System.Collections.Generic.List[string]'

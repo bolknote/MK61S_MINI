@@ -269,7 +269,8 @@ F401, A00/A02, mini V2, Classic V2 и 40th продолжают использо
 
 Оба порта `mk61-firmware` вызывают один F401-бэкенд `tools/build-gcc.cmd`.
 На macOS/Linux нативный host-компилятор C++17 нужен для ZX0-упаковки штатных
-APP; Windows использует Python-паковщик. Bash дополнительно требуется только
+APP; Windows использует встроенный PowerShell/.NET-паковщик, поэтому Python
+для сборки прошивки не требуется. Bash дополнительно требуется только
 при заданном `MK61_APP_MANIFESTS`: этот совместимый путь использует
 `tools/build_f401_bundle.sh` для пользовательских APP.
 
@@ -328,7 +329,7 @@ GCC-бэкенд собирает resident с `-Os -flto`, System APP — с `-O
 создаёт общий `system_apps/build.cmd` через `arm-none-eabi-g++` и
 `arm-none-eabi-objcopy`, после чего host-паковщик оптимально сжимает payload,
 выбирая меньший из `ZX0` и `BCJ + ZX0`: нативная C++-версия на macOS/Linux и
-эквивалентная Python-версия на Windows.
+эквивалентная PowerShell/.NET-версия на Windows.
 Значения `MK61_ENABLE_FOCAL`, `MK61_ENABLE_TINYBASIC`,
 `MK61_ENABLE_WBMP_VIEWER`, `MK61_ENABLE_MARKDOWN_VIEWER` и
 `MK61_ENABLE_CHIP8` берутся из одноимённых переменных окружения; `0`
@@ -435,12 +436,11 @@ TinyBASIC, Markdown, SETUP, Проводник и USB-диск по умолча
 `build.source.path`; USB-диск открывать не требуется. На macOS/Linux после Upload
 каталог `System` пока копируется отдельно в `/System` диска `MK61S C6`.
 
-IDE-вариант использует ARM-инструменты установленного STM32 Core и Python
-3.10+. На macOS/Linux post-build запускается через системный shell и применяет
+IDE-вариант использует ARM-инструменты установленного STM32 Core. На
+macOS/Linux post-build запускается через системный shell и применяет
 нативный C++17-паковщик. На Windows отдельные Visual Studio, LLVM или MinGW не
-нужны: тот же ABI 6 и ZX0 формирует встроенный Python-паковщик. PowerShell
-проверяет `py -3`, `python.exe` и `python3.exe`, не принимая пустой Windows
-Store alias за установленный Python.
+нужны: тот же ABI 6 и ZX0 формирует встроенный PowerShell/.NET-паковщик.
+Python также не нужен.
 Как и GCC-путь, он создаёт самостоятельные APP ABI 6 с ZX0 или BCJ + ZX0.
 `build_f401_bundle.sh` также умеет добавлять пользовательские manifest APP,
 но упаковывает их в тот же ABI 6.
@@ -471,7 +471,7 @@ Core. От Arduino-инсталляции используются только 
 `STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее и
 Ninja. На macOS/Linux для ZX0-паковщика нужен нативный C++17-компилятор
 (`c++`, `clang++` или `g++`; путь задаётся в `MK61_HOST_CXX`) и `pwsh`.
-На Windows хватает встроенного Windows PowerShell 5.1 и Python 3.10+.
+На Windows хватает встроенного Windows PowerShell 5.1.
 
 По умолчанию создаются `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. Например,
 комплект для mini V3 с Markdown, WBMP и CHIP-8 через USB собирается так:
@@ -527,12 +527,15 @@ system_apps/
 ├── build.cmd
 └── .tool/build.ps1
 tools/
+├── build-system-app-bundle.ps1
+├── build-portable-app.ps1
 ├── build_system_app_bundle.py
 └── build_portable_app.py
 ```
 
 Один полиглотный `build.cmd` запускает PowerShell и на Windows, и из shell при
-наличии `pwsh`, затем делегирует общему Python-сборщику ABI 6. ARM-код
+наличии `pwsh`. На Windows он использует PowerShell/.NET-сборщик ABI 6, на
+macOS/Linux — Python-оркестратор и нативный C++17-паковщик. ARM-код
 использует `sdk/portable/start.c`, адаптеры `sdk/portable/system` и публичные
 таблицы C API без прямой линковки с Arduino-объектами или resident ELF.
 
@@ -541,8 +544,8 @@ tools/
 диагностического запуска оболочка по-прежнему ожидает полный каталог
 сборки: resident `.elf`, `.bin` и `compile_commands.json`. Последний
 задаёт компилятор; адреса resident в APP не импортируются.
-Нужен также Python 3.10+; нативный C++17-компилятор для ZX0-паковщика нужен
-только на macOS/Linux:
+На Windows дополнительных Python и C++17 не нужно; на macOS/Linux нужны
+Python 3.10+ и нативный C++17-компилятор для ZX0-паковщика:
 
 ```bat
 system_apps\build.cmd ^
@@ -554,7 +557,8 @@ system_apps\build.cmd ^
 задаётся через `-OutputDirectory`. Пути к `arm-none-eabi-g++`, `objcopy`, `nm`
 и `size` берутся из `compile_commands.json`, созданного Arduino- или прямой
 CMake/GCC-сборкой; установка второго GCC рядом со скриптом не требуется.
-Для сборки вообще без каталога resident используйте
+Для сборки вообще без каталога resident на Windows используйте
+`tools\build-portable-app.ps1 -System …`, а на macOS/Linux —
 [`tools/build_portable_app.py --system …`](system_apps/README.md).
 `WBMP.APP` регистрирует `I1`, когда Markdown выключен.
 Графический `MARKDOWN.APP` регистрирует `T2`, а resident направляет в тот же

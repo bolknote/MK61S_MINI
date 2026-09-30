@@ -538,23 +538,17 @@ try {
     $f401Upload = Get-UploadInvocation 'C:\firmware\mk61-f401.bin'
     Assert-True (($f401Upload.Arguments -join '|') -eq "upload|--fqbn|$($script:FqbnF401)|--input-file|C:\firmware\mk61-f401.bin") 'Windows F401 upload arguments differ'
 
-    # Windows packages APP with the repository's Python ZX0 implementation.
-    # A missing desktop C++ compiler must neither block F411 nor be reported
-    # as a missing dependency.
+    # Windows packages APP with the repository's PowerShell/.NET ZX0
+    # implementation. Missing Python and desktop C++ must neither block F411
+    # nor be reported as missing dependencies.
     $script:State.Mcu = 'f411'
     $script:IsWindowsHost = $true
     function Test-ArduinoCoreReady { return $true }
     function Test-ArduinoLibrariesReady { return $true }
     function Test-F401HostToolsReady { return $true }
-    function Get-Python3Command {
-        return [pscustomobject]@{
-            Executable = 'python.exe'
-            PrefixArguments = @()
-        }
-    }
     function Test-CommandAvailable {
         param([string]$Name)
-        return $Name -ne 'c++'
+        return $Name -notin @('c++', 'python', 'python3', 'py')
     }
     function Invoke-NativeCapture {
         param([string]$Executable, [object[]]$Arguments)
@@ -564,11 +558,14 @@ try {
         }
     }
     Assert-True (Test-BuildDependenciesReady) `
-        'Windows F411 still requires a native host C++ compiler'
+        'Windows F411 still requires Python or a native host C++ compiler'
     $dependencyReport = Get-DependencyReport
     Assert-True ($dependencyReport -match
-        'APP/ZX0 packer: Python \(host C\+\+ не нужен\)') `
-        'Windows dependency report does not explain its Python APP packer'
+        'APP/ZX0 packer: PowerShell/\.NET \(Python и host C\+\+ не нужны\)') `
+        'Windows dependency report does not explain its PowerShell APP packer'
+    Assert-True ($dependencyReport -notmatch
+        'Python 3 \(APP builder\): НЕ НАЙДЕН') `
+        'Windows dependency report still demands Python'
     Assert-True ($dependencyReport -notmatch
         'Host C\+\+17 compiler: НЕ НАЙДЕН') `
         'Windows dependency report still demands a native host compiler'

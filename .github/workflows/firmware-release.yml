@@ -97,6 +97,13 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" `
+              (Join-Path $pythonTrap $name)
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP `
             'deliberately-missing-host-cxx.exe'
           $env:MK61_CONFIG_FILE = Join-Path $env:RUNNER_TEMP 'f401.conf'
@@ -393,15 +400,23 @@ jobs:
       - name: Verify concurrent System APP catalog on Windows
         shell: pwsh
         run: |
-          python tests/system_app_catalog_self_test.py
+          & ./tests/system_app_catalog_powershell_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
-      # recipes. Deliberately poison MK61_HOST_CXX: this proves that a normal
-      # Windows IDE installation needs only Python, not Visual Studio/MinGW.
+      # recipes. Deliberately poison Python and MK61_HOST_CXX: this proves that
+      # a normal Windows IDE installation needs neither Python nor
+      # Visual Studio/MinGW.
       - name: Compile complete F401 mini V2 bundle through the Arduino IDE recipe
         shell: pwsh
         run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" `
+              (Join-Path $pythonTrap $name) -Force
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
           if (Test-Path -LiteralPath $env:MK61_HOST_CXX) {
             throw 'The negative host-compiler sentinel unexpectedly exists'
@@ -416,9 +431,8 @@ jobs:
               $safeCache -match '[^\x20-\x7e]') {
             throw "Arduino IDE build cache is not ASCII-only: $safeCache"
           }
-          # Python's default temporary directory normally lives below the
-          # Windows user profile. Keep it deliberately non-ASCII here: every
-          # ARM compiler output must still stay below the safe build cache.
+          # Keep TEMP deliberately non-ASCII: every ARM compiler output must
+          # still stay below the safe build cache.
           $unicodeTemp = Join-Path $env:RUNNER_TEMP 'Temp пользователя Роман'
           [IO.Directory]::CreateDirectory($unicodeTemp) | Out-Null
           $env:TEMP = $unicodeTemp
@@ -510,6 +524,13 @@ jobs:
       - name: Compile resident-default F411 mini V2 through the Arduino IDE recipe
         shell: pwsh
         run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" `
+              (Join-Path $pythonTrap $name) -Force
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
           $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
           $bundleName = 'mk61s-M-mini-v2-lcd1602-a00-f411'
           $ideConfig = Join-Path `

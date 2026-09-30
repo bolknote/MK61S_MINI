@@ -30,11 +30,17 @@ MK61_MODULE_PACK_BIN="$work/packer" bash "$root/tools/build_mk61_module_pack.sh"
   --help >/dev/null
 python3 "$root/tests/portable_app_package_self_test.py" \
   "$work/packer" "$work/format"
-# Windows Arduino builds deliberately use the Python fallback because STM32
-# Core only ships an ARM cross-compiler, not a native Windows C++ compiler.
-# Exercise that exact container writer on every CI host as well.
+# Keep the non-Windows Python fallback compatible with the production reader.
 python3 "$root/tests/portable_app_package_self_test.py" \
   "$root/tools/.mk61-app/mk61_module_pack.py" "$work/format"
+# Windows Arduino builds use the dependency-free PowerShell/.NET packer.
+# Exercise its output with the C++ firmware reader on every host with pwsh.
+if command -v pwsh >/dev/null 2>&1; then
+  python3 "$root/tests/portable_app_package_self_test.py" \
+    --packer-prefix=pwsh --packer-prefix=-NoLogo \
+    --packer-prefix=-NoProfile --packer-prefix=-File \
+    "$root/tools/.mk61-app/mk61-module-pack.ps1" "$work/format"
+fi
 clang++ "${flags[@]}" -I"$root/sdk/portable/include" \
   "$root/tests/portable_wbmp_self_test.cpp" \
   "$root/examples/portable-apps/WBMP/viewer.cpp" "$root/code/wbmp.cpp" \

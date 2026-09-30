@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Dependency-free ABI 6 APP packer used when no native host C++ exists.
+"""Dependency-free ABI 6 APP packer for the Python build path.
 
 The ZX0 stream writer follows the v2 format by Einar Saukas.  The greedy
-parser is intentionally implemented in Python so Arduino IDE on Windows only
-needs the Python installation that is already required by the APP build.
+parser keeps the standalone Python builder independent of a native host C++
+compiler.  Windows firmware and Arduino IDE builds use the equivalent
+PowerShell/.NET packer instead.
 ZX0 format copyright (c) 2021 Einar Saukas, BSD-3-Clause; the complete notice
 is stored in third_party/zx0/LICENSE.
 """

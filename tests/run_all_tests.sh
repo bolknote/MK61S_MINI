@@ -14,6 +14,8 @@ if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File "$root/tests/run_firmware_tool_powershell_tests.ps1"
   pwsh -NoLogo -NoProfile -File "$root/tests/run_gcc_build_tests.ps1"
   pwsh -NoLogo -NoProfile -File "$root/tests/run_system_apps_tool_tests.ps1"
+  pwsh -NoLogo -NoProfile -File \
+    "$root/tests/system_app_catalog_powershell_self_test.ps1"
 fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"

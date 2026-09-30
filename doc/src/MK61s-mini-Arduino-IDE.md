@@ -36,13 +36,10 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 - Library Manager: `LiquidCrystal` версии `1.0.7`;
 - Library Manager: `STM32duino RTC` версии `1.9.0`.
 
-Отдельный `arduino-cli` не требуется. Дополнительно нужен Python 3.10+.
-На Windows не нужны нативный C++-компилятор, Bash и отдельный `dfu-util`:
-сборка использует PowerShell, ARM-инструменты STM32 Core и встроенный
-Python-паковщик APP. PowerShell сначала проверяет штатный Windows launcher
-`py -3`, затем `python.exe` и `python3.exe`; пустые Windows Store App Execution
-Alias игнорируются. Для Upload через DFU STM32 Core использует собственный
-STM32CubeProgrammer recipe.
+Отдельный `arduino-cli` не требуется. На Windows не нужны Python, нативный
+C++-компилятор, Bash и отдельный `dfu-util`: сборка использует Windows
+PowerShell 5.1, .NET и ARM-инструменты STM32 Core. Для Upload через DFU STM32
+Core использует собственный STM32CubeProgrammer recipe.
 
 ## Установка платы
 
@@ -316,8 +313,8 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `exceeds the 20 KiB APP image limit` | Выбранный APP вырос сверх лимита одного образа; это не постоянный резерв SRAM и не ошибка DFU. |
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 6 проверьте версию публичных сервисов. |
-| `python3.exe failed with exit code 9009` | Повторно установите свежий пакет платы; новая PowerShell-ветка проверяет `py -3`/`python.exe` и не выбирает пустой Windows Store alias. Если Python действительно отсутствует, установите Python 3.10+ и перезапустите IDE. |
-| `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются Python-скриптом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
+| `python3.exe failed with exit code 9009` | Установлена старая версия платы. Обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE: свежая Windows-сборка Python не запускает. |
+| `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются PowerShell/.NET-кодом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
 | `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
 | `STM32 DFU tools not found` | Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Свежий uploader находит STM32Tools в `Arduino15` даже при нераскрытых свойствах Arduino IDE 1 и при настоящем отсутствии пакета печатает проверенные пути. Выбранный COM-порт к этой ошибке отношения не имеет. |
 | `Error missing binary file argument!` | Используется старая копия MK61 uploader, которая передавала Windows-путь STM32 shell-обёртке отдельными короткими аргументами. Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd`, перезапустите IDE и повторите Upload. |

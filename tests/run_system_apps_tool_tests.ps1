@@ -9,6 +9,9 @@ $launcher = Join-Path $appsRoot 'build.cmd'
 $wrapper = Join-Path $appsRoot '.tool/build.ps1'
 $commonBuilder = Join-Path $root 'tools/build_system_app_bundle.py'
 $appBuilder = Join-Path $root 'tools/build_portable_app.py'
+$powerShellCommonBuilder = Join-Path $root 'tools/build-system-app-bundle.ps1'
+$powerShellAppBuilder = Join-Path $root 'tools/build-portable-app.ps1'
+$powerShellPacker = Join-Path $root 'tools/.mk61-app/Mk61AppPacker.cs'
 $gccBuilder = Join-Path $root 'tools/.mk61-gcc/build.ps1'
 $arduinoShell = Join-Path $root `
     'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-app-postbuild.sh'
@@ -36,6 +39,7 @@ function Read-Le32 {
 
 foreach ($file in @(
     $launcher, $wrapper, $commonBuilder, $appBuilder, $gccBuilder,
+    $powerShellCommonBuilder, $powerShellAppBuilder, $powerShellPacker,
     $arduinoShell, $arduinoPowerShell
 )) {
     Assert-True (Test-Path -LiteralPath $file -PathType Leaf) `
@@ -52,22 +56,37 @@ Assert-True ($launcherText -match
 
 $tokens = $null
 $parseErrors = $null
-[void][Management.Automation.Language.Parser]::ParseFile(
-    $wrapper, [ref]$tokens, [ref]$parseErrors)
-Assert-True ($parseErrors.Count -eq 0) (
-    "$wrapper has parser errors: " +
-    (@($parseErrors | ForEach-Object { $_.Message }) -join '; '))
+foreach ($powerShellFile in @(
+        $wrapper, $powerShellCommonBuilder, $powerShellAppBuilder,
+        $arduinoPowerShell,
+        (Join-Path $root 'tools/.mk61-app/build-terminal-help.ps1'),
+        (Join-Path $root 'tools/.mk61-gcc/portable-layout.ps1'),
+        (Join-Path $root `
+            'tools/.fmk-font/package-ui-font-licenses.ps1'))) {
+    $tokens = $null
+    $parseErrors = $null
+    [void][Management.Automation.Language.Parser]::ParseFile(
+        $powerShellFile, [ref]$tokens, [ref]$parseErrors)
+    Assert-True ($parseErrors.Count -eq 0) (
+        "$powerShellFile has parser errors: " +
+        (@($parseErrors | ForEach-Object { $_.Message }) -join '; '))
+}
 
 $wrapperText = [IO.File]::ReadAllText($wrapper)
 $commonText = [IO.File]::ReadAllText($commonBuilder)
 $appText = [IO.File]::ReadAllText($appBuilder)
+$powerShellCommonText = [IO.File]::ReadAllText($powerShellCommonBuilder)
+$powerShellAppText = [IO.File]::ReadAllText($powerShellAppBuilder)
+$powerShellPackerText = [IO.File]::ReadAllText($powerShellPacker)
 $gccText = [IO.File]::ReadAllText($gccBuilder)
 $arduinoShellText = [IO.File]::ReadAllText($arduinoShell)
 $arduinoPowerShellText = [IO.File]::ReadAllText($arduinoPowerShell)
 
 Assert-True ($wrapperText -match 'tools/build_system_app_bundle\.py') `
-    'PowerShell wrapper does not delegate to the common builder'
-Assert-True ($wrapperText -notmatch 'arm-none-eabi-(?:g\+\+|objcopy|nm)') `
+    'non-Windows wrapper does not delegate to the Python builder'
+Assert-True ($wrapperText -match 'tools/build-system-app-bundle\.ps1') `
+    'Windows wrapper does not delegate to the PowerShell builder'
+Assert-True ($wrapperText -notmatch '(?m)-fPIC|-fstack-usage') `
     'PowerShell wrapper still contains a second APP compiler pipeline'
 Assert-True ($commonText -match 'tools/build_portable_app\.py') `
     'System bundle does not use the ordinary APP builder'
@@ -91,20 +110,35 @@ Assert-True ($wrapperText -match 'LocalFloatMath') `
     'PowerShell wrapper does not expose local APP float math'
 Assert-True ($commonText -match 'local.float.math') `
     'common bundle does not forward local APP float math'
+Assert-True ($powerShellCommonText -match 'LocalFloatMath') `
+    'PowerShell bundle does not forward local APP float math'
+Assert-True ($powerShellCommonText -match "Name = 'SETUP\.APP'") `
+    'PowerShell bundle is missing SETUP.APP'
+Assert-True ($powerShellCommonText -match "Name = 'USBDISK\.APP'") `
+    'PowerShell bundle is missing USBDISK.APP'
+Assert-True ($powerShellCommonText -match 'catalog_hits') `
+    'PowerShell bundle does not reuse its APP catalog'
 Assert-True ($appText -match 'MK61_APP_LOCAL_FLOAT_MATH_MASK') `
     'ordinary APP builder does not select the bounded local float subset'
+Assert-True ($powerShellAppText -match 'MK61_APP_LOCAL_FLOAT_MATH_MASK') `
+    'PowerShell APP builder does not select the bounded local float subset'
 Assert-True ($appText -match '"abi": 6') `
     'ordinary and System APP builder is not current ABI 6'
 Assert-True ($appText -match 'sdk/portable/start\.c') `
     'System APP does not share the ordinary SDK startup'
 Assert-True ($appText -notmatch 'resident_imports[^\n]+[1-9]') `
     'APP builder still advertises resident symbol imports'
+Assert-True ($powerShellPackerText -match
+    'namespace Mk61\.Build[\s\S]+class AppPacker') `
+    'PowerShell APP path is missing its dependency-free .NET packer'
 Assert-True ($gccText -match 'system_apps/\.tool/build\.ps1') `
     'direct GCC builder does not call the common System APP wrapper'
 Assert-True ($arduinoShellText -match 'build_system_app_bundle\.py') `
     'Arduino shell hook does not use the common System APP builder'
-Assert-True ($arduinoPowerShellText -match 'build_system_app_bundle\.py') `
-    'Arduino PowerShell hook does not use the common System APP builder'
+Assert-True ($arduinoPowerShellText -match 'build-system-app-bundle\.ps1') `
+    'Arduino PowerShell hook does not use the PowerShell System APP builder'
+Assert-True ($arduinoPowerShellText -notmatch '(?i)python|\.py') `
+    'Arduino PowerShell hook still invokes Python'
 
 foreach ($obsolete in @(
     'system_apps/focal/main.cpp', 'system_apps/basic/main.cpp',
