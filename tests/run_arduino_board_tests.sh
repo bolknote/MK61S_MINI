@@ -6,7 +6,6 @@ launcher="$root/tools/mk61-arduino-board.cmd"
 package="$root/tools/.mk61-arduino-board"
 platform="$package/hardware/mk61/stm32"
 font_settings_compat="$package/font-settings-compat.boards.local.txt"
-module_option_compat="$package/module-option-compat.boards.local.txt"
 hook="$platform/tools/mk61-app-postbuild.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-arduino-board-test.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
@@ -15,7 +14,6 @@ test -x "$launcher"
 test -x "$package/install.sh"
 test -x "$hook"
 test -f "$font_settings_compat"
-test -f "$module_option_compat"
 bash -n "$package/install.sh"
 bash -n "$hook"
 python3 -c 'from pathlib import Path; import sys; assert Path(sys.argv[1]).read_bytes().startswith(b"\xef\xbb\xbf")' \
@@ -68,7 +66,6 @@ grep -q 'installed but stale' "$work/stale-check.txt"
 cmp "$work/current-platform.txt" "$target/platform.txt"
 test -f "$target/boards.local.txt"
 grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' "$target/boards.local.txt"
-grep -Fq '# MK61_MODULE_OPTION_COMPAT_BEGIN' "$target/boards.local.txt"
 grep -Fq \
   'mk61_f401_app.menu.mk61_font_settings.disabled.build.mk61_font_settings=0' \
   "$target/boards.local.txt"
@@ -81,16 +78,7 @@ grep -Fq \
 grep -Fq \
   'mk61_f411.menu.mk61_font_settings.enabled.build.mk61_font_settings=0' \
   "$target/boards.local.txt"
-grep -Fq \
-  'mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal_app=1' \
-  "$target/boards.local.txt"
-grep -Fq \
-  'mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic_app=1' \
-  "$target/boards.local.txt"
-grep -Fq \
-  'mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8_app=1' \
-  "$target/boards.local.txt"
-grep -q 'Accepted obsolete Arduino IDE options' "$work/reinstall.txt"
+grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
 grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
@@ -118,6 +106,10 @@ grep -q '^mk61_f401_app.menu.mk61_focal.app.build.mk61_focal=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_focal.app.build.mk61_focal_app=1$' \
   "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal=1$' \
+  "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
@@ -125,6 +117,10 @@ grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
 grep -q '^mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal=0$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_basic.app.build.mk61_basic_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_basic.builtin.build.mk61_basic_app=0$' \
   "$target/boards.txt"
@@ -141,6 +137,10 @@ grep -q '^mk61_f401_app.menu.mk61_documents.wbmp_builtin.build.mk61_wbmp_app=0$'
 grep -q '^mk61_f401_app.menu.mk61_documents.disabled.build.mk61_markdown=0$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_chip8.app.build.mk61_chip8_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8_app=1$' \
+  "$target/boards.txt"
+grep -q '^mk61_f401_app.menu.mk61_chip8.enabled.build.mk61_chip8=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_chip8.builtin.build.mk61_chip8_app=0$' \
   "$target/boards.txt"
@@ -292,14 +292,10 @@ if command -v pwsh >/dev/null 2>&1; then
   ps_compat="$ps_sketchbook/hardware/mk61/stm32/boards.local.txt"
   test -f "$ps_compat"
   grep -Fq '# MK61_FONT_SETTINGS_COMPAT_BEGIN' "$ps_compat"
-  grep -Fq '# MK61_MODULE_OPTION_COMPAT_BEGIN' "$ps_compat"
   grep -Fq \
     'mk61_f401_app.menu.mk61_font_settings.enabled.build.mk61_font_settings=0' \
     "$ps_compat"
-  grep -Fq \
-    'mk61_f401_app.menu.mk61_basic.enabled.build.mk61_basic_app=1' \
-    "$ps_compat"
-  grep -q 'Accepted obsolete Arduino IDE options' \
+  grep -q 'Accepted obsolete Arduino IDE font options' \
     "$work/reinstall-ps.txt"
 
   # Arduino IDE 2 stores its real sketchbook in arduino-cli.yaml.  This is
@@ -597,7 +593,7 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_focal=enabled,mk61_basic=enabled,mk61_chip8=enabled' \
     > "$work/legacy-module-options-f401.txt"
   ARDUINO_DIRECTORIES_USER="$shell_sketchbook" arduino-cli compile \
-    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=app,mk61_basic=app,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
+    --fqbn 'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core' \
     --build-path "$work/build" "$shell_sketchbook/sketches/code"
 
   bundle="$shell_sketchbook/sketches/binary/mk61s-M-mini-v2-lcd1602-a00-f401"
