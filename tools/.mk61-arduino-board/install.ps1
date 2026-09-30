@@ -310,6 +310,17 @@ function Test-InstalledPlatform {
     )
 }
 
+function Get-Mk61BoardPackageVersion {
+    param([string]$PlatformPath)
+    $metadata = Join-Path $PlatformPath 'platform.txt'
+    if ([IO.File]::Exists($metadata)) {
+        foreach ($line in [IO.File]::ReadAllLines($metadata)) {
+            if ($line -match '^version=(.+)$') { return $Matches[1].Trim() }
+        }
+    }
+    return 'not installed / unknown'
+}
+
 function Test-Mk61SameFile {
     param(
         [string]$Source,
@@ -438,6 +449,10 @@ try {
         'font-settings-compat.boards.local.txt'
     $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
     $target = Join-Path $Sketchbook 'hardware\mk61\stm32'
+    $sourceVersion = Get-Mk61BoardPackageVersion $sourcePlatform
+    $installedVersion = Get-Mk61BoardPackageVersion $target
+    $installCommand = '& "' + (Join-Path $projectRoot 'tools\mk61-arduino-board.cmd') +
+        '" -Sketchbook "' + $Sketchbook + '"'
     $fontSettingsCompatibilityTarget = Join-Path $target 'boards.local.txt'
     $installFontSettingsCompatibility =
         [IO.File]::Exists((Join-Path $target 'boards.txt'))
@@ -448,13 +463,14 @@ try {
     }
 
     if ($Check) {
+        Write-Host "MK61s board package: installed $installedVersion; project $sourceVersion"
         if (Test-InstalledPlatform $target) {
             if (-not (Test-InstalledPlatformCurrent `
                     $sourcePlatform $projectRoot $target)) {
                 [Console]::Error.WriteLine(
                     "MK61s Arduino boards are installed but stale in:`n  $target`n" +
-                    'Close Arduino IDE, run tools\mk61-arduino-board.cmd ' +
-                    'without -Check, then restart Arduino IDE.')
+                    "Close Arduino IDE, run in PowerShell:`n  $installCommand`n" +
+                    'Then restart Arduino IDE.')
                 exit 1
             }
             Write-Host 'MK61s F401/F411 boards are installed in:'
@@ -467,7 +483,9 @@ try {
             exit 0
         }
         [Console]::Error.WriteLine(
-            "MK61s F401/F411 boards are not installed in:`n  $target")
+            "MK61s F401/F411 board installation is missing or incomplete in:`n  $target`n" +
+            "Close Arduino IDE, run in PowerShell:`n  $installCommand`n" +
+            'Then restart Arduino IDE.')
         exit 1
     }
 
@@ -522,6 +540,7 @@ try {
 
     Write-Host 'MK61s F401/F411 boards installed in:'
     Write-Host "  $target"
+    Write-Host "MK61s board package version: $sourceVersion"
     Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
     if ($installFontSettingsCompatibility) {
         Write-Host ('Accepted obsolete Arduino IDE font options saved by ' +
@@ -535,8 +554,8 @@ try {
     Write-Host 'Close every Arduino IDE window, then start Arduino IDE again.'
     Write-Host ('Open Board Selector (or Tools > Board > Select Other Board ' +
                 'and Port) and search for the exact name:')
-    Write-Host '  MK61s F401 + APP'
-    Write-Host '  MK61s F411 + APP'
+    Write-Host "  MK61s F401 + APP ($sourceVersion)"
+    Write-Host "  MK61s F411 + APP ($sourceVersion)"
     Write-Host ('Do not search for this manually installed board in Boards ' +
                 'Manager; only the STM32 core is listed there.')
 } catch {

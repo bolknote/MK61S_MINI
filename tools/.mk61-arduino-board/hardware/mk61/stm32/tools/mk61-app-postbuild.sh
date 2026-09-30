@@ -46,6 +46,14 @@ check_profile() {
   fi
   [ -f "$sketch/mk61s-M.ino" ] && [ -f "$sketch/config.h" ] ||
     die 'open code/mk61s-M.ino before selecting this board'
+  local installed_platform source_platform installed_sketchbook
+  installed_platform="$(cd "$(dirname "$0")/.." && pwd)"
+  source_platform="$(cd "$sketch/../tools/.mk61-arduino-board/hardware/mk61/stm32" && pwd)"
+  if [ "$installed_platform" != "$source_platform" ]; then
+    installed_sketchbook="$(cd "$installed_platform/../../.." && pwd)"
+    "$sketch/../tools/mk61-arduino-board.cmd" --check \
+      --sketchbook "$installed_sketchbook"
+  fi
   [ -n "$variant_ld" ] || return 0
   mkdir -p "$build_path"
   python3 "$sketch/../tools/.mk61-gcc/portable-layout.py" \
