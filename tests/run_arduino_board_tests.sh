@@ -8,6 +8,7 @@ platform="$package/hardware/mk61/stm32"
 font_settings_compat="$package/font-settings-compat.boards.local.txt"
 hook="$platform/tools/mk61-app-postbuild.sh"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-arduino-board-test.XXXXXX")"
+work="$(cd "$work" && pwd -P)"
 trap 'rm -rf "$work"' EXIT
 
 test -x "$launcher"
@@ -31,7 +32,16 @@ shell_sketchbook="$work/shell-sketchbook"
 test ! -e "$shell_sketchbook/hardware/mk61/stm32/boards.local.txt"
 "$launcher" --check --sketchbook "$shell_sketchbook" > "$work/check.txt"
 target="$shell_sketchbook/hardware/mk61/stm32"
+if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
+   command -v pwsh >/dev/null 2>&1; then
+  ARDUINO_DIRECTORIES_USER="$shell_sketchbook" \
+    pwsh -NoLogo -NoProfile -File \
+      "$root/tests/arduino_legacy_fqbn_self_test.ps1" \
+      -Sketchbook "$shell_sketchbook"
+fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
+grep -Fq 'MK61s board package version: 1.2.0' "$work/install.txt"
+grep -Fq 'installed 1.2.0; project 1.2.0' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -62,6 +72,14 @@ if "$launcher" --check --sketchbook "$shell_sketchbook" \
   exit 1
 fi
 grep -q 'installed but stale' "$work/stale-check.txt"
+if "$target/tools/mk61-app-postbuild.sh" check-profile \
+    --platform mini-v3 --display lcd1602-a00 --sketch "$root/code" \
+    > "$work/stale-prebuild.txt" 2>&1; then
+  echo 'Arduino prebuild accepted a stale installed package' >&2
+  exit 1
+fi
+grep -q 'installed but stale' "$work/stale-prebuild.txt"
+grep -Fq 'mk61-arduino-board.cmd' "$work/stale-prebuild.txt"
 "$launcher" --sketchbook "$shell_sketchbook" > "$work/reinstall.txt"
 cmp "$work/current-platform.txt" "$target/platform.txt"
 test -f "$target/boards.local.txt"
@@ -80,11 +98,12 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -q '^mk61_f401_app.name=MK61s F401 + APP$' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.0)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -q '^mk61_f411.name=MK61s F411 + APP$' "$target/boards.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.0)' "$target/boards.txt"
+grep -Fxq 'version=1.2.0' "$target/platform.txt"
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -271,6 +290,12 @@ if command -v pwsh >/dev/null 2>&1; then
   test ! -e "$ps_sketchbook/hardware/mk61/stm32/boards.local.txt"
   pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
     -Check -Sketchbook "$ps_sketchbook" > "$work/check-ps.txt"
+  if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
+    ARDUINO_DIRECTORIES_USER="$ps_sketchbook" \
+      pwsh -NoLogo -NoProfile -File \
+        "$root/tests/arduino_legacy_fqbn_self_test.ps1" \
+        -Sketchbook "$ps_sketchbook"
+  fi
   grep -q 'Verified uploader: mk61Upload' "$work/install-ps.txt"
   cmp "$platform/boards.txt" \
       "$ps_sketchbook/hardware/mk61/stm32/boards.txt"
@@ -285,6 +310,16 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 1.2.0; project 1.2.0' "$work/stale-check-ps.txt"
+  if pwsh -NoLogo -NoProfile -File \
+      "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
+      check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
+      > "$work/stale-prebuild-ps.txt" 2>&1; then
+    echo 'PowerShell prebuild accepted a stale installed package' >&2
+    exit 1
+  fi
+  grep -q 'installed but stale' "$work/stale-prebuild-ps.txt"
+  grep -Fq 'mk61-arduino-board.cmd' "$work/stale-prebuild-ps.txt"
   pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
     -Sketchbook "$ps_sketchbook" > "$work/reinstall-ps.txt"
   cmp "$platform/platform.txt" \
@@ -297,6 +332,12 @@ if command -v pwsh >/dev/null 2>&1; then
     "$ps_compat"
   grep -q 'Accepted obsolete Arduino IDE font options' \
     "$work/reinstall-ps.txt"
+  if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
+    ARDUINO_DIRECTORIES_USER="$ps_sketchbook" \
+      pwsh -NoLogo -NoProfile -File \
+        "$root/tests/arduino_legacy_fqbn_self_test.ps1" \
+        -Sketchbook "$ps_sketchbook"
+  fi
 
   # Arduino IDE 2 stores its real sketchbook in arduino-cli.yaml.  This is
   # commonly different from Documents\Arduino on Windows because of OneDrive
@@ -370,24 +411,31 @@ EOF
     'printf "%s\\n" "$*" > "$MK61_TEST_DFU_LOG"' \
     'exit 0' > "$mock_stm32_tools/win/busybox.exe"
   chmod +x "$mock_stm32_tools/win/busybox.exe"
-  printf '%s\n' '# mock STM32CubeProgrammer wrapper' > \
-    "$mock_stm32_tools/stm32CubeProg.sh"
   printf 'resident firmware\n' > "$mock_build/code.ino.bin"
-  MK61_ARDUINO_DATA_DIR="$mock_arduino_data" \
-    MK61_TEST_DFU_LOG="$mock_dfu_log" \
-    pwsh -NoLogo -NoProfile -File \
-      "$platform/tools/mk61-app-upload.ps1" \
-      -BuildPath "$mock_build" -Project code.ino \
-      -Bundle mk61s-M-classic-v2-uc1609-f401 \
-      -Profile classic-v2-uc1609 \
-      -Busybox '{busybox}' \
-      -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
-      -TestMockDevice "$mock_device" -TestMockDfu \
-      > "$work/mock-upload-dfu-fallback.txt"
-  grep -Fq 'stm32CubeProg.sh --interface=dfu' "$mock_dfu_log"
-  grep -Fq -- "--file=$mock_build/code.ino.bin" "$mock_dfu_log"
-  grep -q 'Resident and System APP upload complete' \
-    "$work/mock-upload-dfu-fallback.txt"
+  # Tool discovery and argv mapping only. Windows CI additionally executes
+  # the real wrappers from STM32Tools 2.4 and 2.5 with native BusyBox.
+  for binary_option in f b; do
+    if [ "$binary_option" = f ]; then
+      printf '%s\n' '    -f | --file)' > "$mock_stm32_tools/stm32CubeProg.sh"
+    else
+      printf '%s\n' '    -b | --bin)' > "$mock_stm32_tools/stm32CubeProg.sh"
+    fi
+    MK61_ARDUINO_DATA_DIR="$mock_arduino_data" \
+      MK61_TEST_DFU_LOG="$mock_dfu_log" \
+      pwsh -NoLogo -NoProfile -File \
+        "$platform/tools/mk61-app-upload.ps1" \
+        -BuildPath "$mock_build" -Project code.ino \
+        -Bundle mk61s-M-classic-v2-uc1609-f401 \
+        -Profile classic-v2-uc1609 \
+        -Busybox '{busybox}' \
+        -Stm32Script '{runtime.tools.STM32Tools.path}/stm32CubeProg.sh' \
+        -TestMockDevice "$mock_device" -TestMockDfu \
+        > "$work/mock-upload-dfu-fallback.txt"
+    grep -Fq 'stm32CubeProg.sh -idfu' "$mock_dfu_log"
+    grep -Fq -- "-$binary_option$mock_build/code.ino.bin" "$mock_dfu_log"
+    grep -q 'Resident and System APP upload complete' \
+      "$work/mock-upload-dfu-fallback.txt"
+  done
 
   missing_arduino_data="$work/missing-arduino15"
   mkdir -p "$missing_arduino_data"

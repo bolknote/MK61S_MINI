@@ -181,6 +181,17 @@ function Wait-Mk61SerialPortAccess {
         "$closePortMessage Retry Upload after the port is released")
 }
 
+function Get-Mk61Stm32BinaryOption {
+    param([string]$ScriptPath)
+    $wrapper = [IO.File]::ReadAllText($ScriptPath)
+    # STM32Tools 2.5 renamed -f/--file to -b/--bin and reassigned -f to
+    # SWD frequency. Inspect the selected wrapper, not its directory name:
+    # Arduino may resolve a newer tools package than the one we installed.
+    if ($wrapper -match '(?m)^\s*-b\s*\|\s*--bin\s*\)') { return '-b' }
+    if ($wrapper -match '(?m)^\s*-f\s*\|\s*--file\s*\)') { return '-f' }
+    Stop-Mk61Upload "cannot identify the binary-file option in STM32 wrapper: $ScriptPath"
+}
+
 $system = ''
 $residentUploaded = $false
 try {
@@ -215,12 +226,13 @@ try {
             Stop-Mk61Upload "resident image not found: $resident"
         }
         $dfuTools = Find-Mk61Stm32DfuTools $Busybox $Stm32Script
+        $binaryOption = Get-Mk61Stm32BinaryOption $dfuTools.Script
         Write-Host 'System APP installation needs exclusive COM-port access.'
         Write-Host $closePortMessage
         Write-Host "Uploading resident via STM32 DFU: $resident"
-        # Pass every option and its value as one token. Windows PowerShell 5.1
-        # can otherwise hand BusyBox/getopt a detached -f without its path;
-        # STM32's wrapper then reports a misleading "missing binary file".
+        Write-Host "STM32 DFU wrapper: $($dfuTools.Script); binary option: $binaryOption"
+        # Keep every option and its value in one native argument, including
+        # paths with spaces under Windows PowerShell 5.1.
         # Forward slashes also keep the subsequent shell eval from treating
         # backslashes in C:\Users\... as escapes.
         $scriptForShell = $dfuTools.Script.Replace('\', '/')
@@ -228,13 +240,13 @@ try {
         $dfuArguments = @(
             'sh',
             $scriptForShell,
-            "--interface=$Protocol",
-            "--file=$residentForShell",
-            "--offset=$FlashOffset",
-            "--vid=$Vid",
-            "--pid=$UsbPid",
-            "--address=$Address",
-            "--start=$Start"
+            "-i$Protocol",
+            "$binaryOption$residentForShell",
+            "-o$FlashOffset",
+            "-v$Vid",
+            "-p$UsbPid",
+            "-a$Address",
+            "-s$Start"
         )
         & $dfuTools.Busybox @dfuArguments
         if ($LASTEXITCODE -ne 0) {

@@ -65,6 +65,15 @@ fi
 target="$sketchbook/hardware/mk61/stm32"
 font_settings_compat_target="$target/boards.local.txt"
 
+package_version() {
+  if [ -f "$1/platform.txt" ]; then
+    sed -n 's/^version=//p' "$1/platform.txt" | tr -d '\r'
+  else
+    printf '%s\n' 'not installed / unknown'
+  fi
+}
+source_version="$(package_version "$source_platform")"
+
 # Arduino IDE persists the complete FQBN per sketch.  If an installed board is
 # being upgraded, that FQBN may still contain the removed
 # mk61_font_settings=disabled/enabled option.  Preserve a local compatibility
@@ -138,18 +147,22 @@ platform_current() {
 }
 
 if [ "$check_only" -eq 1 ]; then
+  printf 'MK61s board package: installed %s; project %s\n' \
+    "$(package_version "$target")" "$source_version"
   if platform_installed; then
     if ! platform_current; then
       printf 'MK61s Arduino boards are installed but stale in:\n  %s\n' \
         "$target" >&2
-      printf '%s\n' \
-        'Run tools/mk61-arduino-board.cmd without --check, then restart Arduino IDE.' >&2
+      printf 'Close Arduino IDE, run:\n  "%s/tools/mk61-arduino-board.cmd" --sketchbook "%s"\nThen restart Arduino IDE.\n' \
+        "$project_root" "$sketchbook" >&2
       exit 1
     fi
     printf 'MK61s F401/F411 boards are installed in:\n  %s\n' "$target"
     exit 0
   fi
-  printf 'MK61s F401/F411 boards are not installed in:\n  %s\n' "$target" >&2
+  printf 'MK61s F401/F411 board installation is missing or incomplete in:\n  %s\n' "$target" >&2
+  printf 'Close Arduino IDE, run:\n  "%s/tools/mk61-arduino-board.cmd" --sketchbook "%s"\nThen restart Arduino IDE.\n' \
+    "$project_root" "$sketchbook" >&2
   exit 1
 fi
 
@@ -196,10 +209,12 @@ platform_installed && platform_current ||
   die "installed board verification failed: $target"
 
 printf 'MK61s F401/F411 boards installed in:\n  %s\n' "$target"
+printf 'MK61s board package version: %s\n' "$source_version"
 printf 'Verified uploader: mk61Upload (DFU + automatic /System install).\n'
 if [ "$install_font_settings_compat" -eq 1 ]; then
   printf '%s\n' \
     'Accepted obsolete Arduino IDE font options saved by an earlier installation.'
 fi
-printf 'Restart Arduino IDE, then select MK61s F401 + APP or MK61s F411 + APP.\n'
+printf 'Restart Arduino IDE, then select MK61s F401 + APP (%s) or MK61s F411 + APP (%s).\n' \
+  "$source_version" "$source_version"
 printf 'STM32 MCU based boards core 2.12.0 is required.\n'

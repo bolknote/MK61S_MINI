@@ -122,6 +122,18 @@ function Check-Mk61Profile {
         -not [IO.File]::Exists((Join-Path $Sketch 'config.h'))) {
         Stop-Mk61Build 'open code/mk61s-M.ino before selecting this board'
     }
+    # Read the checker from this checkout, not from the installed copy. A
+    # project update must not silently keep using obsolete upload/build tools.
+    $sourcePackage = [IO.Path]::GetFullPath(
+        (Join-Path $Sketch '../tools/.mk61-arduino-board'))
+    $installedPlatform = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
+    if ($installedPlatform -ne (Join-Path $sourcePackage 'hardware/mk61/stm32')) {
+        Invoke-Mk61Tool (Get-Mk61PowerShell) @(
+            '-NoLogo', '-NoProfile', '-File',
+            (Join-Path $sourcePackage 'install.ps1'), '-Check',
+            '-Sketchbook', [IO.Path]::GetFullPath(
+                (Join-Path $installedPlatform '../../..')))
+    }
     if (-not [string]::IsNullOrWhiteSpace($VariantLd)) {
         [IO.Directory]::CreateDirectory($BuildPath) | Out-Null
         Invoke-Mk61Tool (Get-Mk61PowerShell) @(
