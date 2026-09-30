@@ -11,13 +11,15 @@ def add_economy(a):
     m=a.module(1,'initialization')
     m.page(24,'init_pilot',inline=False)
     # World 0 is 12345*256. Build the already-landed starting ship once;
-    # init_hold preserves RC, and finish_arrive consumes it as the world.
+    # init_hold preserves RC and leaves X=3 for the fixed starting market.
     m.op('cx').st(3).st(7)
     m.set(1,3160320).st(2).st('C')
     for i in (0,4,5,6,8):m.set(i,60 if i==5 else a.data[24][i])
     m.op('ret').end_page().page(25,'init_hold',inline=False)
     m.op('cx')
     for i in (0,1,2,3,4,5,8):m.st(i)
+    # Return X=3 as well as preserving RC. The fixed starting economy is
+    # also 3; finish_new_game reuses it without entering another literal.
     m.set(6,a.data[25][6]).set(7,3).op('ret')
     m.end_page().label('sum_hold').ld(0)
     for i in range(1,6):m.ld(i).op('+')
@@ -38,10 +40,15 @@ def add_economy(a):
     # All intermediates fit eight digits. Keep the same names and economies.
     m.label('world').n(64257).op('*').n(13616896).op('-').jge('world_ready').n(16777216).op('+')
     m.label('world_ready').op('ret')
-    m.label('select_world').ld(0).n(70).op('-').call('world').put(24,2).set('A',8).op('ret')
-    # Decode the world's economy once on arrival. MARKET R0/R1 are reserved;
-    # the former world/time copies have no readers and need no writes.
-    m.page(26,'init_market').ld('C').n(1048576).op('/','int').st(2).n(30)
+    # Keep the selected ID, already present before packing its name. The
+    # two MARKET coordinate caches avoid unpacking both names for each trip.
+    # Write the packed name directly; the single-field WRITE trampoline
+    # would cost more than the ID cache update. RE survives both exchanges.
+    m.label('select_world').ld(0).n(70).op('-').st('E').call('world').page_bytes(24,0x42).page_bytes(26,0x6E,0x41).set('A',8).op('ret')
+    # An arrival makes the selected ID current. The new-game entry resets
+    # both caches to zero before reaching this shared market initialization.
+    m.page(26,'init_market').ld(1).st(0).ld('C').n(1048576).op('/','int').st(2)
+    m.label('market_stock').n(30)
     for i in range(3,9):m.st(i)
     m.op('ret')
     m.end_page().page(24,'arrived_pilot').ld(2).st(1).st('C').set(5,60).set(7,0).op('ret')
@@ -119,15 +126,15 @@ def add_economy(a):
     m.label('service_full').raw(1,0x0B).op('ret')
 
     m=a.module(9,'navigation')
-    # Read both worlds during one PILOT opening. Only RC/RD/RE and the
-    # stack are scratch; none of the exposed pilot fields may be changed.
-    m.label('distance').open_page(24).ld(2).call('mod256').st('D').ld(1).call('mod256').st('E')
+    # Current/selected IDs are MARKET R0/R1, maintained only at selection,
+    # arrival and new game. Prices and trades preserve both cached values.
+    m.label('distance').open_page(26).ld(1).st('D').ld(0).st('E')
     # Keep the low-byte difference below both coordinate quotients; their
     # subtraction leaves it in Y, avoiding another load of the row delta.
     m.ld('D').ld('E').op('-').ld('D').n(16).op('/','int').ld('E').n(16).op('/','int','-').st('C')
     m.n(16).op('*','-','abs').ld('C').op('abs','+').st('C')
     # Ms exchanges preserve X, already equal to RC.
-    m.close_page(24).st(2).op('ret')
+    m.close_page(26).st(2).op('ret')
     m.label('distance_view').call('distance').set('D',GLYPHS['r']).jump('draw_number')
 
     m=a.module(10,'flight')
@@ -150,7 +157,10 @@ def add_economy(a):
     m.ld(8).n(13).op('*').n(9).op('+').call('mod16').st(8).st('C').ld(2).st('E')
     m.label('jump_tick_done').op('ret')
 
-    m.end_page()
+    # Enter the already-open market initialization after its economy decode.
+    # init_hold returned X=3; reuse it, reset both IDs, then share the stock
+    # reset, page close and port-mode setter with normal arrival.
+    m.end_page().label('finish_new_game',keep_block=True).open_page(26).st(2).op('cx').st(0).st(1).jump('market_stock')
 
     m=a.module(11,'contacts')
     # Equipment cannot change in flight. Decode the laser once per contact;

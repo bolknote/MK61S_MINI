@@ -19,7 +19,8 @@ def create_game():
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)
     show_text(m,'title');m.op('cx','stop')
     m.label('new_game').visit(24,'init_pilot').visit(25,'init_hold')
-    m.call('finish_arrive')
+    # A restarted game begins with both world IDs zero, even after flight.
+    m.call('finish_new_game')
     m.label('redraw').call('show').op('cx','stop')
     m.label('main').st(0).op('frac').jnz('input_invalid')
     # R9 is a local handler address as well as the mode flag. Combat uses
@@ -103,6 +104,10 @@ def check_layout(info):
     for label,bank in (('glyph',3),('bar_pattern',3),('range_pattern',23)):
         if labels[label]//112!=bank:
             raise ValueError(f'{label} must share bank {bank} with its table')
+    # 2F 7E reads sixteen bytes even though the range alphabet only selects
+    # indices 0..3. Its twelve unselected bytes may belong to other code.
+    if labels['range_alphabet']+15>=32*112:
+        raise ValueError('range_alphabet must leave sixteen readable bytes')
     # Negative native selectors retain their last two digits. Every mode
     # handler must therefore remain in 01..99 of the dispatcher's bank 0.
     for label in ('main','new_game','port_input_entry','combat_input_entry','result_input_entry'):

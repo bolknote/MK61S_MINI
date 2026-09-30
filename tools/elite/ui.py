@@ -40,13 +40,9 @@ def add_ui(a):
     m=a.module(4,'arithmetic')
     # mod10 has no callers; the two mod100 expressions are shorter in place
     # once their shared procedure and its bank continuation are removed.
-    for base in (16,256):
-        m.label(f'mod{base}')
-        # mod16 is exact on its 0..65535 domain.
-        # The 24-bit world codes still need integer subtraction for mod256.
-        if base==16:m.n(base).op('/','frac').n(base).op('*')
-        else:m.mod(base)
-        m.op('ret')
+    # Coordinates now come from cached world IDs; mod256 has no callers.
+    # Fraction extraction is exact over mod16's 0..65535 domain.
+    m.label('mod16').n(16).op('/','frac').n(16).op('*').op('ret')
 
     m=a.module(18,'messages')
     for label,text in [('title','三 ELItE 三 СП'),('victory','YES. CLEAr СП'),
@@ -82,13 +78,15 @@ def add_ui(a):
     # The six-slot formation changes only on launch or destruction. Cache
     # its two packed words in FRAME R4/R5, keyed by the live count in R6.
     # Ordinary turns only copy these words, then replace the exact hull.
-    m.end_page().page(29,'battle_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C).ld('B').ld(6).op('-').jz('formation_ready')
+    # The numeric formatter replaces cell 9 and preserves the visible СП
+    # in cells 10/11; these two paths need no suffix template restoration.
+    m.end_page().page(29,'battle_frame').raw(0x2F,0x02,0x2F,0x6C).ld('B').ld(6).op('-').jz('formation_ready')
     m.ld('B').st(6).call('bar_pattern').n(16).op('*').st('E')
     m.ptr('F','drone_alphabet',lift=False).raw(0x2F,0x00,0x2F,0x7E).ld(0).st(4).ld(1).st(5)
     m.label('formation_ready').ld(4).st(0).ld(5).st(1)
     m.ld(2).ld('D').op('+').st(2).raw(0x2F,0x53).op('ret')
     m.end_page().page(29,'gauge_frame').ld('A').ld(7).op('*').ld('E').op('+').st('E').ptr('F','bar_alphabet',lift=False)
-    m.label('instrument_frame').ld(8).st(3).raw(0x2F,0x02,0x2F,0x6C,0x2F,0x00,0x2F,0x7E)
+    m.label('instrument_frame').raw(0x2F,0x02,0x2F,0x6C,0x2F,0x00,0x2F,0x7E)
     m.ld(2).n(63).op('-').st(2).raw(0x2F,0x53).op('ret')
 
     # Five bars, rounded upwards: even a small nonzero reserve is visible.
@@ -111,7 +109,9 @@ def add_ui(a):
     # share storage with the next alphabet; every 2F 7n still has 16 bytes.
     m.label('drone_alphabet').raw(0,DRONE_MASK)
     m.label('bar_alphabet').raw(0,BAR_MASK,GLYPHS['H'],GLYPHS['S'],GLYPHS['F'],GLYPHS['t'],0,GLYPHS['U'])
-    m.label('range_alphabet').raw(64,GLYPHS['H'],192,GLYPHS['H']|128,*([0]*12))
+    # Only indices 0..3 occur. The formatter can read the following twelve
+    # bytes, but never selects them; leave that bank space available to code.
+    m.label('range_alphabet').raw(64,GLYPHS['H'],192,GLYPHS['H']|128)
 
 def show_text(m, label):
     m.ptr('F',label,lift=False).call('show_message')

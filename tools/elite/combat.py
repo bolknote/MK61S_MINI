@@ -26,22 +26,24 @@ def add_combat(a):
     # is used for simultaneous fire. The glyph changes only on selection.
     # Validate before consuming ammunition, advancing enemies or cooling.
     # Shield and escape remain available after the selected target is dead.
-    m.label('fight').ld(2).n(3).op('-').jge('ammo_ready')
+    # Recalls close entry; the following digits lift X into Y automatically.
+    # Keep explicit ENTER where X1/X2 or another stack operand is live.
+    m.label('fight').ld(2).raw(3).op('-').jge('ammo_ready')
     m.ld(8).jz('bad_action')
-    m.ld(2).n(2).op('-').jnz('ammo_ready')
+    m.ld(2).raw(2).op('-').jnz('ammo_ready')
     # Check and consume in one HOLD opening. Keep the old count in RC so
     # an empty magazine returns to the dispatcher only after closing it.
     m.open_page(25).ld(7).st('C').jz('missile_empty').n(1).op('-').st(7)
     m.label('missile_empty').close_page(25).ld('C').jz('bad_action')
     # Keep COMBAT open across the whole simultaneous turn. PILOT and
     # DRONES temporarily exchange the live COMBAT registers via nested Ms.
-    m.label('ammo_ready').ld(1).st('D').ld(2).st('C').ld(6).n(3).op('*').st('E')
+    m.label('ammo_ready').ld(1).st('D').ld(2).st('C').ld(6).raw(3).op('*').st('E')
     m.open_page(27).call('enemy_tick')
     # enemy_tick returns action RC, laser RD, incoming RE, launch RF.
     m.visit(24,'weapon')
     # PILOT exports shot RC, launch RE and hull RF for the next page.
     # No caller-side shuffle is needed before nesting DRONES.
-    m.ld(4).n(4).op('-').jnz('shot_ready').ld('C').n(2).op('/','int').st('C')
+    m.ld(4).raw(4).op('-').jnz('shot_ready').ld('C').raw(2).op('/','int').st('C')
     m.label('shot_ready').ld(5).st('D').visit(28,'drone_tick')
     # DRONES leaves shot RC, live count RD, selected hull RE, player hull RF.
     # COMBAT stays loaded here, so apply the carrier hit directly.
@@ -50,7 +52,7 @@ def add_combat(a):
     m.close_page(27).ld('D').st(6).ld('E').st(8)
     m.ld('F').jz('lost')
     m.ld('C').jz('won')
-    m.ld('B').n(4).op('-').jge('escaped').set('A',16).op('ret')
+    m.ld('B').raw(4).op('-').jge('escaped').set('A',16).op('ret')
     m.label('won').visit(24,'reward').visit(25,'count_kill').ptr(9,'result_input_entry',lift=False).ptr('A','victory',lift=False).op('ret')
     m.label('escaped').ptr(9,'result_input_entry',lift=False).ptr('A','escape',lift=False).op('ret')
     m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat',lift=False).op('ret')
@@ -60,14 +62,14 @@ def add_combat(a):
     # -> outgoing shot RC, launch RE, player hull RF. Shield precedes the hit.
     # Each arm first sets RD; after applying incoming RE, export the results.
     # Saturation reuses the comparison's bound in X1 (60 / 99999999).
-    m.page(24,'weapon',inline=False).ld(7).n(10).op('-').max0().st(7)
-    m.ld('C').n(1).op('-').jz('laser')
+    m.page(24,'weapon',inline=False).ld(7).raw(1,0).op('-').max0().st(7)
+    m.ld('C').raw(1).op('-').jz('laser')
     # X1 retains the subtracted unit across both conditional branches.
     m.raw(0x0F).op('-').jz('missile')
     m.raw(0x0F).op('-').jnz('no_shot')
     m.add(5,18).n(60).op('-').jneg('no_shot').raw(0x0F).st(5)
     m.label('no_shot').set('D',0).jump('weapon_done')
-    m.label('laser').ld(7).n(70).op('-').jge('no_shot').add(7,28).jump('weapon_done')
+    m.label('laser').ld(7).raw(7,0).op('-').jge('no_shot').add(7,28).jump('weapon_done')
     m.label('missile').add(7,10).set('D',45)
     m.label('weapon_done')
     m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
@@ -85,22 +87,22 @@ def add_combat(a):
     m.label('enemy_tick').ld('D').st(4).n(4).op('-').jz('motion_ready')
     m.n(2).op('+').jz('motion_ready').raw(0x0F).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
-    m.label('motion_ready').ld('C').n(4).op('-').jnz('charge_reset')
+    m.label('motion_ready').ld('C').raw(4).op('-').jnz('charge_reset')
     m.add(6,1).jump('charge_ready')
     m.label('charge_reset').set(6,0)
     m.label('charge_ready').set('F',0).ld(1).jz('enemy_ready')
     m.ld(7).ld('E').op('+').st('E')
-    m.ld(0).n(4).op('-').jnz('enemy_ready')
+    m.ld(0).raw(4).op('-').jnz('enemy_ready')
     m.branch(0x5A,'enemy_ready').set(3,3).set('F',1)
     m.label('enemy_ready').ld(8).ld(2).op('-').st('D')
-    m.ld(2).n(19).op('-').jneg('incoming_ready').set('E',0).st('D')
-    m.label('incoming_ready').ld(4).n(4).op('-').jnz('weapon_ready')
-    m.ld('E').n(2).op('/','int').st('E')
+    m.ld(2).raw(1,9).op('-').jneg('incoming_ready').set('E',0).st('D')
+    m.label('incoming_ready').ld(4).raw(4).op('-').jnz('weapon_ready')
+    m.ld('E').raw(2).op('/','int').st('E')
     m.label('weapon_ready').op('ret')
     # DRONES callback: shot RC, target RD, launch RE. R0..4 are hulls;
     # the formation shares the carrier's range. R5 last launched index,
     # R6 alive. K STO 5 increments R5 before writing the next drone's hull.
-    m.page(28,'drone_tick').ld('E').jz('drones_hit').ld(5).n(4).op('-').jge('drones_hit')
+    m.page(28,'drone_tick').ld('E').jz('drones_hit').ld(5).raw(4).op('-').jge('drones_hit')
     m.n(18).raw(0xB5).add(6,1)
     m.label('drones_hit').ld('D').jz('drones_ready')
     m.n(1).op('-').st('B').raw(0xDB).st('E').jz('drones_ready')

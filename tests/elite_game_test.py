@@ -1,8 +1,11 @@
 """Golden game scenarios run by the real ROM/core, never a host game model."""
 import json
+import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import subprocess
 import sys
+from threading import Lock
 import zlib
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -11,6 +14,7 @@ from assembler import ALPHABET, GLYPHS, Assembler, screen
 from game import create_game, check_layout
 
 COUNT=0
+COUNT_LOCK=Lock()
 START=['run','input 0']
 LABELS=create_game().link()[1]['labels']
 
@@ -44,6 +48,7 @@ def play(commands):
         frame=[(word >> shift) & 255 for word in s['pages'][5][:4]
                for shift in (0,8,16)]
         assert frame==s['frame'],s
+        assert s['pages'][2][:2]==[world%256 for world in s['pages'][0][1:3]],('stale route coordinates',s)
         assert s['pages'][4][6]==sum(hp>0 for hp in s['pages'][4][:5]),s
         if game_mode(s)==2:
             target=s['pages'][3][5]
@@ -52,11 +57,17 @@ def play(commands):
             assert s['regs'][6]==s['pages'][4][6],('stale live drones',s)
             assert s['regs'][5]==target,('stale selected target',s)
             assert s['regs'][7]==GLYPHS['H' if target==0 else str(target)]+65,('stale target glyph',s)
-    COUNT+=len(states)
+    with COUNT_LOCK:COUNT+=len(states)
     return states
 
 def state(s):
     return s['pages'][:5]
+
+def set_world(field,code):
+    # Fixture writes must describe a coherent world and coordinate cache,
+    # just as the real selection/arrival handlers do during normal play.
+    assert field in (1,2)
+    return [f'set 24 {field} {code}',f'set 26 {field-1} {code%256}']
 
 def number(s,prefix,value):
     if prefix=='H' and game_mode(s)==2 and s['regs'][10]==16:
@@ -198,8 +209,7 @@ def test_price_equivalence():
     commands=START.copy()
     expected=[]
     for economy in range(16):
-        commands += [f'set 24 1 {economy*1048576}',
-                     f'set 26 0 {economy*1048576}',f'set 26 2 {economy}']
+        commands += set_world(1,economy*1048576)+[f'set 26 2 {economy}']
         for good in range(6):
             # The original unsimplified formula is the independent oracle.
             base=((good+1)*(good+2)*10*(80+5*((economy+2*good)%16)))//100
@@ -464,6 +474,16 @@ def test_instruments_and_formation():
         assert s['frame']==expected,(distance,s)
         assert s['pages'][0][3]==1 and s['pages'][3][2]==distance,s
 
+    # The range formatter restores the suffix after wrapping its digits.
+    # Both shortened frame paths must then preserve it on a free query.
+    rows=play(encounter(3)+['input 9','input 3','input 16','input 9','input 16'])
+    before=rows[3]
+    assert rows[5]['frame']==[GLYPHS['S']]+[54]*5+[0]+screen('060СП')[:5],rows[5]
+    for index in (6,8):number(rows[index],'H',120)
+    assert rows[4]['frame']==rows[7]['frame']
+    assert rows[6]['frame']==rows[8]['frame']
+    assert all(state(s)==state(before) for s in rows[4:])
+
     # Fill the formation, select every target, then remove drones one by one.
     # Queries between shots must not invalidate the formation or glyph cache.
     commands=encounter(3)+['set 27 2 30']+['input 23']*9+['set 25 7 9']
@@ -492,14 +512,14 @@ def test_page_transaction_boundaries():
                 assert state(s[-1])==state(s[-2]),s[-1]
                 assert s[-1]['frame']==screen('ErrOr     СП'),s[-1]
 
-    # Two reads share an open PILOT page. Cover both coordinate components,
+    # Two cached coordinates share an open MARKET page. Cover both components,
     # zero distance, maximum distance and exact fuel equality. A rejected
     # jump must not change fuel, elapsed turns, the random state or cargo.
     for index in (0,1,15,16,17,255):
         distance=index//16+index%16
         code=(((251*index+12345)%65536)<<8)|index
         for fuel in sorted({0,max(0,distance-1),distance,distance+1}):
-            commands=START+[f'set 24 2 {code}',f'set 24 6 {fuel}',
+            commands=START+set_world(2,code)+[f'set 24 6 {fuel}',
                             'set 24 8 1','set 25 6 1013120','input 9','input 60']
             s=play(commands)
             number(s[-2],'r',distance)
@@ -542,21 +562,54 @@ def test_station_transaction_boundaries():
         assert state(after)==expected,(case,before,after)
     print(f'ELITE: {len(cases)} atomic service boundaries, money equality and field caps OK',flush=True)
 
-def test_market_reserved_fields():
-    # Former world/time copies are unused. Sentinel values must survive
-    # quotes and arrival, without affecting prices, gameplay or the frame.
-    actions=['dump']+[f'input {10+i}' for i in range(6)]+['input 71','input 60','input 10']
-    clean=play(START+['set 24 8 1']+actions)
-    marked=play(START+['set 24 8 1','set 26 0 87654321','set 26 1 12345678']+actions)
-    for before,after in zip(clean[2:],marked[2:]):
-        assert after['pages'][2][:2]==[87654321,12345678],after
-        left=[page.copy() for page in before['pages']]
-        right=[page.copy() for page in after['pages']]
-        left[2][:2]=right[2][:2]=[0,0]
-        assert left==right,(before,after)
-        assert before['frame']==after['frame'] and game_mode(before)==game_mode(after)
-    assert marked[-1]['pages'][0][1]==marked[-1]['pages'][0][2],marked[-1]
-    print('ELITE: reserved MARKET fields do not affect prices or arrival OK',flush=True)
+def test_navigation_coordinate_cache():
+    # Selection keeps the packed name and ID together. Quotes and both
+    # trade directions must preserve the route before repeated queries.
+    rows=play(START+['input 71','input 9','input 10','input 30','input 9',
+                     'input 40','input 9','input 72','input 9','set 24 8 1',
+                     'input 60','input 9','input 9','input 70','input 9'])
+    for index in (3,6,8):number(rows[index],'r',1)
+    number(rows[10],'r',2)
+    for index in (12,13):number(rows[index],'r',0)
+    number(rows[15],'r',2)
+    assert state(rows[5])==state(rows[6]) and state(rows[7])==state(rows[8])
+    assert rows[11]['pages'][2][:2]==[2,2] and game_mode(rows[11])==1,rows[11]
+    assert rows[12]['revision']==rows[13]['revision']
+
+    # Combat opens PILOT/HOLD/COMBAT/DRONES/FRAME repeatedly, but the
+    # unfinished route remains 0 -> 1 until victory/escape is acknowledged.
+    for actions,result in ((['input 22']*2,'YES. CLEAr СП'),
+                           (['input 44']*4,'SAFE      СП')):
+        rows=play(encounter()+['input 9']+actions+
+                  ['run','input 9','input 9','input 70','input 9','input 9'])
+        assert rows[-7]['frame']==screen(result) and game_mode(rows[-7])==3,rows[-7]
+        assert rows[-7]['pages'][2][:2]==[0,1],rows[-7]
+        assert rows[-6]['pages'][2][:2]==[1,1] and game_mode(rows[-6])==1,rows[-6]
+        for index,value in ((-5,0),(-4,0),(-2,1),(-1,1)):number(rows[index],'r',value)
+        assert state(rows[-5])==state(rows[-4]) and state(rows[-2])==state(rows[-1])
+    print('ELITE: route coordinate cache survives trade, repeated queries, victory and escape OK',flush=True)
+
+def test_navigation_coordinate_pairs():
+    # Exhaustive real-ROM route calculation, kept separate from the usual
+    # suite so its 65,536 queries do not dominate normal A/B captures.
+    # Each worker launches an independent core process against immutable
+    # load files; only the count of checked snapshots is shared in Python.
+    before=COUNT
+    def check_current(current):
+        code=(((251*current+12345)%65536)<<8)|current
+        commands=START+set_world(1,code)
+        for selected in range(256):commands += [f'input {70+selected}','input 9']
+        rows=play(commands)[2:]
+        for selected,shown in enumerate(rows[1::2]):
+            expected=abs(current//16-selected//16)+abs(current%16-selected%16)
+            number(shown,'r',expected)
+            assert shown['pages'][2][:2]==[current,selected],shown
+    workers=max(1,int(os.environ.get('ELITE_COORDINATE_WORKERS',min(6,os.cpu_count() or 1))))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for completed,_ in enumerate(pool.map(check_current,range(256)),1):
+            if completed%64==0:print(f'ELITE: coordinate pairs {completed*256}/65536 verified',flush=True)
+    assert COUNT-before==256*(2+2*256),COUNT-before
+    print(f'ELITE: all 65536 coordinate pairs calculated by the real ROM OK ({workers} workers)',flush=True)
 
 def test_trade_credit_boundaries():
     # An eight-digit balance must be exact below and at its cap. Comparing
@@ -601,7 +654,8 @@ def test_restart_initialization():
         pilot=(87654321,6565656,11223344,999,1,0,9,99,15)
         hold=(0,1,2,3,4,5,3010420,0,999)
         for bank,fields in ((24,pilot),(25,hold)):
-            commands += [f'set {bank} {i} {v}' for i,v in enumerate(fields)]
+            for field,value in enumerate(fields):
+                commands += set_world(field,value) if bank==24 and field in (1,2) else [f'set {bank} {field} {value}']
         commands += ['input 21','run','input 1','input 10','input 9']
         rows=play(commands)
         dead,restart=rows[-5:-3]
@@ -610,6 +664,7 @@ def test_restart_initialization():
         assert restart['pages'][0]==[1000,3160320,3160320,0,84,60,40,0,9],restart
         assert restart['pages'][1]==[0,0,0,0,0,0,1010420,3,0],restart
         assert restart['pages'][2][2:]==[3,30,30,30,30,30,30],restart
+        assert restart['pages'][2][:2]==[0,0],restart
         number(rows[-3],'C',1000)
         number(rows[-2],'1',19)
         number(rows[-1],'r',0)
@@ -698,8 +753,9 @@ def main():
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
            test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
            test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
-           test_page_transaction_boundaries,test_station_transaction_boundaries,test_market_reserved_fields,test_trade_credit_boundaries,
+           test_page_transaction_boundaries,test_station_transaction_boundaries,test_navigation_coordinate_cache,test_trade_credit_boundaries,
            test_restart_initialization,test_input_dispatch_domain,test_target_selection_transitions)
+    if len(sys.argv)>2 and sys.argv[2]=='coordinate_pairs':tests=(test_navigation_coordinate_pairs,)
     for test in tests:
         if len(sys.argv)<3 or sys.argv[2] in test.__name__:test()
     print(f'ELITE real-core: {COUNT} stopped states verified',flush=True)
