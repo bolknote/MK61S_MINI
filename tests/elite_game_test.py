@@ -102,6 +102,17 @@ def test_assembler_continuations():
     assert not m.items[0].short
     after=a.relax_branches()
     assert m.items[0].short and after[0]['target']==before[0]['target']-2
+    a=Assembler();m=a.module(0,'caller at bank boundary')
+    m.call('helper').raw(*([0x54]*97)).op('ret')
+    a.module(1,'helper host').raw(*([0x54]*106)).op('ret').label('helper').raw(*([0x54]*10)).op('ret')
+    before=a.expand_branches()
+    assert not m.items[0].short and before[0]['helper']==224
+    before_cost=sum(a.size(i) for _,i in before[1])+4*len(before[2])
+    after=a.relax_branches()
+    after_cost=sum(a.size(i) for _,i in after[1])+4*len(after[2])
+    # Trial narrowing lets the whole helper move from B2 back into B0.
+    assert m.items[0].short and after[0]['helper']==100 and not after[2]
+    assert (before_cost,after_cost)==(220,218)
     a=Assembler();m=a.module(0,'preserve measured far condition')
     m.jz('target',far=True).raw(0x54).label('target').op('ret')
     banks,info=a.link()
@@ -438,11 +449,38 @@ def test_combat_cache_and_motion():
             if maneuver==4:damage//=2
             assert s['pages'][3][1:3]==[max(0,60-damage),final_range],s
             assert s['pages'][3][8]==20+12*level,s
+            assert s['pages'][3][4]==maneuver-4,s
             number(s,'H',max(0,60-damage))
     # Returning to port and improving the laser must replace the old cache.
     s=play(encounter()+['input 22']*2+['run','input 53','set 24 8 8','input 70','input 60','input 21'])[-1]
     assert s['pages'][3][8]==44 and s['pages'][3][1]==30,s
     print('ELITE: battle queries preserve cached hull; three lasers, all manoeuvres and re-equipped contact OK',flush=True)
+
+def test_laser_heat_boundaries():
+    # Original rules: cool by ten, then fire below 70 and add 28 heat.
+    # Keep the oracle independent of the delta + 98 shortcut.
+    for heat in (0,9,10,79,80,90):
+        for maneuver in (1,2,3,4):
+            rows=play(encounter()+[f'set 24 7 {heat}','dump',f'input {maneuver}1'])
+            before,after=rows[-2:]
+            assert before['pages'][3][4]==0,before
+            cooled=max(0,heat-10)
+            fired=cooled<70
+            expected_heat=cooled+28 if fired else cooled
+            distance=max(0,min(99,14+{1:-2,2:0,3:2,4:0}[maneuver]))
+            damage=max(0,32-distance) if fired and distance<=18 else 0
+            incoming=14
+            if maneuver==4:damage//=2;incoming//=2
+            assert after['pages'][0][7]==expected_heat,after
+            assert after['pages'][0][4:6]==[84,60-incoming],after
+            assert after['pages'][0][3]==before['pages'][0][3]+1,after
+            assert after['pages'][0][0]==before['pages'][0][0],after
+            assert after['pages'][1]==before['pages'][1],after
+            assert after['pages'][3][1:3]==[60-damage,distance],after
+            assert after['pages'][3][4]==maneuver-4,after
+            assert game_mode(after)==2,after
+            number(after,'H',60-damage)
+    print('ELITE: original cooling/fire thresholds and all manoeuvres OK',flush=True)
 
 def test_instruments_and_formation():
     # Independent threshold oracle: each lit cell covers the next interval,
@@ -751,7 +789,7 @@ def main():
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,
+           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,test_laser_heat_boundaries,
            test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
            test_page_transaction_boundaries,test_station_transaction_boundaries,test_navigation_coordinate_cache,test_trade_credit_boundaries,
            test_restart_initialization,test_input_dispatch_domain,test_target_selection_transitions)

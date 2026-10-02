@@ -43,7 +43,7 @@ def add_combat(a):
     m.visit(24,'weapon')
     # PILOT exports shot RC, launch RE and hull RF for the next page.
     # No caller-side shuffle is needed before nesting DRONES.
-    m.ld(4).raw(4).op('-').jnz('shot_ready').ld('C').raw(2).op('/','int').st('C')
+    m.ld(4).jnz('shot_ready').ld('C').raw(2).op('/','int').st('C')
     m.label('shot_ready').ld(5).st('D').visit(28,'drone_tick')
     # DRONES leaves shot RC, live count RD, selected hull RE, player hull RF.
     # COMBAT stays loaded here, so apply the carrier hit directly.
@@ -69,7 +69,9 @@ def add_combat(a):
     m.raw(0x0F).op('-').jnz('no_shot')
     m.add(5,18).n(60).op('-').jneg('no_shot').raw(0x0F).st(5)
     m.label('no_shot').set('D',0).jump('weapon_done')
-    m.label('laser').ld(7).raw(7,0).op('-').jge('no_shot').add(7,28).jump('weapon_done')
+    # The bound test leaves cooled heat-70 in X and closes number entry.
+    # Adding 98 gives cooled heat+28 without recalling the heat register.
+    m.label('laser').ld(7).raw(7,0).op('-').jge('no_shot').raw(9,8).op('+').st(7).jump('weapon_done')
     m.label('missile').add(7,10).set('D',45)
     m.label('weapon_done')
     m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
@@ -84,7 +86,10 @@ def add_combat(a):
     m=a.module(15,'enemies')
     # Called with COMBAT already open: action RC, maneuver RD,
     # pre-hit drone attack RE -> action RC, laser RD, incoming RE, launch RF.
-    m.label('enemy_tick').ld('D').st(4).n(4).op('-').jz('motion_ready')
+    # R4 holds maneuver-4 after a turn: zero selects evasive half-damage.
+    # The initial zero remains a pre-turn sentinel. n(2) keeps its ENTER;
+    # the following Lx reads 2 independently of this relocated store.
+    m.label('enemy_tick').ld('D').n(4).op('-').st(4).jz('motion_ready')
     m.n(2).op('+').jz('motion_ready').raw(0x0F).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
     m.label('motion_ready').ld('C').raw(4).op('-').jnz('charge_reset')
@@ -96,7 +101,7 @@ def add_combat(a):
     m.branch(0x5A,'enemy_ready').set(3,3).set('F',1)
     m.label('enemy_ready').ld(8).ld(2).op('-').st('D')
     m.ld(2).raw(1,9).op('-').jneg('incoming_ready').set('E',0).st('D')
-    m.label('incoming_ready').ld(4).raw(4).op('-').jnz('weapon_ready')
+    m.label('incoming_ready').ld(4).jnz('weapon_ready')
     m.ld('E').raw(2).op('/','int').st('E')
     m.label('weapon_ready').op('ret')
     # DRONES callback: shot RC, target RD, launch RE. R0..4 are hulls;

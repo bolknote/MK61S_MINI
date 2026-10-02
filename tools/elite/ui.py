@@ -100,7 +100,8 @@ def add_ui(a):
     m.page(29,'range_frame').raw(0x2F,0x07,0x2F,0x6C)
     m.ld(0).n(GLYPHS['r']-63).op('+').st(0).set(1,GLYPHS['U']).ld(8).st(3)
     m.ptr('F','range_alphabet',lift=False).raw(0x2F,0x04,0x2F,0x7E,0x2F,0x53).op('ret')
-    m.end_page().label('draw_range').ld('C').n(19).op('-').jge('range_far')
+    # A measured far condition avoids a four-byte continuation bridge.
+    m.end_page().label('draw_range').ld('C').n(19).op('-').branch(0x5C,'range_far',far=True)
     m.ld('C').n(4).op('/','int').jump('range_index')
     m.label('range_far').raw(5)
     m.label('range_index').call('range_pattern').st('E')

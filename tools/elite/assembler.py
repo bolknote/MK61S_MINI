@@ -351,9 +351,10 @@ class Assembler:
         return labels,placements,bridges,usage
 
     def relax_branches(self):
-        """Try each newly local far branch as an independent transaction.
+        """Try narrowing each far branch as an independent transaction.
 
-        Relocation can make other branches far. Re-run widening and accept
+        Narrowing can move the target into the caller's bank, even if the
+        current layout crosses a bank boundary. Re-run widening and accept
         only a strictly smaller complete artifact, otherwise restore all flags.
         Explicit far branches keep their measured execution cost.
         """
@@ -365,8 +366,7 @@ class Assembler:
         while True:
             labels,placements,_,_=result
             baseline_cost=cost(result)
-            candidates=[i for address,i in placements if i.kind=='branch' and not i.force_far and
-                        not i.short and address//112==labels[i.target]//112]
+            candidates=[i for _,i in placements if i.kind=='branch' and not i.force_far and not i.short]
             for candidate in candidates:
                 flags=[i.short for i in branches]
                 widths=[i.digits for i in pointers]
