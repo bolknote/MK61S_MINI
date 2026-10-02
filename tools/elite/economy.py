@@ -58,7 +58,8 @@ def add_economy(a):
     m=a.module(6,'prices')
     # A single open market page supplies both economy and stock. RD retains
     # the unclamped quote; R2 carries it back to a trade for its next display.
-    m.label('price').ld(1).st('B').visit(26,'price_market').ld('D').st(2).ld('C').op('ret')
+    # Both callers consume RC directly and replace X before using the stack.
+    m.label('price').ld(1).st('B').visit(26,'price_market').ld('D').st(2).op('ret')
     # economy + 2*good is in 0..25: one subtraction replaces general mod 16.
     m.page(26,'price_market').ld('B').n(2).op('*').ld(2).op('+').n(16).op('-').jge('price_wrapped')
     m.raw(0x0F).op('+')
@@ -67,7 +68,8 @@ def add_economy(a):
     # floor((g+1)*(g+2)*10*(80+5*e)/100), with smaller integer intermediates.
     # Keep 16+e below the triangular factor in the stack; no RD spill/reload.
     m.ld('B').n(1).op('+','square').raw(0x0F).op('+').n(2).op('/','*').st('D')
-    m.ld('B').raw(0x20).op('+').st('B').n(30).raw(0xDB).st('E')
+    # RE reads the stock so RB stays equal to the good for HOLD's update.
+    m.ld('B').raw(0x20).op('+').st('E').n(30).raw(0xDE).st('E')
     # Quotes are integers: positive means >=1, without materializing and
     # subtracting one. Keep the unclamped RD for the post-trade quote.
     m.op('-').n(2).op('*').ld('D').op('+').st('D').st('C').jneg('price_clamp').jnz('price_ready')
@@ -81,7 +83,7 @@ def add_economy(a):
     m.ld('C').n(4).op('-').max0().st('C')
     # Keep PILOT open across the HOLD check/update; only commit credits
     # after every guard passed. Working R1/R2/R6/R7 return on close.
-    m.label('trade_quote').ld(1).st('B').ld(7).open_page(24).jneg('sell_checks')
+    m.label('trade_quote').ld(7).open_page(24).jneg('sell_checks')
     m.ld(0).ld('C').op('-').st('F').jneg('trade_refused').ld('E').jz('trade_refused')
     m.visit(25,'trade_hold').ld('C').jz('trade_refused').jneg('trade_refused').jump('trade_commit')
     m.label('sell_checks').ld(0).st('F').open_page(25).raw(0xDB).st('D').jz('sell_empty')

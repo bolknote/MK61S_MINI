@@ -40,7 +40,7 @@ def create_game():
     m.raw(1,0).op('+').jz('jump')
     m.raw(1,0).op('+').jge('station_check')
     m.ld(0).st(1).raw(0x0C).st(1).raw(6).op('-').jge('bad_action')
-    m.ld(0).ld(1).op('-').st(8).raw(3,0).op('-').jneg('set_view')
+    m.ld(0).ld(1).op('-').raw(3,0).op('-').jneg('set_view')
     m.raw(5).op('swap','-').raw(0x32).st(7).jump('trade')
     m.label('station_check').raw(4).op('-').jge('bad_action').jump('station')
     m.label('select_check').raw(2,5,6).op('-').jge('bad_action').jump('select_world')
@@ -67,7 +67,8 @@ def create_game():
     m.label('show_price').raw(1,0).op('+').st(1).call('price')
     # Cursor 5 wraps the last digit of 2F 6D into slot 0. number_common
     # overwrites the other seven digits and owns the single FRAME close.
-    m.label('good_prefix').ld(1).n(1).op('+').st('D').open_page(29).op('cx').st(0).raw(0x2F,0x05,0x2F,0x6D).jump('number_common')
+    # This wrap also overwrites SP: restore it here before the common tail.
+    m.label('good_prefix').ld(1).n(1).op('+').st('D').open_page(29).op('cx').st(0).raw(0x2F,0x05,0x2F,0x6D).ld(8).st(3).jump('number_common')
     # This placement removes a bank bridge and shortens nearby transfers.
     m.label('draw_number').visit(29,'number_frame').op('ret')
     # Native local conditions cost more ROM steps here; retain 1F forms.

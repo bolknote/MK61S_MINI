@@ -13,14 +13,15 @@ def add_combat(a):
     m.raw(4).op('-').jneg('set_view')
     m.label('fight_command').ld(0).st(2).raw(0x0C).st(2).jz('bad_action')
     m.raw(5).op('-').jge('bad_action')
-    m.ld(0).ld(2).op('-').raw(1,0).op('/').st(1).raw(5).op('-').jge('bad_action').jump('fight')
+    # Keep the valid bound delta m-5; adjustment waits for the turn guards.
+    m.ld(0).ld(2).op('-').raw(1,0).op('/').raw(5).op('-').jge('bad_action').st(1).jump('fight')
     m.label('choose_target').raw(6).op('-').jge('bad_action')
     # X1 retains 6 from the bound check; Lx undoes that subtraction.
     m.raw(0x0F).op('+').st('C').visit(27,'select_target').jz('bad_action').st(8)
     m.ld('C').st(1).st(5)
     m.call('glyph').n(65).op('+').st(7).set('A',16).op('ret')
 
-    # Outside page callbacks: R1 maneuver, R2 action.
+    # Outside page callbacks: R1 maneuver-5, R2 action; ammo_ready exports maneuver-4.
     # Between commands R5/R6/R7/R8 cache target / live drones / target glyph
     # delta / selected hull; queries preserve them. The pre-hit drone count
     # is used for simultaneous fire. The glyph changes only on selection.
@@ -37,7 +38,8 @@ def add_combat(a):
     m.label('missile_empty').close_page(25).ld('C').jz('bad_action')
     # Keep COMBAT open across the whole simultaneous turn. PILOT and
     # DRONES temporarily exchange the live COMBAT registers via nested Ms.
-    m.label('ammo_ready').ld(1).st('D').ld(2).st('C').ld(6).raw(3).op('*').st('E')
+    # Only a validated turn adjusts the parser's m-5 to COMBAT's m-4.
+    m.label('ammo_ready').ld(1).raw(1).op('+').st('D').ld(2).st('C').ld(6).raw(3).op('*').st('E')
     m.open_page(27).call('enemy_tick')
     # enemy_tick returns action RC, laser RD, incoming RE, launch RF.
     m.visit(24,'weapon')
@@ -61,13 +63,16 @@ def add_combat(a):
     # PILOT callback: action RC, laser damage RD, incoming RE, launch RF
     # -> outgoing shot RC, launch RE, player hull RF. Shield precedes the hit.
     # Each arm first sets RD; after applying incoming RE, export the results.
-    # Saturation reuses the comparison's bound in X1 (60 / 99999999).
+    # Shield saturation uses a clipped delta; reward reuses 99999999 in X1.
     m.page(24,'weapon',inline=False).ld(7).raw(1,0).op('-').max0().st(7)
     m.ld('C').raw(1).op('-').jz('laser')
     # X1 retains the subtracted unit across both conditional branches.
     m.raw(0x0F).op('-').jz('missile')
     m.raw(0x0F).op('-').jnz('no_shot')
-    m.add(5,18).n(60).op('-').jneg('no_shot').raw(0x0F).st(5)
+    # min(60, shield+18) = 60+min(0, shield-42); write once.
+    m.ld(5).raw(4,2).op('-').jneg('shield_under_cap').op('cx')
+    # Keep ENTER before 60: the Cx path leaves entry open.
+    m.label('shield_under_cap').n(60).op('+').st(5)
     m.label('no_shot').set('D',0).jump('weapon_done')
     # The bound test leaves cooled heat-70 in X and closes number entry.
     # Adding 98 gives cooled heat+28 without recalling the heat register.
@@ -84,12 +89,12 @@ def add_combat(a):
     m.end_page()
 
     m=a.module(15,'enemies')
-    # Called with COMBAT already open: action RC, maneuver RD,
+    # Called with COMBAT already open: action RC, maneuver-4 RD,
     # pre-hit drone attack RE -> action RC, laser RD, incoming RE, launch RF.
     # R4 holds maneuver-4 after a turn: zero selects evasive half-damage.
     # The initial zero remains a pre-turn sentinel. n(2) keeps its ENTER;
-    # the following Lx reads 2 independently of this relocated store.
-    m.label('enemy_tick').ld('D').n(4).op('-').st(4).jz('motion_ready')
+    # the following Lx reads the 2 produced by that addition.
+    m.label('enemy_tick').ld('D').st(4).jz('motion_ready')
     m.n(2).op('+').jz('motion_ready').raw(0x0F).op('*').ld(2).op('+').max0().st(2)
     m.n(99).ld(2).op('-').jge('motion_ready').set(2,99)
     m.label('motion_ready').ld('C').raw(4).op('-').jnz('charge_reset')

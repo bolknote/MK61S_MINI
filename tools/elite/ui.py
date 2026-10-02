@@ -64,9 +64,11 @@ def add_ui(a):
     m.ld(8).st(3).raw(0x2F,0x53).op('ret').end_page()
 
     # FRAME source stays together; single-use operations move to their callers.
+    # The numeric formatter preserves SP. Only good_prefix's wrapped prefix
+    # needs to restore the suffix before entering number_common.
     m=a.module(8,'format')
     m.page(29,'number_frame').ld('D').st(0)
-    m.label('number_common').ld(8).st(3)
+    m.label('number_common')
     m.raw(0x2F,0x02,0x2F,0x6C,0x2F,0x53).op('ret')
     m.end_page().page(29,'name_frame')
     m.op('cx').st(2).ld(8).st(3)

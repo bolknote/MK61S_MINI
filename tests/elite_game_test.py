@@ -482,6 +482,98 @@ def test_laser_heat_boundaries():
             number(after,'H',60-damage)
     print('ELITE: original cooling/fire thresholds and all manoeuvres OK',flush=True)
 
+def test_suffix_frame_transitions():
+    # Eight digits end in slot nine. A subsequent small missile count must
+    # clear those digits and retain SP after every kind of preceding frame.
+    port_cases=[('current name',['input 0']),('destination name',['input 8']),
+                ('distance number',['input 9'])]
+    port_cases += [(f'instrument {view}',[f'input {view}']) for view in (2,3,4,5,7)]
+    port_cases += [(f'quote {good}',[f'input {10+good}']) for good in range(6)]
+    port_cases += [(f'quantity {good}',[f'input {20+good}']) for good in range(6)]
+    port_cases += [('credits',['input 1']),('missiles',['input 6']),
+                   ('error',['input 1.5']),('cached purchase quote',['input 30']),
+                   ('cached sale quote',['input 30','input 40'])]
+    checked=0
+    for label,source in port_cases:
+        rows=play(START+['set 24 0 87654321','input 1','input 71']+
+                  source+['input 1','input 6'])
+        before,credits,missiles=rows[-3:]
+        if label=='error':assert before['frame']==screen('ErrOr     СП'),before
+        if label=='cached purchase quote':number(before,'1',21)
+        if label=='cached sale quote':number(before,'1',19)
+        assert state(credits)==state(missiles)==state(before),(label,before,credits,missiles)
+        number(credits,'C',before['pages'][0][0])
+        number(missiles,'r',before['pages'][1][7])
+        checked+=len(rows)
+
+    battle_cases=[('contact message',['input 0']),('destination name',['input 8']),
+                  ('range diagram',['input 9']),('formation',['input 16']),
+                  ('drone count',['input 17']),('charge',['input 18']),
+                  ('target number',['input 19']),('error',['input 1.5'])]
+    battle_cases += [(f'instrument {view}',[f'input {view}']) for view in (2,3,4,5,7)]
+    for seed in (8,3):
+        cases=battle_cases+([('selected drone formation',['input 81','input 16'])] if seed==3 else [])
+        for label,source in cases:
+            rows=play(encounter(seed,extra=['set 24 0 87654321'])+
+                      ['input 1']+source+['input 1','input 6'])
+            before,credits,missiles=rows[-3:]
+            if label=='contact message':
+                assert before['frame']==screen('PIrAtE    СП' if seed==8 else 'tHArGOId  СП'),before
+            if label=='error':assert before['frame']==screen('ErrOr     СП'),before
+            if 'formation' in label:number(before,'H',before['regs'][8])
+            assert state(credits)==state(missiles)==state(before),(seed,label,before,credits,missiles)
+            assert game_mode(credits)==game_mode(missiles)==2,(label,credits,missiles)
+            number(credits,'C',before['pages'][0][0])
+            number(missiles,'r',before['pages'][1][7])
+            checked+=len(rows)
+
+    # Terminal messages require their normal acknowledgment before another
+    # port query. Cover that real path rather than changing mode fixtures.
+    results=(('victory',['input 22']*2,'YES. CLEAr СП'),
+             ('escape',['input 44']*4,'SAFE      СП'),
+             ('defeat',['set 24 4 1','set 24 5 0','input 21'],'dEAd      СП'))
+    for label,actions,message in results:
+        rows=play(encounter(extra=['set 24 0 87654321'])+actions+
+                  ['run','input 1','input 6'])
+        result,arrived,credits,missiles=rows[-4:]
+        assert result['frame']==screen(message),(label,result)
+        assert game_mode(arrived)==game_mode(credits)==game_mode(missiles)==1,(label,rows[-4:])
+        assert state(credits)==state(missiles)==state(arrived),(label,rows[-4:])
+        number(credits,'C',arrived['pages'][0][0])
+        number(missiles,'r',arrived['pages'][1][7])
+        checked+=len(rows)
+    print(f'ELITE: frame suffix transitions, both cached trade results and normal result acknowledgments OK ({checked} states)',flush=True)
+
+
+def test_shield_boost_boundaries():
+    # Original rule: raise the shield by 18 up to 60, then apply the whole
+    # simultaneous incoming salvo. Evasive manoeuvre halves that salvo.
+    # The oracle reads the user command, not COMBAT's encoded manoeuvre.
+    checked=0
+    for seed,enemy_hull,incoming in ((8,60,14),(3,120,24)):
+        for shield in (0,41,42,43,59,60):
+            for maneuver in (1,2,3,4):
+                rows=play(encounter(seed)+[f'set 24 5 {shield}','dump',f'input {maneuver}3'])
+                before,after=rows[-2:]
+                boosted=min(60,shield+18)
+                damage=incoming//2 if maneuver==4 else incoming
+                remainder=boosted-damage
+                assert after['pages'][0][4:6]==[84+min(0,remainder),max(0,remainder)],after
+                assert after['pages'][0][3]==before['pages'][0][3]+1,after
+                assert after['pages'][0][0]==before['pages'][0][0],after
+                assert after['pages'][0][7]==0,after
+                assert after['pages'][1]==before['pages'][1],after
+                assert after['pages'][3][1]==enemy_hull,after
+                assert after['pages'][3][2]=={1:12,2:14,3:16,4:14}[maneuver],after
+                assert after['pages'][3][4]==maneuver-4,after
+                assert after['pages'][4]==before['pages'][4],after
+                assert game_mode(after)==2,after
+                number(after,'H',enemy_hull)
+                checked+=len(rows)
+    assert checked==288,checked
+    print('ELITE: simultaneous shield boost at zero, cap boundaries and all manoeuvres OK (288 states)',flush=True)
+
+
 def test_instruments_and_formation():
     # Independent threshold oracle: each lit cell covers the next interval,
     # and the right-hand number remains exact at every zero/boundary/cap.
@@ -789,7 +881,7 @@ def main():
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,test_laser_heat_boundaries,
+           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,test_laser_heat_boundaries,test_suffix_frame_transitions,test_shield_boost_boundaries,
            test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
            test_page_transaction_boundaries,test_station_transaction_boundaries,test_navigation_coordinate_cache,test_trade_credit_boundaries,
            test_restart_initialization,test_input_dispatch_domain,test_target_selection_transitions)
