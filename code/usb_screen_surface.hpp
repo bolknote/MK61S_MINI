@@ -6,6 +6,7 @@
 #include "prepared_font.hpp"
 #include "rust_types.h"
 #include "text_screen.hpp"
+#include "disk_activity.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font.hpp"
 #endif
@@ -113,6 +114,9 @@ class Surface {
     bool showTopRightOverlay(const u32* rows, u8 width, u8 height,
                              u8 clear_border);
     void hideTopRightOverlay(void);
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    void setDiskActivity(u8 state);
+#endif
     bool copyTopRightOverlay(u32 rows[OVERLAY_MAX_HEIGHT], u8& width,
                              u8& height, u8& clear_border) const;
 
@@ -120,6 +124,9 @@ class Surface {
     u32 revision(void) const { return revision_; }
 
   private:
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    disk_activity::Overlay disk_overlay_;
+#endif
     static constexpr t_time_ms CURSOR_BLINK_MS = 500;
 
     u8* framebuffer_;

@@ -392,8 +392,8 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   ui_text_renderer::renderPage(
       grid, style, page, first_col, count, render_buffer);
   drawTopRightOverlay(first_col, count, (u8) page_y);
-  lcd.LCDBuffer((u8) (first_col * lcd_display::CELL_WIDTH),
-                (u8) page_y, run_width, RENDER_PAGE_HEIGHT, render_buffer);
+  presentPage(page, (u8) (first_col * lcd_display::CELL_WIDTH),
+              run_width, render_buffer);
   render_width = saved_width;
 }
 #endif

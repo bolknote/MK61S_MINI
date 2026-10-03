@@ -13,6 +13,7 @@
 
 #include "spi1_bus.hpp"
 #include "power_monitor.hpp"
+#include "disk_activity.hpp"
 
 #include <string.h>
 
@@ -141,6 +142,7 @@ bool SpiNorFlash::waitReady(u32 timeout_ms) {
     if(!readStatus(status)) return false;
     if((status & STATUS_BUSY) == 0) return true;
     if((u32) (millis() - started) >= timeout_ms) return false;
+    disk_activity::note();
     delayMicroseconds(50);
   }
 }
@@ -367,7 +369,9 @@ bool SpiNorFlash::readByteArray(u32 address, u8* output, usize len,
   if(output == NULL || address > capacity_ || len > capacity_ - address) {
     return false;
   }
-  return rawRead(address, output, len);
+  const bool ok = rawRead(address, output, len);
+  if(len != 0) disk_activity::note();
+  return ok;
 }
 
 u8 SpiNorFlash::readByte(u32 address, bool fast_read) {
@@ -408,6 +412,7 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     }
     if(!deselect()) return false;
     if(!waitReady(5000)) return false;
+    disk_activity::note();
     address += count;
     data += count;
     len -= count;

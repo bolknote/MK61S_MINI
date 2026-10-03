@@ -5,5 +5,6 @@
 #ifndef HEX
 #define HEX 16
 #endif
-inline uint32_t millis() { return 0; }
+namespace ui_display_test { inline uint32_t now = 0; }
+inline uint32_t millis() { return ui_display_test::now; }
 #endif

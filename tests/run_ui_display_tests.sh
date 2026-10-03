@@ -20,6 +20,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   -I"$root/tests/ui_display_shim" -I"$root/code" \
   "$root/tests/ui_display_self_test.cpp" \
   "$root/code/display.cpp" "$root/code/display_ui.cpp" \
+  "$root/code/disk_activity.cpp" \
   "$root/code/ui_text_renderer.cpp" \
   "$root/code/calculator_face.cpp" \
   "$root/code/ui_font.cpp" "$root/code/text_screen.cpp" \
@@ -29,3 +30,17 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   "$root/code/ERM19264_graphics_font.cpp" -o "$out"
 "$out"
 done
+
+# Character displays must not carry the animation, glyphs, state, or polling
+# calls when the virtual graphical screen is disabled, including WS0010.
+for panel in MK61_LCD1602_A00 MK61_LCD1602_A02 MK61_OLED1602_WS0010; do
+  clang++ -std=c++17 -Wall -Wextra -Werror -DARDUINO=100 \
+    -D"$panel" -DMK61_ENABLE_USB_SCREEN=0 \
+    -I"$root/code" -I"$root/tests/mk_math_shim" \
+    -c "$root/code/disk_activity.cpp" -o "$out-no-graphics.o"
+  if nm "$out-no-graphics.o" | grep -Eq 'disk_activity|DiskActivity|DiskSaving'; then
+    echo "Unexpected disk animation in $panel without USB Screen" >&2
+    exit 1
+  fi
+done
+echo "Disk animation excluded from A00/A02/WS0010 without USB Screen"

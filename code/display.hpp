@@ -48,6 +48,7 @@
 #if MK61_ENABLE_USB_SCREEN
   #include "usb_screen_surface.hpp"
 #endif
+#include "disk_activity.hpp"
 
 namespace lcd_display {
 
@@ -190,6 +191,14 @@ class MK61Display : public Print {
 #endif
     void clear(void);
     void flush(void);
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    void noteDiskActivity(u32 now) { disk_activity_.note(now); }
+    void pollDiskActivity(u32 now);
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+    void beginDiskSaving(bool russian);
+    void endDiskSaving(void);
+#endif
     void beginUpdate(void);
     void endUpdate(void);
     // M8 word flow shared by language runtimes. It uses the active FMK's
@@ -461,6 +470,17 @@ class MK61Display : public Print {
 #endif
 
   private:
+#if MK61_DISK_ACTIVITY_SUPPORTED
+    disk_activity::Activity disk_activity_;
+#endif
+#if defined(MK61_DISPLAY_UC1609)
+    disk_activity::Overlay disk_overlay_;
+    bool disk_saving_ = false;
+    bool disk_saving_ru_ = false;
+    u8 disk_step_ = 0;
+    u32 disk_frame_at_ = 0;
+    void presentPage(u8 page, u8 first, u8 count, u8* pixels);
+#endif
     bool writeCellAnimationFrame(const u8* cells, usize count);
 #if defined(MK61_DISPLAY_LCD1602)
 #if !defined(MK61_OLED1602_WS0010)

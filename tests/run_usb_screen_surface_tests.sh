@@ -8,12 +8,16 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
+for panel in uc1609 lcd1602; do
+panel_flags=(-DMK61_DISPLAY_UC1609=1 -DMK61_PROPORTIONAL_UI_FONTS=1)
+if [[ "$panel" == lcd1602 ]]; then
+  panel_flags=(-DMK61_LCD1602_A00 -DMK61_PROPORTIONAL_UI_FONTS=0)
+fi
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
   -DMK61_ENABLE_USB_SCREEN=1 \
-  -DMK61_DISPLAY_UC1609=1 \
-  -DMK61_PROPORTIONAL_UI_FONTS=1 \
+  "${panel_flags[@]}" \
   -DMK61_FIXED_CALCULATOR_FACE=0 \
   -I"$root/code" \
   -I"$root/tests/mk_math_shim" \
@@ -29,3 +33,4 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+done

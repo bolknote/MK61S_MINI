@@ -1373,7 +1373,201 @@ void test_partial_page_overlay_restoration() {
   expectFrame(original);
 }
 
+void expectDiskCorner(const Frame& underlying, const u8* shown, u8 state) {
+  bool different = false;
+  for(unsigned i = 0; i < underlying.size(); ++i) {
+    if(i / 192U >= 2 || i % 192U < 176) assert(shown[i] == underlying[i]);
+    else different = different || shown[i] != underlying[i];
+  }
+  assert(different);
+  // Disk silhouette, empty margin and animated activity dot.
+  for(unsigned x = 178; x <= 186; ++x) assert(shown[x] & 4U);
+  assert(shown[176] == 0 && shown[177] == 0);
+  assert(shown[192 + 190] == (state == 2 ? 0x0C : 0));
+  assert(shown[192 + 191] == (state == 2 ? 0x0C : 0));
+}
+
+void exportFrame(const Frame& frame, const char* name) {
+  const char* directory = std::getenv("MK61_DISPLAY_TEST_FRAMES");
+  if(!directory) return;
+  char path[512];
+  const int length = std::snprintf(path, sizeof(path), "%s/%s.pgm", directory, name);
+  assert(length > 0 && (usize) length < sizeof(path));
+  FILE* file = std::fopen(path, "wb");
+  assert(file);
+  std::fputs("P5\n192 64\n255\n", file);
+  for(unsigned y = 0; y < 64; ++y)
+    for(unsigned x = 0; x < 192; ++x)
+      assert(std::fputc(framePixel(frame, x, y) ? 0 : 255, file) != EOF);
+  assert(std::fclose(file) == 0);
+}
+
+void test_disk_activity_deadline() {
+  disk_activity::Activity activity;
+  assert(activity.indicator(0) == 0);
+  activity.note(0);
+  assert(activity.indicator(0) == 1);
+  assert(activity.indicator(159) == 1);
+  assert(activity.indicator(160) == 0);
+  assert(activity.indicator(0) == 0); // no flash again one millis() wrap later
+  activity.note(150);
+  assert(activity.indicator(160) == 2);
+  assert(activity.indicator(309) == 2);
+  assert(activity.indicator(310) == 0);
+  activity.note(UINT32_MAX - 79U);
+  assert(activity.indicator(0) != 0);
+  assert(activity.indicator(79) != 0);
+  assert(activity.indicator(80) == 0);
+}
+
+void test_disk_restores_text_clock_and_calculator() {
+  for(unsigned renderer = 0; renderer < 3; ++renderer) {
+    ui_display_test::now = 0;
+    ui_display_test::reset();
+    MK61Display display;
+    display.begin();
+    display.clear();
+    if(renderer == 1) {
+      display.setUiFont(1, 14);
+      display.beginUiText();
+      display.printUiLine(0, "WWWWWWWWWWWWWWWWWWWWWWWW");
+    } else {
+      writeDisplayLine(display, 0, 0, "1234567890ABCDEF");
+      if(renderer == 2) display.beginCalculatorFace();
+    }
+    const u32 clock[] = {0x1555, 0x0AAA, 0x1555, 0x0AAA};
+    assert(display.showTopRightOverlay(clock, 13, 4, 1));
+    const Frame original = ui_display_test::frame;
+    const unsigned before = ui_display_test::transfers;
+    display.noteDiskActivity(0);
+    display.pollDiskActivity(0);
+    expectDiskCorner(original, ui_display_test::frame.data(), 1);
+    if(renderer == 2) exportFrame(ui_display_test::frame, "disk-activity");
+    assert(ui_display_test::transfers == before + 2);
+    assert(!display.deepIdleReady());
+    for(unsigned now = 1; now < 160; ++now) display.pollDiskActivity(now);
+    assert(ui_display_test::transfers == before + 2);
+    display.pollDiskActivity(160);
+    expectFrame(original);
+    assert(display.deepIdleReady());
+    assert(ui_display_test::transfers == before + 4);
+
+    // Capture an independently redrawn result; then perform the same changes
+    // behind the disk. Hiding it must restore the new clock and text, not the
+    // snapshot from when the disk first appeared.
+    auto change = [&](char letter) {
+      display.hideTopRightOverlay();
+      if(renderer == 1) display.printUiLine(0, letter == 'A' ? "A" : "B", 0, letter);
+      else { display.setCursor(15, 0); display.writeCodepoint(letter); }
+    };
+    change('B');
+    const Frame updated = ui_display_test::frame;
+    change('A');
+    display.noteDiskActivity(160);
+    display.pollDiskActivity(160);
+    change('B');
+    expectDiskCorner(updated, ui_display_test::frame.data(), 2);
+    display.pollDiskActivity(320);
+    expectFrame(updated);
+
+    display.noteDiskActivity(320);
+    display.pollDiskActivity(320);
+    display.clear();
+    display.pollDiskActivity(480);
+    expectFrame(Frame{});
+  }
+}
+
+void test_disk_fullscreen_and_update_batching() {
+  ui_display_test::now = 0;
+  ui_display_test::reset();
+  MK61Display display;
+  display.begin();
+  Frame bitmap{};
+  for(usize i = 0; i < bitmap.size(); ++i) bitmap[i] = (u8) (i * 19U + 7U);
+  assert(display.beginFullscreenBitmap());
+  assert(display.showFullscreenBitmap(bitmap.data(), bitmap.size()));
+  display.noteDiskActivity(0);
+  display.pollDiskActivity(0);
+  expectDiskCorner(bitmap, ui_display_test::frame.data(), 1);
+  // A different owner frame can arrive while the icon is still on screen.
+  for(u8& byte : bitmap) byte ^= 0xFF;
+  assert(display.showFullscreenBitmap(bitmap.data(), bitmap.size()));
+  expectDiskCorner(bitmap, ui_display_test::frame.data(), 1);
+  display.pollDiskActivity(160);
+  expectFrame(bitmap);
+  display.endFullscreenBitmap();
+  display.clear();
+
+  const unsigned before = ui_display_test::transfers;
+  display.beginUpdate();
+  display.noteDiskActivity(160);
+  display.pollDiskActivity(160);
+  assert(ui_display_test::transfers == before);
+  display.endUpdate();
+  display.pollDiskActivity(160);
+  expectDiskCorner(Frame{}, ui_display_test::frame.data(), 2);
+  display.pollDiskActivity(320);
+  expectFrame(Frame{});
+}
+
+void test_disk_saving_animation() {
+  for(bool russian : {false, true}) {
+    ui_display_test::now = 0;
+    MK61Display display;
+    startUi(display);
+    display.printUiLine(0, "USB Disk");
+    const Frame original = ui_display_test::frame;
+    const unsigned before = ui_display_test::transfers;
+    display.beginDiskSaving(russian);
+    const Frame first = ui_display_test::frame;
+    assert(first != original && !display.deepIdleReady());
+    assert(ui_display_test::transfers == before + 8);
+    display.beginDiskSaving(russian); // ESC after host eject: do not restart
+    display.flush();
+    display.pollDiskActivity(159);
+    assert(ui_display_test::transfers == before + 8);
+    ui_display_test::now = 160;
+    display.pollDiskActivity(160);
+    const Frame second = ui_display_test::frame;
+    if(russian) {
+      exportFrame(first, "disk-saving-0");
+      exportFrame(second, "disk-saving-1");
+    }
+    assert(second != first);
+    // Only the transfer/chip area moves. The title, rule and footer stay put.
+    for(unsigned i = 0; i < first.size(); ++i) {
+      if(i / 192U < 2 || i / 192U >= 6) assert(first[i] == second[i]);
+    }
+    assert(ui_display_test::transfers == before + 12);
+    display.flush();
+    assert(ui_display_test::transfers == before + 12);
+    display.endDiskSaving();
+    expectFrame(original);
+    assert(display.deepIdleReady());
+    const unsigned ended = ui_display_test::transfers;
+    display.endDiskSaving(); // same cleanup after a failed commit
+    assert(ui_display_test::transfers == ended);
+  }
+  ui_display_test::now = 0;
+}
+
 #if MK61_ENABLE_USB_SCREEN
+void test_disk_usb_display_integration() {
+  MK61Display display;
+  startUi(display);
+  display.printUiLine(0, "USB screen", 0, 'X');
+  const Frame physical = ui_display_test::frame;
+  assert(display.enterUsbScreen());
+  display.noteDiskActivity(0);
+  display.pollDiskActivity(0);
+  expectDiskCorner(physical, display.usbScreenFramebuffer(), 1);
+  expectFrame(physical); // no SPI display writes while USB owns the screen
+  display.pollDiskActivity(160);
+  assert(std::memcmp(physical.data(), display.usbScreenFramebuffer(), physical.size()) == 0);
+  display.leaveUsbScreen();
+}
+
 void test_usb_waits_for_physical_display_ack() {
   MK61Display display;
   startUi(display);
@@ -1576,7 +1770,12 @@ int main() {
   test_cursor_and_stop_redraw();
   test_cursor_blinks_on_trailing_ui_marker();
   test_partial_page_overlay_restoration();
+  test_disk_activity_deadline();
+  test_disk_restores_text_clock_and_calculator();
+  test_disk_fullscreen_and_update_batching();
+  test_disk_saving_animation();
 #if MK61_ENABLE_USB_SCREEN
+  test_disk_usb_display_integration();
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
   test_usb_classic_10x16_parity();

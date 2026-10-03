@@ -23,6 +23,7 @@ static usize ink(const usb_screen::Surface& surface) {
   return count;
 }
 
+#if MK61_PROPORTIONAL_UI_FONTS
 static void putLe16(u8* target, u16 value) {
   target[0] = (u8) value;
   target[1] = (u8) (value >> 8);
@@ -54,6 +55,7 @@ static prepared_font::Face narrowFont(u8 (&data)[27]) {
   assert(face.open(data, sizeof(data)));
   return face;
 }
+#endif
 
 static void test_profiles(void) {
   const usb_screen::TextProfile huge =
@@ -109,6 +111,7 @@ static void test_text_unicode_and_cursor(void) {
   assert(surface.revision() > blink_before);
 }
 
+#if MK61_PROPORTIONAL_UI_FONTS
 static void test_wide_external_font_layout(void) {
   u8 font_data[27] = {};
   prepared_font::Face font = narrowFont(font_data);
@@ -131,6 +134,7 @@ static void test_wide_external_font_layout(void) {
   assert(last_cell_visible);
   assert(!pixel(surface, 191, 0));
 }
+#endif
 
 static void test_custom_glyph(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
@@ -309,17 +313,91 @@ static void test_noop_updates_do_not_render(void) {
   assert(surface.revision() == revision);
 }
 
+static void test_disk_activity_overlay(void) {
+  u8 framebuffer[usb_screen::FRAME_BYTES] = {};
+  u8 reference[usb_screen::FRAME_BYTES] = {};
+  usb_screen::Surface surface(framebuffer);
+  surface.begin();
+  surface.setCursor(15, 0);
+  surface.writeByte('W');
+  const u32 clock[] = {0x1555, 0x0AAA, 0x1555, 0x0AAA};
+  assert(surface.showTopRightOverlay(clock, 13, 4, 1));
+  surface.flush(0);
+  memcpy(reference, framebuffer, sizeof(reference));
+  const u32 before = surface.revision();
+  surface.setDiskActivity(1);
+  assert(surface.revision() == before + 1);
+  assert(memcmp(reference, framebuffer, sizeof(reference)) != 0);
+  for(unsigned i = 0; i < sizeof(reference); ++i) {
+    if(i / 192U >= 2 || i % 192U < 176) assert(reference[i] == framebuffer[i]);
+  }
+  surface.setDiskActivity(1);
+  surface.flush(10);
+  assert(surface.revision() == before + 1);
+  surface.setDiskActivity(2);
+  assert(pixel(surface, 190, 10) && pixel(surface, 191, 11));
+  surface.setDiskActivity(0);
+  assert(memcmp(reference, framebuffer, sizeof(reference)) == 0);
+
+  // Redraw another clock/text owner underneath a visible icon.
+  surface.hideTopRightOverlay();
+  surface.flush(20);
+  memcpy(reference, framebuffer, sizeof(reference));
+  assert(surface.showTopRightOverlay(clock, 13, 4, 1));
+  surface.flush(20);
+  surface.setDiskActivity(1);
+  surface.hideTopRightOverlay();
+  surface.flush(30);
+  assert(memcmp(reference, framebuffer, sizeof(reference)) != 0);
+  surface.setDiskActivity(0);
+  assert(memcmp(reference, framebuffer, sizeof(reference)) == 0);
+
+  // Fullscreen owners do not use the text damage map at all.
+  for(unsigned i = 0; i < sizeof(reference); ++i) reference[i] = (u8) (i * 19U + 7U);
+  assert(surface.beginFullscreenBitmap());
+  assert(surface.showFullscreenBitmap(reference, sizeof(reference)));
+  surface.setDiskActivity(1);
+  u32 revision = surface.revision();
+  assert(surface.showFullscreenBitmap(reference, sizeof(reference)));
+  assert(surface.revision() == revision); // no spurious frame for an unchanged bitmap
+  assert(memcmp(reference, framebuffer, sizeof(reference)) != 0);
+  for(u8& byte : reference) byte ^= 0xFF;
+  assert(surface.showFullscreenBitmap(reference, sizeof(reference)));
+  assert(surface.revision() == revision + 1);
+  surface.setDiskActivity(0);
+  assert(memcmp(reference, framebuffer, sizeof(reference)) == 0);
+  surface.endFullscreenBitmap();
+  surface.clear();
+  surface.flush(40);
+  assert(ink(surface) == 0);
+
+  revision = surface.revision();
+  surface.beginUpdate();
+  surface.setDiskActivity(1);
+  assert(surface.revision() == revision);
+  surface.endUpdate();
+  surface.setDiskActivity(1);
+  assert(ink(surface) > 0);
+  surface.end();
+  surface.begin();
+  surface.flush(50);
+  assert(ink(surface) == 0); // no stale indicator on the next USB session
+}
+
 } // безымянное пространство имён
 
 int main(void) {
   test_profiles();
   test_text_unicode_and_cursor();
+#if MK61_PROPORTIONAL_UI_FONTS
   test_wide_external_font_layout();
+#endif
   test_custom_glyph();
   test_backend_switch_seed_and_session_reset();
   test_fullscreen_and_overlay();
   test_update_batching();
   test_noop_updates_do_not_render();
+  test_disk_activity_overlay();
   printf("usb_screen_surface_self_test: ok\n");
   return 0;
 }

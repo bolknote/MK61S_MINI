@@ -2314,7 +2314,8 @@ void MK61Display::begin(u8, u8 rows) {
 
 #if MK61_DEEP_IDLE_ENABLED
 bool MK61Display::deepIdleReady(void) const {
-  if(!initialized || update_depth != 0) return false;
+  if(!initialized || update_depth != 0 || disk_saving_ ||
+     disk_overlay_.state() != 0) return false;
 #if MK61_ANY_FULLSCREEN_FILE
   if(fullscreen_bitmap_active) return false;
 #endif
@@ -2372,6 +2373,10 @@ void MK61Display::flush(void) {
   }
 #endif
   if(!initialized) return;
+  if(disk_saving_) {
+    pollDiskActivity(millis());
+    return;
+  }
 #if MK61_ENABLE_USB_SCREEN
   // If AF lost arbitration while leaving USB Screen, keep the physical state
   // false and retry on later foreground epochs. Never discard the dirty frame
@@ -2398,9 +2403,7 @@ void MK61Display::flush(void) {
       calculator_face::renderPage(grid, page, render_buffer);
       drawTopRightOverlay(0, lcd_display::COLS,
                           (u8) (page * RENDER_PAGE_HEIGHT));
-      lcd.LCDBuffer(0, (u8) (page * RENDER_PAGE_HEIGHT),
-                    lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT,
-                    render_buffer);
+      presentPage(page, 0, lcd_display::PIXEL_WIDTH, render_buffer);
     }
     render_width = saved_width;
     dirty = false;
@@ -3081,7 +3084,9 @@ void MK61Display::clearShadow(void) {
 void MK61Display::clearPhysicalScreen(void) {
   memset(render_buffer, 0x00, lcd_display::PIXEL_WIDTH);
   for(u8 y = 0; y < lcd_display::PIXEL_HEIGHT; y += RENDER_PAGE_HEIGHT) {
-    lcd.LCDBuffer(0, y, lcd_display::PIXEL_WIDTH, RENDER_PAGE_HEIGHT, render_buffer);
+    presentPage(y / RENDER_PAGE_HEIGHT, 0, lcd_display::PIXEL_WIDTH, render_buffer);
+    // presentPage can compose an icon over this scratch page.
+    memset(render_buffer, 0x00, lcd_display::PIXEL_WIDTH);
   }
 }
 
@@ -3092,8 +3097,19 @@ bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
   static constexpr usize FULLSCREEN_BYTES =
     (usize) lcd_display::PIXEL_WIDTH * lcd_display::PIXEL_HEIGHT / 8;
   if(!initialized || bitmap == NULL || size != FULLSCREEN_BYTES) return false;
-  return lcd.LCDBitmap(0, 0, lcd_display::PIXEL_WIDTH,
-                       lcd_display::PIXEL_HEIGHT, bitmap) == LCD_Success;
+  if(lcd.LCDBitmap(0, 0, lcd_display::PIXEL_WIDTH,
+                   lcd_display::PIXEL_HEIGHT, bitmap) != LCD_Success) return false;
+  u8 corner[disk_activity::Overlay::WIDTH];
+  for(u8 page = 0; page < disk_activity::Overlay::PAGES; ++page) {
+    memcpy(corner, bitmap + (usize) page * lcd_display::PIXEL_WIDTH +
+           disk_activity::Overlay::LEFT, sizeof(corner));
+    disk_overlay_.compose(page, disk_activity::Overlay::LEFT,
+                           sizeof(corner), corner);
+    if(disk_overlay_.state())
+      lcd.LCDBuffer(disk_activity::Overlay::LEFT, page*8U,
+                    sizeof(corner), 8, corner);
+  }
+  return true;
 }
 
 bool MK61Display::beginFullscreenBitmap(void) {
@@ -3405,8 +3421,8 @@ void MK61Display::renderPageRun(u8 page, u8 first_col, u8 count) {
     }
   }
   drawTopRightOverlay(first_col, count, page_y);
-  lcd.LCDBuffer(first_col * lcd_display::CELL_WIDTH, page_y,
-                run_width, RENDER_PAGE_HEIGHT, render_buffer);
+  presentPage(page, first_col * lcd_display::CELL_WIDTH,
+              run_width, render_buffer);
   render_width = saved_width;
 }
 

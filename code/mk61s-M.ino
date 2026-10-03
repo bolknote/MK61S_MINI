@@ -1342,6 +1342,7 @@ void idle_main_process(void) {
   }
   sound_poll();
   led::control();
+  disk_activity::poll();
   main_lcd().flush();
 #if defined(MK61_OLED1602_WS0010)
   bool passive_calculator_wait =

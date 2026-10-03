@@ -74,6 +74,9 @@ Surface::Surface(u8* framebuffer)
 }
 
 void Surface::begin(TextProfile profile) {
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  disk_overlay_ = disk_activity::Overlay{};
+#endif
   profile_ = normalizeProfile(profile);
   active_ = true;
   update_depth_ = 0;
@@ -418,12 +421,28 @@ bool Surface::beginFullscreenBitmap(void) {
 bool Surface::showFullscreenBitmap(const u8* bitmap, usize size) {
   if(!active_ || !fullscreen_bitmap_active_ || bitmap == NULL ||
      size != FRAME_BYTES) return false;
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  disk_overlay_.restore(framebuffer_);
+#endif
   if(memcmp(framebuffer_, bitmap, FRAME_BYTES) != 0) {
     memcpy(framebuffer_, bitmap, FRAME_BYTES);
     revision_++;
   }
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  disk_overlay_.composeFrame(framebuffer_);
+#endif
   return true;
 }
+
+#if MK61_DISK_ACTIVITY_SUPPORTED
+void Surface::setDiskActivity(u8 state) {
+  if(!active_ || update_depth_ != 0 || disk_overlay_.state() == state) return;
+  disk_overlay_.restore(framebuffer_);
+  disk_overlay_.set(state);
+  disk_overlay_.composeFrame(framebuffer_);
+  ++revision_;
+}
+#endif
 
 void Surface::endFullscreenBitmap(void) {
   if(!active_ || !fullscreen_bitmap_active_) return;
@@ -511,6 +530,9 @@ void Surface::flush(t_time_ms now) {
   updateCursorBlink(now);
   if(!dirty_ && !grid_.anyDirty()) return;
   render();
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  disk_overlay_.composeFrame(framebuffer_);
+#endif
   for(u8 row = 0; row < grid_.rows(); row++) grid_.clearDirty(row);
   dirty_ = false;
   revision_++;

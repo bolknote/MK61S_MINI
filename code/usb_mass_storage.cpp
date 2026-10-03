@@ -7,6 +7,11 @@
 #include "power_monitor.hpp"
 #include "usb_disk_session.hpp"
 #include "virtual_fat.hpp"
+#include "disk_activity.hpp"
+#if defined(MK61_DISPLAY_UC1609)
+#include "display.hpp"
+#include "menu.hpp"
+#endif
 
 #include <Arduino.h>
 #include <string.h>
@@ -749,6 +754,7 @@ void service(void) {
       );
     const bool tracked = ok && apply_session_event(
         usb_disk_session::Event::WRITE_ACCEPTED).accepted;
+    disk_activity::note();
     expected = DeferredWriteState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                     tracked ? DeferredWriteState::COMPLETE_OK : DeferredWriteState::COMPLETE_ERROR,
@@ -776,6 +782,7 @@ void service(void) {
       buffer,
       block_len
     );
+    disk_activity::note();
     expected = DeferredReadState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_read.state, &expected,
                                     ok ? DeferredReadState::COMPLETE_OK : DeferredReadState::COMPLETE_ERROR,
@@ -792,12 +799,25 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+#if defined(MK61_DISPLAY_UC1609)
+    const USBD_HandleTypeDef* const device = usb_device();
+    const USBD_MSC_BOT_HandleTypeDef* const msc =
+        device->classId < USBD_MAX_SUPPORTED_CLASS
+        ? (const USBD_MSC_BOT_HandleTypeDef*) device->pClassDataCmsit[device->classId]
+        : nullptr;
+    if(msc != nullptr && msc->host_eject_latched)
+      main_lcd().beginDiskSaving(library_mk61::language_is_ru());
+#endif
     virtual_fat::CommitResult result = virtual_fat::CommitResult::IO_FAILED;
     if(apply_session_event(usb_disk_session::Event::SERVICE).accepted &&
        power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
       result = virtual_fat::flush_pending_result();
     }
     const bool state_ok = apply_session_event(commit_event(result)).accepted;
+#if defined(MK61_DISPLAY_UC1609)
+    if(!state_ok || result != virtual_fat::CommitResult::OK)
+      main_lcd().endDiskSaving();
+#endif
     expected = DeferredSyncState::PROCESSING;
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::EMPTY, false,
