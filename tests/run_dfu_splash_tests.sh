@@ -12,6 +12,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -I"$root/code" \
   "$root/code/dfu_splash.cpp" \
+  "$root/code/zx0.cpp" \
+  "$root/code/zx0_encode.cpp" \
   "$root/tests/dfu_splash_self_test.cpp" \
   -o "$out"
 
