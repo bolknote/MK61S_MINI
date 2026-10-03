@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 
 namespace program_store {
 
@@ -37,6 +38,22 @@ bool available(const program_store::Entry&) {
 
 }  // namespace file_handlers
 
+#define M8(text) text
+static unsigned messages = 0;
+static unsigned waits = 0;
+static void show_message(const char* en0, const char* ru0,
+                         const char* en1, const char* ru1) {
+  assert(strcmp(en0, "CHIP-8") == 0 && strcmp(ru0, "CHIP-8") == 0);
+  assert(strcmp(en1, "unavailable") == 0);
+  assert(strcmp(ru1, "недоступен") == 0);
+  messages++;
+}
+static int wait_explorer_key(bool repeat) {
+  assert(!repeat);
+  waits++;
+  return 0;
+}
+
 #include "explorer_entry_can_run.inc"
 
 int main() {
@@ -56,6 +73,20 @@ int main() {
 
   const Entry text = {NodeKind::FILE, ProgramType::TEXT};
   assert(!entry_can_run(text));
+  assert(!reject_unavailable_chip8(text));
+  assert(!reject_unavailable_chip8(directory));
+
+  const Entry chip8 = {NodeKind::FILE, ProgramType::CHIP8};
+  file_handlers::handler_available = false;
+  assert(!entry_can_run(chip8));
+  assert(reject_unavailable_chip8(chip8));
+  assert(messages == 1 && waits == 1);
+  // Both a built-in interpreter and a discovered CHIP8.APP are available
+  // through this same policy; neither should be blocked by the diagnostic.
+  file_handlers::handler_available = true;
+  assert(entry_can_run(chip8));
+  assert(!reject_unavailable_chip8(chip8));
+  assert(messages == 1 && waits == 1);
 
   const Entry markdown = {NodeKind::FILE, ProgramType::MARKDOWN};
   file_handlers::handler_available = false;

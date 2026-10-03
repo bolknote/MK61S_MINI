@@ -1128,7 +1128,19 @@ static bool apply_font_entry(const program_store::Entry& entry) {
 #endif
 }
 
+static bool reject_unavailable_chip8(const program_store::Entry& entry) {
+  if(entry.kind != program_store::NodeKind::FILE ||
+     entry.type != program_store::ProgramType::CHIP8 ||
+     file_handlers::available(entry)) return false;
+  // A ROM is not text. The short-OK fallback must explain the missing
+  // interpreter rather than feed opcodes to the generic text preview.
+  show_message("CHIP-8", "CHIP-8", "unavailable", M8("недоступен"));
+  (void) wait_explorer_key(false);
+  return true;
+}
+
 static bool view_entry(const program_store::Entry& entry) {
+  if(reject_unavailable_chip8(entry)) return false;
   if(entry.type == program_store::ProgramType::IMAGE1 ||
      entry.type == program_store::ProgramType::MARKDOWN) {
     const loadable_module::FileOpenResult result =
