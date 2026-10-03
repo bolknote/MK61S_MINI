@@ -42,6 +42,10 @@ LOCAL_PATH=$(pwd -P)
 REMOTE_PATH=/
 MOCK_ROOT=
 CLASSIFY_ONLY=
+INSTALL_SYSTEM_DIR=
+EXPECTED_PROFILE=
+RESIDENT_USBDISK=0
+READY_WAIT_SECONDS=0
 SESSION_DIR=
 MONITOR_PID=
 MONITOR_INPUT_FD=
@@ -184,6 +188,11 @@ Usage:
   tools/mkc.cmd [--port PORT] [--device ID] [--local DIRECTORY]
   tools/mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools/mkc.cmd --classify FILE
+  tools/mkc.cmd --install-system DIRECTORY [--expect-profile PROFILE]
+                [--resident-usbdisk] [--wait-ready SECONDS] [--port PORT]
+
+System installation uses CDC, not USB Disk. Close other serial clients.
+Without --resident-usbdisk, System/USBDISK.APP is required.
 
 Keys:
   Tab       switch panel        Enter     open directory
@@ -3448,9 +3457,81 @@ main_loop() {
   done
 }
 
+install_system_unattended() {
+  local source=$LOCAL_PATH name kind size remote_name deadline reason
+  local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP
+    CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT)
+  if [ "$RESIDENT_USBDISK" -eq 0 ] && [ ! -s "$source/USBDISK.APP" ]; then
+    STATUS_TEXT='нет обязательного USBDISK.APP'; return 1
+  fi
+  if [ "$RESIDENT_USBDISK" -eq 1 ] && [ -e "$source/USBDISK.APP" ]; then
+    STATUS_TEXT='resident USB-диск не должен содержать USBDISK.APP'; return 1
+  fi
+  # Validate every source before deleting or uploading anything.
+  for name in "${canonical[@]}"; do
+    [ -e "$source/$name" ] || [ -L "$source/$name" ] || continue
+    [ -f "$source/$name" ] && [ ! -L "$source/$name" ] || {
+      STATUS_TEXT="неверный файл $name"; return 1;
+    }
+    reason=$(unsupported_reason "$source/$name" f)
+    [ -z "$reason" ] || { STATUS_TEXT="$name: $reason"; return 1; }
+  done
+  if [ -z "$MOCK_ROOT" ]; then
+    deadline=$((SECONDS + READY_WAIT_SECONDS))
+    until select_mk61_port; do
+      [ "$SECONDS" -lt "$deadline" ] || { STATUS_TEXT=$SELECT_ERROR; return 1; }
+      sleep 0.5
+    done
+    if [ -n "$EXPECTED_PROFILE" ] && [ "$DETECTED_PROFILE" != "$EXPECTED_PROFILE" ]; then
+      STATUS_TEXT="прошивка $DETECTED_PROFILE не соответствует пакету $EXPECTED_PROFILE"
+      return 1
+    fi
+  fi
+  start_monitor || { STATUS_TEXT="не удалось открыть ${PORT:-устройство}"; return 1; }
+  remote_mkdir /System || return 1
+  remote_list_raw /System "$SESSION_DIR/system-list" || return 1
+  while IFS=$'\t' read -r kind size remote_name; do
+    [ "$kind" = f ] || continue
+    for name in "${canonical[@]}"; do
+      if [ "$(uppercase "$remote_name")" = "$name" ] && [ ! -e "$source/$name" ]; then
+        remote_delete "/System/$remote_name" || return 1
+        printf 'Removed disabled /System/%s\n' "$remote_name"
+      fi
+    done
+  done < "$SESSION_DIR/system-list"
+  for name in "${canonical[@]}"; do
+    [ -f "$source/$name" ] || continue
+    if ! remote_put_file "$source/$name" "/System/$name"; then
+      [ -n "$MOCK_ROOT" ] || remote_send 'fsput cancel' || true
+      return 1
+    fi
+    remote_get_file "/System/$name" "$SESSION_DIR/readback" || return 1
+    if is_text_path "$name"; then
+      utf8_to_m8_file "$source/$name" "$SESSION_DIR/expected" || return 1
+      utf8_to_m8_file "$SESSION_DIR/readback" "$SESSION_DIR/received" || return 1
+    else
+      cp "$source/$name" "$SESSION_DIR/expected" || return 1
+      cp "$SESSION_DIR/readback" "$SESSION_DIR/received" || return 1
+    fi
+    cmp -s "$SESSION_DIR/expected" "$SESSION_DIR/received" || {
+      STATUS_TEXT="проверка $name: содержимое отличается"; return 1;
+    }
+    printf 'Installed and verified /System/%s\n' "$name"
+  done
+  printf 'System installation through CDC: OK\n'
+}
+
 parse_args() {
   while [ "$#" -gt 0 ]; do
     case "$1" in
+      --install-system) [ "$#" -ge 2 ] || die 'после --install-system нужен каталог'; INSTALL_SYSTEM_DIR=$2; shift 2 ;;
+      --expect-profile) [ "$#" -ge 2 ] || die 'после --expect-profile нужен профиль'; EXPECTED_PROFILE=$2; shift 2 ;;
+      --resident-usbdisk) RESIDENT_USBDISK=1; shift ;;
+      --wait-ready)
+        [ "$#" -ge 2 ] || die 'после --wait-ready нужны секунды'
+        case "$2" in ''|*[!0-9]*) die 'неверный --wait-ready' ;; esac
+        [ "$2" -le 300 ] || die '--wait-ready должен быть от 0 до 300'
+        READY_WAIT_SECONDS=$2; shift 2 ;;
       --port)
         [ "$#" -ge 2 ] || die 'после --port нужен порт'
         PORT=$2; PORT_EXPLICIT=1; shift 2
@@ -3471,7 +3552,13 @@ parse_args() {
 main() {
   local reason kind prompted_port
   load_config
+  # Unattended installation must not inherit a port/device from a past TUI.
   parse_args "$@"
+  if [ -n "$INSTALL_SYSTEM_DIR" ]; then
+    [ "$PORT_EXPLICIT" -eq 1 ] || PORT=
+    [ "$DEVICE_SELECTOR_EXPLICIT" -eq 1 ] || DEVICE_SELECTOR=
+    LOCAL_PATH=$INSTALL_SYSTEM_DIR
+  fi
   # Явный порт — самостоятельный selector пользователя. Сохранённый ID от
   # прежней сессии не должен запрещать открыть указанную legacy-прошивку;
   # одновременно заданный --device по-прежнему обязан совпасть.
@@ -3497,6 +3584,11 @@ main() {
   fi
   SESSION_DIR=$(mktemp -d "${TMPDIR:-/tmp}/mkc.XXXXXX") || die 'не удалось создать временный каталог'
   shopt -s nullglob dotglob
+
+  if [ -n "$INSTALL_SYSTEM_DIR" ]; then
+    install_system_unattended || die "${STATUS_TEXT:-System installation failed}"
+    return 0
+  fi
 
   [ -t 0 ] || die 'нужен интерактивный терминал'
   # stdin остаётся свободным: монитор подключён к отдельным FIFO. Дубликат

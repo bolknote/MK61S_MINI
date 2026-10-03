@@ -73,7 +73,7 @@ $tempRoot = Join-Path ([IO.Path]::GetTempPath()) ("mk61-powershell-tests-" + [gu
 $oldConfig = $env:MK61_CONFIG_FILE
 $oldBuild = $env:MK61_BUILD_ROOT
 $oldOutput = $env:MK61_OUTPUT_DIR
-$oldMount = $env:MK61_C6_MOUNT
+$oldMount = $env:MK61_TEST_MKC_DEVICE
 try {
     $config = Join-Path $tempRoot 'settings.conf'
     $env:MK61_CONFIG_FILE = $config
@@ -202,7 +202,7 @@ try {
         'MK61_MATH_BACKEND=0'
     ))
     $env:MK61_OUTPUT_DIR = $outputRoot
-    $env:MK61_C6_MOUNT = $mountRoot
+    $env:MK61_TEST_MKC_DEVICE = $mountRoot
     $installSelection = Invoke-Tool @('--show-config')
     Assert-True (
         ($installSelection.Output -join "`n") -match
@@ -213,13 +213,13 @@ try {
     [IO.File]::WriteAllText((Join-Path $bundle 'build.flags'), $flags + [Environment]::NewLine)
     [IO.File]::WriteAllText((Join-Path $bundle 'build.apps'), "format 1`nabi 6`n")
     [IO.File]::WriteAllText((Join-Path $bundle 'mk61s-M-mini-v3-lcd1602-a00-f401.bin'), "resident-f401`n")
-    [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-app`n")
-    [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-app`n")
-    [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-app`n")
+    [IO.File]::WriteAllText((Join-Path $sourceSystem 'FOCAL.APP'), "focal-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
+    [IO.File]::WriteAllText((Join-Path $sourceSystem 'MARKDOWN.APP'), "markdown-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
+    [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     foreach ($resource in @(
         'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP',
         'HELP0.TXT', 'HELP1.TXT')) {
-        [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resource`n")
+        [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     }
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
     [IO.File]::WriteAllText((Join-Path $targetSystem 'BASIC.APP'), "stale-basic`n")
@@ -227,9 +227,9 @@ try {
 
     $installed = Invoke-Tool @('--install-apps')
     $installedText = $installed.Output -join "`n"
-    Assert-True ($installed.ExitCode -eq 0) '--install-apps failed'
-    Assert-True ($installedText -match 'Меню → USB-диск') 'USB Disk menu instruction is missing'
-    Assert-True ($installedText -match 'Synchronized and verified') 'copy verification was not reported'
+    Assert-True ($installed.ExitCode -eq 0) "--install-apps failed: $installedText"
+    Assert-True ($installedText -match 'Installing System through CDC') 'USB Disk menu instruction is missing'
+    Assert-True ($installedText -match 'System installation through CDC: OK') 'copy verification was not reported'
     Assert-True (
         (([IO.File]::ReadAllBytes((Join-Path $sourceSystem 'FOCAL.APP'))) -join ',') -eq
         (([IO.File]::ReadAllBytes((Join-Path $targetSystem 'FOCAL.APP'))) -join ',')
@@ -279,7 +279,7 @@ try {
     }
     $disabledInstall = Invoke-Tool @('--install-apps')
     Assert-True ($disabledInstall.ExitCode -eq 0) 'all-disabled System APP synchronization failed'
-    Assert-True (($disabledInstall.Output -join "`n") -match 'Synchronized and verified') 'all-disabled removal was not reported'
+    Assert-True (($disabledInstall.Output -join "`n") -match 'System installation through CDC: OK') 'all-disabled removal was not reported'
     foreach ($app in @(
         'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
     )) {
@@ -323,7 +323,7 @@ try {
         "resident-f411`n")
     foreach ($resource in @('HELP0.TXT', 'HELP1.TXT')) {
         [IO.File]::WriteAllText(
-            (Join-Path $f411System $resource), "f411-resource`n")
+            (Join-Path $f411System $resource), "f411-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     }
     $f411Install = Invoke-Tool @(
         '--mcu','f411','--profile','mini-v3-a00','--install-apps')
@@ -339,7 +339,7 @@ try {
         'F411 must not need an external EXPLORER.APP'
 
     [IO.File]::WriteAllText(
-        (Join-Path $f411System 'USBDISK.APP'), "stale-usbdisk`n")
+        (Join-Path $f411System 'USBDISK.APP'), "stale-usbdiskxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     $staleF411 = Invoke-Tool @(
         '--mcu','f411','--profile','mini-v3-a00','--install-apps')
     Assert-True ($staleF411.ExitCode -ne 0) `
@@ -353,9 +353,9 @@ try {
         'MK61_SETUP_AS_APP=1' +
         'MK61_EXPLORER_AS_APP=1'))
     [IO.File]::WriteAllText(
-        (Join-Path $f411System 'SETUP.APP'), "external-setup`n")
+        (Join-Path $f411System 'SETUP.APP'), "external-setupxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     [IO.File]::WriteAllText(
-        (Join-Path $f411System 'EXPLORER.APP'), "external-explorer`n")
+        (Join-Path $f411System 'EXPLORER.APP'), "external-explorerxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     $externalF411 = Invoke-Tool @(
         '--mcu','f411','--profile','mini-v3-a00','--show-config')
     $externalF411Text = $externalF411.Output -join "`n"
@@ -389,7 +389,7 @@ try {
     $env:MK61_CONFIG_FILE = $oldConfig
     $env:MK61_BUILD_ROOT = $oldBuild
     $env:MK61_OUTPUT_DIR = $oldOutput
-    $env:MK61_C6_MOUNT = $oldMount
+    $env:MK61_TEST_MKC_DEVICE = $oldMount
     Remove-Item -LiteralPath $tempRoot -Recurse -Force -ErrorAction SilentlyContinue
 }
 

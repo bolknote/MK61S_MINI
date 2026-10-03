@@ -3333,6 +3333,8 @@ function Invoke-MkcApplication {
     }
     if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
         $script:LocalPath = $script:InstallSystemDir
+        if (-not $script:PortExplicit) { $script:Port = '' }
+        if (-not $script:DeviceSelectorExplicit) { $script:DeviceSelector = '' }
     }
     if (-not (Test-Path -LiteralPath $script:LocalPath -PathType Container)) {
         throw "нет локального каталога: $($script:LocalPath)"
@@ -3355,7 +3357,18 @@ function Invoke-MkcApplication {
             $script:ArduinoCli = $foundCli
         }
         if ([string]::IsNullOrEmpty($script:Port)) {
-            $ports = @(Get-CdcPorts)
+            $deadline = [DateTime]::UtcNow.AddSeconds($script:ReadyWaitSeconds)
+            do {
+                $ports = @(Get-CdcPorts)
+                if ($ports.Count -gt 0 -or
+                    [string]::IsNullOrEmpty($script:InstallSystemDir) -or
+                    [DateTime]::UtcNow -ge $deadline) { break }
+                Start-Sleep -Milliseconds 500
+            } while ($true)
+            if (-not [string]::IsNullOrEmpty($script:InstallSystemDir) -and
+                -not $script:DeviceSelectorExplicit -and $ports.Count -gt 1) {
+                throw 'Найдено несколько CDC-устройств; оставьте подключённым только нужный MK61s.'
+            }
             if ($ports.Count -gt 0) { $script:Port = $ports[0] }
         }
         if ([string]::IsNullOrEmpty($script:Port)) {

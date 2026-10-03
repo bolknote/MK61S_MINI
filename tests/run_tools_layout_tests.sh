@@ -18,7 +18,6 @@ expected="$(
     build_portable_app.py \
     build-system-app-bundle.ps1 \
     build_system_app_bundle.py \
-    convert_fmk1_to_fmk2.py \
     build-gcc.cmd \
     font_preview_study.py \
     generate_eliza_doctor.py \

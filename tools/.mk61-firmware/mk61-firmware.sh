@@ -152,7 +152,7 @@ Options:
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_BUILD_ROOT, MK61_OUTPUT_DIR,
-  MK61_CONFIG_FILE, MK61_C6_MOUNT, MK61_APP_MANIFESTS, MK61_UI,
+  MK61_CONFIG_FILE, MK61_APP_MANIFESTS, MK61_UI,
   MK61_COLOR (always, auto, or never)
 
 Interactive selections are stored in .mk61-firmware.conf (git-ignored).
@@ -2466,7 +2466,7 @@ Resident: $artifact
 System APP:
 $app_names
 
-После прошивки выполните пункт «Шаг 2 · Установить System APP»."
+«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
       else
         ui_msg 'Комплект собран' "Профиль: $(profile_label "$PROFILE")
 
@@ -2484,7 +2484,7 @@ Resident: $artifact
       printf 'Resident: %s (%s bytes)\n' "$artifact" "$size"
       if [ "$app_count" -gt 0 ]; then
         printf 'System APP:\n%s\n' "$app_names"
-        printf 'Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.\n'
+        printf 'After firmware upload, run --install-apps to synchronize System through CDC.\n'
       else
         printf 'All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.\n'
       fi
@@ -2534,137 +2534,47 @@ validate_system_bundle() {
   done
 }
 
-find_c6_mount() {
-  local candidate user_name=${USER:-}
-  # MK61_C5_MOUNT remains a compatibility alias for existing automation.
-  local override=${MK61_C6_MOUNT:-${MK61_C5_MOUNT:-}}
-  if [ -n "$override" ]; then
-    [ -d "$override" ] || return 1
-    printf '%s' "$override"
-    return 0
+install_system_apps_worker() {
+  local artifact identity
+  artifact=$(profile_artifact_name "$PROFILE" "$MCU") || return 1
+  identity=${artifact#mk61s-M-}
+  identity=${identity%-$MCU.bin}
+  [ "$PROFILE" != 40th ] || identity=40th-uc1609
+  local arguments=(
+    --install-system "$(profile_bundle_dir "$PROFILE")/System"
+    --expect-profile "$identity" --wait-ready 45)
+  [ "$(externalize_usbdisk_value)" -ne 0 ] || arguments+=(--resident-usbdisk)
+  if [ -n "${MK61_TEST_MKC_DEVICE:-}" ]; then
+    arguments+=(--mock "$MK61_TEST_MKC_DEVICE")
   fi
-  for candidate in \
-      '/Volumes/MK61S C6' \
-      "${user_name:+/media/$user_name/MK61S C6}" \
-      "${user_name:+/run/media/$user_name/MK61S C6}" \
-      '/media/MK61S C6' \
-      '/mnt/MK61S C6'; do
-    [ -n "$candidate" ] && [ -d "$candidate" ] || continue
-    printf '%s' "$candidate"
-    return 0
-  done
-  return 1
+  MKC_ARDUINO_CLI="$ARDUINO_CLI" "$PROJECT_ROOT/tools/mkc.cmd" "${arguments[@]}"
 }
 
-wait_for_c6_mount_worker() {
-  local attempts=120
-  while [ "$attempts" -gt 0 ]; do
-    if find_c6_mount >/dev/null; then return 0; fi
-    attempts=$((attempts - 1))
-    sleep 0.5
-  done
-  printf 'USB disk "MK61S C6" was not found within 60 seconds.\n' >&2
+system_installer_ready() {
+  [ -z "${MK61_TEST_MKC_DEVICE:-}" ] || return 0
+  command_available "$ARDUINO_CLI" && command_available perl &&
+    command_available iconv && return 0
+  printf 'System installation through CDC requires arduino-cli, perl and iconv. Install them before uploading firmware.\n' >&2
   return 1
-}
-
-copy_system_apps_worker() {
-  local source=$1 mount=$2 target="$2/System" app
-  mkdir -p "$target" || return 1
-  for app in $(expected_system_app_names); do
-    printf 'Copying %s...\n' "$app"
-    cp -f "$source/$app" "$target/$app" || return 1
-  done
-  for app in $(all_system_app_names); do
-    if ! system_app_enabled "$app"; then
-      printf 'Removing disabled %s...\n' "$app"
-      rm -f "$target/$app" || return 1
-    fi
-  done
-  sync || return 1
-  for app in $(expected_system_app_names); do
-    cmp -s "$source/$app" "$target/$app" || {
-      printf 'Verification failed: %s\n' "$target/$app" >&2
-      return 1
-    }
-  done
-  for app in $(all_system_app_names); do
-    if ! system_app_enabled "$app" && [ -e "$target/$app" ]; then
-      printf 'Removal verification failed: %s\n' "$target/$app" >&2
-      return 1
-    fi
-  done
 }
 
 install_system_apps() {
   ensure_hardware_profile || return 1
-  if ! validate_system_bundle; then
-    if [ "$INTERACTIVE" -eq 1 ]; then
-      ui_msg 'Комплект не готов' "Комплект отсутствует, неполон или собран с другими ключами.
-
-Сначала выполните «Только собрать» либо «Собрать и прошить»."
-    fi
-    return 1
-  fi
-
-  local instructions='После прошивки дождитесь запуска MK61s.
-
-На калькуляторе откройте Меню → USB-диск.
-Не нажимайте ESC до сообщения об успешной проверке файлов.
-
-После подтверждения инструмент будет ждать диск «MK61S C6» 60 секунд.'
-  if [ "$INTERACTIVE" -eq 1 ]; then
-    ui_msg 'Шаг 2 · System APP' "$instructions"
-  else
-    printf '%s\n' "$instructions"
-  fi
-
-  if ! run_with_progress 'USB-диск C6' 'Жду MK61S C6' "$LAST_LOG" \
-      indeterminate wait_for_c6_mount_worker; then
-    if [ "$INTERACTIVE" -eq 1 ]; then ui_log 'USB-диск не найден' "$LAST_LOG"
-    else tail -n 20 "$LAST_LOG" >&2
-    fi
-    return 1
-  fi
-
-  local mount source app_names
-  mount=$(find_c6_mount) || {
-    printf 'USB disk disappeared before copying.\n' >&2
-    return 1
-  }
-  source="$(profile_bundle_dir "$PROFILE")/System"
-  if ! run_with_progress 'System APP' 'Копирую и проверяю файлы' "$LAST_LOG" \
-      indeterminate copy_system_apps_worker "$source" "$mount"; then
+  validate_system_bundle || return 1
+  system_installer_ready || return 1
+  printf 'Installing System through CDC. Close all programs using the serial port; USB Disk mode is not needed.\n'
+  if ! run_with_progress 'System APP' 'Передаю и проверяю файлы через COM/CDC' "$LAST_LOG" \
+      indeterminate install_system_apps_worker; then
     if [ "$INTERACTIVE" -eq 1 ]; then ui_log 'Ошибка установки APP' "$LAST_LOG"
     else tail -n 40 "$LAST_LOG" >&2
     fi
     return 1
   fi
-
-  app_names=$(expected_system_app_names)
-  if system_apps_enabled; then
-    DEVICE_STATUS='System APP синхронизированы и проверены'
-  else
-    DEVICE_STATUS='System APP удалены по выключенным ключам'
-  fi
+  DEVICE_STATUS='System APP синхронизированы и проверены'
   if [ "$INTERACTIVE" -eq 1 ]; then
-    if system_apps_enabled; then
-      ui_msg 'Шаг 2 завершён' "В каталоге $mount/System синхронизированы и побайтно проверены:
-$app_names
-
-Теперь можно выйти из режима USB-диска клавишей ESC на MK61s."
-    else
-      ui_msg 'Шаг 2 завершён' "Из каталога $mount/System удалены выключенные канонические System APP.
-Другие файлы C6 не изменялись.
-
-Теперь можно выйти из режима USB-диска клавишей ESC на MK61s."
-    fi
+    ui_msg 'System APP' 'System установлен и проверен через COM/CDC. Другие файлы не изменялись.'
   else
-    if system_apps_enabled; then
-      printf 'Synchronized and verified in %s/System:\n%s\n' "$mount" "$app_names"
-    else
-      printf 'Removed disabled canonical System APP from %s/System.\n' "$mount"
-    fi
-    printf 'You may now leave USB Disk mode with ESC on MK61s.\n'
+    cat "$LAST_LOG"
   fi
 }
 
@@ -2734,6 +2644,7 @@ $(compile_options_details)
 Собрать согласованный комплект и загрузить resident-прошивку в устройство?" || return 1
   fi
 
+  system_installer_ready || return 1
   build_selected || return 1
   ensure_dfu_ready || return 1
   local artifact
@@ -2741,22 +2652,7 @@ $(compile_options_details)
   if run_with_progress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' \
       "$LAST_LOG" measured upload_worker "$artifact"; then
     DEVICE_STATUS='прошивка загружена; устройство перезапущено'
-    if system_apps_enabled; then
-      if [ "$INTERACTIVE" -eq 1 ]; then
-        ui_msg 'Шаг 1 завершён' "Resident-прошивка $(printf '%s' "$MCU" | tr '[:lower:]' '[:upper:]') загружена.
-
-Дождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
-      else
-        printf 'Uploaded resident: %s\n' "$artifact"
-        printf 'Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.\n'
-      fi
-    elif [ "$INTERACTIVE" -eq 1 ]; then
-      ui_msg 'Готово' "Прошивка загружена.
-
-$(profile_label "$PROFILE")"
-    else
-      printf 'Uploaded: %s\n' "$artifact"
-    fi
+    install_system_apps || return 1
     return 0
   fi
   if [ "$INTERACTIVE" -eq 1 ]; then ui_log 'Ошибка загрузки' "$LAST_LOG"
@@ -2789,7 +2685,7 @@ interactive_main() {
       build '⚒ Только собрать'
     )
     menu_items+=(
-      install_apps '↓ Шаг 2 · Установить System APP'
+      install_apps '↓ Установить System APP'
     )
     menu_items+=(
       mcu      '◉ Контроллер'

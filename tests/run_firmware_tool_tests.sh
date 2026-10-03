@@ -346,21 +346,21 @@ install_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$install_selection")
 printf '%s\n' "$install_flags" > "$bundle/build.flags"
 printf 'format 1\nabi 6\n' > "$bundle/build.apps"
 printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
-printf 'focal-app\n' > "$bundle/System/FOCAL.APP"
-printf 'markdown-app\n' > "$bundle/System/MARKDOWN.APP"
-printf 'chip8-app\n' > "$bundle/System/CHIP8.APP"
+printf 'focal-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/FOCAL.APP"
+printf 'markdown-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/MARKDOWN.APP"
+printf 'chip8-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/CHIP8.APP"
 for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
-  printf 'service-resource\n' > "$bundle/System/$resource"
+  printf 'service-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/$resource"
 done
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
 printf 'stale-basic\n' > "$install_mount/System/BASIC.APP"
 printf 'stale-wbmp\n' > "$install_mount/System/WBMP.APP"
 
 install_result=$(MK61_CONFIG_FILE="$install_config" \
-  MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
+  MK61_OUTPUT_DIR="$install_output" MK61_TEST_MKC_DEVICE="$install_mount" \
   "$tool" --install-apps)
-grep -q 'Меню → USB-диск' <<< "$install_result"
-grep -q 'Synchronized and verified' <<< "$install_result"
+grep -q 'Installing System through CDC' <<< "$install_result"
+grep -q 'System installation through CDC: OK' <<< "$install_result"
 cmp "$bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
 cmp "$bundle/System/MARKDOWN.APP" "$install_mount/System/MARKDOWN.APP"
 cmp "$bundle/System/CHIP8.APP" "$install_mount/System/CHIP8.APP"
@@ -380,9 +380,9 @@ printf '%s\n' "$disabled_flags" > "$bundle/build.flags"
 rm -f "$bundle/System/FOCAL.APP" "$bundle/System/MARKDOWN.APP" \
   "$bundle/System/CHIP8.APP"
 disabled_result=$(MK61_CONFIG_FILE="$install_config" \
-  MK61_OUTPUT_DIR="$install_output" MK61_C6_MOUNT="$install_mount" \
+  MK61_OUTPUT_DIR="$install_output" MK61_TEST_MKC_DEVICE="$install_mount" \
   "$tool" --install-apps)
-grep -q 'Synchronized and verified' <<< "$disabled_result"
+grep -q 'System installation through CDC: OK' <<< "$disabled_result"
 for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
   cmp "$bundle/System/$resource" "$install_mount/System/$resource"
 done
@@ -407,10 +407,10 @@ printf '%s\n' "$f411_flags" > "$f411_bundle/build.flags"
 printf 'format 1\nabi 6\n' > "$f411_bundle/build.apps"
 printf 'resident-f411\n' > "$f411_bundle/mk61s-M-mini-v3-lcd1602-a00-f411.bin"
 for resource in HELP0.TXT HELP1.TXT; do
-  printf 'f411-resource\n' > "$f411_bundle/System/$resource"
+  printf 'f411-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/$resource"
 done
 MK61_CONFIG_FILE="$f411_config" MK61_OUTPUT_DIR="$install_output" \
-  MK61_C6_MOUNT="$install_mount" "$tool" \
+  MK61_TEST_MKC_DEVICE="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 test ! -e "$install_mount/System/SETUP.APP"
 test ! -e "$install_mount/System/USBDISK.APP"
@@ -418,9 +418,9 @@ test ! -e "$install_mount/System/EXPLORER.APP"
 
 # A stale artifact from an older external-USBDISK build must not be accepted
 # as a current default F411 bundle.
-printf 'stale-usbdisk\n' > "$f411_bundle/System/USBDISK.APP"
+printf 'stale-usbdiskxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/USBDISK.APP"
 if MK61_CONFIG_FILE="$f411_config" MK61_OUTPUT_DIR="$install_output" \
-    MK61_C6_MOUNT="$install_mount" "$tool" \
+    MK61_TEST_MKC_DEVICE="$install_mount" "$tool" \
     --mcu f411 --profile mini-v3-a00 --install-apps \
     > "$installer_root/stale-f411.txt" 2>&1; then
   echo 'default F411 accepted a stale USBDISK.APP bundle' >&2
@@ -442,10 +442,10 @@ grep -q '^MK61_SETUP_AS_APP=1$' <<< "$external_f411_selection"
 grep -q '^MK61_EXPLORER_AS_APP=1$' <<< "$external_f411_selection"
 external_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$external_f411_selection")
 printf '%s\n' "$external_f411_flags" > "$f411_bundle/build.flags"
-printf 'external-setup\n' > "$f411_bundle/System/SETUP.APP"
-printf 'external-explorer\n' > "$f411_bundle/System/EXPLORER.APP"
+printf 'external-setupxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/SETUP.APP"
+printf 'external-explorerxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/EXPLORER.APP"
 MK61_CONFIG_FILE="$external_f411_config" MK61_OUTPUT_DIR="$install_output" \
-  MK61_C6_MOUNT="$install_mount" "$tool" \
+  MK61_TEST_MKC_DEVICE="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
 cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
@@ -478,9 +478,9 @@ mixed_f411_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$mixed_f411_selection")
 printf '%s\n' "$mixed_f411_flags" > "$f411_bundle/build.flags"
 rm -f "$f411_bundle/System/SETUP.APP" \
   "$f411_bundle/System/USBDISK.APP" "$f411_bundle/System/EXPLORER.APP"
-printf 'focal-app\n' > "$f411_bundle/System/FOCAL.APP"
+printf 'focal-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/FOCAL.APP"
 MK61_CONFIG_FILE="$f411_mixed_config" MK61_OUTPUT_DIR="$install_output" \
-  MK61_C6_MOUNT="$install_mount" "$tool" \
+  MK61_TEST_MKC_DEVICE="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null
 cmp "$f411_bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
 test ! -e "$install_mount/System/BASIC.APP"
@@ -492,3 +492,4 @@ test ! -e "$install_mount/System/SETUP.APP"
 test ! -e "$install_mount/System/EXPLORER.APP"
 
 printf 'firmware_tool_tests: ok\n'
+bash "$root/tests/mkc_system_install_self_test.sh"

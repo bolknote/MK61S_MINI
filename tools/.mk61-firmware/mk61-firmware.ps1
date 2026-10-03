@@ -2447,7 +2447,7 @@ function Build-Selected {
         if ($script:State.Interactive) {
             if ($apps.Count -gt 0) {
                 $appText = $apps -join [Environment]::NewLine
-                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`nПосле прошивки выполните пункт «Шаг 2 · Установить System APP»."
+                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
             } else {
                 Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C6 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
             }
@@ -2457,7 +2457,7 @@ function Build-Selected {
             if ($apps.Count -gt 0) {
                 [Console]::WriteLine('System APP:')
                 foreach ($app in $apps) { [Console]::WriteLine($app) }
-                [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
+                [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
             } else {
                 [Console]::WriteLine('All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.')
             }
@@ -2665,11 +2665,11 @@ function Build-Selected {
 
     $size = (Get-Item -LiteralPath $artifact).Length
     if ($script:State.Interactive) {
-        Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nПосле прошивки выполните пункт «Шаг 2 · Установить System APP»."
+        Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
     } else {
         [Console]::WriteLine("Built $($script:State.Mcu.ToUpperInvariant()) bundle: $bundle")
         [Console]::WriteLine("Resident: $artifact ($size bytes)")
-        [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
+        [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
     }
     return $true
 }
@@ -2721,168 +2721,34 @@ function Test-SystemBundleReady {
     return $true
 }
 
-function Find-C6Mount {
-    $override = [Environment]::GetEnvironmentVariable('MK61_C6_MOUNT')
-    if ([string]::IsNullOrWhiteSpace($override)) {
-        # Compatibility alias for existing unattended installations.
-        $override = [Environment]::GetEnvironmentVariable('MK61_C5_MOUNT')
-    }
-    if (-not [string]::IsNullOrWhiteSpace($override)) {
-        if (Test-Path -LiteralPath $override -PathType Container) {
-            return (Resolve-Path -LiteralPath $override).Path
-        }
-        return ''
-    }
-    if ($script:IsWindowsHost) {
-        foreach ($drive in [IO.DriveInfo]::GetDrives()) {
-            try {
-                if ($drive.IsReady -and $drive.VolumeLabel -eq 'MK61S C6') {
-                    return $drive.RootDirectory.FullName
-                }
-            } catch {}
-        }
-    }
-    $userName = [Environment]::UserName
-    $candidates = @(
-        '/Volumes/MK61S C6'
-        "/media/$userName/MK61S C6"
-        "/run/media/$userName/MK61S C6"
-        '/media/MK61S C6'
-        '/mnt/MK61S C6'
-    )
-    foreach ($candidate in $candidates) {
-        if (Test-Path -LiteralPath $candidate -PathType Container) {
-            return (Resolve-Path -LiteralPath $candidate).Path
-        }
-    }
-    return ''
-}
-
-function Wait-ForC6Mount {
-    param([int]$Seconds = 60)
-    $attempts = $Seconds * 2
-    for ($attempt = 0; $attempt -lt $attempts; $attempt++) {
-        $mount = Find-C6Mount
-        if (-not [string]::IsNullOrEmpty($mount)) { return $mount }
-        if ($script:State.Interactive) {
-            $percent = [Math]::Min(90, [int](90 * ($attempt + 1) / $attempts))
-            Draw-Progress 'USB-диск C6' 'Жду MK61S C6' $percent
-        }
-        Start-Sleep -Milliseconds 500
-    }
-    Write-LastLog "USB disk `"MK61S C6`" was not found within $Seconds seconds."
-    return ''
-}
-
-function Get-FileSha256 {
-    param([string]$Path)
-    $sha = [Security.Cryptography.SHA256]::Create()
-    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
-    try {
-        return [BitConverter]::ToString($sha.ComputeHash($stream)).Replace('-', '')
-    } finally {
-        $stream.Dispose()
-        $sha.Dispose()
-    }
-}
-
-function Copy-SystemAppVerified {
-    param([string]$Source, [string]$Destination)
-    $input = $null
-    $output = $null
-    try {
-        $input = [IO.File]::Open($Source, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
-        $output = [IO.FileStream]::new(
-            $Destination, [IO.FileMode]::Create, [IO.FileAccess]::Write,
-            [IO.FileShare]::None, 4096, [IO.FileOptions]::WriteThrough)
-        $input.CopyTo($output)
-        $output.Flush($true)
-    } finally {
-        if ($null -ne $output) { $output.Dispose() }
-        if ($null -ne $input) { $input.Dispose() }
-    }
-    if ((Get-Item -LiteralPath $Source).Length -ne (Get-Item -LiteralPath $Destination).Length -or
-        (Get-FileSha256 $Source) -ne (Get-FileSha256 $Destination)) {
-        throw "Verification failed: $Destination"
-    }
-}
-
 function Install-SystemApps {
     if (-not (Ensure-HardwareProfile)) { return $false }
     if (-not (Test-SystemBundleReady)) {
-        if ($script:State.Interactive) {
-            Show-Message 'Комплект не готов' "Комплект отсутствует, неполон или собран с другими ключами.`n`nСначала выполните «Только собрать» либо «Собрать и прошить»."
-        } else {
-            Show-LastLogTail 20
-        }
+        Show-LastLogTail 20
         return $false
     }
-
-    $instructions = "После прошивки дождитесь запуска MK61s.`n`nНа калькуляторе откройте Меню → USB-диск.`nНе нажимайте ESC до сообщения об успешной проверке файлов.`n`nПосле подтверждения инструмент будет ждать диск «MK61S C6» 60 секунд."
-    if ($script:State.Interactive) { Show-Message 'Шаг 2 · System APP' $instructions }
-    else { [Console]::WriteLine($instructions) }
-    $mount = Wait-ForC6Mount 60
-    if ([string]::IsNullOrEmpty($mount)) {
-        if ($script:State.Interactive) { Show-Log 'USB-диск не найден' $script:LastLog }
-        else { Show-LastLogTail 20 }
-        return $false
+    $artifact = Get-ProfileArtifactName $script:State.Profile $script:State.Mcu
+    $identity = $artifact -replace '^mk61s-M-', '' -replace '-f40[1]\.bin$', '' -replace '-f411\.bin$', ''
+    if ($script:State.Profile -eq '40th') { $identity = '40th-uc1609' }
+    $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+        '-File', (Join-Path $script:ProjectRoot 'tools/.mkc/mkc.ps1'),
+        '--install-system', (Join-Path (Get-ProfileBundleDir $script:State.Profile) 'System'),
+        '--expect-profile', $identity, '--wait-ready', '45')
+    if ((Get-ExternalizeUsbDiskValue) -eq 0) { $installerArgs += '--resident-usbdisk' }
+    if (-not [string]::IsNullOrEmpty($env:MK61_TEST_MKC_DEVICE)) {
+        $installerArgs += @('--mock', $env:MK61_TEST_MKC_DEVICE)
     }
-
-    $source = Join-Path (Get-ProfileBundleDir $script:State.Profile) 'System'
-    $target = Join-Path $mount 'System'
-    try {
-        [void](New-Item -ItemType Directory -Force -Path $target)
-        $apps = @(Get-ExpectedSystemAppNames)
-        for ($index = 0; $index -lt $apps.Count; $index++) {
-            $app = $apps[$index]
-            if ($script:State.Interactive) {
-                $percent = [Math]::Min(95, [int](90 * ($index + 1) / $apps.Count))
-                Draw-Progress 'System APP' "Копирую и проверяю $app" $percent
-            }
-            Copy-SystemAppVerified (Join-Path $source $app) (Join-Path $target $app)
-        }
-        foreach ($app in @(Get-AllSystemAppNames)) {
-            if ($apps -notcontains $app) {
-                Remove-Item -LiteralPath (Join-Path $target $app) `
-                    -Force -ErrorAction SilentlyContinue
-            }
-        }
-        foreach ($app in @(Get-AllSystemAppNames)) {
-            if ($apps -notcontains $app -and
-                (Test-Path -LiteralPath (Join-Path $target $app))) {
-                throw "Removal verification failed: $(Join-Path $target $app)"
-            }
-        }
-    } catch {
-        Write-LastLog $_.Exception.Message
+    [Console]::WriteLine('Installing System through CDC. Close all programs using the serial port; USB Disk mode is not needed.')
+    $hostPowerShell = (Get-Process -Id $PID).Path
+    [void](New-Item -ItemType Directory -Force -Path (Split-Path -Parent $script:LastLog))
+    & $hostPowerShell @installerArgs 2>&1 | Tee-Object -FilePath $script:LastLog | Out-Host
+    if ($LASTEXITCODE -ne 0) {
         if ($script:State.Interactive) { Show-Log 'Ошибка установки APP' $script:LastLog }
-        else { Show-LastLogTail 20 }
         return $false
     }
-
-    $apps = @(Get-ExpectedSystemAppNames)
-    $appText = ($apps -join [Environment]::NewLine)
-    if ($apps.Count -gt 0) {
-        $script:State.DeviceStatus = 'System APP синхронизированы и проверены'
-    } else {
-        $script:State.DeviceStatus = 'System APP удалены по выключенным ключам'
-    }
+    $script:State.DeviceStatus = 'System APP синхронизированы и проверены'
     if ($script:State.Interactive) {
-        Draw-Progress 'System APP' 'Готово' 100
-        Start-Sleep -Milliseconds 350
-        if ($apps.Count -gt 0) {
-            Show-Message 'Шаг 2 завершён' "В каталоге $target синхронизированы и побайтно проверены:`n$appText`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
-        } else {
-            Show-Message 'Шаг 2 завершён' "Из каталога $target удалены выключенные канонические System APP.`nДругие файлы C6 не изменялись.`n`nТеперь можно выйти из режима USB-диска клавишей ESC на MK61s."
-        }
-    } else {
-        if ($apps.Count -gt 0) {
-            [Console]::WriteLine("Synchronized and verified in ${target}:")
-            [Console]::WriteLine($appText)
-        } else {
-            [Console]::WriteLine("Removed disabled canonical System APP from ${target}.")
-        }
-        [Console]::WriteLine('You may now leave USB Disk mode with ESC on MK61s.')
+        Show-Message 'System APP' 'System установлен и проверен через COM/CDC. Другие файлы не изменялись.'
     }
     return $true
 }
@@ -2980,16 +2846,7 @@ function Upload-Selected {
     if (Invoke-ExternalWithProgress 'Загрузка прошивки' 'Записываю и перезапускаю STM32' `
         $script:LastLog 'measured' $upload.Executable $upload.Arguments) {
         $script:State.DeviceStatus = 'прошивка загружена; устройство перезапущено'
-        if (Test-SystemAppsEnabled) {
-            if ($script:State.Interactive) {
-                Show-Message 'Шаг 1 завершён' "Resident-прошивка $($script:State.Mcu.ToUpperInvariant()) загружена.`n`nДождитесь запуска MK61s, откройте на нём Меню → USB-диск и выполните пункт «Шаг 2 · Установить System APP»."
-            } else {
-                [Console]::WriteLine("Uploaded resident: $artifact")
-                [Console]::WriteLine('Step 2: on MK61s select Menu -> USB Disk, then run --install-apps.')
-            }
-        } elseif ($script:State.Interactive) {
-            Show-Message 'Готово' "Прошивка загружена.`n`n$(Get-ProfileLabel $script:State.Profile)"
-        } else { [Console]::WriteLine("Uploaded: $artifact") }
+        if (-not (Install-SystemApps)) { return $false }
         return $true
     }
     if ($script:State.Interactive) { Show-Log 'Ошибка загрузки' $script:LastLog }
@@ -3049,7 +2906,7 @@ function Get-MainMenuItems {
     )
     $items += [pscustomobject]@{
         Tag = 'install_apps'
-        Label = "$($script:Glyphs.MenuInstall) Шаг 2 · Установить System APP"
+        Label = "$($script:Glyphs.MenuInstall) Установить System APP"
     }
     $items += @(
         [pscustomobject]@{ Tag = 'mcu'; Label = "$($script:Glyphs.MenuChoice) Контроллер" }
@@ -3130,7 +2987,7 @@ MCU:
 
 Environment overrides:
   MK61_ARDUINO_CLI, MK61_DFU_UTIL, MK61_STM32_PROGRAMMER, MK61_BUILD_ROOT,
-  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_C6_MOUNT, MK61_APP_MANIFESTS,
+  MK61_OUTPUT_DIR, MK61_CONFIG_FILE, MK61_APP_MANIFESTS,
   MK61_COLOR
 
 The Bash and PowerShell tools share .mk61-firmware.conf.
