@@ -2175,8 +2175,12 @@ static bool release_repurposed_extents(void) {
 }
 
 static bool prune_tree(u16 parent_id, bool strict) {
+  // Recursing only changes descendants. Keep this level's count locally;
+  // child_count() follows the entire sibling chain, so calling it for every
+  // retained/deleted entry turns even a one-file deletion into O(n^2) I/O.
+  int count = program_store::child_count(parent_id);
   int index = 0;
-  while(index < program_store::child_count(parent_id)) {
+  while(index < count) {
     program_store::Entry entry;
     if(!program_store::child(parent_id, index, entry)) return false;
     if(entry.kind == program_store::NodeKind::DIRECTORY &&
@@ -2197,6 +2201,7 @@ static bool prune_tree(u16 parent_id, bool strict) {
       continue;
     }
     if(!program_store::remove_id(entry.id)) return false;
+    --count;
   }
   return true;
 }

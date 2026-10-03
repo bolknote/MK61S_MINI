@@ -1777,6 +1777,114 @@ static void test_host_deletes_file_via_directory(void) {
   assert(program_store::total_count() == 0);
 }
 
+// Delete matching root entries, including their preceding LFN records, the
+// same way a host removes directory entries. Keep unrelated slots byte-exact.
+static void stage_root_deletions(u16 first_kept_id) {
+  const Layout fs = layout();
+  std::vector<u8> root(fs.root_sectors * 512U);
+  std::vector<bool> changed(fs.root_sectors, false);
+  assert(virtual_fat::read_sectors(
+      fs.root_start, root.data(), (u16) fs.root_sectors));
+  for(usize offset = 0; offset < root.size(); offset += 32U) {
+    u8* const entry = root.data() + offset;
+    if(entry[0] == 0) break;
+    if(entry[0] == 0xE5 || (entry[11] & 0x08) != 0) continue;
+    const u16 cluster = read_le16(entry, 26);
+    if(cluster < 2 || cluster - 2U >= first_kept_id) continue;
+    entry[0] = 0xE5;
+    changed[offset / 512U] = true;
+    for(usize previous = offset; previous >= 32U;) {
+      previous -= 32U;
+      if(root[previous + 11] != 0x0F) break;
+      root[previous] = 0xE5;
+      changed[previous / 512U] = true;
+    }
+  }
+  for(u16 sector = 0; sector < fs.root_sectors; ++sector) {
+    if(changed[sector]) assert(virtual_fat::write_cached_sectors(
+        fs.root_start + sector, root.data() + sector * 512U, 1));
+  }
+}
+
+static void test_host_delete_does_not_rescan_directory_per_file(void) {
+  static constexpr u16 FILES = 100;
+  const u8 data[] = {'x'};
+  const u16 deletions[] = {1, FILES};
+  for(u16 deleted : deletions) {
+    fresh(512U * 1024U);
+    for(u16 id = 0; id < FILES; ++id) {
+      char name[16];
+      snprintf(name, sizeof(name), "file%03u", id);
+      assert(program_store::write_file(program_store::ROOT_ID, id,
+          program_store::ProgramType::MK61, name, data, sizeof(data)));
+    }
+    assert(virtual_fat::reset_session());
+    stage_root_deletions(deleted);
+    SPIFlash::resetOperationCounts();
+    expect_flush();
+    const u32 reads = SPIFlash::readOperations();
+    const u64 bytes = SPIFlash::readBytes();
+    printf("VFAT delete %u/%u: %u reads, %llu bytes\n", deleted, FILES,
+           reads, (unsigned long long) bytes);
+    // Previously one deleted byte among 100 files caused 6,539 reads and
+    // 1.37 MB of NOR traffic. Full deletion also swept all inodes 100 times.
+    assert(reads < 5000U);
+    assert(bytes < 384U * 1024U);
+    virtual_fat::end_session();
+    program_store::init();
+    assert(program_store::ready());
+    assert(program_store::total_count() == FILES - deleted);
+    for(u16 id = 0; id < FILES; ++id) {
+      program_store::Entry entry = {};
+      assert(program_store::entry_by_id(id, entry) == (id >= deleted));
+      if(id >= deleted) expect_file(id, data, sizeof(data));
+    }
+  }
+}
+
+static void prepare_host_subtree_deletion(void) {
+  fresh(512U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID,
+                                          "remove", 0, nullptr));
+  assert(program_store::create_directory(0, "nested", 1, nullptr));
+  const u8 data[] = {'x'};
+  for(u16 id = 2; id < 10; ++id) {
+    char name[16];
+    snprintf(name, sizeof(name), "file%03u", id);
+    assert(program_store::write_file(id % 2, id,
+        program_store::ProgramType::MK61, name, data, sizeof(data)));
+  }
+  assert(program_store::write_file(program_store::ROOT_ID, 100,
+      program_store::ProgramType::MK61, "keep", data, sizeof(data)));
+  assert(virtual_fat::reset_session());
+  stage_root_deletions(10);
+  assert(virtual_fat::flush_write_cache());
+}
+
+static void test_host_subtree_deletion_power_cuts(void) {
+  prepare_host_subtree_deletion();
+  SPIFlash::resetOperationCounts();
+  expect_flush();
+  const u32 operations = SPIFlash::mutationOperations();
+  assert(operations != 0);
+  for(u32 cut = 0; cut <= operations; ++cut) {
+    prepare_host_subtree_deletion();
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    (void) virtual_fat::flush_pending_result();
+    SPIFlash::clearFailure();
+    virtual_fat::end_session();
+    program_store::init();
+    assert(program_store::ready());
+    assert(virtual_fat::reset_session());
+    assert(program_store::vfat_stage_count() == 0);
+    assert(program_store::total_count() == 1);
+    assert(program_store::used_nodes() == 1);
+    const u8 data[] = {'x'};
+    expect_file(100, data, sizeof(data));
+  }
+}
+
 static void test_incomplete_file_preflight_preserves_existing_tree(void) {
   fresh();
   static const u8 old_data[] = {0x41, 0x42, 0x43};
@@ -2932,6 +3040,8 @@ int main(void) {
   test_metadata_only_recovery_does_not_redecode_unchanged_text();
   test_usb_commit_uses_available_cache_for_zx0();
   test_host_deletes_file_via_directory();
+  test_host_delete_does_not_rescan_directory_per_file();
+  test_host_subtree_deletion_power_cuts();
   test_incomplete_file_preflight_preserves_existing_tree();
   test_flush_result_distinguishes_media_failure();
   test_finder_appledouble_does_not_abort_batch();

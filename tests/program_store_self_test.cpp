@@ -1631,6 +1631,33 @@ static void test_directory_extent_batch_trim_is_power_safe(void) {
   }
 }
 
+static void test_directory_removal_batches_extents(void) {
+  u16 directory = prepare_directory_trim_chain();
+  SPIFlash::resetOperationCounts();
+  assert(program_store::remove_id(directory));
+  const u32 operations = SPIFlash::mutationOperations();
+  assert(operations > 0 && operations < 32U);
+  assert(program_store::used_nodes() == 0);
+  for(u32 cut = 0; cut <= operations; ++cut) {
+    directory = prepare_directory_trim_chain();
+    SPIFlash::resetOperationCounts();
+    SPIFlash::failAfterOperations((i32) cut);
+    const bool removed = program_store::remove_id(directory);
+    SPIFlash::clearFailure();
+    program_store::init();
+    assert(program_store::ready());
+    Entry entry = {};
+    if(program_store::entry_by_id(directory, entry)) {
+      assert(!removed);
+      assert(program_store::used_nodes() ==
+             directory_extent_count(directory) + 1U);
+      assert(program_store::remove_id(directory));
+    }
+    assert(program_store::total_count() == 0);
+    assert(program_store::used_nodes() == 0);
+  }
+}
+
 static void test_quota_grows_beyond_legacy_128(void) {
   fresh();
   assert(program_store::max_nodes() > 160);
@@ -3027,6 +3054,85 @@ static bool app_equals(const char* name, const u8* expected, u16 size) {
          length == size && memcmp(recovered, expected, size) == 0;
 }
 
+static void prepare_file_removal(u32 capacity, bool checkpoint_boundary,
+                                  const u8* payload) {
+  fresh(capacity);
+  assert(program_store::create_directory(program_store::ROOT_ID,
+                                          "files", 40, nullptr));
+  const u8 keep[] = {'k'};
+  assert(program_store::write_file(40, 1, ProgramType::TEXT,
+                                   "left", keep, sizeof(keep)));
+  assert(program_store::write_file(40, 50, ProgramType::APP,
+      "TARGET", payload, program_store::MAX_APP_FILE_SIZE));
+  assert(program_store::write_file(40, 100, ProgramType::TEXT,
+                                   "right", keep, sizeof(keep)));
+  if(checkpoint_boundary) {
+    // Four creates and twelve renames fill the 16-record WAL. The removal
+    // must survive every cut while checkpointing, not just its own record.
+    for(u8 i = 0; i < 12; ++i) {
+      char name[16];
+      snprintf(name, sizeof(name), "left%02u", i);
+      assert(program_store::move_rename(1, 40, name));
+    }
+  }
+}
+
+static void expect_removed_file_neighbours(void) {
+  assert(program_store::total_count() == 3);
+  assert(program_store::used_nodes() == 3);
+  assert(program_store::child_count(40) == 2);
+  Entry entry = {};
+  assert(!program_store::entry_by_id(50, entry));
+  assert(program_store::child(40, 0, entry) && entry.id == 100);
+  assert(program_store::child(40, 1, entry) && entry.id == 1);
+  const u8 keep[] = {'k'};
+  expect_text(1, keep, sizeof(keep));
+  expect_text(100, keep, sizeof(keep));
+}
+
+static void test_file_removal_is_local_and_atomic(void) {
+  static u8 payload[program_store::MAX_APP_FILE_SIZE];
+  fill_app(payload, sizeof(payload), 0x35);
+  for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
+    for(bool checkpoint_boundary : {false, true}) {
+      prepare_file_removal(capacity, checkpoint_boundary, payload);
+      SPIFlash::resetOperationCounts();
+      assert(program_store::remove_id(50));
+      const u32 operations = SPIFlash::mutationOperations();
+      if(!checkpoint_boundary) {
+        // One WAL record unlinks the file and frees all its FAT extents.
+        // No full-catalog orphan scan and no second cleanup transaction.
+        assert(operations == 2);
+        assert(SPIFlash::readOperations() < 64U);
+      } else {
+        assert(operations > 2);
+      }
+      expect_removed_file_neighbours();
+
+      for(u32 cut = 0; cut <= operations; ++cut) {
+        prepare_file_removal(capacity, checkpoint_boundary, payload);
+        SPIFlash::resetOperationCounts();
+        SPIFlash::failAfterOperations((i32) cut);
+        const bool removed = program_store::remove_id(50);
+        SPIFlash::clearFailure();
+        program_store::init();
+        assert(program_store::ready());
+        Entry entry = {};
+        if(program_store::entry_by_id(50, entry)) {
+          assert(!removed);
+          assert(app_equals("TARGET", payload, sizeof(payload)));
+          assert(program_store::child_count(40) == 3);
+          assert(program_store::remove_id(50));
+        }
+        expect_removed_file_neighbours();
+        program_store::init();
+        assert(program_store::ready());
+        expect_removed_file_neighbours();
+      }
+    }
+  }
+}
+
 static void test_large_app_power_cuts_keep_old_or_new_value(void) {
   static constexpr u16 SIZE = program_store::MAX_IMAGE1_SIZE + 1U;
   u8 old_data[SIZE];
@@ -3212,6 +3318,7 @@ int main(void) {
   test_directory_extents_are_persistent();
   test_local_mutation_invalidates_only_an_unlocked_fat_stage();
   test_directory_extent_batch_trim_is_power_safe();
+  test_directory_removal_batches_extents();
   test_quota_grows_beyond_legacy_128();
   test_sequential_directory_walk_is_linear();
   test_root_dirent_quota_is_exact_and_atomic();
@@ -3244,6 +3351,7 @@ int main(void) {
   test_c1_to_c4_layouts_format_once_with_bounded_erases();
   test_c5_requires_explicit_format_without_mutation();
   test_large_app_roundtrip_ranges_rename_and_reboot();
+  test_file_removal_is_local_and_atomic();
   test_max_app_replacement_uses_full_wal_capacity();
   test_large_app_power_cuts_keep_old_or_new_value();
   test_max_app_power_cuts_are_atomic();

@@ -114,6 +114,8 @@ static_assert(44 + WAL_MAX_UPDATES *
                   (2 + storage_geometry::INODE_BYTES) <=
                   IMAGE1_WAL_COUNT_OFFSET,
               "inode updates overlap the v6 WAL tail");
+static_assert(MAX_FAT_EXTENTS_PER_FILE + 3U <= WAL_MAX_UPDATES,
+              "file removal and its sibling/parent links must fit one WAL record");
 static_assert(IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <= WAL_CRC_OFFSET,
               "image counter overlaps the WAL CRC");
 static_assert(IMAGE1_HEADER_COUNT_OFFSET + sizeof(u16) <=
@@ -3758,16 +3760,10 @@ bool remove_id(u16 id) {
   if(!get_inode(id, inode) || !visible_inode(inode)) return false;
   if(inode_kind(inode) == NodeKind::DIRECTORY && inode.first_child != NONE) return false;
 
-  // Экстенты каталога освобождаются с конца до освобождения самого inode.
-  if(inode_kind(inode) == NodeKind::DIRECTORY) {
-    while(inode.data_len != NONE) {
-      u16 extent = inode.data_len;
-      Inode extent_inode;
-      while(get_inode(extent, extent_inode) && extent_inode.next_sibling != NONE) {
-        extent = extent_inode.next_sibling;
-      }
-      if(!release_directory_extent(extent) || !get_inode(id, inode)) return false;
-    }
+  // Reuse the bounded, power-safe tail trim instead of one transaction and
+  // a traversal from the head for every directory extent.
+  if(inode_kind(inode) == NodeKind::DIRECTORY && inode.data_len != NONE) {
+    if(!trim_directory_extents(id, 0) || !get_inode(id, inode)) return false;
   }
 
   Transaction transaction;
@@ -3777,13 +3773,21 @@ bool remove_id(u16 id) {
   if(inode_kind(inode) == NodeKind::FILE) {
     const int index = type_index(inode_type(inode));
     if(index >= 0 && transaction.meta.type_count[index] != 0) transaction.meta.type_count[index]--;
+    // The file already names all its FAT extents. Clear those exact nodes in
+    // the same WAL record as the unlink, rather than publishing orphan nodes
+    // and scanning the complete catalog after every single file deletion.
+    u16 extents[MAX_FAT_EXTENTS_PER_FILE];
+    u8 count = 0;
+    if(!collect_file_extents(id, inode, extents, count)) return false;
+    for(u8 i = 0; i < count; ++i) {
+      if(!txn_set(transaction, extents[i], empty_inode())) return false;
+    }
   }
   if(!txn_set(transaction, id, empty_inode())) return false;
   if(!append_transaction(transaction)) return false;
   if(inode_kind(inode) == NodeKind::FILE) {
     g_verified_large_id = NONE;
     g_verified_large_block = 0xFF;
-    (void) sweep_orphan_file_extents();
   }
   if(g_free_hint >= g_geometry.max_nodes || id < g_free_hint) g_free_hint = id;
   return true;
