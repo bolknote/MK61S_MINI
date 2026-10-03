@@ -20,7 +20,7 @@
 bool OpenStoredFile(const char* args);
 // Test seam for all three outcomes of a synchronous nested file launch:
 // 0 = opened, 1 = stopped by ESC, 2 = failed.
-u8 m61_text_host_open_file(const char* args);
+u8 m61_text_host_open_file(const char* args, u16 directory);
 void hidden_start_loaded_program(void);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
@@ -58,6 +58,9 @@ static constexpr u8 TRAP_BITMAP_SIZE =
     (u8) ((core_61::MAX_PROGRAM_STEP + 7U) / 8U);
 static constexpr u8 INVALID_TRAP_TARGET = 0xFF;
 static constexpr u8 MAX_BINDS = 8;
+// Named service keys share the bind table, outside the MK-61 opcode range.
+// Numeric F0 remains invalid syntax; it is not an emulated operation.
+static constexpr u8 BIND_KEY_OK = 0xF0;
 static constexpr u8 INVALID_BIND_OPCODE = 0xFF;
 static constexpr u8 INVALID_BIND_TARGET = 0xFF;
 static constexpr u8 RETURN_STACK_DEPTH = SCRIPT_STACK_DEPTH + 1;
@@ -148,6 +151,8 @@ static bool bind_ready = false;
 static u8 pending_bind_target = INVALID_BIND_TARGET;
 static u32 pending_bind_sequence = 0;
 static bool bind_handler_active = false;
+static bool ok_bind_pending = false;
+static bool ok_bind_active = false;
 static bool boundary_hook_installed = false;
 static bool display_claimed = false;
 #if M61_TEXT_FONT_COMMAND
@@ -246,6 +251,7 @@ static bool sync_bind_hooks(void) {
       clear_bind_hooks();
       return false;
     }
+    if(opcode == BIND_KEY_OK) continue;
 
     bind_before_hooks[hook_index] = core_61::register_mk61_command_hook(
         opcode, core_61::Mk61CommandHookPhase::BEFORE_EXECUTE,
@@ -485,7 +491,19 @@ bool active(void) {
 }
 
 bool calculator_suspended(void) {
-  return trap_pending || trap_context_valid();
+  return trap_pending || trap_context_valid() || ok_bind_pending ||
+      (ok_bind_active && runner_state != RunnerState::WAIT_RUN_STOP);
+}
+
+bool handle_ok_key(void) {
+  if(!bind_is_active(BIND_KEY_OK) || bind_handler_active || bind_pending ||
+     (runner_state != RunnerState::WATCH_EVENTS &&
+      runner_state != RunnerState::WAIT_RUN_STOP &&
+      !trap_pending && !trap_context_valid())) return false;
+  // Keep only one press. A trap may be holding a timed animation frame; do
+  // not enter an ordinary bind (which can open files) inside its snapshot.
+  ok_bind_pending = true;
+  return true;
 }
 
 bool display_owned(void) {
@@ -519,6 +537,8 @@ static void clear_bind_runtime(void) {
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
   bind_handler_active = false;
+  ok_bind_pending = false;
+  ok_bind_active = false;
 }
 
 static void close_text_font_session(void) {
@@ -764,13 +784,17 @@ static BindParse parse_bind(const char* line, ParsedBind& out) {
   p = skip_spaces(p);
 
   if(is_line_end(*p)) return BindParse::INVALID;
-  const i8 high = hex_value(*p++);
-  if(is_line_end(*p)) return BindParse::INVALID;
-  const i8 low = hex_value(*p++);
-  if(high < 0 || low < 0 || high > 0x0E || !is_space(*p)) {
-    return BindParse::INVALID;
+  if(p[0] == 'O' && p[1] == 'K') {
+    out.opcode = BIND_KEY_OK;
+    p += 2;
+  } else {
+    const i8 high = hex_value(*p++);
+    if(is_line_end(*p)) return BindParse::INVALID;
+    const i8 low = hex_value(*p++);
+    if(high < 0 || low < 0 || high > 0x0E) return BindParse::INVALID;
+    out.opcode = (u8) (((u8) high << 4) | (u8) low);
   }
-  out.opcode = (u8) (((u8) high << 4) | (u8) low);
+  if(!is_space(*p)) return BindParse::INVALID;
   p = skip_spaces(p);
 
   static const char run_keyword[] = "run";
@@ -941,7 +965,7 @@ static bool build_bind_index(const char*& error_message, u16& error_line) {
     const BindParse result = parse_bind(line, parsed);
     if(result == BindParse::NONE) continue;
     if(result == BindParse::INVALID) {
-      error_message = "invalid bind (use: bind <00..EF> run :label)";
+      error_message = "invalid bind (use: bind <00..EF|OK> run :label)";
       error_line = line_number;
       return false;
     }
@@ -1069,7 +1093,10 @@ static bool return_from_script(void) {
     }
     if(!restore_return_frame(returned)) return false;
     bind_handler_active = false;
+    const bool redraw = ok_bind_active && !display_owned();
+    ok_bind_active = false;
     runner_state = returned.runner_state;
+    if(redraw) lcd_std_display_redraw();
     if(runner_state == RunnerState::WATCH_EVENTS &&
        !any_trap_is_active() && !any_bind_is_active()) {
       stop_runner();
@@ -1376,14 +1403,16 @@ static ReferencedOpenResult open_referenced_entry(
 }
 #endif
 
+static u16 current_script_directory(void) {
+  program_store::Entry entry;
+  return script_id != program_store::INVALID_ID &&
+      program_store::entry_by_id(script_id, entry)
+      ? entry.parent_id : program_store::ROOT_ID;
+}
+
 static ReferencedOpenResult open_referenced_file(const char* path) {
 #ifndef M61_TEXT_HOST_TEST
-  u16 cwd = program_store::ROOT_ID;
-  if(script_id != program_store::INVALID_ID) {
-    program_store::Entry current;
-    if(program_store::entry_by_id(script_id, current)) cwd = current.parent_id;
-  }
-
+  const u16 cwd = current_script_directory();
   program_store::Entry entry;
   if(storage_path::resolve_file(cwd, path, entry) ==
      storage_path::Status::OK) {
@@ -1400,7 +1429,8 @@ static ReferencedOpenResult open_referenced_file(const char* path) {
   }
   return ReferencedOpenResult::FAILED;
 #else
-  return (ReferencedOpenResult) m61_text_host_open_file(path);
+  return (ReferencedOpenResult) m61_text_host_open_file(
+      path, current_script_directory());
 #endif
 }
 
@@ -1415,13 +1445,6 @@ static const char* optional_open_arguments(const char* line) {
   if(strncmp(p, keyword, length) != 0 ||
      (!is_space(p[length]) && !is_line_end(p[length]))) return NULL;
   return skip_spaces(p + length);
-}
-
-static u16 current_script_directory(void) {
-  program_store::Entry entry;
-  return script_id != program_store::INVALID_ID &&
-      program_store::entry_by_id(script_id, entry)
-      ? entry.parent_id : program_store::ROOT_ID;
 }
 
 #if M61_TEXT_FONT_COMMAND
@@ -1512,6 +1535,7 @@ static void clear_active_handlers(void) {
   bind_ready = false;
   pending_bind_target = INVALID_BIND_TARGET;
   pending_bind_sequence = 0;
+  ok_bind_pending = false;
 }
 
 static bool frame_has_active_handlers(const ScriptFrame& frame) {
@@ -1603,7 +1627,7 @@ static bool execute_script_line(const char* raw_line) {
     return false;
   }
   if(bind_result == BindParse::INVALID) {
-    line_error_message = "invalid bind (use: bind <00..EF> run :label)";
+    line_error_message = "invalid bind (use: bind <00..EF|OK> run :label)";
     return false;
   }
 
@@ -1698,6 +1722,19 @@ void service(void) {
       fail_script(line_error_message == NULL ? "cannot enter trap handler" : line_error_message,
                   trap_line);
       return;
+    }
+  }
+
+  if(ok_bind_pending && !trap_context_valid() &&
+     (runner_state == RunnerState::WATCH_EVENTS ||
+      runner_state == RunnerState::WAIT_RUN_STOP)) {
+    const i16 index = find_bind_index(BIND_KEY_OK);
+    ok_bind_pending = false;
+    if(index >= 0 && bind_is_active(BIND_KEY_OK)) {
+      pending_bind_target = binds[index].target;
+      pending_bind_sequence = 0;
+      bind_pending = bind_ready = true;
+      ok_bind_active = true;
     }
   }
 

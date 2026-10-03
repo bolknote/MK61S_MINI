@@ -8,6 +8,7 @@
 #include <string>
 #include <iomanip>
 #include "mk61emu_core.h"
+#include "m61_text.hpp"
 
 unsigned elite_load_game(const char* directory);
 
@@ -100,10 +101,17 @@ int main(int argc,char**argv){
       if(value[0]=='-')press(8,8);
       input_frame_stable=std::memcmp(before,core_61::segment_display_frame(),12)==0;
     }
+    if(op=="help") {
+      if(!m61_text::handle_ok_key()) return 8;
+      m61_text::service();
+      m61_text::Error error = {};
+      if(m61_text::last_error(error) || m61_text::calculator_suspended()) return 9;
+    }
     unsigned steps=0;
     if(op=="run"||op=="input"){
       press(2,9);
       while(core_61::is_RUN()&&steps<2000000){elite_tracked_step();steps++;}
+      m61_text::service();
     }
     dump(steps);
   }

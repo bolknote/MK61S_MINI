@@ -19,7 +19,9 @@ def outputs():
     # including zero-filled holes, rather than requiring every bank as a key.
     image=b''.join(banks.get(bank,bytes(BANK_SIZE)) for bank in range(32))
     files={OUT/'elite.bin':program_binary(image)}
-    files[OUT/'autoexec.m61']=b'open? manual.md\nreinit\nload 0000 elite.bin\nrun\n'
+    files[OUT/'autoexec.m61']=(b'open? manual.md\nreinit\nbind OK run :help\n'
+                             b'load 0000 elite.bin\nrun\nret\n\n'
+                             b':help\nopen? manual.md\nret\n')
     files[ROOT/'tools/elite/elite.map.json']=(json.dumps(info,indent=2,ensure_ascii=False)+'\n').encode('utf-8')
     return files
 

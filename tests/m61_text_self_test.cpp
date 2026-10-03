@@ -66,6 +66,10 @@ static int font_restore_count = 0;
 static int font_end_count = 0;
 static bool stop_nested_open = false;
 static int calculator_redraw_count = 0;
+static int manual_open_count = 0;
+static u16 manual_directory = program_store::INVALID_ID;
+static bool manual_paused = false;
+static bool manual_available = true;
 
 namespace program_store {
 
@@ -296,7 +300,15 @@ bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
 
-u8 m61_text_host_open_file(const char* name) {
+u8 m61_text_host_open_file(const char* name, u16 directory) {
+  if(std::strcmp(name, "manual.md") == 0) {
+    manual_open_count++;
+    manual_directory = directory;
+    manual_paused = m61_text::calculator_suspended();
+    // A viewer owns its OK/ESC keys; a bind must not reenter even if called.
+    assert(!m61_text::handle_ok_key());
+    return manual_available ? 0 : 2;
+  }
   if(stop_nested_open && std::strcmp(name, "STOPPED") == 0) return 1;
   if(std::strcmp(name, "UNAVAILABLE") == 0) return 2;
   return OpenStoredFile(name) ? 0 : 2;
@@ -383,6 +395,10 @@ static void reset_host(void) {
   font_end_count = 0;
   stop_nested_open = false;
   calculator_redraw_count = 0;
+  manual_open_count = 0;
+  manual_directory = program_store::INVALID_ID;
+  manual_paused = false;
+  manual_available = true;
   m_IK1302.comma = 0;
 }
 
@@ -1114,6 +1130,156 @@ static void test_bind_handler_requires_ret(void) {
   assert(core_61::registered_mk61_command_hook_count() == 0);
 }
 
+static void test_ok_bind_pauses_run_and_returns_to_same_script_position(void) {
+  reset_host();
+  add_script("GAME",
+      "reinit\nbind OK run :help\nrun\nok\nret\n"
+      ":help\nopen? manual.md\nret\n", 42);
+  assert(m61_text::load_program("GAME"));
+  assert(core_61::is_RUN() && program_start_count == 1);
+  assert(core_61::registered_mk61_command_hook_count() == 0);
+  loaded_program[53] = 0x61;
+  m_IK1302.R[10] = 7;
+  MK61Emu_SetAngleUnit(RADIAN);
+  const auto saved_cpu = m_IK1302;
+  for(int attempt = 0; attempt < 2; ++attempt) {
+    assert(m61_text::handle_ok_key());
+    assert(m61_text::calculator_suspended());
+    m61_text::service();
+    assert(manual_open_count == attempt + 1 && manual_paused);
+    assert(manual_directory == 42);
+    assert(!m61_text::calculator_suspended() && m61_text::active());
+    assert(std::memcmp(&saved_cpu, &m_IK1302, sizeof(saved_cpu)) == 0);
+    assert(loaded_program[53] == 0x61);
+    assert(MK61Emu_GetAngleUnit() == RADIAN);
+    assert(program_start_count == 1 && reinit_count == 1);
+    assert(context_saves == 0 && context_restores == 0);
+    assert(calculator_redraw_count == attempt + 1);
+  }
+  // No premature fallthrough past `run`, and no second startup on return.
+  assert(executed_lines[2] == "ret");
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(executed_lines[executed_lines.size() - 2] == "ok");
+  assert(m61_text::handle_ok_key()); // binding also survives an ordinary stop
+  m61_text::service();
+  assert(manual_open_count == 3 && !core_61::is_RUN());
+}
+
+static void test_ok_bind_waits_for_trap_and_does_not_repeat(void) {
+  reset_host();
+  add_script("GAME",
+      "bind OK run :help\ntrap 10 run :frame\nrun\nret\n"
+      ":frame\nwait 500\nret\n"
+      ":help\nopen? manual.md\nwait 500\nret\n");
+  assert(m61_text::load_program("GAME"));
+  assert(fire_program_boundary(10));
+  m61_text::service();
+  assert(context_saves == 1 && m61_text::calculator_suspended());
+  assert(m61_text::handle_ok_key());
+  assert(m61_text::handle_ok_key()); // coalesced while waiting for the frame
+  m61_text::service();
+  assert(manual_open_count == 0);
+  fake_millis = 500;
+  m61_text::service();
+  assert(context_restores == 1 && manual_open_count == 0);
+  assert(m61_text::calculator_suspended()); // not one extra emulator step
+  m61_text::service();
+  assert(manual_open_count == 1 && manual_paused);
+  assert(!m61_text::handle_ok_key()); // handler is still in `wait`
+  fake_millis = 1000;
+  m61_text::service();
+  assert(!m61_text::calculator_suspended() && core_61::is_RUN());
+  assert(!fire_program_boundary(10)); // original trap is bypassed once
+  assert(fire_program_boundary(10));  // later hits still work
+}
+
+static void test_ok_bind_lifecycle_and_optional_viewer(void) {
+  reset_host();
+  assert(!m61_text::handle_ok_key());
+  add_script("GAME", "bind OK run :help\nret\n:help\nopen? manual.md\nret\n");
+  add_script("OTHER", "ret\n");
+  assert(m61_text::load_program("GAME"));
+  manual_available = false;
+  assert(m61_text::handle_ok_key());
+  m61_text::service();
+  m61_text::Error error = {};
+  assert(!m61_text::last_error(error) && m61_text::active());
+  assert(!m61_text::calculator_suspended());
+  assert(m61_text::handle_ok_key());
+  assert(m61_text::clear_bindings_and_traps()); // long Cx drops queued OK
+  assert(!m61_text::handle_ok_key() && !m61_text::calculator_suspended());
+  m61_text::service();
+  assert(manual_open_count == 1);
+  assert(m61_text::load_program("GAME"));
+  assert(m61_text::handle_ok_key());
+  assert(m61_text::load_program("OTHER"));
+  assert(!m61_text::handle_ok_key() && !m61_text::calculator_suspended());
+  assert(m61_text::load_program("GAME"));
+  assert(m61_text::handle_ok_key());
+  m61_text::cancel(); // calculator ESC, not the viewer's ESC
+  assert(!m61_text::handle_ok_key() && !m61_text::calculator_suspended());
+
+  add_script("RESET", "bind OK run :help\nreinit\nret\n:help\nret\n");
+  assert(m61_text::load_program("RESET"));
+  assert(!m61_text::handle_ok_key());
+  add_script("SKIP", "run :done\nbind OK run :help\n:done\nret\n:help\nret\n");
+  assert(m61_text::load_program("SKIP"));
+  assert(!m61_text::handle_ok_key());
+}
+
+static void test_ok_bind_validation_and_shared_limit(void) {
+  for(const char* invalid : {"O", "OKAY", "ok", "OKrun", "F0", "FF"}) {
+    reset_host();
+    add_script("BAD", std::string("bind ") + invalid + " run :help\n:help\nret\n");
+    assert(!m61_text::load_program("BAD"));
+    assert(std::strstr(require_error().message, "invalid bind") != nullptr);
+  }
+  reset_host();
+  add_script("DUP", "bind OK run :h\nbind OK run :h\n:h\nret\n");
+  assert(!m61_text::load_program("DUP"));
+  assert(std::strstr(require_error().message, "duplicate bind") != nullptr);
+  add_script("MISSING", "bind OK run :h\nret\n");
+  assert(!m61_text::load_program("MISSING"));
+  assert(std::strstr(require_error().message, "label not found") != nullptr);
+
+  std::string eight = "bind OK run :h\n";
+  for(int code = 0; code < 7; ++code) eight += "bind 0" + std::to_string(code) + " run :h\n";
+  add_script("EIGHT", eight + "ret\n:h\nret\n");
+  assert(m61_text::load_program("EIGHT"));
+  m61_text::service();
+  assert(core_61::registered_mk61_command_hook_count() == 14);
+  assert(m61_text::handle_ok_key());
+  m61_text::service();
+  assert(fire_mk61_command(0x06) == (u8) MK61_NOP);
+  m61_text::service();
+  add_script("NINE", eight + "bind 07 run :h\nret\n:h\nret\n");
+  assert(!m61_text::load_program("NINE"));
+  assert(std::strstr(require_error().message, "too many binds") != nullptr);
+
+  add_script("NORET", "bind OK run :h\nret\n:h\nopen? manual.md\n");
+  assert(m61_text::load_program("NORET"));
+  assert(m61_text::handle_ok_key());
+  m61_text::service();
+  assert(std::strstr(require_error().message, "without ret") != nullptr);
+  assert(!m61_text::calculator_suspended());
+}
+
+static void test_ok_bind_can_explicitly_run_and_preserve_print_ownership(void) {
+  reset_host();
+  add_script("GAME", "bind OK run :h\nret\n:h\nrun\nprint off\nret\n");
+  assert(m61_text::load_program("GAME"));
+  assert(m61_text::handle_ok_key());
+  m61_text::service();
+  assert(core_61::is_RUN() && !m61_text::calculator_suspended());
+  assert(!m61_text::handle_ok_key());
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(m61_text::display_owned());
+  assert(calculator_redraw_count == 0); // don't overwrite a script's drawing
+  assert(m61_text::handle_ok_key());
+}
+
 static void test_bind_limit_and_non_reentrant_handler(void) {
   reset_host();
   add_script(
@@ -1426,6 +1592,11 @@ int main(void) {
   test_bind_consumes_keyboard_opcode_and_calls_handler();
   test_bind_is_validated_and_activated_only_when_executed();
   test_bind_handler_requires_ret();
+  test_ok_bind_pauses_run_and_returns_to_same_script_position();
+  test_ok_bind_waits_for_trap_and_does_not_repeat();
+  test_ok_bind_lifecycle_and_optional_viewer();
+  test_ok_bind_validation_and_shared_limit();
+  test_ok_bind_can_explicitly_run_and_preserve_print_ownership();
   test_bind_limit_and_non_reentrant_handler();
   test_reinit_continues_script_and_clears_handlers();
   test_manual_clear_stops_bind_and_trap_watcher();

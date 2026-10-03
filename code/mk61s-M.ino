@@ -867,7 +867,8 @@ void   mk61_menu_hook(i32 key) {
 // M61 обслуживает системные клавиши независимо от текущего фокуса ввода и от
 // того, держит ли trap-обработчик сохранённый контекст во время `wait`.
 // Р/Г/ГРД меняют внешний переключатель калькулятора, ESC отменяет сценарий и
-// останавливает вычисление. Остальные события во время сохранённого кадра
+// останавливает вычисление; привязанный OK ждёт завершения кадра. Остальные
+// события во время сохранённого кадра
 // снимаются из FIFO: передать их в замороженный снимок безопасно нельзя, а
 // оставлять в голове очереди нельзя — они заслонят последующее управление.
 static void service_m61_controls(void) {
@@ -926,6 +927,15 @@ static void service_m61_controls(void) {
       was_active = false;
       lcd_std_display_redraw();
       return;
+    }
+
+    if(keycode == KEY_OK && pressed &&
+       input_focus == &mk61_baseloop_hook && !core_61::edit_program &&
+       m61_text::handle_ok_key()) {
+      (void) kbd::get_key();
+      kbd::handoff(kbd::Event(event));
+      classic_timer::synchronize(false);
+      continue;
     }
 
     if(!m61_text::calculator_suspended()) return;

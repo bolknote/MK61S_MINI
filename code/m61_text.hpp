@@ -17,6 +17,9 @@ bool open_program(const char* name);
 bool open_program(u16 id);
 bool active(void);
 bool calculator_suspended(void);
+// Called only for a physical OK press in the calculator foreground, outside
+// PRG. Queues the existing bind handler; a running trap finishes first.
+bool handle_ok_key(void);
 bool display_owned(void);
 void claim_display(void);
 void release_display(void);

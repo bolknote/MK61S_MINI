@@ -1,4 +1,10 @@
 open? manual.md
 reinit
+bind OK run :help
 load 0000 elite.bin
 run
+ret
+
+:help
+open? manual.md
+ret

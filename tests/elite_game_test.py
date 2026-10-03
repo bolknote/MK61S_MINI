@@ -862,8 +862,15 @@ def test_target_selection_transitions():
 def main():
     directory=ROOT/'programs/games/ELITE'
     assert not list(directory.glob('part*.m61')) and not list(directory.glob('b[0-9][0-9].m61'))
-    expected=['open? manual.md','reinit','load 0000 elite.bin','run']
+    expected=['open? manual.md','reinit','bind OK run :help',
+              'load 0000 elite.bin','run','ret','',
+              ':help','open? manual.md','ret']
     assert (directory/'autoexec.m61').read_text().splitlines()==expected
+    # The real M61 bind + ROM/core must preserve the title and an active game.
+    states=play(['run','help','input 0','help','help'])
+    for before,after in ((states[0],states[1]),(states[2],states[3]),(states[3],states[4])):
+        for field in ('pc','x','regs','frame','pages','auto_display','segmented','revision'):
+            assert before[field]==after[field],('OK changed game state',field,before,after)
     # Every scenario executes the real binary decoder and checks the CRC of
     # the actual destination. The header describes the complete linked image.
     banks,info=create_game().link()

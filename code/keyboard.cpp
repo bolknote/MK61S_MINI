@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "keyboard.h"
+#include "keyboard_layout.hpp"
 #include "entropy_pool.hpp"
 #include "tools.hpp"
 #include "debug.h"
@@ -583,18 +584,25 @@ isize scan(void) {
 }
 
 isize scan_m61_controls(void) {
-  // Р, ГРД, Г и ESC находятся на одной верхней строке матрицы. Во время
-  // работы M61 приоритетно возвращаем сканер на неё; после миллисекунды
-  // установления обычный scan() читает строку и сохраняет как штатное
-  // debounced-событие, так и короткий фронт.
-  if(scan_line != LAST_SCAN_ROW) {
+  // Angle keys and ESC share the top matrix row. OK is on that row on mini,
+  // but on another row on Classic. Alternate just these control rows while
+  // a trap/bind pauses the calculator; scan() still owns settle/debounce.
+  constexpr u8 ok_row = keyboard_layout::ACTIVE.ok % KEY_IN_ROW;
+  if(scan_line != LAST_SCAN_ROW && scan_line != ok_row) {
     pinMode(scan_pins[scan_line], INPUT);
     scan_line = LAST_SCAN_ROW;
     activate_scan_line();
     check_hold_key();
     return -1;
   }
-  return scan();
+  const u8 previous = scan_line;
+  const isize result = scan();
+  if(scan_line != previous) {
+    pinMode(scan_pins[scan_line], INPUT);
+    scan_line = previous == LAST_SCAN_ROW ? ok_row : LAST_SCAN_ROW;
+    activate_scan_line();
+  }
+  return result;
 }
 
 

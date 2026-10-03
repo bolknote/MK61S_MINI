@@ -77,7 +77,7 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 length, u16* got) {
 bool OpenStoredFile(const char* name) {
   return m61_text::open_program(name);
 }
-u8 m61_text_host_open_file(const char* name) {
+u8 m61_text_host_open_file(const char* name, u16) {
   if(std::filesystem::path(name).extension()==".md")
     return std::filesystem::is_regular_file(directory/name) ? 0 : 2;
   return OpenStoredFile(name) ? 0 : 2;
@@ -102,6 +102,7 @@ terminal_protocol::Result execute(const char* line, bool) {
   if(std::strncmp(line,"open ",5)==0) return Result::action(ResultKind::OPEN_FILE,line+5);
   if(std::strcmp(line,"reinit")==0) return Result::action(ResultKind::REINIT_CALCULATOR,"");
   if(std::strcmp(line,"run")==0) return Result::action(ResultKind::RUN_PROGRAM,"");
+  if(std::strcmp(line,"ret")==0) return Result::action(ResultKind::RETURN_SCRIPT,"");
   if(std::strncmp(line,"load ",5)==0) return Result::action(ResultKind::LOAD_BINARY,line+5);
   std::istringstream input(line);
   std::string op, hex, extra; unsigned address;
@@ -141,14 +142,16 @@ unsigned elite_load_game(const char* path) {
   assert(core_61::write_absolute_program(0,0xEE));
   if(!m61_text::load_program("autoexec.m61")) std::exit(5);
   while(m61_text::active() && elapsed<20000) {
-    if(core_61::is_RUN()) elite_tracked_step();
+    if(core_61::is_RUN() && !m61_text::calculator_suspended()) elite_tracked_step();
     m61_text::service(); ++elapsed;
+    // A root `ret` now keeps the OK binding alive at the title stop.
+    if(core_61::is_CALC() && !m61_text::calculator_suspended()) break;
   }
   m61_text::Error error={};
   if(m61_text::last_error(error)) {
     std::cerr<<error.script<<':'<<error.line<<": "<<error.message<<'\n'; std::exit(6);
   }
-  if(m61_text::active() || core_61::is_RUN() || written_bytes==0) {
+  if(elapsed>=20000 || core_61::is_RUN() || written_bytes==0) {
     std::cerr<<"ELITE loader failed to reach the title stop; bytes="<<written_bytes<<'\n';
     std::exit(7);
   }

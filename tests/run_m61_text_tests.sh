@@ -18,3 +18,5 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+python3 "$root/tests/m61_controls_self_test.py"
+python3 "$root/tests/game_manual_bind_self_test.py"

@@ -104,7 +104,7 @@ inline void run_program_steps(void) {
       // Во время M61 программа калькулятора может выполнять целый пакет MAXIMUM
       // между проходами loop(). Пока калькулятор работает, опрашиваем всю
       // матрицу: любая его клавиша должна штатно остановить программу. В
-      // замороженной trap-сцене остаются только Р/Г/ГРД и ESC.
+      // замороженной trap-сцене остаются Р/Г/ГРД, ESC и отложенная привязка OK.
       if(m61_text::active()) {
         scan_m61_runtime_keyboard();
         service_m61_controls();
@@ -118,7 +118,9 @@ inline void run_program_steps(void) {
 
       // Ловушка M61: ядро остановилось на стабильной границе команды. Нельзя
       // делать следующий быстрый шаг или передавать клавишу до сохранения контекста скриптом.
-      if(core_61::program_boundary_yielded()) return;
+      // Запрос bind OK также прерывает пакет, не отправляя ядру С/П.
+      if(core_61::program_boundary_yielded() ||
+         m61_text::calculator_suspended()) return;
   }
 
   service_run_keypress();
