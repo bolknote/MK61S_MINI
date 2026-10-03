@@ -7,6 +7,7 @@
 #include "loadable_module_runtime.hpp"
 #endif
 #include "explorer_autoexec.hpp"
+#include "explorer_label.hpp"
 #include "exclusive_buffer.hpp"
 #include "file_handlers.hpp"
 #include "cross_hal.h"
@@ -46,8 +47,7 @@ static constexpr i32 EXPLORER_KEY_REDRAW = -8;
 static constexpr u16 EXPLORER_SCROLL_START_MS = 900;
 static constexpr u16 EXPLORER_SCROLL_STEP_MS = 450;
 static constexpr u16 EXPLORER_SCROLL_EDGE_MS = 900;
-static constexpr u8 EXPLORER_NAME_COL = 0;
-static constexpr u8 EXPLORER_NO_CURSOR_ROW = 0xFF;
+static constexpr u8 EXPLORER_NAME_COL = 1;
 static constexpr int ITEM_MENU_ACTION_CAPACITY = 7;
 
 static u16 current_mk61_entry_id = program_store::INVALID_ID;
@@ -122,7 +122,7 @@ struct ExplorerSearch {
 
 struct ExplorerScroll {
   int active;
-  char name[program_store::NAME_SIZE];
+  char name[explorer_label::SIZE];
   u8 offset;
   i8 direction;
   u32 next_ms;
@@ -130,11 +130,6 @@ struct ExplorerScroll {
 
 static const char* type_label(program_store::ProgramType type) {
   return program_store::type_magic_text(type);
-}
-
-static char type_marker(program_store::ProgramType type) {
-  const char* label = type_label(type);
-  return (label != NULL && label[0] != 0) ? label[0] : '?';
 }
 
 static void print_line(u8 row, const char* text) {
@@ -197,29 +192,15 @@ static bool explorer_time_reached(u32 now, u32 target) {
   return (i32) (now - target) >= 0;
 }
 
-static u8 explorer_type_col(void) {
-  const u8 cols = main_lcd().cols();
-  return cols > 0 ? (u8) (cols - 1) : 0;
-}
-
 static void explorer_cursor_off(void) {
   if(main_lcd().supportsCursor()) main_lcd().cursorOff();
 }
 
-static void explorer_cursor_on(u8 cursor_row) {
-  if(cursor_row == EXPLORER_NO_CURSOR_ROW || cursor_row >= main_lcd().rows() || !main_lcd().supportsCursor()) return;
-  main_lcd().cursorOff();
-  main_lcd().setCursor(explorer_type_col(), cursor_row);
-  main_lcd().blinkOn();
-}
-
-static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0, u8 cursor_row = EXPLORER_NO_CURSOR_ROW) {
+static i32 wait_explorer_key(bool allow_long_ok, u16 tick_ms = 0) {
   bool ok_down = false;
   u32 long_ok_at = 0;
   const u32 tick_at = tick_ms == 0 ? 0 : millis() + tick_ms;
   const u32 display_mode_revision = main_lcd().displayModeRevision();
-
-  explorer_cursor_on(cursor_row);
 
   while(true) {
     idle_main_process();
@@ -598,15 +579,18 @@ static void explorer_scroll_reset(ExplorerScroll& scroll) {
 
 static u8 explorer_name_width(void) {
 #if MK61_PROPORTIONAL_UI_FONTS
-  if(main_lcd().uiTextActive()) return 176; // 192 - two 2px margins - type gutter.
+  if(main_lcd().uiTextActive()) {
+    const u16 pixels = main_lcd().uiTextWidth();
+    return pixels > 12 ? (u8) (pixels - 12) : 0; // selection gutter
+  }
 #endif
-  const u8 type_col = explorer_type_col();
-  return type_col > EXPLORER_NAME_COL ? (u8) (type_col - EXPLORER_NAME_COL) : 0;
+  const u8 cols = main_lcd().cols();
+  return cols > EXPLORER_NAME_COL ? (u8) (cols - EXPLORER_NAME_COL) : 0;
 }
 
 static u8 explorer_name_len(const char* name) {
   const usize len = m8_view::codepoint_count(name,
-                                               program_store::NAME_SIZE - 1);
+                                               explorer_label::SIZE - 1);
   return len > 255 ? 255 : (u8) len;
 }
 
@@ -620,7 +604,7 @@ static bool explorer_name_overflows(const char* name, u8 width) {
 static u8 explorer_scroll_max_offset(const char* name, u8 width) {
 #if MK61_PROPORTIONAL_UI_FONTS
   if(main_lcd().uiTextActive()) {
-    const u16 bytes = (u16) text_editor::bounded_length(name, program_store::NAME_SIZE);
+    const u16 bytes = (u16) text_editor::bounded_length(name, explorer_label::SIZE);
     u16 offset = 0;
     u8 skipped = 0;
     while(offset < bytes && main_lcd().measureUiText(name + offset) > width) {
@@ -635,7 +619,7 @@ static u8 explorer_scroll_max_offset(const char* name, u8 width) {
 }
 
 static void explorer_scroll_track(ExplorerScroll& scroll, int active, const char* name, u8 width, u32 now) {
-  const bool same = scroll.active == active && strncmp(scroll.name, name, program_store::NAME_SIZE) == 0;
+  const bool same = scroll.active == active && strncmp(scroll.name, name, sizeof(scroll.name)) == 0;
   if(!same) {
     scroll.active = active;
     bounded_string::copy(scroll.name, name);
@@ -689,7 +673,7 @@ static void explorer_name_window(const char* name, u8 offset, u8 width,
   out[0] = 0;
   if(name == NULL || width == 0) return;
   const u16 byte_len = (u16) text_editor::bounded_length(
-      name, program_store::NAME_SIZE);
+      name, explorer_label::SIZE);
   const u8 codepoints = explorer_name_len(name);
   if(offset > codepoints) offset = codepoints;
   const bool marker = mark_overflow && offset == 0 && codepoints > width;
@@ -710,38 +694,38 @@ static void explorer_name_window(const char* name, u8 offset, u8 width,
 }
 
 static void draw_explorer_name(const lcd_ru::font_map_t& map,
-                               const char* name, u8 row, u8 offset) {
+                               const char* name, u8 row, u8 offset,
+                               bool selected) {
+#if MK61_PROPORTIONAL_UI_FONTS
+  if(main_lcd().uiTextActive()) {
+    main_lcd().printUiLine(row,
+        name + m8_view::byte_offset(name, offset, explorer_label::SIZE - 1),
+        selected ? '>' : ' ');
+    return;
+  }
+#endif
   const u8 width = explorer_name_width();
   if(width == 0) return;
-  char window[program_store::NAME_SIZE];
+  char window[explorer_label::SIZE];
   explorer_name_window(name, offset, width, true, window, sizeof(window));
+  main_lcd().setCursor(0, row);
+  main_lcd().write((u8) (selected ? '>' : ' '));
   main_lcd().setCursor(EXPLORER_NAME_COL, row);
   lcd_ru::write_text(map, window, width);
 }
 
 static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
                               const program_store::Entry& entry,
-                              u8 scroll_offset) {
-#if MK61_PROPORTIONAL_UI_FONTS
-  if(main_lcd().uiTextActive()) {
-    const u16 offset = m8_view::byte_offset(entry.name, scroll_offset, program_store::NAME_SIZE - 1);
-    main_lcd().printUiLine(row, entry.name + offset, 0,
-        (u8) (entry.kind == program_store::NodeKind::DIRECTORY ? '/' : type_marker(entry.type)));
-    return;
-  }
-#endif
-  draw_explorer_name(map, entry.name, row, scroll_offset);
-  main_lcd().setCursor(explorer_type_col(), row);
-  main_lcd().write((u8) (entry.kind == program_store::NodeKind::DIRECTORY
-                    ? '/'
-                    : type_marker(entry.type)));
+                              u8 scroll_offset, bool selected) {
+  char name[explorer_label::SIZE];
+  explorer_label::format(entry, name);
+  draw_explorer_name(map, name, row, scroll_offset, selected);
 }
 
 [[maybe_unused]] static u16 draw_explorer(
     u16 directory_id, int active, ExplorerScroll& scroll,
-    const char* search_text = NULL, u8* cursor_row_out = NULL) {
+    const char* search_text = NULL) {
   main_lcd().beginUiText();
-  if(cursor_row_out != NULL) *cursor_row_out = EXPLORER_NO_CURSOR_ROW;
   explorer_cursor_off();
 
   MK61DisplayUpdate update(main_lcd());
@@ -795,9 +779,11 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
   const u32 now = millis();
   program_store::Entry active_entry;
   if(explorer_entry(directory_id, active, active_entry)) {
+    char name[explorer_label::SIZE];
+    explorer_label::format(active_entry, name);
     const u8 width = explorer_name_width();
-    explorer_scroll_track(scroll, active, active_entry.name, width, now);
-    scroll_timeout = explorer_scroll_timeout(scroll, active_entry.name, width, now);
+    explorer_scroll_track(scroll, active, name, width, now);
+    scroll_timeout = explorer_scroll_timeout(scroll, name, width, now);
   } else {
     explorer_scroll_reset(scroll);
   }
@@ -809,8 +795,10 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
       : top + row;
     program_store::Entry entry;
     if(!explorer_entry(directory_id, index, entry)) continue;
-    char window[program_store::NAME_SIZE];
-    explorer_name_window(entry.name, active == index ? scroll.offset : 0,
+    char name[explorer_label::SIZE];
+    explorer_label::format(entry, name);
+    char window[explorer_label::SIZE];
+    explorer_name_window(name, active == index ? scroll.offset : 0,
                          explorer_name_width(), true, window,
                          sizeof(window));
     lcd_ru::scan_text(name_map, window, explorer_name_width());
@@ -826,17 +814,14 @@ static void draw_explorer_row(const lcd_ru::font_map_t& map, u8 row,
       const u8 scroll_offset = (active == index) ? scroll.offset : 0;
       const u8 screen_row = (u8) (first_row + row);
       const bool selected = active == index;
-      draw_explorer_row(name_map, screen_row, entry, scroll_offset);
-      if(selected && cursor_row_out != NULL) *cursor_row_out = screen_row;
+      draw_explorer_row(name_map, screen_row, entry, scroll_offset, selected);
     } else {
       print_line((u8) (first_row + row), "?");
     }
   }
 
   for(int row = first_row + visible; row < display_rows; row++) print_line((u8) row, "");
-  if(filtered && (cursor_row_out == NULL || *cursor_row_out == EXPLORER_NO_CURSOR_ROW)) {
-    draw_search_cursor(search_text);
-  }
+  if(filtered) draw_search_cursor(search_text);
   return scroll_timeout;
 }
 
@@ -1624,52 +1609,38 @@ static bool dialog_item_at(u16 directory_id, DialogMode mode,
   return false;
 }
 
-static const char* dialog_item_name(const DialogItem& item) {
+static void dialog_item_name(const DialogItem& item,
+                             char (&out)[explorer_label::SIZE]) {
+  const char* text = "?";
   switch(item.kind) {
     case DialogItemKind::THIS_DIRECTORY:
-      return library_mk61::text("This folder", M8("Эта папка"));
+      text = library_mk61::text("This folder", M8("Эта папка"));
+      break;
     case DialogItemKind::NEW_FILE:
-      return library_mk61::text("New file", M8("Новый файл"));
+      text = library_mk61::text("New file", M8("Новый файл"));
+      break;
     case DialogItemKind::NEW_DIRECTORY:
-      return library_mk61::text("New folder", M8("Новая папка"));
-    case DialogItemKind::ENTRY: return item.entry.name;
-  }
-  return "?";
-}
-
-static char dialog_item_marker(const DialogItem& item) {
-  switch(item.kind) {
-    case DialogItemKind::THIS_DIRECTORY: return '*';
-    case DialogItemKind::NEW_FILE:
-    case DialogItemKind::NEW_DIRECTORY: return '+';
+      text = library_mk61::text("New folder", M8("Новая папка"));
+      break;
     case DialogItemKind::ENTRY:
-      return item.entry.kind == program_store::NodeKind::DIRECTORY
-          ? '/' : type_marker(item.entry.type);
+      explorer_label::format(item.entry, out);
+      return;
   }
-  return '?';
+  bounded_string::copy(out, text);
 }
 
 static void draw_dialog_row(const lcd_ru::font_map_t& map, u8 row,
-                            const DialogItem& item, u8 scroll_offset) {
-#if MK61_PROPORTIONAL_UI_FONTS
-  if(main_lcd().uiTextActive()) {
-    const char* name = dialog_item_name(item);
-    main_lcd().printUiLine(row, name + m8_view::byte_offset(name, scroll_offset),
-                          0, (u8) dialog_item_marker(item));
-    return;
-  }
-#endif
-  draw_explorer_name(map, dialog_item_name(item), row, scroll_offset);
-  main_lcd().setCursor(explorer_type_col(), row);
-  main_lcd().write((u8) dialog_item_marker(item));
+                            const DialogItem& item, u8 scroll_offset,
+                            bool selected) {
+  char name[explorer_label::SIZE];
+  dialog_item_name(item, name);
+  draw_explorer_name(map, name, row, scroll_offset, selected);
 }
 
 static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
                                program_store::ProgramType type,
                                bool allow_new, u16 forbidden_tree,
-                               int active, int count, ExplorerScroll& scroll,
-                               u8& cursor_row) {
-  cursor_row = EXPLORER_NO_CURSOR_ROW;
+                               int active, int count, ExplorerScroll& scroll) {
   explorer_cursor_off();
   MK61DisplayUpdate update(main_lcd());
   main_lcd().clear();
@@ -1691,7 +1662,8 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
   u16 timeout = 0;
   if(dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
                     active, active_item)) {
-    const char* name = dialog_item_name(active_item);
+    char name[explorer_label::SIZE];
+    dialog_item_name(active_item, name);
     const u8 width = explorer_name_width();
     explorer_scroll_track(scroll, active, name, width, now);
     timeout = explorer_scroll_timeout(scroll, name, width, now);
@@ -1705,8 +1677,10 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
     const int index = top + row;
     if(!dialog_item_at(directory_id, mode, type, allow_new, forbidden_tree,
                        index, item)) continue;
-    char window[program_store::NAME_SIZE];
-    explorer_name_window(dialog_item_name(item),
+    char name[explorer_label::SIZE];
+    dialog_item_name(item, name);
+    char window[explorer_label::SIZE];
+    explorer_name_window(name,
                          index == active ? scroll.offset : 0,
                          explorer_name_width(), true, window,
                          sizeof(window));
@@ -1724,8 +1698,7 @@ static u16 draw_storage_dialog(u16 directory_id, DialogMode mode,
     }
     const bool selected = index == active;
     draw_dialog_row(name_map, (u8) row, item,
-                    selected ? scroll.offset : 0);
-    if(selected) cursor_row = (u8) row;
+                    selected ? scroll.offset : 0, selected);
   }
   for(int row = visible; row < rows; row++) print_line((u8) row, "");
   return timeout;
@@ -1753,10 +1726,9 @@ static ProgramStoreFileDialogResult run_storage_dialog(
     int count = dialog_count(directory_id, mode, type, allow_new,
                              forbidden_tree);
     if(active >= count) active = count > 0 ? count - 1 : 0;
-    u8 cursor_row = EXPLORER_NO_CURSOR_ROW;
     const u16 timeout = draw_storage_dialog(directory_id, mode, type,
-        allow_new, forbidden_tree, active, count, scroll, cursor_row);
-    const i32 key = wait_explorer_key(true, timeout, cursor_row);
+        allow_new, forbidden_tree, active, count, scroll);
+    const i32 key = wait_explorer_key(true, timeout);
     if(key == EXPLORER_KEY_TICK || key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_DOWN && count > 0) {
       active = (active + 1) % count;
@@ -2428,10 +2400,9 @@ bool program_store_explorer_select(void) {
       if(first >= 0) active = first;
     }
 
-    u8 cursor_row = EXPLORER_NO_CURSOR_ROW;
     const u16 scroll_timeout = draw_explorer(directory_id, active, scroll,
-                                              search.text, &cursor_row);
-    const i32 key = wait_explorer_key(true, scroll_timeout, cursor_row);
+                                              search.text);
+    const i32 key = wait_explorer_key(true, scroll_timeout);
     if(key == EXPLORER_KEY_TICK || key == EXPLORER_KEY_REDRAW) continue;
     if(key == EXPLORER_KEY_ESC) {
       if(search_active(search.text)) {

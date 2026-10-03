@@ -234,23 +234,6 @@ u16 max_nodes() {
   return (u16) call(MK61_SYS_USBDISK, MK61_USBDISK_MAX_NODES);
 }
 
-const char* file_extension(ProgramType type) {
-  switch(type) {
-    case ProgramType::MK61: return "m61";
-    case ProgramType::FOCAL: return "foc";
-    case ProgramType::TINYBASIC: return "tbi";
-    case ProgramType::TEXT: return "txt";
-    case ProgramType::MK61_STATE: return "state.txt";
-    case ProgramType::FONT: return "fmk";
-    case ProgramType::IMAGE1: return "wbmp";
-    case ProgramType::APP: return "app";
-    case ProgramType::CHIP8: return "ch8";
-    case ProgramType::MARKDOWN: return "md";
-    case ProgramType::MK61_BINARY: return "bin";
-  }
-  return "bin";
-}
-
 bool create_directory(u16 parent, const char* name, u16 preferred, u16* id) {
   mk61_system_usbdisk_name request = {
       0, parent, preferred, INVALID_ID, name};

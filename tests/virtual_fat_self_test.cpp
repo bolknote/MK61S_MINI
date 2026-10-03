@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "SPIFlash.h"
+#include "disk_activity.hpp"
 #include "exclusive_buffer.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_runtime.hpp"
@@ -15,6 +16,16 @@
 
 SPIFlash flash;
 bool flash_is_ok = true;
+
+#if MK61_DISK_ACTIVITY_SUPPORTED
+namespace disk_activity {
+void setFileOperation(bool active) {
+  static bool previous = false;
+  assert(active != previous);
+  previous = active;
+}
+}
+#endif
 
 namespace led {
 void init(void) {}

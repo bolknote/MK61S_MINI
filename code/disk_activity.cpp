@@ -9,6 +9,10 @@
 
 namespace disk_activity {
 namespace {
+// program_store's outermost DiskActivity owns this flag. Nested file reads
+// during a copy/import must not turn it off before the outer operation ends.
+bool file_operation_active = false;
+
 bool foreground(void) {
 #if defined(__arm__) || defined(__thumb__)
   if(__get_IPSR() != 0) return false;
@@ -25,6 +29,15 @@ void note(void) {
 }
 void poll(void) {
   if(foreground()) main_lcd().pollDiskActivity(millis());
+}
+
+void setFileOperation(bool active) {
+  file_operation_active = active;
+}
+
+void storageIO(void) {
+  if(file_operation_active) note();
+  else poll(); // still animate a USB commit and expire a previous indicator
 }
 
 #if defined(MK61_DISPLAY_UC1609)

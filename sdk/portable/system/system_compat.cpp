@@ -149,6 +149,23 @@ static void import_file(const mk61_system_file& file, program_store::Entry& entr
   memcpy(entry.name, file.name, sizeof(entry.name));
 }
 namespace program_store {
+const char* file_extension(ProgramType type) {
+  switch(type) {
+    case ProgramType::MK61: return "m61";
+    case ProgramType::FOCAL: return "foc";
+    case ProgramType::TINYBASIC: return "tbi";
+    case ProgramType::TEXT: return "txt";
+    case ProgramType::MK61_STATE: return "state.txt";
+    case ProgramType::FONT: return "fmk";
+    case ProgramType::IMAGE1: return "wbmp";
+    case ProgramType::APP: return "app";
+    case ProgramType::CHIP8: return "ch8";
+    case ProgramType::MARKDOWN: return "md";
+    case ProgramType::MK61_BINARY: return "bin";
+  }
+  return "bin";
+}
+
 int count(ProgramType type) { return (int) call(MK61_SYS_FILE_COUNT, (u32) type); }
 bool entry(ProgramType type, int index, Entry& out) {
   mk61_system_file file = {};

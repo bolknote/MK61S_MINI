@@ -6,6 +6,7 @@
 #include "Arduino.h"
 #include "config.h"
 #include "debug.h"
+#include "disk_activity.hpp"
 #include "exclusive_buffer.hpp"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
@@ -307,6 +308,7 @@ class DiskActivity {
   public:
     DiskActivity(void) {
       if(g_disk_activity_depth++ == 0) {
+        disk_activity::setFileOperation(true);
         g_disk_led_poll_divider = 0;
         led::blink_continuous(DISK_LED_ON_MS, DISK_LED_OFF_MS);
       }
@@ -315,7 +317,10 @@ class DiskActivity {
     ~DiskActivity(void) {
       if(g_disk_activity_depth == 0) return;
       g_disk_activity_depth--;
-      if(g_disk_activity_depth == 0) led::blink_stop();
+      if(g_disk_activity_depth == 0) {
+        disk_activity::setFileOperation(false);
+        led::blink_stop();
+      }
     }
 };
 

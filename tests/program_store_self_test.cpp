@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "SPIFlash.h"
+#include "disk_activity.hpp"
 #include "explorer_autoexec.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_system_app.hpp"
@@ -13,6 +14,20 @@
 
 SPIFlash flash;
 bool flash_is_ok = true;
+
+#if MK61_DISK_ACTIVITY_SUPPORTED
+namespace disk_activity_test {
+bool active = false;
+unsigned transitions = 0;
+}
+namespace disk_activity {
+void setFileOperation(bool active) {
+  assert(active != disk_activity_test::active);
+  disk_activity_test::active = active;
+  ++disk_activity_test::transitions;
+}
+}
+#endif
 
 namespace led {
 void init(void) {}
@@ -115,6 +130,79 @@ static void expect_text(u16 id, const u8* expected, u16 expected_len) {
   assert(actual_len == expected_len);
   assert(memcmp(actual, expected, expected_len) == 0);
 }
+
+#if MK61_DISK_ACTIVITY_SUPPORTED
+static void test_disk_activity_scope(void) {
+  fresh();
+  assert(!disk_activity_test::active);
+  static const u8 data[] = "file data";
+  u16 id = program_store::INVALID_ID;
+  unsigned transitions = disk_activity_test::transitions;
+  assert(program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::TEXT, "source",
+      data, sizeof(data) - 1, &id));
+  assert(!disk_activity_test::active);
+  assert(disk_activity_test::transitions == transitions + 2);
+
+  // Explorer navigation reads real catalog records but never opens a file.
+  transitions = disk_activity_test::transitions;
+  SPIFlash::resetOperationCounts();
+  for(unsigned i = 0; i < 20; ++i) {
+    Entry entry = {};
+    assert(program_store::child_count(program_store::ROOT_ID) == 1);
+    assert(program_store::child(program_store::ROOT_ID, 0, entry));
+    assert(entry.id == id);
+    assert(program_store::entry_by_id(id, entry));
+    assert(program_store::exists(ProgramType::TEXT, "source"));
+  }
+  assert(SPIFlash::readOperations() != 0);
+  assert(!disk_activity_test::active);
+  assert(disk_activity_test::transitions == transitions);
+
+  expect_text(id, data, sizeof(data) - 1);
+  assert(!disk_activity_test::active);
+  assert(disk_activity_test::transitions == transitions + 2);
+
+  struct CopySource {
+    u16 id;
+    bool fail;
+    unsigned calls;
+  } copy = {id, false, 0};
+  const program_store::FileSource source = {
+    &copy, [](void* context, u32 offset, u8* output, usize size) -> bool {
+      auto& copy = *static_cast<CopySource*>(context);
+      assert(disk_activity_test::active);
+      const unsigned transitions = disk_activity_test::transitions;
+      ++copy.calls;
+      u16 read = 0;
+      assert(program_store::read_range_id(copy.id, (u16) offset, output,
+                                          (u16) size, &read));
+      assert(read == size);
+      // The nested read must not end or restart the outer write's scope.
+      assert(disk_activity_test::active);
+      assert(disk_activity_test::transitions == transitions);
+      return !copy.fail;
+    }
+  };
+  for(bool fail : {false, true}) {
+    copy.fail = fail;
+    copy.calls = 0;
+    transitions = disk_activity_test::transitions;
+    assert(program_store::write_file_from_source(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::TEXT, "copy",
+        sizeof(data) - 1, source) == !fail);
+    assert(copy.calls != 0);
+    assert(!disk_activity_test::active);
+    assert(disk_activity_test::transitions == transitions + 2);
+  }
+
+  // An early read failure also releases the activity scope.
+  transitions = disk_activity_test::transitions;
+  assert(!program_store::read_range_id(id, 0, nullptr, 1, nullptr));
+  assert(!disk_activity_test::active);
+  assert(disk_activity_test::transitions == transitions + 2);
+}
+#endif
 
 static void test_image_type_roundtrip_and_quota(void) {
   fresh();
@@ -3097,6 +3185,9 @@ static void test_two_hundred_apps_have_no_fixed_slot_limit(void) {
 } // безымянное пространство имён
 
 int main(void) {
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  test_disk_activity_scope();
+#endif
   test_mk61_binary_roundtrip_quota_and_paths();
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();

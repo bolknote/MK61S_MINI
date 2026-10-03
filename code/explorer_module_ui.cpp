@@ -3,6 +3,7 @@
 #include "explorer_module_ui.hpp"
 
 #include "bounded_string.hpp"
+#include "explorer_label.hpp"
 #include "mk8_literal.hpp"
 #include "m8_view.hpp"
 #include "text_editor.hpp"
@@ -27,9 +28,8 @@ static constexpr i32 KEY_REDRAW = -8;
 static constexpr u16 SCROLL_START_MS = 900;
 static constexpr u16 SCROLL_STEP_MS = 450;
 static constexpr u16 SCROLL_EDGE_MS = 900;
-static constexpr u8 NO_CURSOR_ROW = 0xFF;
 static constexpr u8 MAX_LINES = MK61_SYSTEM_MAX_ROWS;
-static constexpr usize LINE_BYTES = program_store::NAME_SIZE + 2;
+static constexpr usize LINE_BYTES = explorer_label::SIZE;
 
 struct Search {
   char text[program_store::NAME_SIZE];
@@ -40,7 +40,7 @@ struct Search {
 
 struct Scroll {
   int active;
-  char name[program_store::NAME_SIZE];
+  char name[explorer_label::SIZE];
   u8 offset;
   i8 direction;
   u32 next_ms;
@@ -49,7 +49,6 @@ struct Scroll {
 struct Line {
   char text[LINE_BYTES];
   char marker;
-  u16 trailing;
 };
 
 static bool reached(u32 now, u32 target) {
@@ -71,43 +70,15 @@ static bool entry_at(u16 directory, int index, program_store::Entry& output) {
   return index >= 0 && program_store::child(directory, index, output);
 }
 
-static char type_marker(program_store::ProgramType type) {
-  switch(type) {
-    case program_store::ProgramType::MK61: return 'M';
-    case program_store::ProgramType::FOCAL: return 'F';
-    case program_store::ProgramType::TINYBASIC: return 'B';
-    case program_store::ProgramType::TEXT: return 'T';
-    case program_store::ProgramType::MK61_STATE: return 'M';
-    case program_store::ProgramType::FONT: return 'f';
-    case program_store::ProgramType::IMAGE1: return 'I';
-    case program_store::ProgramType::APP: return 'A';
-    case program_store::ProgramType::CHIP8: return 'C';
-    case program_store::ProgramType::MARKDOWN: return 'T';
-    case program_store::ProgramType::MK61_BINARY: return 'M';
-  }
-  return '?';
-}
-
 static void cursor_off() {
   if(main_lcd().supportsCursor()) main_lcd().cursorOff();
 }
 
-static void cursor_on(u8 row) {
-  if(row == NO_CURSOR_ROW || row >= main_lcd().rows() ||
-     !main_lcd().supportsCursor()) return;
-  main_lcd().cursorOff();
-  const u8 cols = main_lcd().cols();
-  main_lcd().setCursor(cols == 0 ? 0 : (u8) (cols - 1), row);
-  main_lcd().blinkOn();
-}
-
-static i32 wait_key(bool allow_long_ok, u16 tick_ms = 0,
-                    u8 cursor_row = NO_CURSOR_ROW) {
+static i32 wait_key(bool allow_long_ok, u16 tick_ms = 0) {
   bool ok_down = false;
   u32 long_ok_at = 0;
   const u32 tick_at = tick_ms == 0 ? 0 : millis() + tick_ms;
   const u32 revision = main_lcd().displayModeRevision();
-  cursor_on(cursor_row);
 
   while(true) {
     idle_main_process();
@@ -189,7 +160,7 @@ static void render(Line (&lines)[MAX_LINES]) {
     main_lcd().clear();
     for(u8 row = 0; row < count; ++row) {
       main_lcd().printUiLine(row, lines[row].text,
-                             lines[row].marker, lines[row].trailing);
+                             lines[row].marker);
     }
     return;
   }
@@ -208,8 +179,6 @@ static void render(Line (&lines)[MAX_LINES]) {
     const usize capacity = columns > first ? columns - first : 0;
     const usize copied = source < capacity ? source : capacity;
     memcpy(fixed[row] + first, lines[row].text, copied);
-    if(lines[row].trailing != 0 && columns != 0)
-      fixed[row][columns - 1] = (char) (u8) lines[row].trailing;
     rows[row] = fixed[row];
   }
   portable_system::text_rows(rows, count);
@@ -314,14 +283,14 @@ static void reset_scroll(Scroll& scroll) {
 static u16 name_width() {
   if(main_lcd().uiTextActive()) {
     const u16 pixels = main_lcd().uiTextWidth();
-    return pixels > 16 ? (u16) (pixels - 16) : pixels;
+    return pixels > 12 ? (u16) (pixels - 12) : 0;
   }
   const u8 columns = main_lcd().cols();
   return columns > 0 ? (u16) (columns - 1) : 0;
 }
 
 static u8 max_offset(const char* name, u16 width) {
-  const u8 length = (u8) bounded_length(name, program_store::NAME_SIZE - 1);
+  const u8 length = (u8) bounded_length(name, explorer_label::SIZE - 1);
   if(main_lcd().uiTextActive()) {
     u8 offset = 0;
     while(offset < length && main_lcd().measureUiText(name + offset) > width)
@@ -334,7 +303,7 @@ static u8 max_offset(const char* name, u16 width) {
 static void update_scroll(Scroll& scroll, int active, const char* name,
                           u16 width, u32 now) {
   if(scroll.active != active ||
-     strncmp(scroll.name, name, program_store::NAME_SIZE) != 0) {
+     strncmp(scroll.name, name, sizeof(scroll.name)) != 0) {
     scroll.active = active;
     copy_text(scroll.name, sizeof(scroll.name), name);
     scroll.offset = 0;
@@ -488,10 +457,9 @@ static bool handle_search_key(Search& search, i32 key) {
 }
 
 static u16 draw_browser(u16 directory, int active, const Search& search,
-                        Scroll& scroll, u8& cursor_row) {
+                        Scroll& scroll) {
   Line lines[MAX_LINES];
   clear_lines(lines);
-  cursor_row = NO_CURSOR_ROW;
   cursor_off();
   const int total = program_store::child_count(directory);
   const bool filtered = search_active(search.text);
@@ -532,21 +500,22 @@ static u16 draw_browser(u16 directory, int active, const Search& search,
   const u32 now = millis();
   const u16 width = name_width();
   program_store::Entry selected = {};
+  char name[explorer_label::SIZE];
   u16 timeout = 0;
   if(entry_at(directory, active, selected)) {
-    update_scroll(scroll, active, selected.name, width, now);
-    timeout = scroll_timeout(scroll, selected.name, width, now);
+    explorer_label::format(selected, name);
+    update_scroll(scroll, active, name, width, now);
+    timeout = scroll_timeout(scroll, name, width, now);
   } else reset_scroll(scroll);
 
   for(int row = 0; row < visible; ++row) {
     const int index = match_at(directory, top + row, search.text);
     program_store::Entry entry = {};
     if(!entry_at(directory, index, entry)) continue;
+    explorer_label::format(entry, name);
     const u8 offset = index == active ? scroll.offset : 0;
-    copy_text(lines[first_row + row].text, LINE_BYTES, entry.name + offset);
-    lines[first_row + row].trailing = entry.kind == program_store::NodeKind::DIRECTORY
-        ? '/' : (u8) type_marker(entry.type);
-    if(index == active) cursor_row = (u8) (first_row + row);
+    copy_text(lines[first_row + row].text, LINE_BYTES, name + offset);
+    lines[first_row + row].marker = index == active ? '>' : ' ';
   }
   render(lines);
   return timeout;
@@ -687,10 +656,9 @@ bool select(ExplorerSession& session) {
       if(first >= 0) active = first;
     }
 
-    u8 cursor_row = NO_CURSOR_ROW;
     const u16 timeout = draw_browser(session.directory_id, active, search,
-                                     scroll, cursor_row);
-    const i32 key = wait_key(count > 0, timeout, cursor_row);
+                                     scroll);
+    const i32 key = wait_key(count > 0, timeout);
     if(key == KEY_TICK || key == KEY_REDRAW) continue;
     if(key == KEY_ESCAPE) {
       if(search_active(search.text)) {

@@ -12,6 +12,9 @@ for backend in software stm32; do
   backend_flags=()
   if [[ "$backend" == "stm32" ]]; then
     backend_flags=(-DMK61_CRC32_EMULATE_STM32)
+  else
+    # Exercise graphical activity scopes as well as the no-graphics build.
+    backend_flags=(-DMK61_ENABLE_USB_SCREEN=1)
   fi
   clang++ -std=c++17 -Wall -Wextra -Werror \
     "${sanitizer_flags[@]}" \

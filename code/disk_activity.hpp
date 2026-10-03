@@ -15,8 +15,12 @@ namespace disk_activity {
 #if MK61_DISK_ACTIVITY_SUPPORTED
 // Called only between SPI transactions. Never runs the foreground loop or
 // feeds the watchdog; a failed storage operation must remain observable.
+// note() is an explicit USB request (including cached sectors). Raw NOR I/O
+// uses storageIO(): catalog/settings reads outside a file operation stay quiet.
 void note(void);
 void poll(void);
+void setFileOperation(bool active);
+void storageIO(void);
 
 struct Activity {
   u32 last = 0;
@@ -87,6 +91,8 @@ void savingPage(u8 page, u8 step, bool russian, u8* pixels);
 #else
 inline void note(void) {}
 inline void poll(void) {}
+inline void setFileOperation(bool) {}
+inline void storageIO(void) {}
 #endif
 
 } // namespace disk_activity

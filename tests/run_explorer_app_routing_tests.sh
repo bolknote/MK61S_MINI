@@ -23,4 +23,12 @@ for loader in 0 1; do
   "$work/explorer-app-$loader"
 done
 
+python3 "$root/tests/explorer_ui_surface.py" "$work"
+for ui in 0 1; do
+  clang++ "${flags[@]}" -DMK61_PROPORTIONAL_UI_FONTS="$ui" \
+    -I"$root/code" "$root/tests/explorer_ui_self_test.cpp" \
+    -o "$work/explorer-ui"
+  "$work/explorer-ui"
+done
+
 echo "explorer APP routing tests passed"

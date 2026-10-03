@@ -1420,6 +1420,55 @@ void test_disk_activity_deadline() {
   assert(activity.indicator(80) == 0);
 }
 
+void test_disk_catalog_io_is_quiet() {
+  ui_display_test::now = 0;
+  MK61Display display;
+  startUi(display);
+  display.printUiLine(0, "File list", 0, '/');
+  const Frame original = ui_display_test::frame;
+  main_lcd_pointer = &display;
+  disk_activity::setFileOperation(false);
+
+  // An arbitrarily long stream of catalog reads must not create activity.
+  const unsigned before = ui_display_test::transfers;
+  for(unsigned i = 0; i < 20; ++i) {
+    ui_display_test::now += 100;
+    disk_activity::storageIO();
+  }
+  expectFrame(original);
+  assert(ui_display_test::transfers == before);
+
+  disk_activity::setFileOperation(true);
+  disk_activity::storageIO();
+  expectDiskCorner(original, ui_display_test::frame.data(), 1);
+  // An erase/program busy poll keeps the icon alive during a file operation.
+  ui_display_test::now += 160;
+  disk_activity::storageIO();
+  expectDiskCorner(original, ui_display_test::frame.data(), 2);
+  disk_activity::setFileOperation(false);
+  ui_display_test::now += 160;
+  disk_activity::storageIO();
+  expectFrame(original); // directory reads do not extend its lifetime
+
+  // A cached USB sector is still activity even without a C6 file scope.
+  disk_activity::note();
+  expectDiskCorner(original, ui_display_test::frame.data(), 1);
+  ui_display_test::now += 160;
+  disk_activity::poll();
+  expectFrame(original);
+
+  // Catalog/staging I/O outside a file scope must still advance USB saving.
+  display.beginDiskSaving(false);
+  const Frame saving = ui_display_test::frame;
+  ui_display_test::now += 160;
+  disk_activity::storageIO();
+  assert(ui_display_test::frame != saving);
+  display.endDiskSaving();
+  expectFrame(original);
+  main_lcd_pointer = nullptr;
+  ui_display_test::now = 0;
+}
+
 void test_disk_restores_text_clock_and_calculator() {
   for(unsigned renderer = 0; renderer < 3; ++renderer) {
     ui_display_test::now = 0;
@@ -1554,18 +1603,27 @@ void test_disk_saving_animation() {
 
 #if MK61_ENABLE_USB_SCREEN
 void test_disk_usb_display_integration() {
+  ui_display_test::now = 0;
   MK61Display display;
   startUi(display);
   display.printUiLine(0, "USB screen", 0, 'X');
   const Frame physical = ui_display_test::frame;
   assert(display.enterUsbScreen());
-  display.noteDiskActivity(0);
-  display.pollDiskActivity(0);
+  main_lcd_pointer = &display;
+  disk_activity::setFileOperation(false);
+  disk_activity::storageIO();
+  assert(std::memcmp(physical.data(), display.usbScreenFramebuffer(), physical.size()) == 0);
+  disk_activity::setFileOperation(true);
+  disk_activity::storageIO();
   expectDiskCorner(physical, display.usbScreenFramebuffer(), 1);
   expectFrame(physical); // no SPI display writes while USB owns the screen
-  display.pollDiskActivity(160);
+  disk_activity::setFileOperation(false);
+  ui_display_test::now = 160;
+  disk_activity::storageIO();
   assert(std::memcmp(physical.data(), display.usbScreenFramebuffer(), physical.size()) == 0);
   display.leaveUsbScreen();
+  main_lcd_pointer = nullptr;
+  ui_display_test::now = 0;
 }
 
 void test_usb_waits_for_physical_display_ack() {
@@ -1771,6 +1829,7 @@ int main() {
   test_cursor_blinks_on_trailing_ui_marker();
   test_partial_page_overlay_restoration();
   test_disk_activity_deadline();
+  test_disk_catalog_io_is_quiet();
   test_disk_restores_text_clock_and_calculator();
   test_disk_fullscreen_and_update_batching();
   test_disk_saving_animation();

@@ -142,7 +142,7 @@ bool SpiNorFlash::waitReady(u32 timeout_ms) {
     if(!readStatus(status)) return false;
     if((status & STATUS_BUSY) == 0) return true;
     if((u32) (millis() - started) >= timeout_ms) return false;
-    disk_activity::note();
+    disk_activity::storageIO();
     delayMicroseconds(50);
   }
 }
@@ -370,7 +370,7 @@ bool SpiNorFlash::readByteArray(u32 address, u8* output, usize len,
     return false;
   }
   const bool ok = rawRead(address, output, len);
-  if(len != 0) disk_activity::note();
+  if(len != 0) disk_activity::storageIO();
   return ok;
 }
 
@@ -412,7 +412,7 @@ bool SpiNorFlash::rawWrite(u32 address, const u8* data, usize len) {
     }
     if(!deselect()) return false;
     if(!waitReady(5000)) return false;
-    disk_activity::note();
+    disk_activity::storageIO();
     address += count;
     data += count;
     len -= count;
