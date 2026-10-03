@@ -15,7 +15,8 @@ services->call(MK61_SERVICE_UI_FONT, MK61_UI_FONT_INFO, 0,
 ```
 
 `family=0` means the fixed 5x8 monospaced UI (shown as `5x8`), and `1` is the
-native Ark Pixel proportional UI. Legacy wire value `2` remains an alias for
+native Ark Pixel proportional UI. The 5x8 UI uses eight rows with no extra
+interline gap. Legacy wire value `2` remains an alias for
 Ark Pixel so an already-built APP cannot lose font service after an update; it
 is no longer offered by the settings screen. `family=3` is the active external
 FMK UI face selected from a direct child `Fonts/*.FMK`; the C6 filename is its
@@ -31,9 +32,21 @@ symbols. Legacy root files
 remain a migration fallback for an old saved selection but are not the catalog.
 Families 0, 4 and 5 are fixed resident bitmaps; family 0 ignores the stored
 12/14/16 size, family 4 uses size 16 and family 5 uses size 5. On every UC1609
-configuration, calculator digits use a separate fixed twelve-position renderer
+configuration, calculator digits use a separate twelve-position renderer
 and never consume this font service. The same UI implementation is used on F401
 and F411.
+
+SETUP advertises `MK61_SETUP_FEATURE_CALCULATOR_FONT` when the independent
+calculator font preference is available. `MK61_SETUP_CALCULATOR_FONT_READ`
+returns `MK61_CALCULATOR_FONT_MK61` (0, default segmented face) or
+`MK61_CALCULATOR_FONT_CLASSIC_10X16` (1, exact 2x builtin bitmap).
+`MK61_SETUP_CALCULATOR_FONT_APPLY` takes this value in `a`, returns 1 on
+success, and schedules settings persistence. Values above 1 are rejected.
+These operations (24 and 25) are appended to SETUP v2; clients must check the
+feature bit before using them. Existing operation IDs and payloads do not
+change. Bit 6 of the persisted UI-settings byte stores this independent choice;
+the v6 journal record remains 16 bytes and old settings select MK-61.
+
 Size is the stable UI selection, not a request to scale outlines. For Pixel it
 chooses native Ark strikes 10/12/16 px whose complete Russian line envelopes are
 12/14/17 px. For family 3 it reports the selected file's intrinsic 12/14/16

@@ -50,6 +50,9 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
 #if MK61_FIXED_CALCULATOR_FACE
              | (u32) MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE
 #endif
+#if MK61_FIXED_CALCULATOR_FACE && MK61_PROPORTIONAL_UI_FONTS
+             | (u32) MK61_SETUP_FEATURE_CALCULATOR_FONT
+#endif
              ;
     case MK61_SETUP_HARDWARE: {
       if(!payload) return 0;
@@ -99,6 +102,13 @@ u32 service(u32 operation, u32 a, u32 b, void* payload) {
       return 1;
     }
     case MK61_SETUP_FONT_APPLY: return apply_font_profile(payload);
+    case MK61_SETUP_CALCULATOR_FONT_READ:
+      return library_mk61::calculator_font();
+    case MK61_SETUP_CALCULATOR_FONT_APPLY:
+      if(a > MK61_CALCULATOR_FONT_CLASSIC_10X16) return 0;
+      if(!library_mk61::set_calculator_font((u8) a)) return 0;
+      library_mk61::mark_settings_dirty();
+      return 1;
     case MK61_SETUP_UI_FONT_READ:
 #if MK61_PROPORTIONAL_UI_FONTS
       if(!payload) return 0;

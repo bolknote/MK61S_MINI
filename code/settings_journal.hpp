@@ -17,8 +17,9 @@ static constexpr u8 VERSION = 4;
 static constexpr u8 VERSION_5 = 5;
 // UC1609 v6 persists a catalog font by a stable 32-bit filename key.  The key
 // occupies the four text-profile bytes only while an external UI font is
-// selected; UC1609's calculator face is fixed and its UI has independent
-// metrics. Built-in UI selections retain the ordinary text-profile layout.
+// selected; UC1609's calculator face and UI have independent metrics.
+// Built-in UI selections retain the ordinary text-profile layout. Bit 6 of
+// the UI byte stores the independent calculator-font choice (0 = MK-61).
 static constexpr u8 VERSION_6 = 6;
 static constexpr u8 COMMIT_MARKER = 0xA5;
 static constexpr usize COMMIT_INDEX = 15;

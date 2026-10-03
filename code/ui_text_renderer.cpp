@@ -42,7 +42,7 @@ bool privateM8Symbol(u16 codepoint) {
 LineMetrics lineMetrics(const Style& style, u8 rows) {
   if(style.classic_10x16) return {16U, 16U, 0U, 0U};
   if(style.compact_3x5) return {5U, 5U, 1U, 2U};
-  if(!style.font_enabled) return {8U, 8U, 8U, 5U};
+  if(!style.font_enabled) return {8U, 8U, 0U, 0U};
 
   u8 height = 0;
   const u8 ascent = ui_font::metrics(style.face).ascent;

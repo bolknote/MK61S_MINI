@@ -258,13 +258,15 @@ class MK61Display : public Print {
     u16 uiTextWidth(void) const { return 0; }
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
-    // Independent of the menu face and intentionally not configurable.
+    // Independent of the menu face: MK-61 segments or Classic 10x16 digits.
+    void setCalculatorFont(u8 font);
     void beginCalculatorFace(void);
     void invalidateCalculatorFace(void);
     bool calculatorFaceActive(void) const {
       return (ui_font_state & 16U) != 0;
     }
 #else
+    void setCalculatorFont(u8) {}
     void beginCalculatorFace(void) {}
     void invalidateCalculatorFace(void) {}
     bool calculatorFaceActive(void) const { return false; }

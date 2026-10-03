@@ -51,7 +51,14 @@ def main() -> None:
           (ui_text_mode_available ? MK61_SETUP_FEATURE_UI_TEXT_MODE : 0) |
           (ui_font_catalog_available ? MK61_SETUP_FEATURE_UI_FONT_CATALOG : 0) |
           (ui_classic_font_available ? MK61_SETUP_FEATURE_CLASSIC_UI_FONT : 0) |
-          (ui_compact_font_available ? MK61_SETUP_FEATURE_COMPACT_UI_FONT : 0);
+          (ui_compact_font_available ? MK61_SETUP_FEATURE_COMPACT_UI_FONT : 0) |
+          (calculator_font_available ? MK61_SETUP_FEATURE_CALCULATOR_FONT : 0);
+      if(op == MK61_SETUP_CALCULATOR_FONT_READ) return selected_calculator_font;
+      if(op == MK61_SETUP_CALCULATOR_FONT_APPLY) {
+        if(!calculator_font_available || a > MK61_CALCULATOR_FONT_CLASSIC_10X16) return 0;
+        selected_calculator_font = (u8) a;
+        return 1;
+      }
       if(op == MK61_SETUP_UI_FONT_READ) {
         if(!p || !ui_fonts_available) return 0;
         *(mk61_setup_ui_font*) p = surface.ui_font;
@@ -143,7 +150,7 @@ def main() -> None:
       assert(false); return 0;
     }""")
     pieces.append(body(menu, "struct UiFontChoice", True))
-    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static bool uiClassicFontAvailable(", "static bool uiCompactFontAvailable(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
+    for marker in ["static void noteFontSetupPhase(", "static u8 calculatorFontFieldCount(", "static bool uiFontSettingsAvailable(", "static bool uiFontCatalogAvailable(", "static bool uiClassicFontAvailable(", "static bool uiCompactFontAvailable(", "static bool calculatorFontAvailable(", "static u8 uiFontOptionCount(", "static mk61_setup_ui_font readUiFont(", "static UiFontChoice readUiFontChoice(", "static void formatUiFontLine(", "static void formatFontSetupLine(", "static void printFontSetupLine(", "static void drawCalculatorFontSetup(", "static u8 uiFontFieldCount(", "static u8 stepLegacyUiFontFamily(", "static u8 stepUiFontSize(", "static bool uiFontCatalogStep(", "static bool applyBuiltinUiFont(", "static bool applyCatalogUiFont(", "static bool stepUiFontChoice(", "static bool stepUiFontField(", "static void drawUiFontSetup(", "static void applyFontSetupProfile("]:
         pieces.append(body(menu, marker))
     pieces.append(body(root / "development.cpp", "static u16 ui_editor_window_start("))
     settings_source = (root / "menu.cpp").read_text()

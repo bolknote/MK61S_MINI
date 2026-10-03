@@ -48,6 +48,11 @@ _Static_assert(MK61_SETUP_PREPARED_FONT_INSTALL == 22 &&
                "append-only SETUP font compiler operations");
 _Static_assert(MK61_SETUP_API_VERSION == 2,
                "SETUP compiler handoff requires service v2");
+_Static_assert(MK61_SETUP_CALCULATOR_FONT_READ == 24 &&
+               MK61_SETUP_CALCULATOR_FONT_APPLY == 25 &&
+               MK61_CALCULATOR_FONT_MK61 == 0 &&
+               MK61_CALCULATOR_FONT_CLASSIC_10X16 == 1,
+               "append-only calculator font operations");
 _Static_assert(sizeof(mk61_setup_ui_font_item) == 40,
                "UI font catalog item wire layout");
 _Static_assert(sizeof(mk61_setup_prepared_font) == 20 &&
@@ -62,7 +67,8 @@ _Static_assert(MK61_SETUP_FEATURE_TEXT_PROFILE == 1 &&
                MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE == 16 &&
                MK61_SETUP_FEATURE_UI_FONT_CATALOG == 32 &&
                MK61_SETUP_FEATURE_CLASSIC_UI_FONT == 64 &&
-               MK61_SETUP_FEATURE_COMPACT_UI_FONT == 128,
+               MK61_SETUP_FEATURE_COMPACT_UI_FONT == 128 &&
+               MK61_SETUP_FEATURE_CALCULATOR_FONT == 256,
                "append-only SETUP feature bits");
 _Static_assert(MK61_SYS_EDITOR_KEY == 24 && MK61_SYS_SETUP == 25, "append-only System operations");
 _Static_assert(MK61_SERVICE_CAPABILITIES == 26, "public service capability query");

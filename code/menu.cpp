@@ -641,6 +641,7 @@ void  load_settings_state(void) {
   set_sound_volume(sound_settings.bits.volume);
 #if MK61_PROPORTIONAL_UI_FONTS
   const UiFontSettings ui_font = read_ui_font_settings();
+  (void) set_calculator_font(ui_font.calculatorFont());
   const u32 ui_key = read_ui_font_key();
   if(!set_ui_font(ui_font.family(), ui_font.size(), ui_key)) {
     // A missing/corrupt external family must never strand the settings UI.
@@ -693,6 +694,7 @@ bool set_ui_font(u8 family, u8 size, u32 key) {
     program_store_clear_ui_font();
     key = 0;
   }
+  next.setCalculatorFont(ui_font_state.calculatorFont());
   ui_font_state = next;
   ui_font_key_state = key;
   main_lcd().setUiFont(next.family(), next.size());
@@ -707,10 +709,11 @@ bool set_ui_font(u8 family, u8 size, u32 key) {
 
 bool adopt_external_ui_font(u8 size, u32 key) {
 #if MK61_PROPORTIONAL_UI_FONTS
-  const UiFontSettings next = make_ui_font_settings(3, size);
+  UiFontSettings next = make_ui_font_settings(3, size);
   const auto* face = main_lcd().externalUiFont();
   if(key == 0 || face == nullptr || !face->valid() ||
      face->metrics().height != next.size()) return false;
+  next.setCalculatorFont(ui_font_state.calculatorFont());
   ui_font_state = next;
   ui_font_key_state = key;
   main_lcd().setUiFont(3, next.size());
@@ -718,6 +721,26 @@ bool adopt_external_ui_font(u8 size, u32 key) {
 #else
   (void) size;
   (void) key;
+  return false;
+#endif
+}
+
+u8 calculator_font(void) {
+#if MK61_FIXED_CALCULATOR_FACE && MK61_PROPORTIONAL_UI_FONTS
+  return ui_font_state.calculatorFont();
+#else
+  return 0;
+#endif
+}
+
+bool set_calculator_font(u8 font) {
+#if MK61_FIXED_CALCULATOR_FACE && MK61_PROPORTIONAL_UI_FONTS
+  if(font > 1) return false;
+  ui_font_state.setCalculatorFont(font);
+  main_lcd().setCalculatorFont(font);
+  return true;
+#else
+  (void) font;
   return false;
 #endif
 }

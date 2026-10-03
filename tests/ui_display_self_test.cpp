@@ -280,7 +280,7 @@ usize prepareFont(const u8 (&source)[N], u8* output, usize capacity) {
 void referenceMono(Frame& frame, u16 cp, int pen, u8 row) {
   builtin_font::Raster raster{};
   assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8, cp, raster));
-  const int top = 1 + row * 16 + 4;
+  const int top = row * 8;
   for(u8 y = 0; y < raster.height; ++y) {
     for(u8 x = 0; x < raster.width; ++x) {
       if(fmk::bitmapPixel(raster.data, raster.width, x, y)) {
@@ -345,8 +345,8 @@ void startUi(MK61Display& display, u8 family = 1, u8 size = 14) {
   display.setUiFont(family, size);
   display.beginUiText();
   const u8 expected_rows = family == 5 ? 10U :
-      ((family == 0 || family == 4) ? 4U
-                                    : referenceUiRows(display.uiFontFace()));
+      (family == 0 ? 8U : (family == 4 ? 4U
+                                    : referenceUiRows(display.uiFontFace())));
   assert(display.uiTextActive() && display.rows() == expected_rows);
 }
 
@@ -377,7 +377,7 @@ void test_profile_and_scope() {
            display.rows() == 4);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(0, 14);
-    assert(display.uiTextActive() && display.rows() == 4);
+    assert(display.uiTextActive() && display.rows() == 8);
     assert(sameProfile(display.textProfile(), calculator));
     display.setUiFont(1, 14);
     assert(display.uiTextActive() && display.rows() == 4);
@@ -468,7 +468,7 @@ void test_live_ui_font_sample() {
     previous = ui_display_test::frame;
   }
   display.setUiFont(0, 14);
-  assert(display.uiTextActive() && display.rows() == 4);
+  assert(display.uiTextActive() && display.rows() == 8);
 }
 
 void test_mono_ui_is_fixed_and_independent() {
@@ -489,6 +489,37 @@ void test_mono_ui_is_fixed_and_independent() {
   expectFrame(expected);
   assert(ui_display_test::frame == at_14);
   assert(display.measureUiText("WWW") == display.measureUiText("iii"));
+
+  // Every physical page now holds a complete 5x8 row. Check the last row,
+  // partial updates and erasure: stale 16px damage geometry lost odd rows.
+  for(u8 row = 1; row < 8; ++row) {
+    const char text[] = {(char) ('0' + row), 0};
+    display.printUiLine(row, text);
+    referenceMono(expected, (u8) text[0], 2, row);
+    expectFrame(expected);
+  }
+  display.printUiLine(3, "");
+  std::memset(expected.data() + 3 * 192, 0, 192);
+  expectFrame(expected);
+#if MK61_ENABLE_USB_SCREEN
+  assert(display.enterUsbScreen());
+  assert(display.rows() == 8);
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(), expected.size()) == 0);
+  display.printUiLine(7, "Z");
+  std::memset(expected.data() + 7 * 192, 0, 192);
+  referenceMono(expected, 'Z', 2, 7);
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(), expected.size()) == 0);
+  display.leaveUsbScreen();
+  assert(display.uiTextActive() && display.rows() == 8);
+  // UI owners redraw after displayModeRevision changes (row decorations are
+  // deliberately reset at that boundary), just as for proportional faces.
+  display.printUiLine(0, M8("Аа Wi"));
+  for(u8 row = 1; row < 8; ++row) {
+    const char text[] = {(char) (row == 7 ? 'Z' : '0' + row), 0};
+    display.printUiLine(row, row == 3 ? "" : text);
+  }
+  expectFrame(expected);
+#endif
 }
 
 void test_classic_ui_is_exact_2x_builtin() {
@@ -771,6 +802,94 @@ void test_fixed_calculator_face() {
 
   display.clear();
   assert(!display.calculatorFaceActive());
+}
+
+void test_classic_calculator_font() {
+  text_screen::Grid model;
+  model.reset(6);
+  writeGridLine(model, 0, 0, "RUN");
+  writeGridLine(model, 1, 0, "012345678901.");
+  Frame segments{};
+  calculator_face::setFont(calculator_face::Font::MK61);
+  calculator_face::renderFrame(model, segments.data());
+  Frame expected = segments;
+  std::memset(expected.data() + 2 * 192, 0, expected.size() - 2 * 192);
+  for(u8 slot = 0; slot < 12; ++slot) {
+    referenceClassic10x16(expected, (u8) ('0' + slot % 10), slot * 16 + 3, 2);
+  }
+  for(u8 y = 46; y < 48; ++y) {
+    putPixel(expected, 190, y);
+    putPixel(expected, 191, y);
+  }
+
+  MK61Display display;
+  display.begin();
+  display.clear();
+  {
+    MK61DisplayUpdate update(display);
+    writeDisplayLine(display, 0, 0, "RUN");
+    writeDisplayLine(display, 1, 0, "012345678901.");
+    display.beginCalculatorFace();
+  }
+  expectFrame(segments);
+  display.setCalculatorFont(1);
+  assert(calculator_face::font() == calculator_face::Font::CLASSIC_10X16);
+  expectFrame(expected);
+  display.setCalculatorFont(255);
+  expectFrame(expected);
+  display.setUiFont(1, 16);
+  expectFrame(expected); // UI selection cannot change calculator digits.
+
+  // Native core masks and the semantic text representation agree on digits
+  // and decimal points even when the underlying text grid is different.
+  const u8 masks[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D,
+                     0x7D, 0x07, 0x7F, 0x6F, 0x3F, 0x86};
+  calculator_face::setSegmentFrame(masks);
+  display.invalidateCalculatorFace();
+  expectFrame(expected);
+#if MK61_ENABLE_USB_SCREEN
+  assert(display.enterUsbScreen());
+  assert(display.calculatorFaceActive());
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(), expected.size()) == 0);
+  display.setCalculatorFont(0);
+  display.flush();
+  assert(std::memcmp(display.usbScreenFramebuffer(), segments.data(), segments.size()) == 0);
+  display.setCalculatorFont(1);
+  display.flush();
+  assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(), expected.size()) == 0);
+  display.leaveUsbScreen();
+  expectFrame(expected);
+#endif
+  calculator_face::setSegmentFrame(nullptr);
+
+  // Private calculator signs must use the same enlarged builtin decoder as
+  // the UI; no seven-segment-only omissions for Г, arrows or error letters.
+  text_screen::Grid symbols;
+  symbols.reset(6);
+  const u16 tokens[] = {'-', 'E', 'L', 'C', display_symbol::uc1609::CYR_GHE,
+                        display_symbol::uc1609::RT_ARROW};
+  Frame symbols_expected{};
+  for(u8 slot = 0; slot < sizeof(tokens) / sizeof(tokens[0]); ++slot) {
+    symbols.setCursor(slot, 1);
+    symbols.writeCodepoint(tokens[slot]);
+    referenceClassic10x16(symbols_expected, tokens[slot], slot * 16 + 3, 2);
+  }
+  Frame actual{};
+  calculator_face::renderFrame(symbols, actual.data());
+  // Empty service fields still draw their separators.
+  std::memcpy(symbols_expected.data(), actual.data(), 2 * 192);
+  assert(actual == symbols_expected);
+
+  // A non-textual mask must retain its actual segments, not turn into '?'.
+  const u8 arbitrary[12] = {0x81};
+  calculator_face::setSegmentFrame(arbitrary);
+  calculator_face::renderFrame(symbols, actual.data());
+  display.setCalculatorFont(0);
+  calculator_face::renderFrame(symbols, symbols_expected.data());
+  assert(actual == symbols_expected);
+  calculator_face::setSegmentFrame(nullptr);
+  display.invalidateCalculatorFace();
+  expectFrame(segments);
 }
 
 void test_invalid_custom_slot_uses_ui_fallback() {
@@ -1442,6 +1561,7 @@ int main() {
   test_classic_ui_is_exact_2x_builtin();
   test_compact_ui_uses_builtin_3x5();
   test_fixed_calculator_face();
+  test_classic_calculator_font();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();
   test_external_ui_font_layout_fallback_and_lifetime();

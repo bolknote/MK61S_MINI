@@ -81,6 +81,8 @@ namespace library_mk61 {
   extern  u8    ui_font_family(void);
   extern  u8    ui_font_size(void);
   extern  u32   ui_font_key(void);
+  extern  u8    calculator_font(void);
+  extern  bool  set_calculator_font(u8 font);
   extern  bool  set_ui_font(u8 family, u8 size, u32 key = 0);
   // Completes a SETUP.APP installation without recursively loading SETUP.APP.
   extern  bool  adopt_external_ui_font(u8 size, u32 key);

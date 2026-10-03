@@ -407,6 +407,11 @@ static bool uiCompactFontAvailable(void) {
           MK61_SETUP_FEATURE_COMPACT_UI_FONT) != 0;
 }
 
+static bool calculatorFontAvailable(void) {
+  return (service(MK61_SETUP_FEATURES) &
+          MK61_SETUP_FEATURE_CALCULATOR_FONT) != 0;
+}
+
 static mk61_setup_ui_font readUiFont(void) {
   mk61_setup_ui_font value = {0, 14};
   if(uiFontSettingsAvailable()) service(MK61_SETUP_UI_FONT_READ, 0, 0, &value);
@@ -417,6 +422,14 @@ struct UiFontChoice {
   mk61_setup_ui_font setting;
   mk61_setup_ui_font_item external;
 };
+
+static u8 uiFontOptionCount(const UiFontChoice& choice) {
+  // The fixed faces and each catalog FMK have their own exact dimensions.
+  if(choice.setting.family == 0 || choice.setting.family == 4 ||
+     choice.setting.family == 5) return 1U;
+  if(choice.setting.family == 3 && uiFontCatalogAvailable()) return 1U;
+  return 2U;
+}
 
 static UiFontChoice readUiFontChoice(void) {
   UiFontChoice choice = {};
@@ -429,8 +442,16 @@ static UiFontChoice readUiFontChoice(void) {
 }
 
 static void formatUiFontLine(char* out, usize size, u8 field,
-                             const UiFontChoice& choice) {
+                             const UiFontChoice& choice,
+                             bool calculator_value_only = false) {
   const bool russian = library_mk61::language_is_ru();
+  if(field == uiFontOptionCount(choice) && calculatorFontAvailable()) {
+    snprintf(out, size, calculator_value_only ? "%s" :
+        (russian ? M8("Калькулятор: %s") : "Calculator: %s"),
+        service(MK61_SETUP_CALCULATOR_FONT_READ) == MK61_CALCULATOR_FONT_CLASSIC_10X16
+            ? "Classic 10x16" : "MK-61");
+    return;
+  }
   if(field == 0) {
     if(choice.setting.family == 4) {
       snprintf(out, size, "Classic 10x16");
@@ -657,13 +678,7 @@ static bool calculatorFontSetup(void) {
 
 #if MK61_SETUP_UI_FONT_CHOOSER
 static u8 uiFontFieldCount(const UiFontChoice& choice) {
-  // Calculator digits have a separate fixed face.  This dialog controls only
-  // the UI: the fixed 5x8, Classic 10x16 and Compact 3x5 faces are exact,
-  // Pixel has three resident sizes, and each catalog FMK is complete.
-  if(choice.setting.family == 0 || choice.setting.family == 4 ||
-     choice.setting.family == 5) return 1U;
-  if(choice.setting.family == 3 && uiFontCatalogAvailable()) return 1U;
-  return 2U;
+  return (u8) (uiFontOptionCount(choice) + (calculatorFontAvailable() ? 1U : 0U));
 }
 
 static u8 stepLegacyUiFontFamily(u8 family, i8 delta) {
@@ -759,6 +774,28 @@ static bool stepUiFontChoice(UiFontChoice& choice, i8 delta) {
   return applyBuiltinUiFont(choice, delta > 0 ? 0 : 1);
 }
 
+static bool stepUiFontField(UiFontChoice& choice, u8 field, i8 delta) {
+  if(delta != -1 && delta != 1) return false;
+  if(field == uiFontOptionCount(choice) && calculatorFontAvailable()) {
+    const u32 next = service(MK61_SETUP_CALCULATOR_FONT_READ) ==
+        MK61_CALCULATOR_FONT_MK61 ? MK61_CALCULATOR_FONT_CLASSIC_10X16
+                                 : MK61_CALCULATOR_FONT_MK61;
+    return service(MK61_SETUP_CALCULATOR_FONT_APPLY, next) != 0;
+  }
+  if(field >= uiFontOptionCount(choice)) return false;
+  bool applied;
+  if(field == 0) {
+    applied = uiFontCatalogAvailable() ? stepUiFontChoice(choice, delta)
+        : applyBuiltinUiFont(choice,
+            stepLegacyUiFontFamily(choice.setting.family, delta));
+  } else {
+    choice.setting.size = stepUiFontSize(choice.setting.size, delta);
+    applied = service(MK61_SETUP_UI_FONT_APPLY, 0, 0, &choice.setting) != 0;
+  }
+  choice = readUiFontChoice();
+  return applied;
+}
+
 static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
   noteFontSetupPhase(FontSetupPhase::DRAW);
   MK61DisplayUpdate update(main_lcd());
@@ -767,17 +804,37 @@ static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
   const u8 rows = main_lcd().rows();
   if(rows == 0) return;
   const u8 fields = uiFontFieldCount(choice);
-  // Every accepted external UI FMK leaves at least three visible rows, so a
-  // live sample always fits below the one or two option rows.
-  const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
-  const u8 visible = available < fields ? available : fields;
-  const u8 top = active < visible ? 0 : (u8) (active + 1 - visible);
-  // A complete 31-byte C6 name plus the localized label fits. Pixel clipping
-  // and ellipsis belong to printUiLine(), not to snprintf's byte boundary.
+  const bool calculator = calculatorFontAvailable();
+  const u8 calculator_field = uiFontOptionCount(choice);
+  // A complete 31-byte C6 name plus the localized label fits this buffer.
   char line[64];
+  bool wrap_calculator = false;
+  if(calculator) {
+    formatUiFontLine(line, sizeof(line), calculator_field, choice);
+    // printUiLine() reserves a 12px marker gutter and one text-grid cell.
+    // Measure the live face, including FMK advances, before splitting the
+    // caption and value. An exact fit must remain on one line.
+    wrap_calculator = main_lcd().measureUiText(line) + 12U > main_lcd().uiTextWidth() ||
+                      strlen(line) >= main_lcd().cols();
+  }
+  // When wrapping is needed, scroll caption and value together even in the
+  // three-row UI, keeping the font sample on the last row.
+  const u8 content_rows = (u8) (fields + (wrap_calculator ? 1U : 0U));
+  const u8 available = rows > 1 ? (u8) (rows - 1) : 1;
+  const u8 visible = available < content_rows ? available : content_rows;
+  const u8 active_row = (u8) (active +
+      (wrap_calculator && active == calculator_field ? 1U : 0U));
+  const u8 top = active_row < visible ? 0 : (u8) (active_row + 1 - visible);
   for(u8 row = 0; row < visible; ++row) {
-    const u8 field = top + row;
-    formatUiFontLine(line, sizeof(line), field, choice);
+    const u8 content_row = top + row;
+    if(wrap_calculator && content_row == calculator_field) {
+      service(MK61_SETUP_TEXT, row, 0x100U | ' ',
+          (void*) (library_mk61::language_is_ru() ? M8("Калькулятор:") : "Calculator:"));
+      continue;
+    }
+    const u8 field = (u8) (content_row -
+        (wrap_calculator && content_row > calculator_field ? 1U : 0U));
+    formatUiFontLine(line, sizeof(line), field, choice, wrap_calculator);
     service(MK61_SETUP_TEXT, row, 0x100U | (field == active ? '>' : ' '), line);
   }
   if(rows > 1) {
@@ -792,7 +849,7 @@ static void drawUiFontSetup(u8 active, const UiFontChoice& choice) {
 bool font(void) {
 #if MK61_SETUP_UI_FONT_CHOOSER
   if(!uiFontSettingsAvailable()) {
-    // UC1609's calculator face is fixed, so a resident which exposes the
+    // UC1609's calculator face is independent, so a resident which exposes the
     // UI-font service without its rendering context must not fall back to the
     // obsolete calculator-profile editor. Old residents retain that editor.
     return uiFontServiceAvailable() ? action::MENU_BACK
@@ -822,24 +879,8 @@ bool font(void) {
     } else if(key == KEY_OK_PRESS || key == KEY_SHG_LEFT_PRESS ||
               key == KEY_SHG_RIGHT_PRESS) {
       const i8 delta = key == KEY_SHG_LEFT_PRESS ? -1 : 1;
-      bool applied = false;
       MK61DisplayUpdate update(main_lcd());
-      if(active == 0) {
-        if(uiFontCatalogAvailable()) {
-          applied = stepUiFontChoice(ui_font, delta);
-        } else {
-          const u8 family = stepLegacyUiFontFamily(
-              ui_font.setting.family, delta);
-          applied = applyBuiltinUiFont(ui_font, family);
-        }
-      } else {
-        ui_font.setting.size = stepUiFontSize(ui_font.setting.size, delta);
-        applied = service(MK61_SETUP_UI_FONT_APPLY, 0, 0,
-                          &ui_font.setting) != 0;
-      }
-      if(!applied) ui_font = readUiFontChoice();
-      else if(!uiFontCatalogAvailable() || active != 0)
-        ui_font = readUiFontChoice();
+      (void) stepUiFontField(ui_font, active, delta);
       const u8 next_fields = uiFontFieldCount(ui_font);
       if(active >= next_fields) active = (u8) (next_fields - 1U);
       drawUiFontSetup(active, ui_font);

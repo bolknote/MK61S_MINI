@@ -3,8 +3,8 @@
 
 #include "rust_types.h"
 
-// One byte, independent of the calculator's fixed-cell font profile. The
-// Family and size share one byte. Legacy family 2 (Roboto) migrates to Pixel;
+// One packed byte stores independent UI and calculator font choices.
+// Legacy family 2 (Roboto) migrates to Pixel;
 // family 3 selects an FMK from Fonts/, whose stable filename key is persisted
 // separately. Bits 4 and 5 select the resident fixed faces without consuming
 // the legacy family-2 wire value or enlarging this hot one-byte value.
@@ -14,8 +14,9 @@ struct UiFontSettings {
   static constexpr u8 SIZE_SHIFT = 2;
   static constexpr u8 CLASSIC_10X16_MASK = 0x10;
   static constexpr u8 COMPACT_3X5_MASK = 0x20;
+  static constexpr u8 CALCULATOR_CLASSIC_MASK = 0x40;
   static constexpr u8 KNOWN_MASK = FAMILY_MASK | SIZE_MASK |
-                                   CLASSIC_10X16_MASK | COMPACT_3X5_MASK;
+      CLASSIC_10X16_MASK | COMPACT_3X5_MASK | CALCULATOR_CLASSIC_MASK;
   static constexpr u8 DEFAULT_PRESET = 0x04; // fixed 5x8; remember size 14
   static constexpr u8 CLASSIC_10X16_PRESET = CLASSIC_10X16_MASK;
   static constexpr u8 COMPACT_3X5_PRESET = COMPACT_3X5_MASK;
@@ -24,6 +25,13 @@ struct UiFontSettings {
 
   constexpr UiFontSettings(void) : raw(DEFAULT_PRESET) {}
   constexpr explicit UiFontSettings(u8 value) : raw(value) {}
+  constexpr u8 calculatorFont(void) const {
+    return (raw & CALCULATOR_CLASSIC_MASK) ? 1U : 0U;
+  }
+  void setCalculatorFont(u8 font) {
+    raw = (u8) ((raw & (u8) ~CALCULATOR_CLASSIC_MASK) |
+                 (font == 1 ? CALCULATOR_CLASSIC_MASK : 0U));
+  }
   constexpr bool classic10x16(void) const {
     return (raw & CLASSIC_10X16_MASK) != 0;
   }
@@ -43,9 +51,11 @@ struct UiFontSettings {
 static_assert(sizeof(UiFontSettings) == 1, "UI font settings must fit one byte");
 
 inline UiFontSettings normalize_ui_font_settings(u8 raw) {
+  const u8 calculator = raw & UiFontSettings::CALCULATOR_CLASSIC_MASK;
+  raw &= (u8) ~UiFontSettings::CALCULATOR_CLASSIC_MASK;
   if(raw == UiFontSettings::CLASSIC_10X16_PRESET ||
      raw == UiFontSettings::COMPACT_3X5_PRESET) {
-    return UiFontSettings(raw);
+    return UiFontSettings((u8) (raw | calculator));
   }
   if((raw & (u8) ~UiFontSettings::KNOWN_MASK) != 0 ||
      (raw & (UiFontSettings::CLASSIC_10X16_MASK |
@@ -57,7 +67,7 @@ inline UiFontSettings normalize_ui_font_settings(u8 raw) {
   if((raw & UiFontSettings::FAMILY_MASK) == 2) {
     raw = (u8) ((raw & (u8) ~UiFontSettings::FAMILY_MASK) | 1U);
   }
-  return UiFontSettings(raw);
+  return UiFontSettings((u8) (raw | calculator));
 }
 
 inline UiFontSettings make_ui_font_settings(u8 family, u8 size) {

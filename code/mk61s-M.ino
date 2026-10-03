@@ -421,8 +421,8 @@ void mk61_display_refresh(void) {
 #endif
 #if MK61_FIXED_CALCULATOR_FACE
   // The core still writes its canonical two-row model.  UC1609 presents that
-  // model as a fixed twelve-position VFD face, independent of menu/font
-  // settings and external FMK files.
+  // model as a twelve-position calculator face with its own font choice,
+  // independent of the UI font and external FMK files.
   main_lcd().beginCalculatorFace();
   calculator_face::setSegmentFrame(core_61::segment_display_frame());
   static u32 last_rendered_extended_display_revision = ~0UL;

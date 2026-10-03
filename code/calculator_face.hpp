@@ -4,10 +4,14 @@
 #include "rust_types.h"
 #include "text_screen.hpp"
 
-// Fixed calculator face for the 192x64 UC1609.  It deliberately consumes the
+// Calculator face for the 192x64 UC1609. It deliberately consumes the
 // canonical 16-column text shadow: the emulator/core keeps its old contract,
 // while presentation is no longer tied to a configurable text font.
 namespace calculator_face {
+
+enum class Font : u8 { MK61 = 0, CLASSIC_10X16 = 1 };
+Font font(void);
+void setFont(Font value);
 
 static constexpr u16 WIDTH = 192;
 static constexpr u8 HEIGHT = 64;

@@ -274,7 +274,9 @@ enum mk61_setup_operation {
   /* SETUP -> resident handoff for a fully compiled RAM font. */
   MK61_SETUP_PREPARED_FONT_INSTALL,
   /* Resolve a catalog key without recursively invoking SETUP. */
-  MK61_SETUP_UI_FONT_SOURCE
+  MK61_SETUP_UI_FONT_SOURCE,
+  /* Independent calculator face selection; gated by CALCULATOR_FONT. */
+  MK61_SETUP_CALCULATOR_FONT_READ, MK61_SETUP_CALCULATOR_FONT_APPLY
 };
 enum mk61_setup_feature {
   MK61_SETUP_FEATURE_TEXT_PROFILE = 1u << 0,
@@ -284,7 +286,12 @@ enum mk61_setup_feature {
   MK61_SETUP_FEATURE_FIXED_CALCULATOR_FACE = 1u << 4,
   MK61_SETUP_FEATURE_UI_FONT_CATALOG = 1u << 5,
   MK61_SETUP_FEATURE_CLASSIC_UI_FONT = 1u << 6,
-  MK61_SETUP_FEATURE_COMPACT_UI_FONT = 1u << 7
+  MK61_SETUP_FEATURE_COMPACT_UI_FONT = 1u << 7,
+  MK61_SETUP_FEATURE_CALCULATOR_FONT = 1u << 8
+};
+enum mk61_calculator_font {
+  MK61_CALCULATOR_FONT_MK61 = 0,
+  MK61_CALCULATOR_FONT_CLASSIC_10X16 = 1
 };
 typedef struct mk61_setup_datetime {
   uint32_t year, month, day, hour, minute, second;

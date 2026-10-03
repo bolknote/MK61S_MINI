@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <initializer_list>
 
 namespace {
 
@@ -77,17 +78,18 @@ void test_legacy_v3_compatibility(void) {
 void test_ui_font_settings_are_independent_and_bounded(void) {
   for(unsigned raw = 0; raw < 256; ++raw) {
     const auto value = normalize_ui_font_settings((u8) raw);
-    const bool classic = raw == UiFontSettings::CLASSIC_10X16_PRESET;
-    const bool compact = raw == UiFontSettings::COMPACT_3X5_PRESET;
-    const bool valid = raw <= 11 || classic || compact;
-    const u8 expected = compact ? UiFontSettings::COMPACT_3X5_PRESET :
-      (classic ? UiFontSettings::CLASSIC_10X16_PRESET :
-      (valid ? (u8) (((raw & 3U) == 2U) ? ((raw & ~3U) | 1U) : raw)
-             : UiFontSettings::DEFAULT_PRESET));
+    const unsigned ui = raw & ~0x40U;
+    const bool classic = ui == UiFontSettings::CLASSIC_10X16_PRESET;
+    const bool compact = ui == UiFontSettings::COMPACT_3X5_PRESET;
+    const bool valid = ui <= 11 || classic || compact;
+    const u8 expected = valid
+        ? (u8) (((ui & 3U) == 2U ? ((ui & ~3U) | 1U) : ui) | (raw & 0x40U))
+        : UiFontSettings::DEFAULT_PRESET;
     assert(value.raw == expected);
     assert(value.family() <= 5 && value.family() != 2);
     assert(value.size() == 5 || value.size() == 12 || value.size() == 14 ||
            value.size() == 16);
+    assert(value.calculatorFont() == (valid && (raw & 0x40U) ? 1U : 0U));
   }
   const u8 sizes[] = {12, 14, 16};
   for(u8 family = 0; family < 5; ++family) {
@@ -108,6 +110,34 @@ void test_ui_font_settings_are_independent_and_bounded(void) {
   assert(make_ui_font_settings(5, 5).raw ==
          UiFontSettings::COMPACT_3X5_PRESET);
   assert(make_ui_font_settings(1, 13).raw == UiFontSettings::DEFAULT_PRESET);
+}
+
+void test_calculator_font_round_trip(void) {
+  for(u8 family : {0, 1, 3, 4, 5}) {
+    for(u8 font : {0, 1}) {
+      auto setting = make_ui_font_settings(family, family == 4 ? 16 :
+          (family == 5 ? 5 : 14));
+      const u8 old_raw = setting.raw;
+      setting.setCalculatorFont(font);
+      assert(setting.family() == family);
+      auto data = fixture(1);
+      data.ui_font_stored = true;
+      data.ui_font = setting.raw;
+      data.ui_font_key_stored = family == 3;
+      data.ui_font_key = 0x1234ABCD;
+      u8 record[settings_journal::RECORD_SIZE];
+      settings_journal::encode_uncommitted(data, record);
+      record[settings_journal::COMMIT_INDEX] = settings_journal::COMMIT_MARKER;
+      settings_journal::RecordData decoded = {};
+      assert(settings_journal::decode(record, decoded) == settings_journal::RecordStatus::VALID);
+      auto restored = normalize_ui_font_settings(decoded.ui_font);
+      assert(restored.calculatorFont() == font && restored.family() == family);
+      assert(decoded.ui_font_key_stored == (family == 3));
+      if(family == 3) assert(decoded.ui_font_key == data.ui_font_key);
+      restored.setCalculatorFont(0);
+      assert(restored.raw == old_raw);
+    }
+  }
 }
 
 void test_v6_ui_font_commit_and_legacy_migration(void) {
@@ -371,6 +401,7 @@ void test_erased_detection_checks_entire_record(void) {
 int main(void) {
   test_v4_commit_and_corruption();
   test_ui_font_settings_are_independent_and_bounded();
+  test_calculator_font_round_trip();
   test_v6_ui_font_commit_and_legacy_migration();
   test_v6_classic_ui_font_round_trip();
   test_v6_compact_ui_font_round_trip();

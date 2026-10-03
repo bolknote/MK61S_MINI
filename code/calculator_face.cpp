@@ -13,6 +13,7 @@ namespace calculator_face {
 namespace {
 
 const u8* segment_frame = nullptr;
+Font selected_font = Font::MK61;
 
 class PageCanvas {
  public:
@@ -59,6 +60,7 @@ static constexpr u8 DIGIT_HEIGHT = 1 +
 static constexpr u8 DIGIT_INSET = (DIGIT_PITCH - DIGIT_WIDTH) / 2;
 static constexpr i16 DIGIT_TOP = 24 + (SOURCE_HEIGHT - DIGIT_HEIGHT) / 2;
 static constexpr u8 DIGIT_COUNT = 12;
+static constexpr u8 CLASSIC_TOP = 32;
 static_assert(DIGIT_COUNT * DIGIT_PITCH == WIDTH, "calculator digits must fill the glass");
 static_assert(DIGIT_WIDTH == 10 && DIGIT_HEIGHT == 21,
               "16x35r must keep its 27-pixel advance proportions");
@@ -144,13 +146,50 @@ i16 digitLeft(u8 slot) {
   return (i16) slot * DIGIT_PITCH;
 }
 
+void drawGlyph(PageCanvas& canvas, u16 token, i16 x, i16 y, bool enlarged = false) {
+  builtin_font::Raster raster = {};
+  if(!builtin_font::decode(builtin_font::FaceId::FONT_5X8, token, raster) &&
+     !builtin_font::decode(builtin_font::FaceId::FONT_5X8, '?', raster)) return;
+  if(enlarged) {
+    builtin_font::Raster scaled = {};
+    if(!builtin_font::scale2x(raster, scaled)) return;
+    raster = scaled;
+  }
+  for(u8 py = 0; py < raster.height; ++py) {
+    for(u8 px = 0; px < raster.width; ++px) {
+      if(fmk::bitmapPixel(raster.data, raster.width, px, py)) {
+        canvas.pixel(x + px, y + py);
+      }
+    }
+  }
+}
+
 void drawDigitPage(u8* out, u8 page, i16 x, u16 token) {
-  if(token == display_symbol::uc1609::RT_ARROW) drawArrowPage(out, page, x);
+  if(selected_font == Font::CLASSIC_10X16) {
+    PageCanvas canvas(page, out);
+    drawGlyph(canvas, token, x + DIGIT_INSET, CLASSIC_TOP, true);
+  } else if(token == display_symbol::uc1609::RT_ARROW) drawArrowPage(out, page, x);
   else drawSegmentsPage(out, page, x, segments(token));
 }
 
 void drawDecimalPage(u8* out, u8 page, i16 x) {
-  drawSegmentsPage(out, page, x, 0, true);
+  if(selected_font == Font::CLASSIC_10X16) {
+    PageCanvas canvas(page, out);
+    canvas.hline(x + 14, CLASSIC_TOP + 14, 2);
+    canvas.hline(x + 14, CLASSIC_TOP + 15, 2);
+  } else drawSegmentsPage(out, page, x, 0, true);
+}
+
+u16 segmentToken(u8 mask) {
+  if(mask == 0) return ' ';
+  static constexpr u16 tokens[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-',
+    'L', 'C', 'E', display_symbol::uc1609::CYR_GHE
+  };
+  for(u16 token : tokens) {
+    if(segments(token) == mask) return token;
+  }
+  return 0;
 }
 
 void __attribute__((noinline)) drawIndicatorPage(
@@ -158,8 +197,17 @@ void __attribute__((noinline)) drawIndicatorPage(
   if(segment_frame != nullptr) {
     for(u8 slot = 0; slot < DIGIT_COUNT; ++slot) {
       const u8 mask = segment_frame[slot];
-      drawSegmentsPage(out, page, digitLeft(slot), (u8) (mask & 0x7FU),
-                       (mask & 0x80U) != 0);
+      const u16 token = selected_font == Font::CLASSIC_10X16
+          ? segmentToken((u8) (mask & 0x7FU)) : 0;
+      if(token != 0) {
+        drawDigitPage(out, page, digitLeft(slot), token);
+        if(mask & 0x80U) drawDecimalPage(out, page, digitLeft(slot));
+      } else {
+        // Arbitrary segment patterns have no textual equivalent. Preserve
+        // them exactly instead of losing information behind a '?' glyph.
+        drawSegmentsPage(out, page, digitLeft(slot), (u8) (mask & 0x7FU),
+                         (mask & 0x80U) != 0);
+      }
     }
     return;
   }
@@ -180,19 +228,6 @@ void __attribute__((noinline)) drawIndicatorPage(
   }
 }
 
-void drawSmallGlyph(PageCanvas& canvas, u16 token, i16 x, i16 y) {
-  builtin_font::Raster raster = {};
-  if(!builtin_font::decode(builtin_font::FaceId::FONT_5X8, token, raster) &&
-     !builtin_font::decode(builtin_font::FaceId::FONT_5X8, '?', raster)) return;
-  for(u8 py = 0; py < raster.height; ++py) {
-    for(u8 px = 0; px < raster.width; ++px) {
-      if(fmk::bitmapPixel(raster.data, raster.width, px, py)) {
-        canvas.pixel(x + px, y + py);
-      }
-    }
-  }
-}
-
 void drawServiceField(PageCanvas& canvas, const text_screen::Grid& grid,
                       u8 first, u8 count, i16 left, i16 width) {
   u8 begin = first;
@@ -202,7 +237,7 @@ void drawServiceField(PageCanvas& canvas, const text_screen::Grid& grid,
   const i16 text_width = (i16) (end - begin) * 6 - (end > begin ? 1 : 0);
   i16 pen = left + (width - text_width) / 2;
   for(u8 col = begin; col < end; ++col) {
-    drawSmallGlyph(canvas, grid.cell(col, 0), pen, 2);
+    drawGlyph(canvas, grid.cell(col, 0), pen, 2);
     pen += 6;
   }
   // Short luminous rails visually separate status from the main VFD without
@@ -219,6 +254,12 @@ void drawService(PageCanvas& canvas, const text_screen::Grid& grid) {
 }
 
 } // namespace
+
+Font font(void) { return selected_font; }
+
+void setFont(Font value) {
+  selected_font = value == Font::CLASSIC_10X16 ? value : Font::MK61;
+}
 
 void setSegmentFrame(const u8* masks) {
   segment_frame = masks;

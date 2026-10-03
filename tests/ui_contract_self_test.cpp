@@ -27,6 +27,8 @@ bool ui_text_mode_available = false;
 bool ui_font_catalog_available = false;
 bool ui_classic_font_available = false;
 bool ui_compact_font_available = false;
+bool calculator_font_available = false;
+u8 selected_calculator_font = 0;
 u32 selected_ui_font_key = 0;
 std::vector<mk61_setup_ui_font_item> ui_font_catalog;
 lcd_display::TextProfile settings = lcd_display::textProfile5x8();
@@ -42,10 +44,16 @@ struct Surface {
   bool line_ui_active[10] = {};
   mk61_setup_ui_font line_fonts[10] = {};
   u8 row = 0;
+  u16 pixel_width = 188;
+  u8 columns = 64;
+  u8 fixed_advance = 0;
   bool uiTextActive() const { return ui_text_context; }
+  u16 uiTextWidth() const { return uiTextActive() ? pixel_width : 0; }
+  u8 cols() const { return columns; }
   u8 rows() const {
     if(!uiTextActive()) return profile.rows;
-    if(ui_font.family == 0 || ui_font.family == 4) return 4;
+    if(ui_font.family == 0) return 8;
+    if(ui_font.family == 4) return 4;
     if(ui_font.family == 5) return 10;
     return ui_font.size == 12 ? 5 : (ui_font.size == 16 ? 3 : 4);
   }
@@ -70,7 +78,8 @@ struct Surface {
     const u16 length = (u16) std::strlen(text);
     u16 width = 0;
     for(u16 offset = 0; offset < length;) {
-      width = (u16) (width + (text[offset] == 'i' ? 3 : 13));
+      width = (u16) (width + (fixed_advance ? fixed_advance :
+                             (text[offset] == 'i' ? 3 : 13)));
       offset = m8_view::next_offset((const u8*) text, length, offset);
     }
     return width;
@@ -293,9 +302,9 @@ static void test_ui_font_layout() {
             phases.clear();
             drawUiFontSetup(active, font);
 
-            const u8 rows = family == 5 ? 10U :
-                ((family == 0 || family == 4) ? 4U :
-                (size == 12 ? 5U : (size == 16 ? 3U : 4U)));
+            const u8 rows = family == 5 ? 10U : (family == 0 ? 8U :
+                (family == 4 ? 4U :
+                (size == 12 ? 5U : (size == 16 ? 3U : 4U))));
             assert(surface.rows() == rows);
             assert(surface.ui_text_context);
             assert(surface.uiTextActive());
@@ -385,12 +394,114 @@ static void test_ui_font_layout() {
   phases.clear();
 }
 
+static void expect_calculator_font_line(bool wrapped, const char* name) {
+  const std::string caption = russian ? M8("Калькулятор:") : "Calculator:";
+  const std::string expected = wrapped ? std::string(">") + name
+      : ">" + caption + " " + name;
+  unsigned found = 0;
+  for(u8 row = 0; row + 1 < surface.rows(); ++row) {
+    if(surface.lines[row] != expected) continue;
+    if(wrapped) {
+      assert(row > 0);
+      assert(surface.lines[row - 1] == " " + caption);
+    }
+    ++found;
+  }
+  assert(found == 1);
+  assert(surface.lines[surface.rows() - 1] == (russian
+      ? std::string(" ") + M8("Аа Бб Wi 123") : " Aa Bb Wi 123"));
+}
+
+static void test_calculator_font_choice() {
+  ui_fonts_available = ui_text_mode_available = true;
+  calculator_font_available = true;
+  for(bool ru : {false, true}) {
+    russian = ru;
+    for(u8 family : {0, 1, 3, 4, 5}) {
+      surface = Surface{};
+      surface.ui_font = {family, (u8) (family == 5 ? 5 : 16)};
+      surface.fixed_advance = family == 0 ? 6 : (family == 4 ? 12 :
+          (family == 5 ? 4 : 8));
+      if(family == 4) {
+        surface.pixel_width = 192;
+        surface.columns = 16;
+      }
+      UiFontChoice choice = readUiFontChoice();
+      const u8 field = uiFontOptionCount(choice);
+      assert(uiFontFieldCount(choice) == field + 1);
+      selected_calculator_font = MK61_CALCULATOR_FONT_MK61;
+      for(u8 expected : {1, 0}) {
+        const auto ui = surface.ui_font;
+        assert(stepUiFontField(choice, field, expected ? 1 : -1));
+        assert(selected_calculator_font == expected);
+        assert(surface.ui_font.family == ui.family && surface.ui_font.size == ui.size);
+        drawUiFontSetup(field, choice);
+        const bool wrapped = family == 4 ||
+            ((family == 1 || family == 3) && expected == 1);
+        expect_calculator_font_line(wrapped, expected ? "Classic 10x16" : "MK-61");
+      }
+      assert(!stepUiFontField(choice, field, 0));
+      assert(!service(MK61_SETUP_CALCULATOR_FONT_APPLY, 2));
+    }
+  }
+  surface.ui_font = {0, 14};
+  UiFontChoice choice = readUiFontChoice();
+  assert(stepUiFontField(choice, 1, 1));
+  assert(stepUiFontField(choice, 0, 1));
+  assert(selected_calculator_font == 1 && choice.setting.family == 1);
+  calculator_font_available = false;
+  assert(uiFontFieldCount(choice) == uiFontOptionCount(choice));
+  assert(!stepUiFontField(choice, uiFontOptionCount(choice), 1));
+  ui_fonts_available = ui_text_mode_available = false;
+  selected_calculator_font = 0;
+  surface = Surface{};
+  russian = false;
+}
+
+static void test_calculator_font_line_fit() {
+  ui_fonts_available = ui_text_mode_available = calculator_font_available = true;
+  surface = Surface{};
+  // Model a live external face: layout must use its actual advances and
+  // current grid, not classify a font family as always small or large.
+  surface.ui_font = {3, 16};
+  surface.fixed_advance = 6;
+  const UiFontChoice choice = readUiFontChoice();
+  const u8 field = uiFontOptionCount(choice);
+  for(bool ru : {false, true}) {
+    russian = ru;
+    for(u8 font : {0, 1}) {
+      selected_calculator_font = font;
+      const char* name = font ? "Classic 10x16" : "MK-61";
+      const std::string line = std::string(ru ? M8("Калькулятор: ") : "Calculator: ") + name;
+      const u16 width_with_marker = surface.measureUiText(line.c_str()) + 12;
+      for(int extra : {-1, 0, 1}) {
+        surface.columns = 64;
+        surface.pixel_width = (u16) (width_with_marker + extra);
+        drawUiFontSetup(field, choice);
+        expect_calculator_font_line(extra < 0, name);
+      }
+      surface.pixel_width = width_with_marker;
+      for(u8 marker_cell : {0, 1}) {
+        surface.columns = (u8) (line.size() + marker_cell);
+        drawUiFontSetup(field, choice);
+        expect_calculator_font_line(marker_cell == 0, name);
+      }
+    }
+  }
+  ui_fonts_available = ui_text_mode_available = calculator_font_available = false;
+  selected_calculator_font = 0;
+  surface = Surface{};
+  russian = false;
+}
+
 int main() {
   test_disassembler_shorter_mnemonic_clears_tail();
   test_font_settings_key_dispatch();
   test_ui_font_capabilities();
   test_ui_font_catalog();
   test_ui_font_layout();
+  test_calculator_font_choice();
+  test_calculator_font_line_fit();
   using namespace lcd_display;
   auto profile = textProfile5x8();
   const u8 expected_rows[] = {6, 10, 4};

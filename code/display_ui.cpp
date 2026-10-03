@@ -1,6 +1,9 @@
 #include "config.h"
 #if defined(MK61_DISPLAY_UC1609)
 #include "display.hpp"
+#if MK61_FIXED_CALCULATOR_FACE
+#include "calculator_face.hpp"
+#endif
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "mk8_codec.hpp"
 #include "ui_text_renderer.hpp"
@@ -68,7 +71,7 @@ u8 MK61Display::uiLineGap(void) const {
       return external->metrics().line_gap;
     }
   }
-  return uiFontEnabled() ? ui_font::metrics(uiFontFace()).line_gap : 8U;
+  return uiFontEnabled() ? ui_font::metrics(uiFontFace()).line_gap : 0U;
 }
 
 u8 MK61Display::uiHeight(void) const {
@@ -85,7 +88,6 @@ u8 MK61Display::uiHeight(void) const {
 u8 MK61Display::uiRows(void) const {
   if(uiFontClassic10x16()) return 4U;
   if(uiFontCompact3x5()) return 10U;
-  if(!uiFontEnabled()) return 4U;
   const u8 height = uiHeight();
   const u8 line_gap = uiLineGap();
   const u8 pitch = (u8) (height + line_gap);
@@ -121,7 +123,6 @@ u8 MK61Display::uiCols(void) const {
 
 u8 MK61Display::uiTop(void) const {
   if(uiFontClassic10x16()) return 0U;
-  if(!uiFontEnabled()) return 1U;
   const u8 height = uiHeight();
   const u8 line_gap = uiLineGap();
   const u8 rows = uiRows();
@@ -189,6 +190,13 @@ void MK61Display::endUiText(void) {
 #endif
 
 #if MK61_FIXED_CALCULATOR_FACE
+void MK61Display::setCalculatorFont(u8 font) {
+  if(font > (u8) calculator_face::Font::CLASSIC_10X16 ||
+     font == (u8) calculator_face::font()) return;
+  calculator_face::setFont((calculator_face::Font) font);
+  invalidateCalculatorFace();
+}
+
 void MK61Display::beginCalculatorFace(void) {
   if(uiTextContext()) endUiText();
   if(calculatorFaceActive()) {
