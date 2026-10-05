@@ -55,8 +55,9 @@ def add_combat(a):
     m.ld('F').jz('lost')
     m.ld('C').jz('won')
     m.ld('B').raw(4).op('-').jge('escaped').set('A',16).op('ret')
-    m.label('won').visit(24,'reward').visit(25,'count_kill').ptr(9,'result_input_entry',lift=False).ptr('A','victory',lift=False).op('ret')
-    m.label('escaped').ptr(9,'result_input_entry',lift=False).ptr('A','escape',lift=False).op('ret')
+    m.label('won').visit(24,'reward').visit(25,'count_kill').ptr('A','victory',lift=False).jump('result_done')
+    m.label('escaped').ptr('A','escape',lift=False)
+    m.label('result_done').ptr(9,'result_input_entry',lift=False).op('ret')
     m.label('lost').ptr(9,'new_game',lift=False).ptr('A','defeat',lift=False).op('ret')
 
     m=a.module(14,'weapons')
@@ -79,10 +80,13 @@ def add_combat(a):
     m.label('laser').ld(7).raw(7,0).op('-').jge('no_shot').raw(9,8).op('+').st(7).jump('weapon_done')
     m.label('missile').add(7,10).set('D',45)
     m.label('weapon_done')
-    m.label('player_hit').ld(5).ld('E').op('-').st(5).jge('shield_holds')
-    m.ld(4).op('+').max0().st(4).set(5,0)
-    m.label('shield_holds').add(3,1).ld('F').st('E').ld('D').st('C').ld(4).st('F').op('ret')
-    m.end_page().page(24,'reward').add(0,250).n(99999999).op('-').jneg('reward_done').raw(0x0F).st(0)
+    # Both paths arrive at the store with the final nonnegative shield in X.
+    m.label('player_hit').ld(5).ld('E').op('-').jge('shield_holds')
+    m.ld(4).op('+').max0().st(4).op('cx')
+    m.label('shield_holds').st(5).add(3,1).ld('F').st('E').ld('D').st('C').ld(4).st('F').op('ret')
+    # Recall/store close entry and provide lift for both following literals.
+    # Keep the exact eight nines: 1e8 loses precision near the credit cap.
+    m.end_page().page(24,'reward').ld(0).raw(2,5,0).op('+').st(0).raw(*([9]*8)).op('-').jneg('reward_done').raw(0x0F).st(0)
     m.label('reward_done').op('ret')
     m.end_page().page(25,'count_kill').add(8,1).op('ret')
 

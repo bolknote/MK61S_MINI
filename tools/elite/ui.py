@@ -53,9 +53,6 @@ def add_ui(a):
         values=chunks(text)[:3]
         for i,v in enumerate(values[:2] if values[2]==0 else values):m.set(i,v)
         m.jump('text_zero' if values[2]==0 else 'text_end')
-    m.label('text_zero').op('cx').st(2)
-    m.label('text_end').ld(8).st(3).raw(0x2F,0x53).op('ret')
-    m.label('show_message').page_bytes(29,0x1F,0xAF).op('ret')
     # The error frame has one caller and a fixed message: inline its page
     # operation instead of constructing RF and using the message trampoline.
     # show_invalid is entered with X=RA-99=0; page exchanges preserve X.

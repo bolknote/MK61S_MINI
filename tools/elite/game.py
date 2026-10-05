@@ -15,6 +15,8 @@ def create_game():
         29:[0]*7+[1048576,FRAME_SUFFIX_WORD],
     }
     a.data_helpers={24,25,27}
+    # All game writes happen inside page operations; only READ is called.
+    a.data_write_helpers=set()
     m=a.module(0,'kernel')
     m.label('start').raw(0x2F,0x50,0x2F,0x2A).set(9,0).set('A',0)
     show_text(m,'title');m.op('cx','stop')
@@ -31,6 +33,11 @@ def create_game():
     m.label('combat_input_entry').call('combat_input').jump('redraw')
     m.label('input_invalid').call('bad_action').jump('redraw')
     m.label('bad_action').set('A',99).op('ret')
+    # Keep the message footer in B0: startup retains its local call even
+    # when removing page helpers changes the available continuation holes.
+    m.label('text_zero').op('cx').st(2)
+    m.label('text_end').ld(8).st(3).raw(0x2F,0x53).op('ret')
+    m.label('show_message').page_bytes(29,0x1F,0xAF).op('ret')
 
     m=a.module(12,'input')
     # These literals follow closed operations and use automatic stack lift.

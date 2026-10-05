@@ -52,11 +52,12 @@ def pack_number(value):
     t += [9 if negative else 0, exponent % 10, exponent // 10, 0, 0, 0]
     return bytes((t[h] << 4) | t[h-1] for h in (13,1,3,5,7,9,11))
 
-def data_page(values, helpers):
+def data_page(values, helpers, write=True):
     assert len(values) == 9
-    # Only repeated READ/WRITE callers need these entries. Page operations
-    # use 1F 56 directly and no longer need a per-bank callback trampoline.
-    access = bytes.fromhex('56 55 DB 4C 55 56 52 56 55 6C BB 51 67') if helpers else b''
+    # A READ-only page releases the six-byte WRITE entry. Keep the shared
+    # READ close at offset 67 for callers that still need WRITE at offset 70.
+    access = bytes.fromhex('56 55 DB 4C 55 56 52') if helpers else b''
+    if helpers and write:access += bytes.fromhex('56 55 6C BB 51 67')
     return b''.join(pack_number(x) for x in values) + access
 
 @dataclass
@@ -147,9 +148,15 @@ class Assembler:
         self.modules = []
         self.data = {}
         self.data_helpers = set()
+        # None retains the original READ/WRITE pair; an explicit set selects
+        # the pages that need WRITE without removing their READ entry.
+        self.data_write_helpers = None
+
+    def data_has_write(self, bank):
+        return bank in self.data_helpers and (self.data_write_helpers is None or bank in self.data_write_helpers)
 
     def data_end(self, bank):
-        return DATA_END + (13 if bank in self.data_helpers else 0)
+        return DATA_END + (13 if self.data_has_write(bank) else 7 if bank in self.data_helpers else 0)
 
     def lower_pages(self):
         """Inline single-use page bodies; share larger/repeated operations.
@@ -399,7 +406,7 @@ class Assembler:
             banks.setdefault(b,bytearray(112))
             usage.setdefault(b,['data',self.data_end(b)])
             claim(b*112,self.data_end(b))
-            banks[b][:self.data_end(b)]=data_page(values,b in self.data_helpers)
+            banks[b][:self.data_end(b)]=data_page(values,b in self.data_helpers,self.data_has_write(b))
         for address,target in bridges:
             claim(address,4)
             banks[address//112][address%112:address%112+4]=bytes([0x1F,0x51,*bcd(target)])

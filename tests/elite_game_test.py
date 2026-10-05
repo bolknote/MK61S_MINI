@@ -574,6 +574,35 @@ def test_shield_boost_boundaries():
     print('ELITE: simultaneous shield boost at zero, cap boundaries and all manoeuvres OK (288 states)',flush=True)
 
 
+def test_shield_hit_boundaries():
+    # Exercise the unchanged simultaneous salvo with a shield one point
+    # below, equal to, and above the incoming damage, including hull death.
+    checked=0
+    for seed,incoming in ((8,14),(3,24)):
+        for maneuver in (1,2,3,4):
+            damage=incoming//2 if maneuver==4 else incoming
+            for action in (1,2,4):
+                for hull in (1,84):
+                    for shield in (damage-1,damage,damage+1):
+                        rows=play(encounter(seed)+[f'set 24 4 {hull}',f'set 24 5 {shield}',
+                                  'dump',f'input {10*maneuver+action}'])
+                        before,after=rows[-2:]
+                        remaining_hull=max(0,hull-max(0,damage-shield))
+                        assert after['pages'][0][4:6]==[remaining_hull,max(0,shield-damage)],after
+                        assert after['pages'][0][3]==before['pages'][0][3]+1,after
+                        assert after['pages'][0][0]==before['pages'][0][0],after
+                        assert after['pages'][0][7]=={1:28,2:10,4:0}[action],after
+                        assert after['pages'][1][7]==before['pages'][1][7]-(action==2),after
+                        assert after['pages'][3][4]==maneuver-4,after
+                        assert after['pages'][4]==before['pages'][4],after
+                        assert game_mode(after)==(2 if remaining_hull else 4),after
+                        if remaining_hull:number(after,'H',after['pages'][3][1])
+                        else:assert after['frame']==screen('dEAd      СП'),after
+                        checked+=len(rows)
+    assert checked==864,checked
+    print('ELITE: shield depletion, exact absorption and hull death with all manoeuvres OK (864 states)',flush=True)
+
+
 def test_instruments_and_formation():
     # Independent threshold oracle: each lit cell covers the next interval,
     # and the right-hand number remains exact at every zero/boundary/cap.
@@ -888,7 +917,7 @@ def main():
     for path in directory.glob('*.md'):
         assert path.stat().st_size<=1536
     tests=(test_assembler_continuations,test_worlds_and_display,test_trade_and_station,test_price_equivalence,test_navigation_and_input,
-           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,test_laser_heat_boundaries,test_suffix_frame_transitions,test_shield_boost_boundaries,
+           test_pirates_and_results,test_thargoids,test_destroyed_targets,test_combat_cache_and_motion,test_laser_heat_boundaries,test_suffix_frame_transitions,test_shield_boost_boundaries,test_shield_hit_boundaries,
            test_instruments_and_formation,test_price_clamp_boundaries,test_projected_rng,test_trade_transactions,
            test_page_transaction_boundaries,test_station_transaction_boundaries,test_navigation_coordinate_cache,test_trade_credit_boundaries,
            test_restart_initialization,test_input_dispatch_domain,test_target_selection_transitions)
