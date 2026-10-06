@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract the real resident/APP label and scrolling paths for host tests."""
+"""Extract the single Explorer UI and the independent file-choice dialog."""
 
 from pathlib import Path
 import sys
@@ -21,12 +21,16 @@ def main():
     root = Path(__file__).resolve().parents[1]
     out = Path(sys.argv[1])
     resident = root / "code/development.cpp"
-    app = root / "code/explorer_module_ui.cpp"
+    app = root / "code/explorer_ui.cpp"
     editor = root / "code/text_editor.hpp"
+    editor_source = editor.read_text()
+    # Keep real SMS/search editing primitives; omit only display/editor UI.
+    editor_start = editor_source.index("namespace text_editor {")
+    editor_end = editor_source.index("inline u8 visible_rows(")
     (out / "explorer_editor.inc").write_text(
-        "namespace text_editor {\n" + body(editor, "enum class Shift", True) +
-        body(editor, "struct SmsState", True) +
-        body(editor, "inline usize bounded_length(") + "}\n")
+        editor_source[editor_start:editor_end] +
+        functions(editor, ["inline bool insert_text(", "inline bool backspace(",
+                          "inline bool sms_tap("]) + "}\n")
     (out / "explorer_extensions.inc").write_text(
         "namespace program_store {\n" +
         body(root / "code/program_store.cpp", "static const char* extension_for_type(") +
@@ -34,41 +38,51 @@ def main():
         "namespace app_store { using program_store::ProgramType;\n" +
         body(root / "sdk/portable/system/system_compat.cpp", "const char* file_extension(") + "}\n")
     (out / "resident_explorer_ui.inc").write_text(
-        declarations(resident, ["static constexpr u16 EXPLORER_SCROLL_START_MS",
-            "static constexpr u16 EXPLORER_SCROLL_STEP_MS",
-            "static constexpr u16 EXPLORER_SCROLL_EDGE_MS",
-            "static constexpr u8 EXPLORER_NAME_COL"]) +
-        body(resident, "struct ExplorerScroll", True) +
+        declarations(resident, ["static constexpr u16 FILE_DIALOG_SCROLL_START_MS",
+            "static constexpr u16 FILE_DIALOG_SCROLL_STEP_MS",
+            "static constexpr u16 FILE_DIALOG_SCROLL_EDGE_MS",
+            "static constexpr u8 FILE_DIALOG_NAME_COL"]) +
+        body(resident, "struct FileDialogScroll", True) +
         body(resident, "enum class DialogItemKind", True) +
         body(resident, "struct DialogItem", True) +
-        functions(resident, ["static bool explorer_time_reached(",
-            "static void explorer_cursor_off(", "static void print_line(",
-            "static void print_localized_line(", "static int explorer_count(",
-            "static bool explorer_entry(", "static char ascii_upper(",
-            "static bool search_active(", "static bool text_contains_case_insensitive(",
-            "static bool entry_matches_search(", "static int matching_entry_count(",
-            "static int matching_index_at(", "static int matching_position(",
-            "static void explorer_scroll_reset(", "static u8 explorer_name_width(",
-            "static u8 explorer_name_len(", "static bool explorer_name_overflows(",
-            "static u8 explorer_scroll_max_offset(", "static void explorer_scroll_track(",
-            "static u16 explorer_scroll_timeout(", "static void explorer_name_window(",
-            "static void draw_explorer_name(", "static void draw_explorer_row(",
-            "[[maybe_unused]] static u16 draw_explorer(", "static void dialog_item_name(",
+        functions(resident, ["static u8 file_dialog_name_width(",
+            "static u8 file_dialog_name_len(",
+            "static u8 file_dialog_scroll_max_offset(", "static void file_dialog_name_window(",
+            "static void draw_file_dialog_name(", "static void dialog_item_name(",
             "static void draw_dialog_row("]))
     (out / "app_explorer_ui.inc").write_text(
-        declarations(app, ["static constexpr u16 SCROLL_START_MS",
+        "using loadable_module::ExplorerAction;\nusing loadable_module::ExplorerSession;\n" +
+        declarations(app, ["static constexpr u32 LONG_OK_MS",
+            "static constexpr i32 KEY_UP", "static constexpr i32 KEY_DOWN",
+            "static constexpr i32 KEY_OK_SHORT", "static constexpr i32 KEY_OK_LONG",
+            "static constexpr i32 KEY_ESCAPE", "static constexpr i32 KEY_TICK",
+            "static constexpr i32 KEY_REDRAW", "static constexpr u16 SCROLL_START_MS",
             "static constexpr u16 SCROLL_STEP_MS", "static constexpr u16 SCROLL_EDGE_MS",
             "static constexpr u8 MAX_LINES", "static constexpr usize LINE_BYTES"]) +
         body(app, "struct Search", True) + body(app, "struct Scroll", True) +
         body(app, "struct Line", True) +
         functions(app, ["static bool reached(", "static usize bounded_length(",
             "static void copy_text(", "static bool entry_at(", "static void cursor_off(",
+            "static i32 wait_key(", "static bool wait_ok_release(", "static void wait_handoff(",
             "static void clear_lines(", "static void render(", "static bool search_active(",
             "static char ascii_upper(", "static bool contains_ci(", "static bool matches(",
             "static int match_count(", "static int match_at(", "static int match_position(",
+            "static int first_match(", "static int next_match(", "static int previous_match(",
             "static void reset_scroll(", "static u16 name_width(", "static u8 max_offset(",
             "static void update_scroll(", "static u16 scroll_timeout(",
-            "static u16 draw_browser("]))
+            "static void search_reset(", "static bool search_insert(",
+            "static bool handle_search_key(", "static u16 search_window_start(",
+            "static void draw_search_cursor(", "static u16 draw_browser(",
+            "static int make_actions(", "static const char* action_text(",
+            "static void draw_action_menu(", "static ExplorerAction choose_action(",
+            "static bool autoexec(", "static void set_result(", "bool select("]))
+
+    resident_source = resident.read_text()
+    assert "draw_explorer(" not in resident_source
+    assert "draw_explorer_row(" not in resident_source
+    assert "explorer_search_handle_key(" not in resident_source
+    assert "explorer_ui::select(session)" in resident_source
+    assert "explorer_ui::select(" in (root / "code/explorer_module_entry.cpp").read_text()
 
 
 if __name__ == "__main__":

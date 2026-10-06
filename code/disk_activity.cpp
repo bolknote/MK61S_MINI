@@ -40,6 +40,11 @@ void storageIO(void) {
   else poll(); // still animate a USB commit and expire a previous indicator
 }
 
+Pause::Pause(MK61Display& display) : display_(display) {
+  display_.pauseDiskActivity();
+}
+Pause::~Pause() { display_.resumeDiskActivity(); }
+
 #if defined(MK61_DISPLAY_UC1609)
 namespace {
 struct Page {

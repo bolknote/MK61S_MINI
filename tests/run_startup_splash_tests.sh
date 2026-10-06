@@ -37,3 +37,13 @@ if "GRDLabel.print(load_grade_switch())" in setup:
     raise SystemExit("startup emits an intermediate text-mode angle frame")
 print("startup calculator display handoff: ok")
 PY
+
+python3 - "$root/code/startup_splash.cpp" <<'PY'
+from pathlib import Path
+import sys
+source=Path(sys.argv[1]).read_text()
+show=source[source.index("Result show("):]
+assert show.index("disk_activity::Pause quiet(display);")<show.index("loadCustomChars(display);")
+assert "return Result::SKIPPED;" in show and "return Result::COMPLETED;" in show
+print("startup splash: disk-activity RAII covers all return paths")
+PY

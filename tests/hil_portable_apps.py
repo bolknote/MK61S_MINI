@@ -57,8 +57,10 @@ def packbits(data):
 
 
 class ScreenPort(Port):
-    def __init__(self, path):
+    def __init__(self, path, keyboard_layout=1):
         super().__init__(path)
+        assert keyboard_layout in (0,1,2)
+        self.keyboard_layout = keyboard_layout
         self.packet = None; self.text = bytearray(); self.frames = []
         self.sequence = 0; self.attached = False; self.next_ping = 0
         self.caps = None; self.pending = None; self.pages = set()
@@ -81,7 +83,7 @@ class ScreenPort(Port):
         if kind == 0x12:
             self.caps = payload
             assert payload[:4] == bytes((192, 0, 64, 8))
-            assert payload[8:10] == bytes((1, 40)), 'test requires the Classic keyboard layout'
+            assert payload[8:10] == bytes((self.keyboard_layout, 40)), 'unexpected keyboard layout'
             self.attached = True
             self.next_ping = time.monotonic() + .7
         elif kind == 0x20:

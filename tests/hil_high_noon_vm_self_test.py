@@ -3,7 +3,16 @@
 from pathlib import Path
 import unittest
 
-from hil_high_noon_vm import GameFont,ROOT
+from hil_high_noon_vm import GameFont,ROOT,folder_index
+
+
+class ExplorerNavigation(unittest.TestCase):
+    def test_listing_rank_includes_files(self):
+        report="ls /games\r\nf\tnote.txt\r\nd\tOther/\r\nd\tHigh Noon/\r\n3 entries.\r\n/> "
+        self.assertEqual(folder_index(report,"HIGH NOON"),2)
+        with self.assertRaises(AssertionError):folder_index(report,"missing")
+        with self.assertRaises(AssertionError):folder_index("f\tHigh Noon/\r\n","High Noon")
+        with self.assertRaises(AssertionError):folder_index("d\tHigh Noon/\nd\thigh noon/\n","High Noon")
 
 
 class GamePixels(unittest.TestCase):
