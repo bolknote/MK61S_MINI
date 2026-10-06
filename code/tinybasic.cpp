@@ -124,9 +124,19 @@ enum class key_state {PRESSED=0, RELEASED=0x40};
 namespace kbd {
   static bool host_alpha_pressed;
   static bool host_wait_esc;
+  static i32 host_keys[32];
+  static u8 host_key_count, host_key_index;
+  static int host_key_reads;
   isize scan(void) { return 0; }
   i32 get_key(key_state) { return -1; }
-  i32 get_key_wait(void) { return host_wait_esc ? KEY_ESC : KEY_OK; }
+  i32 get_key_wait(void) {
+    host_key_reads++;
+    while(host_key_index < host_key_count) {
+      const i32 key = host_keys[host_key_index++];
+      if(key >= 0 && key < (i32) key_state::RELEASED) return key;
+    }
+    return host_wait_esc ? KEY_ESC : KEY_OK;
+  }
   bool is_key_pressed(i32 key_code) { return key_code == KEY_ALPHA && host_alpha_pressed; }
 }
 
@@ -173,6 +183,7 @@ namespace library_mk61 {
 #endif
 
 #include "bounded_string.hpp"
+#include "keyboard_layout.hpp"
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "number_format.hpp"
@@ -308,7 +319,8 @@ enum class TbFunction : u8 {
   FRAC,
   ROUND,
   SGN,
-  MAX
+  MAX,
+  KEY_INPUT
 };
 
 struct TbLine {
@@ -532,6 +544,7 @@ uint16_t language_vm::frontend_source_id(void) {
 // requests after a program. Keep it only while no later screen/input activity
 // has made another final acknowledgement useful.
 static bool tb_pause_is_final = false;
+static bool tb_key_cancelled = false;
 static TinyBasicRunMode tb_run_mode = TinyBasicRunMode::INTERACTIVE;
 
 class TinyBasicRunModeScope {
@@ -692,6 +705,8 @@ static void tb_print_display_text(const char* text) {
 enum class TbError : u8 { WHAT, HOW, SORRY };
 
 static bool tb_error_code(TbError error) {
+  // ESC inside an INPUT() expression is cancellation, not a math/syntax error.
+  if(tb_key_cancelled) return false;
   tb_pause_is_final = false;
   const char* en = "SORRY";
   const char* ru = M8("НЕТ МЕСТА");
@@ -736,6 +751,14 @@ static bool tb_pause(void) {
   const i32 key = kbd::get_key_wait();
   tb_pause_is_final = true;
   return key != KEY_ESC && key != KEY_ESC_PRESS;
+}
+
+static bool tb_read_key(double& value) {
+  const i32 key = kbd::get_key_wait();
+  tb_pause_is_final = true;
+  if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
+  value = keyboard_layout::logical_key(keyboard_layout::active(), key);
+  return true;
 }
 
 static void tb_report_interrupted(void) {
@@ -863,6 +886,7 @@ static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::ROUND, 0x25, 'R', 'O', 'U', 'N', 'D',
   (u8) TbFunction::SGN,   0x23, 'S', 'G', 'N',
   (u8) TbFunction::MAX,   0x13, 'M', 'A', 'X',
+  (u8) TbFunction::KEY_INPUT,   0x35, 'I', 'N', 'P', 'U', 'T',
   0
 };
 
@@ -1008,7 +1032,12 @@ static bool tb_looks_like_command_start(const char* begin, const char* end) {
   if(cursor >= end) return false;
   const char* saved = cursor;
   u8 command_token = 0;
-  if(tb_parse_command_word(cursor, command_token)) return true;
+  if(tb_parse_command_word(cursor, command_token)) {
+    cursor = tb_skip_spaces(cursor);
+    // In a PRINT list INPUT() is an expression; INPUT A starts a command.
+    return (command_token & TB_COMMAND_ID_MASK) != (u8) TbCommand::CMD_INPUT ||
+           cursor >= end || *cursor != '(';
+  }
   cursor = saved;
   TbTarget target;
   if(!tb_parse_target_token(cursor, end, target, false)) return false;
@@ -1189,8 +1218,9 @@ static const u8 TB_BINARY_WORDS[] = {
 
 class TbExprParser {
   public:
-    TbExprParser(const char* begin, const char* end, bool evaluate = true)
-      : p(begin), end(end), depth(0), evaluate(evaluate) {}
+    TbExprParser(const char* begin, const char* end, bool evaluate = true,
+                 bool allow_key_input = true)
+      : p(begin), end(end), depth(0), evaluate(evaluate), allow_key_input(allow_key_input) {}
 
     bool eval(double& out) {
       out = parse_binary(0);
@@ -1206,6 +1236,7 @@ class TbExprParser {
     const char* end;
     i8 depth;
     bool evaluate;
+    bool allow_key_input;
 
     bool enter(void) {
       if(depth < 0 || depth >= TB_EXPR_DEPTH) {
@@ -1452,6 +1483,20 @@ class TbExprParser {
           return 0.0;
         }
 
+        if(function_id == TbFunction::KEY_INPUT) {
+          if(!match_char(')') || !allow_key_input) {
+            depth = -1;
+            return 0.0;
+          }
+          if(!evaluate) return 0.0;
+          double value = 0.0;
+          if(!tb_read_key(value)) {
+            tb_key_cancelled = true;
+            depth = -1;
+          }
+          return value;
+        }
+
         if(function_id == TbFunction::RND) {
           skip();
           if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
@@ -1501,6 +1546,7 @@ class TbExprParser {
           case TbFunction::SGN:
             return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
           case TbFunction::MAX:   return (a > b) ? a : b;
+          case TbFunction::KEY_INPUT:
           case TbFunction::NONE:
           case TbFunction::SIZE:
           case TbFunction::COLS:
@@ -1646,6 +1692,7 @@ static bool tb_append_print_range(const char* begin, const char* end) {
   const usize used = strlen(tb_pending_print);
   const usize added = (usize) (end - begin);
   if(used + added >= sizeof(tb_pending_print)) return false;
+  if(added != 0) tb_pause_is_final = false;
   memcpy(tb_pending_print + used, begin, added);
   tb_pending_print[used + added] = 0;
   return true;
@@ -1751,6 +1798,7 @@ static void tb_copy_wrapped_line(char* output, usize capacity,
 #endif
 
 static void tb_flush_print(void) {
+  tb_pause_is_final = false;
 #ifdef TINYBASIC_HOST_TEST
   MK61DisplayUpdate update(main_lcd());
   const char* cursor = tb_pending_print;
@@ -1819,7 +1867,8 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
   if(tb_host_input_expression[0] != 0) {
     const char* const end = tb_host_input_expression +
                             strlen(tb_host_input_expression);
-    return tb_eval_expr_range(tb_host_input_expression, end, value);
+    TbExprParser parser(tb_host_input_expression, end, true, false);
+    return parser.eval(value) && tb_skip_spaces(parser.position()) == end;
   }
   if(tb_host_input_index < tb_host_input_count) {
     value = tb_host_input_values[tb_host_input_index++];
@@ -1845,8 +1894,9 @@ static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
        (key == KEY_ESC || key == KEY_ESC_PRESS)) return false;
     if(editor.shift == text_editor::Shift::NONE &&
        (key == KEY_OK || key == KEY_OK_PRESS)) {
-      if(editor.len != 0 &&
-         tb_eval_expr_range(buffer, buffer + editor.len, value)) {
+      TbExprParser parser(buffer, buffer + editor.len, true, false);
+      if(editor.len != 0 && parser.eval(value) &&
+         tb_skip_spaces(parser.position()) == buffer + editor.len) {
         return true;
       }
       tb_message_i18n("WHAT?", M8("ЧТО?"), "number", M8("число"));
@@ -2476,6 +2526,7 @@ static TinyBasicRunStatus tb_run_program(
     TinyBasicRunMode mode = TinyBasicRunMode::INTERACTIVE) {
   TinyBasicRunModeScope mode_scope(mode);
   tb_pause_is_final = false;
+  tb_key_cancelled = false;
 #if defined(MK61_LANGUAGE_VM_COMPILER)
   if (!language_vm::compatible(language_vm::frontend_request) || program_index < 0 ||
       program_index >= TB_PROGRAM_COUNT || !tb_program_used(programs[program_index]))
@@ -2610,7 +2661,9 @@ static TinyBasicRunStatus tb_run_program(
             return false;
           }
           case language_vm::Event::WAIT:
-            if (tb_pause()) return true;
+          case language_vm::Event::READ_KEY:
+            if (event == language_vm::Event::READ_KEY ? tb_read_key(value) : tb_pause())
+              return true;
             c.cancelled = true;
             c.normal_pause = !tb_runs_inside_m61();
             if (tb_runs_inside_m61()) tb_report_interrupted();
@@ -2670,6 +2723,15 @@ static TinyBasicRunStatus tb_run_program(
     const char* end = line_begin + line.len;
     entry_offset = 0;
     if(!tb_execute_command_list(begin, end, source, pc, state, flow)) {
+      if(tb_key_cancelled) {
+        tb_key_cancelled = false;
+        tb_pending_print[0] = 0;
+        if(tb_runs_inside_m61()) {
+          tb_report_interrupted();
+          return TinyBasicRunStatus::STOPPED;
+        }
+        return TinyBasicRunStatus::COMPLETED;
+      }
       succeeded = false;
       break;
     }
@@ -3409,6 +3471,8 @@ extern "C" void TinyBasicTestReset(void) {
   mk61_ref::host_reset();
   kbd::host_alpha_pressed = false;
   kbd::host_wait_esc = false;
+  kbd::host_key_count = kbd::host_key_index = 0;
+  kbd::host_key_reads = 0;
   main_lcd().setReportedCols(16);
   main_lcd().setRows(MK61Display::MAX_ROWS);
 #endif
@@ -3427,6 +3491,29 @@ extern "C" void TinyBasicTestSetPauseEsc(bool enabled) {
   kbd::host_wait_esc = enabled;
 #else
   (void) enabled;
+#endif
+}
+
+extern "C" void TinyBasicTestSetKeys(const int* keys, int count) {
+#ifdef TINYBASIC_HOST_TEST
+  kbd::host_key_count = kbd::host_key_index = 0;
+  kbd::host_key_reads = 0;
+  if(keys == NULL || count <= 0) return;
+  const int capacity = sizeof(kbd::host_keys) / sizeof(kbd::host_keys[0]);
+  if(count > capacity) count = capacity;
+  for(int i = 0; i < count; i++) kbd::host_keys[i] = keys[i];
+  kbd::host_key_count = (u8) count;
+#else
+  (void) keys;
+  (void) count;
+#endif
+}
+
+extern "C" int TinyBasicTestKeyReads(void) {
+#ifdef TINYBASIC_HOST_TEST
+  return kbd::host_key_reads;
+#else
+  return 0;
 #endif
 }
 

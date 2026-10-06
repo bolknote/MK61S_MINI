@@ -2,6 +2,8 @@
 #define MK61_KEYBOARD_LAYOUT_HPP
 
 #include "rust_types.h"
+#include <stddef.h>
+#include "loadable_app_api.h"
 #include "loadable_system_api.h"
 
 namespace keyboard_layout {
@@ -61,6 +63,29 @@ inline int digit_from_key(const Mapping& mapping, i32 key_code) {
     if(key_code == mapping.digit[digit]) return digit;
   }
   return -1;
+}
+
+// APPs and BASIC INPUT() share logical press codes across matrix layouts.
+inline i32 logical_key(const Mapping& keys, i32 raw) {
+  const int digit = digit_from_key(keys, raw);
+  if(digit >= 0) return MK61_APP_KEY_DIGIT_0 + digit;
+  // Scan in stable-code order; aliases keep the APP API's original priority.
+  static const u8 fields[] = {
+    offsetof(Mapping, dot), offsetof(Mapping, add), offsetof(Mapping, sub),
+    offsetof(Mapping, mul), offsetof(Mapping, div), offsetof(Mapping, left),
+    offsetof(Mapping, right), offsetof(Mapping, shg_left), offsetof(Mapping, shg_right),
+    offsetof(Mapping, ok), offsetof(Mapping, esc), offsetof(Mapping, run),
+    offsetof(Mapping, cx), offsetof(Mapping, k), offsetof(Mapping, alpha),
+    offsetof(Mapping, user), offsetof(Mapping, pp), offsetof(Mapping, bp),
+    offsetof(Mapping, x_to_p), offsetof(Mapping, p_to_x), offsetof(Mapping, ret),
+    offsetof(Mapping, frw), offsetof(Mapping, bkw)
+  };
+  static_assert(MK61_APP_KEY_BACKWARD == MK61_APP_KEY_DECIMAL + sizeof(fields) - 1,
+                "logical key fields must follow the stable APP code order");
+  const u8* bytes = reinterpret_cast<const u8*>(&keys);
+  for(u8 i = 0; i < sizeof(fields); i++)
+    if(raw == bytes[fields[i]]) return MK61_APP_KEY_DECIMAL + i;
+  return raw >= 0 ? MK61_APP_KEY_RAW_BASE + raw : (i32) MK61_APP_KEY_NONE;
 }
 
 } // пространство имён keyboard_layout

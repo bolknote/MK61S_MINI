@@ -94,6 +94,7 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::PRINT_FORMAT:
     case Op::PRINT_FLUSH:
     case Op::WAIT:
+    case Op::READ_KEY:
     case Op::CLEAR:
     case Op::TARGET_ARRAY:
       break;
@@ -158,6 +159,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
          bytes[pc + 1] >= 20) ||
         (op == Op::FUNCTION && bytes[pc + 1] > (uint8_t)Function::ROWS) ||
+        (op == Op::READ_KEY && (v.expression || v.language != Language::BASIC)) ||
         (op == Op::PRINT_SEPARATOR && bytes[pc + 1] > 2) ||
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
@@ -766,6 +768,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if (host.yield_input)
           return {Error::YIELDED, instruction, source_line(v, instruction), steps};
         event(Event::READ_INPUT, (const char*)p + 2, word(p), value);
+        if (error == Error::NONE) push(value);
+        break;
+      case Op::READ_KEY:
+        event(Event::READ_KEY, nullptr, 0, value);
         if (error == Error::NONE) push(value);
         break;
       case Op::WAIT:

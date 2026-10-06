@@ -29,6 +29,8 @@ struct Keyword {
   const char* text;
   uint8_t minimum, id;
 };
+// INPUT() is I/O, lowered to a dedicated opcode rather than a math callback.
+static constexpr uint8_t KEY_INPUT_FUNCTION = 254;
 enum Command : uint8_t {
   ASSIGN,
   REM,
@@ -64,7 +66,8 @@ const Keyword functions[] = {
     {"SQRT", 2, (uint8_t)Function::SQRT},   {"ABS", 1, (uint8_t)Function::ABS},
     {"INT", 1, (uint8_t)Function::INT},     {"FRAC", 1, (uint8_t)Function::FRAC},
     {"ROUND", 2, (uint8_t)Function::ROUND}, {"SGN", 2, (uint8_t)Function::SGN},
-    {"MAX", 1, (uint8_t)Function::MAX},     {nullptr, 0, 0}};
+    {"MAX", 1, (uint8_t)Function::MAX},
+    {"INPUT", 3, KEY_INPUT_FUNCTION},       {nullptr, 0, 0}};
 struct Target {
   uint8_t kind, index;
 };  // 0 variable, 1 reference, 2 array
@@ -91,7 +94,8 @@ class Compiler {
         pass_(0),
         image_end_(0),
         rf_available_(rf_available),
-        rf_required_(false) {}
+        rf_required_(false),
+        expression_only_(false) {}
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
@@ -147,6 +151,7 @@ class Compiler {
     return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, line_, offset, maximum_};
   }
   CompileResult expression_only() {
+    expression_only_ = true;
     if (!source_ || !length_ || length_ > (basic() ? 64 : 111) ||
         memchr(source_, 0, length_))
       return {Error::SYNTAX, 0, 0, 0, 0};
@@ -191,7 +196,7 @@ class Compiler {
   uint16_t line_;
   uint8_t pass_;
   uint16_t image_end_;
-  bool rf_available_, rf_required_;
+  bool rf_available_, rf_required_, expression_only_;
   static constexpr bool basic() { return Lang == Language::BASIC; }
   uint8_t stride() const { return basic() ? 4 : 6; }
   void fail(Error e) {
@@ -636,6 +641,15 @@ class Compiler {
         fail(Error::FUNCTION);
         return;
       }
+      if (fn == KEY_INPUT_FUNCTION) {
+        if (!match('(') || !match(')') || expression_only_) {
+          fail(Error::FUNCTION);
+          return;
+        }
+        emit(Op::READ_KEY);
+        stack(1);
+        return;
+      }
       if (f == Function::PI_VALUE || f >= Function::SIZE) {
         emit(Op::FUNCTION);
         byte(fn);
@@ -692,6 +706,7 @@ class Compiler {
         const uint8_t cmd = lookup(basic_commands, 255);
         skip();
         bool looks = cmd != 255;
+        if (cmd == READ_INPUT && p_ < end_ && *p_ == '(') looks = false;
         if (!looks) {
           p_ = q + 1;
           skip();

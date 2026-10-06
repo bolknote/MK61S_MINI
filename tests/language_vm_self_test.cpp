@@ -118,6 +118,55 @@ void test_sizing_and_bounds() {
   f.state.stack_capacity = 1;
   assert(run(f.view, f.state, services).error == Error::STACK);
 }
+
+void test_key_input_is_an_ordered_keyboard_expression() {
+  struct Keys {
+    unsigned reads = 0;
+    bool fail = false;
+    double values[4] = {15, 18, 4, 6};
+  } keys;
+  Services host = services;
+  host.context = &keys;
+  host.yield_input = true;
+  host.event = [](void* raw, Event e, const char*, uint16_t, double& value) {
+    auto& k = *(Keys*)raw;
+    if(e == Event::READ_KEY) {
+      if(k.fail) return false;
+      assert(k.reads < 4);
+      value = k.values[k.reads++];
+    }
+    return true;
+  };
+  Fixture f;
+  f.compile("10 IF 0 A=INPUT()\n20 K=INPUT():@(0)=INP.()\n30 A=INPUT()+INPUT()\n");
+  assert(keys.reads == 0);
+  assert(run(f.view, f.state, host).error == Error::NONE);
+  assert(keys.reads == 4 && f.vars['K'-'A'] == 15 && f.array[0] == 18 && f.vars[0] == 10);
+
+  keys.reads = 0;
+  f.compile("10 @(-1)=INPUT()\n");
+  assert(run(f.view, f.state, host).error == Error::VARIABLE && keys.reads == 0);
+
+  keys.fail = true;
+  f.compile("10 A=9\n20 A=INPUT()\n");
+  assert(run(f.view, f.state, host).error == Error::IO && f.vars[0] == 9);
+
+  keys.fail = false;
+  keys.reads = 0;
+  f.compile("10 PRINT \"K=\";INPUT();IN.(3.8)\n");
+  assert(run(f.view, f.state, host).error == Error::NONE && keys.reads == 1);
+
+  // INPUT's expression evaluator cannot perform nested keyboard I/O.
+  assert(compile_expression(Language::BASIC, "INPUT()", 7, f.image, sizeof(f.image)).error
+         == Error::FUNCTION);
+  const auto r = compile_expression(Language::BASIC, "RND()", 5, f.image, sizeof(f.image));
+  assert(r.error == Error::NONE && inspect(f.image, r.size, f.view) == Error::NONE);
+  f.image[HEADER_SIZE] = (uint8_t)Op::READ_KEY;
+  f.image[HEADER_SIZE+1] = (uint8_t)Op::HALT;
+  f.crc();
+  View invalid;
+  assert(inspect(f.image, r.size, invalid) == Error::INVALID_IMAGE);
+}
 void test_validation() {
   Fixture f;
   f.compile("10 IF 1 GOTO 30\n20 A=1\n30 END\n");
@@ -163,7 +212,8 @@ void test_controls_and_traps() {
          f.vars['I' - 'A'] == 3 && f.vars['S' - 'A'] == 6);
 }
 void test_parser_edges() {
-  const char* invalid[] = {"10 A=PI.\n",       "10 A=MAX(1)\n",   "10 PAUSE 1\n",
+  const char* invalid[] = {"10 A=INPUT\n", "10 A=INPUT(1)\n", "10 A=INPUT(,)\n",
+                           "10 A=PI.\n",       "10 A=MAX(1)\n",   "10 PAUSE 1\n",
                            "10 GOTO 10:END\n", "10 A=BOGUS(1)\n", "10 .R00=1\n"};
   for (const char* source : invalid)
     assert(language_vm::compile(Language::BASIC, source, (uint16_t)strlen(source),
@@ -221,6 +271,7 @@ void test_yield_resume() {
 int main() {
   test_literals();
   test_sizing_and_bounds();
+  test_key_input_is_an_ordered_keyboard_expression();
   test_validation();
   test_controls_and_traps();
   test_parser_edges();

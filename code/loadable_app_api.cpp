@@ -72,33 +72,7 @@ static u32 api_display_write_m8(u32 column, u32 row,
 }
 
 static i32 normalize_key(i32 raw) {
-  const keyboard_layout::Mapping& keys = keyboard_layout::ACTIVE;
-  const int digit = keyboard_layout::digit_from_key(keys, raw);
-  if(digit >= 0) return KEY_DIGIT_0 + digit;
-  if(raw == keys.dot) return KEY_DECIMAL;
-  if(raw == keys.add) return KEY_ADD;
-  if(raw == keys.sub) return KEY_SUBTRACT;
-  if(raw == keys.mul) return KEY_MULTIPLY;
-  if(raw == keys.div) return KEY_DIVIDE;
-  if(raw == keys.left) return KEY_LEFT;
-  if(raw == keys.right) return KEY_RIGHT;
-  if(raw == keys.shg_left) return KEY_SHIFT_LEFT;
-  if(raw == keys.shg_right) return KEY_SHIFT_RIGHT;
-  if(raw == keys.ok) return KEY_OK;
-  if(raw == keys.esc) return KEY_ESC;
-  if(raw == keys.run) return KEY_RUN;
-  if(raw == keys.cx) return KEY_CLEAR;
-  if(raw == keys.k) return KEY_K;
-  if(raw == keys.alpha) return KEY_F;
-  if(raw == keys.user) return KEY_USER;
-  if(raw == keys.pp) return KEY_PP;
-  if(raw == keys.bp) return KEY_BP;
-  if(raw == keys.x_to_p) return KEY_X_TO_P;
-  if(raw == keys.p_to_x) return KEY_P_TO_X;
-  if(raw == keys.ret) return KEY_RETURN;
-  if(raw == keys.frw) return KEY_FORWARD;
-  if(raw == keys.bkw) return KEY_BACKWARD;
-  return raw >= 0 ? KEY_RAW_BASE + raw : KEY_NONE;
+  return keyboard_layout::logical_key(keyboard_layout::ACTIVE, raw);
 }
 
 static i32 raw_key(i32 key) {

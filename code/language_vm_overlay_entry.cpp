@@ -1,6 +1,7 @@
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
+#include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
 
@@ -61,6 +62,7 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
                                ref < 4 ? 0 : ref - 4, 0, &value) != 0;
 }
 bool append(const char* text, uint16_t length, bool separate) {
+  if(length != 0) request().pause_final = 0;
   auto& s = state();
   size_t used = strlen(s.output);
   if (separate && used && used + 1 < sizeof(s.output)) s.output[used++] = ' ';
@@ -76,6 +78,7 @@ void flush(bool empty) {
   auto& s = state();
   const uint8_t rows = main_lcd().rows();
   if (!rows || (!s.output[0] && !empty)) return;
+  request().pause_final = 0;
   const uint8_t n = main_lcd().printWrappedText(
       s.output, (u16)strlen(s.output), s.row, (u8)(rows - s.row), false, empty);
   const uint16_t following = (uint16_t)s.row + n;
@@ -117,20 +120,26 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     // The kernel yields before dispatching this event. No parser/editor is
     // linked into the hot image, and no callback survives an APP replacement.
     case Event::READ_INPUT: return false;
-    case Event::WAIT: {
+    case Event::WAIT:
+    case Event::READ_KEY: {
       if (!basic) {
         const char* rows[] = {"ASK", "Press any key"};
         portable_system::text_rows(rows, 2);
       }
       const i32 key = kbd::get_key_wait();
       request().pause_final = basic;
-      if (key != KEY_ESC && key != KEY_ESC_PRESS) return true;
+      if (key != KEY_ESC && key != KEY_ESC_PRESS) {
+        if(event == Event::READ_KEY)
+          value = keyboard_layout::logical_key(keyboard_layout::active(), key);
+        return true;
+      }
       kbd::handoff(kbd::Event(KEY_ESC_PRESS));
       s.cancelled = true;
       s.normal_stop = basic && request().mode == 0;
       return false;
     }
     case Event::CLEAR:
+      request().pause_final = 0;
       main_lcd().clear(); s.row = 0; s.output[0] = 0; return true;
     case Event::FINISH: flush(false); return true;
     case Event::TARGET_REF:
