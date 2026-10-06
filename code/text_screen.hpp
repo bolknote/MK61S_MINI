@@ -38,6 +38,9 @@ class Grid {
     // enough tokens for the narrowest supported 64x10 text face; character
     // displays retain the original 16x10 allocation.
     void reset(u8 rows, u8 cols = COLS);
+    // Change geometry in place, preserving the overlapping cells/custom
+    // flags and clamping the cursor. No second grid or stack-sized copy.
+    void reshape(u8 rows, u8 cols = COLS);
     void clear(void);
     void setCursor(u8 x, u8 y);
     void newline(void);

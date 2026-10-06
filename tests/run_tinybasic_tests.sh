@@ -7,6 +7,12 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-tinybasic-m8.XXXXXX")"
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 python3 "$root/tests/high_noon_package_self_test.py" "$root"
 sanitizer_flags=()
+vm_flags=()
+vm_sources=()
+if [[ "${MK61_LANGUAGE_VM_TEST:-0}" == "1" ]]; then
+  vm_flags=(-DMK61_LANGUAGE_VM_TEST)
+  vm_sources=("$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp")
+fi
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
@@ -32,6 +38,7 @@ if [[ "$tinybasic_enabled" == "0" ]]; then
 fi
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${vm_flags[@]}" \
   "${sanitizer_flags[@]}" \
   -DTINYBASIC_HOST_TEST \
   -DTINYBASIC_SELF_TEST \
@@ -39,6 +46,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/code" \
   "$root/tests/tinybasic_self_test.cpp" \
   "$root/code/tinybasic.cpp" \
+  "${vm_sources[@]}" \
   -o "$out"
 
 for part in intro player bart reward; do

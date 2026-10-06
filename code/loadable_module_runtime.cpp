@@ -30,15 +30,17 @@ static u8 g_pin_depth;
 static Kind g_pinned_kind = (Kind) 0;
 static shared_memory::Lease g_app_cache;
 
-static_assert((u8) Kind::FOCAL == MK61_APP_KIND_FOCAL &&
-              (u8) Kind::TINYBASIC == MK61_APP_KIND_TINYBASIC &&
-              (u8) Kind::WBMP_VIEWER == MK61_APP_KIND_WBMP_VIEWER &&
-              (u8) Kind::APPLICATION == MK61_APP_KIND_APPLICATION &&
-              (u8) Kind::CHIP8 == MK61_APP_KIND_CHIP8 &&
-              (u8) Kind::MARKDOWN_VIEWER == MK61_APP_KIND_MARKDOWN_VIEWER &&
-              (u8) Kind::SETUP == MK61_APP_KIND_SETUP &&
-              (u8) Kind::USBDISK == MK61_APP_KIND_USBDISK &&
-              (u8) Kind::EXPLORER == MK61_APP_KIND_EXPLORER,
+static_assert((u8)Kind::FOCAL == MK61_APP_KIND_FOCAL &&
+                  (u8)Kind::TINYBASIC == MK61_APP_KIND_TINYBASIC &&
+                  (u8)Kind::WBMP_VIEWER == MK61_APP_KIND_WBMP_VIEWER &&
+                  (u8)Kind::APPLICATION == MK61_APP_KIND_APPLICATION &&
+                  (u8)Kind::CHIP8 == MK61_APP_KIND_CHIP8 &&
+                  (u8)Kind::MARKDOWN_VIEWER == MK61_APP_KIND_MARKDOWN_VIEWER &&
+                  (u8)Kind::SETUP == MK61_APP_KIND_SETUP &&
+                  (u8)Kind::USBDISK == MK61_APP_KIND_USBDISK &&
+                  (u8)Kind::EXPLORER == MK61_APP_KIND_EXPLORER &&
+                  (u8)Kind::LANGUAGE_VM == MK61_APP_KIND_LANGUAGE_VM &&
+                  (u8)Kind::LANGUAGE_INPUT == MK61_APP_KIND_LANGUAGE_INPUT,
               "public APP kinds must match the container ABI");
 
 static bool resident_matches(const Header& header) {
@@ -261,6 +263,9 @@ bool enabled(Kind kind) {
     case Kind::MARKDOWN_VIEWER:
       return MK61_MARKDOWN_VIEWER_IS_LOADABLE != 0;
     case Kind::APPLICATION: return MK61_ENABLE_LOADABLE_MODULES != 0;
+    case Kind::LANGUAGE_VM:
+    case Kind::LANGUAGE_INPUT:
+      return MK61_OVERLAY_LANGUAGE_VM != 0;
   }
   return false;
 }
@@ -336,6 +341,12 @@ bool unpin(Kind kind) {
 
 bool pinned(Kind kind) {
   return g_pin_depth != 0 && g_pinned_kind == kind;
+}
+
+RuntimeStatus evict_cached(void) {
+  if(g_call_depth != 0 || g_pin_depth != 0) return RuntimeStatus::BUSY;
+  invalidate_active();
+  return RuntimeStatus::OK;
 }
 
 RuntimeStatus run_app(u16 file_id, u32& result) {

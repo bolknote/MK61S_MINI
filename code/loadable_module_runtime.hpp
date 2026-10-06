@@ -54,6 +54,9 @@ RuntimeStatus pin(Kind kind);
 bool unpin(Kind kind);
 bool pinned(Kind kind);
 RuntimeStatus run_app(u16 file_id, u32& result);
+// A resident executor may release an idle compiler after its entry returned.
+// Never evict live/pinned APP code or a callback still on its native stack.
+RuntimeStatus evict_cached(void);
 bool find_file_handler(u16 type_magic, FileHandler& handler);
 RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result);
 

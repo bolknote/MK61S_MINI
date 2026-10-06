@@ -51,8 +51,15 @@ constexpr u8 arena_mask(Arena arena) {
 }
 
 namespace snapshot_schema {
+#if defined(MK61_OVERLAY_LANGUAGE_VM) && MK61_OVERLAY_LANGUAGE_VM
+static constexpr u8 FOCAL_RUNTIME = 6;
+static constexpr u8 TINYBASIC_RUNTIME = 7;
+static constexpr u8 LANGUAGE_VM = 5;
+#else
 static constexpr u8 FOCAL_RUNTIME = 1;
 static constexpr u8 TINYBASIC_RUNTIME = 3;
+static constexpr u8 LANGUAGE_VM = 4;
+#endif
 } // namespace snapshot_schema
 
 // Owner един для всех арен. Один логический компонент может одновременно
@@ -136,6 +143,28 @@ struct Snapshot {
   bool reclaimable;
 };
 
+// Foreground-only partition of the existing fixed WORKSPACE. The retained
+// owner's upper bytes remain private while compiler/runtime leases use the
+// lower prefix. No second backing array; unrelated owners are refused. Close
+// requires every prefix lease to have returned and republishes one full,
+// pointer-free resident image, so ordinary snapshot exchange works afterwards.
+class [[nodiscard]] WorkspacePartition {
+ public:
+  constexpr WorkspacePartition() : owner_(Owner::NONE), tail_(nullptr) {}
+  ~WorkspacePartition();
+  WorkspacePartition(const WorkspacePartition&) = delete;
+  WorkspacePartition& operator=(const WorkspacePartition&) = delete;
+  bool open(Owner retained_owner, usize tail_size);
+  bool close();
+  bool ok() const { return tail_ != nullptr; }
+  Owner owner() const { return owner_; }
+  u8* tail() const { return tail_; }
+ private:
+  Owner owner_;
+  u8* tail_;
+};
+bool workspace_partitioned();
+
 class [[nodiscard]] Lease {
   public:
     constexpr Lease(void)
@@ -152,6 +181,12 @@ class [[nodiscard]] Lease {
     // overwrites an inactive persistent owner such as FOCAL/TinyBASIC.
     bool acquire_cache(Arena arena, Owner owner, usize required);
     void reset(void);
+    // Release an unused tail of a live, non-nested OVERLAY without changing
+    // its address/token or invoking an eviction callback.
+    bool shrink_to(usize required);
+    // Stable-address OVERLAY resize within its current free capacity. Never
+    // moves memory or evicts an APP; refuses if its tail would overlap one.
+    bool resize_to(usize required);
 
     bool ok(void) const { return memory_ != nullptr; }
     bool fresh(void) const { return fresh_; }

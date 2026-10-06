@@ -1,5 +1,12 @@
 #include "usb_screen_surface.hpp"
 
+#if MK61_SHARED_SCREEN_GRID
+#define TEST_SURFACE(name, pixels) \
+  text_screen::Grid name##_grid; usb_screen::Surface name(pixels, name##_grid)
+#else
+#define TEST_SURFACE(name, pixels) usb_screen::Surface name(pixels)
+#endif
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -66,7 +73,7 @@ static void test_profiles(void) {
   assert(huge.line_gap == 0);
 
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin(usb_screen::profile5x8());
   surface.flush(0);
   assert(surface.active());
@@ -81,7 +88,7 @@ static void test_profiles(void) {
 
 static void test_text_unicode_and_cursor(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   surface.setCursor(0, 0);
   surface.writeByte('A');
@@ -116,7 +123,7 @@ static void test_wide_external_font_layout(void) {
   u8 font_data[27] = {};
   prepared_font::Face font = narrowFont(font_data);
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin(usb_screen::profile3x5());
   surface.setFont(&font);
   surface.setTextLayout(usb_screen::profile3x5(), 40);
@@ -138,7 +145,7 @@ static void test_wide_external_font_layout(void) {
 
 static void test_custom_glyph(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   const u8 checker[8] = {
     0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A,
@@ -158,7 +165,7 @@ static void test_custom_glyph(void) {
 
 static void test_backend_switch_seed_and_session_reset(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   const u8 checker[8] = {
     0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A, 0x15, 0x0A,
   };
@@ -199,7 +206,7 @@ static void test_backend_switch_seed_and_session_reset(void) {
 
 static void test_fullscreen_and_overlay(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   u8 bitmap[usb_screen::FRAME_BYTES] = {};
   bitmap[0] = 0x81;
@@ -255,7 +262,7 @@ static void test_fullscreen_and_overlay(void) {
 
 static void test_update_batching(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   surface.flush(0);
   const u32 before = surface.revision();
@@ -271,7 +278,7 @@ static void test_update_batching(void) {
 
 static void test_noop_updates_do_not_render(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   surface.flush(0);
 
@@ -316,7 +323,7 @@ static void test_noop_updates_do_not_render(void) {
 static void test_disk_activity_overlay(void) {
   u8 framebuffer[usb_screen::FRAME_BYTES] = {};
   u8 reference[usb_screen::FRAME_BYTES] = {};
-  usb_screen::Surface surface(framebuffer);
+  TEST_SURFACE(surface, framebuffer);
   surface.begin();
   surface.setCursor(15, 0);
   surface.writeByte('W');
@@ -386,7 +393,30 @@ static void test_disk_activity_overlay(void) {
 
 } // безымянное пространство имён
 
+#if MK61_SHARED_SCREEN_GRID
+static void test_shared_grid_identity_and_alias_seed() {
+  text_screen::Grid canonical;
+  canonical.reset(6,47); canonical.writeByte(3); canonical.writeCodepoint(0x410);
+  canonical.setCursor(20,5);
+  u8 framebuffer[usb_screen::FRAME_BYTES]={};
+  usb_screen::Surface surface(framebuffer,canonical);
+  assert(canonical.cellIsCustom(0,0) && canonical.cell(1,0)==0x410);
+  surface.begin(usb_screen::profile5x8(),true,47);
+  u8 glyphs[8][8]={}; bool valid[8]={}; valid[3]=true;
+  surface.seedText(canonical,glyphs,valid,true,true,0);
+  assert(canonical.cols()==47 && canonical.rows()==6 && canonical.cursorX()==20);
+  assert(canonical.cellIsCustom(0,0) && canonical.cell(1,0)==0x410);
+  surface.writeCodepoint('R'); assert(canonical.cell(20,5)=='R');
+  surface.end(); assert(canonical.cell(20,5)=='R');
+  surface.begin();
+  assert(canonical.cell(0,0)==' ' && !canonical.cellIsCustom(0,0));
+}
+#endif
+
 int main(void) {
+#if MK61_SHARED_SCREEN_GRID
+  test_shared_grid_identity_and_alias_seed();
+#endif
   test_profiles();
   test_text_unicode_and_cursor();
 #if MK61_PROPORTIONAL_UI_FONTS

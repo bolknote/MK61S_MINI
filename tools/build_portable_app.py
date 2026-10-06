@@ -29,6 +29,10 @@ SYSTEM_MODULES = {
         "virtual_fat_diagnostic.cpp", "usbdisk_module_entry.cpp"], None),
     "explorer": ("EXPLORER", "EXPLORER", ["explorer_module_ui.cpp",
         "explorer_module_entry.cpp"], None),
+    "language-vm": ("LANGVM", "LANGUAGE_VM", ["language_bytecode.cpp",
+        "language_vm.cpp", "language_vm_module_entry.cpp"], None),
+    "language-input": ("LANGIN", "LANGUAGE_INPUT", ["language_bytecode.cpp",
+        "language_vm.cpp", "language_vm_validation.cpp", "language_vm_input_entry.cpp"], None),
 }
 
 # These ceilings protect intentionally compact system interpreters from silent
@@ -40,6 +44,7 @@ SYSTEM_SIZE_BUDGETS = {
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
+    "language-input": {"app_bytes": 6_500, "memory_bytes": 7_000},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -68,9 +73,12 @@ def run(command: list[str | Path]) -> str:
 
 def enforce_system_size_budget(system: str | None, report: dict,
                                local_float_math: bool = False,
-                               greedy_packer: bool = False) -> None:
+                               greedy_packer: bool = False,
+                               split_language_vm: bool = False) -> None:
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
+    if system == "language-vm" and split_language_vm:
+        budget = {"memory_bytes": 10_800 if local_float_math else 8_400}
     if budget is None:
         return
     budget = dict(budget)
@@ -87,12 +95,19 @@ def enforce_system_size_budget(system: str | None, report: dict,
 
 def build(args: argparse.Namespace) -> dict:
     system = SYSTEM_MODULES.get(args.system)
+    if getattr(args, "split_language_vm", False):
+        if args.system != "language-vm":
+            raise ValueError("--split-language-vm applies only to language-vm")
+        system = ("LANGVM", "LANGUAGE_VM", ["language_vm.cpp",
+                  "language_vm_overlay_entry.cpp"], None)
     if args.text_only and args.system != "markdown-viewer":
         raise ValueError("--text-only applies to markdown-viewer")
     if args.no_ui_fonts and not system:
         raise ValueError("--no-ui-fonts applies to system APPs")
-    if args.local_float_math and args.system not in ("focal", "tinybasic"):
-        raise ValueError("--local-float-math applies only to FOCAL or TinyBASIC")
+    if args.local_float_math and args.system not in ("focal", "tinybasic", "language-vm"):
+        raise ValueError("--local-float-math applies only to FOCAL, TinyBASIC or language-vm")
+    if args.language_vm_compiler and args.local_float_math:
+        raise ValueError("compiler-only APP delegates math to LANGVM; select local math on LANGVM")
     if system and args.source:
         raise ValueError("--system selects its own sources")
     if system and args.shared_runtime:
@@ -126,13 +141,17 @@ def build(args: argparse.Namespace) -> dict:
                 ROOT / "sdk/portable/system/system_compat.cpp",
                 *[ROOT / "code" / x for x in system[2]]] if system else
                [ROOT / "sdk/portable/start.c", *[x.resolve() for x in args.source]])
+    if args.language_vm_compiler:
+        if args.system not in ("tinybasic", "focal"):
+            raise ValueError("--language-vm-compiler applies only to BASIC/FOCAL")
+        sources += [ROOT / "code/language_bytecode.cpp", ROOT / "code/language_vm_frontend.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system == "usbdisk":
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
-    if args.system not in ("focal", "tinybasic"):
+    if args.system not in ("focal", "tinybasic", "language-vm", "language-input"):
         sources += [ROOT / "sdk/portable/memory.c"]
-    if args.system in ("focal", "tinybasic"):
+    if args.system in ("focal", "tinybasic", "language-vm", "language-input"):
         sources += [ROOT / "sdk/portable/system/runtime.S", ROOT / "sdk/portable/system/editor.cpp"]
     if args.shared_runtime:
         sources += [ROOT / "sdk/portable/shared_runtime.c", ROOT / "sdk/portable/system/runtime.S"]
@@ -201,6 +220,8 @@ def build(args: argparse.Namespace) -> dict:
         if system and cpp:
             support += ["-DMK61_BUILD_PORTABLE_SYSTEM", "-DMK61_BUILD_" + system[1] + "_MODULE",
                         "-include", str(ROOT / "sdk/portable/system/system_compat.hpp")]
+            if args.language_vm_compiler:
+                support += ["-DMK61_LANGUAGE_VM_COMPILER=1"]
             if args.local_float_math:
                 local_mask = (args.local_float_math_mask
                               if args.local_float_math_mask is not None
@@ -295,11 +316,13 @@ def build(args: argparse.Namespace) -> dict:
             args.local_float_math_mask
             if args.local_float_math_mask is not None
             else DEFAULT_LOCAL_FLOAT_MASK)
+    if args.language_vm_compiler:
+        report["language_vm_compiler"] = True
     if rust_compiler is not None:
         report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
     enforce_system_size_budget(args.system, report, args.local_float_math,
-                               greedy_packer)
+                               greedy_packer, getattr(args, "split_language_vm", False))
     return report
 
 
@@ -308,6 +331,10 @@ def main() -> None:
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
+    parser.add_argument("--language-vm-compiler", action="store_true",
+                        help="experimental compiler-only BASIC/FOCAL; requires a VM-aware resident")
+    parser.add_argument("--split-language-vm", action="store_true",
+                        help="hot VM without editor/parser; INPUT is a separate LANGIN.APP")
     parser.add_argument("--shared-runtime", action="store_true",
                         help="use resident ARM EABI/string helpers; require runtime service at startup")
     parser.add_argument("--text-only", action="store_true",
@@ -315,7 +342,7 @@ def main() -> None:
     parser.add_argument("--no-ui-fonts", action="store_true",
                         help="omit the optional proportional UI client from a system APP")
     parser.add_argument("--local-float-math", action="store_true",
-                        help="link local single-precision libm into FOCAL or TinyBASIC")
+                        help="link local single-precision libm into FOCAL, TinyBASIC or LANGVM")
     parser.add_argument("--local-float-math-mask", type=lambda value: int(value, 0),
                         help=argparse.SUPPRESS)
     parser.add_argument("--include", type=Path, action="append", default=[])

@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "display_buffer_loan.hpp"
 #include "calculator_face.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
@@ -1601,7 +1602,52 @@ void test_disk_saving_animation() {
   ui_display_test::now = 0;
 }
 
+#if MK61_SCREEN_BUFFER_LOAN && !MK61_ENABLE_USB_SCREEN
+void test_physical_page_loan() {
+  MK61Display display; startUi(display);
+  display.printUiLine(0,"Page loan");
+  const Frame before=ui_display_test::frame;
+  DisplayBufferLoan loan, other;
+  assert(!loan.acquire(display,193) && loan.acquire(display,192));
+  std::memset(loan.data(),0xA5,192);
+  assert(!other.acquire(display,1) && !display.deepIdleReady());
+  display.printUiLine(1,"Deferred draw");
+  display.blinkOn(); ui_display_test::now+=500; display.flush();
+  expectFrame(before);
+  for(unsigned i=0;i<192;++i) assert(loan.data()[i]==0xA5);
+  loan.reset();
+  assert(ui_display_test::frame!=before);
+  assert(other.acquire(display,32)); other.reset();
+  ui_display_test::now=0;
+}
+#endif
 #if MK61_ENABLE_USB_SCREEN
+#if MK61_SCREEN_BUFFER_LOAN
+void test_screen_buffer_loan() {
+  MK61Display display;
+  startUi(display);
+  display.printUiLine(0,"Loan keeps screen");
+  DisplayBufferLoan loan, other;
+  assert(!loan.acquire(display,0) && !loan.acquire(display,1345));
+  assert(loan.acquire(display,1344));
+  assert(loan.data()==display.usbScreenFramebuffer()+192);
+  std::memset(loan.data(),0xA5,1344);
+  assert(!other.acquire(display,1));
+  const u32 revision=display.displayModeRevision();
+  assert(!display.enterUsbScreen() && !display.usbScreenActive());
+  assert(display.displayModeRevision()==revision);
+  display.printUiLine(1,"Physical still draws");
+  display.blinkOn(); ui_display_test::now+=500; display.flush();
+  for(unsigned i=0;i<1344;++i) assert(loan.data()[i]==0xA5);
+  loan.reset();
+  assert(display.enterUsbScreen());
+  assert(!other.acquire(display,1));
+  display.leaveUsbScreen();
+  { DisplayBufferLoan scoped; assert(scoped.acquire(display,256)); }
+  assert(other.acquire(display,256)); other.reset();
+  ui_display_test::now=0;
+}
+#endif
 void test_disk_usb_display_integration() {
   ui_display_test::now = 0;
   MK61Display display;
@@ -1633,11 +1679,18 @@ void test_usb_waits_for_physical_display_ack() {
   // A failed AE must neither publish USB Screen as active nor poison the
   // logical physical-screen state. A later ATTACH can retry cleanly.
   ui_display_test::sleep_failures_remaining = 1;
+  display.printUiLine(0,"Failed attach keeps text");
+  const Frame before_attach=ui_display_test::frame;
+  const u8 before_cols=display.cols(), before_rows=display.rows();
+  const u8 before_x=display.cursorX(), before_y=display.cursorY();
   assert(!display.enterUsbScreen());
   assert(!display.usbScreenActive());
   assert(!ui_display_test::sleeping);
   assert(ui_display_test::sleep_calls == 1);
   assert(display.deepIdleReady());
+  display.flush(); expectFrame(before_attach);
+  assert(display.cols()==before_cols && display.rows()==before_rows);
+  assert(display.cursorX()==before_x && display.cursorY()==before_y);
 
   assert(display.enterUsbScreen());
   assert(display.usbScreenActive());
@@ -1833,7 +1886,13 @@ int main() {
   test_disk_restores_text_clock_and_calculator();
   test_disk_fullscreen_and_update_batching();
   test_disk_saving_animation();
+#if MK61_SCREEN_BUFFER_LOAN && !MK61_ENABLE_USB_SCREEN
+  test_physical_page_loan();
+#endif
 #if MK61_ENABLE_USB_SCREEN
+#if MK61_SCREEN_BUFFER_LOAN
+  test_screen_buffer_loan();
+#endif
   test_disk_usb_display_integration();
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();

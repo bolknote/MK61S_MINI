@@ -68,5 +68,9 @@ MK61_SHARED_MEMORY_OWNER(APPLICATION, "app",
                          0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(SETUP, "setup", arena_mask(Arena::WORKSPACE),
                          0, 0, 0, 0)
+// Pointer-free language values/image survive between foreground commands.
+// Native compiler/runtime objects are never part of this snapshot.
+MK61_SHARED_MEMORY_OWNER(LANGUAGE_VM, "language-vm", arena_mask(Arena::WORKSPACE),
+                         arena_mask(Arena::WORKSPACE), 0, 0, snapshot_schema::LANGUAGE_VM)
 MK61_SHARED_MEMORY_OWNER(USB_SCREEN, "usb-screen",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)

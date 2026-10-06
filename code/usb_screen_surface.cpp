@@ -36,9 +36,17 @@ TextProfile normalizeProfile(TextProfile profile) {
   return {geometry.rows, geometry.width, geometry.height, geometry.line_gap};
 }
 
+#if MK61_SHARED_SCREEN_GRID
+Surface::Surface(u8* framebuffer, text_screen::Grid& grid)
+#else
 Surface::Surface(u8* framebuffer)
+#endif
   : framebuffer_(framebuffer),
+#if MK61_SHARED_SCREEN_GRID
+    grid_(grid),
+#else
     grid_(),
+#endif
     custom_glyphs_{{0}},
     custom_valid_{false},
     font_(NULL),
@@ -70,10 +78,12 @@ Surface::Surface(u8* framebuffer)
     ui_row_tails_(0)
 #endif
     {
+#if !MK61_SHARED_SCREEN_GRID
   grid_.reset(profile_.rows, grid_.cols());
+#endif
 }
 
-void Surface::begin(TextProfile profile) {
+void Surface::begin(TextProfile profile, bool preserve_text, u8 cols) {
 #if MK61_DISK_ACTIVITY_SUPPORTED
   disk_overlay_ = disk_activity::Overlay{};
 #endif
@@ -104,7 +114,8 @@ void Surface::begin(TextProfile profile) {
   memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
   memset(custom_valid_, 0, sizeof(custom_valid_));
   font_ = NULL;
-  grid_.reset(profile_.rows);
+  if(preserve_text) grid_.reshape(profile_.rows, cols);
+  else grid_.reset(profile_.rows, cols);
   grid_.markAll();
   clearPixels();
   dirty_ = true;
@@ -287,7 +298,8 @@ void Surface::seedText(const text_screen::Grid& source,
                        t_time_ms now) {
   if(!active_ || custom_glyphs == NULL || custom_valid == NULL) return;
 
-  grid_.reset(profile_.rows, source.cols());
+  const bool shared_source = &source == &grid_;
+  if(!shared_source) grid_.reset(profile_.rows, source.cols());
   memset(custom_glyphs_, 0, sizeof(custom_glyphs_));
   memset(custom_valid_, 0, sizeof(custom_valid_));
   for(u8 slot = 0; slot < CUSTOM_GLYPHS; slot++) {
@@ -301,7 +313,7 @@ void Surface::seedText(const text_screen::Grid& source,
                 ? source.rows() : grid_.rows();
   const u8 cols = source.cols() < grid_.cols()
                 ? source.cols() : grid_.cols();
-  for(u8 row = 0; row < rows; row++) {
+  for(u8 row = 0; !shared_source && row < rows; row++) {
     grid_.setCursor(0, row);
     for(u8 col = 0; col < cols; col++) {
       const u16 value = source.cell(col, row);

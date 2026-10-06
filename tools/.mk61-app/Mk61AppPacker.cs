@@ -127,7 +127,7 @@ namespace Mk61.Build {
       new Dictionary<string, byte>(StringComparer.Ordinal) {
         {"focal", 1}, {"tinybasic", 2}, {"wbmp-viewer", 3}, {"app", 4},
         {"chip8", 5}, {"markdown-viewer", 6}, {"setup", 7},
-        {"usbdisk", 8}, {"explorer", 9}
+        {"usbdisk", 8}, {"explorer", 9}, {"language-vm", 10}, {"language-input", 11}
       };
 
     private static ushort U16(byte[] data, int offset) {

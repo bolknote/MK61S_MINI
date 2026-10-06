@@ -4,8 +4,20 @@
 
 #include "focal.hpp"
 #include "loadable_module_runtime.hpp"
+#if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
+#include "language_vm_resident.hpp"
+#endif
 
 namespace {
+
+static loadable_module::RuntimeStatus invoke(loadable_module::Command command,
+    u32 a,u32& result) {
+#if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
+  return language_vm::invoke_resident(language_vm::Language::FOCAL,command,a,0,result);
+#else
+  return loadable_module::invoke(loadable_module::Kind::FOCAL,command,a,0,0,0,result);
+#endif
+}
 
 static u32 pointer_argument(const void* value) {
   return (u32) (usize) value;
@@ -14,16 +26,14 @@ static u32 pointer_argument(const void* value) {
 static bool call_bool(loadable_module::Command command,
                       u32 argument0 = 0) {
   u32 result = 0;
-  return loadable_module::invoke(loadable_module::Kind::FOCAL, command,
-                                 argument0, 0, 0, 0, result) ==
+  return invoke(command,argument0,result) ==
            loadable_module::RuntimeStatus::OK && result != 0;
 }
 
 static FocalRunStatus call_status(loadable_module::Command command,
                                   u32 argument0) {
   u32 result = 0;
-  return loadable_module::invoke(loadable_module::Kind::FOCAL, command,
-                                 argument0, 0, 0, 0, result) ==
+  return invoke(command,argument0,result) ==
            loadable_module::RuntimeStatus::OK
       ? (FocalRunStatus) result : FocalRunStatus::UNAVAILABLE;
 }
@@ -68,8 +78,7 @@ FocalRunStatus RunFocalProgram(u16 id) {
 
 void EditFocal(void) {
   u32 result = 0;
-  (void) loadable_module::invoke(loadable_module::Kind::FOCAL,
-      loadable_module::Command::FOCAL_EDIT, result);
+  (void) invoke(loadable_module::Command::FOCAL_EDIT,0,result);
 }
 
 bool EditFocalProgram(const char* name) {

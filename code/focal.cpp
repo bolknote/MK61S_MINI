@@ -223,6 +223,13 @@ namespace library_mk61 {
 #include "bounded_string.hpp"
 #include "mk8_literal.hpp"
 #include "mk_math.hpp"
+#if defined(MK61_LANGUAGE_VM_TEST)
+#include "language_bytecode.hpp"
+#endif
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+#include "language_vm_abi.hpp"
+#include "language_compiler_workspace.hpp"
+#endif
 #include "number_format.hpp"
 
 #include <type_traits>
@@ -395,7 +402,11 @@ struct FocalBranchParts {
 };
 
 struct FocalAst {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  EliminatedAstLines<FocalLine> lines;
+#else
   FocalLine lines[FOCAL_MAX_LINES];
+#endif
   i16 line_count;
   char operand_pool[FOCAL_SOURCE_SIZE];
   u16 operand_used;
@@ -451,6 +462,10 @@ static FocalRuntime& focal_runtime(void) {
 }
 #else
 static_assert(sizeof(FocalRuntime) <= language_workspace::SIZE, "FOCAL runtime does not fit language workspace");
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+static_assert(sizeof(FocalRuntime) <= language_vm::COMPILER_WORKSPACE_SIZE,
+              "compiler-only FOCAL overlaps retained VM values");
+#endif
 
 class FocalWorkspaceScope {
   public:
@@ -479,6 +494,18 @@ static FocalRuntime& focal_runtime(void) {
 #define focal_vars       (focal_runtime().focal_vars)
 #define NextFocal        (focal_runtime().NextFocal)
 #define focal_last_error (focal_runtime().focal_last_error)
+
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+uint16_t language_vm::frontend_source_id(void) {
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope scope;
+  if(!scope.ok())return FOCAL_INVALID_STORE_ID;
+#endif
+  const int slot=NextFocal;
+  return slot>=0 && slot<FOCAL_PROGRAM_COUNT && programs[slot].used
+      ? programs[slot].store_id : FOCAL_INVALID_STORE_ID;
+}
+#endif
 #ifdef FOCAL_HOST_TEST
 static u32 focal_random_state = 0x3B6B120EUL;
 static double focal_host_ask_value = 0.0;
@@ -1045,6 +1072,24 @@ static bool focal_target_only(const char* text, FocalTarget& target) {
 static bool focal_validate_statement(FocalOp op, const char* operand);
 
 static bool focal_compile_source(const char* source, FocalAst& ast) {
+#if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_LANGUAGE_VM_TEST)
+  if (!source) return focal_error(FocalError::SYNTAX);
+  const usize length = text_editor::bounded_length(source, FOCAL_SOURCE_SIZE);
+  if (length >= FOCAL_SOURCE_SIZE) return focal_error(FocalError::FULL);
+  const auto result =
+      language_vm::compile(language_vm::Language::FOCAL, source, (u16)length, nullptr,
+                           language_vm::MAX_IMAGE, mk61_ref::register_available(15));
+  ast.line_count = (i16)result.line;
+  if (result.error != language_vm::Error::NONE) {
+    return focal_error(result.error == language_vm::Error::FULL   ? FocalError::FULL
+                       : result.error == language_vm::Error::LINE ? FocalError::LINE
+                       : result.error == language_vm::Error::REGISTER
+                           ? FocalError::MK
+                           : FocalError::SYNTAX);
+  }
+  focal_last_error[0] = 0;
+  return true;
+#endif
   focal_ast_reset(ast);
   if(source == NULL) return focal_error(FocalError::SYNTAX);
   if(strlen(source) >= FOCAL_SOURCE_SIZE) return focal_error(FocalError::FULL);
@@ -1379,6 +1424,17 @@ static double expr_parse_additive(ExprParser& parser) {
 static bool focal_parse_expr_range(const char* begin, const char* end,
                                    bool evaluate, double& value,
                                    FocalError& error) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (!evaluate) {
+    const auto result = language_vm::compile_expression(
+        language_vm::Language::FOCAL, begin, (u16)(end - begin), nullptr,
+        language_vm::MAX_IMAGE);
+    value = 0;
+    error = result.error == language_vm::Error::NONE ? FocalError::NONE
+                                                     : FocalError::SYNTAX;
+    return result.error == language_vm::Error::NONE;
+  }
+#endif
   while(begin < end && focal_is_space(*begin)) begin++;
   while(end > begin && focal_is_space(*(end - 1))) end--;
   const usize len = (usize) (end - begin);
@@ -2014,6 +2070,10 @@ static i32 focal_wait_for_fresh_key(void);
 #endif
 
 static void focal_wait_after_menu_run(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (language_vm::frontend_request && language_vm::frontend_request->run_requested)
+    return;
+#endif
 #ifndef FOCAL_HOST_TEST
   focal_trace_text("WAIT after run");
   focal_wait_for_fresh_key();
@@ -2537,6 +2597,24 @@ static bool compile_program_slot(int slot) {
 }
 
 FocalRunStatus RunFocal(int FocalN) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (!language_vm::compatible(language_vm::frontend_request) || FocalN < 0 ||
+      FocalN >= FOCAL_PROGRAM_COUNT || !programs[FocalN].used)
+    return FocalRunStatus::UNAVAILABLE;
+  auto& request = *language_vm::frontend_request;
+  request.compiled = language_vm::compile(
+      language_vm::Language::FOCAL, programs[FocalN].source,
+      programs[FocalN].source_len, request.output, (u16)request.capacity);
+  request.source_id = programs[FocalN].store_id;
+  request.language = (u8)language_vm::Language::FOCAL;
+  request.mode = 0;
+  request.run_requested = request.compiled.error == language_vm::Error::NONE;
+  if (!request.run_requested) {
+    focal_error(FocalError::SYNTAX);
+    return FocalRunStatus::COMPILE_ERROR;
+  }
+  return FocalRunStatus::COMPLETED;
+#endif
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return FocalRunStatus::UNAVAILABLE;
@@ -2545,6 +2623,116 @@ FocalRunStatus RunFocal(int FocalN) {
   main_lcd().endUiText();
 #endif
   if(!compile_program_slot(FocalN)) return FocalRunStatus::COMPILE_ERROR;
+#if defined(MK61_LANGUAGE_VM_TEST)
+  uint8_t image[language_vm::MAX_IMAGE];
+  const auto compiled =
+      language_vm::compile(language_vm::Language::FOCAL, programs[FocalN].source,
+                           programs[FocalN].source_len, image, sizeof(image));
+  if (compiled.error != language_vm::Error::NONE) {
+    fprintf(stderr, "VM FOCAL compile: %s at %u: %s\n",
+            language_vm::error_name(compiled.error), compiled.source_offset,
+            programs[FocalN].source);
+    focal_error(FocalError::SYNTAX);
+    return FocalRunStatus::COMPILE_ERROR;
+  }
+  language_vm::View view;
+  if (language_vm::inspect(image, compiled.size, view) != language_vm::Error::NONE) {
+    focal_error(FocalError::SYNTAX);
+    return FocalRunStatus::RUNTIME_ERROR;
+  }
+  double values[language_vm::MAX_STACK];
+  language_vm::State vm = {};
+  vm.variables = focal_vars;
+  vm.stack = values;
+  vm.stack_capacity = language_vm::MAX_STACK;
+  struct Context {
+    char output[96];
+    uint8_t row;
+    bool cancelled;
+  } context = {};
+  const language_vm::Services services = {
+      &context,
+      [](void*) { return !focal_runtime_interrupted(); },
+      [](void*, language_vm::Function f, double a, double b) {
+        return (uint8_t)f == 255
+                   ? mk_math::pow(a, b)
+                   : focal_apply_math_function(
+                         (FocalFunction)((uint8_t)FocalFunction::SIN + (uint8_t)f), a);
+      },
+      [](void*) { return focal_rnd(); },
+      nullptr,
+      [](void*, bool write, uint8_t r, double& value) {
+        const mk61_ref::Ref ref = {r < 4 ? (mk61_ref::Kind)r : mk61_ref::Kind::R,
+                                   r < 4 ? (u8)0 : (u8)(r - 4)};
+        return write ? mk61_ref::write(ref, value) : focal_read_mk_ref(ref, value);
+      },
+      [](void* raw, language_vm::Event e, const char* text, uint16_t length,
+         double& value) {
+        auto& c = *(Context*)raw;
+        switch (e) {
+          case language_vm::Event::PRINT_BEGIN:
+            c.output[0] = 0;
+            c.row = 0;
+            return true;
+          case language_vm::Event::TEXT:
+            focal_append_print_range(c.output, sizeof(c.output), text, text + length);
+            return true;
+          case language_vm::Event::NUMBER: {
+            char number[24];
+            focal_format_number(value, number, sizeof(number));
+            focal_append_print(c.output, sizeof(c.output), number);
+            return true;
+          }
+          case language_vm::Event::FLUSH:
+          case language_vm::Event::PRINT_END: {
+            const u8 n =
+                focal_flush_print_line(c.output, c.row, e == language_vm::Event::FLUSH);
+            const u16 next = (u16)c.row + n;
+            const u8 rows = main_lcd().rows();
+            c.row = next < rows ? (u8)next : (u8)(rows - 1);
+            return true;
+          }
+          case language_vm::Event::READ_INPUT: {
+            char prompt[8];
+            focal_copy_trim(prompt, sizeof(prompt), text, text + length);
+            const auto r = focal_read_number_from_keyboard(prompt, value);
+            c.cancelled = r == FocalInputResult::CANCELLED;
+            return r == FocalInputResult::VALUE;
+          }
+          case language_vm::Event::WAIT:
+            c.cancelled = !focal_wait_for_key();
+            return !c.cancelled;
+          case language_vm::Event::CLEAR:
+            main_lcd().clear();
+            return true;
+          case language_vm::Event::FINISH:
+            return true;
+          default:
+            return false;
+        }
+      }};
+  const auto result = language_vm::run(view, vm, services, 1000000);
+  if (context.cancelled || result.error == language_vm::Error::STOPPED) {
+    focal_show_stopped();
+    return FocalRunStatus::STOPPED;
+  }
+  if (result.error == language_vm::Error::NONE) return FocalRunStatus::COMPLETED;
+  FocalError error = FocalError::SYNTAX;
+  if (result.error == language_vm::Error::MATH)
+    error = FocalError::MATH;
+  else if (result.error == language_vm::Error::LINE)
+    error = FocalError::LINE;
+  else if (result.error == language_vm::Error::REGISTER)
+    error = FocalError::MK;
+  else if (result.error == language_vm::Error::FOR)
+    error = FocalError::FOR;
+  else if (result.error == language_vm::Error::RETURN)
+    error = FocalError::RETURN;
+  else if (result.error == language_vm::Error::STACK)
+    error = FocalError::STACK;
+  focal_error(error);
+  return FocalRunStatus::RUNTIME_ERROR;
+#endif
   focal_trace_int("RUN slot=", FocalN);
   focal_trace_int("RUN lines=", focal_ast.line_count);
   for(i16 i = 0; i < focal_ast.line_count; i++) {
@@ -2572,6 +2760,17 @@ FocalRunStatus RunFocal(int FocalN) {
   focal_trace_text("RUN end");
   return FocalRunStatus::COMPLETED;
 }
+
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+bool language_vm::frontend_emit(void) {
+  if (!compatible(frontend_request) || !frontend_request->output) return false;
+#ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope scope;
+  if (!scope.ok()) return false;
+#endif
+  return RunFocal(NextFocal) == FocalRunStatus::COMPLETED;
+}
+#endif
 
 FocalRunStatus RunFocalProgram(const char* name) {
 #ifndef FOCAL_HOST_TEST
@@ -3491,6 +3690,9 @@ bool EditFocalProgram(u16 id) {
 }
 
 static bool FOCAL_clear_data(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (language_vm::frontend_request) language_vm::frontend_request->clear_requested = 1;
+#endif
   focal_clear_vars();
   focal_message_i18n("FOCAL data", M8("Данные"), "cleared", M8("очищены"));
   delay(700);

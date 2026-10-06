@@ -43,9 +43,17 @@ class Surface {
     static constexpr u8 OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 OVERLAY_MAX_HEIGHT = 16;
 
+#if MK61_SHARED_SCREEN_GRID
+    // Both backing buffers must outlive the surface; sharing is not copying.
+    Surface(u8* framebuffer, text_screen::Grid& grid);
+    Surface(const Surface&) = delete;
+    Surface& operator=(const Surface&) = delete;
+#else
     explicit Surface(u8* framebuffer);
+#endif
 
-    void begin(TextProfile profile = profile5x8());
+    void begin(TextProfile profile = profile5x8(), bool preserve_text = false,
+               u8 cols = COLS);
     void end(void);
     bool active(void) const { return active_; }
 
@@ -130,7 +138,11 @@ class Surface {
     static constexpr t_time_ms CURSOR_BLINK_MS = 500;
 
     u8* framebuffer_;
+#if MK61_SHARED_SCREEN_GRID
+    text_screen::Grid& grid_;
+#else
     text_screen::Grid grid_;
+#endif
     u8 custom_glyphs_[CUSTOM_GLYPHS][8];
     bool custom_valid_[CUSTOM_GLYPHS];
     const prepared_font::Face* font_;

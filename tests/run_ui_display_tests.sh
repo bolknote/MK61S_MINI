@@ -6,13 +6,20 @@ sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-for usb in 0 1; do
+for variant in physical legacy-usb shared-usb physical-loan; do
+usb=1
+shared_grid=0
+if [[ "$variant" == physical ]]; then usb=0; fi
+if [[ "$variant" == shared-usb ]]; then shared_grid=1; fi
+loan="$shared_grid"
+if [[ "$variant" == physical-loan ]]; then usb=0; loan=1; fi
 clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   -DCONFIG -DARDUINO=100 -DMK61_DISPLAY_UC1609=1 \
   -DMK61_PROPORTIONAL_UI_FONTS=1 \
   -DMK61_FIXED_CALCULATOR_FACE=1 \
   -DMK61_HAS_COMPILED_GRAPHICS=1 \
   -DMK61_ENABLE_USB_SCREEN="$usb" -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=1 \
+  -DMK61_SHARED_SCREEN_GRID="$shared_grid" -DMK61_SCREEN_BUFFER_LOAN="$loan" \
   -DMK61_DEEP_IDLE_ENABLED=1 -DMK61_ANY_FULLSCREEN_FILE=1 \
   -DPIN_GLCD_CD=0 -DPIN_GLCD_RST=1 -DPIN_GLCD_CS=2 \
   -DGLCD_UC1609_BIAS=0 -DGLCD_UC1609_ADDRESS_SET=0 \
@@ -20,6 +27,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
   -I"$root/tests/ui_display_shim" -I"$root/code" \
   "$root/tests/ui_display_self_test.cpp" \
   "$root/code/display.cpp" "$root/code/display_ui.cpp" \
+  "$root/code/display_buffer_loan.cpp" \
   "$root/code/disk_activity.cpp" \
   "$root/code/ui_text_renderer.cpp" \
   "$root/code/calculator_face.cpp" \

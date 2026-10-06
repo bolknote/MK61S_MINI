@@ -79,7 +79,16 @@ enum class Command : u32 {
   // It updates ExplorerSession and returns one requested resident action;
   // resident unloads/evicts it as needed, performs the action, then may resume
   // with the same session value.
-  EXPLORER_SELECT = 0x600
+  EXPLORER_SELECT = 0x600,
+  // argument0 = resident-owned ExecuteRequest (monolithic VM) or
+  // OverlayRequest (v3 hot VM, positively identified by LANGUAGE_VM_INFO).
+  LANGUAGE_VM_RUN = 0x700,
+  LANGUAGE_COMPILER_INFO = 0x701,
+  LANGUAGE_VM_INFO = 0x702,
+  LANGUAGE_INPUT = 0x703,
+  LANGUAGE_COMPILER_EMIT = 0x704,
+  LANGUAGE_VM_VALIDATE = 0x705,
+  LANGUAGE_VM_FINISH = 0x706
 };
 
 enum class ExplorerAction : u8 {

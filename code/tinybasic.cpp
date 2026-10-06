@@ -176,6 +176,13 @@ namespace library_mk61 {
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "number_format.hpp"
+#if defined(MK61_LANGUAGE_VM_TEST)
+#include "language_bytecode.hpp"
+#endif
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+#include "language_vm_abi.hpp"
+#include "language_compiler_workspace.hpp"
+#endif
 
 #include <type_traits>
 
@@ -313,7 +320,11 @@ struct TbLine {
 struct TbAst {
   u8 line_count;
   u16 source_len;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  EliminatedAstLines<TbLine> lines;
+#else
   TbLine lines[TB_MAX_LINES];
+#endif
 };
 
 struct TbProgram {
@@ -436,18 +447,28 @@ static usize tinybasic_array_capacity(void) {
 #else
 static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC runtime does not fit language workspace");
 
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+static_assert(sizeof(TinyBasicRuntime) <= language_vm::COMPILER_WORKSPACE_SIZE,
+              "compiler-only BASIC overlaps retained VM values");
+static constexpr usize TB_WORKSPACE_REQUEST = sizeof(TinyBasicRuntime);
+#else
+static constexpr usize TB_WORKSPACE_REQUEST = language_workspace::SIZE;
+#endif
+
 static constexpr usize tinybasic_array_offset(void) {
   return (sizeof(TinyBasicRuntime) + alignof(double) - 1U) &
          ~(alignof(double) - 1U);
 }
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
 static_assert(tinybasic_array_offset() + 128U * sizeof(double) <=
                   language_workspace::SIZE,
               "TinyBASIC workspace must retain a useful PATB array");
+#endif
 
 class TinyBasicWorkspaceScope {
   public:
     TinyBasicWorkspaceScope(void)
-      : lease(language_workspace::Owner::TINYBASIC, language_workspace::SIZE) {
+      : lease(language_workspace::Owner::TINYBASIC, TB_WORKSPACE_REQUEST) {
       if(!lease.ok() || !lease.fresh()) return;
       memset(lease.data(), 0, lease.size());
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
@@ -467,15 +488,23 @@ static TinyBasicRuntime& tinybasic_runtime(void) {
 }
 
 static double* tinybasic_array_data(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  return nullptr; // Compiler/editor owns no interpreter array.
+#else
   u8* memory = (u8*) language_workspace::data(
       language_workspace::Owner::TINYBASIC);
   return memory == NULL
       ? NULL : (double*) (memory + tinybasic_array_offset());
+#endif
 }
 
 static usize tinybasic_array_capacity(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  return 0;
+#else
   return (language_workspace::SIZE - tinybasic_array_offset()) /
          sizeof(double);
+#endif
 }
 #endif
 
@@ -486,6 +515,18 @@ static usize tinybasic_array_capacity(void) {
 #define tb_last_error    (tinybasic_runtime().tb_last_error)
 #define tb_pending_print (tinybasic_runtime().tb_pending_print)
 #define tb_print_row     (tinybasic_runtime().tb_print_row)
+
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+uint16_t language_vm::frontend_source_id(void) {
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope scope;
+  if(!scope.ok())return TB_INVALID_STORE_ID;
+#endif
+  const int slot=NextTinyBasic;
+  return slot>=0 && slot<TB_PROGRAM_COUNT && tb_program_used(programs[slot])
+      ? programs[slot].store_id : TB_INVALID_STORE_ID;
+}
+#endif
 
 // PAUSE already provides the acknowledgement that the generic runner normally
 // requests after a program. Keep it only while no later screen/input activity
@@ -1516,6 +1557,20 @@ static bool tb_parse_line_number(const char*& p, i16& number) {
 }
 
 static bool tb_compile_source(const char* source, TbAst& ast) {
+#if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_LANGUAGE_VM_TEST)
+  if (!source) return tb_error("WHAT?");
+  const usize length = text_editor::bounded_length(source, TB_SOURCE_SIZE);
+  if (length >= TB_SOURCE_SIZE) return tb_error("SORRY");
+  const auto result =
+      language_vm::compile(language_vm::Language::BASIC, source, (u16)length, nullptr,
+                           language_vm::MAX_IMAGE);
+  ast.source_len = (u16)length;
+  ast.line_count = (u8)result.line;
+  if (result.error != language_vm::Error::NONE)
+    return tb_error(result.error == language_vm::Error::FULL ? "SORRY" : "WHAT?");
+  tb_last_error[0] = 0;
+  return true;
+#endif
   tb_ast_reset(ast);
   if(source == NULL) return tb_error("WHAT?");
   usize source_len = 0;
@@ -2409,6 +2464,10 @@ static void tinybasic_wait_after_run(void) { tb_host_wait_count++; }
 #endif
 
 static void tinybasic_finish_wait(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (language_vm::frontend_request && language_vm::frontend_request->run_requested)
+    return;
+#endif
   if(!tb_pause_is_final) tinybasic_wait_after_run();
 }
 
@@ -2417,6 +2476,24 @@ static TinyBasicRunStatus tb_run_program(
     TinyBasicRunMode mode = TinyBasicRunMode::INTERACTIVE) {
   TinyBasicRunModeScope mode_scope(mode);
   tb_pause_is_final = false;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (!language_vm::compatible(language_vm::frontend_request) || program_index < 0 ||
+      program_index >= TB_PROGRAM_COUNT || !tb_program_used(programs[program_index]))
+    return TinyBasicRunStatus::UNAVAILABLE;
+  auto& request = *language_vm::frontend_request;
+  request.compiled = language_vm::compile(
+      language_vm::Language::BASIC, programs[program_index].source,
+      programs[program_index].source_len, request.output, (u16)request.capacity);
+  request.source_id = programs[program_index].store_id;
+  request.language = (u8)language_vm::Language::BASIC;
+  request.mode = (u8)mode;
+  request.run_requested = request.compiled.error == language_vm::Error::NONE;
+  if (!request.run_requested) {
+    tb_error(request.compiled.error == language_vm::Error::FULL ? "SORRY" : "WHAT?");
+    return TinyBasicRunStatus::COMPILE_ERROR;
+  }
+  return TinyBasicRunStatus::COMPLETED;
+#endif
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return TinyBasicRunStatus::UNAVAILABLE;
@@ -2431,6 +2508,137 @@ static TinyBasicRunStatus tb_run_program(
   if(!tb_compile_source(programs[program_index].source, tb_ast)) {
     return TinyBasicRunStatus::COMPILE_ERROR;
   }
+#if defined(MK61_LANGUAGE_VM_TEST)
+  uint8_t image[language_vm::MAX_IMAGE];
+  const auto compiled =
+      language_vm::compile(language_vm::Language::BASIC, programs[program_index].source,
+                           programs[program_index].source_len, image, sizeof(image));
+  if (compiled.error != language_vm::Error::NONE) {
+    fprintf(stderr, "VM BASIC compile: %s at %u: %s\n",
+            language_vm::error_name(compiled.error), compiled.source_offset,
+            programs[program_index].source);
+    tb_error("WHAT?");
+    return TinyBasicRunStatus::COMPILE_ERROR;
+  }
+  language_vm::View view;
+  if (language_vm::inspect(image, compiled.size, view) != language_vm::Error::NONE) {
+    tb_error("HOW?");
+    return TinyBasicRunStatus::RUNTIME_ERROR;
+  }
+  double values[language_vm::MAX_STACK];
+  language_vm::State vm = {};
+  vm.variables = tb_vars;
+  vm.array = tinybasic_array_data();
+  vm.array_count = (uint16_t)(tinybasic_array_max_index() + 1);
+  vm.stack = values;
+  vm.stack_capacity = language_vm::MAX_STACK;
+  main_lcd().clear();
+  tb_pending_print[0] = 0;
+  tb_print_row = 0;
+  struct Context {
+    int width;
+    bool cancelled, normal_pause;
+    const char* failure;
+  } context = {};
+  const language_vm::Services services = {
+      &context,
+      [](void*) { return !tb_runtime_interrupted(); },
+      [](void*, language_vm::Function f, double a, double b) {
+        return (uint8_t)f == 255
+                   ? mk_math::pow(a, b)
+                   : tb_apply_math_function(
+                         (TbFunction)((uint8_t)TbFunction::SIN + (uint8_t)f), a);
+      },
+      [](void*) { return tb_next_random(); },
+      [](void*, language_vm::Function f) {
+        return f == language_vm::Function::SIZE   ? tinybasic_size_value()
+               : f == language_vm::Function::COLS ? (double)main_lcd().cols()
+                                                  : (double)main_lcd().rows();
+      },
+      [](void* raw, bool write, uint8_t r, double& value) {
+        if (write && r == 19 && !mk61_ref::register_available(15)) {
+          ((Context*)raw)->failure = "WHAT?";
+          return false;
+        }
+        const mk61_ref::Ref ref = {r < 4 ? (mk61_ref::Kind)r : mk61_ref::Kind::R,
+                                   r < 4 ? (u8)0 : (u8)(r - 4)};
+        return write ? mk61_ref::write(ref, value) : tb_read_mk_ref(ref, value);
+      },
+      [](void* raw, language_vm::Event event, const char* text, uint16_t length,
+         double& value) {
+        auto& c = *(Context*)raw;
+        switch (event) {
+          case language_vm::Event::PRINT_BEGIN:
+            c.width = 0;
+            tb_pause_is_final = false;
+            return true;
+          case language_vm::Event::TEXT:
+            if (tb_append_print_range(text, text + length)) return true;
+            c.failure = "SORRY";
+            return false;
+          case language_vm::Event::NUMBER: {
+            char number[24];
+            tb_format_number(value, number, sizeof(number));
+            for (int n = c.width - (int)strlen(number); n > 0; --n)
+              if (!tb_append_print(" ")) return false;
+            return tb_append_print(number);
+          }
+          case language_vm::Event::FORMAT: {
+            const double n = mk_math::floor(value + .5);
+            if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7)
+              return false;
+            c.width = (int)n;
+            return true;
+          }
+          case language_vm::Event::SEPARATOR:
+            return length == 2   ? tb_append_print_separator(',')
+                   : length == 1 ? tb_append_print(" ")
+                                 : true;
+          case language_vm::Event::FLUSH:
+            tb_flush_print();
+            return true;
+          case language_vm::Event::PRINT_END:
+            if (!length) tb_flush_print();
+            return true;
+          case language_vm::Event::READ_INPUT: {
+            char prompt[96];
+            tb_copy_range(prompt, sizeof(prompt), text, text + length);
+            if (tb_read_number_from_keyboard(prompt, value)) return true;
+            c.cancelled = true;
+            c.normal_pause = !tb_runs_inside_m61();
+            tb_report_interrupted();
+            return false;
+          }
+          case language_vm::Event::WAIT:
+            if (tb_pause()) return true;
+            c.cancelled = true;
+            c.normal_pause = !tb_runs_inside_m61();
+            if (tb_runs_inside_m61()) tb_report_interrupted();
+            return false;
+          case language_vm::Event::CLEAR:
+            tb_clear_output();
+            return true;
+          case language_vm::Event::FINISH:
+            if (tb_pending_print[0]) tb_flush_print();
+            return true;
+          case language_vm::Event::TARGET_REF:
+            if (value == 19 && !mk61_ref::register_available(15)) {
+              c.failure = "WHAT?";
+              return false;
+            }
+            return true;
+        }
+        return false;
+      }};
+  const auto result = language_vm::run(view, vm, services, 1000000);
+  if (context.cancelled)
+    return context.normal_pause ? TinyBasicRunStatus::COMPLETED
+                                : TinyBasicRunStatus::STOPPED;
+  if (result.error == language_vm::Error::STOPPED) return TinyBasicRunStatus::STOPPED;
+  if (result.error == language_vm::Error::NONE) return TinyBasicRunStatus::COMPLETED;
+  tb_error(context.failure ? context.failure : "HOW?");
+  return TinyBasicRunStatus::RUNTIME_ERROR;
+#endif
   const char* const source = programs[program_index].source;
 
   main_lcd().clear();
@@ -2481,6 +2689,19 @@ static TinyBasicRunStatus tb_run_program(
   return succeeded ? TinyBasicRunStatus::COMPLETED
                    : TinyBasicRunStatus::RUNTIME_ERROR;
 }
+
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+bool language_vm::frontend_emit(void) {
+  if (!compatible(frontend_request) || !frontend_request->output) return false;
+#ifndef TINYBASIC_HOST_TEST
+  TinyBasicWorkspaceScope scope;
+  if (!scope.ok()) return false;
+#endif
+  const int slot = NextTinyBasic;
+  return tb_run_program(slot, (TinyBasicRunMode)frontend_request->mode) ==
+         TinyBasicRunStatus::COMPLETED;
+}
+#endif
 
 void RunTinyBasic(int program_index) {
   (void) tb_run_program(program_index);
@@ -3139,6 +3360,9 @@ static bool TinyBASIC_edit_menu(void) {
 }
 
 static bool TinyBASIC_clear_data(void) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if (language_vm::frontend_request) language_vm::frontend_request->clear_requested = 1;
+#endif
   memset(tb_vars, 0, sizeof(tb_vars));
   tinybasic_clear_array();
   tb_message_i18n("TinyBASIC data", M8("Данные"), "cleared", M8("очищены"));

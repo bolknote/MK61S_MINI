@@ -303,6 +303,27 @@ static void test_functions(void) {
   CHECK_STARTS(FocalTestLcdLine(0), "10");
 }
 
+static void test_control_and_power_compatibility(void) {
+  FocalTestReset();
+  int slot = add_program("1.10 S A=-2^2\n1.20 S B=2^3^2\n1.30 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 4);
+  CHECK_NEAR(FocalTestNumber("B"), 512);
+  FocalTestReset();
+  slot = add_program("1.10 S I=99\n1.20 F I=2,1; S A=1\n1.30 F J=1,3; S J=77\n1.40 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("I"), 99);
+  CHECK_NEAR(FocalTestNumber("J"), 77);
+  FocalTestReset();
+  slot = add_program("1.10 D 2.10\n1.20 S A=5\n1.30 E\n2.10 G 3.10\n3.10 S A=99");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 5);
+  FocalTestReset();
+  slot = add_program("1.10 D 2\n1.20 S A=99\n1.30 E\n2.10 G 3.10\n3.10 S A=5\n3.20 E");
+  FocalTestRun(slot);
+  CHECK_NEAR(FocalTestNumber("A"), 5);
+}
+
 static void test_mk_math_dispatch_and_format(void) {
   // Трансцендентные функции теперь направляются через mk_math:: (здесь подсистема
   // LIBM); так проверяются подключение и путь научного форматирования без libm.
@@ -818,6 +839,7 @@ int main(void) {
   test_return_early_from_group();
   test_goto_and_branch();
   test_functions();
+  test_control_and_power_compatibility();
   test_mk_math_dispatch_and_format();
   test_math_errors_tiny_values_and_for_progress();
   test_mk_register_references();

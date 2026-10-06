@@ -170,11 +170,11 @@ static bool magic_valid(const u8* input) {
 } // namespace
 
 bool valid_kind(Kind kind) {
-  return kind == Kind::FOCAL || kind == Kind::TINYBASIC ||
-         kind == Kind::WBMP_VIEWER || kind == Kind::APPLICATION ||
-         kind == Kind::CHIP8 || kind == Kind::MARKDOWN_VIEWER ||
-         kind == Kind::SETUP || kind == Kind::USBDISK ||
-         kind == Kind::EXPLORER;
+  return kind == Kind::FOCAL || kind == Kind::TINYBASIC || kind == Kind::WBMP_VIEWER ||
+         kind == Kind::APPLICATION || kind == Kind::CHIP8 ||
+         kind == Kind::MARKDOWN_VIEWER || kind == Kind::SETUP ||
+         kind == Kind::USBDISK || kind == Kind::EXPLORER || kind == Kind::LANGUAGE_VM ||
+         kind == Kind::LANGUAGE_INPUT;
 }
 
 bool valid_compression(Compression compression) {
@@ -192,6 +192,10 @@ Kind kind_at(u8 index) {
     case 5: return Kind::SETUP;
     case 6: return Kind::USBDISK;
     case 7: return Kind::EXPLORER;
+    case 8:
+      return Kind::LANGUAGE_VM;
+    case 9:
+      return Kind::LANGUAGE_INPUT;
   }
   return (Kind) 0;
 }
@@ -210,6 +214,10 @@ const char* file_name(Kind kind) {
     case Kind::SETUP: return "SETUP.APP";
     case Kind::USBDISK: return "USBDISK.APP";
     case Kind::EXPLORER: return "EXPLORER.APP";
+    case Kind::LANGUAGE_VM:
+      return "LANGVM.APP";
+    case Kind::LANGUAGE_INPUT:
+      return "LANGIN.APP";
     case Kind::APPLICATION: break;
   }
   return nullptr;

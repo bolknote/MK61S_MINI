@@ -10,6 +10,7 @@ arduino_cli=${MK61_ARDUINO_CLI:-arduino-cli}
 build_root=${MK61_F401_BUILD_ROOT:-"$root/.build/mk61-f401"}
 output_root=${MK61_OUTPUT_DIR:-"$root/binary"}
 profile=mini-v3-a00
+target_mcu=${MK61_TARGET_MCU:-f401}
 
 enable_focal=${MK61_ENABLE_FOCAL:-1}
 enable_tinybasic=${MK61_ENABLE_TINYBASIC:-1}
@@ -29,6 +30,10 @@ enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 math_backend=${MK61_MATH_BACKEND:-0}
 app_local_float=${MK61_APP_LOCAL_FLOAT_MATH:-0}
+resident_language_vm=${MK61_RESIDENT_LANGUAGE_VM:-0}
+overlay_language_vm=${MK61_OVERLAY_LANGUAGE_VM:-0}
+shared_screen_grid=${MK61_SHARED_SCREEN_GRID:-0}
+screen_buffer_loan=${MK61_SCREEN_BUFFER_LOAN:-0}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -63,6 +68,9 @@ Feature environment variables (0 or 1):
   MK61_ENABLE_MARKDOWN_VIEWER, MK61_ENABLE_CHIP8, MK61_ENABLE_SETUP,
   MK61_ENABLE_USB_SCREEN, MK61_ENABLE_EXTENDED_FONT_SETTINGS,
   MK61_USER_EXPLORER_SHORTCUT
+  MK61_RESIDENT_LANGUAGE_VM (experimental compiler APPs + resident executor)
+  MK61_OVERLAY_LANGUAGE_VM (experimental compiler APPs + external split VM)
+  MK61_SHARED_SCREEN_GRID, MK61_SCREEN_BUFFER_LOAN (experimental screen RAM reuse)
 Placement variables (0 = resident, 1 = APP):
   MK61_FOCAL_AS_APP, MK61_TINYBASIC_AS_APP, MK61_WBMP_VIEWER_AS_APP,
   MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP, MK61_SETUP_AS_APP,
@@ -74,6 +82,7 @@ APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCA
 
 Other overrides:
   MK61_ARDUINO_CLI, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
+  MK61_TARGET_MCU=f401 (default) or f411 for an isolated comparison build,
   MK61_APP_MANIFESTS (colon-separated manifest paths)
 
 Every generated APP uses the current relocatable ABI and the same public API.
@@ -400,6 +409,15 @@ board_flags=$(profile_flags "$profile") || {
   exit 2
 }
 firmware_name=$(artifact_name "$profile")
+case "$target_mcu" in
+  f401) maximum_flash=262144; product_build=1; required_f401_o3=1 ;;
+  f411)
+    fqbn_resident=${fqbn_resident/BLACKPILL_F401CC/BLACKPILL_F411CE}
+    firmware_name=${firmware_name/-f401./-f411.}
+    maximum_flash=524288; product_build=0; required_f401_o3=0
+    ;;
+  *) printf 'Error: MK61_TARGET_MCU must be f401 or f411.\n' >&2; exit 2 ;;
+esac
 
 if [ -z "$enable_wbmp" ]; then
   if [ "$enable_markdown" -eq 1 ]; then
@@ -418,7 +436,8 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$markdown_as_app" "$chip8_as_app" "$enable_setup" \
              "$setup_as_app" "$explorer_as_app" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$app_local_float"; do
+             "$enable_user_explorer" "$app_local_float" "$resident_language_vm" "$overlay_language_vm" \
+             "$shared_screen_grid" "$screen_buffer_loan"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
     exit 2
@@ -488,10 +507,17 @@ compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_exten
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
 compile_flags="$compile_flags -DMK61_APP_LOCAL_FLOAT_MATH=$app_local_float"
+compile_flags="$compile_flags -DMK61_RESIDENT_LANGUAGE_VM=$resident_language_vm"
+compile_flags="$compile_flags -DMK61_OVERLAY_LANGUAGE_VM=$overlay_language_vm"
+compile_flags="$compile_flags -DMK61_SHARED_SCREEN_GRID=$shared_screen_grid"
+compile_flags="$compile_flags -DMK61_SCREEN_BUFFER_LOAN=$screen_buffer_loan"
 compile_flags="$compile_flags -DMK61_ENABLE_LOADABLE_MODULES=1"
-compile_flags="$compile_flags -DMK61_F401_PRODUCT_BUILD=1"
+compile_flags="$compile_flags -DMK61_F401_PRODUCT_BUILD=$product_build"
+if [ "$target_mcu" = f411 ]; then
+  compile_flags="$compile_flags -DMK61_ENABLE_DWT_PROFILER=0"
+fi
 compile_flags="$compile_flags -DMK61_REQUIRE_RESIDENT_CRC=1"
-compile_flags="$compile_flags -DMK61_REQUIRE_F401_SELECTIVE_O3=1"
+compile_flags="$compile_flags -DMK61_REQUIRE_F401_SELECTIVE_O3=$required_f401_o3"
 compile_flags="$compile_flags $platform_ram_flags"
 
 mkdir -p "$build_root" "$output_root"
@@ -535,8 +561,8 @@ if [ ! -s "$resident_elf" ] || [ ! -s "$resident_bin" ]; then
   printf 'Error: Arduino build did not create resident ELF and BIN files.\n' >&2
   exit 1
 fi
-"$root/tools/seal-firmware.sh" seal --max-size 262144 "$resident_bin"
-"$root/tools/seal-firmware.sh" check --max-size 262144 "$resident_bin"
+"$root/tools/seal-firmware.sh" seal --max-size "$maximum_flash" "$resident_bin"
+"$root/tools/seal-firmware.sh" check --max-size "$maximum_flash" "$resident_bin"
 
 compiler=
 compiler_path=$(sed -n 's/^compiler\.path=//p' "$work/layout.properties" | head -n 1)
@@ -596,6 +622,8 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --usbdisk 1 \
   --explorer "$explorer_as_app" \
   --local-float-math "$app_local_float" \
+  --language-vm-compiler "$((resident_language_vm | overlay_language_vm))" \
+  --overlay-language-vm "$overlay_language_vm" \
   --catalog-dir "$output_root/apps/abi6"
 for index in "${!custom_app_names[@]}"; do
   build_custom_app "$index"
@@ -611,6 +639,7 @@ rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/MARKDOWN.APP" \
       "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
       "$bundle_dir/System/USBDISK.APP" "$bundle_dir/System/EXPLORER.APP" \
+      "$bundle_dir/System/LANGVM.APP" "$bundle_dir/System/LANGIN.APP" \
       "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
       "$bundle_dir/$firmware_name" "$bundle_dir/$firmware_elf_name" \
       "$bundle_dir/build.apps"

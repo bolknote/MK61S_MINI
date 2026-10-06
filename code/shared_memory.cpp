@@ -1,3 +1,6 @@
+#if defined(ARDUINO_ARCH_STM32)
+#include "config.h"
+#endif
 #include "shared_memory.hpp"
 
 #include <stdint.h>
@@ -209,6 +212,9 @@ static ArenaState arenas[] = {
   MK61_ARENA_STATE(nullptr, 0, true),
   MK61_ARENA_STATE(nullptr, 0, MK61_SHARED_MEMORY_APP_ENABLED)
 };
+#if MK61_OVERLAY_LANGUAGE_VM
+static WorkspacePartition* workspace_partition;
+#endif
 
 #undef MK61_ARENA_STATE
 
@@ -389,6 +395,14 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
                          usize required, bool opportunistic) {
   ArenaState* const arena = state(next_arena);
   const ArenaPolicy* const policy = arena_policy(next_arena);
+#if MK61_OVERLAY_LANGUAGE_VM
+  if(next_arena == Arena::WORKSPACE && workspace_partition &&
+     next_owner != Owner::LANGUAGE_VM && next_owner != Owner::FOCAL &&
+     next_owner != Owner::TINYBASIC) {
+    increment(arena->busy_failures);
+    return false;
+  }
+#endif
   if(arena == nullptr || !arena->enabled || next_owner == Owner::NONE ||
      next_owner >= Owner::COUNT || required == 0 ||
      required > (next_arena == Arena::APP ? APP_MAX_SIZE :
@@ -511,6 +525,25 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
 
 void Lease::reset(void) {
   release_impl(false);
+}
+
+bool Lease::shrink_to(usize required) {
+  if(required > requested_) {
+    note_invalid(state(arena_));return false;
+  }
+  return resize_to(required);
+}
+
+bool Lease::resize_to(usize required) {
+  ArenaState* arena=state(arena_);
+  if(!memory_ || arena_!=Arena::OVERLAY || nested_ || !required ||
+     interrupt_context() || transition_in_progress() ||
+     !arena || arena->active!=owner_ || arena->depth!=1 || arena->token!=token_ ||
+     arena->memory!=memory_ || required>arena->capacity) {
+    note_invalid(arena);return false;
+  }
+  arena->allocated_size=required;requested_=required;
+  return true;
 }
 
 void Lease::release_impl(bool from_manager) {
@@ -710,13 +743,21 @@ bool validate_invariants(void) {
      (pool_end() & (APP_ALIGNMENT - 1U)) != 0) return false;
   const usize physical_size = region_end() - region_begin();
   usize reclaiming_count = 0;
+  const auto& workspace = *state(Arena::WORKSPACE);
+#if MK61_OVERLAY_LANGUAGE_VM
+  if(workspace_partition) {
+    if(!workspace_partition->ok() || workspace.capacity >= WORKSPACE_SIZE ||
+       workspace_partition->tail() != workspace.memory + workspace.capacity) return false;
+  } else
+#endif
+  if(workspace.capacity != WORKSPACE_SIZE) return false;
   for(usize index = 0; index < (usize) Arena::COUNT; index++) {
     const Arena arena_id = (Arena) index;
     const ArenaState& arena = arenas[index];
     const ArenaPolicy& policy = arena_policies[index];
     if(arena.reclaiming) reclaiming_count++;
     const usize physical_limit = (arena_id == Arena::APP || arena_id == Arena::OVERLAY)
-        ? physical_size : arena.capacity;
+        ? physical_size : arena_id == Arena::WORKSPACE ? WORKSPACE_SIZE : arena.capacity;
     if((arena.capacity == 0 && arena_id != Arena::APP && arena_id != Arena::OVERLAY) ||
        arena.high_water > physical_limit || arena.allocated_size > arena.capacity ||
        ((arena.allocated_size == 0) != (arena.depth == 0)) ||
@@ -759,6 +800,58 @@ bool validate_invariants(void) {
      (uintptr_t) prefix.memory != pool_begin() ||
      (app.enabled && (uintptr_t) app.memory != pool_end() - app.capacity)) return false;
   return reclaiming_count <= 1;
+}
+
+bool workspace_partitioned() {
+#if MK61_OVERLAY_LANGUAGE_VM
+  return workspace_partition != nullptr;
+#else
+  return false;
+#endif
+}
+bool WorkspacePartition::open(Owner retained_owner, usize tail_size) {
+#if MK61_OVERLAY_LANGUAGE_VM
+  ArenaState& arena = *state(Arena::WORKSPACE);
+  if(ok() || workspace_partition || retained_owner != Owner::LANGUAGE_VM ||
+     !tail_size || tail_size >= WORKSPACE_SIZE || (tail_size & 7U) ||
+     interrupt_context() || transition_in_progress() || arena.depth ||
+     arena.eviction_prepare || arena.discard_pending ||
+     arena.capacity != WORKSPACE_SIZE || arena.resident != retained_owner ||
+     arena.resident_size != WORKSPACE_SIZE) return false;
+  owner_ = retained_owner;
+  tail_ = arena.memory + WORKSPACE_SIZE - tail_size;
+  workspace_partition = this;
+  clear_resident(arena);
+  arena.capacity = WORKSPACE_SIZE - tail_size;
+  return true;
+#else
+  (void)retained_owner; (void)tail_size;
+  return false;
+#endif
+}
+bool WorkspacePartition::close() {
+  if(!ok()) return true;
+#if MK61_OVERLAY_LANGUAGE_VM
+  ArenaState& arena = *state(Arena::WORKSPACE);
+  if(workspace_partition != this || interrupt_context() || transition_in_progress() ||
+     arena.depth || arena.eviction_prepare || arena.discard_pending) return false;
+  // Prefix is transient: do not retain stale editor/source objects as part
+  // of the VM snapshot. Tail values remain byte-for-byte unchanged.
+  memset(arena.memory, 0, arena.capacity);
+  arena.capacity = WORKSPACE_SIZE;
+  arena.resident = owner_;
+  arena.resident_size = WORKSPACE_SIZE;
+  if(arena.high_water < WORKSPACE_SIZE) arena.high_water = WORKSPACE_SIZE;
+  advance_resident_epoch(arena);
+  workspace_partition = nullptr;
+  owner_ = Owner::NONE; tail_ = nullptr;
+  return true;
+#else
+  return false;
+#endif
+}
+WorkspacePartition::~WorkspacePartition() {
+  if(!close()) __builtin_trap(); // Never expose a tail while a prefix is active.
 }
 
 void reset_statistics(void) {

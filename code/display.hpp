@@ -470,6 +470,10 @@ class MK61Display : public Print {
 #endif
 
   private:
+#if MK61_SCREEN_BUFFER_LOAN
+    friend class DisplayBufferLoan;
+    bool screen_buffer_loan_active = false;
+#endif
 #if MK61_DISK_ACTIVITY_SUPPORTED
     disk_activity::Activity disk_activity_;
 #endif

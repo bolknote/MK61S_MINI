@@ -4,8 +4,20 @@
 
 #include "loadable_module_runtime.hpp"
 #include "tinybasic.hpp"
+#if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
+#include "language_vm_resident.hpp"
+#endif
 
 namespace {
+
+static loadable_module::RuntimeStatus invoke(loadable_module::Command command,
+    u32 a,u32 b,u32& result) {
+#if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
+  return language_vm::invoke_resident(language_vm::Language::BASIC,command,a,b,result);
+#else
+  return loadable_module::invoke(loadable_module::Kind::TINYBASIC,command,a,b,0,0,result);
+#endif
+}
 
 static u32 pointer_argument(const void* value) {
   return (u32) (usize) value;
@@ -14,22 +26,19 @@ static u32 pointer_argument(const void* value) {
 static bool call_bool(loadable_module::Command command,
                       u32 argument0 = 0) {
   u32 result = 0;
-  return loadable_module::invoke(loadable_module::Kind::TINYBASIC, command,
-                                 argument0, 0, 0, 0, result) ==
+  return invoke(command,argument0,0,result) ==
            loadable_module::RuntimeStatus::OK && result != 0;
 }
 
 static void call_void(loadable_module::Command command, u32 argument0 = 0) {
   u32 result = 0;
-  (void) loadable_module::invoke(loadable_module::Kind::TINYBASIC, command,
-                                 argument0, 0, 0, 0, result);
+  (void) invoke(command,argument0,0,result);
 }
 
 static TinyBasicRunStatus call_status(loadable_module::Command command,
                                       u32 argument0, u32 argument1) {
   u32 result = 0;
-  if(loadable_module::invoke(loadable_module::Kind::TINYBASIC, command,
-                             argument0, argument1, 0, 0, result) !=
+  if(invoke(command,argument0,argument1,result) !=
      loadable_module::RuntimeStatus::OK) {
     return TinyBasicRunStatus::UNAVAILABLE;
   }

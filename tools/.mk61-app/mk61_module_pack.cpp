@@ -74,6 +74,8 @@ Kind parse_kind(const std::string& text) {
   if(text == "setup") return Kind::SETUP;
   if(text == "usbdisk") return Kind::USBDISK;
   if(text == "explorer") return Kind::EXPLORER;
+  if(text == "language-vm") return Kind::LANGUAGE_VM;
+  if(text == "language-input") return Kind::LANGUAGE_INPUT;
   if(text == "app") return Kind::APPLICATION;
   if(text == "focal") return Kind::FOCAL;
   if(text == "tinybasic") return Kind::TINYBASIC;

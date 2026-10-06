@@ -12,6 +12,9 @@
 
 #include "focal.hpp"
 #include "loadable_module_abi.hpp"
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+#include "language_vm_abi.hpp"
+#endif
 
 extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
                                     u32 image_crc, u32 kind) {
@@ -24,9 +27,26 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
 extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0,
                                  u32 argument1, u32 argument2, u32) {
   (void) argument1; (void) argument2;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  struct Binding {
+    ~Binding() {
+      if(language_vm::frontend_request)
+        language_vm::frontend_request->source_id=language_vm::frontend_source_id();
+      language_vm::frontend_request = nullptr;
+    }
+  } binding;
+  auto* request = (language_vm::Request*)(usize)argument2;
+  language_vm::frontend_request = language_vm::compatible(request) ? request : nullptr;
+#endif
   const loadable_module::Command command =
       (loadable_module::Command) raw_command;
   switch(command) {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+    case loadable_module::Command::LANGUAGE_COMPILER_INFO:
+      return language_vm::COMPILER_MAGIC;
+    case loadable_module::Command::LANGUAGE_COMPILER_EMIT:
+      return language_vm::frontend_emit();
+#endif
     case loadable_module::Command::FOCAL_LIBRARY_SELECT:
       return FOCAL_library_select();
     case loadable_module::Command::FOCAL_MENU_SELECT:

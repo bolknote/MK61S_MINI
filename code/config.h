@@ -484,6 +484,31 @@
   #error "MK61_APP_LOCAL_FLOAT_MATH must be 0 or 1"
 #endif
 
+// Experimental shared bytecode executor in resident Flash. Compiler-only
+// BASIC/FOCAL APPs must be installed with the matched bundle; ordinary builds
+// keep the existing interpreters and incur no VM runtime/static-RAM cost.
+#ifndef MK61_RESIDENT_LANGUAGE_VM
+  #define MK61_RESIDENT_LANGUAGE_VM 0
+#endif
+#if MK61_RESIDENT_LANGUAGE_VM != 0 && MK61_RESIDENT_LANGUAGE_VM != 1
+  #error "MK61_RESIDENT_LANGUAGE_VM must be 0 or 1"
+#endif
+// External LANGVM.APP + cold LANGIN.APP; only orchestration stays resident.
+#ifndef MK61_OVERLAY_LANGUAGE_VM
+  #define MK61_OVERLAY_LANGUAGE_VM 0
+#endif
+#if MK61_OVERLAY_LANGUAGE_VM != 0 && MK61_OVERLAY_LANGUAGE_VM != 1
+  #error "MK61_OVERLAY_LANGUAGE_VM must be 0 or 1"
+#endif
+#if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
+  #error "Choose one language VM placement"
+#endif
+#if (MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM) && \
+    ((MK61_ENABLE_TINYBASIC && !MK61_TINYBASIC_IS_LOADABLE) || \
+     (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE))
+  #error "Language VM requires compiler-only loadable languages"
+#endif
+
 // Короткое нажатие [USER] открывает Проводник. Поставьте 0, чтобы оставить
 // [USER] только для удержания стека и функций режима ПРГ.
 #ifndef MK61_USER_EXPLORER_SHORTCUT
@@ -546,6 +571,28 @@
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS && !defined(MK61_DISPLAY_UC1609)
   #error "proportional UI fonts require UC1609"
+#endif
+
+// Experimental: UC1609 and USB Screen render one canonical text grid.
+// Keep default-off until display-mode/HIL qualification is complete.
+#ifndef MK61_SHARED_SCREEN_GRID
+  #define MK61_SHARED_SCREEN_GRID 0
+#endif
+#if MK61_SHARED_SCREEN_GRID != 0 && MK61_SHARED_SCREEN_GRID != 1
+  #error "MK61_SHARED_SCREEN_GRID must be 0 or 1"
+#endif
+#if MK61_SHARED_SCREEN_GRID && (!defined(MK61_DISPLAY_UC1609) || !MK61_ENABLE_USB_SCREEN)
+  #error "shared screen grid requires UC1609 and USB Screen"
+#endif
+
+#ifndef MK61_SCREEN_BUFFER_LOAN
+  #define MK61_SCREEN_BUFFER_LOAN 0
+#endif
+#if MK61_SCREEN_BUFFER_LOAN != 0 && MK61_SCREEN_BUFFER_LOAN != 1
+  #error "MK61_SCREEN_BUFFER_LOAN must be 0 or 1"
+#endif
+#if MK61_SCREEN_BUFFER_LOAN && !defined(MK61_DISPLAY_UC1609) && !MK61_ENABLE_USB_SCREEN
+  #error "screen buffer loan requires UC1609 or a USB framebuffer"
 #endif
 
 // Portable system modules are board-neutral by default, so their optional UI

@@ -57,6 +57,29 @@ void Grid::reset(u8 rows, u8 cols) {
   clear();
 }
 
+void Grid::reshape(u8 rows, u8 cols) {
+  const u8 next_cols = cols < 1 ? 1 : (cols > MAX_COLS ? MAX_COLS : cols);
+  const u8 next_rows = rows < 1 ? 1 : (rows > MAX_ROWS ? MAX_ROWS : rows);
+  const usize count = (usize) next_rows * next_cols;
+  // Widening moves destinations upward, so walk backward. Narrowing walks
+  // forward. The same order protects both the tokens and their packed flags.
+  for(usize step = 0; step < count; ++step) {
+    const usize destination = next_cols >= column_count ? count-1U-step : step;
+    const u8 row = (u8) (destination / next_cols);
+    const u8 col = (u8) (destination % next_cols);
+    const bool overlap = row < row_count && col < column_count;
+    const usize source = (usize) row * column_count + col;
+    const u16 value = overlap ? cells[source] : (u16) ' ';
+    const bool custom = overlap && flag(custom_cells, source);
+    cells[destination] = value;
+    setFlag(custom_cells, destination, custom);
+  }
+  row_count = next_rows; column_count = next_cols;
+  setCursor(cursor_x, cursor_y);
+  for(usize byte = 0; byte < FLAG_BYTES; ++byte) dirty_cells[byte] = 0;
+  markAll();
+}
+
 void Grid::clear(void) {
   for(usize cell = 0; cell < CELL_CAPACITY; cell++) cells[cell] = ' ';
   for(usize byte = 0; byte < FLAG_BYTES; byte++) {
@@ -215,6 +238,18 @@ void Grid::reset(u8 rows, u8 cols) {
   (void) cols;
   row_count = rows < 1 ? 1 : (rows > MAX_ROWS ? MAX_ROWS : rows);
   clear();
+}
+
+void Grid::reshape(u8 rows, u8 cols) {
+  (void) cols;
+  const u8 next_rows = rows < 1 ? 1 : (rows > MAX_ROWS ? MAX_ROWS : rows);
+  for(u8 row = row_count; row < next_rows; ++row) {
+    for(u8 col = 0; col < COLS; ++col) cells[row][col] = ' ';
+    custom_cols[row] = 0;
+  }
+  row_count = next_rows;
+  setCursor(cursor_x, cursor_y);
+  markAll();
 }
 
 void Grid::clear(void) {

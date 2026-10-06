@@ -2290,7 +2290,11 @@ MK61Display::MK61Display(void)
     ui_row_tails(0)
 #endif
 #if MK61_ENABLE_USB_SCREEN
-    , usb_surface(render_buffer),
+    , usb_surface(render_buffer
+#if MK61_SHARED_SCREEN_GRID
+                  , grid
+#endif
+                  ),
     usb_screen_active(false),
     display_mode_revision(0),
     physical_screen_enabled(true)
@@ -2373,6 +2377,10 @@ void MK61Display::flush(void) {
   }
 #endif
   if(!initialized) return;
+#if MK61_SCREEN_BUFFER_LOAN && !MK61_ENABLE_USB_SCREEN
+  // Explicit/background flushes must also honor the page-buffer loan.
+  if(screen_buffer_loan_active) return;
+#endif
   if(disk_saving_) {
     pollDiskActivity(millis());
     return;
@@ -3641,6 +3649,11 @@ usb_screen::TextProfile MK61Display::usbTextProfile(
 
 bool MK61Display::enterUsbScreen(void) {
   if(usb_screen_active) return true;
+#if MK61_SCREEN_BUFFER_LOAN
+  // This check precedes Surface::begin/clearPixels and all mode changes.
+  // Never erase a compiler's staging image merely to accept ATTACH.
+  if(screen_buffer_loan_active) return false;
+#endif
 
 #if defined(MK61_OLED1602_WS0010)
   // USB Screen owns a character-oriented canonical surface. Never seed it
@@ -3686,8 +3699,15 @@ bool MK61Display::enterUsbScreen(void) {
     usb_font = external;
   }
 #endif
+#if MK61_SHARED_SCREEN_GRID
+  // The canonical grid is still the physical display's live state. Do not
+  // mutate it until AE is acknowledged; a failed ATTACH leaves it intact.
+  if(!setPhysicalScreenEnabled(false)) return false;
+  usb_surface.begin(profile, true, usb_columns);
+#else
   usb_surface.begin(profile);
   usb_surface.setTextLayout(profile, usb_columns);
+#endif
 #if defined(MK61_DISPLAY_UC1609)
 #if MK61_PROPORTIONAL_UI_FONTS
   usb_surface.setFont(usb_font);
@@ -3797,7 +3817,12 @@ void MK61Display::leaveUsbScreen(void) {
     active_profile = {restore_profile.rows, restore_profile.glyph_width,
                       restore_profile.glyph_height, restore_profile.line_gap};
   }
-#if MK61_PROPORTIONAL_UI_FONTS
+#if MK61_SHARED_SCREEN_GRID && MK61_PROPORTIONAL_UI_FONTS
+  grid.reshape(restore_ui_text ? uiRows() : active_profile.rows,
+               restore_ui_text ? uiCols() : lcd_display::COLS);
+#elif MK61_SHARED_SCREEN_GRID
+  grid.reshape(active_profile.rows);
+#elif MK61_PROPORTIONAL_UI_FONTS
   grid.reset(restore_ui_text ? uiRows() : active_profile.rows,
              restore_ui_text ? uiCols() : lcd_display::COLS);
 #else
@@ -3809,6 +3834,7 @@ void MK61Display::leaveUsbScreen(void) {
     if(!custom_valid[slot]) memset(custom_glyphs[slot], 0,
                                    sizeof(custom_glyphs[slot]));
   }
+#if !MK61_SHARED_SCREEN_GRID
   for(u8 row = 0; row < grid.rows(); row++) {
     grid.setCursor(0, row);
     for(u8 col = 0; col < grid.cols(); col++) {
@@ -3822,6 +3848,7 @@ void MK61Display::leaveUsbScreen(void) {
       }
     }
   }
+#endif
   grid.setCursor(restore_cursor_x, restore_cursor_y);
   top_right_overlay_visible = usb_surface.copyTopRightOverlay(
     top_right_overlay_rows, top_right_overlay_width,

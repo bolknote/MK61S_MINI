@@ -8,8 +8,9 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-for panel in uc1609 lcd1602; do
+for panel in uc1609 uc1609-shared lcd1602; do
 panel_flags=(-DMK61_DISPLAY_UC1609=1 -DMK61_PROPORTIONAL_UI_FONTS=1)
+if [[ "$panel" == uc1609-shared ]]; then panel_flags+=(-DMK61_SHARED_SCREEN_GRID=1); fi
 if [[ "$panel" == lcd1602 ]]; then
   panel_flags=(-DMK61_LCD1602_A00 -DMK61_PROPORTIONAL_UI_FONTS=0)
 fi
@@ -33,4 +34,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+done
+
+for proportional in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
+    -DCONFIG -DMK61_PROPORTIONAL_UI_FONTS="$proportional" \
+    -DMK61_DISPLAY_UC1609=1 -I"$root/code" \
+    "$root/tests/text_screen_shared_self_test.cpp" "$root/code/text_screen.cpp" \
+    -o "$out-grid"
+  "$out-grid"
 done

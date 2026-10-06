@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
     "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
+    "LANGVM.APP", "LANGIN.APP",
 )
 MODULES = (
     ("setup", "SETUP.APP", "setup"),
@@ -33,6 +34,8 @@ MODULES = (
     ("chip8", "CHIP8.APP", "chip8"),
     ("usbdisk", "USBDISK.APP", "usbdisk"),
     ("explorer", "EXPLORER.APP", "explorer"),
+    ("language-vm", "LANGVM.APP", "language-vm"),
+    ("language-input", "LANGIN.APP", "language-input"),
 )
 CATALOG_LOCK_TIMEOUT_SECONDS = 120.0
 
@@ -128,7 +131,12 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
     if system == "markdown-viewer":
         parts.append("graphics" if args.graphics else "text")
     if system in ("focal", "tinybasic"):
-        parts.append("float" if args.local_float_math else "core")
+        parts.append("vm-compiler-v5" if getattr(args,"language_vm_compiler",False)
+                     else "float" if args.local_float_math else "core")
+    if system == "language-vm":
+        parts += ["split-v6", "float" if args.local_float_math else "core"]
+    if system == "language-input":
+        parts.append("cold-v6")
     return "+".join(parts)
 
 
@@ -352,6 +360,9 @@ def prepare_usb_text_resources(stage: Path) -> None:
 
 
 def build(args: argparse.Namespace) -> dict:
+    overlay_vm = getattr(args, "overlay_language_vm", False)
+    if overlay_vm and not getattr(args, "language_vm_compiler", False):
+        raise ValueError("overlay language VM requires compiler-only BASIC/FOCAL")
     resident = args.resident_elf.resolve()
     if not resident.is_file():
         raise ValueError(f"resident ELF not found: {resident}")
@@ -379,6 +390,8 @@ def build(args: argparse.Namespace) -> dict:
         "chip8": args.chip8,
         "usbdisk": args.usbdisk,
         "explorer": args.explorer,
+        "language-vm": overlay_vm and (args.basic or args.focal),
+        "language-input": overlay_vm and (args.basic or args.focal),
     }
     built: list[str] = []
     catalog_hits: list[str] = []
@@ -407,8 +420,12 @@ def build(args: argparse.Namespace) -> dict:
                 command.append("--no-ui-fonts")
             if system == "markdown-viewer" and not args.graphics:
                 command.append("--text-only")
-            if args.local_float_math and system in ("focal", "tinybasic"):
-                command.append("--local-float-math")
+            if system in ("focal", "tinybasic"):
+                if getattr(args,"language_vm_compiler",False):command.append("--language-vm-compiler")
+                elif args.local_float_math:command.append("--local-float-math")
+            if system == "language-vm":
+                command.append("--split-language-vm")
+                if args.local_float_math: command.append("--local-float-math")
             destination = stage / filename
             if cached is None:
                 run(command)
@@ -446,6 +463,8 @@ def build(args: argparse.Namespace) -> dict:
         "graphics": args.graphics,
         "ui_fonts": args.ui_fonts,
         "local_float_math": args.local_float_math,
+        "language_vm_compiler": getattr(args,"language_vm_compiler",False),
+        "overlay_language_vm": overlay_vm,
         "catalog": str(args.catalog_dir.resolve()) if args.catalog_dir else None,
         "catalog_hits": catalog_hits,
     }
@@ -476,6 +495,10 @@ def main() -> None:
     parser.add_argument("--markdown", type=boolean, default=True)
     parser.add_argument("--chip8", type=boolean, default=True)
     parser.add_argument("--local-float-math", type=boolean, default=False)
+    parser.add_argument("--language-vm-compiler", type=boolean, default=False,
+                        help="compiler-only language APPs for the resident VM experiment")
+    parser.add_argument("--overlay-language-vm", type=boolean, default=False,
+                        help="include split hot LANGVM.APP and cold LANGIN.APP")
     args = parser.parse_args()
     try:
         build(args)

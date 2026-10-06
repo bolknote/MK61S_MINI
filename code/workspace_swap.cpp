@@ -558,6 +558,10 @@ bool acquire(shared_memory::Owner owner, usize required, AcquireMode mode,
              shared_memory::Lease& destination) {
   if(mode != AcquireMode::REQUIRED &&
      mode != AcquireMode::OPPORTUNISTIC) return false;
+  // A partition is one foreground transaction, not two independent snapshot
+  // owners. Never decode an older compiler/full image during its lifetime.
+  if(shared_memory::workspace_partitioned())
+    return direct_acquire(owner, required, mode, destination);
   if(destination.ok()) return direct_acquire(owner, required, mode,
                                              destination);
   if(owner == shared_memory::Owner::NONE ||

@@ -37,6 +37,8 @@ KINDS = {
     "setup": 7,
     "usbdisk": 8,
     "explorer": 9,
+    "language-vm": 10,
+    "language-input": 11,
 }
 
 

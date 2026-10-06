@@ -43,6 +43,20 @@ def publish_worker(catalog: str, source: str, index: int) -> str:
 
 
 class SystemAppCatalogSelfTest(unittest.TestCase):
+    def test_vm_variants_do_not_reuse_interpreter_or_math_packages(self) -> None:
+        args = arguments(Path("catalog"))
+        basic = bundle.app_variant("tinybasic", args)
+        args.language_vm_compiler = True
+        self.assertNotEqual(basic, bundle.app_variant("tinybasic", args))
+        self.assertIn("vm-compiler-v5", bundle.app_variant("tinybasic", args))
+        core = bundle.app_variant("language-vm", args)
+        self.assertIn("split-v6", core)
+        self.assertIn("cold-v6", bundle.app_variant("language-input", args))
+        args.local_float_math = True
+        self.assertNotEqual(core, bundle.app_variant("language-vm", args))
+        self.assertIn("LANGVM.APP", bundle.CANONICAL)
+        self.assertIn("LANGIN.APP", bundle.CANONICAL)
+
     def test_parallel_publish_is_complete_and_readable(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
