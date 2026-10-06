@@ -3,7 +3,7 @@
 #include "language_bytecode.hpp"
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 1;
+static constexpr uint32_t REQUEST_VERSION = 2;
 static constexpr uint32_t COMPILER_MAGIC = 0x354D5643UL;
 static constexpr uint16_t VALUES_SIZE = 3504;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
@@ -26,6 +26,8 @@ struct ExecuteRequest {
   uint32_t array_count;
   uint8_t mode, pause_final;
   uint16_t reserved;
+  uint16_t error_column;
+  uint8_t edit_requested, reserved2;
   RunResult result;
 };
 static constexpr uint32_t OVERLAY_MAGIC = 0x36564D4CUL;
@@ -56,7 +58,7 @@ struct ExecutionState {
   uint32_t steps;
   uint16_t prompt_offset, prompt_length, array_count;
   Language language;
-  uint8_t row, width;
+  uint8_t row, width, output_cursor;
   bool cancelled, normal_stop;
   Error failure;
 };
@@ -89,6 +91,7 @@ inline bool execution_compatible(const OverlayRequest* p) {
   return r.size == sizeof(r) && r.version == REQUEST_VERSION && r.image &&
          r.image_size >= HEADER_SIZE && r.image_size <= MAX_IMAGE && r.variables &&
          r.array_count <= 385 && (!r.array_count || r.array) && r.mode <= 1 && !r.reserved &&
+         !r.reserved2 && r.edit_requested <= 1 &&
          (p->state->language == Language::BASIC || p->state->language == Language::FOCAL);
 }
 inline bool validated_view(const OverlayRequest& p, View& v) {
@@ -119,6 +122,7 @@ inline RunResult evaluate_input(const View& view, ExecutionState& s,
   if (!view.expression || s.control.sp >= INPUT_STACK_CAPACITY)
     return {Error::INVALID_IMAGE, 0, 0, 0};
   const uint16_t pc = s.control.pc;
+  const uint16_t data_pc = s.control.data_pc, data_index = s.control.data_index;
   const uint8_t sp = s.control.sp, calls = s.control.call_count, loops = s.control.loop_count;
   const Bindings expression = {program.variables, program.array, program.array_count,
                                s.stack + sp, (uint8_t)(INPUT_STACK_CAPACITY - sp)};
@@ -126,6 +130,8 @@ inline RunResult evaluate_input(const View& view, ExecutionState& s,
   const auto result = run(view, s.control, expression, local);
   if (result.error == Error::NONE) s.input_value = expression.stack[0];
   s.control.pc = pc; s.control.sp = sp;
+  s.control.data_pc = data_pc;
+  s.control.data_index = data_index;
   s.control.call_count = calls; s.control.loop_count = loops;
   return result;
 }
@@ -155,11 +161,11 @@ uint16_t frontend_source_id(void);
 bool frontend_emit(void);
 #if UINTPTR_MAX == UINT32_MAX
 static_assert(sizeof(Request) == 32, "compiler request ARM ABI changed");
-static_assert(sizeof(ExecuteRequest) == 44, "execution request ARM ABI changed");
+static_assert(sizeof(ExecuteRequest) == 48, "execution request ARM ABI changed");
 static_assert(sizeof(OverlayRequest) == 24, "overlay request ARM ABI changed");
 static_assert(sizeof(ValidatedImage) == 16, "validated descriptor ARM ABI changed");
 static_assert(sizeof(InputRequest) == 40, "input request ARM ABI changed");
-static_assert(sizeof(ExecutionState) == 1504, "continuation layout changed; update measurements");
+static_assert(sizeof(ExecutionState) == 1520, "continuation layout changed; update measurements");
 #endif
 }  // namespace language_vm
 #endif

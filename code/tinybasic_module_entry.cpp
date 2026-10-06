@@ -10,6 +10,7 @@
 #define RunTinyBasicProgramStatus mk61_module_run_tinybasic_program_status
 #define EditTinyBasic mk61_module_edit_tinybasic
 #define EditTinyBasicProgram mk61_module_edit_tinybasic_program
+#define EditTinyBasicProgramAt mk61_module_edit_tinybasic_program_at
 
 #include "loadable_module_abi.hpp"
 #include "tinybasic.hpp"
@@ -67,7 +68,9 @@ extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0,
     case loadable_module::Command::TINYBASIC_EDIT_NAME:
       return EditTinyBasicProgram((const char*) argument0);
     case loadable_module::Command::TINYBASIC_EDIT_ID:
-      return EditTinyBasicProgram((u16) argument0);
+      return argument1
+                 ? EditTinyBasicProgramAt((u16)argument0, (u16)(argument1 >> 16), (u16)argument1)
+                 : EditTinyBasicProgram((u16)argument0);
     case loadable_module::Command::TINYBASIC_RUN_ID_STATUS:
       return (u32) RunTinyBasicProgramStatus(
           (u16) argument0, (TinyBasicRunMode) argument1);

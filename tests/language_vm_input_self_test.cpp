@@ -106,7 +106,7 @@ void test_borrowed_stack() {
     assert(compiled.error == Error::NONE);
     View view; assert(inspect(image, compiled.size, view) == Error::NONE);
     const auto result = evaluate_input(view, state, bindings, {});
-    assert(result.error == (text[0]=='A' ? Error::NONE : Error::MATH));
+    assert(result.error == (text[0] == 'A' ? Error::NONE : Error::DIV_ZERO));
     assert(!memcmp(&saved, &state.control, sizeof(saved)));
     assert(state.stack[0] == 123 && variables[0] == 5 && array[2] == 8);
     assert(state.input_value == 13);

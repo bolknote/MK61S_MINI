@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include "tinybasic_diagnostic.hpp"
+#include "tinybasic_text.hpp"
 #if !defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include "config.h"
 #endif
@@ -19,6 +22,7 @@
 #include "loadable_system_api.hpp"
 #include "mk61emu_core.h"
 #include "tools.hpp"
+#include "menu.hpp"
 extern void idle_main_process(void);
 namespace portable_system {
 static u32 call(u32 op, u32 a = 0, u32 b = 0, u32 c = 0, void* payload = nullptr) {
@@ -74,7 +78,7 @@ struct Runtime {
   ExecuteRequest* request;
   Language language;
   char output[96];
-  uint8_t row, width;
+  uint8_t row, width, output_cursor;
   bool cancelled, normal_stop;
   Error failure;
 };
@@ -169,6 +173,13 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
                                ref < 4 ? 0 : ref - 4, 0, &value) != 0;
 }
 bool append(const char* text, uint16_t length, bool separate) {
+  if (runtime.language == Language::BASIC) {
+    if (tinybasic_text::append(runtime.output, sizeof(runtime.output), runtime.output_cursor, text,
+                               length))
+      return true;
+    runtime.failure = Error::FULL;
+    return false;
+  }
   size_t used = strlen(runtime.output);
   if (separate && used && used + 1 < sizeof(runtime.output))
     runtime.output[used++] = ' ';
@@ -191,6 +202,7 @@ void flush(bool empty) {
   const uint16_t next = (uint16_t)runtime.row + n;
   runtime.row = next < rows ? (uint8_t)next : (uint8_t)(rows - 1);
   runtime.output[0] = 0;
+  runtime.output_cursor = 0;
 }
 bool io(void*, Event, const char*, uint16_t, double&);
 const Services services = {nullptr,       background, math, random,
@@ -274,6 +286,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       if (!basic) {
         runtime.row = 0;
         runtime.output[0] = 0;
+        runtime.output_cursor = 0;
       }
       return true;
     case Event::TEXT:
@@ -290,12 +303,15 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     }
     case Event::FORMAT: {
       const double n = mk_math::floor(value + .5);
-      if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) return false;
+      if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {
+        runtime.failure = Error::FORMAT;
+        return false;
+      }
       runtime.width = (uint8_t)n;
       return true;
     }
     case Event::SEPARATOR: {
-      unsigned n = length == 2 ? 8U - (strlen(runtime.output) % 8U) : length;
+      unsigned n = length == 2 ? 8U - (runtime.output_cursor % 8U) : length;
       while (n--)
         if (!append(" ", 1, false)) return false;
       return true;
@@ -325,6 +341,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       main_lcd().clear();
       runtime.row = 0;
       runtime.output[0] = 0;
+      runtime.output_cursor = 0;
       return true;
     case Event::FINISH:
       flush(false);
@@ -367,14 +384,21 @@ uint32_t execute(ExecuteRequest* request) {
     portable_system::call(MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_ACTIVATE);
   main_lcd().clear();
   request->result = run(view, runtime.state, services);
+  request->error_column = source_column(view, request->result.pc);
   if (runtime.cancelled)
     request->result.error = runtime.normal_stop ? Error::NONE : Error::STOPPED;
   else if (runtime.failure != Error::NONE)
     request->result.error = runtime.failure;
   if (request->result.error != Error::NONE &&
       !(request->mode == 1 && request->result.error == Error::STOPPED)) {
-    const char* rows[] = {error_name(request->result.error),
-                          view.language == Language::BASIC ? "TinyBASIC" : "FOCAL"};
+    char position[24];
+    snprintf(position, sizeof(position), "TinyBASIC %lu:%u", (unsigned long)request->result.line,
+             (unsigned)request->error_column);
+    const char* rows[] = {
+        view.language == Language::BASIC ? position : error_name(request->result.error),
+        view.language == Language::BASIC
+            ? tinybasic_diagnostic::reason(request->result.error, library_mk61::language_is_ru())
+            : "FOCAL"};
     portable_system::text_rows(rows, 2);
   }
   if (request->mode == 0 &&
@@ -383,6 +407,9 @@ uint32_t execute(ExecuteRequest* request) {
       idle_main_process();
       const auto event = kbd::poll_event();
       if (event.code() >= 0 && event.code() < (i32)key_state::RELEASED) {
+        if (view.language == Language::BASIC && request->result.error != Error::NONE &&
+            request->result.error != Error::STOPPED && event.code() == KEY_OK)
+          request->edit_requested = 1;
         kbd::handoff(event);
         break;
       }

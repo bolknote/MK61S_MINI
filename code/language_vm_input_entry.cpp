@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include "tinybasic_diagnostic.hpp"
 #if defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
@@ -30,8 +32,14 @@ uint32_t finish(OverlayRequest* p) {
   else if (s.failure != Error::NONE) r.result.error = s.failure;
   if (r.result.error != Error::NONE &&
       !(r.mode == 1 && r.result.error == Error::STOPPED)) {
-    const char* rows[] = {error_name(r.result.error),
-                          s.language == Language::BASIC ? "TinyBASIC" : "FOCAL"};
+    char position[24];
+    snprintf(position, sizeof(position), "TinyBASIC %lu:%u", (unsigned long)r.result.line,
+             (unsigned)r.error_column);
+    const char* rows[] = {
+        s.language == Language::BASIC ? position : error_name(r.result.error),
+        s.language == Language::BASIC
+            ? tinybasic_diagnostic::reason(r.result.error, library_mk61::language_is_ru())
+            : "FOCAL"};
     portable_system::text_rows(rows, 2);
   }
   if (r.mode == 0 && (s.language == Language::FOCAL || !r.pause_final)) {
@@ -39,6 +47,9 @@ uint32_t finish(OverlayRequest* p) {
       idle_main_process();
       const auto event = kbd::poll_event();
       if (event.code() >= 0 && event.code() < (i32)key_state::RELEASED) {
+        if (s.language == Language::BASIC && r.result.error != Error::NONE &&
+            r.result.error != Error::STOPPED && event.code() == KEY_OK)
+          r.edit_requested = 1;
         kbd::handoff(event); break;
       }
       delay(10);

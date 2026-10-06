@@ -81,7 +81,7 @@ def main():
                 request = m.input + 512
                 image = m.workspace + 6400
                 m.uc.mem_write(request, bytes(32))
-                m.put(request, 32, 1, image, 1536)
+                m.put(request, 32, 2, image, 1536)
                 command = 0x206 if kind == "tinybasic" else 0x106
                 result = m.call(command, 42, 0, request)
                 assert result == (1 if kind == "tinybasic" else 0), (kind, result, m.lines)
@@ -98,11 +98,11 @@ def main():
                 variables, array, execute = m.input + 128, m.workspace, m.input + 640
                 m.uc.mem_write(variables, bytes(26 * 8))
                 m.uc.mem_write(array, bytes(385 * 8))
-                m.uc.mem_write(execute, bytes(44))
-                m.put(execute, 44, 1, image, length, variables, array, 385)
+                m.uc.mem_write(execute, bytes(48))
+                m.put(execute, 48, 2, image, length, variables, array, 385)
                 m.uc.mem_write(execute + 28, b"\x01\0\0\0")  # no interactive final wait
                 assert m.call(0x700, execute) == 1
-                error = m.uc.mem_read(execute + 32, 1)[0]
+                error = m.uc.mem_read(execute + 36, 1)[0]
                 actual = struct.unpack("<d", m.uc.mem_read(variables, 8))[0]
                 assert error == 0 and abs(actual - expected) < 1e-12, (
                     kind, address_index, error, actual, expected, m.lines, m.trace[-12:])

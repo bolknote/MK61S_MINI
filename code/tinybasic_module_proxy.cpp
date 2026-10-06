@@ -101,6 +101,13 @@ bool EditTinyBasicProgram(const char* name) {
                    pointer_argument(name));
 }
 
+bool EditTinyBasicProgramAt(u16 id, u16 line, u16 column) {
+  u32 result = 0;
+  return invoke(loadable_module::Command::TINYBASIC_EDIT_ID, id, ((u32)line << 16) | column,
+                result) == loadable_module::RuntimeStatus::OK &&
+         result != 0;
+}
+
 bool EditTinyBasicProgram(u16 id) {
   return call_bool(loadable_module::Command::TINYBASIC_EDIT_ID, id);
 }

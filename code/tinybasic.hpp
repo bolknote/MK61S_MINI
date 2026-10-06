@@ -50,6 +50,7 @@ extern TinyBasicRunStatus RunTinyBasicProgramStatus(
 extern void EditTinyBasic(void);
 extern bool EditTinyBasicProgram(const char* name);
 extern bool EditTinyBasicProgram(u16 id);
+extern bool EditTinyBasicProgramAt(u16 id, u16 line, u16 column);
 #else
 inline bool TinyBASIC_library_select(void) { return false; }
 inline bool TinyBASIC_menu_select(void) { return false; }
@@ -65,6 +66,7 @@ inline TinyBasicRunStatus RunTinyBasicProgramStatus(u16, TinyBasicRunMode) {
 inline void EditTinyBasic(void) {}
 inline bool EditTinyBasicProgram(const char*) { return false; }
 inline bool EditTinyBasicProgram(u16) { return false; }
+inline bool EditTinyBasicProgramAt(u16, u16, u16) { return false; }
 #endif
 
 #endif

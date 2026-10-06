@@ -7,10 +7,15 @@
 
 #include "mk8_codec.hpp"
 #include "tinybasic.hpp"
+#include "language_bytecode.hpp"
 
 extern "C" void TinyBasicTestReset(void);
 extern "C" bool TinyBasicTestCompile(const char* source);
 extern "C" const char* TinyBasicTestError(void);
+extern "C" unsigned TinyBasicTestErrorDetail(void);
+extern "C" unsigned TinyBasicTestErrorLine(void);
+extern "C" unsigned TinyBasicTestErrorColumn(void);
+extern "C" unsigned TinyBasicTestErrorOffset(void);
 extern "C" int TinyBasicTestAddProgram(const char* source, const char* name);
 extern "C" void TinyBasicTestSetInput(double value);
 extern "C" void TinyBasicTestSetInputExpression(const char* expression);
@@ -842,7 +847,175 @@ static void test_high_noon_package(int argc, char** argv) {
   assert(TinyBasicTestWaitCount() == 1);
 }
 
+static int run_language_program(const char* source) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(source, "LANGUAGE");
+  if (slot < 0) std::fprintf(stderr, "Compile failed: %s\n%s", TinyBasicTestError(), source);
+  assert(slot >= 0);
+  if (!TinyBasicTestRunResult(slot)) {
+    std::fprintf(stderr, "Run failed: %s\n%s", TinyBasicTestError(), source);
+    assert(false);
+  }
+  return slot;
+}
+static void test_data_read_restore(void) {
+  run_language_program(
+      "100 DATA 12,-2,.5,1E2\n"
+      "10 FOR I=0 TO 3;READ @(I);NEXT I\n"
+      "20 A=@(0)+@(1)+@(2)+@(3)\n"
+      "30 RESTORE;READ B,C\n"
+      "40 RESTORE 200;READ D,.R0\n"
+      "200 DATA +7,9\n");
+  assert(TinyBasicTestNumber("A") == 110.5);
+  assert(TinyBasicTestNumber("B") == 12 && TinyBasicTestNumber("C") == -2);
+  assert(TinyBasicTestNumber("D") == 7 && TinyBasicTestMkRegister(0) == 9);
+  std::string large = "100 DATA ";
+  for (int i = 0; i < 1000; ++i) large += (i ? ",1" : "1");
+  large += "\n10 FOR I=1 TO 1000;READ B;A=A+B;NEXT I\n";
+  run_language_program(large.c_str());
+  assert(TinyBasicTestNumber("A") == 1000);
+  std::string fractions="100 DATA ";
+  for(int i=0;i<800;++i) fractions+=(i ? ",-.1" : "-.1");
+  fractions+="\n10 FOR I=1 TO 800;READ B;A=A+B;NEXT I\n";
+  run_language_program(fractions.c_str());
+  assert(std::fabs(TinyBasicTestNumber("A")+80)<1E-10);
+  run_language_program("10 IF 0 DATA 8 ELSE DATA 9\n20 READ A,B\n");
+  assert(TinyBasicTestNumber("A") == 8 && TinyBasicTestNumber("B") == 9);
+  const char* bad[] = {"10 DATA\n", "10 DATA 1,\n", "10 DATA A\n",     "10 DATA 1+2\n",
+                       "10 READ\n", "10 READ A,\n", "10 DATA 'TEXT'\n"};
+  for (const char* source : bad) {
+    TinyBasicTestReset();
+    assert(!TinyBasicTestCompile(source));
+  }
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram("10 DATA 1\n20 READ A,B\n", "EXHAUST");
+  assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+  TinyBasicTestReset();
+  slot = TinyBasicTestAddProgram("10 RESTORE 999\n", "RESTFAIL");
+  assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+  run_language_program("10 DATA 3,4\n20 READ A;INPUT B;READ C\n");
+  assert(TinyBasicTestNumber("A") == 3 && TinyBasicTestNumber("C") == 4);
+}
+static void test_else_branches_and_resume(void) {
+  run_language_program(
+      "10 IF 1 IF 0 A=99 ELSE A=3 ELSE A=88\n"
+      "20 IF 0 IF 1 B=99 ELSE B=88 ELSE B=4\n"
+      "30 IF 1 THEN GOSUB 100;C=C+10 ELSE C=99\n"
+      "40 IF 0 D=99 ELSE GOSUB 100;D=C+1\n"
+      "50 IF 1 PRINT 'ELSE IF':E=5 ELSE E=99\n"
+      "60 STOP\n100 C=C+1;RETURN\n");
+  assert(TinyBasicTestNumber("A") == 3 && TinyBasicTestNumber("B") == 4);
+  assert(TinyBasicTestNumber("C") == 12 && TinyBasicTestNumber("D") == 13);
+  assert(TinyBasicTestNumber("E") == 5);
+  run_language_program("10 IF 0 A=1/0 ELSE A=7\n20 IF 1 B=8 ELSE B=SQRT(-1)\n");
+  assert(TinyBasicTestNumber("A") == 7 && TinyBasicTestNumber("B") == 8);
+  for (const char* source : {"10 IF 1 THEN ELSE A=1\n", "10 IF 1 A=1 ELSE\n", "10 ELSE A=1\n",
+                             "10 IF 1 RETURN:A=1 ELSE A=2\n"}) {
+    TinyBasicTestReset();
+    assert(!TinyBasicTestCompile(source));
+  }
+}
+static void test_on_dispatch(void) {
+  run_language_program(
+      "10 A=2;ON A GOSUB 100,300,700;B=B+10\n"
+      "20 ON 0 GOSUB 999;ON 9 GOSUB 999;C=1\n"
+      "30 ON 2 GOTO 999,50;C=99\n"
+      "40 C=88\n50 D=3;STOP\n"
+      "100 B=1;RETURN\n300 B=2;RETURN\n700 B=3;RETURN\n");
+  assert(TinyBasicTestNumber("B") == 12 && TinyBasicTestNumber("C") == 1);
+  assert(TinyBasicTestNumber("D") == 3);
+  for (const char* source : {"10 ON -1 GOTO 10\n", "10 ON .5 GOSUB 10\n", "10 ON 1 GOTO 999\n"}) {
+    TinyBasicTestReset();
+    int slot = TinyBasicTestAddProgram(source, "ONFAIL");
+    assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+  }
+  for (const char* source :
+       {"10 ON 1 PRINT 10\n", "10 ON 1 GOTO\n", "10 ON 1 GOTO 10,\n", "10 ON 1 GOSUB 1.5\n"}) {
+    TinyBasicTestReset();
+    assert(!TinyBasicTestCompile(source));
+  }
+}
+static void test_subroutine_loop_scope_and_array_counters(void) {
+  run_language_program(
+      "10 FOR I=1 TO 1;GOSUB 100;NEXT I\n"
+      "20 A=A+10;FOR @(0)=3 TO 1 STEP -1;A=A+@(0);NEXT @(0)\n"
+      "30 FOR @(1)=2 TO 1;A=99;NEXT @(1)\n"
+      "40 STOP\n100 FOR I=1 TO 1;A=A+1;NEXT I;FOR J=1 TO 2;RETURN\n");
+  assert(TinyBasicTestNumber("A") == 17 && TinyBasicTestNumber("I") == 3);
+  run_language_program("10 FOR I=1 TO 2;ON 1 GOSUB 100;NEXT I;STOP\n100 A=A+1;RETURN\n");
+  assert(TinyBasicTestNumber("A") == 2);
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram("10 FOR I=1 TO 1;GOSUB 100;NEXT I;STOP\n100 NEXT I;RETURN\n",
+                                     "NOOUTER");
+  assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+}
+static void test_carriage_return_output_and_prompt(void) {
+  run_language_program("10 PRINT 'ABCDEFG',_,'XY'\n");
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "XYCDEFG", 7) == 0);
+  run_language_program("10 PRINT 'ABCDEFG';^M;'XY'\n");
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "XYCDEFG", 7) == 0);
+  TinyBasicTestReset();
+  TinyBasicTestSetInput(7);
+  int slot = TinyBasicTestAddProgram("10 INPUT 'OLD',_,'NEW'A\n", "CRPROMPT");
+  assert(slot >= 0 && TinyBasicTestRunResult(slot));
+  assert(std::strcmp(TinyBasicTestLastPrompt(), "NEW") == 0);
+}
+static void test_diagnostic_reason_and_location(void) {
+  using language_vm::Error;
+  struct Failure {
+    const char* source;
+    Error reason;
+    unsigned line;
+  };
+  const Failure failures[] = {{"10 A=3\n20 B=1/0\n", Error::DIV_ZERO, 20},
+                              {"10 A=@(-1)\n", Error::ARRAY_RANGE, 10},
+                              {"10 DATA 1\n20 READ A,B\n", Error::DATA_END, 20},
+                              {"10 RETURN\n", Error::RETURN, 10},
+                              {"10 NEXT I\n", Error::NEXT_WITHOUT_FOR, 10},
+                              {"10 GOTO 999\n", Error::MISSING_LINE, 10},
+                              {"10 ON -1 GOTO 10\n", Error::ON_INDEX, 10},
+                              {"10 PRINT #64,1\n", Error::FORMAT, 10},
+                              {"10 A=SQRT(-1)\n", Error::MATH, 10},
+                              {"10 A=SQRT(-1)=0\n", Error::MATH, 10},
+                              {"10 A=(1E308*1E308)>0\n", Error::MATH, 10},
+                              {"10 A=(-1)^.5=0\n", Error::MATH, 10},
+                              {"10 FOR I=1E308 TO 1E308 STEP 1E308;NEXT I\n", Error::MATH, 10},
+                              {"10 GOSUB 10\n", Error::CALL_STACK, 10}};
+  for (const auto& failure : failures) {
+    TinyBasicTestReset();
+    int slot = TinyBasicTestAddProgram(failure.source, "DIAGNOSTIC");
+    assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+    if (TinyBasicTestErrorDetail() != (unsigned)failure.reason)
+      std::fprintf(stderr, "Wrong diagnostic %u expected %u: %s", TinyBasicTestErrorDetail(),
+                   (unsigned)failure.reason, failure.source);
+    assert(TinyBasicTestErrorDetail() == (unsigned)failure.reason);
+    assert(TinyBasicTestErrorLine() == failure.line && TinyBasicTestErrorColumn() >= 4);
+  }
+  TinyBasicTestReset();
+  int slot = TinyBasicTestAddProgram("10 A=3\n20 B=1/0\n", "COLUMN");
+  assert(slot >= 0 && !TinyBasicTestRunResult(slot));
+  assert(TinyBasicTestErrorColumn() == 7 && TinyBasicTestErrorOffset() == 13);
+  struct SyntaxFailure {
+    const char* source;
+    Error reason;
+  };
+  const SyntaxFailure syntax[] = {{"10 TYPO 1\n", Error::UNKNOWN_COMMAND},
+                                  {"10 PRINT 'UNCLOSED\n", Error::UNTERMINATED_STRING},
+                                  {"10 A=(1+2\n", Error::EXPECTED_PAREN}};
+  for (const auto& failure : syntax) {
+    TinyBasicTestReset();
+    assert(!TinyBasicTestCompile(failure.source));
+    assert(TinyBasicTestErrorDetail() == (unsigned)failure.reason);
+    assert(TinyBasicTestErrorLine() == 10);
+  }
+}
 int main(int argc, char** argv) {
+  test_diagnostic_reason_and_location();
+  test_data_read_restore();
+  test_else_branches_and_resume();
+  test_on_dispatch();
+  test_subroutine_loop_scope_and_array_counters();
+  test_carriage_return_output_and_prompt();
   test_compile_and_print();
   test_line_index_orders_source_and_rejects_duplicates();
   test_format_number();

@@ -35,6 +35,7 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::PRINT_END:
       n = 1;
       break;
+    case Op::SOURCE_POS:
     case Op::CONST_I16:
     case Op::CONST_DEC8:
     case Op::JUMP:
@@ -57,6 +58,16 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::BRANCH:
       n = 6;
       break;
+    case Op::DATA:
+    case Op::ON_GOTO:
+    case Op::ON_GOSUB: {
+      if (v.size - pc < 2) return 0;
+      const uint16_t count = word(v.bytes + pc);
+      pc += 2;
+      const uint16_t width = (Op)op == Op::DATA ? 1 : 2;
+      if (count == 0 || count > (v.size - pc) / width) return 0;
+      return (uint16_t)(pc + count * width);
+    }
     case Op::PRINT_TEXT:
     case Op::READ_INPUT:
       if (v.size - pc < 2) return 0;
@@ -96,11 +107,58 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::WAIT:
     case Op::CLEAR:
     case Op::TARGET_ARRAY:
+    case Op::READ_DATA:
+    case Op::RESTORE_DATA:
+    case Op::FOR_ARRAY:
+    case Op::NEXT_ARRAY:
       break;
     default:
       return 0;
   }
   return n <= v.size - pc ? (uint16_t)(pc + n) : (uint16_t)0;
+}
+bool constant_value(const View& v, uint16_t pc, double& value) {
+  const Op op = (Op)v.bytes[pc];
+  const uint8_t* p = v.bytes + pc + 1;
+  if (op >= Op::CONST_0 && op <= Op::CONST_15) {
+    value = (uint8_t)op - (uint8_t)Op::CONST_0;
+    return true;
+  }
+  switch (op) {
+    case Op::CONST_I8:
+      value = (int8_t)*p;
+      return true;
+    case Op::CONST_I16:
+      value = (int16_t)word(p);
+      return true;
+    case Op::CONST_DEC8:
+    case Op::CONST_DEC16: {
+      value = op == Op::CONST_DEC8 ? *p : word(p);
+      const int exponent = (int8_t)p[op == Op::CONST_DEC8 ? 1 : 2];
+      if (exponent < 0)
+        value /= mk_math::pow10_int(-exponent);
+      else
+        value *= mk_math::pow10_int(exponent);
+      return true;
+    }
+    case Op::CONST_F64: {
+      uint64_t bits = 0;
+      for (uint8_t i = 0; i < 8; ++i) bits |= (uint64_t)p[i] << (i * 8);
+      memcpy(&value, &bits, 8);
+      return true;
+    }
+    default:
+      return false;
+  }
+}
+bool data_value(const View& v,uint16_t at,uint16_t end,double& value,uint16_t& following) {
+  following=next(v,at);
+  if(!following || following>end || !constant_value(v,at,value)) return false;
+  if(following<end && (Op)v.bytes[following]==Op::NEG) {
+    value=-value;
+    ++following;
+  }
+  return mk_math::is_finite(value);
 }
 bool array_index(double value, uint16_t capacity, uint16_t& index) {
   if (!mk_math::is_finite(value) || value < 0) return false;
@@ -162,6 +220,23 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
+    if (op >= Op::DATA && v.language != Language::BASIC) return Error::INVALID_IMAGE;
+    if (op == Op::DATA) {
+      const uint16_t end = (uint16_t)(pc + 3 + word(bytes + pc + 1));
+      for (uint16_t at = (uint16_t)(pc + 3); at < end;) {
+        uint16_t following=0;
+        double value=0;
+        if(!data_value(v,at,end,value,following)) return Error::INVALID_IMAGE;
+        at = following;
+      }
+    }
+    if (op == Op::SOURCE_POS && (!word(bytes + pc + 1) || word(bytes + pc + 1) > v.source_size))
+      return Error::INVALID_IMAGE;
+    if (op == Op::ON_GOTO || op == Op::ON_GOSUB)
+      for (uint16_t i = 0; i < word(bytes + pc + 1); ++i) {
+        const uint16_t line = word(bytes + pc + 3 + i * 2);
+        if (!line || line > 32767) return Error::INVALID_IMAGE;
+      }
     pc = following;
   }
   auto target = [&](uint16_t pc) {
@@ -209,6 +284,18 @@ uint32_t source_line(const View& v, uint16_t pc) {
   return number;
 }
 
+uint16_t source_column(const View& v, uint16_t pc) {
+  uint16_t column = 0;
+  for (uint16_t at = v.code; at <= pc && at < v.size;) {
+    const uint16_t following = next(v, at);
+    if (!following) return 0;
+    if ((Op)v.bytes[at] == Op::SOURCE_POS) column = word(v.bytes + at + 1);
+    if ((Op)v.bytes[at] == Op::LINE) column = 0;
+    at = following;
+  }
+  return column;
+}
+
 RunResult run(const View& v, State& s, const Services& host, uint32_t limit,
               bool resume) {
   return run(v, static_cast<Continuation&>(s), static_cast<const Bindings&>(s),
@@ -222,12 +309,35 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   if (!resume) {
     s.pc = v.code;
     s.sp = s.call_count = s.loop_count = 0;
+    s.data_pc = v.code;
+    s.data_index = 0;
   } else if (s.pc < v.code || s.pc >= v.size || s.sp > data.stack_capacity ||
              s.call_count > (v.language == Language::BASIC ? MAX_CALLS : 8) ||
-             s.loop_count > MAX_LOOPS) {
+             s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.size) {
     return {Error::INVALID_IMAGE, 0, 0, 0};
   }
   if (resume) {
+    uint16_t cursor = v.code;
+    while (cursor < s.data_pc) {
+      const uint16_t following = next(v, cursor);
+      if (!following) return {Error::INVALID_IMAGE, 0, 0, 0};
+      cursor = following;
+    }
+    if (cursor != s.data_pc ||
+        (s.data_index && (cursor >= v.size || (Op)v.bytes[cursor] != Op::DATA ||
+                          s.data_index > word(v.bytes + cursor + 1))))
+      return {Error::INVALID_IMAGE, 0, 0, 0};
+    if (s.data_index) {
+      uint16_t at = (uint16_t)(s.data_pc + 3), target = (uint16_t)(at + s.data_index);
+      while (at < target) {
+        uint16_t following=0;
+        double value=0;
+        const uint16_t end=(uint16_t)(s.data_pc+3+word(v.bytes+s.data_pc+1));
+        if(!data_value(v,at,end,value,following)) return {Error::INVALID_IMAGE,0,0,0};
+        at=following;
+      }
+      if (at != target) return {Error::INVALID_IMAGE, 0, 0, 0};
+    }
     for (uint8_t i = 0; i < s.call_count; ++i) {
       const auto& f = s.calls[i];
       if (f.resume < v.code || f.resume >= v.size || f.loops > MAX_LOOPS ||
@@ -236,8 +346,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
     for (uint8_t i = 0; i < s.loop_count; ++i) {
       const auto& f = s.loops[i];
-      if (f.variable >= 26 || f.body < v.code || f.body >= v.size ||
-          (f.end && (f.end < v.code || f.end >= v.size)))
+      if (((f.variable & 0x8000U) ? (!data.array || (f.variable & 0x7FFFU) >= data.array_count)
+                                  : f.variable >= 26) ||
+          f.body < v.code || f.body >= v.size || (f.end && (f.end < v.code || f.end >= v.size)))
         return {Error::INVALID_IMAGE, 0, 0, 0};
     }
   }
@@ -245,7 +356,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   uint32_t steps = 0;
   uint16_t instruction = s.pc;
   auto push = [&](double value) {
-    if (s.sp >= data.stack_capacity)
+    if (v.language == Language::BASIC && !mk_math::is_finite(value))
+      error = Error::MATH;
+    else if (s.sp >= data.stack_capacity)
       error = Error::STACK;
     else
       data.stack[s.sp++] = value;
@@ -269,7 +382,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   auto call = [&](uint16_t to, uint16_t end) {
     const uint8_t maximum = v.language == Language::BASIC ? MAX_CALLS : 8;
     if (s.call_count >= maximum)
-      error = Error::STACK;
+      error = v.language == Language::BASIC ? Error::CALL_STACK : Error::STACK;
     else {
       s.calls[s.call_count++] = {s.pc, (uint16_t)(end & 0x7FFF), s.loop_count,
                                  (end & 0x8000) != 0};
@@ -304,11 +417,11 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     const uint8_t* p = v.bytes + s.pc + 1;
     const Op op = (Op)v.bytes[s.pc];
     s.pc = after;
-    if (op >= Op::CONST_0 && op <= Op::CONST_15) {
-      push((uint8_t)op - (uint8_t)Op::CONST_0);
+    double a = 0, b = 0, value = 0;
+    if (constant_value(v, instruction, value)) {
+      push(value);
       continue;
     }
-    double a = 0, b = 0, value = 0;
     switch (op) {
       case Op::HALT: {
         if (s.sp != (v.expression ? 1 : 0))
@@ -321,28 +434,70 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if (s.sp) error = Error::STACK;
         if (host.service && !host.service(host.context)) error = Error::STOPPED;
         break;
-      case Op::CONST_I8:
-        push((int8_t)*p);
+      case Op::SOURCE_POS:
+      case Op::DATA:
         break;
-      case Op::CONST_I16:
-        push((int16_t)word(p));
-        break;
-      case Op::CONST_DEC8:
-      case Op::CONST_DEC16: {
-        value = op == Op::CONST_DEC8 ? *p : word(p);
-        const int exponent = (int8_t)p[op == Op::CONST_DEC8 ? 1 : 2];
-        if (exponent < 0)
-          value /= mk_math::pow10_int(-exponent);
-        else
-          value *= mk_math::pow10_int(exponent);
-        push(value);
+      case Op::READ_DATA: {
+        while (s.data_pc < v.size) {
+          const uint16_t following = next(v, s.data_pc);
+          if (!following) {
+            error = Error::INVALID_IMAGE;
+            break;
+          }
+          if ((Op)v.bytes[s.data_pc] == Op::DATA) {
+            const uint16_t count = word(v.bytes + s.data_pc + 1);
+            if (s.data_index < count) {
+              const uint16_t literal = (uint16_t)(s.data_pc + 3 + s.data_index);
+              uint16_t following=0;
+              if(!data_value(v,literal,(uint16_t)(s.data_pc+3+count),value,following)) {
+                error = Error::INVALID_IMAGE;
+                break;
+              }
+              s.data_index = (uint16_t)(s.data_index + following - literal);
+              push(value);
+              break;
+            }
+          }
+          s.data_pc = following;
+          s.data_index = 0;
+        }
+        if (s.data_pc == v.size) error = Error::DATA_END;
         break;
       }
-      case Op::CONST_F64: {
-        uint64_t bits = 0;
-        for (uint8_t i = 0; i < 8; ++i) bits |= (uint64_t)p[i] << (i * 8);
-        memcpy(&value, &bits, 8);
-        push(value);
+      case Op::RESTORE_DATA: {
+        a = pop();
+        b = mk_math::floor(a + .5);
+        if (error != Error::NONE) break;
+        if (!mk_math::is_finite(a) || a < 0 || a > 32767 || mk_math::fabs(a - b) > 1e-7) {
+          error = Error::LINE_NUMBER;
+          break;
+        }
+        const uint16_t to = a == 0 ? v.code : line_pc(v, (uint32_t)b);
+        if (to == 0xFFFF) {
+          error = Error::MISSING_LINE;
+          break;
+        }
+        s.data_pc = to;
+        s.data_index = 0;
+        break;
+      }
+      case Op::ON_GOTO:
+      case Op::ON_GOSUB: {
+        a = pop();
+        if (error != Error::NONE) break;
+        if (!mk_math::is_finite(a) || a < 0 || a != mk_math::floor(a)) {
+          error = Error::ON_INDEX;
+          break;
+        }
+        const uint16_t count = word(p);
+        if (a == 0 || a > count) break;
+        const uint16_t to = line_pc(v, word(p + 2 + ((uint16_t)a - 1) * 2));
+        if (to == 0xFFFF)
+          error = Error::MISSING_LINE;
+        else if (op == Op::ON_GOSUB)
+          call(to, 0);
+        else
+          jump(to);
         break;
       }
       case Op::LOAD:
@@ -372,7 +527,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if (op == Op::STORE_ARRAY) value = pop();
         a = pop();
         uint16_t index = 0;
-        if (!data.array || !array_index(a, data.array_count, index)) error = Error::VARIABLE;
+        if (!data.array || !array_index(a, data.array_count, index))
+          error = v.language == Language::BASIC ? Error::ARRAY_RANGE : Error::VARIABLE;
         if (error == Error::NONE) {
           if (op == Op::STORE_ARRAY)
             data.array[index] = value;
@@ -386,7 +542,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if (!s.sp)
           error = Error::STACK;
         else if (!data.array || !array_index(data.stack[s.sp - 1], data.array_count, index))
-          error = Error::VARIABLE;
+          error = v.language == Language::BASIC ? Error::ARRAY_RANGE : Error::VARIABLE;
         break;
       }
       case Op::TARGET_REF:
@@ -436,7 +592,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             break;
           case Op::DIV:
             if (b == 0)
-              error = Error::MATH;
+              error = v.language == Language::BASIC ? Error::DIV_ZERO : Error::MATH;
             else
               value = a / b;
             break;
@@ -448,7 +604,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             break;
           case Op::MOD:
             if (b == 0)
-              error = Error::MATH;
+              error = v.language == Language::BASIC ? Error::DIV_ZERO : Error::MATH;
             else
               value = a - mk_math::floor(a / b) * b;
             break;
@@ -577,10 +733,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         a = pop();
         b = mk_math::floor(a + .5);
         if (!mk_math::is_finite(a) || a < 1 || a > 32767 || mk_math::fabs(a - b) > 1e-7)
-          error = Error::LINE;
+          error = v.language == Language::BASIC ? Error::LINE_NUMBER : Error::LINE;
         else if (error == Error::NONE) {
           const uint16_t to = line_pc(v, (uint32_t)b);
-          if (op == Op::GOTO)
+          if (to == 0xFFFF && v.language == Language::BASIC)
+            error = Error::MISSING_LINE;
+          else if (op == Op::GOTO)
             jump(to);
           else
             call(to, 0);
@@ -592,7 +750,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         else {
           const auto frame = s.calls[--s.call_count];
           s.pc = frame.resume;
-          if (v.language == Language::FOCAL) s.loop_count = frame.loops;
+          s.loop_count = frame.loops;
         }
         break;
       case Op::DO_FOCAL:
@@ -623,33 +781,43 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         break;
       case Op::FOR_BASIC:
+      case Op::FOR_ARRAY:
       case Op::FOR_FOCAL: {
         double step = pop(), end = pop(), start = pop();
+        uint16_t var = *p;
+        if (op == Op::FOR_ARRAY) {
+          a = pop();
+          uint16_t index = 0;
+          if (!data.array || !array_index(a, data.array_count, index) || index >= 0x8000U) {
+            error = Error::ARRAY_RANGE;
+            break;
+          }
+          var = (uint16_t)(0x8000U | index);
+        } else if (var >= 26) {
+          error = Error::INVALID_IMAGE;
+          break;
+        }
         if (op == Op::FOR_FOCAL && p[3]) {
           const double temp = step;
           step = end;
           end = temp;
-        }
-        const uint8_t var = *p;
-        if (var >= 26) {
-          error = Error::INVALID_IMAGE;
-          break;
         }
         if (error != Error::NONE) break;
         if (op == Op::FOR_FOCAL && step == 0) {
           error = Error::FOR;
           break;
         }
-        bool outside = step < 0 ? start < end : start > end;
+        const bool outside = step < 0 ? start < end : start > end;
         if (outside && op == Op::FOR_FOCAL) {
           jump(word(p + 1));
           break;
         }
-        data.variables[var] = start;
+        double& counter = var & 0x8000U ? data.array[var & 0x7FFFU] : data.variables[var];
+        counter = start;
         if (outside) {
           uint16_t scan = s.pc;
           uint8_t depth = 0;
-          uint8_t vars[MAX_LOOPS] = {};
+          uint16_t vars[MAX_LOOPS] = {};
           bool found = false;
           while (scan < v.size && error == Error::NONE) {
             const Op candidate = (Op)v.bytes[scan];
@@ -658,15 +826,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
               error = Error::INVALID_IMAGE;
               break;
             }
-            if (candidate == Op::FOR_BASIC) {
+            if (candidate == Op::FOR_BASIC || candidate == Op::FOR_ARRAY) {
               if (depth == MAX_LOOPS) {
-                error = Error::FOR;
+                error = Error::LOOP_STACK;
                 break;
               }
-              vars[depth++] = v.bytes[scan + 1];
+              vars[depth++] = candidate == Op::FOR_ARRAY ? 0x8000U : v.bytes[scan + 1];
             }
-            if (candidate == Op::NEXT_BASIC) {
-              const uint8_t variable = v.bytes[scan + 1];
+            if (candidate == Op::NEXT_BASIC || candidate == Op::NEXT_ARRAY) {
+              const uint16_t variable = candidate == Op::NEXT_ARRAY ? 0x8000U : v.bytes[scan + 1];
               if (depth) {
                 if (vars[depth - 1] != variable) {
                   error = Error::FOR;
@@ -674,7 +842,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
                 }
                 --depth;
               } else {
-                if (variable != var)
+                if (variable != (var & 0x8000U ? 0x8000U : var))
                   error = Error::FOR;
                 else {
                   found = true;
@@ -685,53 +853,65 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             }
             scan = following;
           }
-          if (!found && error == Error::NONE) error = Error::FOR;
+          if (!found && error == Error::NONE) error = Error::NEXT_WITHOUT_FOR;
           break;
         }
-        if (op == Op::FOR_BASIC)
-          for (uint8_t i = s.loop_count; i; i--)
+        const uint8_t base =
+            v.language == Language::BASIC && s.call_count ? s.calls[s.call_count - 1].loops : 0;
+        if (op != Op::FOR_FOCAL)
+          for (uint8_t i = s.loop_count; i > base; --i)
             if (s.loops[i - 1].variable == var) {
               s.loop_count = (uint8_t)(i - 1);
               break;
             }
         if (s.loop_count == MAX_LOOPS) {
-          error = Error::STACK;
+          error = v.language == Language::BASIC ? Error::LOOP_STACK : Error::STACK;
           break;
         }
         s.loops[s.loop_count++] = {
-            end, step, start, s.pc, op == Op::FOR_FOCAL ? word(p + 1) : (uint16_t)0,
-            var};
+            end, step, start, s.pc, op == Op::FOR_FOCAL ? word(p + 1) : (uint16_t)0, var};
         break;
       }
       case Op::NEXT_BASIC:
+      case Op::NEXT_ARRAY:
       case Op::NEXT_FOCAL: {
         if (host.service && !host.service(host.context)) {
           error = Error::STOPPED;
           break;
         }
-        if (op == Op::NEXT_BASIC)
-          while (s.loop_count && s.loops[s.loop_count - 1].variable != *p)
-            --s.loop_count;
-        if (!s.loop_count) {
-          error = Error::FOR;
+        uint16_t var = *p;
+        if (op == Op::NEXT_ARRAY) {
+          a = pop();
+          uint16_t index = 0;
+          if (!data.array || !array_index(a, data.array_count, index) || index >= 0x8000U) {
+            error = Error::ARRAY_RANGE;
+            break;
+          }
+          var = (uint16_t)(0x8000U | index);
+        }
+        const uint8_t base =
+            v.language == Language::BASIC && s.call_count ? s.calls[s.call_count - 1].loops : 0;
+        if (op != Op::NEXT_FOCAL)
+          while (s.loop_count > base && s.loops[s.loop_count - 1].variable != var) --s.loop_count;
+        if (s.loop_count == base) {
+          error = v.language == Language::BASIC ? Error::NEXT_WITHOUT_FOR : Error::FOR;
           break;
         }
         LoopFrame& frame = s.loops[s.loop_count - 1];
-        const double old =
-            op == Op::NEXT_FOCAL ? frame.value : data.variables[frame.variable];
+        double& counter = frame.variable & 0x8000U ? data.array[frame.variable & 0x7FFFU]
+                                                   : data.variables[frame.variable];
+        const double old = op == Op::NEXT_FOCAL ? frame.value : counter;
         const double following = old + frame.step;
         if (op == Op::NEXT_FOCAL && old == frame.limit) {
           --s.loop_count;
           break;
         }
-        if (op == Op::NEXT_FOCAL &&
-            (!mk_math::is_finite(following) || following == old)) {
-          error = Error::FOR;
+        if (!mk_math::is_finite(following) || (op == Op::NEXT_FOCAL && following == old)) {
+          error = v.language == Language::BASIC ? Error::MATH : Error::FOR;
           break;
         }
-        const bool inside =
-            frame.step < 0 ? following >= frame.limit : following <= frame.limit;
-        if (op == Op::NEXT_BASIC || inside) data.variables[frame.variable] = following;
+        const bool inside = frame.step < 0 ? following >= frame.limit : following <= frame.limit;
+        if (op != Op::NEXT_FOCAL || inside) counter = following;
         if (inside) {
           frame.value = following;
           s.pc = frame.body;
@@ -783,10 +963,35 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 }
 
 const char* error_name(Error e) {
-  static const char* const names[] = {
-      "OK",       "SYNTAX",        "LINE",   "FULL",    "VARIABLE",
-      "FUNCTION", "FOR",           "RETURN", "STACK",   "MATH",
-      "REGISTER", "INVALID_IMAGE", "IO",     "STOPPED", "LIMIT", "YIELDED"};
+  static const char* const names[] = {"OK",
+                                      "SYNTAX",
+                                      "LINE",
+                                      "FULL",
+                                      "VARIABLE",
+                                      "FUNCTION",
+                                      "FOR",
+                                      "RETURN",
+                                      "STACK",
+                                      "MATH",
+                                      "REGISTER",
+                                      "INVALID_IMAGE",
+                                      "IO",
+                                      "STOPPED",
+                                      "LIMIT",
+                                      "YIELDED",
+                                      "DIV BY ZERO",
+                                      "ARRAY INDEX",
+                                      "OUT OF DATA",
+                                      "ON INDEX",
+                                      "CALL STACK",
+                                      "LOOP STACK",
+                                      "NEXT WITHOUT FOR",
+                                      "NO SUCH LINE",
+                                      "LINE NUMBER",
+                                      "PRINT WIDTH",
+                                      "UNKNOWN COMMAND",
+                                      "UNCLOSED STRING",
+                                      "EXPECTED )"};
   return (uint8_t)e < sizeof(names) / sizeof(names[0]) ? names[(uint8_t)e] : "UNKNOWN";
 }
 }  // namespace language_vm

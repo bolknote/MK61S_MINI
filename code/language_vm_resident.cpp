@@ -166,10 +166,11 @@ loadable_module::RuntimeStatus execute_overlay(ExecuteRequest& execution,
 }
 #endif
 }  // namespace
-loadable_module::RuntimeStatus invoke_resident(Language language,
-                                               loadable_module::Command command,
-                                               uint32_t a, uint32_t b,
-                                               uint32_t& result) {
+static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
+                                                           loadable_module::Command command,
+                                                           uint32_t a, uint32_t b, uint32_t& result,
+                                                           uint16_t* edit_id = nullptr,
+                                                           uint32_t* edit_position = nullptr) {
   using namespace loadable_module;
   result = 0;
   if (busy || (language != Language::BASIC && language != Language::FOCAL))
@@ -178,6 +179,11 @@ loadable_module::RuntimeStatus invoke_resident(Language language,
     BusyScope() { busy = true; }
     ~BusyScope() { busy = false; }
   } scope;
+  static uint16_t basic_error_id = 0xFFFF, basic_error_line = 0, basic_error_column = 0;
+  if (language == Language::BASIC && command == Command::TINYBASIC_EDIT_ID && a == basic_error_id) {
+    if (!b) b = ((uint32_t)basic_error_line << 16) | basic_error_column;
+    basic_error_id = 0xFFFF;
+  }
   const unsigned index = language == Language::BASIC ? 0 : 1;
 #if MK61_OVERLAY_LANGUAGE_VM
   // Retained values stay at the upper end of the existing WORKSPACE. Only
@@ -357,8 +363,33 @@ loadable_module::RuntimeStatus invoke_resident(Language language,
 #else
   if (!execute_resident(execution)) return RuntimeStatus::INVALID_MODULE;
 #endif
+  if (language == Language::BASIC) {
+    basic_error_id = execution.result.error == Error::NONE ? 0xFFFF : request.source_id;
+    basic_error_line = (uint16_t)execution.result.line;
+    basic_error_column = execution.error_column;
+  }
+  if (edit_id && edit_position && language == Language::BASIC && execution.mode == 0 &&
+      execution.edit_requested && execution.result.line && request.source_id != 0xFFFF) {
+    *edit_id = request.source_id;
+    *edit_position = (execution.result.line << 16) | execution.error_column;
+  }
   result = run_status(language, original, execution.result.error);
   return RuntimeStatus::OK;
+}
+loadable_module::RuntimeStatus invoke_resident(Language language, loadable_module::Command command,
+                                               uint32_t a, uint32_t b, uint32_t& result) {
+  uint16_t edit_id = 0xFFFF;
+  uint32_t edit_position = 0;
+  const auto status =
+      invoke_resident_impl(language, command, a, b, result, &edit_id, &edit_position);
+  // The run's image/state leases and BUSY guard have ended before opening the
+  // compiler/editor again. Never load a new APP over an active VM allocation.
+  if (status == loadable_module::RuntimeStatus::OK && edit_id != 0xFFFF) {
+    uint32_t ignored = 0;
+    (void)invoke_resident_impl(Language::BASIC, loadable_module::Command::TINYBASIC_EDIT_ID,
+                               edit_id, edit_position, ignored);
+  }
+  return status;
 }
 }  // namespace language_vm
 #endif

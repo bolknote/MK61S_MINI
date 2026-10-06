@@ -1,3 +1,4 @@
+#include "tinybasic_text.hpp"
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
@@ -62,6 +63,12 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
 }
 bool append(const char* text, uint16_t length, bool separate) {
   auto& s = state();
+  if (s.language == Language::BASIC) {
+    if (tinybasic_text::append(s.output, sizeof(s.output), s.output_cursor, text, length))
+      return true;
+    s.failure = Error::FULL;
+    return false;
+  }
   size_t used = strlen(s.output);
   if (separate && used && used + 1 < sizeof(s.output)) s.output[used++] = ' ';
   if (s.language == Language::BASIC && length >= sizeof(s.output) - used) {
@@ -81,6 +88,7 @@ void flush(bool empty) {
   const uint16_t following = (uint16_t)s.row + n;
   s.row = following < rows ? (uint8_t)following : (uint8_t)(rows - 1);
   s.output[0] = 0;
+  s.output_cursor = 0;
 }
 bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   auto& s = state();
@@ -89,7 +97,11 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     case Event::PRINT_BEGIN:
       s.width = 0;
       request().pause_final = 0;
-      if (!basic) { s.row = 0; s.output[0] = 0; }
+      if (!basic) {
+        s.row = 0;
+        s.output[0] = 0;
+        s.output_cursor = 0;
+      }
       return true;
     case Event::TEXT: return append(text, length, !basic);
     case Event::NUMBER: {
@@ -103,12 +115,15 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     }
     case Event::FORMAT: {
       const double n = mk_math::floor(value + .5);
-      if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) return false;
+      if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {
+        state().failure = Error::FORMAT;
+        return false;
+      }
       s.width = (uint8_t)n;
       return true;
     }
     case Event::SEPARATOR: {
-      unsigned n = length == 2 ? 8U - (strlen(s.output) % 8U) : length;
+      unsigned n = length == 2 ? 8U - (s.output_cursor % 8U) : length;
       while (n--) if (!append(" ", 1, false)) return false;
       return true;
     }
@@ -131,7 +146,11 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return false;
     }
     case Event::CLEAR:
-      main_lcd().clear(); s.row = 0; s.output[0] = 0; return true;
+      main_lcd().clear();
+      s.row = 0;
+      s.output[0] = 0;
+      s.output_cursor = 0;
+      return true;
     case Event::FINISH: flush(false); return true;
     case Event::TARGET_REF:
       return value != 19 ||
@@ -169,6 +188,7 @@ uint32_t execute(OverlayRequest* payload) {
     } else {
       if (resume) s.stack[s.control.sp++] = s.input_value;
       r.result = run(view, s.control, bindings, services, 0, resume);
+      r.error_column = source_column(view, r.result.pc);
       s.steps += r.result.steps;
       r.result.steps = s.steps;
       if (r.result.error == Error::YIELDED) {

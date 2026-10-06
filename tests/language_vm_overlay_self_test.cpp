@@ -16,6 +16,8 @@ bool legacy, input_legacy, input_missing, cancel;
 bool vm_legacy, corrupt_input_stack;
 bool expect_large;
 bool fail_emit;
+bool edit_after_failure;
+unsigned edits;
 shared_memory::Lease* usb_session;
 bool drop_usb_on_input;
 bool usb_live() { return usb_session && usb_session->ok(); }
@@ -56,11 +58,16 @@ namespace loadable_module {
 RuntimeStatus evict_cached() { cached = (Kind)0; return RuntimeStatus::OK; }
 }
 namespace language_vm_test {
-RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t,
+RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t b,
                        Request* request, uint32_t& result) {
   check_usb();
   if (command == Command::LANGUAGE_COMPILER_INFO) {
     result = legacy ? 0 : COMPILER_MAGIC; return RuntimeStatus::OK;
+  }
+  if(command==Command::TINYBASIC_EDIT_ID) {
+    assert(kind==Kind::TINYBASIC && a==inode && b==((10U<<16)|7U));
+    assert(shared_memory::snapshot(shared_memory::Arena::APP).high_water==0);
+    ++edits; result=1; return RuntimeStatus::OK;
   }
   assert(command == Command::LANGUAGE_COMPILER_EMIT || a == inode);
   shared_memory::Lease workspace;
@@ -126,6 +133,10 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
     if (p.state->cancelled)
       p.execution->result.error = p.state->normal_stop ? Error::NONE : Error::STOPPED;
     else if (p.state->failure != Error::NONE) p.execution->result.error = p.state->failure;
+    if(edit_after_failure && p.execution->mode==0 && p.execution->result.error!=Error::NONE) {
+      p.execution->edit_requested=1;
+      edit_after_failure=false;
+    }
     return RuntimeStatus::OK;
   }
   if (kind == Kind::LANGUAGE_INPUT) {
@@ -183,18 +194,19 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
                               (uint16_t)execution.array_count, state.stack, MAX_STACK};
   Services services = {}; services.event = event; services.yield_input = true;
   execution.result = run(view, state.control, bindings, services, 10000, resume);
+  execution.error_column=source_column(view,execution.result.pc);
   if (execution.result.error == Error::YIELDED) {
     suspended = &state;
     const uint8_t* p = view.bytes + execution.result.pc + 1;
     state.prompt_offset = execution.result.pc + 3;
     state.prompt_length = (uint16_t)(p[0] | ((uint16_t)p[1] << 8));
     if (corrupt_input_stack) state.control.sp = INPUT_STACK_CAPACITY;
-  } else assert(execution.result.error == Error::NONE);
+  } else assert(execution.result.error==Error::NONE || edit_after_failure);
   return RuntimeStatus::OK;
 }
 }
 int main() {
-  static_assert(sizeof(ExecutionState) == 1504, "measurement needs updating");
+  static_assert(sizeof(ExecutionState) == 1520, "measurement needs updating");
   uint32_t result;
 #if MK61_SCREEN_BUFFER_LOAN
   memset(screen_storage,0xDD,sizeof(screen_storage));
@@ -336,6 +348,12 @@ int main() {
 #endif
   }
 #endif
+  source="10 A=1/0\n"; mode=0; edit_after_failure=true;
+  uint32_t edit_run_result=1;
+  assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,inode,0,edit_run_result)
+         ==RuntimeStatus::OK && edit_run_result==0);
+  assert(edits==1 && !edit_after_failure);
+  mode=1;
   assert(shared_memory::validate_invariants());
   assert(shared_memory::active_owner(shared_memory::Arena::WORKSPACE) == shared_memory::Owner::NONE);
   assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY) == shared_memory::Owner::NONE);

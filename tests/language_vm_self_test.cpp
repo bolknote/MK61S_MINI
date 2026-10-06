@@ -151,7 +151,7 @@ void test_controls_and_traps() {
   f.compile("10 IF 0 GOTO 999\n20 A=7\n");
   assert(run(f.view, f.state, services).error == Error::NONE && f.vars[0] == 7);
   f.compile("10 A=8\n20 GOTO 999\n");
-  assert(run(f.view, f.state, services).error == Error::LINE && f.vars[0] == 8);
+  assert(run(f.view, f.state, services).error == Error::MISSING_LINE && f.vars[0] == 8);
   f.compile("10 GOTO 10\n");
   assert(run(f.view, f.state, services, 100).error == Error::LIMIT);
   f.compile("10 A=1e999=1e999\n");
@@ -217,6 +217,44 @@ void test_yield_resume() {
   assert(run(f.view, saved, static_cast<const Bindings&>(f.state), yielding,
              100, true).error == Error::INVALID_IMAGE);
 }
+void test_extension_image_validation_and_resume() {
+  Fixture f;
+  f.compile("10 DATA -.1,2\n20 READ A;INPUT B;READ C\n");
+  Services yielding=services;
+  yielding.yield_input=true;
+  assert(run(f.view,f.state,yielding).error==Error::YIELDED);
+  assert(f.vars[0]==-.1);
+  const uint16_t data=f.state.data_pc;
+  State invalid=f.state;
+  invalid.data_pc++;
+  assert(run(f.view,invalid,services,100,true).error==Error::INVALID_IMAGE);
+  invalid=f.state;
+  invalid.data_index--;
+  assert(run(f.view,invalid,services,100,true).error==Error::INVALID_IMAGE);
+  assert(f.vars[1]==0 && f.vars[2]==0);
+
+  const std::vector<uint8_t> original(f.image,f.image+f.view.size);
+  View checked;
+  f.image[data+1]=f.image[data+2]=0;
+  f.crc();
+  assert(inspect(f.image,f.view.size,checked)==Error::INVALID_IMAGE);
+  memcpy(f.image,original.data(),original.size());
+  f.image[data+3]=(uint8_t)Op::STORE;
+  f.crc();
+  assert(inspect(f.image,f.view.size,checked)==Error::INVALID_IMAGE);
+  memcpy(f.image,original.data(),original.size());
+  f.image[f.view.code+1]=f.image[f.view.code+2]=0;
+  f.crc();
+  assert(inspect(f.image,f.view.size,checked)==Error::INVALID_IMAGE);
+
+  f.compile("10 ON 0 GOSUB 20\n20 RETURN\n");
+  uint16_t at=f.view.code;
+  while(at<f.view.size && f.image[at]!=(uint8_t)Op::ON_GOSUB) ++at;
+  assert(at+4<f.view.size);
+  f.image[at+3]=f.image[at+4]=0;
+  f.crc();
+  assert(inspect(f.image,f.view.size,checked)==Error::INVALID_IMAGE);
+}
 }  // namespace
 int main() {
   test_literals();
@@ -225,5 +263,6 @@ int main() {
   test_controls_and_traps();
   test_parser_edges();
   test_yield_resume();
+  test_extension_image_validation_and_resume();
   puts("language_vm_self_test: ok");
 }

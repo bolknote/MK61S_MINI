@@ -15,10 +15,10 @@ from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Machine, Elf, ROOT, run
 from unicorn.arm_const import UC_ARM_REG_SP
 
-STATE_SIZE = 1504
+STATE_SIZE = 1520
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 7
+GENERATION = 8
 
 
 class OverlayMachine(Machine):
@@ -78,7 +78,19 @@ class OverlayMachine(Machine):
         self.keys.append(mapping[38])
 
 
-def execute(m, packages, language, source, answers, cancelled=False, mode=1):
+def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v8 = GENERATION >= 8
+    version = 2 if v8 else 1
+    state_size = 1520 if v8 else 1504
+    control_size = 624 if v8 else 616
+    stack_offset = control_size
+    output_offset = stack_offset+768
+    input_value_offset = output_offset+96
+    prompt_offset_field = input_value_offset+12
+    language_offset = prompt_offset_field+6
+    cancelled_offset = language_offset+(4 if v8 else 3)
+    execution_size = 48 if v8 else 44
+    result_offset = 36 if v8 else 32
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
@@ -90,8 +102,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1):
     compile_request, execution, overlay, input_request = [m.input+x for x in (512, 640, 720, 768)]
     main_metadata, expression_metadata = m.input+900, m.input+928
     state = m.workspace if v5 else m.workspace + 3504
-    expression = state+1128 if v6 else m.input+1024
-    bytecode = state + STATE_SIZE
+    expression = state+stack_offset+512 if v6 else m.input+1024
+    bytecode = state + state_size
     output = m.input+1280 if v5 else bytecode
     array = m.workspace+4688+424 if v5 else m.workspace
     m.partitioned = v5
@@ -100,12 +112,12 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1):
     m.load(packages[compiler])
     m.files[42] = (3 if language == 1 else 2, "VMTEST", source)
     m.uc.mem_write(compile_request, bytes(32))
-    m.put(compile_request, 32, 1, 0, 6144)  # size first, with no output reservation
+    m.put(compile_request, 32, version, 0, 6144)  # size first, with no output reservation
     assert m.call(0x206 if language == 1 else 0x106, 42, 0, compile_request) == (1 if language == 1 else 0)
     wire = bytes(m.uc.mem_read(compile_request, 32))
     assert wire[16] == 0 and wire[30] == 1, wire.hex()
     length = struct.unpack_from("<H", wire, 18)[0]
-    assert length <= 8192-3504-STATE_SIZE
+    assert length <= 8192-3504-state_size
     m.put(compile_request+8, output, length)
     reads = sum(x[0] == "file_read" for x in m.trace)
     assert m.call(0x704, 0, 0, compile_request) == 1
@@ -120,20 +132,20 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1):
         m.uc.mem_write(bytecode,image)
     m.uc.mem_write(variables, bytes(208))
     m.uc.mem_write(array, bytes(3080))
-    m.uc.mem_write(state, bytes(STATE_SIZE))
-    m.uc.mem_write(state+1498, bytes((language,)))
-    m.uc.mem_write(execution, bytes(44))
-    m.put(execution, 44, 1, bytecode, length, variables, array, 385 if language == 1 else 0)
+    m.uc.mem_write(state, bytes(state_size))
+    m.uc.mem_write(state+language_offset, bytes((language,)))
+    m.uc.mem_write(execution, bytes(execution_size))
+    m.put(execution, execution_size, version, bytecode, length, variables, array, 385 if language == 1 else 0)
     m.uc.mem_write(execution+28, bytes((mode, 0, 0, 0)))
     m.uc.mem_write(overlay, bytes(24 if v4 else 20))
-    m.put(overlay, 24 if v4 else 20, 1, execution, state)
+    m.put(overlay, 24 if v4 else 20, version, execution, state)
     action_offset = 20 if v4 else 16
     if v4:
         m.put(overlay+16, main_metadata)
         m.stage = "verification"
         m.load(packages["language-input"])
         assert m.call(VM_INFO) == input_magic
-        assert m.call(VALIDATE, overlay) == 1 and m.uc.mem_read(execution+32, 1)[0] == 0
+        assert m.call(VALIDATE, overlay) == 1 and m.uc.mem_read(execution+result_offset, 1)[0] == 0
     inputs = evaluations = retries = 0
     for _ in range(20):
         m.stage = "program"
@@ -142,73 +154,73 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1):
         if mode == 0 and cancelled:
             m.keys = [m.mapping[39]]  # final interactive wait after ABORT
         assert m.call(VM_RUN, overlay) == 1
-        error, pc = m.uc.mem_read(execution+32, 1)[0], struct.unpack("<H", m.uc.mem_read(execution+34, 2))[0]
+        error, pc = m.uc.mem_read(execution+result_offset, 1)[0], struct.unpack("<H", m.uc.mem_read(execution+result_offset+2, 2))[0]
         if error != 15:  # Error::YIELDED, appended without changing old errors
             if v4:
                 m.stage = "finish"
                 m.load(packages["language-input"])
-                if mode == 0: m.keys = [m.mapping[39]]
+                if mode == 0: m.keys = [m.mapping[38 if edit_after_error else 39]]
                 assert m.call(FINISH, overlay) == 1
-                error = m.uc.mem_read(execution+32, 1)[0]
+                error = m.uc.mem_read(execution+result_offset, 1)[0]
             assert bytes(m.uc.mem_read(bytecode, length)) == image
             return struct.unpack("<d", m.uc.mem_read(variables, 8))[0], error, inputs, evaluations, retries
         assert image[pc] == 48  # READ_INPUT
-        prompt_offset, prompt_length = struct.unpack("<HH", m.uc.mem_read(state+1492, 4))
+        prompt_offset, prompt_length = struct.unpack("<HH", m.uc.mem_read(state+prompt_offset_field, 4))
         assert prompt_offset == pc+3 and prompt_offset+prompt_length <= length
         invalid = False
         while True:
-            before = bytes(m.uc.mem_read(state, STATE_SIZE))
+            before = bytes(m.uc.mem_read(state, state_size))
             m.stage = "input"
             m.load(packages["language-input"])
             assert m.call(VM_INFO) == input_magic
             if cancelled: m.keys = [m.mapping[39]]
             else: m.input_keys(answers.pop(0))
             m.uc.mem_write(input_request, bytes(40))
-            m.put(input_request, 40, 1, bytecode+prompt_offset, expression)
+            m.put(input_request, 40, version, bytecode+prompt_offset, expression)
             struct_data = struct.pack("<HHHBBB", prompt_length, 256 if v4 else 768, 0, language, 0, invalid)
             m.uc.mem_write(input_request+24, struct_data)
             assert m.call(INPUT, input_request) == 1
             result = m.uc.mem_read(input_request+31, 1)[0]
             # Only the unused upper 32 stack slots may change in v6. The
             # suspended values, control frames and partial PRINT are intact.
-            after = bytes(m.uc.mem_read(state, STATE_SIZE))
+            after = bytes(m.uc.mem_read(state, state_size))
             if v6:
-                assert after[:1128] == before[:1128] and after[1384:] == before[1384:]
+                assert after[:stack_offset+512] == before[:stack_offset+512] and after[output_offset:] == before[output_offset:]
                 if language == 2: assert after == before  # FOCAL parses a scalar only
             else:
                 assert after == before, [i for i,(a,b) in enumerate(zip(before,after)) if a!=b][:16]
             if result == 3:
-                m.uc.mem_write(state+1501, b"\x01")  # cancelled
-                m.uc.mem_write(state+1502, bytes((language == 1 and mode == 0,)))
+                m.uc.mem_write(state+cancelled_offset, b"\x01")  # cancelled
+                m.uc.mem_write(state+cancelled_offset+1, bytes((language == 1 and mode == 0,)))
                 action = 3; break
             if result == 1:
-                m.uc.mem_write(state+1480, bytes(m.uc.mem_read(input_request+16, 8)))
+                m.uc.mem_write(state+input_value_offset, bytes(m.uc.mem_read(input_request+16, 8)))
                 action = 1; inputs += 1; break
             assert result == 2
             evaluations += 1
             expression_size = struct.unpack("<H", m.uc.mem_read(input_request+28, 2))[0]
             borrowed_image = bytes(m.uc.mem_read(expression,256)) if v6 else None
             temporary = m.input + 832
-            m.uc.mem_write(temporary, bytes(m.uc.mem_read(execution, 44)))
+            m.uc.mem_write(temporary, bytes(m.uc.mem_read(execution, execution_size)))
             m.put(temporary+8, expression, expression_size)
             m.put(overlay+8, temporary)
             m.uc.mem_write(overlay+action_offset, b"\x02")
-            control = bytes(m.uc.mem_read(state, 616))
-            sp = m.uc.mem_read(state+610, 1)[0]
-            prefix = bytes(m.uc.mem_read(state+616, sp*8))
-            output = bytes(m.uc.mem_read(state+1384, 96))
+            control = bytes(m.uc.mem_read(state, control_size))
+            sp = m.uc.mem_read(state+(614 if v8 else 610), 1)[0]
+            prefix = bytes(m.uc.mem_read(state+stack_offset, sp*8))
+            output = bytes(m.uc.mem_read(state+output_offset, 96))
             if v4:
                 m.put(overlay+16, expression_metadata)
                 m.stage = "verification"
-                assert m.call(VALIDATE, overlay) == 1 and m.uc.mem_read(temporary+32, 1)[0] == 0
+                assert m.call(VALIDATE, overlay) == 1 and m.uc.mem_read(temporary+result_offset, 1)[0] == 0
             m.stage = "expression"
             m.load(packages["language-vm"])
             assert m.call(VM_RUN, overlay) == 1
-            assert bytes(m.uc.mem_read(state, 616)) == control
-            assert bytes(m.uc.mem_read(state+616, sp*8)) == prefix
-            assert bytes(m.uc.mem_read(state+1384, 96)) == output
+            assert bytes(m.uc.mem_read(state, control_size)) == control
+            assert bytes(m.uc.mem_read(state+stack_offset, sp*8)) == prefix
+            assert bytes(m.uc.mem_read(state+output_offset, 96)) == output
             if v6: assert bytes(m.uc.mem_read(expression,256)) == borrowed_image
-            expression_error = m.uc.mem_read(temporary+32, 1)[0]
+            expression_error = m.uc.mem_read(temporary+result_offset, 1)[0]
             m.put(overlay+8, execution)
             if v4: m.put(overlay+16, main_metadata)
             if expression_error == 0:
@@ -224,7 +236,7 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local"), default="core")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7), default=7)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8), default=8)
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
     GENERATION = args.generation
@@ -255,6 +267,20 @@ def main():
             m = OverlayMachine(args.resident_elf, True, address)
             assert execute(m, packages, 1, basic, ["10", "1/0", "20", "30"]) == (60, 0, 3, 4, 1)
             record(m)
+            if GENERATION >= 8:
+                m = OverlayMachine(args.resident_elf, True, address)
+                data = (b"10 DATA 3,4\n20 READ B;INPUT C;READ D\n"
+                        b"30 IF C=5 THEN A=B+D ELSE A=99\n")
+                assert execute(m,packages,1,data,["5"])[:2] == (7,0)
+                m = OverlayMachine(args.resident_elf, True, address)
+                nested = (b"10 FOR I=1 TO 1;ON 1 GOSUB 100;NEXT I\n"
+                          b"20 FOR @(0)=3 TO 1 STEP -1;A=A+@(0);NEXT @(0);STOP\n"
+                          b"100 FOR I=1 TO 1;A=A+1;NEXT I;RETURN\n")
+                assert execute(m,packages,1,nested,[])[:2] == (7,0)
+                m = OverlayMachine(args.resident_elf, True, address)
+                assert execute(m,packages,1,b"10 A=1/0\n",[],mode=0,edit_after_error=True)[1] == 16
+                assert m.uc.mem_read(m.input+640+34,1)[0] == 1
+                assert any("DIV BY ZERO" in line for line in m.lines), m.lines
             m = OverlayMachine(args.resident_elf, True, address)
             assert execute(m, packages, 2, focal, ["10", "20", "30"]) == (30, 0, 3, 0, 0)
             record(m)

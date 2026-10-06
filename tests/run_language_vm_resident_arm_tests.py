@@ -40,8 +40,8 @@ class ResidentMachine(Machine):
         if variables is None:self.uc.mem_write(values,bytes(26*8))
         else:self.uc.mem_write(values,struct.pack("<26d",*variables))
         self.uc.mem_write(array,bytes(385*8))
-        self.uc.mem_write(request,bytes(44))
-        self.put(request,44,1,code,len(image),values,array,385)
+        self.uc.mem_write(request,bytes(48))
+        self.put(request,48,2,code,len(image),values,array,385)
         self.uc.mem_write(request+28,b"\x01\0\0\0")
         # There is no native executor APP or retained compiler code anywhere
         # in the complete dynamic APP/heap pool during execution.
@@ -54,7 +54,7 @@ class ResidentMachine(Machine):
         assert self.uc.reg_read(UC_ARM_REG_PC)==self.stop
         assert self.uc.reg_read(UC_ARM_REG_SP)==sp
         assert self.uc.reg_read(UC_ARM_REG_R0)==1
-        error=self.uc.mem_read(request+32,1)[0]
+        error=self.uc.mem_read(request+36,1)[0]
         assert error==0,(error,self.lines,self.trace[-15:])
         assert bytes(self.uc.mem_read(self.pool_begin,self.pool_end-self.pool_begin))==b"\xCD"*(self.pool_end-self.pool_begin)
         return struct.unpack("<26d",self.uc.mem_read(values,26*8))

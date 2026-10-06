@@ -24,7 +24,20 @@ enum class Error : uint8_t {
   IO,
   STOPPED,
   LIMIT,
-  YIELDED
+  YIELDED,
+  DIV_ZERO,
+  ARRAY_RANGE,
+  DATA_END,
+  ON_INDEX,
+  CALL_STACK,
+  LOOP_STACK,
+  NEXT_WITHOUT_FOR,
+  MISSING_LINE,
+  LINE_NUMBER,
+  FORMAT,
+  UNKNOWN_COMMAND,
+  UNTERMINATED_STRING,
+  EXPECTED_PAREN
 };
 enum class Op : uint8_t {
   HALT,
@@ -83,7 +96,15 @@ enum class Op : uint8_t {
   CONST_DEC8,
   CONST_DEC16,
   CONST_0 = 64,
-  CONST_15 = 79
+  CONST_15 = 79,
+  DATA,
+  READ_DATA,
+  RESTORE_DATA,
+  ON_GOTO,
+  ON_GOSUB,
+  FOR_ARRAY,
+  NEXT_ARRAY,
+  SOURCE_POS
 };
 enum class Function : uint8_t {
   SIN,
@@ -165,13 +186,13 @@ struct CallFrame {
 struct LoopFrame {
   double limit, step, value;
   uint16_t body, end;
-  uint8_t variable;
+  uint16_t variable;
 };
 // Pointer-free control state survives replacement/relocation of a native APP.
 struct Continuation {
   CallFrame calls[MAX_CALLS];
   LoopFrame loops[MAX_LOOPS];
-  uint16_t pc;
+  uint16_t pc, data_pc, data_index;
   uint8_t sp, call_count, loop_count;
 };
 struct Bindings {
@@ -209,6 +230,7 @@ RunResult run(const View&, Continuation&, const Bindings&, const Services&,
               uint32_t step_limit = 0, bool resume = false);
 uint32_t checksum(const uint8_t*, size_t);
 uint32_t source_line(const View&, uint16_t pc);
+uint16_t source_column(const View&, uint16_t pc);
 uint16_t line_pc(const View&, uint32_t number);
 const char* error_name(Error);
 }  // namespace language_vm

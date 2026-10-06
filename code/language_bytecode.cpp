@@ -1,4 +1,5 @@
 #include "language_bytecode.hpp"
+#include "tinybasic_syntax.hpp"
 
 #include <string.h>
 
@@ -44,15 +45,32 @@ enum Command : uint8_t {
   PAUSE,
   END,
   BRANCH_CMD,
-  DO_CMD
+  DO_CMD,
+  DATA_CMD,
+  READ_DATA_CMD,
+  RESTORE_CMD,
+  ON_CMD
 };
-const Keyword basic_commands[] = {
-    {"REM", 3, REM},       {"REMARK", 3, REM},      {"LET", 1, ASSIGN},
-    {"PRINT", 1, PRINT},   {"INPUT", 2, READ_INPUT},     {"IF", 1, IF},
-    {"GOTO", 1, GOTO_CMD}, {"GOSUB", 3, GOSUB_CMD}, {"RETURN", 1, RETURN_CMD},
-    {"FOR", 1, FOR_CMD},   {"NEXT", 1, NEXT_CMD},   {"CLS", 1, CLS},
-    {"PAUSE", 3, PAUSE},   {"END", 1, END},         {"STOP", 1, END},
-    {nullptr, 0, 0}};
+const Keyword basic_commands[] = {{"REM", 3, REM},
+                                  {"REMARK", 3, REM},
+                                  {"LET", 1, ASSIGN},
+                                  {"PRINT", 1, PRINT},
+                                  {"INPUT", 2, READ_INPUT},
+                                  {"IF", 1, IF},
+                                  {"GOTO", 1, GOTO_CMD},
+                                  {"GOSUB", 3, GOSUB_CMD},
+                                  {"RETURN", 1, RETURN_CMD},
+                                  {"FOR", 1, FOR_CMD},
+                                  {"NEXT", 1, NEXT_CMD},
+                                  {"CLS", 1, CLS},
+                                  {"PAUSE", 3, PAUSE},
+                                  {"END", 1, END},
+                                  {"STOP", 1, END},
+                                  {"DATA", 2, DATA_CMD},
+                                  {"READ", 3, READ_DATA_CMD},
+                                  {"RESTORE", 4, RESTORE_CMD},
+                                  {"ON", 15, ON_CMD},
+                                  {nullptr, 0, 0}};
 const Keyword functions[] = {
     {"SIZE", 1, (uint8_t)Function::SIZE},   {"COLS", 15, (uint8_t)Function::COLS},
     {"ROWS", 15, (uint8_t)Function::ROWS},  {"PI", 15, (uint8_t)Function::PI_VALUE},
@@ -446,6 +464,7 @@ class Compiler {
   Target target() {
     skip();
     Target t = {0, 0};
+    const char* target_start = p_;
     if (p_ == end_) {
       fail(Error::VARIABLE);
       return t;
@@ -461,7 +480,8 @@ class Compiler {
       t.kind = 2;
       if (!match('(')) fail(Error::SYNTAX);
       expression();
-      if (!match(')')) fail(Error::SYNTAX);
+      if (!match(')')) fail(Error::EXPECTED_PAREN);
+      source_position(target_start);
       emit(Op::TARGET_ARRAY);
     } else if (alpha(*p_))
       t.index = (uint8_t)(upper(*p_++) - 'A');
@@ -523,6 +543,7 @@ class Compiler {
         break;
       }
       binary((uint8_t)(level + 1));
+      if (basic() && (op == Op::DIV || op == Op::MOD)) source_position(saved);
       operation(op, -1);
       check();
     }
@@ -566,13 +587,14 @@ class Compiler {
   }
   void primary() {
     skip();
+    const char* primary_start = p_;
     if (p_ == end_) {
       fail(Error::SYNTAX);
       return;
     }
     if (match('(')) {
       binary(0);
-      if (!match(')')) fail(Error::SYNTAX);
+      if (!match(')')) fail(Error::EXPECTED_PAREN);
       return;
     }
     if (*p_ == '.' && p_ + 1 < end_ && alpha(p_[1])) {
@@ -587,7 +609,8 @@ class Compiler {
     if (basic() && match('@')) {
       if (!match('(')) fail(Error::SYNTAX);
       binary(0);
-      if (!match(')')) fail(Error::SYNTAX);
+      if (!match(')')) fail(Error::EXPECTED_PAREN);
+      source_position(primary_start);
       emit(Op::LOAD_ARRAY);
       return;
     }
@@ -657,8 +680,9 @@ class Compiler {
         if (!match(',')) fail(Error::FUNCTION);
         binary(0);
       }
-      if (!match(')')) fail(Error::FUNCTION);
+      if (!match(')')) fail(Error::EXPECTED_PAREN);
       if (f == Function::RND && !basic()) fail(Error::FUNCTION);
+      if (basic()) source_position(primary_start);
       emit(Op::FUNCTION);
       byte(f == Function::RND ? (uint8_t)Function::RND_LIMIT : fn);
       if (f == Function::MAX) stack(-1);
@@ -670,6 +694,7 @@ class Compiler {
   const char* command_end(const char* begin, bool print) {
     char quote = 0;
     int nesting = 0;
+    const char* alternate = tinybasic_syntax::else_at(begin, end_);
     for (const char* q = begin; q < end_; ++q) {
       if (quote) {
         if (*q == quote) quote = 0;
@@ -684,6 +709,7 @@ class Compiler {
       else if (*q == ')' && nesting)
         --nesting;
       if (nesting) continue;
+      if (q == alternate) return q;
       if (*q == ':') return q;
       if (*q == ';') {
         if (!print) return q;
@@ -716,13 +742,19 @@ class Compiler {
       const char* start = p_;
       while (p_ < end_ && *p_ != quote) ++p_;
       if (p_ == end_) {
-        fail(Error::SYNTAX);
+        fail(Error::UNTERMINATED_STRING);
         return true;
       }
       byte(opcode);
       u16((uint16_t)(p_ - start));
       while (start < p_) byte((uint8_t)*start++);
       ++p_;
+      return true;
+    }
+    if (basic() && match('_')) {
+      byte(opcode);
+      u16(1);
+      byte('\r');
       return true;
     }
     if (basic() && match('^')) {
@@ -779,6 +811,8 @@ class Compiler {
         continue;
       }
       bool format = false;
+      const bool carriage =
+          basic() && (*p_ == '_' || (p_ + 1 < end_ && *p_ == '^' && upper(p_[1]) == 'M'));
       if (!basic() && match('!'))
         emit(Op::PRINT_FLUSH);
       else if (!text((uint8_t)Op::PRINT_TEXT)) {
@@ -791,7 +825,7 @@ class Compiler {
         separator = (uint8_t)*p_++;
         if (basic()) {
           emit(Op::PRINT_SEPARATOR);
-          byte(separator == ',' && !format ? 2 : 0);
+          byte(separator == ',' && !format && !carriage ? 2 : 0);
         }
         continue;
       }
@@ -815,19 +849,24 @@ class Compiler {
       while (p_ < end_) {
         skip();
         if (p_ == end_) break;
-        if (*p_ != '"' && *p_ != '\'' && *p_ != '^') break;
+        if (*p_ != '"' && *p_ != '\'' && *p_ != '^' && *p_ != '_') break;
         if (!basic()) {
           fail(Error::VARIABLE);
           break;
         }
         char quote = *p_++;
         custom = true;
-        if (quote == '^') {
+        if (quote == '_') {
+          used = 0;
+        } else if (quote == '^') {
           if (p_ == end_ || !alpha(*p_))
             fail(Error::SYNTAX);
           else {
             const char c = (char)(upper(*p_++) ^ 0x40);
-            if (used < 95) prompt[used++] = c;
+            if (c == '\r')
+              used = 0;
+            else if (used < 95)
+              prompt[used++] = c;
           }
         } else {
           while (p_ < end_ && *p_ != quote) {
@@ -867,6 +906,111 @@ class Compiler {
     }
     if (!any && basic()) fail(Error::VARIABLE);
   }
+  void source_position(const char* at) {
+    if (!count_) return;  // INPUT expressions have no statement/source map.
+    const char* line = at;
+    while (line > source_ && line[-1] != '\n' && line[-1] != '\r') --line;
+    emit(Op::SOURCE_POS);
+    u16((uint16_t)(at - line + 1));
+  }
+  bool data_literal(double& value) {
+    skip();
+    const bool negative = match('-');
+    if (!negative) (void)match('+');
+    skip();
+    if (p_ == end_ || (!digit(*p_) && *p_ != '.')) {
+      fail(Error::SYNTAX);
+      return false;
+    }
+    const char* after = nullptr;
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+    if (!portable_system::parse_number(p_, value, after)) {
+      fail(Error::SYNTAX);
+      return false;
+    }
+#else
+    value = mk_math::strtod(p_, &after);
+#endif
+    if (after == p_ || after > end_ || !mk_math::is_finite(value)) {
+      fail(Error::SYNTAX);
+      return false;
+    }
+    p_ = after;
+    if (negative) value = -value;
+    return true;
+  }
+  void data() {
+    emit(Op::DATA);
+    const uint16_t count_at = pc_;
+    u16(0);
+    uint16_t count = 0;
+    do {
+      const char* literal=p_;
+      while(literal<end_ && space(*literal)) ++literal;
+      const bool negative=literal<end_ && *literal=='-';
+      if(literal<end_ && (*literal=='+' || *literal=='-')) ++literal;
+      while(literal<end_ && space(*literal)) ++literal;
+      double value = 0;
+      if (!data_literal(value)) break;
+      const uint16_t before = pc_;
+      constant(negative ? -value : value,literal,p_);
+      if(negative) emit(Op::NEG);
+      stack(-1);  // DATA literals occupy the image, never the execution stack.
+      count = (uint16_t)(count + pc_ - before);
+      skip();
+      if (p_ == end_) break;
+      if (!match(',')) {
+        fail(Error::SYNTAX);
+        break;
+      }
+      if (p_ == end_) fail(Error::SYNTAX);
+    } while (error_ == Error::NONE);
+    patch(count_at, count);
+  }
+  void read_data() {
+    do {
+      Target t = target();
+      operation(Op::READ_DATA, 1);
+      store(t);
+      skip();
+      if (p_ == end_) break;
+      if (!match(',')) {
+        fail(Error::SYNTAX);
+        break;
+      }
+      if (p_ == end_) fail(Error::SYNTAX);
+    } while (error_ == Error::NONE);
+  }
+  void on() {
+    expression();
+    const bool sub = keyword("GOSUB", 3);
+    if (!sub && !keyword("GOTO", 1)) {
+      fail(Error::SYNTAX);
+      return;
+    }
+    operation(sub ? Op::ON_GOSUB : Op::ON_GOTO, -1);
+    const uint16_t count_at = pc_;
+    u16(0);
+    uint16_t count = 0;
+    do {
+      double line = 0;
+      if (!data_literal(line)) break;
+      if (line < 1 || line > 32767 || line != mk_math::floor(line)) {
+        fail(Error::LINE_NUMBER);
+        break;
+      }
+      u16((uint16_t)line);
+      ++count;
+      skip();
+      if (p_ == end_) break;
+      if (!match(',')) {
+        fail(Error::SYNTAX);
+        break;
+      }
+      if (p_ == end_) fail(Error::SYNTAX);
+    } while (error_ == Error::NONE);
+    patch(count_at, count);
+  }
   void commands(uint8_t nesting) {
     if (nesting >= 16) {
       fail(Error::STACK);
@@ -875,11 +1019,21 @@ class Compiler {
     while (p_ < end_ && error_ == Error::NONE) {
       skip();
       if (p_ == end_) break;
+      const char* const command_start = p_;
       const uint8_t cmd = lookup(basic_commands, ASSIGN);
       if (cmd == REM) {
         p_ = end_;
         break;
       }
+      if (cmd == ASSIGN && !tinybasic_syntax::word(command_start, end_, "LET", 1)) {
+        const char* word = command_start;
+        while (word < end_ && alpha(*word)) ++word;
+        if (word - command_start > 1) {
+          fail(Error::UNKNOWN_COMMAND);
+          break;
+        }
+      }
+      source_position(command_start);
       if (cmd == IF) {
         expression();
         (void)keyword("THEN", 1);
@@ -888,8 +1042,28 @@ class Compiler {
         u16(0);
         skip();
         if (p_ == end_) fail(Error::SYNTAX);
+        const char* full_end = end_;
+        const char* after_else = nullptr;
+        const char* alternate = tinybasic_syntax::else_at(p_, end_, &after_else);
+        end_ = alternate;
+        skip();
+        if (p_ == end_) fail(Error::SYNTAX);
         commands((uint8_t)(nesting + 1));
-        patch(patch_at, pc_);
+        if (alternate < full_end) {
+          emit(Op::JUMP);
+          const uint16_t skip_else = pc_;
+          u16(0);
+          patch(patch_at, pc_);
+          end_ = full_end;
+          p_ = after_else;
+          skip();
+          if (p_ == end_) fail(Error::SYNTAX);
+          commands((uint8_t)(nesting + 1));
+          patch(skip_else, pc_);
+        } else
+          patch(patch_at, pc_);
+        end_ = full_end;
+        p_ = full_end;
         break;
       }
       const char* const full_end = end_;
@@ -909,14 +1083,18 @@ class Compiler {
         case GOSUB_CMD:
           expression();
           operation(cmd == GOTO_CMD ? Op::GOTO : Op::GOSUB, -1);
-          if (cmd == GOTO_CMD && segment < full_end) fail(Error::SYNTAX);
+          if (cmd == GOTO_CMD && segment < full_end &&
+              !tinybasic_syntax::word(segment, full_end, "ELSE", 2))
+            fail(Error::SYNTAX);
           break;
         case RETURN_CMD:
+          if (segment < full_end && !tinybasic_syntax::word(segment, full_end, "ELSE", 2))
+            fail(Error::SYNTAX);
           emit(Op::RETURN);
           break;
         case FOR_CMD: {
           Target t = target();
-          if (t.kind || !match('=')) fail(Error::FOR);
+          if (t.kind == 1 || !match('=')) fail(Error::FOR);
           expression();
           if (!keyword("TO", 1)) fail(Error::FOR);
           expression();
@@ -924,17 +1102,38 @@ class Compiler {
             expression();
           else
             constant(1);
-          operation(Op::FOR_BASIC, -3);
-          byte(t.index);
+          operation(t.kind == 2 ? Op::FOR_ARRAY : Op::FOR_BASIC, t.kind == 2 ? -4 : -3);
+          if (t.kind != 2) byte(t.index);
           break;
         }
         case NEXT_CMD: {
           Target t = target();
-          if (t.kind) fail(Error::FOR);
-          emit(Op::NEXT_BASIC);
-          byte(t.index);
+          if (t.kind == 1) fail(Error::FOR);
+          if (t.kind == 2)
+            operation(Op::NEXT_ARRAY, -1);
+          else {
+            emit(Op::NEXT_BASIC);
+            byte(t.index);
+          }
           break;
         }
+        case DATA_CMD:
+          data();
+          break;
+        case READ_DATA_CMD:
+          read_data();
+          break;
+        case RESTORE_CMD:
+          skip();
+          if (p_ == end_)
+            constant(0);
+          else
+            expression();
+          operation(Op::RESTORE_DATA, -1);
+          break;
+        case ON_CMD:
+          on();
+          break;
         case CLS:
           emit(Op::CLEAR);
           break;
@@ -942,6 +1141,8 @@ class Compiler {
           emit(Op::WAIT);
           break;
         case END:
+          if (segment < full_end && !tinybasic_syntax::word(segment, full_end, "ELSE", 2))
+            fail(Error::SYNTAX);
           emit(Op::HALT);
           break;
         default:
@@ -951,7 +1152,9 @@ class Compiler {
       skip();
       if (p_ != end_) fail(Error::SYNTAX);
       end_ = full_end;
-      p_ = segment < full_end ? segment + 1 : segment;
+      p_ = tinybasic_syntax::word(segment, full_end, "ELSE", 2) ? full_end
+           : segment < full_end                                 ? segment + 1
+                                                                : segment;
     }
   }
   void focal_statement(uint8_t nesting) {
@@ -997,7 +1200,7 @@ class Compiler {
       case 4: {
         if (!match('(')) fail(Error::SYNTAX);
         expression();
-        if (!match(')')) fail(Error::SYNTAX);
+        if (!match(')')) fail(Error::EXPECTED_PAREN);
         operation(Op::BRANCH, -1);
         for (uint8_t i = 0; i < 3; ++i) {
           const uint32_t number = address(false);
