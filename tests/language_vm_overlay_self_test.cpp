@@ -16,6 +16,15 @@ bool legacy, input_legacy, input_missing, cancel;
 bool vm_legacy, corrupt_input_stack;
 bool expect_large;
 bool fail_emit;
+shared_memory::Lease* usb_session;
+bool drop_usb_on_input;
+bool usb_live() { return usb_session && usb_session->ok(); }
+void check_usb() {
+  if(!usb_live()) return;
+  assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY) ==
+         shared_memory::Owner::USB_SCREEN);
+  for(size_t i=0;i<usb_session->size();++i) assert(usb_session->data()[i]==0xB7);
+}
 #if MK61_SCREEN_BUFFER_LOAN
 constexpr size_t SCREEN_CAPACITY = MK61_ENABLE_USB_SCREEN ? 1344 : 192;
 uint8_t screen_storage[SCREEN_CAPACITY+32];
@@ -49,6 +58,7 @@ RuntimeStatus evict_cached() { cached = (Kind)0; return RuntimeStatus::OK; }
 namespace language_vm_test {
 RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t,
                        Request* request, uint32_t& result) {
+  check_usb();
   if (command == Command::LANGUAGE_COMPILER_INFO) {
     result = legacy ? 0 : COMPILER_MAGIC; return RuntimeStatus::OK;
   }
@@ -60,7 +70,8 @@ RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t,
   assert(workspace_swap::acquire(owner, COMPILER_WORKSPACE_SIZE, workspace_swap::AcquireMode::REQUIRED,
                                  workspace));
   if(command != Command::LANGUAGE_COMPILER_EMIT)
-    assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY) == shared_memory::Owner::NONE);
+    assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY) ==
+           (usb_live() ? shared_memory::Owner::USB_SCREEN : shared_memory::Owner::NONE));
   else {
     const auto lower = shared_memory::snapshot(shared_memory::Arena::OVERLAY);
     assert(lower.high_water <= MAX_IMAGE); // Image only, never a 3504-byte backup.
@@ -91,6 +102,7 @@ RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t,
   result = 1; return RuntimeStatus::OK;
 }
 RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& result) {
+  check_usb();
 #if MK61_SCREEN_BUFFER_LOAN
   assert(!loan_live); // Image must be copied before VM/UI/USB can take over.
   memset(screen_storage+16,0xCD,SCREEN_CAPACITY);
@@ -121,6 +133,7 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
     assert(command == Command::LANGUAGE_INPUT && input.capacity == INPUT_IMAGE_CAPACITY);
     assert(suspended && input.image == input_image_storage(*suspended));
     assert(suspended->control.sp < INPUT_STACK_CAPACITY);
+    if(drop_usb_on_input) { usb_session->reset(); drop_usb_on_input=false; }
     const Continuation control = suspended->control;
     std::vector<uint8_t> prefix((uint8_t*)suspended->stack,
                                (uint8_t*)(suspended->stack+suspended->control.sp));
@@ -163,8 +176,8 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
   if (resume) { ++resumes; state.stack[state.control.sp++] = state.input_value; }
   else {
     ++starts; assert(!state.control.sp && !state.control.loop_count);
-    assert((shared_memory::active_owner(shared_memory::Arena::OVERLAY) !=
-             shared_memory::Owner::NONE) == expect_large);
+    assert(!shared_memory::contains(shared_memory::Arena::WORKSPACE,
+                                    execution.image, execution.image_size) == expect_large);
   }
   const Bindings bindings = {execution.variables, execution.array,
                               (uint16_t)execution.array_count, state.stack, MAX_STACK};
@@ -275,6 +288,53 @@ int main() {
   assert(!loan_live);
   for(unsigned i=0;i<16;++i) assert(screen_storage[i]==0xDD &&
                                    screen_storage[SCREEN_CAPACITY+16+i]==0xDD);
+#endif
+  vm_legacy=false;
+#if MK61_ENABLE_USB_SCREEN
+  {
+    // The live USB session (including its immutable frame snapshot) must
+    // survive both compiler passes and every hot/cold APP switch. Active USB
+    // cannot lend its framebuffer, so even a tiny program needs real staging.
+    shared_memory::Lease session(shared_memory::Arena::OVERLAY,
+                                shared_memory::Owner::USB_SCREEN, 2793);
+    assert(session.ok()); memset(session.data(),0xB7,session.size());
+    usb_session=&session;
+#if MK61_SCREEN_BUFFER_LOAN
+    screen_unavailable=true;
+#endif
+    source="10 FOR I=1 TO 2\n20 INPUT @(I)\n30 NEXT I\n"
+           "40 IF @(1)+@(2)<>30 GOTO 999\n50 END\n";
+    entries={"10","20"}; position=0;
+    assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
+           == RuntimeStatus::OK && result==1);
+    check_usb(); assert(shared_memory::validate_invariants());
+    source="1.10 F I=1,2; A X\n1.20 B (X-20) 9.10,2.10,9.10\n2.10 E\n";
+    entries={"10","20"}; position=0;
+    assert(invoke_resident(Language::FOCAL, Command::FOCAL_RUN_ID, inode, 0, result)
+           == RuntimeStatus::OK && result==0);
+    check_usb();
+    // Large image stays live during INPUT even when USB exits and releases
+    // the earlier OVERLAY allocation. Neither pointer may move or overlap.
+    source=large.c_str(); entries={"1+1"}; position=0; expect_large=true;
+    assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
+           == RuntimeStatus::OK && result==1);
+    check_usb();
+    entries={"1+1"}; position=0; drop_usb_on_input=true;
+    assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
+           == RuntimeStatus::OK && result==1 && !session.ok());
+    expect_large=false;
+    assert(shared_memory::validate_invariants());
+    // Failures must return their staging allocation without releasing USB.
+    assert(session.acquire(shared_memory::Arena::OVERLAY,
+                           shared_memory::Owner::USB_SCREEN,2793));
+    memset(session.data(),0xB7,session.size()); source="10 END\n"; fail_emit=true;
+    assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
+           == RuntimeStatus::IO_ERROR);
+    fail_emit=false; check_usb(); usb_session=nullptr;
+#if MK61_SCREEN_BUFFER_LOAN
+    screen_unavailable=false;
+#endif
+  }
 #endif
   assert(shared_memory::validate_invariants());
   assert(shared_memory::active_owner(shared_memory::Arena::WORKSPACE) == shared_memory::Owner::NONE);

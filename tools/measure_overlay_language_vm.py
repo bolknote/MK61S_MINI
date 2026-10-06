@@ -220,7 +220,8 @@ def main():
                         "Exact-size two-phase emission keeps unsaved source in compiler WORKSPACE and does not reopen the editor.",
                         "v5 protects a 3504-byte values tail, forbids snapshots during the foreground partition, and stages only bytecode.",
                         "v6 stores INPUT bytecode in the upper 32 VM stack slots, bounds expression values to the lower 64, and preserves all 96 for program RUN.",
-                        "v7 screen staging is conditional on successful foreground loan; active USB/large images use OVERLAY. USB-off only loans the 192-byte page with redraw deferred.",
+                        "v7 screen staging is conditional on a foreground loan; USB-off only loans the 192-byte page with redraw deferred.",
+                        "Current resident uses independently fenced dynamic staging beside an active USB session; these corpus budgets model inactive USB, not the session's simultaneous RAM peak.",
                         "Never compare USB-on screen savings against USB-off firmware: the latter has no spare 1536-byte framebuffer or duplicate grid.",
                         "Inode/cache metadata, device input latency and hardware integration remain separate qualification gates."]}
     if args.generation == 4:

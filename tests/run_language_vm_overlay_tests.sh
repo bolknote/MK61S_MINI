@@ -9,7 +9,7 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
 fi
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DCONFIG -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST \
-  -DMK61_DISPLAY_UC1609 -I"$root/code" \
+  -DMK61_DISPLAY_UC1609 -DMK61_ENABLE_USB_SCREEN=1 -I"$root/code" \
   "$root/tests/language_vm_overlay_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
   "$root/code/language_vm_validation.cpp" \

@@ -193,6 +193,9 @@ loadable_module::RuntimeStatus invoke_resident(Language language,
     return RuntimeStatus::BUSY;
   auto* saved = (Persistent*)partition.tail();
   shared_memory::Lease transfer;
+#if MK61_ENABLE_USB_SCREEN
+  shared_memory::OverlayBuffer usb_transfer;
+#endif
 #if MK61_SCREEN_BUFFER_LOAN
   DisplayBufferLoan screen_transfer;
 #endif
@@ -261,7 +264,17 @@ loadable_module::RuntimeStatus invoke_resident(Language language,
 #endif
       // Never evict the compiler while reserving output: that would discard
       // an unsaved editor RUN between sizing and EMIT. Active USB, a large
-      // image or an unavailable screen loan uses the existing OVERLAY path.
+      // image or an unavailable screen loan needs separately owned staging.
+#if MK61_ENABLE_USB_SCREEN
+      if(!staging && shared_memory::active_owner(shared_memory::Arena::OVERLAY) ==
+                      shared_memory::Owner::USB_SCREEN) {
+        // USB owns its parser/immutable frame snapshot, not all free RAM.
+        // This exact-size buffer cannot evict the still-live compiler APP.
+        if(!usb_transfer.acquire(shared_memory::Owner::LOADABLE_MODULE,expected))
+          return RuntimeStatus::BUSY;
+        staging = usb_transfer.data();
+      }
+#endif
       if(!staging) {
         if(((expected+7U)&~7U) > shared_memory::capacity(shared_memory::Arena::OVERLAY) ||
            !transfer.acquire(shared_memory::Arena::OVERLAY,
@@ -309,8 +322,15 @@ loadable_module::RuntimeStatus invoke_resident(Language language,
     memcpy(destination, image, request.compiled.size);
     image = destination;
     transfer.reset();
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+    usb_transfer.reset();
+#endif
 #if MK61_SCREEN_BUFFER_LOAN && MK61_OVERLAY_LANGUAGE_VM
     screen_transfer.reset();
+#endif
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+  } else if(usb_transfer.ok()) {
+    image = usb_transfer.data();
 #endif
   } else {
     if(!transfer.ok()) return RuntimeStatus::CORRUPT_MODULE;

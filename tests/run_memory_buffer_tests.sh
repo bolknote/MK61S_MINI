@@ -62,3 +62,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "$root/tests/dynamic_app_memory_self_test.cpp" \
   "$root/code/shared_memory.cpp" -o "$dynamic_out"
 "$dynamic_out"
+
+overlay_out="${TMPDIR:-/tmp}/mk61_overlay_buffer_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  -DMK61_OVERLAY_LANGUAGE_VM=1 -DMK61_ENABLE_USB_SCREEN=1 "${sanitizer_flags[@]}" \
+  "$root/tests/overlay_buffer_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$overlay_out"
+"$overlay_out"

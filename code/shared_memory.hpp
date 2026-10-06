@@ -229,6 +229,30 @@ class [[nodiscard]] Lease {
     friend bool detail_try_reclaim(Arena arena);
 };
 
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+// One scoped, non-moving buffer immediately after a live OVERLAY allocation.
+// It uses only the existing free linker range, never evicts an APP, and can
+// outlive the earlier lease (USB may exit during INPUT). The manager fences
+// both APP/OVERLAY growth and _sbrk until reset; no frame storage is borrowed.
+class [[nodiscard]] OverlayBuffer {
+ public:
+  constexpr OverlayBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE) {}
+  ~OverlayBuffer();
+  OverlayBuffer(const OverlayBuffer&) = delete;
+  OverlayBuffer& operator=(const OverlayBuffer&) = delete;
+  bool acquire(Owner owner, usize required);
+  void reset();
+  bool ok() const { return memory_ != nullptr; }
+  u8* data() const { return memory_; }
+  usize size() const { return size_; }
+  Owner owner() const { return owner_; }
+ private:
+  u8* memory_;
+  usize size_;
+  Owner owner_;
+};
+#endif
+
 usize capacity(Arena arena);
 bool enabled(Arena arena);
 Owner active_owner(Arena arena);
@@ -259,7 +283,8 @@ const char* owner_name(Owner owner);
 
 #if MK61_SHARED_MEMORY_DYNAMIC
 // Backend for newlib _sbrk. No eviction/callbacks inside libc. A live OVERLAY
-// lease pins the lower boundary; APP pins the upper boundary. nullptr = OOM.
+// lease or OverlayBuffer pins the lower boundary; APP pins the upper boundary.
+// nullptr = OOM.
 void* adjust_heap(i32 increment);
 #endif
 

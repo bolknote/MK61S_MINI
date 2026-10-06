@@ -215,6 +215,9 @@ static ArenaState arenas[] = {
 #if MK61_OVERLAY_LANGUAGE_VM
 static WorkspacePartition* workspace_partition;
 #endif
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+static OverlayBuffer* overlay_buffer;
+#endif
 
 #undef MK61_ARENA_STATE
 
@@ -226,8 +229,19 @@ static void refresh_pool(void) {
   ArenaState& app = arenas[(usize) Arena::APP];
   prefix.memory = (u8*) pool_begin();
   prefix.capacity = pool_size() - app.capacity;
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+  if(overlay_buffer) prefix.capacity = overlay_buffer->data() - prefix.memory;
+#endif
   app.memory = app.enabled ? (u8*) (pool_end() - app.capacity) : nullptr;
 }
+
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+static usize lower_reserved_size(void) {
+  if(overlay_buffer) return (usize)(overlay_buffer->data() - (u8*)pool_begin()) +
+      ((overlay_buffer->size() + 7U) & ~(usize)7U);
+  return (arenas[(usize)Arena::OVERLAY].allocated_size + 7U) & ~(usize)7U;
+}
+#endif
 
 // Eviction is a global one-way transition, not merely a lock on one arena.
 // Scanning the arena states costs no RAM and prevents a callback from
@@ -298,6 +312,9 @@ void* adjust_heap(i32 increment) {
   ArenaState& prefix = *state(Arena::OVERLAY);
   const ArenaState& app = *state(Arena::APP);
   if(interrupt_context() || transition_in_progress() ||
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+     (increment != 0 && overlay_buffer) ||
+#endif
      (increment != 0 && prefix.allocated_size != 0)) return nullptr;
   const uintptr_t previous = heap_cursor;
   // Compute the magnitude without negating INT32_MIN.
@@ -427,6 +444,16 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     return false;
   }
 
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+  // A released lower lease does not release or move the independent buffer.
+  // Even eviction of APP cannot make OVERLAY grow across its fixed address.
+  if(next_arena == Arena::OVERLAY && overlay_buffer &&
+     ((required + 7U) & ~(usize)7U) > arena->capacity) {
+    increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
+    return false;
+  }
+#endif
+
   if(arena->active != Owner::NONE && arena->active != next_owner) {
     if(!detail_try_reclaim(next_arena)) {
       increment(opportunistic ? arena->cache_deferrals
@@ -450,7 +477,11 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     const usize alignment = next_arena == Arena::APP ? APP_ALIGNMENT : 8U;
     const usize aligned = (required + alignment - 1U) & ~(alignment - 1U);
     const usize peer_size = peer_id == Arena::APP ? peer.capacity :
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+        lower_reserved_size();
+#else
         (peer.allocated_size + 7U) & ~(usize) 7U;
+#endif
     if(aligned > pool_size() - peer_size) {
       // Loading a movable APP never discards a live lower buffer, even an
       // evictable cache. Its existing address and contents remain stable.
@@ -587,6 +618,33 @@ void Lease::release_impl(bool from_manager) {
 void Lease::revoke_from_manager(void) {
   release_impl(true);
 }
+
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+bool OverlayBuffer::acquire(Owner owner, usize required) {
+  ArenaState& prefix = *state(Arena::OVERLAY);
+  if(!required || !owner_allowed(Arena::OVERLAY, owner) ||
+     interrupt_context() || transition_in_progress()) return false;
+  if(ok()) return owner == owner_ && required <= size_;
+  const usize offset = (prefix.allocated_size + 7U) & ~(usize)7U;
+  if(overlay_buffer || offset > prefix.capacity ||
+     required > prefix.capacity - offset ||
+     ((required + 7U) & ~(usize)7U) > prefix.capacity - offset) return false;
+  memory_ = prefix.memory + offset;
+  size_ = required; owner_ = owner;
+  overlay_buffer = this;
+  refresh_pool();
+  return true;
+}
+void OverlayBuffer::reset() {
+  if(!ok()) return;
+  if(overlay_buffer != this || interrupt_context() || transition_in_progress())
+    __builtin_trap();
+  overlay_buffer = nullptr;
+  memory_ = nullptr; size_ = 0; owner_ = Owner::NONE;
+  refresh_pool();
+}
+OverlayBuffer::~OverlayBuffer() { reset(); }
+#endif
 
 bool Lease::set_evictable(EvictionPrepare prepare) {
   if(memory_ == nullptr || nested_ || prepare == nullptr ||
@@ -796,7 +854,20 @@ bool validate_invariants(void) {
   }
   const ArenaState& app = *state(Arena::APP);
   const ArenaState& prefix = *state(Arena::OVERLAY);
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
+  usize prefix_limit = pool_size() - app.capacity;
+  if(overlay_buffer) {
+    const uintptr_t buffer_begin = (uintptr_t)overlay_buffer->data();
+    if(!overlay_buffer->ok() || !overlay_buffer->size() ||
+       !owner_allowed(Arena::OVERLAY, overlay_buffer->owner()) ||
+       buffer_begin < pool_begin() || (buffer_begin & 7U) ||
+       lower_reserved_size() > pool_size() - app.capacity) return false;
+    prefix_limit = buffer_begin - pool_begin();
+  }
+  if(prefix.capacity != prefix_limit ||
+#else
   if(prefix.capacity + app.capacity != pool_size() ||
+#endif
      (uintptr_t) prefix.memory != pool_begin() ||
      (app.enabled && (uintptr_t) app.memory != pool_end() - app.capacity)) return false;
   return reclaiming_count <= 1;

@@ -36,7 +36,9 @@ CANONICAL_FILES = (
 OPTIONAL_FILES = (
     "SETUP.APP",
     "EXPLORER.APP",
-)  # normally resident on F411 and external on F401
+    "LANGVM.APP",
+    "LANGIN.APP",
+)  # Optional roles follow the matched bundle; split VM always needs both APPs.
 CHUNK_SIZE = 48
 
 
@@ -102,6 +104,8 @@ def main() -> int:
     files = required + tuple(
         name for name in OPTIONAL_FILES if (args.bundle / name).is_file()
     )
+    if ("LANGVM.APP" in files) != ("LANGIN.APP" in files):
+        parser.error("split VM bundle requires both LANGVM.APP and LANGIN.APP")
 
     with Port(args.port) as port:
         identity = parse_identity(port.command("identity"))
