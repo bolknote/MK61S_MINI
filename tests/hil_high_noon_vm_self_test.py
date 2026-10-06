@@ -33,6 +33,11 @@ class GamePixels(unittest.TestCase):
         self.assertEqual(self.font.glyphs[ord("$")],
                          (5,6,(0b01110,0b10100,0b01110,0b00101,0b01110)))
 
+    def test_instruction_controls_fit_last_row(self):
+        for text in ("ОК - ДА, С/П - ИГРАТЬ", "ОК - ДАЛЬШЕ, С/П - ИГРАТЬ"):
+            with self.subTest(text=text):
+                self.assertTrue(self.font.has(self.frame(text,9),text))
+
     def test_number_in_every_row(self):
         for row in range(10):
             with self.subTest(row=row):

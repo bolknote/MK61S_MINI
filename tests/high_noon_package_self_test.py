@@ -120,7 +120,9 @@ require("LOADFONT" not in "".join(path.read_text(encoding="utf-8") for path in p
 required_text = (
     "Р О В Н О  В  П О Л Д Е Н Ь",
     "----------------",
-    "ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ",
+    "ПОКАЗАТЬ ИНСТРУКЦИЮ?",
+    "ОК - ДА, С/П - ИГРАТЬ",
+    "ОК - ДАЛЬШЕ, С/П - ИГРАТЬ",
     "ЧЁРНЫЙ БАРТ ВЫЗВАЛ ВАС НА ДУЭЛЬ.",
     "ЭТО ОДИН ИЗ САМЫХ ОПАСНЫХ БАНДИТОВ К ЗАПАДУ ОТ АЛЛЕГАНСКИХ ГОР.",
     "ВЫ ИДЁТЕ ПО ПЫЛЬНОЙ ПУСТЫННОЙ УЛИЦЕ. ИЗ САЛУНА ВЫХОДИТ ЧЁРНЫЙ БАРТ.",
@@ -128,7 +130,7 @@ required_text = (
     "У КАЖДОГО ПО ЧЕТЫРЕ ПАТРОНА В РЕВОЛЬВЕРЕ. СТРЕЛЯЕТЕ ВЫ ОДИНАКОВО МЕТКО.",
     "В НАЧАЛЕ ПУТИ НИКТО НЕ МОЖЕТ ПОПАСТЬ, НО В КОНЦЕ УЖЕ НИКТО НЕ ПРОМАХНЁТСЯ.",
     "ЧЕМ ВЫ БЛИЖЕ, ТЕМ ВЫШЕ ВАШИ ШАНСЫ ПОПАСТЬ В БАРТА. НО И ЕГО ШАНСЫ РАСТУТ.",
-    "ПРОДОЛЖИТЬ? 1 ДА 0 НЕТ",
+    "ПРОДОЛЖИТЬ?",
     "ВАШИ ВОЗМОЖНЫЕ ХОДЫ:",
     "* Х О Д Ы *",
     "===========",
@@ -215,10 +217,13 @@ require(not unsupported,
         + (f"U+{unsupported[0]:04X}" if unsupported else ""))
 
 intro = (game / "intro.tbi").read_text(encoding="utf-8")
-require("130 IF D=0 G.600" in intro,
-        "High Noon answer 0 must skip every instruction page")
-require("590 PAU." in intro and "610 .RE=1:E." in intro,
-        "High Noon instruction pause must not delay the 0 branch")
+require("7100 D=INP.()" in intro and "7110 IF D#19 IF D#21 G.7100" in intro,
+        "High Noon instruction controls must read a single OK or Run press")
+for line in (130, 260, 320, 410):
+    require(f"{line} IF D=21 G.600" in intro,
+            "High Noon Run key must skip every remaining instruction page")
+require("590 GOS.7000" in intro and "610 .RE=1:E." in intro,
+        "High Noon last instruction page must start the game after one press")
 
 reward = (game / "reward.tbi").read_text(encoding="utf-8")
 require(reward.count("GOSUB 8000") == 2,

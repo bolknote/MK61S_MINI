@@ -881,26 +881,52 @@ static int add_shipping_program(const char* path, const char* name) {
 static void test_high_noon_package(int argc, char** argv) {
   assert(argc == 5);
   TinyBasicTestReset();
-  (void) add_shipping_program(argv[1], "INTRO");
+  const int intro = add_shipping_program(argv[1], "INTRO");
   (void) add_shipping_program(argv[2], "PLAYER");
   (void) add_shipping_program(argv[3], "BART");
   (void) add_shipping_program(argv[4], "REWARD");
   TinyBasicTestSetGeometry(47, 10);
 
-  const double no_instructions[] = {0};
-  TinyBasicTestSetInputs(no_instructions, 1);
+  const auto& keys = keyboard_layout::ACTIVE;
+  const int skip[] = {keys.digit[0], keys.run};
+  TinyBasicTestSetKeys(skip, 2);
   assert(RunTinyBasicProgram("INTRO"));
-  assert(std::string(TinyBasicTestLastPrompt()) ==
-         expected_m8("ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ"));
-  // The zero branch now reaches the game immediately.  A standalone
-  // interactive run therefore gets the runner's normal final wait; the real
-  // M61 scenario dispatcher starts PLAYER without that acknowledgement.
-  assert(TinyBasicTestWaitCount() == 1);
+  assert(TinyBasicTestKeyReads() == 2); // 0 is ignored; Run starts the game.
+  assert(TinyBasicTestLastPrompt()[0] == 0);
+  const auto title = expected_m8("Р О В Н О");
+  assert(std::strncmp(TinyBasicTestLcdLine(0), title.c_str(), title.size()) == 0);
+  assert(TinyBasicTestWaitCount() == 0);
   assert(std::fabs(TinyBasicTestMkRegister(0) - 100.0) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(2)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(3)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(4)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 1.0) < 0.000001);
+
+  const int show[] = {keys.ok, keys.ok, keys.ok, keys.ok, keys.ok};
+  TinyBasicTestSetKeys(show, 5);
+  assert(RunTinyBasicProgram("INTRO"));
+  assert(TinyBasicTestKeyReads() == 5 && TinyBasicTestLastPrompt()[0] == 0);
+  assert(TinyBasicTestMkRegister(14) == 1 && TinyBasicTestWaitCount() == 0);
+
+  // Each instruction page permits Run to skip ahead or ESC to leave M61.
+  for(int page = 0; page <= 4; page++) {
+    int presses[5];
+    for(int i = 0; i < page; i++) presses[i] = keys.ok;
+    presses[page] = keys.run;
+    TinyBasicTestSetKeys(presses, page + 1);
+    assert(RunTinyBasicProgram("INTRO"));
+    assert(TinyBasicTestKeyReads() == page + 1 && TinyBasicTestMkRegister(14) == 1);
+    presses[page] = keys.esc;
+    TinyBasicTestSetKeys(presses, page + 1);
+    assert(RunTinyBasicProgramStatus((u16)intro, TinyBasicRunMode::M61_SCENARIO)
+           == TinyBasicRunStatus::STOPPED);
+    assert(TinyBasicTestKeyReads() == page + 1 && TinyBasicTestMkRegister(14) == 99);
+    assert(TinyBasicTestError()[0] == 0 && TinyBasicTestWaitCount() == 0);
+  }
+
+  const int restart[] = {keys.run};
+  TinyBasicTestSetKeys(restart, 1);
+  assert(RunTinyBasicProgram("INTRO") && TinyBasicTestMkRegister(14) == 1);
 
   const double advance[] = {1, 10};
   TinyBasicTestSetInputs(advance, 2);
@@ -933,7 +959,7 @@ static void test_high_noon_package(int argc, char** argv) {
   assert(RunTinyBasicProgram("PLAYER"));
   TinyBasicTestSetPauseEsc(false);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
-  assert(TinyBasicTestWaitCount() == 1);
+  assert(TinyBasicTestWaitCount() == 0);
 }
 
 int main(int argc, char** argv) {

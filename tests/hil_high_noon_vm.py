@@ -24,7 +24,7 @@ sys.path.insert(0,str(ROOT/"tools"))
 from m8_codec import encode
 
 DIGITS=(4,9,8,7,14,13,12,19,18,17)
-OK,ESC=37,39
+OK,ESC,RUN=37,39,25
 
 
 def folder_index(report,name):
@@ -120,7 +120,7 @@ class Game:
     def start(self):
         self.port.open(self.directory+"/autoexec.m61")
         self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("intro")
-        self.number(0);self.wait("ВАША СТРАТЕГИЯ?")
+        self.port.key(RUN);self.wait("ВАША СТРАТЕГИЯ?")
     def start_from_explorer(self):
         assert self.directory.startswith("/")
         components=self.directory.strip("/").split("/")
@@ -155,10 +155,10 @@ class Game:
     def instructions_surrender(self,explorer_start=False):
         if explorer_start:self.start_from_explorer()
         else:self.port.open(self.directory+"/autoexec.m61")
-        self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.number(1)
+        self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.key()
         self.wait("ЧЁРНЫЙ БАРТ ВЫЗВАЛ");self.save("instructions-1");self.key()
         self.wait("У КАЖДОГО ПО ЧЕТЫРЕ");self.save("instructions-2");self.key()
-        self.wait("ПРОДОЛЖИТЬ?");self.save("instructions-confirm");self.number(1)
+        self.wait("ПРОДОЛЖИТЬ?");self.save("instructions-confirm");self.key()
         self.wait("ВАШИ ВОЗМОЖНЫЕ ХОДЫ:");self.save("moves-menu");self.key()
         self.wait("ВАША СТРАТЕГИЯ?");self.number(7)
         self.wait("С ТАКИМ ЗНАНИЕМ ПРАВИЛ");self.save("invalid-strategy");self.key()
