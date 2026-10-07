@@ -22,11 +22,26 @@ On F411 the split VM retains an LRU of verified M61 BASIC bytecode in 24 KiB
 of RAM; storage media revisions invalidate it. Cached runs preserve all shared
 values and reset execution/DATA cursors, and normal M61 completion keeps the
 hot VM loaded instead of loading the cold input/editor module again.
-On Classic V3/F411 at 96 MHz, 20 trivial M61 BASIC launches fell from
-3.863 s (80 APP decodes) to 0.425 s (3 decodes). A real initial search
-with the book off completed e2-e3 in 359.177 s at 420 nodes, displaying
-the first nonzero progress after 25.136 s and then about every 17 s.
-The full historical search remains expensive in BASIC.
+A live APP also retains its verified image until its SRAM lease or storage
+revision changes. File lookup hints retain inode numbers, with complete
+name/parent checks on every hit. M61 keeps an aligned 1 KiB source window
+on F411 (64 bytes on smaller targets), including across same-script jumps;
+storage changes invalidate it. Reformatting changes the revision through
+the persisted volume epoch, even if catalog/WAL counters are reused.
+
+Binary64 finite/trunc/floor helpers preserve the previous bit results,
+including positive-zero rounding and nonfinite values, without repeated
+software double comparisons and conversions. VM background service runs
+before the first instruction and at most every 32 instructions; source-line
+markers do not duplicate it. Blocking keyboard/input services keep their
+normal polling.
+
+On Classic V3/F411 at 96 MHz, 20 trivial M61 BASIC launches originally fell
+from 3.863 s (80 APP decodes) to 0.425 s (3 decodes). The initial no-book
+search now completes e2-e3 at 420 nodes in 163.489 s, down from 359.177 s.
+First nonzero progress appears after 12.100 s rather than 25.136 s, then
+about every 8 s. Flash reads dropped from 252 MB to about 24.5 MB. The
+historical 2/8-ply search and move/score results are unchanged.
 
 An optional opening book shares `history.tbi`, so it adds no runtime files.
 It contains 17 hand-curated six-ply lines, packed into 77 shared-prefix
