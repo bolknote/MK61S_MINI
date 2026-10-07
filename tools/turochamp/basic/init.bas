@@ -2,16 +2,17 @@ FOR I=0 TO 351;@(I)=0;NEXT I
 FOR I=0 TO 119;@(I)=99;NEXT I
 FOR R=2 TO 9;FOR F=1 TO 8;@(10*R+F)=0;NEXT F;NEXT R
 FOR I=31 TO 38;@(I)=1;@(I+50)=-1;NEXT I
-@(21)=4;@(22)=2;@(23)=3;@(24)=5;@(25)=6;@(26)=3;@(27)=2;@(28)=4
-FOR I=21 TO 28;@(I+70)=-@(I);NEXT I
+FOR I=21 TO 28;READ @(I);@(I+70)=-@(I);NEXT I
 SIDE=1;RIGHTS=15;EP=0;HALF=0;FULL=1;WK=25;BK=95;CUR=35;SEL=0
 LEVEL=2;QLIMIT=8;HCOUNT=0;HEP=0;MODE=1;RESULT=0;PHASE=0;SP=0
-@(DIRN)=-21;@(DIRN+1)=-19;@(DIRN+2)=-12;@(DIRN+3)=-8
-@(DIRN+4)=8;@(DIRN+5)=12;@(DIRN+6)=19;@(DIRN+7)=21
-@(DIRS)=-11;@(DIRS+1)=-10;@(DIRS+2)=-9;@(DIRS+3)=-1
-@(DIRS+4)=1;@(DIRS+5)=9;@(DIRS+6)=10;@(DIRS+7)=11
+FOR I=DIRN TO DIRN+7;READ @(I);NEXT I
+FOR I=DIRS TO DIRS+7;READ @(I);NEXT I
 JUMP menu
 :small
 C.:P."НУЖЕН ЭКРАН 26x9":P."И ШРИФТ ТУРОЧЕМП":PAU.
 .RE=99:E.
 IF (COLS<26) OR (ROWS<9) G.:small
+# Back rank, knight offsets, slider offsets in READ order.
+DATA 4,2,3,5,6,3,2,4
+DATA -21,-19,-12,-8,8,12,19,21
+DATA -11,-10,-9,-1,1,9,10,11

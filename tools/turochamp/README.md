@@ -6,6 +6,9 @@ resolves array names, labels and the M61 call/return protocol; the device
 executes every rule, evaluation and search operation in its built-in BASIC.
 Leaf services marked `LOCAL` become BASIC GOSUBs, avoiding an M61 reload.
 Their bodies have no M61 calls and are expanded from one shared template.
+The BASIC uses ON GOTO/GOSUB for return phases, glyphs and menu dispatch.
+DATA/READ initializes the back rank and move offsets; ELSE selects the
+board orientation heading. These require the extended TinyBASIC syntax.
 
 Reference: Martin C. Doege's public-domain `PyTuroChamp/pyturochamp.py`,
 which also underlies the supplied nimTUROCHAMP application. The historical

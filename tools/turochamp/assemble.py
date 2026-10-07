@@ -74,7 +74,8 @@ def assemble(name: str, template: str) -> str:
     if labels:
         statements.append((labels, "E."))
 
-    head = [([], f"IF PHASE={phase} G.:{label}") for label, phase in phases.items()]
+    # Phase zero starts the part; CALL assigns contiguous one-based phases.
+    head = [([], "ON PHASE G." + ",".join(f":{label}" for label in phases))] if phases else []
     entries = head + statements
     numbers: dict[str, int] = {}
     for number, (labels, _) in enumerate(entries, 1):

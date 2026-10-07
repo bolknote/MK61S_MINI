@@ -286,8 +286,9 @@ def keyboard(b):
 def screen(b):
     from turochamp_package_self_test import decode_font
     font = decode_font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes())
-    for keys in ('19','16 19','16 16 19 19 17 17 19'):
-        board = chess.Board(b.ask('ui '+keys))
+    seen = set()
+
+    def check_cells(board):
         view, cursor, selected = (getv(b,x) for x in ('UI_VIEW','CUR','SEL'))
         cells = bytes.fromhex(b.ask('screen'))
         assert len(cells) == 26*9
@@ -304,8 +305,29 @@ def screen(b):
                 index = 13*((file+rank+1)%2)+value+6
                 expected = 0xe0+index if mailbox in (cursor,selected) else ord('A')+index
                 actual = cells[26*(y+1)+x]
-                assert actual == expected, (keys, chess.square_name(square),actual,expected)
+                assert actual == expected, (view, chess.square_name(square),actual,expected)
                 assert actual in font
+                seen.add(actual)
+
+    for keys in ('19','16 19','16 16 19 19 17 17 19'):
+        check_cells(chess.Board(b.ask('ui '+keys)))
+
+    # A render-only fixture puts each piece/empty cell on both square colours.
+    # Highlight each square in turn to cover all 52 glyphs in both orientations.
+    board = chess.Board.empty()
+    for i, value in enumerate(range(-6,7)):
+        if value:
+            for square in (2*i,2*i+1):
+                board.set_piece_at(square, chess.Piece(abs(value), value > 0))
+    for view in (1,-1):
+        b.ask('fen '+board.fen())
+        setv(b, UI_VIEW=view, UI_MESSAGE=0, CUR=0, SEL=0)
+        for square in (None,*range(26)):
+            cursor = 0 if square is None else 10*(chess.square_rank(square)+2)+chess.square_file(square)+1
+            setv(b, CUR=cursor)
+            b.ask(f'keys {MODULES["board"]}')
+            check_cells(board)
+    assert seen == set(range(ord('A'),ord('Z')+1)) | set(range(0xe0,0xfa))
 
 
 def selfplay(b):

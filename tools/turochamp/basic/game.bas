@@ -1,8 +1,7 @@
 REPDEP=0
 CALL status :status
 :status
-IF STAT>0 RESULT=STAT:DRAW_REASON=STAT
-IF STAT>0 G.:end
+IF STAT>0 RESULT=STAT:DRAW_REASON=STAT:G.:end
 IF MODE=0 G.:human
 IF SIDE=MODE G.:human
 UI_MESSAGE=1
@@ -10,8 +9,7 @@ CALL board :thinking
 :thinking
 CALL search :computer
 :computer
-IF BEST>0 MOVE=BEST
-IF BEST>0 G.:move
+IF BEST>0 MOVE=BEST:G.:move
 RESULT=7;IF INT(SIM/2) MOD 2=1 RESULT=8
 DRAW_REASON=RESULT;G.:end
 :human
@@ -21,8 +19,7 @@ IF MODE=0 UI_VIEW=SIDE
 CALL board :key
 :key
 UI_MESSAGE=0
-IF UI_KEY=21 UI_PHASE=1:UI_ACTION=0
-IF UI_KEY=21 G.:menu
+IF UI_KEY=21 UI_PHASE=1:UI_ACTION=0:G.:menu
 IF UI_KEY=25 G.:help
 IF UI_KEY=22 SEL=0:G.:show
 D=0

@@ -29,10 +29,8 @@ IF (UI_KEY=15) OR (UI_KEY=17) UI_ACTION=(UI_ACTION+4) MOD 5
 IF (UI_KEY=16) OR (UI_KEY=18) UI_ACTION=(UI_ACTION+1) MOD 5
 IF UI_KEY=22 G.:back
 IF UI_KEY#19 G.:game_menu
-IF UI_ACTION=0 G.:back
-IF UI_ACTION=1 G.:claim
-IF UI_ACTION=2 G.:offer
-IF UI_ACTION=4 G.:new
+ON UI_ACTION+1 G.:back,:claim,:offer,:resign,:new
+:resign
 RESULT=(SIDE=-1)+2*(SIDE=1);DRAW_REASON=9
 JUMP result
 :claim
