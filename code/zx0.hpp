@@ -68,9 +68,16 @@ bool decode(const Input& input, u32 source_size,
 // Проверяет и распаковывает весь логический поток, сохраняя только заданный
 // диапазон. window служит кольцевым словарём; для потоков C6 достаточно
 // 256 байт, так как встроенный упаковщик не создаёт больших offset.
+// Optional sink receives every decoded byte, even outside the saved range;
+// false aborts decoding. Successful return still requires the full end marker.
 bool decode_range(const Input& input, u32 source_size, u32 logical_size,
                   u32 range_offset, u8* output, u32 range_size,
-                  u8* window, u32 window_size);
+                  u8* window, u32 window_size,
+                  const Output* sink = nullptr);
+
+#ifdef PROGRAM_STORE_HOST_TEST
+u32 test_decode_calls();
+#endif
 
 } // namespace zx0
 

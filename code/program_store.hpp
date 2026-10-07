@@ -250,6 +250,16 @@ WriteFailure last_write_failure(void);
 WriteFailureDetail last_write_failure_detail(void);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
+// Exact USB-visible byte length, persisted in the CRC-protected catalog.
+bool exported_size_id(u16 id, u32& size);
+struct FileSink {
+  void* context;
+  bool (*next)(void* context, u8 value);
+};
+// Consume the entire logical file in one pass, checking its stored CRC and
+// compressed end marker. On failure discard all output already received.
+// The callback must not mutate the store or reenter a storage operation.
+bool stream_file_id(u16 id, const FileSink& sink);
 bool remove_id(u16 id);
 bool remove_tree(u16 id, u16* removed = nullptr);
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name);

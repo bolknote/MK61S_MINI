@@ -2,12 +2,14 @@
 #include <initializer_list>
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 #include "SPIFlash.h"
 #include "disk_activity.hpp"
 #include "explorer_autoexec.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_system_app.hpp"
+#include "mk8_codec.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
 #include "storage_path.hpp"
@@ -2756,6 +2758,9 @@ static void test_geometry_migration_preserves_settings(void) {
   }
 
   program_store::init();
+  assert(!program_store::ready());
+  assert(program_store::mount_status() == program_store::MountStatus::FORMAT_REQUIRED);
+  assert(program_store::format());
   assert(program_store::ready());
   assert(flash.readByte(settings) == 0x5A);
   assert(!program_store::exists(ProgramType::TEXT, "OLD"));
@@ -2829,7 +2834,7 @@ static void test_c1_to_c4_layouts_format_once_with_bounded_erases(void) {
     assert(program_store::total_count() == 0);
     u8 locator[4] = {};
     assert(flash.readByteArray(0, locator, sizeof(locator)));
-    assert(memcmp(locator, "C7FS", 4) == 0);
+    assert(memcmp(locator, "C8FS", 4) == 0);
 
     // Проверка физической ёмкости вместе с одним новым банком каталога, настройками
     // и двумя локаторами ограничена. Данные, второй банк COW и промежуточное USB-
@@ -2969,6 +2974,121 @@ static void test_mk61_binary_roundtrip_quota_and_paths(void) {
     assert(memcmp(source,recovered,got)==0);
     assert(program_store::remove_id(id) && program_store::count(type)==0);
   }
+}
+
+struct StreamCapture {
+  std::vector<u8> data;
+  usize limit;
+};
+
+static bool capture_stream(void* context, u8 value) {
+  auto& capture = *(StreamCapture*) context;
+  if(capture.data.size() == capture.limit) return false;
+  capture.data.push_back(value);
+  return true;
+}
+
+static void test_file_stream(void) {
+  for(auto type : {ProgramType::TEXT, ProgramType::TINYBASIC,
+                    ProgramType::MK61, ProgramType::CHIP8, ProgramType::APP}) {
+    fresh();
+    const u16 size = type == ProgramType::APP ? 12000
+        : type == ProgramType::TINYBASIC || type == ProgramType::CHIP8 ? 3584
+        : 1500;
+    std::vector<u8> text(size);
+    for(u16 i = 0; i < size; ++i) text[i] = (u8) ('A' + i % 7);
+    u16 id;
+    assert(program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, type, "STREAM", text.data(), size, &id));
+    u32 visible_size;
+    assert(program_store::exported_size_id(id, visible_size) && visible_size == size);
+    StreamCapture capture = {{}, size};
+    const program_store::FileSink sink = {&capture, capture_stream};
+    SPIFlash::resetOperationCounts();
+    assert(program_store::stream_file_id(id, sink));
+    const u32 read_count = SPIFlash::readOperations();
+    assert(capture.data == text);
+    for(usize limit : {0U, 255U, 1024U}) {
+      capture = {{}, limit};
+      assert(!program_store::stream_file_id(id, sink));
+      assert(capture.data.size() == limit);
+    }
+    // Every failure of a physical read must propagate, including late CRC
+    // validation after the consumer has received useful bytes.
+    for(u32 fail = 0; fail < read_count; ++fail) {
+      capture = {{}, size};
+      SPIFlash::failReadsAfterOperations(fail);
+      assert(!program_store::stream_file_id(id, sink));
+      SPIFlash::clearFailure();
+    }
+    assert(!program_store::stream_file_id(id, {nullptr, nullptr}));
+    assert(!program_store::stream_file_id(program_store::INVALID_ID, sink));
+  }
+  fresh();
+  u16 empty;
+  assert(program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::TEXT, "EMPTY", nullptr, 0, &empty));
+  StreamCapture capture = {{}, 0};
+  const program_store::FileSink sink = {&capture, capture_stream};
+  assert(program_store::stream_file_id(empty, sink));
+  assert(capture.data.empty());
+  u32 visible_size = 1;
+  assert(program_store::exported_size_id(empty, visible_size) && visible_size == 0);
+}
+
+static void prepare_exported_size_replacement(void) {
+  fresh(512U * 1024U);
+  const std::vector<u8> text(300, 'A');
+  assert(program_store::write_file(program_store::ROOT_ID, 42,
+      ProgramType::TEXT, "SIZE", text.data(), text.size()));
+}
+
+static void test_exported_size_is_atomic_and_crc_protected(void) {
+  const std::vector<u8> replacement(300, mk8::BYTE_RIGHT_ARROW);
+  prepare_exported_size_replacement();
+  SPIFlash::resetOperationCounts();
+  assert(program_store::write_file(program_store::ROOT_ID, 42,
+      ProgramType::TEXT, "SIZE", replacement.data(), replacement.size()));
+  const u32 operations = SPIFlash::mutationOperations();
+  assert(operations != 0);
+  for(auto mode : {SPIFlash::Tear::Before, SPIFlash::Tear::Prefix,
+                    SPIFlash::Tear::Bits, SPIFlash::Tear::Complete}) {
+    for(u32 cut = 0; cut <= operations; ++cut) {
+      prepare_exported_size_replacement();
+      SPIFlash::tearAfterOperations(cut, mode);
+      (void) program_store::write_file(program_store::ROOT_ID, 42,
+          ProgramType::TEXT, "SIZE", replacement.data(), replacement.size());
+      SPIFlash::clearFailure();
+      program_store::init();
+      assert(program_store::ready());
+      u8 bytes[300];
+      u16 length;
+      u32 size;
+      assert(program_store::read_id(42, bytes, sizeof(bytes), &length));
+      assert(length == sizeof(bytes));
+      assert(bytes[0] == 'A' || bytes[0] == mk8::BYTE_RIGHT_ARROW);
+      for(u8 byte : bytes) assert(byte == bytes[0]);
+      assert(program_store::exported_size_id(42, size));
+      assert(size == sizeof(bytes) * (bytes[0] == 'A' ? 1U : 3U));
+      assert(program_store::move_rename(42, program_store::ROOT_ID, "RENAMED"));
+      assert(program_store::test_catalog_checkpoint());
+      program_store::init();
+      u32 renamed_size;
+      assert(program_store::exported_size_id(42, renamed_size) && renamed_size == size);
+    }
+  }
+  prepare_exported_size_replacement();
+  assert(program_store::test_catalog_checkpoint());
+  const u32 address = program_store::test_catalog_page(0) * 4096 +
+      42 * storage_geometry::INODE_BYTES + 20;
+  SPIFlash::corrupt(address, flash.readByte(address) ^ 1U);
+  SPIFlash::resetOperationCounts();
+  program_store::init();
+  assert(!program_store::ready());
+  assert(program_store::mount_status() == program_store::MountStatus::REPAIR_REQUIRED);
+  assert(SPIFlash::mutationOperations() == 0);
+  u32 size;
+  assert(!program_store::exported_size_id(42, size));
 }
 
 static void test_max_app_replacement_uses_full_wal_capacity(void) {
@@ -3308,7 +3428,7 @@ static void test_c5_requires_explicit_format_without_mutation(void) {
   assert(program_store::mount_status() == program_store::MountStatus::READY);
   assert(!program_store::exists(ProgramType::TEXT, "KEEP"));
   assert(flash.readByteArray(0, identity, sizeof(identity)));
-  assert(memcmp(identity, "C7FS", 4) == 0 && identity[4] == 7);
+  assert(memcmp(identity, "C8FS", 4) == 0 && identity[4] == 8);
   assert(flash.readByteArray(settings + 64, recovered, sizeof(recovered)));
   assert(memcmp(recovered, marker, sizeof(marker)) == 0);
   u8 guard[5] = {};
@@ -3364,21 +3484,21 @@ static void test_catalog_rotation_protects_app_and_borrowed_stage(void) {
 
 static void test_catalog_cow_updates_only_dirty_pages(void) {
   fresh(16U * 1024U * 1024U);
-  for(u16 id : {25, 204, 410, 2000}) {
+  for(u16 id : {23, 186, 410, 2000}) {
     char name[16];
     snprintf(name, sizeof(name), "NODE%u", id);
     assert(program_store::create_directory(program_store::ROOT_ID, name, id));
   }
   assert(program_store::test_catalog_checkpoint());
-  u32 pages[20];
+  u32 pages[22];
   const u8 count = program_store::geometry().catalog_table_sectors;
-  assert(count == 20);
+  assert(count == 22);
   for(u8 page = 0; page < count; ++page) pages[page] = program_store::test_catalog_page(page);
 
-  // Inode 204 spans bytes 4080..4099: both physical pages must be patched.
-  // Inode 25 also straddles a 512-byte transfer within the first page.
-  assert(program_store::move_rename(204, program_store::ROOT_ID, "BOUNDARY"));
-  assert(program_store::move_rename(25, program_store::ROOT_ID, "CHUNK"));
+  // Inode 186 spans bytes 4092..4113: both physical pages must be patched.
+  // Inode 23 also straddles a 512-byte transfer within the first page.
+  assert(program_store::move_rename(186, program_store::ROOT_ID, "BOUNDARY"));
+  assert(program_store::move_rename(23, program_store::ROOT_ID, "CHUNK"));
   const u32 erases = SPIFlash::eraseCount();
   const u64 bytes = SPIFlash::programmedBytes();
   assert(program_store::test_catalog_checkpoint());
@@ -3394,18 +3514,18 @@ static void test_catalog_cow_updates_only_dirty_pages(void) {
   program_store::init();
   assert(program_store::ready());
   assert(SPIFlash::mutationOperations() == 0);
-  assert(strcmp(by_id(204).name, "BOUNDARY") == 0);
-  assert(strcmp(by_id(25).name, "CHUNK") == 0);
+  assert(strcmp(by_id(186).name, "BOUNDARY") == 0);
+  assert(strcmp(by_id(23).name, "CHUNK") == 0);
   assert(strcmp(by_id(410).name, "NODE410") == 0);
   assert(strcmp(by_id(2000).name, "NODE2000") == 0);
 }
 
 static void prepare_split_catalog_checkpoint(void) {
   fresh(2U * 1024U * 1024U);
-  assert(program_store::create_directory(program_store::ROOT_ID, "BOUNDARY", 204));
+  assert(program_store::create_directory(program_store::ROOT_ID, "BOUNDARY", 186));
   assert(program_store::create_directory(program_store::ROOT_ID, "UNTOUCHED", 410));
   assert(program_store::test_catalog_checkpoint());
-  assert(program_store::move_rename(204, program_store::ROOT_ID, "COMMITTED"));
+  assert(program_store::move_rename(186, program_store::ROOT_ID, "COMMITTED"));
 }
 
 static void test_catalog_split_page_torn_checkpoint(void) {
@@ -3424,12 +3544,12 @@ static void test_catalog_split_page_torn_checkpoint(void) {
     program_store::init();
     assert(program_store::ready());
     // The rename was already committed in the old WAL before checkpoint.
-    assert(strcmp(by_id(204).name, "COMMITTED") == 0);
+    assert(strcmp(by_id(186).name, "COMMITTED") == 0);
     assert(strcmp(by_id(410).name, "UNTOUCHED") == 0);
     assert(program_store::test_catalog_checkpoint());
     program_store::init();
     assert(program_store::ready());
-    assert(strcmp(by_id(204).name, "COMMITTED") == 0);
+    assert(strcmp(by_id(186).name, "COMMITTED") == 0);
   }
 }
 
@@ -3474,7 +3594,7 @@ static void test_locator_repair_keeps_last_good_copy(void) {
   }
 }
 
-static void test_c6_upgrade_formats_once_and_preserves_settings(void) {
+static void test_old_catalog_requires_format_and_preserves_settings(u8 version) {
   fresh(512U * 1024U);
   assert(program_store::write(ProgramType::TEXT, "OLD", (const u8*) "discard", 7));
   const u32 settings = program_store::settings_address();
@@ -3486,14 +3606,19 @@ static void test_c6_upgrade_formats_once_and_preserves_settings(void) {
     const u32 address = copy * SPIFlash::SECTOR_SIZE;
     u8 locator[72];
     assert(flash.readByteArray(address, locator, sizeof(locator)));
-    memcpy(locator, "C6FS", 4);
-    locator[4] = 6;
+    memcpy(locator, version == 6 ? "C6FS" : "C7FS", 4);
+    locator[4] = version;
     put_le32(locator, 68, locator_crc(locator));
     assert(flash.eraseSector(address));
     assert(flash.writeByteArray(address, locator, sizeof(locator)));
   }
   const u32 erases = SPIFlash::eraseCount();
+  SPIFlash::resetOperationCounts();
   program_store::init();
+  assert(!program_store::ready());
+  assert(program_store::mount_status() == program_store::MountStatus::FORMAT_REQUIRED);
+  assert(SPIFlash::mutationOperations() == 0);
+  assert(program_store::format());
   assert(program_store::ready());
   assert(program_store::total_count() == 0);
   assert(!program_store::exists(ProgramType::TEXT, "OLD"));
@@ -3566,7 +3691,7 @@ static void report_catalog_wear(u32 capacity, bool reboot_each) {
     total += count;
   }
   assert(maximum <= 8 && touched >= 64);
-  printf("C7 whole-store wear: capacity=%u KiB transactions=%u reboot_each=%d erases=%llu peak=%u touched=%u programmed=%llu\n",
+  printf("C8 whole-store wear: capacity=%u KiB transactions=%u reboot_each=%d erases=%llu peak=%u touched=%u programmed=%llu\n",
       (unsigned) (capacity / 1024), (unsigned) transactions, reboot_each,
       (unsigned long long) total, (unsigned) maximum, (unsigned) touched,
       (unsigned long long) (SPIFlash::programmedBytes() - programmed));
@@ -3581,6 +3706,8 @@ int main(int argc, char** argv) {
     return 0;
   }
   assert(argc == 1);
+  test_file_stream();
+  test_exported_size_is_atomic_and_crc_protected();
 #if MK61_DISK_ACTIVITY_SUPPORTED
   test_disk_activity_scope();
 #endif
@@ -3620,7 +3747,8 @@ int main(int argc, char** argv) {
   test_catalog_split_page_torn_checkpoint();
   test_catalog_bad_page_does_not_roll_back_committed_root();
   test_locator_repair_keeps_last_good_copy();
-  test_c6_upgrade_formats_once_and_preserves_settings();
+  test_old_catalog_requires_format_and_preserves_settings(6);
+  test_old_catalog_requires_format_and_preserves_settings(7);
   test_only_unreachable_file_can_be_repurposed();
   test_unreachable_file_repurpose_is_power_safe();
   test_checkpoint_power_cuts_are_atomic();

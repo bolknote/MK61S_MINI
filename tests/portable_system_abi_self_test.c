@@ -137,6 +137,12 @@ _Static_assert(MK61_USBDISK_TRIM_FAILED == 0 &&
                MK61_USBDISK_TRIM_COMPLETE == 1 &&
                MK61_USBDISK_TRIM_MORE == 2,
                "USBDISK trim result wire values");
+_Static_assert(MK61_USBDISK_STREAM_FILE == MK61_USBDISK_STAGE_FORGET + 1 &&
+               MK61_USBDISK_EXPORTED_SIZE == MK61_USBDISK_STREAM_FILE + 1,
+               "USBDISK stream operations are append-only");
+_Static_assert(sizeof(mk61_service_usbdisk_sink) == 8 &&
+               offsetof(mk61_service_usbdisk_sink, next) == 4,
+               "USBDISK sink wire layout");
 _Static_assert(MK61_TEXT_FONT_BEGIN == 0 && MK61_TEXT_FONT_LOAD == 1 &&
                MK61_TEXT_FONT_RESTORE == 2 && MK61_TEXT_FONT_END == 3 &&
                MK61_TEXT_FONT_ACTIVATE == 4,

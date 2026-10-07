@@ -5,7 +5,7 @@
 
 namespace storage_geometry {
 
-// Физическая геометрия SPI NOR для C7. Сектор виртуальной FAT остаётся
+// Физическая геометрия SPI NOR для C8. Сектор виртуальной FAT остаётся
 // 512-байтовым; физические секторы стирания никогда не видны USB-хосту.
 static constexpr u32 PHYSICAL_SECTOR_SIZE = 4096;
 static constexpr u16 LOGICAL_SECTOR_SIZE = 512;
@@ -31,9 +31,10 @@ static constexpr u8 STAGE_SMALL_SECTORS = 17;
 static constexpr u8 STAGE_MIN_SECTORS = 4;
 static constexpr u16 STAGE_TARGET_MIN_PHYSICAL_SECTORS = 512; // 2 МиБ
 
-// Inode C6 занимает во flash 20 байт. Для 31-байтового M8-имени с самым
+// Inode C8 занимает во flash 22 байта, включая внешний размер файла.
+// Для 31-байтового M8-имени с самым
 // длинным создаваемым расширением нужно не более четырёх LFN и одной короткой записи.
-static constexpr u8 INODE_BYTES = 20;
+static constexpr u8 INODE_BYTES = 22;
 static constexpr u8 MAX_DIRENTS_PER_NODE = 5;
 // Метка тома и три записи (две LFN и одна короткая), необходимые для пустого
 // маркера macOS .metadata_never_index.

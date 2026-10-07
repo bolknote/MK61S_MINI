@@ -268,6 +268,12 @@ bool child(u16 parent, int index, Entry& out);
 u32 explorer_actions(u16 id);
 bool read_id(u16 id, u8* data, u16 capacity, u16* length);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 size, u16* length);
+bool exported_size_id(u16 id, u32& size);
+struct FileSink {
+  void* context;
+  bool (*next)(void* context, u8 value);
+};
+bool stream_file_id(u16 id, const FileSink& sink);
 bool exists(ProgramType type, const char* name);
 bool remove(ProgramType type, const char* name);
 bool remove_id(u16 id);

@@ -16,7 +16,7 @@ namespace usbdisk_backend {
 namespace {
 
 static u16 diagnostic_operation_counts[
-    MK61_USBDISK_STAGE_FORGET + 1U];
+    MK61_USBDISK_EXPORTED_SIZE + 1U];
 
 static void export_file(const program_store::Entry& entry,
                         mk61_system_file& output) {
@@ -71,6 +71,11 @@ static bool read_source(void* context, u32 offset, u8* output, usize size) {
 }
 
 struct FilterBridge { mk61_system_usbdisk_stage_filter* request; };
+
+static bool consume_file_byte(void* context, u8 value) {
+  auto& sink = *(mk61_service_usbdisk_sink*) context;
+  return sink.next(sink.context, value) != 0;
+}
 
 static bool include_stage_key(void* context, u32 key) {
   FilterBridge& bridge = *(FilterBridge*) context;
@@ -139,7 +144,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
     memset(diagnostic_operation_counts, 0,
            sizeof(diagnostic_operation_counts));
   }
-  const u32 count = operation <= MK61_USBDISK_STAGE_FORGET
+  const u32 count = operation <= MK61_USBDISK_EXPORTED_SIZE
       ? ++diagnostic_operation_counts[operation] : 0;
   // Unlock is cleanup after either success or failure.  Recording it as the
   // last operation used to erase the only evidence of the primitive that
@@ -330,10 +335,20 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       const u32 capacity = program_store::ready()
           ? program_store::geometry().capacity_bytes : 0;
       return device_identity::fat_volume_serial(
-          device_identity::read(), 0xC7000000UL ^ capacity);
+          device_identity::read(), 0xC8000000UL ^ capacity);
     }
     case MK61_USBDISK_MEDIA_REVISION:
       return program_store::media_revision();
+    case MK61_USBDISK_EXPORTED_SIZE:
+      return payload != nullptr && a <= 0xFFFFU &&
+          program_store::exported_size_id((u16) a, *(u32*) payload);
+    case MK61_USBDISK_STREAM_FILE: {
+      if(payload == nullptr || a > 0xFFFFU) return 0;
+      auto& request = *(mk61_service_usbdisk_sink*) payload;
+      if(request.next == nullptr) return 0;
+      const program_store::FileSink sink = {&request, consume_file_byte};
+      return program_store::stream_file_id((u16) a, sink);
+    }
     default:
       return 0;
   }

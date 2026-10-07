@@ -23,6 +23,10 @@
 #include "dwt_profiler.hpp"
 
 namespace zx0 {
+#ifdef PROGRAM_STORE_HOST_TEST
+static u32 decode_calls;
+u32 test_decode_calls() { return decode_calls; }
+#endif
 namespace {
 
 class BitInput {
@@ -89,13 +93,15 @@ class RangeOutput {
   public:
     RangeOutput(u32 logical_size, u32 range_offset,
                 u8* output, u32 range_size,
-                u8* window, u32 window_size)
+                u8* window, u32 window_size, const Output* sink)
       : logical_size_(logical_size), range_offset_(range_offset),
         output_(output), range_size_(range_size), window_(window),
-        window_size_(window_size), position_(0), range_written_(0) {}
+        window_size_(window_size), position_(0), range_written_(0),
+        sink_(sink) {}
 
     bool byte(u8 value) {
       if(position_ >= logical_size_) return false;
+      if(sink_ != nullptr && !sink_->next(sink_->context, value)) return false;
       window_[position_ % window_size_] = value;
       if(position_ >= range_offset_ &&
          position_ - range_offset_ < range_size_) {
@@ -129,6 +135,7 @@ class RangeOutput {
     u32 window_size_;
     u32 position_;
     u32 range_written_;
+    const Output* sink_;
 };
 
 } // namespace
@@ -136,6 +143,9 @@ class RangeOutput {
 bool decode(const Input& source, u32 source_size,
             u8* output, u32 capacity, u32& written) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
+#ifdef PROGRAM_STORE_HOST_TEST
+  ++decode_calls;
+#endif
   written = 0;
   if(source.next == nullptr || source_size == 0 ||
      output == nullptr || capacity == 0) return false;
@@ -194,17 +204,21 @@ fail:
 
 bool decode_range(const Input& source, u32 source_size, u32 logical_size,
                   u32 range_offset, u8* output, u32 range_size,
-                  u8* window, u32 window_size) {
+                  u8* window, u32 window_size, const Output* sink) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
+#ifdef PROGRAM_STORE_HOST_TEST
+  ++decode_calls;
+#endif
   if(source.next == nullptr || source_size == 0 || logical_size == 0 ||
      range_offset > logical_size ||
      range_size > logical_size - range_offset ||
      (range_size != 0 && output == nullptr) ||
+     (sink != nullptr && sink->next == nullptr) ||
      window == nullptr || window_size == 0) return false;
 
   BitInput input(source, source_size);
   RangeOutput decoded(logical_size, range_offset, output, range_size,
-                      window, window_size);
+                      window, window_size, sink);
   u32 last_offset = 1;
   i32 selector = 0;
 

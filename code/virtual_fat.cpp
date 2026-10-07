@@ -29,7 +29,6 @@ extern "C" bool mk61_usbdisk_startup_timed_out(void);
 extern "C" u32 mk61_usbdisk_startup_timeout_elapsed(void);
 extern "C" u32 mk61_usbdisk_startup_timeout_limit(void);
 extern "C" void mk61_usbdisk_restart_startup_budget(void);
-extern "C" u8* mk61_usbdisk_empty_stage_scratch(u32 size);
 extern void idle_main_process();
 #endif
 
@@ -166,17 +165,6 @@ enum ClusterRole : u8 {
 };
 static bool g_sidecar_scan_pending;
 static bool g_sidecar_candidate_seen;
-static constexpr u8 EXPORTED_SIZE_CACHE_ENTRIES = 16;
-struct ExportedSizeCacheEntry {
-  u16 id;
-  u16 internal_size;
-  u16 visible_size;
-  u8 type;
-  u8 valid;
-};
-static ExportedSizeCacheEntry
-    g_exported_size_cache[EXPORTED_SIZE_CACHE_ENTRIES];
-static u8 g_exported_size_cache_next;
 static constexpr u8 DIRECTORY_CURSOR_COUNT = 8;
 struct DirectoryRenderCursor {
   u16 parent_id;
@@ -513,96 +501,31 @@ static u32 maximum_file_size(program_store::ProgramType type) {
 #endif
 }
 
-static void clear_exported_size_cache(void) {
-  memset(g_exported_size_cache, 0, sizeof(g_exported_size_cache));
-  g_exported_size_cache_next = 0;
-}
+struct TextExport {
+  u32 position;
+  u32 offset;
+  u8* output;
+  u16 capacity;
+  u16 copied;
+};
 
-static bool cached_exported_size(const program_store::Entry& entry,
-                                 u32& output) {
-  for(const auto& cached : g_exported_size_cache) {
-    if(cached.valid && cached.id == entry.id &&
-       cached.internal_size == entry.data_len &&
-       cached.type == (u8) entry.type) {
-      output = cached.visible_size;
-      return true;
+static bool export_text_byte(void* context, u8 value) {
+  TextExport& text = *(TextExport*) context;
+  if(!mk8::valid_byte(value)) return false;
+  const mk8::Utf8Bytes encoded = mk8::utf8(value);
+  for(u8 i = 0; i < encoded.size; ++i, ++text.position) {
+    if(text.position >= text.offset && text.copied < text.capacity) {
+      text.output[text.copied++] = encoded.data[i];
     }
   }
-  return false;
-}
-
-static void cache_exported_size(const program_store::Entry& entry,
-                                u32 size) {
-  if(size > 0xFFFFU) return;
-  ExportedSizeCacheEntry& cached =
-      g_exported_size_cache[g_exported_size_cache_next];
-  cached.id = entry.id;
-  cached.internal_size = entry.data_len;
-  cached.visible_size = (u16) size;
-  cached.type = (u8) entry.type;
-  cached.valid = 1;
-  g_exported_size_cache_next = (u8) (
-      (g_exported_size_cache_next + 1U) % EXPORTED_SIZE_CACHE_ENTRIES);
-}
-
-static u8* whole_text_scratch(u16 size) {
-  // During a commit the UC1609 framebuffer is already detached from the
-  // display and lent to the USB-disk module.  Prefer that full 8 KiB span:
-  // the persistent staging journal is normally non-empty at this point, so
-  // its smaller key-index scratch cannot be borrowed.  Materializing a text
-  // file once avoids restarting ZX0 decompression for every 64-byte range.
-  if(g_commit_compression_buffer != NULL &&
-     size <= g_commit_compression_buffer_size) {
-    return g_commit_compression_buffer;
-  }
-#if defined(MK61_BUILD_USBDISK_MODULE)
-  // With an empty persistent journal its 1.5 KiB sorted-key array is idle.
-  // Reuse it for one complete ordinary M8 text file instead of repeatedly
-  // restarting ZX0 decompression for every 64-byte range. TinyBasic sources
-  // larger than this buffer retain the bounded streaming fallback below.
-  return mk61_usbdisk_empty_stage_scratch(size);
-#else
-  (void) size;
-  return nullptr;
-#endif
+  return true;
 }
 
 static bool exported_file_size(const program_store::Entry& entry,
                                u32& output) {
   output = entry.data_len;
   if(!program_store::text_content(entry.type)) return true;
-  if(cached_exported_size(entry, output)) return true;
-  output = 0;
-  if(u8* const complete = whole_text_scratch(entry.data_len)) {
-    u16 copied = 0;
-    if(!program_store::read_range_id(entry.id, 0, complete, entry.data_len,
-                                     &copied) || copied != entry.data_len) {
-      return false;
-    }
-    for(u16 index = 0; index < copied; ++index) {
-      if(!mk8::valid_byte(complete[index])) return false;
-      output += mk8::utf8(complete[index]).size;
-    }
-    cache_exported_size(entry, output);
-    return true;
-  }
-  u8 bytes[64];
-  u16 offset = 0;
-  while(offset < entry.data_len) {
-    const u16 remaining = (u16) (entry.data_len - offset);
-    const u16 wanted = remaining < (u16) sizeof(bytes)
-        ? remaining : (u16) sizeof(bytes);
-    u16 copied = 0;
-    if(!program_store::read_range_id(entry.id, offset, bytes, wanted,
-                                     &copied) || copied != wanted) return false;
-    for(u16 index = 0; index < copied; ++index) {
-      if(!mk8::valid_byte(bytes[index])) return false;
-      output += mk8::utf8(bytes[index]).size;
-    }
-    offset = (u16) (offset + copied);
-  }
-  cache_exported_size(entry, output);
-  return true;
+  return program_store::exported_size_id(entry.id, output);
 }
 
 static bool read_exported_range(const program_store::Entry& entry,
@@ -618,49 +541,10 @@ static bool read_exported_range(const program_store::Entry& entry,
         entry.id, (u16) external_offset, output, wanted, &copied);
   }
 
-  u32 external_position = 0;
-  const u32 external_end = external_offset + capacity;
-  if(u8* const complete = whole_text_scratch(entry.data_len)) {
-    u16 received = 0;
-    if(!program_store::read_range_id(entry.id, 0, complete, entry.data_len,
-                                     &received) || received != entry.data_len) {
-      return false;
-    }
-    for(u16 index = 0; index < received; ++index) {
-      if(!mk8::valid_byte(complete[index])) return false;
-      const mk8::Utf8Bytes encoded = mk8::utf8(complete[index]);
-      for(u8 part = 0; part < encoded.size; ++part, ++external_position) {
-        if(external_position >= external_offset &&
-           external_position < external_end) {
-          output[copied++] = encoded.data[part];
-        }
-      }
-      if(external_position >= external_end) break;
-    }
-    return true;
-  }
-  u8 bytes[64];
-  u16 internal_offset = 0;
-  while(internal_offset < entry.data_len && external_position < external_end) {
-    const u16 remaining = (u16) (entry.data_len - internal_offset);
-    const u16 wanted = remaining < (u16) sizeof(bytes)
-        ? remaining : (u16) sizeof(bytes);
-    u16 received = 0;
-    if(!program_store::read_range_id(entry.id, internal_offset, bytes, wanted,
-                                     &received) || received != wanted) return false;
-    for(u16 index = 0; index < received; ++index) {
-      if(!mk8::valid_byte(bytes[index])) return false;
-      const mk8::Utf8Bytes encoded = mk8::utf8(bytes[index]);
-      for(u8 part = 0; part < encoded.size; ++part, ++external_position) {
-        if(external_position >= external_offset &&
-           external_position < external_end) {
-          output[copied++] = encoded.data[part];
-        }
-      }
-      if(external_position >= external_end) break;
-    }
-    internal_offset = (u16) (internal_offset + received);
-  }
+  TextExport text = {0, external_offset, output, capacity, 0};
+  const program_store::FileSink sink = {&text, export_text_byte};
+  if(!program_store::stream_file_id(entry.id, sink)) return false;
+  copied = text.copied;
   return true;
 }
 
@@ -822,7 +706,7 @@ static void boot_sector(u8* output) {
   output[0] = 0xEB;
   output[1] = 0x3C;
   output[2] = 0x90;
-  memcpy(output + 3, "MK61C7  ", 8);
+  memcpy(output + 3, "MK61C8  ", 8);
   put_le16(output, 11, SECTOR_SIZE);
   output[13] = geometry().sectors_per_cluster;
   put_le16(output, 14, RESERVED_SECTORS);
@@ -841,7 +725,7 @@ static void boot_sector(u8* output) {
   output[36] = 0x80;
   output[38] = 0x29;
   put_le32(output, 39, volume_serial());
-  memcpy(output + 43, "MK61S C7   ", 11);
+  memcpy(output + 43, "MK61S C8   ", 11);
   memcpy(output + 54, "FAT12   ", 8);
   output[510] = 0x55;
   output[511] = 0xAA;
@@ -919,7 +803,7 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
   int first_child = 0;
   if(root) {
     if(first_slot == 0) {
-      memcpy(output, "MK61S C7   ", 11);
+      memcpy(output, "MK61S C8   ", 11);
       output[11] = ATTR_VOLUME;
       for(u8 offset = 0;
           offset + 1 < storage_geometry::ROOT_SYSTEM_DIRENTS;
@@ -2275,7 +2159,6 @@ static bool ensure_all_directory_extents(u16 parent_id = program_store::ROOT_ID,
 
 static void invalidate_clean_cache(void) {
   reset_directory_cursors();
-  clear_exported_size_cache();
   if(g_session == NULL) return;
   for(u8 slot = 0; slot < g_cache_slots; slot++) {
     if(g_session->cache[slot].state == CACHE_CLEAN) {
@@ -2514,7 +2397,7 @@ u32 volume_serial(void) {
     capacity = current_geometry.capacity_bytes;
     startup_stage(31);
   }
-  const u32 legacy_volume_serial = 0xC7000000UL ^ capacity;
+  const u32 legacy_volume_serial = 0xC8000000UL ^ capacity;
   startup_stage(32);
   const u32 stable = device_identity::fat_volume_serial(
       device_identity::read(), legacy_volume_serial);
@@ -2742,7 +2625,6 @@ bool reset_session(void) {
   ScopedStartupRecovery recovery;
   (void) recovery;
   reset_directory_cursors();
-  clear_exported_size_cache();
   startup_stage(1);
   g_session_volume_serial_valid = false;
   if(!program_store::ready() || !ensure_session()) {
@@ -2812,7 +2694,6 @@ void end_session(void) {
   g_session_volume_serial_valid = false;
   g_sidecar_scan_pending = false;
   g_sidecar_candidate_seen = false;
-  clear_exported_size_cache();
   startup_stage(44);
 }
 

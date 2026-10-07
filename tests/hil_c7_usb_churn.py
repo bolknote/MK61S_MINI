@@ -49,10 +49,14 @@ def main() -> int:
     parser.add_argument("--port", required=True)
     parser.add_argument("--public-id", required=True)
     parser.add_argument("--cycles", type=int, default=3)
+    parser.add_argument("--files", type=int, default=16,
+                        help="files per cycle, a multiple of 4 (use 4 on a nearly full volume)")
     parser.add_argument("--seed", type=int, default=0xC701)
     args = parser.parse_args()
     if not re.fullmatch(r"[0-9a-fA-F]{16}", args.public_id) or not 1 <= args.cycles <= 20:
         parser.error("pin a 16-digit public ID; --cycles must be 1..20")
+    if not 4 <= args.files <= 32 or args.files % 4:
+        parser.error("--files must be a multiple of 4 in 4..32")
     with Port(args.port) as port:
         identity = parse_identity(port.command("identity"))
         original = listing_entries(port.command("ls /", timeout=15))
@@ -90,7 +94,7 @@ def main() -> int:
                 fixture = mount / name
                 if phase == "create":
                     fixture.mkdir()
-                    for index in range(16):
+                    for index in range(args.files):
                         leaf = f"F{index:02d}." + ("bin" if index % 4 == 0 else "txt")
                         content = payload(leaf.endswith(".bin"))
                         store(fixture / leaf, content)
@@ -98,10 +102,10 @@ def main() -> int:
                         stats["writes"] += 1
                         stats["host_readbacks"] += 1
                         if (index + 1) % 4 == 0:
-                            print(f"USB cycle={cycle + 1} create={index + 1}/16", flush=True)
+                            print(f"USB cycle={cycle + 1} create={index + 1}/{args.files}", flush=True)
                     # The host allocates space, but AppleDouble must not
                     # become persistent user files or consume inode quota.
-                    for index in range(8):
+                    for index in range(min(8, args.files)):
                         leaf = list(expected)[index]
                         sidecar = fixture / ("._" + leaf)
                         # macOS can already have generated a genuine one
@@ -138,7 +142,7 @@ def main() -> int:
                                 stats["writes"] += 1
                                 stats["host_readbacks"] += 1
                                 stats["renames"] += 1
-                        for index in range(8):
+                        for index in range(args.files // 2):
                             leaf = f"NEW{index:02d}.txt"
                             content = payload(False)
                             store(fixture / leaf, content)
@@ -204,6 +208,7 @@ def main() -> int:
         print(terminal_report(target, "df"), flush=True)
         print(terminal_report(target, "mpu status"), flush=True)
         print(json.dumps(dict(result="PASS", public=identity.public, build=identity.build,
+                              files_per_cycle=args.files,
                               elapsed_s=round(time.monotonic() - started, 2), **stats)), flush=True)
         return 0
     finally:

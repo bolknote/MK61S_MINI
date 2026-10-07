@@ -253,6 +253,43 @@ static void test_invalid_arguments(void) {
   assert(!zx0::emit(prepared, output));
 }
 
+static void test_streaming_decode(void) {
+  std::vector<u8> source(3584);
+  for(usize i = 0; i < source.size(); ++i) source[i] = (u8) (i % 251);
+  zx0::EncodeResult result = {};
+  std::vector<u8> packed = pack(source, 8192, result);
+  u8 window[256];
+  std::vector<u8> output;
+  const zx0::Output sink = {&output, append_byte};
+  VectorInput memory = {&packed, 0};
+  const zx0::Input input = {&memory, next_byte};
+  assert(zx0::decode_range(input, packed.size(), source.size(),
+                           0, nullptr, 0, window, sizeof(window), &sink));
+  assert(output == source && memory.position == packed.size());
+  for(usize limit : {0U, 1U, 255U, 1024U}) {
+    memory.position = 0;
+    FailingOutput failing = {0, limit};
+    const zx0::Output fail = {&failing, fail_after_limit};
+    assert(!zx0::decode_range(input, packed.size(), source.size(),
+                              0, nullptr, 0, window, sizeof(window), &fail));
+    assert(failing.accepted == limit);
+  }
+  // End marker and trailing-data checks still run after all useful output.
+  for(bool trailing : {false, true}) {
+    auto broken = packed;
+    if(trailing) broken.push_back(0);
+    else broken.pop_back();
+    memory = {&broken, 0};
+    output.clear();
+    assert(!zx0::decode_range(input, broken.size(), source.size(),
+                              0, nullptr, 0, window, sizeof(window), &sink));
+  }
+  const zx0::Output invalid = {nullptr, nullptr};
+  memory = {&packed, 0};
+  assert(!zx0::decode_range(input, packed.size(), source.size(),
+                            0, nullptr, 0, window, sizeof(window), &invalid));
+}
+
 } // namespace
 
 int main(void) {
@@ -262,6 +299,7 @@ int main(void) {
   test_deterministic_output();
   test_prepared_reuse();
   test_range_decode();
+  test_streaming_decode();
   test_invalid_arguments();
   puts("zx0 encode self-test: ok");
   return 0;

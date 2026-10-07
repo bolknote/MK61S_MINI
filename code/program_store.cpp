@@ -43,10 +43,10 @@ namespace {
 // в M8. Физические сигнатуры отличаются от C5, поэтому старая прошивка не
 // сможет принять новый том, а новая никогда не мигрирует C5 исподтишка.
 static constexpr u8 PHYSICAL_FORMAT_VERSION = 6;
-// C7 moves the catalog and its WAL. Payloads, staging and settings retain
-// their C6 encoding; the incompatible locator identifies the new catalog.
-static constexpr u8 CATALOG_VERSION = 7;
-static constexpr u8 LOCATOR_VERSION = 7;
+// C8 adds the exported byte length to each inode. Payloads, staging and
+// settings retain their C6 encoding; no old-catalog reader or migration.
+static constexpr u8 CATALOG_VERSION = 8;
+static constexpr u8 LOCATOR_VERSION = 8;
 static constexpr u8 STATE_WRITING = 0xFF;
 static constexpr u8 STATE_ACTIVE = 0x7F;
 static constexpr u8 STATE_DELETED = 0x3F;
@@ -164,10 +164,11 @@ struct Inode {
   u16 name_hash;
   u8 kind_type;
   u8 flags;
+  u16 exported_size;
 };
 
-static_assert(sizeof(Inode) == storage_geometry::INODE_BYTES,
-              "C6 inode RAM and disk representation must stay compact");
+static_assert(sizeof(Inode) == 24 && storage_geometry::INODE_BYTES == 22,
+              "C8 inode has two RAM alignment bytes, not stored on disk");
 
 struct LargeDescriptor {
   u32 sectors[LARGE_BLOCK_COUNT];
@@ -688,6 +689,7 @@ static void serialize_inode(const Inode& inode, u8* out) {
   put_le16(out, 16, inode.name_hash);
   out[18] = inode.kind_type;
   out[19] = inode.flags;
+  put_le16(out, 20, inode.exported_size);
 }
 
 static Inode deserialize_inode(const u8* data) {
@@ -703,6 +705,7 @@ static Inode deserialize_inode(const u8* data) {
   inode.name_hash = get_le16(data, 16);
   inode.kind_type = data[18];
   inode.flags = data[19];
+  inode.exported_size = get_le16(data, 20);
   return inode;
 }
 
@@ -987,7 +990,7 @@ __attribute__((noinline))
 static bool publish_catalog_root(u32 generation) {
   u8 header[CATALOG_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C7CT", 4);
+  memcpy(header, "C8CT", 4);
   header[4] = CATALOG_VERSION;
   header[5] = STATE_WRITING;
   put_le16(header, 6, CATALOG_HEADER_SIZE);
@@ -1054,7 +1057,7 @@ static bool append_transaction_record(const Transaction& transaction) {
 #endif
   memset(record, 0xFF, sizeof(record));
   record[0] = 'W';
-  record[1] = '7';
+  record[1] = '8';
   record[2] = CATALOG_VERSION;
   record[3] = STATE_WRITING;
   const u32 next_sequence = g_wal_sequence + 1;
@@ -1111,7 +1114,7 @@ static bool replay_wal(void) {
     bool erased = true;
     for(u16 i = 0; i < sizeof(record); ++i) if(record[i] != 0xFF) erased = false;
     if(erased) break;
-    if(record[0] != 'W' || record[1] != '7' ||
+    if(record[0] != 'W' || record[1] != '8' ||
        record[2] != CATALOG_VERSION || record[3] != STATE_ACTIVE ||
        record[8] > WAL_MAX_UPDATES || get_le32(record, 4) != g_wal_sequence + 1 ||
        normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) != get_le32(record, WAL_CRC_OFFSET)) {
@@ -1133,7 +1136,7 @@ static bool replay_wal(void) {
 }
 
 static bool catalog_header_valid(u8* header) {
-  return memcmp(header, "C7CT", 4) == 0 &&
+  return memcmp(header, "C8CT", 4) == 0 &&
       header[4] == CATALOG_VERSION && header[5] == STATE_ACTIVE &&
       get_le16(header, 6) == CATALOG_HEADER_SIZE &&
       get_le32(header, 8) != 0 && get_le32(header, 12) == g_format_epoch &&
@@ -1158,7 +1161,7 @@ static bool load_catalog(void) {
   for(u32 sector = storage_geometry::LOCATOR_SECTORS;
       sector < g_geometry.stage_first_sector; ++sector) {
     if(!read_bytes(sector_address(sector), header, 16)) return false;
-    if(memcmp(header, "C7CT", 4) != 0 || header[5] != STATE_ACTIVE ||
+    if(memcmp(header, "C8CT", 4) != 0 || header[5] != STATE_ACTIVE ||
        get_le32(header, 12) != g_format_epoch) continue;
     if(!read_bytes(sector_address(sector), header, sizeof(header))) return false;
     if(catalog_header_valid(header) &&
@@ -1206,7 +1209,7 @@ static bool load_catalog(void) {
 
 static void encode_locator(u8* locator) {
   memset(locator, 0xFF, LOCATOR_SIZE);
-  memcpy(locator, "C7FS", 4);
+  memcpy(locator, "C8FS", 4);
   locator[4] = LOCATOR_VERSION;
   locator[5] = STATE_WRITING;
   locator[6] = LOCATOR_SIZE;
@@ -1283,7 +1286,8 @@ bool load_capacity_for_reformat(void) {
   const u32 jedec_id = flash_device().getJEDECID();
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
-       !((memcmp(locator, "C7FS", 4) == 0 && locator[4] == LOCATOR_VERSION) ||
+       !((memcmp(locator, "C8FS", 4) == 0 && locator[4] == LOCATOR_VERSION) ||
+         (memcmp(locator, "C7FS", 4) == 0 && locator[4] == 7) ||
          (memcmp(locator, "C6FS", 4) == 0 && locator[4] == PHYSICAL_FORMAT_VERSION)) ||
        locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
        normalized_record_crc(locator, LOCATOR_SIZE, 68, 5) !=
@@ -1300,6 +1304,7 @@ bool load_capacity_for_reformat(void) {
       continue;
     }
     g_format_epoch = get_le32(locator, 12);
+    g_geometry = geometry;
     return true;
   }
   return false;
@@ -1329,7 +1334,7 @@ bool load_locator(void) {
   u8 selected_mask = 0;
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator))) continue;
-    if(!locator_matches_format(locator, "C7FS", LOCATOR_VERSION,
+    if(!locator_matches_format(locator, "C8FS", LOCATOR_VERSION,
                                geometry, epoch, stored_probe_upper,
                                stored_jedec_id)) continue;
     if(stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
@@ -2220,7 +2225,8 @@ static bool next_record_payload_byte(void* context, u8& value) {
 
 static bool read_zx0_record_range(u16 id, const Inode& inode,
                                   const char* name, const u8* header,
-                                  u16 offset, u8* output, u16 size) {
+                                  u16 offset, u8* output, u16 size,
+                                  const zx0::Output* sink = nullptr) {
   const u16 stored_len = get_le16(header, 8);
   mk61_crc32::Context record_crc;
   if(!update_record_crc_prefix(
@@ -2234,7 +2240,7 @@ static bool read_zx0_record_range(u16 id, const Inode& inode,
   u8 window[256] = {};
   const bool decoded = zx0::decode_range(
       input, stored_len, inode.data_len,
-      offset, output, size, window, sizeof(window));
+      offset, output, size, window, sizeof(window), sink);
   return decoded &&
          compressed.position == stored_len &&
          record_crc.finish() == get_le32(header, 12);
@@ -2435,7 +2441,8 @@ static bool next_large_payload_byte(void* context, u8& value) {
 
 static bool read_large_zx0_range(u16 id,
                                  const LargeDescriptor& descriptor,
-                                 u16 offset, u8* output, u16 size) {
+                                 u16 offset, u8* output, u16 size,
+                                 const zx0::Output* sink = nullptr) {
   LargePayloadInput compressed = {
     id, &descriptor, 0, {}, 0, 0, mk61_crc32::INITIAL_STATE
   };
@@ -2443,7 +2450,7 @@ static bool read_large_zx0_range(u16 id,
   u8 window[256] = {};
   return zx0::decode_range(input, descriptor.stored_len,
                            descriptor.data_len, offset, output, size,
-                           window, sizeof(window)) &&
+                           window, sizeof(window), sink) &&
          compressed.position == descriptor.stored_len &&
          mk61_crc32::finish(compressed.crc) == descriptor.data_crc;
 }
@@ -2780,7 +2787,7 @@ static bool format_internal(bool erase_settings,
 #endif
   if(!compute_geometry(capacity, g_geometry)) return false;
   g_format_epoch = g_format_epoch != 0
-      ? g_format_epoch + 1 : (0xC7F70001UL ^ capacity ^ millis());
+      ? g_format_epoch + 1 : (0xC8F80001UL ^ capacity ^ millis());
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
@@ -2845,28 +2852,31 @@ void init(void) {
   g_gc_victim = EMPTY_ADDRESS;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
-  dbgln(SPIROM, "C7 locator: scan");
+  dbgln(SPIROM, "C8 locator: scan");
   if(load_locator()) {
     if(!load_catalog_and_repair_locators()) {
-      dbgln(SPIROM, "C7 catalog: invalid");
-      // A valid locator identifies an existing C7 volume. A broken root,
+      dbgln(SPIROM, "C8 catalog: invalid");
+      // A valid locator identifies an existing C8 volume. A broken root,
       // page or read is not a blank device: require an explicit format.
       g_mount_status = MountStatus::REPAIR_REQUIRED;
     } else {
-      dbgln(SPIROM, "C7 catalog: ready");
+      dbgln(SPIROM, "C8 catalog: ready");
       g_ready = true;
       g_mount_status = MountStatus::READY;
     }
   } else if(load_legacy_c5_locator()) {
     dbgln(SPIROM, "C5 volume: explicit format required");
     g_mount_status = MountStatus::FORMAT_REQUIRED;
+  } else if(load_capacity_for_reformat()) {
+    // Recognizing the capacity is not compatibility: do not read the old
+    // catalog, migrate it, or destructively probe an existing volume.
+    g_mount_status = MountStatus::FORMAT_REQUIRED;
   } else {
-    dbgln(SPIROM, "C7 locator: absent or incompatible");
-    const bool preserve_settings = load_capacity_for_reformat();
+    dbgln(SPIROM, "C8 locator: absent or incompatible");
     u32 capacity = 0;
 #ifdef SPI_FLASH
-    if(!preserve_settings) {
-      dbgln(SPIROM, "C7 capacity probe: start");
+    {
+      dbgln(SPIROM, "C8 capacity probe: start");
 #ifdef DEBUG_SPIFLASH
       const flash_capacity_probe::ProbeProgress progress =
           capacity_probe_debug;
@@ -2876,22 +2886,18 @@ void init(void) {
       if(!flash_capacity_probe::detect(
              flash_device(), flash_device().capacityProbeUpper(), capacity, progress) ||
          !flash_device().setCapacity(capacity)) {
-        dbgln(SPIROM, "C7 capacity probe: failed");
+        dbgln(SPIROM, "C8 capacity probe: failed");
         return;
       }
     }
 #endif
-    if(!preserve_settings) {
-      dbgln(SPIROM, "C7 capacity probe: ", (isize) capacity, " bytes");
-    } else {
-      dbgln(SPIROM, "C7 reformat: preserve settings");
-    }
-    dbgln(SPIROM, "C7 format: start");
-    if(!format_internal(!preserve_settings)) {
-      dbgln(SPIROM, "C7 format: failed");
+    dbgln(SPIROM, "C8 capacity probe: ", (isize) capacity, " bytes");
+    dbgln(SPIROM, "C8 format: start");
+    if(!format_internal(true)) {
+      dbgln(SPIROM, "C8 format: failed");
       return;
     }
-    dbgln(SPIROM, "C7 format: complete");
+    dbgln(SPIROM, "C8 format: complete");
   }
   if(g_ready) {
     (void) sweep_orphan_file_extents();
@@ -2904,8 +2910,9 @@ bool format(void) {
   if(!flash_is_ok) return false;
   if(g_mount_status == MountStatus::FORMAT_REQUIRED) {
     u32 saved_settings = EMPTY_ADDRESS;
-    const bool preserve_settings = legacy_c5_settings_guard_valid(g_geometry);
-    if(preserve_settings && !save_legacy_settings(saved_settings)) return false;
+    const bool legacy_settings = legacy_c5_settings_guard_valid(g_geometry);
+    const bool preserve_settings = legacy_settings || settings_guard_valid(g_geometry);
+    if(legacy_settings && !save_legacy_settings(saved_settings)) return false;
     if(!format_internal(!preserve_settings, saved_settings)) return false;
   } else if(!format_internal(false)) {
     return false;
@@ -3567,7 +3574,8 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
      !source_valid(source, data_len)) return false;
   g_last_write_failure = WriteFailure::VISIBLE_SIZE;
   u32 fat_visible_size = 0;
-  if(!visible_file_size(type, source, data_len, fat_visible_size)) return false;
+  if(!visible_file_size(type, source, data_len, fat_visible_size) ||
+     fat_visible_size > 0xFFFFU) return false;
   g_last_write_failure = WriteFailure::EXTENT_SHAPE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
@@ -3715,6 +3723,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   Inode inode = replacing ? old_inode : empty_inode();
   inode.address = address;
   inode.data_len = data_len;
+  inode.exported_size = (u16) fat_visible_size;
   inode.record_len = record_len;
   inode.parent_id = parent_id;
   inode.name_hash = hash_name(name);
@@ -3798,7 +3807,8 @@ bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data
   return write(type, name, data, data_len);
 }
 
-bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
+static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
+                            u16* out_len, const zx0::Output* sink) {
   DiskActivity activity;
   if(!g_ready || data == NULL) return false;
   Inode inode;
@@ -3812,7 +3822,17 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
     if(!read_large_descriptor(id, inode, descriptor)) return false;
     if(zx0_file_inode(inode)) {
       if(!read_large_zx0_range(
-            id, descriptor, offset, data, copied)) return false;
+            id, descriptor, offset, data, copied, sink)) return false;
+    } else if(sink != nullptr) {
+      LargePayloadInput input = {
+        id, &descriptor, 0, {}, 0, 0, mk61_crc32::INITIAL_STATE
+      };
+      u8 value;
+      while(input.position < descriptor.stored_len) {
+        if(!next_large_payload_byte(&input, value) ||
+           !sink->next(sink->context, value)) return false;
+      }
+      if(mk61_crc32::finish(input.crc) != descriptor.data_crc) return false;
     } else if(copied != 0 &&
               !read_large_data(id, descriptor, offset, data, copied)) {
       return false;
@@ -3822,7 +3842,22 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
     if(!read_record_header(inode, id, header)) return false;
     if(zx0_file_inode(inode)) {
       if(!read_zx0_record_range(id, inode, name, header,
-                                offset, data, copied)) return false;
+                                offset, data, copied, sink)) return false;
+    } else if(sink != nullptr) {
+      mk61_crc32::Context crc;
+      if(!update_record_crc_prefix(
+           crc, (NodeKind) header[3], (ProgramType) header[11],
+           id, inode.parent_id, name, inode.data_len)) return false;
+      RecordPayloadInput input = {};
+      input.address = inode.address + RECORD_HEADER_SIZE + header[10];
+      input.size = inode.data_len;
+      input.crc = &crc;
+      u8 value;
+      while(input.position < input.size) {
+        if(!next_record_payload_byte(&input, value) ||
+           !sink->next(sink->context, value)) return false;
+      }
+      if(crc.finish() != get_le32(header, 12)) return false;
     } else if(!verify_record_crc(id, inode, name) ||
               (copied != 0 &&
                !read_bytes(inode.address + RECORD_HEADER_SIZE +
@@ -3833,6 +3868,28 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
   }
   if(out_len != NULL) *out_len = copied;
   return true;
+}
+
+bool exported_size_id(u16 id, u32& size) {
+  Inode inode;
+  if(!g_ready || !get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE) {
+    return false;
+  }
+  size = inode.exported_size;
+  return text_content(inode_type(inode))
+      ? size >= inode.data_len && size <= 3U * inode.data_len
+      : size == inode.data_len;
+}
+
+bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
+  return read_file_range(id, offset, data, len, out_len, nullptr);
+}
+
+bool stream_file_id(u16 id, const FileSink& sink) {
+  if(sink.next == nullptr) return false;
+  const zx0::Output output = {sink.context, sink.next};
+  u8 unused;
+  return read_file_range(id, 0, &unused, 0, nullptr, &output);
 }
 
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len) {

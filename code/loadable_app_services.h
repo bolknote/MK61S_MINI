@@ -125,8 +125,15 @@ enum mk61_service_usbdisk_operation {
   /* Perform one bounded, power-safe directory-tail trim transaction. */
   MK61_USBDISK_TRIM_DIRECTORY_EXTENTS,
   /* Drop AppleDouble data from the journal as soon as its name is known. */
-  MK61_USBDISK_STAGE_FORGET
+  MK61_USBDISK_STAGE_FORGET,
+  /* One CRC-checked decode, instead of restarting it for each range. */
+  MK61_USBDISK_STREAM_FILE,
+  MK61_USBDISK_EXPORTED_SIZE
 };
+typedef struct mk61_service_usbdisk_sink {
+  void* context;
+  int (*next)(void* context, uint8_t value);
+} mk61_service_usbdisk_sink;
 enum mk61_service_usbdisk_trim_result {
   MK61_USBDISK_TRIM_FAILED = 0,
   MK61_USBDISK_TRIM_COMPLETE = 1,

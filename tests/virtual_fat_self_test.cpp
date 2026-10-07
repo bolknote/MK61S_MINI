@@ -14,6 +14,7 @@
 #include "program_store.hpp"
 #include "shared_memory.hpp"
 #include "virtual_fat.hpp"
+#include "zx0.hpp"
 
 SPIFlash flash;
 bool flash_is_ok = true;
@@ -134,7 +135,7 @@ static void test_boot_sector_volume_serial_fallback(void) {
   u8 boot[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(0, boot));
   assert(read_le32(boot, 39) ==
-         ((0xC7000000UL ^ SPIFlash::DEFAULT_CAPACITY) ^
+         ((0xC8000000UL ^ SPIFlash::DEFAULT_CAPACITY) ^
           program_store::media_revision()));
 }
 
@@ -1674,6 +1675,124 @@ static void test_metadata_only_recovery_does_not_redecode_unchanged_text(void) {
   assert(memcmp(restored, source, sizeof(source)) == 0);
 }
 
+static void test_text_directory_sizes_need_no_decode(void) {
+  for(u16 files : {16, 17, 64, 128, 129}) {
+    fresh();
+    u8 text[1500];
+    for(u16 i = 0; i < sizeof(text); ++i) text[i] = (u8) ('A' + i % 7);
+    for(u16 i = 0; i < files; ++i) {
+      char name[12];
+      snprintf(name, sizeof(name), "FILE%03u", i);
+      assert(program_store::write(program_store::ProgramType::TEXT,
+                                    name, text, sizeof(text)));
+    }
+    assert(virtual_fat::reset_session());
+    const Layout fs = layout();
+    u8 sector[512];
+    for(u8 round = 0; round < 3; ++round) {
+      const u32 before = zx0::test_decode_calls();
+      for(u32 i = 0; i < fs.root_sectors; ++i) {
+        assert(virtual_fat::read_sector(fs.root_start + i, sector));
+      }
+      const u32 decodes = zx0::test_decode_calls() - before;
+      printf("VFAT text sizes: files=%u scan=%u decodes=%u\n",
+             files, round, decodes);
+      assert(decodes == 0);
+      // Neither staging traffic nor a reboot requires a size recalculation.
+      assert(program_store::vfat_stage_write(
+          fs.root_start + fs.root_sectors - 1, sector));
+      if(round == 1) {
+        virtual_fat::end_session();
+        program_store::init();
+        assert(program_store::ready());
+        assert(virtual_fat::reset_session());
+      }
+    }
+  }
+}
+
+static void test_streaming_utf8_export_and_size_invalidation(void) {
+  for(auto type : {program_store::ProgramType::TINYBASIC,
+                    program_store::ProgramType::MK61}) {
+    fresh();
+    const u16 size = type == program_store::ProgramType::TINYBASIC
+        ? program_store::MAX_TINYBASIC_TEXT_SIZE : 1500;
+    std::vector<u8> text(size, 'A');
+    u16 id;
+    assert(program_store::write_file(program_store::ROOT_ID, 80, type,
+                                       "TEXT", text.data(), size, &id));
+    assert(virtual_fat::reset_session());
+    const Layout fs = layout();
+    auto listed_size = [&]() {
+      u8 root[512];
+      assert(virtual_fat::read_sector(fs.root_start, root));
+      for(u16 i = 0; i < sizeof(root); i += 32) {
+        if(root[i + 11] == 0x20 && read_le16(root + i, 26) == id + 2) {
+          return read_le32(root + i, 28);
+        }
+      }
+      assert(false);
+      return 0U;
+    };
+    assert(listed_size() == size);
+    for(u8 replacement = 0; replacement < 2; ++replacement) {
+      // Same inode/type/logical length, but different UTF-8 visible length.
+      // Then delete and reuse the id, still without restarting the session.
+      std::vector<u8> encoded;
+      for(u16 i = 0; i < size; ++i) {
+        text[i] = i % 3 == 0 ? mk8::BYTE_RIGHT_ARROW
+            : (i + replacement) % 3 == 1 ? 0xDF : 'A';
+        const auto ch = mk8::utf8(text[i]);
+        encoded.insert(encoded.end(), ch.data, ch.data + ch.size);
+      }
+      if(replacement) assert(program_store::remove_id(id));
+      assert(program_store::write_file(program_store::ROOT_ID, id, type,
+                                         "TEXT", text.data(), size));
+      assert(listed_size() == encoded.size());
+      for(u32 offset = 0; offset < encoded.size(); offset += 512) {
+        const u16 cluster_index = offset / (fs.sectors_per_cluster * 512U);
+        u16 cluster = id + 2;
+        if(cluster_index != 0) {
+          u16 extent;
+          assert(program_store::first_file_extent(id, extent));
+          for(u16 i = 1; i < cluster_index; ++i) {
+            assert(program_store::next_file_extent(extent, extent));
+          }
+          cluster = extent + 2;
+        }
+        u8 sector[512];
+        const u32 before = zx0::test_decode_calls();
+        assert(virtual_fat::read_sector(cluster_lba(
+            fs, cluster, (offset / 512) % fs.sectors_per_cluster), sector));
+        assert(zx0::test_decode_calls() - before ==
+               (type == program_store::ProgramType::TINYBASIC ? 1U : 0U));
+        const u32 count = encoded.size() - offset < 512
+            ? encoded.size() - offset : 512;
+        assert(memcmp(sector, encoded.data() + offset, count) == 0);
+        for(u32 i = count; i < 512; ++i) assert(sector[i] == 0);
+      }
+    }
+    // Stored sizes must not hide corruption when reading file contents.
+    u32 record_sector;
+    u16 record_len;
+    assert(program_store::test_file_record_location(id, record_sector, record_len));
+    u8 bytes[4096];
+    const u32 base = record_sector * 4096;
+    assert(flash.readByteArray(base, bytes, sizeof(bytes)));
+    bool corrupted = false;
+    for(u32 i = 0; i + record_len <= sizeof(bytes); ++i) {
+      if(bytes[i] == 'R' && bytes[i + 1] == '6' &&
+         read_le16(bytes + i, 4) == id && bytes[i + 2] == 0x7F) {
+        SPIFlash::corrupt(base + i + 12, bytes[i + 12] ^ 1U);
+        corrupted = true;
+      }
+    }
+    assert(corrupted);
+    u8 sector[512];
+    assert(!virtual_fat::read_sector(cluster_lba(fs, id + 2), sector));
+  }
+}
+
 static void expect_large_file(u16 id, const std::vector<u8>& expected);
 
 static void test_text_import_uses_sector_cache(void) {
@@ -3116,6 +3235,8 @@ int main(void) {
   test_fast_usb_cache_is_atomic_and_defers_spi();
   test_optional_display_cache_span();
   test_metadata_only_recovery_does_not_redecode_unchanged_text();
+  test_text_directory_sizes_need_no_decode();
+  test_streaming_utf8_export_and_size_invalidation();
   test_text_import_uses_sector_cache();
   test_usb_commit_uses_available_cache_for_zx0();
   test_host_deletes_file_via_directory();

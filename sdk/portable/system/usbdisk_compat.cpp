@@ -191,13 +191,6 @@ extern "C" void mk61_usbdisk_restart_startup_budget(void) {
   startup_recovery_expired = false;
 }
 
-extern "C" u8* mk61_usbdisk_empty_stage_scratch(u32 size) {
-  if(!stage_keys_valid || stage_key_count != 0 || size > sizeof(stage_keys)) {
-    return nullptr;
-  }
-  return reinterpret_cast<u8*>(stage_keys);
-}
-
 namespace program_store {
 
 u32 media_revision() {
@@ -328,6 +321,24 @@ bool vfat_stage_write(u32 block, const u8* data) {
     stage_keys_valid = false;
   }
   return ok;
+}
+
+bool exported_size_id(u16 id, u32& size) {
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_EXPORTED_SIZE,
+              id, 0, &size) != 0;
+}
+
+static int consume_file_byte(void* context, u8 value) {
+  const auto& sink = *(const FileSink*) context;
+  return sink.next(sink.context, value);
+}
+
+bool stream_file_id(u16 id, const FileSink& sink) {
+  if(sink.next == nullptr) return false;
+  mk61_service_usbdisk_sink request = {
+      (void*) &sink, consume_file_byte};
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_STREAM_FILE,
+               id, 0, &request) != 0;
 }
 bool vfat_stage_read(u32 block, u8* data) {
   return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_READ,

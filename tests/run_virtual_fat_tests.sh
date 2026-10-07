@@ -10,6 +10,7 @@ fi
 out="${TMPDIR:-/tmp}/virtual_fat_self_test"
 module_out="${TMPDIR:-/tmp}/virtual_fat_module_self_test"
 proxy_out="${TMPDIR:-/tmp}/virtual_fat_proxy_self_test"
+stream_out="${TMPDIR:-/tmp}/portable_usbdisk_stream_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -71,3 +72,11 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$proxy_out"
 
 "$proxy_out"
+
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" -DMK61_BUILD_USBDISK_MODULE \
+  -I"$root/sdk/portable/system" -I"$root/sdk/portable/include" \
+  -I"$root/code" \
+  "$root/tests/portable_usbdisk_stream_self_test.cpp" \
+  "$root/sdk/portable/system/usbdisk_compat.cpp" -o "$stream_out"
+"$stream_out"
