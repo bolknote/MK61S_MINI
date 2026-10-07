@@ -2,6 +2,7 @@
 #if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
 #include <string.h>
 #include "language_vm_resident.hpp"
+#include "language_vm_flow.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #if MK61_SCREEN_BUFFER_LOAN && MK61_OVERLAY_LANGUAGE_VM
@@ -61,6 +62,7 @@ bool is_index(Language language, loadable_module::Command command) {
                          ? loadable_module::Command::TINYBASIC_RUN_INDEX
                          : loadable_module::Command::FOCAL_RUN_INDEX);
 }
+#if !MK61_OVERLAY_LANGUAGE_VM
 uint32_t run_status(Language language, loadable_module::Command command, Error error) {
   using C = loadable_module::Command;
   if (language == Language::BASIC) {
@@ -75,94 +77,36 @@ uint32_t run_status(Language language, loadable_module::Command command, Error e
     return error == Error::NONE ? 0 : error == Error::STOPPED ? 1 : 3;
   return error == Error::NONE;
 }
+#endif
 #if MK61_OVERLAY_LANGUAGE_VM
-loadable_module::RuntimeStatus overlay_call(loadable_module::Kind kind,
-    loadable_module::Command command, void* payload) {
-  using namespace loadable_module;
+#if defined(LANGUAGE_VM_HOST_TEST)
+app_flow::Status flow_invoke(void*, const app_flow::Target& target, app_flow::Step& step) {
   uint32_t result = 0;
-#if defined(LANGUAGE_VM_HOST_TEST)
-  auto status = language_vm_test::overlay(kind, Command::LANGUAGE_VM_INFO, nullptr, result);
-#else
-  auto status = invoke(kind, Command::LANGUAGE_VM_INFO, 0, 0, 0, 0, result);
-#endif
-  if (status != RuntimeStatus::OK) return status;
-  if (result != (kind == Kind::LANGUAGE_VM ? OVERLAY_MAGIC : INPUT_MAGIC))
-    return RuntimeStatus::INCOMPATIBLE_FIRMWARE;
-#if defined(LANGUAGE_VM_HOST_TEST)
-  status = language_vm_test::overlay(kind, command, payload, result);
-#else
-  status = invoke(kind, command, (uint32_t)(uintptr_t)payload, 0, 0, 0, result);
-#endif
-  return status != RuntimeStatus::OK ? status : result == 1 ? RuntimeStatus::OK
-                                                          : RuntimeStatus::CORRUPT_MODULE;
+  const auto info = language_vm_test::overlay((loadable_module::Kind)target.kind,
+      loadable_module::Command::APP_FLOW_INFO, nullptr, result);
+  if(info != loadable_module::RuntimeStatus::OK) return (app_flow::Status)info;
+  if(result != MK61_APP_FLOW_MAGIC) return MK61_FLOW_INCOMPATIBLE;
+  const auto status = language_vm_test::overlay((loadable_module::Kind)target.kind,
+      loadable_module::Command::APP_FLOW_STEP, &step, result);
+  return status != loadable_module::RuntimeStatus::OK ? (app_flow::Status)status
+      : result == 1 ? MK61_FLOW_OK : MK61_FLOW_CORRUPT;
 }
-// The expression image borrows the unused upper value-stack slots during
-// INPUT. No C-stack buffer, additional arena, or simultaneous APP is needed.
-__attribute__((noinline)) loadable_module::RuntimeStatus read_input(
-    ExecuteRequest& execution, ExecutionState& state) {
-  using namespace loadable_module;
-  if (state.prompt_offset > execution.image_size ||
-      state.prompt_length > execution.image_size - state.prompt_offset ||
-      state.control.sp >= INPUT_STACK_CAPACITY)
-    return RuntimeStatus::CORRUPT_MODULE;
-  uint8_t* const image = input_image_storage(state);
-  InputRequest input = {};
-  input.size = sizeof(input); input.version = REQUEST_VERSION;
-  input.prompt = (const char*)execution.image + state.prompt_offset;
-  input.prompt_length = state.prompt_length;
-  input.image = image; input.capacity = INPUT_IMAGE_CAPACITY; input.language = state.language;
-  for (;;) {
-    const auto status = overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_INPUT, &input);
-    if (status != RuntimeStatus::OK) return status;
-    if (input.result == InputResult::CANCELLED) {
-      state.cancelled = true;
-      state.normal_stop = state.language == Language::BASIC && execution.mode == 0;
-      return RuntimeStatus::OK;
-    }
-    if (input.result == InputResult::VALUE && state.language == Language::FOCAL) {
-      state.input_value = input.value; return RuntimeStatus::OK;
-    }
-    if (input.result != InputResult::EXPRESSION || state.language != Language::BASIC ||
-        input.image_size < HEADER_SIZE || input.image_size > INPUT_IMAGE_CAPACITY)
-      return RuntimeStatus::CORRUPT_MODULE;
-    ExecuteRequest expression = execution;
-    expression.image = image; expression.image_size = input.image_size;
-    ValidatedImage validated = {};
-    OverlayRequest request = {sizeof(request), REQUEST_VERSION, &expression,
-                              &state, &validated, OverlayAction::EXPRESSION, {0, 0, 0}};
-    const auto checked = overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_VALIDATE, &request);
-    if (checked != RuntimeStatus::OK) return checked;
-    if (expression.result.error != Error::NONE) return RuntimeStatus::CORRUPT_MODULE;
-    const auto evaluated = overlay_call(Kind::LANGUAGE_VM, Command::LANGUAGE_VM_RUN, &request);
-    if (evaluated != RuntimeStatus::OK) return evaluated;
-    if (state.cancelled || expression.result.error == Error::NONE) return RuntimeStatus::OK;
-    input.invalid = true;
-  }
-}
+#endif
 loadable_module::RuntimeStatus execute_overlay(ExecuteRequest& execution,
-                                               ExecutionState& state) {
-  using namespace loadable_module;
-  ValidatedImage validated = {};
-  OverlayRequest request = {sizeof(request), REQUEST_VERSION, &execution,
-                            &state, &validated, OverlayAction::START, {0, 0, 0}};
-  const auto checked = overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_VALIDATE, &request);
-  if (checked != RuntimeStatus::OK || execution.result.error != Error::NONE) return checked;
-  for (;;) {
-    const auto status = overlay_call(Kind::LANGUAGE_VM, Command::LANGUAGE_VM_RUN, &request);
-    if (status != RuntimeStatus::OK) return status;
-    if (execution.result.error != Error::YIELDED)
-      return overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_FINISH, &request);
-    const auto input_status = read_input(execution, state);
-    request.action = input_status != RuntimeStatus::OK || state.cancelled
-                         ? OverlayAction::ABORT : OverlayAction::RESUME;
-    if (input_status != RuntimeStatus::OK) {
-      // Best-effort presentation by a fresh hot APP. Preserve the actual
-      // loader failure, not the generic IO error used for its display.
-      (void)overlay_call(Kind::LANGUAGE_VM, Command::LANGUAGE_VM_RUN, &request);
-      (void)overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_FINISH, &request);
-      return input_status;
-    }
-  }
+    ExecutionState& state, loadable_module::Command original, uint32_t& result) {
+  FlowContext context = {};
+  context.magic = FLOW_CONTEXT_MAGIC;
+  context.original_command = (uint32_t)original;
+  context.program = {sizeof(OverlayRequest), REQUEST_VERSION, &execution,
+                     &state, &context.program_validated, OverlayAction::START, {0, 0, 0}};
+  const auto first = mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_INPUT,
+      MK61_APP_FLOW_SYSTEM_FILE, FLOW_VALIDATE_PROGRAM);
+#if defined(LANGUAGE_VM_HOST_TEST)
+  return (loadable_module::RuntimeStatus)app_flow::run(
+      first, &context, sizeof(context), result, flow_invoke);
+#else
+  return loadable_module::run_flow(first, &context, sizeof(context), result);
+#endif
 }
 #endif
 }  // namespace
@@ -358,7 +302,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
 #if MK61_OVERLAY_LANGUAGE_VM
   auto* continuation = (ExecutionState*)state.data();
   *continuation = {}; continuation->language = language;
-  status = execute_overlay(execution, *continuation);
+  status = execute_overlay(execution, *continuation, original, result);
   if (status != RuntimeStatus::OK) return status;
 #else
   if (!execute_resident(execution)) return RuntimeStatus::INVALID_MODULE;
@@ -373,7 +317,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     *edit_id = request.source_id;
     *edit_position = (execution.result.line << 16) | execution.error_column;
   }
+#if !MK61_OVERLAY_LANGUAGE_VM
   result = run_status(language, original, execution.result.error);
+#endif
   return RuntimeStatus::OK;
 }
 loadable_module::RuntimeStatus invoke_resident(Language language, loadable_module::Command command,

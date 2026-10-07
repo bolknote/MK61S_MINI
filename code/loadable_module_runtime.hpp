@@ -4,6 +4,7 @@
 #include "config.h"
 #include "loadable_module_abi.hpp"
 #include "loadable_module_format.hpp"
+#include "app_flow.hpp"
 
 namespace loadable_module {
 
@@ -48,6 +49,11 @@ RuntimeStatus invoke(Kind kind, Command command,
                      u32 argument0, u32 argument1,
                      u32 argument2, u32 argument3,
                      u32& result);
+// A phase is an APP-defined continuation, not a native return address.
+// Host actions are local to this invocation and run after APP has returned.
+using FlowHost = RuntimeStatus (*)(void* context, u32 operation, u32& result);
+RuntimeStatus run_flow(app_flow::Target first, void* context, u32 context_size,
+                       u32& result, FlowHost host = nullptr);
 // A pinned System APP cannot be replaced or evicted until the matching
 // unpin(). This is used by long-lived hardware sessions such as MSC.
 RuntimeStatus pin(Kind kind);

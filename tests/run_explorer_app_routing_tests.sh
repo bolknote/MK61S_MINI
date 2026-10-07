@@ -33,6 +33,7 @@ if [[ "$app" == 1 ]]; then app_flags=(-DMK61_BUILD_EXPLORER_MODULE=1); fi
     "${app_flags[@]}" \
     -I"$root/code" "$root/tests/explorer_ui_self_test.cpp" \
     "$root/code/explorer_autoexec.cpp" \
+    "$root/code/app_flow.cpp" \
     -o "$work/explorer-ui"
   "$work/explorer-ui"
 done

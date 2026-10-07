@@ -315,6 +315,69 @@ RuntimeStatus invoke(Kind kind, Command command,
   return RuntimeStatus::OK;
 }
 
+namespace {
+static_assert((u32)RuntimeStatus::OK == MK61_FLOW_OK &&
+              (u32)RuntimeStatus::IO_ERROR == MK61_FLOW_IO_ERROR &&
+              (u32)RuntimeStatus::BUSY == MK61_FLOW_BUSY &&
+              (u32)RuntimeStatus::CORRUPT_MODULE == MK61_FLOW_CORRUPT &&
+              (u32)RuntimeStatus::INCOMPATIBLE_FIRMWARE == MK61_FLOW_INCOMPATIBLE,
+              "APP flow status wire values changed");
+
+bool flow_overlaps_app(const void* data, usize size) {
+  if(!size || !g_app_cache.ok()) return false;
+  const uintptr_t begin = (uintptr_t)data, app = (uintptr_t)g_app_cache.data();
+  if(begin > UINTPTR_MAX - size) return true;
+  return begin < app + g_app_cache.size() && app < begin + size;
+}
+
+app_flow::Status flow_invoke(void* backend, const app_flow::Target& target,
+                             app_flow::Step& step) {
+  // This is deliberately not a recursive native APP invocation. In
+  // particular a pinned USB disk session cannot participate in an overlay.
+  if(g_call_depth || g_pin_depth) return MK61_FLOW_BUSY;
+  if(target.kind == MK61_APP_FLOW_HOST) {
+    const FlowHost host = *(FlowHost*)backend;
+    if(!host) return MK61_FLOW_DISABLED;
+    u32 result = 0;
+    const RuntimeStatus status = host(step.context, target.phase, result);
+    mk61_app_flow_return(&step, result, (u32)status);
+    return MK61_FLOW_OK;
+  }
+  if(flow_overlaps_app(step.context, step.context_size) ||
+     flow_overlaps_app(&step, sizeof(step)))
+    return MK61_FLOW_CORRUPT;
+  const Kind kind = (Kind)target.kind;
+  const RuntimeStatus loaded = load(kind, target.file_id);
+  if(loaded != RuntimeStatus::OK) return (app_flow::Status)loaded;
+  if(flow_overlaps_app(step.context, step.context_size) ||
+     flow_overlaps_app(&step, sizeof(step))) return MK61_FLOW_CORRUPT;
+  if(target.flags & MK61_APP_FLOW_DIRECT) {
+    const u32 offset = (u32)(target.flags >> 1) * 4U;
+    if(offset > step.context_size || step.context_size - offset < 16U ||
+       ((uintptr_t)step.context & 3U)) return MK61_FLOW_CORRUPT;
+    const u32* args = (const u32*)((const u8*)step.context + offset);
+    g_call_depth++;
+    const u32 result = g_active_entry(target.phase, args[0], args[1], args[2], args[3]);
+    g_call_depth--;
+    mk61_app_flow_return(&step, result, MK61_FLOW_OK);
+    return MK61_FLOW_OK;
+  }
+  g_call_depth++;
+  const u32 info = g_active_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
+  g_call_depth--;
+  if(info != MK61_APP_FLOW_MAGIC) return MK61_FLOW_INCOMPATIBLE;
+  g_call_depth++;
+  const u32 result = g_active_entry(MK61_APP_FLOW_STEP, (u32)(uintptr_t)&step, 0, 0, 0);
+  g_call_depth--;
+  return result == 1 ? MK61_FLOW_OK : MK61_FLOW_CORRUPT;
+}
+}
+
+RuntimeStatus run_flow(app_flow::Target first, void* context, u32 size,
+                       u32& result, FlowHost host) {
+  return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &host);
+}
+
 RuntimeStatus pin(Kind kind) {
   if(g_pin_depth != 0) {
     if(g_pinned_kind != kind || g_pin_depth == 0xFFU) {
@@ -355,6 +418,17 @@ RuntimeStatus run_app(u16 file_id, u32& result) {
   if(loaded != RuntimeStatus::OK) return loaded;
   if(g_active_entry == nullptr || g_active_kind != Kind::APPLICATION) {
     return RuntimeStatus::INVALID_MODULE;
+  }
+  if(g_call_depth || g_pin_depth) return RuntimeStatus::BUSY;
+  g_call_depth++;
+  const u32 flow_info = g_active_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
+  g_call_depth--;
+  if(flow_info == MK61_APP_FLOW_MAGIC) {
+    // Root state is independent of every relocatable native image. Larger
+    // system workflows provide their own context through run_flow().
+    alignas(8) u8 context[MK61_APP_FLOW_USER_CONTEXT_SIZE] = {};
+    return run_flow(mk61_app_flow_to(MK61_APP_KIND_APPLICATION, file_id, 0),
+                    context, sizeof(context), result);
   }
   g_call_depth++;
   result = g_active_entry((u32) Command::APPLICATION_RUN,

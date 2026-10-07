@@ -12,6 +12,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DMK61_DISPLAY_UC1609 -DMK61_ENABLE_USB_SCREEN=1 -I"$root/code" \
   "$root/tests/language_vm_overlay_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
+  "$root/code/app_flow.cpp" "$root/code/language_vm_flow.cpp" \
   "$root/code/language_vm_validation.cpp" \
   "$root/code/language_bytecode.cpp" "$root/code/shared_memory.cpp" \
   "$root/code/workspace_swap.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
@@ -23,6 +24,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DMK61_DISPLAY_UC1609 -DMK61_ENABLE_USB_SCREEN="$usb" -DMK61_SCREEN_BUFFER_LOAN=1 \
   -I"$root/code" "$root/tests/language_vm_overlay_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
+  "$root/code/app_flow.cpp" "$root/code/language_vm_flow.cpp" \
   "$root/code/language_vm_validation.cpp" "$root/code/language_bytecode.cpp" \
   "$root/code/shared_memory.cpp" "$root/code/workspace_swap.cpp" \
   "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" -o "$work/screen-loan"
@@ -33,6 +35,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DCONFIG -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST -I"$root/code" \
   "$root/tests/language_vm_overlay_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
+  "$root/code/app_flow.cpp" "$root/code/language_vm_flow.cpp" \
   "$root/code/language_vm_validation.cpp" "$root/code/language_bytecode.cpp" \
   "$root/code/shared_memory.cpp" "$root/code/workspace_swap.cpp" \
   "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" -o "$work/no-bulk"

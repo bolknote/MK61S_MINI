@@ -11,6 +11,9 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
 }
 
 extern "C" u32 mk61_app_command(u32 command, u32 a, u32 b, u32, u32) {
+  if(command == MK61_APP_FLOW_INFO) return MK61_APP_FLOW_MAGIC;
+  if(command == MK61_APP_FLOW_STEP)
+    return explorer_ui::flow_step((mk61_app_flow*)(usize)a);
   if(command != (u32) loadable_module::Command::EXPLORER_SELECT ||
      a == 0 || b != sizeof(loadable_module::ExplorerSession)) return 1;
   return explorer_ui::select(

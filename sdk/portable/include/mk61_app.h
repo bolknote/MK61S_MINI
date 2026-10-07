@@ -2,6 +2,7 @@
 #define MK61_APP_H
 
 #include "loadable_app_api.h"
+#include "app_flow.h"
 #include "loadable_app_services.h"
 
 #ifdef __cplusplus
@@ -40,6 +41,9 @@ enum mk61_app_result {
 
 /* Optional file-handler hook. main() is called for a direct APP launch. */
 uint32_t mk61_app_open_file(uint32_t file_id);
+/* Optional: defining this hook advertises cooperative APP flow support.
+ * Return 1 after filling the next action; 0 rejects a malformed request. */
+uint32_t mk61_app_flow_step(mk61_app_flow* flow);
 
 /* Advanced hooks shared by ordinary and canonical System APP. The SDK owns
  * mk61_module_entry and validates/binds the host before either hook runs.

@@ -1815,73 +1815,75 @@ bool program_store_choose_save_target(program_store::ProgramType type,
   return true;
 }
 
+static loadable_module::RuntimeStatus explorer_flow_action(
+    void* context, u32 operation, u32& result) {
+  auto& session = *(loadable_module::ExplorerSession*)context;
+  if(operation != (u32)session.action) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+  result = 0;
+  program_store::Entry entry = {};
+  const bool has_entry = session.selected_id != program_store::INVALID_ID &&
+      program_store::entry_by_id(session.selected_id, entry);
+  switch(session.action) {
+    case loadable_module::ExplorerAction::LOAD:
+      result = has_entry && load_mk61_entry(entry); break;
+    case loadable_module::ExplorerAction::RUN:
+    case loadable_module::ExplorerAction::AUTOEXEC:
+      result = has_entry && run_entry(entry); break;
+    case loadable_module::ExplorerAction::VIEW:
+      if(has_entry) view_entry(entry);
+      break;
+    case loadable_module::ExplorerAction::EDIT:
+      if(has_entry) edit_entry(entry);
+      break;
+    case loadable_module::ExplorerAction::NEW_DIRECTORY:
+      create_directory(session.directory_id); break;
+    case loadable_module::ExplorerAction::RENAME:
+      if(has_entry) rename_entry(entry);
+      break;
+    case loadable_module::ExplorerAction::MOVE:
+      if(has_entry) move_entry(entry);
+      break;
+    case loadable_module::ExplorerAction::DELETE_ENTRY:
+      if(has_entry) delete_entry(entry);
+      break;
+    default: return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+  }
+  return loadable_module::RuntimeStatus::OK;
+}
+#if MK61_EXPLORER_IS_BUILTIN
+static app_flow::Status builtin_explorer_flow(
+    void*, const app_flow::Target& target, app_flow::Step& step) {
+  if(target.kind == MK61_APP_KIND_EXPLORER)
+    return explorer_ui::flow_step(&step) ? MK61_FLOW_OK : MK61_FLOW_CORRUPT;
+  if(target.kind != MK61_APP_FLOW_HOST) return MK61_FLOW_INVALID_MODULE;
+  u32 result = 0;
+  const auto status = explorer_flow_action(step.context, target.phase, result);
+  mk61_app_flow_return(&step, result, (u32)status);
+  return MK61_FLOW_OK;
+}
+#endif
 bool program_store_explorer_select(void) {
   MK61DisplayTextScope text_scope(main_lcd());
   loadable_module::ExplorerSession session = {
-      sizeof(loadable_module::ExplorerSession),
-      program_store::ROOT_ID,
-      program_store::INVALID_ID,
-      0,
-      loadable_module::ExplorerAction::NONE,
-      0,
-      {0}};
-  while(true) {
-    u32 result = 1;
-    loadable_module::RuntimeStatus status = loadable_module::RuntimeStatus::OK;
+      sizeof(loadable_module::ExplorerSession), program_store::ROOT_ID,
+      program_store::INVALID_ID, 0, loadable_module::ExplorerAction::NONE, 0, {0}};
+  const auto first = mk61_app_flow_to(
+      MK61_APP_KIND_EXPLORER, MK61_APP_FLOW_SYSTEM_FILE, 0);
+  u32 result = 0;
 #if MK61_EXPLORER_IS_BUILTIN
-    result = explorer_ui::select(session) ? 0 : 1;
+  const auto status = (loadable_module::RuntimeStatus)app_flow::run(
+      first, &session, sizeof(session), result, builtin_explorer_flow);
 #else
-    status = loadable_module::invoke(
-        loadable_module::Kind::EXPLORER,
-        loadable_module::Command::EXPLORER_SELECT,
-        (u32) (usize) &session, sizeof(session), 0, 0, result);
+  const auto status = loadable_module::run_flow(
+      first, &session, sizeof(session), result, explorer_flow_action);
 #endif
-    if(status != loadable_module::RuntimeStatus::OK || result != 0) {
-      show_message("Explorer error", M8("Нет проводника"),
-                   loadable_module::status_text(status),
-                   M8("System/EXPLORER.APP"));
-      kbd::get_key_wait();
-      return action::MENU_BACK;
-    }
-    if(session.action == loadable_module::ExplorerAction::EXIT)
-      return action::MENU_BACK;
-
-    program_store::Entry entry = {};
-    const bool has_entry = session.selected_id != program_store::INVALID_ID &&
-        program_store::entry_by_id(session.selected_id, entry);
-    switch(session.action) {
-      case loadable_module::ExplorerAction::LOAD:
-        if(has_entry && load_mk61_entry(entry)) return action::MENU_EXIT;
-        break;
-      case loadable_module::ExplorerAction::RUN:
-      case loadable_module::ExplorerAction::AUTOEXEC:
-        if(has_entry && run_entry(entry)) return action::MENU_EXIT;
-        break;
-      case loadable_module::ExplorerAction::VIEW:
-        if(has_entry) view_entry(entry);
-        break;
-      case loadable_module::ExplorerAction::EDIT:
-        if(has_entry) edit_entry(entry);
-        break;
-      case loadable_module::ExplorerAction::NEW_DIRECTORY:
-        create_directory(session.directory_id);
-        break;
-      case loadable_module::ExplorerAction::RENAME:
-        if(has_entry) rename_entry(entry);
-        break;
-      case loadable_module::ExplorerAction::MOVE:
-        if(has_entry) move_entry(entry);
-        break;
-      case loadable_module::ExplorerAction::DELETE_ENTRY:
-        if(has_entry) delete_entry(entry);
-        break;
-      case loadable_module::ExplorerAction::NONE:
-      case loadable_module::ExplorerAction::EXIT:
-        break;
-    }
-    session.action = loadable_module::ExplorerAction::NONE;
-    session.selected_id = program_store::INVALID_ID;
+  if(status != loadable_module::RuntimeStatus::OK) {
+    show_message("Explorer error", M8("Нет проводника"),
+                 loadable_module::status_text(status), M8("System/EXPLORER.APP"));
+    kbd::get_key_wait();
+    return action::MENU_BACK;
   }
+  return result ? action::MENU_EXIT : action::MENU_BACK;
 }
 
 bool program_store_view_entry(const program_store::Entry& entry) {

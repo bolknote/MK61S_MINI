@@ -33,7 +33,8 @@ enum mk61_service_capability {
   /* Private storage primitives used only by the canonical USBDISK.APP. */
   MK61_SERVICE_CAP_USBDISK = 1U << 15,
   /* Directory traversal and handoff policy used by EXPLORER.APP. */
-  MK61_SERVICE_CAP_EXPLORER = 1U << 16
+  MK61_SERVICE_CAP_EXPLORER = 1U << 16,
+  MK61_SERVICE_CAP_APP_FLOW = 1U << 17
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
