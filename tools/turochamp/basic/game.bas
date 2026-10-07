@@ -1,3 +1,4 @@
+IF RESULT>0 G.:result
 REPDEP=0
 CALL status :status
 :status
@@ -59,4 +60,11 @@ CALL help :helped
 :helped
 G.:show
 :end
-JUMP result
+G.:result
+:result
+UI_MESSAGE=4
+:result_show
+CALL board :result_key
+:result_key
+IF UI_KEY#19 G.:result_show
+JUMP init

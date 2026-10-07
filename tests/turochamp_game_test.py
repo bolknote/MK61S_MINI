@@ -244,6 +244,9 @@ def keyboard(b):
         assert b.ask('ui '+keys) == chess.STARTING_FEN
     b.ask('ui 19 21 16 16 16 19')
     assert getv(b, 'RESULT') == 2
+    # The result dialog shares game.tbi and OK still resets the whole game.
+    assert b.ask('ui 19 21 16 16 16 19 19') == chess.STARTING_FEN
+    assert getv(b, 'RESULT') == 0 and getv(b, 'HCOUNT') == 0
     b.ask('ui 16 16 19 21 16 16 19 19')
     assert getv(b, 'RESULT') == 9
     # A new game returns to side selection with all board/history data reset.

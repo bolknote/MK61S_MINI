@@ -170,23 +170,21 @@ void ui(int id,const std::vector<int>& logical) {
 int main(int argc,char**argv) {
   try {
     if(argc!=2)return 2;
-    const char* names[]={"init","game","board","pseudo","legal","attack","make",
-      "unmake","status","repeat","eval","search","turn","history","menu","promote",
-      "claim","result","pawns","castle","mobility","threat","ep","rkey","rstep","node","walk","claims","help"};
-    for(int id=1;id<=29;id++) {
-      std::ifstream file(std::string(argv[1])+"/"+names[id-1]+".tbi");
-      if(file) {
+    for(const auto& module:tc::MODULES) {
+      std::ifstream file(std::string(argv[1])+"/"+module.name+".tbi");
+      if(!file)throw std::runtime_error(std::string("missing BASIC module ")+module.name);
+      {
         const std::string utf8(std::istreambuf_iterator<char>(file),{});
         std::string m8(utf8.size(),'\0');usize size=0;
         if(!mk8::from_utf8((const u8*)utf8.data(),utf8.size(),
                            (u8*)m8.data(),m8.size(),size))
           throw std::runtime_error("invalid source encoding");
-        m8.resize(size);parts[id]=m8;
+        m8.resize(size);parts[module.id]=m8;
 #ifdef MK61_LANGUAGE_VM_TEST
         const auto result=language_vm::compile(language_vm::Language::BASIC,
             m8.data(),(uint16_t)m8.size(),nullptr,language_vm::MAX_IMAGE);
         if(result.error!=language_vm::Error::NONE)
-          throw std::runtime_error(std::string(names[id-1])+": "+
+          throw std::runtime_error(std::string(module.name)+": "+
               language_vm::error_name(result.error)+" at "+std::to_string(result.source_offset));
 #endif
       }

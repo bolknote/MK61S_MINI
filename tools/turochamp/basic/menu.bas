@@ -32,7 +32,7 @@ IF UI_KEY#19 G.:game_menu
 ON UI_ACTION+1 G.:back,:claim,:offer,:resign,:new
 :resign
 RESULT=(SIDE=-1)+2*(SIDE=1);DRAW_REASON=9
-JUMP result
+JUMP game
 :claim
 JUMP claim
 :offer
@@ -48,7 +48,7 @@ IF UI_KEY#22 G.:ask_offer
 G.:back
 :draw
 RESULT=9;DRAW_REASON=9
-JUMP result
+JUMP game
 :new
 JUMP init
 :back

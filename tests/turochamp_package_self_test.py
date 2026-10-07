@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
 sys.path.insert(0, str(ROOT/'tools/turochamp'))
 from m8_codec import encode
-from layout import MODULES, MAX_ARRAY_INDEX, SOURCE_BUDGET
+from layout import MODULES, LOCAL_ONLY, MAX_ARRAY_INDEX, SOURCE_BUDGET
 GAME = ROOT/'programs/games/Turochamp'
 SOURCE = ROOT/'tools/turochamp/basic'
 
@@ -43,6 +43,7 @@ def main():
     for tool in ('assemble.py', 'font.py'):
         subprocess.run([sys.executable, ROOT/'tools/turochamp'/tool, '--check'], check=True)
     assert {p.stem for p in GAME.glob('*.tbi')} == set(MODULES)
+    assert {p.stem for p in SOURCE.glob('*.bas')} == set(MODULES) | LOCAL_ONLY
     driver = (GAME/'autoexec.m61').read_text()
     assert len(driver.encode())+driver.count('\n') <= 1536
     for name, ident in MODULES.items():
@@ -69,6 +70,10 @@ def main():
         for literal in re.findall(r'"([^"]*)"', text):
             assert set(encode(literal)) <= glyphs.keys(), (name,literal)
         template = (SOURCE/(name+'.bas')).read_text()
+        targets = set(re.findall(r'^(?:CALL|JUMP) (\w+)',template,re.M))
+        assert targets <= MODULES.keys(), (name, targets - MODULES.keys())
+        local = set(re.findall(r'^LOCAL (\w+)',template,re.M))
+        assert local <= set(MODULES) | LOCAL_ONLY, (name, local)
         graph[name] = re.findall(r'^CALL (\w+) ',template,re.M)
         largest = max(largest,cost)
     def depth(name, ancestors=()):
@@ -83,7 +88,7 @@ def main():
                                  for y,row in enumerate(rows))
     assert glyphs[ord('G')] == (0,)*7
     assert glyphs[ord('T')] == (127,)*7
-    print(f'Turochamp package: 29 BASIC parts, maximum {largest} M8/CRLF bytes, '
+    print(f'Turochamp package: {len(MODULES)} BASIC parts, maximum {largest} M8/CRLF bytes, '
           f'{len(font_data)}-byte 7x7 font, C6 quotas and call stack PASS')
 
 

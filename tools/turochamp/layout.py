@@ -23,9 +23,15 @@ FIELDS.update(HIST=184, STACK=222, RETURNS=278, GEN_CURSOR=288,
               H_KEEP=332, DRAW_REASON=333, GAIN=334, TMP=335,
               DIRN=336, DIRS=344)
 
-MODULES = {name: i + 1 for i, name in enumerate(
-    "init game board pseudo legal attack make unmake status repeat eval search "
-    "turn history menu promote claim result pawns castle mobility threat ep rkey rstep node walk claims help".split())}
+# Preserve the remaining M61 IDs when removing or merging parts.
+MODULES = {
+    "init": 1, "game": 2, "board": 3, "pseudo": 4, "legal": 5,
+    "make": 7, "unmake": 8, "status": 9, "repeat": 10, "eval": 11,
+    "search": 12, "turn": 13, "history": 14, "menu": 15, "promote": 16,
+    "claim": 17, "castle": 20, "mobility": 21, "threat": 22, "ep": 23,
+    "rkey": 24, "rstep": 25, "node": 26, "claims": 28, "help": 29,
+}
+LOCAL_ONLY = {"attack", "pawns"}
 
 SOURCE_BUDGET = 2800  # M8 bytes, including conservative CRLF overhead.
 MAX_ARRAY_INDEX = 351

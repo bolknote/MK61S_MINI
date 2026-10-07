@@ -112,7 +112,6 @@ constexpr int M_GAME=2;
 constexpr int M_BOARD=3;
 constexpr int M_PSEUDO=4;
 constexpr int M_LEGAL=5;
-constexpr int M_ATTACK=6;
 constexpr int M_MAKE=7;
 constexpr int M_UNMAKE=8;
 constexpr int M_STATUS=9;
@@ -124,8 +123,6 @@ constexpr int M_HISTORY=14;
 constexpr int M_MENU=15;
 constexpr int M_PROMOTE=16;
 constexpr int M_CLAIM=17;
-constexpr int M_RESULT=18;
-constexpr int M_PAWNS=19;
 constexpr int M_CASTLE=20;
 constexpr int M_MOBILITY=21;
 constexpr int M_THREAT=22;
@@ -133,7 +130,34 @@ constexpr int M_EP=23;
 constexpr int M_RKEY=24;
 constexpr int M_RSTEP=25;
 constexpr int M_NODE=26;
-constexpr int M_WALK=27;
 constexpr int M_CLAIMS=28;
 constexpr int M_HELP=29;
+struct Module { int id; const char* name; };
+constexpr Module MODULES[] = {
+  {M_INIT, "init"},
+  {M_GAME, "game"},
+  {M_BOARD, "board"},
+  {M_PSEUDO, "pseudo"},
+  {M_LEGAL, "legal"},
+  {M_MAKE, "make"},
+  {M_UNMAKE, "unmake"},
+  {M_STATUS, "status"},
+  {M_REPEAT, "repeat"},
+  {M_EVAL, "eval"},
+  {M_SEARCH, "search"},
+  {M_TURN, "turn"},
+  {M_HISTORY, "history"},
+  {M_MENU, "menu"},
+  {M_PROMOTE, "promote"},
+  {M_CLAIM, "claim"},
+  {M_CASTLE, "castle"},
+  {M_MOBILITY, "mobility"},
+  {M_THREAT, "threat"},
+  {M_EP, "ep"},
+  {M_RKEY, "rkey"},
+  {M_RSTEP, "rstep"},
+  {M_NODE, "node"},
+  {M_CLAIMS, "claims"},
+  {M_HELP, "help"},
+};
 }

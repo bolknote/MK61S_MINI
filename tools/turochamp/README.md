@@ -9,6 +9,10 @@ Their bodies have no M61 calls and are expanded from one shared template.
 The BASIC uses ON GOTO/GOSUB for return phases, glyphs and menu dispatch.
 DATA/READ initializes the back rank and move offsets; ELSE selects the
 board orientation heading. These require the extended TinyBASIC syntax.
+The package has 25 BASIC parts. Search descent and traversal share node.tbi
+and use local GOTOs; the result dialog shares game.tbi. Attack and pawn
+services remain shared source templates, embedded only where needed.
+Assembly emits the runtime module registry and removes obsolete TBI parts.
 
 Reference: Martin C. Doege's public-domain `PyTuroChamp/pyturochamp.py`,
 which also underlies the supplied nimTUROCHAMP application. The historical

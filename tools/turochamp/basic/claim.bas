@@ -14,7 +14,7 @@ IF UI_KEY=22 G.:back
 IF UI_KEY#19 G.:confirm
 RESULT=7;IF INT(CLAIM/2) MOD 2=1 RESULT=8
 DRAW_REASON=RESULT
-JUMP result
+JUMP game
 :unavailable
 C.:P."НЕТ ОСНОВАНИЙ ДЛЯ НИЧЬЕЙ":P."ОК - НАЗАД":PAU.
 :back

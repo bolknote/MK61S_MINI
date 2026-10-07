@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from m8_codec import encode
-from layout import FIELDS, MODULES, SOURCE_BUDGET
+from layout import FIELDS, MODULES, LOCAL_ONLY, SOURCE_BUDGET
 
 DEST = ROOT / "programs/games/Turochamp"
 TEMPLATES = Path(__file__).parent / "basic"
@@ -111,7 +111,9 @@ def header() -> str:
            "#pragma once", "namespace tc {"]
     out += [f"constexpr int {name}={value};" for name, value in FIELDS.items()]
     out += [f"constexpr int M_{name.upper()}={value};" for name, value in MODULES.items()]
-    out += ["}"]
+    out += ["struct Module { int id; const char* name; };", "constexpr Module MODULES[] = {"]
+    out += [f'  {{M_{name.upper()}, "{name}"}},' for name in MODULES]
+    out += ["};", "}"]
     return "\n".join(out)+"\n"
 
 
@@ -120,10 +122,19 @@ def main() -> None:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     DEST.mkdir(parents=True, exist_ok=True)
-    outputs = {DEST / f"{p.stem}.tbi": assemble(p.stem, p.read_text())
-               for p in sorted(TEMPLATES.glob("*.bas"))}
+    templates = {p.stem for p in TEMPLATES.glob("*.bas")}
+    if templates != set(MODULES) | LOCAL_ONLY:
+        raise SystemExit("BASIC templates differ from module/local-service registry")
+    outputs = {DEST / f"{name}.tbi": assemble(name, (TEMPLATES / f"{name}.bas").read_text())
+               for name in MODULES}
     outputs[DEST / "autoexec.m61"] = driver()
     outputs[Path(__file__).parent / "layout.hpp"] = header()
+    obsolete = set(DEST.glob("*.tbi")) - outputs.keys()
+    if args.check and obsolete:
+        raise SystemExit("obsolete generated game parts: " + ", ".join(p.name for p in sorted(obsolete)))
+    if not args.check:
+        for path in obsolete:
+            path.unlink()
     for path, data in outputs.items():
         if args.check:
             if not path.is_file() or path.read_text() != data:
