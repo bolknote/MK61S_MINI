@@ -76,7 +76,7 @@ u32 volume_serial(void) {
   const u32 capacity = program_store::ready()
       ? program_store::geometry().capacity_bytes : 0;
   const u32 stable = device_identity::fat_volume_serial(
-      device_identity::read(), 0xC6000000UL ^ capacity);
+      device_identity::read(), 0xC7000000UL ^ capacity);
   return stable ^ program_store::media_revision();
 }
 

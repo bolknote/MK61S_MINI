@@ -34,10 +34,12 @@ void preview(const char* name, const u8* data, u16 size) {
 i32 compile_font(u16 id, u8 role, u8 expected_height,
                  u32 ui_key, u8 flags) {
   u32 result = (u32) (i32) MK61_TEXT_FONT_UNAVAILABLE;
-  const u32 packed = (u32) role | ((u32) expected_height << 8) |
-                     ((u32) flags << 16);
-  if(!invoke(loadable_module::Command::SETUP_FONT_COMPILE,
-             id, packed, ui_key, &result, false)) {
+  u32 arguments[4] = {id, (u32)role | ((u32)expected_height << 8) |
+                          ((u32)flags << 16), ui_key, 0};
+  const auto target = mk61_app_flow_direct(MK61_APP_KIND_SETUP,
+      MK61_APP_FLOW_SYSTEM_FILE, (u32)loadable_module::Command::SETUP_FONT_COMPILE, 0);
+  if(loadable_module::run_flow(target, arguments, sizeof(arguments), result) !=
+      loadable_module::RuntimeStatus::OK) {
     return MK61_TEXT_FONT_UNAVAILABLE;
   }
   return (i32) result;

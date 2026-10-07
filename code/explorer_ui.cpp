@@ -786,6 +786,29 @@ bool select(ExplorerSession& session) {
   }
 }
 
+uint32_t flow_step(mk61_app_flow* flow) {
+  if(!mk61_app_flow_compatible(flow) ||
+     flow->context_size != sizeof(ExplorerSession) || flow->current.phase > 1) return 0;
+  auto& session = *(ExplorerSession*)flow->context;
+  if(flow->current.phase == 1) {
+    if(flow->status != MK61_FLOW_OK) {
+      mk61_app_flow_exit(flow, 0, flow->status); return 1;
+    }
+    if(flow->result && (session.action == ExplorerAction::LOAD ||
+        session.action == ExplorerAction::RUN || session.action == ExplorerAction::AUTOEXEC)) {
+      mk61_app_flow_exit(flow, 1, MK61_FLOW_OK); return 1;
+    }
+    session.action = ExplorerAction::NONE;
+    session.selected_id = program_store::INVALID_ID;
+  }
+  if(!select(session)) return 0;
+  if(session.action == ExplorerAction::EXIT) mk61_app_flow_exit(flow, 0, MK61_FLOW_OK);
+  else mk61_app_flow_call(flow,
+      mk61_app_flow_to(MK61_APP_FLOW_HOST, MK61_APP_FLOW_SYSTEM_FILE,
+                       (uint32_t)session.action), 1);
+  return 1;
+}
+
 } // namespace explorer_ui
 
 #endif

@@ -18,7 +18,7 @@ four reversible plies skip repetition scans, since a cycle needs two moves
 by each side. During computer search the original board is refreshed after
 each root candidate with the accumulated node count.
 
-On F411 the split VM retains an LRU of verified M61 BASIC bytecode in 16 KiB
+On F411 the split VM retains an LRU of verified M61 BASIC bytecode in 24 KiB
 of RAM; C6 media revisions invalidate it. Cached runs preserve all shared
 values and reset execution/DATA cursors, and normal M61 completion keeps the
 hot VM loaded instead of loading the cold input/editor module again.

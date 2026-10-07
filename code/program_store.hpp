@@ -316,6 +316,13 @@ struct StageIndexStats {
 };
 void test_reset_stage_index_stats(void);
 StageIndexStats test_stage_index_stats(void);
+u32 test_catalog_root(void);
+u32 test_catalog_page(u8 page);
+u32 test_catalog_wal_address(u8 record);
+u8 test_catalog_wal_records(void);
+u8 test_catalog_wal_capacity(void);
+bool test_catalog_checkpoint(void);
+bool test_catalog_protects(u32 sector);
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0);
 bool test_file_record_location(u16 id, u32& sector, u16& record_len);

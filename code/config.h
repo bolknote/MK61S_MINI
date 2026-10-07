@@ -504,13 +504,13 @@
 // F401 keeps its existing RAM budget; explicit overrides are qualification-only.
 #ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   #if MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
-    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 16384
+    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 24576
   #else
     #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 0
   #endif
 #endif
-#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 16384
-  #error "language image cache must fit in 16 KiB"
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
+  #error "language image cache must fit in 32 KiB"
 #endif
 #if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
   #error "Choose one language VM placement"

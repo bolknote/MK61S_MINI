@@ -32,7 +32,8 @@ SYSTEM_MODULES = {
     "language-vm": ("LANGVM", "LANGUAGE_VM", ["language_bytecode.cpp",
         "language_vm.cpp", "language_vm_module_entry.cpp"], None),
     "language-input": ("LANGIN", "LANGUAGE_INPUT", ["language_bytecode.cpp",
-        "language_vm.cpp", "language_vm_validation.cpp", "language_vm_input_entry.cpp"], None),
+        "language_vm.cpp", "language_vm_validation.cpp", "language_vm_input_entry.cpp",
+        "language_vm_flow.cpp"], None),
 }
 
 # These ceilings protect intentionally compact system interpreters from silent
@@ -44,7 +45,8 @@ SYSTEM_SIZE_BUDGETS = {
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
-    "language-input": {"app_bytes": 7_000, "memory_bytes": 9_216},
+    # The cooperative flow owns retry/continuation policy previously resident.
+    "language-input": {"app_bytes": 7_400, "memory_bytes": 9_600},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -78,10 +80,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
     if system == "language-vm" and split_language_vm:
-        # DATA, indexed dispatch, array loops and error positions add executor code.
-        # 12.25 KiB + the maximum 6 KiB image + 1520-byte continuation stays
-        # within the existing 20 KiB APP arena; no arena/workspace is enlarged.
-        budget = {"memory_bytes": 12_544 if local_float_math else 10_240}
+        # Includes the cooperative FLOW_STEP entry and continuation policy.
+        # These are measured image ceilings, not larger APP/workspace arenas.
+        budget = {"memory_bytes": 13_056 if local_float_math else 10_496}
     if budget is None:
         return
     budget = dict(budget)
@@ -102,7 +103,7 @@ def build(args: argparse.Namespace) -> dict:
         if args.system != "language-vm":
             raise ValueError("--split-language-vm applies only to language-vm")
         system = ("LANGVM", "LANGUAGE_VM", ["language_vm.cpp",
-                  "language_vm_overlay_entry.cpp"], None)
+                  "language_vm_overlay_entry.cpp", "language_vm_flow.cpp"], None)
     if args.text_only and args.system != "markdown-viewer":
         raise ValueError("--text-only applies to markdown-viewer")
     if args.no_ui_fonts and not system:

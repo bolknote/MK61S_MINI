@@ -330,7 +330,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       const u32 capacity = program_store::ready()
           ? program_store::geometry().capacity_bytes : 0;
       return device_identity::fat_volume_serial(
-          device_identity::read(), 0xC6000000UL ^ capacity);
+          device_identity::read(), 0xC7000000UL ^ capacity);
     }
     case MK61_USBDISK_MEDIA_REVISION:
       return program_store::media_revision();

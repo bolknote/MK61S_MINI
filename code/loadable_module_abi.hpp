@@ -22,6 +22,8 @@ enum class Command : u32 {
   // argument0 — тот же mk61_app_api* для любого APP,
   // argument1 — стабильный C6 file id.
   FILE_OPEN = 2,
+  APP_FLOW_INFO = 3,
+  APP_FLOW_STEP = 4,
 
   FOCAL_LIBRARY_SELECT = 0x100,
   FOCAL_MENU_SELECT,

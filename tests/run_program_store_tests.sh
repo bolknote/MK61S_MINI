@@ -2,10 +2,11 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-out="${TMPDIR:-/tmp}/mk61_program_store_self_test"
+build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-program-store.XXXXXX")"
+out="$build_dir/program_store_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
-  sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+  sanitizer_flags=(-O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
 fi
 
 for backend in software stm32; do
@@ -38,7 +39,7 @@ for backend in software stm32; do
     "$root/code/zx0_encode.cpp" \
     -o "$out-$backend"
 
-  "$out-$backend"
+  "$out-$backend" "$@"
 done
 
 # The normal matrix above intentionally models the 64 KiB F401 product.  One
@@ -65,4 +66,4 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/zx0_encode.cpp" \
   -o "$out-f411-font"
 
-"$out-f411-font"
+"$out-f411-font" "$@"

@@ -5,7 +5,7 @@
 
 namespace storage_geometry {
 
-// Физическая геометрия SPI NOR для C6. Сектор виртуальной FAT остаётся
+// Физическая геометрия SPI NOR для C7. Сектор виртуальной FAT остаётся
 // 512-байтовым; физические секторы стирания никогда не видны USB-хосту.
 static constexpr u32 PHYSICAL_SECTOR_SIZE = 4096;
 static constexpr u16 LOGICAL_SECTOR_SIZE = 512;
@@ -15,6 +15,10 @@ static constexpr u8 MAX_SECTORS_PER_CLUSTER = 64;  // 32 КиБ, широкая 
 
 static constexpr u8 LOCATOR_SECTORS = 2;
 static constexpr u8 SETTINGS_SECTORS = 1;
+// Keep the C6 reserve size and Geometry layout (APP ABI). In C7 these banks
+// are metadata-only capacity, not fixed catalog locations: roots, WAL and
+// pages rotate across this reserve and free data sectors. The reserve fits
+// both the live and pending worst-case checkpoints (two pages+root+WAL sets).
 static constexpr u8 CATALOG_HEADER_SECTORS = 1;
 static constexpr u8 CATALOG_WAL_SECTORS = 2;
 static constexpr u8 CATALOG_BANKS = 2;
@@ -67,7 +71,7 @@ struct Geometry {
 };
 
 // Вычисляет самосогласованную разметку. Возвращает false для микросхем, где не
-// помещаются два атомарных банка каталога, журнал staging, настройки и резерв GC.
+// помещаются два COW-набора каталога, журнал staging, настройки и резерв GC.
 bool compute(u32 capacity_bytes, Geometry& out);
 
 } // пространство имён storage_geometry

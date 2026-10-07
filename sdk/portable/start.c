@@ -3,7 +3,11 @@
 const mk61_app_api* mk61_api;
 uint32_t mk61_app_image_crc;
 uint32_t mk61_app_current_kind;
-extern int main(void) __attribute__((weak));
+__attribute__((weak)) int main(void) { return MK61_APP_RUNTIME_ERROR; }
+/* Optional cooperative entry. Old main()/FILE_OPEN APP remain unchanged. */
+uint32_t mk61_app_no_flow(mk61_app_flow* flow) { (void)flow; return 0; }
+uint32_t mk61_app_flow_step(mk61_app_flow*)
+    __attribute__((weak, alias("mk61_app_no_flow")));
 #if defined(MK61_APP_SHARED_RUNTIME)
 extern int mk61_app_bind_runtime(const mk61_app_api* api);
 #endif
@@ -27,8 +31,12 @@ __attribute__((weak)) uint32_t mk61_app_command(
   (void) argument0;
   (void) argument2;
   (void) argument3;
+  if(command == MK61_APP_FLOW_INFO)
+    return mk61_app_flow_step != mk61_app_no_flow ? MK61_APP_FLOW_MAGIC : 0;
+  if(command == MK61_APP_FLOW_STEP)
+    return mk61_app_flow_step((mk61_app_flow*)(uintptr_t)argument0);
   if(command == MK61_APP_RUN)
-    return main ? (uint32_t) main() : MK61_APP_RUNTIME_ERROR;
+    return (uint32_t)main();
   if(command == MK61_APP_FILE_OPEN)
     return mk61_app_open_file(argument1);
   return MK61_APP_RUNTIME_ERROR;

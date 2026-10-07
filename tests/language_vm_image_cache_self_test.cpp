@@ -1,5 +1,6 @@
 #include "language_vm_resident.hpp"
 #include "language_vm_image_cache.hpp"
+#include "language_vm_flow.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include <cassert>
@@ -43,19 +44,23 @@ RuntimeStatus frontend(Kind kind,Command command,uint32_t a,uint32_t b,Request* 
   if(command!=Command::LANGUAGE_COMPILER_EMIT)++compiles;
   result=1;return RuntimeStatus::OK;
 }
+uint32_t validate(OverlayRequest* p) {++validations;return validate_execution(p);}
+uint32_t finish(OverlayRequest*) {++finishes;return 1;}
+uint32_t input(InputRequest*) {assert(false);return 0;}
+uint32_t execute_image(OverlayRequest* p) {
+  View v;assert(validated_view(*p,v));
+  array=p->execution->array;
+  Bindings bindings={p->execution->variables,array,p->state->array_count,p->state->stack,MAX_STACK};
+  Services services={};
+  p->execution->result=run(v,p->state->control,bindings,services);
+  return 1;
+}
 RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) {
   select(kind);
-  if(command==Command::LANGUAGE_VM_INFO){result=kind==Kind::LANGUAGE_VM?OVERLAY_MAGIC:INPUT_MAGIC;return RuntimeStatus::OK;}
-  auto& p=*(OverlayRequest*)payload;
-  result=1;
-  if(command==Command::LANGUAGE_VM_VALIDATE){++validations;result=validate_execution(&p);return RuntimeStatus::OK;}
-  if(command==Command::LANGUAGE_VM_FINISH){++finishes;return RuntimeStatus::OK;}
-  assert(command==Command::LANGUAGE_VM_RUN);
-  View v;assert(validated_view(p,v));
-  array=p.execution->array;
-  Bindings bindings={p.execution->variables,array,p.state->array_count,p.state->stack,MAX_STACK};
-  Services services={};
-  p.execution->result=run(v,p.state->control,bindings,services);
+  if(command==Command::APP_FLOW_INFO){result=MK61_APP_FLOW_MAGIC;return RuntimeStatus::OK;}
+  assert(command==Command::APP_FLOW_STEP);
+  result=kind==Kind::LANGUAGE_VM ? flow_vm((mk61_app_flow*)payload,execute_image)
+                               : flow_input((mk61_app_flow*)payload,validate,input,finish);
   return RuntimeStatus::OK;
 }
 }

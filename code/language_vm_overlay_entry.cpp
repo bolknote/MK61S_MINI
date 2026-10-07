@@ -2,6 +2,7 @@
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
+#include "language_vm_flow.hpp"
 #include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
@@ -219,6 +220,9 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api, u32 crc, u32 kind) {
   return portable_system::bind(api, crc, kind) ? 0 : MK61_APP_RUNTIME_ERROR;
 }
 extern "C" u32 mk61_app_command(u32 command, u32 argument0, u32, u32, u32) {
+  if(command == MK61_APP_FLOW_INFO) return MK61_APP_FLOW_MAGIC;
+  if(command == MK61_APP_FLOW_STEP)
+    return flow_vm((mk61_app_flow*)(usize)argument0, execute);
   if (command == (u32)loadable_module::Command::LANGUAGE_VM_INFO) return OVERLAY_MAGIC;
   return command == (u32)loadable_module::Command::LANGUAGE_VM_RUN
              ? execute((OverlayRequest*)(usize)argument0) : 0;

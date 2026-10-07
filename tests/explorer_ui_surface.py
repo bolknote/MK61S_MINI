@@ -75,14 +75,16 @@ def main():
             "static void draw_search_cursor(", "static u16 draw_browser(",
             "static int make_actions(", "static const char* action_text(",
             "static void draw_action_menu(", "static ExplorerAction choose_action(",
-            "static bool autoexec(", "static void set_result(", "bool select("]))
+            "static bool autoexec(", "static void set_result(", "bool select(",
+            "uint32_t flow_step("]))
 
     resident_source = resident.read_text()
     assert "draw_explorer(" not in resident_source
     assert "draw_explorer_row(" not in resident_source
     assert "explorer_search_handle_key(" not in resident_source
-    assert "explorer_ui::select(session)" in resident_source
-    assert "explorer_ui::select(" in (root / "code/explorer_module_entry.cpp").read_text()
+    assert "loadable_module::run_flow(" in resident_source
+    assert "app_flow::run(" in resident_source
+    assert "explorer_ui::flow_step(" in (root / "code/explorer_module_entry.cpp").read_text()
 
 
 if __name__ == "__main__":

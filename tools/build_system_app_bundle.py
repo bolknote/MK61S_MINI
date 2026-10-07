@@ -134,9 +134,9 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
         parts.append("vm-compiler-v5" if getattr(args,"language_vm_compiler",False)
                      else "float" if args.local_float_math else "core")
     if system == "language-vm":
-        parts += ["split-v6", "float" if args.local_float_math else "core"]
+        parts += ["split-v6-flow1", "float" if args.local_float_math else "core"]
     if system == "language-input":
-        parts.append("cold-v6")
+        parts.append("cold-v6-flow1")
     return "+".join(parts)
 
 

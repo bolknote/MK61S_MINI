@@ -1,4 +1,5 @@
 #include "language_vm_resident.hpp"
+#include "language_vm_flow.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include "display_buffer_loan.hpp"
@@ -58,6 +59,27 @@ namespace loadable_module {
 RuntimeStatus evict_cached() { cached = (Kind)0; return RuntimeStatus::OK; }
 }
 namespace language_vm_test {
+RuntimeStatus overlay(Kind, Command, void*, uint32_t&);
+static uint32_t execute_flow(OverlayRequest* p) {
+  uint32_t result = 0;
+  assert(overlay(Kind::LANGUAGE_VM, Command::LANGUAGE_VM_RUN, p, result) == RuntimeStatus::OK);
+  return result;
+}
+static uint32_t validate_flow(OverlayRequest* p) {
+  uint32_t result = 0;
+  assert(overlay(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_VALIDATE, p, result) == RuntimeStatus::OK);
+  return result;
+}
+static uint32_t input_flow(InputRequest* p) {
+  uint32_t result = 0;
+  assert(overlay(Kind::LANGUAGE_INPUT, Command::LANGUAGE_INPUT, p, result) == RuntimeStatus::OK);
+  return result;
+}
+static uint32_t finish_flow(OverlayRequest* p) {
+  uint32_t result = 0;
+  assert(overlay(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_FINISH, p, result) == RuntimeStatus::OK);
+  return result;
+}
 RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t b,
                        Request* request, uint32_t& result) {
   check_usb();
@@ -116,6 +138,16 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
 #endif
   if (kind != cached) { ++swaps; cached = kind; }
   if (input_missing && kind == Kind::LANGUAGE_INPUT) return RuntimeStatus::INVALID_MODULE;
+  if(command == Command::APP_FLOW_INFO) {
+    result = (kind == Kind::LANGUAGE_INPUT ? input_legacy : vm_legacy) ? 0 : MK61_APP_FLOW_MAGIC;
+    return RuntimeStatus::OK;
+  }
+  if(command == Command::APP_FLOW_STEP) {
+    result = kind == Kind::LANGUAGE_VM
+        ? flow_vm((mk61_app_flow*)payload, execute_flow)
+        : flow_input((mk61_app_flow*)payload, validate_flow, input_flow, finish_flow);
+    return RuntimeStatus::OK;
+  }
   if (command == Command::LANGUAGE_VM_INFO) {
     result = kind == Kind::LANGUAGE_VM ? vm_legacy ? 0x34564D4CUL : OVERLAY_MAGIC
                                       : input_legacy ? 0x34494D4CUL : INPUT_MAGIC;

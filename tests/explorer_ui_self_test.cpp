@@ -6,6 +6,7 @@
 #include "storage_path.hpp"
 #include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
+#include "app_flow.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -339,6 +340,38 @@ static void test_select_flow(bool graphical) {
   directory_tree = false;
 }
 
+struct ExplorerFlowBackend { unsigned actions = 0; bool leave = false; };
+static app_flow::Status explorer_flow_backend(
+    void* raw, const app_flow::Target& target, app_flow::Step& step) {
+  auto& backend = *(ExplorerFlowBackend*)raw;
+  if(target.kind == MK61_APP_KIND_EXPLORER)
+    return app::flow_step(&step) ? MK61_FLOW_OK : MK61_FLOW_CORRUPT;
+  assert(target.kind == MK61_APP_FLOW_HOST);
+  auto& state = *(loadable_module::ExplorerSession*)step.context;
+  assert(target.phase == (uint32_t)state.action);
+  ++backend.actions;
+  mk61_app_flow_return(&step, backend.leave ? 1 : 0, MK61_FLOW_OK);
+  return MK61_FLOW_OK;
+}
+static void test_generic_explorer_flow(bool graphical) {
+  surface.graphical = graphical; directory_tree = true;
+  auto file = entry("manual", ProgramType::TEXT); file.id = 201;
+  entries = {file};
+  auto state = session(); ExplorerFlowBackend backend;
+  uint32_t result = 42;
+  kbd::events({{KEY_OK}, {KEY_ESC}});
+  assert(app_flow::run(mk61_app_flow_to(MK61_APP_KIND_EXPLORER, 0xFFFF, 0),
+      &state, sizeof(state), result, explorer_flow_backend, &backend) == MK61_FLOW_OK);
+  assert(!result && backend.actions == 1 && state.action == loadable_module::ExplorerAction::EXIT);
+  file.type = ProgramType::TINYBASIC; entries = {file};
+  state = session(); backend = {}; backend.leave = true;
+  kbd::events({{KEY_OK}});
+  assert(app_flow::run(mk61_app_flow_to(MK61_APP_KIND_EXPLORER, 0xFFFF, 0),
+      &state, sizeof(state), result, explorer_flow_backend, &backend) == MK61_FLOW_OK);
+  assert(result == 1 && backend.actions == 1);
+  directory_tree = false;
+}
+
 static void test_scrolling(bool graphical) {
   surface.graphical = graphical;
   for(bool directory : {false, true}) {
@@ -373,10 +406,12 @@ int main() {
   test_browser(false);
   test_scrolling(false);
   test_select_flow(false);
+  test_generic_explorer_flow(false);
 #if MK61_PROPORTIONAL_UI_FONTS
   test_browser(true);
   test_scrolling(true);
   test_select_flow(true);
+  test_generic_explorer_flow(true);
 #endif
   printf("Explorer labels and selection: resident/APP, graphical=%d OK\n",
          MK61_PROPORTIONAL_UI_FONTS);
