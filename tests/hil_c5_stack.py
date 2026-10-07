@@ -61,8 +61,12 @@ def main():
                        for line in before), 'test filenames already exist'
         try:
             for index, size in enumerate((1, 511, 512, 513, 1023, 1536, 1536, 1023, 513, 512, 511, 1)):
+                # Text files require valid M8, including through fsput. Map
+                # the noisy fixture to printable ASCII instead of passing
+                # arbitrary digest bytes (NUL and other reserved codes).
                 data = ((b'Stack test data 1234567890\n' * 70) if index % 2 else
-                        b''.join(hashlib.sha256(str(j).encode()).digest() for j in range(60)))[:size]
+                        bytes(32 + value % 95 for value in b''.join(
+                            hashlib.sha256(str(j).encode()).digest() for j in range(60))))[:size]
                 if paths[0] not in touched:
                     touched.append(paths[0])
                 # The second write must preserve identical content through the

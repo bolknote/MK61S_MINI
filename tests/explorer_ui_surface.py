@@ -82,6 +82,7 @@ def main():
     assert "draw_explorer(" not in resident_source
     assert "draw_explorer_row(" not in resident_source
     assert "explorer_search_handle_key(" not in resident_source
+    assert "static bool wait_ok_release(" not in resident_source
     assert "loadable_module::run_flow(" in resident_source
     assert "app_flow::run(" in resident_source
     assert "explorer_ui::flow_step(" in (root / "code/explorer_module_entry.cpp").read_text()
