@@ -23,6 +23,9 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
   u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
+#if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+  required_services |= MK61_SERVICE_CAP_RESOURCES;
+#endif
 #if MK61_APP_LOCAL_FLOAT_MATH_MASK
   required_services |= MK61_SERVICE_CAP_FLOAT_CONVERT;
 #endif

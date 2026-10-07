@@ -105,7 +105,9 @@ enum class Op : uint8_t {
   ON_GOSUB,
   FOR_ARRAY,
   NEXT_ARRAY,
-  SOURCE_POS
+  SOURCE_POS,
+  PRINT_RESOURCE,
+  INPUT_RESOURCE
 };
 enum class Function : uint8_t {
   SIN,
@@ -152,6 +154,7 @@ struct View {
   Language language;
   bool expression;
   bool requires_rf;
+  uint16_t end = 0; // instruction boundary; source-backed recipes follow it
 };
 // All callbacks are supplied afresh by the currently active executor. They
 // are never stored in an image or retained across unloading a native APP.
@@ -168,7 +171,9 @@ enum class Event : uint8_t {
   CLEAR,
   FINISH,
   TARGET_REF,
-  READ_KEY
+  READ_KEY,
+  RESOURCE_TEXT,
+  RESOURCE_INPUT
 };
 struct Services {
   void* context;
@@ -212,15 +217,20 @@ struct RunResult {
   uint32_t steps;
 };
 
-CompileResult compile_basic(const char*, uint16_t, uint8_t*, uint16_t, bool);
-CompileResult compile_focal(const char*, uint16_t, uint8_t*, uint16_t, bool);
+// Immutable M8 source doubles as the resource backing store. No native
+// pointers enter the image. A source-less host expression remains standalone.
+struct ResourceSource { uint16_t id; uint32_t revision; };
+CompileResult compile_basic(const char*, uint16_t, uint8_t*, uint16_t, bool,
+                            const ResourceSource* = nullptr);
+CompileResult compile_focal(const char*, uint16_t, uint8_t*, uint16_t, bool,
+                            const ResourceSource* = nullptr);
 inline CompileResult compile(Language language, const char* source, uint16_t length,
                              uint8_t* output, uint16_t capacity,
-                             bool rf_available = true) {
+                             bool rf_available = true, const ResourceSource* resources = nullptr) {
   if (language == Language::BASIC)
-    return compile_basic(source, length, output, capacity, rf_available);
+    return compile_basic(source, length, output, capacity, rf_available, resources);
   if (language == Language::FOCAL)
-    return compile_focal(source, length, output, capacity, rf_available);
+    return compile_focal(source, length, output, capacity, rf_available, resources);
   return {Error::SYNTAX, 0, 0, 0, 0};
 }
 CompileResult compile_expression(Language, const char*, uint16_t, uint8_t*, uint16_t);

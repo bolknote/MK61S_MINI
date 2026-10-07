@@ -98,6 +98,9 @@ inline u32 call(u32 operation, u32 a = 0, u32 b = 0, u32 c = 0, void* data = nul
   return api->call(operation, a, b, c, data);
 }
 void text_rows(const char* const* rows, u32 count);
+bool resource_read(void* image, uint16_t offset, uint8_t* output, uint16_t length);
+bool resource_print(const uint8_t* image, const uint8_t* recipe,
+                    bool (*append)(void*, const char*, uint16_t, bool), void* context);
 void editor(bool draw, const char* source, u16 len, u16 cursor, u16& top, bool sms = false);
 bool format_number(double value, u8 significant_digits,
                    char* output, usize capacity);

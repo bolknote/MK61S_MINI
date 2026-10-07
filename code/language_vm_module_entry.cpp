@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tinybasic_diagnostic.hpp"
 #include "tinybasic_text.hpp"
+#include "language_resources.hpp"
 #if !defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include "config.h"
 #endif
@@ -39,6 +40,15 @@ static bool parse_number(const char* text, double& value, const char*& end) {
 static bool format_number(double value, u8 digits, char* output, usize size) {
   mk61_system_number_format request = {value, output, (u32)size, digits};
   return call(MK61_SYS_NUMBER_FORMAT, 0, 0, 0, &request) != 0;
+}
+static bool resource_read(void* raw, uint16_t offset, uint8_t* output, uint16_t length) {
+  const auto* image = (const uint8_t*)raw;
+  mk61_service_resource r = {};
+  r.id = language_vm::resource_word(image + 24); r.offset = offset;
+  r.revision = (uint32_t)language_vm::resource_word(image + 26) |
+               ((uint32_t)language_vm::resource_word(image + 28) << 16);
+  r.output = output; r.length = length;
+  return call(MK61_SYS_RESOURCE_READ, 1, 0, 0, &r) != 0;
 }
 static void text_rows(const char* const* rows, u32 count) {
   call(MK61_SYS_TEXT_ROWS, count, 0, 0, (void*)rows);
@@ -207,6 +217,9 @@ void flush(bool empty) {
   runtime.output[0] = 0;
   runtime.output_cursor = 0;
 }
+bool resource_append(void*, const char* text, uint16_t length, bool first) {
+  return append(text, length, first && runtime.language == Language::FOCAL);
+}
 bool io(void*, Event, const char*, uint16_t, double&);
 const Services services = {nullptr,       background, math, random,
                            dynamic_value, reference,  io};
@@ -294,6 +307,11 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     case Event::TEXT:
       return append(text, length, !basic);
+    case Event::RESOURCE_TEXT:
+      if(resource_text((const uint8_t*)text, portable_system::resource_read,
+                       (void*)runtime.request->image, resource_append, nullptr)) return true;
+      if(runtime.failure == Error::NONE) runtime.failure = Error::IO;
+      return false;
     case Event::NUMBER: {
       char number[24];
       if (!portable_system::format_number(value, basic ? 10 : 8, number,
@@ -327,6 +345,12 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     case Event::READ_INPUT:
       return input(text, length, value);
+    case Event::RESOURCE_INPUT: {
+      char prompt[96];
+      if(!resource_prompt((const uint8_t*)text, prompt, portable_system::resource_read,
+                          (void*)runtime.request->image)) return false;
+      return input(prompt, length, value);
+    }
     case Event::WAIT:
     case Event::READ_KEY: {
       if (!basic) {

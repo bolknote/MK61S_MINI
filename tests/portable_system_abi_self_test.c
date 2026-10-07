@@ -3,6 +3,8 @@
 
 /* Public wire records use the ARM AAPCS layout on both F401 and F411. */
 _Static_assert(sizeof(void*) == 4, "compile for ARM");
+_Static_assert(sizeof(mk61_service_resource) == 16, "resource span ABI");
+_Static_assert(sizeof(mk61_service_resource_stream) == 24, "resource stream ABI");
 _Static_assert(offsetof(mk61_app_api, query_service) == 104, "original APP prefix unchanged");
 _Static_assert(sizeof(mk61_app_api) == 108, "append-only service query");
 _Static_assert(sizeof(mk61_system_api) == 28, "System API v1");

@@ -12,6 +12,10 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" \
   -o "$work/test"
 "$work/test"
+clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+  -I"$root/code" "$root/tests/language_resources_self_test.cpp" \
+  "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/resources"
+"$work/resources"
 for variant in compact f64; do
   extra=()
   if [[ "$variant" == "f64" ]]; then extra=(-DLANGUAGE_VM_TEST_NO_DECIMAL_RECIPE); fi

@@ -358,6 +358,9 @@ struct TbAst {
 };
 
 struct TbProgram {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  u32 source_revision;
+#endif
   u16 store_id;
   u16 parent_id;
   char name[TB_NAME_SIZE];
@@ -2933,9 +2936,11 @@ static TinyBasicRunStatus tb_run_program(
       program_index >= TB_PROGRAM_COUNT || !tb_program_used(programs[program_index]))
     return TinyBasicRunStatus::UNAVAILABLE;
   auto& request = *language_vm::frontend_request;
+  const language_vm::ResourceSource resources = {
+      programs[program_index].store_id, programs[program_index].source_revision};
   request.compiled = language_vm::compile(
       language_vm::Language::BASIC, programs[program_index].source,
-      programs[program_index].source_len, request.output, (u16)request.capacity);
+      programs[program_index].source_len, request.output, (u16)request.capacity, true, &resources);
   request.source_id = programs[program_index].store_id;
   request.language = (u8)language_vm::Language::BASIC;
   request.mode = (u8)mode;
@@ -3027,6 +3032,8 @@ static TinyBasicRunStatus tb_run_program(
             c.width = 0;
             tb_pause_is_final = false;
             return true;
+          case language_vm::Event::RESOURCE_TEXT:
+          case language_vm::Event::RESOURCE_INPUT: return false;
           case language_vm::Event::TEXT:
             if (tb_append_print_range(text, text + length)) return true;
             c.failure = "SORRY";
@@ -3235,8 +3242,14 @@ static int load_tinybasic_program_from_store(const program_store::Entry& entry) 
   const int slot = tb_alloc_program_slot(entry.name);
   TbProgram& program = programs[slot];
   u16 len = 0;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  program.source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
+#endif
   if(!program_store::read_id(entry.id, (u8*) program.source,
                              TB_SOURCE_SIZE - 1, &len)) return -1;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if(program.source_revision != portable_system::call(MK61_SYS_RESOURCE_READ)) return -1;
+#endif
   program.source[len] = 0;
   program.source_len = len;
   tb_copy_text(program.name, sizeof(program.name), entry.name);
@@ -3603,6 +3616,9 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
 #endif
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = source_len;
+#if defined(MK61_LANGUAGE_VM_COMPILER) && !defined(TINYBASIC_HOST_TEST)
+  programs[slot].source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
+#endif
   tb_copy_text(programs[slot].name, sizeof(programs[slot].name), final_name);
   programs[slot].store_id = store_id;
   programs[slot].parent_id = parent_id;

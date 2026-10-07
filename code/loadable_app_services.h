@@ -34,7 +34,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_USBDISK = 1U << 15,
   /* Directory traversal and handoff policy used by EXPLORER.APP. */
   MK61_SERVICE_CAP_EXPLORER = 1U << 16,
-  MK61_SERVICE_CAP_APP_FLOW = 1U << 17
+  MK61_SERVICE_CAP_APP_FLOW = 1U << 17,
+  MK61_SERVICE_CAP_RESOURCES = 1U << 18
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -80,8 +81,29 @@ enum mk61_service_operation {
    * representation; CHILD only changes how that entry is addressed. */
   MK61_SERVICE_FILE_CHILD_COUNT,
   MK61_SERVICE_FILE_CHILD,
-  MK61_SERVICE_FILE_ACTIONS
+  MK61_SERVICE_FILE_ACTIONS,
+  MK61_SERVICE_RESOURCE_READ
 };
+
+/* Immutable resource spans. Operation 0 returns the current media revision;
+ * operation 1 reads exactly length bytes only while that revision matches.
+ * A suspended APP can pass this data again after relocation. */
+typedef struct mk61_service_resource {
+  uint32_t revision;
+  uint16_t id, offset;
+  uint8_t* output;
+  uint16_t length, reserved;
+} mk61_service_resource;
+/* Operation 2 streams a bounded source-span recipe through a synchronous
+ * consumer. Neither the callback nor APP addresses survive this call. */
+typedef struct mk61_service_resource_stream {
+  uint32_t revision;
+  uint16_t id, source_size;
+  const uint8_t* recipe;
+  uint16_t recipe_size, reserved;
+  void* context;
+  bool (*append)(void*, const char*, uint16_t, bool first);
+} mk61_service_resource_stream;
 
 /* Narrow resident C6 backend for USBDISK.APP. FAT, LFN, conversion and commit
  * policy remain in the APP; these operations only expose atomic store facts

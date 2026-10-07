@@ -133,6 +133,8 @@ class Machine:
         self.workspace = elf.symbol('17workspace_storageE')
         self.scratch = elf.symbol('15scratch_storageE')
         self.callbacks = {v & ~1: k for k,v in zip(CALLBACKS,self.words(self.api+12,23))}
+        if '_ZN13program_store14media_revisionEv' in elf.symbols:
+            self.callbacks[elf.symbol('_ZN13program_store14media_revisionEv') & ~1] = 'media_revision'
         self.stop = 0x080FF000
         self.uc.hook_add(UC_HOOK_CODE, self.hook)
         self.graphics = graphics
@@ -194,7 +196,7 @@ class Machine:
                 self.float_return = (uc.reg_read(UC_ARM_REG_LR) & ~1,
                                      b, payload)
                 return
-            if a in (20,24,26,28,29,30) or (a == 27 and b == 1):
+            if a in (20,24,26,28,29,30) or (a == 37 and b == 2) or (a == 27 and b == 1):
                 self.key_calls += a == 24
                 return  # Execute the real resident font/editor/capability dispatcher.
             self.trace.append((a,b,c,d))
@@ -203,7 +205,8 @@ class Machine:
             name = self.callbacks[address]
             self.trace.append((name,a,b,c,d))
             result = 0
-            if name == 'file_size': result = len(self.files[a][2]) if a in self.files else 0xFFFFFFFF
+            if name == 'media_revision': result = 1
+            elif name == 'file_size': result = len(self.files[a][2]) if a in self.files else 0xFFFFFFFF
             elif name == 'file_read':
                 if a not in self.files: result = 0xFFFFFFFF
                 else:
@@ -363,6 +366,14 @@ class Machine:
                 assert b in (0, 1)
                 if b and not self.live_ui: return 0
                 self.ui_text = bool(b); return 1
+        if op == 37:
+            if a == 0: return 1
+            revision, inode, offset, output, length, reserved = struct.unpack(
+                '<IHHIHH', self.uc.mem_read(p, 16))
+            if revision != 1 or reserved or inode not in self.files: return 0
+            data = self.files[inode][2][offset:offset+length]
+            if len(data) != length: return 0
+            self.uc.mem_write(output, data); return 1
         if op == 31:
             # The fixture has no C5 font files.  Preserve the resident's
             # platform distinction while allowing a language APP to restore

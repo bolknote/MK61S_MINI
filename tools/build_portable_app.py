@@ -45,8 +45,8 @@ SYSTEM_SIZE_BUDGETS = {
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
-    # The cooperative flow owns retry/continuation policy previously resident.
-    "language-input": {"app_bytes": 7_400, "memory_bytes": 9_600},
+    # The cold module owns retry, resource verification and INPUT rendering.
+    "language-input": {"app_bytes": 8_400, "memory_bytes": 10_752},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -62,11 +62,11 @@ GREEDY_APP_SIZE_BUDGETS = {
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
 }
-# Compiler FLOW_STEP now owns source selection and both translation passes.
+# Compiler FLOW_STEP owns source selection, translation and literal interning.
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    "focal": {"app_bytes": 12_600, "memory_bytes": 17_000},
+    "focal": {"app_bytes": 13_400, "memory_bytes": 18_048},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
@@ -89,9 +89,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if language_vm_compiler:
         budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
-        # Includes the cooperative FLOW_STEP entry and continuation policy.
+        # Includes FLOW_STEP, resource delivery and continuation policy.
         # These are measured image ceilings, not larger APP/workspace arenas.
-        budget = {"memory_bytes": 13_056 if local_float_math else 10_496}
+        budget = {"memory_bytes": 13_056 if local_float_math else 10_560}
     if budget is None:
         return
     budget = dict(budget)
@@ -161,6 +161,8 @@ def build(args: argparse.Namespace) -> dict:
             raise ValueError("--language-vm-compiler applies only to BASIC/FOCAL")
         sources += [ROOT / "code/language_bytecode.cpp", ROOT / "code/language_vm_frontend.cpp",
                     ROOT / "code/language_compiler_flow.cpp"]
+    if args.system in ("language-vm", "language-input"):
+        sources += [ROOT / "sdk/portable/system/resource.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system == "usbdisk":

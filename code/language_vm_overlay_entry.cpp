@@ -1,4 +1,5 @@
 #include "tinybasic_text.hpp"
+#include "language_resources.hpp"
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
@@ -94,6 +95,9 @@ void flush(bool empty) {
   s.output[0] = 0;
   s.output_cursor = 0;
 }
+bool resource_append(void*, const char* text, uint16_t length, bool first) {
+  return append(text, length, first && state().language == Language::FOCAL);
+}
 bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   auto& s = state();
   const bool basic = s.language == Language::BASIC;
@@ -108,6 +112,9 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       }
       return true;
     case Event::TEXT: return append(text, length, !basic);
+    case Event::RESOURCE_TEXT:
+      return portable_system::resource_print(request().image, (const uint8_t*)text,
+                                             resource_append, nullptr);
     case Event::NUMBER: {
       char number[24];
       if (!portable_system::format_number(value, basic ? 10 : 8, number,
@@ -135,7 +142,8 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     case Event::PRINT_END: if (!length) flush(basic); return true;
     // The kernel yields before dispatching this event. No parser/editor is
     // linked into the hot image, and no callback survives an APP replacement.
-    case Event::READ_INPUT: return false;
+    case Event::READ_INPUT:
+    case Event::RESOURCE_INPUT: return false;
     case Event::WAIT:
     case Event::READ_KEY: {
       if (!basic) {
@@ -198,13 +206,18 @@ uint32_t execute(OverlayRequest* payload) {
     } else {
       if (resume) s.stack[s.control.sp++] = s.input_value;
       r.result = run(view, s.control, bindings, services, 0, resume);
-      r.error_column = source_column(view, r.result.pc);
+      r.error_column = 0; // The cold finish APP resolves diagnostics only on failure.
       s.steps += r.result.steps;
       r.result.steps = s.steps;
       if (r.result.error == Error::YIELDED) {
         const uint8_t* p = view.bytes + r.result.pc + 1;
-        s.prompt_offset = (uint16_t)(r.result.pc + 3);
-        s.prompt_length = (uint16_t)(p[0] | ((uint16_t)p[1] << 8));
+        if((Op)view.bytes[r.result.pc] == Op::INPUT_RESOURCE) {
+          s.prompt_offset = (uint16_t)(view.end + resource_word(p));
+          s.prompt_length = resource_word(view.bytes + s.prompt_offset);
+        } else {
+          s.prompt_offset = (uint16_t)(r.result.pc + 3);
+          s.prompt_length = resource_word(p);
+        }
         r.pause_final = 0;
       }
     }

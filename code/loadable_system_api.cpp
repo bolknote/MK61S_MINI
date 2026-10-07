@@ -2,6 +2,7 @@
 
 #if MK61_ANY_LOADABLE_MODULE
 #include "loadable_system_api.hpp"
+#include "language_resources.hpp"
 #include "loadable_app_api.hpp"
 #include "loadable_module_format.hpp"
 #include "cross_hal.h"
@@ -198,7 +199,7 @@ static u32 key_call(u32 operation, u32 value) {
 static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   switch(operation) {
     case MK61_SERVICE_CAPABILITIES:
-      return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES |
+      return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES | MK61_SERVICE_CAP_RESOURCES |
           MK61_SERVICE_CAP_MEMORY |
 #if MK61_ENABLE_SETUP
           MK61_SERVICE_CAP_SETUP |
@@ -319,6 +320,29 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
           ? program_store_explorer_actions(entry) : 0;
     }
 #endif
+    case MK61_SYS_RESOURCE_READ: {
+      const u32 revision = program_store::media_revision();
+      if(a == 0) return revision;
+      if(a == 2 && payload) {
+        const auto& r = *(const mk61_service_resource_stream*)payload;
+        if(r.reserved || r.revision != revision || !r.append ||
+           !language_vm::valid_resource_recipe(r.recipe, r.recipe_size, r.source_size)) return 0;
+        auto read = [](void* raw, uint16_t offset, uint8_t* output, uint16_t length) {
+          const auto& s = *(const mk61_service_resource_stream*)raw;
+          return program_store::media_revision() == s.revision &&
+                 loadable_app::resident_api().file_read(s.id, offset, output, length) == length &&
+                 program_store::media_revision() == s.revision;
+        };
+        return language_vm::resource_text(r.recipe, read, (void*)&r, r.append, r.context) &&
+               program_store::media_revision() == revision;
+      }
+      if(a != 1 || !payload) return 0;
+      const auto& r = *(const mk61_service_resource*)payload;
+      if(r.reserved || r.revision != revision || !r.output) return 0;
+      u16 received = 0;
+      return program_store::read_range_id(r.id, r.offset, r.output, r.length, &received) &&
+             received == r.length && program_store::media_revision() == revision;
+    }
     case MK61_SYS_FILE_RESOLVE: {
       if(!payload || !c || a > 0xFFFFU) return (u32) storage_path::Status::NOT_FOUND;
       program_store::Entry entry = {};

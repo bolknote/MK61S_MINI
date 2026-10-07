@@ -18,7 +18,7 @@ from unicorn.arm_const import UC_ARM_REG_SP
 STATE_SIZE = 1520
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 8
+GENERATION = 9
 
 
 class OverlayMachine(Machine):
@@ -79,8 +79,9 @@ class OverlayMachine(Machine):
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 2 if v8 else 1
+    version = 3 if v9 else 2 if v8 else 1
     state_size = 1520 if v8 else 1504
     control_size = 624 if v8 else 616
     stack_offset = control_size
@@ -94,7 +95,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
-    vm_magic, input_magic = ((0x36564D4C, 0x36494D4C) if v6 else
+    vm_magic, input_magic = ((0x37564D4C, 0x37494D4C) if v9 else
+                             (0x36564D4C, 0x36494D4C) if v6 else
                              (0x34564D4C, 0x34494D4C) if v4 else
                              (0x33564D4C, 0x33494D4C))
     compiler = "tinybasic" if language == 1 else "focal"
@@ -164,9 +166,14 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
                 error = m.uc.mem_read(execution+result_offset, 1)[0]
             assert bytes(m.uc.mem_read(bytecode, length)) == image
             return struct.unpack("<d", m.uc.mem_read(variables, 8))[0], error, inputs, evaluations, retries
-        assert image[pc] == 48  # READ_INPUT
+        assert image[pc] in (48, 89)  # READ_INPUT / INPUT_RESOURCE
         prompt_offset, prompt_length = struct.unpack("<HH", m.uc.mem_read(state+prompt_offset_field, 4))
-        assert prompt_offset == pc+3 and prompt_offset+prompt_length <= length
+        resource_prompt = m.uc.mem_read(bytecode+pc, 1)[0] == 89
+        if resource_prompt:
+            end = struct.unpack('<H', m.uc.mem_read(bytecode+30, 2))[0]
+            handle = struct.unpack('<H', m.uc.mem_read(bytecode+pc+1, 2))[0]
+            assert prompt_offset == end+handle and prompt_length <= 95
+        else: assert prompt_offset == pc+3 and prompt_offset+prompt_length <= length
         invalid = False
         while True:
             before = bytes(m.uc.mem_read(state, state_size))
@@ -176,7 +183,9 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
             if cancelled: m.keys = [m.mapping[39]]
             else: m.input_keys(answers.pop(0))
             m.uc.mem_write(input_request, bytes(40))
+            m.uc.mem_write(input_request, bytes(40))
             m.put(input_request, 40, version, bytecode+prompt_offset, expression)
+            if resource_prompt: m.put(input_request+36, bytecode)
             struct_data = struct.pack("<HHHBBB", prompt_length, 256 if v4 else 768, 0, language, 0, invalid)
             m.uc.mem_write(input_request+24, struct_data)
             assert m.call(INPUT, input_request) == 1
@@ -236,7 +245,7 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local"), default="core")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8), default=8)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9), default=9)
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
     GENERATION = args.generation

@@ -86,6 +86,14 @@ const Keyword functions[] = {
     {"ROUND", 2, (uint8_t)Function::ROUND}, {"SGN", 2, (uint8_t)Function::SGN},
     {"MAX", 1, (uint8_t)Function::MAX},
     {"INPUT", 3, KEY_INPUT_FUNCTION},       {nullptr, 0, 0}};
+struct ResourceWorkspace {
+  uint8_t* first;
+  uint8_t* second;
+  uint16_t half;
+  uint8_t* at(uint16_t offset) {
+    return offset < half ? first + offset : second + offset - half;
+  }
+};
 struct Target {
   uint8_t kind, index;
 };  // 0 variable, 1 reference, 2 array
@@ -94,7 +102,7 @@ template <Language Lang>
 class Compiler {
  public:
   Compiler(const char* source, uint16_t length, uint8_t* out, uint16_t capacity,
-           Line* lines, bool rf_available = true)
+           Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {})
       : source_(source),
         length_(length),
         out_(out),
@@ -113,7 +121,7 @@ class Compiler {
         image_end_(0),
         rf_available_(rf_available),
         rf_required_(false),
-        expression_only_(false) {}
+        expression_only_(false), resources_(resources), resource_size_(0), resource_data_(workspace) {}
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
@@ -127,6 +135,7 @@ class Compiler {
     // may be unordered and every forward reference gets its final offset.
     for (pass_ = 0; pass_ < 2 && error_ == Error::NONE; ++pass_) {
       pc_ = code;
+      resource_size_ = 0;
       sp_ = maximum_ = depth_ = 0;
       for (line_ = 0; line_ < count_ && error_ == Error::NONE; ++line_) {
         if (!pass_) lines_[line_].pc = pc_;
@@ -142,13 +151,31 @@ class Compiler {
       emit(Op::HALT);
       if (!pass_) image_end_ = (uint16_t)(pc_ - 1);
     }
+    const uint16_t code_end = pc_;
+    if (error_ == Error::NONE && resource_size_ && resource_data_.first) {
+      if (pc_ > capacity_ || resource_size_ > capacity_ - pc_ ||
+          resource_size_ > MAX_IMAGE - pc_) fail(Error::FULL);
+      else {
+        if (out_) {
+          const uint16_t first = resource_size_ < resource_data_.half ? resource_size_ : resource_data_.half;
+          memcpy(out_ + pc_, resource_data_.first, first);
+          if (resource_size_ > first) memcpy(out_ + pc_ + first, resource_data_.second, resource_size_ - first);
+        }
+        pc_ += resource_size_;
+      }
+    }
     if (error_ == Error::NONE && out_) {
       memset(out_, 0, HEADER_SIZE);
       memcpy(out_, "LBV1", 4);
       out_[4] = (uint8_t)VERSION;
       out_[5] = (uint8_t)Lang;
       out_[6] = maximum_ ? maximum_ : 1;
-      out_[7] = rf_required_ ? 2 : 0;
+      out_[7] = (rf_required_ ? 2 : 0) | (resource_size_ && resource_data_.first ? 4 : 0);
+      if (resource_size_ && resource_data_.first) {
+        put_word(out_ + 24, resources_->id);
+        put_dword(out_ + 26, resources_->revision);
+        put_word(out_ + 30, code_end);
+      }
       put_word(out_ + 8, pc_);
       put_word(out_ + 10, code);
       put_word(out_ + 12, count_);
@@ -168,6 +195,7 @@ class Compiler {
         p_ >= source_ && p_ <= source_ + length_ ? (uint16_t)(p_ - source_) : 0;
     return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, line_, offset, maximum_};
   }
+  uint16_t resource_reservation() const { return resource_size_; }
   CompileResult expression_only() {
     expression_only_ = true;
     if (!source_ || !length_ || length_ > (basic() ? 64 : 111) ||
@@ -215,6 +243,66 @@ class Compiler {
   uint8_t pass_;
   uint16_t image_end_;
   bool rf_available_, rf_required_, expression_only_;
+  const ResourceSource* resources_;
+  uint16_t resource_size_;
+  ResourceWorkspace resource_data_;
+  bool resource_literals() const { return resources_ && resources_->id != 0xFFFF; }
+  uint16_t intern_resource(const char* text, uint16_t length) {
+    if(!resource_data_.first) {
+      // Sizing mode needs only an upper bound. Raw literal bytes are already
+      // contiguous; synthesized prompts can need at most one span per byte.
+      const uintptr_t begin = (uintptr_t)source_, at = (uintptr_t)text;
+      const bool raw = at >= begin && at - begin <= length_;
+      const uint16_t parts = raw ? (uint16_t)((length + 254) / 255) : length;
+      resource_size_ += (uint16_t)(3 + parts * 3);
+      return 0;
+    }
+    // Compare actual M8 bytes, including normalized INPUT prompts. PRINT and
+    // INPUT share handles even if they spelled the same text differently.
+    for (uint16_t at = 0; at < resource_size_;) {
+      const uint8_t* r = resource_data_.at(at);
+      uint16_t decoded = 0;
+      bool same = (uint16_t)(r[0] | ((uint16_t)r[1] << 8)) == length;
+      for (uint8_t i = 0; i < r[2]; ++i) {
+        const uint8_t* part = resource_data_.at((uint16_t)(at + 3 + i * 3));
+        const uint16_t offset = (uint16_t)(part[0] | ((uint16_t)part[1] << 8));
+        const uint8_t n = part[2];
+        if (same) {
+          if (offset & 0x8000) same = (uint8_t)text[decoded] == (uint8_t)offset;
+          else same = !memcmp(text + decoded, source_ + offset, n);
+        }
+        decoded += n;
+      }
+      if (same) return at;
+      at += (uint16_t)(3 + r[2] * 3);
+    }
+    const uint16_t at = resource_size_;
+    if (resource_size_ > resource_data_.half * 2 - 3) { fail(Error::FULL); return 0; }
+    put_word(resource_data_.at(resource_size_), length);
+    *resource_data_.at((uint16_t)(resource_size_ + 2)) = 0;
+    resource_size_ += 3;
+    while (length && error_ == Error::NONE) {
+      uint16_t best = 0;
+      uint8_t n = 0;
+      const uint16_t wanted = length < 255 ? length : 255;
+      for (uint16_t pos = 0; pos < length_; ++pos) {
+        uint16_t match = 0;
+        while (match < wanted && pos + match < length_ &&
+               source_[pos + match] == text[match]) ++match;
+        if (match > n) { best = pos; n = (uint8_t)match; }
+        if (match == wanted) break;
+      }
+      if (!n) { best = (uint16_t)(0x8000 | (uint8_t)*text); n = 1; }
+      if (resource_size_ > resource_data_.half * 2 - 3 || *resource_data_.at((uint16_t)(at + 2)) == 255) {
+        fail(Error::FULL); break;
+      }
+      put_word(resource_data_.at(resource_size_), best);
+      *resource_data_.at((uint16_t)(resource_size_ + 2)) = n;
+      resource_size_ += 3; ++*resource_data_.at((uint16_t)(at + 2));
+      text += n; length -= n;
+    }
+    return at;
+  }
   static constexpr bool basic() { return Lang == Language::BASIC; }
   uint8_t stride() const { return basic() ? 4 : 6; }
   void fail(Error e) {
@@ -779,9 +867,14 @@ class Compiler {
         fail(Error::UNTERMINATED_STRING);
         return true;
       }
-      byte(opcode);
-      u16((uint16_t)(p_ - start));
-      while (start < p_) byte((uint8_t)*start++);
+      if (resource_literals()) {
+        emit(Op::PRINT_RESOURCE);
+        u16(intern_resource(start, (uint16_t)(p_ - start)));
+      } else {
+        byte(opcode);
+        u16((uint16_t)(p_ - start));
+        while (start < p_) byte((uint8_t)*start++);
+      }
       ++p_;
       return true;
     }
@@ -905,7 +998,9 @@ class Compiler {
         } else {
           while (p_ < end_ && *p_ != quote) {
             const char c = *p_++;
-            if (used < 95) prompt[used++] = c;
+            if (used < 95) {
+              prompt[used++] = c;
+            }
           }
           if (p_ == end_)
             fail(Error::SYNTAX);
@@ -921,12 +1016,17 @@ class Compiler {
         while (name < p_ && space(*name)) ++name;
         const char* finish = p_;
         while (finish > name && space(finish[-1])) --finish;
-        while (name < finish && used < 94) prompt[used++] = *name++;
+        while (name < finish && used < 94) {
+          prompt[used++] = *name++;
+        }
         if (basic()) prompt[used++] = ':';
       }
-      emit(Op::READ_INPUT);
-      u16(used);
-      for (uint8_t i = 0; i < used; ++i) byte((uint8_t)prompt[i]);
+      if (resource_literals()) {
+        emit(Op::INPUT_RESOURCE); u16(intern_resource(prompt, used));
+      } else {
+        emit(Op::READ_INPUT); u16(used);
+        for (uint8_t i = 0; i < used; ++i) byte((uint8_t)prompt[i]);
+      }
       stack(1);
       store(t);
       any = true;
@@ -1321,6 +1421,29 @@ class Compiler {
     if (p_ != end_) fail(Error::SYNTAX);
   }
 };
+template<Language Lang, uint16_t Half>
+__attribute__((noinline)) CompileResult compile_resource_second(
+    const char* source, uint16_t length, uint8_t* output, uint16_t capacity,
+    Line* lines, bool rf, const ResourceSource* resources, uint8_t* first) {
+  uint8_t second[Half];
+  Compiler<Lang> compiler(source, length, output, capacity, lines, rf, resources, {first, second, Half});
+  return compiler.compile();
+}
+template<Language Lang, uint16_t Half>
+__attribute__((noinline)) CompileResult compile_resource_first(
+    const char* source, uint16_t length, uint8_t* output, uint16_t capacity,
+    Line* lines, bool rf, const ResourceSource* resources) {
+  uint8_t first[Half];
+  return compile_resource_second<Lang, Half>(source, length, output, capacity, lines, rf, resources, first);
+}
+template<Language Lang>
+CompileResult compile_resources(const char* source, uint16_t length, uint8_t* output,
+    uint16_t capacity, Line* lines, bool rf, const ResourceSource* resources, uint16_t needed) {
+  if(needed <= 192) return compile_resource_first<Lang,96>(source,length,output,capacity,lines,rf,resources);
+  if(needed <= 768) return compile_resource_first<Lang,384>(source,length,output,capacity,lines,rf,resources);
+  if(needed <= 3072) return compile_resource_first<Lang,1536>(source,length,output,capacity,lines,rf,resources);
+  return compile_resource_first<Lang,3072>(source,length,output,capacity,lines,rf,resources);
+}
 }  // namespace
 
 uint32_t checksum(const uint8_t* p, size_t length) {
@@ -1333,20 +1456,26 @@ uint32_t checksum(const uint8_t* p, size_t length) {
   return ~crc;
 }
 CompileResult compile_basic(const char* source, uint16_t length, uint8_t* output,
-                            uint16_t capacity, bool rf_available) {
+                            uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
   Line lines[192];
   Compiler<Language::BASIC> compiler(source, length, output, capacity, lines,
-                                     rf_available);
-  return compiler.compile();
+                                     rf_available, resources);
+  const auto sized = compiler.compile();
+  if(sized.error != Error::NONE || !compiler.resource_reservation()) return sized;
+  return compile_resources<Language::BASIC>(source,length,output,capacity,lines,rf_available,
+                                             resources,compiler.resource_reservation());
 }
 CompileResult compile_focal(const char* source, uint16_t length, uint8_t* output,
-                            uint16_t capacity, bool rf_available) {
+                            uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
   Line lines[80];
   Compiler<Language::FOCAL> compiler(source, length, output, capacity, lines,
-                                     rf_available);
-  return compiler.compile();
+                                     rf_available, resources);
+  const auto sized = compiler.compile();
+  if(sized.error != Error::NONE || !compiler.resource_reservation()) return sized;
+  return compile_resources<Language::FOCAL>(source,length,output,capacity,lines,rf_available,
+                                             resources,compiler.resource_reservation());
 }
 CompileResult compile_expression(Language language, const char* source, uint16_t length,
                                  uint8_t* output, uint16_t capacity) {

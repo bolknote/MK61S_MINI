@@ -3,8 +3,8 @@
 #include "language_bytecode.hpp"
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 2;
-static constexpr uint32_t COMPILER_MAGIC = 0x354D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 3;
+static constexpr uint32_t COMPILER_MAGIC = 0x364D5643UL;
 static constexpr uint16_t VALUES_SIZE = 3504;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
@@ -30,8 +30,8 @@ struct ExecuteRequest {
   uint8_t edit_requested, reserved2;
   RunResult result;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x36564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x36494D4CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x37564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x37494D4CUL;
 static constexpr uint32_t VALIDATED_MAGIC = 0x3649424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
@@ -70,10 +70,9 @@ inline uint8_t* input_image_storage(ExecutionState& state) {
 // for arbitrary native APPs. It contains no pointers into an unloaded APP.
 struct ValidatedImage {
   uint32_t magic;
-  uint16_t size, code, lines, source_size;
-  uint8_t stack, flags;
+  uint16_t size, code, source_size, end;
+  uint8_t lines, stack, flags;
   Language language;
-  uint8_t reserved;
 };
 struct OverlayRequest {
   uint32_t size, version;
@@ -98,15 +97,15 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
   const auto& m = *p.validated;
   const auto& r = *p.execution;
   const bool basic = m.language == Language::BASIC;
-  if (m.magic != VALIDATED_MAGIC || m.reserved || m.size != r.image_size ||
-      m.language != p.state->language || m.flags > 3 || !m.stack || m.stack > MAX_STACK ||
-      m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.size ||
-      !m.source_size || m.source_size > (basic ? 3584 : 1536) ||
+  if (m.magic != VALIDATED_MAGIC || m.size != r.image_size ||
+      m.language != p.state->language || m.flags > 7 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
+      m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.end || m.end > m.size ||
+      (uint16_t)(m.source_size - 1) >= (basic ? 3584 : 1536) ||
       m.lines > (basic ? 192 : 80) ||
       ((m.flags & 1) ? m.lines || m.source_size > (basic ? 64 : 111) : !m.lines))
     return false;
   v = {r.image, m.size, m.code, m.lines, m.source_size, m.stack, m.language,
-       (m.flags & 1) != 0, (m.flags & 2) != 0};
+       (m.flags & 1) != 0, (m.flags & 2) != 0, m.end};
   return v.expression == (p.action == OverlayAction::EXPRESSION);
 }
 inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,
@@ -153,7 +152,8 @@ struct InputRequest {
   Language language;
   InputResult result;
   bool invalid;
-  uint8_t reserved[7];
+  uint8_t reserved[3];
+  const uint8_t* resource_image;
 };
 inline bool compatible(const Request* r) {
   return r && r->size == sizeof(*r) && r->version == REQUEST_VERSION &&

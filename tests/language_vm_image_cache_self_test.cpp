@@ -125,7 +125,7 @@ int main() {
   cancel_input=false;input_text="3";execute(4);assert(array[1]==20 && compiles==7);
   execute(5,1,4);execute(5,1,4);assert(compiles==9);
   ImageCache<64,2> small;
-  ValidatedImage cert={VALIDATED_MAGIC,16,16,0,4,1,0,Language::BASIC,0};
+  ValidatedImage cert={VALIDATED_MAGIC,16,16,4,16,0,1,0,Language::BASIC};
   uint8_t a[16],b[16],c[16];memset(a,1,16);memset(b,2,16);memset(c,3,16);
   assert(small.store(1,1,a,cert)&&small.store(2,1,b,cert));
   assert(small.find(1,1));assert(small.store(3,1,c,cert));

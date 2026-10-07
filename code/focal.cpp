@@ -413,6 +413,9 @@ struct FocalAst {
 };
 
 struct FocalProgram {
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  u32 source_revision;
+#endif
   bool used;
   u16 store_id;
   u16 parent_id;
@@ -2602,9 +2605,24 @@ FocalRunStatus RunFocal(int FocalN) {
       FocalN >= FOCAL_PROGRAM_COUNT || !programs[FocalN].used)
     return FocalRunStatus::UNAVAILABLE;
   auto& request = *language_vm::frontend_request;
+  auto& program = programs[FocalN];
+#ifndef FOCAL_HOST_TEST
+  if (!request.output && program.store_id != FOCAL_INVALID_STORE_ID) {
+    // The editor expands operator names, while C6 may store compact names.
+    // Resource offsets always refer to the exact saved bytes, not that UI copy.
+    program.source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
+    u16 length = 0;
+    if (!program_store::read_id(program.store_id, (u8*)program.source,
+                               FOCAL_SOURCE_SIZE - 1, &length) ||
+        program.source_revision != portable_system::call(MK61_SYS_RESOURCE_READ))
+      return FocalRunStatus::UNAVAILABLE;
+    program.source[length] = 0; program.source_len = length;
+  }
+#endif
+  const language_vm::ResourceSource resources = {program.store_id, program.source_revision};
   request.compiled = language_vm::compile(
-      language_vm::Language::FOCAL, programs[FocalN].source,
-      programs[FocalN].source_len, request.output, (u16)request.capacity);
+      language_vm::Language::FOCAL, program.source,
+      program.source_len, request.output, (u16)request.capacity, true, &resources);
   request.source_id = programs[FocalN].store_id;
   request.language = (u8)language_vm::Language::FOCAL;
   request.mode = 0;
@@ -2674,6 +2692,8 @@ FocalRunStatus RunFocal(int FocalN) {
             c.output[0] = 0;
             c.row = 0;
             return true;
+          case language_vm::Event::RESOURCE_TEXT:
+          case language_vm::Event::RESOURCE_INPUT: return false;
           case language_vm::Event::TEXT:
             focal_append_print_range(c.output, sizeof(c.output), text, text + length);
             return true;

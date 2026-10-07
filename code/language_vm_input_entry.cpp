@@ -3,6 +3,7 @@
 #if defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
 #include <string.h>
 #include "language_vm_abi.hpp"
+#include "language_resources.hpp"
 #include "language_vm_flow.hpp"
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
@@ -33,6 +34,10 @@ uint32_t finish(OverlayRequest* p) {
   auto& s = *p->state;
   if (s.cancelled) r.result.error = s.normal_stop ? Error::NONE : Error::STOPPED;
   else if (s.failure != Error::NONE) r.result.error = s.failure;
+  if(r.result.error != Error::NONE) {
+    View view;
+    if(validated_view(*p, view)) r.error_column = source_column(view, r.result.pc);
+  }
   if (r.result.error != Error::NONE &&
       !(r.mode == 1 && r.result.error == Error::STOPPED)) {
     char position[24];
@@ -68,6 +73,13 @@ uint32_t input(InputRequest* r) {
   for (uint8_t byte : r->reserved) if (byte) return 0;
   r->result = InputResult::NONE; r->image_size = 0;
   if (r->invalid) invalid_number();
+  char prompt[96];
+  const char* prompt_text = r->prompt;
+  if(r->resource_image) {
+    if(!resource_prompt((const uint8_t*)r->prompt, prompt,
+                        portable_system::resource_read, (void*)r->resource_image)) return 0;
+    prompt_text = prompt;
+  }
   char text[65] = {};
   text_editor::Buffer editor;
   text_editor::init(editor, text, sizeof(text));
@@ -77,7 +89,7 @@ uint32_t input(InputRequest* r) {
       main_lcd().clear();
       const uint8_t rows = main_lcd().rows();
       const uint8_t n = rows > 1 ? main_lcd().printWrappedText(
-          r->prompt, r->prompt_length, 0, (u8)(rows - 1), true, false) : 0;
+          prompt_text, r->prompt_length, 0, (u8)(rows - 1), true, false) : 0;
       main_lcd().setCursor(0, n);
       main_lcd().print("> "); main_lcd().print(text);
     }

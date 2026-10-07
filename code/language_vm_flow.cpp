@@ -1,4 +1,5 @@
 #include "language_vm_flow.hpp"
+#include "language_resources.hpp"
 #include "loadable_app_api.h"
 #include "loadable_module_abi.hpp"
 #include "language_compiler_flow.hpp"
@@ -46,11 +47,18 @@ void returned(mk61_app_flow* flow, uint32_t result = 1,
 bool prepare_input(FlowContext& c) {
   const auto& r = *c.program.execution;
   auto& s = *c.program.state;
-  if(s.prompt_offset > r.image_size || s.prompt_length > r.image_size - s.prompt_offset ||
+  if(r.result.pc >= r.image_size || s.prompt_offset > r.image_size ||
      s.control.sp >= INPUT_STACK_CAPACITY) return false;
+  const bool resource = (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE;
+  if(resource ? s.prompt_length > 95 || r.image_size - s.prompt_offset < 3
+              : s.prompt_length > r.image_size - s.prompt_offset) return false;
+  if(resource && (!valid_resource_recipe(r.image + s.prompt_offset,
+      (uint16_t)(r.image_size - s.prompt_offset), c.program.validated->source_size) ||
+      resource_word(r.image + s.prompt_offset) != s.prompt_length)) return false;
   c.input = {};
   c.input.size = sizeof(c.input); c.input.version = REQUEST_VERSION;
   c.input.prompt = (const char*)r.image + s.prompt_offset;
+  if(resource) c.input.resource_image = r.image;
   c.input.prompt_length = s.prompt_length;
   c.input.image = input_image_storage(s);
   c.input.capacity = INPUT_IMAGE_CAPACITY; c.input.language = s.language;
@@ -79,15 +87,10 @@ uint32_t flow_vm(mk61_app_flow* flow, FlowExecute execute) {
         returned(flow, 0, MK61_FLOW_CORRUPT); return 1;
       }
       if(r.result.error == Error::YIELDED) {
-        if(!prepare_input(*c)) {
-          c->failure_status = MK61_FLOW_CORRUPT;
-          p.action = OverlayAction::ABORT;
-          (void)execute(&p);
-        } else {
-          mk61_app_flow_call(flow, target(MK61_APP_KIND_LANGUAGE_INPUT, FLOW_EDIT_INPUT),
-                              FLOW_AFTER_INPUT);
-          return 1;
-        }
+        c->input.size = 0; // The cold INPUT APP binds the recipe after replacing this APP.
+        mk61_app_flow_call(flow, target(MK61_APP_KIND_LANGUAGE_INPUT, FLOW_EDIT_INPUT),
+                            FLOW_AFTER_INPUT);
+        return 1;
       }
       // A successful M61 BASIC part needs no cold finish UI. Retain the hot
       // executor for the next cached part; errors and interactive runs finish normally.
@@ -127,6 +130,9 @@ uint32_t flow_input(mk61_app_flow* flow, FlowExecute validate,
       c->input.invalid = true;
       [[fallthrough]];
     case FLOW_EDIT_INPUT:
+      if(!c->input.size && !prepare_input(*c)) {
+        returned(flow, 0, MK61_FLOW_CORRUPT); return 1;
+      }
       if(!input(&c->input)) { returned(flow, 0, MK61_FLOW_CORRUPT); return 1; }
       if(c->input.result == InputResult::CANCELLED) {
         s.cancelled = true;

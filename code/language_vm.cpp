@@ -18,7 +18,7 @@ uint32_t record_number(const View& v, uint16_t i) {
   return v.language == Language::BASIC ? word(p) : dword(p);
 }
 uint16_t next(const View& v, uint16_t pc) {
-  if (pc >= v.size) return 0;
+  if (pc >= v.end) return 0;
   const uint8_t op = v.bytes[pc++];
   uint16_t n = 0;
   if (op >= (uint8_t)Op::CONST_0 && op <= (uint8_t)Op::CONST_15) return pc;
@@ -45,6 +45,10 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::CONST_DEC16:
       n = 3;
       break;
+    case Op::PRINT_RESOURCE:
+    case Op::INPUT_RESOURCE:
+      n = 2;
+      break;
     case Op::CONST_F64:
       n = 8;
       break;
@@ -61,16 +65,16 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::DATA:
     case Op::ON_GOTO:
     case Op::ON_GOSUB: {
-      if (v.size - pc < 2) return 0;
+      if (v.end - pc < 2) return 0;
       const uint16_t count = word(v.bytes + pc);
       pc += 2;
       const uint16_t width = (Op)op == Op::DATA ? 1 : 2;
-      if (count == 0 || count > (v.size - pc) / width) return 0;
+      if (count == 0 || count > (v.end - pc) / width) return 0;
       return (uint16_t)(pc + count * width);
     }
     case Op::PRINT_TEXT:
     case Op::READ_INPUT:
-      if (v.size - pc < 2) return 0;
+      if (v.end - pc < 2) return 0;
       n = word(v.bytes + pc);
       pc += 2;
       break;
@@ -116,7 +120,7 @@ uint16_t next(const View& v, uint16_t pc) {
     default:
       return 0;
   }
-  return n <= v.size - pc ? (uint16_t)(pc + n) : (uint16_t)0;
+  return n <= v.end - pc ? (uint16_t)(pc + n) : (uint16_t)0;
 }
 bool constant_value(const View& v, uint16_t pc, double& value) {
   const Op op = (Op)v.bytes[pc];
@@ -175,10 +179,13 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   if (!bytes || length < HEADER_SIZE || length > MAX_IMAGE ||
       memcmp(bytes, "LBV1", 4) || bytes[4] != VERSION ||
       (bytes[5] != (uint8_t)Language::BASIC && bytes[5] != (uint8_t)Language::FOCAL) ||
-      bytes[6] == 0 || bytes[6] > MAX_STACK || bytes[7] > 3 ||
+      bytes[6] == 0 || bytes[6] > MAX_STACK || bytes[7] > 7 ||
       word(bytes + 8) != length)
     return Error::INVALID_IMAGE;
-  for (uint8_t i = 24; i < HEADER_SIZE; ++i)
+  if (bytes[7] & 4) {
+    if ((bytes[7] & 1) || word(bytes + 24) == 0xFFFF)
+      return Error::INVALID_IMAGE;
+  } else for (uint8_t i = 24; i < HEADER_SIZE; ++i)
     if (bytes[i]) return Error::INVALID_IMAGE;
   View v = {bytes,
             length,
@@ -189,16 +196,35 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             (Language)bytes[5],
             (bytes[7] & 1) != 0,
             (bytes[7] & 2) != 0};
+  v.end = (bytes[7] & 4) ? word(bytes + 30) : length;
+  if (v.end > length || ((bytes[7] & 4) && v.end == length)) return Error::INVALID_IMAGE;
   if ((v.expression
            ? v.lines != 0 || v.source_size > (v.language == Language::BASIC ? 64 : 111)
            : !v.lines) ||
       v.lines > (v.language == Language::BASIC ? 192 : 80) ||
-      v.code != HEADER_SIZE + v.lines * stride(v) || v.code >= length ||
+      v.code != HEADER_SIZE + v.lines * stride(v) || v.code >= v.end ||
       !v.source_size || v.source_size > (v.language == Language::BASIC ? 3584 : 1536) ||
       checksum(bytes + HEADER_SIZE, length - HEADER_SIZE) != dword(bytes + 20))
     return Error::INVALID_IMAGE;
   uint8_t boundaries[(MAX_IMAGE + 7) / 8] = {};
-  for (uint16_t pc = v.code; pc < length;) {
+  // The same bitmap covers instructions and separately delimited recipes.
+  for (uint16_t at = v.end; at < length;) {
+    if (length - at < 3 || bytes[at + 2] > (length - at - 3) / 3)
+      return Error::INVALID_IMAGE;
+    boundaries[at >> 3] |= (uint8_t)(1U << (at & 7));
+    unsigned total = 0;
+    for (uint8_t i = 0; i < bytes[at + 2]; ++i) {
+      const auto* p = bytes + at + 3 + i * 3;
+      const uint16_t offset = word(p); const uint8_t n = p[2];
+      if (!n || ((offset & 0x8000) ? (offset & 0x7F00) || n != 1 :
+                       offset > v.source_size || n > v.source_size - offset))
+        return Error::INVALID_IMAGE;
+      total += n;
+    }
+    if (total != word(bytes + at)) return Error::INVALID_IMAGE;
+    at += (uint16_t)(3 + bytes[at + 2] * 3);
+  }
+  for (uint16_t pc = v.code; pc < v.end;) {
     boundaries[pc >> 3] |= (uint8_t)(1U << (pc & 7));
     const uint16_t following = next(v, pc);
     if (!following) return Error::INVALID_IMAGE;
@@ -222,7 +248,15 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
-    if (op >= Op::DATA && v.language != Language::BASIC) return Error::INVALID_IMAGE;
+    if (op >= Op::DATA && op <= Op::SOURCE_POS && v.language != Language::BASIC)
+      return Error::INVALID_IMAGE;
+    if (op == Op::PRINT_RESOURCE || op == Op::INPUT_RESOURCE) {
+      const uint32_t at = (uint32_t)v.end + word(bytes + pc + 1);
+      if (!(bytes[7] & 4) || at >= length ||
+          !(boundaries[at >> 3] & (1U << (at & 7))) ||
+          (op == Op::INPUT_RESOURCE && word(bytes + at) > 95))
+        return Error::INVALID_IMAGE;
+    }
     if (op == Op::DATA) {
       const uint16_t end = (uint16_t)(pc + 3 + word(bytes + pc + 1));
       for (uint16_t at = (uint16_t)(pc + 3); at < end;) {
@@ -243,7 +277,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   }
   auto target = [&](uint16_t pc) {
     return pc == 0xFFFF ||
-           (pc >= v.code && pc < length && (boundaries[pc >> 3] & (1U << (pc & 7))));
+           (pc >= v.code && pc < v.end && (boundaries[pc >> 3] & (1U << (pc & 7))));
   };
   for (uint16_t i = 0; i < v.lines; ++i) {
     const uint32_t number = record_number(v, i);
@@ -254,7 +288,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         (i && record_pc(v, i) <= record_pc(v, (uint16_t)(i - 1))))
       return Error::INVALID_IMAGE;
   }
-  for (uint16_t pc = v.code; pc < length; pc = next(v, pc)) {
+  for (uint16_t pc = v.code; pc < v.end; pc = next(v, pc)) {
     const Op op = (Op)bytes[pc];
     if ((op == Op::JUMP || op == Op::JUMP_FALSE) && !target(word(bytes + pc + 1)))
       return Error::INVALID_IMAGE;
@@ -288,7 +322,7 @@ uint32_t source_line(const View& v, uint16_t pc) {
 
 uint16_t source_column(const View& v, uint16_t pc) {
   uint16_t column = 0;
-  for (uint16_t at = v.code; at <= pc && at < v.size;) {
+  for (uint16_t at = v.code; at <= pc && at < v.end;) {
     const uint16_t following = next(v, at);
     if (!following) return 0;
     if ((Op)v.bytes[at] == Op::SOURCE_POS) column = word(v.bytes + at + 1);
@@ -313,9 +347,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     s.sp = s.call_count = s.loop_count = 0;
     s.data_pc = v.code;
     s.data_index = 0;
-  } else if (s.pc < v.code || s.pc >= v.size || s.sp > data.stack_capacity ||
+  } else if (s.pc < v.code || s.pc >= v.end || s.sp > data.stack_capacity ||
              s.call_count > (v.language == Language::BASIC ? MAX_CALLS : 8) ||
-             s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.size) {
+             s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.end) {
     return {Error::INVALID_IMAGE, 0, 0, 0};
   }
   if (resume) {
@@ -326,7 +360,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       cursor = following;
     }
     if (cursor != s.data_pc ||
-        (s.data_index && (cursor >= v.size || (Op)v.bytes[cursor] != Op::DATA ||
+        (s.data_index && (cursor >= v.end || (Op)v.bytes[cursor] != Op::DATA ||
                           s.data_index > word(v.bytes + cursor + 1))))
       return {Error::INVALID_IMAGE, 0, 0, 0};
     if (s.data_index) {
@@ -342,15 +376,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
     for (uint8_t i = 0; i < s.call_count; ++i) {
       const auto& f = s.calls[i];
-      if (f.resume < v.code || f.resume >= v.size || f.loops > MAX_LOOPS ||
-          (f.end && (f.end < v.code || f.end >= v.size)))
+      if (f.resume < v.code || f.resume >= v.end || f.loops > MAX_LOOPS ||
+          (f.end && (f.end < v.code || f.end >= v.end)))
         return {Error::INVALID_IMAGE, 0, 0, 0};
     }
     for (uint8_t i = 0; i < s.loop_count; ++i) {
       const auto& f = s.loops[i];
       if (((f.variable & 0x8000U) ? (!data.array || (f.variable & 0x7FFFU) >= data.array_count)
                                   : f.variable >= 26) ||
-          f.body < v.code || f.body >= v.size || (f.end && (f.end < v.code || f.end >= v.size)))
+          f.body < v.code || f.body >= v.end || (f.end && (f.end < v.code || f.end >= v.end)))
         return {Error::INVALID_IMAGE, 0, 0, 0};
     }
   }
@@ -376,7 +410,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     if (!host.event || !host.event(host.context, e, p, n, value)) error = Error::IO;
   };
   auto jump = [&](uint16_t to) {
-    if (to < v.code || to >= v.size)
+    if (to < v.code || to >= v.end)
       error = Error::LINE;
     else
       s.pc = to;
@@ -398,7 +432,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       s.pc = frame.resume;
       s.loop_count = frame.loops;
     }
-    if (s.pc >= v.size) {
+    if (s.pc >= v.end) {
       error = Error::INVALID_IMAGE;
       break;
     }
@@ -442,7 +476,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::DATA:
         break;
       case Op::READ_DATA: {
-        while (s.data_pc < v.size) {
+        while (s.data_pc < v.end) {
           const uint16_t following = next(v, s.data_pc);
           if (!following) {
             error = Error::INVALID_IMAGE;
@@ -465,7 +499,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           s.data_pc = following;
           s.data_index = 0;
         }
-        if (s.data_pc == v.size) error = Error::DATA_END;
+        if (s.data_pc == v.end) error = Error::DATA_END;
         break;
       }
       case Op::RESTORE_DATA: {
@@ -706,7 +740,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::JUMP:
-        if (word(p) < v.code || word(p) >= v.size) {
+        if (word(p) < v.code || word(p) >= v.end) {
           error = Error::LINE;
           break;
         }
@@ -764,7 +798,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         a = pop();
         if (error == Error::NONE) {
           const uint16_t to = word(p + (a < 0 ? 0 : a == 0 ? 2 : 4));
-          if (to < v.code || to >= v.size) {
+          if (to < v.code || to >= v.end) {
             error = Error::LINE;
             break;
           }
@@ -823,7 +857,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           uint8_t depth = 0;
           uint16_t vars[MAX_LOOPS] = {};
           bool found = false;
-          while (scan < v.size && error == Error::NONE) {
+          while (scan < v.end && error == Error::NONE) {
             const Op candidate = (Op)v.bytes[scan];
             const uint16_t following = next(v, scan);
             if (!following) {
@@ -929,6 +963,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::PRINT_TEXT:
         event(Event::TEXT, (const char*)p + 2, word(p), value);
         break;
+      case Op::PRINT_RESOURCE:
+        p = v.bytes + v.end + word(p);
+        event(Event::RESOURCE_TEXT, (const char*)p, word(p), value);
+        break;
       case Op::PRINT_NUMBER:
         value = pop();
         if (error == Error::NONE) event(Event::NUMBER, nullptr, 0, value);
@@ -947,11 +985,16 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         event(Event::PRINT_END, nullptr, *p, value);
         break;
       case Op::READ_INPUT:
+      case Op::INPUT_RESOURCE: {
         if (host.yield_input)
           return {Error::YIELDED, instruction, source_line(v, instruction), steps};
-        event(Event::READ_INPUT, (const char*)p + 2, word(p), value);
+        const bool resource = op == Op::INPUT_RESOURCE;
+        p = resource ? v.bytes + v.end + word(p) : p;
+        event(resource ? Event::RESOURCE_INPUT : Event::READ_INPUT,
+              (const char*)p + (resource ? 0 : 2), word(p), value);
         if (error == Error::NONE) push(value);
         break;
+      }
       case Op::READ_KEY:
         event(Event::READ_KEY, nullptr, 0, value);
         if (error == Error::NONE) push(value);
