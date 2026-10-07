@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from m8_codec import encode
 from layout import FIELDS, MODULES, LOCAL_ONLY, SOURCE_BUDGET
+from opening_book import data_statements
 
 DEST = ROOT / "programs/games/Turochamp"
 TEMPLATES = Path(__file__).parent / "basic"
@@ -37,7 +38,9 @@ def assemble(name: str, template: str) -> str:
     statements: list[tuple[list[str], str]] = []
     labels: list[str] = []
     phases: dict[str, int] = {}
-    source = template.splitlines()
+    source = []
+    for line in template.splitlines():
+        source += data_statements() if line.strip() == 'BOOKDATA' else [line]
     # Leaf BASIC services can run as local GOSUBs. Their FOR/RETURN stacks
     # must finish before another M61 part is loaded.
     local = list(dict.fromkeys(re.findall(r'^LOCAL (\w+)$', template, re.M)))

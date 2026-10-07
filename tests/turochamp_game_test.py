@@ -26,6 +26,11 @@ def status(b):
     return tuple(map(int, b.ask('status').split()))
 
 
+def pure_ui(b, keys):
+    # Select the book setting, turn it off, return to White, then use keys.
+    return b.ask('ui 16 16 16 16 19 16 '+keys)
+
+
 def positional(board, side):
     """Independent bitboard implementation of the seven published criteria."""
     def mobility(square, queen=False):
@@ -235,22 +240,22 @@ def terminal_mate(board, move):
 
 
 def keyboard(b):
-    assert b.ask('ui 19') == chess.STARTING_FEN
-    assert b.ask('ui 19 19 17 17 19') == 'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2'
-    assert b.ask('ui 16 19') == 'rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
-    assert b.ask('ui 16 16 19 19 17 17 19') == 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'
+    assert pure_ui(b,'19') == chess.STARTING_FEN
+    assert pure_ui(b,'19 19 17 17 19') == 'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2'
+    assert pure_ui(b,'16 19') == 'rnbqkbnr/pppppppp/8/8/8/4P3/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
+    assert pure_ui(b,'16 16 19 19 17 17 19') == 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1'
     # Cancel, illegal pawn movement, help return, resignation, agreed draw.
-    for keys in ('19 19 22', '19 19 17 17 17 19', '19 25 19 19'):
-        assert b.ask('ui '+keys) == chess.STARTING_FEN
-    b.ask('ui 19 21 16 16 16 19')
+    for keys in ('19 19 22', '19 19 17 17 17 19', '19 25 19 19 19'):
+        assert pure_ui(b,keys) == chess.STARTING_FEN
+    pure_ui(b,'19 21 16 16 16 19')
     assert getv(b, 'RESULT') == 2
     # The result dialog shares game.tbi and OK still resets the whole game.
-    assert b.ask('ui 19 21 16 16 16 19 19') == chess.STARTING_FEN
+    assert pure_ui(b,'19 21 16 16 16 19 19') == chess.STARTING_FEN
     assert getv(b, 'RESULT') == 0 and getv(b, 'HCOUNT') == 0
-    b.ask('ui 16 16 19 21 16 16 19 19')
+    pure_ui(b,'16 16 19 21 16 16 19 19')
     assert getv(b, 'RESULT') == 9
     # A new game returns to side selection with all board/history data reset.
-    assert b.ask('ui 16 16 19 19 17 17 19 21 15 19') == chess.STARTING_FEN
+    assert pure_ui(b,'16 16 19 19 17 17 19 21 15 19') == chess.STARTING_FEN
     assert getv(b, 'HCOUNT') == 0
     # All promotion choices are made through the shipping keyboard dialog.
     for key, piece in (('19','Q'), ('16 19','N'), ('16 16 19','B'), ('16 16 16 19','R'),
@@ -313,7 +318,7 @@ def screen(b):
                 seen.add(actual)
 
     for keys in ('19','16 19','16 16 19 19 17 17 19'):
-        check_cells(chess.Board(b.ask('ui '+keys)))
+        check_cells(chess.Board(pure_ui(b,keys)))
 
     # A render-only fixture puts each piece/empty cell on both square colours.
     # Highlight each square in turn to cover all 52 glyphs in both orientations.

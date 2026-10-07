@@ -5,6 +5,13 @@ CALL status :status
 IF STAT>0 RESULT=STAT:DRAW_REASON=STAT:G.:end
 IF MODE=0 G.:human
 IF SIDE=MODE G.:human
+IF BOOK_ENABLED#1 G.:calculate
+IF BOOK_NODE=0 G.:calculate
+BOOK_ACTION=1
+CALL history :opening
+:opening
+IF BEST>0 MOVE=BEST:G.:move
+:calculate
 UI_MESSAGE=1
 CALL board :thinking
 :thinking

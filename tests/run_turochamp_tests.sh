@@ -22,4 +22,5 @@ for backend in interpreter vm; do
   extra=()
   if [[ "$backend" == interpreter ]]; then extra=("${selfplay[@]}"); fi
   "$test_python" "$root/tests/turochamp_game_test.py" --runner "$work/$backend" "${extra[@]}"
+  "$test_python" "$root/tests/turochamp_book_test.py" --runner "$work/$backend" "${extra[@]}"
 done

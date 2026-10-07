@@ -93,6 +93,8 @@ void fen(const std::string& value) {
     put(tc::RIGHTS,get(tc::RIGHTS)+(1U<<i));
   put(tc::EP,ep=="-"?0:square(ep));put(tc::HALF,half);put(tc::FULL,full);
   put(tc::HEP,get(tc::EP));
+  if(value!="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+    put(tc::BOOK_NODE,0);
 }
 std::string fen() {
   std::string out;
@@ -193,6 +195,7 @@ int main(int argc,char**argv) {
     while(std::getline(std::cin,line)) {
       std::istringstream in(line);std::string cmd;in>>cmd;
       if(cmd=="fen") {fen(line.substr(4));std::cout<<"ok\n";}
+      else if(cmd=="new") {part(tc::M_INIT);std::cout<<fen()<<'\n';}
       else if(cmd=="get") {int n;in>>n;std::cout<<get(n)<<'\n';}
       else if(cmd=="set") {int n;double v;in>>n>>v;put(n,v);std::cout<<"ok\n";}
       else if(cmd=="call") {int n;in>>n;call(n);std::cout<<"ok\n";}
@@ -210,6 +213,9 @@ int main(int argc,char**argv) {
       else if(cmd=="best") {put(tc::REPDEP,0);call(tc::M_STATUS);call(tc::M_SEARCH);
         int m=(int)get(tc::BEST);std::cout<<(m?uci(m):"draw")<<' '
             <<get(tc::ROOTVAL)<<' '<<get(tc::NODES)<<'\n';}
+      else if(cmd=="book") {put(tc::BOOK_ACTION,1);call(tc::M_HISTORY);
+        int m=(int)get(tc::BEST);std::cout<<(m?uci(m):"none")<<' '
+            <<get(tc::BOOK_NODE)<<' '<<get(tc::BOOK_ENABLED)<<'\n';}
       else if(cmd=="claims") {call(tc::M_CLAIMS);int m=(int)get(tc::H_MOVE);
         std::cout<<get(tc::CLAIM)<<' '<<(m?uci(m):"-")<<'\n';}
       else if(cmd=="ui"||cmd=="keys") {std::vector<int> keys;int id,k;

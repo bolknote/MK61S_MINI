@@ -14,6 +14,20 @@ and use local GOTOs; the result dialog shares game.tbi. Attack and pawn
 services remain shared source templates, embedded only where needed.
 Assembly emits the runtime module registry and removes obsolete TBI parts.
 
+An optional opening book shares `history.tbi`, so it adds no runtime files.
+It contains 17 hand-curated six-ply lines, packed into 77 shared-prefix
+edges by `opening_book.py`. Only numeric DATA records ship: parent node,
+12-bit move and child node. RESTORE/READ stream them without allocating a
+second board or a table in the shared array. ON GOSUB selects actual-move
+tracking or uniform reservoir sampling with RND. Only committed moves
+advance the book; leaving a line or reaching its end returns to Turochamp.
+Every selected book move is checked by the full legal generator. Matching
+uses the actual move prefix; transpositions do not re-enter the book.
+The four initial choices are e4, d4, c4 and Nf3. The book defaults to on,
+can be disabled in the start menu, and remembers the setting for new games.
+Five previously unused array slots hold its state; the 351 index limit
+and the historical search/evaluation remain unchanged.
+
 Reference: Martin C. Doege's public-domain `PyTuroChamp/pyturochamp.py`,
 which also underlies the supplied nimTUROCHAMP application. The historical
 seven positional criteria are included. Search defaults to two full plies
@@ -70,7 +84,7 @@ python3 tools/turochamp/font.py --check
 
 Each part retains room for `@(0)..@(351)`, fits in 192 lines and in one
 3584-byte C6 BASIC file. Array storage remains shared between M61 parts.
-There is no native chess engine, website access or opening-book dependency
+There is no native chess engine, website access or external book database
 at game runtime.
 
 Verification:
@@ -81,8 +95,8 @@ python3 -m venv /private/tmp/turochamp-test-env
 TUROCHAMP_PYTHON=/private/tmp/turochamp-test-env/bin/python bash tests/run_turochamp_tests.sh
 ```
 
-`--selfplay` adds a complete computer-versus-computer game with the shipping
-2/8-ply search. The harness compiles the actual device BASIC, transports
+`--selfplay` adds complete computer-versus-computer games both with the book
+and with the pure 2/8-ply search. The harness compiles the actual device BASIC, transports
 FEN and key events, and runs both the interpreter and bytecode VM. Python
 chess supplies independent legal move sets, standard perft positions,
 seeded games, state restoration and adjudication checks. A separate
@@ -91,6 +105,11 @@ reference search checks material/positional scores. Keyboard tests execute
 side selection, moves, castling, EP, promotion, claims, resignation,
 agreement, help, restart and pixel-cell layout. No host chess code makes
 decisions for the BASIC engine.
+
+`turochamp_book_test.py` independently decodes the emitted DATA and checks
+every edge and all complete lines with python-chess. It verifies every
+random choice, variation across new games, both player colours, legality
+guards, departure/end-of-book fallback and the remembered menu setting.
 
 The package check needs only standard Python:
 `python3 tests/turochamp_package_self_test.py`. It checks generated files,

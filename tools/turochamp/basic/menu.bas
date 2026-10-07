@@ -6,11 +6,15 @@ IF UI_ACTION=0 P."БЕЛЫЕ"
 IF UI_ACTION=1 P."ЧЁРНЫЕ"
 IF UI_ACTION=2 P."ДВА ИГРОКА"
 IF UI_ACTION=3 P."ИНСТРУКЦИЯ"
-P."СТРЕЛКИ - ВЫБОР":P."ОК - НАЧАТЬ"
+IF UI_ACTION=4 P."ДЕБЮТНАЯ КНИГА"
+IF BOOK_ENABLED=1 P."КНИГА: ВКЛ" ELSE P."КНИГА: ВЫКЛ"
+P."СТРЕЛКИ - ВЫБОР"
+IF UI_ACTION=4 P."ОК - ВКЛ/ВЫКЛ" ELSE P."ОК - НАЧАТЬ"
 UI_KEY=INP.()
-IF (UI_KEY=15) OR (UI_KEY=17) UI_ACTION=(UI_ACTION+3) MOD 4
-IF (UI_KEY=16) OR (UI_KEY=18) UI_ACTION=(UI_ACTION+1) MOD 4
+IF (UI_KEY=15) OR (UI_KEY=17) UI_ACTION=(UI_ACTION+4) MOD 5
+IF (UI_KEY=16) OR (UI_KEY=18) UI_ACTION=(UI_ACTION+1) MOD 5
 IF UI_KEY#19 G.:start
+IF UI_ACTION=4 BOOK_ENABLED=3-BOOK_ENABLED:G.:start
 IF UI_ACTION=3 G.:help
 MODE=(UI_ACTION=0)-(UI_ACTION=1);UI_VIEW=MODE
 IF MODE=0 UI_VIEW=1
