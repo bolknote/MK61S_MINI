@@ -9,5 +9,12 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
 fi
 clang++ -std=c++17 "${flags[@]}" -I"$root/code" \
   "$root/tests/language_compiler_flow_self_test.cpp" \
-  "$root/code/language_compiler_flow.cpp" -o "$work/test"
+  "$root/code/language_compiler_flow.cpp" "$root/code/language_vm_flow.cpp" -o "$work/test"
 "$work/test"
+for language in TINYBASIC FOCAL; do
+  clang++ -std=c++17 "${flags[@]}" -DMK61_BUILD_${language}_MODULE=1 -I"$root/code" \
+    "$root/tests/language_compiler_flow_self_test.cpp" \
+    "$root/code/language_compiler_flow.cpp" "$root/code/language_vm_flow.cpp" \
+    -o "$work/specialized-$language"
+  "$work/specialized-$language"
+done

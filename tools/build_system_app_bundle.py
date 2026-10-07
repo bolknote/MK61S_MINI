@@ -131,12 +131,12 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
     if system == "markdown-viewer":
         parts.append("graphics" if args.graphics else "text")
     if system in ("focal", "tinybasic"):
-        parts.append("vm-compiler-v5-flow" if getattr(args,"language_vm_compiler",False)
+        parts.append("vm-compiler-v5-flow-compact1-specialized" if getattr(args,"language_vm_compiler",False)
                      else "float" if args.local_float_math else "core")
     if system == "language-vm":
-        parts += ["split-v6-flow1", "float" if args.local_float_math else "core"]
+        parts += ["split-v6-flow1-compact1", "float" if args.local_float_math else "core"]
     if system == "language-input":
-        parts.append("cold-v6-flow1")
+        parts.append("cold-v6-flow1-compact1")
     return "+".join(parts)
 
 

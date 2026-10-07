@@ -11,21 +11,33 @@ struct PersistentValues {
   double array[385];
 };
 static_assert(sizeof(PersistentValues) == VALUES_SIZE, "retained values layout changed");
-struct CompilerContext {
-  FlowContext vm; // Existing executor protocol is the prefix.
-  Request compiler;
-  ExecuteRequest execution;
+struct CompilerStage {
+  // Common initial sequence with FlowContext, including the original command
+  // that must survive index normalization and the transition into RUN.
+  uint32_t magic, original_command;
+  Request request;
   app_flow::ImageTransfer transfer;
   PersistentValues* values;
   uint32_t command, argument0, argument1;
+};
+struct CompilerContext {
+  union {
+    CompilerStage compile; // Active through SOURCE/EMIT/HOST commit.
+    FlowContext vm;        // Active after cold prepare, including INPUT.
+  };
+  ExecuteRequest execution;
+  // These are the only compiler results needed after the union is reused.
+  uint16_t source_id;
   Language language;
+  uint8_t clear_requested;
   bool prepared;
-  uint8_t reserved[2];
+  uint8_t reserved[3];
 };
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(CompilerContext) == 312 && offsetof(CompilerContext, compiler) == 184 &&
-              offsetof(CompilerContext, execution) == 216 && offsetof(CompilerContext, transfer) == 264 &&
-              offsetof(CompilerContext, values) == 292,
+static_assert(sizeof(CompilerStage) == 84 && offsetof(CompilerStage, request) == 8 &&
+              offsetof(CompilerStage, transfer) == 40 && offsetof(CompilerStage, values) == 68 &&
+              sizeof(CompilerContext) == 240 && offsetof(CompilerContext, execution) == 184 &&
+              offsetof(CompilerContext, source_id) == 232,
               "compiler flow wire layout changed");
 #endif
 enum CompilerPhase : uint32_t { FLOW_COMPILE_SOURCE = 0x100, FLOW_EMIT_SOURCE };

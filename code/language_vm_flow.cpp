@@ -29,6 +29,11 @@ FlowContext* context(mk61_app_flow* flow) {
      (flow->context_size != sizeof(FlowContext) && flow->context_size != sizeof(CompilerContext)))
     return nullptr;
   auto* c = (FlowContext*)flow->context;
+  if(flow->context_size == sizeof(CompilerContext)) {
+    auto* root = (CompilerContext*)flow->context;
+    if(!root->prepared) return nullptr; // The compiler union member is still active.
+    c = &root->vm;
+  }
   return c->magic == FLOW_CONTEXT_MAGIC && execution_compatible(&c->program) ? c : nullptr;
 }
 mk61_app_flow_target target(uint8_t kind, uint32_t phase) {

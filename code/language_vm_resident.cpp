@@ -161,9 +161,10 @@ struct CompilerServices {
 };
 loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) {
   auto& binding = *(CompilerServices*)raw;
-  if(step.context != binding.context || step.context_size != sizeof(CompilerContext))
+  if(step.context != binding.context || step.context_size != sizeof(CompilerContext) ||
+     binding.context->prepared)
     return loadable_module::RuntimeStatus::CORRUPT_MODULE;
-  auto& plan = binding.context->transfer;
+  auto& plan = binding.context->compile.transfer;
   if(step.current.phase == app_flow::RESERVE_IMAGE) {
     const auto status = binding.memory->reserve(plan);
     if(status != loadable_module::RuntimeStatus::OK) return status;
@@ -228,9 +229,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   }
 #endif
   CompilerContext context = {};
-  context.vm.magic=FLOW_CONTEXT_MAGIC; context.vm.original_command=(uint32_t)command;
-  context.values=values; context.command=(uint32_t)command;
-  context.argument0=a; context.argument1=b; context.language=language;
+  context.compile.magic=FLOW_CONTEXT_MAGIC; context.compile.original_command=(uint32_t)command;
+  context.compile.values=values; context.compile.command=(uint32_t)command;
+  context.compile.argument0=a; context.compile.argument1=b; context.language=language;
   app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
   CompilerServices services = {&context, &memory};
   const auto first=mk61_app_flow_to(language==Language::BASIC?MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,
@@ -245,17 +246,17 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if(status != RuntimeStatus::OK || !context.prepared) return status;
   auto& execution=context.execution;
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-  if(cacheable && context.compiler.source_id==a && !context.compiler.clear_requested &&
-     context.compiler.mode==1 && execution.result.error==Error::NONE)
+  if(cacheable && context.source_id==a && !context.clear_requested &&
+     execution.mode==1 && execution.result.error==Error::NONE)
     (void)image_cache.store((uint16_t)a,revision,execution.image,context.vm.program_validated);
 #endif
   if(language==Language::BASIC) {
-    error_id=execution.result.error==Error::NONE?0xFFFF:context.compiler.source_id;
+    error_id=execution.result.error==Error::NONE?0xFFFF:context.source_id;
     error_line=(uint16_t)execution.result.line; error_column=execution.error_column;
   }
   if(edit_id && edit_position && language==Language::BASIC && execution.mode==0 &&
-     execution.edit_requested && execution.result.line && context.compiler.source_id!=0xFFFF) {
-    *edit_id=context.compiler.source_id;
+     execution.edit_requested && execution.result.line && context.source_id!=0xFFFF) {
+    *edit_id=context.source_id;
     *edit_position=(execution.result.line<<16)|execution.error_column;
   }
   return RuntimeStatus::OK;

@@ -30,11 +30,14 @@ def main():
     parser.add_argument("--baseline-ref", default="fc327699")
     parser.add_argument("--candidate-label", default="app_flow")
     parser.add_argument("--expect-cache-off", action="store_true")
+    parser.add_argument("--baseline-directory", type=Path)
+    parser.add_argument("--candidate-directory", type=Path)
+    parser.add_argument("--report-file", type=Path)
     args = parser.parse_args()
     comparisons = {}
     for profile in ("f401", "f411"):
-        old = bundle(args.directory / "baseline" / profile)
-        new = bundle(args.directory / "candidate" / profile)
+        old = bundle((args.baseline_directory or args.directory / "baseline") / profile)
+        new = bundle((args.candidate_directory or args.directory / "candidate") / profile)
         assert old["flags"] == new["flags"], "feature/math/placement mismatch"
         if args.expect_cache_off:
             assert "-DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=0" in old["flags"], "RAM cache not explicitly disabled"
@@ -51,11 +54,11 @@ def main():
     report = {"comparisons": comparisons,
               "notes": [f"Matched frozen source baseline {args.baseline_ref} plus {args.candidate_label} changes.",
                         "RAM figures are ELF/image budgets, not simultaneous device heap/stack peaks.",
-                        "Larger hot/cold APPs contain policy moved out of the resident.",
+                        "APP figures distinguish decoded image/BSS from compressed external files.",
                         "No APP arena/workspace/source quota or functionality was reduced."]}
     if args.expect_cache_off:
         report["notes"].append("RAM bytecode cache is explicitly zero in BOTH baseline and candidate; this is not the F411 default cache configuration.")
-    (args.directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")
+    (args.report_file or args.directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({p: {k: c[k] for k in ("resident_flash_delta", "resident_static_ram_delta",
                     "dynamic_pool_delta", "external_app_file_delta", "app_delta")}
                     for p, c in comparisons.items()}, indent=2))

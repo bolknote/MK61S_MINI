@@ -16,6 +16,7 @@ from run_language_vm_overlay_arm_tests import OverlayMachine
 from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
+COMPILER_CONTEXT_SIZE = 240
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):
@@ -47,6 +48,22 @@ def user_calls(m, packed):
         else: assert action == 4 and result == 42
 
 
+def reject_other_language(m, packed, kind, other_language):
+    assert COMPILER_CONTEXT_SIZE == 240
+    context, step, values = m.input + 768, m.input + 1120, m.workspace + 4688
+    m.partitioned = True
+    m.load(packed)
+    m.uc.mem_write(values, bytes(3504))
+    m.uc.mem_write(context, bytes(240)); m.put(context, 0x31564C46, 0)
+    m.put(context + 68, values)
+    m.uc.mem_write(context + 234, bytes((other_language,)))
+    m.uc.mem_write(step, bytes(48)); m.put(step, 48, 1, context, 240)
+    m.uc.mem_write(step + 16, struct.pack("<HBBI", 0xFFFF, kind, 0, 0x100))
+    trace_size = len(m.trace)
+    assert m.call(FLOW_STEP, step) == 0, "compiler accepted the opposite-language context"
+    assert len(m.trace) == trace_size, "wrong-language context reached a resident service"
+
+
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, compiler_flow=True):
     compiler = "tinybasic" if language == 1 else "focal"
     variables, compile_request, execution, context, step, output = [
@@ -57,14 +74,16 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
     m.files[42] = (3 if language == 1 else 2, "FLOWTEST", source)
     command = 0x20A if language == 1 else 0x106  # BASIC status takes its mode from arg1.
     if compiler_flow:
-        context_size = 312
+        context_size = COMPILER_CONTEXT_SIZE
         values = m.workspace + 4688
         variables, array = values + 8 + (language - 1)*208, values + 424
-        compile_request, execution = context + 184, context + 216
+        compact = context_size == 240
+        compile_request, execution = context + (8 if compact else 184), context + (184 if compact else 216)
+        plan = context + (40 if compact else 264)
         m.uc.mem_write(values, bytes(3504)); m.uc.mem_write(values + 4, b"\xFF"*4)
         m.uc.mem_write(context, bytes(context_size)); m.put(context, 0x31564C46, command)
-        m.put(context + 292, values, command, 42, mode if language == 1 else 0)
-        m.uc.mem_write(context + 308, bytes((language,)))
+        m.put(context + (68 if compact else 292), values, command, 42, mode if language == 1 else 0)
+        m.uc.mem_write(context + (234 if compact else 308), bytes((language,)))
         current = (2 if language == 1 else 1, 0x100)
         image, length = None, 0
     else:
@@ -112,16 +131,16 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         if kind:
             assert m.call(FLOW_STEP, step) == 1
         elif phase == 0x100:  # Generic reserve fixture, exact measured size.
-            length, prefix = m.words(context + 264, 2)
+            length, prefix = m.words(plan, 2)
             assert 0 < length <= 768 and prefix == 1520
-            m.put(context + 272, output)
+            m.put(plan + 8, output)
             m.put(step + 32, 3, 0, 1, 0)
         else:  # Generic commit fixture; tail-transfer directly to cold APP.
-            assert phase == 0x101 and m.words(context + 272, 1)[0] == output
+            assert phase == 0x101 and m.words(plan + 8, 1)[0] == output
             image = bytes(m.uc.mem_read(output, length))
             m.uc.mem_write(bytecode, image)
-            m.put(context + 272, bytecode, m.workspace, 4688)
-            m.uc.mem_write(step + 24, bytes(m.uc.mem_read(context + 284, 8)))
+            m.put(plan + 8, bytecode, m.workspace, 4688)
+            m.uc.mem_write(step + 24, bytes(m.uc.mem_read(plan + 20, 8)))
             m.put(step + 32, 1, 0, 0, 0)
         assert m.words(step, 4) == (48, 1, context, context_size)
         action, resume, result, status = m.words(step + 32, 4)
@@ -146,6 +165,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
 
 
 def main():
+    global COMPILER_CONTEXT_SIZE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--resident-elf", type=Path, required=True)
     parser.add_argument("--system", type=Path, required=True)
@@ -153,7 +173,10 @@ def main():
     parser.add_argument("--user-app", type=Path)
     parser.add_argument("--legacy-app", type=Path)
     parser.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
+    parser.add_argument("--compiler-context", choices=(240, 312), type=int, default=240)
+    parser.add_argument("--specialized", action="store_true")
     args = parser.parse_args()
+    COMPILER_CONTEXT_SIZE = args.compiler_context
     elf = Elf(args.resident_elf)
     if args.vm_profile == "libm":
         elf.require_libm_math(args.resident_elf)
@@ -169,6 +192,9 @@ def main():
         legacy = package(reader, args.legacy_app, elf, work, "application") if args.legacy_app else None
         traces = []
         for address in range(3):
+            if args.specialized:
+                reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["tinybasic"], 2, 2)
+                reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["focal"], 1, 1)
             if user: user_calls(FlowMachine(args.resident_elf, True, address), user)
             if legacy:
                 machine = FlowMachine(args.resident_elf, True, address); machine.load(legacy)
@@ -200,7 +226,9 @@ def main():
                 assert execute(machine, packages, 1, b"10 INPUT A\n20 A=999\n", [], True, mode)[1] == expected
         machine = OverlayMachine(args.resident_elf, True, 0)
         assert execute(machine, packages, 1, b"10 A=42\n", [], compiler_flow=False)[:2] == (42, 0)
-        report = {"status": "PASS", "vm_profile": args.vm_profile, "runs": traces,
+        report = {"status": "PASS", "vm_profile": args.vm_profile,
+                  "compiler_context_bytes": COMPILER_CONTEXT_SIZE,
+                  "specialized_language_guards": args.specialized, "runs": traces,
                   "note": "Real ARM APP policy and relocation; native loader/allocator remain fixtures."}
         if args.vm_profile == "core":
             report["note"] += " CORE transcendental CPU is not modeled; covered by run_mk_math_tests.sh, not this emulation."
