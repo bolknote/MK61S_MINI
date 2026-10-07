@@ -140,27 +140,6 @@ static i32 scan_direct_key(void) {
   return scan_code;
 }
 
-// Возвращает false, если подсистема дисплея сменилась при удержании OK.
-// Вызывающий код может перерисовать экран и продолжить ожидание, не показывая
-// символы Unicode с USB-поверхности как '?' на физическом LCD1602.
-static bool wait_ok_release(void) {
-  const u32 display_mode_revision = main_lcd().displayModeRevision();
-  while(true) {
-    idle_main_process();
-    if(main_lcd().displayModeRevision() != display_mode_revision) return false;
-
-    (void) kbd::scan();
-
-    // Терминальные команды `kbd` — это завершённые нажатия: в отличие от
-    // физических и двоичных USB-клавиш, у них намеренно нет отдельного отпускания.
-    if(!kbd::is_key_pressed(KEY_OK)) {
-      kbd::clear_hold_key();
-      return true;
-    }
-    delay(10);
-  }
-}
-
 static void wait_input_handoff(void) {
   while(kbd::handoff_pending()) {
     idle_main_process();
