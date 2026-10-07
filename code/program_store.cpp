@@ -43,7 +43,10 @@ namespace {
 // в M8. Физические сигнатуры отличаются от C5, поэтому старая прошивка не
 // сможет принять новый том, а новая никогда не мигрирует C5 исподтишка.
 static constexpr u8 PHYSICAL_FORMAT_VERSION = 6;
-static constexpr u8 CATALOG_VERSION = 6;
+// C7 moves the catalog and its WAL. Payloads, staging and settings retain
+// their C6 encoding; the incompatible locator identifies the new catalog.
+static constexpr u8 CATALOG_VERSION = 7;
+static constexpr u8 LOCATOR_VERSION = 7;
 static constexpr u8 STATE_WRITING = 0xFF;
 static constexpr u8 STATE_ACTIVE = 0x7F;
 static constexpr u8 STATE_DELETED = 0x3F;
@@ -56,12 +59,20 @@ static constexpr u16 LOCATOR_SIZE = 72;
 static constexpr u16 SETTINGS_GUARD_SIZE = 16;
 static constexpr u16 SETTINGS_JOURNAL_SIZE =
     storage_geometry::PHYSICAL_SECTOR_SIZE - SETTINGS_GUARD_SIZE;
-static constexpr u16 CATALOG_HEADER_SIZE = 80;
-static constexpr u16 CATALOG_HEADER_CRC_OFFSET = 72;
+static constexpr u16 CATALOG_HEADER_SIZE = 512;
+static constexpr u16 CATALOG_HEADER_CRC_OFFSET = 508;
+static constexpr u8 MAX_CATALOG_PAGES =
+    (storage_geometry::FAT12_MAX_DATA_CLUSTERS * storage_geometry::INODE_BYTES +
+     storage_geometry::PHYSICAL_SECTOR_SIZE - 1) / storage_geometry::PHYSICAL_SECTOR_SIZE;
+static constexpr u8 CATALOG_WAL_RECORDS = 15;
+static constexpr u16 CATALOG_MAP_OFFSET = 80;
+static constexpr u16 CATALOG_WAL_OFFSET = CATALOG_MAP_OFFSET + MAX_CATALOG_PAGES * 8;
+static constexpr u16 CATALOG_CURSOR_OFFSET = CATALOG_WAL_OFFSET + 4;
+static_assert(CATALOG_CURSOR_OFFSET + 4 <= CATALOG_HEADER_CRC_OFFSET, "catalog map exceeds root");
 static constexpr u8 LEGACY_TYPE_COUNT = 6;
 static constexpr u8 TYPE_COUNT = 7;
 static constexpr u16 IMAGE1_HEADER_COUNT_OFFSET = 64;
-// Каталог C6 публикует за одну COW-транзакцию основной inode, служебные
+// Каталог публикует за одну WAL-транзакцию основной inode, служебные
 // FAT-extents максимального APP и изменения двух родительских списков.
 static constexpr u16 WAL_RECORD_SIZE = 512;
 static constexpr u8 WAL_MAX_UPDATES = 16;
@@ -218,8 +229,17 @@ static storage_geometry::Geometry g_geometry;
 static bool g_ready;
 static MountStatus g_mount_status;
 static u32 g_format_epoch;
-static u8 g_locator_matching_copies;
-static u8 g_active_bank;
+static u8 g_locator_valid_mask;
+static constexpr u8 ALL_LOCATORS = (1U << storage_geometry::LOCATOR_SECTORS) - 1U;
+struct CatalogPage { u32 sector; u32 crc; };
+static CatalogPage g_catalog_pages[MAX_CATALOG_PAGES];
+static CatalogPage g_catalog_pending[MAX_CATALOG_PAGES];
+static u32 g_catalog_root = EMPTY_ADDRESS;
+static u32 g_catalog_wal = EMPTY_ADDRESS;
+static u32 g_catalog_pending_root = EMPTY_ADDRESS;
+static u32 g_catalog_pending_wal = EMPTY_ADDRESS;
+static u32 g_catalog_cursor;
+static u32 g_gc_victim = EMPTY_ADDRESS;
 static u32 g_catalog_generation;
 static u32 g_wal_sequence;
 static u8 g_wal_records;
@@ -686,17 +706,31 @@ static Inode deserialize_inode(const u8* data) {
   return inode;
 }
 
-static u32 bank_sector(u8 bank) {
-  return bank == 0 ? g_geometry.catalog_a_sector : g_geometry.catalog_b_sector;
+static bool catalog_sector_in_range(u32 sector) {
+  return sector >= storage_geometry::LOCATOR_SECTORS &&
+         sector < g_geometry.stage_first_sector;
 }
 
-static u32 table_address(u8 bank) {
-  return sector_address(bank_sector(bank) + storage_geometry::CATALOG_HEADER_SECTORS);
+static bool catalog_sector_busy(u32 sector) {
+  if(sector == g_catalog_root || sector == g_catalog_wal ||
+     sector == g_catalog_pending_root || sector == g_catalog_pending_wal ||
+     sector == g_gc_victim) return true;
+  for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
+    if(sector == g_catalog_pages[page].sector ||
+       sector == g_catalog_pending[page].sector) return true;
+  }
+  return false;
 }
 
-static u32 wal_address(u8 bank) {
-  return sector_address(bank_sector(bank) + storage_geometry::CATALOG_HEADER_SECTORS +
-                        g_geometry.catalog_table_sectors);
+static void clear_pending_catalog(void) {
+  memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
+  g_catalog_pending_root = g_catalog_pending_wal = EMPTY_ADDRESS;
+}
+
+static u32 wal_record_address(u8 index) {
+  return index < 7
+      ? sector_address(g_catalog_root) + CATALOG_HEADER_SIZE + (u32) index * WAL_RECORD_SIZE
+      : sector_address(g_catalog_wal) + (u32) (index - 7) * WAL_RECORD_SIZE;
 }
 
 static int overlay_search(u16 id, bool& found) {
@@ -730,9 +764,20 @@ static bool overlay_set(u16 id, const Inode& inode) {
 }
 
 static bool read_table_bytes(u32 offset, u8* out, u16 len) {
-  const u32 base = table_address(g_active_bank);
   while(len != 0) {
-    const u32 address = base + offset;
+    const u32 page = offset / storage_geometry::PHYSICAL_SECTOR_SIZE;
+    if(page >= g_geometry.catalog_table_sectors) return false;
+    const u16 in_page = (u16) (offset % storage_geometry::PHYSICAL_SECTOR_SIZE);
+    const u16 room = (u16) (storage_geometry::PHYSICAL_SECTOR_SIZE - in_page);
+    if(g_catalog_pages[page].sector == EMPTY_ADDRESS) {
+      const u16 count = len < room ? len : room;
+      memset(out, 0xFF, count);
+      out += count;
+      offset += count;
+      len = (u16) (len - count);
+      continue;
+    }
+    const u32 address = sector_address(g_catalog_pages[page].sector) + in_page;
     const u32 cache_address = address & ~511UL;
     if(g_table_cache_address != cache_address) {
       if(!read_bytes(cache_address, g_table_cache, sizeof(g_table_cache))) return false;
@@ -855,6 +900,14 @@ static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
 
 static bool checkpoint(bool empty_table = false);
 static bool load_catalog(void);
+static bool borrowed_stage_sector(u32 sector);
+static bool sector_has_live_inode(u32 sector);
+static bool live_sector_window(u32 first, u32 count, u32 start,
+                               u32 base, u8 window, u32& mask);
+
+static bool generation_newer(u32 left, u32 right) {
+  return (i32) (left - right) > 0;
+}
 
 static u8 new_overlay_slots(const Transaction& transaction) {
   u8 added = 0;
@@ -866,8 +919,132 @@ static u8 new_overlay_slots(const Transaction& transaction) {
   return added;
 }
 
-// Do not keep the WAL sector buffer on the stack while checkpoint() copies
-// the catalog. This separate call also prevents LTO from merging the frames.
+// A separate cursor is committed with each root. GC transactions have their
+// own cursor and must not undo catalog allocation when they publish metadata.
+static bool allocate_catalog_sector(u32& output) {
+  const u32 first = storage_geometry::LOCATOR_SECTORS;
+  const u32 count = g_geometry.stage_first_sector - first;
+  const u32 start = catalog_sector_in_range(g_catalog_cursor) ? g_catalog_cursor : first;
+  for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
+    const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
+        ? count - base : GC_SCAN_WINDOW);
+    u32 live = 0;
+    if(!live_sector_window(first, count, start, base, window, live)) return false;
+    for(u8 slot = 0; slot < window; ++slot) {
+      const u32 sector = first + (start - first + base + slot) % count;
+      if((live & (1UL << slot)) != 0 || catalog_sector_busy(sector) ||
+         sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+         borrowed_stage_sector(sector)) continue;
+      if(!erase_sector(sector)) return false;
+      output = sector;
+      g_catalog_cursor = first + (sector - first + 1) % count;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool catalog_page_dirty(u8 page) {
+  const u32 begin = (u32) page * storage_geometry::PHYSICAL_SECTOR_SIZE;
+  const u32 end = begin + storage_geometry::PHYSICAL_SECTOR_SIZE;
+  for(u8 i = 0; i < g_overlay_count; ++i) {
+    const u32 offset = (u32) g_overlay_ids[i] * storage_geometry::INODE_BYTES;
+    if(offset < end && offset + storage_geometry::INODE_BYTES > begin) return true;
+  }
+  return false;
+}
+
+// Stream a page through 512 bytes of scratch; never put a 4-KiB erase block
+// on F401's stack. Inodes straddling a physical page are patched in both pages.
+__attribute__((noinline))
+static bool write_catalog_page(u8 page, CatalogPage& target) {
+  if(!allocate_catalog_sector(target.sector)) return false;
+  mk61_crc32::Context crc;
+  u8 buffer[512];
+  u8 disk_inode[storage_geometry::INODE_BYTES];
+  const u32 page_begin = (u32) page * storage_geometry::PHYSICAL_SECTOR_SIZE;
+  for(u16 offset = 0; offset < storage_geometry::PHYSICAL_SECTOR_SIZE; offset += sizeof(buffer)) {
+    const u32 begin = page_begin + offset;
+    const u32 end = begin + sizeof(buffer);
+    if(!read_table_bytes(begin, buffer, sizeof(buffer))) return false;
+    for(u8 i = 0; i < g_overlay_count; ++i) {
+      const u32 inode_begin = (u32) g_overlay_ids[i] * storage_geometry::INODE_BYTES;
+      const u32 inode_end = inode_begin + storage_geometry::INODE_BYTES;
+      if(inode_begin >= end || inode_end <= begin) continue;
+      serialize_inode(g_overlay_inodes[i], disk_inode);
+      const u32 low = inode_begin > begin ? inode_begin : begin;
+      const u32 high = inode_end < end ? inode_end : end;
+      memcpy(buffer + (low - begin), disk_inode + (low - inode_begin), high - low);
+    }
+    if(!write_bytes(sector_address(target.sector) + offset, buffer, sizeof(buffer)) ||
+       !crc.update(buffer, sizeof(buffer))) return false;
+  }
+  target.crc = crc.finish();
+  return true;
+}
+
+__attribute__((noinline))
+static bool publish_catalog_root(u32 generation) {
+  u8 header[CATALOG_HEADER_SIZE];
+  memset(header, 0xFF, sizeof(header));
+  memcpy(header, "C7CT", 4);
+  header[4] = CATALOG_VERSION;
+  header[5] = STATE_WRITING;
+  put_le16(header, 6, CATALOG_HEADER_SIZE);
+  put_le32(header, 8, generation);
+  put_le32(header, 12, g_format_epoch);
+  put_le16(header, 16, g_geometry.max_nodes);
+  put_le16(header, 18, g_geometry.catalog_table_sectors);
+  put_le32(header, 24, g_wal_sequence);
+  put_le16(header, 28, g_meta.root_head);
+  put_le16(header, 30, g_meta.total_count);
+  put_le16(header, 32, g_meta.current_offset);
+  put_le32(header, 36, g_meta.current_sector);
+  put_le32(header, 40, g_meta.reserve_sector);
+  put_le32(header, 44, g_meta.gc_cursor);
+  put_le32(header, 48, g_meta.data_sequence);
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; ++i) put_le16(header, 52 + i * 2, g_meta.type_count[i]);
+  put_le16(header, IMAGE1_HEADER_COUNT_OFFSET, g_meta.type_count[6]);
+  for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
+    put_le32(header, CATALOG_MAP_OFFSET + page * 8, g_catalog_pending[page].sector);
+    put_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4, g_catalog_pending[page].crc);
+  }
+  put_le32(header, CATALOG_WAL_OFFSET, g_catalog_pending_wal);
+  put_le32(header, CATALOG_CURSOR_OFFSET, g_catalog_cursor);
+  put_le32(header, CATALOG_HEADER_CRC_OFFSET,
+           normalized_record_crc(header, sizeof(header), CATALOG_HEADER_CRC_OFFSET, 5));
+  const u32 address = sector_address(g_catalog_pending_root);
+  return write_bytes(address, header, sizeof(header)) &&
+         write_byte(address + 5, STATE_ACTIVE);
+}
+
+static bool checkpoint(bool empty_table) {
+  clear_pending_catalog();
+  memcpy(g_catalog_pending, g_catalog_pages, sizeof(g_catalog_pending));
+  if(empty_table) memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
+  for(u8 page = 0; !empty_table && page < g_geometry.catalog_table_sectors; ++page) {
+    if(catalog_page_dirty(page) && !write_catalog_page(page, g_catalog_pending[page])) return false;
+  }
+  if(!allocate_catalog_sector(g_catalog_pending_root) ||
+     !allocate_catalog_sector(g_catalog_pending_wal)) return false;
+  u32 generation = g_catalog_generation + 1;
+  if(generation == 0) generation = 1;
+  if(!publish_catalog_root(generation)) return false;
+  memcpy(g_catalog_pages, g_catalog_pending, sizeof(g_catalog_pages));
+  g_catalog_root = g_catalog_pending_root;
+  g_catalog_wal = g_catalog_pending_wal;
+  g_catalog_generation = generation;
+  clear_pending_catalog();
+  g_overlay_count = 0;
+  g_wal_records = 0;
+  g_wal_sealed = false;
+  g_table_cache_address = EMPTY_ADDRESS;
+  invalidate_iteration_caches();
+  return true;
+}
+
+// No full-catalog checkpoint for every mutation. The bounded journal still
+// commits up to 16 changed inodes atomically, including an entire APP's extents.
 __attribute__((noinline))
 static bool append_transaction_record(const Transaction& transaction) {
 #if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
@@ -877,7 +1054,7 @@ static bool append_transaction_record(const Transaction& transaction) {
 #endif
   memset(record, 0xFF, sizeof(record));
   record[0] = 'W';
-  record[1] = '6';
+  record[1] = '7';
   record[2] = CATALOG_VERSION;
   record[3] = STATE_WRITING;
   const u32 next_sequence = g_wal_sequence + 1;
@@ -885,248 +1062,152 @@ static bool append_transaction_record(const Transaction& transaction) {
   record[8] = transaction.count;
   encode_meta(record, transaction.meta, IMAGE1_WAL_COUNT_OFFSET);
   u16 offset = 44;
-  for(u8 i = 0; i < transaction.count; i++) {
+  for(u8 i = 0; i < transaction.count; ++i) {
     put_le16(record, offset, transaction.updates[i].id);
     serialize_inode(transaction.updates[i].inode, record + offset + 2);
     offset = (u16) (offset + 2 + storage_geometry::INODE_BYTES);
   }
-  const u32 crc =
-      normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3);
-  put_le32(record, WAL_CRC_OFFSET, crc);
-
-  const u32 address =
-      wal_address(g_active_bank) + (u32) g_wal_records * WAL_RECORD_SIZE;
+  put_le32(record, WAL_CRC_OFFSET,
+           normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3));
+  const u32 address = wal_record_address(g_wal_records);
   if(!write_bytes(address, record, sizeof(record)) ||
      !write_byte(address + 3, STATE_ACTIVE)) {
     g_wal_sealed = true;
-    (void) load_catalog();
+    if(!load_catalog()) g_ready = false;
     return false;
   }
-
-  for(u8 i = 0; i < transaction.count; i++) {
+  for(u8 i = 0; i < transaction.count; ++i) {
     if(!overlay_set(transaction.updates[i].id, transaction.updates[i].inode)) return false;
   }
   g_wal_sequence = next_sequence;
   g_meta = transaction.meta;
-  g_wal_records++;
+  ++g_wal_records;
   invalidate_iteration_caches();
   return true;
 }
 
 static bool append_transaction(const Transaction& transaction) {
   if(transaction.count > WAL_MAX_UPDATES) return false;
-  const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
-      storage_geometry::PHYSICAL_SECTOR_SIZE / WAL_RECORD_SIZE);
-  if(g_wal_sealed || g_wal_records >= records_per_bank ||
+  if(g_wal_sealed || g_wal_records >= CATALOG_WAL_RECORDS ||
      g_overlay_count + new_overlay_slots(transaction) > OVERLAY_CAPACITY) {
     if(!checkpoint()) {
-      (void) load_catalog();
+      if(!load_catalog()) g_ready = false;
       return false;
     }
   }
-
   return append_transaction_record(transaction);
 }
 
-static void encode_catalog_header(u8* header, u32 generation, u32 table_crc) {
-  memset(header, 0xFF, CATALOG_HEADER_SIZE);
-  memcpy(header, "C6CT", 4);
-  header[4] = CATALOG_VERSION;
-  header[5] = STATE_WRITING;
-  header[6] = CATALOG_HEADER_SIZE;
-  put_le32(header, 8, generation);
-  put_le32(header, 12, g_format_epoch);
-  put_le16(header, 16, g_geometry.max_nodes);
-  put_le32(header, 20, table_crc);
-  put_le32(header, 24, g_wal_sequence);
-  put_le16(header, 28, g_meta.root_head);
-  put_le16(header, 30, g_meta.total_count);
-  put_le16(header, 32, g_meta.current_offset);
-  put_le32(header, 36, g_meta.current_sector);
-  put_le32(header, 40, g_meta.reserve_sector);
-  put_le32(header, 44, g_meta.gc_cursor);
-  put_le32(header, 48, g_meta.data_sequence);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
-    put_le16(header, (u16) (52 + i * 2), g_meta.type_count[i]);
-  }
-  put_le16(header, IMAGE1_HEADER_COUNT_OFFSET, g_meta.type_count[6]);
-  put_le32(header, CATALOG_HEADER_CRC_OFFSET,
-           normalized_record_crc(header, CATALOG_HEADER_SIZE,
-                                 CATALOG_HEADER_CRC_OFFSET, 5));
-}
-
-static bool checkpoint(bool empty_table) {
-  const u8 destination = (u8) (g_active_bank ^ 1U);
-  for(u16 sector = 0; sector < g_geometry.catalog_bank_sectors; sector++) {
-    if(!erase_sector(bank_sector(destination) + sector)) return false;
-  }
-
-  u8 buffer[512];
-  u8 disk_inode[storage_geometry::INODE_BYTES];
-  u16 buffered = 0;
-  u32 destination_address = table_address(destination);
-  mk61_crc32::Context crc;
-  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode = empty_inode();
-    if(!empty_table && !get_inode(id, inode)) return false;
-    serialize_inode(inode, disk_inode);
-    u8 copied = 0;
-    while(copied < sizeof(disk_inode)) {
-      const u16 room = (u16) (sizeof(buffer) - buffered);
-      const u16 count = (u16) ((sizeof(disk_inode) - copied < room)
-          ? sizeof(disk_inode) - copied : room);
-      memcpy(buffer + buffered, disk_inode + copied, count);
-      buffered = (u16) (buffered + count);
-      copied = (u8) (copied + count);
-      if(buffered == sizeof(buffer)) {
-        if(!write_bytes(destination_address, buffer, sizeof(buffer))) return false;
-        if(!crc.update(buffer, sizeof(buffer))) return false;
-        destination_address += sizeof(buffer);
-        buffered = 0;
-      }
-    }
-  }
-  if(buffered != 0) {
-    if(!write_bytes(destination_address, buffer, buffered)) return false;
-    if(!crc.update(buffer, buffered)) return false;
-  }
-  const u32 table_crc = crc.finish();
-
-  // The table has been written and checksummed; its buffer can hold the header.
-  u8* const header = buffer;
-  encode_catalog_header(header, g_catalog_generation + 1, table_crc);
-  const u32 header_address = sector_address(bank_sector(destination));
-  if(!write_bytes(header_address, header, CATALOG_HEADER_SIZE) ||
-     !write_byte(header_address + 5, STATE_ACTIVE)) return false;
-
-  g_active_bank = destination;
-  g_catalog_generation++;
-  g_overlay_count = 0;
-  g_wal_records = 0;
-  g_wal_sealed = false;
-  g_table_cache_address = EMPTY_ADDRESS;
-  invalidate_iteration_caches();
-  return true;
-}
-
-static bool decode_catalog_header(u8 bank, u8* header,
-                                  u32& generation, u32& wal_sequence,
-                                  CatalogMeta& meta) {
-  if(!read_bytes(sector_address(bank_sector(bank)), header, CATALOG_HEADER_SIZE)) return false;
-  if(memcmp(header, "C6CT", 4) != 0 || header[4] != CATALOG_VERSION ||
-     header[5] != STATE_ACTIVE || header[6] != CATALOG_HEADER_SIZE ||
-     get_le32(header, 12) != g_format_epoch ||
-     get_le16(header, 16) != g_geometry.max_nodes) return false;
-  if(normalized_record_crc(header, CATALOG_HEADER_SIZE,
-                          CATALOG_HEADER_CRC_OFFSET, 5) !=
-     get_le32(header, CATALOG_HEADER_CRC_OFFSET)) return false;
-  u32 table_crc = 0;
-  if(!crc32_flash(
-       table_address(bank),
-       (u32) g_geometry.max_nodes * storage_geometry::INODE_BYTES,
-       table_crc)) return false;
-  if(table_crc != get_le32(header, 20)) return false;
-
-  generation = get_le32(header, 8);
-  wal_sequence = get_le32(header, 24);
-  meta.root_head = get_le16(header, 28);
-  meta.total_count = get_le16(header, 30);
-  meta.current_offset = get_le16(header, 32);
-  meta.current_sector = get_le32(header, 36);
-  meta.reserve_sector = get_le32(header, 40);
-  meta.gc_cursor = get_le32(header, 44);
-  meta.data_sequence = get_le32(header, 48);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
-    meta.type_count[i] = get_le16(header, (u16) (52 + i * 2));
-  }
-  meta.type_count[6] = decode_optional_count(header, IMAGE1_HEADER_COUNT_OFFSET);
-  return generation != 0;
-}
-
-static bool generation_newer(u32 left, u32 right) {
-  return (i32) (left - right) > 0;
-}
-
 static bool replay_wal(void) {
-  const u8 records_per_bank = (u8) ((u32) storage_geometry::CATALOG_WAL_SECTORS *
-      storage_geometry::PHYSICAL_SECTOR_SIZE / WAL_RECORD_SIZE);
   g_wal_records = 0;
   g_wal_sealed = false;
-  for(u8 record_index = 0; record_index < records_per_bank; record_index++) {
+  for(u8 index = 0; index < CATALOG_WAL_RECORDS; ++index) {
 #if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
     u8 (&record)[WAL_RECORD_SIZE] = g_wal_record;
 #else
     u8 record[WAL_RECORD_SIZE];
 #endif
-    if(!read_bytes(wal_address(g_active_bank) +
-                       (u32) record_index * WAL_RECORD_SIZE,
-                   record, sizeof(record))) return false;
+    if(!read_bytes(wal_record_address(index), record, sizeof(record))) return false;
     bool erased = true;
-    for(u8 i = 0; i < 8; i++) if(record[i] != 0xFF) erased = false;
+    for(u16 i = 0; i < sizeof(record); ++i) if(record[i] != 0xFF) erased = false;
     if(erased) break;
-    if(record[0] != 'W' || record[1] != '6' ||
-       record[2] != CATALOG_VERSION ||
-       record[3] != STATE_ACTIVE || record[8] > WAL_MAX_UPDATES ||
-       normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) !=
-           get_le32(record, WAL_CRC_OFFSET)) {
+    if(record[0] != 'W' || record[1] != '7' ||
+       record[2] != CATALOG_VERSION || record[3] != STATE_ACTIVE ||
+       record[8] > WAL_MAX_UPDATES || get_le32(record, 4) != g_wal_sequence + 1 ||
+       normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) != get_le32(record, WAL_CRC_OFFSET)) {
       g_wal_sealed = true;
       break;
     }
-    const u32 sequence = get_le32(record, 4);
-    if(!generation_newer(sequence, g_wal_sequence)) {
-      g_wal_sealed = true;
-      break;
-    }
-
     u16 offset = 44;
-    for(u8 i = 0; i < record[8]; i++) {
+    for(u8 i = 0; i < record[8]; ++i) {
       const u16 id = get_le16(record, offset);
-      if(id >= g_geometry.max_nodes) return false;
-      if(!overlay_set(id, deserialize_inode(record + offset + 2))) return false;
+      if(id >= g_geometry.max_nodes ||
+         !overlay_set(id, deserialize_inode(record + offset + 2))) return false;
       offset = (u16) (offset + 2 + storage_geometry::INODE_BYTES);
     }
     g_meta = decode_meta(record, IMAGE1_WAL_COUNT_OFFSET);
-    g_wal_sequence = sequence;
-    g_wal_records++;
+    g_wal_sequence = get_le32(record, 4);
+    ++g_wal_records;
   }
   return true;
 }
 
-static bool load_catalog(void) {
-  u8 header_a[CATALOG_HEADER_SIZE];
-  u8 header_b[CATALOG_HEADER_SIZE];
-  u32 generation_a = 0;
-  u32 generation_b = 0;
-  u32 sequence_a = 0;
-  u32 sequence_b = 0;
-  CatalogMeta meta_a;
-  CatalogMeta meta_b;
-  const bool valid_a = decode_catalog_header(0, header_a,
-                                             generation_a, sequence_a, meta_a);
-  const bool valid_b = decode_catalog_header(1, header_b,
-                                             generation_b, sequence_b, meta_b);
-  if(!valid_a && !valid_b) return false;
+static bool catalog_header_valid(u8* header) {
+  return memcmp(header, "C7CT", 4) == 0 &&
+      header[4] == CATALOG_VERSION && header[5] == STATE_ACTIVE &&
+      get_le16(header, 6) == CATALOG_HEADER_SIZE &&
+      get_le32(header, 8) != 0 && get_le32(header, 12) == g_format_epoch &&
+      get_le16(header, 16) == g_geometry.max_nodes &&
+      get_le16(header, 18) == g_geometry.catalog_table_sectors &&
+      normalized_record_crc(header, CATALOG_HEADER_SIZE, CATALOG_HEADER_CRC_OFFSET, 5) ==
+          get_le32(header, CATALOG_HEADER_CRC_OFFSET);
+}
 
-  if(valid_b && (!valid_a || generation_newer(generation_b, generation_a))) {
-    g_active_bank = 1;
-    g_catalog_generation = generation_b;
-    g_wal_sequence = sequence_b;
-    g_meta = meta_b;
-  } else {
-    g_active_bank = 0;
-    g_catalog_generation = generation_a;
-    g_wal_sequence = sequence_a;
-    g_meta = meta_a;
-  }
+__attribute__((noinline))
+static bool load_catalog(void) {
+  clear_pending_catalog();
+  memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
+  g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
   g_overlay_count = 0;
   g_table_cache_address = EMPTY_ADDRESS;
+  if(g_geometry.catalog_table_sectors > MAX_CATALOG_PAGES) return false;
+  u8 header[CATALOG_HEADER_SIZE];
+  u32 newest = 0;
+  // Only sector headers are scanned. Fixed locators contain format/geometry,
+  // not a hot pointer rewritten each time the root moves.
+  for(u32 sector = storage_geometry::LOCATOR_SECTORS;
+      sector < g_geometry.stage_first_sector; ++sector) {
+    if(!read_bytes(sector_address(sector), header, 16)) return false;
+    if(memcmp(header, "C7CT", 4) != 0 || header[5] != STATE_ACTIVE ||
+       get_le32(header, 12) != g_format_epoch) continue;
+    if(!read_bytes(sector_address(sector), header, sizeof(header))) return false;
+    if(catalog_header_valid(header) &&
+       (g_catalog_root == EMPTY_ADDRESS || generation_newer(get_le32(header, 8), newest))) {
+      g_catalog_root = sector;
+      newest = get_le32(header, 8);
+    }
+  }
+  if(g_catalog_root == EMPTY_ADDRESS ||
+     !read_bytes(sector_address(g_catalog_root), header, sizeof(header))) return false;
+  g_catalog_wal = get_le32(header, CATALOG_WAL_OFFSET);
+  g_catalog_cursor = get_le32(header, CATALOG_CURSOR_OFFSET);
+  if(!catalog_sector_in_range(g_catalog_wal) || g_catalog_wal == g_catalog_root ||
+     !catalog_sector_in_range(g_catalog_cursor)) return false;
+  for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
+    CatalogPage& entry = g_catalog_pages[page];
+    entry.sector = get_le32(header, CATALOG_MAP_OFFSET + page * 8);
+    entry.crc = get_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4);
+    if(entry.sector == EMPTY_ADDRESS) {
+      if(entry.crc != EMPTY_ADDRESS) return false;
+      continue;
+    }
+    if(!catalog_sector_in_range(entry.sector) || entry.sector == g_catalog_root ||
+       entry.sector == g_catalog_wal) return false;
+    for(u8 previous = 0; previous < page; ++previous) {
+      if(g_catalog_pages[previous].sector == entry.sector) return false;
+    }
+    u32 crc = 0;
+    if(!crc32_flash(sector_address(entry.sector), storage_geometry::PHYSICAL_SECTOR_SIZE, crc) ||
+       crc != entry.crc) return false;
+  }
+  g_catalog_generation = newest;
+  g_wal_sequence = get_le32(header, 24);
+  g_meta.root_head = get_le16(header, 28);
+  g_meta.total_count = get_le16(header, 30);
+  g_meta.current_offset = get_le16(header, 32);
+  g_meta.current_sector = get_le32(header, 36);
+  g_meta.reserve_sector = get_le32(header, 40);
+  g_meta.gc_cursor = get_le32(header, 44);
+  g_meta.data_sequence = get_le32(header, 48);
+  for(u8 i = 0; i < LEGACY_TYPE_COUNT; ++i) g_meta.type_count[i] = get_le16(header, 52 + i * 2);
+  g_meta.type_count[6] = decode_optional_count(header, IMAGE1_HEADER_COUNT_OFFSET);
   return replay_wal();
 }
 
 static void encode_locator(u8* locator) {
   memset(locator, 0xFF, LOCATOR_SIZE);
-  memcpy(locator, "C6FS", 4);
-  locator[4] = PHYSICAL_FORMAT_VERSION;
+  memcpy(locator, "C7FS", 4);
+  locator[4] = LOCATOR_VERSION;
   locator[5] = STATE_WRITING;
   locator[6] = LOCATOR_SIZE;
   put_le32(locator, 8, g_geometry.capacity_bytes);
@@ -1202,8 +1283,8 @@ bool load_capacity_for_reformat(void) {
   const u32 jedec_id = flash_device().getJEDECID();
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
-       memcmp(locator, "C6FS", 4) != 0 ||
-       locator[4] != PHYSICAL_FORMAT_VERSION ||
+       !((memcmp(locator, "C7FS", 4) == 0 && locator[4] == LOCATOR_VERSION) ||
+         (memcmp(locator, "C6FS", 4) == 0 && locator[4] == PHYSICAL_FORMAT_VERSION)) ||
        locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
        normalized_record_crc(locator, LOCATOR_SIZE, 68, 5) !=
            get_le32(locator, 68) ||
@@ -1218,6 +1299,7 @@ bool load_capacity_for_reformat(void) {
        !flash_device().setCapacity(capacity) || !settings_guard_valid(geometry)) {
       continue;
     }
+    g_format_epoch = get_le32(locator, 12);
     return true;
   }
   return false;
@@ -1244,10 +1326,10 @@ bool load_locator(void) {
   bool found = false;
   storage_geometry::Geometry selected_geometry = {};
   u32 selected_epoch = 0;
-  u8 selected_copies = 0;
+  u8 selected_mask = 0;
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator))) continue;
-    if(!locator_matches_format(locator, "C6FS", PHYSICAL_FORMAT_VERSION,
+    if(!locator_matches_format(locator, "C7FS", LOCATOR_VERSION,
                                geometry, epoch, stored_probe_upper,
                                stored_jedec_id)) continue;
     if(stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
@@ -1256,17 +1338,17 @@ bool load_locator(void) {
     if(!found) {
       selected_geometry = geometry;
       selected_epoch = epoch;
-      selected_copies = 1;
+      selected_mask = (u8) (1U << copy);
       found = true;
     } else if(epoch == selected_epoch &&
               geometry.capacity_bytes == selected_geometry.capacity_bytes) {
-      selected_copies++;
+      selected_mask |= (u8) (1U << copy);
     }
   }
   if(!found) return false;
   g_geometry = selected_geometry;
   g_format_epoch = selected_epoch;
-  g_locator_matching_copies = selected_copies;
+  g_locator_valid_mask = selected_mask;
   return true;
 }
 
@@ -1299,29 +1381,32 @@ bool load_legacy_c5_locator(void) {
     }
     g_geometry = geometry;
     g_format_epoch = epoch;
-    g_locator_matching_copies = 0;
+    g_locator_valid_mask = 0;
     return true;
   }
   return false;
 }
 
-static bool write_locators(void) {
+static bool write_locators(bool repair_only = false) {
   u8 locator[LOCATOR_SIZE];
   encode_locator(locator);
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
+    // Keep the last valid copy intact while repairing its peer. Rewriting
+    // both could turn a power cut during repair into destructive reformat.
+    if(repair_only && (g_locator_valid_mask & (1U << copy)) != 0) continue;
+    g_locator_valid_mask &= (u8) ~(1U << copy);
     if(!erase_sector(copy)) return false;
     const u32 address = sector_address(copy);
     if(!write_bytes(address, locator, sizeof(locator)) ||
        !write_byte(address + 5, STATE_ACTIVE)) return false;
+    g_locator_valid_mask |= (u8) (1U << copy);
   }
-  g_locator_matching_copies = storage_geometry::LOCATOR_SECTORS;
   return true;
 }
 
 static bool load_catalog_and_repair_locators(void) {
   return load_catalog() &&
-         (g_locator_matching_copies == storage_geometry::LOCATOR_SECTORS ||
-          write_locators());
+         (g_locator_valid_mask == ALL_LOCATORS || write_locators(true));
 }
 
 static bool data_sector_header_valid(u32 sector) {
@@ -1382,15 +1467,16 @@ static bool descriptor_contains_sector(const LargeDescriptor& descriptor,
 }
 
 static bool sector_has_live_inode(u32 sector) {
-  if(transient_large_sector(sector)) return true;
+  if(catalog_sector_busy(sector) || transient_large_sector(sector)) return true;
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
     Inode inode;
-    if(!get_inode(id, inode) || !visible_inode(inode)) continue;
+    if(!get_inode(id, inode)) return true;
+    if(!visible_inode(inode)) continue;
     if(inode.address < EXTENT_ADDRESS &&
        inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE == sector) return true;
     if(large_file_inode(inode)) {
       LargeDescriptor descriptor = {};
-      if(read_large_descriptor(id, inode, descriptor) &&
+      if(!read_large_descriptor(id, inode, descriptor) ||
          descriptor_contains_sector(descriptor, sector)) return true;
     }
   }
@@ -1409,60 +1495,59 @@ static bool range_erased(u32 address, u16 len) {
   return true;
 }
 
+static void mark_sector_window(u32 sector, u32 first, u32 count, u32 start,
+                               u32 base, u8 window, u32& mask) {
+  if(sector < first || sector - first >= count) return;
+  const u32 relative = (sector - first + count - (start - first)) % count;
+  if(relative >= base && relative < base + window) {
+    mask |= 1UL << (relative - base);
+  }
+}
+
+// One table scan covers 32 candidates for either allocator, including all
+// large-file blocks. A read error must never make live data look reclaimable.
+static bool live_sector_window(u32 first, u32 count, u32 start,
+                               u32 base, u8 window, u32& mask) {
+  mask = 0;
+  for(u8 index = 0; index < g_large_write_sector_count; ++index) {
+    mark_sector_window(g_large_write_sectors[index], first, count, start,
+                       base, window, mask);
+  }
+  for(u16 id = 0; id < g_geometry.max_nodes; ++id) {
+    Inode inode;
+    if(!get_inode(id, inode)) return false;
+    if(!visible_inode(inode)) continue;
+    if(inode.address < EXTENT_ADDRESS) {
+      mark_sector_window(inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE,
+                         first, count, start, base, window, mask);
+    }
+    if(large_file_inode(inode)) {
+      LargeDescriptor descriptor = {};
+      if(!read_large_descriptor(id, inode, descriptor)) return false;
+      for(u8 block = 0; block < descriptor.block_count; ++block) {
+        mark_sector_window(descriptor.sectors[block], first, count, start,
+                           base, window, mask);
+      }
+    }
+  }
+  return true;
+}
+
 static bool select_reclaimable_sector(u32& out) {
   const u32 first = g_geometry.data_first_sector;
   const u32 count = g_geometry.data_sector_count;
   const u32 start = data_sector_in_range(g_meta.gc_cursor)
       ? g_meta.gc_cursor : first;
-
-  // За один проход таблицы inode отмечаем активность 32 кандидатов. Прежний
-  // цикл с секторами снаружи мог при почти заполненном накопителе просматривать
-  // всю таблицу узлов для каждого сектора данных (квадратичный худший случай).
   for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
     const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
         ? count - base : GC_SCAN_WINDOW);
     u32 live_mask = 0;
-    for(u8 index = 0; index < g_large_write_sector_count; index++) {
-      const u32 sector = g_large_write_sectors[index];
-      if(!data_sector_in_range(sector)) continue;
-      const u32 relative = (sector - first + count - (start - first)) % count;
-      if(relative >= base && relative < base + window) {
-        live_mask |= 1UL << (relative - base);
-      }
-    }
-    for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-      Inode inode;
-      if(!get_inode(id, inode) || !visible_inode(inode)) continue;
-      if(inode.address < EXTENT_ADDRESS) {
-        const u32 sector = inode.address /
-            storage_geometry::PHYSICAL_SECTOR_SIZE;
-        if(data_sector_in_range(sector)) {
-          const u32 relative =
-              (sector - first + count - (start - first)) % count;
-          if(relative >= base && relative < base + window) {
-            live_mask |= 1UL << (relative - base);
-          }
-        }
-      }
-      if(large_file_inode(inode)) {
-        LargeDescriptor descriptor = {};
-        if(!read_large_descriptor(id, inode, descriptor)) continue;
-        for(u8 block = 0; block < descriptor.block_count; block++) {
-          const u32 sector = descriptor.sectors[block];
-          if(!data_sector_in_range(sector)) continue;
-          const u32 relative =
-              (sector - first + count - (start - first)) % count;
-          if(relative >= base && relative < base + window) {
-            live_mask |= 1UL << (relative - base);
-          }
-        }
-      }
-    }
+    if(!live_sector_window(first, count, start, base, window, live_mask)) return false;
     for(u8 slot = 0; slot < window; slot++) {
       const u32 sector = first +
           (start - first + base + slot) % count;
       if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
-         borrowed_stage_sector(sector) ||
+         catalog_sector_busy(sector) || borrowed_stage_sector(sector) ||
          (live_mask & (1UL << slot)) != 0) continue;
       if(!initialize_data_sector(sector)) continue;
       out = sector;
@@ -1493,7 +1578,8 @@ static bool select_gc_victim(u32& out) {
     }
     for(u16 id = 0; id < g_geometry.max_nodes; id++) {
       Inode inode;
-      if(!get_inode(id, inode) || !visible_inode(inode)) continue;
+      if(!get_inode(id, inode)) return false;
+      if(!visible_inode(inode)) continue;
       if(inode.address < EXTENT_ADDRESS) {
         const u32 sector = inode.address /
             storage_geometry::PHYSICAL_SECTOR_SIZE;
@@ -1509,7 +1595,7 @@ static bool select_gc_victim(u32& out) {
       }
       if(large_file_inode(inode)) {
         LargeDescriptor descriptor = {};
-        if(!read_large_descriptor(id, inode, descriptor)) continue;
+        if(!read_large_descriptor(id, inode, descriptor)) return false;
         for(u8 block = 0; block < descriptor.block_count; block++) {
           const u32 sector = descriptor.sectors[block];
           if(!data_sector_in_range(sector)) continue;
@@ -1527,7 +1613,7 @@ static bool select_gc_victim(u32& out) {
     for(u8 slot = 0; slot < window; slot++) {
       const u32 sector = first + (start - first + base + slot) % count;
       if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
-         borrowed_stage_sector(sector)) continue;
+         catalog_sector_busy(sector) || borrowed_stage_sector(sector)) continue;
       if(live_bytes[slot] != 0xFFFF && live_bytes[slot] < best_bytes) {
         best_bytes = live_bytes[slot];
         best = sector;
@@ -1549,11 +1635,17 @@ static bool commit_meta_only(const CatalogMeta& meta) {
 }
 
 static bool garbage_collect(void) {
+  // Includes newly allocated reserves not yet named by committed metadata.
+  struct SectorPin {
+    explicit SectorPin(u32 sector) { g_gc_victim = sector; }
+    ~SectorPin() { g_gc_victim = EMPTY_ADDRESS; }
+  };
   if(!data_sector_in_range(g_meta.reserve_sector) ||
      borrowed_stage_sector(g_meta.reserve_sector) ||
      sector_has_live_inode(g_meta.reserve_sector)) {
     u32 replacement = EMPTY_ADDRESS;
     if(!select_reclaimable_sector(replacement)) return false;
+    SectorPin reserve_pin(replacement);
     CatalogMeta meta = g_meta;
     meta.reserve_sector = replacement;
     if(!commit_meta_only(meta)) return false;
@@ -1561,6 +1653,9 @@ static bool garbage_collect(void) {
 
   u32 victim = EMPTY_ADDRESS;
   if(!select_gc_victim(victim)) return false;
+  // A checkpoint can run after the last inode has left the victim but before
+  // GC erases it. Do not let the moving catalog claim it in that interval.
+  SectorPin victim_pin(victim);
 
   const u32 destination = g_meta.reserve_sector;
   if(!initialize_data_sector(destination)) return false;
@@ -1574,7 +1669,8 @@ static bool garbage_collect(void) {
           transaction.count < WAL_MAX_UPDATES) {
       const u16 id = next_id++;
       Inode inode;
-      if(!get_inode(id, inode) || !visible_inode(inode) ||
+      if(!get_inode(id, inode)) return false;
+      if(!visible_inode(inode) ||
          inode.address >= EXTENT_ADDRESS ||
          inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE != victim) {
         continue;
@@ -2683,18 +2779,23 @@ static bool format_internal(bool erase_settings,
   const u32 capacity = 0;
 #endif
   if(!compute_geometry(capacity, g_geometry)) return false;
-  g_format_epoch = 0xC6F60001UL ^ capacity ^ millis();
+  g_format_epoch = g_format_epoch != 0
+      ? g_format_epoch + 1 : (0xC7F70001UL ^ capacity ^ millis());
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
-  g_active_bank = 1;
+  memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
+  clear_pending_catalog();
+  g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
+  g_catalog_cursor = storage_geometry::LOCATOR_SECTORS;
+  g_gc_victim = EMPTY_ADDRESS;
   g_catalog_generation = 0;
   g_wal_sequence = 0;
   g_wal_records = 0;
   g_wal_sealed = false;
   g_overlay_count = 0;
   g_free_hint = 0;
-  g_locator_matching_copies = 0;
+  g_locator_valid_mask = 0;
   g_large_write_sector_count = 0;
   g_verified_large_id = NONE;
   g_verified_large_generation = 0;
@@ -2708,12 +2809,9 @@ static bool format_internal(bool erase_settings,
   g_meta.gc_cursor = g_geometry.data_first_sector;
   g_meta.data_sequence = 0;
 
-  // checkpoint() сама стирает и публикует новый активный банк. Другой банк
-  // привязан к эпохе и будет стёрт, когда снова станет приёмником COW, поэтому
-  // предварительное стирание обоих банков здесь лишь утраивало работу с
-  // каталогом при первом запуске на W25Q128 ёмкостью 16 МиБ. Старую таблицу
-  // при форматировании читать нельзя: она может содержать сотни orphan inode
-  // и даже относиться к другой геометрии. Создаём явно пустую таблицу.
+  // Publish an empty root and WAL, without reading or copying the old table.
+  // Absent pages mean all-FF inodes. Old roots/data are excluded by the new
+  // epoch and are erased lazily as the circular allocator reaches them.
   if(!checkpoint(true)) return false;
   // Заголовки staging также содержат эпоху форматирования. Старые или чужие
   // секторы после форматирования игнорируются и стираются лениво перед первой записью.
@@ -2743,18 +2841,19 @@ void init(void) {
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
   g_free_hint = 0;
+  g_format_epoch = 0;
+  g_gc_victim = EMPTY_ADDRESS;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
-  dbgln(SPIROM, "C6 locator: scan");
+  dbgln(SPIROM, "C7 locator: scan");
   if(load_locator()) {
     if(!load_catalog_and_repair_locators()) {
-      dbgln(SPIROM, "C6 catalog: both banks invalid");
-      // Действительный локатор доказывает, что это существующий том C6. Потеря
-      // обоих банков каталога не должна выглядеть как первое использование:
-      // сохраняем каждый байт до явного запроса пользователя на форматирование.
+      dbgln(SPIROM, "C7 catalog: invalid");
+      // A valid locator identifies an existing C7 volume. A broken root,
+      // page or read is not a blank device: require an explicit format.
       g_mount_status = MountStatus::REPAIR_REQUIRED;
     } else {
-      dbgln(SPIROM, "C6 catalog: ready");
+      dbgln(SPIROM, "C7 catalog: ready");
       g_ready = true;
       g_mount_status = MountStatus::READY;
     }
@@ -2762,12 +2861,12 @@ void init(void) {
     dbgln(SPIROM, "C5 volume: explicit format required");
     g_mount_status = MountStatus::FORMAT_REQUIRED;
   } else {
-    dbgln(SPIROM, "C6 locator: absent or incompatible");
+    dbgln(SPIROM, "C7 locator: absent or incompatible");
     const bool preserve_settings = load_capacity_for_reformat();
     u32 capacity = 0;
 #ifdef SPI_FLASH
     if(!preserve_settings) {
-      dbgln(SPIROM, "C6 capacity probe: start");
+      dbgln(SPIROM, "C7 capacity probe: start");
 #ifdef DEBUG_SPIFLASH
       const flash_capacity_probe::ProbeProgress progress =
           capacity_probe_debug;
@@ -2777,22 +2876,22 @@ void init(void) {
       if(!flash_capacity_probe::detect(
              flash_device(), flash_device().capacityProbeUpper(), capacity, progress) ||
          !flash_device().setCapacity(capacity)) {
-        dbgln(SPIROM, "C6 capacity probe: failed");
+        dbgln(SPIROM, "C7 capacity probe: failed");
         return;
       }
     }
 #endif
     if(!preserve_settings) {
-      dbgln(SPIROM, "C6 capacity probe: ", (isize) capacity, " bytes");
+      dbgln(SPIROM, "C7 capacity probe: ", (isize) capacity, " bytes");
     } else {
-      dbgln(SPIROM, "C6 geometry migration: preserve settings");
+      dbgln(SPIROM, "C7 reformat: preserve settings");
     }
-    dbgln(SPIROM, "C6 format: start");
+    dbgln(SPIROM, "C7 format: start");
     if(!format_internal(!preserve_settings)) {
-      dbgln(SPIROM, "C6 format: failed");
+      dbgln(SPIROM, "C7 format: failed");
       return;
     }
-    dbgln(SPIROM, "C6 format: complete");
+    dbgln(SPIROM, "C7 format: complete");
   }
   if(g_ready) {
     (void) sweep_orphan_file_extents();
@@ -4680,7 +4779,8 @@ static bool borrow_stage_slot(u16& out_sector, u8& out_slot) {
   }
   for(u16 id = 0; id < g_geometry.max_nodes; id++) {
     Inode inode;
-    if(!get_inode(id, inode) || !visible_inode(inode)) continue;
+    if(!get_inode(id, inode)) return false;
+    if(!visible_inode(inode)) continue;
     if(inode.address < EXTENT_ADDRESS) {
       mark_stage_borrow_occupied(
           occupied, inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE);
@@ -4701,7 +4801,7 @@ static bool borrow_stage_slot(u16& out_sector, u8& out_slot) {
       physical++) {
     const u32 relative = physical - g_geometry.data_first_sector;
     if((occupied[relative >> 5] & (1UL << (relative & 31U))) != 0 ||
-       borrowed_stage_sector(physical)) continue;
+       catalog_sector_busy(physical) || borrowed_stage_sector(physical)) continue;
     chosen = physical;
     reclaimable++;
   }
@@ -4867,6 +4967,18 @@ void test_reset_stage_index_stats(void) {
 StageIndexStats test_stage_index_stats(void) {
   return g_stage_index_stats;
 }
+
+u32 test_catalog_root(void) { return g_catalog_root; }
+u32 test_catalog_page(u8 page) {
+  return page < g_geometry.catalog_table_sectors ? g_catalog_pages[page].sector : EMPTY_ADDRESS;
+}
+u32 test_catalog_wal_address(u8 record) {
+  return record < CATALOG_WAL_RECORDS ? wal_record_address(record) : EMPTY_ADDRESS;
+}
+u8 test_catalog_wal_records(void) { return g_wal_records; }
+u8 test_catalog_wal_capacity(void) { return CATALOG_WAL_RECORDS; }
+bool test_catalog_checkpoint(void) { return g_ready && checkpoint(); }
+bool test_catalog_protects(u32 sector) { return catalog_sector_busy(sector); }
 
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0) {

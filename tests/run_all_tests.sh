@@ -101,6 +101,7 @@ fi
 "$root/tests/run_msc_scsi_safety_tests.sh"
 "$root/tests/run_usb_disk_session_tests.sh"
 "$root/tests/run_program_store_tests.sh"
+bash "$root/tests/run_catalog_wear_model_tests.sh"
 "$root/tests/run_runtime_peripherals_tests.sh"
 "$root/tests/run_settings_journal_tests.sh"
 "$root/tests/run_startup_splash_tests.sh"

@@ -822,7 +822,7 @@ static void boot_sector(u8* output) {
   output[0] = 0xEB;
   output[1] = 0x3C;
   output[2] = 0x90;
-  memcpy(output + 3, "MK61C6  ", 8);
+  memcpy(output + 3, "MK61C7  ", 8);
   put_le16(output, 11, SECTOR_SIZE);
   output[13] = geometry().sectors_per_cluster;
   put_le16(output, 14, RESERVED_SECTORS);
@@ -841,7 +841,7 @@ static void boot_sector(u8* output) {
   output[36] = 0x80;
   output[38] = 0x29;
   put_le32(output, 39, volume_serial());
-  memcpy(output + 43, "MK61S C6   ", 11);
+  memcpy(output + 43, "MK61S C7   ", 11);
   memcpy(output + 54, "FAT12   ", 8);
   output[510] = 0x55;
   output[511] = 0xAA;
@@ -919,7 +919,7 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
   int first_child = 0;
   if(root) {
     if(first_slot == 0) {
-      memcpy(output, "MK61S C6   ", 11);
+      memcpy(output, "MK61S C7   ", 11);
       output[11] = ATTR_VOLUME;
       for(u8 offset = 0;
           offset + 1 < storage_geometry::ROOT_SYSTEM_DIRENTS;
@@ -2506,7 +2506,7 @@ u32 volume_serial(void) {
     capacity = current_geometry.capacity_bytes;
     startup_stage(31);
   }
-  const u32 legacy_volume_serial = 0xC6000000UL ^ capacity;
+  const u32 legacy_volume_serial = 0xC7000000UL ^ capacity;
   startup_stage(32);
   const u32 stable = device_identity::fat_volume_serial(
       device_identity::read(), legacy_volume_serial);

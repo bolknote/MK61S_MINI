@@ -133,7 +133,7 @@ static void test_boot_sector_volume_serial_fallback(void) {
   u8 boot[virtual_fat::SECTOR_SIZE];
   assert(virtual_fat::read_sector(0, boot));
   assert(read_le32(boot, 39) ==
-         ((0xC6000000UL ^ SPIFlash::DEFAULT_CAPACITY) ^
+         ((0xC7000000UL ^ SPIFlash::DEFAULT_CAPACITY) ^
           program_store::media_revision()));
 }
 

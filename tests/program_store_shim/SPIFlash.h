@@ -10,6 +10,7 @@ class SPIFlash {
     static constexpr uint32_t SECTOR_SIZE = 4096;
     static constexpr uint32_t DEFAULT_CAPACITY = 2U * 1024U * 1024U;
     static constexpr uint32_t MAX_CAPACITY = 16U * 1024U * 1024U;
+    enum class Tear { Before, Prefix, Bits, Complete };
 
     SPIFlash(uint8_t = 0) {}
 
@@ -37,7 +38,8 @@ class SPIFlash {
     }
 
     bool writeByteArray(uint32_t address, uint8_t* data, size_t len, bool = true) {
-      if(data == NULL || address > actual_capacity || len > actual_capacity - address || fails(address, len)) return false;
+      if(data == NULL || address > actual_capacity || len > actual_capacity - address) return false;
+      if(fails(address, len)) { tornWrite(address, data, len); return false; }
       for(size_t i = 0; i < len; i++) {
         if((storage[address + i] & data[i]) != data[i]) return false;
       }
@@ -49,7 +51,8 @@ class SPIFlash {
 
     bool eraseSector(uint32_t address) {
       const uint32_t base = address - address % SECTOR_SIZE;
-      if(base >= actual_capacity || fails(base, SECTOR_SIZE)) return false;
+      if(base >= actual_capacity) return false;
+      if(fails(base, SECTOR_SIZE)) { tornErase(base); return false; }
       memset(storage + base, 0xFF, SECTOR_SIZE);
       erase_count++;
       sector_erases[base / SECTOR_SIZE]++;
@@ -112,7 +115,8 @@ class SPIFlash {
     }
 
     bool rawWrite(uint32_t address, const uint8_t* data, size_t len) {
-      if(data == NULL || actual_capacity == 0 || fails(address, len)) return false;
+      if(data == NULL || actual_capacity == 0) return false;
+      if(fails(address, len)) { tornWrite(address, data, len); return false; }
       for(size_t i = 0; i < len; i++) {
         const uint32_t target = (address + (uint32_t) i) % actual_capacity;
         if((storage[target] & data[i]) != data[i]) return false;
@@ -126,8 +130,9 @@ class SPIFlash {
     }
 
     bool rawEraseSector(uint32_t address) {
-      if(actual_capacity == 0 || fails(address, SECTOR_SIZE)) return false;
+      if(actual_capacity == 0) return false;
       const uint32_t base = (address % actual_capacity) & ~(SECTOR_SIZE - 1U);
+      if(fails(address, SECTOR_SIZE)) { tornErase(base); return false; }
       memset(storage + base, 0xFF, SECTOR_SIZE);
       erase_count++;
       sector_erases[base / SECTOR_SIZE]++;
@@ -136,7 +141,16 @@ class SPIFlash {
     }
 
     static void failAfterOperations(int32_t successful_operations) {
+      tearAfterOperations(successful_operations, Tear::Before);
+    }
+
+    // One interrupted NOR command, then no further writes (including retries).
+    // Reads remain available so error recovery can inspect the torn medium.
+    static void tearAfterOperations(int32_t successful_operations, Tear mode) {
       fail_after_operations = successful_operations;
+      tear_mode = mode;
+      cut_seen = false;
+      tear_pending = false;
     }
 
     static void failReadsAfterOperations(int32_t successful_operations) {
@@ -153,6 +167,8 @@ class SPIFlash {
       fail_end = MAX_CAPACITY;
       fail_after_operations = -1;
       fail_reads_after_operations = -1;
+      tear_mode = Tear::Before;
+      cut_seen = tear_pending = false;
     }
 
     static void corrupt(uint32_t address, uint8_t value) {
@@ -160,6 +176,33 @@ class SPIFlash {
     }
 
   private:
+    static uint8_t tearMask(size_t index, size_t len) {
+      if(tear_mode == Tear::Complete) return 0xFF;
+      if(tear_mode == Tear::Prefix) return index < len / 2 ? 0xFF : 0;
+      return (index & 1U) != 0 ? 0x55 : 0xAA;
+    }
+
+    static void tornWrite(uint32_t address, const uint8_t* data, size_t len) {
+      if(!tear_pending) return;
+      tear_pending = false;
+      for(size_t i = 0; i < len; ++i) {
+        storage[(address + (uint32_t) i) % actual_capacity] &=
+            data[i] | (uint8_t) ~tearMask(i, len);
+      }
+      programmed_bytes += len;
+      ++mutation_operations;
+    }
+
+    static void tornErase(uint32_t base) {
+      if(!tear_pending) return;
+      tear_pending = false;
+      for(size_t i = 0; i < SECTOR_SIZE; ++i)
+        storage[base + i] |= tearMask(i, SECTOR_SIZE);
+      ++erase_count;
+      ++sector_erases[base / SECTOR_SIZE];
+      ++mutation_operations;
+    }
+
     static bool failsRead(void) {
       if(fail_reads_after_operations < 0) return false;
       if(fail_reads_after_operations == 0) return true;
@@ -171,7 +214,13 @@ class SPIFlash {
       const uint32_t end = address + (uint32_t) len;
       if(address < fail_end && end > fail_begin) return true;
       if(fail_after_operations < 0) return false;
-      if(fail_after_operations == 0) return true;
+      if(fail_after_operations == 0) {
+        if(!cut_seen) {
+          cut_seen = true;
+          tear_pending = tear_mode != Tear::Before;
+        }
+        return true;
+      }
       fail_after_operations--;
       return false;
     }
@@ -190,6 +239,9 @@ class SPIFlash {
     static inline uint64_t read_bytes;
     static inline int32_t fail_after_operations = -1;
     static inline int32_t fail_reads_after_operations = -1;
+    static inline Tear tear_mode = Tear::Before;
+    static inline bool cut_seen = false;
+    static inline bool tear_pending = false;
 };
 
 #endif
