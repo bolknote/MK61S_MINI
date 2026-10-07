@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <vector>
+#include <string>
 
 #include "language_bytecode.hpp"
 #include "mk_math.hpp"
@@ -167,6 +168,57 @@ void test_key_input_is_an_ordered_keyboard_expression() {
   View invalid;
   assert(inspect(f.image, r.size, invalid) == Error::INVALID_IMAGE);
 }
+void test_indexed_lines_and_diagnostic_boundaries() {
+  Fixture f;
+  std::string source;
+  for(unsigned i=0;i<96;++i) {
+    char line[32];snprintf(line,sizeof(line),"%u A=%u\n",10+3*i,i);
+    source+=line;
+  }
+  f.compile(source.c_str());
+  assert(f.view.lines==96 && line_pc(f.view,0)==0xFFFF);
+  assert(line_pc(f.view,9)==0xFFFF && line_pc(f.view,0xFFFFFFFFUL)==0xFFFF);
+  for(unsigned i=0;i<96;++i) {
+    const auto pc=line_pc(f.view,10+3*i);
+    assert(pc!=0xFFFF && source_line(f.view,pc)==10+3*i);
+    assert(source_line(f.view,(uint16_t)(pc-1))==(i?10+3*(i-1):0));
+    assert(line_pc(f.view,11+3*i)==0xFFFF);
+  }
+  assert(source_line(f.view,(uint16_t)(f.view.code-1))==0);
+  assert(source_line(f.view,f.view.size)==295);
+  const auto result=run(f.view,f.state,services);
+  assert(result.error==Error::NONE && f.vars[0]==95);
+  f.compile("10 GOTO 41\n40 A=1\n50 END\n");
+  const auto missing=run(f.view,f.state,services);
+  assert(missing.error==Error::MISSING_LINE && missing.line==10);
+  f.compile("1.10 S A=1\n1.20 G 2.10\n2.10 S A=A+2\n3.10 E\n",Language::FOCAL);
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==3);
+}
+
+void test_service_progress_and_bounded_cancellation() {
+  Fixture f;
+  std::string source;
+  for(unsigned i=0;i<96;++i) {
+    char line[32];snprintf(line,sizeof(line),"%u A=A+1\n",10+3*i);source+=line;
+  }
+  f.compile(source.c_str());
+  f.vars[0]=0;
+  struct Polls { double* value;std::vector<double> observed; } polls{f.vars,{}};
+  auto host=services;host.context=&polls;
+  host.service=[](void* raw) {
+    auto& p=*(Polls*)raw;p.observed.push_back(*p.value);
+    return p.observed.size()<3;
+  };
+  const auto cancelled=run(f.view,f.state,host);
+  assert(cancelled.error==Error::STOPPED && cancelled.steps<=65);
+  assert(polls.observed.size()==3 && polls.observed[0]==0);
+  assert(polls.observed[1]>0 && polls.observed[2]>polls.observed[1]);
+  f.vars[0]=0;polls.observed.clear();
+  host.service=[](void*){return false;};
+  const auto immediate=run(f.view,f.state,host);
+  assert(immediate.error==Error::STOPPED && immediate.steps==1 && f.vars[0]==0);
+}
+
 void test_validation() {
   Fixture f;
   f.compile("10 IF 1 GOTO 30\n20 A=1\n30 END\n");
@@ -310,6 +362,8 @@ int main() {
   test_literals();
   test_sizing_and_bounds();
   test_key_input_is_an_ordered_keyboard_expression();
+  test_indexed_lines_and_diagnostic_boundaries();
+  test_service_progress_and_bounded_cancellation();
   test_validation();
   test_controls_and_traps();
   test_parser_edges();

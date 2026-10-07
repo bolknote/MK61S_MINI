@@ -434,7 +434,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       }
       case Op::LINE:
         if (s.sp) error = Error::STACK;
-        if (host.service && !host.service(host.context)) error = Error::STOPPED;
+        // The instruction loop already services USB/keyboard/watchdog before
+        // the first instruction and at most 32 instructions apart. Polling
+        // again on every short BASIC line repeats that work unnecessarily.
         break;
       case Op::SOURCE_POS:
       case Op::DATA:

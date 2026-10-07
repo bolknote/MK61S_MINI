@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 #include <float.h>
+#include <string.h>
 
 #ifndef MK61_MATH_BACKEND_LIBM
   #define MK61_MATH_BACKEND_LIBM 0
@@ -40,22 +41,63 @@ namespace mk_math {
 
 inline bool is_nan(double x) { return x != x; }
 inline bool is_inf(double x) { return x > DBL_MAX || x < -DBL_MAX; }
-inline bool is_finite(double x) { return !is_nan(x) && !is_inf(x); }
+inline bool is_finite(double x) {
+#if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
+  uint64_t bits;memcpy(&bits,&x,sizeof(bits));
+  return (bits & UINT64_C(0x7FF0000000000000)) != UINT64_C(0x7FF0000000000000);
+#else
+  return !is_nan(x) && !is_inf(x);
+#endif
+}
 
 // ---- Вспомогательные функции округления без libm --------------------------
 
 inline double fabs(double x) { return x < 0.0 ? -x : x; }
 
+#if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
+inline uint64_t binary64_bits(double x) {
+  static_assert(sizeof(double)==sizeof(uint64_t), "unsupported binary64 layout");
+  uint64_t bits;memcpy(&bits,&x,sizeof(bits));return bits;
+}
+inline double binary64_value(uint64_t bits) {
+  double x;memcpy(&x,&bits,sizeof(x));return x;
+}
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((noinline))
+#endif
 inline double trunc(double x) {
+#if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
+  const uint64_t bits=binary64_bits(x);
+  const unsigned exponent=(unsigned)((bits>>52)&0x7FFU);
+  if(exponent>=1075) return x; // Integral values, infinities and NaNs.
+  if(exponent<1023) return 0.0; // Preserve the existing positive-zero result.
+  const unsigned integral=exponent-1023;
+  uint32_t high=(uint32_t)(bits>>32),low=(uint32_t)bits;
+  if(integral<20) { high&=~(0x000FFFFFUL>>integral);low=0; }
+  else low&=~(0xFFFFFFFFUL>>(integral-20));
+  return binary64_value(((uint64_t)high<<32)|low);
+#else
   if(!is_finite(x)) return x;
-  // Значения double с модулем >= 2^53 уже являются целыми.
   if(x >= 9007199254740992.0 || x <= -9007199254740992.0) return x;
   return (double) (long long) x;
+#endif
 }
 
+#if defined(__GNUC__) || defined(__clang__)
+__attribute__((noinline))
+#endif
 inline double floor(double x) {
+#if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
+  const double truncated=trunc(x);
+  const uint64_t bits=binary64_bits(x);
+  return (bits>>63) && (bits<<1) && bits!=binary64_bits(truncated)
+      ? truncated-1.0 : truncated;
+#else
   const double t = trunc(x);
   return (t > x) ? t - 1.0 : t;
+#endif
 }
 
 inline double ceil(double x) {
