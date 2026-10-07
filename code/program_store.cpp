@@ -2925,7 +2925,11 @@ u32 media_revision(void) {
   if(!g_ready) return 0;
   // Compact both persistent counters into a well-distributed change token.
   // FAT only compares identity; it does not impose ordering on this value.
-  u32 revision = g_catalog_generation;
+  // Include the persisted volume identity: a reformat can reuse the same
+  // catalog/WAL counters and inodes, but must invalidate live SRAM caches.
+  u32 revision = g_format_epoch;
+  revision ^= g_catalog_generation + 0x9E3779B9UL +
+              (revision << 6) + (revision >> 2);
   revision ^= g_wal_sequence + 0x9E3779B9UL +
               (revision << 6) + (revision >> 2);
   revision ^= (u32) g_stage_generation + 0x9E3779B9UL +

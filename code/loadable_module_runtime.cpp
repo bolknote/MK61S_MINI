@@ -25,6 +25,7 @@ static Kind g_active_kind = (Kind) 0;
 static Header g_active_header;
 static Entry g_active_entry;
 static u16 g_active_file_id = program_store::INVALID_ID;
+static u32 g_active_revision;
 static u8 g_call_depth;
 static u8 g_pin_depth;
 static Kind g_pinned_kind = (Kind) 0;
@@ -238,6 +239,14 @@ static RuntimeStatus load(Kind kind,
     return RuntimeStatus::UNAVAILABLE;
   }
 
+  // A live verified SRAM image is unchanged until either its lease is
+  // evicted or the filesystem changes. Avoid walking /System and rereading
+  // its header for every cooperative VM part.
+  const u32 revision = program_store::media_revision();
+  if(g_app_cache.ok() && g_active_entry != nullptr && g_active_kind == kind &&
+     g_active_revision == revision &&
+     (kind != Kind::APPLICATION || g_active_file_id == file_id))
+    return RuntimeStatus::OK;
   program_store::Entry app = {};
   const bool found = kind == Kind::APPLICATION
       ? file_id != program_store::INVALID_ID &&
@@ -246,7 +255,9 @@ static RuntimeStatus load(Kind kind,
   if(!found) {
     return RuntimeStatus::INVALID_MODULE;
   }
-  return load_entry(kind, app);
+  const RuntimeStatus status = load_entry(kind, app);
+  if(status == RuntimeStatus::OK) g_active_revision = revision;
+  return status;
 }
 
 } // namespace

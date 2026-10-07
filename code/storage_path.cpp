@@ -7,6 +7,47 @@
 namespace storage_path {
 namespace {
 
+// Cache only lookup hints, never file contents or trusted Entry metadata.
+// Each hit rereads its inode/name and compares the complete visible name,
+// so a hash collision cannot select another file. A filesystem change drops
+// all hints, preserving directory precedence and ambiguity checks.
+struct LookupHint { u32 hash, age; u16 parent, id; };
+static LookupHint lookup_hints[16];
+static u32 lookup_revision, lookup_clock;
+static u32 lookup_hash(const char* name) {
+  u32 hash=2166136261UL;
+  while(*name) { hash^=mk8::fold_case((u8)*name++);hash*=16777619UL; }
+  return hash;
+}
+static void synchronize_lookups() {
+  const u32 revision=program_store::media_revision();
+  if(revision!=lookup_revision || lookup_clock==0xFFFFFFFFUL) {
+    memset(lookup_hints,0,sizeof(lookup_hints));lookup_clock=0;lookup_revision=revision;
+  }
+}
+static bool cached_lookup(u16 parent,const char* name,program_store::Entry& out) {
+  synchronize_lookups();
+  const u32 hash=lookup_hash(name);
+  for(auto& hint:lookup_hints) {
+    if(!hint.age || hint.parent!=parent || hint.hash!=hash) continue;
+    program_store::Entry entry;
+    char visible[VISIBLE_NAME_SIZE];
+    if(!program_store::entry_by_id(hint.id,entry) || entry.parent_id!=parent ||
+       !visible_name(entry,visible,sizeof(visible)) || !fat_name::equal(visible,name)) continue;
+    hint.age=++lookup_clock;out=entry;return true;
+  }
+  return false;
+}
+static void remember_lookup(u16 parent,const char* name,const program_store::Entry& entry) {
+  synchronize_lookups();
+  auto* slot=&lookup_hints[0];
+  for(auto& hint:lookup_hints) {
+    if(!hint.age) { slot=&hint;break; }
+    if(hint.age<slot->age) slot=&hint;
+  }
+  *slot={lookup_hash(name),++lookup_clock,parent,entry.id};
+}
+
 struct View {
   const char* begin;
   const char* end;
@@ -63,6 +104,10 @@ static bool parent_of(u16 directory, u16& out) {
 }
 
 static Status find_directory_child(u16 parent, const char* name, u16& out) {
+  program_store::Entry cached;
+  if(cached_lookup(parent,name,cached) && cached.kind==program_store::NodeKind::DIRECTORY) {
+    out=cached.id;return Status::OK;
+  }
   const int count = program_store::child_count(parent);
   bool file_match = false;
   for(int index = 0; index < count; index++) {
@@ -73,6 +118,7 @@ static Status find_directory_child(u16 parent, const char* name, u16& out) {
     if(!fat_name::equal(visible, name)) continue;
     if(entry.kind == program_store::NodeKind::DIRECTORY) {
       out = entry.id;
+      remember_lookup(parent,name,entry);
       return Status::OK;
     }
     file_match = true;
@@ -252,6 +298,7 @@ static Status find_untyped_file(u16 parent, const char* basename,
 
 static Status exact_visible_entry(u16 parent, const char* leaf,
                                   program_store::Entry& out) {
+  if(cached_lookup(parent,leaf,out)) return Status::OK;
   const int count = program_store::child_count(parent);
   for(int index = 0; index < count; index++) {
     program_store::Entry entry;
@@ -260,6 +307,7 @@ static Status exact_visible_entry(u16 parent, const char* leaf,
     if(!visible_name(entry, visible, sizeof(visible))) return Status::INVALID;
     if(fat_name::equal(visible, leaf)) {
       out = entry;
+      remember_lookup(parent,leaf,entry);
       return Status::OK;
     }
   }

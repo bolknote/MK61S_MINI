@@ -1115,6 +1115,54 @@ static void test_arbitrary_nested_directories(void) {
   assert(program_store::total_count() == 0);
 }
 
+static void test_cached_path_lookups_observe_mutations(void) {
+  fresh();
+  const u32 initial_revision=program_store::media_revision();
+  assert(program_store::format());
+  assert(program_store::media_revision()!=initial_revision);
+  u16 directory=program_store::INVALID_ID;
+  assert(program_store::create_directory(program_store::ROOT_ID,
+      "CacheTest",program_store::INVALID_ID,&directory));
+  const u8 data[]={'A','B','C'};
+  for(unsigned i=0;i<40;++i) {
+    char name[16];snprintf(name,sizeof(name),"F%02u",i);
+    assert(program_store::write_file(directory,program_store::INVALID_ID,
+        ProgramType::TEXT,name,data,1));
+  }
+  Entry entry;
+  assert(program_store::child(directory,39,entry));
+  char leaf[storage_path::VISIBLE_NAME_SIZE];
+  assert(storage_path::visible_name(entry,leaf,sizeof(leaf)));
+  const u16 id=entry.id;
+  SPIFlash::resetOperationCounts();
+  assert(storage_path::resolve_file(directory,leaf,entry)==storage_path::Status::OK);
+  const auto cold=SPIFlash::readOperations();
+  SPIFlash::resetOperationCounts();
+  for(unsigned i=0;i<20;++i) {
+    assert(storage_path::resolve_file(directory,leaf,entry)==storage_path::Status::OK);
+    assert(entry.id==id && entry.data_len==1);
+  }
+  const auto warm=SPIFlash::readOperations()/20;
+  assert(warm<cold/3);
+  assert(program_store::write_file(directory,id,ProgramType::TEXT,entry.name,data,3));
+  assert(storage_path::resolve_file(directory,leaf,entry)==storage_path::Status::OK);
+  assert(entry.id==id && entry.data_len==3);
+  assert(program_store::move_rename(id,directory,"Renamed"));
+  assert(storage_path::resolve_file(directory,leaf,entry)==storage_path::Status::NOT_FOUND);
+  assert(storage_path::resolve_file(directory,"renamed.TXT",entry)==storage_path::Status::OK);
+  assert(entry.id==id);
+  assert(program_store::remove_id(id));
+  assert(storage_path::resolve_file(directory,"Renamed.txt",entry)==storage_path::Status::NOT_FOUND);
+  assert(program_store::write_file(directory,program_store::INVALID_ID,
+      ProgramType::TEXT,"Renamed",data,2));
+  assert(storage_path::resolve_file(directory,"RENAMED.txt",entry)==storage_path::Status::OK);
+  assert(entry.data_len==2);
+  const u32 revision=program_store::media_revision();
+  program_store::init();assert(program_store::media_revision()==revision);
+  assert(storage_path::resolve_file(directory,"Renamed.txt",entry)==storage_path::Status::OK);
+  printf("path lookup cache: cold=%u warm=%u reads, replace/rename/delete/reboot PASS\n",cold,warm);
+}
+
 static void test_paths_and_recursive_tree_operations(void) {
   fresh();
   u16 projects = program_store::INVALID_ID;
@@ -3552,6 +3600,7 @@ int main(int argc, char** argv) {
   test_mixed_order_compression_churn();
   test_zx0_replacement_power_cuts();
   test_arbitrary_nested_directories();
+  test_cached_path_lookups_observe_mutations();
   test_paths_and_recursive_tree_operations();
   test_explorer_autoexec_is_a_direct_script_child();
   test_system_apps_are_resolved_only_from_system_directory();

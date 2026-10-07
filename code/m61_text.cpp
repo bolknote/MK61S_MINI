@@ -50,7 +50,15 @@ static constexpr u16 MAX_LINE_SIZE = (u16) terminal_core::MAX_INPUT_TEXT;
 static constexpr u8 HIN_BYTES_PER_LINE = 24;
 static constexpr u8 SCRIPT_STACK_DEPTH = 8;
 static constexpr u8 SCRIPT_LINE_BUDGET = 8;
-static constexpr u8 READ_CACHE_SIZE = 64;
+#ifndef MK61_M61_READ_CACHE_BYTES
+  #if defined(STM32F411xE)
+    #define MK61_M61_READ_CACHE_BYTES 1024
+  #else
+    #define MK61_M61_READ_CACHE_BYTES 64
+  #endif
+#endif
+static constexpr u16 READ_CACHE_SIZE = MK61_M61_READ_CACHE_BYTES;
+static_assert(READ_CACHE_SIZE > 0 && READ_CACHE_SIZE <= 4096, "M61 read cache size is invalid");
 static constexpr u8 MAX_LABELS = 64;
 static constexpr u8 MAX_LABEL_SIZE = 31;
 static constexpr u8 TRAP_ADDRESS_COUNT = (u8) core_61::MAX_PROGRAM_STEP;
@@ -131,7 +139,8 @@ static u8 return_stack_depth = 0;
 static u8 script_stack_depth = 0;
 static u8 read_cache[READ_CACHE_SIZE];
 static u16 read_cache_start = 0;
-static u8 read_cache_len = 0;
+static u16 read_cache_len = 0;
+static u32 read_cache_revision;
 static LabelEntry labels[MAX_LABELS];
 static u8 label_count = 0;
 static u8 trap_targets[TRAP_ADDRESS_COUNT];
@@ -603,9 +612,11 @@ static bool read_script_byte(u8& value, bool& eof) {
   }
 
   if(script_source == ScriptSource::STORE) {
-    if(script_pos < read_cache_start || script_pos >= (u16) (read_cache_start + read_cache_len)) {
-      read_cache_start = script_pos;
-      const u16 remaining = (u16) (script_len - script_pos);
+    const u32 revision=program_store::media_revision();
+    if(read_cache_revision!=revision || script_pos < read_cache_start ||
+       script_pos >= (u16) (read_cache_start + read_cache_len)) {
+      read_cache_start = (u16)(script_pos / READ_CACHE_SIZE * READ_CACHE_SIZE);
+      const u16 remaining = (u16) (script_len - read_cache_start);
       const u16 wanted = remaining < READ_CACHE_SIZE ? remaining : READ_CACHE_SIZE;
       u16 got = 0;
       if(!program_store::read_range_id(script_id, read_cache_start, read_cache,
@@ -613,7 +624,8 @@ static bool read_script_byte(u8& value, bool& eof) {
         read_cache_len = 0;
         return false;
       }
-      read_cache_len = (u8) got;
+      read_cache_len = got;
+      read_cache_revision = revision;
     }
     value = read_cache[script_pos - read_cache_start];
     script_pos++;
@@ -684,6 +696,10 @@ static LabelParse parse_label(const char* line, const char*& name, usize& len) {
 
 static bool stored_label_equals(const LabelEntry& entry, const char* name, usize len) {
   if(entry.len != len || entry.hash != label_hash(name, len)) return false;
+  if(read_cache_revision==program_store::media_revision() &&
+     entry.name_pos>=read_cache_start &&
+     (u32)entry.name_pos+entry.len<=(u32)read_cache_start+read_cache_len)
+    return memcmp(read_cache+(entry.name_pos-read_cache_start),name,len)==0;
   char stored[MAX_LABEL_SIZE + 1];
   u16 got = 0;
   if(!program_store::read_range_id(script_id, entry.name_pos, (u8*) stored,
@@ -1239,7 +1255,8 @@ static bool goto_label(const char* args) {
   const LabelEntry& entry = labels[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
-  invalidate_read_cache();
+  // A same-script jump can reuse its verified read window. read_script_byte
+  // checks the media revision before using any cached source byte.
   return true;
 }
 

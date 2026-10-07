@@ -23,6 +23,7 @@ struct StoredScript {
 
 static std::vector<StoredScript> scripts;
 static int range_reads = 0;
+static u32 media_revision_value=1;
 static int executed_commands = 0;
 static int clear_count = 0;
 static u8 loaded_program[10000] = {};
@@ -72,6 +73,8 @@ static bool manual_paused = false;
 static bool manual_available = true;
 
 namespace program_store {
+
+u32 media_revision() { return media_revision_value; }
 
 bool entry_by_id(u16 id, Entry& out) {
   if(id>=scripts.size()) return false;
@@ -368,6 +371,7 @@ static void reset_host(void) {
   program_load::reset();
   assert((u8) core_61::context_buffer_owner == 0);
   scripts.clear();
+  ++media_revision_value;
   range_reads = 0;
   executed_commands = 0;
   clear_count = 0;
@@ -649,6 +653,23 @@ static void test_indexed_loop_is_budgeted_and_uses_block_reads(void) {
   assert(executed_commands > 8);
   assert(range_reads < 200); // старому исполнителю здесь требовались тысячи однобайтовых чтений
   m61_text::cancel();
+}
+
+static void test_read_window_survives_goto_but_observes_writes(void) {
+  reset_host();
+  std::string source(300,'\n');source+=":loop\nok\nrun :loop\n";
+  add_script("CACHE",source);
+  assert(m61_text::load_program("CACHE"));
+  for(int i=0;i<64;++i)m61_text::service();
+  const int before=range_reads;
+  for(int i=0;i<32;++i)m61_text::service();
+  // Both commands and indexed label names share the verified window.
+  assert(range_reads==before);
+  scripts[0].source.replace(scripts[0].source.find("ok\n"),2,"bad");
+  ++media_revision_value;
+  for(int i=0;i<4 && m61_text::active();++i)m61_text::service();
+  assert(!m61_text::active());
+  const auto error=require_error();assert(error.line==302);
 }
 
 static void test_label_reference_rejects_trailing_tokens(void) {
@@ -1574,6 +1595,7 @@ int main(void) {
   test_duplicate_and_oversized_labels_fail_before_execution();
   test_line_limit_is_enforced_during_indexing();
   test_indexed_loop_is_budgeted_and_uses_block_reads();
+  test_read_window_survives_goto_but_observes_writes();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
   test_m61_run_uses_common_program_start_hook();
