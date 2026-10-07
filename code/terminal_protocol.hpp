@@ -27,6 +27,7 @@ struct Result {
   static Result ok(void) { return {ResultKind::OK, -1, ""}; }
   static Result error(void) { return {ResultKind::ERROR, -1, ""}; }
   static Result keyboard(i32 value) { return {ResultKind::KEY, value, ""}; }
+  static Result run_program(u8 address) { return {ResultKind::RUN_PROGRAM, address, ""}; }
   static Result wait(i32 milliseconds) { return {ResultKind::WAIT, milliseconds, ""}; }
   static Result action(ResultKind kind, const char* args) { return {kind, -1, args == 0 ? "" : args}; }
 };

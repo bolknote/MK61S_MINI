@@ -47,6 +47,7 @@ static AngleUnit host_angle_unit = DEGREE;
 static AngleUnit saved_context_angle = DEGREE;
 static u32 fake_millis = 0;
 static int program_start_count = 0;
+static std::vector<u8> program_start_addresses;
 static u32 program_started_at = 0;
 static std::vector<std::string> executed_lines;
 static std::vector<bool> executed_in_trap;
@@ -242,7 +243,9 @@ AngleUnit MK61Emu_GetAngleUnit(void) {
   return host_angle_unit;
 }
 
-void hidden_start_loaded_program(void) {
+void hidden_start_loaded_program(u8 address) {
+  program_start_addresses.push_back(address);
+  core_61::set_IP(address);
   m_IK1302.comma = core_61::COMMA_RUN_POSITION;
 }
 
@@ -350,6 +353,17 @@ terminal_protocol::Result execute(const char* line, bool trap_mode) {
   if(std::strncmp(line, "run :", 5) == 0) {
     return terminal_protocol::Result::action(terminal_protocol::ResultKind::GOTO_LABEL, line + 5);
   }
+  if(std::strncmp(line, "run ", 4) == 0) {
+    u8 address = 0;
+    const auto parsed = terminal_core::parse_run_address(line + 4, core_61::program_steps(), address);
+    if(parsed == terminal_core::RunAddressParse::VALID)
+      return terminal_protocol::Result::run_program(address);
+    if(parsed == terminal_core::RunAddressParse::INVALID)
+      return terminal_protocol::Result::error();
+    return terminal_protocol::Result::action(terminal_protocol::ResultKind::OPEN_FILE, line + 4);
+  }
+  if(std::strcmp(line, "invalid-run-result") == 0)
+    return terminal_protocol::Result::run_program(200);
   if(std::strncmp(line, "open ", 5) == 0) {
     return terminal_protocol::Result::action(terminal_protocol::ResultKind::OPEN_FILE, line + 5);
   }
@@ -388,6 +402,7 @@ static void reset_host(void) {
   saved_context_angle = DEGREE;
   fake_millis = 0;
   program_start_count = 0;
+  program_start_addresses.clear();
   program_started_at = 0;
   executed_lines.clear();
   executed_in_trap.clear();
@@ -694,6 +709,52 @@ static void test_run_waits_and_reports_later_failure(void) {
   const m61_text::Error error = require_error();
   assert(std::strcmp(error.script, "WAIT") == 0);
   assert(error.line == 2);
+}
+
+static void test_run_address_waits_and_preserves_default_start(void) {
+  reset_host();
+  add_script("ENTRY", "run 08\nok\nrun\nret\n");
+  assert(m61_text::load_program("ENTRY"));
+  assert(core_61::get_IP() == 8);
+  assert((program_start_addresses == std::vector<u8>{8}));
+  assert(program_start_count == 1 && executed_commands == 1);
+  m61_text::service();
+  assert(executed_commands == 1);
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(core_61::get_IP() == 0);
+  assert((program_start_addresses == std::vector<u8>{8, 0}));
+  assert(program_start_count == 2 && m61_text::active());
+  m_IK1302.comma = 0;
+  m61_text::service();
+  assert(!m61_text::active());
+}
+
+static void test_run_address_limits_and_named_file(void) {
+  for(const auto address : {104, 111}) {
+    reset_host();
+    active_program_steps = address == 104 ? 105 : 112;
+    add_script("LIMIT", "run " + std::to_string(address) + "\nret\n");
+    assert(m61_text::load_program("LIMIT"));
+    assert(core_61::get_IP() == address && program_start_count == 1);
+    m_IK1302.comma = 0;
+    m61_text::service();
+    assert(!m61_text::active());
+  }
+  for(const char* command : {"run 105", "run -1", "run +8", "run 99999999999999", "invalid-run-result"}) {
+    reset_host();
+    add_script("INVALID", std::string(command) + "\nret\n");
+    assert(!m61_text::load_program("INVALID"));
+    assert(require_error().line == 1);
+    assert(program_start_count == 0 && !core_61::is_RUN());
+  }
+  reset_host();
+  add_script("PARENT", "run 8.m61\nok\nret\n");
+  add_script("8.m61", "ok\nret\n");
+  assert(m61_text::load_program("PARENT"));
+  assert(!m61_text::active() && program_start_count == 0);
+  assert(executed_lines[0] == "run 8.m61");
+  assert(executed_lines.size() == 5);
 }
 
 static void test_print_owns_display_until_root_script_finishes(void) {
@@ -1598,6 +1659,8 @@ int main(void) {
   test_read_window_survives_goto_but_observes_writes();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
+  test_run_address_waits_and_preserves_default_start();
+  test_run_address_limits_and_named_file();
   test_m61_run_uses_common_program_start_hook();
   test_print_owns_display_until_root_script_finishes();
   test_print_off_and_on_control_display_ownership();

@@ -21,7 +21,7 @@ bool OpenStoredFile(const char* args);
 // Test seam for all three outcomes of a synchronous nested file launch:
 // 0 = opened, 1 = stopped by ESC, 2 = failed.
 u8 m61_text_host_open_file(const char* args, u16 directory);
-void hidden_start_loaded_program(void);
+void hidden_start_loaded_program(u8 address);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
 bool load_binary_program(u16 directory, const char* args);
@@ -1201,16 +1201,17 @@ static bool open_store_script(u16 id) {
 
 // Запуск загруженной программы прямо на ядре, ожидание останова — асинхронно
 // из service(). Клавиши через буфер клавиатуры терялись бы при выходе из меню.
-static bool start_current_program(void) {
+static bool start_current_program(u8 start_address) {
   if(trap_context_valid()) return false;
   const usize steps = core_61::program_steps();
+  if(start_address >= steps) return false;
   for(u8 address = 0; address < TRAP_ADDRESS_COUNT; address++) {
     if(trap_is_active(address) && address >= steps) return false;
   }
   runner_state = RunnerState::WAIT_RUN_STOP;
   // Взводим исполнитель до последнего скрытого шага С/П: один шаг ядра может
   // дойти до первого кода программы, особенно в режиме MAXIMUM.
-  hidden_start_loaded_program();
+  hidden_start_loaded_program(start_address);
   if(!core_61::is_RUN()) {
     runner_state = RunnerState::EXECUTING;
     return false;
@@ -1653,16 +1654,23 @@ static bool execute_script_line(const char* raw_line) {
   switch(result.kind) {
     case terminal_protocol::ResultKind::OK:
       return true;
-    case terminal_protocol::ResultKind::RUN_PROGRAM:
+    case terminal_protocol::ResultKind::RUN_PROGRAM: {
       if(program_load::blocked()) {
         line_error_message = program_load::error();
         return false;
       }
-      if(start_current_program()) return true;
+      // Older callers use action(RUN_PROGRAM, ""), whose key is -1.
+      const i32 address = result.key == -1 ? 0 : result.key;
+      if(address < 0 || (usize) address >= core_61::program_steps()) {
+        line_error_message = "run address is outside current program memory";
+        return false;
+      }
+      if(start_current_program((u8) address)) return true;
       line_error_message = trap_context_valid()
           ? "cannot run calculator from a trap handler"
           : "active trap address is outside current program memory";
       return false;
+    }
     case terminal_protocol::ResultKind::OPEN_FILE:
       switch(open_referenced_file(result.args)) {
         case ReferencedOpenResult::OPENED:

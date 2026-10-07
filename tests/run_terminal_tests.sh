@@ -17,6 +17,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+python3 "$root/tests/terminal_run_self_test.py"
 
 for screen in 0 1; do
   clang++ -std=c++17 -Wall -Wextra -Werror \

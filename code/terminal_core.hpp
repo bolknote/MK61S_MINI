@@ -128,6 +128,28 @@ inline bool parse_single_unsigned(const char* p, usize base, usize maximum, usiz
   return parse_unsigned(p, base, maximum, out) && at_end(p);
 }
 
+enum class RunAddressParse : u8 { NOT_ADDRESS, VALID, INVALID };
+
+// Only a complete decimal argument is an address. Names such as 8.m61,
+// quoted numeric names and paths retain the existing file-launch syntax.
+inline RunAddressParse parse_run_address(const char* args, usize steps,
+                                         u8& address) {
+  const char* begin = skip_spaces(args);
+  if(begin == nullptr || is_end(*begin)) return RunAddressParse::NOT_ADDRESS;
+  const char* p = begin;
+  const bool signed_number = *p == '+' || *p == '-';
+  if(signed_number) p++;
+  if(*p < '0' || *p > '9') return RunAddressParse::NOT_ADDRESS;
+  while(*p >= '0' && *p <= '9') p++;
+  if(!at_end(p)) return RunAddressParse::NOT_ADDRESS;
+  usize value = 0;
+  if(signed_number || steps == 0 ||
+     !parse_single_unsigned(begin, 10, steps - 1, value) || value > 255)
+    return RunAddressParse::INVALID;
+  address = (u8) value;
+  return RunAddressParse::VALID;
+}
+
 inline bool exact_confirmation(const char* line, char answer) {
   line = skip_spaces(line);
   if(line == 0 || (*line != answer && *line != (char) (answer - 'a' + 'A'))) return false;

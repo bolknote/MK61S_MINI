@@ -42,6 +42,7 @@ void press(int x, int y) {
 }
 
 namespace program_store {
+u32 media_revision() { return 1; }
 bool entry_by_id(u16 id, Entry& out) {
   if(id>=files.size()) return false;
   out={}; out.type=files[id].type; out.kind=NodeKind::FILE;
@@ -82,7 +83,7 @@ u8 m61_text_host_open_file(const char* name, u16) {
     return std::filesystem::is_regular_file(directory/name) ? 0 : 2;
   return OpenStoredFile(name) ? 0 : 2;
 }
-void hidden_start_loaded_program() { core_61::set_IP(0); press(2,9); }
+void hidden_start_loaded_program(u8 address) { core_61::set_IP(address); press(2,9); }
 // Firmware updates its UI/timer here; the host measures core steps instead.
 void mk61_program_started() { assert(core_61::is_RUN()); }
 void reinit_mk61_calculator_state() {

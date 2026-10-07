@@ -11,6 +11,7 @@
 #include "disasm.hpp"
 #include "tools.hpp"
 #include "calculator_control.hpp"
+#include "program_execution.hpp"
 #include "lcd_ru.hpp"
 #include "ledcontrol.h"
 #include "mk_math.hpp"
@@ -4590,7 +4591,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             }
             break;
           case  CMD_RUN: {
-              // "run <имя>" — синоним open; без имени — запуск программы МК61.
+              // Decimal argument: local entry address. Other names alias open.
               const char* args = command_args();
               if(*args == ':') { // run :метка - переход внутри m61-скрипта
                 if(script_mode) return script_action(terminal_protocol::ResultKind::GOTO_LABEL, args + 1);
@@ -4603,7 +4604,15 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              if(*args != 0) {
+              u8 address = 0;
+              const terminal_core::RunAddressParse address_parse =
+                  terminal_core::parse_run_address(args, core_61::program_steps(), address);
+              if(address_parse == terminal_core::RunAddressParse::INVALID) {
+                Serial.println("Run address is outside current program memory!");
+                recive_pos = 0;
+                return terminal_protocol::Result::error();
+              }
+              if(*args != 0 && address_parse == terminal_core::RunAddressParse::NOT_ADDRESS) {
                 if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
                 if(!OpenStoredFile(current_directory, args)) {
                   Serial.println("Open failed!");
@@ -4617,7 +4626,16 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              if(script_mode) return script_action(terminal_protocol::ResultKind::RUN_PROGRAM, "");
+              if(script_mode) {
+                recive_pos = 0;
+                return terminal_protocol::Result::run_program(address);
+              }
+              if(address_parse == terminal_core::RunAddressParse::VALID) {
+                hidden_start_loaded_program(address);
+                if(core_61::is_RUN()) mk61_program_started();
+                recive_pos = 0;
+                return terminal_protocol::Result::ok();
+              }
               kbd::push((i8) sw::F);   // F
               kbd::push((i8) sw::NEG); // /-/
               kbd::push((i8) sw::RET); // В/О

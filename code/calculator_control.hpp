@@ -9,7 +9,7 @@ enum class sw : u32;
 // owns the normal keyboard queue.
 void hidden_press_key(sw key);
 void hidden_return_to_program_start(void);
-void hidden_start_loaded_program(void);
+void hidden_start_loaded_program(u8 address = 0);
 bool hidden_press_scan_code(i32 keycode);
 
 #endif

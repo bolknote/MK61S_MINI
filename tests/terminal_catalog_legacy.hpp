@@ -31,7 +31,7 @@ static constexpr TerminalCommand legacy_commands[] = {
   { "ret",     CMD_RET,            "return from an M61 script/trap" },
   { "reinit",  CMD_REINIT,         "clear calculator state and M61 handlers" },
   { "cmd",     CMD_CMD,           "cmd <hex opcode> - press keys of opcode" },
-  { "run",     CMD_RUN,           "run [name] - run program / stored file" },
+  { "run",     CMD_RUN,           "run [address|name] - run program / stored file" },
   { "open",    CMD_OPEN,          "open <name> - run stored file" },
   { "save",    CMD_SAVE,          "save <number|path.m61> - store program (Y/y)" },
   { "load",    CMD_LOAD,          "load <number|path.m61> - load program" },

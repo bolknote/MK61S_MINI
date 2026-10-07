@@ -1,5 +1,6 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_core.hpp"
+#include "terminal_protocol.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_front_coding.hpp"
 #include "terminal_line_editor.hpp"
@@ -86,6 +87,32 @@ static void test_input_capacity_reserves_terminator(void) {
   assert(terminal_core::input_can_append(terminal_core::MAX_INPUT_TEXT - 1));
   assert(!terminal_core::input_can_append(terminal_core::MAX_INPUT_TEXT));
   assert(terminal_core::MAX_INPUT_TEXT + 1 == terminal_core::INPUT_CAPACITY);
+}
+
+static void test_run_address_and_file_arguments(void) {
+  using terminal_core::RunAddressParse;
+  u8 address = 77;
+  for(const char* arg : {"8", "08", "0008", " 8\t"}) {
+    assert(terminal_core::parse_run_address(arg, 105, address) == RunAddressParse::VALID);
+    assert(address == 8);
+  }
+  assert(terminal_core::parse_run_address("0", 105, address) == RunAddressParse::VALID && address == 0);
+  assert(terminal_core::parse_run_address("104", 105, address) == RunAddressParse::VALID && address == 104);
+  for(const char* arg : {"105", "112", "999999999999999999999", "-1", "+8"}) {
+    address = 77;
+    assert(terminal_core::parse_run_address(arg, 105, address) == RunAddressParse::INVALID);
+    assert(address == 77);
+  }
+  assert(terminal_core::parse_run_address("111", 112, address) == RunAddressParse::VALID && address == 111);
+  assert(terminal_core::parse_run_address("112", 112, address) == RunAddressParse::INVALID);
+  for(const char* arg : {"", "\t", "GAME", "8.m61", "8/Game", "\"8\"", ":loop"}) {
+    address = 77;
+    assert(terminal_core::parse_run_address(arg, 105, address) == RunAddressParse::NOT_ADDRESS);
+    assert(address == 77);
+  }
+  const auto run = terminal_protocol::Result::run_program(8);
+  assert(run.kind == terminal_protocol::ResultKind::RUN_PROGRAM);
+  assert(run.key == 8 && run.args[0] == 0);
 }
 
 static void test_script_argument_rebinds_without_copy(void) {
@@ -1008,6 +1035,7 @@ static void test_rtc_idle_clock_glyphs_and_slots(void) {
 int main(void) {
   test_diagnostic_field_preserves_print_protocol();
   test_input_capacity_reserves_terminator();
+  test_run_address_and_file_arguments();
   test_script_argument_rebinds_without_copy();
   test_conditional_argument_restores_original_offset();
   test_terminal_escape_decoder();

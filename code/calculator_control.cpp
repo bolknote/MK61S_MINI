@@ -31,8 +31,9 @@ void hidden_return_to_program_start(void) {
   hidden_press_key(sw::RET);
 }
 
-void hidden_start_loaded_program(void) {
+void hidden_start_loaded_program(u8 address) {
   hidden_return_to_program_start();
+  core_61::set_IP(address);
   hidden_press_key(sw::RUN);
 }
 

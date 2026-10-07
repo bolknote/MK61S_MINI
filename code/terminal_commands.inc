@@ -30,7 +30,7 @@ COMMAND("wait", CMD_WAIT, "wait <1..60000> — пауза сценария, мс
 COMMAND("ret", CMD_RET, "возврат из сценария или ловушки M61")
 COMMAND("reinit", CMD_REINIT, "очистить калькулятор и обработчики M61")
 COMMAND("cmd", CMD_CMD, "cmd <код> — набрать команду клавишами")
-COMMAND("run", CMD_RUN, "run [имя] — запустить программу или файл")
+COMMAND("run", CMD_RUN, "run [адрес|имя] — запустить программу или файл")
 COMMAND("open", CMD_OPEN, "open <имя> — открыть файл")
 COMMAND("save", CMD_SAVE, "save <номер|путь.m61> — сохранить программу")
 COMMAND("load", CMD_LOAD, "load <номер|путь.m61> | load <адрес> <путь.bin>")
