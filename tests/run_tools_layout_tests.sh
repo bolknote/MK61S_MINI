@@ -24,7 +24,12 @@ expected="$(
     generate_highnoon_font.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
+    language_vm_probe.cpp \
     m8_codec.py \
+    measure_app_flow.py \
+    measure_language_vm.py \
+    measure_overlay_language_vm.py \
+    measure_resident_language_vm.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
