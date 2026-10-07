@@ -33,7 +33,7 @@ SYSTEM_MODULES = {
         "language_vm.cpp", "language_vm_module_entry.cpp"], None),
     "language-input": ("LANGIN", "LANGUAGE_INPUT", ["language_bytecode.cpp",
         "language_vm.cpp", "language_vm_validation.cpp", "language_vm_input_entry.cpp",
-        "language_vm_flow.cpp"], None),
+        "language_vm_flow.cpp", "language_compiler_flow.cpp"], None),
 }
 
 # These ceilings protect intentionally compact system interpreters from silent
@@ -62,6 +62,12 @@ GREEDY_APP_SIZE_BUDGETS = {
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
 }
+# Compiler FLOW_STEP now owns source selection and both translation passes.
+# Leave ordinary interpreter ceilings unchanged; only external compiler APPs
+# pay for this policy. The shared APP arena remains the same 20 KiB.
+COMPILER_SIZE_BUDGETS = {
+    "focal": {"app_bytes": 12_600, "memory_bytes": 17_000},
+}
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
 
@@ -76,9 +82,12 @@ def run(command: list[str | Path]) -> str:
 def enforce_system_size_budget(system: str | None, report: dict,
                                local_float_math: bool = False,
                                greedy_packer: bool = False,
-                               split_language_vm: bool = False) -> None:
+                               split_language_vm: bool = False,
+                               language_vm_compiler: bool = False) -> None:
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
+    if language_vm_compiler:
+        budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
         # Includes the cooperative FLOW_STEP entry and continuation policy.
         # These are measured image ceilings, not larger APP/workspace arenas.
@@ -88,6 +97,8 @@ def enforce_system_size_budget(system: str | None, report: dict,
     budget = dict(budget)
     if greedy_packer:
         greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
+        if language_vm_compiler and system == "focal":
+            greedy_limit = 14_100
         if greedy_limit is not None:
             budget["app_bytes"] = greedy_limit
     exceeded = [f"{field}={report[field]} > {limit}"
@@ -148,7 +159,8 @@ def build(args: argparse.Namespace) -> dict:
     if args.language_vm_compiler:
         if args.system not in ("tinybasic", "focal"):
             raise ValueError("--language-vm-compiler applies only to BASIC/FOCAL")
-        sources += [ROOT / "code/language_bytecode.cpp", ROOT / "code/language_vm_frontend.cpp"]
+        sources += [ROOT / "code/language_bytecode.cpp", ROOT / "code/language_vm_frontend.cpp",
+                    ROOT / "code/language_compiler_flow.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system == "usbdisk":
@@ -326,7 +338,8 @@ def build(args: argparse.Namespace) -> dict:
         report["rust_compiler"] = run([rust_compiler, "--version"]).strip()
     (out / (args.name + ".json")).write_text(json.dumps(report, indent=2) + "\n")
     enforce_system_size_budget(args.system, report, args.local_float_math,
-                               greedy_packer, getattr(args, "split_language_vm", False))
+                               greedy_packer, getattr(args, "split_language_vm", False),
+                               args.language_vm_compiler)
     return report
 
 

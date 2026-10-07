@@ -1,5 +1,7 @@
 #include "language_vm_resident.hpp"
 #include "language_vm_flow.hpp"
+#include "language_compiler_flow.hpp"
+#include "app_flow_transfer.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include "display_buffer_loan.hpp"
@@ -130,8 +132,21 @@ RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t b,
   request->language = (uint8_t)language; request->mode = mode;
   result = 1; return RuntimeStatus::OK;
 }
+static uint32_t compiler_flow_frontend(Command command, uint32_t a, uint32_t b,
+                                       Request* request, uint32_t& result) {
+  return (uint32_t)frontend(request->language == (uint8_t)Language::BASIC ? Kind::TINYBASIC : Kind::FOCAL,
+                            command, a, b, request, result);
+}
 RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& result) {
   check_usb();
+  if(kind == Kind::TINYBASIC || kind == Kind::FOCAL) {
+    if(command == Command::APP_FLOW_INFO) {
+      result = legacy ? 0 : MK61_APP_FLOW_MAGIC; return RuntimeStatus::OK;
+    }
+    assert(command == Command::APP_FLOW_STEP);
+    result = flow_compile((mk61_app_flow*)payload, compiler_flow_frontend);
+    return RuntimeStatus::OK;
+  }
 #if MK61_SCREEN_BUFFER_LOAN
   assert(!loan_live); // Image must be copied before VM/UI/USB can take over.
   memset(screen_storage+16,0xCD,SCREEN_CAPACITY);
@@ -391,6 +406,20 @@ int main() {
   assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY) == shared_memory::Owner::NONE);
   assert(!shared_memory::workspace_partitioned());
   assert(shared_memory::capacity(shared_memory::Arena::WORKSPACE) == 8192);
+  {
+    app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
+    app_flow::ImageTransfer plan = {};
+    plan.size = 64; plan.prefix = sizeof(ExecutionState);
+    assert(memory.reserve(plan) == RuntimeStatus::OK);
+    auto* reserved = plan.image; memset(reserved, 0xE7, 64);
+    plan.size = 65;
+    assert(memory.commit(plan) == RuntimeStatus::CORRUPT_MODULE);
+    plan.size = 64; plan.image = reserved + 1;
+    assert(memory.commit(plan) == RuntimeStatus::CORRUPT_MODULE);
+    plan.image = reserved;
+    assert(memory.commit(plan) == RuntimeStatus::OK);
+    assert(plan.image == plan.workspace + sizeof(ExecutionState) && plan.image[63] == 0xE7);
+  }
   {
     shared_memory::Lease transfer(shared_memory::Arena::OVERLAY,
         shared_memory::Owner::LOADABLE_MODULE, 64);

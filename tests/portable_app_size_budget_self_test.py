@@ -89,4 +89,15 @@ except ValueError:
 else:
     raise AssertionError("cold flow APP size regression was accepted")
 
+for greedy, limit in ((False, 12600), (True, 14100)):
+    BUILDER.enforce_system_size_budget("focal", {"memory_bytes": 17000, "app_bytes": limit},
+                                       False, greedy, False, True)
+    try:
+        BUILDER.enforce_system_size_budget("focal", {"memory_bytes": 17000, "app_bytes": limit+1},
+                                           False, greedy, False, True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("compiler flow APP size regression was accepted")
+
 print("portable APP size budget tests: OK")

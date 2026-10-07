@@ -14,6 +14,13 @@
 #include "loadable_module_abi.hpp"
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 #include "language_vm_abi.hpp"
+#include "language_compiler_flow.hpp"
+extern "C" u32 mk61_app_command(u32, u32, u32, u32, u32);
+static u32 compiler_dispatch(loadable_module::Command command, u32 a, u32 b,
+                             language_vm::Request* request, u32& result) {
+  result = mk61_app_command((u32)command, a, b, (u32)(uintptr_t)request, 0);
+  return MK61_FLOW_OK;
+}
 #endif
 
 extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
@@ -28,6 +35,9 @@ extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0,
                                  u32 argument1, u32 argument2, u32) {
   (void) argument1; (void) argument2;
 #if defined(MK61_LANGUAGE_VM_COMPILER)
+  if(raw_command == MK61_APP_FLOW_INFO) return MK61_APP_FLOW_MAGIC;
+  if(raw_command == MK61_APP_FLOW_STEP)
+    return language_vm::flow_compile((mk61_app_flow*)(uintptr_t)argument0, compiler_dispatch);
   struct Binding {
     ~Binding() {
       if(language_vm::frontend_request)

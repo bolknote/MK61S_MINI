@@ -1,6 +1,7 @@
 #include "language_vm_flow.hpp"
 #include "loadable_app_api.h"
 #include "loadable_module_abi.hpp"
+#include "language_compiler_flow.hpp"
 
 namespace language_vm {
 namespace {
@@ -24,7 +25,8 @@ void completed(mk61_app_flow* flow, const FlowContext& c) {
   mk61_app_flow_return(flow, result, c.failure_status);
 }
 FlowContext* context(mk61_app_flow* flow) {
-  if(!mk61_app_flow_compatible(flow) || flow->context_size != sizeof(FlowContext))
+  if(!mk61_app_flow_compatible(flow) ||
+     (flow->context_size != sizeof(FlowContext) && flow->context_size != sizeof(CompilerContext)))
     return nullptr;
   auto* c = (FlowContext*)flow->context;
   return c->magic == FLOW_CONTEXT_MAGIC && execution_compatible(&c->program) ? c : nullptr;
@@ -95,6 +97,7 @@ uint32_t flow_vm(mk61_app_flow* flow, FlowExecute execute) {
 
 uint32_t flow_input(mk61_app_flow* flow, FlowExecute validate,
                     FlowInput input, FlowExecute finish) {
+  if(!mk61_app_flow_compatible(flow) || !prepare_compiled_flow(flow)) return 0;
   auto* c = context(flow);
   if(!c || !validate || !input || !finish) return 0;
   auto& s = *c->program.state;

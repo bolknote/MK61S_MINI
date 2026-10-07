@@ -34,6 +34,7 @@ resident_language_vm=${MK61_RESIDENT_LANGUAGE_VM:-0}
 overlay_language_vm=${MK61_OVERLAY_LANGUAGE_VM:-0}
 shared_screen_grid=${MK61_SHARED_SCREEN_GRID:-0}
 screen_buffer_loan=${MK61_SCREEN_BUFFER_LOAN:-0}
+language_image_cache=${MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES:-}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -71,6 +72,8 @@ Feature environment variables (0 or 1):
   MK61_RESIDENT_LANGUAGE_VM (experimental compiler APPs + resident executor)
   MK61_OVERLAY_LANGUAGE_VM (experimental compiler APPs + external split VM)
   MK61_SHARED_SCREEN_GRID, MK61_SCREEN_BUFFER_LOAN (experimental screen RAM reuse)
+  MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=0..32768 overrides the automatic RAM cache;
+    use 0 on both sides of a matched Flash/RAM comparison.
 Placement variables (0 = resident, 1 = APP):
   MK61_FOCAL_AS_APP, MK61_TINYBASIC_AS_APP, MK61_WBMP_VIEWER_AS_APP,
   MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP, MK61_SETUP_AS_APP,
@@ -511,6 +514,13 @@ compile_flags="$compile_flags -DMK61_RESIDENT_LANGUAGE_VM=$resident_language_vm"
 compile_flags="$compile_flags -DMK61_OVERLAY_LANGUAGE_VM=$overlay_language_vm"
 compile_flags="$compile_flags -DMK61_SHARED_SCREEN_GRID=$shared_screen_grid"
 compile_flags="$compile_flags -DMK61_SCREEN_BUFFER_LOAN=$screen_buffer_loan"
+if [ -n "$language_image_cache" ]; then
+  case "$language_image_cache" in
+    *[!0-9]*|'') printf 'Invalid language image cache size.\n' >&2; exit 2 ;;
+  esac
+  [ "$language_image_cache" -le 32768 ] || { printf 'Image cache exceeds 32768 bytes.\n' >&2; exit 2; }
+  compile_flags="$compile_flags -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=$language_image_cache"
+fi
 compile_flags="$compile_flags -DMK61_ENABLE_LOADABLE_MODULES=1"
 compile_flags="$compile_flags -DMK61_F401_PRODUCT_BUILD=$product_build"
 if [ "$target_mcu" = f411 ]; then

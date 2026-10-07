@@ -1,6 +1,7 @@
 #include "language_vm_resident.hpp"
 #include "language_vm_image_cache.hpp"
 #include "language_vm_flow.hpp"
+#include "language_compiler_flow.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 #include <cassert>
@@ -48,6 +49,9 @@ RuntimeStatus frontend(Kind kind,Command command,uint32_t a,uint32_t b,Request* 
   if(command!=Command::LANGUAGE_COMPILER_EMIT)++compiles;
   result=1;return RuntimeStatus::OK;
 }
+uint32_t compiler_frontend(Command command,uint32_t a,uint32_t b,Request* r,uint32_t& result) {
+  return (uint32_t)frontend(Kind::TINYBASIC,command,a,b,r,result);
+}
 uint32_t validate(OverlayRequest* p) {++validations;return validate_execution(p);}
 uint32_t finish(OverlayRequest* p) {
   ++finishes;
@@ -88,6 +92,10 @@ RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) 
   select(kind);
   if(command==Command::APP_FLOW_INFO){result=MK61_APP_FLOW_MAGIC;return RuntimeStatus::OK;}
   assert(command==Command::APP_FLOW_STEP);
+  if(kind==Kind::TINYBASIC) {
+    result=flow_compile((mk61_app_flow*)payload,compiler_frontend);
+    return RuntimeStatus::OK;
+  }
   result=kind==Kind::LANGUAGE_VM ? flow_vm((mk61_app_flow*)payload,execute_image)
                                : flow_input((mk61_app_flow*)payload,validate,input,finish);
   return RuntimeStatus::OK;

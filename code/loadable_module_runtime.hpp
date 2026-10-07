@@ -52,8 +52,13 @@ RuntimeStatus invoke(Kind kind, Command command,
 // A phase is an APP-defined continuation, not a native return address.
 // Host actions are local to this invocation and run after APP has returned.
 using FlowHost = RuntimeStatus (*)(void* context, u32 operation, u32& result);
+using FlowService = RuntimeStatus (*)(void* binding, app_flow::Step& step);
 RuntimeStatus run_flow(app_flow::Target first, void* context, u32 context_size,
                        u32& result, FlowHost host = nullptr);
+// A scoped native service may also select the next APP after a memory handoff.
+// Its binding is resident-owned and never exposed to APP code.
+RuntimeStatus run_flow_service(app_flow::Target first, void* context, u32 context_size,
+                               u32& result, FlowService service, void* binding);
 // A pinned System APP cannot be replaced or evicted until the matching
 // unpin(). This is used by long-lived hardware sessions such as MSC.
 RuntimeStatus pin(Kind kind);

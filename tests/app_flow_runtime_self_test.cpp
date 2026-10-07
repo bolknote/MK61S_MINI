@@ -9,6 +9,7 @@ enum class RuntimeStatus : u8 {
 };
 enum class Kind : u8 { APPLICATION = 4, SETUP = 7 };
 using FlowHost = RuntimeStatus (*)(void*, u32, u32&);
+using FlowService = RuntimeStatus (*)(void*, app_flow::Step&);
 static u8 g_call_depth, g_pin_depth;
 static app_flow::Step* current_step;
 static bool legacy;
@@ -38,12 +39,17 @@ static auto g_active_entry = entry;
 static RuntimeStatus host(void*, u32 operation, u32& result) {
   assert(!g_call_depth && operation == 17); result = 99; return RuntimeStatus::OK;
 }
+static RuntimeStatus tail_service(void* binding, app_flow::Step& step) {
+  assert(!g_call_depth && *(const int*)binding == 17);
+  mk61_app_flow_next(&step, mk61_app_flow_to(MK61_APP_KIND_APPLICATION, 43, 2));
+  return RuntimeStatus::OK;
+}
 int main() {
   u32 context[4] = {11,22,33,44};
   app_flow::Step step = {sizeof(step), MK61_APP_FLOW_VERSION, context, sizeof(context), {}, {},
                          MK61_FLOW_INVALID, 0, 0, 0};
   current_step = &step;
-  FlowHost callback = host;
+  FlowBinding callback = {host, nullptr, nullptr};
   const auto target = mk61_app_flow_to(MK61_APP_KIND_APPLICATION, 42, 0);
   g_call_depth = 1;
   assert(flow_invoke(&callback, target, step) == MK61_FLOW_BUSY && !loads && !native_calls);
@@ -69,7 +75,11 @@ int main() {
   step.context = context;
   const auto service = mk61_app_flow_to(MK61_APP_FLOW_HOST, 0xFFFF, 17);
   assert(flow_invoke(&callback, service, step) == MK61_FLOW_OK && step.result == 99);
-  callback = nullptr;
+  callback.host = nullptr;
   assert(flow_invoke(&callback, service, step) == MK61_FLOW_DISABLED);
+  int cookie = 17;
+  callback.service = tail_service; callback.binding = &cookie;
+  assert(flow_invoke(&callback, service, step) == MK61_FLOW_OK);
+  assert(step.action == MK61_FLOW_NEXT && step.next.file_id == 43 && !g_call_depth);
   puts("APP resident flow: pins, active calls, overlap, compatibility, direct commands PASS");
 }

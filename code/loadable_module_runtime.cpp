@@ -31,6 +31,18 @@ static u8 g_pin_depth;
 static Kind g_pinned_kind = (Kind) 0;
 static shared_memory::Lease g_app_cache;
 
+// Keep every native entry behind the same lifetime guard. Do not inline this
+// into each caller: the guard is resident code shared by all APP protocols.
+static __attribute__((noinline)) u32 call_entry(u32 command, u32 argument0,
+                                               u32 argument1, u32 argument2,
+                                               u32 argument3) {
+  ++g_call_depth;
+  const u32 result = g_active_entry(command, argument0, argument1,
+                                     argument2, argument3);
+  --g_call_depth;
+  return result;
+}
+
 static_assert((u8)Kind::FOCAL == MK61_APP_KIND_FOCAL &&
                   (u8)Kind::TINYBASIC == MK61_APP_KIND_TINYBASIC &&
                   (u8)Kind::WBMP_VIEWER == MK61_APP_KIND_WBMP_VIEWER &&
@@ -204,13 +216,11 @@ static RuntimeStatus activate(Kind kind, u16 file_id, const Header& header,
   g_active_file_id = file_id;
   g_active_entry = (Entry) (usize) ((usize) image + header.entry_offset + 1U);
 
-  g_call_depth++;
-  const u32 initialized = g_active_entry((u32) Command::INITIALIZE,
+  const u32 initialized = call_entry((u32) Command::INITIALIZE,
                                          entry_api_argument(),
                                          header.image_crc32,
                                          (u32) kind,
                                          0);
-  g_call_depth--;
   if(initialized != 0) {
     invalidate_active();
     return RuntimeStatus::INVALID_MODULE;
@@ -315,14 +325,12 @@ RuntimeStatus invoke(Kind kind, Command command,
   if(g_active_entry == nullptr || g_active_kind != kind) {
     return RuntimeStatus::INVALID_MODULE;
   }
-  g_call_depth++;
   // The portable wire protocol carries an inode, never a resident C++ Entry.
   if(command == Command::WBMP_VIEW_ENTRY && argument1 != 0 &&
      (g_active_header.flags & MK61_PORTABLE_APP_FLAG) != 0)
     argument1 = ((const program_store::Entry*) (usize) argument1)->id;
-  result = g_active_entry((u32) command, argument0, argument1,
+  result = call_entry((u32) command, argument0, argument1,
                           argument2, argument3);
-  g_call_depth--;
   return RuntimeStatus::OK;
 }
 
@@ -340,6 +348,11 @@ bool flow_overlaps_app(const void* data, usize size) {
   if(begin > UINTPTR_MAX - size) return true;
   return begin < app + g_app_cache.size() && app < begin + size;
 }
+struct FlowBinding {
+  FlowHost host;
+  FlowService service;
+  void* binding;
+};
 
 app_flow::Status flow_invoke(void* backend, const app_flow::Target& target,
                              app_flow::Step& step) {
@@ -347,7 +360,9 @@ app_flow::Status flow_invoke(void* backend, const app_flow::Target& target,
   // particular a pinned USB disk session cannot participate in an overlay.
   if(g_call_depth || g_pin_depth) return MK61_FLOW_BUSY;
   if(target.kind == MK61_APP_FLOW_HOST) {
-    const FlowHost host = *(FlowHost*)backend;
+    const auto& hooks = *(const FlowBinding*)backend;
+    if(hooks.service) return (app_flow::Status)hooks.service(hooks.binding, step);
+    const FlowHost host = hooks.host;
     if(!host) return MK61_FLOW_DISABLED;
     u32 result = 0;
     const RuntimeStatus status = host(step.context, target.phase, result);
@@ -367,26 +382,26 @@ app_flow::Status flow_invoke(void* backend, const app_flow::Target& target,
     if(offset > step.context_size || step.context_size - offset < 16U ||
        ((uintptr_t)step.context & 3U)) return MK61_FLOW_CORRUPT;
     const u32* args = (const u32*)((const u8*)step.context + offset);
-    g_call_depth++;
-    const u32 result = g_active_entry(target.phase, args[0], args[1], args[2], args[3]);
-    g_call_depth--;
+    const u32 result = call_entry(target.phase, args[0], args[1], args[2], args[3]);
     mk61_app_flow_return(&step, result, MK61_FLOW_OK);
     return MK61_FLOW_OK;
   }
-  g_call_depth++;
-  const u32 info = g_active_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
-  g_call_depth--;
+  const u32 info = call_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
   if(info != MK61_APP_FLOW_MAGIC) return MK61_FLOW_INCOMPATIBLE;
-  g_call_depth++;
-  const u32 result = g_active_entry(MK61_APP_FLOW_STEP, (u32)(uintptr_t)&step, 0, 0, 0);
-  g_call_depth--;
+  const u32 result = call_entry(MK61_APP_FLOW_STEP, (u32)(uintptr_t)&step, 0, 0, 0);
   return result == 1 ? MK61_FLOW_OK : MK61_FLOW_CORRUPT;
 }
 }
 
 RuntimeStatus run_flow(app_flow::Target first, void* context, u32 size,
                        u32& result, FlowHost host) {
-  return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &host);
+  FlowBinding hooks = {host, nullptr, nullptr};
+  return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &hooks);
+}
+RuntimeStatus run_flow_service(app_flow::Target first, void* context, u32 size,
+                               u32& result, FlowService service, void* binding) {
+  FlowBinding hooks = {nullptr, service, binding};
+  return (RuntimeStatus)app_flow::run(first, context, size, result, flow_invoke, &hooks);
 }
 
 RuntimeStatus pin(Kind kind) {
@@ -431,9 +446,7 @@ RuntimeStatus run_app(u16 file_id, u32& result) {
     return RuntimeStatus::INVALID_MODULE;
   }
   if(g_call_depth || g_pin_depth) return RuntimeStatus::BUSY;
-  g_call_depth++;
-  const u32 flow_info = g_active_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
-  g_call_depth--;
+  const u32 flow_info = call_entry(MK61_APP_FLOW_INFO, 0, 0, 0, 0);
   if(flow_info == MK61_APP_FLOW_MAGIC) {
     // Root state is independent of every relocatable native image. Larger
     // system workflows provide their own context through run_flow().
@@ -441,10 +454,8 @@ RuntimeStatus run_app(u16 file_id, u32& result) {
     return run_flow(mk61_app_flow_to(MK61_APP_KIND_APPLICATION, file_id, 0),
                     context, sizeof(context), result);
   }
-  g_call_depth++;
-  result = g_active_entry((u32) Command::APPLICATION_RUN,
+  result = call_entry((u32) Command::APPLICATION_RUN,
                           entry_api_argument(), 0, 0, 0);
-  g_call_depth--;
   return RuntimeStatus::OK;
 }
 
@@ -500,12 +511,10 @@ RuntimeStatus open_file(const FileHandler& handler, u16 file_id, u32& result) {
   if(g_active_entry == nullptr || g_active_kind != handler.kind) {
     return RuntimeStatus::INVALID_MODULE;
   }
-  g_call_depth++;
-  result = g_active_entry(
+  result = call_entry(
       (u32) Command::FILE_OPEN,
       entry_api_argument(),
       file_id, 0, 0);
-  g_call_depth--;
   return RuntimeStatus::OK;
 }
 
