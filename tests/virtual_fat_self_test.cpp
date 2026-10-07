@@ -10,6 +10,7 @@
 #include "exclusive_buffer.hpp"
 #include "ledcontrol.h"
 #include "loadable_module_runtime.hpp"
+#include "mk8_codec.hpp"
 #include "program_store.hpp"
 #include "shared_memory.hpp"
 #include "virtual_fat.hpp"
@@ -1673,6 +1674,81 @@ static void test_metadata_only_recovery_does_not_redecode_unchanged_text(void) {
   assert(memcmp(restored, source, sizeof(source)) == 0);
 }
 
+static void expect_large_file(u16 id, const std::vector<u8>& expected);
+
+static void test_text_import_uses_sector_cache(void) {
+  for(bool recovery : {false, true}) {
+    for(bool wide : {false, true}) {
+      fresh(512U * 1024U);
+      const Layout fs = layout();
+      const u16 first_cluster = 120;
+      const u16 size = wide ? program_store::MAX_TINYBASIC_TEXT_SIZE : 1500;
+      std::vector<u8> expected(size);
+      std::vector<u8> encoded;
+      bool crosses_sector = false;
+      u32 random = 0xC7011234;
+      for(u16 index = 0; index < size; ++index) {
+        random = random * 1664525U + 1013904223U;
+        expected[index] = wide && index % 17U == 0 ? mk8::BYTE_RIGHT_ARROW
+            : wide && index % 3U == 0 ? (u8) 0xDF
+            : (u8) (32U + (random >> 16) % 95U);
+        const mk8::Utf8Bytes character = mk8::utf8(expected[index]);
+        crosses_sector |= encoded.size() % 512U + character.size > 512U;
+        encoded.insert(encoded.end(), character.data,
+                       character.data + character.size);
+      }
+      assert(!wide || crosses_sector);
+      const u16 clusters = (u16) ((encoded.size() +
+          fs.sectors_per_cluster * 512U - 1U) / (fs.sectors_per_cluster * 512U));
+      u8 fat[512];
+      assert(virtual_fat::read_sector(1, fat));
+      for(u16 index = 0; index < clusters; ++index) {
+        set_fat12_value(fat, (u16) (first_cluster + index),
+            index + 1U == clusters ? 0xFFF : (u16) (first_cluster + index + 1U));
+      }
+      u8 root[512];
+      assert(virtual_fat::read_sector(fs.root_start, root));
+      const char* alias = wide ? "IMPORT  TBI" : "IMPORT  TXT";
+      const u8 next = append_ascii_entry(
+          root, (u8) first_free_slot(root), wide ? "import.tbi" : "import.txt",
+          alias, false, first_cluster, (u16) encoded.size());
+      root[(u16) next * 32U] = 0;
+      for(usize offset = 0; offset < encoded.size(); offset += 512U) {
+        u8 sector[512] = {};
+        const usize count = encoded.size() - offset < sizeof(sector)
+            ? encoded.size() - offset : sizeof(sector);
+        memcpy(sector, encoded.data() + offset, count);
+        assert(virtual_fat::write_sector(
+            cluster_lba(fs, first_cluster) + (u32) (offset / 512U), sector));
+      }
+      assert(virtual_fat::write_sector(fs.root_start, root));
+      assert(virtual_fat::write_sector(1, fat));
+      if(recovery) {
+        virtual_fat::end_session();
+        program_store::init();
+        assert(program_store::ready());
+      }
+      SPIFlash::resetOperationCounts();
+      if(recovery) assert(virtual_fat::reset_session());
+      else expect_flush();
+      const u32 reads = SPIFlash::readOperations();
+      const u64 bytes = SPIFlash::readBytes();
+      printf("VFAT text import: recovery=%u utf8=%u bytes=%zu reads=%u read_bytes=%llu\n",
+             recovery, wide, encoded.size(), reads, (unsigned long long) bytes);
+      fflush(stdout);
+      // Count physical I/O, not host CPU time: UTF-8 decoding must reuse
+      // sector data rather than rereading NOR once per character/pass.
+      assert(reads <= 512U && bytes <= 64U * 1024U);
+      expect_large_file((u16) (first_cluster - 2U), expected);
+      assert(program_store::vfat_stage_count() == 0);
+      virtual_fat::end_session();
+      program_store::init();
+      assert(program_store::ready());
+      expect_large_file((u16) (first_cluster - 2U), expected);
+    }
+  }
+}
+
 static void run_usb_commit_zx0_workspace_test(usize external_size,
                                                bool managed_bulk = false) {
   fresh();
@@ -2248,8 +2324,6 @@ static void test_wbmp_short_name_alias(void) {
   assert(image.type == program_store::ProgramType::IMAGE1);
   assert(strcmp(image.name, "SCREEN") == 0);
 }
-
-static void expect_large_file(u16 id, const std::vector<u8>& expected);
 
 static void test_chip8_import_uses_full_quota_and_large_zx0(void) {
   fresh();
@@ -2999,6 +3073,10 @@ static void benchmark_stage_index(void) {
 #include "vfat_mutation_cases.hpp"
 
 int main(void) {
+  if(getenv("MK61_TEXT_IMPORT_BENCHMARK") != nullptr) {
+    test_text_import_uses_sector_cache();
+    return 0;
+  }
   if(getenv("MK61_STAGE_BENCHMARK") != nullptr) {
     benchmark_stage_index();
     return 0;
@@ -3038,6 +3116,7 @@ int main(void) {
   test_fast_usb_cache_is_atomic_and_defers_spi();
   test_optional_display_cache_span();
   test_metadata_only_recovery_does_not_redecode_unchanged_text();
+  test_text_import_uses_sector_cache();
   test_usb_commit_uses_available_cache_for_zx0();
   test_host_deletes_file_via_directory();
   test_host_delete_does_not_rescan_directory_per_file();
