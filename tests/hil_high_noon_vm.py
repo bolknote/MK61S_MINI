@@ -17,13 +17,22 @@ from hil_language_vm import health
 from hil_multi_device_identity import parse_identity
 from hil_portable_apps import ScreenPort
 from hil_portable_system_apps import png,registers
+from hil_usb_disk_transaction import listing_entries
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/"tools"))
 from m8_codec import encode
 
 DIGITS=(4,9,8,7,14,13,12,19,18,17)
-OK,ESC=37,39
+OK,ESC,RUN=37,39,25
+
+
+def folder_index(report,name):
+    entries=listing_entries(report)
+    matches=[i for i,entry in enumerate(entries)
+             if entry.casefold()==("d\t"+name+"/").casefold()]
+    assert len(matches)==1,(name,entries)
+    return matches[0]
 
 
 class GameFont:
@@ -111,7 +120,25 @@ class Game:
     def start(self):
         self.port.open(self.directory+"/autoexec.m61")
         self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("intro")
-        self.number(0);self.wait("ВАША СТРАТЕГИЯ?")
+        self.port.key(RUN);self.wait("ВАША СТРАТЕГИЯ?")
+    def start_from_explorer(self):
+        assert self.directory.startswith("/")
+        components=self.directory.strip("/").split("/")
+        assert all(component and component not in (".","..") for component in components)
+        indices=[];parent="/"
+        for component in components:
+            indices.append(folder_index(self.port.command("ls "+parent),component))
+            parent=parent.rstrip("/")+"/"+component
+        self.port.open_text_start=len(self.port.text)
+        self.port.key(ESC) # Calculator -> the pinned build's main menu.
+        for _ in range(3):self.port.key(36) # DFU, USB disk, Setup, Explorer.
+        self.port.key(OK);self.port.pump(.2)
+        for index in indices:
+            for _ in range(index):self.port.key(36)
+            self.port.key(OK);self.port.pump(.3)
+        self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("explorer-autoexec-intro")
+        self.result["checks"].append("Explorer-folder-entry-autoexec-M61")
+        print("Explorer folder entry -> High Noon autoexec PASS",flush=True)
     def stop(self):
         self.port.key(ESC);self.port.pump(.5)
         # A second ESC is safe if a nested interpreter's final key is pending.
@@ -125,12 +152,13 @@ class Game:
         self.save("returned-to-calculator")
         self.result["register_reports"].append(report)
 
-    def instructions_surrender(self):
-        self.port.open(self.directory+"/autoexec.m61")
-        self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.number(1)
+    def instructions_surrender(self,explorer_start=False):
+        if explorer_start:self.start_from_explorer()
+        else:self.port.open(self.directory+"/autoexec.m61")
+        self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.key()
         self.wait("ЧЁРНЫЙ БАРТ ВЫЗВАЛ");self.save("instructions-1");self.key()
         self.wait("У КАЖДОГО ПО ЧЕТЫРЕ");self.save("instructions-2");self.key()
-        self.wait("ПРОДОЛЖИТЬ?");self.save("instructions-confirm");self.number(1)
+        self.wait("ПРОДОЛЖИТЬ?");self.save("instructions-confirm");self.key()
         self.wait("ВАШИ ВОЗМОЖНЫЕ ХОДЫ:");self.save("moves-menu");self.key()
         self.wait("ВАША СТРАТЕГИЯ?");self.number(7)
         self.wait("С ТАКИМ ЗНАНИЕМ ПРАВИЛ");self.save("invalid-strategy");self.key()
@@ -206,6 +234,8 @@ def main():
     ap.add_argument("--directory",default="/games/High Noon")
     ap.add_argument("--output-dir",type=Path,required=True)
     ap.add_argument("--attempts",type=int,default=12)
+    ap.add_argument("--explorer-start",action="store_true",
+                    help="start the first game by entering its folder in Explorer, not CDC open")
     args=ap.parse_args();assert 1<=args.attempts<=20
     args.output_dir.mkdir(parents=True,exist_ok=True)
     result={"status":"RUNNING","checks":[],"screens":[],"register_reports":[]}
@@ -220,7 +250,7 @@ def main():
                 read_file(port,args.directory+"/"+path.name,data)
             result["checks"].append("all-seven-installed-files-byte-identical")
             result["before"]=health(port);port.attach();port.pump(.2);game.save("before-game")
-            game.instructions_surrender();game.escape();game.victory(args.attempts)
+            game.instructions_surrender(args.explorer_start);game.escape();game.victory(args.attempts)
             result["after"]=health(port);result["CRC_checked_frames"]=len(port.frames);result["status"]="PASS"
         except BaseException as error:
             result["status"]="FAIL";result["error"]=str(error)

@@ -95,6 +95,7 @@ enum class Op : uint8_t {
   TARGET_ARRAY,
   CONST_DEC8,
   CONST_DEC16,
+  READ_KEY,
   CONST_0 = 64,
   CONST_15 = 79,
   DATA,
@@ -166,7 +167,8 @@ enum class Event : uint8_t {
   WAIT,
   CLEAR,
   FINISH,
-  TARGET_REF
+  TARGET_REF,
+  READ_KEY
 };
 struct Services {
   void* context;

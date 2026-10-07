@@ -2,6 +2,10 @@
 #include "m8_view.hpp"
 #include "mk8_literal.hpp"
 #include "loadable_system_api.h"
+#include "explorer_autoexec.hpp"
+#include "storage_path.hpp"
+#include "keyboard_layout.hpp"
+#include "loadable_module_abi.hpp"
 
 #include <assert.h>
 #include <stdio.h>
@@ -9,22 +13,108 @@
 #include <string>
 #include <vector>
 
+#define KEY_LEFT (keyboard_layout::active().left)
+#define KEY_RIGHT (keyboard_layout::active().right)
+#define KEY_OK (keyboard_layout::active().ok)
+#define KEY_ESC (keyboard_layout::active().esc)
+#define KEY_K (keyboard_layout::active().k)
+#define KEY_ALPHA (keyboard_layout::active().alpha)
+#define KEY_CX (keyboard_layout::active().cx)
+#define KEY_PP (keyboard_layout::active().pp)
+#define KEY_LEFT_PRESS KEY_LEFT
+#define KEY_SHG_LEFT_PRESS (keyboard_layout::active().shg_left)
+#define KEY_SHG_RIGHT_PRESS (keyboard_layout::active().shg_right)
+
 #include "explorer_editor.inc"
 #include "explorer_extensions.inc"
 
 static std::vector<program_store::Entry> entries;
+static bool resolve_from_parent;
+static bool directory_tree;
 namespace program_store {
-int child_count(u16) { return (int) entries.size(); }
-bool child(u16, int index, Entry& out) {
-  if(index < 0 || (usize) index >= entries.size()) return false;
-  out = entries[index];
+int child_count(u16 directory) {
+  int count = 0;
+  for(const auto& entry : entries)
+    if(!directory_tree || entry.parent_id == directory) ++count;
+  return count;
+}
+bool child(u16 directory, int index, Entry& out) {
+  if(index < 0) return false;
+  for(const auto& entry : entries) {
+    if(directory_tree && entry.parent_id != directory) continue;
+    if(index-- == 0) { out = entry; return true; }
+  }
+  return false;
+}
+bool entry_by_id(u16 id, Entry& out) {
+  for(const auto& entry : entries)
+    if(entry.id == id) { out = entry; return true; }
+  if(id!=17 && id!=22) return false;
+  out={};out.id=id;out.kind=NodeKind::DIRECTORY;
   return true;
+}
+u32 explorer_actions(u16 id) {
+  Entry entry = {};
+  if(!entry_by_id(id, entry) || entry.kind == NodeKind::DIRECTORY) return 0;
+  using namespace loadable_module;
+  if(entry.type == ProgramType::MK61) return EXPLORER_CAN_LOAD | EXPLORER_CAN_VIEW;
+  if(entry.type == ProgramType::TINYBASIC) return EXPLORER_CAN_RUN | EXPLORER_CAN_VIEW;
+  return EXPLORER_CAN_VIEW;
+}
+}
+u32 program_store_explorer_actions(const program_store::Entry& entry) {
+  return program_store::explorer_actions(entry.id);
+}
+namespace storage_path {
+Status resolve_file(u16 directory,const char* name,program_store::ProgramType type,
+                    program_store::Entry& out) {
+  for(const auto& e:entries) {
+    if(e.kind!=program_store::NodeKind::FILE || e.type!=type ||
+       (!resolve_from_parent && e.parent_id!=directory))continue;
+    char label[explorer_label::SIZE];explorer_label::format(e,label);
+    if(strcasecmp(label,name)==0) { out=e;return Status::OK; }
+  }
+  return Status::NOT_FOUND;
 }
 }
 
 static u32 now;
 u32 millis() { return now; }
-namespace lcd_display { static constexpr u8 COLS = 16; }
+void delay(u32 duration) { now += duration; }
+void idle_main_process() { now += 10; }
+enum class key_state { RELEASED = 0x40 };
+namespace kbd {
+struct Event {
+  i32 value;
+  explicit Event(i32 value) : value(value) {}
+  i32 code() const { return value; }
+};
+struct Input { i32 key; u32 at = 0; bool held = false; };
+std::vector<Input> input;
+usize position;
+bool ok_held;
+unsigned polls;
+Event poll_event() {
+  assert(++polls < 10000); // A missing/consumed event must fail, not hang CI.
+  if(position == input.size() || now < input[position].at) return Event(-1);
+  const Input next = input[position++];
+  if((next.key & ~(i32) key_state::RELEASED) == KEY_OK)
+    ok_held = next.held;
+  return Event(next.key);
+}
+bool is_key_pressed(i32 key) { return key == KEY_OK && ok_held; }
+void clear_hold_key() {}
+void handoff(Event) {}
+bool handoff_pending() { return false; }
+Event scan() {
+  if(position < input.size() && now >= input[position].at &&
+     (input[position].key & (i32) key_state::RELEASED)) return poll_event();
+  return Event(-1);
+}
+void events(std::initializer_list<Input> keys) {
+  input = keys; position = polls = 0; now = 0; ok_held = false;
+}
+}
 struct Surface {
   bool graphical;
   u8 x = 0, y = 0;
@@ -41,6 +131,7 @@ struct Surface {
     return width;
   }
   bool supportsCursor() const { return true; }
+  u32 displayModeRevision() const { return 0; }
   void cursorOff() {}
   void cursorOn() { ++cursor_calls; }
   void blinkOn() { ++cursor_calls; }
@@ -66,6 +157,9 @@ void write_text(const font_map_t&, const char* text, u8 width) {
     if(*text) ++text;
   }
 }
+void print_window(const char* const* rows,u8 count) {
+  for(u8 row=0;row<count;++row) surface.lines[row]=rows[row];
+}
 }
 namespace library_mk61 {
 bool language_is_ru() { return false; }
@@ -81,9 +175,6 @@ void text_rows(const char* const* rows, u32 count) {
 }
 }
 namespace resident {
-// Search editor drawing is unrelated to file-row formatting.
-void draw_search_header(const char* query) { surface.printUiLine(0, query, '?'); }
-void draw_search_cursor(const char*) { surface.cursorOn(); }
 #include "resident_explorer_ui.inc"
 }
 namespace app {
@@ -99,7 +190,28 @@ static Entry entry(const char* name, ProgramType type, bool directory = false) {
   bounded_string::copy(result.name, name);
   result.type = type;
   result.kind = directory ? NodeKind::DIRECTORY : NodeKind::FILE;
+  result.parent_id = program_store::ROOT_ID;
   return result;
+}
+
+static void test_app_autoexec_uses_basename_and_type() {
+  auto script=entry("AUTOEXEC",ProgramType::MK61);script.id=101;script.parent_id=17;
+  auto basic=entry("autoexec",ProgramType::TINYBASIC);basic.id=102;basic.parent_id=17;
+  auto text=entry("autoexec",ProgramType::TEXT);text.id=103;text.parent_id=17;
+  entries={basic,text,script};
+  u16 id=program_store::INVALID_ID;
+  assert(app::autoexec(17,id) && id==script.id); // M61 priority, case-insensitive.
+  entries={text,basic};
+  assert(app::autoexec(17,id) && id==basic.id);
+  entries={text};id=123;
+  assert(!app::autoexec(17,id) && id==123);
+  script.parent_id=22;entries={script};resolve_from_parent=true;
+  assert(!app::autoexec(17,id) && id==123); // Never inherit a parent's autoexec.
+  resolve_from_parent=false;
+  assert(!app::autoexec(0x7ffe,id) && id==123);
+  auto directory=entry("autoexec",ProgramType::MK61,true);
+  directory.parent_id=17;entries={directory};
+  assert(!app::autoexec(17,id));
 }
 
 static void expect_line(u8 row, const std::string& expected) {
@@ -139,15 +251,10 @@ static void test_browser(bool graphical) {
   surface.cursor_calls = 0;
   entries = {entry("manual", ProgramType::MARKDOWN),
              entry("games", ProgramType::TEXT, true)};
-  resident::ExplorerScroll resident_scroll = {};
-  resident::explorer_scroll_reset(resident_scroll);
   app::Scroll app_scroll = {};
   app::reset_scroll(app_scroll);
   app::Search search = {};
   for(int active : {0, 1, 0}) {
-    assert(resident::draw_explorer(0, active, resident_scroll) == 0);
-    expect_line(0, std::string(active == 0 ? ">" : " ") + "manual.md");
-    expect_line(1, std::string(active == 1 ? ">" : " ") + "games/");
     assert(app::draw_browser(0, active, search, app_scroll) == 0);
     expect_line(0, std::string(active == 0 ? ">" : " ") + "manual.md");
     expect_line(1, std::string(active == 1 ? ">" : " ") + "games/");
@@ -156,10 +263,14 @@ static void test_browser(bool graphical) {
 
   // Search results still have a left selection marker.
   bounded_string::copy(search.text, "games");
-  resident::draw_explorer(0, 1, resident_scroll, search.text);
-  expect_line(1, ">games/");
   app::draw_browser(0, 1, search, app_scroll);
   expect_line(1, ">games/");
+  assert(surface.cursor_calls == 1 && surface.x == 6 && surface.y == 0);
+  bounded_string::copy(search.text, "1234567890123456789012345678901");
+  app::draw_browser(0, 1, search, app_scroll);
+  const u16 start = app::search_window_start(search.text);
+  assert(start > 0 && surface.x < surface.cols());
+  expect_line(0, std::string("?") + (search.text + start));
 
   // Dialogs used by LOAD/SAVE and editors use the very same labels.
   resident::DialogItem item = {resident::DialogItemKind::ENTRY, entries[0]};
@@ -174,6 +285,60 @@ static void test_browser(bool graphical) {
   expect_line(0, ">New file");
 }
 
+static loadable_module::ExplorerSession session(u16 directory = program_store::ROOT_ID) {
+  return {sizeof(loadable_module::ExplorerSession), directory,
+          program_store::INVALID_ID, 0, loadable_module::ExplorerAction::NONE, 0, {0}};
+}
+
+static void test_select_flow(bool graphical) {
+  using loadable_module::ExplorerAction;
+  surface.graphical = graphical;
+  directory_tree = true;
+  auto folder = entry("games", ProgramType::TEXT, true); folder.id = 17;
+  auto script = entry("AUTOEXEC", ProgramType::MK61); script.id = 101; script.parent_id = 17;
+  auto basic = entry("autoexec", ProgramType::TINYBASIC); basic.id = 102; basic.parent_id = 17;
+  for(const auto& files : {std::vector<Entry>{folder, basic, script},
+                           std::vector<Entry>{folder, basic}}) {
+    entries = files;
+    auto state = session(); kbd::events({{KEY_OK}});
+    assert(app::select(state));
+    assert(state.action == ExplorerAction::AUTOEXEC && state.directory_id == 17);
+    assert(state.selected_id == files.back().id && state.search[0] == 0);
+  }
+
+  auto program = entry("game1", ProgramType::MK61); program.id = 201;
+  entries = {folder, program};
+  auto state = session(); kbd::events({{KEY_OK}, {KEY_ESC}, {KEY_RIGHT}, {KEY_OK}});
+  assert(app::select(state) && state.action == ExplorerAction::LOAD);
+  assert(state.directory_id == program_store::ROOT_ID && state.selected_id == 201);
+
+  state = session(); kbd::events({{KEY_OK}, {KEY_ESC}, {KEY_ESC}});
+  assert(app::select(state) && state.action == ExplorerAction::EXIT);
+
+  entries = {folder}; state = session(); kbd::events({{KEY_OK}, {KEY_OK}});
+  assert(app::select(state) && state.action == ExplorerAction::NEW_DIRECTORY);
+  assert(state.directory_id == 17 && state.selected_id == program_store::INVALID_ID);
+
+  program.type = ProgramType::TINYBASIC; entries = {folder, program};
+  state = session(); kbd::events({{keyboard_layout::active().digit[1]}, {KEY_OK}});
+  assert(app::select(state) && state.action == ExplorerAction::RUN);
+  assert(state.selected_id == 201 && strcmp(state.search, "1") == 0);
+  kbd::events({{KEY_ESC}, {KEY_ESC}});
+  assert(app::select(state) && state.action == ExplorerAction::EXIT && state.search[0] == 0);
+
+  program.type = ProgramType::MK61; entries = {program}; state = session();
+  kbd::events({{KEY_OK, 0, true}, {KEY_OK | (i32) key_state::RELEASED, 1300},
+               {KEY_RIGHT, 1301}, {KEY_OK, 1302}});
+  assert(app::select(state) && state.action == ExplorerAction::VIEW && state.selected_id == 201);
+
+  state = session(12345); bounded_string::copy(state.search, "stale");
+  kbd::events({{KEY_ESC}});
+  assert(app::select(state) && state.directory_id == program_store::ROOT_ID && state.search[0] == 0);
+  state.size = 0; kbd::events({});
+  assert(!app::select(state) && kbd::position == 0);
+  directory_tree = false;
+}
+
 static void test_scrolling(bool graphical) {
   surface.graphical = graphical;
   for(bool directory : {false, true}) {
@@ -181,39 +346,37 @@ static void test_scrolling(bool graphical) {
     entries = {entry(longest.c_str(), ProgramType::MK61_STATE, directory)};
     char label[explorer_label::SIZE];
     explorer_label::format(entries[0], label);
-    const u8 offset = resident::explorer_scroll_max_offset(label,
-        resident::explorer_name_width());
+    const u8 offset = resident::file_dialog_scroll_max_offset(label,
+        resident::file_dialog_name_width());
     assert(offset == app::max_offset(label, app::name_width()));
     assert(offset > 0);
-    resident::ExplorerScroll resident_scroll = {};
-    resident::explorer_scroll_reset(resident_scroll);
     app::Scroll app_scroll = {};
     app::reset_scroll(app_scroll);
     app::Search search = {};
     now = 0;
-    assert(resident::draw_explorer(0, 0, resident_scroll) != 0);
     assert(app::draw_browser(0, 0, search, app_scroll) != 0);
     for(unsigned step = 0; step < offset; ++step) {
       now += 1000;
-      resident::draw_explorer(0, 0, resident_scroll);
-      assert(resident_scroll.offset == step + 1);
       app::draw_browser(0, 0, search, app_scroll);
       assert(app_scroll.offset == step + 1);
     }
     const std::string expected = std::string(">") + (label + offset);
     expect_line(0, expected);
-    resident::draw_explorer(0, 0, resident_scroll);
-    expect_line(0, expected); // the suffix is reachable in both implementations
+    app::draw_browser(0,0,search,app_scroll);
+    expect_line(0, expected); // The same UI is compiled into resident and APP.
   }
 }
 
 int main() {
+  test_app_autoexec_uses_basename_and_type();
   test_extensions();
   test_browser(false);
   test_scrolling(false);
+  test_select_flow(false);
 #if MK61_PROPORTIONAL_UI_FONTS
   test_browser(true);
   test_scrolling(true);
+  test_select_flow(true);
 #endif
   printf("Explorer labels and selection: resident/APP, graphical=%d OK\n",
          MK61_PROPORTIONAL_UI_FONTS);

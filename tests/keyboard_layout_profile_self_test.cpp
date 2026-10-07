@@ -36,6 +36,19 @@ void test_program_key_constants_match_matrix_layout(void) {
   assert(KEY_F == (u32) sw::F);
 }
 
+void test_logical_press_codes_match_across_profiles(void) {
+  const auto& keys = keyboard_layout::ACTIVE;
+  for(int digit = 0; digit <= 9; ++digit)
+    assert(keyboard_layout::logical_key(keys, keys.digit[digit]) == digit);
+  assert(keyboard_layout::logical_key(keys, keys.left) == MK61_APP_KEY_LEFT);
+  assert(keyboard_layout::logical_key(keys, keys.right) == MK61_APP_KEY_RIGHT);
+  assert(keyboard_layout::logical_key(keys, keys.shg_left) == MK61_APP_KEY_SHIFT_LEFT);
+  assert(keyboard_layout::logical_key(keys, keys.shg_right) == MK61_APP_KEY_SHIFT_RIGHT);
+  assert(keyboard_layout::logical_key(keys, keys.ok) == MK61_APP_KEY_OK);
+  assert(keyboard_layout::logical_key(keys, keys.esc) == MK61_APP_KEY_ESC);
+  assert(keyboard_layout::logical_key(keys, -1) == MK61_APP_KEY_NONE);
+}
+
 void test_digit_and_sms_layout(void) {
   const i32 digit_keys[] = {
     (i32) sw::_0, (i32) sw::_1, (i32) sw::_2, (i32) sw::_3, (i32) sw::_4,
@@ -143,6 +156,7 @@ void test_editor_shortcuts_follow_active_profile(void) {
 
 int main(void) {
   test_program_key_constants_match_matrix_layout();
+  test_logical_press_codes_match_across_profiles();
   test_digit_and_sms_layout();
   test_editor_controls_are_unambiguous();
   test_k_punctuation_layout();

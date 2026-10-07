@@ -10,6 +10,7 @@ python3 "$root/tests/explorer_app_routing_surface.py" \
 
 flags=(-std=c++17 -O2 -Wall -Wextra -Werror
   -DMK61_ENABLE_FOCAL=0 -DMK61_ENABLE_TINYBASIC=0
+  -DTEXT_EDITOR_HOST_TEST=1
   -I"$work")
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -25,10 +26,16 @@ done
 
 python3 "$root/tests/explorer_ui_surface.py" "$work"
 for ui in 0 1; do
+for app in 0 1; do
+app_flags=()
+if [[ "$app" == 1 ]]; then app_flags=(-DMK61_BUILD_EXPLORER_MODULE=1); fi
   clang++ "${flags[@]}" -DMK61_PROPORTIONAL_UI_FONTS="$ui" \
+    "${app_flags[@]}" \
     -I"$root/code" "$root/tests/explorer_ui_self_test.cpp" \
+    "$root/code/explorer_autoexec.cpp" \
     -o "$work/explorer-ui"
   "$work/explorer-ui"
+done
 done
 
 echo "explorer APP routing tests passed"

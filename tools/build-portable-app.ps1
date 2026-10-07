@@ -60,7 +60,7 @@ $Systems = @{
     }
     'explorer' = @{
         Name = 'EXPLORER'; Macro = 'EXPLORER'; Magic = $null
-        Sources = @('explorer_module_ui.cpp', 'explorer_module_entry.cpp')
+        Sources = @('explorer_ui.cpp', 'explorer_autoexec.cpp', 'explorer_module_entry.cpp')
     }
 }
 

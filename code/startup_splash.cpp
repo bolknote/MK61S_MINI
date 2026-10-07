@@ -5,6 +5,7 @@
 #include "config.h"
 #include "cross_hal.h"
 #include "display.hpp"
+#include "disk_activity.hpp"
 #include "entropy_pool.hpp"
 #include "keyboard.h"
 #include "runtime_safety.hpp"
@@ -100,6 +101,7 @@ bool waitOrEscape(t_time_ms duration_ms, EscapePolicy escape_policy) {
 
 Result show(MK61Display& display, const char* model, const char* version,
             EscapePolicy escape_policy) {
+  disk_activity::Pause quiet(display);
   loadCustomChars(display);
 
 #if defined(MK61_DISPLAY_LCD1602)

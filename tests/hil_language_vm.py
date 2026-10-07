@@ -49,6 +49,7 @@ def run():
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--port",required=True);ap.add_argument("--public-id",required=True)
     ap.add_argument("--build-id",required=True);ap.add_argument("--output-dir",type=Path,required=True)
+    ap.add_argument("--profile",choices=("classic-v3-uc1609","mini-v3-a00"),default="classic-v3-uc1609")
     ap.add_argument("--install-fixtures",action="store_true")
     ap.add_argument("--screen",action="store_true")
     ap.add_argument("--extended",action="store_true",help="large image, USB reattach and FOCAL INPUT")
@@ -56,10 +57,12 @@ def run():
     args=ap.parse_args();args.output_dir.mkdir(parents=True,exist_ok=True)
     assert not args.extended or args.screen,"extended checks require --screen"
     result={"status":"RUNNING","checks":[],"runs":[]}
-    with ScreenPort(args.port) as port:
+    mini=args.profile=="mini-v3-a00"
+    number15=(21,17,29) if mini else (9,13,37)
+    with ScreenPort(args.port,keyboard_layout=0 if mini else 1) as port:
         identity=parse_identity(port.command("identity"))
         assert identity.public==args.public_id.upper() and identity.build==args.build_id.upper(),identity
-        assert identity.profile=="classic-v3-uc1609",identity
+        assert identity.profile==args.profile,identity
         try:
             if args.install_fixtures:
                 root=listing_entries(port.command("ls /"))
@@ -99,7 +102,7 @@ def run():
                     print("USB "+name+": PASS",flush=True)
                 port.open("/VMHIL/input.tbi");port.pump(.5)
                 require_foreground(port)
-                for keys in ((9,13,37),(9,13,37)):
+                for keys in (number15,number15):
                     for key in keys:port.key(key)
                 port.pump(.5);port.close_app()
                 values,report=registers(port);assert values["R5"]==30,(values,report)
@@ -113,7 +116,7 @@ def run():
                     # an ATTACH sent to an already ATTACHED session is ignored.
                     port.send(0x13);port.attached=False;port.pump(.3)
                     port.attach_waiting();port.pump(.2)
-                    for key in (9,13,37):port.key(key)
+                    for key in number15:port.key(key)
                     port.pump(.5);port.close_app()
                     values,report=registers(port);assert values["R8"]==15,(values,report)
                     result["checks"].append("USB-large-image-detach-reattach-INPUT")
@@ -122,7 +125,7 @@ def run():
                     port.open("/VMHIL/input.foc");port.pump(.5)
                     require_foreground(port)
                     for _ in range(2):
-                        for key in (9,13,37):port.key(key)
+                        for key in number15:port.key(key)
                     port.pump(.5);port.close_app()
                     values,report=registers(port);assert values["R9"]==30,(values,report)
                     result["checks"].append("USB-FOCAL-INPUT-FOR")

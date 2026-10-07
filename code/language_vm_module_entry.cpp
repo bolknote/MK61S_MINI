@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "language_vm_abi.hpp"
+#include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
 #include "mk8_literal.hpp"
 #include "mk_math.hpp"
@@ -173,6 +174,7 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
                                ref < 4 ? 0 : ref - 4, 0, &value) != 0;
 }
 bool append(const char* text, uint16_t length, bool separate) {
+  if(length != 0) runtime.request->pause_final = 0;
   if (runtime.language == Language::BASIC) {
     if (tinybasic_text::append(runtime.output, sizeof(runtime.output), runtime.output_cursor, text,
                                length))
@@ -196,6 +198,7 @@ void flush(bool empty) {
   const uint8_t rows = main_lcd().rows();
   if (!rows) return;
   if (!runtime.output[0] && !empty) return;
+  runtime.request->pause_final = 0;
   const uint8_t n =
       main_lcd().printWrappedText(runtime.output, (u16)strlen(runtime.output),
                                   runtime.row, (u8)(rows - runtime.row), false, empty);
@@ -324,20 +327,26 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     case Event::READ_INPUT:
       return input(text, length, value);
-    case Event::WAIT: {
+    case Event::WAIT:
+    case Event::READ_KEY: {
       if (!basic) {
         const char* rows[] = {"ASK", "Press any key"};
         portable_system::text_rows(rows, 2);
       }
       const i32 key = kbd::get_key_wait();
       runtime.request->pause_final = basic;
-      if (key != KEY_ESC && key != KEY_ESC_PRESS) return true;
+      if (key != KEY_ESC && key != KEY_ESC_PRESS) {
+        if(event == Event::READ_KEY)
+          value = keyboard_layout::logical_key(keyboard_layout::active(), key);
+        return true;
+      }
       kbd::handoff(kbd::Event(KEY_ESC_PRESS));
       runtime.cancelled = true;
       runtime.normal_stop = basic && runtime.request->mode == 0;
       return false;
     }
     case Event::CLEAR:
+      runtime.request->pause_final = 0;
       main_lcd().clear();
       runtime.row = 0;
       runtime.output[0] = 0;

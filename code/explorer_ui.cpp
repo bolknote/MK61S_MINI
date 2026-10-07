@@ -1,6 +1,17 @@
-#if defined(MK61_BUILD_EXPLORER_MODULE)
+#if !defined(MK61_BUILD_EXPLORER_MODULE)
+#include "config.h"
+#include "Arduino.h"
+#include "display.hpp"
+#include "cross_hal.h"
+#include "development.hpp"
+#include "menu.hpp"
+#include "lcd_ru.hpp"
+extern void idle_main_process(void);
+#endif
+#if defined(MK61_BUILD_EXPLORER_MODULE) || MK61_EXPLORER_IS_BUILTIN
 
-#include "explorer_module_ui.hpp"
+#include "explorer_ui.hpp"
+#include "explorer_autoexec.hpp"
 
 #include "bounded_string.hpp"
 #include "explorer_label.hpp"
@@ -8,10 +19,9 @@
 #include "m8_view.hpp"
 #include "text_editor.hpp"
 
-#include <stdio.h>
 #include <string.h>
 
-namespace explorer_module {
+namespace explorer_ui {
 namespace {
 
 using loadable_module::ExplorerAction;
@@ -181,7 +191,13 @@ static void render(Line (&lines)[MAX_LINES]) {
     memcpy(fixed[row] + first, lines[row].text, copied);
     rows[row] = fixed[row];
   }
+#if defined(MK61_BUILD_EXPLORER_MODULE)
   portable_system::text_rows(rows, count);
+#else
+  MK61DisplayUpdate update(main_lcd());
+  main_lcd().clear();
+  lcd_ru::print_window(rows, count);
+#endif
 }
 
 static bool search_active(const char* text) {
@@ -456,6 +472,30 @@ static bool handle_search_key(Search& search, i32 key) {
   return false;
 }
 
+static u16 search_window_start(const char* text) {
+  const u16 length = (u16) bounded_length(text, program_store::NAME_SIZE - 1);
+  if(!main_lcd().uiTextActive()) {
+    const u8 columns = main_lcd().cols();
+    const u16 capacity = columns > 2 ? (u16) (columns - 2) : 0;
+    return length > capacity ? (u16) (length - capacity) : 0;
+  }
+  const u16 width = main_lcd().uiTextWidth();
+  const u16 capacity = width > 28 ? (u16) (width - 28) : 0;
+  u16 start = 0;
+  while(start < length && main_lcd().measureUiText(text + start) > capacity)
+    ++start; // M8 characters and byte offsets are identical.
+  return start;
+}
+
+static void draw_search_cursor(const char* text, u16 start) {
+  if(!main_lcd().supportsCursor() || main_lcd().cols() == 0) return;
+  const u16 length = (u16) bounded_length(text + start, program_store::NAME_SIZE - 1);
+  const u16 column = length + 1;
+  main_lcd().setCursor((u8) (column < main_lcd().cols()
+      ? column : main_lcd().cols() - 1), 0);
+  main_lcd().cursorOn();
+}
+
 static u16 draw_browser(u16 directory, int active, const Search& search,
                         Scroll& scroll) {
   Line lines[MAX_LINES];
@@ -480,13 +520,18 @@ static u16 draw_browser(u16 directory, int active, const Search& search,
 
   const int first_row = filtered ? 1 : 0;
   const int list_rows = rows - first_row;
-  if(filtered) snprintf(lines[0].text, LINE_BYTES, "?%s", search.text);
+  const u16 search_start = filtered ? search_window_start(search.text) : 0;
+  if(filtered) {
+    copy_text(lines[0].text, LINE_BYTES, search.text + search_start);
+    lines[0].marker = '?';
+  }
   const int matches_count = match_count(directory, search.text);
   if(matches_count <= 0 || list_rows <= 0) {
     if(list_rows > 0) copy_text(lines[first_row].text, LINE_BYTES,
         library_mk61::language_is_ru() ? M8("Нет совпад.") : "No match");
     reset_scroll(scroll);
     render(lines);
+    if(filtered) draw_search_cursor(search.text, search_start);
     return 0;
   }
 
@@ -518,13 +563,18 @@ static u16 draw_browser(u16 directory, int active, const Search& search,
     lines[first_row + row].marker = index == active ? '>' : ' ';
   }
   render(lines);
+  if(filtered) draw_search_cursor(search.text, search_start);
   return timeout;
 }
 
 static int make_actions(const program_store::Entry& entry,
                         ExplorerAction* output, int capacity) {
   int count = 0;
+#if defined(MK61_BUILD_EXPLORER_MODULE)
   const u32 mask = program_store::explorer_actions(entry.id);
+#else
+  const u32 mask = program_store_explorer_actions(entry);
+#endif
   if((mask & loadable_module::EXPLORER_CAN_LOAD) && count < capacity)
     output[count++] = ExplorerAction::LOAD;
   if((mask & loadable_module::EXPLORER_CAN_RUN) && count < capacity)
@@ -596,22 +646,10 @@ static ExplorerAction choose_action(const program_store::Entry& entry) {
 }
 
 static bool autoexec(u16 directory, u16& id) {
-  const int count = program_store::child_count(directory);
-  for(int pass = 0; pass < 2; ++pass) {
-    const char* name = pass == 0 ? "autoexec.m61" : "autoexec.tbi";
-    const auto type = pass == 0 ? program_store::ProgramType::MK61
-                                : program_store::ProgramType::TINYBASIC;
-    for(int index = 0; index < count; ++index) {
-      program_store::Entry entry = {};
-      if(entry_at(directory, index, entry) &&
-         entry.kind == program_store::NodeKind::FILE && entry.type == type &&
-         strncmp(entry.name, name, program_store::NAME_SIZE) == 0) {
-        id = entry.id;
-        return true;
-      }
-    }
-  }
-  return false;
+  program_store::Entry entry = {};
+  if(!explorer_autoexec::find(directory, entry)) return false;
+  id = entry.id;
+  return true;
 }
 
 static void set_result(ExplorerSession& session, ExplorerAction action,
@@ -723,10 +761,13 @@ bool select(ExplorerSession& session) {
         }
         continue;
       }
-      const u32 actions = program_store::explorer_actions(entry.id);
-      requested = (actions & loadable_module::EXPLORER_CAN_LOAD)
+      ExplorerAction actions[8];
+      const int count = make_actions(entry, actions, 8);
+      const bool load = count > 0 && actions[0] == ExplorerAction::LOAD;
+      const bool run = count > 0 && actions[0] == ExplorerAction::RUN;
+      requested = load
           ? ExplorerAction::LOAD
-          : (actions & loadable_module::EXPLORER_CAN_RUN)
+          : run
               ? ExplorerAction::RUN : ExplorerAction::VIEW;
     } else if(key == KEY_OK_LONG) {
       cursor_off();
@@ -739,11 +780,12 @@ bool select(ExplorerSession& session) {
 
     session.active = active;
     copy_text(session.search, sizeof(session.search), search.text);
+    cursor_off();
     set_result(session, requested, entry.id);
     return true;
   }
 }
 
-} // namespace explorer_module
+} // namespace explorer_ui
 
 #endif

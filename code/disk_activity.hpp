@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "rust_types.h"
+class MK61Display;
 
 #if defined(MK61_DISPLAY_UC1609) || MK61_ENABLE_USB_SCREEN
 #define MK61_DISK_ACTIVITY_SUPPORTED 1
@@ -25,12 +26,37 @@ void storageIO(void);
 struct Activity {
   u32 last = 0;
   bool seen = false;
-  void note(u32 now) { last = now; seen = true; }
+  u8 pause_depth = 0; // Fits the existing alignment padding; no backing buffer.
+  void note(u32 now) {
+    if(!pause_depth) { last = now; seen = true; }
+  }
+  void pause() {
+    if(pause_depth == 255) __builtin_trap();
+    ++pause_depth;
+    seen = false;
+  }
+  void resume() {
+    if(!pause_depth) __builtin_trap();
+    --pause_depth;
+  }
   u8 indicator(u32 now) {
+    if(pause_depth) return 0;
     // Keep a brief read visible, but do not turn idle time into disk activity.
     if(seen && (u32) (now - last) >= 160U) seen = false;
     return seen ? (u8) (1U + ((now / 160U) & 1U)) : 0U;
   }
+};
+
+// Foreground artwork owns the complete screen during startup. Drop activity
+// there (including a pending icon) instead of replaying it after the splash.
+class Pause {
+ public:
+  explicit Pause(MK61Display& display);
+  ~Pause();
+  Pause(const Pause&) = delete;
+  Pause& operator=(const Pause&) = delete;
+ private:
+  MK61Display& display_;
 };
 
 // Independent of the clock/text/bitmap owner. Only the covered 16x16 pixels
@@ -93,6 +119,12 @@ inline void note(void) {}
 inline void poll(void) {}
 inline void setFileOperation(bool) {}
 inline void storageIO(void) {}
+class Pause {
+ public:
+  explicit Pause(MK61Display&) {}
+  Pause(const Pause&) = delete;
+  Pause& operator=(const Pause&) = delete;
+};
 #endif
 
 } // namespace disk_activity

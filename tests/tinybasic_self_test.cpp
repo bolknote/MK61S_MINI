@@ -6,6 +6,7 @@
 #include <string>
 
 #include "mk8_codec.hpp"
+#include "keyboard_layout.hpp"
 #include "tinybasic.hpp"
 #include "language_bytecode.hpp"
 
@@ -31,6 +32,8 @@ extern "C" const char* TinyBasicTestLcdLine(int row);
 extern "C" void TinyBasicTestEditSequence(const int* keys, int count, char* out, int size);
 extern "C" void TinyBasicTestSetAlphaHeld(bool held);
 extern "C" void TinyBasicTestSetPauseEsc(bool enabled);
+extern "C" void TinyBasicTestSetKeys(const int* keys, int count);
+extern "C" int TinyBasicTestKeyReads(void);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
 extern "C" bool TinyBasicTestRunResult(int slot);
 extern "C" void TinyBasicTestClearData(void);
@@ -159,6 +162,97 @@ static void test_bad_expression_tail(void) {
     "10 A=1 BAD\n"
     "20 PRINT A\n"));
   assert(std::strcmp(TinyBasicTestError(), "WHAT?") == 0);
+}
+
+static void test_key_input_reads_once_and_preserves_screen(void) {
+  TinyBasicTestReset();
+  const auto& keys = keyboard_layout::ACTIVE;
+  const int presses[] = {-1, keys.digit[4] | 0x40, keys.digit[4], keys.right,
+                         keys.shg_left, keys.digit[2], keys.digit[6]};
+  TinyBasicTestSetKeys(presses, sizeof(presses) / sizeof(presses[0]));
+  const int slot = TinyBasicTestAddProgram(
+      "10 PRINT \"BOARD\"\n"
+      "20 IF 0 A=INPUT()\n"
+      "30 K=INPUT():@(0)=INP.():B=@(0):.R1=INPUT()\n"
+      "40 A=INPUT()+INPUT()\n",
+      "INPUTKEY");
+  assert(slot >= 0 && TinyBasicTestKeyReads() == 0);
+  assert(RunTinyBasicProgram("INPUTKEY"));
+  assert(TinyBasicTestKeyReads() == 5);
+  assert(TinyBasicTestNumber("K") == 4);
+  assert(TinyBasicTestNumber("B") == MK61_APP_KEY_RIGHT);
+  assert(TinyBasicTestMkRegister(1) == MK61_APP_KEY_SHIFT_LEFT);
+  assert(TinyBasicTestNumber("A") == 8);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "BOARD", 5) == 0);
+  assert(TinyBasicTestWaitCount() == 0);
+
+  TinyBasicTestReset();
+  const int index_and_value[] = {keys.digit[0], keys.digit[9]};
+  TinyBasicTestSetKeys(index_and_value, 2);
+  const int array = TinyBasicTestAddProgram("10 @(INPUT())=INPUT():A=@(0)\n", "KEYARRAY");
+  assert(array >= 0 && TinyBasicTestKeyReads() == 0);
+  assert(TinyBasicTestRunResult(array));
+  assert(TinyBasicTestNumber("A") == 9);
+  assert(TinyBasicTestKeyReads() == 2);
+}
+
+static void test_key_input_output_after_key_requires_acknowledgement(void) {
+  TinyBasicTestReset();
+  const int keys[] = {keyboard_layout::ACTIVE.ok};
+  TinyBasicTestSetKeys(keys, 1);
+  assert(TinyBasicTestAddProgram("10 PRINT INPUT()\n", "KEYPRINT") >= 0);
+  assert(RunTinyBasicProgram("KEYPRINT"));
+  assert(TinyBasicTestKeyReads() == 1);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "19", 2) == 0);
+  assert(TinyBasicTestWaitCount() == 1);
+}
+
+static void test_key_input_in_print_list_and_numeric_input_command(void) {
+  TinyBasicTestReset();
+  const int keys[] = {keyboard_layout::ACTIVE.ok};
+  TinyBasicTestSetKeys(keys, 1);
+  TinyBasicTestSetInput(3.8);
+  const int slot = TinyBasicTestAddProgram(
+      "10 PRINT \"K=\";INPUT():INPUT N\n"
+      "20 PRINT \"N=\";IN.(N)\n",
+      "KEYLIST");
+  assert(slot >= 0 && TinyBasicTestRunResult(slot));
+  assert(TinyBasicTestKeyReads() == 1 && TinyBasicTestNumber("N") == 3.8);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "K=19", 4) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(1), "N=3", 3) == 0);
+}
+
+static void test_key_input_esc_cancels_expression_without_error(void) {
+  for(const TinyBasicRunMode mode : {TinyBasicRunMode::INTERACTIVE,
+                                     TinyBasicRunMode::M61_SCENARIO}) {
+    TinyBasicTestReset();
+    const int keys[] = {keyboard_layout::ACTIVE.esc, keyboard_layout::ACTIVE.digit[4]};
+    TinyBasicTestSetKeys(keys, 2);
+    const int slot = TinyBasicTestAddProgram(
+        "10 A=7:PRINT \"BOARD\"\n"
+        "20 A=INPUT()+INPUT()\n"
+        "30 B=99\n",
+        "KEYESC");
+    assert(slot >= 0);
+    const auto status = RunTinyBasicProgramStatus((u16)slot, mode);
+    assert(status == (mode == TinyBasicRunMode::INTERACTIVE
+                          ? TinyBasicRunStatus::COMPLETED : TinyBasicRunStatus::STOPPED));
+    assert(TinyBasicTestNumber("A") == 7 && TinyBasicTestNumber("B") == 0);
+    assert(TinyBasicTestKeyReads() == 1);
+    assert(std::strncmp(TinyBasicTestLcdLine(0), "BOARD", 5) == 0);
+    assert(TinyBasicTestError()[0] == 0 && TinyBasicTestWaitCount() == 0);
+    assert(!TinyBasicTestCompile("10 A=INPUT(1)\n"));
+    assert(TinyBasicTestError()[0] != 0);
+  }
+}
+
+static void test_key_input_requires_empty_parentheses(void) {
+  TinyBasicTestReset();
+  for(const char* source : {"10 A=INPUT\n", "10 A=INPUT(1)\n", "10 A=INPUT(\n",
+                            "10 A=INPUT(,)\n", "10 A=GET()\n", "10 GET A\n"}) {
+    assert(!TinyBasicTestCompile(source));
+  }
+  assert(TinyBasicTestKeyReads() == 0);
 }
 
 static void test_compile_rejects_invalid_statements(void) {
@@ -792,26 +886,52 @@ static int add_shipping_program(const char* path, const char* name) {
 static void test_high_noon_package(int argc, char** argv) {
   assert(argc == 5);
   TinyBasicTestReset();
-  (void) add_shipping_program(argv[1], "INTRO");
+  const int intro = add_shipping_program(argv[1], "INTRO");
   (void) add_shipping_program(argv[2], "PLAYER");
   (void) add_shipping_program(argv[3], "BART");
   (void) add_shipping_program(argv[4], "REWARD");
   TinyBasicTestSetGeometry(47, 10);
 
-  const double no_instructions[] = {0};
-  TinyBasicTestSetInputs(no_instructions, 1);
+  const auto& keys = keyboard_layout::ACTIVE;
+  const int skip[] = {keys.digit[0], keys.run};
+  TinyBasicTestSetKeys(skip, 2);
   assert(RunTinyBasicProgram("INTRO"));
-  assert(std::string(TinyBasicTestLastPrompt()) ==
-         expected_m8("ПОКАЗАТЬ ИНСТРУКЦИЮ? 1 ДА 0 НЕТ"));
-  // The zero branch now reaches the game immediately.  A standalone
-  // interactive run therefore gets the runner's normal final wait; the real
-  // M61 scenario dispatcher starts PLAYER without that acknowledgement.
-  assert(TinyBasicTestWaitCount() == 1);
+  assert(TinyBasicTestKeyReads() == 2); // 0 is ignored; Run starts the game.
+  assert(TinyBasicTestLastPrompt()[0] == 0);
+  const auto title = expected_m8("Р О В Н О");
+  assert(std::strncmp(TinyBasicTestLcdLine(0), title.c_str(), title.size()) == 0);
+  assert(TinyBasicTestWaitCount() == 0);
   assert(std::fabs(TinyBasicTestMkRegister(0) - 100.0) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(2)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(3)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(4)) < 0.000001);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 1.0) < 0.000001);
+
+  const int show[] = {keys.ok, keys.ok, keys.ok, keys.ok, keys.ok};
+  TinyBasicTestSetKeys(show, 5);
+  assert(RunTinyBasicProgram("INTRO"));
+  assert(TinyBasicTestKeyReads() == 5 && TinyBasicTestLastPrompt()[0] == 0);
+  assert(TinyBasicTestMkRegister(14) == 1 && TinyBasicTestWaitCount() == 0);
+
+  // Each instruction page permits Run to skip ahead or ESC to leave M61.
+  for(int page = 0; page <= 4; page++) {
+    int presses[5];
+    for(int i = 0; i < page; i++) presses[i] = keys.ok;
+    presses[page] = keys.run;
+    TinyBasicTestSetKeys(presses, page + 1);
+    assert(RunTinyBasicProgram("INTRO"));
+    assert(TinyBasicTestKeyReads() == page + 1 && TinyBasicTestMkRegister(14) == 1);
+    presses[page] = keys.esc;
+    TinyBasicTestSetKeys(presses, page + 1);
+    assert(RunTinyBasicProgramStatus((u16)intro, TinyBasicRunMode::M61_SCENARIO)
+           == TinyBasicRunStatus::STOPPED);
+    assert(TinyBasicTestKeyReads() == page + 1 && TinyBasicTestMkRegister(14) == 99);
+    assert(TinyBasicTestError()[0] == 0 && TinyBasicTestWaitCount() == 0);
+  }
+
+  const int restart[] = {keys.run};
+  TinyBasicTestSetKeys(restart, 1);
+  assert(RunTinyBasicProgram("INTRO") && TinyBasicTestMkRegister(14) == 1);
 
   const double advance[] = {1, 10};
   TinyBasicTestSetInputs(advance, 2);
@@ -844,7 +964,7 @@ static void test_high_noon_package(int argc, char** argv) {
   assert(RunTinyBasicProgram("PLAYER"));
   TinyBasicTestSetPauseEsc(false);
   assert(std::fabs(TinyBasicTestMkRegister(14) - 99.0) < 0.000001);
-  assert(TinyBasicTestWaitCount() == 1);
+  assert(TinyBasicTestWaitCount() == 0);
 }
 
 static int run_language_program(const char* source) {
@@ -1033,6 +1153,11 @@ int main(int argc, char** argv) {
   test_gosub();
   test_for_next();
   test_input();
+  test_key_input_reads_once_and_preserves_screen();
+  test_key_input_output_after_key_requires_acknowledgement();
+  test_key_input_in_print_list_and_numeric_input_command();
+  test_key_input_esc_cancels_expression_without_error();
+  test_key_input_requires_empty_parentheses();
   test_bad_expression_tail();
   test_compile_rejects_invalid_statements();
   test_keyword_abbreviations();

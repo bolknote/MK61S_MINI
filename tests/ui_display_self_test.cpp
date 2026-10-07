@@ -1404,6 +1404,7 @@ void exportFrame(const Frame& frame, const char* name) {
 }
 
 void test_disk_activity_deadline() {
+  static_assert(sizeof(disk_activity::Activity)==8,"activity must keep its RAM budget");
   disk_activity::Activity activity;
   assert(activity.indicator(0) == 0);
   activity.note(0);
@@ -1419,6 +1420,48 @@ void test_disk_activity_deadline() {
   assert(activity.indicator(0) != 0);
   assert(activity.indicator(79) != 0);
   assert(activity.indicator(80) == 0);
+  activity.note(100);activity.pause();
+  assert(activity.indicator(100)==0);
+  activity.note(101);activity.pause();activity.note(102);activity.resume();
+  assert(activity.indicator(102)==0);
+  activity.resume();assert(activity.indicator(102)==0); // No stale replay.
+  activity.note(103);assert(activity.indicator(103)!=0);
+}
+
+void test_splash_disk_activity_is_quiet() {
+  ui_display_test::now=0;ui_display_test::reset();
+  MK61Display display;startUi(display);
+  display.printUiLine(0,"Splash");
+  const Frame before=ui_display_test::frame;
+  display.noteDiskActivity(0);display.pollDiskActivity(0);
+  assert(ui_display_test::frame!=before);
+  {
+    disk_activity::Pause quiet(display);
+    expectFrame(before); // Pending icon is removed before the first logo.
+    display.printUiLine(0,"Startup artwork");
+    const Frame splash=ui_display_test::frame;
+    for(unsigned t=1;t<400;t+=17) {
+      ui_display_test::now=t;display.noteDiskActivity(t);display.pollDiskActivity(t);
+      expectFrame(splash);
+    }
+    { disk_activity::Pause nested(display);display.noteDiskActivity(400); }
+    display.pollDiskActivity(400);expectFrame(splash);
+#if MK61_ENABLE_USB_SCREEN
+    assert(display.enterUsbScreen());
+    display.noteDiskActivity(401);display.pollDiskActivity(401);display.flush();
+    const auto* pixels=display.usbScreenFramebuffer();
+    Frame virtual_splash{};std::memcpy(virtual_splash.data(),pixels,virtual_splash.size());
+    display.noteDiskActivity(500);display.pollDiskActivity(500);display.flush();
+    assert(!std::memcmp(display.usbScreenFramebuffer(),virtual_splash.data(),virtual_splash.size()));
+    display.leaveUsbScreen();
+#endif
+  }
+  ui_display_test::now=600;display.pollDiskActivity(600);
+  const Frame after=ui_display_test::frame;
+  display.noteDiskActivity(600);display.pollDiskActivity(600);
+  expectDiskCorner(after,ui_display_test::frame.data(),2); // Normal I/O restored.
+  display.pollDiskActivity(760);expectFrame(after);
+  ui_display_test::now=0;
 }
 
 void test_disk_catalog_io_is_quiet() {
@@ -1882,6 +1925,7 @@ int main() {
   test_cursor_blinks_on_trailing_ui_marker();
   test_partial_page_overlay_restoration();
   test_disk_activity_deadline();
+  test_splash_disk_activity_is_quiet();
   test_disk_catalog_io_is_quiet();
   test_disk_restores_text_clock_and_calculator();
   test_disk_fullscreen_and_update_batching();

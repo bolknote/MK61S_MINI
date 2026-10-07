@@ -194,6 +194,10 @@ class MK61Display : public Print {
 #if MK61_DISK_ACTIVITY_SUPPORTED
     void noteDiskActivity(u32 now) { disk_activity_.note(now); }
     void pollDiskActivity(u32 now);
+    void pauseDiskActivity(void) {
+      disk_activity_.pause();pollDiskActivity(millis());
+    }
+    void resumeDiskActivity(void) { disk_activity_.resume(); }
 #endif
 #if defined(MK61_DISPLAY_UC1609)
     void beginDiskSaving(bool russian);
