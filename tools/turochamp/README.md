@@ -19,9 +19,14 @@ by each side. During computer search the original board is refreshed after
 each root candidate with the accumulated node count.
 
 On F411 the split VM retains an LRU of verified M61 BASIC bytecode in 24 KiB
-of RAM; C6 media revisions invalidate it. Cached runs preserve all shared
+of RAM; storage media revisions invalidate it. Cached runs preserve all shared
 values and reset execution/DATA cursors, and normal M61 completion keeps the
 hot VM loaded instead of loading the cold input/editor module again.
+On Classic V3/F411 at 96 MHz, 20 trivial M61 BASIC launches fell from
+3.863 s (80 APP decodes) to 0.425 s (3 decodes). A real initial search
+with the book off completed e2-e3 in 359.177 s at 420 nodes, displaying
+the first nonzero progress after 25.136 s and then about every 17 s.
+The full historical search remains expensive in BASIC.
 
 An optional opening book shares `history.tbi`, so it adds no runtime files.
 It contains 17 hand-curated six-ply lines, packed into 77 shared-prefix

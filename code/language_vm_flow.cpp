@@ -85,7 +85,8 @@ uint32_t flow_vm(mk61_app_flow* flow, FlowExecute execute) {
       // A successful M61 BASIC part needs no cold finish UI. Retain the hot
       // executor for the next cached part; errors and interactive runs finish normally.
       if(r.mode == 1 && s.language == Language::BASIC && r.result.error == Error::NONE &&
-         !s.cancelled && s.failure == Error::NONE) completed(flow, *c);
+         !s.cancelled && s.failure == Error::NONE)
+        mk61_app_flow_return(flow, 1, c->failure_status);
       else mk61_app_flow_next(flow, target(MK61_APP_KIND_LANGUAGE_INPUT, FLOW_FINISH));
       return 1;
     default: return 0;
