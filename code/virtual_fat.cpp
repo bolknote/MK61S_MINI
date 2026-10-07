@@ -1616,12 +1616,20 @@ static bool read_file_chain_source(void* context, u32 offset,
     if(cluster_index >= chain.cluster_count) return false;
     const u8 sector = (u8) (in_cluster / SECTOR_SIZE);
     const u16 in_sector = (u16) (in_cluster % SECTOR_SIZE);
-    u8 block[SECTOR_SIZE];
-    if(!read_effective_sector(
-           cluster_lba(chain.clusters[cluster_index], sector), block)) {
+    const u32 lba = cluster_lba(chain.clusters[cluster_index], sector);
+    u8 uncached[SECTOR_SIZE];
+    const u8* block = uncached;
+    // UTF-8 decoding requests at most four bytes per character. Merely
+    // consulting the cache without filling it rereads a whole NOR sector
+    // on every character, in both validation and import. Borrow the existing
+    // cache; copy this span before another lookup can evict its slot.
+    // A caller may lend all cache bytes to materialization/compression.
+    const bool loaded = g_cache_slots != 0
+        ? cached_effective_sector(lba, block)
+        : read_effective_sector(lba, uncached);
+    if(!loaded) {
       return g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE,
-                          cluster_lba(chain.clusters[cluster_index], sector),
-                          chain.size, nullptr, true);
+                          lba, chain.size, nullptr, true);
     }
     usize count = SECTOR_SIZE - in_sector;
     if(count > size) count = size;
