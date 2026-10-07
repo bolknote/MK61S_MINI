@@ -35,9 +35,12 @@ IF (X=0) AND (B=0) AND (N<2) STAT=4
 IF STAT>0 G.:done
 IF HALF>=150 STAT=6
 IF STAT>0 G.:done
+# A reversible cycle needs at least two moves by each side.
+IF HCOUNT+REPDEP<4 G.:claims
 CALL repeat :repetition
 :repetition
 REPS=REPRESULT
+:claims
 IF REPS>=5 STAT=5
 IF REPS>=3 CLAIM=1
 IF HALF>=100 CLAIM=CLAIM+2

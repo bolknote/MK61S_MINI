@@ -4,6 +4,13 @@
 #include "language_vm_resident.hpp"
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#include "language_vm_image_cache.hpp"
+#if !defined(LANGUAGE_VM_HOST_TEST)
+#include "program_store.hpp"
+#include "development.hpp"
+#endif
+#endif
 #if MK61_SCREEN_BUFFER_LOAN && MK61_OVERLAY_LANGUAGE_VM
 #include "display_buffer_loan.hpp"
 #endif
@@ -15,6 +22,10 @@ loadable_module::RuntimeStatus frontend(loadable_module::Kind,
 #if MK61_OVERLAY_LANGUAGE_VM
 loadable_module::RuntimeStatus overlay(loadable_module::Kind,
     loadable_module::Command,void*,uint32_t&);
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+uint32_t media_revision();
+void activate_text_font();
+#endif
 #endif
 }
 #endif
@@ -37,6 +48,23 @@ static_assert(sizeof(Persistent) == VALUES_SIZE, "workspace partition ABI change
 static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
 bool busy;
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES> image_cache;
+uint32_t image_revision() {
+#if defined(LANGUAGE_VM_HOST_TEST)
+  return language_vm_test::media_revision();
+#else
+  return program_store::media_revision();
+#endif
+}
+void activate_cached_text_font() {
+#if defined(LANGUAGE_VM_HOST_TEST)
+  language_vm_test::activate_text_font();
+#else
+  (void)program_store_text_font_activate();
+#endif
+}
+#endif
 loadable_module::RuntimeStatus frontend(loadable_module::Kind kind,
     loadable_module::Command command,uint32_t a,uint32_t b,Request* request,uint32_t& result) {
 #if defined(LANGUAGE_VM_HOST_TEST)
@@ -140,18 +168,37 @@ __attribute__((noinline)) loadable_module::RuntimeStatus read_input(
   }
 }
 loadable_module::RuntimeStatus execute_overlay(ExecuteRequest& execution,
-                                               ExecutionState& state) {
+                                               ExecutionState& state,
+                                               const ValidatedImage* cached = nullptr,
+                                               ValidatedImage* checked_image = nullptr) {
   using namespace loadable_module;
   ValidatedImage validated = {};
   OverlayRequest request = {sizeof(request), REQUEST_VERSION, &execution,
                             &state, &validated, OverlayAction::START, {0, 0, 0}};
-  const auto checked = overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_VALIDATE, &request);
-  if (checked != RuntimeStatus::OK || execution.result.error != Error::NONE) return checked;
+  if(cached) {
+    validated = *cached;
+    View view;
+    if(!validated_view(request, view)) return RuntimeStatus::CORRUPT_MODULE;
+    initialize_validated_state(execution, validated, state);
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+    activate_cached_text_font();
+#endif
+  } else {
+    const auto checked = overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_VALIDATE, &request);
+    if (checked != RuntimeStatus::OK || execution.result.error != Error::NONE) return checked;
+  }
+  if(checked_image) *checked_image = validated;
   for (;;) {
     const auto status = overlay_call(Kind::LANGUAGE_VM, Command::LANGUAGE_VM_RUN, &request);
     if (status != RuntimeStatus::OK) return status;
-    if (execution.result.error != Error::YIELDED)
+    if (execution.result.error != Error::YIELDED) {
+      // Successful shared-screen BASIC has no final cold UI work. Keep
+      // LANGVM hot instead of decoding LANGIN solely to return success.
+      if(execution.mode == 1 && state.language == Language::BASIC &&
+         execution.result.error == Error::NONE && !state.cancelled &&
+         state.failure == Error::NONE) return RuntimeStatus::OK;
       return overlay_call(Kind::LANGUAGE_INPUT, Command::LANGUAGE_VM_FINISH, &request);
+    }
     const auto input_status = read_input(execution, state);
     request.action = input_status != RuntimeStatus::OK || state.cancelled
                          ? OverlayAction::ABORT : OverlayAction::RESUME;
@@ -234,6 +281,34 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     command =
         language == Language::BASIC ? Command::TINYBASIC_RUN_ID : Command::FOCAL_RUN_ID;
   }
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  const bool cacheable = language == Language::BASIC &&
+      command == Command::TINYBASIC_RUN_ID_STATUS && b == 1;
+  const uint32_t revision = image_revision();
+  if(cacheable) {
+    const auto* cached = image_cache.find((uint16_t)a, revision);
+    if(cached) {
+      saved->selected[index] = (uint16_t)a;
+      shared_memory::Lease state;
+      if(!workspace(state)) return RuntimeStatus::BUSY;
+      ExecuteRequest execution = {};
+      execution.size = sizeof(execution); execution.version = REQUEST_VERSION;
+      execution.image = image_cache.image(*cached);
+      execution.image_size = cached->validated.size;
+      execution.variables = saved->variables[index]; execution.array = saved->array;
+      execution.array_count = 385; execution.mode = 1;
+      auto* continuation = state.as<ExecutionState>();
+      *continuation = {}; continuation->language = language;
+      const auto status = execute_overlay(execution, *continuation, &cached->validated);
+      if(status != RuntimeStatus::OK) return status;
+      basic_error_id = execution.result.error == Error::NONE ? 0xFFFF : (uint16_t)a;
+      basic_error_line = (uint16_t)execution.result.line;
+      basic_error_column = execution.error_column;
+      result = run_status(language, original, execution.result.error);
+      return RuntimeStatus::OK;
+    }
+  }
+#endif
   Request request = {};
   request.size = sizeof(request);
   request.version = REQUEST_VERSION;
@@ -358,8 +433,14 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
 #if MK61_OVERLAY_LANGUAGE_VM
   auto* continuation = (ExecutionState*)state.data();
   *continuation = {}; continuation->language = language;
-  status = execute_overlay(execution, *continuation);
+  ValidatedImage checked_image = {};
+  status = execute_overlay(execution, *continuation, nullptr, &checked_image);
   if (status != RuntimeStatus::OK) return status;
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  if(cacheable && request.source_id == a && !request.clear_requested &&
+     request.mode == 1 && execution.result.error == Error::NONE)
+    (void)image_cache.store((uint16_t)a, revision, image, checked_image);
+#endif
 #else
   if (!execute_resident(execution)) return RuntimeStatus::INVALID_MODULE;
 #endif

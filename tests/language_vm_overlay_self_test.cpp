@@ -217,7 +217,7 @@ int main() {
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
   assert(starts == 1 && resumes == 3 && expressions == 4 && retries == 1 && swaps >= 8);
-  assert(validations == 5 && finishes == 1); // one per immutable image, not per resume
+  assert(validations == 5 && finishes == 0); // one per immutable image, not per resume
   source = "10 IF @(1)<>10 GOTO 999\n20 IF @(3)<>30 GOTO 999\n";
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_INDEX, 0, 0, result)
          == RuntimeStatus::OK && result == 1);

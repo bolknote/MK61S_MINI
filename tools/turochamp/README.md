@@ -13,6 +13,15 @@ The package has 25 BASIC parts. Search descent and traversal share node.tbi
 and use local GOTOs; the result dialog shares game.tbi. Attack and pawn
 services remain shared source templates, embedded only where needed.
 Assembly emits the runtime module registry and removes obsolete TBI parts.
+Legal-move testing embeds both make and unmake. Positions with fewer than
+four reversible plies skip repetition scans, since a cycle needs two moves
+by each side. During computer search the original board is refreshed after
+each root candidate with the accumulated node count.
+
+On F411 the split VM retains an LRU of verified M61 BASIC bytecode in 16 KiB
+of RAM; C6 media revisions invalidate it. Cached runs preserve all shared
+values and reset execution/DATA cursors, and normal M61 completion keeps the
+hot VM loaded instead of loading the cold input/editor module again.
 
 An optional opening book shares `history.tbi`, so it adds no runtime files.
 It contains 17 hand-curated six-ply lines, packed into 77 shared-prefix

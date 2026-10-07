@@ -500,6 +500,18 @@
 #if MK61_OVERLAY_LANGUAGE_VM != 0 && MK61_OVERLAY_LANGUAGE_VM != 1
   #error "MK61_OVERLAY_LANGUAGE_VM must be 0 or 1"
 #endif
+// F411 can retain the hot working set of repeatedly opened M61 BASIC parts.
+// F401 keeps its existing RAM budget; explicit overrides are qualification-only.
+#ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  #if MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
+    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 16384
+  #else
+    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 16384
+  #error "language image cache must fit in 16 KiB"
+#endif
 #if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
   #error "Choose one language VM placement"
 #endif

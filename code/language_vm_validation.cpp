@@ -18,12 +18,7 @@ uint32_t validate_execution(OverlayRequest* p) {
   *p->validated = {VALIDATED_MAGIC, v.size, v.code, v.lines, v.source_size, v.stack,
                    (uint8_t)((v.expression ? 1 : 0) | (v.requires_rf ? 2 : 0)), v.language, 0};
   if (p->action == OverlayAction::START) {
-    auto& s = *p->state;
-    s = {}; s.language = v.language; s.array_count = (uint16_t)r.array_count;
-    if (v.language == Language::BASIC) {
-      const uint16_t source_limit = (uint16_t)((3584 - v.source_size) / 2 + 1);
-      if (s.array_count > source_limit) s.array_count = source_limit;
-    }
+    initialize_validated_state(r, *p->validated, *p->state);
   }
   return 1;
 }

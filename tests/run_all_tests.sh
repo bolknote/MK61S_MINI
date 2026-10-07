@@ -108,6 +108,7 @@ fi
 python3 "$root/tests/terminal_help_self_test.py"
 "$root/tests/run_text_editor_tests.sh"
 "$root/tests/run_tinybasic_tests.sh"
+bash "$root/tests/run_language_vm_image_cache_tests.sh"
 "$root/tests/run_high_noon_equivalence_tests.sh"
 python3 "$root/tests/turochamp_package_self_test.py"
 "$root/tests/run_usb_screen_protocol_tests.sh"

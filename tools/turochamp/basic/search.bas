@@ -48,6 +48,9 @@ APFRAME=STACK+1
 CALL unmake :restored
 :restored
 CHECK=UI_TEST
+IF UI_MESSAGE#1 G.:next
+CALL board :progress
+:progress
 G.:next
 :exhausted
 IF UI_FLAGS=0 UI_FLAGS=1:ROOTCURSOR=0:G.:next

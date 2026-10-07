@@ -17,7 +17,7 @@ AS=-GLSIDE
 LOCAL attack
 :tested
 TMP=AT;APFRAME=G_UNDO
-CALL unmake :restored
+LOCAL unmake
 :restored
 IF TMP>0 G.:again
 :done

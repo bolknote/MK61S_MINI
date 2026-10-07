@@ -109,6 +109,14 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
        (m.flags & 1) != 0, (m.flags & 2) != 0};
   return v.expression == (p.action == OverlayAction::EXPRESSION);
 }
+inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,
+                                       ExecutionState& s) {
+  s = {}; s.language = image.language; s.array_count = (uint16_t)r.array_count;
+  if(image.language == Language::BASIC) {
+    const uint16_t limit = (uint16_t)((3584 - image.source_size) / 2 + 1);
+    if(s.array_count > limit) s.array_count = limit;
+  }
+}
 // Cold module owns full decoding/CRC/branch checks. A valid START also resets
 // continuation and derives the original BASIC array quota; no UI here.
 uint32_t validate_execution(OverlayRequest*);
