@@ -2,7 +2,7 @@
 """Run bytecode in the actual resident Flash executor after poisoning APP RAM.
 
 Uses the existing ARM peripheral fixture. Display/keyboard/background are
-stubbed; bytecode decoding, control, double EABI and selected float math run
+stubbed; bytecode decoding, control, tagged integers, double EABI and selected float math run
 in real resident code. This does not flash a physical device.
 """
 import argparse
@@ -13,6 +13,16 @@ from pathlib import Path
 
 from run_portable_system_arm_tests import Machine,Elf,ROOT,run
 from unicorn.arm_const import (UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_R0,UC_ARM_REG_PC)
+
+INTEGER_TAG = 0x7FFC0001
+
+
+def decode_values(payload):
+    return tuple(struct.unpack("<i", cell[:4])[0]
+                 if struct.unpack("<I", cell[4:])[0] == INTEGER_TAG
+                 else struct.unpack("<d", cell)[0]
+                 for cell in (payload[i:i + 8] for i in range(0, len(payload), 8)))
+
 
 class ResidentMachine(Machine):
     def __init__(self,path):
@@ -41,7 +51,7 @@ class ResidentMachine(Machine):
         else:self.uc.mem_write(values,struct.pack("<26d",*variables))
         self.uc.mem_write(array,bytes(385*8))
         self.uc.mem_write(request,bytes(48))
-        self.put(request,48,2,code,len(image),values,array,385)
+        self.put(request,48,4,code,len(image),values,array,385)
         self.uc.mem_write(request+28,b"\x01\0\0\0")
         # There is no native executor APP or retained compiler code anywhere
         # in the complete dynamic APP/heap pool during execution.
@@ -57,7 +67,7 @@ class ResidentMachine(Machine):
         error=self.uc.mem_read(request+36,1)[0]
         assert error==0,(error,self.lines,self.trace[-15:])
         assert bytes(self.uc.mem_read(self.pool_begin,self.pool_end-self.pool_begin))==b"\xCD"*(self.pool_end-self.pool_begin)
-        return struct.unpack("<26d",self.uc.mem_read(values,26*8))
+        return decode_values(bytes(self.uc.mem_read(values,26*8)))
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

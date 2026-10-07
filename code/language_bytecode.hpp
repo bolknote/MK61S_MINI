@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "language_value.hpp"
 
 // Experimental, relocatable bytecode. The compiler, VM and host probes share
 // this wire format; no native pointers or C++ layouts are serialized.
@@ -107,7 +108,9 @@ enum class Op : uint8_t {
   NEXT_ARRAY,
   SOURCE_POS,
   PRINT_RESOURCE,
-  INPUT_RESOURCE
+  INPUT_RESOURCE,
+  CONST_I32,
+  FLOOR_DIV
 };
 enum class Function : uint8_t {
   SIN,
@@ -191,7 +194,7 @@ struct CallFrame {
   bool group;
 };
 struct LoopFrame {
-  double limit, step, value;
+  Value limit, step, value;
   uint16_t body, end;
   uint16_t variable;
 };
@@ -203,10 +206,10 @@ struct Continuation {
   uint8_t sp, call_count, loop_count;
 };
 struct Bindings {
-  double* variables;
-  double* array;
+  Value* variables;
+  Value* array;
   uint16_t array_count;
-  double* stack;
+  Value* stack;
   uint8_t stack_capacity;
 };
 struct State : Continuation, Bindings {};

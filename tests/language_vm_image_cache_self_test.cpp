@@ -15,7 +15,7 @@ uint32_t revision=1;
 unsigned compiles,validations,finishes,swaps,activations;
 uint32_t selected_id,selected_mode;
 Kind cached=(Kind)0;
-double* array;
+Value* array;
 const char* input_text="4";
 bool cancel_input;
 const char* program1="10 READ @(0)\n20 @(1)=@(1)+@(0)\n30 DATA 2\n40 END\n";

@@ -33,15 +33,15 @@ void activate_text_font();
 namespace language_vm {
 namespace {
 #if MK61_OVERLAY_LANGUAGE_VM
-constexpr uint32_t SESSION_MAGIC = 0x35564D4CUL;
+constexpr uint32_t SESSION_MAGIC = 0x36564D4CUL;
 #else
-constexpr uint32_t SESSION_MAGIC = 0x31564D4CUL;
+constexpr uint32_t SESSION_MAGIC = 0x32564D4CUL;
 #endif
 struct Persistent {
   uint32_t magic;
   uint16_t selected[2];
-  double variables[2][26];
-  double array[385];
+  Value variables[2][26];
+  Value array[385];
 };
 static_assert(sizeof(Persistent) == 3504, "language values layout changed");
 static_assert(sizeof(Persistent) == VALUES_SIZE, "workspace partition ABI changed");
@@ -82,9 +82,11 @@ bool workspace(shared_memory::Lease& lease) {
                                  workspace_swap::AcquireMode::REQUIRED, lease);
 }
 void initialize(Persistent& state) {
-  memset(&state, 0, sizeof(state));
+  memset(static_cast<void*>(&state), 0, sizeof(state));
   state.magic = SESSION_MAGIC;
   state.selected[0] = state.selected[1] = 0xFFFF;
+  for(auto& language : state.variables) for(auto& value : language) value=Value(0);
+  for(auto& value : state.array) value=Value(0);
 }
 #if !MK61_OVERLAY_LANGUAGE_VM
 bool is_index(Language language, loadable_module::Command command) {
@@ -320,8 +322,8 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     status = frontend(kind,command,a,b,&request,result);
   if (request.source_id != 0xFFFF) saved->selected[index] = request.source_id;
   if (request.clear_requested) {
-    memset(saved->variables[index], 0, sizeof(saved->variables[index]));
-    if (language == Language::BASIC) memset(saved->array, 0, sizeof(saved->array));
+    for(auto& value : saved->variables[index]) value=Value(0);
+    if(language == Language::BASIC) for(auto& value : saved->array) value=Value(0);
   }
   shared_memory::Lease state;
   if (!workspace(state)) return RuntimeStatus::BUSY;

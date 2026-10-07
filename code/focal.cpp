@@ -2658,9 +2658,10 @@ FocalRunStatus RunFocal(int FocalN) {
     focal_error(FocalError::SYNTAX);
     return FocalRunStatus::RUNTIME_ERROR;
   }
-  double values[language_vm::MAX_STACK];
+  language_vm::Value values[language_vm::MAX_STACK], variables[26];
+  for(unsigned i=0;i<26;++i) variables[i]=focal_vars[i];
   language_vm::State vm = {};
-  vm.variables = focal_vars;
+  vm.variables = variables;
   vm.stack = values;
   vm.stack_capacity = language_vm::MAX_STACK;
   struct Context {
@@ -2732,6 +2733,7 @@ FocalRunStatus RunFocal(int FocalN) {
         }
       }};
   const auto result = language_vm::run(view, vm, services, 1000000);
+  for(unsigned i=0;i<26;++i) focal_vars[i]=variables[i].number();
   if (context.cancelled || result.error == language_vm::Error::STOPPED) {
     focal_show_stopped();
     return FocalRunStatus::STOPPED;

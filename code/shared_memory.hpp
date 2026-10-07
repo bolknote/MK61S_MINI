@@ -54,11 +54,11 @@ namespace snapshot_schema {
 #if defined(MK61_OVERLAY_LANGUAGE_VM) && MK61_OVERLAY_LANGUAGE_VM
 static constexpr u8 FOCAL_RUNTIME = 6;
 static constexpr u8 TINYBASIC_RUNTIME = 8;
-static constexpr u8 LANGUAGE_VM = 5;
+static constexpr u8 LANGUAGE_VM = 6;
 #else
 static constexpr u8 FOCAL_RUNTIME = 1;
 static constexpr u8 TINYBASIC_RUNTIME = 9;
-static constexpr u8 LANGUAGE_VM = 4;
+static constexpr u8 LANGUAGE_VM = 7;
 #endif
 } // namespace snapshot_schema
 

@@ -85,7 +85,7 @@ namespace {
 using namespace language_vm;
 struct Runtime {
   State state;
-  double stack[MAX_STACK];
+  Value stack[MAX_STACK];
   ExecuteRequest* request;
   Language language;
   char output[96];
@@ -266,7 +266,7 @@ bool input(const char* prompt, uint16_t length, double& value) {
         if (compiled.error == Error::NONE &&
             inspect(image, compiled.size, view) == Error::NONE) {
           State expression = {};
-          double stack[MAX_STACK];
+          Value stack[MAX_STACK];
           expression.variables = runtime.request->variables;
           expression.array = runtime.request->array;
           expression.array_count = runtime.state.array_count;
@@ -274,7 +274,7 @@ bool input(const char* prompt, uint16_t length, double& value) {
           expression.stack_capacity = MAX_STACK;
           const auto result = run(view, expression, services);
           if (result.error == Error::NONE) {
-            value = stack[0];
+            value = stack[0].number();
             return true;
           }
           if (runtime.cancelled) return false;
@@ -398,7 +398,7 @@ uint32_t execute(ExecuteRequest* request) {
     request->result.error = checked;
     return 1;
   }
-  runtime = {};
+  memset(static_cast<void*>(&runtime), 0, sizeof(runtime));
   runtime.request = request;
   runtime.language = view.language;
   runtime.state.variables = request->variables;

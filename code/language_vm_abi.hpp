@@ -1,10 +1,11 @@
 #ifndef MK61_LANGUAGE_VM_ABI_HPP
 #define MK61_LANGUAGE_VM_ABI_HPP
 #include "language_bytecode.hpp"
+#include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 3;
-static constexpr uint32_t COMPILER_MAGIC = 0x364D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 4;
+static constexpr uint32_t COMPILER_MAGIC = 0x374D5643UL;
 static constexpr uint16_t VALUES_SIZE = 3504;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
@@ -21,8 +22,8 @@ struct ExecuteRequest {
   uint32_t size, version;
   const uint8_t* image;
   uint32_t image_size;
-  double* variables;
-  double* array;
+  Value* variables;
+  Value* array;
   uint32_t array_count;
   uint8_t mode, pause_final;
   uint16_t reserved;
@@ -30,21 +31,21 @@ struct ExecuteRequest {
   uint8_t edit_requested, reserved2;
   RunResult result;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x37564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x37494D4CUL;
-static constexpr uint32_t VALIDATED_MAGIC = 0x3649424CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x38564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x38494D4CUL;
+static constexpr uint32_t VALIDATED_MAGIC = 0x3749424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.
 // The bound is tested both with and without compact decimal recipes.
 static constexpr uint16_t INPUT_IMAGE_CAPACITY = 256;
-// While a program is suspended for INPUT, the upper 32 double slots hold
+// While a program is suspended for INPUT, the upper 32 number slots hold
 // its temporary bytecode instead of a second buffer on the resident C stack.
 // A 64-byte expression has at most 32 leaves; even with a suspended array
 // index it fits below the 64-slot boundary. Ordinary RUN still has 96 slots.
 static constexpr uint8_t INPUT_STACK_CAPACITY =
-    MAX_STACK - INPUT_IMAGE_CAPACITY / sizeof(double);
-static_assert(INPUT_IMAGE_CAPACITY % sizeof(double) == 0 &&
+    MAX_STACK - INPUT_IMAGE_CAPACITY / sizeof(Value);
+static_assert(INPUT_IMAGE_CAPACITY % sizeof(Value) == 0 &&
               INPUT_STACK_CAPACITY >= 33 && INPUT_STACK_CAPACITY < MAX_STACK,
               "INPUT bytecode and value stack must be disjoint");
 enum class OverlayAction : uint8_t { START, RESUME, EXPRESSION, ABORT };
@@ -52,9 +53,9 @@ enum class OverlayAction : uint8_t { START, RESUME, EXPRESSION, ABORT };
 // executor binds a fresh State and callback table on every invocation.
 struct ExecutionState {
   Continuation control;
-  double stack[MAX_STACK];
+  Value stack[MAX_STACK];
   char output[96];
-  double input_value;
+  Value input_value;
   uint32_t steps;
   uint16_t prompt_offset, prompt_length, array_count;
   Language language;
@@ -62,6 +63,14 @@ struct ExecutionState {
   bool cancelled, normal_stop;
   Error failure;
 };
+inline void reset_execution_state(ExecutionState& state) {
+  static_assert(std::is_trivially_copyable<ExecutionState>::value,
+                "continuation must support in-place byte initialization");
+  // Zero bits represent a valid double zero in Value. Unused number slots
+  // are overwritten before reading; persistent variables have tagged zeros.
+  // Aggregate assignment can instead create a 1520-byte stack temporary.
+  memset(static_cast<void*>(&state), 0, sizeof(state));
+}
 inline uint8_t* input_image_storage(ExecutionState& state) {
   return reinterpret_cast<uint8_t*>(state.stack + INPUT_STACK_CAPACITY);
 }
@@ -110,7 +119,7 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
 }
 inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,
                                        ExecutionState& s) {
-  s = {}; s.language = image.language; s.array_count = (uint16_t)r.array_count;
+  reset_execution_state(s); s.language = image.language; s.array_count = (uint16_t)r.array_count;
   if(image.language == Language::BASIC) {
     const uint16_t limit = (uint16_t)((3584 - image.source_size) / 2 + 1);
     if(s.array_count > limit) s.array_count = limit;

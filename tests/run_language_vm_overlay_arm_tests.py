@@ -18,7 +18,18 @@ from unicorn.arm_const import UC_ARM_REG_SP
 STATE_SIZE = 1520
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 9
+GENERATION = 10
+
+
+def decode_number(data):
+    low, high = struct.unpack('<II', data)
+    return struct.unpack('<i',struct.pack('<I',low))[0] if high == 0x7FFC0001 else struct.unpack('<d',data)[0]
+
+
+def encode_number(number):
+    if number == int(number) and -2147483648 <= number <= 2147483647 and not (number == 0 and math.copysign(1,number) < 0):
+        return struct.pack('<II',int(number)&0xFFFFFFFF,0x7FFC0001)
+    return struct.pack('<d',number)
 
 
 class OverlayMachine(Machine):
@@ -79,9 +90,10 @@ class OverlayMachine(Machine):
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v10 = GENERATION >= 10
     v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 3 if v9 else 2 if v8 else 1
+    version = 4 if v10 else 3 if v9 else 2 if v8 else 1
     state_size = 1520 if v8 else 1504
     control_size = 624 if v8 else 616
     stack_offset = control_size
@@ -95,7 +107,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
-    vm_magic, input_magic = ((0x37564D4C, 0x37494D4C) if v9 else
+    vm_magic, input_magic = ((0x38564D4C, 0x38494D4C) if v10 else
+                             (0x37564D4C, 0x37494D4C) if v9 else
                              (0x36564D4C, 0x36494D4C) if v6 else
                              (0x34564D4C, 0x34494D4C) if v4 else
                              (0x33564D4C, 0x33494D4C))
@@ -165,7 +178,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
                 assert m.call(FINISH, overlay) == 1
                 error = m.uc.mem_read(execution+result_offset, 1)[0]
             assert bytes(m.uc.mem_read(bytecode, length)) == image
-            return struct.unpack("<d", m.uc.mem_read(variables, 8))[0], error, inputs, evaluations, retries
+            return (decode_number(m.uc.mem_read(variables,8)) if v10 else struct.unpack("<d", m.uc.mem_read(variables,8))[0]), error, inputs, evaluations, retries
         assert image[pc] in (48, 89)  # READ_INPUT / INPUT_RESOURCE
         prompt_offset, prompt_length = struct.unpack("<HH", m.uc.mem_read(state+prompt_offset_field, 4))
         resource_prompt = m.uc.mem_read(bytecode+pc, 1)[0] == 89
@@ -203,7 +216,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
                 m.uc.mem_write(state+cancelled_offset+1, bytes((language == 1 and mode == 0,)))
                 action = 3; break
             if result == 1:
-                m.uc.mem_write(state+input_value_offset, bytes(m.uc.mem_read(input_request+16, 8)))
+                m.uc.mem_write(state+input_value_offset, encode_number(struct.unpack("<d",m.uc.mem_read(input_request+16,8))[0]) if v10 else bytes(m.uc.mem_read(input_request+16,8)))
                 action = 1; inputs += 1; break
             assert result == 2
             evaluations += 1
@@ -245,7 +258,7 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local"), default="core")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9), default=9)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10), default=10)
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
     GENERATION = args.generation

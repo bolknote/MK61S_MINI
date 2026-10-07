@@ -7,8 +7,8 @@ namespace language_vm {
 struct PersistentValues {
   uint32_t magic;
   uint16_t selected[2];
-  double variables[2][26];
-  double array[385];
+  Value variables[2][26];
+  Value array[385];
 };
 static_assert(sizeof(PersistentValues) == VALUES_SIZE, "retained values layout changed");
 struct CompilerStage {

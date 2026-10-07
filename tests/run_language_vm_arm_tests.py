@@ -81,7 +81,7 @@ def main():
                 request = m.input + 512
                 image = m.workspace + 6400
                 m.uc.mem_write(request, bytes(32))
-                m.put(request, 32, 3, image, 1536)
+                m.put(request, 32, 4, image, 1536)
                 command = 0x206 if kind == "tinybasic" else 0x106
                 result = m.call(command, 42, 0, request)
                 assert result == (1 if kind == "tinybasic" else 0), (kind, result, m.lines)
@@ -99,11 +99,12 @@ def main():
                 m.uc.mem_write(variables, bytes(26 * 8))
                 m.uc.mem_write(array, bytes(385 * 8))
                 m.uc.mem_write(execute, bytes(48))
-                m.put(execute, 48, 3, image, length, variables, array, 385)
+                m.put(execute, 48, 4, image, length, variables, array, 385)
                 m.uc.mem_write(execute + 28, b"\x01\0\0\0")  # no interactive final wait
                 assert m.call(0x700, execute) == 1
                 error = m.uc.mem_read(execute + 36, 1)[0]
-                actual = struct.unpack("<d", m.uc.mem_read(variables, 8))[0]
+                low,high=struct.unpack("<II",m.uc.mem_read(variables,8))
+                actual=struct.unpack("<i",struct.pack("<I",low))[0] if high==0x7FFC0001 else struct.unpack("<d",m.uc.mem_read(variables,8))[0]
                 assert error == 0 and abs(actual - expected) < 1e-12, (
                     kind, address_index, error, actual, expected, m.lines, m.trace[-12:])
         math_kind="LIBM" if args.vm_profile=="core" else "local float + real conversion bridge"

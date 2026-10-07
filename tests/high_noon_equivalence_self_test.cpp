@@ -47,7 +47,8 @@ struct Outcome {
 };
 struct Model {
   Case scenario;
-  double variables[26]{}, array[385]{}, stack[MAX_STACK]{}, calculator_stack[4]{};
+  Value variables[26]{}, array[385]{}, stack[MAX_STACK]{};
+  double calculator_stack[4]{};
   std::string transcript;
   uint32_t rng;
   unsigned waits = 0, inputs = 0;

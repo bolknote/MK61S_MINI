@@ -43,7 +43,7 @@ struct Fixture {
   uint8_t image[MAX_IMAGE];
   View view = {};
   State state = {};
-  double vars[26] = {}, array[385] = {}, values[MAX_STACK] = {};
+  Value vars[26] = {}, array[385] = {}, values[MAX_STACK] = {};
   void compile(const char* source, Language language = Language::BASIC) {
     const auto result = language_vm::compile(language, source, (uint16_t)strlen(source),
                                              image, sizeof(image));
@@ -89,7 +89,8 @@ void test_literals() {
     f.state.stack_capacity = MAX_STACK;
     assert(run(f.view, f.state, services).error == Error::NONE);
     const double expected = mk_math::atof(literal);
-    assert(memcmp(&expected, &f.values[0], sizeof(expected)) == 0);
+    const double actual=f.values[0].number();
+    assert(memcmp(&expected, &actual, sizeof(expected)) == 0);
   }
   Fixture f;
   const auto result =
@@ -203,10 +204,10 @@ void test_service_progress_and_bounded_cancellation() {
   }
   f.compile(source.c_str());
   f.vars[0]=0;
-  struct Polls { double* value;std::vector<double> observed; } polls{f.vars,{}};
+  struct Polls { Value* value;std::vector<double> observed; } polls{f.vars,{}};
   auto host=services;host.context=&polls;
   host.service=[](void* raw) {
-    auto& p=*(Polls*)raw;p.observed.push_back(*p.value);
+    auto& p=*(Polls*)raw;p.observed.push_back(p.value->number());
     return p.observed.size()<3;
   };
   const auto cancelled=run(f.view,f.state,host);

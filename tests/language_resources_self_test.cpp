@@ -49,7 +49,7 @@ struct Program {
   std::vector<uint8_t> image;
   View view = {};
   State state = {};
-  double variables[26] = {}, array[385] = {}, stack[MAX_STACK] = {};
+  Value variables[26] = {}, array[385] = {}, stack[MAX_STACK] = {};
   Program(const std::string& source, Language lang, bool resources) {
     ResourceSource backing = {42,7};
     const auto sized=compile(lang,source.data(),(uint16_t)source.size(),nullptr,MAX_IMAGE,true,

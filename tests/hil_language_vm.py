@@ -25,6 +25,17 @@ FIXTURES={
     "loader.m61":b'open "arith.tbi"\nopen "loops.tbi"\nopen "state.tbi"\nret\n',
 }
 EXTENDED_FIXTURES={
+    # Numeric boundaries must survive compiler/runner eviction and the
+    # public double register interface, regardless of internal cell type.
+    "numeric.tbi":(
+        b"10 S=0;FOR I=2147483646 TO 2147483648;S=S+1;NEXT I\n"
+        b"20 .RA=2147483647+1-2147483648;.RB=281474976710655 MOD 65536\n"
+        b"30 .RC=INT(-7/2);.RD=S;END\n"),
+    "numeric.foc":(
+        b"1.10 S S=0\n1.20 F I=2147483646,2147483648;S S=S+1\n"
+        b"1.30 S .RA=2147483647+1-2147483648\n"
+        b"1.40 S .RB=INT(281474976710655/536870912)\n"
+        b"1.50 S .RC=INT(-7/2)\n1.60 S .RD=S\n1.70 E\n"),
     # Source fits BASIC's original 3584 bytes; bytecode exceeds the 3184-byte
     # in-WORKSPACE slot and therefore stays beside the USB session over INPUT.
     "large.tbi":b"10 A=0\n"+b"".join(
@@ -130,6 +141,13 @@ def run():
                     values,report=registers(port);assert values["R9"]==30,(values,report)
                     result["checks"].append("USB-FOCAL-INPUT-FOR")
                     print("USB FOCAL FOR/INPUT: PASS",flush=True)
+                    for name,wide in (("numeric.tbi",65535),("numeric.foc",524287)):
+                        port.open("/VMHIL/"+name);port.pump(.7)
+                        require_foreground(port);port.close_app()
+                        values,report=registers(port)
+                        assert (values["RA"],values["RB"],values["RC"],values["RD"]) == (0,wide,-4,3),(name,report)
+                        result["checks"].append("USB-"+name+"-overflow-wide-floor-FOR")
+                        print("USB "+name+": overflow, wide arithmetic, floor and FOR PASS",flush=True)
                     port.open("/VMHIL/large.tbi");port.pump(.8)
                     require_foreground(port)
                     if port.frames:png(port.frames[-1],args.output_dir/"large-input-before-cancel.png")

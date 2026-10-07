@@ -35,7 +35,7 @@ void check_expression(const std::string& text) {
   memcpy(borrowed, image+8, limited.size);
   uint8_t saved_image[INPUT_IMAGE_CAPACITY]; memcpy(saved_image, borrowed, sizeof(saved_image));
   assert(inspect(borrowed, limited.size, view) == Error::NONE);
-  double variables[26] = {}, array[385] = {};
+  Value variables[26] = {}, array[385] = {};
   const Bindings bindings = {variables, array, 385, state.stack, MAX_STACK};
   const auto result = evaluate_input(view, state, bindings, {});
   assert(result.error != Error::STACK && result.error != Error::INVALID_IMAGE);
@@ -98,8 +98,8 @@ void test_borrowed_stack() {
   memset(state.control.loops, 0x5A, sizeof(state.control.loops));
   state.stack[0] = 123; state.input_value = 7;
   const Continuation saved = state.control;
-  double variables[26] = {}; variables[0] = 5;
-  double array[385] = {}; array[2] = 8;
+  Value variables[26] = {}; variables[0] = 5;
+  Value array[385] = {}; array[2] = 8;
   const Bindings bindings = {variables, array, 385, state.stack, MAX_STACK};
   for (const char* text : {"A+@(2)", "1/0"}) {
     const auto compiled = compile_expression(Language::BASIC, text, (uint16_t)strlen(text), image, INPUT_IMAGE_CAPACITY);
@@ -164,7 +164,7 @@ void test_program_stack_unchanged() {
   const auto compiled=compile_basic(source.c_str(),(uint16_t)source.size(),image,sizeof(image),true);
   assert(compiled.error==Error::NONE && compiled.stack==INPUT_STACK_CAPACITY+1);
   View view; assert(inspect(image,compiled.size,view)==Error::NONE);
-  double variables[26]={}, stack[MAX_STACK]={};
+  Value variables[26]={}, stack[MAX_STACK]={};
   State state={}; state.variables=variables; state.stack=stack; state.stack_capacity=MAX_STACK;
   assert(run(view,state,{}).error==Error::NONE && variables[0]==INPUT_STACK_CAPACITY+1);
 }
@@ -172,7 +172,7 @@ void test_cold_certificate() {
   uint8_t image[MAX_IMAGE];
   const char* source="10 A=1\n";
   const auto compiled=compile_basic(source,(uint16_t)strlen(source),image,sizeof(image),true);
-  double vars[26]={};
+  Value vars[26]={};
   ExecuteRequest execution={}; execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
   execution.image=image; execution.image_size=compiled.size; execution.variables=vars; execution.mode=1;
   ExecutionState state={}; state.language=Language::BASIC;

@@ -46,8 +46,8 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
     }
     if(request.source_id != 0xFFFF) stage.values->selected[index] = request.source_id;
     if(request.clear_requested) {
-      memset(stage.values->variables[index], 0, sizeof(stage.values->variables[index]));
-      if(basic) memset(stage.values->array, 0, sizeof(stage.values->array));
+      for(auto& value : stage.values->variables[index]) value=Value(0);
+      if(basic) for(auto& value : stage.values->array) value=Value(0);
     }
     if(!request.run_requested) {
       mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1;
@@ -107,7 +107,7 @@ bool prepare_compiled_flow(mk61_app_flow* flow) {
   c.source_id = stage.request.source_id; c.clear_requested = stage.request.clear_requested;
   c.execution.image = stage.transfer.image; c.execution.image_size = stage.transfer.size;
   auto* state = (ExecutionState*)stage.transfer.workspace;
-  *state = {}; state->language = c.language;
+  reset_execution_state(*state); state->language = c.language;
   // Start the VM member's lifetime only after consuming every compiler field.
   // The persistent execution request and final metadata are outside the union.
   c.vm = {}; c.vm.magic = FLOW_CONTEXT_MAGIC; c.vm.original_command = original;

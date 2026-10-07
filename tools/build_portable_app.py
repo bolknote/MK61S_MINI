@@ -46,7 +46,7 @@ SYSTEM_SIZE_BUDGETS = {
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.
-    "language-input": {"app_bytes": 8_400, "memory_bytes": 10_752},
+    "language-input": {"app_bytes": 9_200, "memory_bytes": 11_776},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -66,7 +66,7 @@ GREEDY_APP_SIZE_BUDGETS = {
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    "focal": {"app_bytes": 13_400, "memory_bytes": 18_048},
+    "focal": {"app_bytes": 13_800, "memory_bytes": 18_688},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
@@ -91,7 +91,7 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if system == "language-vm" and split_language_vm:
         # Includes FLOW_STEP, resource delivery and continuation policy.
         # These are measured image ceilings, not larger APP/workspace arenas.
-        budget = {"memory_bytes": 13_056 if local_float_math else 10_560}
+        budget = {"memory_bytes": 15_872 if local_float_math else 13_056}
     if budget is None:
         return
     budget = dict(budget)

@@ -2984,10 +2984,13 @@ static TinyBasicRunStatus tb_run_program(
     tb_error("HOW?");
     return TinyBasicRunStatus::RUNTIME_ERROR;
   }
-  double values[language_vm::MAX_STACK];
+  language_vm::Value values[language_vm::MAX_STACK], variables[26], array[385];
+  for(unsigned i=0;i<26;++i) variables[i]=tb_vars[i];
+  const auto count=tinybasic_array_max_index()+1;
+  for(unsigned i=0;i<count;++i) array[i]=tinybasic_array_data()[i];
   language_vm::State vm = {};
-  vm.variables = tb_vars;
-  vm.array = tinybasic_array_data();
+  vm.variables = variables;
+  vm.array = array;
   vm.array_count = (uint16_t)(tinybasic_array_max_index() + 1);
   vm.stack = values;
   vm.stack_capacity = language_vm::MAX_STACK;
@@ -2999,7 +3002,11 @@ static TinyBasicRunStatus tb_run_program(
     int width;
     bool cancelled, normal_pause;
     const char* failure;
+    language_vm::Value* variables;
+    language_vm::Value* array;
+    unsigned array_count;
   } context = {};
+  context.variables=variables; context.array=array; context.array_count=count;
   const language_vm::Services services = {
       &context,
       [](void*) { return !tb_runtime_interrupted(); },
@@ -3065,6 +3072,8 @@ static TinyBasicRunStatus tb_run_program(
             if (!length) tb_flush_print();
             return true;
           case language_vm::Event::READ_INPUT: {
+            for(unsigned i=0;i<26;++i) tb_vars[i]=c.variables[i].number();
+            for(unsigned i=0;i<c.array_count;++i) tinybasic_array_data()[i]=c.array[i].number();
             char prompt[96];
             tb_copy_range(prompt, sizeof(prompt), text, text + length);
             if (tb_read_number_from_keyboard(prompt, value)) return true;
@@ -3097,6 +3106,8 @@ static TinyBasicRunStatus tb_run_program(
         return false;
       }};
   const auto result = language_vm::run(view, vm, services, 1000000);
+  for(unsigned i=0;i<26;++i) tb_vars[i]=variables[i].number();
+  for(unsigned i=0;i<count;++i) tinybasic_array_data()[i]=array[i].number();
   if (context.cancelled)
     return context.normal_pause ? TinyBasicRunStatus::COMPLETED
                                 : TinyBasicRunStatus::STOPPED;

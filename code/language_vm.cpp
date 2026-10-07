@@ -52,6 +52,7 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::CONST_F64:
       n = 8;
       break;
+    case Op::CONST_I32:
     case Op::DO_FOCAL:
     case Op::FOR_FOCAL:
       n = 4;
@@ -88,6 +89,7 @@ uint16_t next(const View& v, uint16_t pc) {
     case Op::SUB:
     case Op::MUL:
     case Op::DIV:
+    case Op::FLOOR_DIV:
     case Op::POW:
     case Op::MOD:
     case Op::EQ:
@@ -122,7 +124,7 @@ uint16_t next(const View& v, uint16_t pc) {
   }
   return n <= v.end - pc ? (uint16_t)(pc + n) : (uint16_t)0;
 }
-bool constant_value(const View& v, uint16_t pc, double& value) {
+bool constant_value(const View& v, uint16_t pc, Value& value) {
   const Op op = (Op)v.bytes[pc];
   const uint8_t* p = v.bytes + pc + 1;
   if (op >= Op::CONST_0 && op <= Op::CONST_15) {
@@ -136,39 +138,49 @@ bool constant_value(const View& v, uint16_t pc, double& value) {
     case Op::CONST_I16:
       value = (int16_t)word(p);
       return true;
+    case Op::CONST_I32:
+      value = (int32_t)dword(p);
+      return true;
     case Op::CONST_DEC8:
     case Op::CONST_DEC16: {
-      value = op == Op::CONST_DEC8 ? *p : word(p);
+      double decoded = op == Op::CONST_DEC8 ? *p : word(p);
       const int exponent = (int8_t)p[op == Op::CONST_DEC8 ? 1 : 2];
       if (exponent < 0)
-        value /= mk_math::pow10_int(-exponent);
+        decoded /= mk_math::pow10_int(-exponent);
       else
-        value *= mk_math::pow10_int(exponent);
+        decoded *= mk_math::pow10_int(exponent);
+      value = decoded;
       return true;
     }
     case Op::CONST_F64: {
       uint64_t bits = 0;
       for (uint8_t i = 0; i < 8; ++i) bits |= (uint64_t)p[i] << (i * 8);
-      memcpy(&value, &bits, 8);
+      double decoded; memcpy(&decoded, &bits, 8); value = decoded;
       return true;
     }
     default:
       return false;
   }
 }
-bool data_value(const View& v,uint16_t at,uint16_t end,double& value,uint16_t& following) {
+bool data_value(const View& v,uint16_t at,uint16_t end,Value& value,uint16_t& following) {
   following=next(v,at);
   if(!following || following>end || !constant_value(v,at,value)) return false;
   if(following<end && (Op)v.bytes[following]==Op::NEG) {
     value=-value;
     ++following;
   }
-  return mk_math::is_finite(value);
+  return value.finite();
 }
-bool array_index(double value, uint16_t capacity, uint16_t& index) {
-  if (!mk_math::is_finite(value) || value < 0) return false;
-  const double n = mk_math::floor(value + .5);
-  if (n >= capacity || mk_math::fabs(value - n) > 1e-7) return false;
+bool array_index(Value value, uint16_t capacity, uint16_t& index) {
+  if(value.integer()) {
+    const int32_t n=value.integer_value();
+    if(n < 0 || (uint32_t)n >= capacity) return false;
+    index=(uint16_t)n; return true;
+  }
+  const double number=value.number();
+  if (!mk_math::is_finite(number) || number < 0) return false;
+  const double n = mk_math::floor(number + .5);
+  if (n >= capacity || mk_math::fabs(number - n) > 1e-7) return false;
   index = (uint16_t)n;
   return true;
 }
@@ -233,9 +245,9 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     // with respect to program variables and control frames. This permits the
     // hot INPUT evaluator to borrow the suspended program's stack safely.
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
-        op != Op::CONST_I16 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
+        op != Op::CONST_I16 && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
-        op != Op::LOAD_ARRAY && !(op >= Op::NEG && op <= Op::CHECK) &&
+        op != Op::LOAD_ARRAY && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
     if (((op == Op::LOAD || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
@@ -261,7 +273,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       const uint16_t end = (uint16_t)(pc + 3 + word(bytes + pc + 1));
       for (uint16_t at = (uint16_t)(pc + 3); at < end;) {
         uint16_t following=0;
-        double value=0;
+        Value value=0;
         if(!data_value(v,at,end,value,following)) return Error::INVALID_IMAGE;
         at = following;
       }
@@ -367,7 +379,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       uint16_t at = (uint16_t)(s.data_pc + 3), target = (uint16_t)(at + s.data_index);
       while (at < target) {
         uint16_t following=0;
-        double value=0;
+        Value value=0;
         const uint16_t end=(uint16_t)(s.data_pc+3+word(v.bytes+s.data_pc+1));
         if(!data_value(v,at,end,value,following)) return {Error::INVALID_IMAGE,0,0,0};
         at=following;
@@ -391,23 +403,25 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   Error error = Error::NONE;
   uint32_t steps = 0;
   uint16_t instruction = s.pc;
-  auto push = [&](double value) {
-    if (v.language == Language::BASIC && !mk_math::is_finite(value))
+  auto push = [&](Value value) {
+    if (v.language == Language::BASIC && !value.finite())
       error = Error::MATH;
     else if (s.sp >= data.stack_capacity)
       error = Error::STACK;
     else
       data.stack[s.sp++] = value;
   };
-  auto pop = [&]() -> double {
+  auto pop = [&]() -> Value {
     if (!s.sp) {
       error = Error::STACK;
       return 0;
     }
     return data.stack[--s.sp];
   };
-  auto event = [&](Event e, const char* p, uint16_t n, double& value) {
-    if (!host.event || !host.event(host.context, e, p, n, value)) error = Error::IO;
+  auto event = [&](Event e, const char* p, uint16_t n, Value& value) {
+    double external=value.number();
+    if (!host.event || !host.event(host.context, e, p, n, external)) error = Error::IO;
+    value=external;
   };
   auto jump = [&](uint16_t to) {
     if (to < v.code || to >= v.end)
@@ -453,7 +467,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     const uint8_t* p = v.bytes + s.pc + 1;
     const Op op = (Op)v.bytes[s.pc];
     s.pc = after;
-    double a = 0, b = 0, value = 0;
+    Value a = 0, b = 0, value = 0;
     if (constant_value(v, instruction, value)) {
       push(value);
       continue;
@@ -504,13 +518,13 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       }
       case Op::RESTORE_DATA: {
         a = pop();
-        b = mk_math::floor(a + .5);
+        b = (a + Value(.5)).floor();
         if (error != Error::NONE) break;
-        if (!mk_math::is_finite(a) || a < 0 || a > 32767 || mk_math::fabs(a - b) > 1e-7) {
+        if (!a.finite() || a < 0 || a > 32767 || mk_math::fabs((a - b).number()) > 1e-7) {
           error = Error::LINE_NUMBER;
           break;
         }
-        const uint16_t to = a == 0 ? v.code : line_pc(v, (uint32_t)b);
+        const uint16_t to = a == 0 ? v.code : line_pc(v, (uint32_t)b.number());
         if (to == 0xFFFF) {
           error = Error::MISSING_LINE;
           break;
@@ -523,13 +537,13 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::ON_GOSUB: {
         a = pop();
         if (error != Error::NONE) break;
-        if (!mk_math::is_finite(a) || a < 0 || a != mk_math::floor(a)) {
+        if (!a.finite() || a < 0 || a != a.floor()) {
           error = Error::ON_INDEX;
           break;
         }
         const uint16_t count = word(p);
         if (a == 0 || a > count) break;
-        const uint16_t to = line_pc(v, word(p + 2 + ((uint16_t)a - 1) * 2));
+        const uint16_t to = line_pc(v, word(p + 2 + ((uint16_t)a.number() - 1) * 2));
         if (to == 0xFFFF)
           error = Error::MISSING_LINE;
         else if (op == Op::ON_GOSUB)
@@ -554,10 +568,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::LOAD_REF:
       case Op::STORE_REF:
         if (op == Op::STORE_REF) value = pop();
-        if (error == Error::NONE &&
-            (!host.reference ||
-             !host.reference(host.context, op == Op::STORE_REF, *p, value)))
-          error = Error::REGISTER;
+        if(error == Error::NONE) {
+          double external=value.number();
+          if(!host.reference || !host.reference(host.context, op == Op::STORE_REF, *p, external))
+            error=Error::REGISTER;
+          value=external;
+        }
         if (op == Op::LOAD_REF && error == Error::NONE) push(value);
         break;
       case Op::LOAD_ARRAY:
@@ -593,18 +609,19 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       case Op::NOT:
         a = pop();
-        push(a == 0);
+        push((int32_t)a.zero());
         break;
       case Op::CHECK:
         if (!s.sp)
           error = Error::STACK;
-        else if (!mk_math::is_finite(data.stack[s.sp - 1]))
+        else if (!data.stack[s.sp - 1].finite())
           error = Error::MATH;
         break;
       case Op::ADD:
       case Op::SUB:
       case Op::MUL:
       case Op::DIV:
+      case Op::FLOOR_DIV:
       case Op::POW:
       case Op::MOD:
       case Op::EQ:
@@ -629,14 +646,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             value = a * b;
             break;
           case Op::DIV:
+          case Op::FLOOR_DIV:
             if (b == 0)
               error = v.language == Language::BASIC ? Error::DIV_ZERO : Error::MATH;
             else
-              value = a / b;
+              value = op == Op::FLOOR_DIV ? Value::floor_divide(a,b) : a / b;
             break;
           case Op::POW:
             if (host.math)
-              value = host.math(host.context, (Function)255, a, b);
+              value = host.math(host.context, (Function)255, a.number(), b.number());
             else
               error = Error::MATH;
             break;
@@ -644,7 +662,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             if (b == 0)
               error = v.language == Language::BASIC ? Error::DIV_ZERO : Error::MATH;
             else
-              value = a - mk_math::floor(a / b) * b;
+              value = Value::modulo(a,b);
             break;
           case Op::EQ:
             value = a == b;
@@ -687,16 +705,16 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         switch (f) {
           case Function::ABS:
-            value = mk_math::fabs(a);
+            value = a.absolute();
             break;
           case Function::INT:
-            value = mk_math::floor(a);
+            value = a.floor();
             break;
           case Function::FRAC:
-            value = mk_math::frac(a);
+            value = a.fraction();
             break;
           case Function::ROUND:
-            value = mk_math::round_half(a);
+            value = a.rounded();
             break;
           case Function::SGN:
             value = a > 0 ? 1 : a < 0 ? -1 : 0;
@@ -706,7 +724,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             break;
           case Function::RND:
           case Function::RND_LIMIT:
-            if (f == Function::RND_LIMIT && (!(a >= 1) || !mk_math::is_finite(a))) {
+            if (f == Function::RND_LIMIT && (!(a >= 1) || !a.finite())) {
               error = Error::MATH;
               break;
             }
@@ -716,7 +734,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             }
             value = host.random(host.context);
             if (f == Function::RND_LIMIT)
-              value = 1 + mk_math::floor(value * mk_math::floor(a));
+              value = Value(1) + (value * a.floor()).floor();
             break;
           case Function::PI_VALUE:
             value = 3.14159265358979323846;
@@ -733,7 +751,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
             if (!host.math)
               error = Error::MATH;
             else
-              value = host.math(host.context, f, a, 0);
+              value = host.math(host.context, f, a.number(), 0);
             break;
         }
         if (error == Error::NONE) push(value);
@@ -764,16 +782,16 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       case Op::JUMP_FALSE:
         a = pop();
-        if (error == Error::NONE && !a) jump(word(p));
+        if (error == Error::NONE && a.zero()) jump(word(p));
         break;
       case Op::GOTO:
       case Op::GOSUB:
         a = pop();
-        b = mk_math::floor(a + .5);
-        if (!mk_math::is_finite(a) || a < 1 || a > 32767 || mk_math::fabs(a - b) > 1e-7)
+        b = (a + Value(.5)).floor();
+        if (!a.finite() || a < 1 || a > 32767 || mk_math::fabs((a - b).number()) > 1e-7)
           error = v.language == Language::BASIC ? Error::LINE_NUMBER : Error::LINE;
         else if (error == Error::NONE) {
-          const uint16_t to = line_pc(v, (uint32_t)b);
+          const uint16_t to = line_pc(v, (uint32_t)b.number());
           if (to == 0xFFFF && v.language == Language::BASIC)
             error = Error::MISSING_LINE;
           else if (op == Op::GOTO)
@@ -821,7 +839,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::FOR_BASIC:
       case Op::FOR_ARRAY:
       case Op::FOR_FOCAL: {
-        double step = pop(), end = pop(), start = pop();
+        Value step = pop(), end = pop(), start = pop();
         uint16_t var = *p;
         if (op == Op::FOR_ARRAY) {
           a = pop();
@@ -836,7 +854,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           break;
         }
         if (op == Op::FOR_FOCAL && p[3]) {
-          const double temp = step;
+          const Value temp = step;
           step = end;
           end = temp;
         }
@@ -850,7 +868,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           jump(word(p + 1));
           break;
         }
-        double& counter = var & 0x8000U ? data.array[var & 0x7FFFU] : data.variables[var];
+        Value& counter = var & 0x8000U ? data.array[var & 0x7FFFU] : data.variables[var];
         counter = start;
         if (outside) {
           uint16_t scan = s.pc;
@@ -936,15 +954,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           break;
         }
         LoopFrame& frame = s.loops[s.loop_count - 1];
-        double& counter = frame.variable & 0x8000U ? data.array[frame.variable & 0x7FFFU]
+        Value& counter = frame.variable & 0x8000U ? data.array[frame.variable & 0x7FFFU]
                                                    : data.variables[frame.variable];
-        const double old = op == Op::NEXT_FOCAL ? frame.value : counter;
-        const double following = old + frame.step;
+        const Value old = op == Op::NEXT_FOCAL ? frame.value : counter;
+        const Value following = old + frame.step;
         if (op == Op::NEXT_FOCAL && old == frame.limit) {
           --s.loop_count;
           break;
         }
-        if (!mk_math::is_finite(following) || (op == Op::NEXT_FOCAL && following == old)) {
+        if (!following.finite() || (op == Op::NEXT_FOCAL && following == old)) {
           error = v.language == Language::BASIC ? Error::MATH : Error::FOR;
           break;
         }

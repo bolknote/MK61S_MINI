@@ -121,7 +121,7 @@ class Compiler {
         image_end_(0),
         rf_available_(rf_available),
         rf_required_(false),
-        expression_only_(false), resources_(resources), resource_size_(0), resource_data_(workspace) {}
+        expression_only_(false), resources_(resources), resource_size_(0), resource_data_(workspace), last_op_(Op::HALT), last_at_(0) {}
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
@@ -246,6 +246,8 @@ class Compiler {
   const ResourceSource* resources_;
   uint16_t resource_size_;
   ResourceWorkspace resource_data_;
+  Op last_op_;
+  uint16_t last_at_;
   bool resource_literals() const { return resources_ && resources_->id != 0xFFFF; }
   uint16_t intern_resource(const char* text, uint16_t length) {
     if(!resource_data_.first) {
@@ -327,7 +329,10 @@ class Compiler {
     if (pass_ && out_) out_[pc_] = v;
     ++pc_;
   }
-  void emit(Op op) { byte((uint8_t)op); }
+  void emit(Op op) {
+    if(op != Op::SOURCE_POS && op != Op::CHECK) {last_op_=op;last_at_=pc_;}
+    byte((uint8_t)op);
+  }
   void u16(uint16_t v) {
     byte((uint8_t)v);
     byte((uint8_t)(v >> 8));
@@ -361,6 +366,10 @@ class Compiler {
     } else if (value >= -32768 && value <= 32767 && value == (int)value) {
       emit(Op::CONST_I16);
       u16((uint16_t)(int16_t)value);
+    } else if (Value(value).integer()) {
+      emit(Op::CONST_I32);
+      const uint32_t n=(uint32_t)Value(value).integer_value();
+      for(uint8_t i=0;i<4;++i) byte((uint8_t)(n>>(i*8)));
     } else if (literal && decimal(value, literal, finish)) {
       // Exact decimal recipe avoids turning a three-byte .1 into F64+opcode.
     } else {
@@ -784,9 +793,16 @@ class Compiler {
       }
       if (!match(')')) fail(Error::EXPECTED_PAREN);
       if (f == Function::RND && !basic()) fail(Error::FUNCTION);
+      const bool floor_div = f == Function::INT && last_op_ == Op::DIV;
+      const uint16_t division = last_at_;
       if (basic()) source_position(primary_start);
-      emit(Op::FUNCTION);
-      byte(f == Function::RND ? (uint8_t)Function::RND_LIMIT : fn);
+      if(floor_div) {
+        if(pass_ && out_) out_[division]=(uint8_t)Op::FLOOR_DIV;
+        last_op_=Op::FLOOR_DIV; last_at_=division;
+      } else {
+        emit(Op::FUNCTION);
+        byte(f == Function::RND ? (uint8_t)Function::RND_LIMIT : fn);
+      }
       if (f == Function::MAX) stack(-1);
       check();
       return;

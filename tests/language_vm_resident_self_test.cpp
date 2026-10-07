@@ -45,7 +45,7 @@ bool execute_resident(ExecuteRequest& request) {
   assert(evicted);++executions;
   assert(shared_memory::active_owner(shared_memory::Arena::OVERLAY)==shared_memory::Owner::NONE);
   View view;assert(inspect(request.image,(uint16_t)request.image_size,view)==Error::NONE);
-  State state={};double values[MAX_STACK];state.variables=request.variables;
+  State state={};Value values[MAX_STACK];state.variables=request.variables;
   state.array=request.array;state.array_count=(uint16_t)request.array_count;
   state.stack=values;state.stack_capacity=MAX_STACK;
   Services services={};

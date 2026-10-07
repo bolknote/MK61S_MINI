@@ -16,6 +16,13 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -I"$root/code" "$root/tests/language_resources_self_test.cpp" \
   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/resources"
 "$work/resources"
+clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+  -I"$root/code" "$root/tests/language_value_self_test.cpp" -o "$work/values"
+"$work/values"
+clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+  -I"$root/code" "$root/tests/language_integer_self_test.cpp" \
+  "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/integers"
+"$work/integers"
 for variant in compact f64; do
   extra=()
   if [[ "$variant" == "f64" ]]; then extra=(-DLANGUAGE_VM_TEST_NO_DECIMAL_RECIPE); fi
