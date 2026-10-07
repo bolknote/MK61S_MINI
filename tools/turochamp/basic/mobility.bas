@@ -1,0 +1,11 @@
+E_CURSOR=0;EC=0
+:again
+GLSTATE=&E_CURSOR;GLSIDE=PCS;GLMODE=3;GLPIECE=EF;GLTYPE=ED
+CALL pseudo :move
+:move
+IF GLMOVE=0 G.:done
+T=INT(GLMOVE/128) MOD 128
+EC=EC+1+(@(T)*PCS<0)
+G.:again
+:done
+RET

@@ -1,0 +1,35 @@
+reinit
+loadfont Turochamp
+open init.tbi
+:dispatch
+if re==1 open init.tbi
+if re==2 open game.tbi
+if re==3 open board.tbi
+if re==4 open pseudo.tbi
+if re==5 open legal.tbi
+if re==6 open attack.tbi
+if re==7 open make.tbi
+if re==8 open unmake.tbi
+if re==9 open status.tbi
+if re==10 open repeat.tbi
+if re==11 open eval.tbi
+if re==12 open search.tbi
+if re==13 open turn.tbi
+if re==14 open history.tbi
+if re==15 open menu.tbi
+if re==16 open promote.tbi
+if re==17 open claim.tbi
+if re==18 open result.tbi
+if re==19 open pawns.tbi
+if re==20 open castle.tbi
+if re==21 open mobility.tbi
+if re==22 open threat.tbi
+if re==23 open ep.tbi
+if re==24 open rkey.tbi
+if re==25 open rstep.tbi
+if re==26 open node.tbi
+if re==27 open walk.tbi
+if re==28 open claims.tbi
+if re==29 open help.tbi
+if re==99 ret
+run :dispatch

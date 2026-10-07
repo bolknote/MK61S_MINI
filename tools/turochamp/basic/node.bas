@@ -1,0 +1,37 @@
+NODES=NODES+1;REPDEP=DFS
+CALL status :status
+:status
+IF STAT>0 G.:terminal
+IF DFS>=QLIMIT G.:leaf
+F=STACK+7*DFS;SEARCH_CUR=F
+@(F)=0;@(F+3)=-100000;@(F+4)=ALPHA;@(F+5)=LFRAME;@(F+6)=CHECK+8*CLAIM
+IF CLAIM>0 @(F+3)=0
+IF DFS<LEVEL G.:ready
+IF CHECK=1 G.:ready
+IF @(STACK+7*(DFS-1)+6) MOD 2=1 G.:selective
+IF LASTCAP=0 G.:leaf
+AQ=LASTCAP;AS=SIDE
+LOCAL attack
+:recapture
+IF AT=0 G.:leaf
+:selective
+F=STACK+7*DFS
+@(F+6)=@(F+6)+4;A=SIDE*(MATW-MATB)
+IF A>@(F+3) @(F+3)=A
+IF @(F+3)>@(F+4) @(F+4)=@(F+3)
+IF @(F+4)>=@(F+5) G.:cut
+:ready
+JUMP walk
+:cut
+RETVAL=@(F+3);DRAW_REASON=INT(@(F+6)/8) MOD 4;SEARCH_CUR=-1
+JUMP walk
+:leaf
+RETVAL=SIDE*(MATW-MATB)
+IF CLAIM>0 IF RETVAL<0 RETVAL=0
+DRAW_REASON=CLAIM;SEARCH_CUR=-1
+JUMP walk
+:terminal
+RETVAL=0;DRAW_REASON=0
+IF STAT<3 RETVAL=-2000+DFS
+SEARCH_CUR=-1
+JUMP walk

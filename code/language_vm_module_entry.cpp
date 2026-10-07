@@ -370,11 +370,12 @@ uint32_t execute(ExecuteRequest* request) {
   }
   runtime.state.stack = runtime.stack;
   runtime.state.stack_capacity = MAX_STACK;
-  main_lcd().endUiText();
+  const bool shared_screen = view.language == Language::BASIC && request->mode == 1;
+  if(!shared_screen) main_lcd().endUiText();
   if ((portable_system::call(MK61_SERVICE_CAPABILITIES) & MK61_SERVICE_CAP_TEXT_FONT) !=
       0)
     portable_system::call(MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_ACTIVATE);
-  main_lcd().clear();
+  if(!shared_screen) main_lcd().clear();
   request->result = run(view, runtime.state, services);
   if (runtime.cancelled)
     request->result.error = runtime.normal_stop ? Error::NONE : Error::STOPPED;

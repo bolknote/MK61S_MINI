@@ -1,0 +1,25 @@
+REPRESULT=0
+IF RP_BRANCH=1 IF (SIDE#@(RP_META+2)) OR (RIGHTS#@(RP_META+3)) G.:done
+A=0;B=1;C=0;D=0
+FOR R=2 TO 9
+FOR F=1 TO 8
+A=A+(@(10*R+F)+6)*B;B=B*13;C=C+1
+IF C<13 G.:next
+IF RP_BRANCH=0 @(RP_KEY+D)=A
+IF RP_BRANCH=1 IF A#@(RP_KEY+D) G.:done
+A=0;B=1;C=0;D=D+1
+:next
+NEXT F
+NEXT R
+IF RP_BRANCH=0 @(RP_KEY+D)=A:@(RP_META+2)=SIDE:@(RP_META+3)=RIGHTS
+IF RP_BRANCH=0 G.:done
+IF A#@(RP_KEY+D) G.:done
+IF EP>0 G.:ep
+REPRESULT=1
+G.:done
+:ep
+CALL ep :ep_done
+:ep_done
+REPRESULT=(RETVAL=0)
+:done
+RET

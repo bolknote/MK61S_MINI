@@ -72,26 +72,27 @@ namespace mk61_ref {
 
 class MK61Display {
   public:
-    static constexpr u8 MAX_ROWS = 8;
-    MK61Display(void) : x(0), y(0), row_count(MAX_ROWS), reported_cols(16) {
+    static constexpr u8 MAX_ROWS = 10;
+    static constexpr u8 MAX_COLS = 64;
+    MK61Display(void) : x(0), y(0), row_count(8), reported_cols(16) {
       clear();
     }
     void clear(void) {
       memset(lines, ' ', sizeof(lines));
-      for(int row = 0; row < MAX_ROWS; row++) lines[row][16] = 0;
+      for(int row = 0; row < MAX_ROWS; row++) lines[row][reported_cols] = 0;
       x = 0;
       y = 0;
     }
     void flush(void) {}
     void setCursor(u8 col, u8 row) {
-      x = (col < 16) ? col : 15;
+      x = (col < reported_cols) ? col : (reported_cols - 1);
       y = (row < MAX_ROWS) ? row : (MAX_ROWS - 1);
     }
     void cursorOn(void) {}
     void cursorOff(void) {}
     bool supportsCursor(void) const { return false; }
     void write(u8 value) {
-      if(x < 16 && y < MAX_ROWS) lines[y][x++] = (char) value;
+      if(x < reported_cols && y < MAX_ROWS) lines[y][x++] = (char) value;
     }
     void print(const char* text) {
       if(text == NULL) return;
@@ -99,7 +100,14 @@ class MK61Display {
     }
     void print(char value) { write((u8) value); }
     u8 cols(void) const { return reported_cols; }
-    void setReportedCols(u8 cols) { reported_cols = cols; }
+    void setReportedCols(u8 cols) {
+      reported_cols = cols < 1 ? 1 : (cols > MAX_COLS ? MAX_COLS : cols);
+      for(u8 row = 0; row < MAX_ROWS; row++) {
+        for(u8 col = 0; col < reported_cols; col++)
+          if(lines[row][col] == 0) lines[row][col] = ' ';
+        lines[row][reported_cols] = 0;
+      }
+    }
     u8 rows(void) const { return row_count; }
     void setRows(u8 rows) { row_count = (rows < 1) ? 1 : ((rows > MAX_ROWS) ? MAX_ROWS : rows); }
     const char* line(u8 row) const { return lines[(row < MAX_ROWS) ? row : 0]; }
@@ -108,7 +116,7 @@ class MK61Display {
     u8 y;
     u8 row_count;
     u8 reported_cols;
-    char lines[MAX_ROWS][17];
+    char lines[MAX_ROWS][MAX_COLS+1];
 };
 
 class MK61DisplayUpdate {
@@ -2548,7 +2556,7 @@ static TinyBasicRunStatus tb_run_program(
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return TinyBasicRunStatus::UNAVAILABLE;
-  main_lcd().endUiText();
+  if(!tb_runs_inside_m61()) main_lcd().endUiText();
   tb_activate_inherited_text_font();
 #endif
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT ||
@@ -2583,7 +2591,7 @@ static TinyBasicRunStatus tb_run_program(
   vm.array_count = (uint16_t)(tinybasic_array_max_index() + 1);
   vm.stack = values;
   vm.stack_capacity = language_vm::MAX_STACK;
-  main_lcd().clear();
+  if(!tb_runs_inside_m61()) main_lcd().clear();
   tb_pending_print[0] = 0;
   tb_print_row = 0;
   struct Context {
@@ -2694,7 +2702,7 @@ static TinyBasicRunStatus tb_run_program(
 #endif
   const char* const source = programs[program_index].source;
 
-  main_lcd().clear();
+  if(!tb_runs_inside_m61()) main_lcd().clear();
   tb_pending_print[0] = 0;
   tb_print_row = 0;
 
@@ -3474,7 +3482,7 @@ extern "C" void TinyBasicTestReset(void) {
   kbd::host_key_count = kbd::host_key_index = 0;
   kbd::host_key_reads = 0;
   main_lcd().setReportedCols(16);
-  main_lcd().setRows(MK61Display::MAX_ROWS);
+  main_lcd().setRows(8);
 #endif
 }
 
@@ -3523,6 +3531,25 @@ extern "C" bool TinyBasicTestCompile(const char* source) {
 
 extern "C" const char* TinyBasicTestError(void) {
   return tb_last_error;
+}
+
+extern "C" TinyBasicRunStatus TinyBasicTestRunSource(const char* source) {
+  if(source == NULL || strlen(source) >= TB_SOURCE_SIZE)
+    return TinyBasicRunStatus::COMPILE_ERROR;
+  tb_copy_text(programs[0].source, sizeof(programs[0].source), source);
+  programs[0].source_len = (u16)strlen(source);
+  return tb_run_program(0, TinyBasicRunMode::M61_SCENARIO);
+}
+
+extern "C" double TinyBasicTestArray(int index) {
+  return index >= 0 && (usize)index < tinybasic_array_capacity()
+      ? tinybasic_array_data()[index] : 0;
+}
+
+extern "C" bool TinyBasicTestSetArray(int index, double value) {
+  if(index < 0 || (usize)index >= tinybasic_array_capacity()) return false;
+  tinybasic_array_data()[index] = value;
+  return true;
 }
 
 extern "C" int TinyBasicTestAddProgram(const char* source, const char* name) {

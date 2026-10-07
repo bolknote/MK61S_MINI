@@ -15,10 +15,12 @@ void invalid_number() {
 uint32_t validate(OverlayRequest* p) {
   const auto result = validate_execution(p);
   if (result && p->execution->result.error == Error::NONE && p->action == OverlayAction::START) {
-    main_lcd().endUiText();
+    const bool shared_screen = p->state->language == Language::BASIC &&
+                               p->execution->mode == 1;
+    if(!shared_screen) main_lcd().endUiText();
     if (portable_system::call(MK61_SERVICE_CAPABILITIES) & MK61_SERVICE_CAP_TEXT_FONT)
       portable_system::call(MK61_SYS_TEXT_FONT, MK61_SYS_TEXT_FONT_ACTIVATE);
-    main_lcd().clear();
+    if(!shared_screen) main_lcd().clear();
   }
   return result;
 }

@@ -209,6 +209,28 @@ Chris Gaylo, Syosset High School, 12 сентября 1970 года. За осн
 by Tricks, Public Domain. Это обычный FMK1-файл, который `autoexec.m61`
 временно загружает командой `loadfont`.
 
+## Turochamp
+
+Алгоритм Алана Тьюринга и Дэвида Чемперноуна, 1948; описание Тьюринга
+опубликовано в *Faster than Thought* (1953). Интерпретация семи критериев
+сверена со статьёй авторов реконструкции:
+[Frederic Friedel и Garry Kasparov, 2017](https://en.chessbase.com/post/reconstructing-turing-s-paper-machine).
+Ориентиры реализации — [nimTUROCHAMP](https://github.com/mdoege/nimTUROCHAMP)
+и public-domain [pyturochamp.py](https://github.com/mdoege/PyTuroChamp/blob/master/pyturochamp.py)
+Мартина Дёге. BASIC-перенос распространяется под GPLv3 проекта.
+
+Это новая реализация на встроенном TinyBASIC с M61-диспетчером, а не запуск
+Nim или Python. Полный законный генератор включает четыре превращения,
+рокировку и взятие на проходе; предусмотрены мат, пат, ничьи и сдача.
+Два полных полухода и до восьми тактических соответствуют настройкам
+nimTUROCHAMP. Дебютная книга и таблицы современных шахматных оценок не
+используются. Неоднозначные исторические детали и выбранные трактовки
+описаны в `tools/turochamp/README.md`.
+
+Шахматные растры 7×7 созданы для этого переноса. Текстовый растр основан
+на public-domain Matrix Font by Tricks и русских дополнениях High Noon.
+Локальный `Turochamp.FMK` воспроизводимо собирается `tools/turochamp/font.py`.
+
 ## Техническая подготовка изображений
 
 WBMP — обычный Type 0, один бит на пиксель, без собственного заголовка
