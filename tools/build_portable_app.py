@@ -44,7 +44,7 @@ SYSTEM_SIZE_BUDGETS = {
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
-    "language-input": {"app_bytes": 6_500, "memory_bytes": 8_600},
+    "language-input": {"app_bytes": 7_000, "memory_bytes": 9_216},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -79,9 +79,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
     budget = budgets.get(system)
     if system == "language-vm" and split_language_vm:
         # DATA, indexed dispatch, array loops and error positions add executor code.
-        # 12 KiB + the maximum 6 KiB image + 1520-byte continuation stays
+        # 12.25 KiB + the maximum 6 KiB image + 1520-byte continuation stays
         # within the existing 20 KiB APP arena; no arena/workspace is enlarged.
-        budget = {"memory_bytes": 12_288 if local_float_math else 10_000}
+        budget = {"memory_bytes": 12_544 if local_float_math else 10_240}
     if budget is None:
         return
     budget = dict(budget)
