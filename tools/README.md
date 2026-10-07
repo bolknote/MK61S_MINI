@@ -20,6 +20,8 @@
 - `generate_highnoon_font.py` — воспроизводимая сборка узкого игрового
   `programs/games/High Noon/HighNoon.FMK`: базовый public-domain растр 3×5
   дополнен читаемыми русскими буквами шириной до пяти пикселей;
+- `turochamp/assemble.py`, `turochamp/font.py` — сборка BASIC-частей
+  и шахматного шрифта игры Turochamp; [исходники и проверки](turochamp/README.md);
 - `generate_eliza_doctor.py` — воспроизводимая компиляция оригинального
   сценария DOCTOR 1966 года в компактные таблицы точного ELIZA-движка;
   `--check` проверяет соответствие таблиц исходному сценарию;

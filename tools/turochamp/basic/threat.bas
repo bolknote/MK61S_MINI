@@ -1,0 +1,31 @@
+# Bit 0: mate in one on the computer's next move; bit 1: can castle then.
+E_CURSOR=0;ETHREAT=0
+:own_move
+GLSTATE=&E_CURSOR;GLSIDE=PCS;GLMODE=2;GLPIECE=0;GLTYPE=0
+CALL legal :candidate
+:candidate
+IF GLMOVE=0 G.:done
+E_MOVE=GLMOVE
+F=E_MOVE MOD 128;T=INT(E_MOVE/128) MOD 128
+IF ABS(@(F))=6 IF ABS(T-F)=2 IF ETHREAT<2 ETHREAT=ETHREAT+2
+IF ETHREAT MOD 2=1 G.:own_move
+APMOVE=E_MOVE;APFRAME=E_UNDO
+CALL make :made
+:made
+AQ=BK;IF PCS=-1 AQ=WK
+AS=PCS
+LOCAL attack
+:checked
+IF AT=0 G.:undo
+STATUS_CURSOR=0;GLSTATE=&STATUS_CURSOR;GLSIDE=-PCS;GLMODE=2;GLPIECE=0;GLTYPE=0
+CALL legal :replies
+:replies
+IF GLMOVE=0 ETHREAT=ETHREAT+1
+:undo
+APFRAME=E_UNDO
+LOCAL unmake
+:restored
+IF ETHREAT=3 G.:done
+G.:own_move
+:done
+RET

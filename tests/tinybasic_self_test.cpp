@@ -34,6 +34,7 @@ extern "C" void TinyBasicTestSetAlphaHeld(bool held);
 extern "C" void TinyBasicTestSetPauseEsc(bool enabled);
 extern "C" void TinyBasicTestSetKeys(const int* keys, int count);
 extern "C" int TinyBasicTestKeyReads(void);
+extern "C" TinyBasicRunStatus TinyBasicTestRunSource(const char*);
 extern "C" void TinyBasicTestFormatNumber(double value, char* out, int size);
 extern "C" bool TinyBasicTestRunResult(int slot);
 extern "C" void TinyBasicTestClearData(void);
@@ -253,6 +254,32 @@ static void test_key_input_requires_empty_parentheses(void) {
     assert(!TinyBasicTestCompile(source));
   }
   assert(TinyBasicTestKeyReads() == 0);
+}
+
+static void test_m61_compute_part_preserves_shared_screen(void) {
+  TinyBasicTestReset();
+  assert(TinyBasicTestRunSource("10 CLS:PRINT \"SHARED SCREEN\"\n") ==
+         TinyBasicRunStatus::COMPLETED);
+  assert(TinyBasicTestRunSource("10 A=7:END\n") == TinyBasicRunStatus::COMPLETED);
+  assert(TinyBasicTestNumber("A") == 7);
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "SHARED SCREEN", 13) == 0);
+  const int slot = TinyBasicTestAddProgram("10 A=8:END\n", "CLEARS");
+  assert(slot >= 0 && TinyBasicTestRunResult(slot));
+  assert(TinyBasicTestLcdLine(0)[0] == ' ');
+}
+
+static void test_print_array_and_register_after_semicolon(void) {
+  TinyBasicTestReset();
+  const int slot = TinyBasicTestAddProgram(
+      "10 @(0)=7:.R0=9\n"
+      "20 PRINT \"A\";@(0);\":\";.R0\n"
+      "30 PRINT \"B\";@(1)=4;.R1=5\n"
+      "40 PRINT \"C\";@(1);\":\";.R1\n", "PRINTREF");
+  assert(slot >= 0);
+  assert(TinyBasicTestRunResult(slot));
+  assert(std::strncmp(TinyBasicTestLcdLine(0), "A7:9", 4) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(1), "B", 1) == 0);
+  assert(std::strncmp(TinyBasicTestLcdLine(2), "C4:5", 4) == 0);
 }
 
 static void test_compile_rejects_invalid_statements(void) {
@@ -1158,6 +1185,8 @@ int main(int argc, char** argv) {
   test_key_input_in_print_list_and_numeric_input_command();
   test_key_input_esc_cancels_expression_without_error();
   test_key_input_requires_empty_parentheses();
+  test_m61_compute_part_preserves_shared_screen();
+  test_print_array_and_register_after_semicolon();
   test_bad_expression_tail();
   test_compile_rejects_invalid_statements();
   test_keyword_abbreviations();

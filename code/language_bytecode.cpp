@@ -740,8 +740,27 @@ class Compiler {
             ++p_;
             skip();
             looks = p_ < end_ && *p_ == '=';
-          } else if (p_ < end_ && (*p_ == '@' || *p_ == '.'))
-            looks = true;
+          } else if (p_ < end_ && *p_ == '@') {
+            // A PRINT item may itself be an array expression. Only an '='
+            // after the complete target starts the next assignment.
+            ++p_;
+            skip();
+            if (p_ < end_ && *p_ == '(') {
+              int brackets = 0;
+              do {
+                if (*p_ == '(') ++brackets;
+                if (*p_ == ')') --brackets;
+                ++p_;
+              } while (p_ < end_ && brackets);
+              skip();
+              looks = p_ < end_ && *p_ == '=';
+            }
+          } else if (p_ < end_ && *p_ == '.') {
+            ++p_;
+            while (p_ < end_ && (alpha(*p_) || digit(*p_))) ++p_;
+            skip();
+            looks = p_ < end_ && *p_ == '=';
+          }
         }
         p_ = saved;
         if (looks) return q;
