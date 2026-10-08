@@ -69,3 +69,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "$root/tests/overlay_buffer_self_test.cpp" \
   "$root/code/shared_memory.cpp" -o "$overlay_out"
 "$overlay_out"
+
+python3 "$root/tests/app_memory_elf_self_test.py"
+
+qualified_out="${TMPDIR:-/tmp}/mk61_qualified_app_memory_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  -DMK61_TEST_RAM_SIZE=21728 "${sanitizer_flags[@]}" \
+  "$root/tests/qualified_app_memory_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$qualified_out"
+"$qualified_out"

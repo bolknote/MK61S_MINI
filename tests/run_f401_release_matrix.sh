@@ -75,7 +75,8 @@ build_group() {
     local elf="$build_path/resident.elf"
     [[ -s "$elf" ]] || fail "missing ELF for $case_id"
     "$root/tests/check_global_constructors.sh" "$elf"
-    python3 "$root/tests/check_app_memory_elf.py" "$elf"
+    python3 "$root/tests/check_app_memory_elf.py" "$elf" \
+      --system-dir "$build_path/bundle/System"
     "$root/tests/check_early_dfu_elf.sh" "$elf"
     "$root/tests/check_usb_suspend_elf.sh" --disabled "$elf"
     if [[ "$product" == 1 ]]; then
