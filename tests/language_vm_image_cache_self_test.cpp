@@ -15,6 +15,7 @@ using namespace loadable_module;
 namespace {
 uint32_t revision=1;
 unsigned compiles,validations,finishes,swaps,activations;
+unsigned state_resets;
 uint32_t selected_id,selected_mode;
 Kind cached=(Kind)0;
 Value* array;
@@ -50,6 +51,9 @@ const char* program(uint32_t id) {
   return "10 @(1)=7\n20 END\n";
 }
 void select(Kind kind) {check_usb();if(cached!=kind){++swaps;cached=kind;}}
+}
+namespace language_vm {
+void language_vm_test_state_reset(ExecutionState&) { ++state_resets; }
 }
 namespace loadable_module {
 RuntimeStatus evict_cached(){cached=(Kind)0;return RuntimeStatus::OK;}
@@ -121,6 +125,12 @@ uint32_t execute_image(OverlayRequest* p) {
   Services services={};services.yield_input=true;services.event=event;
   auto& state=*p->state;
   auto& execution=*p->execution;
+  if(p->action==OverlayAction::START) {
+    assert(!state.cancelled && !state.normal_stop && state.failure==Error::NONE);
+    assert(!state.steps && !state.row && !state.width && !state.output_cursor && !state.output[0]);
+    assert(!state.control.sp && !state.control.call_count && !state.control.loop_count);
+    assert(state.input_value.representation()==0);
+  }
   if(p->action==OverlayAction::EXPRESSION)
     execution.result=evaluate_input(v,state,bindings,services);
   else if(p->action==OverlayAction::ABORT) execution.result.error=Error::STOPPED;
@@ -164,7 +174,9 @@ void execute(uint16_t id,uint32_t mode=1,uint32_t expected=1) {
 int main() {
   execute(1);assert(array[1]==2 && compiles==1 && validations==1 && finishes==0);
   const unsigned initial_swaps=swaps;
+  const unsigned initial_resets=state_resets;
   for(unsigned i=0;i<20;++i)execute(1);
+  assert(state_resets==initial_resets+20); // Exactly one complete reset per warm RUN.
   assert(array[1]==42 && compiles==1 && validations==1 && swaps==initial_swaps && activations==20);
   uint32_t explicit_result=0;
   for(auto command:{Command::TINYBASIC_RUN_ID,Command::TINYBASIC_RUN_NAME,Command::TINYBASIC_RUN_INDEX}) {
@@ -251,5 +263,5 @@ int main() {
   CacheDiagnostics diagnostic={};assert(cache_diagnostics(diagnostic));
   assert(diagnostic.budget==24576 && diagnostic.payload<diagnostic.budget && diagnostic.publications);
   assert(diagnostic.hits>20 && diagnostic.invalidations && !resource_reads);
-  std::puts("language_vm_image_cache_self_test: invalidation, LRU, values, DATA, INPUT/cancel, stale editor, BUILDING rollback and no APP swaps PASS");
+  std::puts("language_vm_image_cache_self_test: invalidation, eviction policy, values, DATA, INPUT/cancel, stale editor, BUILDING rollback and no APP swaps PASS");
 }

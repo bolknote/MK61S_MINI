@@ -51,10 +51,6 @@ static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
 bool busy;
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-// Research policy stays opt-in until the matched device comparison passes.
-#ifndef MK61_LANGUAGE_VM_CACHE_DENSITY
-#define MK61_LANGUAGE_VM_CACHE_DENSITY 0
-#endif
 static_assert(MK61_LANGUAGE_VM_CACHE_DENSITY == 0 || MK61_LANGUAGE_VM_CACHE_DENSITY == 1,
               "cache density must be 0 or 1");
 using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES, 16,
@@ -311,7 +307,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
         execution.array_count=language==Language::BASIC?385:0;
         execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
         continuation=state.as<ExecutionState>();
-        reset_execution_state(*continuation); continuation->language=language;
+        // Before validated_view only the language tag is read. The checked
+        // cached path initializes the complete state exactly once below.
+        continuation->language=language;
       }
       const auto status=execute_overlay(execution,*continuation,command,result,certificate);
       if(status != RuntimeStatus::OK) return status;

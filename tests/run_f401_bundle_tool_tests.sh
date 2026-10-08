@@ -12,6 +12,7 @@ bash -n "$tool"
 "$tool" --help | grep -q 'MK61_ENABLE_WBMP_VIEWER'
 "$tool" --help | grep -q 'MK61_ENABLE_MARKDOWN_VIEWER'
 "$tool" --help | grep -q 'MK61_ENABLE_CHIP8'
+"$tool" --help | grep -q 'MK61_LANGUAGE_VM_CACHE_DENSITY'
 "$tool" --help | grep -q -- '--app-manifest FILE'
 
 app_dir="$work/app"
@@ -108,6 +109,14 @@ MK61_ENABLE_FOCAL=2 "$tool" > /dev/null 2>&1
 status=$?
 set -e
 test "$status" -eq 2
+
+set +e
+MK61_LANGUAGE_VM_CACHE_DENSITY=2 "$tool" > /dev/null 2>&1
+status=$?
+set -e
+test "$status" -eq 2
+grep -Fq 'MK61_LANGUAGE_VM_CACHE_DENSITY:-1' "$tool"
+grep -Fq 'MK61_LANGUAGE_VM_CACHE_DENSITY=$cache_density' "$tool"
 
 # Полная ARM-сборка проходит в release matrix. Здесь фиксируем политику
 # общего ABI и независимое размещение SETUP/Explorer.

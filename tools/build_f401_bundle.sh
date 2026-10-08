@@ -35,6 +35,7 @@ overlay_language_vm=${MK61_OVERLAY_LANGUAGE_VM:-0}
 shared_screen_grid=${MK61_SHARED_SCREEN_GRID:-0}
 screen_buffer_loan=${MK61_SCREEN_BUFFER_LOAN:-0}
 language_image_cache=${MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES:-}
+cache_density=${MK61_LANGUAGE_VM_CACHE_DENSITY:-1}
 check_app_manifests=0
 app_manifests=()
 custom_app_names=()
@@ -74,6 +75,7 @@ Feature environment variables (0 or 1):
   MK61_SHARED_SCREEN_GRID, MK61_SCREEN_BUFFER_LOAN (experimental screen RAM reuse)
   MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=0..32768 overrides the automatic RAM cache;
     use 0 on both sides of a matched Flash/RAM comparison.
+  MK61_LANGUAGE_VM_CACHE_DENSITY=1 (default) or 0 (original LRU).
 Placement variables (0 = resident, 1 = APP):
   MK61_FOCAL_AS_APP, MK61_TINYBASIC_AS_APP, MK61_WBMP_VIEWER_AS_APP,
   MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP, MK61_SETUP_AS_APP,
@@ -440,6 +442,7 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$setup_as_app" "$explorer_as_app" \
              "$enable_usb_screen" "$enable_extended_font" \
              "$enable_user_explorer" "$app_local_float" "$resident_language_vm" "$overlay_language_vm" \
+             "$cache_density" \
              "$shared_screen_grid" "$screen_buffer_loan"; do
   boolean_valid "$value" || {
     printf 'Error: all MK61 feature values must be 0 or 1.\n' >&2
@@ -512,6 +515,7 @@ compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
 compile_flags="$compile_flags -DMK61_APP_LOCAL_FLOAT_MATH=$app_local_float"
 compile_flags="$compile_flags -DMK61_RESIDENT_LANGUAGE_VM=$resident_language_vm"
 compile_flags="$compile_flags -DMK61_OVERLAY_LANGUAGE_VM=$overlay_language_vm"
+compile_flags="$compile_flags -DMK61_LANGUAGE_VM_CACHE_DENSITY=$cache_density"
 compile_flags="$compile_flags -DMK61_SHARED_SCREEN_GRID=$shared_screen_grid"
 compile_flags="$compile_flags -DMK61_SCREEN_BUFFER_LOAN=$screen_buffer_loan"
 if [ -n "$language_image_cache" ]; then

@@ -68,6 +68,10 @@ struct ExecutionState {
   Error failure;
 };
 inline void reset_execution_state(ExecutionState& state) {
+#if defined(LANGUAGE_VM_TEST_STATE_RESETS)
+  extern void language_vm_test_state_reset(ExecutionState&);
+  language_vm_test_state_reset(state);
+#endif
   static_assert(std::is_trivially_copyable<ExecutionState>::value,
                 "continuation must support in-place byte initialization");
   // Zero bits represent a valid double zero in Value. Unused number slots

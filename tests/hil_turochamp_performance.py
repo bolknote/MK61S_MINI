@@ -128,6 +128,16 @@ def completed_board(font, frame):
             font.has(frame, 'С/П МЕНЮ') and font.has(frame, 'ОК ВЫБОР'))
 
 
+def board_pixels(frame):
+    # Disk activity is asynchronous to the completed board. Ignore only its
+    # documented x=176..191, y=0..15 rectangle, retaining the full raw capture.
+    assert len(frame) == 1536
+    pixels = bytearray(frame)
+    for page in range(2):
+        pixels[page * 192 + 176:(page + 1) * 192] = bytes(16)
+    return bytes(pixels)
+
+
 def search(port,font,args,index,out):
     port.open(args.game_dir+'/autoexec.m61')
     wait_screen(port,font,'ВЫБЕРИТЕ СТОРОНУ')
@@ -152,7 +162,8 @@ def search(port,font,args,index,out):
             elif completed_board(font,frame):
                 finished=stamp;png(frame,out/'move-e2-e3.png')
                 (out/'move.frame').write_bytes(frame)
-                digest=hashlib.sha256(frame).hexdigest();break
+                digest=hashlib.sha256(frame).hexdigest()
+                board_digest=hashlib.sha256(board_pixels(frame)).hexdigest();break
         cursor=len(port.frames)
         if finished is not None:break
         if time.monotonic()-last_notice>=25:
@@ -168,6 +179,7 @@ def search(port,font,args,index,out):
     result={'repeat':index,'temperature':'cold' if index==0 and args.reset_before else 'repeat',
             'seconds':elapsed,'nodes':420,'nodes_per_second':420/elapsed,'move':'e2e3',
             'final_frame_sha256':digest,'complete_eight_rank_board':True,
+            'board_frame_sha256':board_digest,
             'progress':progress,'profile':profile(counters)}
     (out/'run.json').write_text(json.dumps(result,indent=2)+'\n')
     print(f'{args.build_id} run {index}: e2-e3 / 420 nodes in {elapsed:.3f}s PASS',flush=True)
@@ -219,7 +231,7 @@ def main():
                 out=args.output_dir/f'run-{index}';out.mkdir(exist_ok=True)
                 report['runs'].append(search(port,font,args,index,out))
                 (args.output_dir/'report.json').write_text(json.dumps(report,indent=2)+'\n')
-            assert len({r['final_frame_sha256'] for r in report['runs']})==1
+            assert len({r['board_frame_sha256'] for r in report['runs']})==1
             report['median_seconds']=statistics.median(r['seconds'] for r in report['runs'])
             report['warm_median_seconds']=statistics.median(r['seconds'] for r in report['runs'][1:]) if args.runs>1 else None
             report['result']='PASS'

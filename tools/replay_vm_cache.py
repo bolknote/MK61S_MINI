@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Replay real module order against the shipping cache and research policies.
+"""Replay real module order against the LRU/density cache and research policies.
 
 Requires a LANGUAGE_VM_TRACE report and qualified owned bytecode images.
 This models cache requests, not CPU speed, source I/O, APP loads or real timing.
-Research policies never change firmware defaults. No device access.
+The replay does not configure firmware defaults. No device access.
 """
 import argparse
 from collections import OrderedDict
@@ -41,7 +41,7 @@ def simulate(requests, payload, slots, repeats, policy):
                 elif policy == 'probation':
                     victim = next((key for key, value in entries.items() if not value[1]), next(iter(entries)))
                 elif policy == 'density':
-                    # Research only: decaying reuse/bytes, recency tie-break.
+                    # Decaying reuse/bytes, recency tie-break.
                     victim = min(entries, key=lambda key: Fraction(entries[key][1], entries[key][0]))
                     entries = OrderedDict((key, (value[0], value[1] // 2)) for key, value in entries.items())
                 else:

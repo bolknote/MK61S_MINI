@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Pure pixel/profile tests for the chess HIL benchmark, without devices."""
-from hil_turochamp_performance import Font, ROOT, profile, completed_board
+from hil_turochamp_performance import Font, ROOT, profile, completed_board, board_pixels
 from m8_codec import encode
 
 font=Font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes())
@@ -40,7 +40,14 @@ put('7',7,0);put('С/П МЕНЮ',7,10)
 assert not completed_board(font,frame), 'partial seven-rank board accepted'
 put('8',8,0);put('ОК ВЫБОР',8,10)
 assert completed_board(font,frame)
+stable=board_pixels(frame)
+for x,y in ((176,0),(191,0),(176,15),(191,15)):
+    changed=bytearray(frame);changed[y//8*192+x]^=1<<(y%8)
+    assert board_pixels(changed)==stable, 'disk animation changed board comparison'
+for x,y in ((175,0),(176,16),(191,16),(0,7)):
+    changed=bytearray(frame);changed[y//8*192+x]^=1<<(y%8)
+    assert board_pixels(changed)!=stable, 'non-disk pixel ignored'
 try:profile('invalid')
 except AssertionError:pass
 else:raise AssertionError('missing profile clock accepted')
-print('Turochamp performance oracle: M8 pixels, progress, move and DWT timing PASS')
+print('Turochamp performance oracle: M8, eight ranks, bounded disk mask and DWT timing PASS')

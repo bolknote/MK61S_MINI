@@ -7,11 +7,17 @@ flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+policies=(0 1)
+if [[ -n "${MK61_VM_CACHE_DENSITY_TEST+x}" ]]; then
+  policies=("$MK61_VM_CACHE_DENSITY_TEST")
+fi
+for density in "${policies[@]}"; do
 for usb in 0 1; do
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DCONFIG -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST \
+  -DLANGUAGE_VM_TEST_STATE_RESETS \
   -DMK61_ENABLE_USB_SCREEN="$usb" \
-  -DMK61_LANGUAGE_VM_CACHE_DENSITY="${MK61_VM_CACHE_DENSITY_TEST:-0}" \
+  -DMK61_LANGUAGE_VM_CACHE_DENSITY="$density" \
   -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576 -I"$root/code" \
   "$root/tests/language_vm_image_cache_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
@@ -19,8 +25,9 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   "$root/code/language_vm_flow.cpp" "$root/code/app_flow.cpp" \
   "$root/code/language_compiler_flow.cpp" "$root/code/app_flow_transfer.cpp" \
   "$root/code/shared_memory.cpp" "$root/code/workspace_swap.cpp" \
-  "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" -o "$work/cache-$usb"
-"$work/cache-$usb"
+  "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" -o "$work/cache-$density-$usb"
+"$work/cache-$density-$usb"
+done
 done
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" -I"$root/code" \
   "$root/tests/language_vm_cache_handles_self_test.cpp" -o "$work/handles"

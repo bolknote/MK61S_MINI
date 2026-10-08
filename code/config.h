@@ -512,6 +512,14 @@
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
   #error "language image cache must fit in 32 KiB"
 #endif
+// Qualified reuse/byte policy is the default for an enabled image cache.
+// Retain the original LRU as an explicit A/B and compatibility override.
+#ifndef MK61_LANGUAGE_VM_CACHE_DENSITY
+  #define MK61_LANGUAGE_VM_CACHE_DENSITY 1
+#endif
+#if MK61_LANGUAGE_VM_CACHE_DENSITY != 0 && MK61_LANGUAGE_VM_CACHE_DENSITY != 1
+  #error "MK61_LANGUAGE_VM_CACHE_DENSITY must be 0 or 1"
+#endif
 #if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
   #error "Choose one language VM placement"
 #endif
