@@ -81,7 +81,7 @@ def main():
                 request = m.input + 512
                 image = m.workspace + 6400
                 m.uc.mem_write(request, bytes(40))
-                m.put(request, 40, 5, image, 1536)
+                m.put(request, 40, 6, image, 1536)
                 command = 0x206 if kind == "tinybasic" else 0x106
                 result = m.call(command, 42, 0, request)
                 assert result == (1 if kind == "tinybasic" else 0), (kind, result, m.lines)
@@ -99,7 +99,7 @@ def main():
                 m.uc.mem_write(variables, bytes(26 * 8))
                 m.uc.mem_write(array, bytes(385 * 8))
                 m.uc.mem_write(execute, bytes(48))
-                m.put(execute, 48, 5, image, length, variables, array, 385)
+                m.put(execute, 48, 6, image, length, variables, array, 385)
                 m.uc.mem_write(execute + 28, b"\x01\0\0\0")  # no interactive final wait
                 assert m.call(0x700, execute) == 1
                 error = m.uc.mem_read(execute + 36, 1)[0]

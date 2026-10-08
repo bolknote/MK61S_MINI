@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <limits>
 
 #include "language_bytecode.hpp"
 #include "mk_math.hpp"
@@ -95,8 +96,33 @@ void test_literals() {
   Fixture f;
   const auto result =
       compile_expression(Language::BASIC, ".1", 2, f.image, sizeof(f.image));
-  assert(result.size == HEADER_SIZE + 5);
+  assert(result.size == HEADER_SIZE + 4);
   assert(f.image[HEADER_SIZE] == (uint8_t)Op::CONST_DEC8);
+}
+void test_finite_results_and_decimal_cache() {
+  for(Language language : {Language::BASIC,Language::FOCAL}) {
+    Fixture f;
+    // More recipes than cache slots, in different expressions and loop
+    // positions: collisions must affect speed only, never the exact value.
+    f.compile(language==Language::BASIC ?
+        "10 A=0;FOR I=1 TO 50;A=A+.1+.2+.3+.4+.5+.6+.7+.8+.9;NEXT I\n" :
+        "1.10 S A=0\n1.20 F I=1,50;S A=A+.1+.2+.3+.4+.5+.6+.7+.8+.9\n",language);
+    double expected=0;
+    for(unsigned i=0;i<50;++i)
+      for(const char* n:{".1",".2",".3",".4",".5",".6",".7",".8",".9"}) expected+=mk_math::atof(n);
+    assert(run(f.view,f.state,services).error==Error::NONE);
+    const double actual=f.vars[0].number();
+    assert(memcmp(&actual,&expected,sizeof(actual))==0);
+    f.compile(language==Language::BASIC ? "10 A=1e999-1e999\n" :
+              "1.10 S A=1e999-1e999\n",language);
+    auto result=run(f.view,f.state,services);
+    assert(result.error==Error::MATH && result.line==(language==Language::BASIC?10U:1010U));
+    f.compile(language==Language::BASIC ? "10 A=B+1\n" : "1.10 S A=B+1\n",language);
+    f.vars[1]=std::numeric_limits<double>::quiet_NaN();
+    assert(run(f.view,f.state,services).error==Error::MATH);
+    f.compile(language==Language::BASIC ? "10 A=SQRT(-1)+1\n" : "1.10 S A=SQRT(-1)+1\n",language);
+    assert(run(f.view,f.state,services).error==Error::MATH);
+  }
 }
 void test_sizing_and_bounds() {
   const char* source = "10 A=.1+.2\n20 @(0)=A\n30 A=@(0)\n";
@@ -225,6 +251,10 @@ void test_validation() {
   f.compile("10 IF 1 GOTO 30\n20 A=1\n30 END\n");
   const auto image = std::vector<uint8_t>(f.image, f.image + f.view.size);
   const uint16_t size = f.view.size;
+  f.image[4]=2;
+  View old;
+  assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
+  f.image[4]=VERSION;
   for (uint16_t n = 0; n < size; ++n) {
     View v;
     assert(inspect(f.image, n, v) != Error::NONE);
@@ -246,6 +276,39 @@ void test_validation() {
   f.crc();
   assert(inspect(f.image, f.view.size, v) == Error::INVALID_IMAGE);
 }
+void test_diagnostic_prefix_step_limit() {
+  Fixture f;
+  f.compile("10 A=1\n");
+  assert(f.image[f.view.code]==(uint8_t)Op::SOURCE_POS);
+  auto limited=run(f.view,f.state,services,1);
+  assert(limited.error==Error::LIMIT && limited.steps==1 && f.vars[0]==0);
+  assert(source_column(f.view,limited.pc)==4);
+  auto complete=run(f.view,f.state,services,4);
+  assert(complete.error==Error::NONE && complete.steps==4 && f.vars[0]==1);
+  f.view.end=(uint16_t)(f.view.code+2);
+  assert(run(f.view,f.state,services).error==Error::INVALID_IMAGE);
+}
+void test_loop_service_cadence() {
+  for(unsigned kind=0;kind<3;++kind) {
+    Fixture f;
+    f.compile(kind==0 ? "10 FOR I=1 TO 1000;NEXT I\n" :
+              kind==1 ? "10 FOR @(0)=1 TO 1000;A=A+1;NEXT @(0)\n" :
+                        "1.10 F I=1,1000;S A=A+1\n1.20 E\n",
+              kind==2 ? Language::FOCAL : Language::BASIC);
+    struct Polls {unsigned count=0,stop=0;} polls;
+    auto host=services;host.context=&polls;
+    host.service=[](void* raw) {
+      auto& p=*(Polls*)raw;++p.count;
+      return !p.stop || p.count<p.stop;
+    };
+    auto r=run(f.view,f.state,host);
+    assert(r.error==Error::NONE && polls.count==(r.steps+31)/32);
+    assert(kind==0 ? f.vars['I'-'A']==1001 : f.vars[0]==1000);
+    polls={0,6};f.vars[0]=0;
+    r=run(f.view,f.state,host);
+    assert(r.error==Error::STOPPED && polls.count==6 && r.steps==161);
+  }
+}
 void test_controls_and_traps() {
   Fixture f;
   f.compile("10 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n");
@@ -263,6 +326,32 @@ void test_controls_and_traps() {
   f.compile("1.10 F I=1,3; S S=S+I\n1.20 E\n", Language::FOCAL);
   assert(run(f.view, f.state, services).error == Error::NONE &&
          f.vars['I' - 'A'] == 3 && f.vars['S' - 'A'] == 6);
+}
+void test_direct_branches_and_dynamic_fallback() {
+  Fixture f;
+  f.compile("10 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n");
+  assert((Op)f.image[f.view.code+3]==Op::GOSUB_DIRECT);
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==11);
+  f.compile("10 GOTO 30\n20 A=99\n30 A=7\n");
+  assert((Op)f.image[f.view.code+3]==Op::GOTO_DIRECT);
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==7);
+  f.compile("10 A=30;GOTO A\n20 A=99\n30 A=A+1\n");
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==31);
+  auto host=services;unsigned reads=0;host.context=&reads;
+  host.event=[](void* raw,Event e,const char*,uint16_t,double& value) {
+    if(e==Event::READ_KEY) {++*(unsigned*)raw;value=10;}return true;
+  };
+  f.compile("10 GOTO 10+INPUT()\n20 A=9\n");
+  assert(run(f.view,f.state,host).error==Error::NONE && f.vars[0]==9 && reads==1);
+  for(const char* source:{"10 GOTO 0\n","10 GOTO -1\n","10 GOTO 32768\n","10 GOTO 2.5\n"}) {
+    f.compile(source);assert(run(f.view,f.state,services).error==Error::LINE_NUMBER);
+  }
+  f.compile("10 IF 0 GOSUB 999\n20 A=8\n");
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==8);
+  f.compile("10 GOTO 30\n20 A=1\n30 END\n");
+  const uint16_t direct=(uint16_t)(f.view.code+3);
+  f.image[direct+1]=(uint8_t)(direct+1);f.image[direct+2]=(uint8_t)((direct+1)>>8);f.crc();
+  View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
 }
 void test_parser_edges() {
   const char* invalid[] = {"10 A=INPUT\n", "10 A=INPUT(1)\n", "10 A=INPUT(,)\n",
@@ -361,12 +450,16 @@ void test_extension_image_validation_and_resume() {
 }  // namespace
 int main() {
   test_literals();
+  test_finite_results_and_decimal_cache();
   test_sizing_and_bounds();
   test_key_input_is_an_ordered_keyboard_expression();
   test_indexed_lines_and_diagnostic_boundaries();
   test_service_progress_and_bounded_cancellation();
   test_validation();
+  test_diagnostic_prefix_step_limit();
+  test_loop_service_cadence();
   test_controls_and_traps();
+  test_direct_branches_and_dynamic_fallback();
   test_parser_edges();
   test_yield_resume();
   test_extension_image_validation_and_resume();

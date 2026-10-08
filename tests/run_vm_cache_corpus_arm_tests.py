@@ -53,7 +53,7 @@ def main():
             m.load(packages["tinybasic" if language==1 else "focal"])
             m.stage = "sizing"
             m.uc.mem_write(request, bytes(40))
-            m.put(request,40,5,0,9728)
+            m.put(request,40,6,0,9728)
             m.uc.mem_write(request+32,b"\x01")
             m.call(0x20A if language==1 else 0x106,42,1 if language==1 else 0,request)
             wire = bytes(m.uc.mem_read(request,40))
@@ -79,9 +79,9 @@ def main():
             m.uc.mem_write(m.workspace,bytes(1520))
             m.uc.mem_write(m.workspace+1506,bytes((language,)))
             m.uc.mem_write(execution,bytes(48))
-            m.put(execution,48,5,cache+8,length,variables,m.workspace+5112,385 if language==1 else 0)
+            m.put(execution,48,6,cache+8,length,variables,m.workspace+5112,385 if language==1 else 0)
             m.uc.mem_write(overlay,bytes(24))
-            m.put(overlay,24,5,execution,m.workspace,certificate)
+            m.put(overlay,24,6,execution,m.workspace,certificate)
             assert m.call(0x705,overlay)==1 and m.uc.mem_read(execution+36,1)[0]==0
             assert bytes(m.uc.mem_read(cache+8,length))==image
             assert sum(t[0]=="file_read" for t in m.trace)==reads

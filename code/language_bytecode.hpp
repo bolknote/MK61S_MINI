@@ -113,7 +113,9 @@ enum class Op : uint8_t {
   PRINT_RESOURCE,
   INPUT_RESOURCE,
   CONST_I32,
-  FLOOR_DIV
+  FLOOR_DIV,
+  GOTO_DIRECT,
+  GOSUB_DIRECT
 };
 enum class Function : uint8_t {
   SIN,
@@ -140,7 +142,7 @@ enum class Function : uint8_t {
   ROWS
 };
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 2;
+static constexpr uint16_t VERSION = 3;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.

@@ -217,9 +217,14 @@ static void test_ask_long_for_loop(void) {
   CHECK_NEAR(FocalTestNumber("N"), 9000.0);
   CHECK_NEAR(FocalTestNumber("S"), 9000.0);
   CHECK_STARTS(FocalTestLcdLine(0), "9000");
-  // Длинный FOR занимает одну строку исходника, но должен обслуживать USB-экран
-  // на каждой встроенной итерации тела, иначе истечёт трёхсекундный пульс.
+  // Длинный FOR должен обслуживать USB, даже если исходная строка одна.
+#if defined(MK61_LANGUAGE_VM_TEST)
+  // VM опрашивает службы каждые 32 инструкции, независимо от длины строки.
+  // Точное соответствие steps/polls и отмена проверяются VM-тестом.
+  CHECK(FocalTestBackgroundServiceCount() >= 9000 / 32);
+#else
   CHECK(FocalTestBackgroundServiceCount() >= 9000);
+#endif
 }
 
 static void test_ask_without_target_waits_for_key(void) {

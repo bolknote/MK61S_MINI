@@ -390,9 +390,6 @@ class Compiler {
     emit(op);
     stack(effect);
   }
-  void check() {
-    if (!basic()) emit(Op::CHECK);
-  }
   void constant(double value, const char* literal = nullptr,
                 const char* finish = nullptr) {
     if (value >= 0 && value <= 15 && value == (int)value) {
@@ -566,6 +563,22 @@ class Compiler {
         return lines_[i].pc;
     return 0xFFFF;
   }
+  bool direct_basic_branch(bool sub) {
+    skip();
+    const char* q=p_;
+    uint32_t number=0;
+    if(q==end_ || !digit(*q)) return false;
+    while(q<end_ && digit(*q)) {
+      number=number*10+(unsigned)(*q++-'0');
+      if(number>32767) return false;
+    }
+    while(q<end_ && space(*q)) ++q;
+    if(q!=end_ || !number) return false;
+    // Resolve only a bare, valid line literal. Dynamic/invalid numeric
+    // expressions retain their original evaluation and error semantics.
+    emit(sub ? Op::GOSUB_DIRECT : Op::GOTO_DIRECT);
+    u16(target_pc(number));p_=q;return true;
+  }
   bool reference(uint8_t& id) {
     if (!match('.')) return false;
     if (p_ == end_) {
@@ -636,8 +649,9 @@ class Compiler {
     if (t.kind != 2) byte(t.index);
   }
   void expression() {
+    // Every producing VM operation checks finiteness in both languages.
+    // Separate CHECK instructions would repeat the same test and dispatch.
     binary(0);
-    emit(Op::CHECK);
   }
   void binary(uint8_t level) {
     if (level == 3) {
@@ -684,7 +698,6 @@ class Compiler {
       binary((uint8_t)(level + 1));
       if (basic() && (op == Op::DIV || op == Op::MOD)) source_position(saved);
       operation(op, -1);
-      check();
     }
   }
   void prefix(bool power_operand) {
@@ -698,7 +711,6 @@ class Compiler {
       if (match('^')) {
         prefix(false);
         operation(Op::POW, -1);
-        check();
       }
       --depth_;
       return;
@@ -708,7 +720,6 @@ class Compiler {
     else if (match('-')) {
       prefix(power_operand);
       emit(Op::NEG);
-      check();
     } else if (basic() && keyword("NOT", 3)) {
       prefix(power_operand);
       emit(Op::NOT);
@@ -742,7 +753,6 @@ class Compiler {
       emit(Op::LOAD_REF);
       byte(ref);
       stack(1);
-      check();
       return;
     }
     if (basic() && match('@')) {
@@ -771,10 +781,6 @@ class Compiler {
       const char* literal = p_;
       p_ = after;
       constant(value, literal, after);
-      // Reject a non-finite BASIC numeric token before a comparison can turn
-      // it into a finite boolean; intermediate arithmetic retains its checks.
-      if(basic() && !mk_math::is_finite(value))emit(Op::CHECK);
-      check();
       return;
     }
     if (alpha(*p_)) {
@@ -790,7 +796,6 @@ class Compiler {
         emit(Op::LOAD);
         byte(var);
         stack(1);
-        check();
         return;
       }
       const Function f = (Function)fn;
@@ -841,7 +846,6 @@ class Compiler {
         byte(f == Function::RND ? (uint8_t)Function::RND_LIMIT : fn);
       }
       if (f == Function::MAX) stack(-1);
-      check();
       return;
     }
     fail(Error::SYNTAX);
@@ -1268,8 +1272,10 @@ class Compiler {
           break;
         case GOTO_CMD:
         case GOSUB_CMD:
-          expression();
-          operation(cmd == GOTO_CMD ? Op::GOTO : Op::GOSUB, -1);
+          if(!direct_basic_branch(cmd==GOSUB_CMD)) {
+            expression();
+            operation(cmd == GOTO_CMD ? Op::GOTO : Op::GOSUB, -1);
+          }
           if (cmd == GOTO_CMD && segment < full_end &&
               !tinybasic_syntax::word(segment, full_end, "ELSE", 2))
             fail(Error::SYNTAX);

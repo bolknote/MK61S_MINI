@@ -18,7 +18,7 @@ from unicorn.arm_const import UC_ARM_REG_SP
 STATE_SIZE = 1520
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 11
+GENERATION = 12
 
 
 def decode_number(data):
@@ -90,11 +90,12 @@ class OverlayMachine(Machine):
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v12 = GENERATION >= 12
     v11 = GENERATION >= 11
     v10 = GENERATION >= 10
     v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
+    version = 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
     state_size = 1520 if v8 else 1504
     control_size = 624 if v8 else 616
     stack_offset = control_size
@@ -108,7 +109,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
-    vm_magic, input_magic = ((0x39564D4C, 0x39494D4C) if v11 else
+    vm_magic, input_magic = ((0x3A564D4C, 0x3A494D4C) if v12 else
+                             (0x39564D4C, 0x39494D4C) if v11 else
                              (0x38564D4C, 0x38494D4C) if v10 else
                              (0x37564D4C, 0x37494D4C) if v9 else
                              (0x36564D4C, 0x36494D4C) if v6 else
@@ -263,7 +265,7 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11), default=11)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12), default=12)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()

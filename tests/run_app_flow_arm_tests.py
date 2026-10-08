@@ -17,8 +17,8 @@ from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
 COMPILER_CONTEXT_SIZE = 240
-REQUEST_VERSION = 5
-LANGUAGE_FLOW_MAGIC = 0x32564C46
+REQUEST_VERSION = 6
+LANGUAGE_FLOW_MAGIC = 0x33564C46
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):

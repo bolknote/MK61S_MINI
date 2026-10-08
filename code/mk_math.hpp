@@ -37,13 +37,28 @@
 
 namespace mk_math {
 
+// Numeric bit casts have a fixed size and must stay local even in portable
+// APPs compiled with -fno-builtin. Ordinary memcpy still uses the APP service;
+// these copies are register moves, not a call through that service.
+template<typename To, typename From>
+inline To bit_copy(const From& from) {
+  static_assert(sizeof(To)==sizeof(From), "bit copy size mismatch");
+  To to;
+#if defined(__GNUC__) || defined(__clang__)
+  __builtin_memcpy(&to, &from, sizeof(to));
+#else
+  memcpy(&to, &from, sizeof(to));
+#endif
+  return to;
+}
+
 // ---- Предикаты без libm ----------------------------------------------------
 
 inline bool is_nan(double x) { return x != x; }
 inline bool is_inf(double x) { return x > DBL_MAX || x < -DBL_MAX; }
 inline bool is_finite(double x) {
 #if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
-  uint64_t bits;memcpy(&bits,&x,sizeof(bits));
+  const uint64_t bits=bit_copy<uint64_t>(x);
   return (bits & UINT64_C(0x7FF0000000000000)) != UINT64_C(0x7FF0000000000000);
 #else
   return !is_nan(x) && !is_inf(x);
@@ -57,10 +72,10 @@ inline double fabs(double x) { return x < 0.0 ? -x : x; }
 #if DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024
 inline uint64_t binary64_bits(double x) {
   static_assert(sizeof(double)==sizeof(uint64_t), "unsupported binary64 layout");
-  uint64_t bits;memcpy(&bits,&x,sizeof(bits));return bits;
+  return bit_copy<uint64_t>(x);
 }
 inline double binary64_value(uint64_t bits) {
-  double x;memcpy(&x,&bits,sizeof(x));return x;
+  return bit_copy<double>(bits);
 }
 #endif
 

@@ -32,11 +32,11 @@ class Value {
   }
   bool integer() const { return (uint32_t)(bits_ >> 32) == INTEGER_TAG; }
   int32_t integer_value() const {
-    const uint32_t low = (uint32_t)bits_; int32_t n; memcpy(&n, &low, sizeof(n)); return n;
+    const uint32_t low = (uint32_t)bits_; return mk_math::bit_copy<int32_t>(low);
   }
   double number() const {
     if(integer()) return (double)integer_value();
-    double n; memcpy(&n, &bits_, sizeof(n)); return n;
+    return mk_math::bit_copy<double>(bits_);
   }
   explicit operator double() const { return number(); }
   explicit operator bool() const { return !zero(); }
@@ -101,7 +101,7 @@ class Value {
         if((magnitude & (magnitude-1)) == 0) {
           const uint32_t remainder=(uint32_t)x & (magnitude-1);
           const uint32_t low=y < 0 && remainder ? remainder-magnitude : remainder;
-          int32_t n; memcpy(&n,&low,sizeof(n)); return Value(n);
+          return Value(mk_math::bit_copy<int32_t>(low));
         }
         int32_t r=x % y;
         if((r < 0 && y > 0) || (r > 0 && y < 0)) r += y;
@@ -141,7 +141,7 @@ class Value {
  private:
   uint64_t bits_;
   __attribute__((noinline)) void set_number(double n) {
-    uint64_t bits; memcpy(&bits,&n,sizeof(bits));
+    const uint64_t bits=mk_math::bit_copy<uint64_t>(n);
     const uint64_t magnitude=bits & UINT64_C(0x7FFFFFFFFFFFFFFF);
     if(magnitude == 0) {
       bits_ = bits ? bits : (uint64_t)INTEGER_TAG << 32; return;
