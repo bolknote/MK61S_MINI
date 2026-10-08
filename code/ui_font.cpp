@@ -8,13 +8,16 @@ namespace ui_font {
 namespace {
 
 struct GlyphRecord {
-  uint16_t offset;
-  uint8_t width;
-  uint8_t height;
-  uint8_t bearing_x;
-  int8_t bearing_y;
-  uint8_t advance;
+  // Native compile-time data, not a file/ABI layout. The reviewed atlas bounds
+  // let all six fields share one word; the generator rejects truncation.
+  uint32_t offset : 11;
+  uint32_t width : 4;
+  uint32_t height : 4;
+  uint32_t bearing_x : 3;
+  int32_t bearing_y : 5;
+  uint32_t advance : 5;
 };
+static_assert(sizeof(GlyphRecord) == 4, "UI glyph records must stay compact");
 
 struct FaceData {
   const GlyphRecord* records;
@@ -69,9 +72,11 @@ Glyph glyph(Face face, uint32_t codepoint) {
     fallback = true;
   }
   const GlyphRecord& record = FACES[selected].records[index];
-  return {FACES[selected].bitmap + record.offset, record.width, record.height,
-          static_cast<int8_t>(record.bearing_x), record.bearing_y,
-          record.advance, font_glyph::BitmapLayout::TIGHT_MSB, fallback};
+  return {FACES[selected].bitmap + record.offset,
+          static_cast<uint8_t>(record.width), static_cast<uint8_t>(record.height),
+          static_cast<int8_t>(record.bearing_x), static_cast<int8_t>(record.bearing_y),
+          static_cast<uint8_t>(record.advance),
+          font_glyph::BitmapLayout::TIGHT_MSB, fallback};
 }
 
 } // namespace ui_font

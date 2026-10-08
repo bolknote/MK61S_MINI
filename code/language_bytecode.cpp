@@ -1,3 +1,12 @@
+#if defined(ARDUINO_ARCH_STM32)
+#include "config.h"
+#endif
+
+// The compiler is experimental and not part of an ordinary resident image.
+// Keep it available to host tools and portable APPs, and to opted-in VM builds.
+#if !defined(ARDUINO_ARCH_STM32) || MK61_RESIDENT_LANGUAGE_VM || \
+    MK61_OVERLAY_LANGUAGE_VM || defined(MK61_LANGUAGE_VM_COMPILER) || \
+    defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
 #include "language_bytecode.hpp"
 #include "tinybasic_syntax.hpp"
 
@@ -1508,3 +1517,4 @@ CompileResult compile_expression(Language language, const char* source, uint16_t
 }
 
 }  // namespace language_vm
+#endif
