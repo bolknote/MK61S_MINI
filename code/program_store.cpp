@@ -5286,4 +5286,13 @@ void vfat_stage_unlock(void) {
   if(g_stage_external) forget_stage_index_binding();
 }
 
+bool vfat_stage_release_cache(void) {
+  if(!g_stage_overlay_lease.ok() ||
+     prepare_stage_index_eviction() != shared_memory::EvictionDecision::RELEASE) {
+    return false;
+  }
+  g_stage_overlay_lease.reset();
+  return true;
+}
+
 } // пространство имён program_store

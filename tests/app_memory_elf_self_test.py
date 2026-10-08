@@ -41,12 +41,23 @@ class AppMemoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             with self.assertRaisesRegex(AssertionError, 'missing or empty'):
-                gate.system_memory_size(root)
+                gate.system_memory_sizes(root)
             disk = root / 'USBDISK.APP'
             disk.write_bytes(app(18624))
             (root / 'BASIC.APP').write_bytes(app(20001, kind=2))
+            (root / 'SETUP.APP').write_bytes(app(20420, kind=7))
             self.assertEqual(gate.app_memory_size(disk), 18624)
-            self.assertEqual(gate.system_memory_size(root), 20001)
+            self.assertEqual(gate.system_memory_sizes(root), (20420, 18624))
+            # Classic V2: SETUP runs after dropping the idle stage cache;
+            # USBDISK, not SETUP, must coexist with the locked full index.
+            gate.check_pool(22808, gate.system_memory_sizes(root)[1])
+            gate.check_pool(21728, gate.system_memory_sizes(root)[1])
+            disk.unlink()
+            with self.assertRaisesRegex(AssertionError, 'USBDISK.APP is missing'):
+                gate.system_memory_sizes(root)
+            disk.write_bytes(app(18624, kind=7))
+            with self.assertRaisesRegex(AssertionError, 'incorrect USBDISK kind'):
+                gate.system_memory_sizes(root)
             disk.write_bytes(app(18624)[:-1])
             with self.assertRaisesRegex(AssertionError, 'truncated'):
                 gate.app_memory_size(disk)

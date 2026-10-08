@@ -166,9 +166,13 @@ static shared_memory::EvictionDecision prepare_app_eviction(void) {
 
 static u8* acquire_app_memory(const Header& header) {
   if(g_app_cache.ok()) return g_app_cache.data();
-  if(!g_app_cache.acquire_cache(
-       shared_memory::Arena::APP, shared_memory::Owner::LOADABLE_MODULE,
-       header.memory_size)) return nullptr;
+  for(u8 attempt = 0; !g_app_cache.acquire_cache(
+        shared_memory::Arena::APP, shared_memory::Owner::LOADABLE_MODULE,
+        header.memory_size); ++attempt) {
+    // A large APP may need an idle FAT index's RAM. Ask its owner once;
+    // never evict an active USB/terminal index or an unrelated lower buffer.
+    if(attempt != 0 || !program_store::vfat_stage_release_cache()) return nullptr;
+  }
   if(!g_app_cache.set_evictable(prepare_app_eviction)) {
     g_app_cache.reset();
     return nullptr;

@@ -24,22 +24,28 @@ def app_memory_size(path):
     return memory
 
 
-def system_memory_size(directory):
+def system_memory_sizes(directory):
     apps = sorted(directory.glob('*.APP'))
     assert apps, f'{directory}: System APP bundle is missing or empty'
-    return max(app_memory_size(path) for path in apps)
+    sizes = {path.name: app_memory_size(path) for path in apps}
+    disk = directory / 'USBDISK.APP'
+    assert disk.name in sizes, f'{directory}: USBDISK.APP is missing'
+    assert disk.read_bytes()[14] == 8, f'{disk}: incorrect USBDISK kind'
+    return max(sizes.values()), sizes[disk.name]
 
 
-def check_pool(free, module_memory):
+def check_pool(free, disk_memory):
     # APP_MAX_SIZE is a format ceiling, not a reserved allocation. Qualify the
-    # actual shipped modules against the full (512-KiB-volume) staging index.
-    # Also retain room for a maximum user APP when the lower pool is free.
-    assert free >= APP_MAX_SIZE, 'maximum standalone APP cannot fit'
-    rounded = (module_memory + APP_ALIGNMENT - 1) & ~(APP_ALIGNMENT - 1)
-    assert free >= rounded + STAGE_INDEX_SIZE, 'System APP and full stage index cannot coexist'
+    # actual USB module against the full (512-KiB-volume) staging index.
+    # Other APPs may release an unlocked stage cache, never a live index.
+    assert free >= APP_MAX_SIZE, f'maximum standalone APP cannot fit: {free} < {APP_MAX_SIZE}'
+    rounded = (disk_memory + APP_ALIGNMENT - 1) & ~(APP_ALIGNMENT - 1)
+    assert free >= rounded + STAGE_INDEX_SIZE, (
+        f'USBDISK APP and full stage index cannot coexist: '
+        f'{free} < {rounded} + {STAGE_INDEX_SIZE}')
 
 
-def check(path, module_memory=APP_MAX_SIZE):
+def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     data = path.read_bytes()
     h = struct.unpack_from('<16sHHIIIIIHHHHHH', data)
     assert h[0][:6] == b'\x7fELF\x01\x01' and h[2] == 40, 'expected ARM ELF32 LE'
@@ -62,12 +68,12 @@ def check(path, module_memory=APP_MAX_SIZE):
     end = value('__mk61_dynamic_end')
     assert end in (0x2000E700, 0x2001BF00), 'stack/guard budget changed'
     free = end - value('__mk61_dynamic_begin')
-    check_pool(free, module_memory)
+    check_pool(free, disk_memory)
     # Some builds never call malloc, so section GC may remove both _sbrk
     # implementations. If present, it must be our strong override, not Core's.
     assert '_sbrk' not in symbols or symbols['_sbrk'][1] == 1, 'weak Core _sbrk can overlap APP'
     print(f'APP RAM: {path}: reserve=0 free={free} system_max={module_memory} '
-          f'stage={STAGE_INDEX_SIZE} top={end:#x} heap=guarded PASS')
+          f'usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} top={end:#x} heap=guarded PASS')
 
 
 if __name__ == '__main__':
@@ -76,6 +82,7 @@ if __name__ == '__main__':
                         help='qualify every APP in the matching built System bundle')
     parser.add_argument('elf', type=Path, nargs='+')
     args = parser.parse_args()
-    memory = system_memory_size(args.system_dir) if args.system_dir else APP_MAX_SIZE
+    memory, disk = (system_memory_sizes(args.system_dir) if args.system_dir
+                    else (APP_MAX_SIZE, APP_MAX_SIZE))
     for path in args.elf:
-        check(path, memory)
+        check(path, memory, disk)

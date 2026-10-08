@@ -4,6 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-program-store.XXXXXX")"
 out="$build_dir/program_store_self_test"
+python3 "$root/tests/app_memory_surface.py" "$build_dir/app_memory_acquire.inc"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
@@ -23,6 +24,7 @@ for backend in software stm32; do
     -DARDUINO_BLACKPILL_F401CC \
     -include "$root/tests/program_store_shim/program_store_test_shim.h" \
     -I"$root/tests/program_store_shim" \
+    -I"$build_dir" \
     -I"$root/code" \
     "$root/tests/program_store_self_test.cpp" \
     "$root/code/explorer_autoexec.cpp" \
@@ -50,6 +52,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -include "$root/tests/program_store_shim/program_store_test_shim.h" \
   -I"$root/tests/program_store_shim" \
+  -I"$build_dir" \
   -I"$root/code" \
   "$root/tests/program_store_self_test.cpp" \
   "$root/code/explorer_autoexec.cpp" \

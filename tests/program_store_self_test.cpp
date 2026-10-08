@@ -43,6 +43,15 @@ void control(void) {}
 void control(t_time_ms) {}
 } // пространство имён led
 
+namespace app_memory_test {
+struct Header { u32 memory_size; };
+static shared_memory::Lease g_app_cache;
+static shared_memory::EvictionDecision prepare_app_eviction(void) {
+  return shared_memory::EvictionDecision::KEEP;
+}
+#include "app_memory_acquire.inc"
+}
+
 namespace {
 
 using program_store::Entry;
@@ -2376,6 +2385,57 @@ static void test_stage_overlay_lock_and_terminal_narrowing(void) {
   assert(memcmp(recovered, unrelated_data, sizeof(recovered)) == 0);
 }
 
+static void test_app_reclaims_only_an_idle_stage_cache(void) {
+  using namespace shared_memory;
+  for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
+    fresh(capacity);
+    assert(program_store::vfat_stage_release_cache());
+    const usize gap = shared_memory::capacity(Arena::OVERLAY) - 21728;
+    assert(adjust_heap((i32) gap) != nullptr);
+    u8 data[512], recovered[512];
+    for(u16 block = 0; block < 64; ++block) {
+      memset(data, (u8) block, sizeof(data));
+      assert(program_store::vfat_stage_write(1000U + block, data));
+    }
+    assert(program_store::vfat_stage_lock());
+    // The shipped disk fits alongside even the largest stage index.
+    assert(app_memory_test::acquire_app_memory({18624}) != nullptr);
+    app_memory_test::g_app_cache.reset();
+    // A live USB/terminal index is neither moved nor discarded by the loader.
+    assert(app_memory_test::acquire_app_memory({APP_MAX_SIZE}) == nullptr);
+    assert(!program_store::vfat_stage_release_cache());
+    assert(program_store::vfat_stage_count() == 64);
+    program_store::vfat_stage_unlock();
+    SPIFlash::resetOperationCounts();
+    const auto programmed = SPIFlash::programmedBytes();
+    // This calls the real loader, not a duplicate of its retry policy.
+    u8* const image = app_memory_test::acquire_app_memory({APP_MAX_SIZE});
+    assert(image != nullptr);
+    memset(image, 0xA5, APP_MAX_SIZE);
+    assert(SPIFlash::readOperations() == 0);
+    assert(SPIFlash::programmedBytes() == programmed);
+    assert(!program_store::vfat_stage_read(1000, recovered));
+    for(usize i = 0; i < APP_MAX_SIZE; ++i) assert(image[i] == 0xA5);
+    app_memory_test::g_app_cache.reset();
+    // Evicting the RAM cache must preserve even acknowledged journal writes.
+    for(u16 block = 0; block < 64; ++block) {
+      assert(program_store::vfat_stage_read(1000U + block, recovered));
+      for(u8 byte : recovered) assert(byte == (u8) block);
+    }
+    assert(program_store::vfat_stage_release_cache());
+    Lease other(Arena::OVERLAY, Owner::LOADABLE_MODULE, 2048);
+    assert(other.ok());
+    memset(other.data(), 0x39, other.size());
+    assert(app_memory_test::acquire_app_memory({APP_MAX_SIZE}) == nullptr);
+    assert(other.ok());
+    for(usize i = 0; i < other.size(); ++i) assert(other.data()[i] == 0x39);
+    other.reset();
+    assert(adjust_heap(-(i32) gap) != nullptr);
+    assert(validate_invariants());
+  }
+  puts("APP stage cache: real loader, live lock, idle reclaim, journal recovery PASS");
+}
+
 static void test_stage_indexes_large_unique_write_burst(void) {
   fresh();
   static constexpr u16 BLOCKS = 384;
@@ -3820,6 +3880,10 @@ static void report_catalog_wear(u32 capacity, bool reboot_each) {
 }
 
 int main(int argc, char** argv) {
+  if(argc == 2 && strcmp(argv[1], "--app-stage-cache") == 0) {
+    test_app_reclaims_only_an_idle_stage_cache();
+    return 0;
+  }
   if(argc == 2 && strcmp(argv[1], "--full-refill") == 0) {
     test_large_full_delete_refill_and_torn_reclaim();
     return 0;
@@ -3885,6 +3949,7 @@ int main(int argc, char** argv) {
   test_gc_power_cuts_are_atomic_and_recoverable();
   test_stage_journal_survives_reboot_and_churn();
   test_stage_overlay_lock_and_terminal_narrowing();
+  test_app_reclaims_only_an_idle_stage_cache();
   test_stage_indexes_large_unique_write_burst();
   test_small_stage_borrows_free_data_sectors();
   test_small_stage_borrow_power_cuts();
