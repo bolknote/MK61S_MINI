@@ -2463,6 +2463,49 @@ static void test_app_reclaims_only_an_idle_stage_cache(void) {
   puts("APP stage cache: real loader, live lock, idle reclaim, journal recovery PASS");
 }
 
+static void test_local_write_with_evicted_empty_stage_cache(void) {
+  using namespace shared_memory;
+  for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
+    fresh(capacity);
+    assert(program_store::vfat_stage_release_cache());
+    Lease display(Arena::OVERLAY, Owner::USB_SCREEN,
+                  shared_memory::capacity(Arena::OVERLAY));
+    assert(display.ok());
+    memset(display.data(), 0x39, display.size());
+    const u8 value[] = {'4', '2'};
+    u16 id = program_store::INVALID_ID;
+    assert(program_store::write_file(program_store::ROOT_ID, id,
+        ProgramType::TEXT, "saved", value, sizeof(value), &id));
+    u8 recovered[512]; u16 size = 0;
+    assert(program_store::read_id(id, recovered, sizeof(recovered), &size));
+    assert(size == sizeof(value) && memcmp(recovered, value, size) == 0);
+    assert(program_store::remove_id(id));
+    for(usize i = 0; i < display.size(); ++i) assert(display.data()[i] == 0x39);
+    // Remounting invalidates that knowledge until the journal is recovered.
+    program_store::init();
+    assert(program_store::ready());
+    assert(!program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::TEXT, "unknown", value,
+        sizeof(value)));
+    display.reset();
+
+    // An evicted index with acknowledged writes must still be recovered.
+    memset(recovered, 0x61, sizeof(recovered));
+    assert(program_store::vfat_stage_write(1234, recovered));
+    assert(program_store::vfat_stage_release_cache());
+    assert(display.acquire(Arena::OVERLAY, Owner::USB_SCREEN,
+                           shared_memory::capacity(Arena::OVERLAY)));
+    assert(!program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::TEXT, "blocked", value,
+        sizeof(value)));
+    display.reset();
+    u8 staged[512];
+    assert(program_store::vfat_stage_read(1234, staged));
+    assert(memcmp(recovered, staged, sizeof(staged)) == 0);
+  }
+  puts("Local C6 writes: evicted empty stage cache and occupied overlay PASS");
+}
+
 static void test_stage_indexes_large_unique_write_burst(void) {
   fresh();
   static constexpr u16 BLOCKS = 384;
@@ -3909,6 +3952,7 @@ static void report_catalog_wear(u32 capacity, bool reboot_each) {
 int main(int argc, char** argv) {
   if(argc == 2 && strcmp(argv[1], "--app-stage-cache") == 0) {
     test_app_reclaims_only_an_idle_stage_cache();
+    test_local_write_with_evicted_empty_stage_cache();
     return 0;
   }
   if(argc == 2 && strcmp(argv[1], "--full-refill") == 0) {
@@ -3978,6 +4022,7 @@ int main(int argc, char** argv) {
   test_stage_journal_survives_reboot_and_churn();
   test_stage_overlay_lock_and_terminal_narrowing();
   test_app_reclaims_only_an_idle_stage_cache();
+  test_local_write_with_evicted_empty_stage_cache();
   test_stage_indexes_large_unique_write_burst();
   test_small_stage_borrows_free_data_sectors();
   test_small_stage_borrow_power_cuts();

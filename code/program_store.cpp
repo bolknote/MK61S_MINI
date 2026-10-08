@@ -281,6 +281,7 @@ static u8 g_stage_sealed[STAGE_MAX_SLOTS];
 static u32 g_stage_physical[STAGE_MAX_SLOTS];
 static u8 g_stage_slot_count;
 static bool g_stage_recovery_ok;
+static bool g_stage_known_empty;
 // Preserve the original 23-bit key range despite the ten-bit record reference.
 // A side bitmap is indexed by physical record reference, not by index position,
 // so it also survives narrowing the index for APP validation.
@@ -4569,6 +4570,11 @@ static u32 pack_stage_index(u32 key, u16 ref) {
 }
 
 static void forget_stage_index_binding(void) {
+  if(g_stage_index != nullptr) {
+    g_stage_known_empty = g_stage_recovery_ok && !g_stage_external &&
+        g_stage_ref_count == 0 &&
+        g_stage_slot_count == g_geometry.stage_sector_count;
+  }
   g_stage_index = nullptr;
   g_stage_index_capacity = 0;
   g_stage_ref_count = 0;
@@ -4985,7 +4991,10 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
 } // пространство имён
 
 void vfat_stage_clear(void) {
-  if(g_stage_external || !bind_full_stage_index()) {
+  const bool bound = !g_stage_external && bind_full_stage_index();
+  // A fresh recovery must never reuse knowledge from another mount or index.
+  g_stage_known_empty = false;
+  if(!bound) {
     g_stage_ref_count = 0;
     return;
   }
@@ -5207,7 +5216,11 @@ bool vfat_stage_discard_all(void) {
   // A narrowed index contains only the current file's blocks. Discarding it
   // would strand other acknowledged host writes while freeing their physical
   // stage sectors. The full index must be restored first.
-  if(!g_ready || g_stage_external || !ensure_stage_index()) return false;
+  if(!g_ready || g_stage_external) return false;
+  // Local APP writes need no stage index when its last complete recovery
+  // proved the journal empty. USB Screen may now own the same overlay RAM.
+  if(g_stage_index == nullptr && g_stage_known_empty) return true;
+  if(!ensure_stage_index()) return false;
   while(g_stage_ref_count != 0) {
     const u16 index = (u16) (g_stage_ref_count - 1);
     if(!write_byte(stage_record_address(stage_index_ref(index)) + 2,
