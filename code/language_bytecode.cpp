@@ -116,27 +116,16 @@ struct Target {
 template <Language Lang>
 class Compiler {
  public:
-  Compiler(const char* source, uint16_t length, uint8_t* out, uint16_t capacity,
-           Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {})
-      : source_(source),
-        length_(length),
-        out_(out),
-        capacity_(capacity),
-        p_(source),
-        end_(source),
-        error_(Error::NONE),
-        lines_(lines),
-        count_(0),
-        pc_(0),
-        sp_(0),
-        maximum_(0),
-        depth_(0),
-        line_(0),
-        pass_(0),
-        image_end_(0),
-        rf_available_(rf_available),
-        rf_required_(false),
-        expression_only_(false), resources_(resources), resource_size_(0), resource_data_(workspace), last_op_(Op::HALT), last_at_(0) {}
+  __attribute__((noinline)) Compiler(const char* source, uint16_t length, uint8_t* out, uint16_t capacity,
+           Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {}) {
+    // All fields are scalar pointers, integers or POD workspace descriptors.
+    // A shared cold initializer avoids duplicating dozens of zero stores for
+    // every bounded resource-workspace specialization in the compiler APP.
+    static_assert((unsigned)Error::NONE==0 && (unsigned)Op::HALT==0,"zero compiler state changed");
+    memset(static_cast<void*>(this),0,sizeof(*this));
+    source_=p_=end_=source;length_=length;out_=out;capacity_=capacity;
+    lines_=lines;rf_available_=rf_available;resources_=resources;resource_data_=workspace;
+  }
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
@@ -266,6 +255,10 @@ class Compiler {
   ResourceWorkspace resource_data_;
   Op last_op_;
   uint16_t last_at_;
+  // Two previous short instructions: pc:16, opcode:8, first operand:8.
+  // Emission metadata works without an output buffer in the sizing pass.
+  uint32_t previous_[2];
+  uint8_t last_operand_;
   bool owned_resources() const { return resources_ && resources_->mode == ResourceMode::EMBEDDED; }
   bool resource_literals() const { return resources_ && (owned_resources() || resources_->id != 0xFFFF); }
   uint16_t intern_resource(const char* text, uint16_t length) {
@@ -363,11 +356,16 @@ class Compiler {
       fail(Error::FULL);
       return;
     }
+    if(pc_==last_at_+1) last_operand_=v;
     if (pass_ && out_) out_[pc_] = v;
     ++pc_;
   }
   void emit(Op op) {
-    if(op != Op::SOURCE_POS && op != Op::CHECK) {last_op_=op;last_at_=pc_;}
+    if(op != Op::SOURCE_POS) {
+      previous_[0]=previous_[1];
+      previous_[1]=((uint32_t)last_at_<<16)|((uint32_t)last_op_<<8)|last_operand_;
+      last_op_=op;last_at_=pc_;
+    }
     byte((uint8_t)op);
   }
   void u16(uint16_t v) {
@@ -400,17 +398,19 @@ class Compiler {
     } else if (value >= -32768 && value <= 32767 && value == (int)value) {
       emit(Op::CONST_I16);
       u16((uint16_t)(int16_t)value);
-    } else if (Value(value).integer()) {
-      emit(Op::CONST_I32);
-      const uint32_t n=(uint32_t)Value(value).integer_value();
-      for(uint8_t i=0;i<4;++i) byte((uint8_t)(n>>(i*8)));
-    } else if (literal && decimal(value, literal, finish)) {
-      // Exact decimal recipe avoids turning a three-byte .1 into F64+opcode.
     } else {
-      emit(Op::CONST_F64);
-      uint64_t bits = 0;
-      memcpy(&bits, &value, sizeof(bits));
-      for (uint8_t i = 0; i < 8; ++i) byte((uint8_t)(bits >> (i * 8)));
+      const Value number(value);
+      if(number.integer()) {
+        emit(Op::CONST_I32);
+        const uint32_t n=(uint32_t)number.integer_value();
+        for(uint8_t i=0;i<4;++i) byte((uint8_t)(n>>(i*8)));
+      } else if(literal && decimal(value,literal,finish)) {
+        // Exact decimal recipe avoids turning a three-byte .1 into F64+opcode.
+      } else {
+        emit(Op::CONST_F64);
+        const uint64_t bits=mk_math::bit_copy<uint64_t>(value);
+        for(uint8_t i=0;i<8;++i) byte((uint8_t)(bits>>(i*8)));
+      }
     }
     stack(1);
   }
@@ -578,6 +578,26 @@ class Compiler {
     // expressions retain their original evaluation and error semantics.
     emit(sub ? Op::GOSUB_DIRECT : Op::GOTO_DIRECT);
     u16(target_pc(number));p_=q;return true;
+  }
+  bool fixed_array_index(uint16_t& index) {
+#if defined(LANGUAGE_VM_TEST_NO_FUSION)
+    (void)index;return false;
+#else
+    // A bare unsigned integer has no numeric/I/O side effects. Out-of-range
+    // indices still compile and fail at the original array access at runtime.
+    const char* q=p_;
+    while(q<end_ && space(*q)) ++q;
+    if(q==end_ || !digit(*q)) return false;
+    uint32_t number=0;
+    do {
+      number=number*10+(unsigned)(*q++-'0');
+      if(number>65535) return false;
+    } while(q<end_ && digit(*q));
+    while(q<end_ && space(*q)) ++q;
+    // CONST_0..15 + LOAD_ARRAY is already two bytes; do not grow it to three.
+    if(q==end_ || *q!=')' || number<16) return false;
+    index=(uint16_t)number;p_=q+1;return true;
+#endif
   }
   bool reference(uint8_t& id) {
     if (!match('.')) return false;
@@ -757,6 +777,11 @@ class Compiler {
     }
     if (basic() && match('@')) {
       if (!match('(')) fail(Error::SYNTAX);
+      uint16_t index=0;
+      if(fixed_array_index(index)) {
+        source_position(primary_start);
+        operation(Op::LOAD_ARRAY_FIXED,1);u16(index);return;
+      }
       binary(0);
       if (!match(')')) fail(Error::EXPECTED_PAREN);
       source_position(primary_start);
@@ -957,8 +982,14 @@ class Compiler {
     Target t = target();
     if (!match('=')) fail(Error::SYNTAX);
     do {
+#if !defined(LANGUAGE_VM_TEST_NO_FUSION)
+      const uint16_t begin=pc_;
+#endif
       expression();
-      store(t);
+#if !defined(LANGUAGE_VM_TEST_NO_FUSION)
+      if(t.kind || !fuse_assignment(t.index,begin))
+#endif
+        store(t);
       skip();
       if (!basic() || !match(',')) break;
       const char* saved = p_;
@@ -979,6 +1010,25 @@ class Compiler {
           ++t.index;
       }
     } while (error_ == Error::NONE);
+  }
+  bool fuse_assignment(uint8_t index,uint16_t begin) {
+    if((last_op_!=Op::ADD && last_op_!=Op::SUB) || pc_!=last_at_+1) return false;
+    const uint32_t second=previous_[1];
+    if(previous_[0]!=(((uint32_t)begin<<16)|((uint32_t)Op::LOAD<<8)|index) ||
+       (second>>16)!=begin+2U) return false;
+    const Op op=(Op)((second>>8)&255);
+    uint8_t rhs=(uint8_t)second;
+    if(op>=Op::CONST_0 && op<=Op::CONST_15) {
+      if(last_at_!=begin+3) return false;
+      rhs=(uint8_t)op-(uint8_t)Op::CONST_0;
+    } else {
+      if(op!=Op::LOAD || last_at_!=begin+4) return false;
+      rhs|=0x40;
+    }
+    // Exactly LOAD lhs, LOAD/CONST rhs, ADD/SUB, STORE lhs. Never cross
+    // diagnostics, extra arithmetic, references, arrays or I/O.
+    rhs|=(uint8_t)(((unsigned)last_op_-(unsigned)Op::ADD)<<7);
+    pc_=begin;operation(Op::UPDATE_LOCAL,-1);byte(index);byte(rhs);return true;
   }
   void print() {
     emit(Op::PRINT_BEGIN);
@@ -1228,7 +1278,15 @@ class Compiler {
       if (cmd == IF) {
         expression();
         (void)keyword("THEN", 1);
-        operation(Op::JUMP_FALSE, -1);
+#if !defined(LANGUAGE_VM_TEST_NO_FUSION)
+        if(last_op_>=Op::EQ && last_op_<=Op::GE && pc_==last_at_+1) {
+          // Fuse only the final comparison, never an earlier operand or an
+          // operation across a source prefix. Sizing and EMIT take this path.
+          const Op comparison=last_op_;pc_=last_at_;
+          operation(Op::COMPARE_FALSE,-1);byte(comparison_mask(comparison));
+        } else
+#endif
+          operation(Op::JUMP_FALSE, -1);
         const uint16_t patch_at = pc_;
         u16(0);
         skip();

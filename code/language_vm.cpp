@@ -4,6 +4,10 @@
 #include "mk_math.hpp"
 
 namespace language_vm {
+#if defined(LANGUAGE_VM_TRACE)
+// Host-only instrumentation. No callback, counters or ABI fields are shipped.
+void trace_instruction(const View&, uint16_t, uint32_t);
+#endif
 namespace {
 uint16_t word(const uint8_t* p) { return (uint16_t)(p[0] | ((uint16_t)p[1] << 8)); }
 uint32_t dword(const uint8_t* p) {
@@ -21,13 +25,13 @@ uint32_t record_number(const View& v, uint16_t i) {
 // record. A single indexed read replaces a second opcode switch in the hot loop.
 constexpr uint8_t wire_widths[] = {
   1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1, // 0..15
-  1,1,1,1,1,1,1,1,1,1,1,1,2,1,3,3, // 16..31
+  1,1,1,1,1,1,1,1,1,1,1,1,2,0,3,3, // 16..31 (29: retired CHECK)
   1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
   255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
-  255,1,1,255,255,1,1,3,3,3,5,1,3,3 // 80..93
+  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3 // 80..96
 };
-static_assert(sizeof(wire_widths)==(unsigned)Op::GOSUB_DIRECT+1,"opcode width table changed");
+static_assert(sizeof(wire_widths)==(unsigned)Op::UPDATE_LOCAL+1,"opcode width table changed");
 uint16_t next(const View& v, uint16_t pc) {
   if(pc>=v.end) return 0;
   const uint8_t op=v.bytes[pc];
@@ -103,6 +107,30 @@ bool array_index(Value value, uint16_t capacity, uint16_t& index) {
   if (n >= capacity || mk_math::fabs(number - n) > 1e-7) return false;
   index = (uint16_t)n;
   return true;
+}
+__attribute__((noinline)) bool comparison(Value a,Value b,uint8_t mask) {
+  // Four order states also preserve unordered IEEE comparisons. No floating
+  // reassociation or replacement with single precision is involved.
+  unsigned order;
+  if(a.integer() && b.integer()) {
+    const int32_t x=a.integer_value(),y=b.integer_value();
+    order=x<y ? 0 : x==y ? 1 : 2;
+  } else {
+    const double x=a.number(),y=b.number();
+    order=x<y ? 0 : x==y ? 1 : x>y ? 2 : 3;
+  }
+  return (mask&(1U<<order))!=0;
+}
+Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
+  const uint8_t rhs=encoded&0x3F;
+  if(index>=26 || ((encoded&0x40) && rhs>=26)) return Error::INVALID_IMAGE;
+  const Value a=variables[index];
+  if(!a.finite()) return Error::MATH;
+  Value b=rhs;
+  if(encoded&0x40) {b=variables[rhs];if(!b.finite()) return Error::MATH;}
+  const Value result=(encoded&0x80) ? a-b : a+b;
+  if(!result.finite()) return Error::MATH;
+  variables[index]=result;return Error::NONE;
 }
 }  // namespace
 
@@ -182,7 +210,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
-        op != Op::LOAD_ARRAY && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
+        op != Op::LOAD_ARRAY && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
     if (((op == Op::LOAD || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
@@ -193,6 +221,9 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         (op == Op::READ_KEY && (v.expression || v.language != Language::BASIC)) ||
         (op == Op::PRINT_SEPARATOR && bytes[pc + 1] > 2) ||
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
+        (op == Op::COMPARE_FALSE && bytes[pc+1]>15) ||
+        (op == Op::UPDATE_LOCAL && (bytes[pc+1]>=26 ||
+            ((bytes[pc+2]&0x40) && (bytes[pc+2]&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
     if (op >= Op::DATA && op <= Op::SOURCE_POS && v.language != Language::BASIC)
@@ -242,6 +273,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) &&
         !target(word(bytes + pc + 1)))
       return Error::INVALID_IMAGE;
+    if(op==Op::COMPARE_FALSE && !target(word(bytes+pc+2))) return Error::INVALID_IMAGE;
     if (op == Op::DO_FOCAL &&
         (!target(word(bytes + pc + 1)) ||
          !target(word(bytes + pc + 3) == 0xFFFF
@@ -391,6 +423,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
   };
   while (error == Error::NONE) {
+    if (s.call_count && s.calls[s.call_count - 1].end &&
+        s.pc >= s.calls[s.call_count - 1].end) {
+      const auto frame = s.calls[--s.call_count];
+      s.pc = frame.resume;
+      s.loop_count = frame.loops;
+    }
     // SOURCE_POS is a diagnostic prefix, not work for the evaluator. Its
     // bytes remain available to source_column() even after a jump/resume.
     // Skip it before dispatch/service accounting; useful instructions still
@@ -401,12 +439,6 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       s.pc=(uint16_t)(s.pc+3);
     }
     if(error!=Error::NONE) break;
-    if (s.call_count && s.calls[s.call_count - 1].end &&
-        s.pc >= s.calls[s.call_count - 1].end) {
-      const auto frame = s.calls[--s.call_count];
-      s.pc = frame.resume;
-      s.loop_count = frame.loops;
-    }
     if (s.pc >= v.end) {
       error = Error::INVALID_IMAGE;
       break;
@@ -421,12 +453,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       break;
     }
     const Op op = (Op)v.bytes[s.pc];
+#if defined(LANGUAGE_VM_TRACE)
+    trace_instruction(v, s.pc, steps);
+#endif
     // Metadata needs no operand decoder, constant decoder or value scratch.
     // Keep logical steps/service cadence and the original safety checks.
-    if(op==Op::LINE || op==Op::CHECK) {
+    if(op==Op::LINE) {
       ++s.pc;
-      if(op==Op::LINE ? s.sp!=0 : !s.sp) error=Error::STACK;
-      else if(op==Op::CHECK && !data.stack[s.sp-1].finite()) error=Error::MATH;
+      if(s.sp) error=Error::STACK;
       continue;
     }
     if(op>=Op::CONST_0 && op<=Op::CONST_15) {
@@ -468,13 +502,6 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           event(Event::FINISH, nullptr, 0, value);
         return {error, instruction, source_line(v, instruction), steps};
       }
-      case Op::LINE:
-        if (s.sp) error = Error::STACK;
-        // The instruction loop already services USB/keyboard/watchdog before
-        // the first instruction and at most 32 instructions apart. Polling
-        // again on every short BASIC line repeats that work unnecessarily.
-        break;
-      case Op::SOURCE_POS:
       case Op::DATA:
         break;
       case Op::READ_DATA: {
@@ -553,6 +580,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         else if (error == Error::NONE)
           data.variables[*p] = value;
         break;
+      case Op::UPDATE_LOCAL:
+        error=update_local(data.variables,*p,p[1]);
+        break;
       case Op::LOAD_REF:
       case Op::STORE_REF:
         if (op == Op::STORE_REF) value = pop();
@@ -565,11 +595,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if (op == Op::LOAD_REF && error == Error::NONE) push(value);
         break;
       case Op::LOAD_ARRAY:
-      case Op::STORE_ARRAY: {
+      case Op::STORE_ARRAY:
+      case Op::LOAD_ARRAY_FIXED: {
         if (op == Op::STORE_ARRAY) value = pop();
-        a = pop();
         uint16_t index = 0;
-        if (!data.array || !array_index(a, data.array_count, index))
+        bool valid;
+        if(op==Op::LOAD_ARRAY_FIXED) {index=word(p);valid=data.array && index<data.array_count;}
+        else {a=pop();valid=data.array && array_index(a,data.array_count,index);}
+        if (!valid)
           error = v.language == Language::BASIC ? Error::ARRAY_RANGE : Error::VARIABLE;
         if (error == Error::NONE) {
           if (op == Op::STORE_ARRAY)
@@ -598,12 +631,6 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::NOT:
         a = pop();
         push((int32_t)a.zero());
-        break;
-      case Op::CHECK:
-        if (!s.sp)
-          error = Error::STACK;
-        else if (!data.stack[s.sp - 1].finite())
-          error = Error::MATH;
         break;
       case Op::ADD:
       case Op::SUB:
@@ -654,22 +681,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
               value = Value::modulo(a,b);
             break;
           case Op::EQ:
-            value = a == b;
-            break;
           case Op::NE:
-            value = a != b;
-            break;
           case Op::LT:
-            value = a < b;
-            break;
           case Op::LE:
-            value = a <= b;
-            break;
           case Op::GT:
-            value = a > b;
-            break;
           case Op::GE:
-            value = a >= b;
+            value=comparison(a,b,comparison_mask(op));
             break;
           case Op::AND:
             value = a != 0 && b != 0;
@@ -691,6 +708,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         break;
       }
+      case Op::COMPARE_FALSE:
+        if(s.sp<2) error=Error::STACK;
+        else {
+          s.sp=(uint8_t)(s.sp-2);
+          // The cold verifier rejects reserved mask bits. The hot operation
+          // uses only four bounded order bits, never an unchecked table index.
+          if(!comparison(data.stack[s.sp],data.stack[s.sp+1],*p)) jump(word(p+1));
+        }
+        break;
       case Op::FUNCTION: {
         const Function f = (Function)*p;
         if (f != Function::RND && f != Function::PI_VALUE && f < Function::SIZE) a = pop();

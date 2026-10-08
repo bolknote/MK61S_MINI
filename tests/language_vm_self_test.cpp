@@ -251,10 +251,15 @@ void test_validation() {
   f.compile("10 IF 1 GOTO 30\n20 A=1\n30 END\n");
   const auto image = std::vector<uint8_t>(f.image, f.image + f.view.size);
   const uint16_t size = f.view.size;
-  f.image[4]=2;
   View old;
-  assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
+  for(uint8_t version:{1,2,3}) {
+    f.image[4]=version;assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
+  }
   f.image[4]=VERSION;
+  const uint8_t first=f.image[f.view.code];
+  f.image[f.view.code]=(uint8_t)Op::CHECK;f.crc();
+  assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
+  f.image[f.view.code]=first;f.crc();
   for (uint16_t n = 0; n < size; ++n) {
     View v;
     assert(inspect(f.image, n, v) != Error::NONE);
@@ -352,6 +357,102 @@ void test_direct_branches_and_dynamic_fallback() {
   const uint16_t direct=(uint16_t)(f.view.code+3);
   f.image[direct+1]=(uint8_t)(direct+1);f.image[direct+2]=(uint8_t)((direct+1)>>8);f.crc();
   View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+}
+void test_fused_operations() {
+#if !defined(LANGUAGE_VM_TEST_NO_FUSION)
+  const Value samples[]={Value(0),Value(-1),Value(INT32_MIN),Value(INT32_MAX),
+      Value(.1),Value(-.1),Value(2147483648.0),Value(1e16),
+      Value::floating_bits(UINT64_C(0x8000000000000000)),Value(DBL_MAX),
+      Value(std::numeric_limits<double>::infinity()),
+      Value(std::numeric_limits<double>::quiet_NaN())};
+  for(Language language:{Language::BASIC,Language::FOCAL})
+    for(bool subtract:{false,true}) {
+      Fixture f;
+      const char* source=language==Language::BASIC ?
+          (subtract?"10 A=A-B\n":"10 A=A+B\n") :
+          (subtract?"1.10 S A=A-B\n":"1.10 S A=A+B\n");
+      f.compile(source,language);
+      const uint16_t pc=(uint16_t)(f.view.code+(language==Language::BASIC?3:0));
+      assert((Op)f.image[pc]==Op::UPDATE_LOCAL);
+      const auto sizing=compile(language,source,(uint16_t)strlen(source),nullptr,MAX_IMAGE);
+      assert(sizing.size==f.view.size && sizing.stack==f.view.stack);
+      std::vector<uint8_t> exact(f.view.size);
+      assert(compile(language,source,(uint16_t)strlen(source),exact.data(),(uint16_t)exact.size()).error==Error::NONE);
+      assert(!memcmp(exact.data(),f.image,exact.size()));
+      for(Value a:samples) for(Value b:samples) {
+        f.vars[0]=a;f.vars[1]=b;
+        const Value expected=subtract?a-b:a+b;
+        const bool finite=a.finite() && b.finite() && expected.finite();
+        const auto result=run(f.view,f.state,services);
+        assert(result.error==(finite?Error::NONE:Error::MATH));
+        assert(f.vars[0].representation()==(finite?expected:a).representation());
+      }
+      for(unsigned bad:{26U,255U}) {
+        const uint8_t saved=f.image[pc+1];f.image[pc+1]=(uint8_t)bad;f.crc();
+        View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+        f.image[pc+1]=saved;f.crc();
+      }
+      const uint8_t saved=f.image[pc+2];f.image[pc+2]=0x40|26;f.crc();
+      View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+      f.image[pc+2]=saved;f.crc();
+    }
+  for(unsigned n:{0U,1U,15U,16U,63U}) for(bool subtract:{false,true}) {
+    Fixture f;const std::string source="10 A=A"+std::string(subtract?"-":"+")+std::to_string(n)+"\n";
+    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code+3);
+    assert(n<=15 ? (Op)f.image[pc]==Op::UPDATE_LOCAL && (f.image[pc+2]&63)==n : (Op)f.image[pc]==Op::LOAD);
+    for(Value a:samples) {
+      f.vars[0]=a;const Value expected=subtract?a-Value(n):a+Value(n);
+      const bool finite=a.finite() && expected.finite();
+      assert(run(f.view,f.state,services).error==(finite?Error::NONE:Error::MATH));
+      assert(f.vars[0].representation()==(finite?expected:a).representation());
+    }
+  }
+  // Keep original grouping, dynamic/I/O order and diagnostic prefixes.
+  Fixture f;f.compile("10 A=1e16;B=-1e16;C=1;A=A+B+C\n");
+  assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==1);
+  f.compile("10 A=A+64\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
+  f.compile("10 A=A+-0\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
+  f.compile("10 A=A+INPUT()\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
+  f.compile("10 A=@(128)\n");
+  const uint16_t fixed=(uint16_t)(f.view.code+6);
+  assert((Op)f.image[fixed]==Op::LOAD_ARRAY_FIXED);
+  f.array[128]=Value(.1);assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==Value(.1));
+  f.array[128]=Value(std::numeric_limits<double>::infinity());
+  assert(run(f.view,f.state,services).error==Error::MATH);
+  f.state.array_count=128;
+  auto result=run(f.view,f.state,services);
+  assert(result.error==Error::ARRAY_RANGE && source_column(f.view,result.pc)==6);
+  f.compile("10 A=@(0)\n");assert((Op)f.image[f.view.code+3]==Op::CONST_0); // two-byte form stays smaller
+  f.compile("10 A=@(65535)\n");assert(run(f.view,f.state,services).error==Error::ARRAY_RANGE);
+  const char* relations[]={"=","#","<","<=",">",">="};
+  for(unsigned relation=0;relation<6;++relation) {
+    const std::string source="10 IF A"+std::string(relations[relation])+"B C=1 ELSE C=2\n";
+    f.compile(source.c_str());const uint16_t pc=(uint16_t)(f.view.code+7);
+    assert((Op)f.image[pc]==Op::COMPARE_FALSE && f.image[pc+1]==comparison_mask((Op)((unsigned)Op::EQ+relation)));
+    for(Value a:samples) for(Value b:samples) {
+      f.vars[0]=a;f.vars[1]=b;f.vars[2]=0;
+      result=run(f.view,f.state,services);
+      if(!a.finite() || !b.finite()) {assert(result.error==Error::MATH && f.vars[2]==0);continue;}
+      const bool expected=relation==0?a==b:relation==1?a!=b:relation==2?a<b:
+                          relation==3?a<=b:relation==4?a>b:a>=b;
+      assert(result.error==Error::NONE && f.vars[2]==(expected?1:2));
+    }
+    // Continuation validation is structural: an injected unordered stack
+    // value must still preserve the original IEEE comparison truth table.
+    f.state.pc=pc;f.state.sp=2;f.state.call_count=f.state.loop_count=0;
+    f.state.data_pc=f.view.code;f.state.data_index=0;
+    f.values[0]=Value(std::numeric_limits<double>::quiet_NaN());f.values[1]=0;
+    assert(run(f.view,f.state,services,0,true).error==Error::NONE);
+    assert(f.vars[2]==(relation==1?1:2));
+    const uint8_t saved=f.image[pc+1];
+    for(unsigned bad:{18U,25U,255U}) {
+      f.image[pc+1]=(uint8_t)bad;f.crc();View invalid;
+      assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+    }
+    f.image[pc+1]=saved;f.image[pc+2]=(uint8_t)(pc+1);f.image[pc+3]=(uint8_t)((pc+1)>>8);f.crc();
+    View invalid;assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+  }
+#endif
 }
 void test_parser_edges() {
   const char* invalid[] = {"10 A=INPUT\n", "10 A=INPUT(1)\n", "10 A=INPUT(,)\n",
@@ -460,6 +561,7 @@ int main() {
   test_loop_service_cadence();
   test_controls_and_traps();
   test_direct_branches_and_dynamic_fallback();
+  test_fused_operations();
   test_parser_edges();
   test_yield_resume();
   test_extension_image_validation_and_resume();

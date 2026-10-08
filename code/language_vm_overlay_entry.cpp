@@ -75,10 +75,8 @@ bool append(const char* text, uint16_t length, bool separate) {
   }
   size_t used = strlen(s.output);
   if (separate && used && used + 1 < sizeof(s.output)) s.output[used++] = ' ';
-  if (s.language == Language::BASIC && length >= sizeof(s.output) - used) {
-    s.failure = Error::FULL;
-    return false;
-  }
+  // BASIC has already returned through its bounded append above. FOCAL
+  // retains its historic truncation behavior; no second BASIC path exists.
   while (length-- && used + 1 < sizeof(s.output)) s.output[used++] = *text++;
   s.output[used] = 0;
   return true;

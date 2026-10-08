@@ -91,7 +91,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if system == "language-vm" and split_language_vm:
         # Includes FLOW_STEP, resource delivery and continuation policy.
         # These are measured image ceilings, not larger APP/workspace arenas.
-        budget = {"memory_bytes": 15_872 if local_float_math else 13_056}
+        # The fused v4 executor uses 13,060 bytes: one additional 32-byte
+        # allocation quantum against the old ceiling, not a larger APP arena.
+        budget = {"memory_bytes": 15_872 if local_float_math else 13_088}
     if budget is None:
         return
     budget = dict(budget)

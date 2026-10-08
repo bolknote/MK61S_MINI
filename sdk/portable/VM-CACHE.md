@@ -27,15 +27,15 @@ READY-запись.
 новое состояние исполнения с прежними правилами сохранения значений.
 Исходная длина сохраняется для SIZE и квоты массива.
 
-## Wire format v3
+## Wire format v4
 
 Все слова little-endian; opcode остаётся 8-битным. Образ не содержит native
-указателей. Магия `LBV1` сохранена, поле версии равно 3. Образы v1/v2 отвергаются.
+указателей. Магия `LBV1` сохранена, поле версии равно 4. Образы v1/v2/v3 отвергаются.
 
 | Смещение | Размер | Значение |
 | --- | --- | --- |
 | 0 | 4 | `LBV1` |
-| 4 | 1 | Версия 3 |
+| 4 | 1 | Версия 4 |
 | 5 | 1 | BASIC=1 / FOCAL=2 |
 | 6 | 1 | Требуемое число значений на стеке |
 | 7 | 1 | Флаги: expression=1, RF=2, resources=4, owned resources=8 |
@@ -60,6 +60,31 @@ SOURCE_POS остаются в коде. Бюджет заголовка, кар
 Вычисляемый номер, включая побочные эффекты INPUT(), использует прежние
 GOTO/GOSUB и прежнюю проверку номера. Cold verifier проверяет границы pc.
 
+Три составные инструкции v4:
+
+| Opcode | Операнды | Действие |
+| --- | --- | --- |
+| 94 LOAD_ARRAY_FIXED | u16 index | Загрузка массива без промежуточной константы/стека |
+| 95 COMPARE_FALSE | u8 mask, u16 pc | Сравнить два значения, перейти при ложном результате |
+| 96 UPDATE_LOCAL | u8 variable, u8 rhs | Обновить локальную переменную ADD/SUB без стека |
+
+COMPARE_FALSE использует биты less/equal/greater/unordered; маски EQ/NE/LT/LE/GT/GE
+равны 2/13/1/3/4/6. Cold verifier отвергает старшие биты и неверные границы pc.
+UPDATE_LOCAL: rhs bits 0..5 — число/индекс, bit 6 — индекс переменной вместо
+числа, bit 7 — SUB вместо ADD. Индексы проверяются и cold, и hot; конечность
+операндов/результата проверяется до записи. Компилятор первого этапа эмитирует
+только RHS-переменную или CONST_0..15 и только точную последовательность
+`A=A+B`/`A=A-B`/`A=A+1`: не пересекает SourcePos, ссылки, массивы, I/O или
+дополнительную арифметику. Группировка, overflow promotion и signed zero прежние.
+
+LOAD_ARRAY_FIXED эмитируется только для голого unsigned integer 16..65535;
+ошибка превышения квоты остаётся runtime-ошибкой на исходном `@`. Для 0..15
+прежняя двухбайтная пара компактнее и сохраняется. Динамические индексы,
+INPUT(), дроби и отрицательные числа не меняются. LOAD_ARRAY_FIXED разрешён
+также в INPUT expressions; остальные составные инструкции там запрещены.
+CHECK (29) в v4 зарезервирован и отвергается: все producing operations уже
+проверяют конечность, компиляторы v3 его тоже не эмитировали.
+
 Каталог и пул объединены в компактную последовательность
 `[u16 length][length готовых M8-байтов]`. PRINT_RESOURCE и INPUT_RESOURCE
 содержат `u16` смещение записи относительно конца кода. Это не ссылка на
@@ -71,7 +96,7 @@ Cold verifier проверяет весь каталог, границы ссы�
 инструкций остаётся 768 байт: увеличенный пул не раздувает bitmap на C-стеке.
 Проверенный сертификат 16 байт не содержит указателей на cold APP.
 
-Внутренний compiler/runtime request ABI равен 6, ARM Request — 40 байт,
+Внутренний compiler/runtime request ABI равен 7, ARM Request — 40 байт,
 CompilerContext — прежние 240 байт, ExecutionState — прежние 1520 байт.
 Compiler/VM/input и language-flow context magics обновлены. Размер union
 сам по себе не гарантирует совместимость смещений CompilerStage.
@@ -85,7 +110,7 @@ Compiler/VM/input и language-flow context magics обновлены. Разме
 
 - Проверка конечности числа выполняется в каждой производящей операции.
   Повторные CHECK не эмитируются; NaN/Inf по-прежнему дают MATH до STORE
-  или следующей операции. Явный CHECK в wire format остаётся проверяемым.
+  или следующей операции. В v4 неиспользуемый CHECK удалён из executor.
 - SOURCE_POS — диагностический префикс. Он сохраняет столбцы ошибок, но
   пропускается перед основным dispatch и не входит в счётчик steps/limit.
   Service вызывается до первой и каждой 32-й полезной инструкции,
@@ -104,6 +129,65 @@ Compiler/VM/input и language-flow context magics обновлены. Разме
 
 Этот быстрый путь не превращает CORE transcendental math в APP FLOAT и не
 заменяет LIBM. Выбранный math backend и числовой ABI остаются прежними.
+
+### Составные операции: первый этап
+
+Выбор сделан по host-профилю неизменённого Turochamp (2/8, без книги), а не
+по отдельным именам файлов в runtime. До слияния: 7272816 полезных dispatch;
+составные операции дали около 12% сокращения. Это количество инструкций VM,
+не device cycles или обещание такого же процента времени всей игры.
+
+115 модулей компилируются; ни один owned-образ не вырос. Сумма 54662 → 53797
+байт, High Noon 6992 → 6975, Turochamp 40232 → 39488 (39568 aligned).
+Пакет шахмат всё ещё не помещается в payload 23888; увеличение кеша, межмодульный
+CALL/RUN, замена cache policy и JIT в эту итерацию не входят.
+
+Статические массивы/ABI states не добавлены. Compiler emission хранит только
+два предыдущих коротких opcode в своём временном объекте; sizing и EMIT
+пользуются одной схемой, без дополнительной копии всего кода/IR. Поля cold
+compiler обнуляются общим initializer; fixed numeric bit copies не вызывают
+APP memcpy, большой int32 token упаковывается через один Value, не два.
+
+Цена loaded APP против предыдущего этапа: BASIC 18216 → 18488, FOCAL
+18588 → 18604, LANGVM 12876 → 13060, LANGIN 10960 → 11216 байт. APP FLOAT
+LANGVM 15356 → 15540. Это разные фазы, их нельзя суммировать как одновременно
+занятую RAM. Общий APP arena по-прежнему 20 КиБ; бюджет cache 24576 не меняется.
+Hot CORE/LIBM size gate вырос на один 32-байтный allocation quantum:
+13056 → 13088, потому что реальный образ на 4 байта превышает прежний ceiling.
+FOCAL storage/memory и APP FLOAT ceilings сохранены. Это небольшая цена
+native executor/компилятора за меньшие модули и меньшее число dispatch, не
+нулевая цена динамической RAM.
+
+Регрессионные проверки покрывают IEEE order/unordered, NaN/Inf, signed zero,
+int32 overflow, ошибки/диагностику, точный sizing, invalid operands/targets,
+INPUT whitelist, resume и bounded cancellation. Host ASan/UBSan, полный
+Turochamp (правила/поиск/UI/книга) и 24624 High Noon cases прошли.
+Профилировщик LANGUAGE_VM_TRACE — только host build: в shipping APP нет
+счётчиков, callback-полей или дополнительных firmware imports.
+
+Matched baseline исходников `488eaa248` (VM в нём — `b81f5e617`). Согласованные
+полные сборки F401 CORE/cache0 и F411 LIBM/cache24576: sealed Flash 256664 →
+256664 и 358580 → 358588; ELF static RAM/dynamic pool неизменны — 37904/22760
+и 83708/32256 соответственно. Внешние APP-файлы суммарно +764 байта, не
+внутренняя Flash. APP FLOAT и CORE/LIBM имеют отдельные loaded-image ceilings.
+
+Matched ARM instruction gate (500 итераций, включает initial validation,
+без I/O/загрузки APP): integer/array, mixed, wide, decimals и compound BASIC,
+mixed FOCAL — ×1,038..1,053; IF/GOTO BASIC ×1,690; GOSUB BASIC ×1,557;
+целочисленный FOCAL ×1,860; DO FOCAL ×1,643. Во всех десяти случаях число
+инструкций меньше, числовые результаты побитово совпадают. Это ARM
+instruction counts, не аппаратные задержки. Полные бинарные отчёты находятся
+в `arm-release/report.json` и `size-comparison.json` рабочего каталога.
+
+115 реальных ARM sizing/EMIT/verifier также прошли: максимум вложенного
+compiler/service C-стека 6908 байт (ранее 6820), verifier 972. Это не полный
+device peak. LIBM и APP FLOAT overlay/INPUT/resume и F401 CORE compiler flow
+проверены на трёх адресах с перезаписью выгруженного APP.
+
+Локальные данные: `tmp/vm-fusion-20261008.iL2KAw/`. Новых hardware timings
+этого этапа пока нет; устройство не перепрошивалось. Read-only identity
+показал другой установленный MCU `D0B44A55` и 4 свободных inode; это лимит
+ФС (не RAM), который не расходуется RAM-кешем VM.
 
 ## Бюджет и lifetime
 

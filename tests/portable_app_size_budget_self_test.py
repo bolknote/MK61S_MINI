@@ -70,7 +70,7 @@ except ValueError as error:
 else:
     raise AssertionError("oversize greedy-packed hybrid BASIC.APP was accepted")
 
-for local, limit in ((False, 13056), (True, 15872)):
+for local, limit in ((False, 13088), (True, 15872)):
     BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": limit},
                                        local, False, True)
     try:

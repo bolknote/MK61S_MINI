@@ -66,6 +66,7 @@ int main(){
     request.version=3;assert(!compatible(&request));
     request.version=4;assert(!compatible(&request));
     request.version=5;assert(!compatible(&request));
+    request.version=6;assert(!compatible(&request));
     request.version=REQUEST_VERSION;assert(compatible(&request));
     request.size-=8;assert(!compatible(&request));
   }

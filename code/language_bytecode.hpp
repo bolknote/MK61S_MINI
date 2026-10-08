@@ -73,7 +73,7 @@ enum class Op : uint8_t {
   OR,
   XOR,
   FUNCTION,
-  CHECK,
+  CHECK, // retired in v4; wire value 29 is invalid
   JUMP,
   JUMP_FALSE,
   GOTO,
@@ -115,7 +115,10 @@ enum class Op : uint8_t {
   CONST_I32,
   FLOOR_DIV,
   GOTO_DIRECT,
-  GOSUB_DIRECT
+  GOSUB_DIRECT,
+  LOAD_ARRAY_FIXED,
+  COMPARE_FALSE,
+  UPDATE_LOCAL
 };
 enum class Function : uint8_t {
   SIN,
@@ -141,8 +144,17 @@ enum class Function : uint8_t {
   COLS,
   ROWS
 };
+// Bits select less/equal/greater/unordered results of a numeric comparison.
+constexpr uint8_t comparison_mask(Op op) {
+  // Packed nibbles: EQ NE LT LE GT GE. Called only for that bounded range.
+  return (uint8_t)((UINT32_C(0x6431D2)>>(((unsigned)op-(unsigned)Op::EQ)*4))&15);
+}
+static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
+              comparison_mask(Op::LT)==1 && comparison_mask(Op::LE)==3 &&
+              comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
+              "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 3;
+static constexpr uint16_t VERSION = 4;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
