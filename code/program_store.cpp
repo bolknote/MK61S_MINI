@@ -572,6 +572,7 @@ static int type_index(ProgramType type) {
     case ProgramType::CHIP8: return -1; // счётчик CHIP-8 вычисляется по inode
     case ProgramType::MARKDOWN: return -1; // новый тип без миграции каталога
     case ProgramType::MK61_BINARY: return -1;
+    case ProgramType::SHEET: return -1;
   }
   return -1;
 }
@@ -579,6 +580,7 @@ static int type_index(ProgramType type) {
 static bool supported_type(ProgramType type) {
   return type == ProgramType::APP || type == ProgramType::CHIP8 ||
          type == ProgramType::MARKDOWN || type == ProgramType::MK61_BINARY ||
+         type == ProgramType::SHEET ||
          type_index(type) >= 0;
 }
 
@@ -588,6 +590,7 @@ static u16 maximum_data_len(ProgramType type) {
   if(type == ProgramType::IMAGE1) return MAX_IMAGE1_SIZE;
   if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;
   if(type == ProgramType::MK61_BINARY) return MAX_MK61_BINARY_SIZE;
+  if(type == ProgramType::SHEET) return MAX_SHEET_SIZE;
   if(type == ProgramType::APP) return MAX_APP_FILE_SIZE;
   return MAX_MK61_TEXT_SIZE;
 }
@@ -605,6 +608,7 @@ static const char* extension_for_type(ProgramType type) {
     case ProgramType::CHIP8: return "ch8";
     case ProgramType::MARKDOWN: return "md";
     case ProgramType::MK61_BINARY: return "bin";
+    case ProgramType::SHEET: return "mks";
   }
   return "bin";
 }
@@ -622,6 +626,7 @@ static const char* magic_for_type(ProgramType type) {
     case ProgramType::CHIP8: return "C1";
     case ProgramType::MARKDOWN: return "T2";
     case ProgramType::MK61_BINARY: return "M3";
+    case ProgramType::SHEET: return "S1";
   }
   return "??";
 }
@@ -3029,7 +3034,8 @@ bool type_from_magic(TypeMagic magic, ProgramType& type) {
     ProgramType::APP,
     ProgramType::CHIP8,
     ProgramType::MARKDOWN,
-    ProgramType::MK61_BINARY
+    ProgramType::MK61_BINARY,
+    ProgramType::SHEET
   };
   for(const ProgramType candidate : TYPES) {
     if(type_magic(candidate) != magic) continue;

@@ -2695,6 +2695,9 @@ u16 class_terminal::file_capacity(program_store::ProgramType type) {
       if(type == program_store::ProgramType::MK61_BINARY) {
         return program_store::MAX_MK61_BINARY_SIZE;
       }
+      if(type == program_store::ProgramType::SHEET) {
+        return program_store::MAX_SHEET_SIZE;
+      }
       if(type == program_store::ProgramType::APP) {
         return program_store::MAX_APP_FILE_SIZE;
       }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Таблица МК-61s — проект интерфейса</title>
+<style>
+:root{color-scheme:light;--ink:#202a25;--muted:#5b6761;--paper:#f5f3ed;--green:#376047}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 system-ui,sans-serif}main{max-width:1120px;margin:auto;padding:48px 28px}.eyebrow{font-size:13px;letter-spacing:.12em;color:var(--green)}h1{font-size:clamp(32px,5vw,56px);line-height:1.1;margin:12px 0 20px}h2{font-size:26px;margin-top:42px}p{max-width:850px}.lead{font-size:21px;color:var(--muted)}nav{display:flex;gap:8px;flex-wrap:wrap;margin:28px 0 22px}button{font:inherit;padding:8px 16px;background:transparent;border:1px solid #b3bdb4;border-radius:7px;cursor:pointer}button[aria-pressed=true]{background:var(--green);color:white;border-color:var(--green)}.lcd{background:#25302a;border:16px solid #25302a;border-radius:16px;max-width:992px}.lcd img{width:100%;display:block;image-rendering:pixelated}.caption{color:var(--muted);min-height:64px}.boards img{max-width:100%;height:auto;border-radius:8px}table{border-collapse:collapse;width:100%;max-width:940px}td,th{border-bottom:1px solid #d5dcd4;padding:12px;text-align:left;vertical-align:top}code{background:#e6eade;padding:3px 6px;border-radius:4px}.note{padding:20px 24px;background:#e6eade;border-radius:8px;margin:24px 0}a{color:var(--green)}small{color:var(--muted)}
+</style><main>
+<div class="eyebrow">МК-61s / КОНЦЕПЦИЯ 01 / 8 ОКТЯБРЯ 2026</div>
+<h1>Таблица, которая считает<br>как калькулятор</h1>
+<p class="lead">Лист с адресами A1, B2… Формула — последовательность операций МК-61 со ссылками на ячейки. Макеты используют настоящие растры 5×8 и 3×5 из прошивки; исходные экраны — ровно 192×64.</p>
+<nav aria-label="Макеты экранов"><button data-screen="01-sheet" aria-pressed="true">Таблица</button><button data-screen="02-compact" aria-pressed="false">Обзор</button><button data-screen="03-formula" aria-pressed="false">Формула</button><button data-screen="04-reference" aria-pressed="false">Ссылка</button><button data-screen="05-actions" aria-pressed="false">Действия</button><button data-screen="06-cycle" aria-pressed="false">Ошибка</button><button data-screen="09-fixed-both" aria-pressed="false">Фиксация</button></nav>
+<div class="lcd"><img id="screen" src="01-sheet-preview.png" alt="Предлагаемый экран таблицы МК-61s"></div>
+<p id="caption" class="caption">Режим по умолчанию: 5×8, 3 столбца и 5 строк. Сверху — формула выбранной ячейки; внутри таблицы — её результат.</p>
+<small>Переключатель показывает состояния макета. Ввод формул и вычисления здесь не реализованы.</small>
+<h2>Выбранная компоновка</h2>
+<p>Основной вид — <strong>3 столбца × 5 строк, шрифт 5×8</strong>. Компактный режим 3×5 — для обзора. Верхняя строка всегда принадлежит выбранной ячейке, нижняя — доступным действиям. Заголовок приложения не занимает место в рабочем экране.</p>
+<div class="boards"><img src="imagegen-concept.png" alt="Иллюстрация предложенного интерфейса на концептуальном приборе с графическим дисплеем"><p><small>Иллюстрация компоновки, созданная встроенным imagegen. Корпус взят как визуальный ориентир; это концепт графического прибора. Точную геометрию показывают следующие пиксельные макеты. <a href="imagegen-prompt.txt">Промпт генерации</a>.</small></p><img src="layout-options.png" alt="Сравнение двух вариантов плотности таблицы"><img src="formula-workflow.png" alt="Выбор C2, ввод формулы, выбор ссылки B2 и заполнение вниз"></div>
+<h2>Ввод формулы</h2>
+<p>Пример: в A2 записано 2, в B2 — 125. Для C2 вводим <code>A2 В↑ B2 ×</code> и получаем 250. Ссылки вставляются выбором ячейки: печатать латинские адреса на приборе не требуется. Знак <code>=</code> на экране означает формулу и добавляется автоматически.</p>
+<p>Ссылка ведёт себя как ввод числа в X по правилам МК-61; <code>В↑</code> отделяет операнды, а <code>OK</code> сохраняет всю формулу. Пользователь редактирует последовательность операций; читабельный результат появляется сразу, когда черновик можно вычислить.</p>
+<p>В новой ячейке одиночное число сохраняется как число. Как только добавлена ссылка или операция, черновик становится формулой. Отдельная клавиша «=» не нужна. Подпись вводится через <code>USER → Тип/формат → Текст</code> существующим буквенным редактором.</p>
+<h2>Как закрепить адрес</h2>
+<p>В режиме выбора ссылки <strong>USER</strong> переключает <code>B2 → $B2 → B$2 → $B$2 → B2</code>. Эти варианты означают свободную ссылку, закреплённый столбец B, закреплённую строку 2 и закрепление обоих. <strong>OK</strong> вставляет ссылку. Символ <code>$</code> появляется автоматически; набирать его буквенным редактором не требуется.</p>
+<div class="boards"><img src="reference-modes.png" alt="Четыре режима фиксации ссылки B2, переключаемые кнопкой USER"></div>
+<table><tr><th>Клавиша</th><th>В таблице</th><th>В формуле</th></tr>
+<tr><td>← / →</td><td>Столбец</td><td>Предыдущий / следующий шаг</td></tr>
+<tr><td>ШГ− / ШГ+</td><td>Строка вверх / вниз</td><td>Переход по строкам при выборе ссылки</td></tr>
+<tr><td>OK</td><td>Редактировать</td><td>Записать; в выборе ссылки — вставить</td></tr>
+<tr><td>USER</td><td>Действия с ячейкой и листом</td><td>Выбрать ссылку; в выборе ссылки — фиксация адреса $</td></tr>
+<tr><td>Цифры, В↑, + − × ÷, F, K</td><td>Цифра начинает черновик нового значения</td><td>Обычный ввод калькулятора, включая функции</td></tr>
+<tr><td>Cx</td><td>Очистка через меню действий</td><td>Удалить цифру / выбранный шаг</td></tr>
+<tr><td>ESC</td><td>Выйти из листа</td><td>Отменить черновик; из выбора ссылки — вернуться к черновику</td></tr></table>
+<h2>Поведение ячеек</h2>
+<p>Три типа: число, подпись, формула. При копировании C2 в C3 относительные ссылки A2 и B2 становятся A3 и B3. USER в выборе ссылки переключает <code>A2</code>, <code>$A2</code>, <code>A$2</code>, <code>$A$2</code>. Фиксация действует на копирование; при вставке или удалении строк ссылка следует за исходной ячейкой.</p>
+<p>После записи меняются только зависимые ячейки. Каждая формула считает с собственным начальным стеком; режим углов DEG/RAD/GRD хранится в листе. Пустая ячейка в числовой формуле даёт 0, ссылка на текст — ошибку типа.</p>
+<p>Ошибки локальны: <code>#ЦИКЛ</code>, <code>#ССЫЛ</code>, <code>#ЧИСЛО</code>, <code>#ТИП</code>. Полное значение и объяснение ошибки открываются в деталях ячейки. Число не обрезается до другого числа: сначала научная запись, затем <code>#####</code>, если оно всё ещё не помещается.</p>
+<div class="note"><strong>Первая версия:</strong> один лист, числа и подписи, формулы, выбор ссылок, копирование и заполнение, отмена, сохранение и открытие. Функции — чистые операции калькулятора; размер листа, память, формат файла и скорость пересчёта требуют отдельного измерения.</div>
+<p>Следующие решения: проверка шрифта на физическом экране, ввод подписей через существующий текстовый редактор, полный экран сохранения/открытия, политика автосохранения. Макет 16×2 можно спроектировать отдельно как просмотр одной ячейки.</p>
+<p><a href="ui-proposal.json">Структурированная спецификация</a> · <a href="render_mockups.py">Исходник растровых макетов</a></p>
+</main><script>
+const captions={"01-sheet": "Режим по умолчанию: 5×8, 3 столбца и 5 строк. Сверху — формула выбранной ячейки; внутри таблицы — её результат.", "02-compact": "3×5, 4 столбца и 7 строк. Это дополнительный обзор; читаемость нужно проверить на физическом дисплее.", "03-formula": "Лента операций МК-61. USER выбирает ссылку, ←/→ перемещаются между шагами. OK записывает черновик, ESC отменяет.", "04-reference": "B2 выделена инверсией, цель C2 остаётся в рамке. OK вставляет ссылку. USER переключает B2 / $B2 / B$2 / $B$2.", "05-actions": "Копирование, заполнение вниз, отмена, тип, формат и очистка — в одном меню. «Лист…» ведёт к сохранению, открытию и настройкам листа.", "06-cycle": "Цикл показан в ячейке и строке состояния. Подробности объясняют причину, соседние независимые значения остаются доступными.", "09-fixed-both": "В выборе ячейки USER переключает B2 → $B2 → B$2 → $B$2 → B2. Символ $ появляется автоматически; OK вставляет выбранный вариант ссылки."};
+document.querySelectorAll('button[data-screen]').forEach(button=>button.addEventListener('click',()=>{
+ document.querySelectorAll('button[data-screen]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+ document.getElementById('screen').src=button.dataset.screen+'-preview.png';
+ document.getElementById('caption').textContent=captions[button.dataset.screen];
+}));
+</script></html>

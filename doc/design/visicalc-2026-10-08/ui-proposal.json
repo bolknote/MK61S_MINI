@@ -1,0 +1,83 @@
+{
+  "status": "UI proposal; not a firmware implementation",
+  "accepted_by_user": "5x8, 3 columns x 5 rows as default; 3x5 as overview",
+  "target": "MK61s UC1609 / USB screen, 192x64 monochrome",
+  "default": {
+    "font": "firmware 5x8",
+    "visible_columns": 3,
+    "visible_rows": 5
+  },
+  "overview": {
+    "font": "firmware Compact 3x5",
+    "visible_columns": 4,
+    "visible_rows": 7
+  },
+  "formula_input": "MK61 RPN keystrokes; a cell reference behaves as numeric entry into X",
+  "example": {
+    "A2": 2,
+    "B2": 125,
+    "C2": "=A2 В↑ B2 ×",
+    "result": 250
+  },
+  "keymap": {
+    "sheet": {
+      "left/right": "column",
+      "SHG-/SHG+": "row",
+      "OK": "edit",
+      "digit": "replace with number draft",
+      "USER": "actions",
+      "ESC": "leave sheet"
+    },
+    "editor": {
+      "left/right": "previous/next token",
+      "digit, operations, F, K, В↑": "calculator input",
+      "USER": "pick reference",
+      "Cx": "delete token / last digit",
+      "OK": "commit",
+      "ESC": "cancel draft"
+    },
+    "reference": {
+      "left/right": "column",
+      "SHG-/SHG+": "row",
+      "OK": "insert reference",
+      "USER": "cycle A2 / $A2 / A$2 / $A$2",
+      "ESC": "return to draft"
+    }
+  },
+  "cell_types": [
+    "number",
+    "text",
+    "formula"
+  ],
+  "new_cell": "One numeric literal commits as a number. A reference or calculator operation promotes the draft to a formula; no equals key is needed. Text is entered through USER > type/format > text using the existing alpha editor.",
+  "copying": "Relative addresses shift by destination offset; $ fixes row or column. Structural insert/delete tracks referenced cells.",
+  "recalculation": "After commit, recalculate only dependent cells. Formula evaluation uses its own initialized stack. Angle mode DEG/RAD/GRD is saved with the sheet.",
+  "errors": {
+    "#ЦИКЛ": "dependency cycle with path in detail view",
+    "#ССЫЛ": "deleted or invalid cell",
+    "#ЧИСЛО": "domain or numeric range",
+    "#ТИП": "text used as a numeric operand"
+  },
+  "blank_reference": "0; text references are errors",
+  "formatting": "Never silently truncate a number; use scientific format or #####, with full value in cell details. Text can be cropped with an overflow marker.",
+  "scope": "First version: one sheet, navigation, numbers/text/formulas, reference picker, copy/fill, undo, save/load. Finite sheet size and budgets require measurement before implementation.",
+  "determinism": "Use pure calculator operations. No dependence on current calculator registers, random inputs, I/O, or program control flow in the first version.",
+  "open_decisions": [
+    "physical readability of 3x5",
+    "text entry through the existing alpha editor",
+    "sheet size and memory budget",
+    "autosave policy and file format",
+    "save/load UI"
+  ],
+  "native_screen_files": [
+    "01-sheet-192x64.png",
+    "02-compact-192x64.png",
+    "03-formula-192x64.png",
+    "04-reference-192x64.png",
+    "05-actions-192x64.png",
+    "06-cycle-192x64.png",
+    "07-fixed-column-192x64.png",
+    "08-fixed-row-192x64.png",
+    "09-fixed-both-192x64.png"
+  ]
+}

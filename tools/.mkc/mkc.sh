@@ -207,7 +207,7 @@ Keys:
 Type a command and press Enter: the left panel runs it locally, while the
 right panel sends it to the MK61s terminal and captures its output.
 
-Supported device files: .m61, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .app
+Supported device files: .m61, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
 System apps: /System/FOCAL.APP, /System/BASIC.APP, /System/WBMP.APP, /System/MARKDOWN.APP, /System/CHIP8.APP
 Legacy aliases accepted on upload: .t1, .m2, .wbm
 EOF
@@ -308,6 +308,11 @@ unsupported_reason() {
         base=${name:0:$(( ${#name} - 4 ))}
         limit=3584
         minimum=1
+        ;;
+      *.mks)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=2048
+        minimum=20
         ;;
       *.t1|*.m2)
         base=${name:0:$(( ${#name} - 3 ))}

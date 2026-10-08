@@ -19,6 +19,7 @@ enum class ProgramType {
   IMAGE1,
   APP,
   CHIP8,
+  SHEET,
 };
 
 struct Entry {
@@ -93,4 +94,9 @@ int main() {
   assert(!entry_can_run(markdown));
   file_handlers::handler_available = true;
   assert(entry_can_run(markdown));
+  const Entry sheet = {NodeKind::FILE, ProgramType::SHEET};
+  file_handlers::handler_available = false;
+  assert(!entry_can_run(sheet));
+  file_handlers::handler_available = true;
+  assert(entry_can_run(sheet));
 }

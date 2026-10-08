@@ -1,0 +1,16 @@
+Use case: ui-mockup
+Asset type: illustrative product interface concept, for a design discussion, not a photograph of existing working firmware.
+Primary request: visualize a VisiCalc-like spreadsheet operated on a MK-61s calculator, with RPN calculator formulas containing cell references.
+Input images:
+Image 1 (formula-workflow.png) is the canonical UI reference: its enlarged native 192x64 pixel screens show the exact layout and data; preserve the first screen's table content and last screen's input conventions.
+Image 2 (mk-61s-mini-c.jpg) is a hardware form and key layout reference only, not an edit target. It shows the existing two-line mini. For this conceptual illustration adapt its flat square black calculator to a graphical 192x64 monochrome display while retaining the same physical keypad arrangement. Do not imply this is the original photographed hardware.
+Scene/backdrop: calm off-white studio presentation background, no hands, no desk props, no people. One complete small black calculator front view on the left, and one large isolated close-up of its graphical spreadsheet display on the right.
+Style/medium: polished industrial interface presentation, slightly realistic device materials with exact hard pixel UI. Screen is subdued pale LCD green with dark monochrome pixels, no glows, no antialiasing on screen content. All reference screens have a precise 3:1 width-to-height ratio. The actual calculator must have the spreadsheet browse screen, not a two-line segmented display.
+Composition: landscape board, generous whitespace, clear hierarchy, the close-up occupies most of the right half. The same table on the calculator and close-up. Keep keypad detail secondary; do not invent extra keys or a touch interface.
+Screen content, verbatim:
+Top line: "C2 = A2 В↑ B2 ×" with "DEG" at far right.
+Second line: spreadsheet column letters "A" "B" "C" on an inverse header band.
+Exactly five data rows, labelled 1 through 5. Row 1 contains "КОЛ-ВО", "ЦЕНА", "СУММА". Row 2 contains 2, 125, 250; cell C2 is dark inverse with light 250. Row 3 contains 3, 80, 240. Row 4 contains 1, 350, 350. Row 5 has blank A5, "ИТОГО" in B5, 840 in C5.
+Bottom line: "OK:ПРАВКА  USER:МЕНЮ".
+Only outside-screen title text: "ТАБЛИЦА МК-61s".
+Constraints: A/B/C are Latin letters, В↑ is the Russian calculator enter key notation. No desktop toolbars, no ribbons, no giant app title inside the tiny screen, no mouse cursor, no color within the UI. Match the reference pixel layout as closely as possible. No claims of implemented firmware.

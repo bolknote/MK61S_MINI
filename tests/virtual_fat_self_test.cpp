@@ -2605,6 +2605,42 @@ static void test_binary_import_export_uses_full_quota(void) {
   expect_large_file(entry.id, rom);
 }
 
+static void test_sheet_binary_import_and_quota(void) {
+  for(bool oversized : {false,true}) {
+    fresh(); const Layout fs=layout(); const u16 cluster=221;
+    const u16 size=(u16)(program_store::MAX_SHEET_SIZE+(oversized?1:0));
+    u8 fat[512]; assert(virtual_fat::read_sector(1,fat)); set_fat12_value(fat,cluster,0xfff);
+    u8 root[512]; assert(virtual_fat::read_sector(fs.root_start,root));
+    static const char short_name[11]={'B','U','D','G','E','T',' ',' ','M','K','S'};
+    const u8 slot=append_ascii_entry(root,(u8)first_free_slot(root),"Budget.mks",short_name,false,cluster,size);
+    root[slot*32]=0;
+    std::vector<u8> bytes(program_store::MAX_SHEET_SIZE);
+    for(usize i=0;i<bytes.size();++i) bytes[i]=(u8)(i*73U);
+    assert(virtual_fat::write_cached_sectors(cluster_lba(fs,cluster),bytes.data(),(u16)(bytes.size()/512)));
+    assert(virtual_fat::write_sector(fs.root_start,root)); assert(virtual_fat::write_sector(1,fat));
+    if(oversized) {
+      assert(!virtual_fat::finalize_pending());
+      assert(virtual_fat::diagnostic().code==virtual_fat::ErrorCode::FILE_TOO_LARGE);
+      assert(virtual_fat::diagnostic().limit==program_store::MAX_SHEET_SIZE);
+      assert(program_store::count(program_store::ProgramType::SHEET)==0);
+      expect_rejected_pending_recovered();
+    } else {
+      expect_flush(); program_store::Entry entry={};
+      assert(program_store::entry(program_store::ProgramType::SHEET,0,entry));
+      assert(strcmp(entry.name,"Budget")==0 && entry.data_len==bytes.size());
+      std::vector<u8> copy(bytes.size()); u16 received=0;
+      assert(program_store::read_id(entry.id,copy.data(),(u16)copy.size(),&received));
+      assert(received==bytes.size() && copy==bytes);
+      assert(virtual_fat::reset_session());
+      assert(virtual_fat::read_sector(fs.root_start,root));
+      bool extension=false;
+      for(unsigned i=0;i<16 && root[i*32];++i)
+        if(memcmp(root+i*32+8,"MKS",3)==0) extension=true;
+      assert(extension);
+    }
+  }
+}
+
 static void test_binary_over_quota_is_rejected(void) {
   fresh();
   const Layout fs = layout();
@@ -3256,6 +3292,7 @@ int main(void) {
   test_wbmp_short_name_alias();
   test_binary_import_export_uses_full_quota();
   test_binary_over_quota_is_rejected();
+  test_sheet_binary_import_and_quota();
   test_chip8_import_uses_full_quota_and_large_zx0();
   test_chip8_over_quota_is_rejected();
   test_f411_large_font_import_is_streamed();

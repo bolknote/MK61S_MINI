@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifndef MK61_APP_SHARED_RUNTIME
 void* memcpy(void* dst, const void* src, size_t size) {
   unsigned char* out = dst;
   const unsigned char* in = src;
@@ -41,6 +42,7 @@ size_t strlen(const char* text) {
   while(*end != 0) ++end;
   return (size_t) (end - text);
 }
+#endif
 
 int strcmp(const char* left, const char* right) {
   const unsigned char* a = (const unsigned char*) left;
@@ -49,6 +51,7 @@ int strcmp(const char* left, const char* right) {
   return (int) *a - (int) *b;
 }
 
+#ifndef MK61_APP_SHARED_RUNTIME
 char* strchr(const char* text, int character) {
   const unsigned char wanted = (unsigned char) character;
   do {
@@ -56,3 +59,4 @@ char* strchr(const char* text, int character) {
   } while(*text++ != 0);
   return NULL;
 }
+#endif

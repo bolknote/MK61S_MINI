@@ -225,6 +225,7 @@ static const Extension EXTENSIONS[] = {
   { ".app",       program_store::ProgramType::APP },
   { ".ch8",       program_store::ProgramType::CHIP8 },
   { ".bin",       program_store::ProgramType::MK61_BINARY },
+  { ".mks",       program_store::ProgramType::SHEET },
   { ".wbmp",      program_store::ProgramType::IMAGE1 },
   // Старые терминальные псевдонимы по-прежнему принимаются, но каноническая
   // запись использует расширения из program_store::file_extension().

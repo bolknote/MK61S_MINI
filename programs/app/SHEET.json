@@ -1,0 +1,16 @@
+{
+  "name": "SHEET",
+  "abi": 6,
+  "load_address": 536870912,
+  "relocations": 247,
+  "relocation_bytes": 279,
+  "entry_offset": 0,
+  "image_bytes": 14580,
+  "bss_bytes": 4860,
+  "memory_bytes": 19440,
+  "app_bytes": 11325,
+  "compression": "ZX0+BCJ",
+  "zx0_parser": "optimal",
+  "resident_imports": 0,
+  "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+}

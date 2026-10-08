@@ -95,6 +95,7 @@ bool OpenStoredEntry(const program_store::Entry& entry) {
     case program_store::ProgramType::MK61_STATE:
       return program_store_view_entry(entry);
     case program_store::ProgramType::MARKDOWN:
+    case program_store::ProgramType::SHEET:
       return file_handlers::open(entry) ==
              loadable_module::FileOpenResult::OK;
     case program_store::ProgramType::FONT:

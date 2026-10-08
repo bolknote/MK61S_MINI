@@ -848,15 +848,17 @@ static bool reject_unavailable_chip8(const program_store::Entry& entry) {
 static bool view_entry(const program_store::Entry& entry) {
   if(reject_unavailable_chip8(entry)) return false;
   if(entry.type == program_store::ProgramType::IMAGE1 ||
-     entry.type == program_store::ProgramType::MARKDOWN) {
+     entry.type == program_store::ProgramType::MARKDOWN ||
+     entry.type == program_store::ProgramType::SHEET) {
     const loadable_module::FileOpenResult result =
         file_handlers::open(entry);
     if(result == loadable_module::FileOpenResult::OK) return true;
 
     const bool markdown =
         entry.type == program_store::ProgramType::MARKDOWN;
-    const char* en = markdown ? "Markdown error" : "Image error";
-    const char* ru = markdown ? M8("Ошибка Markdown") : M8("Ошибка картинки");
+    const bool sheet = entry.type == program_store::ProgramType::SHEET;
+    const char* en = sheet ? "Sheet error" : (markdown ? "Markdown error" : "Image error");
+    const char* ru = sheet ? M8("Ошибка таблицы") : (markdown ? M8("Ошибка Markdown") : M8("Ошибка картинки"));
     if(result == loadable_module::FileOpenResult::BUSY) {
       en = "Busy";
       ru = M8("Занято");
@@ -1552,6 +1554,7 @@ static bool entry_can_run(const program_store::Entry& entry) {
     case program_store::ProgramType::IMAGE1:
     case program_store::ProgramType::CHIP8:
     case program_store::ProgramType::MARKDOWN:
+    case program_store::ProgramType::SHEET:
       return file_handlers::available(entry);
     default:
       return false;
@@ -1564,7 +1567,8 @@ static bool run_entry(const program_store::Entry& entry) {
   const bool file_handler =
       entry.type == program_store::ProgramType::IMAGE1 ||
       entry.type == program_store::ProgramType::CHIP8 ||
-      entry.type == program_store::ProgramType::MARKDOWN;
+      entry.type == program_store::ProgramType::MARKDOWN ||
+      entry.type == program_store::ProgramType::SHEET;
   bool ok;
   if(entry.type == program_store::ProgramType::FONT) ok = apply_font_entry(entry);
   else if(file_handler) {

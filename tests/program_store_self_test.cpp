@@ -341,6 +341,33 @@ static void test_large_font_roundtrip_on_f411(void) {
       (u16) (program_store::MAX_FONT_SIZE + 1U)));
 }
 
+static void test_sheet_type_roundtrip_quota_and_paths(void) {
+  fresh(512U * 1024U);
+  static u8 source[program_store::MAX_SHEET_SIZE + 1];
+  static u8 recovered[program_store::MAX_SHEET_SIZE];
+  for(u16 i=0;i<sizeof(source);++i) source[i]=(u8)(i*37U);
+  u16 id=program_store::INVALID_ID;
+  assert(!program_store::text_content(ProgramType::SHEET));
+  assert(!program_store::transparent_compression_enabled(ProgramType::SHEET));
+  assert(program_store::write_file(program_store::ROOT_ID,program_store::INVALID_ID,
+      ProgramType::SHEET,"Budget",source,program_store::MAX_SHEET_SIZE,&id));
+  assert(!program_store::write_file(program_store::ROOT_ID,program_store::INVALID_ID,
+      ProgramType::SHEET,"too big",source,sizeof(source)));
+  assert(program_store::count(ProgramType::SHEET)==1);
+  ProgramType type=ProgramType::TEXT;
+  assert(program_store::type_from_magic(program_store::TYPE_MAGIC_SHEET,type));
+  assert(type==ProgramType::SHEET && strcmp(program_store::type_magic_text(type),"S1")==0);
+  u16 size=0;
+  assert(program_store::read_id(id,recovered,sizeof(recovered),&size));
+  assert(size==sizeof(recovered) && memcmp(source,recovered,size)==0);
+  program_store::init(); assert(program_store::ready() && program_store::count(ProgramType::SHEET)==1);
+  Entry entry={};
+  assert(storage_path::resolve_file(program_store::ROOT_ID,"Budget.mks",entry)==storage_path::Status::OK);
+  assert(entry.id==id && entry.type==ProgramType::SHEET);
+  char path[64]; assert(storage_path::format_entry(entry,path,sizeof(path))==storage_path::Status::OK);
+  assert(strcmp(path,"/Budget.mks")==0);
+}
+
 static void test_markdown_type_roundtrip_without_catalog_migration(void) {
   fresh();
   static const u8 source[] =
@@ -3902,6 +3929,7 @@ int main(int argc, char** argv) {
   test_disk_activity_scope();
 #endif
   test_mk61_binary_roundtrip_quota_and_paths();
+  test_sheet_type_roundtrip_quota_and_paths();
   test_dynamic_geometry_and_lazy_format();
   test_roundtrip_ranges_and_noop();
   test_tinybasic_expanded_source_quota();

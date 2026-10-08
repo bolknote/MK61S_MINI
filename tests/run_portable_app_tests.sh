@@ -21,6 +21,16 @@ clang "${cflags[@]}" -fno-builtin \
 clang "${cflags[@]}" "$root/tests/portable_memory_self_test.c" \
   "$work/memory.o" -o "$work/memory"
 "$work/memory"
+clang "${cflags[@]}" -fno-builtin -DMK61_APP_SHARED_RUNTIME=1 \
+  -Dstrlen=mk61_test_strlen -Dstrcmp=mk61_test_strcmp \
+  -Dstrchr=mk61_test_strchr \
+  -Dmemcpy=mk61_test_memcpy -Dmemset=mk61_test_memset \
+  -Dmemmove=mk61_test_memmove -Dmemcmp=mk61_test_memcmp \
+  -c "$root/sdk/portable/memory.c" -o "$work/shared-memory.o"
+clang "${cflags[@]}" "$root/tests/portable_memory_self_test.c" \
+  "$root/tests/portable_shared_runtime_memory_stubs.c" \
+  "$work/shared-memory.o" -o "$work/shared-memory"
+"$work/shared-memory"
 clang++ "${flags[@]}" \
   "$root/tests/portable_app_format_self_test.cpp" \
   "$root/code/loadable_module_format.cpp" "$root/code/zx0.cpp" \
