@@ -72,6 +72,10 @@ grep -Fq 'case_flags="$common_flags -DMK61_ENABLE_USB_SCREEN=0 -DMK61_F401_PRODU
   "$stock_linker_build"
 grep -Fq '__mk61_dynamic_begin/end references under LTO' "$stock_linker_build"
 grep -Fq '#include "firmware_optimization.hpp"' "$config"
+# The crash formatter does not include config.h. Without the explicit policy,
+# global -O3 unrolls it enough to break the 48-KiB release reserve.
+grep -Fq '#include "firmware_optimization.hpp"' \
+  "$root/code/crash_dump_format.cpp"
 grep -Fq '#pragma GCC optimize ("Os")' "$mixed_policy"
 grep -Fq '#pragma GCC reset_options' "$hot_core"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3' "$mixed_policy"

@@ -1,3 +1,6 @@
+// Cold diagnostic formatting must follow the mixed F411 size policy too;
+// global -O3 otherwise expands the repeated register/hex output into ~18 KiB.
+#include "firmware_optimization.hpp"
 #include "crash_dump_format.hpp"
 
 #include <stddef.h>
