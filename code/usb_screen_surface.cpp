@@ -153,6 +153,7 @@ void Surface::clear(void) {
   if(!active_) return;
 #if MK61_FIXED_CALCULATOR_FACE
   calculator_face_active_ = false;
+  fullscreen_bitmap_active_ &= (u8) ~2U;
 #endif
   grid_.reset(profile_.rows, grid_.cols());
   grid_.markAll();
@@ -278,6 +279,7 @@ void Surface::writeCodepoint(u16 codepoint) {
 #if MK61_FIXED_CALCULATOR_FACE
 void Surface::beginCalculatorFace(void) {
   if(!active_ || calculator_face_active_) return;
+  if(fullscreen_bitmap_active_) fullscreen_bitmap_active_ |= 2U;
   calculator_face_active_ = true;
   cursor_underline_ = false;
   cursor_blink_ = false;
@@ -419,10 +421,12 @@ void Surface::setUiLineDecorations(u8 row, bool leading_gutter,
 
 bool Surface::beginFullscreenBitmap(void) {
   if(!active_) return false;
+  if(fullscreen_bitmap_active_) return true;
+  fullscreen_bitmap_active_ = 1U;
 #if MK61_FIXED_CALCULATOR_FACE
+  if(calculator_face_active_) fullscreen_bitmap_active_ |= 2U;
   calculator_face_active_ = false;
 #endif
-  fullscreen_bitmap_active_ = true;
   cursor_underline_ = false;
   cursor_blink_ = false;
   cursor_blink_phase_ = false;
@@ -458,6 +462,9 @@ void Surface::setDiskActivity(u8 state) {
 
 void Surface::endFullscreenBitmap(void) {
   if(!active_ || !fullscreen_bitmap_active_) return;
+#if MK61_FIXED_CALCULATOR_FACE
+  if(fullscreen_bitmap_active_ & 2U) calculator_face_active_ = true;
+#endif
   fullscreen_bitmap_active_ = false;
   grid_.markAll();
   markDirty();

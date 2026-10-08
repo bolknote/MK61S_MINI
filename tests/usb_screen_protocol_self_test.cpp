@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <vector>
 
 using namespace usb_screen_protocol;
 
@@ -68,6 +69,54 @@ static void test_packbits(void) {
   assert(packbits_decode(missing_repeat, sizeof(missing_repeat), output,
                          sizeof(output), 2, output_size) ==
          Status::MALFORMED_PACKBITS);
+}
+
+static void test_packbits_word_scan_boundaries(void) {
+  for(usize alignment = 0; alignment < 4; ++alignment) {
+    for(usize size = 0; size <= 260; ++size) {
+      // Exact end-of-allocation makes a speculative word read detectable by
+      // ASan. Cover each tail around both the four-byte and 128-byte limits.
+      std::vector<u8> storage(size + alignment + (size == 0), 0xA7);
+      const u8* input = storage.data() + alignment;
+      std::vector<u8> expected;
+      for(usize at = 0; at < size;) {
+        const usize count = size - at < 128 ? size - at : 128;
+        if(count >= 3) {
+          expected.push_back((u8)(257 - count));
+          expected.push_back(0xA7);
+        } else {
+          expected.push_back((u8)(count - 1));
+          for(usize i = 0; i < count; ++i) expected.push_back(0xA7);
+        }
+        at += count;
+      }
+      std::vector<u8> output(expected.size() + 1, 0);
+      usize written = 99;
+      assert(packbits_encode(input, size, output.data(), expected.size(), written) == Status::OK);
+      assert(written == expected.size());
+      assert(expected.empty() || memcmp(output.data(), expected.data(), written) == 0);
+      for(usize capacity = 0; capacity < expected.size(); ++capacity) {
+        written = 99;
+        assert(packbits_encode(input, size, output.data(), capacity, written) == Status::OUTPUT_TOO_SMALL);
+        assert(written == 0);
+      }
+
+      // Alternating bytes are entirely literal: the inline early mismatch
+      // must preserve the canonical 128-byte literal partition as well.
+      for(usize i = 0; i < size; ++i) storage[alignment + i] = (u8)(i & 1);
+      expected.clear();
+      for(usize at = 0; at < size;) {
+        const usize count = size - at < 128 ? size - at : 128;
+        expected.push_back((u8)(count - 1));
+        for(usize i = 0; i < count; ++i) expected.push_back(input[at + i]);
+        at += count;
+      }
+      output.resize(expected.size() + 1);
+      assert(packbits_encode(input, size, output.data(), expected.size(), written) == Status::OK);
+      assert(written == expected.size());
+      assert(expected.empty() || memcmp(output.data(), expected.data(), written) == 0);
+    }
+  }
 }
 
 static void test_packet_roundtrip_and_resync(void) {
@@ -220,6 +269,7 @@ int main(void) {
   static_assert(FRAME_BYTES == 1536, "unexpected framebuffer size");
   test_cobs_roundtrip();
   test_packbits();
+  test_packbits_word_scan_boundaries();
   test_packet_roundtrip_and_resync();
   test_packet_crc_rejection();
   test_terminal_multiplex();

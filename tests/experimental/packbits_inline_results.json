@@ -1,0 +1,698 @@
+{
+  "status": "PASS",
+  "tested_on": "2026-10-08",
+  "decision": "inline word scan retained; calculator renderer restoration fixed",
+  "device": "STM32F411CE / Classic V3 / UC1609 / 96 MHz",
+  "compiler": "ARM GCC 14.2.1, -Os without LTO",
+  "frames_per_variant": 672,
+  "runs_per_case": 3,
+  "frames_per_run": 32,
+  "cpu_scope": "snapshot/CRC + rectangle encode + packet CRC/COBS; PACKBITS is nested in rectangle and is not double-counted",
+  "cases": {
+    "blank": {
+      "packbits_cycles_per_frame": {
+        "baseline": 23688.0,
+        "candidate": 6208.0,
+        "time_change_percent": -73.793,
+        "speedup": 3.8157
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 193818.59375,
+        "candidate": 176434.84375,
+        "time_change_percent": -8.969,
+        "speedup": 1.0985
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.00596283350023441,
+        "candidate": 0.005952291998255532,
+        "time_change_percent": -0.177,
+        "speedup": 1.0018
+      }
+    },
+    "cursor": {
+      "packbits_cycles_per_frame": {
+        "baseline": 40496.0,
+        "candidate": 9776.0,
+        "time_change_percent": -75.859,
+        "speedup": 4.1424
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 212394.9375,
+        "candidate": 181850.65625,
+        "time_change_percent": -14.381,
+        "speedup": 1.168
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.005948687001364306,
+        "candidate": 0.00595066649839282,
+        "time_change_percent": 0.033,
+        "speedup": 0.9997
+      }
+    },
+    "mixed": {
+      "packbits_cycles_per_frame": {
+        "baseline": 70440.65625,
+        "candidate": 41019.09375,
+        "time_change_percent": -41.768,
+        "speedup": 1.7173
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 342644.84375,
+        "candidate": 316846.59375,
+        "time_change_percent": -7.529,
+        "speedup": 1.0814
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.008443124504992738,
+        "candidate": 0.008510916501109023,
+        "time_change_percent": 0.803,
+        "speedup": 0.992
+      }
+    },
+    "random": {
+      "packbits_cycles_per_frame": {
+        "baseline": 82687.1875,
+        "candidate": 55469.15625,
+        "time_change_percent": -32.917,
+        "speedup": 1.4907
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 436852.59375,
+        "candidate": 416679.53125,
+        "time_change_percent": -4.618,
+        "speedup": 1.0484
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.010784395497466903,
+        "candidate": 0.010856813001737464,
+        "time_change_percent": 0.672,
+        "speedup": 0.9933
+      }
+    },
+    "alternating": {
+      "packbits_cycles_per_frame": {
+        "baseline": 83274.21875,
+        "candidate": 58754.78125,
+        "time_change_percent": -29.444,
+        "speedup": 1.4173
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 435481.65625,
+        "candidate": 415992.875,
+        "time_change_percent": -4.475,
+        "speedup": 1.0468
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.010774292000860441,
+        "candidate": 0.010873500497837085,
+        "time_change_percent": 0.921,
+        "speedup": 0.9909
+      }
+    },
+    "white": {
+      "packbits_cycles_per_frame": {
+        "baseline": 23688.0,
+        "candidate": 6208.0,
+        "time_change_percent": -73.793,
+        "speedup": 3.8157
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 193870.75,
+        "candidate": 176486.71875,
+        "time_change_percent": -8.967,
+        "speedup": 1.0985
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.005949853999482002,
+        "candidate": 0.005945145996520296,
+        "time_change_percent": -0.079,
+        "speedup": 1.0008
+      }
+    },
+    "rendered_text": {
+      "packbits_cycles_per_frame": {
+        "baseline": 52541.15625,
+        "candidate": 27337.71875,
+        "time_change_percent": -47.969,
+        "speedup": 1.9219
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 276935.46875,
+        "candidate": 253377.9375,
+        "time_change_percent": -8.507,
+        "speedup": 1.093
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.005984020994219463,
+        "candidate": 0.0059747915001935326,
+        "time_change_percent": -0.154,
+        "speedup": 1.0015
+      }
+    }
+  },
+  "font_fix": {
+    "host": "failure reproduced before fix; ASan/UBSan across physical, legacy USB, shared USB and buffer-loan variants, both calculator fonts",
+    "native": "pixel restoration after graphics_end and detach in bitmap, both qualification images and installed normal release",
+    "state_storage": "reuse one byte; no extra persistent RAM",
+    "explicit_text_selection": "clear during bitmap cancels restoring calculator role"
+  },
+  "installed_release": {
+    "build": "A3952F33",
+    "firmware_bytes": 358828,
+    "qualification_points": false,
+    "mcu_crc_verified": true,
+    "font_pixels_sha256": "07a433c6b855e38c0da4ae94220ff2ae68e005f786f8c6ba22a09e90c4c3cdc9",
+    "c6_file_hashes_preserved": 111,
+    "temporary_app_removed": true
+  },
+  "validation": [
+    "PackBits canonical bytes at all four alignments and run/literal 128-byte boundaries",
+    "truncated output capacity statuses and exact reads under ASan/UBSan",
+    "unchanged wire sizes and CRC-verified pixel frames",
+    "F411 release resource contract and changed-function stack checks"
+  ],
+  "reports": {
+    "hardware": "tmp/packbits-inline-check/hil/report.json",
+    "font_release": "tmp/packbits-inline-check/release/font-hil.json",
+    "f411_resources": "tmp/packbits-inline-check/release/resources.json"
+  },
+  "resource_reports": {
+    "f401_product": {
+      "path": "tmp/packbits-inline-check/gcc-f401-build/classic-v3/resource-report.json",
+      "report": {
+        "artifact": "mk61s-M-classic-v3-uc1609-f401",
+        "binary": {
+          "bytes": 253424,
+          "flash_free": 8720,
+          "sha256": "43d7738cba0df19b25e14b162f9c35c32b4ab522d5fecb53656505403f845886"
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 7168,
+          "markdown_app_max": 14336,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "case": "f401-product-classic-v3",
+        "elf": {
+          "largest_symbols": [
+            {
+              "address": 134361612,
+              "bytes": 10472,
+              "name": "class_terminal::execute(bool, bool)",
+              "type": "T"
+            },
+            {
+              "address": 536890880,
+              "bytes": 8192,
+              "name": "shared_memory::(anonymous namespace)::workspace_storage",
+              "type": "b"
+            },
+            {
+              "address": 134410512,
+              "bytes": 7944,
+              "name": "main",
+              "type": "T"
+            },
+            {
+              "address": 134265152,
+              "bytes": 6536,
+              "name": "loadable_module::(anonymous namespace)::other_system_call(unsigned long, unsigned long, unsigned long, unsigned long, void*)",
+              "type": "t"
+            },
+            {
+              "address": 134319636,
+              "bytes": 4104,
+              "name": "program_store::write_file_from_source(unsigned short, unsigned short, program_store::ProgramType, char const*, unsigned short, program_store::FileSource const&, unsigned short const*, unsigned char, unsigned short*, unsigned char*, unsigned int, unsigned char const*)",
+              "type": "T"
+            },
+            {
+              "address": 134443592,
+              "bytes": 3888,
+              "name": "ROM",
+              "type": "r"
+            },
+            {
+              "address": 134288096,
+              "bytes": 3756,
+              "name": "cycle()",
+              "type": "t"
+            },
+            {
+              "address": 134340420,
+              "bytes": 3624,
+              "name": "setup_ui::service(unsigned long, unsigned long, unsigned long, void*)",
+              "type": "T"
+            },
+            {
+              "address": 536877808,
+              "bytes": 3616,
+              "name": "(anonymous namespace)::extended_bank_slots",
+              "type": "b"
+            },
+            {
+              "address": 134387220,
+              "bytes": 3320,
+              "name": "idle_main_process()",
+              "type": "T"
+            }
+          ],
+          "sections": [
+            {
+              "bytes": 8,
+              "name": ".ARM"
+            },
+            {
+              "bytes": 48,
+              "name": ".ARM.attributes"
+            },
+            {
+              "bytes": 0,
+              "name": ".ARM.extab"
+            },
+            {
+              "bytes": 1540,
+              "name": "._user_heap_stack"
+            },
+            {
+              "bytes": 34000,
+              "name": ".bss"
+            },
+            {
+              "bytes": 56,
+              "name": ".comment"
+            },
+            {
+              "bytes": 2040,
+              "name": ".data"
+            },
+            {
+              "bytes": 8,
+              "name": ".fini_array"
+            },
+            {
+              "bytes": 12,
+              "name": ".init_array"
+            },
+            {
+              "bytes": 404,
+              "name": ".isr_vector"
+            },
+            {
+              "bytes": 40,
+              "name": ".mk61_fw_footer"
+            },
+            {
+              "bytes": 2714,
+              "name": ".mk61_help"
+            },
+            {
+              "bytes": 292,
+              "name": ".noinit"
+            },
+            {
+              "bytes": 4,
+              "name": ".preinit_array"
+            },
+            {
+              "bytes": 34416,
+              "name": ".rodata"
+            },
+            {
+              "bytes": 216480,
+              "name": ".text"
+            }
+          ],
+          "summary": {
+            "bss": 35832,
+            "data": 2040,
+            "fixed_app_reserve": 0,
+            "linker_checked_ram": 37872,
+            "linker_heap_stack_minimum": 1540,
+            "static_ram": 36332,
+            "text": 251372,
+            "total": 289244
+          }
+        },
+        "mcu": "f401",
+        "product": true,
+        "profile": "classic-v3",
+        "schema": 1,
+        "stack": {
+          "compiled_units": 123,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1504,
+          "max_function": "program_store.cpp:3600:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2102,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok",
+        "violations": []
+      }
+    },
+    "f401_usb_capability": {
+      "path": "tmp/packbits-inline-check/f401-a00-usb/resources.json",
+      "report": {
+        "artifact": "mk61s-M-mini-v3-lcd1602-a00-f401",
+        "binary": {
+          "bytes": 243828,
+          "flash_free": 18316,
+          "sha256": "04e0edbc0cd0fb76f2000a79ceb2928caaa4c6cd2d2828419c0d76062c151ddc"
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        },
+        "case": "f401-capability-a00-usb",
+        "elf": {
+          "largest_symbols": [
+            {
+              "address": 134343486,
+              "bytes": 10550,
+              "name": "class_terminal::execute(bool, bool)",
+              "type": "T"
+            },
+            {
+              "address": 536894664,
+              "bytes": 8192,
+              "name": "shared_memory::(anonymous namespace)::workspace_storage",
+              "type": "b"
+            },
+            {
+              "address": 134294928,
+              "bytes": 7372,
+              "name": "setup",
+              "type": "T"
+            },
+            {
+              "address": 134286710,
+              "bytes": 5054,
+              "name": "idle_main_process()",
+              "type": "T"
+            },
+            {
+              "address": 134268144,
+              "bytes": 4988,
+              "name": "loadable_module::(anonymous namespace)::other_system_call(unsigned long, unsigned long, unsigned long, unsigned long, void*)",
+              "type": "t"
+            },
+            {
+              "address": 134324704,
+              "bytes": 4132,
+              "name": "program_store::write_file_from_source(unsigned short, unsigned short, program_store::ProgramType, char const*, unsigned short, program_store::FileSource const&, unsigned short const*, unsigned char, unsigned short*, unsigned char*, unsigned int, unsigned char const*)",
+              "type": "T"
+            },
+            {
+              "address": 134435132,
+              "bytes": 3888,
+              "name": "ROM",
+              "type": "r"
+            },
+            {
+              "address": 134262748,
+              "bytes": 3728,
+              "name": "cycle()",
+              "type": "T"
+            },
+            {
+              "address": 536878592,
+              "bytes": 3616,
+              "name": "(anonymous namespace)::extended_bank_slots",
+              "type": "b"
+            },
+            {
+              "address": 134394256,
+              "bytes": 3040,
+              "name": "usbdisk_backend::call(unsigned long, unsigned long, unsigned long, unsigned long, void*) [clone .constprop.0]",
+              "type": "T"
+            }
+          ],
+          "sections": [
+            {
+              "bytes": 8,
+              "name": ".ARM"
+            },
+            {
+              "bytes": 48,
+              "name": ".ARM.attributes"
+            },
+            {
+              "bytes": 0,
+              "name": ".ARM.extab"
+            },
+            {
+              "bytes": 1536,
+              "name": "._user_heap_stack"
+            },
+            {
+              "bytes": 34664,
+              "name": ".bss"
+            },
+            {
+              "bytes": 56,
+              "name": ".comment"
+            },
+            {
+              "bytes": 2044,
+              "name": ".data"
+            },
+            {
+              "bytes": 8,
+              "name": ".fini_array"
+            },
+            {
+              "bytes": 12,
+              "name": ".init_array"
+            },
+            {
+              "bytes": 404,
+              "name": ".isr_vector"
+            },
+            {
+              "bytes": 40,
+              "name": ".mk61_fw_footer"
+            },
+            {
+              "bytes": 2751,
+              "name": ".mk61_help"
+            },
+            {
+              "bytes": 296,
+              "name": ".noinit"
+            },
+            {
+              "bytes": 4,
+              "name": ".preinit_array"
+            },
+            {
+              "bytes": 28176,
+              "name": ".rodata"
+            },
+            {
+              "bytes": 213120,
+              "name": ".text"
+            }
+          ],
+          "summary": {
+            "bss": 36496,
+            "data": 2044,
+            "fixed_app_reserve": 0,
+            "linker_checked_ram": 38540,
+            "linker_heap_stack_minimum": 1536,
+            "static_ram": 37004,
+            "text": 241772,
+            "total": 280312
+          }
+        },
+        "mcu": "f401",
+        "product": false,
+        "profile": "mini-v3-a00",
+        "schema": 1,
+        "stack": null,
+        "status": "ok",
+        "violations": []
+      }
+    },
+    "f411_release": {
+      "path": "tmp/packbits-inline-check/release/resources.json",
+      "report": {
+        "artifact": "mk61s-M-classic-v3-uc1609-f411",
+        "binary": {
+          "bytes": 358828,
+          "flash_free": 165460,
+          "sha256": "e226dfced3fe1e634d155a0fcbb96ca7986d795b0033633192ae739122e500ec"
+        },
+        "budgets": {
+          "flash_capacity": 524288,
+          "flash_min_headroom": 16384,
+          "stack_frame_limit": 5120
+        },
+        "case": "f411-classic-v3-usb-screen",
+        "elf": {
+          "largest_symbols": [
+            {
+              "address": 536874616,
+              "bytes": 24576,
+              "name": "language_vm::(anonymous namespace)::image_cache",
+              "type": "b"
+            },
+            {
+              "address": 134308688,
+              "bytes": 13220,
+              "name": "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)",
+              "type": "t"
+            },
+            {
+              "address": 134321920,
+              "bytes": 10976,
+              "name": "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)",
+              "type": "t"
+            },
+            {
+              "address": 536940332,
+              "bytes": 8308,
+              "name": "USBD_MSC_BOT_Handle",
+              "type": "b"
+            },
+            {
+              "address": 536920832,
+              "bytes": 8192,
+              "name": "shared_memory::(anonymous namespace)::bulk_storage",
+              "type": "b"
+            },
+            {
+              "address": 536930624,
+              "bytes": 8192,
+              "name": "shared_memory::(anonymous namespace)::workspace_storage",
+              "type": "b"
+            },
+            {
+              "address": 536909140,
+              "bytes": 5008,
+              "name": "mk61_lcd_storage",
+              "type": "b"
+            },
+            {
+              "address": 134287708,
+              "bytes": 4968,
+              "name": "loadable_module::(anonymous namespace)::other_system_call(unsigned long, unsigned long, unsigned long, unsigned long, void*)",
+              "type": "t"
+            },
+            {
+              "address": 134438264,
+              "bytes": 4648,
+              "name": "class_terminal::execute(bool, bool)",
+              "type": "T"
+            },
+            {
+              "address": 134344124,
+              "bytes": 4304,
+              "name": "cycle()",
+              "type": "T"
+            }
+          ],
+          "sections": [
+            {
+              "bytes": 8,
+              "name": ".ARM"
+            },
+            {
+              "bytes": 48,
+              "name": ".ARM.attributes"
+            },
+            {
+              "bytes": 0,
+              "name": ".ARM.extab"
+            },
+            {
+              "bytes": 1536,
+              "name": "._user_heap_stack"
+            },
+            {
+              "bytes": 79636,
+              "name": ".bss"
+            },
+            {
+              "bytes": 56,
+              "name": ".comment"
+            },
+            {
+              "bytes": 2240,
+              "name": ".data"
+            },
+            {
+              "bytes": 32,
+              "name": ".fini_array"
+            },
+            {
+              "bytes": 24,
+              "name": ".init_array"
+            },
+            {
+              "bytes": 408,
+              "name": ".isr_vector"
+            },
+            {
+              "bytes": 40,
+              "name": ".mk61_fw_footer"
+            },
+            {
+              "bytes": 2856,
+              "name": ".mk61_help"
+            },
+            {
+              "bytes": 296,
+              "name": ".noinit"
+            },
+            {
+              "bytes": 4,
+              "name": ".preinit_array"
+            },
+            {
+              "bytes": 42032,
+              "name": ".rodata"
+            },
+            {
+              "bytes": 314028,
+              "name": ".text"
+            }
+          ],
+          "summary": {
+            "bss": 81468,
+            "data": 2240,
+            "fixed_app_reserve": 0,
+            "linker_checked_ram": 83708,
+            "linker_heap_stack_minimum": 1536,
+            "static_ram": 82172,
+            "text": 356576,
+            "total": 440284
+          }
+        },
+        "mcu": "f411",
+        "product": false,
+        "profile": "classic-v3",
+        "schema": 1,
+        "stack": {
+          "compiled_units": 3,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 136,
+          "max_function": "usb_screen_surface.cpp:698:6:void usb_screen::Surface::render()",
+          "records": 167,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok",
+        "violations": []
+      }
+    }
+  }
+}

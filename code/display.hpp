@@ -579,7 +579,8 @@ class MK61Display : public Print {
     ActiveFontRole active_font_role;
     bool initialized;
 #if MK61_ANY_FULLSCREEN_FILE
-    bool fullscreen_bitmap_active;
+    // Bit 0: bitmap active; bit 1: restore calculator renderer on exit.
+    u8 fullscreen_bitmap_active;
 #endif
     bool screen_dirty;
     bool dirty;

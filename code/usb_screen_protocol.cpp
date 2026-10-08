@@ -37,10 +37,23 @@ static bool add_run(DiffPlan& plan, PageRun run) {
   return true;
 }
 
-static usize repeated_count(const u8* input, usize size, usize at) {
-  usize count = 1;
-  while(at + count < size && count < 128 &&
-        input[at + count] == input[at]) count++;
+// Literal-heavy frames call this for almost every byte. Keep the bounded
+// word scan inline under -Os, where an out-of-line helper costs more than
+// the early mismatch it replaces.
+static inline __attribute__((always_inline))
+usize repeated_count(const u8* input, usize size, usize at) {
+  const usize available = size - at;
+  const usize limit = available < 128 ? available : 128;
+  if(limit == 1 || input[at + 1] != input[at]) return 1;
+  usize count = 2;
+  const u32 repeated = (u32) input[at] * 0x01010101U;
+  while(limit - count >= 4) {
+    u32 word;
+    __builtin_memcpy(&word, input + at + count, sizeof(word));
+    if(word != repeated) break;
+    count += 4;
+  }
+  while(count < limit && input[at + count] == input[at]) ++count;
   return count;
 }
 

@@ -805,6 +805,80 @@ void test_fixed_calculator_face() {
   assert(!display.calculatorFaceActive());
 }
 
+void test_calculator_face_after_fullscreen_bitmap() {
+  for(u8 font = 0; font < 2; ++font) {
+    calculator_face::setSegmentFrame(nullptr);
+    MK61Display display;
+    display.begin();
+    display.clear();
+    display.setCalculatorFont(font);
+    writeDisplayLine(display, 0, 0, "P");
+    writeDisplayLine(display, 1, 0, "-12.34567");
+    display.beginCalculatorFace();
+    Frame bitmap{};
+    bitmap.fill(0xA5);
+
+    // The public APP graphics API is temporary, including repeated begin.
+    // Exiting it must preserve the chosen calculator renderer on UC1609.
+    assert(display.beginFullscreenBitmap());
+    assert(display.beginFullscreenBitmap());
+    assert(display.showFullscreenBitmap(bitmap.data(), bitmap.size()));
+    display.endFullscreenBitmap();
+    assert(display.calculatorFaceActive());
+    assert(calculator_face::font() == (font ? calculator_face::Font::CLASSIC_10X16
+                                          : calculator_face::Font::MK61));
+
+#if MK61_ENABLE_USB_SCREEN
+    display.clear();
+    writeDisplayLine(display, 0, 0, "P");
+    writeDisplayLine(display, 1, 0, "-12.34567");
+    display.beginCalculatorFace();
+    text_screen::Grid model;
+    model.reset(display.rows());
+    writeGridLine(model, 0, 0, "P");
+    writeGridLine(model, 1, 0, "-12.34567");
+    Frame expected{};
+    calculator_face::renderFrame(model, expected.data());
+    assert(display.enterUsbScreen());
+    assert(display.beginFullscreenBitmap());
+    assert(display.beginFullscreenBitmap());
+    assert(display.showFullscreenBitmap(bitmap.data(), bitmap.size()));
+    display.endFullscreenBitmap();
+    assert(display.calculatorFaceActive());
+    assert(std::memcmp(display.usbScreenFramebuffer(), expected.data(), expected.size()) == 0);
+    display.leaveUsbScreen();
+    assert(display.calculatorFaceActive());
+    expectFrame(expected);
+
+    // A heartbeat timeout/detach can happen before graphics_end(). The
+    // physical display must recover the calculator role without rebooting.
+    assert(display.enterUsbScreen());
+    assert(display.beginFullscreenBitmap());
+    assert(display.showFullscreenBitmap(bitmap.data(), bitmap.size()));
+    display.leaveUsbScreen();
+    assert(display.calculatorFaceActive());
+    expectFrame(expected);
+    display.endFullscreenBitmap();
+    assert(display.calculatorFaceActive());
+#endif
+
+    // An explicit clear selects ordinary text, even if called during a
+    // bitmap. The saved calculator role must not override that decision.
+#if MK61_ENABLE_USB_SCREEN
+    assert(display.enterUsbScreen());
+#endif
+    assert(display.beginFullscreenBitmap());
+    display.clear();
+    display.endFullscreenBitmap();
+    assert(!display.calculatorFaceActive());
+#if MK61_ENABLE_USB_SCREEN
+    display.leaveUsbScreen();
+    assert(!display.calculatorFaceActive());
+#endif
+  }
+  calculator_face::setFont(calculator_face::Font::MK61);
+}
+
 void test_classic_calculator_font() {
   text_screen::Grid model;
   model.reset(6);
@@ -1909,6 +1983,7 @@ int main() {
   test_classic_ui_is_exact_2x_builtin();
   test_compact_ui_uses_builtin_3x5();
   test_fixed_calculator_face();
+  test_calculator_face_after_fullscreen_bitmap();
   test_classic_calculator_font();
   test_invalid_custom_slot_uses_ui_fallback();
   test_external_calculator_font_is_isolated_from_ui();

@@ -85,6 +85,11 @@ class Surface {
     void beginCalculatorFace(void);
     void invalidateCalculatorFace(void);
     bool calculatorFaceActive(void) const { return calculator_face_active_; }
+    // During a bitmap the renderer is suspended, but detach still needs the
+    // role to which graphics_end() would return.
+    bool calculatorFaceSelected(void) const {
+      return calculator_face_active_ || (fullscreen_bitmap_active_ & 2U) != 0;
+    }
 #endif
 
     // Восстанавливает только что запущенную USB-поверхность из логического
@@ -149,7 +154,8 @@ class Surface {
     TextProfile profile_;
     bool active_;
     bool dirty_;
-    bool fullscreen_bitmap_active_;
+    // Bit 0: bitmap active; bit 1: restore calculator renderer on exit.
+    u8 fullscreen_bitmap_active_;
 #if MK61_FIXED_CALCULATOR_FACE
     bool calculator_face_active_;
 #endif

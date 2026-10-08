@@ -2353,6 +2353,9 @@ bool MK61Display::resumeDeepIdle(void) {
 void MK61Display::clear(void) {
 #if MK61_FIXED_CALCULATOR_FACE
   ui_font_state &= (u8) ~16U;
+#if MK61_ANY_FULLSCREEN_FILE
+  fullscreen_bitmap_active &= (u8) ~2U;
+#endif
 #endif
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
@@ -3122,18 +3125,26 @@ bool MK61Display::showFullscreenBitmap(const u8* bitmap, usize size) {
 
 bool MK61Display::beginFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
-  if(usb_screen_active) return usb_surface.beginFullscreenBitmap();
+  if(usb_screen_active) {
+    const bool started = usb_surface.beginFullscreenBitmap();
+#if MK61_FIXED_CALCULATOR_FACE
+    if(started) ui_font_state &= (u8) ~16U;
+#endif
+    return started;
+  }
 #endif
 #if MK61_ANY_FULLSCREEN_FILE
   if(!initialized) return false;
+  if(fullscreen_bitmap_active) return true;
+  fullscreen_bitmap_active = 1U;
 #if MK61_FIXED_CALCULATOR_FACE
+  if(calculatorFaceActive()) fullscreen_bitmap_active |= 2U;
   ui_font_state &= (u8) ~16U;
 #endif
   cursor_underline = false;
   cursor_blink = false;
   cursor_blink_phase = false;
   cursor_next_blink_ms = 0;
-  fullscreen_bitmap_active = true;
   return true;
 #else
   return false;
@@ -3144,13 +3155,23 @@ void MK61Display::endFullscreenBitmap(void) {
 #if MK61_ENABLE_USB_SCREEN
   if(usb_screen_active) {
     usb_surface.endFullscreenBitmap();
+#if MK61_FIXED_CALCULATOR_FACE
+    if(usb_surface.calculatorFaceActive()) ui_font_state |= 16U;
+#endif
     usb_surface.flush(millis());
     return;
   }
 #endif
 #if MK61_ANY_FULLSCREEN_FILE
   if(!fullscreen_bitmap_active) return;
+#if MK61_FIXED_CALCULATOR_FACE
+  const bool restore_calculator = (fullscreen_bitmap_active & 2U) != 0;
+  if(restore_calculator) ui_font_state |= 16U;
+#endif
   fullscreen_bitmap_active = false;
+#if MK61_FIXED_CALCULATOR_FACE
+  if(!restore_calculator)
+#endif
   clearShadow();
   markScreenDirty();
 #endif
@@ -3807,7 +3828,7 @@ void MK61Display::leaveUsbScreen(void) {
   const bool restore_cursor_underline = usb_surface.cursorUnderline();
   const bool restore_cursor_blink = usb_surface.cursorBlink();
 #if MK61_FIXED_CALCULATOR_FACE
-  const bool restore_calculator_face = usb_surface.calculatorFaceActive();
+  const bool restore_calculator_face = usb_surface.calculatorFaceSelected();
 #endif
 #if MK61_PROPORTIONAL_UI_FONTS
   const bool restore_ui_text = uiTextContext();
