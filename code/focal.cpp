@@ -2456,19 +2456,30 @@ static int load_focal_program_from_store(const program_store::Entry& entry) {
   char* const source = focal_ast.operand_pool;
   memset(source, 0, FOCAL_SOURCE_SIZE);
   u16 len = 0;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  const u32 revision=portable_system::call(MK61_SYS_RESOURCE_READ);
+#endif
   if(!program_store::read_id(entry.id, (u8*) source,
                              FOCAL_SOURCE_SIZE - 1, &len)) return -1;
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  if(revision!=portable_system::call(MK61_SYS_RESOURCE_READ)) return -1;
+#endif
   source[len] = 0;
   focal_trace_int("LOAD len=", len);
   focal_trace_string("LOAD source=", source);
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
   if(!focal_expand_operator_names(source, FOCAL_SOURCE_SIZE)) {
     focal_error(FocalError::FULL);
     return -1;
   }
+#endif
 
   const int slot = focal_choose_program_slot(entry.name);
   focal_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
   programs[slot].source_len = (u16) strlen(programs[slot].source);
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  programs[slot].source_revision=revision;
+#endif
   focal_copy_text(programs[slot].name, sizeof(programs[slot].name), entry.name);
   programs[slot].store_id = entry.id;
   programs[slot].parent_id = entry.parent_id;
@@ -2606,24 +2617,19 @@ FocalRunStatus RunFocal(int FocalN) {
     return FocalRunStatus::UNAVAILABLE;
   auto& request = *language_vm::frontend_request;
   auto& program = programs[FocalN];
-#ifndef FOCAL_HOST_TEST
-  if (!request.output && program.store_id != FOCAL_INVALID_STORE_ID) {
-    // The editor expands operator names, while C6 may store compact names.
-    // Resource offsets always refer to the exact saved bytes, not that UI copy.
-    program.source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
-    u16 length = 0;
-    if (!program_store::read_id(program.store_id, (u8*)program.source,
-                               FOCAL_SOURCE_SIZE - 1, &length) ||
-        program.source_revision != portable_system::call(MK61_SYS_RESOURCE_READ))
-      return FocalRunStatus::UNAVAILABLE;
-    program.source[length] = 0; program.source_len = length;
-  }
-#endif
-  const language_vm::ResourceSource resources = {program.store_id, program.source_revision};
+  language_vm::ResourceSource resources = {program.store_id, program.source_revision, request.resources};
   request.compiled = language_vm::compile(
       language_vm::Language::FOCAL, program.source,
       program.source_len, request.output, (u16)request.capacity, true, &resources);
+  if (!request.output && request.compiled.error == language_vm::Error::FULL &&
+      request.resources == language_vm::ResourceMode::EMBEDDED) {
+    request.resources = resources.mode = language_vm::ResourceMode::SOURCE;
+    request.capacity = language_vm::MAX_IMAGE;
+    request.compiled = language_vm::compile(language_vm::Language::FOCAL,
+        program.source, program.source_len, nullptr, language_vm::MAX_IMAGE, true, &resources);
+  }
   request.source_id = programs[FocalN].store_id;
+  request.source_revision = program.source_revision;
   request.language = (u8)language_vm::Language::FOCAL;
   request.mode = 0;
   request.run_requested = request.compiled.error == language_vm::Error::NONE;
@@ -2785,7 +2791,8 @@ FocalRunStatus RunFocal(int FocalN) {
 
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 bool language_vm::frontend_emit(void) {
-  if (!compatible(frontend_request) || !frontend_request->output) return false;
+  if (!compatible(frontend_request)) return false;
+  frontend_request->retained_source = 1;
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope scope;
   if (!scope.ok()) return false;
@@ -3578,6 +3585,13 @@ static void EditFocalSlot(int slot,
   if(slot >= 0 && slot < FOCAL_PROGRAM_COUNT && programs[slot].used) {
     focal_copy_text(source, FOCAL_SOURCE_SIZE, programs[slot].source);
   }
+#if defined(MK61_LANGUAGE_VM_COMPILER)
+  // Stored source is kept verbatim for compilation; only the editor needs
+  // expanded names. This avoids a second file read for resource offsets.
+  if(!focal_expand_operator_names(source,FOCAL_SOURCE_SIZE)) {
+    focal_error(FocalError::FULL);return;
+  }
+#endif
 
   text_editor::Buffer editor;
   text_editor::init(editor, source, FOCAL_SOURCE_SIZE);

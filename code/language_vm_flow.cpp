@@ -49,7 +49,8 @@ bool prepare_input(FlowContext& c) {
   auto& s = *c.program.state;
   if(r.result.pc >= r.image_size || s.prompt_offset > r.image_size ||
      s.control.sp >= INPUT_STACK_CAPACITY) return false;
-  const bool resource = (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE;
+  const bool resource = (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE &&
+                        !(r.image[7] & OWNED_RESOURCE_FLAG);
   if(resource ? s.prompt_length > 95 || r.image_size - s.prompt_offset < 3
               : s.prompt_length > r.image_size - s.prompt_offset) return false;
   if(resource && (!valid_resource_recipe(r.image + s.prompt_offset,
@@ -113,6 +114,8 @@ uint32_t flow_input(mk61_app_flow* flow, FlowExecute validate,
     case FLOW_VALIDATE_PROGRAM:
       if(!validate(&c->program)) { returned(flow, 0, MK61_FLOW_CORRUPT); return 1; }
       if(c->program.execution->result.error != Error::NONE) completed(flow, *c);
+      else if(flow->context_size==sizeof(CompilerContext) && ((CompilerContext*)flow->context)->cache_target)
+        mk61_app_flow_next(flow,target(MK61_APP_FLOW_HOST,app_flow::PUBLISH_IMAGE));
       else mk61_app_flow_next(flow, target(MK61_APP_KIND_LANGUAGE_VM, FLOW_RUN_PROGRAM));
       return 1;
     case FLOW_FINISH:

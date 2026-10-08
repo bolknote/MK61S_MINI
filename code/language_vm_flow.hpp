@@ -20,7 +20,9 @@ struct FlowContext {
 static_assert(sizeof(FlowContext) == 184 && offsetof(FlowContext, input) == 136,
               "VM cooperative context ARM layout changed");
 #endif
-static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x31564C46UL;
+// Request growth moved compiler-stage fields without changing its total
+// union size. Reject older language APPs before they read those offsets.
+static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x32564C46UL;
 enum FlowPhase : uint32_t {
   FLOW_VALIDATE_PROGRAM = 0, FLOW_RUN_PROGRAM, FLOW_AFTER_INPUT,
   FLOW_EDIT_INPUT, FLOW_AFTER_EXPRESSION, FLOW_EVALUATE_EXPRESSION, FLOW_FINISH

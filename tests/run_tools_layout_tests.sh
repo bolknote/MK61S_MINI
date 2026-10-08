@@ -30,6 +30,7 @@ expected="$(
     measure_language_vm.py \
     measure_overlay_language_vm.py \
     measure_resident_language_vm.py \
+    measure_vm_cache.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \

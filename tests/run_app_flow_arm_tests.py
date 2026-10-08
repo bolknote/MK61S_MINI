@@ -17,6 +17,8 @@ from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
 COMPILER_CONTEXT_SIZE = 240
+REQUEST_VERSION = 5
+LANGUAGE_FLOW_MAGIC = 0x32564C46
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):
@@ -54,14 +56,18 @@ def reject_other_language(m, packed, kind, other_language):
     m.partitioned = True
     m.load(packed)
     m.uc.mem_write(values, bytes(3504))
-    m.uc.mem_write(context, bytes(240)); m.put(context, 0x31564C46, 0)
-    m.put(context + 68, values)
+    m.uc.mem_write(context, bytes(240)); m.put(context, LANGUAGE_FLOW_MAGIC, 0)
+    m.put(context + 76, values)
     m.uc.mem_write(context + 234, bytes((other_language,)))
     m.uc.mem_write(step, bytes(48)); m.put(step, 48, 1, context, 240)
     m.uc.mem_write(step + 16, struct.pack("<HBBI", 0xFFFF, kind, 0, 0x100))
     trace_size = len(m.trace)
     assert m.call(FLOW_STEP, step) == 0, "compiler accepted the opposite-language context"
     assert len(m.trace) == trace_size, "wrong-language context reached a resident service"
+    m.uc.mem_write(context+234,bytes((1 if kind==2 else 2,)))
+    m.put(context,0x31564C46)
+    assert m.call(FLOW_STEP,step)==0,"compiler accepted a legacy same-sized context"
+    assert len(m.trace)==trace_size,"legacy context reached a resident service"
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, compiler_flow=True):
@@ -79,19 +85,20 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         variables, array = values + 8 + (language - 1)*208, values + 424
         compact = context_size == 240
         compile_request, execution = context + (8 if compact else 184), context + (184 if compact else 216)
-        plan = context + (40 if compact else 264)
+        plan = context + (48 if compact else 264)
         m.uc.mem_write(values, bytes(3504)); m.uc.mem_write(values + 4, b"\xFF"*4)
-        m.uc.mem_write(context, bytes(context_size)); m.put(context, 0x31564C46, command)
-        m.put(context + (68 if compact else 292), values, command, 42, mode if language == 1 else 0)
+        m.uc.mem_write(context, bytes(context_size)); m.put(context, LANGUAGE_FLOW_MAGIC, command)
+        m.put(context + (76 if compact else 292), values, command, 42, mode if language == 1 else 0)
         m.uc.mem_write(context + (234 if compact else 308), bytes((language,)))
         current = (2 if language == 1 else 1, 0x100)
         image, length = None, 0
     else:
         context_size = 184
         m.load(packages[compiler])
-        m.uc.mem_write(compile_request, bytes(32)); m.put(compile_request, 32, 2, 0, 6144)
+        m.uc.mem_write(compile_request, bytes(40)); m.put(compile_request, 40, REQUEST_VERSION, 0, 6144)
+        m.uc.mem_write(compile_request + 32, b"\x01")  # same owned-resource policy as APP flow
         assert m.call(command, 42, mode if language == 1 else 0, compile_request) == (1 if language == 1 else 0)
-        wire = bytes(m.uc.mem_read(compile_request, 32))
+        wire = bytes(m.uc.mem_read(compile_request, 40))
         assert wire[16] == 0 and wire[30] == 1
         length = struct.unpack_from("<H", wire, 18)[0]; assert length <= 768
         m.put(compile_request + 8, output, length)
@@ -100,10 +107,10 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         m.uc.mem_write(variables, bytes(208)); m.uc.mem_write(array, bytes(3080))
         m.uc.mem_write(state, bytes(1520)); m.uc.mem_write(state + 1506, bytes((language,)))
         m.uc.mem_write(execution, bytes(48))
-        m.put(execution, 48, 2, bytecode, length, variables, array, 385 if language == 1 else 0)
+        m.put(execution, 48, REQUEST_VERSION, bytecode, length, variables, array, 385 if language == 1 else 0)
         m.uc.mem_write(execution + 28, bytes((mode, 0, 0, 0)))
-        m.uc.mem_write(context, bytes(context_size)); m.put(context, 0x31564C46, command)
-        m.put(context + 8, 24, 2, execution, state, context + 32, 0)
+        m.uc.mem_write(context, bytes(context_size)); m.put(context, LANGUAGE_FLOW_MAGIC, command)
+        m.put(context + 8, 24, REQUEST_VERSION, execution, state, context + 32, 0)
         current = (11, 0)
     parents, loaded_kind = [], None
     previous_result = previous_status = consumed = 0
@@ -129,7 +136,10 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         m.uc.mem_write(step + 16, struct.pack("<HBBI", 0xFFFF, kind, 0, phase))
         m.put(step + 40, previous_result, previous_status)
         if kind:
+            resource_reads = sum(x and x[0] == "file_read" for x in m.trace)
             assert m.call(FLOW_STEP, step) == 1
+            if kind in (10, 11):
+                assert sum(x and x[0] == "file_read" for x in m.trace) == resource_reads, "runtime read its source"
         elif phase == 0x100:  # Generic reserve fixture, exact measured size.
             length, prefix = m.words(plan, 2)
             assert 0 < length <= 768 and prefix == 1520
@@ -159,7 +169,9 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
             assert image is not None
             assert bytes(m.uc.mem_read(bytecode, length)) == image
             m.last_bytecode = image
-            return struct.unpack("<d", m.uc.mem_read(variables, 8))[0], m.uc.mem_read(execution + 36, 1)[0], consumed, transfer + 1
+            low, high = struct.unpack("<II", m.uc.mem_read(variables, 8))
+            number = struct.unpack("<i", struct.pack("<I", low))[0] if high == 0x7FFC0001 else struct.unpack("<d", m.uc.mem_read(variables, 8))[0]
+            return number, m.uc.mem_read(execution + 36, 1)[0], consumed, transfer + 1
         else: raise AssertionError((current, action))
     raise AssertionError("endless flow")
 
@@ -203,7 +215,9 @@ def main():
                 (1, b"10 S=0\n20 FOR I=1 TO 3\n30 GOSUB 100\n40 NEXT I\n50 A=S;END\n100 INPUT @(I)\n110 S=S+@(I);RETURN\n", ["10", "1/0", "20", "30"], 60),
                 (2, b"1.10 D 2\n1.20 E\n2.10 F I=1,3; A X\n2.20 S A=X\n", ["10", "20", "30"], 30),
                 (1, b"10 DATA 3,4\n20 READ B;INPUT C;READ D\n30 A=B+C+D\n", ["5"], 12),
-                (1, b"10 A=.1+.2\n20 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n", [], 11.3)]
+                (1, b"10 A=.1+.2\n20 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n", [], 11.3),
+                (1, b"10 PRINT 'RAM STRING';'RAM STRING'\n20 INPUT 'RAM PROMPT',A\n30 A=A+2\n", ["5"], 7),
+                (2, b"1.10 PRINT \"RAM FOCAL\"\n1.20 ASK A\n1.30 EXIT\n", ["7"], 7)]
             # The fixture does not model the calculator's CORE numeric CPU.
             # Ordinary double arithmetic is real ARM code; transcendental
             # probes require real resident LIBM or the APP's local float math.
@@ -229,6 +243,7 @@ def main():
         report = {"status": "PASS", "vm_profile": args.vm_profile,
                   "compiler_context_bytes": COMPILER_CONTEXT_SIZE,
                   "specialized_language_guards": args.specialized, "runs": traces,
+                  "legacy_language_contexts_rejected":args.specialized,
                   "note": "Real ARM APP policy and relocation; native loader/allocator remain fixtures."}
         if args.vm_profile == "core":
             report["note"] += " CORE transcendental CPU is not modeled; covered by run_mk_math_tests.sh, not this emulation."

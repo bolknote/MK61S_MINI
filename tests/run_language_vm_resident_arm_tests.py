@@ -51,7 +51,7 @@ class ResidentMachine(Machine):
         else:self.uc.mem_write(values,struct.pack("<26d",*variables))
         self.uc.mem_write(array,bytes(385*8))
         self.uc.mem_write(request,bytes(48))
-        self.put(request,48,4,code,len(image),values,array,385)
+        self.put(request,48,5,code,len(image),values,array,385)
         self.uc.mem_write(request+28,b"\x01\0\0\0")
         # There is no native executor APP or retained compiler code anywhere
         # in the complete dynamic APP/heap pool during execution.

@@ -46,6 +46,10 @@
   контракта на Linux, macOS и Windows.
 - `vfat_diagnostic.py` — расшифровка числовой причины `vlog` на компьютере;
   словарь объяснений не занимает Flash микроконтроллера.
+- `measure_vm_cache.py` — воспроизводимое сравнение SOURCE/owned VM-образов,
+  общего RAM-бюджета и вместимости High Noon/Turochamp. Собирает только host
+  probe, пишет отчёт в `tmp/vm-cache/measure`, не прошивает устройство;
+  [контракт и ограничения](../sdk/portable/VM-CACHE.md).
 
 Как написать и собрать своё приложение:
 [короткий Hello World на C и Rust](../doc/src/MK61s-mini-APP-Quickstart.md) и

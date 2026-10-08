@@ -4,7 +4,7 @@
 namespace app_flow {
 // Operations are local to a caller's scoped HOST service, not global syscall
 // numbers. APP keeps only this data plan; leases stay in the native binding.
-enum TransferOperation : uint32_t { RESERVE_IMAGE = 0x100, COMMIT_IMAGE = 0x101 };
+enum TransferOperation : uint32_t { RESERVE_IMAGE = 0x100, COMMIT_IMAGE = 0x101, PUBLISH_IMAGE = 0x102 };
 struct ImageTransfer {
   uint32_t size, prefix;
   uint8_t* image;

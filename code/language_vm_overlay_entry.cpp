@@ -214,6 +214,7 @@ uint32_t execute(OverlayRequest* payload) {
         if((Op)view.bytes[r.result.pc] == Op::INPUT_RESOURCE) {
           s.prompt_offset = (uint16_t)(view.end + resource_word(p));
           s.prompt_length = resource_word(view.bytes + s.prompt_offset);
+          if(view.bytes[7] & OWNED_RESOURCE_FLAG) s.prompt_offset += 2;
         } else {
           s.prompt_offset = (uint16_t)(r.result.pc + 3);
           s.prompt_length = resource_word(p);

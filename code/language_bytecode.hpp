@@ -9,6 +9,9 @@
 // this wire format; no native pointers or C++ layouts are serialized.
 namespace language_vm {
 enum class Language : uint8_t { BASIC = 1, FOCAL = 2 };
+// No BASIC source can contain column 65535. The editor discards coordinates
+// from an execution snapshot whose filesystem revision changed.
+static constexpr uint32_t STALE_SOURCE_POSITION = UINT32_MAX;
 enum class Error : uint8_t {
   NONE,
   SYNTAX,
@@ -137,8 +140,12 @@ enum class Function : uint8_t {
   ROWS
 };
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 1;
+static constexpr uint16_t VERSION = 2;
 static constexpr uint16_t MAX_IMAGE = 6144;
+// Keep the instruction/map budget unchanged; owned resource bytes have a
+// separate bounded allowance, rather than increasing source or stack quotas.
+static constexpr uint16_t MAX_MODULE = MAX_IMAGE + 3584;
+static constexpr uint8_t RESOURCE_FLAG = 4, OWNED_RESOURCE_FLAG = 8;
 static constexpr uint8_t MAX_STACK = 96;
 static constexpr uint8_t MAX_CALLS = 16;
 static constexpr uint8_t MAX_LOOPS = 16;
@@ -222,7 +229,12 @@ struct RunResult {
 
 // Immutable M8 source doubles as the resource backing store. No native
 // pointers enter the image. A source-less host expression remains standalone.
-struct ResourceSource { uint16_t id; uint32_t revision; };
+enum class ResourceMode : uint8_t { SOURCE = 0, EMBEDDED = 1 };
+struct ResourceSource {
+  uint16_t id;
+  uint32_t revision;
+  ResourceMode mode = ResourceMode::SOURCE;
+};
 CompileResult compile_basic(const char*, uint16_t, uint8_t*, uint16_t, bool,
                             const ResourceSource* = nullptr);
 CompileResult compile_focal(const char*, uint16_t, uint8_t*, uint16_t, bool,

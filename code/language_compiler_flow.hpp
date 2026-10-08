@@ -31,11 +31,12 @@ struct CompilerContext {
   Language language;
   uint8_t clear_requested;
   bool prepared;
-  uint8_t reserved[3];
+  bool cache_target;
+  uint8_t reserved[2];
 };
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(CompilerStage) == 84 && offsetof(CompilerStage, request) == 8 &&
-              offsetof(CompilerStage, transfer) == 40 && offsetof(CompilerStage, values) == 68 &&
+static_assert(sizeof(CompilerStage) == 92 && offsetof(CompilerStage, request) == 8 &&
+              offsetof(CompilerStage, transfer) == 48 && offsetof(CompilerStage, values) == 76 &&
               sizeof(CompilerContext) == 240 && offsetof(CompilerContext, execution) == 184 &&
               offsetof(CompilerContext, source_id) == 232,
               "compiler flow wire layout changed");

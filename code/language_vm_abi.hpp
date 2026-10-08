@@ -4,8 +4,8 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 4;
-static constexpr uint32_t COMPILER_MAGIC = 0x374D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 5;
+static constexpr uint32_t COMPILER_MAGIC = 0x384D5643UL;
 static constexpr uint16_t VALUES_SIZE = 3504;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
@@ -17,6 +17,10 @@ struct Request {
   CompileResult compiled;
   uint16_t source_id;
   uint8_t language, mode, run_requested, clear_requested;
+  ResourceMode resources;
+  uint8_t retained_source;
+  uint8_t reserved[2];
+  uint32_t source_revision;
 };
 struct ExecuteRequest {
   uint32_t size, version;
@@ -31,9 +35,9 @@ struct ExecuteRequest {
   uint8_t edit_requested, reserved2;
   RunResult result;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x38564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x38494D4CUL;
-static constexpr uint32_t VALIDATED_MAGIC = 0x3749424CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x39564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x39494D4CUL;
+static constexpr uint32_t VALIDATED_MAGIC = 0x3849424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.
@@ -97,7 +101,7 @@ inline bool execution_compatible(const OverlayRequest* p) {
       p->reserved[0] || p->reserved[1] || p->reserved[2]) return false;
   const auto& r = *p->execution;
   return r.size == sizeof(r) && r.version == REQUEST_VERSION && r.image &&
-         r.image_size >= HEADER_SIZE && r.image_size <= MAX_IMAGE && r.variables &&
+         r.image_size >= HEADER_SIZE && r.image_size <= MAX_MODULE && r.variables &&
          r.array_count <= 385 && (!r.array_count || r.array) && r.mode <= 1 && !r.reserved &&
          !r.reserved2 && r.edit_requested <= 1 &&
          (p->state->language == Language::BASIC || p->state->language == Language::FOCAL);
@@ -107,8 +111,8 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
   const auto& r = *p.execution;
   const bool basic = m.language == Language::BASIC;
   if (m.magic != VALIDATED_MAGIC || m.size != r.image_size ||
-      m.language != p.state->language || m.flags > 7 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
-      m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.end || m.end > m.size ||
+      m.language != p.state->language || m.flags > 15 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
+      m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.end || m.end > MAX_IMAGE || m.end > m.size ||
       (uint16_t)(m.source_size - 1) >= (basic ? 3584 : 1536) ||
       m.lines > (basic ? 192 : 80) ||
       ((m.flags & 1) ? m.lines || m.source_size > (basic ? 64 : 111) : !m.lines))
@@ -166,7 +170,8 @@ struct InputRequest {
 };
 inline bool compatible(const Request* r) {
   return r && r->size == sizeof(*r) && r->version == REQUEST_VERSION &&
-         r->capacity >= HEADER_SIZE && r->capacity <= MAX_IMAGE;
+         r->capacity >= HEADER_SIZE && r->capacity <= MAX_MODULE &&
+         r->resources <= ResourceMode::EMBEDDED && r->retained_source <= 1 && !r->reserved[0] && !r->reserved[1];
 }
 // Bound by each compiler APP command, reset before returning to the resident.
 extern Request* frontend_request;
@@ -177,7 +182,7 @@ uint16_t frontend_source_id(void);
 // editor or repeating file/name selection. Used only by compiler-only APPs.
 bool frontend_emit(void);
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(Request) == 32, "compiler request ARM ABI changed");
+static_assert(sizeof(Request) == 40, "compiler request ARM ABI changed");
 static_assert(sizeof(ExecuteRequest) == 48, "execution request ARM ABI changed");
 static_assert(sizeof(OverlayRequest) == 24, "overlay request ARM ABI changed");
 static_assert(sizeof(ValidatedImage) == 16, "validated descriptor ARM ABI changed");

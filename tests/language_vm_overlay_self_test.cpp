@@ -110,8 +110,8 @@ RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t b,
   if (command != Command::LANGUAGE_COMPILER_EMIT)
     memset(workspace.data(), 0xA5, workspace.size());
   if (command == Command::LANGUAGE_COMPILER_EMIT)
-    assert(request->output && request->capacity == request->compiled.size);
-  else assert(!request->output && request->capacity == MAX_IMAGE);
+    assert(!request->output || request->capacity == request->compiled.size);
+  else assert(!request->output && request->capacity == MAX_MODULE);
 #if MK61_SCREEN_BUFFER_LOAN
   for(unsigned i=0;i<16;++i) assert(screen_storage[i]==0xDD &&
                                    screen_storage[SCREEN_CAPACITY+16+i]==0xDD);

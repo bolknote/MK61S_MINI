@@ -25,6 +25,7 @@ loadable_module::RuntimeStatus overlay(loadable_module::Kind,
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
 uint32_t media_revision();
 void activate_text_font();
+uint16_t resolve_name(language_vm::Language, uint32_t);
 #endif
 #endif
 }
@@ -49,7 +50,9 @@ static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
 bool busy;
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES> image_cache;
+using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES>;
+ProgramCache image_cache;
+static_assert(sizeof(ProgramCache)<=MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,"cache exceeds total RAM budget");
 uint32_t image_revision() {
 #if defined(LANGUAGE_VM_HOST_TEST)
   return language_vm_test::media_revision();
@@ -62,6 +65,29 @@ void activate_cached_text_font() {
   language_vm_test::activate_text_font();
 #else
   (void)program_store_text_font_activate();
+#endif
+}
+bool saved_run(Language language,loadable_module::Command command) {
+  using C=loadable_module::Command;
+  return language==Language::BASIC ? command==C::TINYBASIC_RUN_ID_STATUS || command==C::TINYBASIC_RUN_ID ||
+      command==C::TINYBASIC_RUN_INDEX || command==C::TINYBASIC_RUN_NAME :
+      command==C::FOCAL_RUN_ID || command==C::FOCAL_RUN_INDEX || command==C::FOCAL_RUN_NAME;
+}
+uint16_t cached_source(Language language,loadable_module::Command command,uint32_t a,const PersistentValues& values) {
+  using C=loadable_module::Command;
+  if(command==C::TINYBASIC_RUN_INDEX || command==C::FOCAL_RUN_INDEX)
+    return a ? 0xFFFF : values.selected[language==Language::BASIC?0:1];
+  if(command!=C::TINYBASIC_RUN_NAME && command!=C::FOCAL_RUN_NAME) return a<=0xFFFF?(uint16_t)a:0xFFFF;
+#if defined(LANGUAGE_VM_HOST_TEST)
+  return language_vm_test::resolve_name(language,a);
+#else
+  if(!a) return 0xFFFF;
+  const auto type=language==Language::BASIC?program_store::ProgramType::TINYBASIC:program_store::ProgramType::FOCAL;
+  for(int i=0;i<program_store::count(type);++i) {
+    program_store::Entry e={};
+    if(program_store::entry(type,i,e) && !strcmp(e.name,(const char*)(uintptr_t)a)) return e.id;
+  }
+  return 0xFFFF;
 #endif
 }
 #endif
@@ -160,19 +186,50 @@ namespace {
 struct CompilerServices {
   CompilerContext* context;
   app_flow::Transfer* memory;
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  bool cacheable;
+  ProgramCache::Handle object;
+  ~CompilerServices() {if(object) (void)image_cache.release(object);}
+#endif
 };
 loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) {
   auto& binding = *(CompilerServices*)raw;
-  if(step.context != binding.context || step.context_size != sizeof(CompilerContext) ||
-     binding.context->prepared)
+  if(step.context != binding.context || step.context_size != sizeof(CompilerContext))
     return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  if(step.current.phase==app_flow::PUBLISH_IMAGE) {
+    if(!binding.context->prepared || !binding.object) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+    image_cache.synchronize(image_revision());
+    if(!image_cache.publish(binding.object,binding.context->vm.program_validated)) return loadable_module::RuntimeStatus::IO_ERROR;
+    mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,
+        MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM));return loadable_module::RuntimeStatus::OK;
+  }
+#endif
+  if(binding.context->prepared) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
   auto& plan = binding.context->compile.transfer;
   if(step.current.phase == app_flow::RESERVE_IMAGE) {
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+    auto& request=binding.context->compile.request;
+    if(binding.cacheable && request.source_id!=0xFFFF && request.resources==ResourceMode::EMBEDDED) {
+      const uint32_t revision=image_revision();
+      if(request.source_revision!=revision) return loadable_module::RuntimeStatus::IO_ERROR;
+      binding.object=image_cache.reserve({revision,request.source_id,binding.context->language,0},(uint16_t)plan.size);
+      if(binding.object) {
+        plan.image=image_cache.building(binding.object);binding.context->cache_target=true;
+        mk61_app_flow_return(&step,1,MK61_FLOW_OK);return loadable_module::RuntimeStatus::OK;
+      }
+    }
+#endif
+    if(plan.size>shared_memory::WORKSPACE_SIZE) return loadable_module::RuntimeStatus::BUSY;
     const auto status = binding.memory->reserve(plan);
     if(status != loadable_module::RuntimeStatus::OK) return status;
     mk61_app_flow_return(&step, 1, MK61_FLOW_OK);
   } else if(step.current.phase == app_flow::COMMIT_IMAGE) {
-    const auto status = binding.memory->commit(plan);
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+    if(binding.context->cache_target && (!binding.object || plan.image!=image_cache.building(binding.object)))
+      return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+#endif
+    const auto status = binding.context->cache_target ? binding.memory->retain_image(plan) : binding.memory->commit(plan);
     if(status != loadable_module::RuntimeStatus::OK) return status;
     mk61_app_flow_next(&step, plan.next);
   } else return loadable_module::RuntimeStatus::CORRUPT_MODULE;
@@ -193,8 +250,15 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if(busy || (language != Language::BASIC && language != Language::FOCAL)) return RuntimeStatus::BUSY;
   struct BusyScope { BusyScope(){ busy=true; } ~BusyScope(){ busy=false; } } busy_scope;
   static uint16_t error_id = 0xFFFF, error_line = 0, error_column = 0;
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  static uint32_t error_revision=0;
+#endif
   if(language == Language::BASIC && command == Command::TINYBASIC_EDIT_ID && a == error_id) {
-    if(!b) b = ((uint32_t)error_line << 16) | error_column;
+    if(!b) b =
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+        error_revision && error_revision!=image_revision() ? STALE_SOURCE_POSITION :
+#endif
+        ((uint32_t)error_line << 16) | error_column;
     error_id = 0xFFFF;
   }
   shared_memory::WorkspacePartition partition;
@@ -207,25 +271,37 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if(!partition.open(shared_memory::Owner::LANGUAGE_VM, VALUES_SIZE)) return RuntimeStatus::BUSY;
   auto* values = (PersistentValues*)partition.tail();
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-  const bool cacheable = language == Language::BASIC &&
-      command == Command::TINYBASIC_RUN_ID_STATUS && b == 1;
+  const bool cacheable = saved_run(language,command);
   const uint32_t revision = image_revision();
+  const uint16_t source_id=cacheable?cached_source(language,command,a,*values):0xFFFF;
   if(cacheable) {
-    if(const auto* cached = image_cache.find((uint16_t)a, revision)) {
-      values->selected[0] = (uint16_t)a;
+    const auto cached=image_cache.find({revision,source_id,language,0});
+    if(cached) {
+      struct PinScope {ProgramCache::Handle h;~PinScope(){(void)image_cache.release(h);}} pin={cached};
+      values->selected[language==Language::BASIC?0:1] = source_id;
       shared_memory::Lease state;
       if(!workspace(state)) return RuntimeStatus::BUSY;
       ExecuteRequest execution = {};
       execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
-      execution.image=image_cache.image(*cached); execution.image_size=cached->validated.size;
-      execution.variables=values->variables[0]; execution.array=values->array;
-      execution.array_count=385; execution.mode=1;
+      const auto* certificate=image_cache.certificate(cached);
+      execution.image=image_cache.image(cached); execution.image_size=certificate->size;
+      execution.variables=values->variables[language==Language::BASIC?0:1];
+      execution.array=language==Language::BASIC?values->array:nullptr;
+      execution.array_count=language==Language::BASIC?385:0;
+      execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
       auto* continuation=state.as<ExecutionState>();
-      *continuation={}; continuation->language=language;
-      const auto status=execute_overlay(execution,*continuation,command,result,&cached->validated);
+      reset_execution_state(*continuation); continuation->language=language;
+      const auto status=execute_overlay(execution,*continuation,command,result,certificate);
       if(status != RuntimeStatus::OK) return status;
-      error_id=execution.result.error==Error::NONE?0xFFFF:(uint16_t)a;
-      error_line=(uint16_t)execution.result.line; error_column=execution.error_column;
+      if(language==Language::BASIC) {
+        error_id=execution.result.error==Error::NONE?0xFFFF:source_id;
+        error_line=(uint16_t)execution.result.line; error_column=execution.error_column;
+        error_revision=revision;
+        if(edit_id && edit_position && execution.mode==0 && execution.edit_requested && execution.result.line) {
+          *edit_id=source_id;*edit_position=revision==image_revision() ?
+              (execution.result.line<<16)|execution.error_column : STALE_SOURCE_POSITION;
+        }
+      }
       return RuntimeStatus::OK;
     }
   }
@@ -235,7 +311,11 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   context.compile.values=values; context.compile.command=(uint32_t)command;
   context.compile.argument0=a; context.compile.argument1=b; context.language=language;
   app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
-  CompilerServices services = {&context, &memory};
+  CompilerServices services = {&context, &memory
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+      ,cacheable,{}
+#endif
+  };
   const auto first=mk61_app_flow_to(language==Language::BASIC?MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,
       MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE);
 #if defined(LANGUAGE_VM_HOST_TEST)
@@ -247,19 +327,22 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
 #endif
   if(status != RuntimeStatus::OK || !context.prepared) return status;
   auto& execution=context.execution;
-#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-  if(cacheable && context.source_id==a && !context.clear_requested &&
-     execution.mode==1 && execution.result.error==Error::NONE)
-    (void)image_cache.store((uint16_t)a,revision,execution.image,context.vm.program_validated);
-#endif
   if(language==Language::BASIC) {
     error_id=execution.result.error==Error::NONE?0xFFFF:context.source_id;
     error_line=(uint16_t)execution.result.line; error_column=execution.error_column;
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+    error_revision=revision;
+#endif
   }
   if(edit_id && edit_position && language==Language::BASIC && execution.mode==0 &&
      execution.edit_requested && execution.result.line && context.source_id!=0xFFFF) {
     *edit_id=context.source_id;
-    *edit_position=(execution.result.line<<16)|execution.error_column;
+    *edit_position=
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+        revision==image_revision() ? (execution.result.line<<16)|execution.error_column : STALE_SOURCE_POSITION;
+#else
+        (execution.result.line<<16)|execution.error_column;
+#endif
   }
   return RuntimeStatus::OK;
 }
@@ -392,6 +475,17 @@ loadable_module::RuntimeStatus invoke_resident(Language language, loadable_modul
                                edit_id, edit_position, ignored);
   }
   return status;
+}
+bool cache_diagnostics(CacheDiagnostics& out) {
+  out={};
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  const auto& s=image_cache.statistics();
+  out={MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,ProgramCache::PAYLOAD_CAPACITY,image_cache.used(),
+       s.lookups,s.hits,s.misses,s.reservations,s.reservation_failures,s.publications,s.evictions,s.invalidations};
+  return true;
+#else
+  return false;
+#endif
 }
 }  // namespace language_vm
 #endif

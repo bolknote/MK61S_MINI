@@ -16,7 +16,7 @@ uint32_t validate_execution(OverlayRequest* p) {
     return 1;
   }
   *p->validated = {VALIDATED_MAGIC, v.size, v.code, v.source_size, v.end, (uint8_t)v.lines, v.stack,
-                   (uint8_t)((v.expression ? 1 : 0) | (v.requires_rf ? 2 : 0) | (r.image[7] & 4)), v.language};
+                   (uint8_t)((v.expression ? 1 : 0) | (v.requires_rf ? 2 : 0) | (r.image[7] & 12)), v.language};
   if (p->action == OverlayAction::START) {
     initialize_validated_state(r, *p->validated, *p->state);
   }

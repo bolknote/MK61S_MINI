@@ -188,15 +188,17 @@ bool array_index(Value value, uint16_t capacity, uint16_t& index) {
 
 Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   out = {};
-  if (!bytes || length < HEADER_SIZE || length > MAX_IMAGE ||
+  if (!bytes || length < HEADER_SIZE || length > MAX_MODULE ||
       memcmp(bytes, "LBV1", 4) || bytes[4] != VERSION ||
       (bytes[5] != (uint8_t)Language::BASIC && bytes[5] != (uint8_t)Language::FOCAL) ||
-      bytes[6] == 0 || bytes[6] > MAX_STACK || bytes[7] > 7 ||
+      bytes[6] == 0 || bytes[6] > MAX_STACK || bytes[7] > 15 ||
       word(bytes + 8) != length)
     return Error::INVALID_IMAGE;
   if (bytes[7] & 4) {
-    if ((bytes[7] & 1) || word(bytes + 24) == 0xFFFF)
+    if ((bytes[7] & 1) || (!(bytes[7] & OWNED_RESOURCE_FLAG) && word(bytes + 24) == 0xFFFF))
       return Error::INVALID_IMAGE;
+    if(bytes[7] & OWNED_RESOURCE_FLAG)
+      for(uint8_t i=24;i<30;++i) if(bytes[i]) return Error::INVALID_IMAGE;
   } else for (uint8_t i = 24; i < HEADER_SIZE; ++i)
     if (bytes[i]) return Error::INVALID_IMAGE;
   View v = {bytes,
@@ -209,7 +211,9 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             (bytes[7] & 1) != 0,
             (bytes[7] & 2) != 0};
   v.end = (bytes[7] & 4) ? word(bytes + 30) : length;
-  if (v.end > length || ((bytes[7] & 4) && v.end == length)) return Error::INVALID_IMAGE;
+  if (v.end > MAX_IMAGE || v.end > length || ((bytes[7] & 4) && v.end == length) ||
+      ((bytes[7] & OWNED_RESOURCE_FLAG) && !(bytes[7] & RESOURCE_FLAG)) ||
+      (!(bytes[7] & OWNED_RESOURCE_FLAG) && length > MAX_IMAGE)) return Error::INVALID_IMAGE;
   if ((v.expression
            ? v.lines != 0 || v.source_size > (v.language == Language::BASIC ? 64 : 111)
            : !v.lines) ||
@@ -219,11 +223,15 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       checksum(bytes + HEADER_SIZE, length - HEADER_SIZE) != dword(bytes + 20))
     return Error::INVALID_IMAGE;
   uint8_t boundaries[(MAX_IMAGE + 7) / 8] = {};
-  // The same bitmap covers instructions and separately delimited recipes.
+  // Only code needs a bitmap. Resource boundaries are scanned once here and
+  // looked up in the bounded directory, keeping the verifier stack unchanged.
   for (uint16_t at = v.end; at < length;) {
+    if(bytes[7] & OWNED_RESOURCE_FLAG) {
+      if(length-at<2 || word(bytes+at)>length-at-2) return Error::INVALID_IMAGE;
+      at += (uint16_t)(2+word(bytes+at)); continue;
+    }
     if (length - at < 3 || bytes[at + 2] > (length - at - 3) / 3)
       return Error::INVALID_IMAGE;
-    boundaries[at >> 3] |= (uint8_t)(1U << (at & 7));
     unsigned total = 0;
     for (uint8_t i = 0; i < bytes[at + 2]; ++i) {
       const auto* p = bytes + at + 3 + i * 3;
@@ -236,6 +244,13 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if (total != word(bytes + at)) return Error::INVALID_IMAGE;
     at += (uint16_t)(3 + bytes[at + 2] * 3);
   }
+  auto resource_boundary = [&](uint16_t wanted) {
+    for(uint16_t at=v.end;at<length;) {
+      if(at==wanted) return true;
+      at += (uint16_t)((bytes[7] & OWNED_RESOURCE_FLAG) ? 2+word(bytes+at) : 3+bytes[at+2]*3);
+    }
+    return false;
+  };
   for (uint16_t pc = v.code; pc < v.end;) {
     boundaries[pc >> 3] |= (uint8_t)(1U << (pc & 7));
     const uint16_t following = next(v, pc);
@@ -265,7 +280,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if (op == Op::PRINT_RESOURCE || op == Op::INPUT_RESOURCE) {
       const uint32_t at = (uint32_t)v.end + word(bytes + pc + 1);
       if (!(bytes[7] & 4) || at >= length ||
-          !(boundaries[at >> 3] & (1U << (at & 7))) ||
+          !resource_boundary((uint16_t)at) ||
           (op == Op::INPUT_RESOURCE && word(bytes + at) > 95))
         return Error::INVALID_IMAGE;
     }
@@ -983,7 +998,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       case Op::PRINT_RESOURCE:
         p = v.bytes + v.end + word(p);
-        event(Event::RESOURCE_TEXT, (const char*)p, word(p), value);
+        event((v.bytes[7] & OWNED_RESOURCE_FLAG) ? Event::TEXT : Event::RESOURCE_TEXT,
+              (const char*)p + ((v.bytes[7] & OWNED_RESOURCE_FLAG) ? 2 : 0), word(p), value);
         break;
       case Op::PRINT_NUMBER:
         value = pop();
@@ -1006,8 +1022,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::INPUT_RESOURCE: {
         if (host.yield_input)
           return {Error::YIELDED, instruction, source_line(v, instruction), steps};
-        const bool resource = op == Op::INPUT_RESOURCE;
-        p = resource ? v.bytes + v.end + word(p) : p;
+        const bool pooled = op == Op::INPUT_RESOURCE;
+        const bool resource = pooled && !(v.bytes[7] & OWNED_RESOURCE_FLAG);
+        p = pooled ? v.bytes + v.end + word(p) : p;
         event(resource ? Event::RESOURCE_INPUT : Event::READ_INPUT,
               (const char*)p + (resource ? 0 : 2), word(p), value);
         if (error == Error::NONE) push(value);

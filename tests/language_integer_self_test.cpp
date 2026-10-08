@@ -64,7 +64,9 @@ int main(){
   {
     Request request={};request.size=sizeof(request);request.capacity=MAX_IMAGE;
     request.version=3;assert(!compatible(&request));
+    request.version=4;assert(!compatible(&request));
     request.version=REQUEST_VERSION;assert(compatible(&request));
+    request.size-=8;assert(!compatible(&request));
   }
   std::puts("integer VM: automatic types, int32 overflow, fractional division, FLOOR_DIV, MOD, wide history, signed zero, FOR/INPUT/DATA PASS");
 }

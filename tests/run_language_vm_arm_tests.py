@@ -80,12 +80,12 @@ def main():
                 m.files[42] = (3 if kind == "tinybasic" else 2, "VMTEST", source)
                 request = m.input + 512
                 image = m.workspace + 6400
-                m.uc.mem_write(request, bytes(32))
-                m.put(request, 32, 4, image, 1536)
+                m.uc.mem_write(request, bytes(40))
+                m.put(request, 40, 5, image, 1536)
                 command = 0x206 if kind == "tinybasic" else 0x106
                 result = m.call(command, 42, 0, request)
                 assert result == (1 if kind == "tinybasic" else 0), (kind, result, m.lines)
-                wire = bytes(m.uc.mem_read(request, 32))
+                wire = bytes(m.uc.mem_read(request, 40))
                 assert wire[16] == 0 and wire[30] == 1, wire.hex()
                 length = struct.unpack_from("<H", wire, 18)[0]
                 bytecode = bytes(m.uc.mem_read(image, length))
@@ -99,7 +99,7 @@ def main():
                 m.uc.mem_write(variables, bytes(26 * 8))
                 m.uc.mem_write(array, bytes(385 * 8))
                 m.uc.mem_write(execute, bytes(48))
-                m.put(execute, 48, 4, image, length, variables, array, 385)
+                m.put(execute, 48, 5, image, length, variables, array, 385)
                 m.uc.mem_write(execute + 28, b"\x01\0\0\0")  # no interactive final wait
                 assert m.call(0x700, execute) == 1
                 error = m.uc.mem_read(execute + 36, 1)[0]

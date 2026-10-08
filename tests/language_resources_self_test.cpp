@@ -30,13 +30,13 @@ struct Host {
   }
   static bool event(void* raw, Event e, const char* text, uint16_t n, double& value) {
     auto& h = *(Host*)raw;
-    if(e == Event::TEXT) h.text.emplace_back(text,n);
+    if(e == Event::TEXT) {h.handles.push_back(text);h.text.emplace_back(text,n);}
     if(e == Event::RESOURCE_TEXT) {
       h.handles.push_back(text); std::string decoded;
       if(!resource_text((const uint8_t*)text, read, &h, append, &decoded)) return false;
       h.text.push_back(decoded);
     }
-    if(e == Event::READ_INPUT) { h.prompts.emplace_back(text,n); value=h.prompts.size()+5; }
+    if(e == Event::READ_INPUT) {h.handles.push_back(text); h.prompts.emplace_back(text,n); value=h.prompts.size()+5; }
     if(e == Event::RESOURCE_INPUT) {
       h.handles.push_back(text); char decoded[96];
       if(!resource_prompt((const uint8_t*)text, decoded, read, &h)) return false;
@@ -50,9 +50,9 @@ struct Program {
   View view = {};
   State state = {};
   Value variables[26] = {}, array[385] = {}, stack[MAX_STACK] = {};
-  Program(const std::string& source, Language lang, bool resources) {
-    ResourceSource backing = {42,7};
-    const auto sized=compile(lang,source.data(),(uint16_t)source.size(),nullptr,MAX_IMAGE,true,
+  Program(const std::string& source, Language lang, bool resources, ResourceMode mode=ResourceMode::SOURCE) {
+    ResourceSource backing = {42,7,mode};
+    const auto sized=compile(lang,source.data(),(uint16_t)source.size(),nullptr,mode==ResourceMode::EMBEDDED?MAX_MODULE:MAX_IMAGE,true,
                              resources?&backing:nullptr);
     if(sized.error != Error::NONE) std::fprintf(stderr,"compile %s at %u: %s\n",error_name(sized.error),sized.source_offset,source.c_str());
     assert(sized.error == Error::NONE);
@@ -159,6 +159,46 @@ void test_invalid_recipes() {
     p.crc(); View v;(void)inspect(p.image.data(),(uint16_t)p.image.size(),v);p.image=good;
   }
 }
+void test_owned_resources() {
+  for(auto lang:{Language::BASIC,Language::FOCAL}) {
+    const std::string source=lang==Language::BASIC ?
+        "10 PRINT 'SAME';'SAME'\n20 INPUT 'SAME',A\n30 END\n" :
+        "1.10 PRINT \"SAME\"\n1.20 PRINT \"SAME\"\n1.30 ASK A\n1.40 EXIT\n";
+    Program p(source,lang,true,ResourceMode::EMBEDDED);
+    Host h={nullptr,nullptr};h.revision=999;
+    assert(p.image[7]&OWNED_RESOURCE_FLAG);
+    assert(lang==Language::FOCAL ? p.image.size()-p.view.end>=6 : p.image.size()-p.view.end==6);
+    assert(p.run(h).error==Error::NONE && !h.reads && h.text.size()==2);
+    assert(h.text[0]=="SAME" && h.text[1]=="SAME" && h.handles[0]==h.handles[1]);
+    if(lang==Language::BASIC) assert(h.prompts[0]=="SAME" && h.handles[0]==h.handles[2]);
+    const auto good=p.image;
+    p.image[p.view.end]=255;p.crc();View bad;
+    assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
+    p.image=good;
+    p.image[24]=42;
+    assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
+    p.image=good;p.image[4]=1;
+    assert(inspect(p.image.data(),(uint16_t)p.image.size(),bad)==Error::INVALID_IMAGE);
+  }
+  // Variable records can straddle either scratch slab, including their u16.
+  std::string source="10 PRINT ";
+  for(unsigned i=0;i<180;++i) {
+    if(i) source+=';';source+="'";source+=(char)('A'+i/26);source+=(char)('A'+i%26);
+    if(i%3) source+='!';source+='\'';
+  }
+  source+='\n';Program p(source,Language::BASIC,true,ResourceMode::EMBEDDED);Host h={nullptr,nullptr};
+  assert(p.run(h).error==Error::NONE && h.text.size()==180 && !h.reads);
+  // Code limit stays 6144, but a self-contained resource tail may extend the
+  // overall blob beyond it. Instruction jumps still cannot enter that tail.
+  Program large("10 PRINT '"+std::string(900,'X')+"'\n",Language::BASIC,true,ResourceMode::EMBEDDED);
+  const uint16_t padding=(uint16_t)(MAX_IMAGE-4-large.view.end);
+  large.image.insert(large.image.begin()+large.view.end-1,padding,(uint8_t)Op::LINE);
+  const uint16_t end=(uint16_t)(large.view.end+padding),size=(uint16_t)large.image.size();
+  large.image[8]=(uint8_t)size;large.image[9]=(uint8_t)(size>>8);
+  large.image[30]=(uint8_t)end;large.image[31]=(uint8_t)(end>>8);large.crc();
+  assert(size>MAX_IMAGE && size<=MAX_MODULE && inspect(large.image.data(),size,large.view)==Error::NONE);
+  Host out={nullptr,nullptr};assert(large.run(out).error==Error::NONE && out.text[0]==std::string(900,'X'));
 }
-int main(){test_semantics_and_dedup();test_pool_crosses_scratch_slabs();test_resume_and_stale_source();test_invalid_recipes();
+}
+int main(){test_semantics_and_dedup();test_pool_crosses_scratch_slabs();test_resume_and_stale_source();test_invalid_recipes();test_owned_resources();
   std::puts("language_resources: M8 dedup, PRINT/INPUT equivalence, streaming, relocation, resume, stale source, malformed recipes PASS");}

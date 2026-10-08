@@ -37,7 +37,8 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
     }
     request = {};
     request.size = sizeof(request); request.version = REQUEST_VERSION;
-    request.capacity = MAX_IMAGE; request.source_id = 0xFFFF;
+    request.capacity = MAX_MODULE; request.source_id = 0xFFFF;
+    request.resources = ResourceMode::EMBEDDED;
     request.language = (uint8_t)language;
     uint32_t result = 0;
     const auto status = frontend((C)stage.command, stage.argument0, stage.argument1, &request, result);
@@ -53,7 +54,7 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
       mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1;
     }
     if(request.compiled.error != Error::NONE || request.compiled.size < HEADER_SIZE ||
-       request.compiled.size > MAX_IMAGE) {
+       request.compiled.size > MAX_MODULE) {
       mk61_app_flow_exit(flow, 0, MK61_FLOW_CORRUPT); return 1;
     }
     stage.transfer.size = request.compiled.size;
@@ -66,6 +67,19 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
   }
   if(flow->current.phase != FLOW_EMIT_SOURCE) return 0;
   if(flow->status != MK61_FLOW_OK) {
+    if(request.resources==ResourceMode::EMBEDDED && flow->status==MK61_FLOW_BUSY) {
+      // Retry the same retained source, never reopen selection/editor UI.
+      request.resources=ResourceMode::SOURCE;request.output=nullptr;request.capacity=MAX_IMAGE;
+      uint32_t result=0;
+      const auto status=frontend(C::LANGUAGE_COMPILER_EMIT,0,0,&request,result);
+      if(status!=MK61_FLOW_OK || !request.run_requested || request.compiled.error!=Error::NONE ||
+         request.compiled.size<HEADER_SIZE || request.compiled.size>MAX_IMAGE) {
+        mk61_app_flow_exit(flow,0,status!=MK61_FLOW_OK ? status : (uint32_t)MK61_FLOW_CORRUPT);return 1;
+      }
+      stage.transfer.size=request.compiled.size;
+      mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
+          MK61_APP_FLOW_SYSTEM_FILE,app_flow::RESERVE_IMAGE),FLOW_EMIT_SOURCE);return 1;
+    }
     mk61_app_flow_exit(flow, 0, flow->status); return 1;
   }
   if(!stage.transfer.image || stage.transfer.size != request.compiled.size) return 0;

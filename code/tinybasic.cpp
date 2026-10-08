@@ -2936,12 +2936,21 @@ static TinyBasicRunStatus tb_run_program(
       program_index >= TB_PROGRAM_COUNT || !tb_program_used(programs[program_index]))
     return TinyBasicRunStatus::UNAVAILABLE;
   auto& request = *language_vm::frontend_request;
-  const language_vm::ResourceSource resources = {
-      programs[program_index].store_id, programs[program_index].source_revision};
+  language_vm::ResourceSource resources = {
+      programs[program_index].store_id, programs[program_index].source_revision, request.resources};
   request.compiled = language_vm::compile(
       language_vm::Language::BASIC, programs[program_index].source,
       programs[program_index].source_len, request.output, (u16)request.capacity, true, &resources);
+  if (!request.output && request.compiled.error == language_vm::Error::FULL &&
+      request.resources == language_vm::ResourceMode::EMBEDDED) {
+    request.resources = resources.mode = language_vm::ResourceMode::SOURCE;
+    request.capacity = language_vm::MAX_IMAGE;
+    request.compiled = language_vm::compile(language_vm::Language::BASIC,
+        programs[program_index].source, programs[program_index].source_len,
+        nullptr, language_vm::MAX_IMAGE, true, &resources);
+  }
   request.source_id = programs[program_index].store_id;
+  request.source_revision = programs[program_index].source_revision;
   request.language = (u8)language_vm::Language::BASIC;
   request.mode = (u8)mode;
   request.run_requested = request.compiled.error == language_vm::Error::NONE;
@@ -3199,7 +3208,8 @@ static TinyBasicRunStatus tb_run_program(
 
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 bool language_vm::frontend_emit(void) {
-  if (!compatible(frontend_request) || !frontend_request->output) return false;
+  if (!compatible(frontend_request)) return false;
+  frontend_request->retained_source = 1;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope scope;
   if (!scope.ok()) return false;
@@ -3838,6 +3848,17 @@ bool EditTinyBasicProgramAt(u16 id, u16 line_number, u16 column) {
   const int slot = id < TB_PROGRAM_COUNT ? (int)id : -1;
 #endif
   if (slot < 0) return false;
+  if (line_number == (u16)(language_vm::STALE_SOURCE_POSITION >> 16) &&
+      column == (u16)language_vm::STALE_SOURCE_POSITION) {
+    tb_location = {};
+    tb_error_slot = -1;
+    tb_detail = language_vm::Error::NONE;
+    tb_message_i18n("SOURCE CHANGED", M8("ТЕКСТ ИЗМЕНЁН"),
+                    "CURSOR RESET", M8("ПОЗИЦИЯ СБРОШЕНА"));
+    (void)tinybasic_wait_after_run();
+    EditTinyBasicSlot(slot);
+    return true;
+  }
   const char* source = programs[slot].source;
   const char* p = source;
   while (*p) {

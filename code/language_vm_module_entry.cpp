@@ -388,7 +388,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
 uint32_t execute(ExecuteRequest* request) {
   if (!request || request->size != sizeof(*request) ||
       request->version != REQUEST_VERSION || !request->variables ||
-      request->image_size > MAX_IMAGE || request->array_count > 385 ||
+      request->image_size > MAX_MODULE || request->array_count > 385 ||
       request->mode > 1 || request->reserved)
     return 0;
   View view;

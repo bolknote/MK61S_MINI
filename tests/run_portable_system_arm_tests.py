@@ -401,7 +401,9 @@ class Machine:
         for i,r in enumerate(saved_fp): uc.reg_write(r,0x3141592600000000+i)
         for r,v in zip([UC_ARM_REG_SP,UC_ARM_REG_LR,UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3],[sp,self.stop|1,command,a,b,c]): uc.reg_write(r,v)
         self.put(sp,d)
-        uc.emu_start(self.base+self.entry+1,self.stop,timeout=10_000_000,count=10_000_000)
+        uc.emu_start(self.base+self.entry+1,self.stop,
+                     timeout=getattr(self,'call_timeout_us',10_000_000),
+                     count=getattr(self,'call_instruction_limit',10_000_000))
         assert uc.reg_read(UC_ARM_REG_PC) == self.stop, ('did not return',hex(uc.reg_read(UC_ARM_REG_PC)))
         assert uc.reg_read(UC_ARM_REG_SP) == sp
         for i,r in enumerate(saved): assert uc.reg_read(r) == 0x31410000+i

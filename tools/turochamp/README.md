@@ -145,3 +145,27 @@ The package check needs only standard Python:
 M8/UTF-8/CRLF quotas, dispatcher coverage, call depth, font CRC and all
 normal/selected cell rasters. Device timing needs a live UC1609 calculator;
 host timings do not include flash reads or APP handoffs.
+
+Performance HIL:
+
+```sh
+python3 tests/hil_turochamp_performance.py \
+  --port /dev/cu.usbmodemDEVICE --public-id PUBLIC_ID --build-id BUILD_ID \
+  --reset-before --runs 3 --output-dir tmp/turochamp-performance
+```
+
+This test verifies the installed game byte-for-byte, disables the book and
+starts the initial 2/8-ply search with the computer playing White. Its pixel
+oracle uses the real FMK glyphs to read node progress and the e2-e3 result
+from CRC-checked USB screen frames. Frame arrival timestamps, not fixed
+polling delays, define the elapsed time. It checks the expected 420 nodes,
+retains DWT profiles and screenshots, restores calculator registers/cwd and
+checks firmware CRC, MPU and crash state. It does not install firmware or
+write game/fixture files. `--reset-before` clears volatile caches before the
+first run; later runs repeat without reset. They are not claimed to have
+all 25 modules resident in the 24 KiB cache. Matched A/B firmware and System
+installation are a separate step; preserve math, clock, optimization,
+profiler and USB settings on both sides.
+
+The pixel/profile parser has a device-free regression test:
+`python3 tests/hil_turochamp_performance_self_test.py`.

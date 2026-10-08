@@ -22,10 +22,10 @@ uint32_t frontend(C command, uint32_t a, uint32_t, Request* r, uint32_t& result)
   assert(r->size == sizeof(*r) && r->version == REQUEST_VERSION);
   if(frontend_status) return frontend_status;
   if(command == C::LANGUAGE_COMPILER_EMIT) {
-    assert(r->output == image && r->capacity == compiled_size);
+    assert(!r->output || (r->output == image && r->capacity == compiled_size));
     if(bad_emit) ++r->compiled.size;
   } else {
-    assert(a == 42 && !r->output && r->capacity == MAX_IMAGE);
+    assert(a == 42 && !r->output && r->capacity == MAX_MODULE);
     r->compiled = {}; r->compiled.size = compiled_size;
     r->source_id = 42; r->clear_requested = clear_values;
   }
@@ -52,6 +52,11 @@ int main() {
   static_assert(offsetof(CompilerContext, compile) == offsetof(CompilerContext, vm),
                 "compiler and VM phases must reuse the same memory");
   values.selected[0] = values.selected[1] = 0xFFFF;
+  {
+    auto legacy = make(); auto legacy_step = step(legacy);
+    legacy.compile.magic = 0x31564C46;
+    assert(!flow_compile(&legacy_step, frontend) && !calls);
+  }
 #if defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_FOCAL_MODULE)
   #if defined(MK61_BUILD_TINYBASIC_MODULE)
   constexpr Language language = Language::BASIC, other = Language::FOCAL;
@@ -110,7 +115,9 @@ int main() {
   assert(c.compile.command == (uint32_t)C::TINYBASIC_RUN_ID && c.compile.argument0 == 42);
   assert(f.resume_phase == FLOW_EMIT_SOURCE && c.compile.transfer.prefix == sizeof(ExecutionState));
   f = step(c, FLOW_EMIT_SOURCE); f.status = MK61_FLOW_BUSY;
-  assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_EXIT && f.status == MK61_FLOW_BUSY);
+  assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_CALL && c.compile.request.resources==ResourceMode::SOURCE);
+  f=step(c,FLOW_EMIT_SOURCE);f.status=MK61_FLOW_BUSY;
+  assert(flow_compile(&f, frontend) && f.action==MK61_FLOW_EXIT && f.status==MK61_FLOW_BUSY);
 
   c = make(); no_run = clear_values = true;
   values.variables[0][0] = values.variables[1][0] = values.array[0] = 42;
@@ -121,7 +128,7 @@ int main() {
   c = make(); f = step(c);
   assert(flow_compile(&f, frontend) && f.status == MK61_FLOW_IO_ERROR);
   frontend_status = 0;
-  for(auto length : {uint16_t(HEADER_SIZE - 1), uint16_t(MAX_IMAGE + 1)}) {
+  for(auto length : {uint16_t(HEADER_SIZE - 1), uint16_t(MAX_MODULE + 1)}) {
     compiled_size = length; c = make(); f = step(c);
     assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_EXIT && f.status == MK61_FLOW_CORRUPT);
   }

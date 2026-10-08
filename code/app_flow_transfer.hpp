@@ -14,6 +14,9 @@ class Transfer {
   explicit Transfer(shared_memory::Owner owner) : owner_(owner) {}
   loadable_module::RuntimeStatus reserve(ImageTransfer&);
   loadable_module::RuntimeStatus commit(ImageTransfer&);
+  // The caller separately owns and pins this immutable image (e.g. a cache
+  // reservation). Only the runtime workspace is acquired here, no copy.
+  loadable_module::RuntimeStatus retain_image(ImageTransfer&);
  private:
   shared_memory::Owner owner_;
   uint32_t reserved_size_ = 0;

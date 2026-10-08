@@ -13,7 +13,9 @@
 using namespace language_vm;
 struct Program {
   std::vector<uint8_t> image;
+  std::vector<uint8_t> owned_image;
   View view{};
+  View owned_view{};
   explicit Program(const char* path) : image(MAX_IMAGE) {
     std::ifstream file(path, std::ios::binary);
     assert(file);
@@ -25,6 +27,13 @@ struct Program {
     assert(result.error == Error::NONE);
     image.resize(result.size);
     assert(inspect(image.data(), result.size, view) == Error::NONE);
+    const ResourceSource resources={0xFFFF,0,ResourceMode::EMBEDDED};
+    owned_image.resize(MAX_MODULE);
+    const auto owned=compile(Language::BASIC,source.data(),(uint16_t)source.size(),
+                            owned_image.data(),MAX_MODULE,true,&resources);
+    assert(owned.error==Error::NONE);
+    owned_image.resize(owned.size);
+    assert(inspect(owned_image.data(),owned.size,owned_view)==Error::NONE);
   }
 };
 struct Case {
@@ -93,7 +102,7 @@ struct Model {
     if (e == Event::WAIT) return ++m.waits != m.scenario.cancel_wait;
     return true;
   }
-  Outcome run(const Program& p) {
+  Outcome run(const Program& p, bool owned=false) {
     State state{};
     state.variables = variables;
     state.array = array;
@@ -101,7 +110,7 @@ struct Model {
     state.stack = stack;
     state.stack_capacity = MAX_STACK;
     const Services services{this, nullptr, math, random, value, reference, event};
-    const auto result = language_vm::run(p.view, state, services, 10000);
+    const auto result = language_vm::run(owned?p.owned_view:p.view, state, services, 10000);
     return {result.error, scenario.registers, transcript, rng, waits, inputs};
   }
 };
@@ -112,6 +121,7 @@ static void compare(const Program& before, const Program& after, const Case& sce
     Case c = scenario;
     c.cancel_wait = cancelled;
     const auto a = Model(c).run(before), b = Model(c).run(after);
+    assert(a==Model(c).run(before,true) && b==Model(c).run(after,true));
     ++cases;
     if (!(a == b)) {
       std::fprintf(stderr, "%s: seed=%u X=%.0f C=%.0f P=%.0f T=%.0f B=%.0f RE=%.0f cancel=%u\n",

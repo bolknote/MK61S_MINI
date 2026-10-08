@@ -102,6 +102,12 @@ struct ResourceWorkspace {
   uint8_t* at(uint16_t offset) {
     return offset < half ? first + offset : second + offset - half;
   }
+  uint16_t word(uint16_t offset) {
+    return (uint16_t)(*at(offset) | ((uint16_t)*at((uint16_t)(offset+1))<<8));
+  }
+  void word(uint16_t offset, uint16_t value) {
+    *at(offset)=(uint8_t)value; *at((uint16_t)(offset+1))=(uint8_t)(value>>8);
+  }
 };
 struct Target {
   uint8_t kind, index;
@@ -163,7 +169,7 @@ class Compiler {
     const uint16_t code_end = pc_;
     if (error_ == Error::NONE && resource_size_ && resource_data_.first) {
       if (pc_ > capacity_ || resource_size_ > capacity_ - pc_ ||
-          resource_size_ > MAX_IMAGE - pc_) fail(Error::FULL);
+          resource_size_ > (owned_resources() ? MAX_MODULE : MAX_IMAGE) - pc_) fail(Error::FULL);
       else {
         if (out_) {
           const uint16_t first = resource_size_ < resource_data_.half ? resource_size_ : resource_data_.half;
@@ -179,10 +185,13 @@ class Compiler {
       out_[4] = (uint8_t)VERSION;
       out_[5] = (uint8_t)Lang;
       out_[6] = maximum_ ? maximum_ : 1;
-      out_[7] = (rf_required_ ? 2 : 0) | (resource_size_ && resource_data_.first ? 4 : 0);
+      out_[7] = (rf_required_ ? 2 : 0) | (resource_size_ && resource_data_.first ?
+                  RESOURCE_FLAG | (owned_resources() ? OWNED_RESOURCE_FLAG : 0) : 0);
       if (resource_size_ && resource_data_.first) {
-        put_word(out_ + 24, resources_->id);
-        put_dword(out_ + 26, resources_->revision);
+        if(!owned_resources()) {
+          put_word(out_ + 24, resources_->id);
+          put_dword(out_ + 26, resources_->revision);
+        }
         put_word(out_ + 30, code_end);
       }
       put_word(out_ + 8, pc_);
@@ -257,8 +266,27 @@ class Compiler {
   ResourceWorkspace resource_data_;
   Op last_op_;
   uint16_t last_at_;
-  bool resource_literals() const { return resources_ && resources_->id != 0xFFFF; }
+  bool owned_resources() const { return resources_ && resources_->mode == ResourceMode::EMBEDDED; }
+  bool resource_literals() const { return resources_ && (owned_resources() || resources_->id != 0xFFFF); }
   uint16_t intern_resource(const char* text, uint16_t length) {
+    if(owned_resources()) {
+      if(!resource_data_.first) {
+        resource_size_ += (uint16_t)(2 + length); return 0;
+      }
+      for(uint16_t at=0; at<resource_size_;) {
+        const uint16_t n=resource_data_.word(at);
+        bool same=n==length;
+        for(uint16_t i=0; same && i<n; ++i)
+          same=*resource_data_.at((uint16_t)(at+2+i))==(uint8_t)text[i];
+        if(same) return at;
+        at += (uint16_t)(2+n);
+      }
+      if(2U+length > (unsigned)resource_data_.half*2-resource_size_) {fail(Error::FULL);return 0;}
+      const uint16_t at=resource_size_;
+      resource_data_.word(at,length);
+      for(uint16_t i=0;i<length;++i) *resource_data_.at((uint16_t)(at+2+i))=(uint8_t)text[i];
+      resource_size_ += (uint16_t)(2+length); return at;
+    }
     if(!resource_data_.first) {
       // Sizing mode needs only an upper bound. Raw literal bytes are already
       // contiguous; synthesized prompts can need at most one span per byte.
