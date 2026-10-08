@@ -15,6 +15,7 @@ expected="$(
     build_mk61_module_pack.sh \
     build_mk61_program_pack.sh \
     build-portable-app.ps1 \
+    build_sheet_app.py \
     build_portable_app.py \
     build-system-app-bundle.ps1 \
     build_system_app_bundle.py \
@@ -24,6 +25,7 @@ expected="$(
     generate_highnoon_font.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
+    language_vm_cache_replay.cpp \
     language_vm_probe.cpp \
     m8_codec.py \
     measure_app_flow.py \
@@ -38,6 +40,7 @@ expected="$(
     release-contract.json \
     release-contract.ps1 \
     release_contract.py \
+    replay_vm_cache.py \
     vfat_diagnostic.py \
     seal-firmware-elf.py \
     seal-firmware-elf.ps1 \
