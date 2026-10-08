@@ -7,6 +7,7 @@
 // The complete UI and document share a 20-KiB APP allocation.
 #pragma GCC optimize ("Oz")
 #endif
+#include "phone_input.hpp"
 
 namespace {
 using sheet::Kind; using sheet::Error; using sheet::Op;
@@ -19,7 +20,7 @@ struct App {
   mk61_service_lease frame_lease;
   const mk61_app_api* api;
   const mk61_app_services* services;
-  mk61_service_edit_key text_editor;
+  phone_input::State phone;
   char edit[sheet::SOURCE_BYTES], copied[sheet::SOURCE_BYTES], file_name[32];
   uint32_t file_id, parent, revision;
   uint16_t selected, top_row, left_column, edit_length, cursor, undo_size, origin;
@@ -221,10 +222,7 @@ void begin_edit(Kind kind,bool replace=false) {
   if(!replace) sheet::source(app.book,app.selected,app.edit);
   app.edit_length=length(app.edit); app.cursor=app.edit_length;
   app.edit_kind=kind; app.prefix=0; app.mode=Mode::EDIT;
-  app.text_editor={}; app.text_editor.source=app.edit;
-  app.text_editor.capacity=sizeof(app.edit); app.text_editor.length=app.edit_length;
-  app.text_editor.cursor=app.cursor; app.text_editor.options=1U|2U|4U|8U|16U;
-  app.text_editor.ok_text=""; app.text_editor.backspace_key=app.services->keyboard_mapping->cx;
+  app.phone={};
 }
 bool insert(const char* value,bool token) {
   const uint16_t size=length(value);
@@ -262,14 +260,30 @@ void commit() {
 void editor() {
   char addr[8]; sheet::address(app.selected,0,addr); band(0,addr);
   text(24,0,app.edit_kind==Kind::TEXT?M8("ПОДПИСЬ"):M8("ФОРМУЛА"),true);
-  text(168,0,app.prefix==1?"F":(app.prefix==2?"K":angle_label()),true);
+  const char* input_mode=app.phone.layout==phone_input::RUSSIAN?
+      (app.phone.lowercase?M8("рус"):M8("РУС")):
+      (app.phone.layout==phone_input::LATIN?(app.phone.lowercase?"abc":"ABC"):"123");
+  text(168,0,app.edit_kind==Kind::TEXT?input_mode:
+      (app.prefix==1?"F":(app.prefix==2?"K":angle_label())),true);
   if(app.edit_kind==Kind::TEXT) {
     uint16_t top=app.cursor/32>2?(uint16_t)((app.cursor/32-2)*32):0;
     for(uint16_t i=top;i<app.edit_length && i<top+96;++i) {
       char ch[2]={app.edit[i],0}; text((i-top)%32*6,8+(i-top)/32*8,ch);
     }
-    rectangle((app.cursor-top)%32*6,8+(app.cursor-top)/32*8+7,5,1);
-    text(0,40,M8("K:БУКВЫ F:СИМВОЛЫ")); text(0,48,M8("Cx:СТЕРЕТЬ ←→:КУРСОР"));
+    const uint16_t caret=(uint16_t)(app.cursor-(app.phone.key && app.cursor?1:0));
+    rectangle((caret-top)%32*6,8+(caret-top)/32*8+7,5,1);
+    if(app.phone.key) {
+      char key[3]={(char)('0'+app.phone.key),':',0}; text(0,32,key);
+      const char* letters=phone_input::group(app.phone,app.phone.key);
+      for(uint8_t i=0;letters[i];++i) {
+        char ch[2]={phone_input::letter(app.phone,(uint8_t)letters[i]),0};
+        if(i==app.phone.index) rectangle(18+i*6,32,6,8);
+        text(18+i*6,32,ch,i==app.phone.index);
+      }
+    } else text(0,32,app.phone.layout==phone_input::DIGITS?M8("0..9:ЦИФРЫ"):
+                                      M8("2..9:БУКВЫ 1:ЗНАКИ 0:ПРОБЕЛ"));
+    text(0,40,M8("K:РУС/ЛАТ/123 F:РЕГИСТР"));
+    text(0,48,M8("Cx:СТЕРЕТЬ →/В↑:ПРИНЯТЬ"));
   } else {
     char display[128]; formula_text(app.edit,app.edit_length,display,sizeof(display));
     for(uint16_t i=0;display[i] && i<96;++i) {
@@ -508,9 +522,23 @@ void key(int value) {
     if(value==MK61_APP_KEY_ESC) { app.mode=Mode::TABLE; return; }
     if(value==MK61_APP_KEY_OK) { commit(); return; }
     if(app.edit_kind==Kind::TEXT) {
-      auto& editor=app.text_editor; editor.key=raw_key(value); editor.now=app.api->millis_ms();
-      app.services->call(MK61_SERVICE_EDITOR_KEY,0,0,0,&editor);
-      app.edit_length=(uint16_t)editor.length; app.cursor=(uint16_t)editor.cursor; return;
+      if(value>=0 && value<=9) {
+        if(!phone_input::tap(app.phone,app.edit,app.edit_length,app.cursor,sizeof(app.edit),
+                             (uint8_t)value,app.api->millis_ms())) app.message=Error::LIMIT;
+        return;
+      }
+      const bool pending=app.phone.key!=0; phone_input::finish(app.phone);
+      if(value==MK61_APP_KEY_K) app.phone.layout=(uint8_t)((app.phone.layout+1)%3);
+      else if(value==MK61_APP_KEY_F) app.phone.lowercase=!app.phone.lowercase;
+      else if(value==MK61_APP_KEY_LEFT && app.cursor) --app.cursor;
+      else if(value==MK61_APP_KEY_RIGHT && !pending && app.cursor<app.edit_length) ++app.cursor;
+      else if(value==MK61_APP_KEY_SHIFT_LEFT) app.cursor=0;
+      else if(value==MK61_APP_KEY_SHIFT_RIGHT) app.cursor=app.edit_length;
+      else if(value==MK61_APP_KEY_CLEAR && app.cursor) {
+        memmove(app.edit+app.cursor-1,app.edit+app.cursor,app.edit_length-app.cursor+1);
+        --app.cursor; --app.edit_length;
+      }
+      return;
     }
     if(value==MK61_APP_KEY_USER) {
       if(app.prefix) { app.prefix=0; app.mode=Mode::FUNCTIONS; app.menu=0; }
@@ -583,7 +611,7 @@ uint32_t run(uint32_t file_id) {
   const uint32_t caps=MK61_APP_CAP_TIME|MK61_APP_CAP_KEYBOARD|MK61_APP_CAP_FILES|MK61_APP_CAP_GRAPHICS;
   if(!mk61_app_api_compatible(app.api,sizeof(*app.api),caps)) return MK61_APP_UNSUPPORTED_DISPLAY;
   app.services=mk61_app_get_services(app.api,MK61_SERVICE_CAP_UI|MK61_SERVICE_CAP_FILES|
-      MK61_SERVICE_CAP_DIALOGS|MK61_SERVICE_CAP_EDITOR|MK61_SERVICE_CAP_FONT|MK61_SERVICE_CAP_MATH|
+      MK61_SERVICE_CAP_DIALOGS|MK61_SERVICE_CAP_FONT|MK61_SERVICE_CAP_MATH|
       MK61_SERVICE_CAP_NUMBER_IO|MK61_SERVICE_CAP_MEMORY);
   if(!app.services || !app.services->keyboard_mapping) return MK61_APP_RUNTIME_ERROR;
   sheet::number_io(parse_number,format_number);
@@ -593,6 +621,8 @@ uint32_t run(uint32_t file_id) {
   app.redraw=true;
   uint32_t result=MK61_APP_OK;
   while(!app.exit) {
+    if(app.mode==Mode::EDIT && app.edit_kind==Kind::TEXT &&
+       phone_input::expire(app.phone,app.api->millis_ms())) app.redraw=true;
     if(app.graphics && app.api->graphics_revision()!=app.revision) { close_graphics(); app.redraw=true; }
     if(!open_graphics()) { result=MK61_APP_UNSUPPORTED_DISPLAY; break; }
     if(app.redraw) {

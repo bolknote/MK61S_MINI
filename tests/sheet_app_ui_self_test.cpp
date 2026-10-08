@@ -163,8 +163,21 @@ int main(int argc,char** argv){
   assert(sheet_app_entry()==MK61_APP_OK);done();assert(result(0)==2);
   sheet::source(app.book,0,source_text);assert(strcmp(source_text,"2 ENT 3 ROLL")==0);
 
-  // Type -> text delegates SMS/alpha entry to the same resident editor.
-  reset();inputs={USER,RIGHT,RIGHT,RIGHT,RIGHT,OK,RIGHT,OK,1,2,3,OK,ESC,RIGHT,OK};
+  // Phone text mode begins in Russian; numeric text needs the 123 layout.
+  reset();inputs={USER,RIGHT,RIGHT,RIGHT,RIGHT,OK,RIGHT,OK,MK61_APP_KEY_K,MK61_APP_KEY_K,1,2,3,OK,ESC,RIGHT,OK};
   assert(sheet_app_entry()==MK61_APP_OK);done();sheet::source(app.book,0,source_text);assert(strcmp(source_text,"123")==0 && app.book.cells[0].kind==(uint8_t)Kind::TEXT);
+  reset();files.clear();inputs={USER,RIGHT,RIGHT,RIGHT,RIGHT,OK,RIGHT,OK,
+      6,5,5,5,6,6,RIGHT,6,6,6,OK,ESC,OK};
+  assert(sheet_app_entry()==MK61_APP_OK);done();sheet::source(app.book,0,source_text);assert(strcmp(source_text,M8("РОСТ"))==0);
+  reset();inputs={ESC};assert(mk61_app_open_file(42)==MK61_APP_OK);done();sheet::source(app.book,0,source_text);assert(strcmp(source_text,M8("РОСТ"))==0);
+  reset();inputs={USER,RIGHT,RIGHT,RIGHT,RIGHT,OK,RIGHT,OK,
+      3,3,3,RIGHT,MK61_APP_KEY_F,3,3,3,3,0,MK61_APP_KEY_K,MK61_APP_KEY_F,
+      2,RIGHT,2,2,RIGHT,2,2,2,0,MK61_APP_KEY_K,1,2,3,MK61_APP_KEY_CLEAR,3,OK,ESC,RIGHT,OK};
+  assert(sheet_app_entry()==MK61_APP_OK);done();sheet::source(app.book,0,source_text);assert(strcmp(source_text,M8("Ёж ABC 123"))==0);
+  // Idle timeout confirms a glyph even when the next key repeats its group.
+  reset();inputs={USER,RIGHT,RIGHT,RIGHT,RIGHT,OK,RIGHT,OK,2};
+  for(int i=0;i<250;++i) inputs.push_back(MK61_APP_KEY_NONE);
+  inputs.insert(inputs.end(),{2,OK,ESC,RIGHT,OK});
+  assert(sheet_app_entry()==MK61_APP_OK);done();sheet::source(app.book,0,source_text);assert(strcmp(source_text,M8("АА"))==0);
   std::puts("SHEET UI: actual glyphs, keystrokes, anchors, copy/fill/undo, save/reopen/failures, math and scratch lifetime PASS");
 }

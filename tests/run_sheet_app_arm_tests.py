@@ -88,6 +88,15 @@ def main():
                 machine.frames=[]
                 assert machine.call(1,machine.api)==0
                 assert shows_selected_nine(machine.frames)
+                # Russian phone input needs no prefix: РОСТ, including two
+                # consecutive letters from the same keypad group.
+                machine.keys=[25,16,16,16,16,19,16,19,
+                              6,5,5,5,6,6,16,6,6,6,19,20,19]
+                assert machine.call(1,machine.api)==0
+                text_inode=max(machine.files)
+                assert cells(machine.files[text_inode][2])=={0:(2,'РОСТ')}
+                machine.keys=[20]
+                assert machine.call(2,machine.api,text_inode)==0
                 # MK-61 x^y operand order, with the real resident POW service.
                 machine.keys=[2,enter,3,24,256+machine.mapping[5],19,20,16,19]
                 machine.frames=[]
@@ -106,7 +115,8 @@ def main():
                 machine.files[201]=(12,'BROKEN',bytes(broken));machine.keys=[]
                 assert machine.call(2,machine.api,201)==1
                 assert machine.begins==machine.ends
-            print(f'{resident.parent.name}: SHEET at three addresses; real ARM runtime, fonts, numbers, math, save/reopen, 64-cell cycles and CRC rejection PASS')
+            count=1 if args.address is not None else 3
+            print(f'{resident.parent.name}: SHEET at {count} address(es); real ARM runtime, fonts, numbers, math, Russian phone input/save/reopen, 64-cell cycles and CRC rejection PASS')
 
 
 if __name__=='__main__':

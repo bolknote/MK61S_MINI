@@ -11,6 +11,8 @@ fi
 clang++ "${flags[@]}" "$root/tests/sheet_engine_self_test.cpp" \
   "$root/examples/portable-apps/SHEET/sheet_engine.cpp" -o "$work/engine"
 "$work/engine"
+clang++ "${flags[@]}" "$root/tests/sheet_phone_input_self_test.cpp" -o "$work/phone"
+"$work/phone"
 for keyboard in MINI CLASSIC; do
   clang++ "${flags[@]}" -DARDUINO=100 -DMK61_DISPLAY_UC1609 \
     -DMK61_KEYBOARD_"$keyboard" -I"$root/tests/mk_math_shim" \
