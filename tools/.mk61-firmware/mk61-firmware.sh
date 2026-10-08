@@ -2317,6 +2317,7 @@ prepare_and_compile_f411_worker() {
     --build-property "compiler.cpp.extra_flags=$flags" \
     --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
     --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
+    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$PROJECT_ROOT/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch_dir" || return 1
 
   source_artifact="$build_dir/mk61s-M.ino.bin"

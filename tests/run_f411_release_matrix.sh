@@ -243,6 +243,7 @@ compile_variant() {
     --build-property "compiler.cpp.extra_flags=$compile_flags" \
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
     --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker" \
+    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}

@@ -138,7 +138,8 @@ class Stress:
             if command == "vlog" and not re.search(r"VFAT v=1 code=0\b", report):
                 raise AssertionError("a VFAT error was retained")
 
-    def run(self, metadata_cycles: int, rounds: int, interruptions: int) -> None:
+    def run(self, metadata_cycles: int, rounds: int, interruptions: int,
+            refill_rounds: int = 1) -> None:
         self.health()
         self.change(f'mkdir "{self.root}"')
         for name in ("A", "B", "QUOTA", "FULL"):
@@ -248,12 +249,13 @@ class Stress:
             raise AssertionError("not enough free space to exercise recovery")
         self.reset()
         self.note("full", files=len(full), df=self.cmd("df"))
-        for path in full[::2]:
-            self.remove(path)
-        for path in full[::2]:
-            self.put(path, self.payload(4096))
-        self.reset()
-        self.note("full-refill", files=len(full))
+        for refill_round in range(refill_rounds):
+            for path in full[::2]:
+                self.remove(path)
+            for path in full[::2]:
+                self.put(path, self.payload(4096))
+            self.reset()
+            self.note("full-refill", files=len(full), round=refill_round + 1)
         self.health()
         removed = self.change(f'rm -r "{self.root}"')
         if "Removed " not in removed:
@@ -273,16 +275,19 @@ def main() -> int:
     parser.add_argument("--metadata-cycles", type=int, default=1024)
     parser.add_argument("--rounds", type=int, default=96)
     parser.add_argument("--interruptions", type=int, default=14)
+    parser.add_argument("--refill-rounds", type=int, default=1,
+                        help="delete/refill cycles at physical capacity (1..32)")
     parser.add_argument("--seed", type=int, default=0xC700)
     args = parser.parse_args()
     if not re.fullmatch(r"[0-9a-fA-F]{16}", args.public_id):
         parser.error("--public-id requires 16 hexadecimal digits")
     if not (1 <= args.metadata_cycles <= 10000 and 1 <= args.rounds <= 10000
-            and 1 <= args.interruptions <= 100):
+            and 1 <= args.interruptions <= 100 and 1 <= args.refill_rounds <= 32):
         parser.error("counts are outside the bounded stress-test limits")
     stress = Stress(args.port, args.public_id, args.seed)
     try:
-        stress.run(args.metadata_cycles, args.rounds, args.interruptions)
+        stress.run(args.metadata_cycles, args.rounds, args.interruptions,
+                   args.refill_rounds)
         return 0
     except BaseException as error:
         stress.note("FAIL", error=str(error), retained_fixture=stress.root)

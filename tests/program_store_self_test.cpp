@@ -3657,6 +3657,128 @@ static void test_two_hundred_apps_have_no_fixed_slot_limit(void) {
 
 } // безымянное пространство имён
 
+struct FullFile {
+  u16 id;
+  u8 seed;
+};
+
+static void full_file_name(unsigned index, char (&name)[16]) {
+  snprintf(name, sizeof(name), "FULL%03u", index);
+}
+
+static void verify_full_files(const std::vector<FullFile>& files) {
+  u8 expected[4096], actual[4096];
+  for(unsigned index = 0; index < files.size(); ++index) {
+    if(files[index].id == program_store::INVALID_ID) continue;
+    char name[16];
+    full_file_name(index, name);
+    assert(strcmp(by_id(files[index].id).name, name) == 0);
+    fill_app(expected, sizeof(expected), files[index].seed);
+    u16 length = 0;
+    assert(program_store::read_id(files[index].id, actual, sizeof(actual), &length));
+    assert(length == sizeof(actual) && memcmp(actual, expected, length) == 0);
+  }
+}
+
+static void test_large_full_delete_refill_and_torn_reclaim(void) {
+  fresh(512U * 1024U);
+  u8 payload[4096];
+  std::vector<FullFile> files;
+  for(unsigned index = 0; index < 200; ++index) {
+    char name[16];
+    full_file_name(index, name);
+    fill_app(payload, sizeof(payload), (u8)index);
+    u16 id;
+    if(!program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::MK61_BINARY,
+        name, payload, sizeof(payload), &id)) break;
+    files.push_back({id, (u8)index});
+  }
+  assert(files.size() >= 40 && files.size() < 60);
+  struct Reclaim {
+    std::vector<u8> image;
+    std::vector<FullFile> files;
+    unsigned index = 0;
+    u8 seed = 0;
+    u32 operations = 0;
+  } reclaim;
+  for(unsigned round = 0; round < 8; ++round) {
+    for(unsigned index = 0; index < files.size(); index += 2) {
+      assert(program_store::remove_id(files[index].id));
+      files[index].id = program_store::INVALID_ID;
+    }
+    program_store::init();
+    assert(program_store::ready());
+    for(unsigned index = 0; index < files.size(); index += 2) {
+      std::vector<u8> image(512U * 1024U);
+      assert(flash.readByteArray(0, image.data(), image.size()));
+      std::vector<u32> sectors(files.size());
+      for(unsigned other = 0; other < files.size(); ++other) {
+        if(files[other].id == program_store::INVALID_ID) continue;
+        u16 length;
+        assert(program_store::test_file_record_location(
+            files[other].id, sectors[other], length));
+      }
+      char name[16];
+      full_file_name(index, name);
+      const u8 seed = (u8)(index + (round + 1) * 13);
+      fill_app(payload, sizeof(payload), seed);
+      SPIFlash::resetOperationCounts();
+      u16 id;
+      assert(program_store::write_file(program_store::ROOT_ID,
+          program_store::INVALID_ID, ProgramType::MK61_BINARY,
+          name, payload, sizeof(payload), &id));
+      const u32 operations = SPIFlash::mutationOperations();
+      bool moved_survivor = false;
+      for(unsigned other = 0; other < files.size(); ++other) {
+        if(files[other].id == program_store::INVALID_ID) continue;
+        u32 sector;
+        u16 length;
+        assert(program_store::test_file_record_location(files[other].id, sector, length));
+        moved_survivor |= sector != sectors[other];
+      }
+      if(moved_survivor && operations > reclaim.operations) {
+        reclaim = {image, files, index, seed, operations};
+      }
+      files[index] = {id, seed};
+    }
+    program_store::init();
+    assert(program_store::ready());
+    verify_full_files(files);
+  }
+  assert(reclaim.operations > 0);
+  char name[16];
+  full_file_name(reclaim.index, name);
+  fill_app(payload, sizeof(payload), reclaim.seed);
+  for(const auto mode : {SPIFlash::Tear::Before, SPIFlash::Tear::Prefix,
+                        SPIFlash::Tear::Bits, SPIFlash::Tear::Complete})
+  for(u32 cut = 0; cut <= reclaim.operations; ++cut) {
+    SPIFlash::reset(512U * 1024U);
+    assert(flash.writeByteArray(0, reclaim.image.data(), reclaim.image.size()));
+    program_store::init();
+    assert(program_store::ready());
+    SPIFlash::tearAfterOperations((i32)cut, mode);
+    (void)program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::MK61_BINARY,
+        name, payload, sizeof(payload));
+    SPIFlash::clearFailure();
+    program_store::init();
+    assert(program_store::ready());
+    verify_full_files(reclaim.files);
+    u16 id;
+    assert(program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::MK61_BINARY,
+        name, payload, sizeof(payload), &id));
+    auto expected = reclaim.files;
+    expected[reclaim.index] = {id, reclaim.seed};
+    program_store::init();
+    assert(program_store::ready());
+    verify_full_files(expected);
+  }
+  printf("C8 full/refill: files=%zu rounds=8 torn_reclaim_cases=%u PASS\n",
+         files.size(), (reclaim.operations + 1) * 4);
+}
+
 static void report_catalog_wear(u32 capacity, bool reboot_each) {
   fresh(capacity);
   static u32 before[SPIFlash::MAX_CAPACITY / SPIFlash::SECTOR_SIZE];
@@ -3698,6 +3820,10 @@ static void report_catalog_wear(u32 capacity, bool reboot_each) {
 }
 
 int main(int argc, char** argv) {
+  if(argc == 2 && strcmp(argv[1], "--full-refill") == 0) {
+    test_large_full_delete_refill_and_torn_reclaim();
+    return 0;
+  }
   if(argc == 2 && (strcmp(argv[1], "--catalog-wear") == 0 ||
                   strcmp(argv[1], "--catalog-wear-reboot") == 0)) {
     const bool reboot_each = strcmp(argv[1], "--catalog-wear-reboot") == 0;
@@ -3780,6 +3906,7 @@ int main(int argc, char** argv) {
   test_max_app_replacement_uses_full_wal_capacity();
   test_large_app_power_cuts_keep_old_or_new_value();
   test_max_app_power_cuts_are_atomic();
+  test_large_full_delete_refill_and_torn_reclaim();
   test_middle_file_extent_can_be_repurposed();
   test_two_hundred_apps_have_no_fixed_slot_limit();
   report_catalog_wear(512U * 1024U, true);

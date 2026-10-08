@@ -52,6 +52,8 @@ def main() -> int:
     parser.add_argument("--files", type=int, default=16,
                         help="files per cycle, a multiple of 4 (use 4 on a nearly full volume)")
     parser.add_argument("--seed", type=int, default=0xC701)
+    parser.add_argument("--profile", action="store_true",
+                        help="capture DWT counters around each USB session")
     args = parser.parse_args()
     if not re.fullmatch(r"[0-9a-fA-F]{16}", args.public_id) or not 1 <= args.cycles <= 20:
         parser.error("pin a 16-digit public ID; --cycles must be 1..20")
@@ -86,6 +88,10 @@ def main() -> int:
                 phase_started = time.monotonic()
                 if console_locked(system_root()):
                     raise AssertionError("Mac locked before USB reconnect; unlock it and repeat the HIL")
+                if args.profile:
+                    report = terminal_report(target, "prof start")
+                    if "PROF started" not in report:
+                        raise AssertionError(f"DWT profiler unavailable: {report}")
                 baseline = whole_disks()
                 enter_usb_disk(target)
                 disk, info = wait_for_msc_disk(location, identity.usb, baseline, 30)
@@ -167,6 +173,9 @@ def main() -> int:
                 reconnect(target, 150)
                 cdc_at = time.monotonic()
                 stats["sessions"] += 1
+                if args.profile:
+                    print(f"DWT cycle={cycle + 1} phase={phase}", flush=True)
+                    print(terminal_report(target, "prof stop"), flush=True)
                 diagnostic = parse_vfat_diagnostic(terminal_report(target, "vlog"))
                 if diagnostic is None or diagnostic["code"] != 0:
                     raise AssertionError(f"USB import diagnostic: {diagnostic}")

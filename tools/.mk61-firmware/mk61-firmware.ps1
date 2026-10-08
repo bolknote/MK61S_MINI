@@ -2554,12 +2554,20 @@ function Build-Selected {
     $linkerFlagPath = $portableLinker.Replace('\', '/')
     $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
 
+    $usbGuard = Join-Path $script:ProjectRoot 'tools/.mk61-gcc/protect-usb-lto.ps1'
+    $usbGuardRecipe = '"' + (Get-CurrentPowerShellExecutable) + '" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "' +
+        $usbGuard + '" "{build.path}" "{build.core.path}/../../libraries/USBDevice" ' +
+        '"{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} ' +
+        '{compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} ' +
+        '{build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"'
+
     $arguments = @(
         'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
         '--build-property', "compiler.cpp.extra_flags=$flags",
         '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
         '--build-property', "compiler.c.elf.extra_flags=$residentLinkFlags",
+        '--build-property', "recipe.hooks.linking.prelink.20.pattern=$usbGuardRecipe",
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
         $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {

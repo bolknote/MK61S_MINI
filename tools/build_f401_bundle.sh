@@ -559,6 +559,7 @@ printf 'Building F401 resident firmware (%s)…\n' "$profile"
   --build-property "compiler.cpp.extra_flags=$compile_flags" \
   --build-property "compiler.c.extra_flags=$platform_ram_flags" \
   --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
+  --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
   "$sketch_dir"
 
 python3 "$root/tests/analyze_stack_usage.py" \
@@ -589,6 +590,8 @@ compiler=$(normalize_host_path "$compiler_path$compiler_cpp")
   exit 1
 }
 objcopy="$(dirname "$compiler")/arm-none-eabi-objcopy"
+python3 "$root/tests/check_usb_cdc_rx_elf.py" "$resident_elf" \
+  --objdump "$(dirname "$compiler")/arm-none-eabi-objdump"
 [ -x "$objcopy" ] || {
   printf 'Error: required STM32 objcopy is missing: %s\n' "$objcopy" >&2
   exit 1

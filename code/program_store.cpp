@@ -901,7 +901,7 @@ static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
   return meta;
 }
 
-static bool checkpoint(bool empty_table = false);
+static bool checkpoint(bool empty_table = false, bool reserve_only = false);
 static bool load_catalog(void);
 static bool borrowed_stage_sector(u32 sector);
 static bool sector_has_live_inode(u32 sector);
@@ -924,10 +924,13 @@ static u8 new_overlay_slots(const Transaction& transaction) {
 
 // A separate cursor is committed with each root. GC transactions have their
 // own cursor and must not undo catalog allocation when they publish metadata.
-static bool allocate_catalog_sector(u32& output) {
+static bool allocate_catalog_sector(u32& output, bool reserve_only = false) {
   const u32 first = storage_geometry::LOCATOR_SECTORS;
-  const u32 count = g_geometry.stage_first_sector - first;
-  const u32 start = catalog_sector_in_range(g_catalog_cursor) ? g_catalog_cursor : first;
+  const u32 end = reserve_only ? g_geometry.data_first_sector
+                              : g_geometry.stage_first_sector;
+  const u32 count = end - first;
+  const u32 start = g_catalog_cursor >= first && g_catalog_cursor < end
+      ? g_catalog_cursor : first;
   for(u32 base = 0; base < count; base += GC_SCAN_WINDOW) {
     const u8 window = (u8) ((count - base < GC_SCAN_WINDOW)
         ? count - base : GC_SCAN_WINDOW);
@@ -960,8 +963,9 @@ static bool catalog_page_dirty(u8 page) {
 // Stream a page through 512 bytes of scratch; never put a 4-KiB erase block
 // on F401's stack. Inodes straddling a physical page are patched in both pages.
 __attribute__((noinline))
-static bool write_catalog_page(u8 page, CatalogPage& target) {
-  if(!allocate_catalog_sector(target.sector)) return false;
+static bool write_catalog_page(u8 page, CatalogPage& target,
+                                bool reserve_only) {
+  if(!allocate_catalog_sector(target.sector, reserve_only)) return false;
   mk61_crc32::Context crc;
   u8 buffer[512];
   u8 disk_inode[storage_geometry::INODE_BYTES];
@@ -1021,15 +1025,19 @@ static bool publish_catalog_root(u32 generation) {
          write_byte(address + 5, STATE_ACTIVE);
 }
 
-static bool checkpoint(bool empty_table) {
+static bool checkpoint(bool empty_table, bool reserve_only) {
   clear_pending_catalog();
   memcpy(g_catalog_pending, g_catalog_pages, sizeof(g_catalog_pending));
   if(empty_table) memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
   for(u8 page = 0; !empty_table && page < g_geometry.catalog_table_sectors; ++page) {
-    if(catalog_page_dirty(page) && !write_catalog_page(page, g_catalog_pending[page])) return false;
+    const bool borrowed = reserve_only &&
+        g_catalog_pages[page].sector != EMPTY_ADDRESS &&
+        g_catalog_pages[page].sector >= g_geometry.data_first_sector;
+    if((catalog_page_dirty(page) || borrowed) &&
+       !write_catalog_page(page, g_catalog_pending[page], reserve_only)) return false;
   }
-  if(!allocate_catalog_sector(g_catalog_pending_root) ||
-     !allocate_catalog_sector(g_catalog_pending_wal)) return false;
+  if(!allocate_catalog_sector(g_catalog_pending_root, reserve_only) ||
+     !allocate_catalog_sector(g_catalog_pending_wal, reserve_only)) return false;
   u32 generation = g_catalog_generation + 1;
   if(generation == 0) generation = 1;
   if(!publish_catalog_root(generation)) return false;
@@ -1563,7 +1571,7 @@ static bool select_reclaimable_sector(u32& out) {
   return false;
 }
 
-static bool select_gc_victim(u32& out) {
+static bool select_gc_victim(u32& out, u16 limit = 0xFFFE) {
   const u32 first = g_geometry.data_first_sector;
   const u32 count = g_geometry.data_sector_count;
   const u32 start = data_sector_in_range(g_meta.gc_cursor)
@@ -1619,7 +1627,7 @@ static bool select_gc_victim(u32& out) {
       const u32 sector = first + (start - first + base + slot) % count;
       if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
          catalog_sector_busy(sector) || borrowed_stage_sector(sector)) continue;
-      if(live_bytes[slot] != 0xFFFF && live_bytes[slot] < best_bytes) {
+      if(live_bytes[slot] <= limit && live_bytes[slot] < best_bytes) {
         best_bytes = live_bytes[slot];
         best = sector;
       }
@@ -1639,15 +1647,15 @@ static bool commit_meta_only(const CatalogMeta& meta) {
   return append_transaction(transaction);
 }
 
-static bool garbage_collect(void) {
+static bool garbage_collect(bool merge_current = false) {
   // Includes newly allocated reserves not yet named by committed metadata.
   struct SectorPin {
     explicit SectorPin(u32 sector) { g_gc_victim = sector; }
     ~SectorPin() { g_gc_victim = EMPTY_ADDRESS; }
   };
-  if(!data_sector_in_range(g_meta.reserve_sector) ||
+  if(!merge_current && (!data_sector_in_range(g_meta.reserve_sector) ||
      borrowed_stage_sector(g_meta.reserve_sector) ||
-     sector_has_live_inode(g_meta.reserve_sector)) {
+     sector_has_live_inode(g_meta.reserve_sector))) {
     u32 replacement = EMPTY_ADDRESS;
     if(!select_reclaimable_sector(replacement)) return false;
     SectorPin reserve_pin(replacement);
@@ -1657,14 +1665,25 @@ static bool garbage_collect(void) {
   }
 
   u32 victim = EMPTY_ADDRESS;
-  if(!select_gc_victim(victim)) return false;
+  u16 limit = 0xFFFE;
+  if(merge_current) {
+    if(!data_sector_in_range(g_meta.current_sector) ||
+       !data_sector_header_valid(g_meta.current_sector) ||
+       g_meta.current_offset > storage_geometry::PHYSICAL_SECTOR_SIZE) return false;
+    limit = (u16) (storage_geometry::PHYSICAL_SECTOR_SIZE - g_meta.current_offset);
+    if(!range_erased(sector_address(g_meta.current_sector) +
+                      g_meta.current_offset, limit)) return false;
+  }
+  if(!select_gc_victim(victim, limit)) return false;
   // A checkpoint can run after the last inode has left the victim but before
   // GC erases it. Do not let the moving catalog claim it in that interval.
   SectorPin victim_pin(victim);
 
-  const u32 destination = g_meta.reserve_sector;
-  if(!initialize_data_sector(destination)) return false;
-  u16 destination_offset = DATA_SECTOR_HEADER_SIZE;
+  const u32 destination = merge_current ? g_meta.current_sector
+                                       : g_meta.reserve_sector;
+  if(!merge_current && !initialize_data_sector(destination)) return false;
+  u16 destination_offset = merge_current ? g_meta.current_offset
+                                         : DATA_SECTOR_HEADER_SIZE;
   u8 copy_buffer[64];
   u16 next_id = 0;
   while(next_id < g_geometry.max_nodes) {
@@ -1700,6 +1719,7 @@ static bool garbage_collect(void) {
       if(!txn_set(transaction, id, inode)) return false;
       destination_offset = (u16) (destination_offset + inode.record_len);
     }
+    if(merge_current) transaction.meta.current_offset = destination_offset;
     if(transaction.count != 0 && !append_transaction(transaction)) {
       return false;
     }
@@ -1708,11 +1728,14 @@ static bool garbage_collect(void) {
   CatalogMeta promoted = g_meta;
   promoted.current_sector = destination;
   promoted.current_offset = destination_offset;
-  promoted.reserve_sector = EMPTY_ADDRESS;
+  if(!merge_current) promoted.reserve_sector = EMPTY_ADDRESS;
   const u32 first = g_geometry.data_first_sector;
   promoted.gc_cursor = first +
       (victim - first + 1) % g_geometry.data_sector_count;
   if(!commit_meta_only(promoted)) return false;
+  // The caller can now reclaim the old sector. Do not erase it twice: the
+  // large-block allocator will erase it only after its last inode is durable.
+  if(merge_current) return true;
   if(!erase_sector(victim)) return false;
   CatalogMeta reserved = g_meta;
   reserved.reserve_sector = victim;
@@ -3136,19 +3159,48 @@ class LargeWriteGuard {
 static bool select_large_sector(u32& output) {
   const u32 first = g_geometry.data_first_sector;
   const u32 count = g_geometry.data_sector_count;
-  const u32 start = data_sector_in_range(g_meta.gc_cursor)
-      ? g_meta.gc_cursor : first;
-  for(u32 offset = 0; offset < count; offset++) {
-    const u32 sector = first + (start - first + offset) % count;
-    if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
-       borrowed_stage_sector(sector) ||
-       sector_has_live_inode(sector)) continue;
-    if(!erase_sector(sector)) continue;
-    output = sector;
-    g_meta.gc_cursor = first + (sector - first + 1) % count;
-    return true;
+  bool catalog_relocated = false;
+  bool records_compacted = false;
+  for(;;) {
+    const u32 start = data_sector_in_range(g_meta.gc_cursor)
+        ? g_meta.gc_cursor : first;
+    for(u32 offset = 0; offset < count; offset++) {
+      const u32 sector = first + (start - first + offset) % count;
+      if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+         borrowed_stage_sector(sector) ||
+         sector_has_live_inode(sector)) continue;
+      if(!erase_sector(sector)) continue;
+      output = sector;
+      g_meta.gc_cursor = first + (sector - first + 1) % count;
+      return true;
+    }
+    // Rotating catalog pages may borrow data sectors while there is space.
+    // At physical exhaustion move them back to the metadata-only reserve;
+    // otherwise the usable capacity depends on the last checkpoint location.
+    if(!catalog_relocated) {
+      catalog_relocated = true;
+      bool borrowed = data_sector_in_range(g_catalog_root) ||
+                      data_sector_in_range(g_catalog_wal);
+      for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
+        borrowed |= data_sector_in_range(g_catalog_pages[page].sector);
+      }
+      if(borrowed) {
+        if(!checkpoint(false, true)) {
+          if(!load_catalog()) g_ready = false;
+          return false;
+        }
+        continue;
+      }
+    }
+    // Deleted large-file descriptors can leave several almost-empty record
+    // sectors. A large block needs a whole sector, not just unused tail bytes.
+    if(!records_compacted) {
+      records_compacted = true;
+      if(garbage_collect(true) ||
+         (garbage_collect() && garbage_collect(true))) continue;
+    }
+    return false;
   }
-  return false;
 }
 
 // Keep large-file work buffers out of the caller's small-file/encoder paths.
