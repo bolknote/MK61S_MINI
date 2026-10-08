@@ -101,21 +101,9 @@ uint32_t input(InputRequest* r) {
     }
     if (editor.shift == text_editor::Shift::NONE &&
         (key == KEY_OK || key == KEY_OK_PRESS)) {
-      if (r->language == Language::FOCAL) {
-        const char* end = nullptr;
-        if (portable_system::parse_number(text, r->value, end)) {
-          while (*end == ' ' || *end == '\t') ++end;
-          if (!*end && mk_math::is_finite(r->value)) {
-            r->result = InputResult::VALUE; return 1;
-          }
-        }
-      } else {
-        const auto compiled = compile_expression(
-            Language::BASIC, text, editor.len, r->image, r->capacity);
-        if (compiled.error == Error::NONE) {
-          r->image_size = compiled.size;
-          r->result = InputResult::EXPRESSION; return 1;
-        }
+      const auto compiled = compile_expression(r->language,text,editor.len,r->image,r->capacity);
+      if(compiled.error==Error::NONE) {
+        r->image_size=compiled.size;r->result=InputResult::EXPRESSION;return 1;
       }
       invalid_number(); text_editor::init(editor, text, sizeof(text)); continue;
     }

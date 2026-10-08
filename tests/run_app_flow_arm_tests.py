@@ -17,8 +17,8 @@ from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
 COMPILER_CONTEXT_SIZE = 240
-REQUEST_VERSION = 7
-LANGUAGE_FLOW_MAGIC = 0x34564C46
+REQUEST_VERSION = 8
+LANGUAGE_FLOW_MAGIC = 0x35564C46
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):
@@ -52,10 +52,10 @@ def user_calls(m, packed):
 
 def reject_other_language(m, packed, kind, other_language):
     assert COMPILER_CONTEXT_SIZE == 240
-    context, step, values = m.input + 768, m.input + 1120, m.workspace + 4688
+    context, step, values = m.input + 768, m.input + 1120, m.workspace + 4176
     m.partitioned = True
     m.load(packed)
-    m.uc.mem_write(values, bytes(3504))
+    m.uc.mem_write(values, bytes(4016))
     m.uc.mem_write(context, bytes(240)); m.put(context, LANGUAGE_FLOW_MAGIC, 0)
     m.put(context + 76, values)
     m.uc.mem_write(context + 234, bytes((other_language,)))
@@ -74,19 +74,19 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
     compiler = "tinybasic" if language == 1 else "focal"
     variables, compile_request, execution, context, step, output = [
         m.input + offset for offset in (128, 512, 640, 768, 1120, 1280)]
-    state, array, bytecode = m.workspace, m.workspace + 5112, m.workspace + 1520
+    state, array, bytecode = m.workspace, m.workspace + 4600, m.workspace + 1584
     m.partitioned = True
-    m.uc.mem_write(m.workspace + 4688, b"\x5A" * 3504)
+    m.uc.mem_write(m.workspace + 4176, b"\x5A" * 4016)
     m.files[42] = (3 if language == 1 else 2, "FLOWTEST", source)
     command = 0x20A if language == 1 else 0x106  # BASIC status takes its mode from arg1.
     if compiler_flow:
         context_size = COMPILER_CONTEXT_SIZE
-        values = m.workspace + 4688
-        variables, array = values + 8 + (language - 1)*208, values + 424
+        values = m.workspace + 4176
+        variables, array = values + 8 + (language - 1)*208, values + 424+(3080 if language==2 else 0)
         compact = context_size == 240
         compile_request, execution = context + (8 if compact else 184), context + (184 if compact else 216)
         plan = context + (48 if compact else 264)
-        m.uc.mem_write(values, bytes(3504)); m.uc.mem_write(values + 4, b"\xFF"*4)
+        m.uc.mem_write(values, bytes(4016)); m.uc.mem_write(values + 4, b"\xFF"*4)
         m.uc.mem_write(context, bytes(context_size)); m.put(context, LANGUAGE_FLOW_MAGIC, command)
         m.put(context + (76 if compact else 292), values, command, 42, mode if language == 1 else 0)
         m.uc.mem_write(context + (234 if compact else 308), bytes((language,)))
@@ -105,9 +105,9 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         assert m.call(0x704, 0, 0, compile_request) == 1
         image = bytes(m.uc.mem_read(output, length)); m.uc.mem_write(bytecode, image)
         m.uc.mem_write(variables, bytes(208)); m.uc.mem_write(array, bytes(3080))
-        m.uc.mem_write(state, bytes(1520)); m.uc.mem_write(state + 1506, bytes((language,)))
+        m.uc.mem_write(state, bytes(1584)); m.uc.mem_write(state + 1570, bytes((language,)))
         m.uc.mem_write(execution, bytes(48))
-        m.put(execution, 48, REQUEST_VERSION, bytecode, length, variables, array, 385 if language == 1 else 0)
+        m.put(execution, 48, REQUEST_VERSION, bytecode, length, variables, array, 385 if language == 1 else 64)
         m.uc.mem_write(execution + 28, bytes((mode, 0, 0, 0)))
         m.uc.mem_write(context, bytes(context_size)); m.put(context, LANGUAGE_FLOW_MAGIC, command)
         m.put(context + 8, 24, REQUEST_VERSION, execution, state, context + 32, 0)
@@ -142,14 +142,14 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
                 assert sum(x and x[0] == "file_read" for x in m.trace) == resource_reads, "runtime read its source"
         elif phase == 0x100:  # Generic reserve fixture, exact measured size.
             length, prefix = m.words(plan, 2)
-            assert 0 < length <= 768 and prefix == 1520
+            assert 0 < length <= 768 and prefix == 1584
             m.put(plan + 8, output)
             m.put(step + 32, 3, 0, 1, 0)
         else:  # Generic commit fixture; tail-transfer directly to cold APP.
             assert phase == 0x101 and m.words(plan + 8, 1)[0] == output
             image = bytes(m.uc.mem_read(output, length))
             m.uc.mem_write(bytecode, image)
-            m.put(plan + 8, bytecode, m.workspace, 4688)
+            m.put(plan + 8, bytecode, m.workspace, 4176)
             m.uc.mem_write(step + 24, bytes(m.uc.mem_read(plan + 20, 8)))
             m.put(step + 32, 1, 0, 0, 0)
         assert m.words(step, 4) == (48, 1, context, context_size)

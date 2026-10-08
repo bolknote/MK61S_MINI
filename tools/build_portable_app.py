@@ -46,7 +46,7 @@ SYSTEM_SIZE_BUDGETS = {
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.
-    "language-input": {"app_bytes": 9_200, "memory_bytes": 11_776},
+    "language-input": {"app_bytes": 12_000, "memory_bytes": 16_000},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -90,10 +90,10 @@ def enforce_system_size_budget(system: str | None, report: dict,
         budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
         # Includes FLOW_STEP, resource delivery and continuation policy.
-        # These are measured image ceilings, not larger APP/workspace arenas.
-        # The fused v4 executor uses 13,060 bytes: one additional 32-byte
-        # allocation quantum against the old ceiling, not a larger APP arena.
-        budget = {"memory_bytes": 15_872 if local_float_math else 13_088}
+        # Six FOCAL v5 operations add parameter frames, sparse array access
+        # and precision events. The measured split kernel uses 14,452 bytes;
+        # these ceilings do not enlarge the common 20-KiB APP arena.
+        budget = {"memory_bytes": 17_408 if local_float_math else 15_360}
     if budget is None:
         return
     budget = dict(budget)
@@ -111,6 +111,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
 
 
 def build(args: argparse.Namespace) -> dict:
+    # FOCAL is now a VM frontend, never a self-contained native interpreter.
+    if args.system == "focal":
+        args.language_vm_compiler = True
     system = SYSTEM_MODULES.get(args.system)
     if getattr(args, "split_language_vm", False):
         if args.system != "language-vm":

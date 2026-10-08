@@ -6,9 +6,11 @@
 // Keep it available to host tools and portable APPs, and to opted-in VM builds.
 #if !defined(ARDUINO_ARCH_STM32) || MK61_RESIDENT_LANGUAGE_VM || \
     MK61_OVERLAY_LANGUAGE_VM || defined(MK61_LANGUAGE_VM_COMPILER) || \
-    defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+    defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || \
+    defined(MK61_BUILD_FOCAL_MODULE) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
 #include "language_bytecode.hpp"
 #include "tinybasic_syntax.hpp"
+#include "focal_compiler.hpp"
 
 #include <string.h>
 
@@ -1585,17 +1587,13 @@ CompileResult compile_basic(const char* source, uint16_t length, uint8_t* output
 }
 CompileResult compile_focal(const char* source, uint16_t length, uint8_t* output,
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
-  if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
-  Line lines[80];
-  Compiler<Language::FOCAL> compiler(source, length, output, capacity, lines,
-                                     rf_available, resources);
-  const auto sized = compiler.compile();
-  if(sized.error != Error::NONE || !compiler.resource_reservation()) return sized;
-  return compile_resources<Language::FOCAL>(source,length,output,capacity,lines,rf_available,
-                                             resources,compiler.resource_reservation());
+  return focal_next::compile_program(source,length,output,capacity,rf_available,resources);
 }
 CompileResult compile_expression(Language language, const char* source, uint16_t length,
                                  uint8_t* output, uint16_t capacity) {
+  if(language==Language::FOCAL)
+    return focal_next::compile_expression(source,length,output,capacity);
+
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
   if (language == Language::BASIC) {
     Compiler<Language::BASIC> compiler(source, length, output, capacity, nullptr);

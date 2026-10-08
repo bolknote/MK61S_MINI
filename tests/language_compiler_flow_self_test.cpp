@@ -74,11 +74,12 @@ int main() {
   assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_EXIT && !calls);
   assert(f.result == (basic ? 0U : 4U));
   values.selected[index] = 42;
-  values.variables[0][0] = values.variables[1][0] = values.array[0] = 42;
+  values.variables[0][0] = values.variables[1][0] = values.array[0] = values.focal_array[0] = 42;
   clear_values = true; f = step(c);
   assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_CALL);
   assert(values.variables[index][0] == 0 && values.variables[1-index][0] == 42);
   assert(values.array[0] == (basic ? 0 : 42));
+  assert(values.focal_array[0] == (basic ? 42 : 0));
   assert(c.compile.command == (uint32_t)(basic ? C::TINYBASIC_RUN_ID : C::FOCAL_RUN_ID));
   c.compile.transfer.image = image; f = step(c, FLOW_EMIT_SOURCE);
   assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_NEXT);
@@ -86,7 +87,7 @@ int main() {
   assert(prepare_compiled_flow(&f) && c.prepared);
   assert(c.source_id == 42 && c.clear_requested && c.vm.program.state->language == language);
   assert(c.execution.variables == values.variables[index]);
-  assert(c.execution.array == (basic ? values.array : nullptr));
+  assert(c.execution.array == (basic ? values.array : values.focal_array));
   assert(c.vm.original_command == (uint32_t)(basic ? C::TINYBASIC_RUN_INDEX : C::FOCAL_RUN_INDEX));
   assert(!flow_compile(&f, frontend));
   c = make(language); no_run = true; f = step(c);
@@ -120,7 +121,7 @@ int main() {
   assert(flow_compile(&f, frontend) && f.action==MK61_FLOW_EXIT && f.status==MK61_FLOW_BUSY);
 
   c = make(); no_run = clear_values = true;
-  values.variables[0][0] = values.variables[1][0] = values.array[0] = 42;
+  values.variables[0][0] = values.variables[1][0] = values.array[0] = values.focal_array[0] = 42;
   f = step(c);
   assert(flow_compile(&f, frontend) && f.action == MK61_FLOW_EXIT && f.result == 77);
   assert(!values.variables[0][0] && !values.array[0] && values.variables[1][0] == 42);

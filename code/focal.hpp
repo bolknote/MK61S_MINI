@@ -1,53 +1,50 @@
-#ifndef FOCAL_COMPILER
-#define FOCAL_COMPILER
-
+#ifndef MK61_FOCAL_HPP
+#define MK61_FOCAL_HPP
 #include "rust_types.h"
-
 #ifndef FOCAL_HOST_TEST
 #include "config.h"
 #endif
-
 #ifndef MK61_ENABLE_FOCAL
-  #define MK61_ENABLE_FOCAL 1
+#define MK61_ENABLE_FOCAL 1
 #endif
-
-enum class FocalRunStatus {
-  COMPLETED,
-  STOPPED,
-  COMPILE_ERROR,
-  RUNTIME_ERROR,
-  NOT_FOUND,
-  UNAVAILABLE
+enum class FocalRunStatus : u32 {
+  COMPLETED = 0,
+  STOPPED = 1,
+  COMPILE_ERROR = 2,
+  RUNTIME_ERROR = 3,
+  NOT_FOUND = 4,
+  UNAVAILABLE = 5
 };
-
-inline bool FocalRunSucceeded(FocalRunStatus status) {
-  return status == FocalRunStatus::COMPLETED;
+inline bool FocalRunSucceeded(FocalRunStatus s) {
+  return s == FocalRunStatus::COMPLETED;
 }
-
 #if MK61_ENABLE_FOCAL
-extern bool FOCAL_library_select(void);
-extern bool FOCAL_menu_select(void);
-extern bool CompileFocal(const char* program);
-extern void InitFocal(void);
-extern bool FocalIsReady(void);
-extern FocalRunStatus RunFocal(int FocalN);
-extern FocalRunStatus RunFocalProgram(const char* name);
-extern FocalRunStatus RunFocalProgram(u16 id);
-extern void EditFocal(void);
-extern bool EditFocalProgram(const char* name);
-extern bool EditFocalProgram(u16 id);
+bool FOCAL_library_select();
+bool FOCAL_menu_select();
+bool CompileFocal(char *);
+void InitFocal();
+bool FocalIsReady();
+void RunFocal(int);
+FocalRunStatus RunFocalProgram(const char *);
+FocalRunStatus RunFocalProgram(u16);
+void EditFocal();
+bool EditFocalProgram(const char *);
+bool EditFocalProgram(u16);
 #else
-inline bool FOCAL_library_select(void) { return false; }
-inline bool FOCAL_menu_select(void) { return false; }
-inline bool CompileFocal(const char*) { return false; }
-inline void InitFocal(void) {}
-inline bool FocalIsReady(void) { return false; }
-inline FocalRunStatus RunFocal(int) { return FocalRunStatus::UNAVAILABLE; }
-inline FocalRunStatus RunFocalProgram(const char*) { return FocalRunStatus::UNAVAILABLE; }
-inline FocalRunStatus RunFocalProgram(u16) { return FocalRunStatus::UNAVAILABLE; }
-inline void EditFocal(void) {}
-inline bool EditFocalProgram(const char*) { return false; }
+inline bool FOCAL_library_select() { return false; }
+inline bool FOCAL_menu_select() { return false; }
+inline bool CompileFocal(char *) { return false; }
+inline void InitFocal() {}
+inline bool FocalIsReady() { return false; }
+inline void RunFocal(int) {}
+inline FocalRunStatus RunFocalProgram(const char *) {
+  return FocalRunStatus::UNAVAILABLE;
+}
+inline FocalRunStatus RunFocalProgram(u16) {
+  return FocalRunStatus::UNAVAILABLE;
+}
+inline void EditFocal() {}
+inline bool EditFocalProgram(const char *) { return false; }
 inline bool EditFocalProgram(u16) { return false; }
 #endif
-
 #endif

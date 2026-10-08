@@ -70,7 +70,7 @@ except ValueError as error:
 else:
     raise AssertionError("oversize greedy-packed hybrid BASIC.APP was accepted")
 
-for local, limit in ((False, 13088), (True, 15872)):
+for local, limit in ((False, 15360), (True, 17408)):
     BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": limit},
                                        local, False, True)
     try:
@@ -81,9 +81,9 @@ for local, limit in ((False, 13088), (True, 15872)):
     else:
         raise AssertionError("hot overlay VM size regression was accepted")
 
-BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 11776, "app_bytes": 9200})
+BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 16000, "app_bytes": 12000})
 try:
-    BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 11777, "app_bytes": 9201})
+    BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 16001, "app_bytes": 12001})
 except ValueError:
     pass
 else:

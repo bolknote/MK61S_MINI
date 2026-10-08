@@ -16,7 +16,7 @@
 | USB-экран и desktop-клиент | [Markdown](src/MK61s-mini-USB-Screen.md) | [PDF](MK61s-mini-USB-Screen.pdf) |
 | Хранилище C6 и USB FAT12 | [Markdown](src/MK61s-mini-Storage.md) | [PDF](MK61s-mini-Storage.pdf) |
 | Часы RTC | [Markdown](src/MK61s-mini-RTC.md) | [PDF](MK61s-mini-RTC.pdf) |
-| FOCAL | [Markdown](src/MK61s-mini-FOCAL.md) | [PDF](MK61s-mini-FOCAL.pdf) |
+| FOCAL (новая VM-версия) | [Markdown](src/MK61s-mini-FOCAL.md) | [PDF предыдущего черновика](MK61s-mini-FOCAL.pdf) |
 | TinyBASIC | [Markdown](src/MK61s-mini-TinyBASIC.md) | [PDF](MK61s-mini-TinyBASIC.pdf) |
 | Сценарии M61 | [Markdown](src/MK61s-mini-M61.md) | [PDF](MK61s-mini-M61.pdf) |
 | Команда trap M61 | [Markdown](src/MK61s-mini-M61-Trap.md) | [PDF](MK61s-mini-M61-Trap.pdf) |

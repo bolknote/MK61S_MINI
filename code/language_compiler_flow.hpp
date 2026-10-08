@@ -9,6 +9,7 @@ struct PersistentValues {
   uint16_t selected[2];
   Value variables[2][26];
   Value array[385];
+  Value focal_array[64];
 };
 static_assert(sizeof(PersistentValues) == VALUES_SIZE, "retained values layout changed");
 struct CompilerStage {

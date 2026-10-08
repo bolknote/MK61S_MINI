@@ -35,17 +35,18 @@ uint16_t resolve_name(language_vm::Language, uint32_t);
 namespace language_vm {
 namespace {
 #if MK61_OVERLAY_LANGUAGE_VM
-constexpr uint32_t SESSION_MAGIC = 0x36564D4CUL;
+constexpr uint32_t SESSION_MAGIC = 0x37564D4CUL;
 #else
-constexpr uint32_t SESSION_MAGIC = 0x32564D4CUL;
+constexpr uint32_t SESSION_MAGIC = 0x33564D4CUL;
 #endif
 struct Persistent {
   uint32_t magic;
   uint16_t selected[2];
   Value variables[2][26];
   Value array[385];
+  Value focal_array[64];
 };
-static_assert(sizeof(Persistent) == 3504, "language values layout changed");
+static_assert(sizeof(Persistent) == 4016, "language values layout changed");
 static_assert(sizeof(Persistent) == VALUES_SIZE, "workspace partition ABI changed");
 static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
@@ -121,6 +122,7 @@ void initialize(Persistent& state) {
   state.selected[0] = state.selected[1] = 0xFFFF;
   for(auto& language : state.variables) for(auto& value : language) value=Value(0);
   for(auto& value : state.array) value=Value(0);
+  for(auto& value : state.focal_array) value=Value(0);
 }
 #if !MK61_OVERLAY_LANGUAGE_VM
 bool is_index(Language language, loadable_module::Command command) {
@@ -307,8 +309,8 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
         execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
         execution.image=image_cache.image(cached); execution.image_size=certificate->size;
         execution.variables=values->variables[language==Language::BASIC?0:1];
-        execution.array=language==Language::BASIC?values->array:nullptr;
-        execution.array_count=language==Language::BASIC?385:0;
+        execution.array=language==Language::BASIC?values->array:values->focal_array;
+        execution.array_count=language==Language::BASIC?385:64;
         execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
         continuation=state.as<ExecutionState>();
         reset_execution_state(*continuation); continuation->language=language;
@@ -428,7 +430,8 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if (request.source_id != 0xFFFF) saved->selected[index] = request.source_id;
   if (request.clear_requested) {
     for(auto& value : saved->variables[index]) value=Value(0);
-    if(language == Language::BASIC) for(auto& value : saved->array) value=Value(0);
+    if(language==Language::BASIC){for(auto& value:saved->array)value=Value(0);}
+    else {for(auto& value:saved->focal_array)value=Value(0);}
   }
   shared_memory::Lease state;
   if (!workspace(state)) return RuntimeStatus::BUSY;
@@ -465,8 +468,8 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   execution.image = image;
   execution.image_size = request.compiled.size;
   execution.variables = values->variables[index];
-  execution.array = language == Language::BASIC ? values->array : nullptr;
-  execution.array_count = language == Language::BASIC ? 385 : 0;
+  execution.array = language==Language::BASIC?values->array:values->focal_array;
+  execution.array_count = language == Language::BASIC ? 385 : 64;
   execution.mode = request.mode;
   if (!execute_resident(execution)) return RuntimeStatus::INVALID_MODULE;
   if (language == Language::BASIC) {

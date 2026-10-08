@@ -339,10 +339,14 @@
 #endif
 
 #ifndef MK61_FOCAL_AS_APP
-  #define MK61_FOCAL_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+  #define MK61_FOCAL_AS_APP 1
 #endif
 #ifndef MK61_TINYBASIC_AS_APP
-  #define MK61_TINYBASIC_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+  #if MK61_ENABLE_FOCAL
+    #define MK61_TINYBASIC_AS_APP 1
+  #else
+    #define MK61_TINYBASIC_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
+  #endif
 #endif
 #ifndef MK61_WBMP_VIEWER_AS_APP
   #define MK61_WBMP_VIEWER_AS_APP MK61_DEFAULT_OPTIONAL_COMPONENT_AS_APP
@@ -465,13 +469,17 @@
 #endif
 
 // Математический бэкенд языков (FOCAL/TinyBASIC).
-//  LIBM (умолчание) — трансцендентные функции через <math.h>.
+//  LIBM — трансцендентные функции через <math.h> (по умолчанию, кроме F401+FOCAL).
 //  CORE             — вычисление на ядре МК-61; убирает libm из прошивки
 //                     ценой ~8 значащих цифр и меньшей скорости.
 #define MK61_MATH_BACKEND_LIBM 0
 #define MK61_MATH_BACKEND_CORE 1
 #ifndef MK61_MATH_BACKEND
-  #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+  #if MK61_ENABLE_FOCAL && (defined(STM32F401xC) || defined(STM32F401xE) || defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_CORE
+  #else
+    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+  #endif
 #endif
 
 // FOCAL/BASIC APP may carry a bounded single-precision libm subset while the
@@ -485,8 +493,8 @@
 #endif
 
 // Experimental shared bytecode executor in resident Flash. Compiler-only
-// BASIC/FOCAL APPs must be installed with the matched bundle; ordinary builds
-// keep the existing interpreters and incur no VM runtime/static-RAM cost.
+// BASIC/FOCAL APPs must be installed with the matched bundle. New FOCAL
+// always uses this executor or the external split executor selected below.
 #ifndef MK61_RESIDENT_LANGUAGE_VM
   #define MK61_RESIDENT_LANGUAGE_VM 0
 #endif
@@ -495,7 +503,7 @@
 #endif
 // External LANGVM.APP + cold LANGIN.APP; only orchestration stays resident.
 #ifndef MK61_OVERLAY_LANGUAGE_VM
-  #define MK61_OVERLAY_LANGUAGE_VM 0
+  #define MK61_OVERLAY_LANGUAGE_VM (MK61_ENABLE_FOCAL && !MK61_RESIDENT_LANGUAGE_VM)
 #endif
 #if MK61_OVERLAY_LANGUAGE_VM != 0 && MK61_OVERLAY_LANGUAGE_VM != 1
   #error "MK61_OVERLAY_LANGUAGE_VM must be 0 or 1"
