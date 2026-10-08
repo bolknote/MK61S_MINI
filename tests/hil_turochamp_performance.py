@@ -120,6 +120,14 @@ def stop_game(port):
     assert re.search(r'^IP: 0\s*$',response,re.M),response
 
 
+def completed_board(font, frame):
+    # The move appears on the sixth rank while rows seven/eight are still
+    # being printed. It is not a completed frame or a safe point to send ESC.
+    return (font.has(frame, 'e2-e3') and font.has(frame, 'ВАШ ХОД') and
+            all(font.matches(frame, str(rank), rank, 0) for rank in range(1, 9)) and
+            font.has(frame, 'С/П МЕНЮ') and font.has(frame, 'ОК ВЫБОР'))
+
+
 def search(port,font,args,index,out):
     port.open(args.game_dir+'/autoexec.m61')
     wait_screen(port,font,'ВЫБЕРИТЕ СТОРОНУ')
@@ -141,7 +149,7 @@ def search(port,font,args,index,out):
                 if nodes is not None and nodes not in seen:
                     seen.add(nodes);progress.append({'nodes':nodes,'seconds':stamp-started})
                     if nodes in (0,21,210,420):png(frame,out/(f'nodes-{nodes:04d}.png'))
-            elif font.has(frame,'e2-e3') and font.has(frame,'ВАШ ХОД'):
+            elif completed_board(font,frame):
                 finished=stamp;png(frame,out/'move-e2-e3.png')
                 (out/'move.frame').write_bytes(frame)
                 digest=hashlib.sha256(frame).hexdigest();break
@@ -159,7 +167,8 @@ def search(port,font,args,index,out):
     elapsed=finished-started
     result={'repeat':index,'temperature':'cold' if index==0 and args.reset_before else 'repeat',
             'seconds':elapsed,'nodes':420,'nodes_per_second':420/elapsed,'move':'e2e3',
-            'final_frame_sha256':digest,'progress':progress,'profile':profile(counters)}
+            'final_frame_sha256':digest,'complete_eight_rank_board':True,
+            'progress':progress,'profile':profile(counters)}
     (out/'run.json').write_text(json.dumps(result,indent=2)+'\n')
     print(f'{args.build_id} run {index}: e2-e3 / 420 nodes in {elapsed:.3f}s PASS',flush=True)
     stop_game(port)

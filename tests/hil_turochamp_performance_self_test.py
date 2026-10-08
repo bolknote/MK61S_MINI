@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Pure pixel/profile tests for the chess HIL benchmark, without devices."""
-from hil_turochamp_performance import Font, ROOT, profile
+from hil_turochamp_performance import Font, ROOT, profile, completed_board
 from m8_codec import encode
 
 font=Font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes())
@@ -32,6 +32,14 @@ detail=profile('PROF state=stopped clock=96000000\n'
 assert detail['points']['app.entry.vm']['self_seconds']==.5
 assert detail['vm_cache_dropped']==0 and detail['vm_cache']==[
     {'id':12,'bytes':2189,'hits':50,'misses':2,'name':'search'}]
+frame=bytearray(1536)
+put('ВАШ ХОД',2,10);put('e2-e3',6,10)
+for rank in range(1,7):put(str(rank),rank,0)
+assert not completed_board(font,frame), 'partial six-rank board accepted'
+put('7',7,0);put('С/П МЕНЮ',7,10)
+assert not completed_board(font,frame), 'partial seven-rank board accepted'
+put('8',8,0);put('ОК ВЫБОР',8,10)
+assert completed_board(font,frame)
 try:profile('invalid')
 except AssertionError:pass
 else:raise AssertionError('missing profile clock accepted')
