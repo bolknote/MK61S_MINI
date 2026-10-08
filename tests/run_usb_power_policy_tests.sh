@@ -24,6 +24,7 @@ wrappers=(
   USBD_LL_DevDisconnected
 )
 builders=(
+  "$root/tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt"
   "$root/tools/.mk61-firmware/mk61-firmware.sh"
   "$root/tools/.mk61-firmware/mk61-firmware.ps1"
   "$root/tools/build_f401_bundle.sh"

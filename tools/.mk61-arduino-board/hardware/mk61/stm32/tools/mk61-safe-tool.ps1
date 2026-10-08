@@ -12,8 +12,17 @@ if ($args.Count -lt 2) {
 $safeTemp = [IO.Path]::GetFullPath([string]$args[0])
 $tool = [string]$args[1]
 $toolArguments = @()
-if ($args.Count -gt 2) {
-    $toolArguments = @($args[2..($args.Count - 1)])
+for ($index = 2; $index -lt $args.Count; ++$index) {
+    $argument = [string]$args[$index]
+    # -File consumes the drive colon in attached native options, e.g.
+    # -LC:/build or -Wl,--script=C:/core.ld. They arrive as two arguments.
+    # Rejoin only those linker path options; separate -L C:/build is intact.
+    if ($argument -cmatch '^-(?:L|Wl,.*[,=])[A-Za-z]$' -and
+        $index + 1 -lt $args.Count -and
+        [string]$args[$index + 1] -match '^[\\/]') {
+        $argument += ':' + [string]$args[++$index]
+    }
+    $toolArguments += $argument
 }
 
 [IO.Directory]::CreateDirectory($safeTemp) | Out-Null

@@ -571,6 +571,33 @@ jobs:
             }
           }
 
+      # Python is allowed for artifact analysis, not in either IDE build
+      # above. Check the actual calls: successful compilation or merely
+      # finding the wrapper symbol does not prove that --wrap survived LTO.
+      - name: Verify USB receive guards in both Arduino IDE ELF files
+        shell: pwsh
+        run: |
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig `
+            config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $arduinoData = (& arduino-cli --config-file $ideConfig `
+            config get directories.data | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $toolchain = Join-Path $arduinoData `
+            'packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc'
+          $objdump = @(Get-ChildItem -LiteralPath $toolchain -Recurse `
+            -Filter 'arm-none-eabi-objdump.exe' -File)
+          if ($objdump.Count -ne 1) {
+            throw "Expected one pinned ARM objdump, found $($objdump.Count)"
+          }
+          foreach ($mcu in @('f401', 'f411')) {
+            $elf = Join-Path $safeCache "arduino-ide-$mcu-mini-v2/code.ino.elf"
+            & python ./tests/check_usb_cdc_rx_elf.py $elf --objdump $objdump[0].FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
   build-release:
     name: Build firmware
     needs:

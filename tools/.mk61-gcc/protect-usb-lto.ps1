@@ -12,7 +12,19 @@ try {
         $compiler += '.exe'
     }
     $flags = @()
-    if ($args.Count -gt 3) { $flags = @($args[3..($args.Count - 1)]) }
+    for ($index = 3; $index -lt $args.Count; ++$index) {
+        $argument = [string]$args[$index]
+        # Even a parameter-free -File script receives -IC:/path as two
+        # arguments, -IC and /path: PowerShell consumes the drive colon as
+        # its parameter/value separator. Restore it before writing GCC's
+        # response file. Separate -I C:/path and POSIX paths need no repair.
+        if ($argument -cmatch '^-I[A-Za-z]$' -and
+            $index + 1 -lt $args.Count -and
+            [string]$args[$index + 1] -match '^[\\/]') {
+            $argument += ':' + [string]$args[++$index]
+        }
+        $flags += $argument
+    }
     $objectDirectory = Join-Path $buildPath 'libraries/USBDevice'
     $safeTemp = Join-Path $buildPath 'mk61-usb-lto'
     [IO.Directory]::CreateDirectory($safeTemp) | Out-Null

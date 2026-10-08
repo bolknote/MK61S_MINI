@@ -23,6 +23,7 @@ python3 "$root/tests/usb_lto_build_self_test.py"
 
 linker_flag='--wrap=USBD_CDC_ClearBuffer'
 for builder in \
+  "$root/tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt" \
   "$root/tools/.mk61-firmware/mk61-firmware.sh" \
   "$root/tools/.mk61-firmware/mk61-firmware.ps1" \
   "$root/tools/build_f401_bundle.sh" \
