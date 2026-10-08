@@ -9,6 +9,7 @@
 #include "mpu_guard.hpp"
 #include "spi_nor_flash.hpp"
 #include "tools.hpp"
+#include "dwt_profiler.hpp"
 
 #include <string.h>
 
@@ -36,6 +37,7 @@ static shared_memory::Lease g_app_cache;
 static __attribute__((noinline)) u32 call_entry(u32 command, u32 argument0,
                                                u32 argument1, u32 argument2,
                                                u32 argument3) {
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::app_point((u8)g_active_kind, true));
   ++g_call_depth;
   const u32 result = g_active_entry(command, argument0, argument1,
                                      argument2, argument3);
@@ -261,6 +263,10 @@ static RuntimeStatus load(Kind kind,
      g_active_revision == revision &&
      (kind != Kind::APPLICATION || g_active_file_id == file_id))
     return RuntimeStatus::OK;
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::app_point((u8)kind, false));
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+  dwt_profiler::DecodeContext decode_context(dwt_profiler::app_decode_point((u8)kind));
+#endif
   program_store::Entry app = {};
   const bool found = kind == Kind::APPLICATION
       ? file_id != program_store::INVALID_ID &&

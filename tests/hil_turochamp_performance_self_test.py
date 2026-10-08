@@ -25,6 +25,13 @@ data=profile('PROF state=stopped clock=96000000 overhead=1\n'
 assert data['points']['flash.read']['calls']==23
 assert data['points']['flash.read']['total_seconds']==1
 assert data['points']['zx0.decode']['total_seconds']==2
+detail=profile('PROF state=stopped clock=96000000\n'
+               'PROF app.entry.vm n=2 min=10 avg=20 max=50 total=96000000 self=48000000\n'
+               'VMCACHE dropped=0\n'
+               'VMCACHE id=12 bytes=2189 hits=50 misses=2 name=search\r\n')
+assert detail['points']['app.entry.vm']['self_seconds']==.5
+assert detail['vm_cache_dropped']==0 and detail['vm_cache']==[
+    {'id':12,'bytes':2189,'hits':50,'misses':2,'name':'search'}]
 try:profile('invalid')
 except AssertionError:pass
 else:raise AssertionError('missing profile clock accepted')

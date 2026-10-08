@@ -3,6 +3,7 @@
 #include <string.h>
 #include "language_vm_resident.hpp"
 #include "language_vm_flow.hpp"
+#include "dwt_profiler.hpp"
 #include "language_compiler_flow.hpp"
 #include "app_flow_transfer.hpp"
 #include "shared_memory.hpp"
@@ -50,7 +51,14 @@ static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
 bool busy;
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES>;
+// Research policy stays opt-in until the matched device comparison passes.
+#ifndef MK61_LANGUAGE_VM_CACHE_DENSITY
+#define MK61_LANGUAGE_VM_CACHE_DENSITY 0
+#endif
+static_assert(MK61_LANGUAGE_VM_CACHE_DENSITY == 0 || MK61_LANGUAGE_VM_CACHE_DENSITY == 1,
+              "cache density must be 0 or 1");
+using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES, 16,
+    MK61_LANGUAGE_VM_CACHE_DENSITY ? CachePolicy::REUSE_DENSITY : CachePolicy::LRU>;
 ProgramCache image_cache;
 static_assert(sizeof(ProgramCache)<=MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,"cache exceeds total RAM budget");
 uint32_t image_revision() {
@@ -201,6 +209,9 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
     if(!binding.context->prepared || !binding.object) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
     image_cache.synchronize(image_revision());
     if(!image_cache.publish(binding.object,binding.context->vm.program_validated)) return loadable_module::RuntimeStatus::IO_ERROR;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+    dwt_profiler::record_vm_image(binding.context->source_id, binding.context->vm.program_validated.size);
+#endif
     mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,
         MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM));return loadable_module::RuntimeStatus::OK;
   }
@@ -275,22 +286,33 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   const uint32_t revision = image_revision();
   const uint16_t source_id=cacheable?cached_source(language,command,a,*values):0xFFFF;
   if(cacheable) {
-    const auto cached=image_cache.find({revision,source_id,language,0});
+    ProgramCache::Handle cached;
+    {
+      MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::VM_CACHE_LOOKUP);
+      cached=image_cache.find({revision,source_id,language,0});
+    }
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+    dwt_profiler::record_vm_cache(source_id, (bool)cached, cached ? image_cache.certificate(cached)->size : 0);
+#endif
     if(cached) {
       struct PinScope {ProgramCache::Handle h;~PinScope(){(void)image_cache.release(h);}} pin={cached};
-      values->selected[language==Language::BASIC?0:1] = source_id;
       shared_memory::Lease state;
-      if(!workspace(state)) return RuntimeStatus::BUSY;
       ExecuteRequest execution = {};
-      execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
       const auto* certificate=image_cache.certificate(cached);
-      execution.image=image_cache.image(cached); execution.image_size=certificate->size;
-      execution.variables=values->variables[language==Language::BASIC?0:1];
-      execution.array=language==Language::BASIC?values->array:nullptr;
-      execution.array_count=language==Language::BASIC?385:0;
-      execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
-      auto* continuation=state.as<ExecutionState>();
-      reset_execution_state(*continuation); continuation->language=language;
+      ExecutionState* continuation;
+      {
+        MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::VM_PREPARE);
+        values->selected[language==Language::BASIC?0:1] = source_id;
+        if(!workspace(state)) return RuntimeStatus::BUSY;
+        execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
+        execution.image=image_cache.image(cached); execution.image_size=certificate->size;
+        execution.variables=values->variables[language==Language::BASIC?0:1];
+        execution.array=language==Language::BASIC?values->array:nullptr;
+        execution.array_count=language==Language::BASIC?385:0;
+        execution.mode=command==Command::TINYBASIC_RUN_ID_STATUS?(uint8_t)b:0;
+        continuation=state.as<ExecutionState>();
+        reset_execution_state(*continuation); continuation->language=language;
+      }
       const auto status=execute_overlay(execution,*continuation,command,result,certificate);
       if(status != RuntimeStatus::OK) return status;
       if(language==Language::BASIC) {

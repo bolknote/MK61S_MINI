@@ -1736,8 +1736,25 @@ void class_terminal::print_profile_statistics(void) {
         terminal_output::field(Serial, " max=", stats.maximum_cycles);
         Serial.print(" total=");
         print_u64(stats.total_cycles);
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+        Serial.print(" self=");
+        print_u64(stats.self_cycles);
+#endif
         Serial.println();
       }
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+      terminal_output::line(Serial, "VMCACHE dropped=", dwt_profiler::vm_cache_dropped());
+      for(usize index = 0; index < dwt_profiler::VM_CACHE_ROWS; ++index) {
+        const auto& row = dwt_profiler::vm_cache_row(index);
+        if(row.id == 0xFFFF) continue;
+        terminal_output::field(Serial, "VMCACHE id=", row.id);
+        terminal_output::field(Serial, " bytes=", row.size);
+        terminal_output::field(Serial, " hits=", row.hits);
+        terminal_output::field(Serial, " misses=", row.misses);
+        program_store::Entry entry = {};
+        terminal_output::line(Serial, " name=", program_store::entry_by_id(row.id, entry) ? entry.name : "?");
+      }
+#endif
     }
 
 #if MK61_ENABLE_PROFILE_SAVE

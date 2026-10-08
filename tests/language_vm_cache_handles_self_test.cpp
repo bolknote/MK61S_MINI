@@ -3,8 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 using namespace language_vm;
-int main() {
-  using Cache=ImageCache<1024,8>;
+template<CachePolicy Policy>
+void test_handles() {
+  using Cache=ImageCache<1024,8,Policy>;
   static_assert(sizeof(Cache)<=1024,"metadata is outside cache budget");
   Cache cache;
   ValidatedImage certificate={VALIDATED_MAGIC,64,32,4,64,0,1,0,Language::BASIC};
@@ -31,7 +32,7 @@ int main() {
   // Rollback BUILDING records and generations cannot turn an old handle
   // into a reference to a reused slot. Exercise fragmented, changing epochs.
   uint32_t random=0x61CACE;
-  Cache::Handle live[8]={};uint8_t markers[8]={};uint32_t revision=3;
+  typename Cache::Handle live[8]={};uint8_t markers[8]={};uint32_t revision=3;
   for(unsigned i=0;i<5000;++i) {
     random=random*1664525U+1013904223U;
     unsigned n=(random>>16)%8;
@@ -52,5 +53,10 @@ int main() {
   for(auto h:live) if(h) assert(cache.release(h));
   cache.synchronize(++revision);assert(cache.used()==0);
   assert(cache.statistics().reservation_failures && cache.statistics().evictions);
-  puts("VM cache handles: total budget, BUILDING rollback, pins, stale epochs, OOM, generation reuse, fragmented fuzz PASS");
+}
+int main() {
+  static_assert(sizeof(ImageCache<24576>) == sizeof(ImageCache<24576,16,CachePolicy::REUSE_DENSITY>));
+  test_handles<CachePolicy::LRU>();
+  test_handles<CachePolicy::REUSE_DENSITY>();
+  puts("VM cache handles: LRU/density, total budget, BUILDING rollback, pins, stale epochs, OOM, generation reuse, fragmented fuzz PASS");
 }

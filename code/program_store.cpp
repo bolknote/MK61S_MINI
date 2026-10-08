@@ -7,6 +7,7 @@
 #include "config.h"
 #include "debug.h"
 #include "disk_activity.hpp"
+#include "dwt_profiler.hpp"
 #include "exclusive_buffer.hpp"
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
@@ -3874,6 +3875,15 @@ static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
   char name[NAME_SIZE];
   if(!get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE ||
      offset > inode.data_len || !read_inode_name(id, inode, name)) return false;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+  const auto type = inode_type(inode);
+  const bool source = type == ProgramType::TINYBASIC || type == ProgramType::FOCAL || type == ProgramType::MK61;
+  const bool font = type == ProgramType::FONT;
+  dwt_profiler::Scope file_profile(source ? dwt_profiler::Point::FILE_SOURCE :
+      font ? dwt_profiler::Point::FILE_FONT : dwt_profiler::Point::FILE_OTHER);
+  dwt_profiler::DecodeContext decode_context(source ? dwt_profiler::Point::ZX0_SOURCE :
+      font ? dwt_profiler::Point::ZX0_FONT : dwt_profiler::decode_point);
+#endif
   const u16 available = (u16) (inode.data_len - offset);
   const u16 copied = available < len ? available : len;
   if(large_file_inode(inode)) {

@@ -1,4 +1,5 @@
 #include "development.hpp"
+#include "dwt_profiler.hpp"
 
 #include "Arduino.h"
 #include "bounded_string.hpp"
@@ -2089,6 +2090,7 @@ i32 program_store_text_font_restore(void) {
 }
 
 i32 program_store_text_font_activate(void) {
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::FONT_ACTIVATE);
 #if !defined(MK61_DISPLAY_UC1609)
   return -2;
 #else

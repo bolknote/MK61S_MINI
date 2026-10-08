@@ -23,6 +23,15 @@
   #error "MK61_DWT_CORE_DETAIL must be 0 or 1"
 #endif
 
+// Optional runtime attribution for VM investigations. Default builds retain
+// the original point table, statistics layout and scope implementation.
+#ifndef MK61_DWT_RUNTIME_DETAIL
+  #define MK61_DWT_RUNTIME_DETAIL 0
+#endif
+#if MK61_DWT_RUNTIME_DETAIL != 0 && MK61_DWT_RUNTIME_DETAIL != 1
+  #error "MK61_DWT_RUNTIME_DETAIL must be 0 or 1"
+#endif
+
 // APP исполняется из динамически выделенного блока SRAM и не должен тянуть в
 // образ resident-состояние профилировщика или дополнительные импорты.
 #if defined(MK61_BUILD_FOCAL_MODULE) || \
@@ -47,6 +56,8 @@
 
 #define MK61_DWT_CORE_DETAIL_SUPPORTED \
   (MK61_DWT_CORE_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
+#define MK61_DWT_RUNTIME_DETAIL_SUPPORTED \
+  (MK61_DWT_RUNTIME_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
 
 namespace dwt_profiler {
 
@@ -68,6 +79,14 @@ enum class Point : u8 {
   FLASH_VERIFY,
   FLASH_ERASE,
   ZX0_DECODE,
+#if MK61_DWT_RUNTIME_DETAIL
+  APP_LOAD_BASIC, APP_LOAD_FOCAL, APP_LOAD_VM, APP_LOAD_INPUT, APP_LOAD_OTHER,
+  APP_ENTRY_BASIC, APP_ENTRY_FOCAL, APP_ENTRY_VM, APP_ENTRY_INPUT, APP_ENTRY_OTHER,
+  FILE_SOURCE, FILE_FONT, FILE_OTHER,
+  ZX0_APP_BASIC, ZX0_APP_FOCAL, ZX0_APP_VM, ZX0_APP_INPUT, ZX0_APP_OTHER,
+  ZX0_SOURCE, ZX0_FONT, ZX0_SWAP, ZX0_OTHER,
+  FONT_ACTIVATE, VM_CACHE_LOOKUP, VM_PREPARE,
+#endif
   COUNT
 };
 
@@ -78,6 +97,9 @@ struct Statistics {
   u32 samples;
   u32 minimum_cycles;
   u32 maximum_cycles;
+#if MK61_DWT_RUNTIME_DETAIL
+  u64 self_cycles = 0;
+#endif
 
   constexpr Statistics(void)
     : total_cycles(0), samples(0), minimum_cycles(0), maximum_cycles(0) {}
@@ -87,8 +109,23 @@ struct Statistics {
     samples = 0;
     minimum_cycles = 0;
     maximum_cycles = 0;
+#if MK61_DWT_RUNTIME_DETAIL
+    self_cycles = 0;
+#endif
   }
 
+#if MK61_DWT_RUNTIME_DETAIL
+  void add(u64 cycles, u64 own_cycles) {
+    if(samples == 0xFFFFFFFFUL) return;
+    const u32 bounded = cycles > 0xFFFFFFFFUL ? 0xFFFFFFFFUL : (u32)cycles;
+    if(samples == 0 || bounded < minimum_cycles) minimum_cycles = bounded;
+    if(samples == 0 || bounded > maximum_cycles) maximum_cycles = bounded;
+    total_cycles += cycles;
+    self_cycles += own_cycles;
+    samples++;
+  }
+  void add(u32 cycles) { add(cycles, cycles); }
+#else
   void add(u32 cycles) {
     // После 2^32-1 выборок статистика замораживается, чтобы count и average
     // не стали внутренне противоречивыми после переполнения.
@@ -98,9 +135,15 @@ struct Statistics {
     total_cycles += cycles;
     samples++;
   }
+#endif
 
   u32 average_cycles(void) const {
+#if MK61_DWT_RUNTIME_DETAIL
+    const u64 average = samples == 0 ? 0 : total_cycles / samples;
+    return average > 0xFFFFFFFFUL ? 0xFFFFFFFFUL : (u32)average;
+#else
     return samples == 0 ? 0 : (u32) (total_cycles / samples);
+#endif
   }
 };
 
@@ -120,22 +163,71 @@ const char* point_name(Point point);
 const Statistics& statistics(Point point);
 void record_sample(Point point, u32 elapsed_cycles);
 
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+class Scope;
+extern Scope* scope_top;
+extern u32 scope_generation;
+u64 read_cycles(void);
+void record_scope(Point, u64 elapsed, u64 children);
+Point app_point(u8 kind, bool entry);
+Point app_decode_point(u8 kind);
+extern Point decode_point;
+
+struct VmCacheRow {
+  u16 id = 0xFFFF, size = 0;
+  u32 hits = 0, misses = 0;
+};
+static constexpr usize VM_CACHE_ROWS = 32;
+void record_vm_cache(u16 id, bool hit, u16 size);
+void record_vm_image(u16 id, u16 size);
+const VmCacheRow& vm_cache_row(usize index);
+u32 vm_cache_dropped(void);
+
+class DecodeContext {
+ public:
+  explicit DecodeContext(Point point) : previous_(decode_point), generation_(scope_generation) {
+    decode_point = point;
+  }
+  ~DecodeContext() { if(generation_ == scope_generation) decode_point = previous_; }
+  DecodeContext(const DecodeContext&) = delete;
+  DecodeContext& operator=(const DecodeContext&) = delete;
+ private:
+  Point previous_;
+  u32 generation_;
+};
+#endif
+
 class Scope {
   public:
     explicit Scope(Point point)
       : point_(point), started_at_(0), active_(collection_active) {
       if(!active_) return;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+      generation_ = scope_generation;
+      parent_ = scope_top;
+      scope_top = this;
+      started_at_ = read_cycles();
+#else
       __asm__ __volatile__("" ::: "memory");
       started_at_ = DWT->CYCCNT;
       __asm__ __volatile__("" ::: "memory");
+#endif
     }
 
     ~Scope(void) {
       if(!active_) return;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+      if(generation_ != scope_generation) return;
+      const u64 elapsed = read_cycles() - started_at_;
+      scope_top = parent_;
+      if(parent_) parent_->children_ += elapsed;
+      record_scope(point_, elapsed, children_);
+#else
       __asm__ __volatile__("" ::: "memory");
       const u32 finished_at = DWT->CYCCNT;
       __asm__ __volatile__("" ::: "memory");
       record_sample(point_, finished_at - started_at_);
+#endif
     }
 
     Scope(const Scope&) = delete;
@@ -143,7 +235,13 @@ class Scope {
 
   private:
     Point point_;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+    u64 started_at_, children_ = 0;
+    Scope* parent_ = nullptr;
+    u32 generation_ = 0;
+#else
     u32 started_at_;
+#endif
     bool active_;
 };
 
@@ -254,6 +352,12 @@ class AccumulatingScope {
 #else
   #define MK61_PROFILE_SCOPE(point) ((void) 0)
   #define MK61_PROFILE_ACCUMULATE_SCOPE(accumulator) ((void) 0)
+#endif
+
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+  #define MK61_RUNTIME_PROFILE_SCOPE(point) MK61_PROFILE_SCOPE(point)
+#else
+  #define MK61_RUNTIME_PROFILE_SCOPE(point) ((void) 0)
 #endif
 
 #endif

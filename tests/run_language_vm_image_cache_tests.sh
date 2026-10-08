@@ -11,6 +11,7 @@ for usb in 0 1; do
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DCONFIG -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST \
   -DMK61_ENABLE_USB_SCREEN="$usb" \
+  -DMK61_LANGUAGE_VM_CACHE_DENSITY="${MK61_VM_CACHE_DENSITY_TEST:-0}" \
   -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576 -I"$root/code" \
   "$root/tests/language_vm_image_cache_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \

@@ -3,9 +3,10 @@
 #include "language_vm_abi.hpp"
 #include <string.h>
 namespace language_vm {
+enum class CachePolicy : uint8_t { LRU, REUSE_DENSITY };
 // Capacity includes the bounded directory and counters. No heap allocation;
 // only pinned, generation-checked handles expose immutable program bytes.
-template<unsigned Capacity, unsigned Slots=16>
+template<unsigned Capacity, unsigned Slots=16, CachePolicy Policy=CachePolicy::LRU>
 class ImageCache {
  public:
   struct Key { uint32_t revision; uint16_t id; Language language; uint8_t reserved=0; };
@@ -22,11 +23,12 @@ class ImageCache {
   struct Entry {
     Key key={}; ValidatedImage validated={}; uint32_t age=0,generation=0;
     uint16_t offset=0,size=0; uint8_t pins=0; State state=State::EMPTY;
-    uint16_t reserved=0;
+    uint16_t reuse=0; // Uses the existing reserved word; no additional metadata.
   };
   static constexpr unsigned Metadata=sizeof(Entry)*Slots+sizeof(Statistics)+16;
  public:
   static_assert(Capacity>=Metadata+32,"cache budget must include metadata and a small image");
+  static_assert(Policy == CachePolicy::LRU || Policy == CachePolicy::REUSE_DENSITY, "unknown cache policy");
   static constexpr unsigned PAYLOAD_CAPACITY=(Capacity-Metadata)&~7U;
   static constexpr unsigned metadata_bytes() {return Metadata;}
   const Statistics& statistics() const {return statistics_;}
@@ -45,6 +47,7 @@ class ImageCache {
     for(unsigned i=0;i<Slots;++i) {
       auto& e=entries_[i];
       if(e.state==State::READY && same(e.key,key) && e.pins!=255) {
+        if constexpr(Policy == CachePolicy::REUSE_DENSITY) if(e.reuse < 255) ++e.reuse;
         ++e.pins;e.age=age();++statistics_.hits;return {e.generation,(uint16_t)i};
       }
     }
@@ -68,9 +71,11 @@ class ImageCache {
       unsigned oldest=Slots;
       for(unsigned i=0;i<Slots;++i) {
         const auto& e=entries_[i];
-        if(e.state!=State::EMPTY && !e.pins && (oldest==Slots || e.age<entries_[oldest].age)) oldest=i;
+        if(e.state!=State::EMPTY && !e.pins && (oldest==Slots || colder(e, entries_[oldest]))) oldest=i;
       }
       if(oldest==Slots) return failed();
+      if constexpr(Policy == CachePolicy::REUSE_DENSITY)
+        for(auto& e : entries_) e.reuse >>= 1; // Adapt to a new working set, not unbounded LFU.
       entries_[oldest]={};++statistics_.evictions;
     }
   }
@@ -105,6 +110,14 @@ class ImageCache {
   Entry entries_[Slots]={}; Statistics statistics_={};
   uint32_t revision_=0,clock_=0,generation_=0,reserved_=0;
   static unsigned allocated(unsigned size) {return (size+7U)&~7U;}
+  static bool colder(const Entry& a, const Entry& b) {
+    if constexpr(Policy == CachePolicy::REUSE_DENSITY) {
+      const uint32_t left = (uint32_t)a.reuse * allocated(b.size);
+      const uint32_t right = (uint32_t)b.reuse * allocated(a.size);
+      if(left != right) return left < right;
+    }
+    return a.age < b.age;
+  }
   static bool same(Key a,Key b) {return a.id==b.id && a.language==b.language && a.revision==b.revision && !a.reserved && !b.reserved;}
   Entry* entry(Handle h) {return h && entries_[h.slot].generation==h.generation && entries_[h.slot].state!=State::EMPTY ? &entries_[h.slot] : nullptr;}
   const Entry* entry(Handle h) const {return h && entries_[h.slot].generation==h.generation && entries_[h.slot].state!=State::EMPTY ? &entries_[h.slot] : nullptr;}

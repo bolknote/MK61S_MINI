@@ -1,4 +1,5 @@
 #include "workspace_swap.hpp"
+#include "dwt_profiler.hpp"
 
 #include "crc32.hpp"
 #include "zx0.hpp"
@@ -514,6 +515,9 @@ static RestoreResult restore(shared_memory::Owner owner, usize required,
     MemoryReader reader = {payload, header.stored_size, 0};
     const zx0::Input input = {&reader, read_byte};
     u32 written = 0;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+    dwt_profiler::DecodeContext decode_context(dwt_profiler::Point::ZX0_SWAP);
+#endif
     decoded = zx0::decode(input, header.stored_size,
                           destination.data(), header.raw_size, written) &&
               written == header.raw_size;

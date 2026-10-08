@@ -18,6 +18,7 @@ struct Trace {
   std::map<std::vector<unsigned>,uint64_t> sequences;
   std::map<uint32_t,Module> modules;
   std::vector<unsigned> previous;
+  std::vector<uint32_t> run_order;
   ~Trace() {
     const char* path=std::getenv("VM_TRACE_FILE");
     if(!path) return;
@@ -46,6 +47,8 @@ struct Trace {
       for(const auto& p:m.pcs) {if(pc_comma)out<<',';pc_comma=true;out<<'['<<p.first<<','<<p.second<<']';}
       out<<"]}";
     }
+    out<<"],\"run_order\":[";
+    for(unsigned i=0;i<run_order.size();++i) {if(i)out<<',';out<<run_order[i];}
     out<<"]}\n";
   }
 };
@@ -55,7 +58,7 @@ void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
   const uint8_t* b=v.bytes+16;
   const uint32_t crc=(uint32_t)b[0]|((uint32_t)b[1]<<8)|((uint32_t)b[2]<<16)|((uint32_t)b[3]<<24);
   auto& module=trace.modules[crc];module.language=(unsigned)v.language;module.bytes=v.size;
-  if(steps==1) {++module.runs;trace.previous.clear();}
+  if(steps==1) {++module.runs;trace.previous.clear();trace.run_order.push_back(crc);}
   ++module.instructions;++module.pcs[pc];
   const unsigned op=v.bytes[pc];++trace.ops[op];
   trace.previous.push_back(op);

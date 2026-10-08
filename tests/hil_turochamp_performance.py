@@ -89,12 +89,22 @@ def profile(report):
     frequency=re.search(r'\bclock=(\d+)',report)
     assert frequency,report
     hz=int(frequency.group(1));points={}
-    for name,n,minimum,average,maximum,total in re.findall(
-            r'^PROF (\S+) n=(\d+) min=(\d+) avg=(\d+) max=(\d+) total=(\d+)',report,re.M):
+    for name,n,minimum,average,maximum,total,own in re.findall(
+            r'^PROF (\S+) n=(\d+) min=(\d+) avg=(\d+) max=(\d+) total=(\d+)(?: self=(\d+))?',report,re.M):
         points[name]={'calls':int(n),'total_cycles':int(total),
                       'total_seconds':int(total)/hz if hz else None,
                       'maximum_cycles':int(maximum)}
-    return {'clock_hz':hz,'points':points}
+        if own:
+            assert int(own)<=int(total),(name,own,total)
+            points[name].update(self_cycles=int(own), self_seconds=int(own)/hz if hz else None)
+    cache = [{'id':int(i),'bytes':int(size),'hits':int(hits),'misses':int(misses),'name':name.rstrip('\r')}
+             for i,size,hits,misses,name in re.findall(
+                 r'^VMCACHE id=(\d+) bytes=(\d+) hits=(\d+) misses=(\d+) name=(.*)$',report,re.M)]
+    dropped=re.search(r'^VMCACHE dropped=(\d+)',report,re.M)
+    result={'clock_hz':hz,'points':points}
+    if dropped:
+        result.update(vm_cache=cache,vm_cache_dropped=int(dropped.group(1)))
+    return result
 
 
 def identify(port,args):

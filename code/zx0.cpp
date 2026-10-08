@@ -143,6 +143,7 @@ class RangeOutput {
 bool decode(const Input& source, u32 source_size,
             u8* output, u32 capacity, u32& written) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::decode_point);
 #ifdef PROGRAM_STORE_HOST_TEST
   ++decode_calls;
 #endif
@@ -206,6 +207,7 @@ bool decode_range(const Input& source, u32 source_size, u32 logical_size,
                   u32 range_offset, u8* output, u32 range_size,
                   u8* window, u32 window_size, const Output* sink) {
   MK61_PROFILE_SCOPE(dwt_profiler::Point::ZX0_DECODE);
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::decode_point);
 #ifdef PROGRAM_STORE_HOST_TEST
   ++decode_calls;
 #endif
