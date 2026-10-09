@@ -6,6 +6,7 @@ trap 'rm -rf "$work"' EXIT
 flags=()
 if [[ ${MK61_TEST_SANITIZERS:-0} == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 failures=0
+if [[ ${MK61_VM_DSP_SCAN_TEST:-0} == 1 ]]; then flags+=(-DLANGUAGE_VM_TEST_DSP_SCAN); fi
 for profile in MINI CLASSIC 40TH; do
  for trace in 0 1; do
   extra=();if [[ $trace == 1 ]]; then extra=(-DMK61_FOCAL_TRACE=1); fi

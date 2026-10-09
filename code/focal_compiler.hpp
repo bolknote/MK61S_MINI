@@ -2,6 +2,7 @@
 #define MK61_COMPACT_FOCAL_COMPILER_HPP
 #include "focal_syntax.hpp"
 #include "language_bytecode.hpp"
+#include "language_source_scan.hpp"
 namespace focal_next {
 // Two sizing/emission passes, like the BASIC compiler. Only the sorted line
 // map is retained. Emitted literals belong to the image, never to an APP.
@@ -762,8 +763,11 @@ private:
         fail(E::UNKNOWN_COMMAND);
         return;
       }
+      const char *line = at;
+      while (line > source_ && line[-1] != '\r' && line[-1] != '\n')
+        --line;
       op(Op::SOURCE_POS);
-      emit_word(uint16_t(at - source_ + 1));
+      emit_word(uint16_t(at - line + 1));
       if (c == Command::FOR) {
         Target t;
         target(t);
@@ -817,9 +821,8 @@ private:
     const char *e = source_ + length_;
     p_ = source_;
     while (p_ < e && error_ == E::NONE) {
-      const char *line_end = p_;
-      while (line_end < e && *line_end != '\n')
-        ++line_end;
+      const char *line_end = p_ + language_vm::source_scan::line_end(
+                                      (const uint8_t *)p_, size_t(e - p_));
       end_ = line_end;
       skip_space();
       if (p_ < end_) {

@@ -66,7 +66,8 @@ GREEDY_APP_SIZE_BUDGETS = {
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    # Qualified bounded DSP CR/LF scan: +57 stored bytes, no arena increase.
+    # Bounded DSP CR/LF scan; current FOCAL sizes are documented in
+    # doc/design/FOCAL-VM-next-2026-10-08.md. The APP arena stays unchanged.
     "focal": {"app_bytes": 13_880, "memory_bytes": 18_688},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt

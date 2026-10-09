@@ -354,6 +354,16 @@ def main():
                     if b'%8.3' in program:assert "3.14" in "".join(m.lines),m.lines
                     record(m)
 
+            # Execute the actual ARM USUB8/SEL path with every supported
+            # delimiter, unaligned line starts, M8 high bytes and scalar tails.
+            for separator in (b'\n', b'\r', b'\r\n', b'\n\r'):
+                for language, program in (
+                    (1, b'10 REM M8 \x80\xff\n20 A=7+5\n30 END'),
+                    (2, b'1.10 C M8 \x80\xff\n1.20 S A(3)=5; S A=CALL(2,7); E\n2.10 R ARG(1)+A(3)')):
+                    m = OverlayMachine(args.resident_elf, True, address)
+                    assert execute(m, packages, language, program.replace(b'\n', separator), [])[:2] == (12, 0)
+                    record(m)
+
             m = OverlayMachine(args.resident_elf, True, address)
             assert execute(m, packages, 1, b'10 PRINT "HEAD";\n20 INPUT A\n30 PRINT A\n', ["5"])[0:2] == (5, 0)
             assert "HEAD5" in "".join(m.lines), m.lines

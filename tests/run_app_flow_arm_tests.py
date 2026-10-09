@@ -217,7 +217,9 @@ def main():
                 (1, b"10 DATA 3,4\n20 READ B;INPUT C;READ D\n30 A=B+C+D\n", ["5"], 12),
                 (1, b"10 A=.1+.2\n20 GOSUB 100;A=A+10;END\n100 A=A+1;RETURN\n", [], 11.3),
                 (1, b"10 PRINT 'RAM STRING';'RAM STRING'\n20 INPUT 'RAM PROMPT',A\n30 A=A+2\n", ["5"], 7),
-                (2, b"1.10 PRINT \"RAM FOCAL\"\n1.20 ASK A\n1.30 EXIT\n", ["7"], 7)]
+                (2, b"1.10 PRINT \"RAM FOCAL\"\n1.20 ASK A\n1.30 EXIT\n", ["7"], 7),
+                (1, b"10 REM M8 \x80\xff\r20 INPUT A\r\n30 A=A+5\n\r40 END", ["7"], 12),
+                (2, b"1.10 C M8 \x80\xff\r1.20 S A=CALL(2,7); E\r\n2.10 ASK N(3)\n\r2.20 R ARG(1)+N(3)", ["5"], 12)]
             # The fixture does not model the calculator's CORE numeric CPU.
             # Ordinary double arithmetic is real ARM code; transcendental
             # probes require real resident LIBM or the APP's local float math.
