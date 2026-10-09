@@ -8,6 +8,7 @@
     MK61_OVERLAY_LANGUAGE_VM || defined(MK61_LANGUAGE_VM_COMPILER) || \
     defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
 #include "language_bytecode.hpp"
+#include "language_source_scan.hpp"
 #include "tinybasic_syntax.hpp"
 
 #include <string.h>
@@ -506,7 +507,8 @@ class Compiler {
       while (cursor < source_ + length_ && (*cursor == '\r' || *cursor == '\n'))
         ++cursor;
       const char* begin = cursor;
-      while (cursor < source_ + length_ && *cursor != '\r' && *cursor != '\n') ++cursor;
+      cursor += source_scan::line_end((const uint8_t*)cursor,
+                                      (size_t)(source_ + length_ - cursor));
       p_ = begin;
       end_ = cursor;
       skip();

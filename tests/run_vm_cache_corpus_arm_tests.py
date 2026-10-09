@@ -21,8 +21,15 @@ def main():
     parser.add_argument("--system", type=Path, required=True)
     parser.add_argument("--corpus-report", type=Path, required=True)
     parser.add_argument("--report-file", type=Path, required=True)
+    parser.add_argument("--origin", action="append", help="qualify only this corpus origin (repeatable)")
+    parser.add_argument("--call-timeout-seconds", type=int, default=60,
+                        help="emulator watchdog, not a firmware timing measurement")
     args = parser.parse_args()
     corpus = json.loads(args.corpus_report.read_text())
+    assert 1 <= args.call_timeout_seconds <= 300
+    entries = [entry for entry in corpus['programs']
+               if not args.origin or entry['origin'] in args.origin]
+    assert entries and (not args.origin or {e['origin'] for e in entries} == set(args.origin))
     elf = Elf(args.resident_elf)
     cache = elf.symbol("image_cache")
     # ImageCache stores its aligned byte arena first. Its metadata is not used
@@ -38,11 +45,11 @@ def main():
         packages = {kind: package(reader, args.system/name, elf, work, kind) for kind, name in
                     (("tinybasic", "BASIC.APP"), ("focal", "FOCAL.APP"),
                      ("language-input", "LANGIN.APP"))}
-        for entry in corpus["programs"]:
+        for entry in entries:
             m = OverlayMachine(args.resident_elf, True, 0)
             # Larger real programs need more CPU-hook time than the small
             # ABI probes. This only changes the test watchdog, not firmware.
-            m.call_timeout_us=60_000_000
+            m.call_timeout_us=args.call_timeout_seconds*1_000_000
             m.call_instruction_limit=30_000_000
             language = 1 if entry["language"]=="basic" else 2
             source = (args.corpus_report.parent/entry["source_file"]).read_bytes()
@@ -89,7 +96,7 @@ def main():
                             "source_reads":reads,"source_bytes":len(source),
                             "source_reads_during_emit_or_verify":0,"stack_peaks":m.stage_peaks})
             if len(results)%10==0:
-                print(f"ARM corpus: {len(results)}/{len(corpus['programs'])}",flush=True)
+                print(f"ARM corpus: {len(results)}/{len(entries)}",flush=True)
     peaks = {}
     for result in results:
         for stage, size in result["stack_peaks"].items():

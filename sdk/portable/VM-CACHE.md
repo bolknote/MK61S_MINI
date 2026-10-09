@@ -390,6 +390,89 @@ python3 tools/replay_vm_cache.py --trace TRACE.json --images-dir OWNED_IMAGES --
 
 ## Бюджет и lifetime
 
+### DSP-поиск CR/LF в компиляторах
+
+2026-10-09: `language_source_scan.hpp` заменяет только поиск конца физической
+строки в общем `Compiler::index_lines()` BASIC/FOCAL. Пропуск пробелов,
+ключевые слова, обратный поиск диагностической колонки и арифметика не менялись.
+На little-endian ARM с SIMD32 работает один общий helper: безопасный
+`memcpy` четырёх байтов только при оставшейся длине ≥4, маска первого CR/LF
+и прежний побайтовый хвост. Остальные платформы используют скалярный путь.
+На Cortex-M4 ELF содержит две пары USUB8/SEL; их GE-lane semantics описаны в
+[документации Arm CMSIS](https://arm-software.github.io/CMSIS_6/main/Core/group__intrinsic__SIMD__gr.html).
+Helper занимает 86 байт кода, не требует выравнивания, padding, malloc или
+постоянного буфера. Форматы bytecode v4/request ABI7 и compiler context прежние.
+
+Первоначальный отдельный APP-эксперимент дал около ×2,14 на самой функции,
+но не на компиляции/VM целиком. Production-перенос измерен на настоящих
+System APP F411 `AEB505B6E0067623`, 96 МГц, с отдельным diagnostic resident
+`C84E8759`. Семь cold запусков каждого исходника на блок,
+baseline → candidate → baseline; cache miss/source read ровно по одному.
+Метрика — `app.entry.basic/focal self`: реальный frontend+sizing+EMIT,
+без вложенных source/Flash/APP reads и decode, без времени исполнения VM
+или ожидания конечной клавиши. Это не wall-time полного RUN и не скорость шахмат.
+
+| Compiler self, мс | Baseline до | Новый | Baseline после | Меньше времени |
+| --- | ---: | ---: | ---: | ---: |
+| Turochamp search BASIC |106,112|105,611|106,112|0,472%|
+| High Noon intro BASIC |57,403|56,644|57,404|1,323%|
+| Statistics FOCAL |41,208|40,651|41,227|1,376%|
+
+Процент считается относительно медианы обеих baseline-серий (14 значений).
+В успешной серии 63 образца, 314 CRC-valid кадров, ноль отброшенных пакетов
+и повторов чтения. Первые попытки нового стенда выявили единичные пропуски
+CDC/неполный экранный пакет и ошибочную проверку UTF-8 HELP вместо stored M8;
+они исключены, артефакты сохранены. HIL теперь отвергает повреждённый экран,
+восстанавливает сборку только с нового CRC-valid FRAME_BEGIN и явно считает
+пропуски. DWT ASCII-метрики проверяются отдельно; CRC/offset-invalid fsget
+никогда не принимается за fingerprint. Это изменение стенда, не ослабление
+CRC/verifier продукта.
+
+Сопоставимые обычные overlay-сборки F411 и F401 CORE/cache0 сохранили MCU
+побайтно: `C1D1CF6A`/358876 и `109C89EE`/256704 соответственно, static RAM
+83708/37904 прежняя. Изменились только два внешних System APP:
+
+| APP | Stored до → после | Цена stored | Loaded RAM до → после |
+| --- | ---: | ---: | ---: |
+| BASIC |13251 → 13333|+82|18488 → 18568|
+| FOCAL |13799 → 13856|+57|18604 → 18668|
+
+Итого +139 байт внешней Flash; BSS обоих APP прежняя (52/104). Загруженный
+машинный код занимает дополнительно 80/64 байта RAM, не одновременно:
+обычный APP arena остаётся 20 КиБ. Это не нулевая цена loaded RAM, хотя
+постоянная RAM и объём программ/байткода не выросли. Измеренный storage ceiling
+компилятора FOCAL явно обновлён 13800 → 13880, memory ceiling 18688 не менялся;
+обычные не-VM интерпретаторы имеют прежние ограничения.
+
+Host ASan/UBSan покрывает все соседние пары байтов/полосы, M8 high bytes,
+alignment=0..3 и точные хвосты до 3584 байт; скалярный и эмулированный DSP пути.
+Компилятор проверен с LF/CR/CRLF/LFCR, пустыми строками, EOF без разделителя,
+owned/inline ресурсами и прежними диагностическими курсорами. Полный VM suite
+пройден с `MK61_VM_DSP_SCAN_TEST=1`; actual ARM flow с INPUT/retry/DATA/cancel
+на трёх адресах — F411 LIBM и F401 CORE. Физическая F401 не использовалась.
+Все 115 программ также прошли actual ARM sizing/EMIT/cold verification
+непосредственно в cache SRAM: Source reads ровно один, ноль при EMIT/verifier,
+guards сохранились. Измеренный вложенный compiler/service C-stack 6908 байт,
+verifier 972 — прежний максимум, не общий device peak. Единственный первый
+host-watchdog отказ в `init.tbi` отдельно перепроверен на baseline и candidate:
+оба прошли с 180-секундным emulator timeout; после этого весь корпус прошёл
+с тем же timeout. Лимит 30 млн инструкций и все firmware limits сохранены.
+`--origin` и `--call-timeout-seconds` добавлены только для воспроизводимой
+диагностики ARM-стенда; это не аппаратное измерение секунд.
+
+После A/B исходные 111 файлов/стек/программа/регистры/cwd были восстановлены,
+собственный FOCAL fixture удалён. Затем оставлены только новые BASIC.APP и
+FOCAL.APP на обычной `C1D1CF6A`, без diagnostic таблиц. Финальные fingerprints
+подтверждают сохранность остальных 109 файлов и всех 23 каталогов.
+Артефакты: `tmp/vm-crlf-20261009.sDAyrU/`,
+`system-hil-qualified/report.json`, `comparison.json`.
+
+```sh
+bash tests/run_language_source_scan_tests.sh
+MK61_TEST_SANITIZERS=1 MK61_VM_DSP_SCAN_TEST=1 bash tests/run_language_vm_tests.sh
+python3 tests/hil_language_source_scan_self_test.py
+```
+
 `MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES` теперь означает **общий** бюджет,
 а не только байты образов. При 24576 байтах:
 

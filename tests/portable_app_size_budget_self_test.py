@@ -89,7 +89,7 @@ except ValueError:
 else:
     raise AssertionError("cold flow APP size regression was accepted")
 
-for greedy, limit in ((False, 13800), (True, 14100)):
+for greedy, limit in ((False, 13880), (True, 14100)):
     BUILDER.enforce_system_size_budget("focal", {"memory_bytes": 17000, "app_bytes": limit},
                                        False, greedy, False, True)
     try:
