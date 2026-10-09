@@ -9,9 +9,8 @@
 #endif
 extern "C" void* mk61_test_memcpy(void*,const void*,size_t);
 extern "C" int mk61_test_memcmp(const void*,const void*,size_t);
-#if defined(MK61_TEST_SDK_MEMORY)
 extern "C" void* mk61_test_memmove(void*,const void*,size_t);
-#endif
+extern "C" void* mk61_test_memset(void*,int,size_t);
 static int sign(int n) { return (n>0)-(n<0); }
 static void compare(const unsigned char* a,const unsigned char* b,size_t n) {
   assert(sign(mk61_test_memcmp(a,b,n))==sign(std::memcmp(a,b,n)));
@@ -19,6 +18,8 @@ static void compare(const unsigned char* a,const unsigned char* b,size_t n) {
 int main() {
   assert(mk61_test_memcpy(nullptr,nullptr,0)==nullptr);
   assert(mk61_test_memcmp(nullptr,nullptr,0)==0);
+  assert(mk61_test_memmove(nullptr,nullptr,0)==nullptr);
+  assert(mk61_test_memset(nullptr,-1,0)==nullptr);
   uint32_t random=0x61F411;
   for(unsigned aa=0;aa<4;++aa) for(unsigned ba=0;ba<4;++ba) {
     for(size_t n=0;n<=513;++n) {
@@ -41,16 +42,29 @@ int main() {
     assert(mk61_test_memcpy(out.data()+2,a.data()+3,n)==out.data()+2);
     assert(std::memcmp(out.data()+2,a.data()+3,n)==0);
   }
-#if defined(MK61_TEST_SDK_MEMORY)
-  // SDK memmove uses memcpy for safe forward copies, including overlap.
-  for(unsigned n=0;n<=65;++n) for(int shift=-16;shift<=16;++shift) {
-    unsigned char actual[128],expected[128];
-    for(unsigned i=0;i<128;++i) actual[i]=expected[i]=(unsigned char)(i*37);
-    assert(mk61_test_memmove(actual+32+shift,actual+32,n)==actual+32+shift);
-    std::memmove(expected+32+shift,expected+32,n);
+  for(unsigned n=0;n<=513;++n) for(unsigned align=0;align<4;++align) for(int shift=-32;shift<=32;++shift) {
+    unsigned char actual[640],expected[640];
+    for(unsigned i=0;i<640;++i) actual[i]=expected[i]=(unsigned char)(i*37);
+    assert(mk61_test_memmove(actual+48+align+shift,actual+48+align,n)==actual+48+align+shift);
+    std::memmove(expected+48+align+shift,expected+48+align,n);
     assert(std::memcmp(actual,expected,sizeof(actual))==0);
   }
-#endif
+  for(unsigned n=0;n<=513;++n) for(unsigned align=0;align<4;++align) for(int value:{0,-1,0x1234}) {
+    unsigned char actual[520],expected[520];
+    std::memset(actual,0xA7,sizeof(actual));std::memset(expected,0xA7,sizeof(expected));
+    assert(mk61_test_memset(actual+align,value,n)==actual+align);
+    std::memset(expected+align,value,n);
+    assert(std::memcmp(actual,expected,sizeof(actual))==0);
+  }
+  for(size_t n:{size_t(1024),size_t(4096),size_t(8192),size_t(32769)}) for(int shift:{-513,-17,-1,0,1,17,513}) {
+    std::vector<unsigned char> actual(n+1100),expected(n+1100);
+    for(size_t i=0;i<actual.size();++i)actual[i]=expected[i]=(unsigned char)(i*13);
+    assert(mk61_test_memmove(actual.data()+550+shift,actual.data()+550,n)==actual.data()+550+shift);
+    std::memmove(expected.data()+550+shift,expected.data()+550,n);
+    assert(actual==expected);
+    assert(mk61_test_memset(actual.data()+550,0x1234,n)==actual.data()+550);
+    std::memset(expected.data()+550,0x1234,n);assert(actual==expected);
+  }
 #if defined(__unix__) || defined(__APPLE__)
   // Hardware-style exact page boundaries catch a load/store that reaches
   // outside the requested range, independently of allocator padding.
@@ -65,8 +79,19 @@ int main() {
     for(size_t i=0;i<n;++i) p[i]=(unsigned char)(i*37);
     assert(mk61_test_memcpy(q,p,n)==q);compare(p,q,n);
     if(n) {q[n-1]^=1;compare(p,q,n);}
+    assert(mk61_test_memset(q,0x1234,n)==q);
+    for(size_t i=0;i<n;++i)assert(q[i]==0x34);
+    for(unsigned gap:{1U,2U,3U,4U,15U,16U,17U}) {
+      unsigned char* begin=a+page-n-gap;
+      for(size_t i=0;i<n+gap;++i)begin[i]=(unsigned char)(i*31);
+      assert(mk61_test_memmove(p,begin,n)==p);
+      for(size_t i=0;i<n;++i)assert(p[i]==(unsigned char)(i*31));
+      for(size_t i=0;i<n+gap;++i)begin[i]=(unsigned char)(i*31);
+      assert(mk61_test_memmove(begin,p,n)==begin);
+      for(size_t i=0;i<n;++i)assert(begin[i]==(unsigned char)((i+gap)*31));
+    }
   }
   assert(munmap(a,page*2)==0 && munmap(b,page*2)==0);
 #endif
-  std::puts("System memcpy/memcmp: ISO C order/return, all alignments, short/large/exact guard-page tails PASS");
+  std::puts("System memcpy/memcmp/memset/memmove: ISO C order/return, alignments, overlap, short/large/exact guard-page tails PASS");
 }

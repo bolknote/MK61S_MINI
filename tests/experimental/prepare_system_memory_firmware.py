@@ -20,13 +20,18 @@ def main():
     p.add_argument('--source-dir',type=Path,required=True)
     p.add_argument('--flags',type=Path,required=True)
     p.add_argument('--variant',choices=('baseline','candidate'),required=True)
+    p.add_argument('--baseline-scope',choices=('copy_compare','fill_move'),default='copy_compare',
+                   help='which global replacements to omit in the baseline')
     args=p.parse_args()
     out=args.output_dir.resolve()/args.variant
     sketch=out/'mk61s-M'
     assert not sketch.exists(),'use a fresh snapshot'
     shutil.copytree(args.source_dir,sketch)
     if args.variant=='baseline':
-        (sketch/'system_memory.c').unlink(missing_ok=True)
+        if args.baseline_scope=='copy_compare':
+            (sketch/'system_memory.c').unlink(missing_ok=True)
+        else:
+            (sketch/'system_memory_fill_move.c').unlink()
     flags=args.flags.read_text().strip()
     env=dict(os.environ,SOURCE_DATE_EPOCH='1791504000')
     # Keep the qualified Classic F411 -Os policy for both images.
@@ -52,7 +57,7 @@ def main():
     subprocess.run([sys.executable,ROOT/'tools/seal-firmware-elf.py','--bin',binary,'--elf',elf,
         '--compile-commands',out/'build/compile_commands.json'],env=env,check=True)
     hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sketch.iterdir() if p.is_file()}
-    result={'variant':args.variant,'firmware':firmware_info(binary),'source_hashes':hashes,'flags':flags}
+    result={'variant':args.variant,'baseline_scope':args.baseline_scope,'firmware':firmware_info(binary),'source_hashes':hashes,'flags':flags}
     (out/'evidence.json').write_text(json.dumps(result,indent=2)+'\n')
     print(args.variant,result['firmware']['build'],result['firmware']['bytes'],'bytes',flush=True)
 

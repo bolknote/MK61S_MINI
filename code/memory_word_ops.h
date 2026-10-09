@@ -123,5 +123,119 @@ static inline int mk61_memory_compare(const void* left, const void* right,
   return 0;
 }
 
+#if MK61_MEMORY_WORDS
+#if defined(__GNUC__) && !defined(__clang__)
+#define MK61_MEMORY_BULK __attribute__((noipa))
+#else
+#define MK61_MEMORY_BULK __attribute__((noinline))
+#endif
+static MK61_MEMORY_BULK void* mk61_memory_fill_small(void* destination, int value,
+                                                   size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  unsigned char* end = out + size; // callers have already handled size == 0
+  while(out != end) *out++ = (unsigned char) value;
+  return destination;
+}
+static MK61_MEMORY_BULK void* mk61_memory_move_small(void* destination,
+                                             const void* source, size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  const unsigned char* in = (const unsigned char*) source;
+  if((uintptr_t) out < (uintptr_t) in ||
+     (uintptr_t) out - (uintptr_t) in >= size) {
+    unsigned char* end = out + size;
+    while(out != end) *out++ = *in++;
+  } else {
+    while(size != 0) { --size; out[size] = in[size]; }
+  }
+  return destination;
+}
+// Separate bulk functions keep their register saves off the short paths at
+// -Os. Otherwise GCC reserves bulk-loop registers even for a one-byte clear.
+static MK61_MEMORY_BULK void* mk61_memory_fill_bulk(void* destination, int value,
+                                                  size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  const uint32_t word = (uint32_t) (unsigned char) value * 0x01010101U;
+  while(size >= 16) {
+    *(mk61_memory_word*) out = word;
+    *(mk61_memory_word*) (out + 4) = word;
+    *(mk61_memory_word*) (out + 8) = word;
+    *(mk61_memory_word*) (out + 12) = word;
+    out += 16;
+    size -= 16;
+  }
+  while(size >= 4) {
+    *(mk61_memory_word*) out = word;
+    out += 4;
+    size -= 4;
+  }
+  while(size != 0) { *out++ = (unsigned char) value; --size; }
+  return destination;
+}
+static MK61_MEMORY_BULK void* mk61_memory_move_backward_bulk(void* destination,
+                                            const void* source, size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  const unsigned char* in = (const unsigned char*) source;
+  while(size >= 16) {
+    size -= 16;
+    // Preserve the order inside the block too: gaps of 1..15 bytes can
+    // overlap a word that has not yet been read.
+    *(mk61_memory_word*) (out + size + 12) = *(const mk61_memory_word*) (in + size + 12);
+    *(mk61_memory_word*) (out + size + 8) = *(const mk61_memory_word*) (in + size + 8);
+    *(mk61_memory_word*) (out + size + 4) = *(const mk61_memory_word*) (in + size + 4);
+    *(mk61_memory_word*) (out + size) = *(const mk61_memory_word*) (in + size);
+  }
+  while(size >= 4) {
+    size -= 4;
+    *(mk61_memory_word*) (out + size) = *(const mk61_memory_word*) (in + size);
+  }
+  while(size != 0) { --size; out[size] = in[size]; }
+  return destination;
+}
+static MK61_MEMORY_BULK void* mk61_memory_move_bulk(void* destination,
+                                            const void* source, size_t size) {
+  if((uintptr_t) destination < (uintptr_t) source ||
+     (uintptr_t) destination - (uintptr_t) source >= size)
+    return mk61_memory_copy(destination, source, size);
+  return mk61_memory_move_backward_bulk(destination, source, size);
+}
+#undef MK61_MEMORY_BULK
+#endif
+
+static inline void* mk61_memory_fill(void* destination, int value, size_t size) {
+  if(size == 0) return destination;
+#if MK61_MEMORY_WORDS
+  if(size < 16) return mk61_memory_fill_small(destination, value, size);
+  return mk61_memory_fill_bulk(destination, value, size);
+#else
+  // Same bounded byte loop as newlib; do not set up word-pattern registers.
+  unsigned char* out = (unsigned char*) destination;
+  unsigned char* end = out + size;
+  while(out != end) *out++ = (unsigned char) value;
+  return destination;
+#endif
+}
+
+static inline void* mk61_memory_move(void* destination, const void* source,
+                                     size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  const unsigned char* in = (const unsigned char*) source;
+  if(size == 0 || out == in) return destination;
+#if MK61_MEMORY_WORDS
+  if(size < 16) return mk61_memory_move_small(destination, source, size);
+  return mk61_memory_move_bulk(destination, source, size);
+#else
+  // Integer address ordering also works for distinct objects. Use the
+  // internal forward primitive for leftward overlap, not ISO C memcpy.
+  if((uintptr_t) out < (uintptr_t) in ||
+     (uintptr_t) out - (uintptr_t) in >= size) {
+    unsigned char* end = out + size;
+    while(out != end) *out++ = *in++;
+    return destination;
+  }
+  while(size != 0) { --size; out[size] = in[size]; }
+  return destination;
+#endif
+}
+
 #undef MK61_MEMORY_WORDS
 #endif
