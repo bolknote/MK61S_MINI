@@ -124,8 +124,8 @@ package_system_apps() {
   basic="$(define_value "$board_flags" MK61_ENABLE_TINYBASIC 1)"
   markdown="$(define_value "$board_flags" MK61_ENABLE_MARKDOWN_VIEWER 1)"
   chip8="$(define_value "$board_flags" MK61_ENABLE_CHIP8 0)"
-  focal_app="$(define_value "$board_flags" MK61_FOCAL_AS_APP 0)"
-  basic_app="$(define_value "$board_flags" MK61_TINYBASIC_AS_APP 0)"
+  focal_app="$(define_value "$board_flags" MK61_FOCAL_AS_APP 1)"
+  basic_app="$(define_value "$board_flags" MK61_TINYBASIC_AS_APP "$focal")"
   wbmp_app="$(define_value "$board_flags" MK61_WBMP_VIEWER_AS_APP 0)"
   markdown_app="$(define_value "$board_flags" MK61_MARKDOWN_VIEWER_AS_APP 0)"
   chip8_app="$(define_value "$board_flags" MK61_CHIP8_AS_APP 0)"
@@ -176,13 +176,17 @@ package_system_apps() {
   [[ "$setup" == 0 || "$setup_app" == 0 ]] || expected+=(SETUP.APP)
   [[ "$external_usbdisk" == 0 ]] || expected+=(USBDISK.APP)
   [[ "$explorer_app" == 0 ]] || expected+=(EXPLORER.APP)
+  local resident_vm overlay_vm
+  resident_vm="$(define_value "$board_flags" MK61_RESIDENT_LANGUAGE_VM 0)"
+  overlay_vm="$(define_value "$board_flags" MK61_OVERLAY_LANGUAGE_VM "$((focal && !resident_vm))")"
+  [[ "$overlay_vm" == 0 ]] || expected+=(LANGVM.APP LANGIN.APP)
   local file wanted expected_file
   for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do
     [[ -s "$bundle/System/$file" ]] ||
       fail "missing product artifact: $bundle_name/System/$file"
   done
   for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
-      USBDISK.APP EXPLORER.APP; do
+      USBDISK.APP EXPLORER.APP LANGVM.APP LANGIN.APP; do
     wanted=0
     for expected_file in "${expected[@]}"; do
       [[ "$file" != "$expected_file" ]] || wanted=1

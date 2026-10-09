@@ -26,6 +26,7 @@ expected="$(
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
     language_vm_cache_replay.cpp \
+    language_vm_cache_codec_probe.cpp \
     language_vm_probe.cpp \
     m8_codec.py \
     measure_app_flow.py \
@@ -33,6 +34,7 @@ expected="$(
     measure_overlay_language_vm.py \
     measure_resident_language_vm.py \
     measure_vm_cache.py \
+    measure_vm_cache_storage.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \

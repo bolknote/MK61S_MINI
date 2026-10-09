@@ -142,6 +142,8 @@ jobs:
             'build.flags',
             'System/FOCAL.APP',
             'System/BASIC.APP',
+            'System/LANGVM.APP',
+            'System/LANGIN.APP',
             'System/MARKDOWN.APP',
             'System/CHIP8.APP',
             'System/SETUP.APP',
@@ -465,6 +467,8 @@ jobs:
             'SETUP.APP' = 7
             'USBDISK.APP' = 8
             'EXPLORER.APP' = 9
+            'LANGVM.APP' = 10
+            'LANGIN.APP' = 11
           }
           foreach ($entry in $expectedKinds.GetEnumerator()) {
             $artifact = Join-Path $bundle "System/$($entry.Key)"
@@ -513,7 +517,7 @@ jobs:
             }
           }
 
-      - name: Compile resident-default F411 mini V2 through the Arduino IDE recipe
+      - name: Compile default F411 mini V2 through the Arduino IDE recipe
         shell: pwsh
         run: |
           $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
@@ -542,7 +546,9 @@ jobs:
           $bundle = Join-Path $env:GITHUB_WORKSPACE "binary/$bundleName"
           foreach ($name in @(
             "$bundleName.bin", 'build.flags', 'build.apps',
-            'System/HELP0.TXT', 'System/HELP1.TXT'
+            'System/HELP0.TXT', 'System/HELP1.TXT',
+            'System/FOCAL.APP', 'System/BASIC.APP',
+            'System/LANGVM.APP', 'System/LANGIN.APP'
           )) {
             $artifact = Join-Path $bundle $name
             if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
@@ -551,17 +557,17 @@ jobs:
             }
           }
           foreach ($name in @(
-            'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP',
+            'WBMP.APP', 'MARKDOWN.APP',
             'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP'
           )) {
             if (Test-Path -LiteralPath (Join-Path $bundle "System/$name")) {
-              throw "resident-default F411 bundle contains System/$name"
+              throw "default F411 bundle contains unexpected System/$name"
             }
           }
           $flags = Get-Content -LiteralPath (Join-Path $bundle 'build.flags') -Raw
           foreach ($required in @(
             '-DSTM32F411xE', '-DREVISION_V2',
-            '-DMK61_FOCAL_AS_APP=0', '-DMK61_TINYBASIC_AS_APP=0',
+            '-DMK61_FOCAL_AS_APP=1', '-DMK61_TINYBASIC_AS_APP=1',
             '-DMK61_MARKDOWN_VIEWER_AS_APP=0', '-DMK61_SETUP_AS_APP=0',
             '-DMK61_EXPLORER_AS_APP=0', '-DMK61_EXTERNALIZE_USBDISK=0',
             '-DMK61_MATH_BACKEND=0'

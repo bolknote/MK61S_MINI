@@ -19,9 +19,14 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   if(!sys || !sys->keyboard_mapping || !sys->math || !sys->format ||
       (base->capabilities & required) != required) return false;
   api = sys; app = base; image_crc = crc; kind = app_kind;
-#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_USBDISK_MODULE)
+  // USBDISK shares the resident's bounded memory/string primitives so the
+  // C9 FAT12 implementation fits the same 20-KiB arena without duplicates.
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
+  mk61_system_runtime = sys->runtime;
+#endif
+#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
   u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
 #if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
   required_services |= MK61_SERVICE_CAP_RESOURCES;
@@ -31,7 +36,6 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
 #endif
   if((sys->call(MK61_SERVICE_CAPABILITIES, 0, 0, 0, nullptr) &
       required_services) != required_services) return false;
-  mk61_system_runtime = sys->runtime;
 #endif
   return true;
 }

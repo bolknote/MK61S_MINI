@@ -110,11 +110,13 @@ int main(void) {
                 "builtin placement must be the inverse of APP placement");
 #if defined(MK61_CONFIG_EXPECT_DEFAULT_COMPONENT_PLACEMENT)
   #if defined(STM32F411xE)
-  static_assert(!MK61_FOCAL_AS_APP && !MK61_TINYBASIC_AS_APP &&
-                !MK61_WBMP_VIEWER_AS_APP && !MK61_MARKDOWN_VIEWER_AS_APP &&
+  static_assert(MK61_FOCAL_AS_APP && MK61_TINYBASIC_AS_APP &&
+                MK61_OVERLAY_LANGUAGE_VM && !MK61_RESIDENT_LANGUAGE_VM,
+                "F411 languages must use compiler APPs and the shared overlay VM");
+  static_assert(!MK61_WBMP_VIEWER_AS_APP && !MK61_MARKDOWN_VIEWER_AS_APP &&
                 !MK61_CHIP8_AS_APP && !MK61_SETUP_AS_APP &&
                 !MK61_EXPLORER_AS_APP,
-                "F411 must embed optional components by default");
+                "F411 must embed non-language components by default");
   #else
   static_assert(MK61_FOCAL_AS_APP && MK61_TINYBASIC_AS_APP &&
                 MK61_WBMP_VIEWER_AS_APP && MK61_MARKDOWN_VIEWER_AS_APP &&

@@ -9,6 +9,10 @@
 #define EditFocal mk61_module_edit_focal
 #define EditFocalProgram mk61_module_edit_focal_program
 #endif
+#if MK61_ENABLE_FOCAL && defined(MK61_BUILD_FOCAL_MODULE) && \
+    !defined(MK61_LANGUAGE_VM_COMPILER)
+#error "FOCAL.APP requires MK61_LANGUAGE_VM_COMPILER and a matched shared VM"
+#endif
 #ifdef FOCAL_HOST_TEST
 #include "focal.hpp"
 #include "../tests/focal_host_fixture.hpp"
@@ -24,10 +28,6 @@
 #define MK61_FOCAL_IS_LOADABLE 0
 #endif
 
-#if MK61_ENABLE_FOCAL && defined(MK61_BUILD_FOCAL_MODULE) &&                   \
-    !defined(MK61_LANGUAGE_VM_COMPILER)
-#error "FOCAL.APP requires MK61_LANGUAGE_VM_COMPILER and a matched shared VM"
-#endif
 #if MK61_ENABLE_FOCAL &&                                                       \
     (!MK61_FOCAL_IS_LOADABLE || defined(MK61_BUILD_FOCAL_MODULE) ||            \
      defined(FOCAL_HOST_TEST))

@@ -218,7 +218,7 @@ try {
     [IO.File]::WriteAllText((Join-Path $sourceSystem 'CHIP8.APP'), "chip8-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     foreach ($resource in @(
         'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP',
-        'HELP0.TXT', 'HELP1.TXT')) {
+        'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP')) {
         [IO.File]::WriteAllText((Join-Path $sourceSystem $resource), "service-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`n")
     }
     [IO.File]::WriteAllText((Join-Path $targetSystem 'KEEP.APP'), "keep-me`n")
@@ -273,7 +273,7 @@ try {
     [IO.File]::WriteAllText(
         (Join-Path $bundle 'build.flags'),
         $disabledFlagLine.Substring('COMPILE_FLAGS='.Length) + [Environment]::NewLine)
-    foreach ($app in @('FOCAL.APP', 'MARKDOWN.APP', 'CHIP8.APP')) {
+    foreach ($app in @('FOCAL.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'LANGVM.APP', 'LANGIN.APP')) {
         Remove-Item -LiteralPath (Join-Path $sourceSystem $app) `
             -Force -ErrorAction SilentlyContinue
     }
@@ -281,7 +281,7 @@ try {
     Assert-True ($disabledInstall.ExitCode -eq 0) 'all-disabled System APP synchronization failed'
     Assert-True (($disabledInstall.Output -join "`n") -match 'System installation through CDC: OK') 'all-disabled removal was not reported'
     foreach ($app in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'LANGVM.APP', 'LANGIN.APP'
     )) {
         Assert-True (-not (Test-Path -LiteralPath (Join-Path $targetSystem $app))) "$app survived all-disabled synchronization"
     }
@@ -407,14 +407,14 @@ try {
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
     Normalize-ComponentPlacements
     Assert-True (
-        $script:State.FocalAsApp -eq 0 -and
-        $script:State.TinyBasicAsApp -eq 0 -and
+        $script:State.FocalAsApp -eq 1 -and
+        $script:State.TinyBasicAsApp -eq 1 -and
         $script:State.WbmpAsApp -eq 0 -and
         $script:State.MarkdownAsApp -eq 0 -and
         $script:State.Chip8AsApp -eq 0 -and
         $script:State.SetupAsApp -eq 0 -and
         $script:State.ExplorerAsApp -eq 0) `
-        'F411 components must be resident by default'
+        'F411 must externalize languages and keep other components resident by default'
     $next = Get-NextComponentMode 1 0
     Assert-True ($next.Enabled -eq 1 -and $next.AsApp -eq 1) `
         'component mode did not advance from resident to APP'

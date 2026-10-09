@@ -343,7 +343,7 @@ function Remove-GeneratedBundleFiles {
     }
     $system = Join-Path $Directory 'System'
     foreach ($name in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP'
     )) {
         $path = Join-Path $system $name
         if ([IO.File]::Exists($path)) {

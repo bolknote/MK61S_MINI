@@ -131,7 +131,7 @@ grep -q '^mk61_f401_app.menu.mk61_focal.enabled.build.mk61_focal=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal=1$' \
   "$target/boards.txt"
-grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
+grep -q '^mk61_f401_app.menu.mk61_focal.builtin.build.mk61_focal_app=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_focal.disabled.build.mk61_focal=0$' \
   "$target/boards.txt"
@@ -171,7 +171,7 @@ grep -q '^mk61_f411.build.mk61_font_settings=0$' \
   "$target/boards.txt"
 ! grep -q '^menu.mk61_font_settings=' "$target/boards.txt"
 ! grep -q '\.menu\.mk61_font_settings\.' "$target/boards.txt"
-grep -q '^mk61_f411.menu.mk61_focal.builtin.build.mk61_focal_app=0$' \
+grep -q '^mk61_f411.menu.mk61_focal.builtin.build.mk61_focal_app=1$' \
   "$target/boards.txt"
 grep -q '^mk61_f411.menu.mk61_basic.builtin.build.mk61_basic_app=0$' \
   "$target/boards.txt"
@@ -717,16 +717,16 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test ! -e "$legacy_f411.flags"
   test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.bin"
   test -s "$f411_bundle/mk61s-M-mini-v2-lcd1602-a00-f411.elf"
-  for resource in HELP0.TXT HELP1.TXT; do
+  for resource in HELP0.TXT HELP1.TXT FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP; do
     test -s "$f411_bundle/System/$resource"
   done
-  for app in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
+  for app in WBMP.APP MARKDOWN.APP CHIP8.APP \
       SETUP.APP USBDISK.APP EXPLORER.APP; do
     test ! -e "$f411_bundle/System/$app"
   done
   grep -q -- '-DSTM32F411xE' "$f411_bundle/build.flags"
-  grep -q -- '-DMK61_FOCAL_AS_APP=0' "$f411_bundle/build.flags"
-  grep -q -- '-DMK61_TINYBASIC_AS_APP=0' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_FOCAL_AS_APP=1' "$f411_bundle/build.flags"
+  grep -q -- '-DMK61_TINYBASIC_AS_APP=1' "$f411_bundle/build.flags"
   grep -q -- '-DMK61_MARKDOWN_VIEWER_AS_APP=0' "$f411_bundle/build.flags"
   grep -q -- '-DMK61_SETUP_AS_APP=0' "$f411_bundle/build.flags"
   grep -q -- '-DMK61_EXPLORER_AS_APP=0' "$f411_bundle/build.flags"

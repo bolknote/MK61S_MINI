@@ -203,7 +203,8 @@ build_bundle() {
   cp "$stage/$bundle.bin" "$output/$bundle.bin"
   cp "$stage/$bundle.elf" "$output/$bundle.elf"
   for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
-                   SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
+                   SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT \
+                   LANGVM.APP LANGIN.APP; do
     if [ -f "$stage/System/$canonical" ]; then
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else

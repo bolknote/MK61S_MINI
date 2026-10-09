@@ -29,7 +29,8 @@ def main():
     editor_end = editor_source.index("inline u8 visible_rows(")
     (out / "explorer_editor.inc").write_text(
         editor_source[editor_start:editor_end] +
-        functions(editor, ["inline bool insert_text(", "inline bool backspace(",
+        functions(editor, ["inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16 start,",
+                          "inline bool insert_text(", "inline bool backspace(",
                           "inline bool sms_tap("]) + "}\n")
     (out / "explorer_extensions.inc").write_text(
         "namespace program_store {\n" +

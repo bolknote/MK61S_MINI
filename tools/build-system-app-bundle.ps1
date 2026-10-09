@@ -19,7 +19,10 @@ param(
     [ValidateSet('0', '1')][string]$Setup = '1',
     [ValidateSet('0', '1')][string]$UsbDisk = '1',
     [ValidateSet('0', '1')][string]$Explorer = '0',
-    [ValidateSet('0', '1')][string]$LocalFloatMath = '0'
+    [ValidateSet('0', '1')][string]$LocalFloatMath = '0',
+    [ValidateSet('0', '1', 'auto')][string]$LanguageVmCompiler = 'auto',
+    [ValidateSet('0', '1', 'auto')][string]$OverlayLanguageVm = 'auto',
+    [ValidateSet('0', '1')][string]$FocalTrace = '0'
 )
 
 Set-StrictMode -Version 2.0
@@ -28,7 +31,8 @@ $ProjectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $Canonical = @(
     'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
-    'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT')
+    'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
+    'LANGVM.APP', 'LANGIN.APP')
 $Modules = @(
     [pscustomobject]@{ Key = 'setup'; Name = 'SETUP.APP'; System = 'setup' },
     [pscustomobject]@{ Key = 'focal'; Name = 'FOCAL.APP'; System = 'focal' },
@@ -37,7 +41,9 @@ $Modules = @(
     [pscustomobject]@{ Key = 'markdown'; Name = 'MARKDOWN.APP'; System = 'markdown-viewer' },
     [pscustomobject]@{ Key = 'chip8'; Name = 'CHIP8.APP'; System = 'chip8' },
     [pscustomobject]@{ Key = 'usbdisk'; Name = 'USBDISK.APP'; System = 'usbdisk' },
-    [pscustomobject]@{ Key = 'explorer'; Name = 'EXPLORER.APP'; System = 'explorer' })
+    [pscustomobject]@{ Key = 'explorer'; Name = 'EXPLORER.APP'; System = 'explorer' },
+    [pscustomobject]@{ Key = 'language-vm'; Name = 'LANGVM.APP'; System = 'language-vm' },
+    [pscustomobject]@{ Key = 'language-input'; Name = 'LANGIN.APP'; System = 'language-input' })
 $Enabled = @{
     setup = $Setup -eq '1'; focal = $Focal -eq '1'; basic = $Basic -eq '1'
     wbmp = $Wbmp -eq '1' -and $Markdown -ne '1'
@@ -168,9 +174,49 @@ function Get-AppVariant {
         $parts.Add($(if ($Graphics -eq '1') { 'graphics' } else { 'text' }))
     }
     if ($SystemName -in @('focal', 'tinybasic')) {
+        $parts.Add($(if ($LanguageVmCompiler -eq '1') { 'vm-compiler-v8-fused' }
+            elseif ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
+    }
+    if ($SystemName -eq 'language-vm') {
+        $parts.Add('split-v9-fused')
         $parts.Add($(if ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
     }
+    if ($SystemName -eq 'language-input') { $parts.Add('cold-v9-fused') }
+    if ($FocalTrace -eq '1' -and $SystemName -in @('focal', 'language-vm')) {
+        $parts.Add('trace')
+    }
     return $parts -join '+'
+}
+
+function Set-LanguageVmPlacement {
+    param([string]$Toolchain, [string]$Resident)
+    if ($LanguageVmCompiler -eq 'auto' -or $OverlayLanguageVm -eq 'auto') {
+        $suffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
+        $symbols = Invoke-BuildTool (Join-Path $Toolchain "arm-none-eabi-nm$suffix") `
+            @('--defined-only', $Resident) -Capture
+        $mode = 0
+        if ($symbols -match '(?m)^([0-9a-fA-F]+)\s+A\s+mk61_language_vm_mode\s*$') {
+            $mode = [Convert]::ToInt32($Matches[1], 16)
+            if ($mode -notin @(0, 1, 2)) { throw 'invalid resident language VM mode' }
+        } elseif ($Focal -eq '1') {
+            throw 'resident has no language VM metadata; rebuild it or select VM placement explicitly'
+        }
+        if ($LanguageVmCompiler -eq 'auto') {
+            $script:LanguageVmCompiler = if ($mode -ne 0) { '1' } else { '0' }
+        }
+        if ($OverlayLanguageVm -eq 'auto') {
+            $script:OverlayLanguageVm = if ($mode -eq 2) { '1' } else { '0' }
+        }
+    }
+    if ($OverlayLanguageVm -eq '1' -and $LanguageVmCompiler -ne '1') {
+        throw 'overlay language VM requires compiler-only BASIC/FOCAL'
+    }
+    if ($Focal -eq '1' -and $LanguageVmCompiler -ne '1') {
+        throw 'FOCAL.APP requires a matched shared VM'
+    }
+    $Enabled['language-vm'] = $OverlayLanguageVm -eq '1' -and
+        ($Focal -eq '1' -or $Basic -eq '1')
+    $Enabled['language-input'] = $Enabled['language-vm']
 }
 
 function Get-SourceKey {
@@ -348,6 +394,7 @@ try {
     if (-not [IO.File]::Exists($gcc)) {
         throw "ARM GCC toolchain not found in: $toolchain"
     }
+    Set-LanguageVmPlacement $toolchain $resident
     $output = [IO.Path]::GetFullPath($OutputDirectory)
     [IO.Directory]::CreateDirectory($output) | Out-Null
     if (-not [string]::IsNullOrWhiteSpace($CatalogDirectory)) {
@@ -385,9 +432,20 @@ try {
                 if ($UiFonts -ne '1') { $arguments.Add('-NoUiFonts') }
                 if ($module.System -eq 'markdown-viewer' -and
                     $Graphics -ne '1') { $arguments.Add('-TextOnly') }
-                if ($LocalFloatMath -eq '1' -and
-                    $module.System -in @('focal', 'tinybasic')) {
-                    $arguments.Add('-LocalFloatMath')
+                if ($module.System -in @('focal', 'tinybasic')) {
+                    if ($LanguageVmCompiler -eq '1') {
+                        $arguments.Add('-LanguageVmCompiler')
+                    } elseif ($LocalFloatMath -eq '1') {
+                        $arguments.Add('-LocalFloatMath')
+                    }
+                }
+                if ($module.System -eq 'language-vm') {
+                    $arguments.Add('-SplitLanguageVm')
+                    if ($LocalFloatMath -eq '1') { $arguments.Add('-LocalFloatMath') }
+                }
+                if ($FocalTrace -eq '1' -and
+                    $module.System -in @('focal', 'language-vm')) {
+                    $arguments.Add('-FocalTrace')
                 }
                 Invoke-BuildTool $powerShell $arguments.ToArray()
                 $source = Join-Path $moduleOutput $module.Name
@@ -427,6 +485,9 @@ try {
             apps = $built.ToArray(); graphics = $Graphics -eq '1'
             ui_fonts = $UiFonts -eq '1'
             local_float_math = $LocalFloatMath -eq '1'
+            language_vm_compiler = $LanguageVmCompiler -eq '1'
+            overlay_language_vm = $OverlayLanguageVm -eq '1'
+            focal_trace = $FocalTrace -eq '1'
             catalog = $CatalogDirectory; catalog_hits = $hits.ToArray()
             builder = 'PowerShell'
         } | ConvertTo-Json -Depth 4 | Write-Host

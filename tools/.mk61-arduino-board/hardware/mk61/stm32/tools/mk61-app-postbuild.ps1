@@ -297,7 +297,7 @@ function Build-Mk61Bundle {
         -Destination (Join-Path $output "$Bundle.elf") -Force
     foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP',
             'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP',
-            'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT')) {
+            'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP')) {
         $source = Join-Path (Join-Path $script:Stage 'System') $canonical
         $target = Join-Path $outputSystem $canonical
         if ([IO.File]::Exists($source)) {

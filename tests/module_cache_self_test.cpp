@@ -1,4 +1,5 @@
 #include "rust_types.h"
+#include "dwt_profiler.hpp"
 #include <cassert>
 #include <cstdio>
 enum class RuntimeStatus {OK,DISABLED,UNAVAILABLE,INVALID_MODULE,IO_ERROR};

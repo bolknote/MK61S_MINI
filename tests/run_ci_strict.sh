@@ -57,6 +57,9 @@ run_suite() {
   local shim_dir="$shim_root/$name"
   mkdir "$shim_dir"
   ln -s "$compiler" "$shim_dir/clang++"
+  # The driver selects C from its invocation name. Use the same frontend and
+  # sanitizer runtime for C objects and the C++ executables that link them.
+  ln -s "$compiler" "$shim_dir/clang"
   PATH="$shim_dir:$original_path" \
     MK61_TEST_SANITIZERS="$sanitizers" \
     "$root/tests/run_all_tests.sh"

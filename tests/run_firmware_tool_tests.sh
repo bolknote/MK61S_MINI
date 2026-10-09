@@ -300,8 +300,8 @@ grep -q '^SCREEN=lcd1602-a02$' "$legacy_config"
 grep -q '^MK61_ENABLE_FOCAL=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_MARKDOWN_VIEWER=1$' "$legacy_config"
 grep -q '^MK61_ENABLE_CHIP8=0$' "$legacy_config"
-grep -q '^MK61_FOCAL_AS_APP=0$' "$legacy_config"
-grep -q '^MK61_TINYBASIC_AS_APP=0$' "$legacy_config"
+grep -q '^MK61_FOCAL_AS_APP=1$' "$legacy_config"
+grep -q '^MK61_TINYBASIC_AS_APP=1$' "$legacy_config"
 grep -q '^MK61_WBMP_VIEWER_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_MARKDOWN_VIEWER_AS_APP=0$' "$legacy_config"
 grep -q '^MK61_CHIP8_AS_APP=0$' "$legacy_config"
@@ -349,7 +349,7 @@ printf 'resident-f401\n' > "$bundle/mk61s-M-mini-v3-lcd1602-a00-f401.bin"
 printf 'focal-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/FOCAL.APP"
 printf 'markdown-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/MARKDOWN.APP"
 printf 'chip8-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/CHIP8.APP"
-for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT; do
+for resource in SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT LANGVM.APP LANGIN.APP; do
   printf 'service-resourcexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$bundle/System/$resource"
 done
 printf 'keep-me\n' > "$install_mount/System/KEEP.APP"
@@ -364,6 +364,8 @@ grep -q 'System installation through CDC: OK' <<< "$install_result"
 cmp "$bundle/System/FOCAL.APP" "$install_mount/System/FOCAL.APP"
 cmp "$bundle/System/MARKDOWN.APP" "$install_mount/System/MARKDOWN.APP"
 cmp "$bundle/System/CHIP8.APP" "$install_mount/System/CHIP8.APP"
+cmp "$bundle/System/LANGVM.APP" "$install_mount/System/LANGVM.APP"
+cmp "$bundle/System/LANGIN.APP" "$install_mount/System/LANGIN.APP"
 grep -q '^keep-me$' "$install_mount/System/KEEP.APP"
 test ! -e "$install_mount/System/BASIC.APP"
 test ! -e "$install_mount/System/WBMP.APP"
@@ -378,7 +380,7 @@ disabled_selection=$(MK61_CONFIG_FILE="$install_config" "$tool" --show-config)
 disabled_flags=$(sed -n 's/^COMPILE_FLAGS=//p' <<< "$disabled_selection")
 printf '%s\n' "$disabled_flags" > "$bundle/build.flags"
 rm -f "$bundle/System/FOCAL.APP" "$bundle/System/MARKDOWN.APP" \
-  "$bundle/System/CHIP8.APP"
+  "$bundle/System/CHIP8.APP" "$bundle/System/LANGVM.APP" "$bundle/System/LANGIN.APP"
 disabled_result=$(MK61_CONFIG_FILE="$install_config" \
   MK61_OUTPUT_DIR="$install_output" MK61_TEST_MKC_DEVICE="$install_mount" \
   "$tool" --install-apps)
@@ -451,15 +453,14 @@ cmp "$f411_bundle/System/USBDISK.APP" "$install_mount/System/USBDISK.APP"
 cmp "$f411_bundle/System/SETUP.APP" "$install_mount/System/SETUP.APP"
 cmp "$f411_bundle/System/EXPLORER.APP" "$install_mount/System/EXPLORER.APP"
 
-# Component placement is independent on F411 as well: keep TinyBASIC and
-# Markdown resident, but install only FOCAL as a canonical APP.
+# Keep Markdown resident while FOCAL and its executor remain external.
 f411_mixed_config="$installer_root/f411-mixed.conf"
 printf '%s\n' \
   'MCU=f411' \
   'PLATFORM=mini-v3' \
   'SCREEN=lcd1602-a00' \
   'MK61_ENABLE_FOCAL=1' \
-  'MK61_ENABLE_TINYBASIC=1' \
+  'MK61_ENABLE_TINYBASIC=0' \
   'MK61_ENABLE_WBMP_VIEWER=0' \
   'MK61_ENABLE_MARKDOWN_VIEWER=1' \
   'MK61_ENABLE_CHIP8=0' \
@@ -479,6 +480,9 @@ printf '%s\n' "$mixed_f411_flags" > "$f411_bundle/build.flags"
 rm -f "$f411_bundle/System/SETUP.APP" \
   "$f411_bundle/System/USBDISK.APP" "$f411_bundle/System/EXPLORER.APP"
 printf 'focal-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/FOCAL.APP"
+for resource in LANGVM.APP LANGIN.APP; do
+  printf 'vm-appxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' > "$f411_bundle/System/$resource"
+done
 MK61_CONFIG_FILE="$f411_mixed_config" MK61_OUTPUT_DIR="$install_output" \
   MK61_TEST_MKC_DEVICE="$install_mount" "$tool" \
   --mcu f411 --profile mini-v3-a00 --install-apps >/dev/null

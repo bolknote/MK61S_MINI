@@ -4,7 +4,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('setup', 'focal', 'tinybasic', 'wbmp-viewer',
-                 'markdown-viewer', 'chip8', 'usbdisk', 'explorer')]
+                 'markdown-viewer', 'chip8', 'usbdisk', 'explorer',
+                 'language-vm', 'language-input')]
     [string]$System,
     [Parameter(Mandatory = $true)]
     [string]$ArmToolchainBin,
@@ -13,7 +14,10 @@ param(
     [switch]$NoUiFonts,
     [switch]$TextOnly,
     [switch]$LocalFloatMath,
-    [int]$LocalFloatMathMask = -1
+    [int]$LocalFloatMathMask = -1,
+    [switch]$LanguageVmCompiler,
+    [switch]$SplitLanguageVm,
+    [switch]$FocalTrace
 )
 
 Set-StrictMode -Version 2.0
@@ -61,6 +65,17 @@ $Systems = @{
     'explorer' = @{
         Name = 'EXPLORER'; Macro = 'EXPLORER'; Magic = $null
         Sources = @('explorer_ui.cpp', 'explorer_autoexec.cpp', 'explorer_module_entry.cpp')
+    }
+    'language-vm' = @{
+        Name = 'LANGVM'; Macro = 'LANGUAGE_VM'; Magic = $null
+        Sources = @('language_bytecode.cpp', 'language_vm.cpp',
+            'language_vm_module_entry.cpp')
+    }
+    'language-input' = @{
+        Name = 'LANGIN'; Macro = 'LANGUAGE_INPUT'; Magic = $null
+        Sources = @('language_bytecode.cpp', 'language_vm.cpp',
+            'language_vm_validation.cpp', 'language_vm_input_entry.cpp',
+            'language_vm_flow.cpp', 'language_compiler_flow.cpp')
     }
 }
 
@@ -218,6 +233,14 @@ function Assert-SizeBudget {
         if ($System -eq 'setup') { $appLimit = 10000; $memoryLimit = 20480 }
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
         elseif ($System -eq 'explorer') { $appLimit = 8000; $memoryLimit = 10000 }
+        elseif ($System -eq 'language-input') { $appLimit = 13312; $memoryLimit = 16000 }
+    }
+    if ($LanguageVmCompiler -and $System -eq 'focal') {
+        $appLimit = 15360
+        $memoryLimit = if ($FocalTrace) { 19200 } else { 18688 }
+    }
+    if ($SplitLanguageVm) {
+        $memoryLimit = if ($LocalFloatMath) { 17408 } else { 15360 }
     }
     $failures = @()
     if ($null -ne $appLimit -and $Report.app_bytes -gt $appLimit) {
@@ -232,11 +255,25 @@ function Assert-SizeBudget {
 }
 
 try {
+    # FOCAL is a compiler frontend; execution belongs to the matched VM.
+    if ($System -eq 'focal') { $LanguageVmCompiler = $true }
+    if ($LanguageVmCompiler -and $System -notin @('focal', 'tinybasic')) {
+        throw '-LanguageVmCompiler applies only to BASIC/FOCAL'
+    }
+    if ($LanguageVmCompiler -and $LocalFloatMath) {
+        throw 'compiler-only APP delegates math to LANGVM; select local math on LANGVM'
+    }
+    if ($SplitLanguageVm -and $System -ne 'language-vm') {
+        throw '-SplitLanguageVm applies only to language-vm'
+    }
+    if ($FocalTrace -and $System -notin @('focal', 'language-vm')) {
+        throw '-FocalTrace applies only to FOCAL or its shared VM'
+    }
     if ($TextOnly -and $System -ne 'markdown-viewer') {
         throw '-TextOnly applies to markdown-viewer'
     }
-    if ($LocalFloatMath -and $System -notin @('focal', 'tinybasic')) {
-        throw '-LocalFloatMath applies only to FOCAL or TinyBASIC'
+    if ($LocalFloatMath -and $System -notin @('focal', 'tinybasic', 'language-vm')) {
+        throw '-LocalFloatMath applies only to FOCAL, TinyBASIC or language-vm'
     }
     if ($LocalFloatMathMask -ge 0 -and -not $LocalFloatMath) {
         throw '-LocalFloatMathMask requires -LocalFloatMath'
@@ -252,6 +289,10 @@ try {
     $output = [IO.Path]::GetFullPath($OutputDirectory)
     [IO.Directory]::CreateDirectory($output) | Out-Null
     $definition = $Systems[$System]
+    if ($SplitLanguageVm) {
+        $definition.Sources = @('language_vm.cpp',
+            'language_vm_overlay_entry.cpp', 'language_vm_flow.cpp')
+    }
     $name = [string]$definition.Name
 
     $sources = New-Object 'System.Collections.Generic.List[string]'
@@ -261,6 +302,15 @@ try {
     foreach ($source in $definition.Sources) {
         $sources.Add((Join-Path (Join-Path $ProjectRoot 'code') $source))
     }
+    if ($LanguageVmCompiler) {
+        foreach ($source in @('language_bytecode.cpp',
+                'language_vm_frontend.cpp', 'language_compiler_flow.cpp')) {
+            $sources.Add((Join-Path (Join-Path $ProjectRoot 'code') $source))
+        }
+    }
+    if ($System -in @('language-vm', 'language-input')) {
+        $sources.Add((Join-Path $ProjectRoot 'sdk/portable/system/resource.cpp'))
+    }
     if ($System -eq 'setup') {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/setup_compat.cpp'))
@@ -269,13 +319,15 @@ try {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/usbdisk_compat.cpp'))
     }
-    if ($System -notin @('focal', 'tinybasic')) {
-        $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
-    } else {
+    $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
+    $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'usbdisk')
+    if ($sharedSystemRuntime) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/runtime.S'))
-        $sources.Add((Join-Path $ProjectRoot `
-            'sdk/portable/system/editor.cpp'))
+        if ($System -ne 'usbdisk') {
+            $sources.Add((Join-Path $ProjectRoot `
+                'sdk/portable/system/editor.cpp'))
+        }
     }
     $unique = @($sources | Select-Object -Unique)
     if ($unique.Count -ne $sources.Count) { throw 'duplicate source' }
@@ -284,12 +336,14 @@ try {
         '-mfloat-abi=hard', '-Oz', '-flto', '-fipa-pta',
         '-mword-relocations', '-fno-builtin', '-ffunction-sections',
         '-fdata-sections', '-Wall', '-Wextra', '-Werror')
+    if ($FocalTrace) { $flags += '-DMK61_FOCAL_TRACE=1' }
     $includes = @(
         ('-I' + (Join-Path $ProjectRoot 'sdk/portable/system')),
         ('-I' + (Join-Path $ProjectRoot 'sdk/portable/include')),
         ('-I' + (Join-Path $ProjectRoot 'code')))
     $objects = New-Object 'System.Collections.Generic.List[string]'
     $compileCommands = New-Object 'System.Collections.Generic.List[object]'
+    $database = New-Object 'System.Collections.Generic.List[object]'
     $index = 0
     foreach ($source in $sources) {
         if (-not [IO.File]::Exists($source)) { throw "source not found: $source" }
@@ -304,6 +358,9 @@ try {
         foreach ($flag in $flags) { $arguments.Add($flag) }
         if ((Join-Path $ProjectRoot 'sdk/portable/memory.c') -eq $source) {
             $arguments.Add('-fno-lto')
+            if ($sharedSystemRuntime) {
+                $arguments.Add('-DMK61_APP_SHARED_RUNTIME=1')
+            }
         }
         if ($cpp) {
             foreach ($flag in @('-DMK61_BUILD_PORTABLE_SYSTEM',
@@ -311,6 +368,9 @@ try {
                 '-include', (Join-Path $ProjectRoot `
                     'sdk/portable/system/system_compat.hpp'))) {
                 $arguments.Add($flag)
+            }
+            if ($LanguageVmCompiler) {
+                $arguments.Add('-DMK61_LANGUAGE_VM_COMPILER=1')
             }
             if ($LocalFloatMath) {
                 $mask = if ($LocalFloatMathMask -ge 0) {
@@ -337,9 +397,19 @@ try {
             Source = $source
             Assembly = $extension -eq '.S'
         })
+        if ($extension -ne '.S') {
+            $database.Add([ordered]@{
+                directory = $ProjectRoot; file = $source
+                arguments = @($compiler) + $arguments.ToArray() +
+                    @('-c', $source, '-o', $object)
+            })
+        }
         $objects.Add($object)
         $index++
     }
+    [IO.File]::WriteAllText((Join-Path $output 'compile_commands.json'),
+        (ConvertTo-Json -InputObject $database.ToArray() -Depth 4) +
+            [Environment]::NewLine, $Utf8NoBom)
     Get-StackSummary $compileCommands.ToArray() $output
 
     $elf = Join-Path $output "$name.elf"
@@ -419,6 +489,9 @@ try {
             $LocalFloatMathMask
         } else { $DefaultLocalFloatMask }
     }
+    if ($LanguageVmCompiler) { $report.language_vm_compiler = $true }
+    if ($SplitLanguageVm) { $report.split_language_vm = $true }
+    if ($FocalTrace) { $report.focal_trace = $true }
     Assert-SizeBudget $report
     $json = $report | ConvertTo-Json
     [IO.File]::WriteAllText(

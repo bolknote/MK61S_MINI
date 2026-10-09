@@ -1,4 +1,16 @@
 #include "config.h"
+// Absolute ELF metadata lets every bundle frontend select the executor that
+// was compiled into this resident, including implicit config.h defaults.
+// This symbol occupies no Flash or SRAM and survives LTO/section collection.
+#if defined(__arm__)
+#if MK61_OVERLAY_LANGUAGE_VM
+__asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 2");
+#elif MK61_RESIDENT_LANGUAGE_VM
+__asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 1");
+#else
+__asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 0");
+#endif
+#endif
 #if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
 #include <string.h>
 #include "language_vm_resident.hpp"

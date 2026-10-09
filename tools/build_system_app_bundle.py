@@ -7,6 +7,7 @@ import errno
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import struct
@@ -321,12 +322,14 @@ def publish_catalog(source: Path, filename: str, system: str,
     return stored
 
 
-def run(command: list[str | Path]) -> None:
-    result = subprocess.run([str(item) for item in command])
+def run(command: list[str | Path], *, capture: bool = False) -> str | None:
+    result = subprocess.run([str(item) for item in command],
+                            capture_output=capture, text=capture)
     if result.returncode:
         raise RuntimeError(
             f"{Path(str(command[0])).name} failed with exit code "
             f"{result.returncode}")
+    return result.stdout if capture else None
 
 
 def compiler_from_database(path: Path) -> Path:
@@ -360,10 +363,35 @@ def prepare_usb_text_resources(stage: Path) -> None:
         path.write_bytes(decode_m8(path.read_bytes()).encode("utf-8"))
 
 
-def build(args: argparse.Namespace) -> dict:
-    overlay_vm = getattr(args, "overlay_language_vm", False)
-    if overlay_vm and not getattr(args, "language_vm_compiler", False):
+def resolve_language_vm_placement(args: argparse.Namespace, toolchain: Path,
+                                  resident: Path) -> None:
+    compiler = getattr(args, "language_vm_compiler", None)
+    overlay = getattr(args, "overlay_language_vm", None)
+    if compiler is None or overlay is None:
+        suffix = ".exe" if os.name == "nt" else ""
+        symbols = run([toolchain / ("arm-none-eabi-nm" + suffix),
+                       "--defined-only", resident], capture=True)
+        match = re.search(r"^([0-9a-fA-F]+)\s+A\s+mk61_language_vm_mode\s*$",
+                          symbols, re.MULTILINE)
+        mode = int(match[1], 16) if match else 0
+        if mode not in (0, 1, 2):
+            raise ValueError("invalid resident language VM mode")
+        if match is None and args.focal:
+            raise ValueError("resident has no language VM metadata; rebuild it "
+                             "or select VM placement explicitly")
+        if compiler is None:
+            compiler = mode != 0
+        if overlay is None:
+            overlay = mode == 2
+    if overlay and not compiler:
         raise ValueError("overlay language VM requires compiler-only BASIC/FOCAL")
+    if args.focal and not compiler:
+        raise ValueError("FOCAL.APP requires a matched shared VM")
+    args.language_vm_compiler = compiler
+    args.overlay_language_vm = overlay
+
+
+def build(args: argparse.Namespace) -> dict:
     resident = args.resident_elf.resolve()
     if not resident.is_file():
         raise ValueError(f"resident ELF not found: {resident}")
@@ -379,6 +407,8 @@ def build(args: argparse.Namespace) -> dict:
     suffix = ".exe" if os.name == "nt" else ""
     if not (toolchain / ("arm-none-eabi-gcc" + suffix)).is_file():
         raise ValueError(f"ARM GCC toolchain not found in: {toolchain}")
+    resolve_language_vm_placement(args, toolchain, resident)
+    overlay_vm = args.overlay_language_vm
 
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -499,10 +529,10 @@ def main() -> None:
     parser.add_argument("--chip8", type=boolean, default=True)
     parser.add_argument("--local-float-math", type=boolean, default=False)
     parser.add_argument("--focal-trace",type=boolean,default=False)
-    parser.add_argument("--language-vm-compiler", type=boolean, default=False,
-                        help="compiler-only language APPs for the resident VM experiment")
-    parser.add_argument("--overlay-language-vm", type=boolean, default=False,
-                        help="include split hot LANGVM.APP and cold LANGIN.APP")
+    parser.add_argument("--language-vm-compiler", type=boolean,
+                        help="compiler-only language APPs (default: read resident ELF)")
+    parser.add_argument("--overlay-language-vm", type=boolean,
+                        help="include LANGVM.APP and LANGIN.APP (default: read resident ELF)")
     args = parser.parse_args()
     try:
         build(args)

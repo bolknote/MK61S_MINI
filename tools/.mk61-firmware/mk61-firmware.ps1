@@ -365,7 +365,8 @@ function Normalize-ComponentPlacements {
         'FocalAsApp', 'TinyBasicAsApp', 'WbmpAsApp',
         'MarkdownAsApp', 'Chip8AsApp', 'SetupAsApp', 'ExplorerAsApp')) {
         if ($script:State[$name] -notin @(0, 1)) {
-            $script:State[$name] = $default
+            $script:State[$name] = if ($script:State.EnableFocal -eq 1 -and
+                $name -in @('FocalAsApp', 'TinyBasicAsApp')) { 1 } else { $default }
         }
     }
 }
@@ -373,8 +374,9 @@ function Normalize-ComponentPlacements {
 function Set-DefaultComponentPlacements {
     param([string]$Mcu)
     $default = if ($Mcu -eq 'f411') { 0 } else { 1 }
-    $script:State.FocalAsApp = $default
-    $script:State.TinyBasicAsApp = $default
+    $languageDefault = if ($script:State.EnableFocal -eq 1) { 1 } else { $default }
+    $script:State.FocalAsApp = $languageDefault
+    $script:State.TinyBasicAsApp = $languageDefault
     $script:State.WbmpAsApp = $default
     $script:State.MarkdownAsApp = $default
     $script:State.Chip8AsApp = $default
@@ -1303,6 +1305,10 @@ function Get-ExpectedSystemAppNames {
     }
     if ($script:State.EnableTinyBasic -eq 1 -and
         $script:State.TinyBasicAsApp -eq 1) { $names.Add('BASIC.APP') }
+    if ($script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) {
+        $names.Add('LANGVM.APP')
+        $names.Add('LANGIN.APP')
+    }
     if ($script:State.EnableWbmp -eq 1 -and
         $script:State.WbmpAsApp -eq 1 -and
         $script:State.EnableMarkdown -eq 0) {
@@ -1318,7 +1324,8 @@ function Get-ExpectedSystemAppNames {
 function Get-AllSystemAppNames {
     return [string[]]@(
         'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
-        'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT')
+        'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
+        'LANGVM.APP', 'LANGIN.APP')
 }
 
 function Find-BashExecutable {

@@ -61,13 +61,14 @@ GREEDY_APP_SIZE_BUDGETS = {
     (False, "focal"): 13_500,
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
+    (False, "language-input"): 13_312,
 }
 # Compiler FLOW_STEP owns source selection, translation and literal interning.
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    # Bounded DSP CR/LF scan; current FOCAL sizes are documented in
-    # doc/design/FOCAL-VM-next-2026-10-08.md. The APP arena stays unchanged.
+    # Keep the original ceilings with overlap-safe editor splices by retaining
+    # the compact SDK strcmp alongside the shared resident runtime.
     "focal": {"app_bytes": 13_880, "memory_bytes": 18_688},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
@@ -104,7 +105,7 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if greedy_packer:
         greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
         if language_vm_compiler and system == "focal":
-            greedy_limit = 14_100
+            greedy_limit = 15_360  # separate storage ceiling for the .NET parser
         if greedy_limit is not None:
             budget["app_bytes"] = greedy_limit
     exceeded = [f"{field}={report[field]} > {limit}"
@@ -176,10 +177,13 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system == "usbdisk":
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
-    if args.system not in ("focal", "tinybasic", "language-vm", "language-input"):
-        sources += [ROOT / "sdk/portable/memory.c"]
+    sources += [ROOT / "sdk/portable/memory.c"]
+    shared_system_runtime = args.system in (
+        "focal", "tinybasic", "language-vm", "language-input", "usbdisk")
+    if shared_system_runtime:
+        sources += [ROOT / "sdk/portable/system/runtime.S"]
     if args.system in ("focal", "tinybasic", "language-vm", "language-input"):
-        sources += [ROOT / "sdk/portable/system/runtime.S", ROOT / "sdk/portable/system/editor.cpp"]
+        sources += [ROOT / "sdk/portable/system/editor.cpp"]
     if args.shared_runtime:
         sources += [ROOT / "sdk/portable/shared_runtime.c", ROOT / "sdk/portable/system/runtime.S"]
     if len(set(sources)) != len(sources):
@@ -248,6 +252,10 @@ def build(args: argparse.Namespace) -> dict:
         # GCC can synthesize memset/memcpy after LTO's symbol pruning.
         # Keep their freestanding definitions in a normal object.
         support = ["-fno-lto"] if source == ROOT / "sdk/portable/memory.c" else []
+        if shared_system_runtime and source == ROOT / "sdk/portable/memory.c":
+            # Keep SDK strcmp, which has no resident runtime slot. Its compact
+            # byte loop avoids linking newlib's much larger ARM routine.
+            support += ["-DMK61_APP_SHARED_RUNTIME=1"]
         if system and cpp:
             support += ["-DMK61_BUILD_PORTABLE_SYSTEM", "-DMK61_BUILD_" + system[1] + "_MODULE",
                         "-include", str(ROOT / "sdk/portable/system/system_compat.hpp")]

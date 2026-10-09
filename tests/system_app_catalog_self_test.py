@@ -43,6 +43,38 @@ def publish_worker(catalog: str, source: str, index: int) -> str:
 
 
 class SystemAppCatalogSelfTest(unittest.TestCase):
+    def test_default_bundle_uses_the_resident_vm_placement(self) -> None:
+        for mode in (0, 1, 2):
+            with self.subTest(mode=mode):
+                args = arguments(Path("catalog"))
+                args.focal = mode != 0
+                with patch.object(bundle, "run", return_value=
+                                  f"{mode:08x} A mk61_language_vm_mode\n"):
+                    bundle.resolve_language_vm_placement(
+                        args, Path("toolchain"), Path("resident.elf"))
+                self.assertEqual(args.language_vm_compiler, mode != 0)
+                self.assertEqual(args.overlay_language_vm, mode == 2)
+
+    def test_explicit_placement_supports_residents_without_metadata(self) -> None:
+        args = arguments(Path("catalog"))
+        args.focal = True
+        args.language_vm_compiler = True
+        args.overlay_language_vm = False
+        with patch.object(bundle, "run", side_effect=AssertionError("unexpected nm")):
+            bundle.resolve_language_vm_placement(
+                args, Path("toolchain"), Path("resident.elf"))
+        self.assertFalse(args.overlay_language_vm)
+
+    def test_focal_cannot_be_packaged_without_a_matched_vm(self) -> None:
+        args = arguments(Path("catalog"))
+        args.focal = True
+        for symbols in ("", "00000000 A mk61_language_vm_mode\n",
+                        "00000003 A mk61_language_vm_mode\n"):
+            with self.subTest(symbols=symbols), patch.object(bundle, "run", return_value=symbols):
+                with self.assertRaises(ValueError):
+                    bundle.resolve_language_vm_placement(
+                        args, Path("toolchain"), Path("resident.elf"))
+
     def test_focal_trace_has_its_own_cache_variant(self) -> None:
         args=arguments(Path("catalog"));args.language_vm_compiler=True
         plain={name:bundle.app_build_key("sources",name+".APP",name,args)

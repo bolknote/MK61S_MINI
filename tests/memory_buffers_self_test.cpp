@@ -260,7 +260,7 @@ int main(void) {
          shared_memory::arena_mask(shared_memory::Arena::WORKSPACE));
   assert(focal_policy.cache_arenas == 0 &&
          focal_policy.evictable_arenas == 0 &&
-         focal_policy.snapshot_schema == 1);
+         focal_policy.snapshot_schema == 10);
   const shared_memory::OwnerPolicy compression_policy =
       shared_memory::owner_policy(
           shared_memory::Owner::PROGRAM_STORE_COMPRESSION);
@@ -701,7 +701,7 @@ int main(void) {
   workspace_swap::Statistics swap = workspace_swap::statistics();
   assert(swap.valid && swap.compressed &&
          swap.owner == shared_memory::Owner::FOCAL &&
-         swap.schema == 1 &&
+         swap.schema == 10 &&
          swap.raw_size == SWAP_RUNTIME_SIZE &&
          swap.stored_size < exclusive_buffer::SIZE);
   {

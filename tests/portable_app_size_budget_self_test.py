@@ -89,7 +89,20 @@ except ValueError:
 else:
     raise AssertionError("cold flow APP size regression was accepted")
 
-for greedy, limit in ((False, 13880), (True, 14100)):
+BUILDER.enforce_system_size_budget(
+    "language-input", {"memory_bytes": 15536, "app_bytes": 13312},
+    greedy_packer=True)
+for report in ({"memory_bytes": 15536, "app_bytes": 13313},
+               {"memory_bytes": 16001, "app_bytes": 13021}):
+    try:
+        BUILDER.enforce_system_size_budget("language-input", report,
+                                           greedy_packer=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("greedy cold flow APP size regression was accepted")
+
+for greedy, limit in ((False, 13880), (True, 15360)):
     BUILDER.enforce_system_size_budget("focal", {"memory_bytes": 17000, "app_bytes": limit},
                                        False, greedy, False, True)
     try:
@@ -99,6 +112,18 @@ for greedy, limit in ((False, 13880), (True, 14100)):
         pass
     else:
         raise AssertionError("compiler flow APP size regression was accepted")
+
+BUILDER.enforce_system_size_budget(
+    "focal", {"memory_bytes": 18688, "app_bytes": 13847},
+    language_vm_compiler=True)
+try:
+    BUILDER.enforce_system_size_budget(
+        "focal", {"memory_bytes": 18689, "app_bytes": 13847},
+        language_vm_compiler=True)
+except ValueError:
+    pass
+else:
+    raise AssertionError("compiler FOCAL loaded-memory regression was accepted")
 
 print("portable APP size budget tests: OK")
 

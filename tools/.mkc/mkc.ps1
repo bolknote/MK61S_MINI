@@ -1286,7 +1286,7 @@ function Receive-RemoteFile {
 
 function Install-SystemBundle {
     param([string]$Directory)
-    $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP',
+    $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP', 'LANGVM.APP', 'LANGIN.APP',
         'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'EXPLORER.APP',
         'HELP0.TXT', 'HELP1.TXT')
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {

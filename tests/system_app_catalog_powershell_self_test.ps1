@@ -79,6 +79,27 @@ Publish-Catalog '$($source.Replace("'", "''"))' `$module 'build-$index'
     Assert-Test (-not [IO.File]::Exists((Join-Path $catalog 'catalog.json'))) `
         'corrupt catalog was not quarantined for rebuild'
 
+    # The default IDE/GCC wrappers do not pass VM switches. The ELF must
+    # select compiler APPs and include hot/cold executors only for overlay mode.
+    function Invoke-BuildTool { return $script:residentSymbols }
+    foreach ($mode in @(0, 1, 2)) {
+        $script:residentSymbols = '{0:x8} A mk61_language_vm_mode' -f $mode
+        $LanguageVmCompiler = 'auto'
+        $OverlayLanguageVm = 'auto'
+        $Focal = if ($mode -eq 0) { '0' } else { '1' }
+        Set-LanguageVmPlacement 'toolchain' 'resident.elf'
+        Assert-Test (($LanguageVmCompiler -eq '1') -eq ($mode -ne 0)) `
+            'resident VM metadata selected the wrong compiler mode'
+        Assert-Test ($Enabled['language-vm'] -eq ($mode -eq 2)) `
+            'resident VM metadata selected the wrong hot executor'
+        Assert-Test ($Enabled['language-input'] -eq ($mode -eq 2)) `
+            'resident VM metadata selected the wrong cold executor'
+    }
+    $compilerVariant = Get-AppVariant 'tinybasic'
+    $LanguageVmCompiler = '0'
+    Assert-Test ($compilerVariant -ne (Get-AppVariant 'tinybasic')) `
+        'compiler BASIC reused the native interpreter cache variant'
+
     Write-Host 'system_app_catalog_powershell_self_test: ok'
 } finally {
     $env:MK61_POWERSHELL_IMPORT_ONLY = $null

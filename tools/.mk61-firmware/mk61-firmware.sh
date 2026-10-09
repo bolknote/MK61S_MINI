@@ -1256,8 +1256,10 @@ boolean_valid() {
 normalize_component_placements() {
   local default=1
   [ "$MCU" = f411 ] && default=0
-  boolean_valid "$FOCAL_AS_APP" || FOCAL_AS_APP=$default
-  boolean_valid "$TINYBASIC_AS_APP" || TINYBASIC_AS_APP=$default
+  local language_default=$default
+  [ "$ENABLE_FOCAL" -eq 1 ] && language_default=1
+  boolean_valid "$FOCAL_AS_APP" || FOCAL_AS_APP=$language_default
+  boolean_valid "$TINYBASIC_AS_APP" || TINYBASIC_AS_APP=$language_default
   boolean_valid "$WBMP_VIEWER_AS_APP" || WBMP_VIEWER_AS_APP=$default
   boolean_valid "$MARKDOWN_VIEWER_AS_APP" || MARKDOWN_VIEWER_AS_APP=$default
   boolean_valid "$CHIP8_AS_APP" || CHIP8_AS_APP=$default
@@ -1268,8 +1270,10 @@ normalize_component_placements() {
 reset_component_placements_for_mcu() {
   local default=1
   [ "$1" = f411 ] && default=0
-  FOCAL_AS_APP=$default
-  TINYBASIC_AS_APP=$default
+  local language_default=$default
+  [ "$ENABLE_FOCAL" -eq 1 ] && language_default=1
+  FOCAL_AS_APP=$language_default
+  TINYBASIC_AS_APP=$language_default
   WBMP_VIEWER_AS_APP=$default
   MARKDOWN_VIEWER_AS_APP=$default
   CHIP8_AS_APP=$default
@@ -2398,6 +2402,9 @@ expected_system_app_names() {
   printf '%s\n' HELP0.TXT HELP1.TXT
   [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] && printf '%s\n' FOCAL.APP
   [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] && printf '%s\n' BASIC.APP
+  if [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ]; then
+    printf '%s\n' LANGVM.APP LANGIN.APP
+  fi
   [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && [ "$WBMP_VIEWER_AS_APP" -eq 1 ] && \
     [ "$ENABLE_MARKDOWN_VIEWER" -eq 0 ] && printf '%s\n' WBMP.APP
   [ "$ENABLE_MARKDOWN_VIEWER" -eq 1 ] && [ "$MARKDOWN_VIEWER_AS_APP" -eq 1 ] && printf '%s\n' MARKDOWN.APP
@@ -2406,13 +2413,14 @@ expected_system_app_names() {
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT LANGVM.APP LANGIN.APP
 }
 
 system_app_enabled() {
   case "$1" in
     FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
     BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] ;;
+    LANGVM.APP|LANGIN.APP) [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
     WBMP.APP)
       [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
         [ "$WBMP_VIEWER_AS_APP" -eq 1 ] && \
