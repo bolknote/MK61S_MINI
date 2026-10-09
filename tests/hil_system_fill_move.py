@@ -147,6 +147,8 @@ def main():
     p.add_argument('--install-candidate',action='store_true')
     p.add_argument('--keep-last-image',action='store_true',
                    help='leave the last flashed image even after failed qualification (explicit user choice)')
+    p.add_argument('--reuse-baseline',type=Path,
+                   help='reuse a completed matching baseline directory from an earlier run')
     args=p.parse_args();assert 1<=args.runs<=10
     out=args.output_dir.resolve();out.mkdir(parents=True)
     targets={name:firmware_info(getattr(args,name)) for name in ('original','baseline','candidate')}
@@ -162,6 +164,15 @@ def main():
     try:
         runs={}
         for name in ('baseline','candidate'):
+            if name=='baseline' and args.reuse_baseline:
+                previous=json.loads((args.reuse_baseline/'baseline/report.json').read_text())
+                assert previous['status']=='PASS' and previous['firmware']['sha256']==targets[name]['sha256']
+                assert previous['oracle']==expected[name] and len(previous['runs'])==args.runs
+                assert json.loads((args.reuse_baseline/'content-before.json').read_text())==files
+                old_state=json.loads((args.reuse_baseline/'state-before.json').read_text())
+                for c in STATE_COMMANDS:assert old_state[c]==state[c],c
+                runs[name]=previous['runs'];result['reused_baseline']=str(args.reuse_baseline.resolve())
+                continue
             flash(args,targets[name],out/(name+'-flash.json'))
             last=name
             runs[name]=measure(args,name,targets[name],expected[name],files,state,out/name)

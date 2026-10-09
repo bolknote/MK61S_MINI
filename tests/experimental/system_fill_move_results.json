@@ -1,0 +1,5819 @@
+{
+  "schema": 1,
+  "date": "2026-10-09",
+  "status": "PASS",
+  "implementation_commit": "f553a2136",
+  "source_base_commit": "206282e25c721f7150761e99882c16a6ba31c0db",
+  "implementation": "Strong ISO C memset/memmove in every STM32 resident and matching private SDK helpers. Exact bounded 32-bit ordinary-memory operations; memmove preserves direction within word blocks. Byte fill below 4, fixed bounded words for 4..15, bulk loops from 16. Tiny move below 16; zero/self exits. No speculative string reads.",
+  "scope": "One unchanged shared-runtime APP measures actual Flash symbols through public runtime slots. Three runs per image, seven DWT samples per row; median across per-run medians. Same source/features for the pair except the added system_memory_fill_move.c. Primitive performance, not a whole-program speedup.",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "9B4970B4",
+    "profile": "classic-v3-uc1609"
+  },
+  "clock_hz": 96000000,
+  "compiler": "xPack ARM GCC 14.2.1, resident -Os without LTO",
+  "features_cpp_flags": "-DMK61_BOARD_CLASSIC_V3 -DMK61_ENABLE_FOCAL=1 -DMK61_ENABLE_TINYBASIC=1 -DMK61_ENABLE_WBMP_VIEWER=0 -DMK61_ENABLE_MARKDOWN_VIEWER=1 -DMK61_ENABLE_CHIP8=1 -DMK61_FOCAL_AS_APP=1 -DMK61_TINYBASIC_AS_APP=1 -DMK61_WBMP_VIEWER_AS_APP=1 -DMK61_MARKDOWN_VIEWER_AS_APP=1 -DMK61_CHIP8_AS_APP=0 -DMK61_ENABLE_SETUP=1 -DMK61_SETUP_AS_APP=1 -DMK61_EXPLORER_AS_APP=1 -DMK61_ENABLE_USB_SCREEN=1 -DMK61_EXTERNALIZE_USBDISK=0 -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0 -DMK61_USER_EXPLORER_SHORTCUT=1 -DMK61_MATH_BACKEND=0 -DMK61_APP_LOCAL_FLOAT_MATH=0 -DMK61_FOCAL_TRACE=0 -DMK61_RESIDENT_LANGUAGE_VM=0 -DMK61_OVERLAY_LANGUAGE_VM=1 -DMK61_LANGUAGE_VM_CACHE_DENSITY=1 -DMK61_SHARED_SCREEN_GRID=0 -DMK61_SCREEN_BUFFER_LOAN=0 -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576 -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=0 -DMK61_ENABLE_DWT_PROFILER=0 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=0 -DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0 -DMK61_PORTABLE_UI_FONTS=1 -DMK61_APP_LOCAL_FLOAT_MATH=0",
+  "firmwares": {
+    "baseline": {
+      "bytes": 366748,
+      "footer": 364336,
+      "build": "676FA80C",
+      "sha256": "b4d542f8216f41cd68b8f19843d4d724bdd99854bd592e5ee804f58b646d7cb4"
+    },
+    "candidate": {
+      "bytes": 367308,
+      "footer": 364896,
+      "build": "9B4970B4",
+      "sha256": "8917aa6acc16c37fadf33d5c0df2c11afe8768a2f183bb1d346691c4c2414868"
+    }
+  },
+  "qualification": {
+    "unchanged_APP_bytes": 1688,
+    "unchanged_APP_sha256": "4420a568699e49d43ab3dc6b0d99ec036e0c796fe2d29cf48dd140f27d22e21e",
+    "runs_per_image": 3,
+    "samples_per_row": 7,
+    "total_native_correctness_rows": 6000,
+    "sizes_bytes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      12,
+      15,
+      16,
+      17,
+      31,
+      32,
+      33,
+      63,
+      64,
+      65,
+      128,
+      256,
+      512,
+      2048,
+      8192
+    ],
+    "alignments": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "move_cases": [
+      "left17",
+      "left1",
+      "self",
+      "right1",
+      "right17",
+      "disjoint_right",
+      "disjoint_left"
+    ],
+    "fill_values": [
+      0,
+      -1,
+      4660
+    ],
+    "baseline_reused": "Exact completed baseline 676FA80C, same code oracle, APP, files and calculator state.",
+    "runtime_verification": "Full sealed resident CRC plus captured four public function addresses and memmove/memset code prefixes match sealed ELF/BIN.",
+    "performance_gate": {
+      "large_minimum_speedup": 3.0333582210680086,
+      "tiny_maximum_extra_cycles": 13.203125,
+      "limits": {
+        "large_minimum_speedup": 1.3,
+        "tiny_maximum_extra_cycles": 16
+      }
+    }
+  },
+  "footprint": {
+    "baseline_flash_bytes": 366748,
+    "candidate_flash_bytes": 367308,
+    "flash_delta_bytes": 560,
+    "static_ram_baseline": 82844,
+    "static_ram_candidate": 82844,
+    "static_ram_delta_bytes": 0,
+    "memcpy_and_memcmp_whole_machine_code_unchanged": true
+  },
+  "source_sha256": {
+    "code/memory_word_ops.h": "2048ee0ec4ee3bb1be16b99bb6f8c9b9ebc8d2eb0eb52fcf1e120dd55355668a",
+    "code/system_memory.c": "274943dc60f52d0ac87e558bc9a679201f8cf6c4a5e9ec9cfc43fedca1a59e66",
+    "code/system_memory_fill_move.c": "8dba7cef00e891ceb0abe50cae1c493006b1b81bba69b5ff95e735ced8b0d5d2",
+    "sdk/portable/memory.c": "152793927096f4811446f8a407fe53235946f6b238d282d07bf6a98309b6c95d",
+    "tests/experimental/system_fill_move_hil.cpp": "faa5e9ffa8bab9f6d26648b0c43ceab3254bda183c62b7fc30ebbecf56b2ef23"
+  },
+  "validation": {
+    "scalar_word_SDK_ASan_UBSan": "PASS; sizes 0..513 and 1024/4096/8192/32769, alignments, shifts -32..32, value truncation, exact protected page ends and return values.",
+    "portable_APP_suite": "PASS",
+    "F411_memory_stack": {
+      "compiled_units": 2,
+      "dynamic_bounded": 0,
+      "limit": 2048,
+      "max_frame": 20,
+      "max_function": "system_memory.c:12:7:memcpy",
+      "records": 10,
+      "schema": 1,
+      "status": "ok",
+      "unbounded": 0
+    },
+    "F401_memory_stack": {
+      "compiled_units": 2,
+      "dynamic_bounded": 0,
+      "limit": 2048,
+      "max_frame": 20,
+      "max_function": "system_memory.c:12:7:memcpy",
+      "records": 10,
+      "schema": 1,
+      "status": "ok",
+      "unbounded": 0
+    },
+    "F401_full_release": "Compile/link reached the unchanged pre-existing BASIC/FOCAL stack gate failure (3232/3112/2488/3120 vs 2048). Memory translation units passed separately; no gate relaxed."
+  },
+  "preservation": {
+    "candidate_installed": true,
+    "build": "9B4970B4",
+    "rollback_disabled_by_user": true,
+    "original_file_hashes_preserved": 39,
+    "original_content": {
+      "files": {
+        "/System/SETUP.app": {
+          "bytes": 9145,
+          "sha256": "3d4797c1a6c3c9c8cfa2fd4d094c8c033fe273f8f88852817f98e02be8b94bb0"
+        },
+        "/System/MARKDOWN.app": {
+          "bytes": 14466,
+          "sha256": "6a8fb27f7952ba6dc222ff2b1f8dbab34bdc7c0a7c5c63ffd99960e66f707715"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 10023,
+          "sha256": "3e2807df91f9a01653c518019c5fe2c854b7d9527815c6bfe32b27afd8cc5368"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 11731,
+          "sha256": "60622bfcfd2f52e344aa501d565f73bf696673341e004943aa86f67bf8bd0f03"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 13847,
+          "sha256": "ccf98dcae84bd138b5e76769e342d17342ddd49c43d73ea74b650f5c262cb71c"
+        },
+        "/System/EXPLORER.app": {
+          "bytes": 5441,
+          "sha256": "e6206a5fb91e6372d9e8da08be1336e29a717549ae4d158fa46deaf52b6de0b1"
+        },
+        "/System/BASIC.app": {
+          "bytes": 13755,
+          "sha256": "198607322d3149af76abaf8ebeb9325ae34cf11a9dc1b1f62b4e64a80de24e44"
+        },
+        "/System/HELP1.txt": {
+          "bytes": 1340,
+          "sha256": "7ba4db448c5c5def076020c9d45234500d5ffefb89da710280c8b2aed57d94a5"
+        },
+        "/System/HELP0.txt": {
+          "bytes": 1533,
+          "sha256": "092fa5f9fc0d230e7ef5c27148f9c5a8f649be82972d084b4b7818463a33b2d8"
+        },
+        "/Games/Turochamp/unmake.tbi": {
+          "bytes": 653,
+          "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+        },
+        "/Games/Turochamp/turn.tbi": {
+          "bytes": 455,
+          "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+        },
+        "/Games/Turochamp/threat.tbi": {
+          "bytes": 1862,
+          "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+        },
+        "/Games/Turochamp/status.tbi": {
+          "bytes": 1619,
+          "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+        },
+        "/Games/Turochamp/search.tbi": {
+          "bytes": 1775,
+          "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+        },
+        "/Games/Turochamp/rules.md": {
+          "bytes": 830,
+          "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+        },
+        "/Games/Turochamp/rstep.tbi": {
+          "bytes": 416,
+          "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+        },
+        "/Games/Turochamp/rkey.tbi": {
+          "bytes": 575,
+          "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+        },
+        "/Games/Turochamp/repeat.tbi": {
+          "bytes": 1096,
+          "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+        },
+        "/Games/Turochamp/pseudo.tbi": {
+          "bytes": 1798,
+          "sha256": "0e4ab66f6ed586893091a292892fa9811d2cf7577c7e395043d72edc6ecb922c"
+        },
+        "/Games/Turochamp/promote.tbi": {
+          "bytes": 408,
+          "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+        },
+        "/Games/Turochamp/node.tbi": {
+          "bytes": 2262,
+          "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+        },
+        "/Games/Turochamp/mobility.tbi": {
+          "bytes": 310,
+          "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+        },
+        "/Games/Turochamp/menu.tbi": {
+          "bytes": 1634,
+          "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+        },
+        "/Games/Turochamp/manual.md": {
+          "bytes": 818,
+          "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+        },
+        "/Games/Turochamp/make.tbi": {
+          "bytes": 1030,
+          "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+        },
+        "/Games/Turochamp/legal.tbi": {
+          "bytes": 2587,
+          "sha256": "2006be8d1c6e73470af2f00b770631591e63b81334370508ecc5c7a54f95c76c"
+        },
+        "/Games/Turochamp/init.tbi": {
+          "bytes": 707,
+          "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+        },
+        "/Games/Turochamp/history.tbi": {
+          "bytes": 2195,
+          "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+        },
+        "/Games/Turochamp/help.tbi": {
+          "bytes": 701,
+          "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+        },
+        "/Games/Turochamp/game.tbi": {
+          "bytes": 1668,
+          "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+        },
+        "/Games/Turochamp/eval.tbi": {
+          "bytes": 1478,
+          "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+        },
+        "/Games/Turochamp/ep.tbi": {
+          "bytes": 1023,
+          "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+        },
+        "/Games/Turochamp/claims.tbi": {
+          "bytes": 734,
+          "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+        },
+        "/Games/Turochamp/claim.tbi": {
+          "bytes": 663,
+          "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+        },
+        "/Games/Turochamp/castle.tbi": {
+          "bytes": 1184,
+          "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+        },
+        "/Games/Turochamp/board.tbi": {
+          "bytes": 2570,
+          "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+        },
+        "/Games/Turochamp/autoexec.m61": {
+          "bytes": 698,
+          "sha256": "29d8540f7acf15af5e6b1001838d2357dbeadd492648122b63d1c2594de4cdd9"
+        },
+        "/Games/Turochamp/algorithm.md": {
+          "bytes": 746,
+          "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+        },
+        "/Games/Turochamp/Turochamp.fmk": {
+          "bytes": 985,
+          "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+        }
+      },
+      "directories": [
+        "/Games",
+        "/Games/Turochamp",
+        "/System"
+      ]
+    },
+    "calculator_registers_stack_program_cwd_preserved": true,
+    "crash_after": "none",
+    "own_APP_and_all_report_files_removed": true,
+    "DWT_settings_restored_each_run": true
+  },
+  "summary": [
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        60.208984375,
+        60.005859375,
+        60.005859375,
+        60.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.005859375,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.2244629548443664,
+        1.2286078673627994
+      ],
+      "worst_delta_cycles": -11.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        60.005859375,
+        60.208984375,
+        60.005859375,
+        60.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.212890625,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.219311822836052,
+        1.2286078673627994
+      ],
+      "worst_delta_cycles": -10.79296875
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "self",
+      "baseline_cycles": [
+        60.005859375,
+        60.20703125,
+        60.005859375,
+        60.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.005859375,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.2244629548443664,
+        1.2285680124347376
+      ],
+      "worst_delta_cycles": -11.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        62.005859375,
+        62.005859375,
+        62.005859375,
+        62.208984375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.005859375,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.265274401179706,
+        1.2694193136981389
+      ],
+      "worst_delta_cycles": -13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        62.005859375,
+        62.005859375,
+        62.005859375,
+        62.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.005859375,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.265274401179706,
+        1.265274401179706
+      ],
+      "worst_delta_cycles": -13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        62.005859375,
+        62.212890625,
+        62.005859375,
+        62.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.005859375,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.265274401179706,
+        1.2694990235542625
+      ],
+      "worst_delta_cycles": -13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        60.005859375,
+        60.005859375,
+        60.005859375,
+        60.005859375
+      ],
+      "candidate_cycles": [
+        49.005859375,
+        49.005859375,
+        49.205078125,
+        49.005859375
+      ],
+      "speedup_range": [
+        1.2195054181717144,
+        1.2244629548443664
+      ],
+      "worst_delta_cycles": -10.80078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        66.005859375,
+        66.005859375,
+        66.005859375,
+        66.005859375
+      ],
+      "candidate_cycles": [
+        79.005859375,
+        79.005859375,
+        79.005859375,
+        79.005859375
+      ],
+      "speedup_range": [
+        0.8354552421448171,
+        0.8354552421448171
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        66.005859375,
+        66.005859375,
+        66.005859375,
+        66.005859375
+      ],
+      "candidate_cycles": [
+        79.005859375,
+        79.005859375,
+        79.005859375,
+        79.005859375
+      ],
+      "speedup_range": [
+        0.8354552421448171,
+        0.8354552421448171
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "self",
+      "baseline_cycles": [
+        66.005859375,
+        66.005859375,
+        66.005859375,
+        66.005859375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.208984375
+      ],
+      "speedup_range": [
+        1.2176184471266438,
+        1.2221981121840078
+      ],
+      "worst_delta_cycles": -11.796875
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        68.005859375,
+        68.005859375,
+        68.005859375,
+        68.005859375
+      ],
+      "candidate_cycles": [
+        81.005859375,
+        81.208984375,
+        81.005859375,
+        81.208984375
+      ],
+      "speedup_range": [
+        0.8374179273190794,
+        0.8395177817962628
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        68.005859375,
+        68.005859375,
+        68.005859375,
+        68.005859375
+      ],
+      "candidate_cycles": [
+        81.005859375,
+        81.005859375,
+        81.005859375,
+        81.005859375
+      ],
+      "speedup_range": [
+        0.8395177817962628,
+        0.8395177817962628
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        68.005859375,
+        68.005859375,
+        68.005859375,
+        68.005859375
+      ],
+      "candidate_cycles": [
+        81.005859375,
+        81.005859375,
+        81.208984375,
+        81.005859375
+      ],
+      "speedup_range": [
+        0.8374179273190794,
+        0.8395177817962628
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        66.005859375,
+        66.005859375,
+        66.005859375,
+        66.005859375
+      ],
+      "candidate_cycles": [
+        79.208984375,
+        79.005859375,
+        79.208984375,
+        79.005859375
+      ],
+      "speedup_range": [
+        0.8333127851066453,
+        0.8354552421448171
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        73.005859375,
+        73.005859375,
+        73.005859375,
+        73.005859375
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        86.208984375,
+        86.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        0.8468474591630984,
+        0.8488475076643579
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        73.005859375,
+        73.005859375,
+        73.005859375,
+        73.005859375
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        86.20703125,
+        86.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        0.8468666455208663,
+        0.8488475076643579
+      ],
+      "worst_delta_cycles": 13.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "self",
+      "baseline_cycles": [
+        73.005859375,
+        73.005859375,
+        73.005859375,
+        73.005859375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.212890625
+      ],
+      "speedup_range": [
+        1.3466512951687863,
+        1.351813677624679
+      ],
+      "worst_delta_cycles": -18.79296875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        76.005859375,
+        76.005859375,
+        76.005859375,
+        76.005859375
+      ],
+      "candidate_cycles": [
+        85.005859375,
+        85.20703125,
+        85.20703125,
+        85.005859375
+      ],
+      "speedup_range": [
+        0.8920139366432861,
+        0.8941249454311514
+      ],
+      "worst_delta_cycles": 9.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        75.005859375,
+        75.005859375,
+        75.005859375,
+        75.005859375
+      ],
+      "candidate_cycles": [
+        88.005859375,
+        88.208984375,
+        88.20703125,
+        88.005859375
+      ],
+      "speedup_range": [
+        0.8503199521732392,
+        0.8522825628620253
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        75.005859375,
+        75.005859375,
+        75.005859375,
+        75.005859375
+      ],
+      "candidate_cycles": [
+        88.005859375,
+        88.005859375,
+        88.005859375,
+        88.208984375
+      ],
+      "speedup_range": [
+        0.8503199521732392,
+        0.8522825628620253
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        73.005859375,
+        73.005859375,
+        73.005859375,
+        73.005859375
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        86.005859375,
+        86.005859375,
+        86.208984375
+      ],
+      "speedup_range": [
+        0.8468474591630984,
+        0.8488475076643579
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        80.005859375,
+        80.005859375,
+        80.005859375,
+        80.20703125
+      ],
+      "candidate_cycles": [
+        93.005859375,
+        93.208984375,
+        93.005859375,
+        93.208984375
+      ],
+      "speedup_range": [
+        0.8583492236447834,
+        0.8605075121010833
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        80.005859375,
+        80.005859375,
+        80.005859375,
+        80.005859375
+      ],
+      "candidate_cycles": [
+        93.208984375,
+        93.20703125,
+        93.20703125,
+        93.005859375
+      ],
+      "speedup_range": [
+        0.8583492236447834,
+        0.8602238602238602
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "self",
+      "baseline_cycles": [
+        80.005859375,
+        80.005859375,
+        80.203125,
+        80.005859375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        1.4814292430653502,
+        1.4850819138548335
+      ],
+      "worst_delta_cycles": -26.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        83.208984375,
+        83.005859375,
+        83.005859375,
+        83.2109375
+      ],
+      "candidate_cycles": [
+        90.005859375,
+        90.005859375,
+        90.20703125,
+        90.20703125
+      ],
+      "speedup_range": [
+        0.920170614471918,
+        0.9244840830675086
+      ],
+      "worst_delta_cycles": 7.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        82.005859375,
+        82.005859375,
+        82.005859375,
+        82.005859375
+      ],
+      "candidate_cycles": [
+        95.20703125,
+        95.208984375,
+        95.208984375,
+        95.005859375
+      ],
+      "speedup_range": [
+        0.8613247994748395,
+        0.863166334313262
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        82.005859375,
+        82.005859375,
+        82.20703125,
+        82.20703125
+      ],
+      "candidate_cycles": [
+        95.005859375,
+        95.208984375,
+        95.208984375,
+        95.005859375
+      ],
+      "speedup_range": [
+        0.8613247994748395,
+        0.8652838023970562
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        80.005859375,
+        80.005859375,
+        80.005859375,
+        80.005859375
+      ],
+      "candidate_cycles": [
+        93.005859375,
+        93.005859375,
+        93.005859375,
+        93.005859375
+      ],
+      "speedup_range": [
+        0.8602238602238602,
+        0.8602238602238602
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        87.005859375,
+        87.005859375,
+        87.20703125,
+        87.205078125
+      ],
+      "candidate_cycles": [
+        100.20703125,
+        100.005859375,
+        100.208984375,
+        100.20703125
+      ],
+      "speedup_range": [
+        0.8682610221026781,
+        0.8702516225856121
+      ],
+      "worst_delta_cycles": 13.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        87.005859375,
+        87.005859375,
+        87.005859375,
+        87.20703125
+      ],
+      "candidate_cycles": [
+        100.208984375,
+        100.20703125,
+        100.208984375,
+        100.20703125
+      ],
+      "speedup_range": [
+        0.868244099245717,
+        0.8702685845710053
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "self",
+      "baseline_cycles": [
+        87.2109375,
+        87.005859375,
+        87.005859375,
+        87.005859375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.2109375,
+        54.005859375
+      ],
+      "speedup_range": [
+        1.60495028102032,
+        1.6148421395247912
+      ],
+      "worst_delta_cycles": -32.794921875
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        90.208984375,
+        90.208984375,
+        90.208984375,
+        90.005859375
+      ],
+      "candidate_cycles": [
+        95.005859375,
+        95.2109375,
+        95.005859375,
+        95.208984375
+      ],
+      "speedup_range": [
+        0.9453504831066527,
+        0.9495096930699176
+      ],
+      "worst_delta_cycles": 5.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        89.005859375,
+        89.005859375,
+        89.005859375,
+        89.20703125
+      ],
+      "candidate_cycles": [
+        102.208984375,
+        102.20703125,
+        102.208984375,
+        102.20703125
+      ],
+      "speedup_range": [
+        0.8708222659609027,
+        0.87280718517103
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        89.208984375,
+        89.208984375,
+        89.005859375,
+        89.005859375
+      ],
+      "candidate_cycles": [
+        102.208984375,
+        102.20703125,
+        102.208984375,
+        102.208984375
+      ],
+      "speedup_range": [
+        0.8708222659609027,
+        0.8728262946684502
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        87.005859375,
+        87.208984375,
+        87.20703125,
+        87.005859375
+      ],
+      "candidate_cycles": [
+        100.208984375,
+        100.208984375,
+        100.20703125,
+        100.20703125
+      ],
+      "speedup_range": [
+        0.868244099245717,
+        0.8702711131034752
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        94.20703125,
+        94.20703125,
+        94.20703125,
+        94.005859375
+      ],
+      "candidate_cycles": [
+        107.20703125,
+        107.208984375,
+        107.005859375,
+        107.208984375
+      ],
+      "speedup_range": [
+        0.8768468419230839,
+        0.8803913337105518
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        94.005859375,
+        94.005859375,
+        94.20703125,
+        94.20703125
+      ],
+      "candidate_cycles": [
+        107.20703125,
+        107.20703125,
+        107.208984375,
+        107.208984375
+      ],
+      "speedup_range": [
+        0.8768628165421752,
+        0.8787232879707055
+      ],
+      "worst_delta_cycles": 13.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "self",
+      "baseline_cycles": [
+        94.20703125,
+        94.005859375,
+        94.005859375,
+        94.005859375
+      ],
+      "candidate_cycles": [
+        54.208984375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        1.7378490362096919,
+        1.7406603739466926
+      ],
+      "worst_delta_cycles": -39.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        97.005859375,
+        97.20703125,
+        97.20703125,
+        97.005859375
+      ],
+      "candidate_cycles": [
+        100.208984375,
+        100.20703125,
+        100.20703125,
+        100.208984375
+      ],
+      "speedup_range": [
+        0.9680355507045822,
+        0.9700619810548474
+      ],
+      "worst_delta_cycles": 3.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        96.20703125,
+        96.205078125,
+        96.005859375,
+        96.208984375
+      ],
+      "candidate_cycles": [
+        109.20703125,
+        109.2109375,
+        109.208984375,
+        109.208984375
+      ],
+      "speedup_range": [
+        0.8791022087096486,
+        0.8809621747295001
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        96.20703125,
+        96.005859375,
+        96.20703125,
+        96.205078125
+      ],
+      "candidate_cycles": [
+        109.208984375,
+        109.005859375,
+        109.208984375,
+        109.208984375
+      ],
+      "speedup_range": [
+        0.88074035584383,
+        0.8809442904408478
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 5,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        94.20703125,
+        94.20703125,
+        94.203125,
+        94.20703125
+      ],
+      "candidate_cycles": [
+        107.208984375,
+        107.208984375,
+        107.20703125,
+        107.205078125
+      ],
+      "speedup_range": [
+        0.8787028602659865,
+        0.8787553061633478
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        101.005859375,
+        101.20703125,
+        101.005859375,
+        101.005859375
+      ],
+      "candidate_cycles": [
+        114.208984375,
+        114.20703125,
+        114.208984375,
+        114.208984375
+      ],
+      "speedup_range": [
+        0.8843950406156477,
+        0.8861716318363717
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        101.20703125,
+        101.005859375,
+        101.005859375,
+        101.203125
+      ],
+      "candidate_cycles": [
+        114.20703125,
+        114.208984375,
+        114.208984375,
+        114.20703125
+      ],
+      "speedup_range": [
+        0.8843950406156477,
+        0.8861716318363717
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "self",
+      "baseline_cycles": [
+        101.005859375,
+        101.005859375,
+        101.20703125,
+        101.208984375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        1.870275939387364,
+        1.874037105348812
+      ],
+      "worst_delta_cycles": -47.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        104.20703125,
+        104.20703125,
+        104.005859375,
+        104.208984375
+      ],
+      "candidate_cycles": [
+        105.005859375,
+        105.2109375,
+        105.208984375,
+        105.005859375
+      ],
+      "speedup_range": [
+        0.9885644272003268,
+        0.9924111377713297
+      ],
+      "worst_delta_cycles": 1.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        103.20703125,
+        103.005859375,
+        103.20703125,
+        103.005859375
+      ],
+      "candidate_cycles": [
+        116.208984375,
+        116.208984375,
+        116.208984375,
+        116.208984375
+      ],
+      "speedup_range": [
+        0.8863846451200861,
+        0.8881157666515404
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        103.20703125,
+        103.208984375,
+        103.20703125,
+        103.20703125
+      ],
+      "candidate_cycles": [
+        116.208984375,
+        116.212890625,
+        116.20703125,
+        116.20703125
+      ],
+      "speedup_range": [
+        0.8881027209626728,
+        0.888130693468688
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 6,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        101.208984375,
+        101.20703125,
+        101.208984375,
+        101.20703125
+      ],
+      "candidate_cycles": [
+        114.20703125,
+        114.208984375,
+        114.208984375,
+        114.20703125
+      ],
+      "speedup_range": [
+        0.8861564771269773,
+        0.8861887334541848
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        108.20703125,
+        108.208984375,
+        108.208984375,
+        108.20703125
+      ],
+      "candidate_cycles": [
+        121.2109375,
+        121.208984375,
+        121.20703125,
+        121.20703125
+      ],
+      "speedup_range": [
+        0.8927167257492749,
+        0.8927616101066744
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        108.208984375,
+        108.208984375,
+        108.208984375,
+        108.20703125
+      ],
+      "candidate_cycles": [
+        121.20703125,
+        121.2109375,
+        121.20703125,
+        121.208984375
+      ],
+      "speedup_range": [
+        0.8927311107172207,
+        0.8927616101066744
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "self",
+      "baseline_cycles": [
+        108.20703125,
+        108.20703125,
+        108.005859375,
+        108.20703125
+      ],
+      "candidate_cycles": [
+        54.21484375,
+        54.005859375,
+        54.212890625,
+        54.005859375
+      ],
+      "speedup_range": [
+        1.9922542061461974,
+        2.0036165057321615
+      ],
+      "worst_delta_cycles": -53.79296875
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        111.20703125,
+        111.208984375,
+        111.2109375,
+        111.2109375
+      ],
+      "candidate_cycles": [
+        110.208984375,
+        110.208984375,
+        110.208984375,
+        110.208984375
+      ],
+      "speedup_range": [
+        1.0090559483934995,
+        1.009091392418523
+      ],
+      "worst_delta_cycles": -0.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        110.208984375,
+        110.208984375,
+        110.208984375,
+        110.208984375
+      ],
+      "candidate_cycles": [
+        123.20703125,
+        123.208984375,
+        123.208984375,
+        123.208984375
+      ],
+      "speedup_range": [
+        0.8944882139403643,
+        0.8945023937097746
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        110.208984375,
+        110.20703125,
+        110.208984375,
+        110.005859375
+      ],
+      "candidate_cycles": [
+        123.208984375,
+        123.20703125,
+        123.208984375,
+        123.208984375
+      ],
+      "speedup_range": [
+        0.8928395922831824,
+        0.8944882139403643
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        108.005859375,
+        108.20703125,
+        108.208984375,
+        108.005859375
+      ],
+      "candidate_cycles": [
+        121.208984375,
+        121.208984375,
+        121.208984375,
+        121.208984375
+      ],
+      "speedup_range": [
+        0.8910713997969674,
+        0.8927472244154756
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        115.208984375,
+        115.2109375,
+        115.20703125,
+        115.20703125
+      ],
+      "candidate_cycles": [
+        128.208984375,
+        128.208984375,
+        128.208984375,
+        128.20703125
+      ],
+      "speedup_range": [
+        0.8985878159133495,
+        0.8986182837469342
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        115.20703125,
+        115.20703125,
+        115.208984375,
+        115.208984375
+      ],
+      "candidate_cycles": [
+        128.208984375,
+        128.208984375,
+        128.208984375,
+        128.208984375
+      ],
+      "speedup_range": [
+        0.8985878159133495,
+        0.8986030498301418
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "self",
+      "baseline_cycles": [
+        115.20703125,
+        115.20703125,
+        115.208984375,
+        115.208984375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        2.133232071172833,
+        2.1332682362301543
+      ],
+      "worst_delta_cycles": -61.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        118.20703125,
+        118.20703125,
+        118.208984375,
+        118.20703125
+      ],
+      "candidate_cycles": [
+        115.208984375,
+        115.208984375,
+        115.208984375,
+        115.20703125
+      ],
+      "speedup_range": [
+        1.0260226829640429,
+        1.0260400773064795
+      ],
+      "worst_delta_cycles": -2.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        117.20703125,
+        117.208984375,
+        117.208984375,
+        117.20703125
+      ],
+      "candidate_cycles": [
+        130.208984375,
+        130.20703125,
+        130.208984375,
+        130.208984375
+      ],
+      "speedup_range": [
+        0.9001454992725036,
+        0.9001740017400174
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        117.20703125,
+        117.208984375,
+        117.208984375,
+        117.208984375
+      ],
+      "candidate_cycles": [
+        130.208984375,
+        130.208984375,
+        130.208984375,
+        130.208984375
+      ],
+      "speedup_range": [
+        0.9001454992725036,
+        0.900160499197504
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        115.20703125,
+        115.208984375,
+        115.20703125,
+        115.20703125
+      ],
+      "candidate_cycles": [
+        128.208984375,
+        128.208984375,
+        128.208984375,
+        128.20703125
+      ],
+      "speedup_range": [
+        0.8985878159133495,
+        0.8986030498301418
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        122.2109375,
+        122.208984375,
+        122.2109375,
+        122.208984375
+      ],
+      "candidate_cycles": [
+        135.20703125,
+        135.208984375,
+        135.208984375,
+        135.20703125
+      ],
+      "speedup_range": [
+        0.9038525430829012,
+        0.9038800450697715
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        122.20703125,
+        122.20703125,
+        122.20703125,
+        122.20703125
+      ],
+      "candidate_cycles": [
+        135.208984375,
+        135.208984375,
+        135.20703125,
+        135.208984375
+      ],
+      "speedup_range": [
+        0.9038380978519942,
+        0.903851154190622
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "self",
+      "baseline_cycles": [
+        122.20703125,
+        122.20703125,
+        122.20703125,
+        122.20703125
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        2.262847636613504,
+        2.262847636613504
+      ],
+      "worst_delta_cycles": -68.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        125.208984375,
+        125.20703125,
+        125.208984375,
+        125.20703125
+      ],
+      "candidate_cycles": [
+        120.208984375,
+        120.2109375,
+        120.2109375,
+        120.208984375
+      ],
+      "speedup_range": [
+        1.0415610580360044,
+        1.0415942288007538
+      ],
+      "worst_delta_cycles": -4.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        124.208984375,
+        124.20703125,
+        124.20703125,
+        124.208984375
+      ],
+      "candidate_cycles": [
+        137.005859375,
+        137.2109375,
+        137.208984375,
+        137.005859375
+      ],
+      "speedup_range": [
+        0.9052268974548767,
+        0.9065961480890131
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        124.208984375,
+        124.208984375,
+        124.20703125,
+        124.20703125
+      ],
+      "candidate_cycles": [
+        137.208984375,
+        137.208984375,
+        137.20703125,
+        137.2109375
+      ],
+      "speedup_range": [
+        0.9052268974548767,
+        0.9052540177364023
+      ],
+      "worst_delta_cycles": 13.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 9,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        122.20703125,
+        122.208984375,
+        122.20703125,
+        122.20703125
+      ],
+      "candidate_cycles": [
+        135.208984375,
+        135.20703125,
+        135.20703125,
+        135.20703125
+      ],
+      "speedup_range": [
+        0.9038380978519942,
+        0.9038655996301967
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        143.20703125,
+        143.20703125,
+        143.20703125,
+        143.20703125
+      ],
+      "candidate_cycles": [
+        156.208984375,
+        156.208984375,
+        156.208984375,
+        156.208984375
+      ],
+      "speedup_range": [
+        0.9167656509833831,
+        0.9167656509833831
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        143.005859375,
+        143.20703125,
+        143.20703125,
+        143.208984375
+      ],
+      "candidate_cycles": [
+        156.208984375,
+        156.208984375,
+        156.208984375,
+        156.208984375
+      ],
+      "speedup_range": [
+        0.915477812925893,
+        0.9167781542654947
+      ],
+      "worst_delta_cycles": 13.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "self",
+      "baseline_cycles": [
+        143.208984375,
+        143.208984375,
+        143.20703125,
+        143.208984375
+      ],
+      "candidate_cycles": [
+        54.212890625,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        2.6416039197319594,
+        2.651730497992839
+      ],
+      "worst_delta_cycles": -88.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        146.208984375,
+        146.2109375,
+        146.20703125,
+        146.208984375
+      ],
+      "candidate_cycles": [
+        135.2109375,
+        135.208984375,
+        135.005859375,
+        135.20703125
+      ],
+      "speedup_range": [
+        1.0813399202634773,
+        1.0829680424750083
+      ],
+      "worst_delta_cycles": -10.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        145.208984375,
+        145.208984375,
+        145.208984375,
+        145.208984375
+      ],
+      "candidate_cycles": [
+        158.208984375,
+        158.2109375,
+        158.208984375,
+        158.2109375
+      ],
+      "speedup_range": [
+        0.917818873142067,
+        0.9178302038196117
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        145.208984375,
+        145.208984375,
+        145.208984375,
+        145.208984375
+      ],
+      "candidate_cycles": [
+        158.208984375,
+        158.208984375,
+        158.2109375,
+        158.208984375
+      ],
+      "speedup_range": [
+        0.917818873142067,
+        0.9178302038196117
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 12,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        143.20703125,
+        143.208984375,
+        143.208984375,
+        143.208984375
+      ],
+      "candidate_cycles": [
+        156.208984375,
+        156.208984375,
+        156.2109375,
+        156.208984375
+      ],
+      "speedup_range": [
+        0.9167656509833831,
+        0.9167781542654947
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        164.208984375,
+        164.208984375,
+        164.208984375,
+        164.208984375
+      ],
+      "candidate_cycles": [
+        177.208984375,
+        177.208984375,
+        177.20703125,
+        177.208984375
+      ],
+      "speedup_range": [
+        0.9266402883248284,
+        0.9266505014879313
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        164.208984375,
+        164.208984375,
+        164.208984375,
+        164.208984375
+      ],
+      "candidate_cycles": [
+        177.208984375,
+        177.208984375,
+        177.208984375,
+        177.20703125
+      ],
+      "speedup_range": [
+        0.9266402883248284,
+        0.9266505014879313
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "self",
+      "baseline_cycles": [
+        164.208984375,
+        164.208984375,
+        164.20703125,
+        164.208984375
+      ],
+      "candidate_cycles": [
+        54.005859375,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        3.0405410292575312,
+        3.040577194314853
+      ],
+      "worst_delta_cycles": -110.201171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        167.208984375,
+        167.20703125,
+        167.208984375,
+        167.208984375
+      ],
+      "candidate_cycles": [
+        150.2109375,
+        150.2109375,
+        150.208984375,
+        150.208984375
+      ],
+      "speedup_range": [
+        1.1131481770427003,
+        1.1131756537116257
+      ],
+      "worst_delta_cycles": -16.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        166.208984375,
+        166.208984375,
+        166.2109375,
+        166.208984375
+      ],
+      "candidate_cycles": [
+        179.2109375,
+        179.208984375,
+        179.208984375,
+        179.2109375
+      ],
+      "speedup_range": [
+        0.9274488861763809,
+        0.927469892648902
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        166.208984375,
+        166.208984375,
+        166.208984375,
+        166.208984375
+      ],
+      "candidate_cycles": [
+        179.208984375,
+        179.208984375,
+        179.208984375,
+        179.208984375
+      ],
+      "speedup_range": [
+        0.9274589940602692,
+        0.9274589940602692
+      ],
+      "worst_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 15,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        164.208984375,
+        164.208984375,
+        164.208984375,
+        164.20703125
+      ],
+      "candidate_cycles": [
+        177.208984375,
+        177.2109375,
+        177.208984375,
+        177.208984375
+      ],
+      "speedup_range": [
+        0.926629266733531,
+        0.9266402883248284
+      ],
+      "worst_delta_cycles": 13.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        171.208984375,
+        171.208984375,
+        171.208984375,
+        171.208984375
+      ],
+      "candidate_cycles": [
+        129.208984375,
+        127.2109375,
+        133.208984375,
+        133.208984375
+      ],
+      "speedup_range": [
+        1.2852660440156591,
+        1.3458668550021495
+      ],
+      "worst_delta_cycles": -38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        171.208984375,
+        171.208984375,
+        171.208984375,
+        171.208984375
+      ],
+      "candidate_cycles": [
+        129.208984375,
+        127.208984375,
+        133.208984375,
+        133.208984375
+      ],
+      "speedup_range": [
+        1.2852660440156591,
+        1.345887519000169
+      ],
+      "worst_delta_cycles": -38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "self",
+      "baseline_cycles": [
+        171.208984375,
+        171.2109375,
+        171.208984375,
+        171.208984375
+      ],
+      "candidate_cycles": [
+        54.205078125,
+        54.005859375,
+        54.005859375,
+        54.005859375
+      ],
+      "speedup_range": [
+        3.1585414189456995,
+        3.1702289248128457
+      ],
+      "worst_delta_cycles": -117.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        174.208984375,
+        174.208984375,
+        174.208984375,
+        174.208984375
+      ],
+      "candidate_cycles": [
+        144.203125,
+        148.208984375,
+        148.208984375,
+        143.208984375
+      ],
+      "speedup_range": [
+        1.1754279614669954,
+        1.2164668657856335
+      ],
+      "worst_delta_cycles": -26.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        173.208984375,
+        173.208984375,
+        173.208984375,
+        173.208984375
+      ],
+      "candidate_cycles": [
+        131.208984375,
+        135.208984375,
+        135.208984375,
+        129.208984375
+      ],
+      "speedup_range": [
+        1.2810464125269043,
+        1.3405335953442672
+      ],
+      "worst_delta_cycles": -38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        173.20703125,
+        173.208984375,
+        173.208984375,
+        173.208984375
+      ],
+      "candidate_cycles": [
+        131.208984375,
+        135.208984375,
+        135.208984375,
+        129.208984375
+      ],
+      "speedup_range": [
+        1.2810464125269043,
+        1.3405335953442672
+      ],
+      "worst_delta_cycles": -38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        171.208984375,
+        171.208984375,
+        171.208984375,
+        171.208984375
+      ],
+      "candidate_cycles": [
+        127.208984375,
+        133.2109375,
+        133.20703125,
+        129.2109375
+      ],
+      "speedup_range": [
+        1.2852471995777375,
+        1.345887519000169
+      ],
+      "worst_delta_cycles": -37.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        178.01171875,
+        178.01171875,
+        178.41015625,
+        178.4140625
+      ],
+      "candidate_cycles": [
+        137.01171875,
+        135.01171875,
+        141.01171875,
+        141.01171875
+      ],
+      "speedup_range": [
+        1.265215102911438,
+        1.3184908717414576
+      ],
+      "worst_delta_cycles": -37.3984375
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        178.4140625,
+        178.4140625,
+        178.4140625,
+        178.4140625
+      ],
+      "candidate_cycles": [
+        137.01171875,
+        135.01171875,
+        141.01171875,
+        141.01171875
+      ],
+      "speedup_range": [
+        1.2652428045098203,
+        1.3214709371293
+      ],
+      "worst_delta_cycles": -37.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "self",
+      "baseline_cycles": [
+        178.01171875,
+        178.01171875,
+        178.01171875,
+        178.01171875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        3.2957980762276704,
+        3.2957980762276704
+      ],
+      "worst_delta_cycles": -124.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        181.01171875,
+        181.4140625,
+        181.41796875,
+        181.41796875
+      ],
+      "candidate_cycles": [
+        156.01171875,
+        156.01171875,
+        151.01171875,
+        152.01171875
+      ],
+      "speedup_range": [
+        1.1602443726683191,
+        1.2013502677254972
+      ],
+      "worst_delta_cycles": -25.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        180.4140625,
+        180.4140625,
+        180.4140625,
+        180.01171875
+      ],
+      "candidate_cycles": [
+        139.01171875,
+        143.01171875,
+        143.01171875,
+        137.01171875
+      ],
+      "speedup_range": [
+        1.2615334189178116,
+        1.3138417676407699
+      ],
+      "worst_delta_cycles": -37.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        180.01171875,
+        180.01171875,
+        180.01171875,
+        180.01171875
+      ],
+      "candidate_cycles": [
+        135.01171875,
+        147.01171875,
+        133.01171875,
+        147.01171875
+      ],
+      "speedup_range": [
+        1.224471901155839,
+        1.3533523244544947
+      ],
+      "worst_delta_cycles": -33.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 17,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        178.01171875,
+        178.4140625,
+        178.4140625,
+        178.4140625
+      ],
+      "candidate_cycles": [
+        131.01171875,
+        145.01171875,
+        133.01171875,
+        145.01171875
+      ],
+      "speedup_range": [
+        1.2303423753468201,
+        1.358746533885924
+      ],
+      "worst_delta_cycles": -33.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        276.01171875,
+        276.41796875,
+        276.41796875,
+        276.41796875
+      ],
+      "candidate_cycles": [
+        192.01171875,
+        190.41015625,
+        199.4140625,
+        199.41796875
+      ],
+      "speedup_range": [
+        1.3861236802413273,
+        1.4516976100112833
+      ],
+      "worst_delta_cycles": -77.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        276.41796875,
+        276.01171875,
+        276.4140625,
+        276.4140625
+      ],
+      "candidate_cycles": [
+        192.41796875,
+        190.01171875,
+        199.41796875,
+        199.41796875
+      ],
+      "speedup_range": [
+        1.386104091986445,
+        1.4526036634253643
+      ],
+      "worst_delta_cycles": -76.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "self",
+      "baseline_cycles": [
+        276.41796875,
+        276.01171875,
+        276.41796875,
+        276.4140625
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        5.11021913647212,
+        5.117740652346858
+      ],
+      "worst_delta_cycles": -222.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        279.41796875,
+        279.01171875,
+        279.4140625,
+        279.4140625
+      ],
+      "candidate_cycles": [
+        202.4140625,
+        203.41015625,
+        210.01171875,
+        210.4140625
+      ],
+      "speedup_range": [
+        1.3279248505550811,
+        1.3804276506233355
+      ],
+      "worst_delta_cycles": -69.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        279.41796875,
+        279.41796875,
+        279.01171875,
+        279.41796875
+      ],
+      "candidate_cycles": [
+        202.41015625,
+        203.4140625,
+        210.01171875,
+        210.41796875
+      ],
+      "speedup_range": [
+        1.3279187628789426,
+        1.3804542910627786
+      ],
+      "worst_delta_cycles": -69.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        278.4140625,
+        278.41796875,
+        278.4140625,
+        278.01171875
+      ],
+      "candidate_cycles": [
+        178.01171875,
+        208.4140625,
+        194.4140625,
+        208.41796875
+      ],
+      "speedup_range": [
+        1.3339143472964108,
+        1.564020978253714
+      ],
+      "worst_delta_cycles": -69.59375
+    },
+    {
+      "family": "memmove",
+      "bytes": 31,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        276.41796875,
+        276.4140625,
+        276.41796875,
+        276.01171875
+      ],
+      "candidate_cycles": [
+        176.01171875,
+        206.41796875,
+        192.41796875,
+        206.01171875
+      ],
+      "speedup_range": [
+        1.339098839959881,
+        1.570452073947491
+      ],
+      "worst_delta_cycles": -69.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        283.4140625,
+        283.4140625,
+        283.41796875,
+        283.41796875
+      ],
+      "candidate_cycles": [
+        154.01171875,
+        150.01171875,
+        162.41796875,
+        162.01171875
+      ],
+      "speedup_range": [
+        1.744991462036124,
+        1.8892794833736948
+      ],
+      "worst_delta_cycles": -121.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        283.4140625,
+        283.01171875,
+        283.4140625,
+        283.4140625
+      ],
+      "candidate_cycles": [
+        154.41796875,
+        150.01171875,
+        162.4140625,
+        162.01171875
+      ],
+      "speedup_range": [
+        1.7450093799605562,
+        1.8865974012446944
+      ],
+      "worst_delta_cycles": -121.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "self",
+      "baseline_cycles": [
+        283.41796875,
+        283.4140625,
+        283.4140625,
+        283.41796875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        5.247269834382006,
+        5.247342156650032
+      ],
+      "worst_delta_cycles": -229.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        286.41796875,
+        286.41796875,
+        286.41796875,
+        286.4140625
+      ],
+      "candidate_cycles": [
+        174.01171875,
+        182.01171875,
+        182.01171875,
+        172.01171875
+      ],
+      "speedup_range": [
+        1.5736237793754695,
+        1.6650845918019757
+      ],
+      "worst_delta_cycles": -104.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        286.01171875,
+        286.4140625,
+        286.41796875,
+        286.41796875
+      ],
+      "candidate_cycles": [
+        174.40625,
+        182.328125,
+        182.01171875,
+        172.01171875
+      ],
+      "speedup_range": [
+        1.5708715399777187,
+        1.6651073010105597
+      ],
+      "worst_delta_cycles": -104.0859375
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        285.41796875,
+        285.41796875,
+        285.4140625,
+        285.4140625
+      ],
+      "candidate_cycles": [
+        156.01171875,
+        164.01171875,
+        164.01171875,
+        152.01171875
+      ],
+      "speedup_range": [
+        1.7402053016409842,
+        1.8775793395862779
+      ],
+      "worst_delta_cycles": -121.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        283.4140625,
+        283.41796875,
+        283.41796875,
+        283.01171875
+      ],
+      "candidate_cycles": [
+        150.01171875,
+        162.01171875,
+        162.01171875,
+        154.01171875
+      ],
+      "speedup_range": [
+        1.749367088607595,
+        1.8892794833736948
+      ],
+      "worst_delta_cycles": -121.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        290.4140625,
+        290.41796875,
+        290.41796875,
+        290.41796875
+      ],
+      "candidate_cycles": [
+        162.01171875,
+        158.01171875,
+        170.01171875,
+        170.01171875
+      ],
+      "speedup_range": [
+        1.7082232382878018,
+        1.8379520901831845
+      ],
+      "worst_delta_cycles": -120.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        290.41796875,
+        290.41796875,
+        290.41796875,
+        290.4140625
+      ],
+      "candidate_cycles": [
+        162.41796875,
+        158.01171875,
+        170.01171875,
+        170.01171875
+      ],
+      "speedup_range": [
+        1.7082002619304735,
+        1.8379520901831845
+      ],
+      "worst_delta_cycles": -120.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "self",
+      "baseline_cycles": [
+        290.4140625,
+        290.41796875,
+        290.4140625,
+        290.4140625
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        5.376871338685181,
+        5.3769436609532075
+      ],
+      "worst_delta_cycles": -236.40234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        293.41796875,
+        293.41796875,
+        293.41796875,
+        293.41796875
+      ],
+      "candidate_cycles": [
+        190.4140625,
+        190.0859375,
+        180.01171875,
+        182.41796875
+      ],
+      "speedup_range": [
+        1.5409469494932917,
+        1.6299937070069224
+      ],
+      "worst_delta_cycles": -103.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        293.41796875,
+        293.4140625,
+        293.421875,
+        293.4140625
+      ],
+      "candidate_cycles": [
+        190.41796875,
+        190.4140625,
+        180.01171875,
+        182.41015625
+      ],
+      "speedup_range": [
+        1.5409153383797978,
+        1.6300154069830524
+      ],
+      "worst_delta_cycles": -103.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        292.4140625,
+        292.4140625,
+        292.4140625,
+        292.41796875
+      ],
+      "candidate_cycles": [
+        156.40625,
+        180.01171875,
+        152.01171875,
+        180.41796875
+      ],
+      "speedup_range": [
+        1.6207807391690303,
+        1.923628420917384
+      ],
+      "worst_delta_cycles": -112.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 33,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        290.4140625,
+        290.41796875,
+        290.4140625,
+        290.41796875
+      ],
+      "candidate_cycles": [
+        150.01171875,
+        178.41796875,
+        154.01171875,
+        178.01171875
+      ],
+      "speedup_range": [
+        1.6277394636015325,
+        1.9359425044918366
+      ],
+      "worst_delta_cycles": -112.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        500.41796875,
+        500.421875,
+        500.421875,
+        500.41796875
+      ],
+      "candidate_cycles": [
+        242.41796875,
+        236.41796875,
+        257.41796875,
+        257.41796875
+      ],
+      "speedup_range": [
+        1.943990045372464,
+        2.116682913933546
+      ],
+      "worst_delta_cycles": -243.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        500.421875,
+        500.421875,
+        500.421875,
+        500.421875
+      ],
+      "candidate_cycles": [
+        242.41796875,
+        236.41796875,
+        257.41796875,
+        257.41796875
+      ],
+      "speedup_range": [
+        1.9440052201095617,
+        2.116682913933546
+      ],
+      "worst_delta_cycles": -243.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "self",
+      "baseline_cycles": [
+        500.421875,
+        500.421875,
+        500.421875,
+        500.421875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        9.265061112316483,
+        9.265061112316483
+      ],
+      "worst_delta_cycles": -446.41015625
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        503.421875,
+        503.421875,
+        503.421875,
+        503.421875
+      ],
+      "candidate_cycles": [
+        260.421875,
+        263.4140625,
+        278.41796875,
+        278.41796875
+      ],
+      "speedup_range": [
+        1.808151525780428,
+        1.9331013379732405
+      ],
+      "worst_delta_cycles": -225.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        503.43359375,
+        503.421875,
+        503.421875,
+        503.421875
+      ],
+      "candidate_cycles": [
+        260.41796875,
+        263.41796875,
+        278.41796875,
+        278.01171875
+      ],
+      "speedup_range": [
+        1.808151525780428,
+        1.9331753341233293
+      ],
+      "worst_delta_cycles": -225.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        502.421875,
+        502.41796875,
+        502.41796875,
+        502.41796875
+      ],
+      "candidate_cycles": [
+        208.41796875,
+        274.41796875,
+        244.41796875,
+        274.01171875
+      ],
+      "speedup_range": [
+        1.8308493829269334,
+        2.410645675194452
+      ],
+      "worst_delta_cycles": -228.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 63,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        500.41796875,
+        500.421875,
+        500.41796875,
+        500.41796875
+      ],
+      "candidate_cycles": [
+        206.01171875,
+        272.41796875,
+        242.41796875,
+        272.41796875
+      ],
+      "speedup_range": [
+        1.8369491962890205,
+        2.4290752573996475
+      ],
+      "worst_delta_cycles": -228.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        507.421875,
+        507.41796875,
+        507.421875,
+        507.421875
+      ],
+      "candidate_cycles": [
+        204.41796875,
+        196.01171875,
+        220.41796875,
+        220.41796875
+      ],
+      "speedup_range": [
+        2.3020894252751343,
+        2.588712409573726
+      ],
+      "worst_delta_cycles": -287.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        507.41796875,
+        507.41796875,
+        507.41796875,
+        507.421875
+      ],
+      "candidate_cycles": [
+        204.41796875,
+        196.01171875,
+        220.41796875,
+        220.41796875
+      ],
+      "speedup_range": [
+        2.3020717032626226,
+        2.588712409573726
+      ],
+      "worst_delta_cycles": -287.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "self",
+      "baseline_cycles": [
+        507.41796875,
+        507.421875,
+        507.421875,
+        507.41796875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        9.39459029435163,
+        9.394662616619657
+      ],
+      "worst_delta_cycles": -453.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        510.421875,
+        510.41796875,
+        510.421875,
+        510.421875
+      ],
+      "candidate_cycles": [
+        234.41796875,
+        250.234375,
+        250.02734375,
+        230.41796875
+      ],
+      "speedup_range": [
+        2.0397596003746488,
+        2.215199959313069
+      ],
+      "worst_delta_cycles": -260.18359375
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        510.421875,
+        510.421875,
+        510.421875,
+        510.41796875
+      ],
+      "candidate_cycles": [
+        234.41796875,
+        250.23828125,
+        250.4140625,
+        230.41796875
+      ],
+      "speedup_range": [
+        2.0383115465011077,
+        2.2151830064251445
+      ],
+      "worst_delta_cycles": -260.0078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        509.41796875,
+        509.41796875,
+        509.41796875,
+        509.421875
+      ],
+      "candidate_cycles": [
+        206.41796875,
+        222.01171875,
+        222.01171875,
+        198.41796875
+      ],
+      "speedup_range": [
+        2.2945544118940795,
+        2.567418052957968
+      ],
+      "worst_delta_cycles": -287.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 64,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        507.41796875,
+        507.41796875,
+        507.42578125,
+        507.41796875
+      ],
+      "candidate_cycles": [
+        196.4140625,
+        220.41796875,
+        220.41796875,
+        204.01171875
+      ],
+      "speedup_range": [
+        2.3020717032626226,
+        2.5834095700250588
+      ],
+      "worst_delta_cycles": -287.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        514.41796875,
+        514.41796875,
+        514.41796875,
+        514.41796875
+      ],
+      "candidate_cycles": [
+        212.41796875,
+        204.41015625,
+        228.41796875,
+        228.421875
+      ],
+      "speedup_range": [
+        2.2520521239482867,
+        2.5165969156681762
+      ],
+      "worst_delta_cycles": -285.99609375
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        514.421875,
+        514.41796875,
+        514.41796875,
+        514.421875
+      ],
+      "candidate_cycles": [
+        212.01171875,
+        204.4140625,
+        228.41796875,
+        228.41796875
+      ],
+      "speedup_range": [
+        2.252090637024369,
+        2.5165488247659087
+      ],
+      "worst_delta_cycles": -286.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "self",
+      "baseline_cycles": [
+        514.421875,
+        514.421875,
+        514.41796875,
+        514.4296875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        9.524191798654806,
+        9.524408765458885
+      ],
+      "worst_delta_cycles": -460.40625
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        517.421875,
+        517.421875,
+        517.421875,
+        517.43359375
+      ],
+      "candidate_cycles": [
+        258.41796875,
+        258.40625,
+        238.4140625,
+        242.41796875
+      ],
+      "speedup_range": [
+        2.0022674023127505,
+        2.1702657535144345
+      ],
+      "worst_delta_cycles": -259.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        517.42578125,
+        517.421875,
+        517.41796875,
+        517.421875
+      ],
+      "candidate_cycles": [
+        258.375,
+        258.01171875,
+        238.3125,
+        242.01171875
+      ],
+      "speedup_range": [
+        2.0026155055636186,
+        2.1711742722265934
+      ],
+      "worst_delta_cycles": -259.05078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        516.41796875,
+        516.421875,
+        516.41796875,
+        516.41796875
+      ],
+      "candidate_cycles": [
+        198.41796875,
+        246.41796875,
+        190.01171875,
+        246.41796875
+      ],
+      "speedup_range": [
+        2.0956993167731404,
+        2.717821680406225
+      ],
+      "worst_delta_cycles": -270.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 65,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        514.421875,
+        514.421875,
+        514.421875,
+        514.421875
+      ],
+      "candidate_cycles": [
+        188.01171875,
+        244.41796875,
+        196.01171875,
+        244.41796875
+      ],
+      "speedup_range": [
+        2.1046810822905178,
+        2.7361160167044107
+      ],
+      "worst_delta_cycles": -270.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        956.22265625,
+        956.21875,
+        956.2265625,
+        956.22265625
+      ],
+      "candidate_cycles": [
+        304.41796875,
+        288.41796875,
+        336.421875,
+        336.421875
+      ],
+      "speedup_range": [
+        2.842331986438159,
+        3.3153924290648065
+      ],
+      "worst_delta_cycles": -619.80078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        955.8203125,
+        955.828125,
+        956.21875,
+        956.21875
+      ],
+      "candidate_cycles": [
+        304.41796875,
+        288.41796875,
+        336.41796875,
+        336.421875
+      ],
+      "speedup_range": [
+        2.8423203752728625,
+        3.3140380578316515
+      ],
+      "worst_delta_cycles": -619.796875
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "self",
+      "baseline_cycles": [
+        956.22265625,
+        956.22265625,
+        956.22265625,
+        956.21875
+      ],
+      "candidate_cycles": [
+        54.01171875,
+        54.01171875,
+        54.01171875,
+        54.01171875
+      ],
+      "speedup_range": [
+        17.703912634700224,
+        17.70398495696825
+      ],
+      "worst_delta_cycles": -902.20703125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        959.22265625,
+        959.23046875,
+        959.22265625,
+        959.22265625
+      ],
+      "candidate_cycles": [
+        354.4140625,
+        386.17578125,
+        386.41796875,
+        346.41796875
+      ],
+      "speedup_range": [
+        2.4823448540784248,
+        2.768974888084526
+      ],
+      "worst_delta_cycles": -572.8046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        958.828125,
+        958.8359375,
+        958.84375,
+        958.828125
+      ],
+      "candidate_cycles": [
+        354.41796875,
+        386.41796875,
+        386.41796875,
+        346.41796875
+      ],
+      "speedup_range": [
+        2.4813440756952376,
+        2.7678360001353135
+      ],
+      "worst_delta_cycles": -572.41796875
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        957.828125,
+        958.22265625,
+        958.22265625,
+        958.2265625
+      ],
+      "candidate_cycles": [
+        306.41796875,
+        338.421875,
+        338.41796875,
+        290.41796875
+      ],
+      "speedup_range": [
+        2.8314442033334872,
+        3.2994740877237816
+      ],
+      "worst_delta_cycles": -619.80078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        956.2265625,
+        956.22265625,
+        955.8359375,
+        956.2265625
+      ],
+      "candidate_cycles": [
+        288.41796875,
+        336.41796875,
+        336.421875,
+        304.41796875
+      ],
+      "speedup_range": [
+        2.8411824810738007,
+        3.3154195164894698
+      ],
+      "worst_delta_cycles": -619.4140625
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        1852.6640625,
+        1852.671875,
+        1853.453125,
+        1852.65625
+      ],
+      "candidate_cycles": [
+        504.8359375,
+        472.8359375,
+        568.8359375,
+        568.8359375
+      ],
+      "speedup_range": [
+        3.2569254645589267,
+        3.9182129107942436
+      ],
+      "worst_delta_cycles": -1283.8203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        1852.65625,
+        1852.65625,
+        1853.4296875,
+        1853.4375
+      ],
+      "candidate_cycles": [
+        504.8359375,
+        472.8359375,
+        568.84375,
+        568.84375
+      ],
+      "speedup_range": [
+        3.2582403999340768,
+        3.9181798655056754
+      ],
+      "worst_delta_cycles": -1284.5859375
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "self",
+      "baseline_cycles": [
+        1852.6640625,
+        1852.6640625,
+        1852.65625,
+        1852.6640625
+      ],
+      "candidate_cycles": [
+        54.0234375,
+        54.0234375,
+        54.0234375,
+        54.0234375
+      ],
+      "speedup_range": [
+        34.29356471438901,
+        34.293709327548804
+      ],
+      "worst_delta_cycles": -1798.6328125
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        1856.4375,
+        1856.4453125,
+        1856.4453125,
+        1855.671875
+      ],
+      "candidate_cycles": [
+        594.4140625,
+        658.828125,
+        658.6640625,
+        578.5078125
+      ],
+      "speedup_range": [
+        2.8177991224949603,
+        3.207686801982471
+      ],
+      "worst_delta_cycles": -1197.6171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        1855.6640625,
+        1855.65625,
+        1855.65625,
+        1856.4375
+      ],
+      "candidate_cycles": [
+        594.8359375,
+        658.8359375,
+        658.8359375,
+        578.8125
+      ],
+      "speedup_range": [
+        2.8165680473372783,
+        3.2073210236475544
+      ],
+      "worst_delta_cycles": -1196.8203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        1854.65625,
+        1854.6484375,
+        1854.65625,
+        1854.6484375
+      ],
+      "candidate_cycles": [
+        506.8359375,
+        570.8359375,
+        570.8359375,
+        474.8359375
+      ],
+      "speedup_range": [
+        3.249004338483857,
+        3.9058720939798284
+      ],
+      "worst_delta_cycles": -1283.8125
+    },
+    {
+      "family": "memmove",
+      "bytes": 256,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        1853.4375,
+        1853.4453125,
+        1852.6640625,
+        1852.6640625
+      ],
+      "candidate_cycles": [
+        472.8359375,
+        568.8359375,
+        568.84375,
+        504.8359375
+      ],
+      "speedup_range": [
+        3.256894467944844,
+        3.9198321299340746
+      ],
+      "worst_delta_cycles": -1283.8203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        3647.0703125,
+        3647.0625,
+        3647.078125,
+        3647.078125
+      ],
+      "candidate_cycles": [
+        905.6484375,
+        840.84375,
+        1032.84375,
+        1032.84375
+      ],
+      "speedup_range": [
+        3.531103446189223,
+        4.337384323781915
+      ],
+      "worst_delta_cycles": -2614.234375
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        3647.0703125,
+        3647.078125,
+        3647.0625,
+        3647.078125
+      ],
+      "candidate_cycles": [
+        904.84375,
+        840.84375,
+        1032.84375,
+        1032.84375
+      ],
+      "speedup_range": [
+        3.5310883180539165,
+        4.337402906306909
+      ],
+      "worst_delta_cycles": -2614.21875
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "self",
+      "baseline_cycles": [
+        3647.0703125,
+        3647.0703125,
+        3647.0625,
+        3647.078125
+      ],
+      "candidate_cycles": [
+        54.0234375,
+        54.0234375,
+        54.0234375,
+        54.0234375
+      ],
+      "speedup_range": [
+        67.50889370932755,
+        67.50918293564715
+      ],
+      "worst_delta_cycles": -3593.0390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        3650.1015625,
+        3650.1015625,
+        3650.09375,
+        3650.1015625
+      ],
+      "candidate_cycles": [
+        1074.828125,
+        1203.3203125,
+        1202.8359375,
+        1042.84375
+      ],
+      "speedup_range": [
+        3.0333582210680086,
+        3.5001423391567528
+      ],
+      "worst_delta_cycles": -2446.78125
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        3650.1015625,
+        3650.09375,
+        3650.1015625,
+        3650.09375
+      ],
+      "candidate_cycles": [
+        1074.8359375,
+        1202.84375,
+        1202.9765625,
+        1042.84375
+      ],
+      "speedup_range": [
+        3.0342250017859347,
+        3.5001348476221867
+      ],
+      "worst_delta_cycles": -2447.125
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        3649.0546875,
+        3649.0703125,
+        3649.0625,
+        3649.0546875
+      ],
+      "candidate_cycles": [
+        906.84375,
+        1034.84375,
+        1034.84375,
+        842.84375
+      ],
+      "speedup_range": [
+        3.5261965876491015,
+        4.3294557116903345
+      ],
+      "worst_delta_cycles": -2614.21875
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        3647.0703125,
+        3647.0703125,
+        3647.0703125,
+        3647.0703125
+      ],
+      "candidate_cycles": [
+        840.84375,
+        1032.859375,
+        1032.859375,
+        904.84375
+      ],
+      "speedup_range": [
+        3.5310424640334026,
+        4.337393615044412
+      ],
+      "worst_delta_cycles": -2614.2109375
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        14411.28125,
+        14411.25,
+        14411.25,
+        14411.25
+      ],
+      "candidate_cycles": [
+        3307.375,
+        3051.375,
+        3819.375,
+        3819.375
+      ],
+      "speedup_range": [
+        3.7731958762886597,
+        4.7228708369177825
+      ],
+      "worst_delta_cycles": -10591.875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        14411.25,
+        14411.28125,
+        14411.28125,
+        14411.25
+      ],
+      "candidate_cycles": [
+        3307.375,
+        3051.375,
+        3819.375,
+        3819.375
+      ],
+      "speedup_range": [
+        3.7731958762886597,
+        4.72288107820245
+      ],
+      "worst_delta_cycles": -10591.875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "self",
+      "baseline_cycles": [
+        14411.28125,
+        14411.25,
+        14411.28125,
+        14411.25
+      ],
+      "candidate_cycles": [
+        54.09375,
+        54.09375,
+        54.09375,
+        54.09375
+      ],
+      "speedup_range": [
+        266.41247833622185,
+        266.4130560369729
+      ],
+      "worst_delta_cycles": -14357.15625
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        14414.34375,
+        14414.28125,
+        14414.28125,
+        14414.21875
+      ],
+      "candidate_cycles": [
+        3955.375,
+        4467.375,
+        4469.6875,
+        3827.34375
+      ],
+      "speedup_range": [
+        3.2248968747815145,
+        3.7661155337824046
+      ],
+      "worst_delta_cycles": -9944.59375
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        14414.3125,
+        14414.28125,
+        14414.3125,
+        14414.3125
+      ],
+      "candidate_cycles": [
+        3952.34375,
+        4466.71875,
+        4464.34375,
+        3824.375
+      ],
+      "speedup_range": [
+        3.227040263056634,
+        3.7690635724791632
+      ],
+      "worst_delta_cycles": -9947.5625
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        14413.28125,
+        14413.28125,
+        14413.3125,
+        14413.3125
+      ],
+      "candidate_cycles": [
+        3309.34375,
+        3821.375,
+        3821.375,
+        3053.375
+      ],
+      "speedup_range": [
+        3.771752641392169,
+        4.72045277766406
+      ],
+      "worst_delta_cycles": -10591.90625
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        14411.28125,
+        14411.25,
+        14411.25,
+        14411.21875
+      ],
+      "candidate_cycles": [
+        3051.375,
+        3819.375,
+        3819.375,
+        3307.375
+      ],
+      "speedup_range": [
+        3.7731958762886597,
+        4.72288107820245
+      ],
+      "worst_delta_cycles": -10591.875
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "shift_left17",
+      "baseline_cycles": [
+        57468.0,
+        57468.0,
+        57468.125,
+        57468.125
+      ],
+      "candidate_cycles": [
+        12917.5,
+        11893.5,
+        14965.5,
+        14965.5
+      ],
+      "speedup_range": [
+        3.840040426313855,
+        4.831882961281372
+      ],
+      "worst_delta_cycles": -42502.625
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "shift_left1",
+      "baseline_cycles": [
+        57468.0,
+        57455.375,
+        57468.125,
+        57468.0
+      ],
+      "candidate_cycles": [
+        12917.375,
+        11893.5,
+        14965.5,
+        14965.5
+      ],
+      "speedup_range": [
+        3.8400320737696703,
+        4.830821457098415
+      ],
+      "worst_delta_cycles": -42502.5
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "self",
+      "baseline_cycles": [
+        57468.0,
+        57468.0,
+        57468.0,
+        57468.0
+      ],
+      "candidate_cycles": [
+        54.375,
+        54.375,
+        54.375,
+        54.375
+      ],
+      "speedup_range": [
+        1056.8827586206896,
+        1056.8827586206896
+      ],
+      "worst_delta_cycles": -57413.625
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "shift_right1",
+      "baseline_cycles": [
+        57471.375,
+        57471.375,
+        57471.375,
+        57471.375
+      ],
+      "candidate_cycles": [
+        15485.375,
+        17545.625,
+        17532.5,
+        14973.25
+      ],
+      "speedup_range": [
+        3.275538773910875,
+        3.8382699146811814
+      ],
+      "worst_delta_cycles": -39925.75
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "shift_right17",
+      "baseline_cycles": [
+        57471.25,
+        57471.375,
+        57471.375,
+        57471.25
+      ],
+      "candidate_cycles": [
+        15482.375,
+        17530.375,
+        17530.375,
+        14970.5
+      ],
+      "speedup_range": [
+        3.2783882261503248,
+        3.838966634380949
+      ],
+      "worst_delta_cycles": -39941.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "disjoint_right",
+      "baseline_cycles": [
+        57470.125,
+        57470.125,
+        57470.125,
+        57470.125
+      ],
+      "candidate_cycles": [
+        12919.5,
+        14967.5,
+        14967.5,
+        11895.5
+      ],
+      "speedup_range": [
+        3.8396609320193753,
+        4.831249211886848
+      ],
+      "worst_delta_cycles": -42502.625
+    },
+    {
+      "family": "memmove",
+      "bytes": 8192,
+      "scenario": "disjoint_left",
+      "baseline_cycles": [
+        57468.0,
+        57468.0,
+        57468.0,
+        57468.0
+      ],
+      "candidate_cycles": [
+        11893.5,
+        14965.5,
+        14965.5,
+        12917.375
+      ],
+      "speedup_range": [
+        3.8400320737696703,
+        4.831882961281372
+      ],
+      "worst_delta_cycles": -42502.5
+    },
+    {
+      "family": "memset",
+      "bytes": 0,
+      "scenario": "zero",
+      "baseline_cycles": [
+        52.005859375,
+        52.005859375,
+        52.005859375,
+        52.005859375
+      ],
+      "candidate_cycles": [
+        51.005859375,
+        51.005859375,
+        51.005859375,
+        51.005859375
+      ],
+      "speedup_range": [
+        1.0196055906567107,
+        1.0196055906567107
+      ],
+      "worst_delta_cycles": -1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 0,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        52.005859375,
+        52.005859375,
+        52.005859375,
+        52.005859375
+      ],
+      "candidate_cycles": [
+        51.005859375,
+        51.005859375,
+        51.005859375,
+        51.005859375
+      ],
+      "speedup_range": [
+        1.0196055906567107,
+        1.0196055906567107
+      ],
+      "worst_delta_cycles": -1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 0,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        52.005859375,
+        52.005859375,
+        52.2109375,
+        52.005859375
+      ],
+      "candidate_cycles": [
+        51.005859375,
+        51.005859375,
+        51.005859375,
+        51.005859375
+      ],
+      "speedup_range": [
+        1.0196055906567107,
+        1.0236262684281066
+      ],
+      "worst_delta_cycles": -1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 1,
+      "scenario": "zero",
+      "baseline_cycles": [
+        58.005859375,
+        58.20703125,
+        58.005859375,
+        58.005859375
+      ],
+      "candidate_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "speedup_range": [
+        0.9062585822831162,
+        0.9094016050776601
+      ],
+      "worst_delta_cycles": 6.0
+    },
+    {
+      "family": "memset",
+      "bytes": 1,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        58.2109375,
+        58.005859375,
+        58.005859375,
+        58.005859375
+      ],
+      "candidate_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "speedup_range": [
+        0.9062585822831162,
+        0.9094626346464862
+      ],
+      "worst_delta_cycles": 6.0
+    },
+    {
+      "family": "memset",
+      "bytes": 1,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        58.208984375,
+        58.005859375,
+        58.005859375,
+        58.20703125
+      ],
+      "candidate_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "speedup_range": [
+        0.9062585822831162,
+        0.9094321198620732
+      ],
+      "worst_delta_cycles": 6.0
+    },
+    {
+      "family": "memset",
+      "bytes": 2,
+      "scenario": "zero",
+      "baseline_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "candidate_cycles": [
+        71.005859375,
+        71.005859375,
+        71.005859375,
+        71.005859375
+      ],
+      "speedup_range": [
+        0.9014165864392794,
+        0.9014165864392794
+      ],
+      "worst_delta_cycles": 7.0
+    },
+    {
+      "family": "memset",
+      "bytes": 2,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "candidate_cycles": [
+        71.005859375,
+        71.005859375,
+        71.005859375,
+        71.005859375
+      ],
+      "speedup_range": [
+        0.9014165864392794,
+        0.9014165864392794
+      ],
+      "worst_delta_cycles": 7.0
+    },
+    {
+      "family": "memset",
+      "bytes": 2,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        64.005859375,
+        64.005859375,
+        64.005859375,
+        64.005859375
+      ],
+      "candidate_cycles": [
+        71.005859375,
+        71.005859375,
+        71.005859375,
+        71.005859375
+      ],
+      "speedup_range": [
+        0.9014165864392794,
+        0.9014165864392794
+      ],
+      "worst_delta_cycles": 7.0
+    },
+    {
+      "family": "memset",
+      "bytes": 3,
+      "scenario": "zero",
+      "baseline_cycles": [
+        70.005859375,
+        70.005859375,
+        70.005859375,
+        70.005859375
+      ],
+      "candidate_cycles": [
+        78.005859375,
+        78.005859375,
+        78.005859375,
+        78.005859375
+      ],
+      "speedup_range": [
+        0.8974436014922758,
+        0.8974436014922758
+      ],
+      "worst_delta_cycles": 8.0
+    },
+    {
+      "family": "memset",
+      "bytes": 3,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        70.005859375,
+        70.005859375,
+        70.005859375,
+        70.005859375
+      ],
+      "candidate_cycles": [
+        78.005859375,
+        78.005859375,
+        78.005859375,
+        78.005859375
+      ],
+      "speedup_range": [
+        0.8974436014922758,
+        0.8974436014922758
+      ],
+      "worst_delta_cycles": 8.0
+    },
+    {
+      "family": "memset",
+      "bytes": 3,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        70.005859375,
+        70.005859375,
+        70.005859375,
+        70.005859375
+      ],
+      "candidate_cycles": [
+        78.005859375,
+        78.005859375,
+        78.005859375,
+        78.005859375
+      ],
+      "speedup_range": [
+        0.8974436014922758,
+        0.8974436014922758
+      ],
+      "worst_delta_cycles": 8.0
+    },
+    {
+      "family": "memset",
+      "bytes": 4,
+      "scenario": "zero",
+      "baseline_cycles": [
+        76.005859375,
+        76.005859375,
+        76.005859375,
+        76.005859375
+      ],
+      "candidate_cycles": [
+        74.005859375,
+        77.005859375,
+        76.20703125,
+        77.005859375
+      ],
+      "speedup_range": [
+        0.9870139751946636,
+        1.0270248871763743
+      ],
+      "worst_delta_cycles": 1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 4,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        76.20703125,
+        76.005859375,
+        76.005859375,
+        76.005859375
+      ],
+      "candidate_cycles": [
+        74.005859375,
+        77.005859375,
+        76.005859375,
+        77.005859375
+      ],
+      "speedup_range": [
+        0.9870139751946636,
+        1.0297432107888416
+      ],
+      "worst_delta_cycles": 1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 4,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        76.005859375,
+        76.005859375,
+        76.005859375,
+        76.005859375
+      ],
+      "candidate_cycles": [
+        74.005859375,
+        77.005859375,
+        76.005859375,
+        77.005859375
+      ],
+      "speedup_range": [
+        0.9870139751946636,
+        1.0270248871763743
+      ],
+      "worst_delta_cycles": 1.0
+    },
+    {
+      "family": "memset",
+      "bytes": 5,
+      "scenario": "zero",
+      "baseline_cycles": [
+        82.005859375,
+        82.005859375,
+        82.20703125,
+        82.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        0.9534915408198025,
+        0.9879526577095932
+      ],
+      "worst_delta_cycles": 4.0
+    },
+    {
+      "family": "memset",
+      "bytes": 5,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        82.005859375,
+        82.20703125,
+        82.005859375,
+        82.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.20703125,
+        86.005859375
+      ],
+      "speedup_range": [
+        0.9534915408198025,
+        0.9879526577095932
+      ],
+      "worst_delta_cycles": 4.0
+    },
+    {
+      "family": "memset",
+      "bytes": 5,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        82.005859375,
+        82.005859375,
+        82.208984375,
+        82.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        0.9534915408198025,
+        0.9879526577095932
+      ],
+      "worst_delta_cycles": 4.0
+    },
+    {
+      "family": "memset",
+      "bytes": 6,
+      "scenario": "zero",
+      "baseline_cycles": [
+        88.005859375,
+        88.005859375,
+        88.005859375,
+        88.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.20703125
+      ],
+      "speedup_range": [
+        1.020866373646291,
+        1.0602367114520341
+      ],
+      "worst_delta_cycles": -1.798828125
+    },
+    {
+      "family": "memset",
+      "bytes": 6,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        88.005859375,
+        88.005859375,
+        88.005859375,
+        88.208984375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        1.0232542295900988,
+        1.0602367114520341
+      ],
+      "worst_delta_cycles": -2.0
+    },
+    {
+      "family": "memset",
+      "bytes": 6,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        88.20703125,
+        88.005859375,
+        88.005859375,
+        88.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.208984375
+      ],
+      "speedup_range": [
+        1.0208432452026552,
+        1.062660297889362
+      ],
+      "worst_delta_cycles": -1.796875
+    },
+    {
+      "family": "memset",
+      "bytes": 7,
+      "scenario": "zero",
+      "baseline_cycles": [
+        94.005859375,
+        94.005859375,
+        94.005859375,
+        94.005859375
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        1.093016918360395,
+        1.132520765194475
+      ],
+      "worst_delta_cycles": -8.0
+    },
+    {
+      "family": "memset",
+      "bytes": 7,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        94.005859375,
+        94.2109375,
+        94.005859375,
+        94.20703125
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        1.0953559668445554,
+        1.132520765194475
+      ],
+      "worst_delta_cycles": -8.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 7,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        94.20703125,
+        94.005859375,
+        94.005859375,
+        94.20703125
+      ],
+      "candidate_cycles": [
+        83.005859375,
+        86.005859375,
+        85.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        1.093016918360395,
+        1.1349443516318032
+      ],
+      "worst_delta_cycles": -8.0
+    },
+    {
+      "family": "memset",
+      "bytes": 8,
+      "scenario": "zero",
+      "baseline_cycles": [
+        100.20703125,
+        100.20703125,
+        100.20703125,
+        100.005859375
+      ],
+      "candidate_cycles": [
+        77.005859375,
+        83.005859375,
+        81.005859375,
+        83.005859375
+      ],
+      "speedup_range": [
+        1.2048048189369163,
+        1.3012909934816244
+      ],
+      "worst_delta_cycles": -17.0
+    },
+    {
+      "family": "memset",
+      "bytes": 8,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        100.005859375,
+        100.20703125,
+        100.20703125,
+        100.205078125
+      ],
+      "candidate_cycles": [
+        77.205078125,
+        83.005859375,
+        81.005859375,
+        83.005859375
+      ],
+      "speedup_range": [
+        1.2072048754088331,
+        1.2953274810898328
+      ],
+      "worst_delta_cycles": -17.19921875
+    },
+    {
+      "family": "memset",
+      "bytes": 8,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        100.005859375,
+        100.20703125,
+        100.20703125,
+        100.20703125
+      ],
+      "candidate_cycles": [
+        77.208984375,
+        83.005859375,
+        81.005859375,
+        83.005859375
+      ],
+      "speedup_range": [
+        1.2072284053742441,
+        1.2952619463206092
+      ],
+      "worst_delta_cycles": -17.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 9,
+      "scenario": "zero",
+      "baseline_cycles": [
+        106.20703125,
+        106.20703125,
+        106.20703125,
+        106.208984375
+      ],
+      "candidate_cycles": [
+        85.005859375,
+        91.005859375,
+        89.005859375,
+        91.005859375
+      ],
+      "speedup_range": [
+        1.1670350896018886,
+        1.249408358798796
+      ],
+      "worst_delta_cycles": -15.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 9,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        106.208984375,
+        106.20703125,
+        106.20703125,
+        106.208984375
+      ],
+      "candidate_cycles": [
+        85.005859375,
+        91.208984375,
+        89.208984375,
+        91.20703125
+      ],
+      "speedup_range": [
+        1.1644360692948457,
+        1.2494313351561244
+      ],
+      "worst_delta_cycles": -14.998046875
+    },
+    {
+      "family": "memset",
+      "bytes": 9,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        106.005859375,
+        106.20703125,
+        106.005859375,
+        106.20703125
+      ],
+      "candidate_cycles": [
+        85.005859375,
+        91.005859375,
+        89.005859375,
+        91.005859375
+      ],
+      "speedup_range": [
+        1.1670350896018886,
+        1.2470417939939802
+      ],
+      "worst_delta_cycles": -15.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 12,
+      "scenario": "zero",
+      "baseline_cycles": [
+        124.20703125,
+        124.208984375,
+        124.208984375,
+        124.208984375
+      ],
+      "candidate_cycles": [
+        77.005859375,
+        86.005859375,
+        83.005859375,
+        86.20703125
+      ],
+      "speedup_range": [
+        1.440821967465676,
+        1.612955588809699
+      ],
+      "worst_delta_cycles": -38.001953125
+    },
+    {
+      "family": "memset",
+      "bytes": 12,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        124.208984375,
+        124.20703125,
+        124.208984375,
+        124.208984375
+      ],
+      "candidate_cycles": [
+        77.005859375,
+        86.005859375,
+        83.005859375,
+        86.005859375
+      ],
+      "speedup_range": [
+        1.4441694106960372,
+        1.612980952139397
+      ],
+      "worst_delta_cycles": -38.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 12,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        124.20703125,
+        124.208984375,
+        124.20703125,
+        124.20703125
+      ],
+      "candidate_cycles": [
+        77.20703125,
+        86.005859375,
+        83.005859375,
+        86.20703125
+      ],
+      "speedup_range": [
+        1.4407993112510762,
+        1.6087528459397926
+      ],
+      "worst_delta_cycles": -38.0
+    },
+    {
+      "family": "memset",
+      "bytes": 15,
+      "scenario": "zero",
+      "baseline_cycles": [
+        142.005859375,
+        142.208984375,
+        142.208984375,
+        142.20703125
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        94.005859375,
+        91.005859375,
+        94.005859375
+      ],
+      "speedup_range": [
+        1.5127464627786666,
+        1.651118428522766
+      ],
+      "worst_delta_cycles": -48.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 15,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        142.208984375,
+        142.208984375,
+        142.208984375,
+        142.208984375
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        94.2109375,
+        91.005859375,
+        94.005859375
+      ],
+      "speedup_range": [
+        1.5094742515963182,
+        1.6534801862155104
+      ],
+      "worst_delta_cycles": -47.998046875
+    },
+    {
+      "family": "memset",
+      "bytes": 15,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        142.005859375,
+        142.208984375,
+        142.2109375,
+        142.20703125
+      ],
+      "candidate_cycles": [
+        86.005859375,
+        94.005859375,
+        91.005859375,
+        94.005859375
+      ],
+      "speedup_range": [
+        1.5127464627786666,
+        1.651118428522766
+      ],
+      "worst_delta_cycles": -48.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 16,
+      "scenario": "zero",
+      "baseline_cycles": [
+        148.2109375,
+        148.208984375,
+        148.208984375,
+        148.208984375
+      ],
+      "candidate_cycles": [
+        103.203125,
+        112.208984375,
+        108.20703125,
+        112.20703125
+      ],
+      "speedup_range": [
+        1.320829924631425,
+        1.436109008327025
+      ],
+      "worst_delta_cycles": -36.0
+    },
+    {
+      "family": "memset",
+      "bytes": 16,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        148.208984375,
+        148.20703125,
+        148.20703125,
+        148.20703125
+      ],
+      "candidate_cycles": [
+        103.208984375,
+        112.20703125,
+        108.208984375,
+        112.005859375
+      ],
+      "speedup_range": [
+        1.3208355091383812,
+        1.436008553640028
+      ],
+      "worst_delta_cycles": -36.0
+    },
+    {
+      "family": "memset",
+      "bytes": 16,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        148.208984375,
+        148.208984375,
+        148.208984375,
+        148.208984375
+      ],
+      "candidate_cycles": [
+        103.208984375,
+        112.20703125,
+        108.005859375,
+        112.20703125
+      ],
+      "speedup_range": [
+        1.320852915578764,
+        1.436008553640028
+      ],
+      "worst_delta_cycles": -36.001953125
+    },
+    {
+      "family": "memset",
+      "bytes": 17,
+      "scenario": "zero",
+      "baseline_cycles": [
+        154.01171875,
+        154.01171875,
+        154.01171875,
+        154.01171875
+      ],
+      "candidate_cycles": [
+        110.01171875,
+        119.01171875,
+        115.41796875,
+        119.41015625
+      ],
+      "speedup_range": [
+        1.289770682717786,
+        1.3999573909029577
+      ],
+      "worst_delta_cycles": -34.6015625
+    },
+    {
+      "family": "memset",
+      "bytes": 17,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        154.01171875,
+        154.01171875,
+        154.01171875,
+        154.01171875
+      ],
+      "candidate_cycles": [
+        110.01171875,
+        119.01171875,
+        115.4140625,
+        119.01171875
+      ],
+      "speedup_range": [
+        1.2940886861194079,
+        1.3999573909029577
+      ],
+      "worst_delta_cycles": -35.0
+    },
+    {
+      "family": "memset",
+      "bytes": 17,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        154.01171875,
+        154.01171875,
+        154.01171875,
+        154.01171875
+      ],
+      "candidate_cycles": [
+        110.01171875,
+        119.4140625,
+        115.01171875,
+        119.01171875
+      ],
+      "speedup_range": [
+        1.289728491985607,
+        1.3999573909029577
+      ],
+      "worst_delta_cycles": -34.59765625
+    },
+    {
+      "family": "memset",
+      "bytes": 31,
+      "scenario": "zero",
+      "baseline_cycles": [
+        238.4140625,
+        238.4140625,
+        238.4140625,
+        238.4140625
+      ],
+      "candidate_cycles": [
+        148.01171875,
+        166.01171875,
+        159.41796875,
+        166.01171875
+      ],
+      "speedup_range": [
+        1.4361279088919738,
+        1.6107782850808898
+      ],
+      "worst_delta_cycles": -72.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 31,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        238.4140625,
+        238.4140625,
+        238.41796875,
+        238.41796875
+      ],
+      "candidate_cycles": [
+        148.01171875,
+        166.01171875,
+        159.01171875,
+        166.4140625
+      ],
+      "speedup_range": [
+        1.432679216938172,
+        1.6107782850808898
+      ],
+      "worst_delta_cycles": -72.00390625
+    },
+    {
+      "family": "memset",
+      "bytes": 31,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        238.41796875,
+        238.4140625,
+        238.4140625,
+        238.4140625
+      ],
+      "candidate_cycles": [
+        148.01171875,
+        166.4140625,
+        159.01171875,
+        166.01171875
+      ],
+      "speedup_range": [
+        1.4326557438617906,
+        1.610804676572273
+      ],
+      "worst_delta_cycles": -72.0
+    },
+    {
+      "family": "memset",
+      "bytes": 32,
+      "scenario": "zero",
+      "baseline_cycles": [
+        244.4140625,
+        244.41796875,
+        244.41796875,
+        244.41796875
+      ],
+      "candidate_cycles": [
+        114.41796875,
+        132.01171875,
+        124.01171875,
+        132.01171875
+      ],
+      "speedup_range": [
+        1.8514869063470927,
+        2.13615103615445
+      ],
+      "worst_delta_cycles": -112.40625
+    },
+    {
+      "family": "memset",
+      "bytes": 32,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        244.4140625,
+        244.41796875,
+        244.41796875,
+        244.41796875
+      ],
+      "candidate_cycles": [
+        114.01171875,
+        132.01171875,
+        124.01171875,
+        132.01171875
+      ],
+      "speedup_range": [
+        1.8514869063470927,
+        2.1437626340494056
+      ],
+      "worst_delta_cycles": -112.40625
+    },
+    {
+      "family": "memset",
+      "bytes": 32,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        244.41796875,
+        244.41796875,
+        244.41796875,
+        244.4140625
+      ],
+      "candidate_cycles": [
+        114.01171875,
+        132.01171875,
+        124.01171875,
+        132.01171875
+      ],
+      "speedup_range": [
+        1.8514573161710313,
+        2.143796895878302
+      ],
+      "worst_delta_cycles": -112.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 33,
+      "scenario": "zero",
+      "baseline_cycles": [
+        250.41796875,
+        250.41796875,
+        250.4140625,
+        250.4140625
+      ],
+      "candidate_cycles": [
+        121.40625,
+        139.01171875,
+        131.01171875,
+        139.01171875
+      ],
+      "speedup_range": [
+        1.801388147357181,
+        2.0626447876447878
+      ],
+      "worst_delta_cycles": -111.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 33,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        250.4140625,
+        250.41796875,
+        250.41796875,
+        250.41796875
+      ],
+      "candidate_cycles": [
+        121.01171875,
+        139.01171875,
+        131.01171875,
+        139.01171875
+      ],
+      "speedup_range": [
+        1.8014162475061117,
+        2.069337293004939
+      ],
+      "worst_delta_cycles": -111.40625
+    },
+    {
+      "family": "memset",
+      "bytes": 33,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        250.41796875,
+        250.4140625,
+        250.4140625,
+        250.4140625
+      ],
+      "candidate_cycles": [
+        121.01171875,
+        139.01171875,
+        131.01171875,
+        139.01171875
+      ],
+      "speedup_range": [
+        1.801388147357181,
+        2.0693695729365054
+      ],
+      "worst_delta_cycles": -111.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 63,
+      "scenario": "zero",
+      "baseline_cycles": [
+        430.421875,
+        430.421875,
+        430.41796875,
+        430.41796875
+      ],
+      "candidate_cycles": [
+        170.4140625,
+        206.01171875,
+        191.41796875,
+        206.421875
+      ],
+      "speedup_range": [
+        2.0851373855120734,
+        2.5257415302801083
+      ],
+      "worst_delta_cycles": -223.99609375
+    },
+    {
+      "family": "memset",
+      "bytes": 63,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        430.421875,
+        430.421875,
+        430.41796875,
+        430.41796875
+      ],
+      "candidate_cycles": [
+        170.01171875,
+        206.01171875,
+        191.4140625,
+        206.4140625
+      ],
+      "speedup_range": [
+        2.0852163052117634,
+        2.531718861291731
+      ],
+      "worst_delta_cycles": -224.00390625
+    },
+    {
+      "family": "memset",
+      "bytes": 63,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        430.41796875,
+        430.421875,
+        430.41796875,
+        430.421875
+      ],
+      "candidate_cycles": [
+        170.01171875,
+        206.4140625,
+        191.40625,
+        206.01171875
+      ],
+      "speedup_range": [
+        2.08523522955225,
+        2.5316958849344027
+      ],
+      "worst_delta_cycles": -224.0078125
+    },
+    {
+      "family": "memset",
+      "bytes": 64,
+      "scenario": "zero",
+      "baseline_cycles": [
+        436.421875,
+        436.42578125,
+        436.41796875,
+        436.41796875
+      ],
+      "candidate_cycles": [
+        136.01171875,
+        172.4140625,
+        156.01171875,
+        172.01171875
+      ],
+      "speedup_range": [
+        2.531265576147537,
+        3.208707889370746
+      ],
+      "worst_delta_cycles": -264.01171875
+    },
+    {
+      "family": "memset",
+      "bytes": 64,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        436.41796875,
+        436.41796875,
+        436.41796875,
+        436.42578125
+      ],
+      "candidate_cycles": [
+        136.01171875,
+        172.01171875,
+        156.41796875,
+        172.01171875
+      ],
+      "speedup_range": [
+        2.5371409106392644,
+        3.2086791694189953
+      ],
+      "worst_delta_cycles": -264.40625
+    },
+    {
+      "family": "memset",
+      "bytes": 64,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        436.41796875,
+        436.4140625,
+        436.421875,
+        436.41796875
+      ],
+      "candidate_cycles": [
+        136.01171875,
+        172.01171875,
+        156.41015625,
+        172.01171875
+      ],
+      "speedup_range": [
+        2.53711820143068,
+        3.2086791694189953
+      ],
+      "worst_delta_cycles": -264.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 65,
+      "scenario": "zero",
+      "baseline_cycles": [
+        442.41796875,
+        442.41796875,
+        442.41796875,
+        442.41796875
+      ],
+      "candidate_cycles": [
+        143.01171875,
+        179.4140625,
+        163.01171875,
+        179.01171875
+      ],
+      "speedup_range": [
+        2.4659046374918354,
+        3.0935784327114804
+      ],
+      "worst_delta_cycles": -263.00390625
+    },
+    {
+      "family": "memset",
+      "bytes": 65,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        442.41796875,
+        442.41796875,
+        442.41796875,
+        442.421875
+      ],
+      "candidate_cycles": [
+        143.01171875,
+        179.41796875,
+        163.01171875,
+        179.4140625
+      ],
+      "speedup_range": [
+        2.4658509503385515,
+        3.0935784327114804
+      ],
+      "worst_delta_cycles": -263.0
+    },
+    {
+      "family": "memset",
+      "bytes": 65,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        442.421875,
+        442.421875,
+        442.421875,
+        442.421875
+      ],
+      "candidate_cycles": [
+        143.01171875,
+        179.01171875,
+        163.01171875,
+        179.01171875
+      ],
+      "speedup_range": [
+        2.471468784777533,
+        3.0936057469066673
+      ],
+      "worst_delta_cycles": -263.41015625
+    },
+    {
+      "family": "memset",
+      "bytes": 128,
+      "scenario": "zero",
+      "baseline_cycles": [
+        821.2265625,
+        821.2265625,
+        820.82421875,
+        820.8203125
+      ],
+      "candidate_cycles": [
+        180.41796875,
+        252.41796875,
+        220.01171875,
+        252.41796875
+      ],
+      "speedup_range": [
+        3.2518299571333507,
+        4.551800290124927
+      ],
+      "worst_delta_cycles": -568.40234375
+    },
+    {
+      "family": "memset",
+      "bytes": 128,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        820.828125,
+        820.828125,
+        820.828125,
+        820.828125
+      ],
+      "candidate_cycles": [
+        180.01171875,
+        252.41796875,
+        220.41796875,
+        252.41796875
+      ],
+      "speedup_range": [
+        3.251860907782541,
+        4.559859384154677
+      ],
+      "worst_delta_cycles": -568.41015625
+    },
+    {
+      "family": "memset",
+      "bytes": 128,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        820.828125,
+        820.828125,
+        820.82421875,
+        820.828125
+      ],
+      "candidate_cycles": [
+        180.01171875,
+        252.41796875,
+        220.01171875,
+        252.41796875
+      ],
+      "speedup_range": [
+        3.251860907782541,
+        4.559859384154677
+      ],
+      "worst_delta_cycles": -568.41015625
+    },
+    {
+      "family": "memset",
+      "bytes": 256,
+      "scenario": "zero",
+      "baseline_cycles": [
+        1589.65625,
+        1589.65625,
+        1589.65625,
+        1589.65625
+      ],
+      "candidate_cycles": [
+        268.0234375,
+        412.0234375,
+        348.0234375,
+        412.0234375
+      ],
+      "speedup_range": [
+        3.8581694760992815,
+        5.931034482758621
+      ],
+      "worst_delta_cycles": -1177.6328125
+    },
+    {
+      "family": "memset",
+      "bytes": 256,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        1589.6484375,
+        1589.65625,
+        1589.6484375,
+        1589.6484375
+      ],
+      "candidate_cycles": [
+        268.0234375,
+        412.0234375,
+        348.0234375,
+        412.8359375
+      ],
+      "speedup_range": [
+        3.850557311280586,
+        5.931005334188358
+      ],
+      "worst_delta_cycles": -1176.8125
+    },
+    {
+      "family": "memset",
+      "bytes": 256,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        1589.65625,
+        1589.6484375,
+        1589.65625,
+        1589.6484375
+      ],
+      "candidate_cycles": [
+        268.0234375,
+        412.8359375,
+        348.0234375,
+        412.8359375
+      ],
+      "speedup_range": [
+        3.850557311280586,
+        5.931034482758621
+      ],
+      "worst_delta_cycles": -1176.8125
+    },
+    {
+      "family": "memset",
+      "bytes": 512,
+      "scenario": "zero",
+      "baseline_cycles": [
+        3127.28125,
+        3127.28125,
+        3127.28125,
+        3127.28125
+      ],
+      "candidate_cycles": [
+        444.828125,
+        732.84375,
+        604.84375,
+        732.84375
+      ],
+      "speedup_range": [
+        4.267323355080807,
+        7.030313674523166
+      ],
+      "worst_delta_cycles": -2394.4375
+    },
+    {
+      "family": "memset",
+      "bytes": 512,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        3127.28125,
+        3127.28125,
+        3127.2734375,
+        3127.28125
+      ],
+      "candidate_cycles": [
+        444.8359375,
+        732.84375,
+        604.8359375,
+        732.84375
+      ],
+      "speedup_range": [
+        4.267323355080807,
+        7.030190203551169
+      ],
+      "worst_delta_cycles": -2394.4375
+    },
+    {
+      "family": "memset",
+      "bytes": 512,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        3127.28125,
+        3127.28125,
+        3127.28125,
+        3127.28125
+      ],
+      "candidate_cycles": [
+        444.8359375,
+        732.84375,
+        604.8359375,
+        732.84375
+      ],
+      "speedup_range": [
+        4.267323355080807,
+        7.030190203551169
+      ],
+      "worst_delta_cycles": -2394.4375
+    },
+    {
+      "family": "memset",
+      "bytes": 2048,
+      "scenario": "zero",
+      "baseline_cycles": [
+        12353.03125,
+        12353.03125,
+        12353.03125,
+        12353.03125
+      ],
+      "candidate_cycles": [
+        1503.3125,
+        2655.34375,
+        2143.34375,
+        2655.34375
+      ],
+      "speedup_range": [
+        4.652140141930777,
+        8.217207832702782
+      ],
+      "worst_delta_cycles": -9697.6875
+    },
+    {
+      "family": "memset",
+      "bytes": 2048,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        12353.0625,
+        12353.0,
+        12353.0,
+        12353.03125
+      ],
+      "candidate_cycles": [
+        1503.3125,
+        2655.34375,
+        2143.34375,
+        2655.34375
+      ],
+      "speedup_range": [
+        4.652128373209683,
+        8.217228620130545
+      ],
+      "worst_delta_cycles": -9697.65625
+    },
+    {
+      "family": "memset",
+      "bytes": 2048,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        12353.03125,
+        12353.0,
+        12353.03125,
+        12353.0625
+      ],
+      "candidate_cycles": [
+        1500.09375,
+        2655.34375,
+        2143.34375,
+        2655.34375
+      ],
+      "speedup_range": [
+        4.652128373209683,
+        8.234839489198592
+      ],
+      "worst_delta_cycles": -9697.65625
+    },
+    {
+      "family": "memset",
+      "bytes": 8192,
+      "scenario": "zero",
+      "baseline_cycles": [
+        49256.0,
+        49256.0,
+        49256.0,
+        49256.0
+      ],
+      "candidate_cycles": [
+        5737.25,
+        10345.5,
+        8297.375,
+        10345.375
+      ],
+      "speedup_range": [
+        4.76110386158233,
+        8.585297834328292
+      ],
+      "worst_delta_cycles": -38910.5
+    },
+    {
+      "family": "memset",
+      "bytes": 8192,
+      "scenario": "value_FF",
+      "baseline_cycles": [
+        49256.125,
+        49256.0,
+        49256.0,
+        49256.0
+      ],
+      "candidate_cycles": [
+        5724.375,
+        10345.375,
+        8297.375,
+        10345.375
+      ],
+      "speedup_range": [
+        4.761161388543189,
+        8.604629326345671
+      ],
+      "worst_delta_cycles": -38910.625
+    },
+    {
+      "family": "memset",
+      "bytes": 8192,
+      "scenario": "value_0x1234",
+      "baseline_cycles": [
+        49256.125,
+        49256.125,
+        49256.0,
+        49256.0
+      ],
+      "candidate_cycles": [
+        5737.25,
+        10345.375,
+        8297.375,
+        10345.375
+      ],
+      "speedup_range": [
+        4.761161388543189,
+        8.585319621770012
+      ],
+      "worst_delta_cycles": -38910.625
+    }
+  ],
+  "raw_report_sha256": "830db5b7641a3669468196ee5a57c11d2463f681716f29c90b3db8d29fb0d0d6"
+}

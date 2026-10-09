@@ -126,17 +126,35 @@ static inline int mk61_memory_compare(const void* left, const void* right,
 #if MK61_MEMORY_WORDS
 #if defined(__GNUC__) && !defined(__clang__)
 #define MK61_MEMORY_BULK __attribute__((noipa))
+#define MK61_MEMORY_TINY __attribute__((noipa, aligned(16)))
 #else
 #define MK61_MEMORY_BULK __attribute__((noinline))
+#define MK61_MEMORY_TINY __attribute__((noinline, aligned(16)))
 #endif
-static MK61_MEMORY_BULK void* mk61_memory_fill_small(void* destination, int value,
+static MK61_MEMORY_TINY void* mk61_memory_fill_small(void* destination, int value,
                                                    size_t size) {
   unsigned char* out = (unsigned char*) destination;
   unsigned char* end = out + size; // callers have already handled size == 0
   while(out != end) *out++ = (unsigned char) value;
   return destination;
 }
-static MK61_MEMORY_BULK void* mk61_memory_move_small(void* destination,
+static MK61_MEMORY_TINY void* mk61_memory_fill_short_words(void* destination,
+                                                   int value, size_t size) {
+  unsigned char* out = (unsigned char*) destination;
+  const uint32_t word = (uint32_t) (unsigned char) value * 0x01010101U;
+  // This path receives 4..15 bytes. Fixed stores avoid bulk-loop setup while
+  // retaining exact bounds on both the whole words and the byte tail.
+  *(mk61_memory_word*) out = word;
+  if(size >= 8) *(mk61_memory_word*) (out + 4) = word;
+  if(size >= 12) *(mk61_memory_word*) (out + 8) = word;
+  out += size & ~(size_t) 3;
+  size &= 3;
+  if(size > 0) out[0] = (unsigned char) value;
+  if(size > 1) out[1] = (unsigned char) value;
+  if(size > 2) out[2] = (unsigned char) value;
+  return destination;
+}
+static MK61_MEMORY_TINY void* mk61_memory_move_small(void* destination,
                                              const void* source, size_t size) {
   unsigned char* out = (unsigned char*) destination;
   const unsigned char* in = (const unsigned char*) source;
@@ -199,12 +217,14 @@ static MK61_MEMORY_BULK void* mk61_memory_move_bulk(void* destination,
   return mk61_memory_move_backward_bulk(destination, source, size);
 }
 #undef MK61_MEMORY_BULK
+#undef MK61_MEMORY_TINY
 #endif
 
 static inline void* mk61_memory_fill(void* destination, int value, size_t size) {
   if(size == 0) return destination;
 #if MK61_MEMORY_WORDS
-  if(size < 16) return mk61_memory_fill_small(destination, value, size);
+  if(size < 4) return mk61_memory_fill_small(destination, value, size);
+  if(size < 16) return mk61_memory_fill_short_words(destination, value, size);
   return mk61_memory_fill_bulk(destination, value, size);
 #else
   // Same bounded byte loop as newlib; do not set up word-pattern registers.
