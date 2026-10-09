@@ -32,6 +32,7 @@ default_math_backend=0
 if [[ "$target_mcu" == f401 && "$enable_focal" == 1 ]]; then default_math_backend=1; fi
 math_backend=${MK61_MATH_BACKEND:-$default_math_backend}
 app_local_float=${MK61_APP_LOCAL_FLOAT_MATH:-0}
+focal_trace=${MK61_FOCAL_TRACE:-0}
 resident_language_vm=${MK61_RESIDENT_LANGUAGE_VM:-0}
 overlay_language_vm=${MK61_OVERLAY_LANGUAGE_VM:-$((enable_focal && !resident_language_vm))}
 shared_screen_grid=${MK61_SHARED_SCREEN_GRID:-0}
@@ -512,6 +513,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_exten
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
 compile_flags="$compile_flags -DMK61_APP_LOCAL_FLOAT_MATH=$app_local_float"
+compile_flags="$compile_flags -DMK61_FOCAL_TRACE=$focal_trace"
 compile_flags="$compile_flags -DMK61_RESIDENT_LANGUAGE_VM=$resident_language_vm"
 compile_flags="$compile_flags -DMK61_OVERLAY_LANGUAGE_VM=$overlay_language_vm"
 compile_flags="$compile_flags -DMK61_SHARED_SCREEN_GRID=$shared_screen_grid"
@@ -637,6 +639,7 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --usbdisk 1 \
   --explorer "$explorer_as_app" \
   --local-float-math "$app_local_float" \
+  --focal-trace "$focal_trace" \
   --language-vm-compiler "$((resident_language_vm | overlay_language_vm))" \
   --overlay-language-vm "$overlay_language_vm" \
   --catalog-dir "$output_root/apps/abi6"

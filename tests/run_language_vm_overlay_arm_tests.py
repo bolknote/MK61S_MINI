@@ -13,7 +13,7 @@ from pathlib import Path
 
 from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Machine, Elf, ROOT, run
-from unicorn.arm_const import UC_ARM_REG_SP
+from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_R0, UC_ARM_REG_LR
 
 STATE_SIZE = 1584
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
@@ -39,13 +39,26 @@ class OverlayMachine(Machine):
         self.stage_peaks = {}
         self.partitioned = False
         self.workspace_requests = []
+        self.debug_capability_return = None
 
     def hook(self, uc, address, size, ctx):
+        if address == self.debug_capability_return:
+            uc.reg_write(UC_ARM_REG_R0,uc.reg_read(UC_ARM_REG_R0) | (1 << 19))
+            self.debug_capability_return=None
+        if address == (self.syscall & ~1) and uc.reg_read(UC_ARM_REG_R0)==26:
+            # Execute the real capabilities dispatcher, then advertise the
+            # test UART. DEBUG_WRITE itself is modeled below, like the loader.
+            self.debug_capability_return=uc.reg_read(UC_ARM_REG_LR) & ~1
         sp = uc.reg_read(UC_ARM_REG_SP)
         self.stage_peaks[self.stage] = max(self.stage_peaks.get(self.stage, 0), self.stack_top-sp)
         return super().hook(uc, address, size, ctx)
 
     def system(self, op, a, b, c, p):
+        if op == 26: return (1 << 19) | (1 << 18)  # resources + opt-in diagnostic channel
+        if op == 38:
+            assert a <= 128
+            self.trace.append(("serial",bytes(self.uc.mem_read(p,a)).decode("ascii")))
+            return 1
         if op == 13 and a == 0 and self.partitioned:
             # Model the v5 prefix service, not the native allocator. Old
             # full-workspace restores are forbidden during the transaction.
@@ -270,6 +283,7 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
+    p.add_argument("--focal-trace",action="store_true")
     p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14), default=14)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
@@ -325,10 +339,18 @@ def main():
                     (b'1.10 S A=3+CALL(2,5); E\n2.10 ASK "Z=",Z(2); RETURN ARG(1)+Z(2)\n',["7"],15),
                     (b'1.10 S A=CALL(2,5); E\n2.10 IF(ARG(1)-1) 2.30,2.30; R ARG(1)*CALL(2,ARG(1)-1)\n2.30 R 1\n',[],120),
                     (b'1.10 P "Head",CALL(2,4),!; E\n2.10 ASK N; R ARG(1)*N\n',["2+3"],0),
-                    (b'1.10 P %8.3,PI,!; S A=1; E\n',[],1)):
+                    (b'1.10 P %8.3,PI,!; S A=1; E\n',[],1),
+                    (b'1.10 D 2\n1.20 S A=99\n1.30 E\n2.10 G 3.10\n3.10 S A=5\n3.20 E\n',[],5),
+                    (b'1.10 P 1,2\n1.20 E\n',[],0),
+                    (b'1.10 P "ONE"\n1.20 P "TWO"\n1.30 E\n',[],0)):
                     m=OverlayMachine(args.resident_elf,True,address)
                     assert execute(m,packages,2,program,answers)[:2]==(expected,0)
-                    if b'Head' in program:assert "Head20" in "".join(m.lines),m.lines
+                    if args.focal_trace:
+                        log="".join(row[1] for row in m.trace if row[0]=="serial")
+                        assert "FOCAL RUN" in log and "FOCAL EXEC" in log,log
+                    if b'Head' in program:assert "Head 20" in "".join(m.lines),m.lines
+                    if b'P 1,2' in program:assert '1 2' in m.lines,m.lines
+                    if b'ONE' in program:assert m.lines[-1]=='TWO',m.lines
                     if b'%8.3' in program:assert "3.14" in "".join(m.lines),m.lines
                     record(m)
 

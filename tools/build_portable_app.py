@@ -97,6 +97,8 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if budget is None:
         return
     budget = dict(budget)
+    if system == "focal" and language_vm_compiler and report.get("focal_trace"):
+        budget["memory_bytes"] = 19_200
     if greedy_packer:
         greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
         if language_vm_compiler and system == "focal":
@@ -184,6 +186,10 @@ def build(args: argparse.Namespace) -> dict:
              "-mfloat-abi=hard", "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if getattr(args,"focal_trace",False):
+        if args.system not in ("focal", "language-vm"):
+            raise ValueError("--focal-trace applies only to FOCAL or its shared VM")
+        flags.append("-DMK61_FOCAL_TRACE=1")
     if not system:
         flags.append("-ffreestanding")
     if args.shared_runtime:
@@ -339,6 +345,8 @@ def build(args: argparse.Namespace) -> dict:
             args.local_float_math_mask
             if args.local_float_math_mask is not None
             else DEFAULT_LOCAL_FLOAT_MASK)
+    if getattr(args,"focal_trace",False):
+        report["focal_trace"] = True
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
     if rust_compiler is not None:
@@ -355,6 +363,7 @@ def main() -> None:
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
+    parser.add_argument("--focal-trace", action="store_true", help="enable opt-in FOCAL Serial diagnostics in frontend/VM")
     parser.add_argument("--language-vm-compiler", action="store_true",
                         help="experimental compiler-only BASIC/FOCAL; requires a VM-aware resident")
     parser.add_argument("--split-language-vm", action="store_true",

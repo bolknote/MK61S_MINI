@@ -5,8 +5,7 @@
 #include "../code/focal.cpp"
 #include <type_traits>
 #include <string>
-#include <dlfcn.h>
-using ExpandOperators=bool(*)(const char*,char*,int);
+
 static int failures=0,checks=0;
 #define CHECK(x) do{++checks;if(!(x)){++failures;fprintf(stderr,"FAIL %s:%d: %s\n",__func__,__LINE__,#x);}}while(0)
 static void reset(){FocalNextReset();focal_host_fixture::reset();focal_host_fixture::serial.clear();}
@@ -23,6 +22,7 @@ static void keyboard_contract(){reset();const auto& k=keyboard_layout::active();
  for(const auto& c:cases){int key[]={c.key};std::string result=std::string("1.10 ")+c.text;edit("1.10 ",key,1,result.c_str());}
  int forced[]={k.k,k.x_to_p};edit("1.10 SET X=",forced,2,"1.10 SET X=SET ");
  int after_number[]={k.degree};edit("1.10",after_number,1,"1.10 GOTO ");
+ int old_integer_goto[]={k.degree};edit("10",old_integer_goto,1,"10 GOTO ");
  int integer_then_dot[]={k.dot};edit("1",integer_then_dot,1,"1.");
 }
 static void source_storage_contract(){reset();char source[256]="1.10 COMMENT ASK PRINT\n1.20 PRINT \"SET; IF\"\n1.30 FOR I=1,2; PRINT I\n1.40 IF(I) 1.50,,; EXIT\n1.50 EXIT";
@@ -30,8 +30,7 @@ static void source_storage_contract(){reset();char source[256]="1.10 COMMENT ASK
  CHECK(!strcmp(focal_host_fixture::last_write,"1.10 C ASK PRINT\n1.20 P \"SET; IF\"\n1.30 F I=1,2; P I\n1.40 B(I) 1.50,,; E\n1.50 E"));
  CHECK(!strcmp(programs[0].source,focal_host_fixture::last_write));
  // The editor must expand B to IF and must leave literals/comments intact.
- auto expand=(ExpandOperators)dlsym(RTLD_DEFAULT,"FocalTestExpandOperators");
- CHECK(expand!=nullptr);
+ auto expand=&FocalTestExpandOperators;
  if(expand) {
   char restored[256];CHECK(expand(focal_host_fixture::last_write,restored,sizeof(restored)));
   CHECK(!strcmp(restored,source));
@@ -52,6 +51,10 @@ static void public_api_contract(){reset();
  CHECK(!strcmp(focal_host_fixture::last_write,"1.10 S A=7\n1.20 E"));
  CHECK(status(&RunFocal,0)==FocalRunStatus::COMPLETED);CHECK(FocalNextVar(0)==7);
  CHECK(status(&RunFocal,-1)==FocalRunStatus::NOT_FOUND);
+ reset();char bad[32]="BROKEN";CHECK(store_edited_program(0,bad,"DRAFT"));
+ CHECK(status(&RunFocal,0)==FocalRunStatus::COMPILE_ERROR);
+ reset();char math[64]="1.10 SET A=1/0\n1.20 EXIT";CHECK(CompileFocal(math));
+ CHECK(status(&RunFocal,0)==FocalRunStatus::RUNTIME_ERROR);
 }
 static void control_contract(){reset();CHECK(FocalNextRun("1.10 D 2\n1.20 S A=99\n1.30 E\n2.10 G 3.10\n3.10 S A=5\n3.20 E")==0);CHECK(FocalNextVar(0)==5);
  reset();CHECK(FocalNextRun("1.10 D 2.10\n1.20 S A=5\n1.30 E\n2.10 G 3.10\n3.10 S A=99")==0);CHECK(FocalNextVar(0)==5);
@@ -81,6 +84,7 @@ static void transactional_storage_contract(){reset();char source[64]="1.10 S A=1
  const auto previous=programs[0];focal_host_fixture::write_ok=false;char changed[64]="1.10 S A=2";
  CHECK(!store_edited_program(0,changed,"NEW"));CHECK(!memcmp(&previous,&programs[0],sizeof(previous)));
  CHECK(focal_host_fixture::exists("OLD"));CHECK(!focal_host_fixture::exists("NEW"));
+ CHECK(!strcmp(changed,"1.10 SET A=2"));
  // Legacy RAM selection has no stable inode; failure removing OLD must roll
  // the newly-created destination back without publishing new slot metadata.
  focal_host_fixture::write_ok=true;programs[0].store_id=0xFFFF;const auto legacy=programs[0];

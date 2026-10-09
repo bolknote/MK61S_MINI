@@ -1,6 +1,7 @@
 #ifndef MK61_COMPACT_FOCAL_EDITOR_HPP
 #define MK61_COMPACT_FOCAL_EDITOR_HPP
 #include "focal_syntax.hpp"
+#include "language_bytecode.hpp"
 #include "text_editor.hpp"
 #include <stdio.h>
 namespace focal_editor {
@@ -12,7 +13,7 @@ inline bool operator_field(const char *s, u16 cursor) {
   const char *p = s + start;
   const char *e = s + cursor;
   focal_next::Address a;
-  if (focal_next::address(p, e, a) && a.exact)
+  if (focal_next::address(p, e, a))
     p = focal_next::skip(p, e);
   else
     p = s + start;
@@ -31,23 +32,34 @@ inline const char *insert(Shift shift, i32 code, const char *source, u16 cursor,
                           void *) {
   const auto &k = keyboard_layout::active();
   // The shared punctuation map takes priority over K+operator shortcuts.
+  if (shift == Shift::NONE && code == k.dot) {
+    unsigned start = cursor;
+    while (start && source[start - 1] != '\n' && source[start - 1] != '\r')
+      --start;
+    const char *p = source + start;
+    const char *e = source + cursor;
+    focal_next::Address a;
+    if (focal_next::address(p, e, a) && !a.exact && p == e)
+      return ".";
+  }
   if (shift == Shift::K) {
     const char *punctuation = kshift_text_for_key(code);
     if (punctuation)
       return punctuation;
   }
-  if (shift != Shift::ALPHA && operator_field(source, cursor)) {
+  if (shift == Shift::K ||
+      (shift == Shift::NONE && operator_field(source, cursor))) {
     if (code == k.dot)
       return "ASK ";
     if (code == k.neg)
       return "IF ";
-    if (code == k.xy)
-      return "COMMENT ";
     if (code == k.power)
+      return "COMMENT ";
+    if (code == k.bx)
       return "EXIT";
     if (code == k.mul)
       return "FOR ";
-    if (code == k.bp)
+    if (code == k.degree)
       return "GOTO ";
     if (code == k.radian)
       return "PRINT ";
@@ -81,8 +93,14 @@ inline bool token_at(const char *s, u16 len, u16 pos, Token &token) {
         auto c = focal_next::command(b, line_end);
         if (c == focal_next::Command::NONE)
           break;
-        if (pos >= unsigned(word - s) && pos <= unsigned(b - s)) {
-          token = {u16(word - s), u16(b - s)};
+        const char *token_end = b;
+        while (token_end < line_end && focal_next::space(*token_end))
+          ++token_end;
+        if (pos >= unsigned(word - s) && pos <= unsigned(token_end - s)) {
+          const char *tail = b;
+          while (tail < line_end && focal_next::space(*tail))
+            ++tail;
+          token = {u16(word - s), u16(tail - s)};
           return true;
         }
         if (c == focal_next::Command::COMMENT)
@@ -96,26 +114,30 @@ inline bool token_at(const char *s, u16 len, u16 pos, Token &token) {
   }
   return false;
 }
-inline bool move(const char *s, u16 len, u16 &cursor, int delta, void *) {
-  u16 next = cursor;
-  if (delta < 0)
-    move_cursor_left(s, next);
-  else
-    move_cursor_right(s, len, next);
-  Token t;
-  if (token_at(s, len, next, t) && next > t.begin && next < t.end)
-    next = delta < 0 ? t.begin : t.end;
-  cursor = next;
-  return true;
+inline bool move(const char *source, u16 length, u16 &cursor, int delta,
+                 void *) {
+  Token token;
+  if (token_at(source, length, cursor, token)) {
+    if (delta < 0 && cursor > token.begin && cursor <= token.end) {
+      cursor = token.begin;
+      return true;
+    }
+    if (delta > 0 && cursor >= token.begin && cursor < token.end) {
+      cursor = token.end;
+      return true;
+    }
+  }
+  return delta < 0 ? move_cursor_left(source, cursor)
+                   : move_cursor_right(source, length, cursor);
 }
-inline bool erase(char *s, u16 &len, u16 &cursor, u16 capacity, void *) {
-  Token t;
-  u16 end = cursor;
-  while (end && s[end - 1] == ' ')
-    --end;
-  if (token_at(s, len, end, t) && end == t.end)
-    return replace_range(s, len, cursor, capacity, t.begin, cursor, "");
-  return backspace(s, len, cursor);
+inline bool erase(char *source, u16 &length, u16 &cursor, u16 capacity,
+                  void *) {
+  Token token;
+  if (token_at(source, length, cursor, token) && cursor > token.begin &&
+      cursor <= token.end)
+    return replace_range(source, length, cursor, capacity, token.begin,
+                         token.end, "");
+  return backspace(source, length, cursor);
 }
 // A macro wraps the complete current expression item before the cursor.
 // Commas inside calls and the IF condition do not split that expression.
@@ -136,27 +158,42 @@ inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
   }
   if (!name && !square && !inverse && !power10)
     return false;
-  if (!cursor || !(focal_next::alpha(s[cursor - 1]) ||
-                   focal_next::digit(s[cursor - 1]) || s[cursor - 1] == ')'))
+  unsigned end = cursor;
+  while (end && focal_next::space(s[end - 1]))
+    --end;
+  if (!end)
     return false;
-  unsigned begin = cursor;
-  while (begin && s[begin - 1] != '\n')
+  unsigned begin = end;
+  while (begin && s[begin - 1] != '\n' && s[begin - 1] != '\r')
     --begin;
   const char *p = s + begin;
-  const char *e = s + cursor;
+  const char *e = s + end;
   focal_next::Address address;
-  if (focal_next::address(p, e, address) && address.exact)
-    p = focal_next::skip(p, e);
-  // Focus the last statement, then the current argument/group. This keeps
-  // macros useful inside nested calls and after a semicolon.
+  const char *after_address = p;
+  bool numbered =
+      focal_next::address(after_address, e, address) && address.exact;
+  if (numbered)
+    p = focal_next::skip(after_address, e);
+  bool after_statement = false;
   while (p < e) {
     const char *next = focal_next::delimiter(p, e, ';');
     if (next == e)
       break;
     p = next + 1;
+    after_statement = true;
   }
-  auto command = focal_next::command(p, e);
-  p = focal_next::skip(p, e);
+  const char *word = focal_next::skip(p, e);
+  const char *after = word;
+  auto command = focal_next::command(after, e);
+  const bool explicit_command = numbered || after_statement || after - word > 1;
+  if (explicit_command && command != focal_next::Command::NONE)
+    p = focal_next::skip(after, e);
+  else {
+    if (numbered)
+      return false;
+    p = word;
+    command = focal_next::Command::NONE;
+  }
   if (command == focal_next::Command::COMMENT ||
       command == focal_next::Command::ASK ||
       command == focal_next::Command::GOTO ||
@@ -188,13 +225,16 @@ inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
   if (quote)
     return false;
   unsigned atom = atoms[depth];
-  while (atom < cursor && focal_next::space(s[atom]))
+  while (atom < end && focal_next::space(s[atom]))
     ++atom;
-  if (atom == cursor || cursor - atom >= 96)
+  if (atom == end || end - atom >= 112)
     return false;
-  char expression[96], replacement[112];
-  memcpy(expression, s + atom, cursor - atom);
-  expression[cursor - atom] = 0;
+  char expression[112], replacement[120];
+  memcpy(expression, s + atom, end - atom);
+  expression[end - atom] = 0;
+  if (!language_vm::validate_focal_expression(expression,
+                                              (uint16_t)(end - atom)))
+    return false;
   // Reject an operator or a quoted item: F+digit must then insert a symbol.
   bool compound = false;
   unsigned nesting = 0;
@@ -218,7 +258,7 @@ inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
              expression);
   else
     snprintf(replacement, sizeof(replacement), "%s(%s)", name, expression);
-  return replace_range(s, len, cursor, capacity, u16(atom), cursor,
+  return replace_range(s, len, cursor, capacity, u16(atom), u16(end),
                        replacement);
 }
 inline KeyResult handle(Buffer &editor, const char *enter, i32 code, u32 now) {

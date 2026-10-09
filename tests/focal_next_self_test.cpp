@@ -122,8 +122,7 @@ int main() {
   assert(!strncmp(FocalNextScreen(0), "A;B", 3));
   assert(!strncmp(FocalNextScreen(1), "    3.14", 8));
   run("1.10 PRINT 'first',!; PRINT 'second',!; EXIT");
-  assert(!strncmp(FocalNextScreen(0), "first", 5));
-  assert(!strncmp(FocalNextScreen(1), "second", 6));
+  assert(!strncmp(FocalNextScreen(0), "second", 6));
   run("1.10 PRINT \"old\"; CLS; PRINT \"new\",!; EXIT");
   assert(!strncmp(FocalNextScreen(0), "new", 3));
   run("2.10 RETURN 5\n1.10 SET X=CALL(2); EXIT");

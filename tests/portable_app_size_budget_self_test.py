@@ -101,3 +101,11 @@ for greedy, limit in ((False, 13800), (True, 14100)):
         raise AssertionError("compiler flow APP size regression was accepted")
 
 print("portable APP size budget tests: OK")
+
+BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19200,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+try:
+    BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19201,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+except ValueError:
+    pass
+else:
+    raise AssertionError("debug FOCAL size regression was accepted")

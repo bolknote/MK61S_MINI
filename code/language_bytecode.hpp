@@ -160,7 +160,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 5;
+static constexpr uint16_t VERSION = 6;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -204,7 +204,8 @@ enum class Event : uint8_t {
   READ_KEY,
   RESOURCE_TEXT,
   RESOURCE_INPUT,
-  PRECISION
+  PRECISION,
+  TRACE
 };
 struct Services {
   void* context;
@@ -270,6 +271,7 @@ inline CompileResult compile(Language language, const char* source, uint16_t len
     return compile_focal(source, length, output, capacity, rf_available, resources);
   return {Error::SYNTAX, 0, 0, 0, 0};
 }
+bool validate_focal_expression(const char*,uint16_t,bool rf_available=true);
 CompileResult compile_expression(Language, const char*, uint16_t, uint8_t*, uint16_t);
 // No output buffer means validation/sizing only, with identical grammar.
 Error inspect(const uint8_t* bytes, uint16_t length, View& output);

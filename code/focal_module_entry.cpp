@@ -67,12 +67,11 @@ extern "C" u32 mk61_app_command(u32 raw_command, u32 argument0, u32 argument1,
   case loadable_module::Command::FOCAL_MENU_SELECT:
     return FOCAL_menu_select();
   case loadable_module::Command::FOCAL_COMPILE:
-    return CompileFocal((char *)argument0);
+    return CompileFocal((const char *)argument0);
   case loadable_module::Command::FOCAL_IS_READY:
     return FocalIsReady();
   case loadable_module::Command::FOCAL_RUN_INDEX:
-    RunFocal((int)argument0);
-    return 0;
+    return (u32)RunFocal((int)argument0);
   case loadable_module::Command::FOCAL_RUN_NAME:
     return (u32)RunFocalProgram((const char *)argument0);
   case loadable_module::Command::FOCAL_RUN_ID:

@@ -3061,6 +3061,7 @@ static TinyBasicRunStatus tb_run_program(
               if (!tb_append_print(" ")) return false;
             return tb_append_print(number);
           }
+          case language_vm::Event::TRACE:return true;
           case language_vm::Event::PRECISION:return false; // FOCAL-only instruction
           case language_vm::Event::FORMAT: {
             const double n = mk_math::floor(value + .5);

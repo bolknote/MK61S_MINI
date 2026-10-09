@@ -11,6 +11,7 @@
 #endif
 #ifdef FOCAL_HOST_TEST
 #include "focal.hpp"
+#include "../tests/focal_host_fixture.hpp"
 #include "keyboard_layout.hpp"
 #include "rust_types.h"
 
@@ -169,7 +170,7 @@ public:
 };
 
 namespace library_mk61 {
-bool language_is_ru(void) { return false; }
+bool language_is_ru(void) { return focal_host_fixture::russian; }
 } // namespace library_mk61
 #endif
 
@@ -207,6 +208,8 @@ bool language_is_ru(void) { return false; }
 #endif
 #include "focal_editor.hpp"
 #include "focal_syntax.hpp"
+#include "focal_text.hpp"
+#include "focal_trace.hpp"
 #include "language_bytecode.hpp"
 #include "mk61_ref.hpp"
 #if defined(MK61_LANGUAGE_VM_COMPILER)
@@ -266,14 +269,17 @@ class FocalWorkspaceScope {
   language_workspace::Lease lease;
 
 public:
-  FocalWorkspaceScope()
+  explicit FocalWorkspaceScope(usize requested = sizeof(FocalRuntime))
       : lease(language_workspace::Owner::FOCAL,
 #if defined(MK61_LANGUAGE_VM_COMPILER)
-              sizeof(FocalRuntime)
+              requested
 #else
               language_workspace::SIZE
 #endif
         ) {
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
+    (void)requested;
+#endif
     if (lease.ok() && lease.fresh()) {
       auto *r = new (lease.data()) FocalRuntime;
       focal_reset_runtime(*r);
@@ -324,11 +330,9 @@ static text_editor::KeyResult focal_handle_editor_key(text_editor::Buffer &e,
 #endif
 }
 #endif
-#ifndef FOCAL_HOST_TEST
 static bool focal_language_is_ru(void) {
   return library_mk61::language_is_ru();
 }
-#endif
 
 static void tb_message_i18n(const char *en0, const char *ru0, const char *en1,
                             const char *ru1) {
@@ -340,9 +344,9 @@ static void tb_message_i18n(const char *en0, const char *ru0, const char *en1,
   return;
 #endif
   main_lcd().setCursor(0, 0);
-  main_lcd().print(en0);
+  main_lcd().print(focal_language_is_ru() ? ru0 : en0);
   main_lcd().setCursor(0, 1);
-  main_lcd().print(en1);
+  main_lcd().print(focal_language_is_ru() ? ru1 : en1);
   (void)ru0;
   (void)ru1;
 }
@@ -363,22 +367,22 @@ enum class TbError : u8 { WHAT, HOW, SORRY };
 static bool tb_error(const char *message) {
   tb_copy_text(tb_last_error, sizeof(tb_last_error), message);
   const char *localized = message;
-#ifndef FOCAL_HOST_TEST
   static const struct {
     const char *en;
     const char *ru;
-  } errors[] = {{"FULL?", M8("нет места")},    {"LINE?", M8("нет строки")},
-                {"SYNTAX?", M8("синтаксис?")}, {"VAR?", M8("перем?")},
-                {"FUNC?", M8("функция?")},     {"FOR?", M8("цикл?")},
-                {"RETURN?", M8("нет DO")},     {"STACK?", M8("стек DO")},
-                {"MATH?", M8("матем?")}};
+  } errors[] = {{"LINE?", M8("СТРОКА?")},    {"SYNTAX?", M8("СИНТАКСИС?")},
+                {"VAR?", M8("ПЕРЕМ?")},      {"FUNC?", M8("ФУНК?")},
+                {"FOR?", M8("ЦИКЛ?")},       {"FULL?", M8("НЕТ МЕСТА")},
+                {"RETURN?", M8("ВОЗВРАТ?")}, {"STACK?", M8("СТЕК?")},
+                {"MATH?", M8("МАТ?")},       {"MK?", M8("МК?")},
+                {"NAME?", M8("ИМЯ?")},       {"SLOT?", M8("СЛОТ?")}};
   for (const auto &error : errors)
     if (!strcmp(message, error.en)) {
       localized = error.ru;
       break;
     }
-#endif
-  tb_message_i18n("FOCAL", "FOCAL", message, localized);
+  focal_trace_message("ERROR", message);
+  tb_message_i18n(message, localized, "FOCAL", M8("ФОКАЛ"));
   return false;
 }
 static const char *focal_error_name(language_vm::Error error) {
@@ -394,8 +398,9 @@ static const char *focal_error_name(language_vm::Error error) {
     return "LINE?";
   case E::VARIABLE:
   case E::ARRAY_RANGE:
-  case E::REGISTER:
     return "VAR?";
+  case E::REGISTER:
+    return "MK?";
   case E::FUNCTION:
     return "FUNC?";
   case E::FOR:
@@ -689,6 +694,9 @@ uint16_t language_vm::frontend_source_id() {
 }
 #endif
 static FocalRunStatus tb_run_program(int slot) {
+  focal_trace_message("RUN", slot >= 0 && slot < TB_PROGRAM_COUNT
+                                 ? programs[slot].name
+                                 : nullptr);
   if (slot < 0 || slot >= TB_PROGRAM_COUNT || !tb_program_used(programs[slot]))
     return FocalRunStatus::NOT_FOUND;
 #if defined(MK61_LANGUAGE_VM_COMPILER)
@@ -702,11 +710,19 @@ static FocalRunStatus tb_run_program(int slot) {
       language_vm::Language::FOCAL, programs[slot].source,
       programs[slot].source_len, request.output, (u16)request.capacity,
       mk61_ref::register_available(15), &resource);
+  if (!request.output && request.compiled.error == language_vm::Error::FULL &&
+      resource.mode == language_vm::ResourceMode::EMBEDDED) {
+    request.resources = resource.mode = language_vm::ResourceMode::SOURCE;
+    request.capacity = language_vm::MAX_IMAGE;
+    request.compiled = language_vm::compile(
+        language_vm::Language::FOCAL, programs[slot].source,
+        programs[slot].source_len, nullptr, language_vm::MAX_IMAGE,
+        mk61_ref::register_available(15), &resource);
+  }
   request.source_id = programs[slot].store_id;
   request.source_revision = programs[slot].source_revision;
   request.language = (u8)language_vm::Language::FOCAL;
   request.run_requested = request.compiled.error == language_vm::Error::NONE;
-  request.resources = language_vm::ResourceMode::EMBEDDED;
   if (!request.run_requested)
     tb_error(focal_error_name(request.compiled.error));
   return request.run_requested ? FocalRunStatus::COMPLETED
@@ -759,13 +775,22 @@ static FocalRunStatus tb_run_program(int slot) {
          double &value) {
         auto &c = *(Context *)ptr;
         switch (event) {
+        case language_vm::Event::TRACE:
+          focal_trace_execution(text, length, value);
+          return true;
         case language_vm::Event::PRINT_BEGIN:
+          tb_pending_print[0] = 0;
+          tb_print_row = 0;
           c.width = 0;
           c.precision = 8;
           return true;
         case language_vm::Event::TEXT:
+          if (tb_pending_print[0] && !next_text(nullptr, " ", 1))
+            return false;
           return next_text(nullptr, text, length);
         case language_vm::Event::NUMBER:
+          if (tb_pending_print[0] && !next_text(nullptr, " ", 1))
+            return false;
           return next_number(nullptr, value, c.width, c.precision);
         case language_vm::Event::PRECISION:
           c.width = (unsigned)value;
@@ -774,7 +799,7 @@ static FocalRunStatus tb_run_program(int slot) {
         case language_vm::Event::FLUSH:
           return next_newline(nullptr);
         case language_vm::Event::PRINT_END:
-          return true;
+          return !tb_pending_print[0] || next_newline(nullptr);
         case language_vm::Event::READ_INPUT: {
           char prompt[96];
           if (length >= sizeof(prompt))
@@ -825,21 +850,126 @@ bool language_vm::frontend_emit() {
   return tb_run_program(NextFocal) == FocalRunStatus::COMPLETED;
 }
 #endif
-bool CompileFocal(char *text) {
+static int find_free_program();
+static void tb_program_default_name(int, char *, usize);
+static bool store_edited_program(int, char *, const char *, u16);
+static void focal_display_program_name(const char *name, char *output,
+                                       usize capacity) {
+  if (focal_language_is_ru() && strlen(name) > 5 &&
+      focal_next::equal(name, name + 5, "FOCAL")) {
+    const char *p = name + 5;
+    while (focal_next::digit(*p))
+      ++p;
+    if (!*p) {
+      snprintf(output, capacity, M8("ФОКАЛ%s"), name + 5);
+      return;
+    }
+  }
+  tb_copy_text(output, capacity, name);
+}
+static unsigned focal_source_lines(const char *source) {
+  unsigned count = 0;
+  const char *p = source;
+  while (*p) {
+    const char *end = p;
+    while (*end && *end != '\n' && *end != '\r')
+      ++end;
+    const char *first = p;
+    focal_next::Address a;
+    if (focal_next::address(first, end, a) && a.exact)
+      ++count;
+    p = end;
+    while (*p == '\r' || *p == '\n')
+      ++p;
+  }
+  return count;
+}
+static void display_focal_ok(int slot) {
+  char english[32], russian[32], name[32];
+  unsigned lines = focal_source_lines(programs[slot].source);
+  snprintf(english, sizeof(english), "FOCAL: %u lines", lines);
+  snprintf(russian, sizeof(russian), M8("ФОКАЛ готов: %u"), lines);
+  focal_display_program_name(programs[slot].name, name, sizeof(name));
+  tb_message_i18n(english, russian, name, name);
+  delay(700);
+}
+static void display_focal_saved(int slot) {
+  char name[32];
+  focal_display_program_name(programs[slot].name, name, sizeof(name));
+  tb_message_i18n("FOCAL saved", M8("ФОКАЛ сохранен"), name, name);
+  delay(700);
+}
+static bool focal_persist_write(u16 parent, u16 preferred, const char *name,
+                                const char *source, u16 length, u16 &saved) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_fixture::write(parent, preferred, name, source, length,
+                                   saved);
+#else
+  return program_store::write_file(parent, preferred,
+                                   program_store::ProgramType::FOCAL, name,
+                                   (const u8 *)source, length, &saved);
+#endif
+}
+static bool focal_persist_remove(u16 id, const char *name) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_fixture::remove(id, name);
+#else
+  return id == TB_INVALID_STORE_ID
+             ? program_store::remove(program_store::ProgramType::FOCAL, name)
+             : program_store::remove_id(id);
+#endif
+}
+static bool focal_persist_exists(const char *name) {
+#ifdef FOCAL_HOST_TEST
+  return focal_host_fixture::exists(name);
+#else
+  return program_store::exists(program_store::ProgramType::FOCAL, name);
+#endif
+}
+static constexpr usize FOCAL_EDITOR_OFFSET = (sizeof(FocalRuntime) + 3u) & ~3u;
+[[maybe_unused]] static constexpr usize FOCAL_EDITOR_WORKSPACE =
+    FOCAL_EDITOR_OFFSET + TB_SOURCE_SIZE;
+#if defined(MK61_LANGUAGE_VM_COMPILER) && !defined(FOCAL_HOST_TEST)
+static_assert(FOCAL_EDITOR_WORKSPACE <= language_vm::COMPILER_WORKSPACE_SIZE,
+              "FOCAL editor must retain the protected VM values");
+#endif
+static char *focal_editor_source() {
+#ifdef FOCAL_HOST_TEST
+  static char source[TB_SOURCE_SIZE];
+  return source;
+#else
+  return (char *)language_workspace::data(language_workspace::Owner::FOCAL) +
+         FOCAL_EDITOR_OFFSET;
+#endif
+}
+bool CompileFocal(const char *source) {
 #ifndef FOCAL_HOST_TEST
-  FocalWorkspaceScope scope;
+  FocalWorkspaceScope scope(FOCAL_EDITOR_WORKSPACE);
   if (!scope.ok())
     return false;
 #endif
-  return tb_compile_source(text);
+  const int slot = find_free_program();
+  if (slot < 0)
+    return tb_error("FULL?");
+  if (!source || !tb_compile_source(source))
+    return false;
+  char *staging = focal_editor_source();
+  if (!focal_text::editor_copy(source, staging, TB_SOURCE_SIZE))
+    return tb_error("FULL?");
+  char name[TB_NAME_SIZE];
+  tb_program_default_name(slot, name, sizeof(name));
+  if (!store_edited_program(slot, staging, name, TB_ROOT_STORE_ID))
+    return false;
+  display_focal_ok(slot);
+  return true;
 }
-void RunFocal(int slot) {
+FocalRunStatus RunFocal(int slot) {
 #ifndef FOCAL_HOST_TEST
   FocalWorkspaceScope scope;
   if (!scope.ok())
-    return;
+    return FocalRunStatus::UNAVAILABLE;
 #endif
-  (void)tb_run_program(slot);
+  return tb_run_program(slot);
 }
 static int find_free_program(void) {
   for (int i = 0; i < TB_PROGRAM_COUNT; i++) {
@@ -858,7 +988,7 @@ static int find_program_by_name(const char *name) {
 }
 
 static void tb_program_default_name(int slot, char *out, usize size) {
-  snprintf(out, size, "FOC%d", slot);
+  snprintf(out, size, "FOCAL%d", slot);
 }
 
 #ifndef FOCAL_HOST_TEST
@@ -890,6 +1020,7 @@ static int load_focal_program_from_store(const program_store::Entry &entry) {
 #if defined(MK61_LANGUAGE_VM_COMPILER)
   program.source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
 #endif
+  focal_trace_message("LOAD", entry.name);
   if (!program_store::read_id(entry.id, (u8 *)program.source,
                               TB_SOURCE_SIZE - 1, &len))
     return -1;
@@ -1247,75 +1378,64 @@ static void tb_draw_name_editor(const char *name, u16 cursor, bool sms_cursor) {
   }
 }
 
-static bool store_edited_program(int slot, char *source, const char *store_name,
-                                 u16 target_parent = TB_ROOT_STORE_ID) {
+static bool store_edited_program(int slot, char *source, const char *name,
+                                 u16 parent = TB_ROOT_STORE_ID) {
   if (slot < 0 || slot > TB_PROGRAM_COUNT)
-    return tb_error("SORRY");
-  // Drafts are editable even when not runnable.
-  if (text_editor::bounded_length(source, TB_SOURCE_SIZE) >= TB_SOURCE_SIZE)
+    return tb_error("SLOT?");
+  if (!source ||
+      text_editor::bounded_length(source, TB_SOURCE_SIZE) >= TB_SOURCE_SIZE)
     return tb_error("FULL?");
-
-  char old_name[TB_NAME_SIZE] = "";
-  u16 store_id = TB_INVALID_STORE_ID;
-  u16 parent_id = target_parent;
-  if (slot >= 0 && slot < TB_PROGRAM_COUNT && tb_program_used(programs[slot])) {
-    tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
-    store_id = programs[slot].store_id;
-    parent_id = target_parent;
-  }
-
+  if (!name || !*name || strlen(name) >= TB_NAME_SIZE)
+    return tb_error("NAME?");
   if (slot == TB_PROGRAM_COUNT) {
-#ifdef FOCAL_HOST_TEST
     slot = find_free_program();
     if (slot < 0)
-      return tb_error("SORRY");
-#else
-    slot = tb_alloc_program_slot(store_name);
-#endif
+      slot = 0;
   }
-  if (slot < 0 || slot >= TB_PROGRAM_COUNT)
-    return tb_error("SORRY");
-  char final_name[TB_NAME_SIZE];
-  if (store_name != NULL && store_name[0] != 0)
-    tb_copy_text(final_name, sizeof(final_name), store_name);
-  else
-    tb_program_default_name(slot, final_name, sizeof(final_name));
-  const u16 source_len = (u16)strlen(source);
-#ifndef FOCAL_HOST_TEST
-  // Сначала сохраняем во флеш-память. Состояние редактора в ОЗУ фиксируется
-  // только после успешной записи всего исходного текста, поэтому при ошибке
-  // предыдущая программа остаётся целой.
-  u16 saved_id = store_id;
-  if (!program_store::write_file(parent_id, store_id,
-                                 program_store::ProgramType::FOCAL, final_name,
-                                 (const u8 *)source, source_len, &saved_id)) {
-    return tb_error("SORRY");
+  const bool used = tb_program_used(programs[slot]);
+  u16 previous = used ? programs[slot].store_id : TB_INVALID_STORE_ID;
+  char old_name[TB_NAME_SIZE] = {};
+  if (used)
+    tb_copy_text(old_name, sizeof(old_name), programs[slot].name);
+  const bool legacy_rename =
+      previous == TB_INVALID_STORE_ID && *old_name && !tb_streq(old_name, name);
+  if (legacy_rename && focal_persist_exists(name))
+    return tb_error("NAME?");
+  if (!focal_text::transform(source, TB_SOURCE_SIZE, true) ||
+      !focal_text::transform(source, TB_SOURCE_SIZE, false))
+    return tb_error("FULL?");
+  u16 saved = previous;
+  bool written = focal_persist_write(parent, previous, name, source,
+                                     (u16)strlen(source), saved);
+  bool expanded = focal_text::transform(source, TB_SOURCE_SIZE, true);
+  if (!written || !expanded)
+    return tb_error("FULL?");
+  if (legacy_rename && !focal_persist_remove(previous, old_name)) {
+    (void)focal_persist_remove(saved, name);
+    return tb_error("FULL?");
   }
-  if (store_id == TB_INVALID_STORE_ID && old_name[0] != 0 &&
-      !tb_streq(old_name, final_name)) {
-    program_store::remove(program_store::ProgramType::FOCAL, old_name);
-  }
-  store_id = saved_id;
-#endif
+  // Retain the exact persisted text for source-backed resource offsets. Only
+  // the separate editor view expands names; no caller's old slot is clobbered.
   tb_copy_text(programs[slot].source, sizeof(programs[slot].source), source);
-  programs[slot].source_len = source_len;
+  (void)focal_text::transform(programs[slot].source, TB_SOURCE_SIZE, false);
+  programs[slot].source_len = (u16)strlen(programs[slot].source);
+  programs[slot].store_id = saved;
+  programs[slot].parent_id = parent;
+  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), name);
 #if defined(MK61_LANGUAGE_VM_COMPILER)
   programs[slot].source_revision =
       portable_system::call(MK61_SYS_RESOURCE_READ);
 #endif
-  tb_copy_text(programs[slot].name, sizeof(programs[slot].name), final_name);
-  programs[slot].store_id = store_id;
-  programs[slot].parent_id = parent_id;
   NextFocal = (i8)slot;
-
-  tb_message_i18n("FOCAL ready", M8("FOCAL готов"), programs[slot].name,
-                  programs[slot].name);
-  delay(700);
+  focal_trace_message("SAVE", name);
+  display_focal_saved(slot);
   return true;
 }
-
 static void EditFocalSlot(int slot, u16 new_parent = TB_ROOT_STORE_ID) {
 #ifndef FOCAL_HOST_TEST
+  FocalWorkspaceScope editing(FOCAL_EDITOR_WORKSPACE);
+  if (!editing.ok())
+    return;
   tb_activate_inherited_text_font();
 #endif
   if (slot < 0 || slot > TB_PROGRAM_COUNT)
@@ -1343,7 +1463,11 @@ static void EditFocalSlot(int slot, u16 new_parent = TB_ROOT_STORE_ID) {
     programs[slot].store_id = TB_INVALID_STORE_ID;
     programs[slot].parent_id = new_parent;
   }
-  char *const source = programs[slot].source;
+  char *const source = focal_editor_source();
+  if (!focal_text::editor_copy(programs[slot].source, source, TB_SOURCE_SIZE)) {
+    tb_error("FULL?");
+    return;
+  }
 
   const auto restore_original = [&]() {
 #ifndef FOCAL_HOST_TEST
@@ -1360,7 +1484,7 @@ static void EditFocalSlot(int slot, u16 new_parent = TB_ROOT_STORE_ID) {
   };
 
   text_editor::Buffer editor = {
-      source, TB_SOURCE_SIZE,           programs[slot].source_len, 0,
+      source, TB_SOURCE_SIZE,           (u16)strlen(source), 0,
       0,      text_editor::Shift::NONE, {false, -1, 0, 0}};
 #if (defined(MK61_DISPLAY_LCD1602) && !defined(FOCAL_HOST_TEST)) ||            \
     defined(MK61_BUILD_PORTABLE_SYSTEM)
@@ -1598,6 +1722,7 @@ bool FOCAL_menu_select(void) {
 
 #ifdef FOCAL_HOST_TEST
 extern "C" void FocalNextReset() {
+  focal_host_fixture::reset();
   InitFocal();
   focal_host_angle_unit = RADIAN;
   host_input_count = host_input_index = 0;
@@ -1628,6 +1753,10 @@ extern "C" void FocalNextInputs(const double *values, unsigned n) {
 }
 extern "C" const char *FocalNextPrompt() { return host_prompt; }
 extern "C" const char *FocalNextScreen(int row) { return main_lcd().line(row); }
+extern "C" bool FocalTestExpandOperators(const char *input, char *output,
+                                         int size) {
+  return size > 0 && focal_text::editor_copy(input, output, (unsigned)size);
+}
 extern "C" void FocalNextAngleMode(int unit) {
   focal_host_angle_unit = (AngleUnit)unit;
 }

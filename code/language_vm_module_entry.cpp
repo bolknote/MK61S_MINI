@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tinybasic_diagnostic.hpp"
 #include "tinybasic_text.hpp"
+#include "focal_trace.hpp"
 #include "language_resources.hpp"
 #if !defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include "config.h"
@@ -184,7 +185,7 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
 }
 bool append(const char* text,uint16_t length,bool separate) {
   if(length)runtime.request->pause_final=0;
-  if(separate && !tinybasic_text::append(runtime.output,sizeof(runtime.output),runtime.output_cursor," ",1)) return false;
+  if(separate && runtime.output[0] && !tinybasic_text::append(runtime.output,sizeof(runtime.output),runtime.output_cursor," ",1)) return false;
   if(tinybasic_text::append(runtime.output,sizeof(runtime.output),runtime.output_cursor,text,length))return true;
   runtime.failure=Error::FULL;return false;
 }
@@ -274,12 +275,14 @@ bool input(const char* prompt, uint16_t length, double& value) {
 bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   const bool basic = runtime.language == Language::BASIC;
   switch (event) {
+    case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
       runtime.width = 0; runtime.precision = 8;
       runtime.request->pause_final = 0;
+      if(!basic){runtime.row=0;runtime.output[0]=0;runtime.output_cursor=0;}
       return true;
     case Event::TEXT:
-      return append(text, length, false);
+      return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
       if(resource_text((const uint8_t*)text, portable_system::resource_read,
                        (void*)runtime.request->image, resource_append, nullptr)) return true;
@@ -290,9 +293,10 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       if (!portable_system::format_number(value, basic ? 10 : runtime.precision, number,
                                           sizeof(number)))
         return false;
+      if(!basic && runtime.output[0] && !append(" ",1,false))return false;
       for (int n = (int)runtime.width - (int)strlen(number); n > 0; --n)
           if (!append(" ", 1, false)) return false;
-      return append(number, (uint16_t)strlen(number), false);
+      return append(number,(uint16_t)strlen(number),false);
     }
     case Event::PRECISION:
       if(value<0 || value>64 || !length || length>15)return false;
@@ -316,7 +320,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       flush(true);
       return true;
     case Event::PRINT_END:
-      if (!length) flush(basic);
+      if(!basic || !length)flush(false);
       return true;
     case Event::READ_INPUT:
       return input(text, length, value);

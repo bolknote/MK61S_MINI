@@ -1589,6 +1589,9 @@ CompileResult compile_focal(const char* source, uint16_t length, uint8_t* output
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   return focal_next::compile_program(source,length,output,capacity,rf_available,resources);
 }
+bool validate_focal_expression(const char* source,uint16_t length,bool rf_available) {
+  return focal_next::valid_fragment(source,length,rf_available);
+}
 CompileResult compile_expression(Language language, const char* source, uint16_t length,
                                  uint8_t* output, uint16_t capacity) {
   if(language==Language::FOCAL)

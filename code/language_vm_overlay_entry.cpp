@@ -1,4 +1,5 @@
 #include "tinybasic_text.hpp"
+#include "focal_trace.hpp"
 #include "language_resources.hpp"
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
@@ -65,7 +66,7 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
 }
 bool append(const char* text,uint16_t length,bool separate) {
   if(length)request().pause_final=0;
-  if(separate && !tinybasic_text::append(state().output,sizeof(state().output),state().output_cursor," ",1)) return false;
+  if(separate && state().output[0] && !tinybasic_text::append(state().output,sizeof(state().output),state().output_cursor," ",1)) return false;
   if(tinybasic_text::append(state().output,sizeof(state().output),state().output_cursor,text,length))return true;
   state().failure=Error::FULL;return false;
 }
@@ -89,11 +90,13 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   auto& s = state();
   const bool basic = s.language == Language::BASIC;
   switch (event) {
+    case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
       s.width = 0;s.precision=8;
       request().pause_final = 0;
+      if(!basic){s.row=0;s.output[0]=0;s.output_cursor=0;}
       return true;
-    case Event::TEXT: return append(text, length, false);
+    case Event::TEXT: return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
       return portable_system::resource_print(request().image, (const uint8_t*)text,
                                              resource_append, nullptr);
@@ -101,9 +104,10 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       char number[24];
       if (!portable_system::format_number(value, basic ? 10 : s.precision, number,
                                           sizeof(number))) return false;
+      if(!basic && s.output[0] && !append(" ",1,false))return false;
       for (int n = (int)s.width - (int)strlen(number); n > 0; --n)
           if (!append(" ", 1, false)) return false;
-      return append(number, (uint16_t)strlen(number), false);
+      return append(number,(uint16_t)strlen(number),false);
     }
     case Event::PRECISION:
       if(value<0 || value>64 || !length || length>15)return false;
@@ -123,7 +127,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     }
     case Event::FLUSH: flush(true); return true;
-    case Event::PRINT_END: if (!length) flush(basic); return true;
+    case Event::PRINT_END: if(!basic || !length)flush(false);return true;
     // The kernel yields before dispatching this event. No parser/editor is
     // linked into the hot image, and no callback survives an APP replacement.
     case Event::READ_INPUT:

@@ -289,8 +289,8 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if (op == Op::FOR_FOCAL && !target(word(bytes + pc + 2)))
       return Error::INVALID_IMAGE;
     if (op == Op::CALL_PARAMS &&
-        (!target(word(bytes+pc+1)) || !target(word(bytes+pc+3)) ||
-         (word(bytes+pc+1)!=0xFFFF && (word(bytes+pc+3)==0xFFFF || word(bytes+pc+3)<=word(bytes+pc+1))))) return Error::INVALID_IMAGE;
+        (!target(word(bytes+pc+1)) || !target(word(bytes+pc+3)==0xFFFF?0xFFFF:uint16_t(word(bytes+pc+3)&0x7FFF)) ||
+         (word(bytes+pc+1)!=0xFFFF && (word(bytes+pc+3)==0xFFFF || (word(bytes+pc+3)&0x7FFF)<=word(bytes+pc+1))))) return Error::INVALID_IMAGE;
     if (op == Op::BRANCH)
       for (uint8_t i = 0; i < 3; ++i)
         if (!target(word(bytes + pc + 1 + i * 2))) return Error::INVALID_IMAGE;
@@ -432,6 +432,20 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       jump(to);
     }
   };
+  // Procedure groups propagate a source-level jump to their caller. A
+  // single-line DO catches it and returns. Value calls keep their own frame
+  // so internal branches can still compute an explicit function result.
+  auto focal_jump = [&](uint16_t to) {
+    if(to<v.code || to>=v.end){error=Error::LINE;return;}
+    while(s.call_count) {
+      const auto frame=s.calls[s.call_count-1];
+      if(frame.mode&2)break;
+      --s.call_count;s.loop_count=frame.loops;if(frame.mode)s.sp=frame.base;
+      if(!frame.group){s.pc=frame.resume;return;}
+    }
+    while(s.loop_count && (to<s.loops[s.loop_count-1].body || to>=s.loops[s.loop_count-1].end))--s.loop_count;
+    jump(to);
+  };
   while (error == Error::NONE) {
     if (s.call_count && s.calls[s.call_count - 1].end &&
         s.pc >= s.calls[s.call_count - 1].end) {
@@ -469,6 +483,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     const Op op = (Op)v.bytes[s.pc];
 #if defined(LANGUAGE_VM_TRACE)
     trace_instruction(v, s.pc, steps);
+#endif
+#if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
+    if(v.language==Language::FOCAL && host.event) {
+      double line=(double)source_line(v,s.pc);
+      if(!host.event(host.context,Event::TRACE,(const char*)v.bytes+s.pc,s.pc,line)) {error=Error::IO;break;}
+    }
 #endif
     // Metadata needs no operand decoder, constant decoder or value scratch.
     // Keep logical steps/service cadence and the original safety checks.
@@ -844,9 +864,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::JUMP:
-        if(v.language==Language::FOCAL)
-          while(s.loop_count && (word(p)<s.loops[s.loop_count-1].body || word(p)>=s.loops[s.loop_count-1].end)) --s.loop_count;
-        jump(word(p));break;
+        if(v.language==Language::FOCAL)focal_jump(word(p));else jump(word(p));break;
       case Op::JUMP_FALSE:
         a = pop();
         if (error == Error::NONE && a.zero()) jump(word(p));
@@ -887,15 +905,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         call(word(p), word(p + 2));
         break;
       case Op::BRANCH:
-        a=pop();
-        if(error==Error::NONE) {
-          const uint16_t to=word(p+(a<0?0:a==0?2:4));
-          if(to!=0xFFFF) {
-            while(s.loop_count && (to<s.loops[s.loop_count-1].body || to>=s.loops[s.loop_count-1].end)) --s.loop_count;
-            jump(to);
-          }
-        }
-        break;
+        a=pop();if(error==Error::NONE){const uint16_t to=word(p+(a<0?0:a==0?2:4));if(to!=0xFFFF)focal_jump(to);}break;
       case Op::FOR_BASIC:
       case Op::FOR_ARRAY:
       case Op::FOR_FOCAL: {

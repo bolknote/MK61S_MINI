@@ -58,7 +58,7 @@ bool FOCAL_menu_select(void) {
   return call_bool(loadable_module::Command::FOCAL_MENU_SELECT);
 }
 
-bool CompileFocal(char *program) {
+bool CompileFocal(const char *program) {
   return call_bool(loadable_module::Command::FOCAL_COMPILE,
                    pointer_argument(program));
 }
@@ -73,8 +73,8 @@ bool FocalIsReady(void) {
   return call_bool(loadable_module::Command::FOCAL_IS_READY);
 }
 
-void RunFocal(int index) {
-  call_void(loadable_module::Command::FOCAL_RUN_INDEX, (u32)index);
+FocalRunStatus RunFocal(int index) {
+  return call_status(loadable_module::Command::FOCAL_RUN_INDEX, (u32)index, 0);
 }
 
 FocalRunStatus RunFocalProgram(const char *name) {

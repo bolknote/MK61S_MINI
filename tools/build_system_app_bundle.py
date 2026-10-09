@@ -137,6 +137,7 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
         parts += ["split-v9-fused", "float" if args.local_float_math else "core"]
     if system == "language-input":
         parts.append("cold-v9-fused")
+    if getattr(args,"focal_trace",False) and system in ("focal","language-vm"):parts.append("trace")
     return "+".join(parts)
 
 
@@ -416,6 +417,8 @@ def build(args: argparse.Namespace) -> dict:
             ]
             if args.packer:
                 command += ["--packer", args.packer.resolve()]
+            if getattr(args,"focal_trace",False) and system in ("focal","language-vm"):
+                command.append("--focal-trace")
             if not args.ui_fonts:
                 command.append("--no-ui-fonts")
             if system == "markdown-viewer" and not args.graphics:
@@ -495,6 +498,7 @@ def main() -> None:
     parser.add_argument("--markdown", type=boolean, default=True)
     parser.add_argument("--chip8", type=boolean, default=True)
     parser.add_argument("--local-float-math", type=boolean, default=False)
+    parser.add_argument("--focal-trace",type=boolean,default=False)
     parser.add_argument("--language-vm-compiler", type=boolean, default=False,
                         help="compiler-only language APPs for the resident VM experiment")
     parser.add_argument("--overlay-language-vm", type=boolean, default=False,

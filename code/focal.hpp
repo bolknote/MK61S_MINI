@@ -21,10 +21,10 @@ inline bool FocalRunSucceeded(FocalRunStatus s) {
 #if MK61_ENABLE_FOCAL
 bool FOCAL_library_select();
 bool FOCAL_menu_select();
-bool CompileFocal(char *);
+bool CompileFocal(const char *);
 void InitFocal();
 bool FocalIsReady();
-void RunFocal(int);
+FocalRunStatus RunFocal(int);
 FocalRunStatus RunFocalProgram(const char *);
 FocalRunStatus RunFocalProgram(u16);
 void EditFocal();
@@ -33,10 +33,10 @@ bool EditFocalProgram(u16);
 #else
 inline bool FOCAL_library_select() { return false; }
 inline bool FOCAL_menu_select() { return false; }
-inline bool CompileFocal(char *) { return false; }
+inline bool CompileFocal(const char *) { return false; }
 inline void InitFocal() {}
 inline bool FocalIsReady() { return false; }
-inline void RunFocal(int) {}
+inline FocalRunStatus RunFocal(int) { return FocalRunStatus::UNAVAILABLE; }
 inline FocalRunStatus RunFocalProgram(const char *) {
   return FocalRunStatus::UNAVAILABLE;
 }

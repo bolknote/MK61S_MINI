@@ -229,7 +229,7 @@ private:
     has_calls_ = true;
     op(Op::CALL_PARAMS, int(function) - int(count));
     emit_word(label_pc(a));
-    emit_word(label_end(a));
+    emit_word(uint16_t(label_end(a) | (a.exact ? 0 : 0x8000)));
     byte(uint8_t(count));
     byte(uint8_t(function));
   }
@@ -604,7 +604,7 @@ private:
         fail(E::VARIABLE);
     } else {
       op(Op::PRINT_END);
-      byte(1);
+      byte(0);
     }
   }
   void branch() {
@@ -872,6 +872,16 @@ public:
         length_(n), capacity_(cap), pc_(0), lines_(lines), rf_(rf) {
     resources_table_ = table;
   }
+  bool valid_fragment() {
+    if (!source_ || !length_ || length_ > 111)
+      return false;
+    p_ = source_;
+    end_ = source_ + length_;
+    pc_ = language_vm::HEADER_SIZE;
+    expression();
+    skip_space();
+    return error_ == E::NONE && p_ == end_ && sp_ == 1;
+  }
   language_vm::CompileResult compile() {
     if (!source_ || !length_ || length_ > (Expression ? 64 : 1536) ||
         memchr(source_, 0, length_))
@@ -965,6 +975,11 @@ inline language_vm::CompileResult compile_expression(const char *source,
   Compiler<true> compiler(source, length, output, capacity, true, nullptr,
                           nullptr, nullptr);
   return compiler.compile();
+}
+inline bool valid_fragment(const char *source, uint16_t length, bool rf) {
+  Compiler<false> compiler(source, length, nullptr, language_vm::MAX_IMAGE, rf,
+                           nullptr, nullptr, nullptr);
+  return compiler.valid_fragment();
 }
 } // namespace focal_next
 #endif

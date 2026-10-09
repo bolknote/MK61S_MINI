@@ -43,6 +43,15 @@ def publish_worker(catalog: str, source: str, index: int) -> str:
 
 
 class SystemAppCatalogSelfTest(unittest.TestCase):
+    def test_focal_trace_has_its_own_cache_variant(self) -> None:
+        args=arguments(Path("catalog"));args.language_vm_compiler=True
+        plain={name:bundle.app_build_key("sources",name+".APP",name,args)
+               for name in ("focal","language-vm","tinybasic")}
+        args.focal_trace=True
+        self.assertNotEqual(plain["focal"],bundle.app_build_key("sources","focal.APP","focal",args))
+        self.assertNotEqual(plain["language-vm"],bundle.app_build_key("sources","language-vm.APP","language-vm",args))
+        self.assertEqual(plain["tinybasic"],bundle.app_build_key("sources","tinybasic.APP","tinybasic",args))
+
     def test_vm_variants_do_not_reuse_interpreter_or_math_packages(self) -> None:
         args = arguments(Path("catalog"))
         basic = bundle.app_variant("tinybasic", args)
