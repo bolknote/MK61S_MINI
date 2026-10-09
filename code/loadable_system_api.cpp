@@ -44,12 +44,18 @@ static_assert(alignof(mk61_system_lease) >= alignof(language_workspace::Lease),
               "opaque lease alignment");
 static u32 workspace_image_crc[(u8) Kind::EXPLORER + 1U];
 #define MK61_RUNTIME(name) extern "C" void service_##name() asm(#name);
+#define MK61_RUNTIME_ISO_C(name, result, ...) \
+  extern "C" result service_##name(__VA_ARGS__) asm(#name);
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
+#undef MK61_RUNTIME_ISO_C
 static const mk61_system_runtime_function runtime[] = {
 #define MK61_RUNTIME(name) service_##name,
+#define MK61_RUNTIME_ISO_C(name, result, ...) \
+  reinterpret_cast<mk61_system_runtime_function>(service_##name),
 #include "loadable_system_runtime.def"
 #undef MK61_RUNTIME
+#undef MK61_RUNTIME_ISO_C
 };
 
 static language_workspace::Owner owner(u32 kind) {

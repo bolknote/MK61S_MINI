@@ -2,13 +2,11 @@
  * Compile with -fno-builtin so these loops cannot become recursive calls. */
 #include <stddef.h>
 #include <stdint.h>
+#include "memory_word_ops.h"
 
 #ifndef MK61_APP_SHARED_RUNTIME
 void* memcpy(void* dst, const void* src, size_t size) {
-  unsigned char* out = dst;
-  const unsigned char* in = src;
-  for(size_t i = 0; i < size; ++i) out[i] = in[i];
-  return dst;
+  return mk61_memory_copy(dst, src, size);
 }
 
 void* memset(void* dst, int value, size_t size) {
@@ -27,11 +25,7 @@ void* memmove(void* dst, const void* src, size_t size) {
 }
 
 int memcmp(const void* left, const void* right, size_t size) {
-  const unsigned char* a = left;
-  const unsigned char* b = right;
-  for(size_t i = 0; i < size; ++i)
-    if(a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
-  return 0;
+  return mk61_memory_compare(left, right, size);
 }
 
 /* Newlib's Cortex-M string routines are optimized for throughput and pull
