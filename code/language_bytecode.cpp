@@ -9,6 +9,7 @@
     defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || \
     defined(MK61_BUILD_FOCAL_MODULE) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
 #include "language_bytecode.hpp"
+#include "language_source_scan.hpp"
 #include "tinybasic_syntax.hpp"
 #include "focal_compiler.hpp"
 
@@ -508,7 +509,8 @@ class Compiler {
       while (cursor < source_ + length_ && (*cursor == '\r' || *cursor == '\n'))
         ++cursor;
       const char* begin = cursor;
-      while (cursor < source_ + length_ && *cursor != '\r' && *cursor != '\n') ++cursor;
+      cursor += source_scan::line_end((const uint8_t*)cursor,
+                                      (size_t)(source_ + length_ - cursor));
       p_ = begin;
       end_ = cursor;
       skip();
