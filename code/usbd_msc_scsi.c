@@ -38,6 +38,14 @@ EndBSPDependencies */
 #endif
 
 extern uint8_t MK61_VirtualFatSync(void);
+extern uint32_t MK61_VirtualFatWriteCacheBlocks(void);
+
+static uint32_t SCSI_WritePacketBytes(const USBD_MSC_BOT_HandleTypeDef *hmsc)
+{
+  return msc_scsi_write_chunk_limit(hmsc->scsi_blk_size, MSC_MEDIA_PACKET,
+                                   MK61_VirtualFatWriteCacheBlocks());
+}
+
 
 #define MK61_VFAT_SYNC_OK    0U
 #define MK61_VFAT_SYNC_BUSY  2U
@@ -1016,7 +1024,7 @@ static int8_t SCSI_Write10(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *param
     }
     len = hmsc->cbw.dDataLength;
 
-    len = MIN(len, MSC_MEDIA_PACKET);
+    len = MIN(len, SCSI_WritePacketBytes(hmsc));
 
     /* Prepare EP to receive first data packet */
     hmsc->bot_state = USBD_BOT_DATA_OUT;
@@ -1107,7 +1115,7 @@ static int8_t SCSI_Write12(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *param
     }
     len = hmsc->cbw.dDataLength;
 
-    len = MIN(len, MSC_MEDIA_PACKET);
+    len = MIN(len, SCSI_WritePacketBytes(hmsc));
 
     /* Prepare EP to receive first data packet */
     hmsc->bot_state = USBD_BOT_DATA_OUT;
@@ -1310,7 +1318,7 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
   MSCOutEpAdd = USBD_CoreGetEPAdd(pdev, USBD_EP_OUT, USBD_EP_TYPE_BULK, (uint8_t)pdev->classId);
 #endif /* USE_USBD_COMPOSITE */
 
-  len = MIN(len, MSC_MEDIA_PACKET);
+  len = MIN(len, SCSI_WritePacketBytes(hmsc));
 
   write_status = ((USBD_StorageTypeDef *)pdev->pUserData[pdev->classId])->Write(lun, hmsc->bot_data,
                                                                                 hmsc->scsi_blk_addr,
@@ -1339,7 +1347,7 @@ static int8_t SCSI_ProcessWrite(USBD_HandleTypeDef *pdev, uint8_t lun)
   }
   else
   {
-    len = MIN((hmsc->scsi_blk_len * hmsc->scsi_blk_size), MSC_MEDIA_PACKET);
+    len = MIN((hmsc->scsi_blk_len * hmsc->scsi_blk_size), SCSI_WritePacketBytes(hmsc));
 
     /* Prepare EP to Receive next packet */
     (void)USBD_LL_PrepareReceive(pdev, MSCOutEpAdd, hmsc->bot_data, len);

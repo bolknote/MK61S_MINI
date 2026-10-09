@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import glob
+import fcntl
+import hashlib
 import os
 import re
 import select
@@ -29,23 +31,43 @@ DATE_MS = re.compile(
 class Port:
     def __init__(self, path: str):
         self.path = path
-        self.fd = os.open(path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
-        attrs = termios.tcgetattr(self.fd)
-        attrs[0] = 0
-        attrs[1] = 0
-        attrs[2] &= ~(termios.CSIZE | termios.PARENB | termios.CSTOPB)
-        attrs[2] |= termios.CS8 | termios.CREAD | termios.CLOCAL
-        attrs[3] = 0
-        attrs[4] = termios.B115200
-        attrs[5] = termios.B115200
-        attrs[6][termios.VMIN] = 0
-        attrs[6][termios.VTIME] = 0
-        termios.tcsetattr(self.fd, termios.TCSANOW, attrs)
+        self.fd = -1
+        # The advisory lock also covers PTYs/drivers which ignore TIOCEXCL.
+        canonical = os.path.realpath(path).replace('/dev/tty.', '/dev/cu.')
+        key = hashlib.sha256(canonical.encode()).hexdigest()[:20]
+        self.lock_fd = os.open(f'/tmp/mk61-hil-cdc-{os.geteuid()}-{key}.lock',
+                               os.O_CREAT | os.O_RDWR, 0o600)
+        try:
+            fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.fd = os.open(path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+            fcntl.ioctl(self.fd, termios.TIOCEXCL)
+            attrs = termios.tcgetattr(self.fd)
+            attrs[0] = 0
+            attrs[1] = 0
+            attrs[2] &= ~(termios.CSIZE | termios.PARENB | termios.CSTOPB)
+            attrs[2] |= termios.CS8 | termios.CREAD | termios.CLOCAL
+            attrs[3] = 0
+            attrs[4] = termios.B115200
+            attrs[5] = termios.B115200
+            attrs[6][termios.VMIN] = 0
+            attrs[6][termios.VTIME] = 0
+            termios.tcsetattr(self.fd, termios.TCSANOW, attrs)
+        except BaseException:
+            self.close()
+            raise
 
     def close(self) -> None:
         if self.fd >= 0:
+            try:
+                fcntl.ioctl(self.fd, termios.TIOCNXCL)
+            except OSError:
+                pass
             os.close(self.fd)
             self.fd = -1
+        if self.lock_fd >= 0:
+            fcntl.flock(self.lock_fd, fcntl.LOCK_UN)
+            os.close(self.lock_fd)
+            self.lock_fd = -1
 
     def __enter__(self) -> "Port":
         return self

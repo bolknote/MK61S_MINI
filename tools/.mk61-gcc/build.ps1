@@ -444,6 +444,13 @@ try {
     $setupApp = if ($Setup -eq '1' -and $SetupAsApp -eq '1') { '1' } else { '0' }
     $systemRequested = $true
     $releaseCaseInfo = Get-ReleaseCase $ReleaseCase
+    $caseDefinitions = @()
+    if ($null -ne $releaseCaseInfo) {
+        $caseDefineProperty = $releaseCaseInfo.PSObject.Properties['defines']
+        if ($null -ne $caseDefineProperty) {
+            $caseDefinitions = @($caseDefineProperty.Value)
+        }
+    }
     $productBuild = if ($null -ne $releaseCaseInfo -and
             [int]$releaseCaseInfo.product -eq 1) { '1' } else { $ProductBuild }
     if ($null -ne $releaseCaseInfo) {
@@ -656,6 +663,7 @@ try {
         "-DMK61_GLOBAL_RAM_LIMIT=$ramLimit",
         "-DMK61_STACK_FRAME_LIMIT=$stackFrameLimit"
     )
+    $configureArguments += "-DMK61_CASE_DEFINITIONS=$($caseDefinitions -join ';')"
     if ($env:OS -eq 'Windows_NT') {
         $configureArguments += @(
             "-DMK61_POWERSHELL=$powerShell",
@@ -827,6 +835,9 @@ try {
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
     $flagValues.Add('-DMK61_REQUIRE_F401_SELECTIVE_O3=1')
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
+    foreach ($definition in $caseDefinitions) {
+        $flagValues.Add("-D$definition")
+    }
     [IO.File]::WriteAllText(
         (Join-Path $outputBundle 'build.flags'),
         ($flagValues -join ' ') + [Environment]::NewLine,

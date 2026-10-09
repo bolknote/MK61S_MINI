@@ -27,6 +27,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/virtual_fat_diagnostic.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
+  "$root/code/fat_cluster_chain.cpp" \
   "$root/code/language_workspace.cpp" \
   "$root/code/shared_memory.cpp" \
   "$root/code/shared_scratch.cpp" \
@@ -51,6 +52,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/virtual_fat_diagnostic.cpp" \
   "$root/code/program_store.cpp" \
   "$root/code/storage_geometry.cpp" \
+  "$root/code/fat_cluster_chain.cpp" \
   "$root/code/language_workspace.cpp" \
   "$root/code/shared_memory.cpp" \
   "$root/code/shared_scratch.cpp" \

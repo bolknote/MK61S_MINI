@@ -874,7 +874,7 @@ static constexpr u32 USB_HOST_LOST_TIMEOUT_MS = 3000U;
 static bool usb_disk_mode(bool wait_for_key_on_error) {
   draw_usb_disk_status(M8("USB-диск"), "USB Disk", M8("запуск..."), "starting...");
   library_mk61::flush_settings_state();
-  // C6 is mounted once during normal boot and its in-memory catalog remains
+  // C9 is mounted once during normal boot and its in-memory catalog remains
   // authoritative until the MSC session starts.  Remounting here used to run
   // catalog repair and clear persistent FAT staging immediately before the
   // USB-disk APP performed its own recovery.  Apart from duplicating a slow
@@ -884,7 +884,7 @@ static bool usb_disk_mode(bool wait_for_key_on_error) {
   if(!program_store::ready() && !program_store::refresh()) {
     if(program_store::mount_status() ==
        program_store::MountStatus::FORMAT_REQUIRED) {
-      draw_usb_disk_status(M8("Найден том C5"), "C5 volume found",
+      draw_usb_disk_status(M8("Неизвестная ФС"), "Unsupported FS",
                            M8("нужен формат"), "format needed");
     } else if(program_store::mount_status() ==
               program_store::MountStatus::REPAIR_REQUIRED) {
@@ -897,10 +897,9 @@ static bool usb_disk_mode(bool wait_for_key_on_error) {
     lcd_ru::restore_default_font();
     return action::MENU_BACK;
   }
-  // Empty files are valid C6/FAT objects.  Cleaning them implicitly here
+  // Empty files are valid C9/FAT objects. Cleaning them implicitly here
   // both destroyed user data and performed another full catalog walk before
-  // the APP could report a startup stage.  The explicit `fsclean` terminal
-  // command remains available for legacy stores that need that operation.
+  // the APP could report a startup stage. Empty-file deletion is explicit.
   if(!usb_start_mass_storage_mode()) {
     usb_mass_storage::note_startup_stage(720U);
     // deinit()/APP eviction performs its own finalization and can otherwise
@@ -962,7 +961,7 @@ static bool usb_disk_mode(bool wait_for_key_on_error) {
     }
   }
 
-  // Stopping MSC may validate and commit a complete C6 batch. On a large
+  // Stopping MSC may validate and commit a complete C9 batch. On a large
   // directory this takes seconds; show that ESC/eject was accepted instead
   // of leaving the interactive prompt frozen on screen.
 #if defined(MK61_DISPLAY_UC1609)

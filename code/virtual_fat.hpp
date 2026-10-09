@@ -32,6 +32,8 @@ bool write_cached_sectors(u32 lba, const u8* data, u16 count);
 bool flush_write_cache(void);
 bool write_sector(u32 lba, const u8* data);
 bool write_sectors(u32 lba, const u8* data, u16 count);
+// Durably import payload while retaining the host's exact FAT/dirent view.
+// Closing the MSC session canonicalizes directories and releases metadata.
 bool flush_pending(void);
 CommitResult flush_pending_result(void);
 // Финальная граница USB-сеанса: после детерминированного отказа read-only

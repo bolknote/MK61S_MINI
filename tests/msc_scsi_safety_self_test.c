@@ -192,6 +192,13 @@ static void test_arithmetic_matches_64_bit_reference(void)
 
 int main(void)
 {
+  assert(msc_scsi_write_chunk_limit(512U,8192U,10U) == 5120U);
+  assert(msc_scsi_write_chunk_limit(512U,8192U,7U) == 3584U);
+  assert(msc_scsi_write_chunk_limit(512U,8192U,32U) == 8192U);
+  assert(msc_scsi_write_chunk_limit(512U,512U,16U) == 512U);
+  assert(msc_scsi_write_chunk_limit(512U,8192U,0U) == 0U);
+  assert(msc_scsi_write_chunk_limit(0U,8192U,16U) == 0U);
+  assert(msc_scsi_write_chunk_limit(512U,8191U,16U) == 7680U);
   test_capacity16_response_is_bounded();
   test_address_range_rejects_wraparound();
   test_transfer_size_rejects_overflow();

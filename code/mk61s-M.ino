@@ -242,7 +242,7 @@ bool usb_start_terminal_mode(void) {
       // particular, do not let the new CDC endpoint inherit a still-live tty
       // node from the preceding MSC generation.
       delay(USB_CLASS_DISCONNECT_SETTLE_MS);
-      terminal.init();
+      terminal.init(false);
       dbgln(MINI, FIRMWARE_VER);
     }
   #endif
@@ -490,7 +490,7 @@ void setup() {
   crash_dump::initialize();
   dwt_profiler::initialize();
   // Сверхранний ESC уже был обработан из .preinit_array. Проверка resident
-  // идёт до дисплея, C6, USB и watchdog; повреждённый release образ может
+  // идёт до дисплея, C9, USB и watchdog; повреждённый release образ может
   // только оставить компактный breadcrumb и уйти через тот же ROM DFU путь.
   resident_firmware::enforce_or_dfu();
   power_monitor::initialize();
@@ -547,11 +547,6 @@ void setup() {
   sound_driver_init(PIN_BUZZER);
   classic_timer::initialize();
 
-  // Запускаем CDC до обнаружения внешней флеш-памяти. Раньше DEBUG_SPIFLASH
-  // начинал вывод только после program_store::init(), поэтому медленная или
-  // неудачная проверка ёмкости выглядела как зависшая плата, а её диагностика
-  // так и не доходила до хоста. В DFU-ветке CDC приложения не запускается:
-  // она уже завершилась переходом в системный загрузчик выше.
   usb_start_terminal_mode();
   crash_dump::update_runtime(crash_dump::RUNTIME_BOOT, 3, millis());
   dbgln(MINI, "ESC unpressed!");

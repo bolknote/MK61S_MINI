@@ -103,6 +103,7 @@ if command -v pwsh >/dev/null 2>&1; then
 fi
 "$root/tests/run_memory_buffer_tests.sh"
 "$root/tests/run_storage_geometry_tests.sh"
+"$root/tests/run_fat_cluster_chain_tests.sh"
 "$root/tests/run_msc_scsi_safety_tests.sh"
 "$root/tests/run_usb_disk_session_tests.sh"
 "$root/tests/run_program_store_tests.sh"

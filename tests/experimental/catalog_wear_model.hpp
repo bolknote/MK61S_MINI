@@ -6,9 +6,9 @@
 // no filesystem, serial port, USB device or production disk is opened here.
 //
 // Experiment boundary:
-// - Independent reference model for the C7 port in program_store.cpp.
+// - Independent reference model for the C9 port in program_store.cpp.
 //   This model never touches a real device; integration has separate tests.
-// - X7CT/X7WL are deliberately NOT production C7 signatures.
+// - X9CT/X9WL are deliberately NOT production C9 signatures.
 // - Only inode-sized records and opaque transaction metadata are modeled.
 //   available() represents file/staging ownership; payload GC is not modeled.
 // - Two moving sectors hold a root/page map and 15 journal records. Only
@@ -33,14 +33,14 @@ namespace catalog_wear_model {
 
 constexpr uint32_t sector_bytes = 4096;
 constexpr uint32_t none = UINT32_MAX;
-constexpr uint16_t inode_bytes = 20;
-constexpr uint8_t max_pages = 20;
-constexpr uint8_t overlay_limit = 96;
+constexpr uint16_t inode_bytes = 26;
+constexpr uint8_t max_pages = 52;
+constexpr uint8_t overlay_limit = 32;
 constexpr uint8_t transaction_limit = 16;
 constexpr uint8_t wal_slots = 15;
 constexpr uint16_t record_bytes = 512;
 constexpr uint16_t crc_offset = 508;
-constexpr uint16_t map_offset = 64;
+constexpr uint16_t map_offset = 80;
 constexpr uint16_t wal_offset = map_offset + max_pages * 8;
 constexpr uint16_t cursor_offset = wal_offset + 4;
 constexpr uint8_t active = 0x7f;
@@ -114,7 +114,7 @@ template<class Flash> class Catalog {
     uint8_t record[record_bytes];
     for(uint32_t sector = first_; sector < end_; ++sector) {
       if(!flash_.read(sector * sector_bytes, record, 20)) return false;
-      if(std::memcmp(record, "X7CT", 4) || record[5] != active ||
+      if(std::memcmp(record, "X9CT", 4) || record[5] != active ||
          get32(record + 12) != epoch_) continue;
       if(!flash_.read(sector * sector_bytes, record, sizeof(record))) return false;
       if(valid_root(record) && (root_ == none || newer(get32(record + 8), generation_))) {
@@ -171,12 +171,12 @@ template<class Flash> class Catalog {
     }
     uint8_t record[record_bytes];
     std::memset(record, 0xff, sizeof(record));
-    std::memcpy(record, "X7WL", 4); record[4] = 7;
+    std::memcpy(record, "X9WL", 4); record[4] = 9;
     put32(record + 8, sequence_ + 1); record[12] = count;
     std::memcpy(record + 16, meta.data(), meta.size());
     for(uint8_t i = 0; i < count; ++i) {
-      put16(record + 48 + i * 22, updates[i].id);
-      std::memcpy(record + 50 + i * 22, updates[i].value.data(), inode_bytes);
+      put16(record + 48 + i * (2U + inode_bytes), updates[i].id);
+      std::memcpy(record + 50 + i * (2U + inode_bytes), updates[i].value.data(), inode_bytes);
     }
     put32(record + crc_offset, record_crc(record));
     const uint32_t address = record_address(used_);
@@ -209,13 +209,13 @@ template<class Flash> class Catalog {
 
  private:
   bool geometry_valid() const {
-    return nodes_ && nodes_ <= 4084 && page_count_ && page_count_ <= max_pages && first_ >= 2 &&
+    return nodes_ && nodes_ <= 8192 && page_count_ && page_count_ <= max_pages && first_ >= 2 &&
         end_ <= flash_.sectors() && end_ > first_ &&
         end_ - first_ >= 2U * page_count_ + 4;
   }
   bool in_range(uint32_t sector) const { return sector >= first_ && sector < end_; }
   bool valid_root(uint8_t* record) const {
-    return !std::memcmp(record, "X7CT", 4) && record[4] == 7 && record[5] == active &&
+    return !std::memcmp(record, "X9CT", 4) && record[4] == 9 && record[5] == active &&
         get32(record + 8) && get32(record + 12) == epoch_ &&
         get16(record + 16) == nodes_ && record[18] == page_count_ &&
         record_crc(record) == get32(record + crc_offset);
@@ -290,7 +290,7 @@ template<class Flash> class Catalog {
   bool publish(uint32_t generation) {
     uint8_t record[record_bytes];
     std::memset(record, 0xff, sizeof(record));
-    std::memcpy(record, "X7CT", 4); record[4] = 7;
+    std::memcpy(record, "X9CT", 4); record[4] = 9;
     put32(record + 8, generation); put32(record + 12, epoch_);
     put16(record + 16, nodes_); record[18] = page_count_;
     put32(record + 20, sequence_);
@@ -325,14 +325,14 @@ template<class Flash> class Catalog {
       bool erased = true;
       for(uint8_t b : record) if(b != 0xff) erased = false;
       if(erased) break;
-      if(std::memcmp(record, "X7WL", 4) || record[4] != 7 || record[5] != active ||
+      if(std::memcmp(record, "X9WL", 4) || record[4] != 9 || record[5] != active ||
          get32(record + 8) != sequence_ + 1 || record[12] > transaction_limit ||
          record_crc(record) != get32(record + crc_offset)) { sealed_ = true; break; }
       for(uint8_t u = 0; u < record[12]; ++u) {
         Update update{};
-        update.id = get16(record + 48 + u * 22);
+        update.id = get16(record + 48 + u * (2U + inode_bytes));
         if(update.id >= nodes_) return false;
-        std::memcpy(update.value.data(), record + 50 + u * 22, inode_bytes);
+        std::memcpy(update.value.data(), record + 50 + u * (2U + inode_bytes), inode_bytes);
         if(!set_overlay(update)) return false;
       }
       std::memcpy(meta_.data(), record + 16, meta_.size());

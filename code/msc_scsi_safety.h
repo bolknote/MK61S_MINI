@@ -29,6 +29,15 @@ static inline uint32_t msc_scsi_min_u32(uint32_t lhs, uint32_t rhs)
   return lhs < rhs ? lhs : rhs;
 }
 
+/* A DATA OUT chunk must fit both the BOT buffer and the atomic cache. */
+static inline uint32_t msc_scsi_write_chunk_limit(uint32_t block_bytes,
+                                                uint32_t buffer_bytes,
+                                                uint32_t cache_blocks)
+{
+  if(block_bytes == 0U) return 0U;
+  return msc_scsi_min_u32(cache_blocks, buffer_bytes / block_bytes) * block_bytes;
+}
+
 static inline uint8_t msc_bot_max_lun_is_valid(int32_t max_lun)
 {
   return (uint8_t)(max_lun >= 0 && max_lun <= (int32_t)MSC_BOT_MAX_LUN_VALUE);

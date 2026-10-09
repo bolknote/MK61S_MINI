@@ -5,36 +5,42 @@
 
 namespace storage_geometry {
 
-// Физическая геометрия SPI NOR для C8. Сектор виртуальной FAT остаётся
+// Физическая геометрия SPI NOR для C9. Сектор виртуальной FAT остаётся
 // 512-байтовым; физические секторы стирания никогда не видны USB-хосту.
 static constexpr u32 PHYSICAL_SECTOR_SIZE = 4096;
 static constexpr u16 LOGICAL_SECTOR_SIZE = 512;
 static constexpr u16 FAT12_MAX_DATA_CLUSTERS = 4084;
-static constexpr u8 MIN_SECTORS_PER_CLUSTER = 4;   // 2 КиБ, любой допустимый файл
+static constexpr u8 MIN_SECTORS_PER_CLUSTER = 1;   // 512 bytes on small volumes
 static constexpr u8 MAX_SECTORS_PER_CLUSTER = 64;  // 32 КиБ, широкая совместимость
 
 static constexpr u8 LOCATOR_SECTORS = 2;
 static constexpr u8 SETTINGS_SECTORS = 1;
-// Keep the C6 reserve size and Geometry layout (APP ABI). In C7 these banks
-// are metadata-only capacity, not fixed catalog locations: roots, WAL and
-// pages rotate across this reserve and free data sectors. The reserve fits
-// both the live and pending worst-case checkpoints (two pages+root+WAL sets).
+// Geometry layout is stable for APP ABI. Banks describe metadata-only
+// capacity, not fixed catalog locations: roots, WAL and pages rotate across
+// this reserve and free data sectors, excluding import scratch. The reserve
+// fits both live and pending worst-case checkpoints (pages + root + WAL).
 static constexpr u8 CATALOG_HEADER_SECTORS = 1;
 static constexpr u8 CATALOG_WAL_SECTORS = 2;
 static constexpr u8 CATALOG_BANKS = 2;
 // Шестьдесят четыре обычных сегмента журнала содержат 448 физических записей
-// максимум для 384 активных грязных блоков. Последний сегмент — резерв атомарного
+// максимум для 441 активного грязного блока. Последний сегмент — резерв атомарного
 // уплотнения. Дополнительные 192 КиБ несущественны на типичной микросхеме 16 МиБ
 // и не дают современным настольным ФС исчерпать staging до синхронизации кеша.
 static constexpr u8 STAGE_TARGET_SECTORS = 65;
 static constexpr u8 STAGE_SMALL_SECTORS = 17;
 static constexpr u8 STAGE_MIN_SECTORS = 4;
+// Additional to the protected current writer/GC reserve: room for a maximum
+// atomic APP and its catalog publication on a 512-KiB volume.
+static constexpr u8 STAGE_MIN_FREE_DATA_SECTORS = 12;
 static constexpr u16 STAGE_TARGET_MIN_PHYSICAL_SECTORS = 512; // 2 МиБ
 
-// Inode C8 занимает во flash 22 байта, включая внешний размер файла.
+// Inode C9: exported size and a pointer to an immutable FAT chain.
 // Для 31-байтового M8-имени с самым
 // длинным создаваемым расширением нужно не более четырёх LFN и одной короткой записи.
-static constexpr u8 INODE_BYTES = 22;
+static constexpr u8 INODE_BYTES = 26;
+static constexpr u16 MAX_NODES = 8192;
+static constexpr u8 NODES_PER_PHYSICAL_SECTOR = 8;
+static constexpr u32 MAX_CAPACITY_BYTES = 128U * 1024U * 1024U;
 static constexpr u8 MAX_DIRENTS_PER_NODE = 5;
 // Метка тома и три записи (две LFN и одна короткая), необходимые для пустого
 // маркера macOS .metadata_never_index.
@@ -68,12 +74,18 @@ struct Geometry {
   u16 fat_sectors;
   u16 root_entries;
   u16 root_sectors;
+  // Small NOR volumes may expose additional virtual space for host sidecars.
   u32 logical_sectors;
 };
 
 // Вычисляет самосогласованную разметку. Возвращает false для микросхем, где не
 // помещаются два COW-набора каталога, журнал staging, настройки и резерв GC.
 bool compute(u32 capacity_bytes, Geometry& out);
+u16 fat_cluster_capacity(const Geometry& geometry);
+u32 import_scratch_first_sector(const Geometry& geometry);
+u16 fat_reverse_sector_count(const Geometry& geometry);
+u16 fat_name_index_sector_count(const Geometry& geometry);
+u16 import_scratch_sector_count(const Geometry& geometry);
 
 } // пространство имён storage_geometry
 

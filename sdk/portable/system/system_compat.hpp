@@ -225,7 +225,7 @@ static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_TINYBASIC_TEXT_SIZE = 3584,
                      MAX_MK61_BINARY_SIZE = 4096,
                      MAX_SHEET_SIZE = 2048,
                      MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
-static constexpr u8 MAX_FAT_EXTENTS_PER_FILE = 10;
+static constexpr u8 MAX_FAT_EXTENTS_PER_FILE = 40;
 static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
 static constexpr u16 ROOT_ID = 0xFFFF, INVALID_ID = 0xFFFF;
 enum class ProgramType : u8 { MK61 = 0, FOCAL = 2, TINYBASIC = 3, TEXT = 4,
@@ -262,7 +262,30 @@ constexpr bool transparent_compression_enabled(ProgramType type) {
 bool ready();
 const storage_geometry::Geometry& geometry();
 u32 media_revision();
+u32 catalog_revision();
 u16 max_nodes();
+bool node_id_available(u16 id);
+bool fat_find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
+u8 format_version(void);
+u16 max_fat_clusters(void);
+enum class FatClusterStatus : u8 { FREE = 0, USED = 1, ERROR = 2 };
+struct FatClusterInfo { u16 owner, index, next; };
+bool fat_first_cluster(u16 id, u16& cluster);
+bool fat_chain_count(u16 id, u16& count);
+bool fat_chain_cluster(u16 id, u16 index, u16& cluster);
+FatClusterStatus fat_cluster_info(u16 cluster, FatClusterInfo& output);
+bool fat_projection_begin(void);
+bool import_plan_begin(void);
+bool import_plan_put(u16 cluster, u16 empty_index, u16 target, u16 source);
+bool import_plan_get(u16 cluster, u16 empty_index, u16& target, u16& source);
+bool import_name_get(u16 slot, u16& hash, u32& location);
+bool import_name_put(u16 slot, u16 hash, u32 location);
+bool prepare_import_mapping(u16 id);
+void import_plan_end(void);
+bool create_directory_from_fat(u16 parent, const char* name, u16 preferred, u16 first, u16* output);
+bool set_directory_chain(u16 id, u16 count, const FileSource& source);
+bool ensure_directory_chain(u16 id);
+
 const char* file_extension(ProgramType type);
 int count(ProgramType type);
 bool entry(ProgramType type, int index, Entry& out);
@@ -296,16 +319,6 @@ bool write_file_from_source(u16 parent, u16 preferred, ProgramType type,
 WriteFailure last_write_failure(void);
 WriteFailureDetail last_write_failure_detail(void);
 bool move_rename(u16 id, u16 parent, const char* name);
-bool allocate_directory_extent(u16 directory, u16 preferred);
-bool release_directory_extent(u16 extent);
-bool trim_directory_extents(u16 directory, u16 keep_count);
-bool first_extent(u16 directory, u16& id);
-bool next_extent(u16 extent, u16& id);
-bool extent_info(u16 extent, u16& directory, u16& next);
-bool first_file_extent(u16 file, u16& id);
-bool next_file_extent(u16 extent, u16& id);
-bool file_extent_info(u16 extent, u16& file, u8& cluster, u16& next);
-bool release_file_extent(u16 extent);
 bool vfat_stage_write(u32 block, const u8* data);
 bool vfat_stage_read(u32 block, u8* data);
 bool vfat_stage_exists(u32 block);
@@ -315,6 +328,7 @@ bool vfat_stage_discard_all();
 void vfat_stage_clear();
 bool vfat_stage_lock();
 using VfatStageKeyFilter = bool (*)(void*, u32);
+bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context);
 bool vfat_stage_narrow_matching(VfatStageKeyFilter include, void* context,
                                 u32* storage, u16 capacity);
 bool vfat_stage_restore_full();

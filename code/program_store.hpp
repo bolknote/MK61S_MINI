@@ -10,7 +10,7 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
-// TinyBASIC shares one 4-KiB C6 data sector with its record header and name.
+// TinyBASIC shares one 4-KiB C9 data sector with its record header and name.
 // 3584 bytes leave enough room for that metadata while more than doubling the
 // original editor quota.  FOCAL and ordinary text files keep their established
 // 1536-byte limit so their scratch-buffer contracts do not change.
@@ -25,7 +25,7 @@ static constexpr u16 MAX_FONT_SIZE = 1536;
 static constexpr u16 MAX_FONT_SIZE = 8192;
 #endif
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
-// гарантированно помещаются в минимальный 2-КиБ FAT-кластер C6.
+// независимо отображаются в цепочку из 512-байтных FAT-кластеров.
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;
 // CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
 // классический ROM занимает не более 4096 - 0x200 = 3584 байт.
@@ -40,7 +40,7 @@ static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
 // Верхняя граница служебных продолжений FAT у одного максимального APP
 // вычисляется для минимального допустимого 2-КиБ кластера. На штатной W25Q128
 // с кластером 4 КиБ реально используются только пять. Это не лимит количества
-// APP: файлов может быть столько, сколько помещается в C6 и каталогах.
+// APP: файлов может быть столько, сколько помещается в C9 и каталогах.
 static constexpr u16 MIN_FAT_CLUSTER_SIZE =
     (u16) storage_geometry::MIN_SECTORS_PER_CLUSTER *
     storage_geometry::LOGICAL_SECTOR_SIZE;
@@ -87,7 +87,7 @@ constexpr bool text_content(ProgramType type) {
   return false;
 }
 
-// Единая политика прозрачного C6 ZX0. FONT включится здесь только вместе с
+// Единая политика прозрачного C9 ZX0. FONT включится здесь только вместе с
 // переходом на raw-only FMK2; APP имеет собственное сжатие контейнера.
 constexpr bool transparent_compression_enabled(ProgramType type) {
   switch(type) {
@@ -152,7 +152,7 @@ struct FileSource {
 // Last broad phase in which write_file_from_source() failed.  This is
 // diagnostic state only; callers must still use the boolean return value.
 // Keeping the phase in the resident storage layer lets loadable importers
-// report an actionable C6 failure without widening the stable APP ABI.
+// report an actionable C9 failure without widening the stable APP ABI.
 enum class WriteFailure : u8 {
   NONE = 0,
   ARGUMENTS = 1,
@@ -198,12 +198,34 @@ bool refresh(void);
 bool ready(void);
 MountStatus mount_status(void);
 const storage_geometry::Geometry& geometry(void);
-// Persistent revision of the logical USB view. It changes both when the C6
+// Persistent revision of the logical USB view. It changes both when the C9
 // catalog commits and when a host write reaches the staging journal, including
 // a write later rejected or discarded. Hosts may use it to invalidate stale
 // FAT metadata after a disconnected transaction.
 u32 media_revision(void);
+u32 catalog_revision(void);
 u16 max_nodes(void);
+bool node_id_available(u16 id);
+bool fat_find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
+u8 format_version(void);
+u16 max_fat_clusters(void);
+enum class FatClusterStatus : u8 { FREE = 0, USED = 1, ERROR = 2 };
+struct FatClusterInfo { u16 owner, index, next; };
+bool fat_first_cluster(u16 id, u16& cluster);
+bool fat_chain_count(u16 id, u16& count);
+bool fat_chain_cluster(u16 id, u16 index, u16& cluster);
+FatClusterStatus fat_cluster_info(u16 cluster, FatClusterInfo& output);
+bool fat_projection_begin(void);
+bool import_plan_begin(void);
+bool import_plan_put(u16 cluster, u16 empty_index, u16 target, u16 source);
+bool import_plan_get(u16 cluster, u16 empty_index, u16& target, u16& source);
+bool import_name_get(u16 slot, u16& hash, u32& location);
+bool import_name_put(u16 slot, u16 hash, u32 location);
+bool prepare_import_mapping(u16 id);
+void import_plan_end(void);
+bool create_directory_from_fat(u16 parent, const char* name, u16 preferred, u16 first, u16* output);
+bool set_directory_chain(u16 id, u16 count, const FileSource& source);
+bool ensure_directory_chain(u16 id);
 u16 used_nodes(void);
 bool basename_valid(const char* name);
 u32 settings_address(void);
@@ -239,10 +261,10 @@ bool write_file(u16 parent_id, u16 preferred_id, ProgramType type,
                 const char* name, const u8* data, u16 data_len,
                 u16* out_id = nullptr);
 // Для RAW большой файл пишется потоково. Для ZX0 вызывающий может передать
-// свободный compression_buffer и непрерывный contiguous_data; иначе C6
+// свободный compression_buffer и непрерывный contiguous_data; иначе C9
 // использует доступные shared/exclusive buffers либо безопасно оставляет RAW.
-// fat_extents задаёт идентификаторы последующих FAT-кластеров; при NULL C6
-// выбирает свободные узлы самостоятельно.
+// fat_extents supplies the entire FAT cluster sequence, including the first
+// cluster. A null sequence allocates clusters independently of the node ID.
 bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
@@ -269,37 +291,6 @@ bool stream_file_id(u16 id, const FileSink& sink);
 bool remove_id(u16 id);
 bool remove_tree(u16 id, u16* removed = nullptr);
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name);
-// Освобождает нечитаемый FILE inode, который host уже перепрофилировал под
-// новый узел, только если старый inode доказанно не входит в дерево от ROOT_ID.
-// Связанный файл с повреждённой записью имени остаётся нетронутым.
-bool release_unreachable_file(u16 id);
-bool allocate_directory_extent(u16 directory_id, u16 preferred_id);
-bool release_directory_extent(u16 extent_id);
-enum class DirectoryTrimResult : u8 {
-  FAILED = 0,
-  COMPLETE = 1,
-  MORE = 2
-};
-// Removes at most one WAL batch from the tail.  A caller that lives across an
-// APP boundary can service the foreground/watchdog between MORE results.
-DirectoryTrimResult trim_directory_extents_step(u16 directory_id,
-                                                u16 keep_count);
-// Atomically removes directory extents from the tail in bounded WAL batches,
-// retaining exactly keep_count extents.  This is used to canonicalize host FAT
-// directory preallocation without one catalog transaction per empty cluster.
-bool trim_directory_extents(u16 directory_id, u16 keep_count);
-bool first_extent(u16 directory_id, u16& out_id);
-bool next_extent(u16 id, u16& out_id);
-bool extent_info(u16 extent_id, u16& directory_id, u16& next_id);
-bool first_file_extent(u16 file_id, u16& out_id);
-bool next_file_extent(u16 id, u16& out_id);
-bool file_extent_info(u16 extent_id, u16& file_id, u8& cluster_index,
-                      u16& next_id);
-// Атомарно отделяет служебный FAT-extent от большого файла и перенумеровывает
-// оставшуюся цепочку. Используется VFAT после полного read-only preflight,
-// когда host повторно выделил этот кластер другому узлу.
-bool release_file_extent(u16 extent_id);
-
 static constexpr u16 VFAT_STAGE_BLOCK_SIZE = 512;
 static constexpr u32 VFAT_STAGE_KEY_MAX = 0x007FFFFFUL;
 
@@ -307,6 +298,9 @@ bool vfat_stage_write(u32 block, const u8* data);
 bool vfat_stage_read(u32 block, u8* data);
 bool vfat_stage_exists(u32 block);
 u16 vfat_stage_count(void);
+#if defined(STM32F411xE)
+u32 vfat_stage_borrow_diagnostic(void);
+#endif
 bool vfat_stage_snapshot(u32* keys, u16 capacity, u16& count);
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all(void);
@@ -319,6 +313,7 @@ bool vfat_stage_lock(void);
 using VfatStageKeyFilter = bool (*)(void* context, u32 key);
 bool vfat_stage_narrow(u32 start_block, u16 blocks,
                        u32* index_storage, u16 index_capacity);
+bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context);
 bool vfat_stage_narrow_matching(VfatStageKeyFilter include,
                                 void* context,
                                 u32* index_storage, u16 index_capacity);
@@ -345,7 +340,8 @@ bool test_catalog_protects(u32 sector);
 bool test_file_storage_info(u16 id, u16& stored_len,
                             bool& large, bool& zx0);
 bool test_file_record_location(u16 id, u32& sector, u16& record_len);
-bool test_make_unreadable_orphan_file(u16 id);
+u16 test_current_record_space(void);
+bool test_relocate_fat_chain(u16 id, u32 sector);
 #endif
 
 bool write_mk61(const char* name, const u8* code, u16 code_len);
