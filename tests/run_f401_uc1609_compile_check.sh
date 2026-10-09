@@ -119,8 +119,10 @@ test -s "$compile_path/mk61s-M.ino.bin" || fail 'missing BIN'
 
 # Merely fitting below 256 KiB is not a release criterion: sealing appends a
 # footer and future linker fluctuations must not break the public build. Use
-# the explicit 7-KiB UC1609 floor from the release contract; character-display
-# F401 products keep their independent 8-KiB floor.
+# the explicit 2-KiB floor for this non-published Arduino comparison.
+# Published GCC UC1609 products retain 4 KiB; character products retain 8 KiB.
+# Arduino protects the complete USB Core translation units from LTO and
+# therefore has a larger linked resident than the direct GCC path.
 sealed_size="$(wc -c < "$compile_path/mk61s-M.ino.bin" | tr -d '[:space:]')"
 [[ "$sealed_size" =~ ^[0-9]+$ ]] || fail "invalid sealed BIN size: $sealed_size"
 flash_headroom=$((flash_capacity - sealed_size))

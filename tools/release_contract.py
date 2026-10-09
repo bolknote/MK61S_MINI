@@ -259,11 +259,13 @@ def validate_contract(raw: Any) -> None:
                     f"{where}.budgets.markdown_app_max", minimum=1)
         if case["mcu"] == "f401" and case["product"]:
             # The resident UC1609 backend includes the fixed twelve-position
-            # calculator face. Character displays retain the original 8-KiB
-            # floor; the graphical product has its own explicit 7-KiB floor.
-            minimum = 7168 if case["profile"] in {
-                "classic-v2", "classic-v3", "40th"
-            } else 8192
+            # calculator face and the C9 mapping/import services. Keep a 4-KiB
+            # growth reserve for GCC here; character displays retain 8 KiB.
+            # The non-published Arduino check retains 2 KiB: protecting all
+            # USB Core call sites from LTO costs more than the direct builder.
+            minimum = 2048 if case["builder"] == "arduino" else (
+                4096 if case["profile"] in {"classic-v2", "classic-v3", "40th"}
+                else 8192)
             require(flash_headroom >= minimum,
                     f"{where}: F401 product needs at least {minimum} B headroom")
 

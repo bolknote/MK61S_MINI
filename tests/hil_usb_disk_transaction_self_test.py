@@ -45,7 +45,7 @@ class UsbDiskTransactionTest(unittest.TestCase):
                    "limit=1536 subject=524541444D45")
         for prose in ("File exceeds its size limit.", "Слишком большой файл."):
             self.assertEqual(parse_vfat_diagnostic("vlog\r\n" + machine +
-                             "\r\n" + prose + "\r\n/> "),
+                             "\r\n" + prose + "\r\nVFAT staged=20 borrow=0\r\n/> "),
                              dict(code=1221, phase=3, flags=0, actual=7492,
                                   limit=1536, subject="README"))
         russian = ("VFAT v=1 code=1201 phase=3 flags=0 actual=0 "

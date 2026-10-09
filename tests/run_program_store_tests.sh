@@ -33,6 +33,7 @@ for backend in software stm32; do
     "$root/code/program_store.cpp" \
     "$root/code/shared_memory.cpp" \
     "$root/code/storage_geometry.cpp" \
+  "$root/code/fat_cluster_chain.cpp" \
     "$root/code/storage_path.cpp" \
     "$root/code/shared_scratch.cpp" \
     "$root/code/exclusive_buffer.cpp" \
@@ -61,6 +62,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/program_store.cpp" \
   "$root/code/shared_memory.cpp" \
   "$root/code/storage_geometry.cpp" \
+  "$root/code/fat_cluster_chain.cpp" \
   "$root/code/storage_path.cpp" \
   "$root/code/shared_scratch.cpp" \
   "$root/code/exclusive_buffer.cpp" \

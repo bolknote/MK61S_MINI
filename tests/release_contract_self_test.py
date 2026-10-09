@@ -85,7 +85,7 @@ class ReleaseContractTest(unittest.TestCase):
         for case in release_contract.cases_in_group(
                 self.contract, "f401-product"):
             self.assertTrue(case["product"])
-            expected = 7168 if case["profile"] in {
+            expected = 4096 if case["profile"] in {
                 "classic-v2", "classic-v3", "40th"
             } else 8192
             self.assertEqual(case["budgets"]["flash_min_headroom"], expected)
@@ -94,6 +94,16 @@ class ReleaseContractTest(unittest.TestCase):
                 self.contract, "f401-capability"):
             self.assertFalse(case["product"])
             self.assertEqual(case["budgets"]["flash_min_headroom"], 512)
+
+    def test_nonpublished_arduino_c9_budget_is_explicit(self):
+        case = self.cases["f401-arduino-classic-v3"]
+        self.assertFalse(case["publish"])
+        self.assertEqual(case["budgets"]["flash_min_headroom"], 2048)
+        weak = copy.deepcopy(self.contract)
+        target = next(c for c in weak["cases"] if c["id"] == case["id"])
+        target["budgets"]["flash_min_headroom"] = 2047
+        with self.assertRaisesRegex(release_contract.ContractError, "at least 2048"):
+            release_contract.validate_contract(weak)
 
     def test_profile_and_case_defines_are_combined_once(self):
         case = self.cases["f411-oled1602-ws0010-no-graphics"]
@@ -131,7 +141,7 @@ class ReleaseContractTest(unittest.TestCase):
                       if case["id"] == "f401-product-classic-v3")
         target["budgets"]["flash_min_headroom"] = 512
         with self.assertRaisesRegex(release_contract.ContractError,
-                                    "at least 7168"):
+                                    "at least 4096"):
             release_contract.validate_contract(weak)
 
         incomplete = copy.deepcopy(self.contract)

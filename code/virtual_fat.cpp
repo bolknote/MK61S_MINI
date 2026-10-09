@@ -36,6 +36,9 @@ namespace virtual_fat {
 namespace {
 
 #if defined(MK61_BUILD_USBDISK_MODULE)
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#endif
 static void startup_stage(u32 stage) {
   mk61_usbdisk_startup_stage(stage);
 }
@@ -63,6 +66,8 @@ static constexpr u16 MAX_LFN_UNITS = MAX_LFN_ENTRIES * 13;
 static constexpr u16 KIND_MAP_BYTES =
     (storage_geometry::FAT12_MAX_DATA_CLUSTERS * 2 + 7) / 8;
 static constexpr u8 PRIMARY_CACHE_SLOTS = 13;
+static constexpr u16 NODE_KIND_BYTES = (storage_geometry::MAX_NODES * 2U + 7U) / 8U;
+static constexpr u16 NODE_MAP_BYTES = (storage_geometry::MAX_NODES + 7U) / 8U;
 static constexpr u8 SCRATCH_CACHE_SLOTS = shared_scratch::SIZE / SECTOR_SIZE;
 static constexpr u8 EXTERNAL_CACHE_SLOTS = 16;
 static constexpr u8 MAX_CACHE_SLOTS = PRIMARY_CACHE_SLOTS +
@@ -91,15 +96,18 @@ struct ParsedNode {
   program_store::ProgramType type;
   char name[program_store::NAME_SIZE];
   u16 id;
+  u16 source_id;
+  u16 cluster;
+  u16 empty_index;
   u16 data_len;
   u8 attributes;
 };
 
-static constexpr u8 MAX_C6_FILE_CLUSTERS =
+static constexpr u8 MAX_FILE_FAT_CLUSTERS =
     program_store::MAX_FAT_EXTENTS_PER_FILE + 1U;
 
 struct FileChain {
-  u16 clusters[MAX_C6_FILE_CLUSTERS];
+  u16 clusters[MAX_FILE_FAT_CLUSTERS];
   u16 size;
   u8 cluster_count;
 };
@@ -120,16 +128,21 @@ struct CacheEntry {
 };
 
 struct SessionState {
-  u8 desired_kinds[KIND_MAP_BYTES];
+  u8* desired_kinds;
+  u8* desired_nodes;
+  u8* existing_nodes;
+  u8* cache_data;
+  u16 kind_bytes, node_bytes, existing_bytes;
   u32 cache_clock;
   CacheEntry cache[MAX_CACHE_SLOTS];
-  u8 cache_data[PRIMARY_CACHE_SLOTS][SECTOR_SIZE];
 };
 
 static_assert(sizeof(SessionState) <= language_workspace::SIZE,
-              "C6 FAT session and write-back cache must fit the shared 8 KiB workspace");
-static_assert(sizeof(SessionState) >= PRIMARY_CACHE_SLOTS * SECTOR_SIZE,
-              "C6 FAT cache geometry unexpectedly changed");
+              "C9 FAT session and write-back cache must fit the shared 8 KiB workspace");
+static constexpr u8 MIN_PRIMARY_CACHE_SLOTS = 7;
+static_assert(sizeof(SessionState) + KIND_MAP_BYTES + NODE_KIND_BYTES + NODE_MAP_BYTES +
+              MIN_PRIMARY_CACHE_SLOTS * SECTOR_SIZE <= language_workspace::SIZE,
+              "C9 role/node maps must leave the minimum primary cache capacity");
 static_assert(SCRATCH_CACHE_SLOTS == 3,
               "shared scratch should lend exactly three USB sectors");
 static_assert(shared_scratch::SIZE >= program_store::MAX_IMAGE1_SIZE,
@@ -143,6 +156,7 @@ static u8* g_commit_compression_buffer;
 static usize g_commit_compression_buffer_size;
 static u8 g_scratch_cache_slots;
 static u8 g_extra_cache_slots;
+static u8 g_primary_cache_slots = PRIMARY_CACHE_SLOTS;
 static u8 g_cache_slots = PRIMARY_CACHE_SLOTS;
 static constexpr u16 CLUSTER_MAP_BYTES =
     (storage_geometry::FAT12_MAX_DATA_CLUSTERS + 7) / 8;
@@ -165,46 +179,68 @@ enum ClusterRole : u8 {
 };
 static bool g_sidecar_scan_pending;
 static bool g_sidecar_candidate_seen;
-static constexpr u8 DIRECTORY_CURSOR_COUNT = 8;
+// A successful mounted SYNC leaves the exact host metadata in staging.
+// That retained view is already applied; a second SYNC/eject needs no import
+// until another accepted packet or persistent media mutation invalidates it.
+static bool g_host_view_applied;
+static u32 g_applied_media_revision;
+// Current directory and its parent cover sequential host scans. A miss
+// restarts the iterator without changing the generated directory contents.
+#if defined(MK61_BUILD_USBDISK_MODULE)
+static constexpr u8 DIRECTORY_CURSOR_COUNT = 1;
+#else
+static constexpr u8 DIRECTORY_CURSOR_COUNT = 2;
+#endif
 struct DirectoryRenderCursor {
   u16 parent_id;
-  u8 root;
   u8 valid;
   u32 next_first_slot;
   u32 child_slot;
+#if !defined(MK61_BUILD_USBDISK_MODULE)
   u32 age;
-  i32 child_index;
+#endif
+  i16 child_index;
+  i16 children;
 };
 static DirectoryRenderCursor g_directory_cursors[DIRECTORY_CURSOR_COUNT];
+#if !defined(MK61_BUILD_USBDISK_MODULE)
 static u32 g_directory_cursor_clock;
+#endif
+static u32 g_directory_catalog_revision;
 
 static void reset_directory_cursors() {
   memset(g_directory_cursors, 0, sizeof(g_directory_cursors));
+#if !defined(MK61_BUILD_USBDISK_MODULE)
   g_directory_cursor_clock = 0;
+#endif
 }
 
-static bool resume_directory_cursor(u16 parent_id, bool root, u32 first_slot,
-                                    u32& child_slot, int& child_index) {
+static bool resume_directory_cursor(u16 parent_id, u32 first_slot,
+                                    u32& child_slot, int& child_index, int& children) {
   for(auto& cursor : g_directory_cursors) {
-    if(!cursor.valid || cursor.parent_id != parent_id ||
-       cursor.root != (u8) root || cursor.next_first_slot != first_slot) {
+    if(!cursor.valid || cursor.parent_id != parent_id || cursor.next_first_slot != first_slot) {
       continue;
     }
+#if !defined(MK61_BUILD_USBDISK_MODULE)
     cursor.age = ++g_directory_cursor_clock;
+#endif
     child_slot = cursor.child_slot;
     child_index = cursor.child_index;
+    children = cursor.children;
     return true;
   }
   return false;
 }
 
-static void save_directory_cursor(u16 parent_id, bool root,
+static void save_directory_cursor(u16 parent_id,
                                   u32 next_first_slot, u32 child_slot,
-                                  int child_index) {
+                                  int child_index, int children) {
+#if defined(MK61_BUILD_USBDISK_MODULE)
+  DirectoryRenderCursor* selected = &g_directory_cursors[0];
+#else
   DirectoryRenderCursor* selected = nullptr;
   for(auto& cursor : g_directory_cursors) {
-    if(cursor.valid && cursor.parent_id == parent_id &&
-       cursor.root == (u8) root) {
+    if(cursor.valid && cursor.parent_id == parent_id) {
       selected = &cursor;
       break;
     }
@@ -213,13 +249,16 @@ static void save_directory_cursor(u16 parent_id, bool root,
     }
   }
   if(selected == nullptr) return;
+#endif
   selected->parent_id = parent_id;
-  selected->root = root;
   selected->valid = 1;
   selected->next_first_slot = next_first_slot;
   selected->child_slot = child_slot;
-  selected->child_index = child_index;
+  selected->child_index = (i16) child_index;
+  selected->children = (i16) children;
+#if !defined(MK61_BUILD_USBDISK_MODULE)
   selected->age = ++g_directory_cursor_clock;
+#endif
 }
 #if defined(MK61_BUILD_USBDISK_MODULE)
 static bool g_startup_recovery;
@@ -251,6 +290,9 @@ static DiagnosticState g_error;
 static u32 g_session_volume_serial;
 static bool g_session_volume_serial_valid;
 
+#if defined(MK61_BUILD_USBDISK_MODULE) && defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#endif
 static void record_startup_timeout() {
 #if defined(MK61_BUILD_USBDISK_MODULE)
   if(mk61_usbdisk_startup_timed_out()) {
@@ -261,17 +303,37 @@ static void record_startup_timeout() {
 #endif
 }
 
+static bool initialize_session_layout(void) {
+  memset(g_session, 0, language_workspace::SIZE);
+  const auto& geometry = program_store::geometry();
+  auto& state = *g_session;
+  state.kind_bytes = (u16) ((program_store::max_fat_clusters() * 2U + 7U) / 8U);
+  state.node_bytes = (u16) ((geometry.max_nodes * 2U + 7U) / 8U);
+  state.existing_bytes = (u16) ((geometry.max_nodes + 7U) / 8U);
+  u8* data = (u8*) (g_session + 1);
+  state.desired_kinds = data; data += state.kind_bytes;
+  state.desired_nodes = data; data += state.node_bytes;
+  state.existing_nodes = data; data += state.existing_bytes;
+  const usize used = ((usize) (data - (u8*) g_session) + 7U) & ~(usize) 7U;
+  data = (u8*) g_session + used;
+  if(used + SECTOR_SIZE > language_workspace::SIZE) return false;
+  state.cache_data = data;
+  const usize slots = (language_workspace::SIZE - used) / SECTOR_SIZE;
+  g_primary_cache_slots = (u8) (slots < PRIMARY_CACHE_SLOTS ? slots : PRIMARY_CACHE_SLOTS);
+  g_cache_slots = (u8) (g_primary_cache_slots + g_scratch_cache_slots + g_extra_cache_slots);
+  return true;
+}
+
 static bool ensure_session(void) {
   if(g_session_lease.ok() && g_session != NULL) return true;
   if(!g_session_lease.acquire(language_workspace::Owner::USB_DISK,
-                              sizeof(SessionState))) return false;
+                              language_workspace::SIZE)) return false;
   if(!program_store::vfat_stage_lock()) {
     g_session_lease.reset();
     return false;
   }
   g_session = (SessionState*) g_session_lease.data();
-  memset(g_session, 0, sizeof(*g_session));
-  return true;
+  return initialize_session_layout();
 }
 
 static SessionState& session(void) {
@@ -280,7 +342,7 @@ static SessionState& session(void) {
 }
 
 static void update_cache_slot_count(void) {
-  g_cache_slots = (u8) (PRIMARY_CACHE_SLOTS + g_scratch_cache_slots +
+  g_cache_slots = (u8) (g_primary_cache_slots + g_scratch_cache_slots +
                         g_extra_cache_slots);
 }
 
@@ -299,7 +361,7 @@ static u32 data_start(void) {
 }
 
 static u16 cluster_limit(void) {
-  return (u16) (FIRST_DATA_CLUSTER + geometry().max_nodes);
+  return (u16) (FIRST_DATA_CLUSTER + program_store::max_fat_clusters());
 }
 
 static bool valid_cluster(u16 cluster) {
@@ -308,7 +370,7 @@ static bool valid_cluster(u16 cluster) {
 
 static bool sidecar_filter_enabled(void) {
   return g_session != NULL &&
-         geometry().max_nodes <= storage_geometry::FAT12_MAX_DATA_CLUSTERS;
+         program_store::max_fat_clusters() <= storage_geometry::FAT12_MAX_DATA_CLUSTERS;
 }
 
 static bool cluster_marked(const u8* map, u16 cluster) {
@@ -339,9 +401,11 @@ static void mark_cluster(u8* map, u16 cluster) {
 }
 
 static bool sidecar_data_lba(u32 lba) {
-  if(lba < data_start() || !sidecar_filter_enabled()) return false;
+  // A changed FAT/dirent may reuse a former sidecar cluster for real data.
+  // Accept its bytes until a fresh scan proves that the ignore role still holds.
+  if(g_sidecar_scan_pending || lba < data_start() || !sidecar_filter_enabled()) return false;
   const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
-  return id < geometry().max_nodes &&
+  return id < program_store::max_fat_clusters() &&
          cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
              CLUSTER_ROLE_SIDECAR;
 }
@@ -351,7 +415,7 @@ static bool directory_metadata_lba(u32 lba) {
   if(lba >= fat_start() && lba < data_start()) return true;
   if(lba < data_start()) return false;
   const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
-  return id < geometry().max_nodes &&
+  return id < program_store::max_fat_clusters() &&
          cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
              CLUSTER_ROLE_DIRECTORY;
 }
@@ -367,12 +431,18 @@ static bool contains_sidecar_name(const u8* block) {
   return false;
 }
 
-static u16 id_for_cluster(u16 cluster) {
-  return (u16) (cluster - FIRST_DATA_CLUSTER);
+__attribute__((noinline))
+static void note_host_metadata(u32 lba, const u8* block) {
+  const bool candidate = contains_sidecar_name(block) && sidecar_filter_enabled();
+  if(candidate) g_sidecar_candidate_seen = true;
+  if(candidate || (g_sidecar_candidate_seen && lba != 0 && directory_metadata_lba(lba))) {
+    g_sidecar_scan_pending = true;
+  }
 }
 
 static u16 cluster_for_id(u16 id) {
-  return (u16) (id + FIRST_DATA_CLUSTER);
+  u16 cluster = 0;
+  return program_store::fat_first_cluster(id, cluster) ? cluster : 0;
 }
 
 static u32 cluster_lba(u16 cluster, u8 sector_in_cluster = 0) {
@@ -711,7 +781,7 @@ static void boot_sector(u8* output) {
   output[0] = 0xEB;
   output[1] = 0x3C;
   output[2] = 0x90;
-  memcpy(output + 3, "MK61C8  ", 8);
+  memcpy(output + 3, "MK61C9  ", 8);
   put_le16(output, 11, SECTOR_SIZE);
   output[13] = geometry().sectors_per_cluster;
   put_le16(output, 14, RESERVED_SECTORS);
@@ -730,42 +800,25 @@ static void boot_sector(u8* output) {
   output[36] = 0x80;
   output[38] = 0x29;
   put_le32(output, 39, volume_serial());
-  memcpy(output + 43, "MK61S C8   ", 11);
+  memcpy(output + 43, "MK61S C9   ", 11);
   memcpy(output + 54, "FAT12   ", 8);
   output[510] = 0x55;
   output[511] = 0xAA;
 }
 
+static bool g_base_fat_error;
 static u16 base_fat_value(u16 cluster) {
   if(cluster == 0) return (u16) (0xF00 | MEDIA_DESCRIPTOR);
   if(cluster == 1) return FAT12_EOF;
   if(!valid_cluster(cluster)) return FAT12_FREE;
-  const u16 id = id_for_cluster(cluster);
-  program_store::Entry entry;
-  if(program_store::entry_by_id(id, entry)) {
-    if(entry.kind == program_store::NodeKind::FILE) {
-      u16 extent = 0;
-      return program_store::first_file_extent(id, extent)
-          ? cluster_for_id(extent) : FAT12_EOF;
-    }
-    u16 extent = 0;
-    return program_store::first_extent(id, extent)
-        ? cluster_for_id(extent) : FAT12_EOF;
+  program_store::FatClusterInfo info = {};
+  const auto status = program_store::fat_cluster_info(cluster, info);
+  if(status == program_store::FatClusterStatus::ERROR) {
+    g_base_fat_error = true;
+    return FAT12_BAD;
   }
-  u16 owner = 0;
-  u16 next = 0;
-  u8 cluster_index = 0;
-  if(program_store::file_extent_info(id, owner, cluster_index, next)) {
-    (void) owner;
-    (void) cluster_index;
-    return next == program_store::INVALID_ID
-        ? FAT12_EOF : cluster_for_id(next);
-  }
-  if(program_store::extent_info(id, owner, next)) {
-    (void) owner;
-    return next == program_store::INVALID_ID ? FAT12_EOF : cluster_for_id(next);
-  }
-  return FAT12_FREE;
+  if(status == program_store::FatClusterStatus::FREE) return FAT12_FREE;
+  return info.next == program_store::INVALID_ID ? FAT12_EOF : info.next;
 }
 
 static void set_fat_byte(u8* output, u32 sector, u32 byte_offset,
@@ -789,6 +842,7 @@ static void set_fat_entry(u8* output, u32 sector, u16 cluster, u16 value) {
 
 static void fat_sector(u32 sector, u8* output) {
   memset(output, 0, SECTOR_SIZE);
+  g_base_fat_error = false;
   const u32 byte_start = sector * SECTOR_SIZE;
   u32 first = byte_start * 2 / 3;
   if(first > 2) first -= 2;
@@ -808,7 +862,7 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
   int first_child = 0;
   if(root) {
     if(first_slot == 0) {
-      memcpy(output, "MK61S C8   ", 11);
+      memcpy(output, "MK61S C9   ", 11);
       output[11] = ATTR_VOLUME;
       for(u8 offset = 0;
           offset + 1 < storage_geometry::ROOT_SYSTEM_DIRENTS;
@@ -832,10 +886,13 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
     }
   }
 
-  (void) resume_directory_cursor(parent_id, root, first_slot,
-                                 cursor, first_child);
-
-  const int children = program_store::child_count(parent_id);
+  const u32 revision = program_store::catalog_revision();
+  if(revision != g_directory_catalog_revision) {
+    reset_directory_cursors(); g_directory_catalog_revision = revision;
+  }
+  int children = 0;
+  if(!resume_directory_cursor(parent_id, first_slot, cursor, first_child, children))
+    children = program_store::child_count(parent_id);
   for(int index = first_child; index < children; index++) {
     program_store::Entry entry;
     if(!program_store::child(parent_id, index, entry)) return false;
@@ -852,79 +909,39 @@ static bool render_children(u16 parent_id, u32 first_slot, u8* output,
     if(cursor >= last_slot && cursor > first_slot) {
       // If an LFN spans the sector boundary, the next sector must revisit the
       // same child to render the tail. Otherwise resume at the following one.
-      save_directory_cursor(parent_id, root, last_slot,
+      save_directory_cursor(parent_id, last_slot,
                             cursor > last_slot ? node_slot : cursor,
-                            cursor > last_slot ? index : index + 1);
+                            cursor > last_slot ? index : index + 1, children);
       return true;
     }
   }
-  save_directory_cursor(parent_id, root, last_slot, cursor, children);
+  save_directory_cursor(parent_id, last_slot, cursor, children, children);
   return true;
-}
-
-static bool directory_segment(u16 id, u16& directory_id, u16& segment) {
-  program_store::Entry entry;
-  if(program_store::entry_by_id(id, entry) &&
-     entry.kind == program_store::NodeKind::DIRECTORY) {
-    directory_id = id;
-    segment = 0;
-    return true;
-  }
-  u16 next = 0;
-  if(!program_store::extent_info(id, directory_id, next)) return false;
-  (void) next;
-  u16 extent = 0;
-  if(!program_store::first_extent(directory_id, extent)) return false;
-  segment = 1;
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
-    if(extent == id) return true;
-    if(!program_store::next_extent(extent, extent)) break;
-    segment++;
-  }
-  return false;
 }
 
 static bool data_sector_base(u32 offset, u8* output) {
   memset(output, 0, SECTOR_SIZE);
-  const u8 sectors_per_cluster = geometry().sectors_per_cluster;
-  const u16 cluster = (u16) (FIRST_DATA_CLUSTER + offset / sectors_per_cluster);
-  const u8 sector = (u8) (offset % sectors_per_cluster);
+  const u8 per_cluster = geometry().sectors_per_cluster;
+  const u16 cluster = (u16) (FIRST_DATA_CLUSTER + offset / per_cluster);
+  const u8 sector = (u8) (offset % per_cluster);
   if(!valid_cluster(cluster)) return false;
-  const u16 id = id_for_cluster(cluster);
+  program_store::FatClusterInfo info = {};
+  const auto status = program_store::fat_cluster_info(cluster, info);
+  if(status == program_store::FatClusterStatus::ERROR) return false;
+  if(status == program_store::FatClusterStatus::FREE) return true;
   program_store::Entry entry;
-  if(program_store::entry_by_id(id, entry)) {
-    if(entry.kind == program_store::NodeKind::FILE) {
-      const u32 file_offset = (u32) sector * SECTOR_SIZE;
-      u32 visible_size = 0;
-      if(!exported_file_size(entry, visible_size)) return false;
-      if(file_offset >= visible_size) return true;
-      u16 copied = 0;
-      return read_exported_range(entry, file_offset, output, SECTOR_SIZE,
-                                 copied);
-    }
-  }
-  u16 file_id = 0;
-  u16 file_next = 0;
-  u8 file_cluster = 0;
-  if(program_store::file_extent_info(id, file_id, file_cluster, file_next) &&
-     program_store::entry_by_id(file_id, entry) &&
-     entry.kind == program_store::NodeKind::FILE) {
-    (void) file_next;
-    const u32 file_offset =
-        ((u32) file_cluster * sectors_per_cluster + sector) * SECTOR_SIZE;
-    u32 visible_size = 0;
-    if(!exported_file_size(entry, visible_size)) return false;
-    if(file_offset >= visible_size) return true;
+  if(!program_store::entry_by_id(info.owner, entry)) return false;
+  if(entry.kind == program_store::NodeKind::FILE) {
+    const u32 file_offset = ((u32) info.index * per_cluster + sector) * SECTOR_SIZE;
+    u32 visible = 0;
+    if(!exported_file_size(entry, visible)) return false;
+    if(file_offset >= visible) return true;
     u16 copied = 0;
     return read_exported_range(entry, file_offset, output, SECTOR_SIZE, copied);
   }
-  u16 directory_id = 0;
-  u16 segment = 0;
-  if(!directory_segment(id, directory_id, segment)) return true;
-  const u32 slots_per_cluster = (u32) sectors_per_cluster * (SECTOR_SIZE / 32);
-  const u32 first_slot = (u32) segment * slots_per_cluster +
-                         (u32) sector * (SECTOR_SIZE / 32);
-  return render_children(directory_id, first_slot, output, false);
+  if(entry.kind != program_store::NodeKind::DIRECTORY) return false;
+  const u32 first_slot = ((u32) info.index * per_cluster + sector) * (SECTOR_SIZE / 32);
+  return render_children(info.owner, first_slot, output, false);
 }
 
 static bool read_base_sector(u32 lba, u8* output) {
@@ -935,7 +952,7 @@ static bool read_base_sector(u32 lba, u8* output) {
   }
   if(lba < root_start()) {
     fat_sector((lba - fat_start()) % geometry().fat_sectors, output);
-    return true;
+    return !g_base_fat_error;
   }
   if(lba < data_start()) {
     return render_children(program_store::ROOT_ID,
@@ -954,8 +971,8 @@ static u32 canonical_lba(u32 lba) {
 }
 
 static u8* cache_bytes(u8 slot) {
-  if(slot < PRIMARY_CACHE_SLOTS) return session().cache_data[slot];
-  slot = (u8) (slot - PRIMARY_CACHE_SLOTS);
+  if(slot < g_primary_cache_slots) return session().cache_data + (usize) slot * SECTOR_SIZE;
+  slot = (u8) (slot - g_primary_cache_slots);
   if(slot < g_scratch_cache_slots) {
     return g_cache_scratch.data() + (u32) slot * SECTOR_SIZE;
   }
@@ -1125,18 +1142,35 @@ static bool effective_fat_value(u16 cluster, u16& value) {
 
 static bool fat_eof(u16 value) { return value >= 0xFF8 && value <= 0xFFF; }
 
-static DesiredKind desired_kind(u16 id) {
-  if(id >= storage_geometry::FAT12_MAX_DATA_CLUSTERS) return DESIRED_NONE;
-  const u16 bit = (u16) id * 2;
+static DesiredKind desired_kind(u16 cluster) {
+  if(!valid_cluster(cluster)) return DESIRED_NONE;
+  const u16 bit = (u16) ((cluster - 2U) * 2U);
   return (DesiredKind) ((session().desired_kinds[bit / 8] >> (bit & 7)) & 3);
 }
-
-static bool set_desired_kind(u16 id, DesiredKind kind) {
-  if(id >= geometry().max_nodes || desired_kind(id) != DESIRED_NONE) return false;
-  const u16 bit = (u16) id * 2;
-  session().desired_kinds[bit / 8] = (u8) (
-      session().desired_kinds[bit / 8] | ((u8) kind << (bit & 7)));
+static bool set_desired_kind(u16 cluster, DesiredKind kind) {
+  if(!valid_cluster(cluster) || desired_kind(cluster) != DESIRED_NONE) return false;
+  const u16 bit = (u16) ((cluster - 2U) * 2U);
+  session().desired_kinds[bit / 8] |= (u8) ((u8) kind << (bit & 7));
   return true;
+}
+static DesiredKind desired_node(u16 id) {
+  if(id >= geometry().max_nodes) return DESIRED_NONE;
+  const u16 bit = (u16) (id * 2U);
+  return (DesiredKind) ((session().desired_nodes[bit / 8] >> (bit & 7)) & 3);
+}
+static bool set_desired_node(u16 id, DesiredKind kind) {
+  if(id >= geometry().max_nodes) return false;
+  const u16 bit = (u16) (id * 2U);
+  auto& value = session().desired_nodes[bit / 8];
+  value = (u8) ((value & ~(3U << (bit & 7))) | ((u8) kind << (bit & 7)));
+  return true;
+}
+static bool existing_node(u16 id) {
+  return id < geometry().max_nodes &&
+      (session().existing_nodes[id >> 3] & (1U << (id & 7U))) != 0;
+}
+static void mark_existing_node(u16 id) {
+  if(id < geometry().max_nodes) session().existing_nodes[id >> 3] |= (u8) (1U << (id & 7U));
 }
 
 static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
@@ -1145,14 +1179,14 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
   chain.size = parsed.data_len;
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
-  const u32 required = parsed.data_len == 0 ? 1 :
+  const u32 required = parsed.data_len == 0 ? 0 :
       ((u32) parsed.data_len + cluster_bytes - 1U) / cluster_bytes;
-  if(required == 0 || required > MAX_C6_FILE_CLUSTERS) {
+  if(required > MAX_FILE_FAT_CLUSTERS) {
     return g_error.fail(ErrorCode::CLUSTER_LIMIT, Phase::CHAIN,
-                        required, MAX_C6_FILE_CLUSTERS, parsed.name);
+                        required, MAX_FILE_FAT_CLUSTERS, parsed.name);
   }
   chain.cluster_count = (u8) required;
-  u16 cluster = cluster_for_id(parsed.id);
+  u16 cluster = parsed.cluster;
   for(u8 index = 0; index < chain.cluster_count; index++) {
     if(!valid_cluster(cluster)) {
       return g_error.fail(ErrorCode::FILE_CLUSTER, Phase::CHAIN,
@@ -1166,7 +1200,7 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
     }
     chain.clusters[index] = cluster;
     if(index != 0 && reserve_extents &&
-       !set_desired_kind(id_for_cluster(cluster), DESIRED_EXTENT)) {
+       !set_desired_kind(cluster, DESIRED_EXTENT)) {
       return g_error.fail(ErrorCode::DUPLICATE_CLUSTER, Phase::CHAIN,
                           cluster, index, parsed.name);
     }
@@ -1192,21 +1226,18 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
 }
 
 static bool file_chain_matches(const FileChain& chain, u16 file_id) {
-  u16 current = file_id;
-  for(u8 index = 0; index < chain.cluster_count; index++) {
-    if(current != id_for_cluster(chain.clusters[index])) return false;
-    if(index + 1U == chain.cluster_count) {
-      u16 extra = 0;
-      return !program_store::next_file_extent(current, extra);
-    }
-    if(!program_store::next_file_extent(current, current)) return false;
+  u16 count = 0;
+  if(!program_store::fat_chain_count(file_id, count) || count != chain.cluster_count) return false;
+  for(u8 index = 0; index < chain.cluster_count; ++index) {
+    u16 cluster = 0;
+    if(!program_store::fat_chain_cluster(file_id, index, cluster) ||
+       cluster != chain.clusters[index]) return false;
   }
-  return false;
+  return true;
 }
 
 static void reset_lfn(LfnState& lfn) {
   memset(&lfn, 0, sizeof(lfn));
-  for(u16 i = 0; i < MAX_LFN_UNITS; i++) lfn.name[i] = 0xFFFF;
 }
 
 static void parse_lfn(const u8* item, LfnState& lfn) {
@@ -1282,7 +1313,7 @@ static bool system_directory(const char* name, u8 attributes) {
 static bool host_sidecar_file(const char* name) {
   // Finder хранит расширенные атрибуты и ветви ресурсов в файлах AppleDouble.
   // Их суффикс намеренно повторяет настоящий файл (например, "._game.m61"),
-  // поэтому импорт C6 по расширению должен отклонить их до того, как примет
+  // поэтому импорт C9 по расширению должен отклонить их до того, как примет
   // многокилобайтный блок метаданных за исходник калькулятора.
   return name[0] == '.' && name[1] == '_';
 }
@@ -1317,13 +1348,14 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
       return ParseStatus::INVALID;
     }
     bounded_string::copy(parsed.name, name);
-    parsed.id = id_for_cluster(cluster);
+    parsed.id = parsed.source_id = program_store::INVALID_ID;
+    parsed.cluster = cluster;
     parsed.data_len = 0;
     parsed.type = program_store::ProgramType::MK61;
     return ParseStatus::VALID;
   }
   const u32 size = get_le32(item, 28);
-  if(size == 0 && cluster == 0) return ParseStatus::SKIP;
+
   if(host_sidecar_file(name) || !parse_file_name(name, parsed.type)) {
     return ParseStatus::SKIP;
   }
@@ -1332,7 +1364,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
     return ParseStatus::INVALID;
   }
   // Неподдерживаемые файлы хоста намеренно игнорируются независимо от размера.
-  // Квоту данных C6 применяем лишь после выбора известного расширения калькулятора.
+  // Квоту данных C9 применяем лишь после выбора известного расширения калькулятора.
   const u32 size_limit = maximum_file_size(parsed.type);
   if(parsed.type == program_store::ProgramType::CHIP8 && size == 0) {
     g_error.fail(ErrorCode::EMPTY_FILE, Phase::ENTRY, 0, 1, name);
@@ -1342,13 +1374,15 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
     g_error.fail(ErrorCode::FILE_TOO_LARGE, Phase::ENTRY, size, size_limit, name);
     return ParseStatus::INVALID;
   }
-  if(!valid_cluster(cluster)) {
+  if((size != 0 && !valid_cluster(cluster)) ||
+     (size == 0 && cluster != 0 && !valid_cluster(cluster))) {
     g_error.fail(ErrorCode::FILE_CLUSTER, Phase::ENTRY,
                   cluster, cluster_limit(), name);
     return ParseStatus::INVALID;
   }
   bounded_string::copy(parsed.name, name);
-  parsed.id = id_for_cluster(cluster);
+  parsed.id = parsed.source_id = program_store::INVALID_ID;
+  parsed.cluster = cluster;
   parsed.data_len = (u16) size;
   return ParseStatus::VALID;
 }
@@ -1356,7 +1390,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
 static bool scan_cluster_chain(u8* map, u16 first) {
   if(!valid_cluster(first)) return true;
   u16 cluster = first;
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
+  for(u16 guard = 0; guard < program_store::max_fat_clusters(); guard++) {
     if(!valid_cluster(cluster) || cluster_marked(map, cluster)) return true;
     mark_cluster(map, cluster);
     u16 next = 0;
@@ -1424,7 +1458,7 @@ static bool scan_host_directory(u16 first_cluster, u8 depth,
     return true;
   }
   u16 cluster = first_cluster;
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
+  for(u16 guard = 0; guard < program_store::max_fat_clusters(); guard++) {
     if(!valid_cluster(cluster) ||
        cluster_marked(maps.directories, cluster)) return true;
     mark_cluster(maps.directories, cluster);
@@ -1459,8 +1493,7 @@ static bool discard_known_sidecars(void) {
     maps.sidecars[byte] &=
         (u8) ~(maps.regular[byte] | maps.directories[byte]);
   }
-  for(u16 id = 0; id < geometry().max_nodes; id++) {
-    const u16 cluster = cluster_for_id(id);
+  for(u16 cluster = 2; cluster < cluster_limit(); ++cluster) {
     if(!cluster_marked(maps.sidecars, cluster)) continue;
     for(u8 sector = 0; sector < geometry().sectors_per_cluster; sector++) {
       const u32 lba = cluster_lba(cluster, sector);
@@ -1473,9 +1506,8 @@ static bool discard_known_sidecars(void) {
   // The two-bit desired-kind workspace is idle between commits. Reuse it as
   // the persistent sidecar/directory role map; commit validation clears and
   // owns it under ScopedDesiredKinds below.
-  memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
-  for(u16 id = 0; id < geometry().max_nodes; id++) {
-    const u16 cluster = cluster_for_id(id);
+  memset(session().desired_kinds, 0, session().kind_bytes);
+  for(u16 cluster = 2; cluster < cluster_limit(); ++cluster) {
     if(cluster_marked(maps.sidecars, cluster)) {
       set_cluster_role(cluster, CLUSTER_ROLE_SIDECAR);
     } else if(cluster_marked(maps.directories, cluster)) {
@@ -1486,10 +1518,12 @@ static bool discard_known_sidecars(void) {
   return true;
 }
 
-enum class WalkPass : u8 { VALIDATE, APPLY };
+enum class WalkPass : u8 { RESERVE, RESERVE_NAMES, VALIDATE, CHANGES, SNAPSHOT, DISPLACE, APPLY };
+struct NextDirectory { u16 parent, cluster; bool enter; };
 
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
-                           u8 depth, WalkPass pass);
+                           u8 depth, WalkPass pass,
+                           bool preserve_host_tail = false);
 
 static bool read_file_chain_source(void* context, u32 offset,
                                    u8* output, usize size) {
@@ -1593,20 +1627,6 @@ static bool read_imported_text(void* context, u32 offset,
   return true;
 }
 
-static bool base_file_cluster(u16 cluster, u16& file_id,
-                              u8& cluster_index) {
-  const u16 id = id_for_cluster(cluster);
-  program_store::Entry entry;
-  if(program_store::entry_by_id(id, entry) &&
-     entry.kind == program_store::NodeKind::FILE) {
-    file_id = id;
-    cluster_index = 0;
-    return true;
-  }
-  u16 next = 0;
-  return program_store::file_extent_info(id, file_id, cluster_index, next);
-}
-
 static bool file_chain_complete(const FileChain& chain,
                                 bool current_exists, u16 current_id,
                                 u32 current_size, const char* subject,
@@ -1626,12 +1646,15 @@ static bool file_chain_complete(const FileChain& chain,
         any_staged = true;
         continue;
       }
-      u16 owner = 0;
-      u8 old_cluster = 0;
-      if(!current_exists ||
-         !base_file_cluster(chain.clusters[index], owner, old_cluster) ||
-         owner != current_id ||
-         ((u32) old_cluster * geometry().sectors_per_cluster + sector) *
+      // current_exists already proves current_id is a file. A matching
+      // reverse owner needs no second inode/name read for every data sector.
+      program_store::FatClusterInfo old = {};
+      const auto status = program_store::fat_cluster_info(chain.clusters[index], old);
+      if(status == program_store::FatClusterStatus::ERROR) return g_error.fail(
+          ErrorCode::FILE_READ, Phase::VALIDATE, chain.clusters[index], current_id, subject, true);
+      if(!current_exists || status != program_store::FatClusterStatus::USED ||
+         old.owner != current_id || old.index > program_store::MAX_FAT_EXTENTS_PER_FILE ||
+         ((u32) old.index * geometry().sectors_per_cluster + sector) *
              SECTOR_SIZE >= current_size) {
         return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
                             lba, current_size, subject);
@@ -1706,24 +1729,26 @@ static bool read_materialized_file(void* context, u32 offset,
   return true;
 }
 
+#include "virtual_fat_c9_import.inc"
+
 static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   FileChain chain = {};
   if(!collect_file_chain(parsed, false, chain)) return false;
   program_store::Entry current;
-  const bool exists = program_store::entry_by_id(parsed.id, current) &&
+  const bool exists = program_store::entry_by_id(parsed.source_id, current) &&
                       current.kind == program_store::NodeKind::FILE;
   u32 current_visible_size = 0;
   if(exists && !exported_file_size(current, current_visible_size)) return false;
   bool any_staged = false;
-  if(!file_chain_complete(chain, exists, parsed.id,
+  if(!file_chain_complete(chain, exists, parsed.source_id,
                           exists ? current_visible_size : 0,
                           parsed.name, any_staged)) {
     return false;
   }
   const bool content_unchanged =
-      exists && current.type == parsed.type &&
+      exists && parsed.id == parsed.source_id && current.type == parsed.type &&
       current_visible_size == parsed.data_len && !any_staged &&
-      file_chain_matches(chain, parsed.id);
+      file_chain_matches(chain, parsed.source_id);
   if(content_unchanged) {
     if(current.parent_id == parent_id && strcmp(current.name, parsed.name) == 0) {
       return true;
@@ -1749,21 +1774,19 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
     text_source.size = internal_size;
     source = {&text_source, read_imported_text};
   }
-  u16 extents[program_store::MAX_FAT_EXTENTS_PER_FILE] = {};
-  for(u8 index = 1; index < chain.cluster_count; index++) {
-    extents[index - 1] = id_for_cluster(chain.clusters[index]);
-  }
+  u16 extents[program_store::MAX_FAT_EXTENTS_PER_FILE + 1U] = {};
+  for(u8 index = 0; index < chain.cluster_count; index++) extents[index] = chain.clusters[index];
   if(internal_size != 0 &&
      program_store::transparent_compression_enabled(parsed.type)) {
     const u8 source_slots = (u8) (
         ((u32) internal_size + SECTOR_SIZE - 1U) / SECTOR_SIZE);
-    if(source_slots < PRIMARY_CACHE_SLOTS) {
+    if(source_slots < g_primary_cache_slots) {
       const u8 saved_cache_slots = g_cache_slots;
       const u8 workspace_slots =
-          (u8) (PRIMARY_CACHE_SLOTS - source_slots);
+          (u8) (g_primary_cache_slots - source_slots);
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_slots = workspace_slots;
-      u8* const bytes = session().cache_data[workspace_slots];
+      u8* const bytes = session().cache_data + (usize) workspace_slots * SECTOR_SIZE;
       const bool loaded =
           source.read(source.context, 0, bytes, internal_size);
       memset(session().cache, 0, sizeof(session().cache));
@@ -1780,32 +1803,20 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
       u8* const compression_buffer =
           g_commit_compression_buffer != NULL
               ? g_commit_compression_buffer
-              : session().cache_data[0];
+              : session().cache_data;
       const usize compression_buffer_size =
           g_commit_compression_buffer != NULL
               ? g_commit_compression_buffer_size
               : (usize) workspace_slots * SECTOR_SIZE;
       const bool written = program_store::write_file_from_source(
           parent_id, parsed.id, parsed.type, parsed.name, internal_size,
-          memory_source, chain.cluster_count > 1 ? extents : NULL,
-          (u8) (chain.cluster_count - 1U), NULL,
+          memory_source, chain.cluster_count != 0 ? extents : NULL,
+          chain.cluster_count, NULL,
           compression_buffer, compression_buffer_size, bytes);
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_slots = saved_cache_slots;
       if(written) return true;
       u32 detail = 3U;
-      u16 owner = 0;
-      u16 next = 0;
-      u8 cluster_index = 0;
-      if(program_store::file_extent_info(parsed.id, owner,
-                                         cluster_index, next)) {
-        detail |= 0x10000000UL | ((u32) owner << 8);
-      } else if(program_store::extent_info(parsed.id, owner, next)) {
-        detail |= 0x20000000UL | ((u32) owner << 8);
-      } else if(program_store::entry_by_id(parsed.id, current)) {
-        detail |= 0x30000000UL | ((u32) current.kind << 20) |
-                  ((u32) current.type << 8);
-      }
       detail |= (u32) program_store::last_write_failure_detail() << 16;
       detail |= (u32) program_store::last_write_failure() << 24;
       return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
@@ -1814,8 +1825,8 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   }
   if(program_store::write_file_from_source(
       parent_id, parsed.id, parsed.type, parsed.name, internal_size, source,
-      chain.cluster_count > 1 ? extents : NULL,
-      (u8) (chain.cluster_count - 1U), NULL,
+      chain.cluster_count != 0 ? extents : NULL,
+      chain.cluster_count, NULL,
       g_commit_compression_buffer, g_commit_compression_buffer_size)) {
     return true;
   }
@@ -1823,33 +1834,108 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
                       parsed.id, 4U, parsed.name, true);
 }
 
-static bool process_node(u16 parent_id, const ParsedNode& parsed,
-                         u8 depth, WalkPass pass) {
-  if(pass == WalkPass::VALIDATE) {
-    const DesiredKind kind = parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE;
-    if(!set_desired_kind(parsed.id, kind)) {
+static_assert((u32) storage_geometry::MAX_NODES * storage_geometry::MAX_DIRENTS_PER_NODE +
+              storage_geometry::ROOT_SYSTEM_DIRENTS <= 0xFFFFU, "directory slot counter bound");
+static u16 g_validated_directory_slots[MAX_DEPTH + 1U];
+static u16 g_extra_directory_clusters;
+static bool validate_directory_capacity(u8 depth, bool root, u16 raw_clusters) {
+  const u32 slots = g_validated_directory_slots[depth];
+  if(root) {
+    return slots <= geometry().root_entries ||
+        g_error.fail(ErrorCode::ROOT_LIMIT, Phase::VALIDATE, slots, geometry().root_entries);
+  }
+  const u16 needed = (u16) ((slots + (u32) geometry().sectors_per_cluster * 16U - 1U) /
+                           ((u32) geometry().sectors_per_cluster * 16U));
+  if(needed > raw_clusters) g_extra_directory_clusters =
+      (u16) (g_extra_directory_clusters + needed - raw_clusters);
+  return true;
+}
+
+__attribute__((noinline))
+static bool process_node(u16 parent_id, ParsedNode& parsed, u8 depth, WalkPass pass, NextDirectory& next) {
+  if(!c9_resolve_node(parent_id, parsed, pass)) return false;
+  if(pass == WalkPass::RESERVE) {
+    if(parsed.cluster != 0 &&
+       !set_desired_kind(parsed.cluster, parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE)) {
       return g_error.fail(ErrorCode::DUPLICATE_CLUSTER, Phase::VALIDATE,
-                          cluster_for_id(parsed.id), (u32) kind, parsed.name);
-    }
-    program_store::Entry current;
-    if(program_store::entry_by_id(parsed.id, current)) {
-      if(parsed.directory != (current.kind == program_store::NodeKind::DIRECTORY)) {
-        // Повторное использование между типами файла и каталога безопасно лишь
-        // после полного удаления старого дерева; отказ сохраняет детерминизм восстановления.
-        return g_error.fail(ErrorCode::KIND_CHANGE, Phase::VALIDATE,
-                            cluster_for_id(parsed.id), (u32) current.kind,
-                            parsed.name);
-      }
+                           parsed.cluster, 0, parsed.name);
     }
     if(!parsed.directory) {
       FileChain chain = {};
-      if(!collect_file_chain(parsed, true, chain)) {
+      return collect_file_chain(parsed, true, chain);
+    }
+    next = {parsed.id == program_store::INVALID_ID ? UNRESOLVED_PARENT : parsed.id, parsed.cluster, true};
+    return true;
+  }
+  if(pass == WalkPass::DISPLACE) {
+    program_store::Entry current = {};
+    if(program_store::entry_by_id(parsed.id, current) &&
+       (current.parent_id != parent_id || strcmp(current.name, parsed.name) != 0)) {
+      ParsedNode temporary = {};
+      temporary.directory = current.kind == program_store::NodeKind::DIRECTORY;
+      temporary.type = current.type;
+      bool moved = false;
+      for(u16 sequence = 0; sequence <= geometry().max_nodes * 2U; ++sequence) {
+        format_displaced_name(parsed.id, sequence, temporary.name);
+        bool exists = false;
+        if(!c9_host_name_exists(current.parent_id, temporary, exists)) return false;
+        if(exists) continue;
+        u16 occupied = program_store::INVALID_ID;
+        if(!program_store::fat_find_child(current.parent_id, temporary.directory, temporary.type, temporary.name, occupied)) return false;
+        if(occupied != program_store::INVALID_ID) continue;
+        if(!temporary.directory) {
+          char visible[program_store::NAME_SIZE + 16];
+          if(!c9_visible_name(temporary, visible, sizeof(visible)) ||
+             !program_store::fat_find_child(current.parent_id, true, program_store::ProgramType::MK61, visible, occupied)) return false;
+          if(occupied != program_store::INVALID_ID) continue;
+        }
+        if(program_store::move_rename(parsed.id, current.parent_id, temporary.name)) { moved = true; break; }
+        return g_error.fail(ErrorCode::APPLY, Phase::PREPARE, parsed.id, 0, parsed.name, true);
+      }
+      if(!moved) return g_error.fail(ErrorCode::APPLY, Phase::PREPARE, parsed.id, 0, parsed.name, true);
+    }
+    if(parsed.directory) next = {parsed.id, parsed.cluster, true};
+    return true;
+  }
+  if(pass == WalkPass::CHANGES) {
+    program_store::Entry current = {};
+    u16 first = 0;
+    const bool exists = program_store::entry_by_id(parsed.id, current);
+    u32 visible = 0;
+    const bool stable = exists && current.parent_id == parent_id &&
+        parsed.directory == (current.kind == program_store::NodeKind::DIRECTORY) &&
+        strcmp(current.name, parsed.name) == 0 &&
+        (parsed.directory || (current.type == parsed.type &&
+          exported_file_size(current, visible) && visible == parsed.data_len)) &&
+        program_store::fat_first_cluster(parsed.id, first) && first == parsed.cluster;
+    if(!stable) {
+      c9_mark_parent_changed(parent_id);
+      if(exists) c9_mark_parent_changed(current.parent_id);
+    }
+    if(parsed.directory) next = {parsed.id, parsed.cluster, true};
+    return true;
+  }
+  if(pass == WalkPass::RESERVE_NAMES || pass == WalkPass::SNAPSHOT) {
+    if(parsed.directory) next = {parsed.id == program_store::INVALID_ID ? UNRESOLVED_PARENT : parsed.id, parsed.cluster, true};
+    return true;
+  }
+  if(pass == WalkPass::VALIDATE) {
+    program_store::Entry projected = {};
+    projected.kind = parsed.directory ? program_store::NodeKind::DIRECTORY : program_store::NodeKind::FILE;
+    projected.type = parsed.type;
+    memcpy(projected.name, parsed.name, sizeof(projected.name));
+    const u8 dirents = node_dirent_count(projected);
+    if(dirents == 0) return false;
+    g_validated_directory_slots[depth] += dirents;
+    if(!parsed.directory) {
+      FileChain chain = {};
+      if(!collect_file_chain(parsed, false, chain)) {
         return g_error.fail(ErrorCode::FILE_CHAIN, Phase::VALIDATE,
-                            cluster_for_id(parsed.id), parsed.data_len, parsed.name);
+                            parsed.cluster, parsed.data_len, parsed.name);
       }
       program_store::Entry current = {};
       const bool exists =
-          program_store::entry_by_id(parsed.id, current) &&
+          program_store::entry_by_id(parsed.source_id, current) &&
           current.kind == program_store::NodeKind::FILE;
       u32 current_visible_size = 0;
       if(exists && !exported_file_size(current, current_visible_size)) {
@@ -1857,21 +1943,21 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
                             parsed.id, current.data_len, parsed.name, true);
       }
       bool any_staged = false;
-      if(!file_chain_complete(chain, exists, parsed.id,
+      if(!file_chain_complete(chain, exists, parsed.source_id,
                               exists ? current_visible_size : 0,
                               parsed.name, any_staged)) {
         return g_error.fail(ErrorCode::FILE_DATA, Phase::VALIDATE,
-                            cluster_for_id(parsed.id), parsed.data_len, parsed.name);
+                            parsed.cluster, parsed.data_len, parsed.name);
       }
       // A chain without staged sectors whose visible bytes still map exactly
-      // to the same C6 file cannot have changed.  Its stored M8 text and APP
-      // payload were validated when they entered C6, so decoding them again
+      // to the same C9 file cannot have changed.  Its stored M8 text and APP
+      // payload were validated when they entered C9, so decoding them again
       // only makes metadata-only host traffic needlessly expensive.  Rename
       // and move handling remains in APPLY.
       const bool content_unchanged =
           exists && current.type == parsed.type &&
           current_visible_size == parsed.data_len && !any_staged &&
-          file_chain_matches(chain, parsed.id);
+          file_chain_matches(chain, parsed.source_id);
       if(content_unchanged) return true;
       if(program_store::text_content(parsed.type)) {
         const u16 limit = parsed.type == program_store::ProgramType::TINYBASIC
@@ -1888,36 +1974,42 @@ static bool process_node(u16 parent_id, const ParsedNode& parsed,
       // resident-прошивки. Пока его байты и FAT-цепочка не меняются, он не
       // должен блокировать удаление, переименование или копирование остальных
       // файлов. Новое и изменённое содержимое по-прежнему полностью
-      // распаковывается и проверяется до первой мутации дерева C6.
+      // распаковывается и проверяется до первой мутации дерева C9.
       if(!validate_app_chain(parsed, chain)) return false;
 #endif
       return true;
     }
-    return walk_directory(parsed.id, false, cluster_for_id(parsed.id),
-                          (u8) (depth + 1), pass);
-  }
-
-  if(parsed.directory) {
-    // Directory clusters are only a transport representation.  A host may
-    // preallocate a very long, empty tail (macOS commonly does this) after the
-    // first 0x00 end marker.  Persisting that tail would consume one C6 node
-    // per unused FAT cluster.  Import the live entries first; the final
-    // ensure_all_directory_extents() pass materializes only the clusters that
-    // those entries actually require.
-    if(!program_store::create_directory(parent_id, parsed.name, parsed.id,
-                                        NULL)) {
-      return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
-                          parsed.id, 5U, parsed.name, true);
+    C9DirectoryChain mapping = {};
+    if(!c9_directory_clusters(parsed, mapping)) return false;
+    u16 cluster = parsed.cluster;
+    for(u16 index = 1; index < mapping.count; ++index) {
+      if(!effective_fat_value(cluster, cluster) ||
+         !program_store::import_plan_put(cluster, 0, parsed.id, parsed.source_id)) return false;
     }
-    return walk_directory(parsed.id, false, cluster_for_id(parsed.id),
-                          (u8) (depth + 1), pass);
+    next = {parsed.id, parsed.cluster, true};
+    return true;
   }
-  return apply_file(parent_id, parsed);
+  if(parsed.directory) {
+    C9DirectoryChain mapping = {};
+    if(!c9_directory_clusters(parsed, mapping) ||
+       !program_store::create_directory_from_fat(parent_id, parsed.name, parsed.id,
+                                                 parsed.cluster, nullptr) ||
+       !program_store::set_directory_chain(parsed.id, mapping.count,
+                              {&mapping, c9_directory_chain_source})) {
+      return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+                           parsed.id, mapping.count, parsed.name, true);
+    }
+    if(!set_desired_node(parsed.id, DESIRED_DIRECTORY)) return false;
+    next = {parsed.id, parsed.cluster, true};
+    return true;
+  }
+  if(!apply_file(parent_id, parsed) || !set_desired_node(parsed.id, DESIRED_FILE)) return false;
+  return true;
 }
 
 static bool handle_directory_item(u16 parent_id, const u8* item,
                                   LfnState& lfn, u8 depth, WalkPass pass,
-                                  bool& end) {
+                                  bool& end, u32 lba, u8 slot, NextDirectory& next) {
   if(item[0] == 0) {
     end = true;
     reset_lfn(lfn);
@@ -1935,138 +2027,94 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
   if(status == ParseStatus::INVALID) {
     return g_error.fail(ErrorCode::DIRECTORY_ENTRY, Phase::ENTRY, parent_id);
   }
-  return process_node(parent_id, parsed, depth, pass);
+  if(pass == WalkPass::VALIDATE && !c9_claim_name(parent_id, parsed, lba, slot)) return false;
+  return process_node(parent_id, parsed, depth, pass, next);
 }
 
+// A parent is suspended immediately after a short entry, when its LFN state
+// has been reset. Only its next slot needs saving; one LFN parser is reused
+// for all 32 levels instead of nesting file/APP/CRC frames at every level.
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
-                           u8 depth, WalkPass pass) {
-  if(depth > MAX_DEPTH) {
-    return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, depth, MAX_DEPTH);
-  }
-  LfnState lfn;
-  reset_lfn(lfn);
-  bool end = false;
-  if(root) {
-    for(u16 sector = 0; sector < geometry().root_sectors; sector++) {
-      for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
-        const u8* block = NULL;
-        if(!cached_effective_sector(root_start() + sector, block)) {
-          return g_error.fail(ErrorCode::ROOT_READ, Phase::VALIDATE,
-                              root_start() + sector, slot, nullptr, true);
+                           u8 depth, WalkPass pass,
+                           bool preserve_host_tail) {
+  if(depth > MAX_DEPTH) return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, depth, MAX_DEPTH);
+  struct Cursor { u16 parent, cluster, guard, sector; u8 slot; bool root; };
+  Cursor stack[MAX_DEPTH + 1U] = {};
+  u8 level = depth;
+  stack[level] = {parent_id, first_cluster, 0, 0, 0, root};
+  LfnState lfn; reset_lfn(lfn);
+  if(pass == WalkPass::VALIDATE) g_validated_directory_slots[level] = root ? storage_geometry::ROOT_SYSTEM_DIRENTS : 2U;
+  for(;;) {
+    Cursor& cursor = stack[level];
+    if(!cursor.root && !valid_cluster(cursor.cluster)) return g_error.fail(
+        ErrorCode::DIRECTORY_CLUSTER, Phase::CHAIN, cursor.cluster, cluster_limit());
+    bool end = false;
+    const u16 sectors = cursor.root ? geometry().root_sectors : geometry().sectors_per_cluster;
+    if(cursor.sector >= sectors) {
+      if(cursor.root) end = true;
+      else {
+        u16 following = 0;
+        if(!effective_fat_value(cursor.cluster, following)) return g_error.fail(
+            ErrorCode::FAT_READ, Phase::CHAIN, cursor.cluster, 0, nullptr, true);
+        if(fat_eof(following)) end = true;
+        else {
+          if(!valid_cluster(following) || ++cursor.guard >= program_store::max_fat_clusters()) return g_error.fail(
+              ErrorCode::DIRECTORY_CHAIN, Phase::CHAIN, cursor.cluster, following);
+          // Directory tails are metadata too; active SYNC must retain every
+          // cluster's exact dirents while the host holds their vnode positions.
+          if(pass == WalkPass::RESERVE && !set_desired_kind(following, DESIRED_DIRECTORY)) return g_error.fail(
+              ErrorCode::EXTENT_CHAIN, Phase::CHAIN, cursor.cluster, following);
+          cursor.cluster = following; cursor.sector = 0; cursor.slot = 0;
         }
-        u8 item[32];
-        memcpy(item, block + slot * 32, sizeof(item));
-        if(!handle_directory_item(program_store::ROOT_ID, item,
-                                  lfn, depth, pass, end)) return false;
-        if(end) return true;
       }
     }
-    return true;
-  }
-
-  u16 cluster = first_cluster;
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
-    if(!valid_cluster(cluster)) {
-      return g_error.fail(ErrorCode::DIRECTORY_CLUSTER, Phase::CHAIN,
-                          cluster, cluster_limit());
+    NextDirectory next = {};
+    if(!end) {
+      const u32 lba = cursor.root ? root_start() + cursor.sector : cluster_lba(cursor.cluster, (u8) cursor.sector);
+      if(cursor.slot == 0 && pass == WalkPass::SNAPSHOT &&
+         (cursor.root ? g_root_changed : existing_node(cursor.parent)) && !c9_snapshot_sector(lba)) return g_error.fail(
+          ErrorCode::CACHE_WRITE, Phase::PREPARE, lba, 0, nullptr, true);
+      const u8* block = nullptr;
+      if(!cached_effective_sector(lba, block)) return g_error.fail(
+          cursor.root ? ErrorCode::ROOT_READ : ErrorCode::DIRECTORY_READ,
+          Phase::CHAIN, lba, cursor.slot, nullptr, true);
+      const u8 slot = cursor.slot;
+      u8 item[32]; memcpy(item, block + slot * 32U, sizeof(item));
+      if(++cursor.slot == 16U) { cursor.slot = 0; ++cursor.sector; }
+      if(!handle_directory_item(cursor.parent, item, lfn, level, pass, end, lba, slot, next)) return false;
     }
-    for(u8 sector = 0; sector < geometry().sectors_per_cluster; sector++) {
-      if(end) break;
-      for(u8 slot = 0; slot < SECTOR_SIZE / 32; slot++) {
-        const u8* block = NULL;
-        if(!cached_effective_sector(cluster_lba(cluster, sector), block)) {
-          return g_error.fail(ErrorCode::DIRECTORY_READ, Phase::CHAIN,
-                              cluster_lba(cluster, sector), slot, nullptr, true);
+    if(end) {
+      // A host may read the whole cluster, including zeros after its end
+      // marker. Native canonical LFNs can populate those untouched sectors
+      // after APPLY, so preserve them before changing the child list too.
+      if(pass == WalkPass::SNAPSHOT && preserve_host_tail &&
+         (cursor.root ? g_root_changed : existing_node(cursor.parent))) {
+        const u16 first_unread = (u16) (cursor.sector + (cursor.slot != 0 ? 1U : 0U));
+        for(u16 sector = first_unread; sector < sectors; ++sector) {
+          const u32 lba = cursor.root ? root_start() + sector
+              : cluster_lba(cursor.cluster, (u8) sector);
+          if(!c9_snapshot_sector(lba)) return g_error.fail(
+              ErrorCode::CACHE_WRITE, Phase::PREPARE, lba, 0, nullptr, true);
         }
-        u8 item[32];
-        memcpy(item, block + slot * 32, sizeof(item));
-        if(!handle_directory_item(parent_id, item, lfn, depth,
-                                  pass, end)) return false;
-        if(end) break;
       }
-    }
-    // FAT specifies 0x00 as the end of all directory entries, not merely the
-    // current sector.  Any clusters after it are allocation slack and must not
-    // become persistent C6 directory extents.
-    if(end) return true;
-    u16 next = 0;
-    if(!effective_fat_value(cluster, next)) {
-      return g_error.fail(ErrorCode::FAT_READ, Phase::CHAIN,
-                          cluster, 0, nullptr, true);
-    }
-    if(fat_eof(next)) return true;
-    if(next == FAT12_FREE || next == FAT12_BAD || !valid_cluster(next)) {
-      return g_error.fail(ErrorCode::DIRECTORY_CHAIN, Phase::CHAIN, cluster, next);
-    }
-    if(pass == WalkPass::VALIDATE &&
-       !set_desired_kind(id_for_cluster(next), DESIRED_EXTENT)) {
-      return g_error.fail(ErrorCode::EXTENT_CHAIN, Phase::CHAIN, cluster, next);
-    }
-    cluster = next;
-  }
-  return g_error.fail(ErrorCode::DIRECTORY_CHAIN, Phase::CHAIN,
-                      cluster, geometry().max_nodes);
-}
-
-static bool directory_chain_matches(u16 directory_id) {
-  if(desired_kind(directory_id) != DESIRED_DIRECTORY) return false;
-  u16 host_cluster = cluster_for_id(directory_id);
-  u16 current_extent = program_store::INVALID_ID;
-  (void) program_store::first_extent(directory_id, current_extent);
-  for(u16 guard = 0; guard < geometry().max_nodes; guard++) {
-    u16 next = 0;
-    if(!effective_fat_value(host_cluster, next)) return false;
-    if(fat_eof(next)) return current_extent == program_store::INVALID_ID;
-    if(!valid_cluster(next) || current_extent != id_for_cluster(next)) return false;
-    host_cluster = next;
-    if(!program_store::next_extent(current_extent, current_extent)) {
-      current_extent = program_store::INVALID_ID;
+      if(pass == WalkPass::VALIDATE && !validate_directory_capacity(level, cursor.root, (u16) (cursor.guard + 1U))) return false;
+      if(level == depth) return true;
+      --level; reset_lfn(lfn);
+    } else if(next.enter) {
+      if(level == MAX_DEPTH) return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, level + 1U, MAX_DEPTH);
+      ++level;
+      stack[level] = {next.parent, next.cluster, 0, 0, 0, false};
+      reset_lfn(lfn);
+      if(pass == WalkPass::VALIDATE) g_validated_directory_slots[level] = 2;
     }
   }
-  return false;
 }
 
-static bool release_all_extents(u16 directory_id) {
-  return program_store::trim_directory_extents(directory_id, 0);
-}
-
-static bool release_mismatched_extent_chains(u16 parent_id, u8 depth = 0) {
-  if(depth > MAX_DEPTH) return false;
-  const int count = program_store::child_count(parent_id);
-  for(int index = 0; index < count; index++) {
-    program_store::Entry entry;
-    if(!program_store::child(parent_id, index, entry)) return false;
-    if(entry.kind != program_store::NodeKind::DIRECTORY) continue;
-    if((!directory_chain_matches(entry.id) && !release_all_extents(entry.id)) ||
-       !release_mismatched_extent_chains(entry.id, (u8) (depth + 1))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-static bool release_repurposed_extents(void) {
-  for(u16 id = 0; id < program_store::max_nodes(); id++) {
-    const DesiredKind wanted = desired_kind(id);
+static bool prepare_import_mappings(void) {
+  for(u16 id = 0; id < geometry().max_nodes; ++id) {
+    const DesiredKind wanted = desired_node(id);
     if(wanted != DESIRED_FILE && wanted != DESIRED_DIRECTORY) continue;
-    u16 owner = 0;
-    u16 next = 0;
-    u8 cluster_index = 0;
-    if(program_store::file_extent_info(
-           id, owner, cluster_index, next)) {
-      if(!program_store::release_file_extent(id)) return false;
-      continue;
-    }
-    // A host is allowed to reuse allocation slack after the first 0x00
-    // directory marker.  Older firmware persisted that entire preallocated
-    // FAT tail as C6 directory extents.  If a later, interrupted host
-    // transaction already points a live file or directory at one of those
-    // clusters, free that exact extent before APPLY claims its stable id.
-    // release_directory_extent() relinks both neighbours in one WAL record,
-    // so this remains power-loss safe even when the reused node is in the
-    // middle of a legacy tail.
-    if(program_store::extent_info(id, owner, next) &&
-       !program_store::release_directory_extent(id)) return false;
+    if(!program_store::prepare_import_mapping(id)) return false;
   }
   return true;
 }
@@ -2082,7 +2130,7 @@ static bool prune_tree(u16 parent_id, bool strict) {
     if(!program_store::child(parent_id, index, entry)) return false;
     if(entry.kind == program_store::NodeKind::DIRECTORY &&
        !prune_tree(entry.id, strict)) return false;
-    const DesiredKind wanted = desired_kind(entry.id);
+    const DesiredKind wanted = desired_node(entry.id);
     const bool keep = (entry.kind == program_store::NodeKind::FILE &&
                        wanted == DESIRED_FILE) ||
                       (entry.kind == program_store::NodeKind::DIRECTORY &&
@@ -2103,49 +2151,8 @@ static bool prune_tree(u16 parent_id, bool strict) {
   return true;
 }
 
-static u32 directory_required_slots(u16 directory_id) {
-  u32 slots = 2;
-  const int count = program_store::child_count(directory_id);
-  for(int index = 0; index < count; index++) {
-    program_store::Entry entry;
-    if(!program_store::child(directory_id, index, entry)) return 0;
-    const u8 used = node_dirent_count(entry);
-    if(used == 0) return 0;
-    slots += used;
-  }
-  return slots;
-}
-
 static bool ensure_directory_extents(u16 directory_id) {
-  startup_stage(20);
-  const u32 slots = directory_required_slots(directory_id);
-  if(slots == 0) return false;
-  startup_stage(21);
-  const u8 sectors_per_cluster = geometry().sectors_per_cluster;
-  startup_stage(100U + sectors_per_cluster);
-  const u32 per_cluster = (u32) sectors_per_cluster * (SECTOR_SIZE / 32);
-  if(per_cluster == 0) return false;
-  const u16 wanted = (u16) ((slots + per_cluster - 1) / per_cluster);
-  startup_stage(22);
-  u16 have = 1;
-  u16 extent = 0;
-  if(program_store::first_extent(directory_id, extent)) {
-    do {
-      have++;
-    } while(program_store::next_extent(extent, extent));
-  }
-  startup_stage(23);
-  while(have < wanted) {
-    if(!program_store::allocate_directory_extent(directory_id,
-                                                 program_store::INVALID_ID)) return false;
-    have++;
-  }
-  startup_stage(24);
-  if(have > wanted &&
-     !program_store::trim_directory_extents(directory_id,
-                                            (u16) (wanted - 1U))) return false;
-  startup_stage(25);
-  return true;
+  return program_store::ensure_directory_chain(directory_id);
 }
 
 static bool ensure_all_directory_extents(u16 parent_id = program_store::ROOT_ID,
@@ -2174,12 +2181,12 @@ static void invalidate_clean_cache(void) {
 
 class ScopedCommitScratch {
   public:
-    ScopedCommitScratch(void)
+    __attribute__((noinline)) ScopedCommitScratch(void)
       : saved_extra_slots_(g_extra_cache_slots) {
       // К моменту создания этой защиты каждый грязный байт уже находится в
       // устойчивом к сбою питания журнале staging. Чистые записи кеша можно
       // удалить, чтобы VFAT_COMMIT занял shared_scratch, а
-      // внешний кеш временно стал workspace упаковщика C6.
+      // внешний кеш временно стал workspace упаковщика C9.
       memset(session().cache, 0, sizeof(session().cache));
       g_cache_scratch.reset();
       g_scratch_cache_slots = 0;
@@ -2191,7 +2198,7 @@ class ScopedCommitScratch {
       update_cache_slot_count();
     }
 
-    ~ScopedCommitScratch(void) {
+    __attribute__((noinline)) ~ScopedCommitScratch(void) {
       // Пока область scratch отсутствовала, фиксация могла заполнить чистые
       // записи кеша чтения. Очищаем их метаданные перед восстановлением слотов.
       memset(session().cache, 0, sizeof(session().cache));
@@ -2214,7 +2221,10 @@ class ScopedCommitScratch {
 class ScopedDesiredKinds {
  public:
   ScopedDesiredKinds() {
-    memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+    memset(session().desired_kinds, 0, session().kind_bytes);
+    memset(session().desired_nodes, 0, session().node_bytes);
+    memset(session().existing_nodes, 0, session().existing_bytes);
+    g_empty_import_index = g_import_id_hint = 0;
   }
   ~ScopedDesiredKinds() {
     // The same two-bit array stores transient AppleDouble roles while the
@@ -2222,7 +2232,7 @@ class ScopedDesiredKinds {
     // the write path after either a successful or rejected commit. If the
     // MSC session continues after sync, rebuild those roles before accepting
     // the next packet: a retryable commit failure keeps the host FAT batch.
-    memset(session().desired_kinds, 0, sizeof(session().desired_kinds));
+    memset(session().desired_kinds, 0, session().kind_bytes);
     g_sidecar_scan_pending = g_sidecar_candidate_seen;
   }
 
@@ -2345,11 +2355,13 @@ static void write_reserved_packet_sector(u32 lba, const u8* data) {
     if(found < 0) __builtin_trap(); // reserve_packet_cache_slots() гарантирует слот.
     CacheEntry& entry = session().cache[(u8) found];
     entry.lba = canonical_lba(lba);
+    g_host_view_applied = false;
     memcpy(cache_bytes((u8) found), data, SECTOR_SIZE);
     entry.state = CACHE_UNCHECKED;
   } else {
     u8* const bytes = cache_bytes((u8) found);
     if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
+      g_host_view_applied = false;
       memcpy(bytes, data, SECTOR_SIZE);
       session().cache[(u8) found].state = CACHE_UNCHECKED;
     }
@@ -2366,6 +2378,7 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
     slot = (u8) found;
     u8* const bytes = cache_bytes(slot);
     if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
+      g_host_view_applied = false;
       memcpy(bytes, data, SECTOR_SIZE);
       session().cache[slot].state = CACHE_UNCHECKED;
     }
@@ -2382,6 +2395,7 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
   // обращается к SPI и потому безопасен внутри обратного вызова USB.
   entry.state = CACHE_EMPTY;
   entry.lba = key;
+  g_host_view_applied = false;
   memcpy(cache_bytes(slot), data, SECTOR_SIZE);
   touch_cache(slot);
   entry.state = CACHE_UNCHECKED;
@@ -2459,20 +2473,17 @@ bool try_write_cached_sectors(u32 lba, const u8* data, u16 count) {
   // данные либо частично принимать пакет, которому затем нужен отложенный путь цикла.
   if((data == NULL && count != 0) || !program_store::ready() ||
      g_session == NULL || count > MAX_CACHE_SLOTS || lba > sector_count() ||
-     (u32) count > sector_count() - lba || !fast_packet_fits(lba, count)) {
-    return false;
-  }
+     (u32) count > sector_count() - lba) return false;
+  // Invalidate old sidecar roles before reserving the whole packet; its later
+  // sectors may reuse a cluster mentioned by the earlier metadata sectors.
+  for(u16 index = 0; index < count; ++index)
+    note_host_metadata(lba + index, data + (u32) index * SECTOR_SIZE);
+  if(!fast_packet_fits(lba, count)) return false;
   for(u16 index = 0; index < count; index++) {
     const u32 current_lba = lba + index;
     const u8* const block = data + (u32) index * SECTOR_SIZE;
-    const bool candidate = contains_sidecar_name(block);
-    if(candidate && sidecar_filter_enabled()) g_sidecar_candidate_seen = true;
     if(current_lba != 0 && !sidecar_data_lba(current_lba)) {
       fast_cache_write_sector(lba, count, current_lba, block);
-    }
-    if((candidate && sidecar_filter_enabled()) || (g_sidecar_candidate_seen &&
-                     current_lba != 0 && directory_metadata_lba(current_lba))) {
-      g_sidecar_scan_pending = true;
     }
   }
   return true;
@@ -2486,25 +2497,23 @@ bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
   // Закончим обработку старого пакета до изменения нового. Обычный BOT
   // пакет не больше cache capacity; его отложенный путь резервирует все
   // слоты до первого memcpy, как и быстрый путь в USB callback.
-  if(!discard_known_sidecars()) return false;
+  // Scanning every directory timestamp write makes a tiny macOS file create
+  // traverse the entire volume dozens of times. Batch role changes until sync,
+  // or scan early under staging pressure to reclaim AppleDouble payload.
+  const u16 pressure = (u16) ((geometry().stage_sector_count - 1U) * 7U / 2U);
+  if(g_sidecar_scan_pending && program_store::vfat_stage_count() >= pressure &&
+     !discard_known_sidecars()) return false;
+  for(u16 i = 0; i < count; ++i)
+    note_host_metadata(lba + i, data + (u32) i * SECTOR_SIZE);
   if(!reserve_packet_cache_slots(lba, count)) return false;
   for(u16 i = 0; i < count; i++) {
     const u32 current_lba = lba + i;
     const u8* const block = data + (u32) i * SECTOR_SIZE;
-    const bool candidate = contains_sidecar_name(block);
-    if(candidate && sidecar_filter_enabled()) g_sidecar_candidate_seen = true;
-    if(current_lba == 0) continue;
-    if(sidecar_data_lba(current_lba)) continue;
+    if(current_lba == 0 || sidecar_data_lba(current_lba)) continue;
     write_reserved_packet_sector(current_lba, block);
-    if((candidate && sidecar_filter_enabled()) || (g_sidecar_candidate_seen &&
-                     directory_metadata_lba(current_lba))) {
-      g_sidecar_scan_pending = true;
-    }
   }
-  // Это write-back cache (SCSI WCE=1): если последующая фильтрация sidecar
-  // встретила временный сбой I/O, пакет уже принят. Оставляем scan_pending и
-  // возвращаем ошибку при sync/eject, если повторная попытка тоже не удалась.
-  (void) discard_known_sidecars();
+  // The packet is acknowledged into WCE cache. A later sync first refreshes
+  // the role map and persists all ordinary bytes before acknowledging durability.
   return true;
 }
 
@@ -2514,7 +2523,7 @@ bool flush_write_cache(void) {
 }
 
 bool write_sector(u32 lba, const u8* data) {
-  if(!write_cached_sectors(lba, data, 1)) return false;
+  if(!write_cached_sectors(lba, data, 1) || !discard_known_sidecars()) return false;
   const int slot = lba == 0 ? -1 : cache_index(lba);
   return slot < 0 || persist_cache_slot((u8) slot);
 }
@@ -2523,7 +2532,73 @@ bool write_sectors(u32 lba, const u8* data, u16 count) {
   return write_cached_sectors(lba, data, count) && flush_write_cache();
 }
 
-CommitResult flush_pending_result(void) {
+// Outside the host-addressable volume. Staging's CRC and C9 format epoch
+// make this a durable completion record for our own import, not a host dirent.
+static constexpr u32 CLOSE_STAGE_KEY = 0x007FFFFFUL;
+static const u8 CLOSE_SIGNATURE[8] = {'C','9','C','L','O','S','E',1};
+
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#else
+__attribute__((noinline))
+#endif
+static bool close_stage_record(bool create) {
+  u8 bytes[SECTOR_SIZE] = {};
+  if(create) {
+    // APPLY published every referenced FAT chain unchanged. Its native FAT
+    // sector is therefore sufficient for recovery before the marker is durable.
+    // Release this redundant snapshot first, leaving one index slot even when
+    // the accepted host journal reached its exact capacity.
+    const u32 redundant = fat_start() + geometry().fat_sectors - 1U;
+    program_store::vfat_stage_forget(redundant, 1);
+    if(program_store::vfat_stage_exists(redundant)) return false;
+    memcpy(bytes, CLOSE_SIGNATURE, sizeof(CLOSE_SIGNATURE));
+    put_le32(bytes, 8, geometry().capacity_bytes);
+    return program_store::vfat_stage_write(CLOSE_STAGE_KEY, bytes);
+  }
+  return program_store::vfat_stage_read(CLOSE_STAGE_KEY, bytes) &&
+      memcmp(bytes, CLOSE_SIGNATURE, sizeof(CLOSE_SIGNATURE)) == 0 &&
+      get_le32(bytes, 8) == geometry().capacity_bytes;
+}
+
+static bool keep_close_marker(void*, u32 key) { return key == CLOSE_STAGE_KEY; }
+
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#else
+__attribute__((noinline))
+#endif
+static CommitResult close_io_failure(ErrorCode code) {
+  g_error.fail(code, Phase::COMMIT, 0, 0, nullptr, true);
+  return CommitResult::IO_FAILED;
+}
+
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#else
+__attribute__((noinline))
+#endif
+static CommitResult close_applied_view(bool create_marker) {
+  g_host_view_applied = false;
+  if(!close_stage_record(create_marker)) {
+    return close_io_failure(ErrorCode::CACHE_WRITE);
+  }
+  // After the marker, recovery must finish canonicalization/retirement instead
+  // of parsing a mix of partly retired host sectors and native LFN sectors.
+  if(!ensure_all_directory_extents()) {
+    return close_io_failure(ErrorCode::DIRECTORY_EXTENTS);
+  }
+  // The marker must be retired last, after every ordinary journal entry.
+  if(!program_store::vfat_stage_discard_unmatched(keep_close_marker, nullptr) ||
+     !program_store::vfat_stage_discard_all()) {
+    return close_io_failure(ErrorCode::STAGE_DISCARD);
+  }
+  invalidate_clean_cache();
+  clear_diagnostic();
+  return CommitResult::OK;
+}
+
+static CommitResult commit_pending_result(bool final_view) {
   g_error.begin_attempt();
   if(!program_store::ready() || !ensure_session()) {
     record_startup_timeout();
@@ -2540,11 +2615,38 @@ CommitResult flush_pending_result(void) {
   if(staged_before == 0) {
     return CommitResult::OK;
   }
+  if(final_view && program_store::vfat_stage_exists(CLOSE_STAGE_KEY)) {
+    ScopedCommitScratch scratch;
+    return close_applied_view(false);
+  }
+  if(g_host_view_applied && g_applied_media_revision == program_store::media_revision()) {
+    if(!final_view) { clear_diagnostic(); return CommitResult::OK; }
+    ScopedCommitScratch scratch;
+    return close_applied_view(true);
+  }
+  // Failed/partial attempts and reboot recovery always take the complete,
+  // validated import path. The shortcut is an SRAM fact about this session.
+  g_host_view_applied = false;
   startup_stage(50);
   ScopedCommitScratch commit_scratch;
   ScopedDesiredKinds desired_kinds;
   invalidate_clean_cache();
   startup_stage(51);
+  if(!program_store::fat_projection_begin()) {
+    g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE, 0, 0, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
+  if(!walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::RESERVE) ||
+     !walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::RESERVE_NAMES)) {
+    return (g_error.value.flags & RETRYABLE) != 0
+        ? CommitResult::IO_FAILED : CommitResult::REJECTED;
+  }
+  if(!program_store::import_plan_begin()) {
+    g_error.fail(ErrorCode::CACHE_WRITE, Phase::VALIDATE, 0, 0, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
+  g_empty_import_index = 0;
+  g_extra_directory_clusters = 0;
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::VALIDATE)) {
     // Preserve the classification made by validation itself.  A slow but
@@ -2558,15 +2660,54 @@ CommitResult flush_pending_result(void) {
     g_error.fail(ErrorCode::VALIDATE, Phase::VALIDATE);
     return retryable ? CommitResult::IO_FAILED : CommitResult::REJECTED;
   }
+  u16 required_clusters = g_extra_directory_clusters;
+  for(u16 cluster = 2; cluster < cluster_limit(); ++cluster) {
+    if(desired_kind(cluster) != DESIRED_NONE) ++required_clusters;
+  }
+  if(required_clusters > program_store::max_fat_clusters()) {
+    g_error.fail(ErrorCode::CLUSTER_LIMIT, Phase::VALIDATE,
+                 required_clusters, program_store::max_fat_clusters());
+    return CommitResult::REJECTED;
+  }
+  memset(session().existing_nodes, 0, session().existing_bytes);
+  g_root_changed = false;
+  g_empty_import_index = 0;
+  if(!walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::CHANGES)) {
+    g_error.fail(ErrorCode::PREPARE, Phase::PREPARE,
+                 program_store::vfat_stage_count(), 0, "changes", true);
+    return CommitResult::IO_FAILED;
+  }
+  for(u16 id = 0; id < geometry().max_nodes; ++id) {
+    if(desired_node(id) == DESIRED_FILE || desired_node(id) == DESIRED_DIRECTORY) continue;
+    program_store::Entry old;
+    if(program_store::entry_by_id(id, old)) c9_mark_parent_changed(old.parent_id);
+  }
   startup_stage(52);
-  if(!release_repurposed_extents() ||
-     !release_mismatched_extent_chains(program_store::ROOT_ID) ||
-     !prune_tree(program_store::ROOT_ID, false)) {
+  if(!program_store::vfat_stage_discard_unmatched(c9_keep_stage, nullptr)) {
+    g_error.fail(ErrorCode::CACHE_WRITE, Phase::PREPARE, 0, 0, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
+  for(u16 sector = 0; sector < geometry().fat_sectors; ++sector) {
+    if(!c9_snapshot_sector(fat_start() + sector)) {
+      g_error.fail(ErrorCode::CACHE_WRITE, Phase::PREPARE,
+                   program_store::vfat_stage_count(), fat_start() + sector,
+                   "fat", true);
+      return CommitResult::IO_FAILED;
+    }
+  }
+  if(!walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::SNAPSHOT, !final_view) ||
+     !prepare_import_mappings() || !prune_tree(program_store::ROOT_ID, false)) {
     record_startup_timeout();
     g_error.fail(ErrorCode::PREPARE, Phase::PREPARE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+  g_empty_import_index = 0;
+  if(!walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::DISPLACE)) {
+    g_error.fail(ErrorCode::PREPARE, Phase::PREPARE, 0, 0, nullptr, true);
+    return CommitResult::IO_FAILED;
+  }
   startup_stage(53);
+  g_empty_import_index = 0;
   invalidate_clean_cache();
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0,
                      WalkPass::APPLY)) {
@@ -2581,22 +2722,34 @@ CommitResult flush_pending_result(void) {
     return CommitResult::IO_FAILED;
   }
   startup_stage(55);
-  if(!program_store::vfat_stage_discard_all()) {
+  program_store::import_plan_end();
+  // Keep the exact accepted FAT/directory sectors while the host has open
+  // vnodes. Canonical LFN records can change short-entry positions, so they
+  // are generated only after this host session ends.
+  const bool discarded = program_store::vfat_stage_discard_unmatched(c9_keep_host_metadata, nullptr);
+  if(!discarded) {
     record_startup_timeout();
     g_error.fail(ErrorCode::STAGE_DISCARD, Phase::COMMIT, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
-  startup_stage(56);
+  if(final_view) return close_applied_view(true);
   invalidate_clean_cache();
-  if(!ensure_all_directory_extents()) {
-    record_startup_timeout();
-    g_error.fail(ErrorCode::DIRECTORY_EXTENTS, Phase::COMMIT, 0, 0, nullptr, true);
+  // Closing MSC releases the projection. Rebuild it lazily for a subsequent
+  // reader/session instead of delaying the return to CDC with scratch erases.
+  if(!final_view && !program_store::fat_projection_begin()) {
+    g_error.fail(ErrorCode::FILE_READ, Phase::COMMIT, 0, 0, "index", true);
     return CommitResult::IO_FAILED;
   }
+  g_host_view_applied = !final_view;
+  g_applied_media_revision = program_store::media_revision();
   startup_stage(57);
   clear_diagnostic();
   startup_stage(58);
   return CommitResult::OK;
+}
+
+CommitResult flush_pending_result(void) {
+  return commit_pending_result(false);
 }
 
 bool flush_pending(void) {
@@ -2604,7 +2757,7 @@ bool flush_pending(void) {
 }
 
 CommitResult finalize_pending_result(void) {
-  const CommitResult result = flush_pending_result();
+  const CommitResult result = commit_pending_result(true);
   if(result != CommitResult::REJECTED) return result;
 #if defined(MK61_BUILD_USBDISK_MODULE)
   // Validation may legitimately consume the whole startup budget before it
@@ -2627,6 +2780,7 @@ bool finalize_pending(void) {
 }
 
 bool reset_session(void) {
+  g_host_view_applied = false;
   ScopedStartupRecovery recovery;
   (void) recovery;
   reset_directory_cursors();
@@ -2644,7 +2798,7 @@ bool reset_session(void) {
     update_cache_slot_count();
   }
   startup_stage(3);
-  memset(g_session, 0, sizeof(*g_session));
+  if(!initialize_session_layout()) return false;
   g_sidecar_scan_pending = false;
   g_sidecar_candidate_seen = false;
   startup_stage(4);
@@ -2671,6 +2825,8 @@ bool reset_session(void) {
     return g_error.fail(ErrorCode::DIRECTORY_EXTENTS, Phase::SESSION,
                         0, 0, nullptr, true);
   }
+  if(!program_store::fat_projection_begin()) return g_error.fail(
+      ErrorCode::FILE_READ, Phase::SESSION, 0, 0, "index", true);
   startup_stage(6);
   // Freeze the identity for this mounted session. Host writes advance the
   // persistent staging generation, but a FAT volume must never change serial
@@ -2684,6 +2840,7 @@ bool reset_session(void) {
 }
 
 void end_session(void) {
+  g_host_view_applied = false;
   startup_stage(40);
   g_cache_scratch.reset();
   startup_stage(41);

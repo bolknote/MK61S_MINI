@@ -1,4 +1,5 @@
 #include "program_store.hpp"
+#include "fat_cluster_chain.hpp"
 
 #include "bounded_string.hpp"
 #include "crc32.hpp"
@@ -27,6 +28,9 @@
 #include <stdint.h>
 #include <string.h>
 
+
+
+
 #ifdef SPI_FLASH
 #if defined(PROGRAM_STORE_HOST_TEST)
 extern SpiNorFlash flash;
@@ -39,14 +43,10 @@ static SpiNorFlash& flash_device(void) { return external_flash(); }
 namespace program_store {
 namespace {
 
-// C6 — первый формат, в котором имена и текстовые данные безусловно хранятся
-// в M8. Физические сигнатуры отличаются от C5, поэтому старая прошивка не
-// сможет принять новый том, а новая никогда не мигрирует C5 исподтишка.
-static constexpr u8 PHYSICAL_FORMAT_VERSION = 6;
-// C8 adds the exported byte length to each inode. Payloads, staging and
-// settings retain their C6 encoding; no old-catalog reader or migration.
-static constexpr u8 CATALOG_VERSION = 8;
-static constexpr u8 LOCATOR_VERSION = 8;
+// C9 is the only supported filesystem. Older layouts are formatted afresh.
+static constexpr u8 PHYSICAL_FORMAT_VERSION = 9;
+static constexpr u8 CATALOG_VERSION = 9;
+static constexpr u8 LOCATOR_VERSION = 9;
 static constexpr u8 STATE_WRITING = 0xFF;
 static constexpr u8 STATE_ACTIVE = 0x7F;
 static constexpr u8 STATE_DELETED = 0x3F;
@@ -62,14 +62,14 @@ static constexpr u16 SETTINGS_JOURNAL_SIZE =
 static constexpr u16 CATALOG_HEADER_SIZE = 512;
 static constexpr u16 CATALOG_HEADER_CRC_OFFSET = 508;
 static constexpr u8 MAX_CATALOG_PAGES =
-    (storage_geometry::FAT12_MAX_DATA_CLUSTERS * storage_geometry::INODE_BYTES +
+    (storage_geometry::MAX_NODES * storage_geometry::INODE_BYTES +
      storage_geometry::PHYSICAL_SECTOR_SIZE - 1) / storage_geometry::PHYSICAL_SECTOR_SIZE;
 static constexpr u8 CATALOG_WAL_RECORDS = 15;
 static constexpr u16 CATALOG_MAP_OFFSET = 80;
 static constexpr u16 CATALOG_WAL_OFFSET = CATALOG_MAP_OFFSET + MAX_CATALOG_PAGES * 8;
 static constexpr u16 CATALOG_CURSOR_OFFSET = CATALOG_WAL_OFFSET + 4;
 static_assert(CATALOG_CURSOR_OFFSET + 4 <= CATALOG_HEADER_CRC_OFFSET, "catalog map exceeds root");
-static constexpr u8 LEGACY_TYPE_COUNT = 6;
+static constexpr u8 INLINE_TYPE_COUNT = 6;
 static constexpr u8 TYPE_COUNT = 7;
 static constexpr u16 IMAGE1_HEADER_COUNT_OFFSET = 64;
 // Каталог публикует за одну WAL-транзакцию основной inode, служебные
@@ -78,7 +78,7 @@ static constexpr u16 WAL_RECORD_SIZE = 512;
 static constexpr u8 WAL_MAX_UPDATES = 16;
 static constexpr u16 IMAGE1_WAL_COUNT_OFFSET = 506;
 static constexpr u16 WAL_CRC_OFFSET = 508;
-static constexpr u8 OVERLAY_CAPACITY = 96;
+static constexpr u8 OVERLAY_CAPACITY = 32;
 static constexpr u16 STAGE_DATA_SIZE = VFAT_STAGE_BLOCK_SIZE;
 static constexpr u16 STAGE_SECTOR_HEADER_SIZE = 16;
 static constexpr u16 STAGE_RECORD_HEADER_SIZE = 16;
@@ -90,12 +90,13 @@ static constexpr u16 STAGE_REF_CAPACITY = 640;
 static constexpr u8 STAGE_REF_BITS = 10;
 static constexpr u16 STAGE_REF_MASK = (1U << STAGE_REF_BITS) - 1U;
 static constexpr u32 STAGE_KEY_MAX = VFAT_STAGE_KEY_MAX;
-// A 512-KiB C6 volume can lend unused data erase sectors to USB staging.
+// A 512-KiB C9 volume can lend unused data erase sectors to USB staging.
 // The fixed stage remains the fallback and its last sector remains the COW
-// compaction reserve. All borrowed sectors are identified by their C6S0
+// compaction reserve. All borrowed sectors are identified by their C9S0
 // headers after a reset, so the catalog allocator must never erase them.
 static constexpr u8 STAGE_MAX_SLOTS = 128;
-static constexpr u8 STAGE_MIN_FREE_DATA_SECTORS = 20;
+static constexpr u8 STAGE_MIN_FREE_DATA_SECTORS =
+    storage_geometry::STAGE_MIN_FREE_DATA_SECTORS;
 static constexpr u8 GC_SCAN_WINDOW = 32;
 static constexpr u32 ERASE_TIMEOUT_MS = 5000;
 static constexpr t_time_ms DISK_LED_ON_MS = 35;
@@ -103,7 +104,7 @@ static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 static constexpr u8 INODE_FLAG_LARGE_FILE = 0x01;
 static constexpr u8 INODE_FLAG_ZX0 = 0x02;
 static constexpr u8 INODE_FILE_FLAGS =
-    INODE_FLAG_LARGE_FILE | INODE_FLAG_ZX0;
+    INODE_FLAG_LARGE_FILE | INODE_FLAG_ZX0 | 0x04U;
 static constexpr u16 ZX0_MIN_SAVING = 64;
 static constexpr u8 ZX0_MIN_SAVING_PERCENT = 10;
 static constexpr usize ZX0_FALLBACK_WORKSPACE_SIZE = 1024;
@@ -115,38 +116,36 @@ static constexpr u8 LARGE_BLOCK_COUNT =
 static constexpr u16 LARGE_DESCRIPTOR_HEADER_SIZE = 20;
 static constexpr u16 LARGE_DESCRIPTOR_SIZE =
     LARGE_DESCRIPTOR_HEADER_SIZE + (u16) LARGE_BLOCK_COUNT * sizeof(u32);
-static constexpr u8 LEGACY_LARGE_DESCRIPTOR_VERSION = 1;
 static constexpr u8 LARGE_DESCRIPTOR_VERSION = 2;
 
-static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C6 stage must pack seven sectors");
+static_assert(STAGE_RECORDS_PER_SECTOR == 7, "C9 stage must pack seven sectors");
 static_assert(STAGE_KEY_MAX == 0x007FFFFFUL,
-              "C6 stage keys must remain readable across firmware updates");
+              "C9 stage keys must remain readable across firmware updates");
 static_assert(44 + WAL_MAX_UPDATES *
                   (2 + storage_geometry::INODE_BYTES) <=
                   IMAGE1_WAL_COUNT_OFFSET,
               "inode updates overlap the v6 WAL tail");
-static_assert(MAX_FAT_EXTENTS_PER_FILE + 3U <= WAL_MAX_UPDATES,
-              "file removal and its sibling/parent links must fit one WAL record");
+static_assert(WAL_MAX_UPDATES >= 4, "file and parent links fit one WAL record");
 static_assert(IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <= WAL_CRC_OFFSET,
               "image counter overlaps the WAL CRC");
 static_assert(IMAGE1_HEADER_COUNT_OFFSET + sizeof(u16) <=
                   CATALOG_HEADER_CRC_OFFSET,
               "image counter overlaps the catalog-header CRC");
 static_assert(LARGE_BLOCK_COUNT == 6,
-              "maximum APP should occupy exactly six C6 large blocks");
+              "maximum APP should occupy exactly six C9 large blocks");
 static_assert(LARGE_DESCRIPTOR_SIZE < 128,
-              "large-file descriptor must remain a small C6 record");
+              "large-file descriptor must remain a small C9 record");
 static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
-              "two maximum C6 records must fit one erase sector");
+              "two maximum C9 records must fit one erase sector");
 static_assert((usize) MAX_TINYBASIC_TEXT_SIZE + NAME_SIZE +
                   RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE -
                       DATA_SECTOR_HEADER_SIZE,
-              "maximum TinyBASIC source must fit one C6 data sector");
+              "maximum TinyBASIC source must fit one C9 data sector");
 static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
-              "two maximum C6 image records must fit one erase sector");
+              "two maximum C9 image records must fit one erase sector");
 
 static bool compute_geometry(u32 capacity,
                              storage_geometry::Geometry& geometry) {
@@ -165,10 +164,11 @@ struct Inode {
   u8 kind_type;
   u8 flags;
   u16 exported_size;
+  u32 fat_address;
 };
 
-static_assert(sizeof(Inode) == 24 && storage_geometry::INODE_BYTES == 22,
-              "C8 inode has two RAM alignment bytes, not stored on disk");
+static_assert(sizeof(Inode) == 28 && storage_geometry::INODE_BYTES == 26,
+              "C9 inode has two RAM alignment bytes, not stored on disk");
 
 struct LargeDescriptor {
   u32 sectors[LARGE_BLOCK_COUNT];
@@ -208,7 +208,7 @@ union WriteWorkspace {
 };
 
 #if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-// C6 writes are serialized by the store and already use process-wide
+// C9 writes are serialized by the store and already use process-wide
 // transaction state. F411 can therefore keep this temporary workspace in BSS
 // and preserve the production stack-headroom gate; the compact F401 APP keeps
 // the same workspace on the stack instead of permanently enlarging its arena.
@@ -241,6 +241,22 @@ static u32 g_catalog_pending_root = EMPTY_ADDRESS;
 static u32 g_catalog_pending_wal = EMPTY_ADDRESS;
 static u32 g_catalog_cursor;
 static u32 g_gc_victim = EMPTY_ADDRESS;
+static constexpr u8 C9_PIN_CAPACITY = 8;
+struct C9PendingRecord { u32 address; u16 owner; bool mapping; };
+static C9PendingRecord g_c9_pins[C9_PIN_CAPACITY];
+static u8 g_c9_pin_count;
+static u32 g_chain_verified_address = EMPTY_ADDRESS;
+static u16 g_chain_verified_id = NONE;
+static fat_cluster_chain::Plan g_chain_verified_plan;
+static bool g_reverse_ready;
+static bool g_import_applying;
+static bool g_import_plan_ready;
+#if !defined(ARDUINO_BLACKPILL_F401CC)
+static u32 g_import_plan_erased;
+#endif
+static u16 g_reverse_window = NONE;
+static u16 g_reverse_entries[32][3];
+static bool c9_map_size(u16 id, const Inode& inode, u16& size);
 static u32 g_catalog_generation;
 static u32 g_wal_sequence;
 static u8 g_wal_records;
@@ -253,6 +269,18 @@ static Inode g_overlay_inodes[OVERLAY_CAPACITY];
 static u8 g_overlay_count;
 static u8 g_table_cache[512];
 static u32 g_table_cache_address = EMPTY_ADDRESS;
+#if !defined(ARDUINO_BLACKPILL_F401CC)
+// Keep the parent inode block alongside the sequential child block on F411.
+// A single line otherwise rereads 512 NOR bytes for almost every lookup.
+static u8 g_table_other_cache[512];
+static u32 g_table_other_address = EMPTY_ADDRESS;
+#endif
+static void invalidate_table_cache(void) {
+  g_table_cache_address = EMPTY_ADDRESS;
+#if !defined(ARDUINO_BLACKPILL_F401CC)
+  g_table_other_address = EMPTY_ADDRESS;
+#endif
+}
 static u8 g_disk_activity_depth;
 static u8 g_disk_led_poll_divider;
 
@@ -298,10 +326,10 @@ static u8 g_verified_large_block = 0xFF;
 
 static_assert((u16) STAGE_MAX_SLOTS *
                   STAGE_RECORDS_PER_SECTOR <= STAGE_REF_MASK,
-              "C6 stage references must fit in the packed index");
+              "C9 stage references must fit in the packed index");
 static_assert((usize) STAGE_REF_CAPACITY * sizeof(u32) <=
                   shared_memory::STAGE_INDEX_SIZE,
-              "full C6 staging index does not fit the shared overlay");
+              "full C9 staging index does not fit the shared overlay");
 
 static int g_flat_cache_index = -1;
 static u16 g_flat_cache_id;
@@ -312,7 +340,7 @@ static u16 g_child_cache_id = NONE;
 #ifdef DEBUG_SPIFLASH
 static void capacity_probe_debug(u32 candidate, bool complete,
                                  bool distinct) {
-  Serial.print("C6 probe candidate: ");
+  Serial.print("C9 probe candidate: ");
   Serial.print(candidate);
   if(!complete) {
     Serial.println(" bytes, testing...");
@@ -419,7 +447,7 @@ static bool erase_sector(u32 sector) {
     if((i32) (millis() - stop_at) >= 0) return false;
   }
   led::control();
-  g_table_cache_address = EMPTY_ADDRESS;
+  invalidate_table_cache();
 #if !defined(PROGRAM_STORE_HOST_TEST)
   if(g_usb_file_import_progress) {
     independent_watchdog::completed_storage_unit();
@@ -503,7 +531,7 @@ static bool crc32_flash_software(u32 address, u32 len, u32& output) {
 
 static void encode_settings_guard(u8* guard, u32 capacity) {
   memset(guard, 0xFF, SETTINGS_GUARD_SIZE);
-  memcpy(guard, "C6SG", 4);
+  memcpy(guard, "C9SG", 4);
   guard[4] = PHYSICAL_FORMAT_VERSION;
   put_le32(guard, 8, capacity);
   put_le32(guard, 12, mk61_crc32::calculate(guard, 12));
@@ -531,12 +559,7 @@ static bool settings_guard_valid_for(const storage_geometry::Geometry& geometry,
 
 static bool settings_guard_valid(const storage_geometry::Geometry& geometry) {
   return settings_guard_valid_for(
-      geometry, "C6SG", PHYSICAL_FORMAT_VERSION);
-}
-
-static bool legacy_c5_settings_guard_valid(
-    const storage_geometry::Geometry& geometry) {
-  return settings_guard_valid_for(geometry, "C5SG", 5);
+      geometry, "C9SG", PHYSICAL_FORMAT_VERSION);
 }
 
 static bool write_settings_guard(void) {
@@ -550,7 +573,7 @@ static u16 hash_name(const char* name) {
   u16 hash = 0x811C;
   if(name == NULL) return hash;
   while(*name != 0) {
-    hash ^= (u8) *name++;
+    hash ^= mk8::fold_case((u8) *name++);
     hash = (u16) (hash * 257U + 17U);
   }
   return hash;
@@ -672,7 +695,8 @@ static bool zx0_file_inode(const Inode& inode) {
 
 static bool inode_flags_valid(const Inode& inode) {
   const NodeKind kind = inode_kind(inode);
-  if(kind != NodeKind::FILE) return inode.flags == 0;
+  if(kind != NodeKind::FILE) return inode.flags == 0 ||
+      (kind == NodeKind::DIRECTORY && inode.flags == 0x04U);
   if((inode.flags & ~INODE_FILE_FLAGS) != 0) return false;
   if(inode_type(inode) == ProgramType::APP && zx0_file_inode(inode)) {
     return false;
@@ -696,6 +720,7 @@ static void serialize_inode(const Inode& inode, u8* out) {
   out[18] = inode.kind_type;
   out[19] = inode.flags;
   put_le16(out, 20, inode.exported_size);
+  put_le32(out, 22, inode.fat_address);
 }
 
 static Inode deserialize_inode(const u8* data) {
@@ -712,15 +737,23 @@ static Inode deserialize_inode(const u8* data) {
   inode.kind_type = data[18];
   inode.flags = data[19];
   inode.exported_size = get_le16(data, 20);
+  inode.fat_address = get_le32(data, 22);
   return inode;
 }
 
 static bool catalog_sector_in_range(u32 sector) {
+  const u32 scratch = storage_geometry::import_scratch_first_sector(g_geometry);
   return sector >= storage_geometry::LOCATOR_SECTORS &&
-         sector < g_geometry.stage_first_sector;
+         sector < g_geometry.stage_first_sector &&
+         !(sector >= scratch &&
+           sector - scratch < storage_geometry::import_scratch_sector_count(g_geometry));
 }
 
+__attribute__((noinline))
 static bool catalog_sector_busy(u32 sector) {
+  for(u8 index = 0; index < g_c9_pin_count; ++index) {
+    if(g_c9_pins[index].address / 4096U == sector) return true;
+  }
   if(sector == g_catalog_root || sector == g_catalog_wal ||
      sector == g_catalog_pending_root || sector == g_catalog_pending_wal ||
      sector == g_gc_victim) return true;
@@ -772,6 +805,7 @@ static bool overlay_set(u16 id, const Inode& inode) {
   return true;
 }
 
+__attribute__((noinline))
 static bool read_table_bytes(u32 offset, u8* out, u16 len) {
   while(len != 0) {
     const u32 page = offset / storage_geometry::PHYSICAL_SECTOR_SIZE;
@@ -788,14 +822,30 @@ static bool read_table_bytes(u32 offset, u8* out, u16 len) {
     }
     const u32 address = sector_address(g_catalog_pages[page].sector) + in_page;
     const u32 cache_address = address & ~511UL;
+#if !defined(ARDUINO_BLACKPILL_F401CC)
+    const u8* cached = g_table_cache;
+    if(g_table_cache_address != cache_address) {
+      if(g_table_other_address == cache_address) {
+        cached = g_table_other_cache;
+      } else {
+        memcpy(g_table_other_cache, g_table_cache, sizeof(g_table_cache));
+        g_table_other_address = g_table_cache_address;
+        g_table_cache_address = EMPTY_ADDRESS;
+        if(!read_bytes(cache_address, g_table_cache, sizeof(g_table_cache))) return false;
+        g_table_cache_address = cache_address;
+      }
+    }
+#else
     if(g_table_cache_address != cache_address) {
       if(!read_bytes(cache_address, g_table_cache, sizeof(g_table_cache))) return false;
       g_table_cache_address = cache_address;
     }
+    const u8* cached = g_table_cache;
+#endif
     const u16 in_cache = (u16) (address - cache_address);
     const u16 count = len < sizeof(g_table_cache) - in_cache
         ? len : (u16) (sizeof(g_table_cache) - in_cache);
-    memcpy(out, g_table_cache + in_cache, count);
+    memcpy(out, cached + in_cache, count);
     out += count;
     offset += count;
     len = (u16) (len - count);
@@ -823,6 +873,9 @@ static CatalogMeta current_meta(void) {
 }
 
 static void invalidate_iteration_caches(void) {
+  g_chain_verified_address = EMPTY_ADDRESS;
+  g_reverse_window = NONE;
+  if(!g_import_applying) g_reverse_ready = false;
   g_flat_cache_index = -1;
   g_child_cache_parent = NONE;
   g_child_cache_index = -1;
@@ -880,15 +933,10 @@ static void encode_meta(u8* record, const CatalogMeta& meta,
   put_le32(record, 20, meta.reserve_sector);
   put_le32(record, 24, meta.gc_cursor);
   put_le32(record, 28, meta.data_sequence);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+  for(u8 i = 0; i < INLINE_TYPE_COUNT; i++) {
     put_le16(record, (u16) (32 + i * 2), meta.type_count[i]);
   }
   put_le16(record, image_count_offset, meta.type_count[6]);
-}
-
-static u16 decode_optional_count(const u8* data, u16 offset) {
-  const u16 count = get_le16(data, offset);
-  return count == 0xFFFF ? 0 : count;
 }
 
 static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
@@ -900,10 +948,10 @@ static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
   meta.reserve_sector = get_le32(record, 20);
   meta.gc_cursor = get_le32(record, 24);
   meta.data_sequence = get_le32(record, 28);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; i++) {
+  for(u8 i = 0; i < INLINE_TYPE_COUNT; i++) {
     meta.type_count[i] = get_le16(record, (u16) (32 + i * 2));
   }
-  meta.type_count[6] = decode_optional_count(record, image_count_offset);
+  meta.type_count[6] = get_le16(record, image_count_offset);
   return meta;
 }
 
@@ -944,12 +992,16 @@ static bool allocate_catalog_sector(u32& output, bool reserve_only = false) {
     if(!live_sector_window(first, count, start, base, window, live)) return false;
     for(u8 slot = 0; slot < window; ++slot) {
       const u32 sector = first + (start - first + base + slot) % count;
-      if((live & (1UL << slot)) != 0 || catalog_sector_busy(sector) ||
+      if(!catalog_sector_in_range(sector) ||
+         (live & (1UL << slot)) != 0 || catalog_sector_busy(sector) ||
          sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
          borrowed_stage_sector(sector)) continue;
       if(!erase_sector(sector)) return false;
       output = sector;
       g_catalog_cursor = first + (sector - first + 1) % count;
+      while(!catalog_sector_in_range(g_catalog_cursor)) {
+        g_catalog_cursor = first + (g_catalog_cursor - first + 1) % count;
+      }
       return true;
     }
   }
@@ -1000,7 +1052,7 @@ __attribute__((noinline))
 static bool publish_catalog_root(u32 generation) {
   u8 header[CATALOG_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C8CT", 4);
+  memcpy(header, "C9CT", 4);
   header[4] = CATALOG_VERSION;
   header[5] = STATE_WRITING;
   put_le16(header, 6, CATALOG_HEADER_SIZE);
@@ -1016,7 +1068,7 @@ static bool publish_catalog_root(u32 generation) {
   put_le32(header, 40, g_meta.reserve_sector);
   put_le32(header, 44, g_meta.gc_cursor);
   put_le32(header, 48, g_meta.data_sequence);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; ++i) put_le16(header, 52 + i * 2, g_meta.type_count[i]);
+  for(u8 i = 0; i < INLINE_TYPE_COUNT; ++i) put_le16(header, 52 + i * 2, g_meta.type_count[i]);
   put_le16(header, IMAGE1_HEADER_COUNT_OFFSET, g_meta.type_count[6]);
   for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
     put_le32(header, CATALOG_MAP_OFFSET + page * 8, g_catalog_pending[page].sector);
@@ -1055,7 +1107,7 @@ static bool checkpoint(bool empty_table, bool reserve_only) {
   g_overlay_count = 0;
   g_wal_records = 0;
   g_wal_sealed = false;
-  g_table_cache_address = EMPTY_ADDRESS;
+  invalidate_table_cache();
   invalidate_iteration_caches();
   return true;
 }
@@ -1071,7 +1123,7 @@ static bool append_transaction_record(const Transaction& transaction) {
 #endif
   memset(record, 0xFF, sizeof(record));
   record[0] = 'W';
-  record[1] = '8';
+  record[1] = '9';
   record[2] = CATALOG_VERSION;
   record[3] = STATE_WRITING;
   const u32 next_sequence = g_wal_sequence + 1;
@@ -1128,7 +1180,7 @@ static bool replay_wal(void) {
     bool erased = true;
     for(u16 i = 0; i < sizeof(record); ++i) if(record[i] != 0xFF) erased = false;
     if(erased) break;
-    if(record[0] != 'W' || record[1] != '8' ||
+    if(record[0] != 'W' || record[1] != '9' ||
        record[2] != CATALOG_VERSION || record[3] != STATE_ACTIVE ||
        record[8] > WAL_MAX_UPDATES || get_le32(record, 4) != g_wal_sequence + 1 ||
        normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) != get_le32(record, WAL_CRC_OFFSET)) {
@@ -1150,7 +1202,7 @@ static bool replay_wal(void) {
 }
 
 static bool catalog_header_valid(u8* header) {
-  return memcmp(header, "C8CT", 4) == 0 &&
+  return memcmp(header, "C9CT", 4) == 0 &&
       header[4] == CATALOG_VERSION && header[5] == STATE_ACTIVE &&
       get_le16(header, 6) == CATALOG_HEADER_SIZE &&
       get_le32(header, 8) != 0 && get_le32(header, 12) == g_format_epoch &&
@@ -1166,7 +1218,7 @@ static bool load_catalog(void) {
   memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
   g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
   g_overlay_count = 0;
-  g_table_cache_address = EMPTY_ADDRESS;
+  invalidate_table_cache();
   if(g_geometry.catalog_table_sectors > MAX_CATALOG_PAGES) return false;
   u8 header[CATALOG_HEADER_SIZE];
   u32 newest = 0;
@@ -1175,7 +1227,7 @@ static bool load_catalog(void) {
   for(u32 sector = storage_geometry::LOCATOR_SECTORS;
       sector < g_geometry.stage_first_sector; ++sector) {
     if(!read_bytes(sector_address(sector), header, 16)) return false;
-    if(memcmp(header, "C8CT", 4) != 0 || header[5] != STATE_ACTIVE ||
+    if(memcmp(header, "C9CT", 4) != 0 || header[5] != STATE_ACTIVE ||
        get_le32(header, 12) != g_format_epoch) continue;
     if(!read_bytes(sector_address(sector), header, sizeof(header))) return false;
     if(catalog_header_valid(header) &&
@@ -1216,14 +1268,14 @@ static bool load_catalog(void) {
   g_meta.reserve_sector = get_le32(header, 40);
   g_meta.gc_cursor = get_le32(header, 44);
   g_meta.data_sequence = get_le32(header, 48);
-  for(u8 i = 0; i < LEGACY_TYPE_COUNT; ++i) g_meta.type_count[i] = get_le16(header, 52 + i * 2);
-  g_meta.type_count[6] = decode_optional_count(header, IMAGE1_HEADER_COUNT_OFFSET);
+  for(u8 i = 0; i < INLINE_TYPE_COUNT; ++i) g_meta.type_count[i] = get_le16(header, 52 + i * 2);
+  g_meta.type_count[6] = get_le16(header, IMAGE1_HEADER_COUNT_OFFSET);
   return replay_wal();
 }
 
 static void encode_locator(u8* locator) {
   memset(locator, 0xFF, LOCATOR_SIZE);
-  memcpy(locator, "C8FS", 4);
+  memcpy(locator, "C9FS", 4);
   locator[4] = LOCATOR_VERSION;
   locator[5] = STATE_WRITING;
   locator[6] = LOCATOR_SIZE;
@@ -1281,7 +1333,7 @@ static bool locator_matches_format(const u8* locator, const char* magic,
   return epoch != 0;
 }
 
-// Обновление прошивки может намеренно изменить вычисляемую геометрию C6/FAT,
+// Обновление прошивки может намеренно изменить вычисляемую геометрию C9/FAT,
 // хотя физическая микросхема и сектор настроек не меняются. Старый каталог при
 // этом смонтировать нельзя, но повторять разрушающую проверку ёмкости и стирать
 // настройки было бы излишне и неожиданно. Этот ограниченный декодер доверяет
@@ -1300,9 +1352,7 @@ bool load_capacity_for_reformat(void) {
   const u32 jedec_id = flash_device().getJEDECID();
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
-       !((memcmp(locator, "C8FS", 4) == 0 && locator[4] == LOCATOR_VERSION) ||
-         (memcmp(locator, "C7FS", 4) == 0 && locator[4] == 7) ||
-         (memcmp(locator, "C6FS", 4) == 0 && locator[4] == PHYSICAL_FORMAT_VERSION)) ||
+       (memcmp(locator, "C9FS", 4) != 0 || locator[4] != LOCATOR_VERSION) ||
        locator[5] != STATE_ACTIVE || locator[6] != LOCATOR_SIZE ||
        normalized_record_crc(locator, LOCATOR_SIZE, 68, 5) !=
            get_le32(locator, 68) ||
@@ -1348,7 +1398,7 @@ bool load_locator(void) {
   u8 selected_mask = 0;
   for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
     if(!read_bytes(sector_address(copy), locator, sizeof(locator))) continue;
-    if(!locator_matches_format(locator, "C8FS", LOCATOR_VERSION,
+    if(!locator_matches_format(locator, "C9FS", LOCATOR_VERSION,
                                geometry, epoch, stored_probe_upper,
                                stored_jedec_id)) continue;
     if(stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
@@ -1369,41 +1419,6 @@ bool load_locator(void) {
   g_format_epoch = selected_epoch;
   g_locator_valid_mask = selected_mask;
   return true;
-}
-
-// C5 распознаётся только для безопасного отказа. Ни каталог, ни записи, ни
-// staging старого тома новая прошивка не читает и не переписывает.
-static
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-__attribute__((noinline))
-#endif
-bool load_legacy_c5_locator(void) {
-  u8 locator[LOCATOR_SIZE];
-  storage_geometry::Geometry geometry;
-  u32 epoch = 0;
-  u32 stored_probe_upper = 0;
-  u32 stored_jedec_id = 0;
-#ifdef SPI_FLASH
-  const u32 probe_upper = flash_device().capacityProbeUpper();
-  const u32 jedec_id = flash_device().getJEDECID();
-#else
-  const u32 probe_upper = 0;
-  const u32 jedec_id = 0;
-#endif
-  for(u8 copy = 0; copy < storage_geometry::LOCATOR_SECTORS; copy++) {
-    if(!read_bytes(sector_address(copy), locator, sizeof(locator)) ||
-       !locator_matches_format(locator, "C5FS", 5, geometry, epoch,
-                               stored_probe_upper, stored_jedec_id) ||
-       stored_jedec_id != jedec_id || stored_probe_upper != probe_upper ||
-       !flash_device().setCapacity(geometry.capacity_bytes)) {
-      continue;
-    }
-    g_geometry = geometry;
-    g_format_epoch = epoch;
-    g_locator_valid_mask = 0;
-    return true;
-  }
-  return false;
 }
 
 static bool write_locators(bool repair_only = false) {
@@ -1431,7 +1446,7 @@ static bool load_catalog_and_repair_locators(void) {
 static bool data_sector_header_valid(u32 sector) {
   u8 header[DATA_SECTOR_HEADER_SIZE];
   if(!read_bytes(sector_address(sector), header, sizeof(header))) return false;
-  return memcmp(header, "C6D0", 4) == 0 &&
+  return memcmp(header, "C9D0", 4) == 0 &&
          header[4] == PHYSICAL_FORMAT_VERSION &&
          header[5] == STATE_ACTIVE && get_le32(header, 8) == g_format_epoch;
 }
@@ -1440,7 +1455,7 @@ static bool initialize_data_sector(u32 sector) {
   if(!erase_sector(sector)) return false;
   u8 header[DATA_SECTOR_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C6D0", 4);
+  memcpy(header, "C9D0", 4);
   header[4] = PHYSICAL_FORMAT_VERSION;
   header[5] = STATE_WRITING;
   put_le32(header, 8, g_format_epoch);
@@ -1461,7 +1476,7 @@ static bool borrowed_stage_sector(u32 sector) {
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   // A failed read must not turn an unknown sector into an erase candidate.
   if(!read_bytes(sector_address(sector), header, sizeof(header))) return true;
-  return memcmp(header, "C6S0", 4) == 0 &&
+  return memcmp(header, "C9S0", 4) == 0 &&
          header[4] == PHYSICAL_FORMAT_VERSION &&
          header[5] == STATE_ACTIVE &&
          get_le32(header, 8) == g_format_epoch;
@@ -1491,8 +1506,10 @@ static bool sector_has_live_inode(u32 sector) {
     Inode inode;
     if(!get_inode(id, inode)) return true;
     if(!visible_inode(inode)) continue;
-    if(inode.address < EXTENT_ADDRESS &&
-       inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE == sector) return true;
+    if((inode.address < EXTENT_ADDRESS &&
+        inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE == sector) ||
+       (inode.fat_address < EXTENT_ADDRESS &&
+        inode.fat_address / storage_geometry::PHYSICAL_SECTOR_SIZE == sector)) return true;
     if(large_file_inode(inode)) {
       LargeDescriptor descriptor = {};
       if(!read_large_descriptor(id, inode, descriptor) ||
@@ -1540,6 +1557,10 @@ static bool live_sector_window(u32 first, u32 count, u32 start,
       mark_sector_window(inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE,
                          first, count, start, base, window, mask);
     }
+    if(inode.fat_address < EXTENT_ADDRESS) {
+      mark_sector_window(inode.fat_address / storage_geometry::PHYSICAL_SECTOR_SIZE,
+                         first, count, start, base, window, mask);
+    }
     if(large_file_inode(inode)) {
       LargeDescriptor descriptor = {};
       if(!read_large_descriptor(id, inode, descriptor)) return false;
@@ -1577,7 +1598,8 @@ static bool select_reclaimable_sector(u32& out) {
   return false;
 }
 
-static bool select_gc_victim(u32& out, u16 limit = 0xFFFE) {
+static bool select_gc_victim(u32& out, u16 limit = 0xFFFE,
+                             bool nonempty = false) {
   const u32 first = g_geometry.data_first_sector;
   const u32 count = g_geometry.data_sector_count;
   const u32 start = data_sector_in_range(g_meta.gc_cursor)
@@ -1612,6 +1634,19 @@ static bool select_gc_victim(u32& out, u16 limit = 0xFFFE) {
           }
         }
       }
+      if(inode.fat_address < EXTENT_ADDRESS) {
+        const u32 sector = inode.fat_address / storage_geometry::PHYSICAL_SECTOR_SIZE;
+        if(data_sector_in_range(sector)) {
+          const u32 relative = (sector - first + count - (start - first)) % count;
+          if(relative >= base && relative < base + window) {
+            u16 size = 0;
+            if(!c9_map_size(id, inode, size)) return false;
+            const u8 slot = (u8) (relative - base);
+            const u32 sum = (u32) live_bytes[slot] + size;
+            live_bytes[slot] = sum > 0xFFFFU ? 0xFFFFU : (u16) sum;
+          }
+        }
+      }
       if(large_file_inode(inode)) {
         LargeDescriptor descriptor = {};
         if(!read_large_descriptor(id, inode, descriptor)) return false;
@@ -1633,7 +1668,8 @@ static bool select_gc_victim(u32& out, u16 limit = 0xFFFE) {
       const u32 sector = first + (start - first + base + slot) % count;
       if(sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
          catalog_sector_busy(sector) || borrowed_stage_sector(sector)) continue;
-      if(live_bytes[slot] <= limit && live_bytes[slot] < best_bytes) {
+      if((!nonempty || live_bytes[slot] != 0) &&
+         live_bytes[slot] <= limit && live_bytes[slot] < best_bytes) {
         best_bytes = live_bytes[slot];
         best = sector;
       }
@@ -1653,7 +1689,9 @@ static bool commit_meta_only(const CatalogMeta& meta) {
   return append_transaction(transaction);
 }
 
-static bool garbage_collect(bool merge_current = false) {
+enum GcMode : u8 { GC_MERGE = 1, GC_LIVE_VICTIM = 2 };
+static bool garbage_collect(u8 mode = 0) {
+  const bool merge_current = (mode & GC_MERGE) != 0;
   // Includes newly allocated reserves not yet named by committed metadata.
   struct SectorPin {
     explicit SectorPin(u32 sector) { g_gc_victim = sector; }
@@ -1680,7 +1718,7 @@ static bool garbage_collect(bool merge_current = false) {
     if(!range_erased(sector_address(g_meta.current_sector) +
                       g_meta.current_offset, limit)) return false;
   }
-  if(!select_gc_victim(victim, limit)) return false;
+  if(!select_gc_victim(victim, limit, (mode & GC_LIVE_VICTIM) != 0)) return false;
   // A checkpoint can run after the last inode has left the victim but before
   // GC erases it. Do not let the moving catalog claim it in that interval.
   SectorPin victim_pin(victim);
@@ -1700,30 +1738,30 @@ static bool garbage_collect(bool merge_current = false) {
       const u16 id = next_id++;
       Inode inode;
       if(!get_inode(id, inode)) return false;
-      if(!visible_inode(inode) ||
-         inode.address >= EXTENT_ADDRESS ||
-         inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE != victim) {
-        continue;
+      if(!visible_inode(inode)) continue;
+      bool moved = false;
+      for(u8 reference = 0; reference < 2; ++reference) {
+        const u32 old_address = reference == 0 ? inode.address : inode.fat_address;
+        if(old_address >= EXTENT_ADDRESS || old_address / 4096U != victim) continue;
+        u16 record_size = inode.record_len;
+        if(reference != 0 && !c9_map_size(id, inode, record_size)) return false;
+        if(record_size == 0 || (u32) destination_offset + record_size > 4096U) return false;
+        const u32 new_address = sector_address(destination) + destination_offset;
+        u32 source = old_address, target = new_address;
+        u16 remaining = record_size;
+        while(remaining != 0) {
+          const u16 copied = remaining < sizeof(copy_buffer) ? remaining : sizeof(copy_buffer);
+          if(!read_bytes(source, copy_buffer, copied) ||
+             !write_bytes(target, copy_buffer, copied)) return false;
+          source += copied; target += copied;
+          remaining = (u16) (remaining - copied);
+        }
+        if(reference == 0) inode.address = new_address;
+        else inode.fat_address = new_address;
+        destination_offset = (u16) (destination_offset + record_size);
+        moved = true;
       }
-      if(inode.record_len == 0 ||
-         (u32) destination_offset + inode.record_len >
-             storage_geometry::PHYSICAL_SECTOR_SIZE) return false;
-      const u32 new_address = sector_address(destination) + destination_offset;
-      u32 source = inode.address;
-      u16 remaining = inode.record_len;
-      u32 target = new_address;
-      while(remaining != 0) {
-        const u16 copied = remaining < sizeof(copy_buffer)
-            ? remaining : sizeof(copy_buffer);
-        if(!read_bytes(source, copy_buffer, copied) ||
-           !write_bytes(target, copy_buffer, copied)) return false;
-        source += copied;
-        target += copied;
-        remaining = (u16) (remaining - copied);
-      }
-      inode.address = new_address;
-      if(!txn_set(transaction, id, inode)) return false;
-      destination_offset = (u16) (destination_offset + inode.record_len);
+      if(moved && !txn_set(transaction, id, inode)) return false;
     }
     if(merge_current) transaction.meta.current_offset = destination_offset;
     if(transaction.count != 0 && !append_transaction(transaction)) {
@@ -2059,7 +2097,7 @@ static bool append_record_source(NodeKind kind, ProgramType type, u16 id,
   u8 header[RECORD_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
   header[0] = 'R';
-  header[1] = '6';
+  header[1] = '9';
   header[2] = STATE_WRITING;
   header[3] = (u8) kind;
   put_le16(header, 4, id);
@@ -2159,7 +2197,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
   u8 header[RECORD_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
   header[0] = 'R';
-  header[1] = '6';
+  header[1] = '9';
   header[2] = STATE_WRITING;
   header[3] = (u8) NodeKind::FILE;
   put_le16(header, 4, id);
@@ -2184,6 +2222,7 @@ static bool append_zx0_record(ProgramType type, u16 id, u16 parent_id,
   return true;
 }
 
+__attribute__((noinline))
 static bool read_record_header(const Inode& inode, u16 expected_id, u8* header) {
   if(!visible_inode(inode) || inode.address >= EXTENT_ADDRESS || inode.record_len < RECORD_HEADER_SIZE ||
      !inode_flags_valid(inode) ||
@@ -2196,7 +2235,7 @@ static bool read_record_header(const Inode& inode, u16 expected_id, u8* header) 
           : zx0_file_inode(inode)
               ? stored_len != 0 && stored_len < inode.data_len
               : stored_len == inode.data_len;
-  return header[0] == 'R' && header[1] == '6' && header[2] == STATE_ACTIVE &&
+  return header[0] == 'R' && header[1] == '9' && header[2] == STATE_ACTIVE &&
          header[3] == (u8) inode_kind(inode) && get_le16(header, 4) == expected_id &&
          get_le16(header, 6) == inode.parent_id && length_valid &&
          header[10] != 0 && header[10] < NAME_SIZE &&
@@ -2204,6 +2243,7 @@ static bool read_record_header(const Inode& inode, u16 expected_id, u8* header) 
              inode.record_len;
 }
 
+__attribute__((noinline))
 static bool read_inode_name(u16 id, const Inode& inode, char* out) {
   u8 header[RECORD_HEADER_SIZE];
   if(out == NULL || !read_record_header(inode, id, header)) return false;
@@ -2289,7 +2329,7 @@ static void encode_large_descriptor(const LargeDescriptor& descriptor,
   size = (u16) (LARGE_DESCRIPTOR_HEADER_SIZE +
                 (u16) descriptor.block_count * sizeof(u32));
   memset(output, 0xFF, LARGE_DESCRIPTOR_SIZE);
-  memcpy(output, "C6L0", 4);
+  memcpy(output, "C9L0", 4);
   output[4] = descriptor.version;
   output[5] = descriptor.block_count;
   put_le16(output, 6, LARGE_DESCRIPTOR_HEADER_SIZE);
@@ -2308,16 +2348,13 @@ static bool decode_large_descriptor(const u8* input, u16 size,
                                     LargeDescriptor& descriptor) {
   memset(&descriptor, 0, sizeof(descriptor));
   if(input == NULL || size < LARGE_DESCRIPTOR_HEADER_SIZE ||
-     memcmp(input, "C6L0", 4) != 0 ||
-     (input[4] != LEGACY_LARGE_DESCRIPTOR_VERSION &&
-      input[4] != LARGE_DESCRIPTOR_VERSION) ||
+     memcmp(input, "C9L0", 4) != 0 ||
+     input[4] != LARGE_DESCRIPTOR_VERSION ||
      get_le16(input, 6) != LARGE_DESCRIPTOR_HEADER_SIZE) return false;
   descriptor.version = input[4];
   descriptor.block_count = input[5];
   descriptor.data_len = get_le16(input, 8);
-  descriptor.stored_len =
-      descriptor.version == LEGACY_LARGE_DESCRIPTOR_VERSION
-          ? descriptor.data_len : get_le16(input, 10);
+  descriptor.stored_len = get_le16(input, 10);
   descriptor.generation = get_le32(input, 12);
   descriptor.data_crc = get_le32(input, 16);
   if(descriptor.data_len == 0 || descriptor.data_len > MAX_APP_FILE_SIZE ||
@@ -2373,7 +2410,7 @@ static bool large_block_header(u32 sector, u16 id,
      !read_bytes(sector_address(sector), header,
                  LARGE_BLOCK_HEADER_SIZE)) return false;
   const u16 data_len = large_block_length(descriptor, block_index);
-  return memcmp(header, "C6B0", 4) == 0 &&
+  return memcmp(header, "C9B0", 4) == 0 &&
          header[4] == descriptor.version &&
          header[5] == STATE_ACTIVE &&
          get_le16(header, 6) == LARGE_BLOCK_HEADER_SIZE &&
@@ -2720,6 +2757,7 @@ static WriteFailureDetail fat_name_available(u16 parent_id, NodeKind kind,
   if(!fat_visible_name(kind, type, name, wanted)) {
     return WriteFailureDetail::TARGET_VISIBLE_NAME;
   }
+  const u16 wanted_hash = hash_name(wanted);
   u16 root_slots = storage_geometry::ROOT_SYSTEM_DIRENTS;
   u16 id = parent_id == ROOT_ID ? g_meta.root_head : NONE;
   if(parent_id != ROOT_ID) {
@@ -2736,6 +2774,16 @@ static WriteFailureDetail fat_name_available(u16 parent_id, NodeKind kind,
       return WriteFailureDetail::CHILD_CATALOG;
     }
     if(id != ignore_id) {
+      u16 visible_hash = inode.name_hash;
+      if(inode_kind(inode) == NodeKind::FILE) {
+        visible_hash = (u16) ((visible_hash ^ (u8) '.') * 257U + 17U);
+        for(const char* ext = extension_for_type(inode_type(inode)); *ext; ++ext)
+          visible_hash = (u16) ((visible_hash ^ mk8::fold_case((u8) *ext)) * 257U + 17U);
+      }
+      if(parent_id != ROOT_ID && visible_hash != wanted_hash) {
+        id = inode.next_sibling;
+        continue;
+      }
       char stored[NAME_SIZE];
       char visible[NAME_SIZE + 16];
       if(!read_inode_name(id, inode, stored)) {
@@ -2784,31 +2832,11 @@ static bool find_global_file(ProgramType type, const char* name, u16& out) {
   return false;
 }
 
-static bool copy_flash_range(u32 source, u32 destination, u16 size) {
-  u8 buffer[64];
-  u16 offset = 0;
-  while(offset < size) {
-    const u16 remaining = (u16) (size - offset);
-    const u16 count = remaining < sizeof(buffer) ? remaining : sizeof(buffer);
-    if(!read_bytes(source + offset, buffer, count) ||
-       !write_bytes(destination + offset, buffer, count)) return false;
-    offset = (u16) (offset + count);
-  }
-  return true;
-}
-
-static bool save_legacy_settings(u32& scratch_address) {
-  if(g_geometry.stage_sector_count == 0) return false;
-  const u32 scratch_sector = g_geometry.stage_first_sector;
-  if(!erase_sector(scratch_sector)) return false;
-  scratch_address = sector_address(scratch_sector);
-  return copy_flash_range(
-      sector_address(g_geometry.settings_sector), scratch_address,
-      SETTINGS_JOURNAL_SIZE);
-}
-
-static bool format_internal(bool erase_settings,
-                            u32 saved_settings_address = EMPTY_ADDRESS) {
+static bool format_internal(bool erase_settings) {
+  g_reverse_ready = g_import_applying = g_import_plan_ready = false;
+  g_reverse_window = g_chain_verified_id = NONE;
+  g_chain_verified_address = EMPTY_ADDRESS;
+  g_c9_pin_count = 0;
 #ifdef SPI_FLASH
   const u32 capacity = flash_device().getCapacity();
 #else
@@ -2816,7 +2844,7 @@ static bool format_internal(bool erase_settings,
 #endif
   if(!compute_geometry(capacity, g_geometry)) return false;
   g_format_epoch = g_format_epoch != 0
-      ? g_format_epoch + 1 : (0xC8F80001UL ^ capacity ^ millis());
+      ? g_format_epoch + 1 : (0xC9F90001UL ^ capacity ^ millis());
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
@@ -2836,7 +2864,7 @@ static bool format_internal(bool erase_settings,
   g_verified_large_id = NONE;
   g_verified_large_generation = 0;
   g_verified_large_block = 0xFF;
-  g_table_cache_address = EMPTY_ADDRESS;
+  invalidate_table_cache();
   memset(&g_meta, 0, sizeof(g_meta));
   g_meta.root_head = NONE;
   g_meta.current_sector = EMPTY_ADDRESS;
@@ -2851,13 +2879,7 @@ static bool format_internal(bool erase_settings,
   if(!checkpoint(true)) return false;
   // Заголовки staging также содержат эпоху форматирования. Старые или чужие
   // секторы после форматирования игнорируются и стираются лениво перед первой записью.
-  if(saved_settings_address != EMPTY_ADDRESS) {
-    if(!erase_sector(g_geometry.settings_sector) ||
-       !copy_flash_range(saved_settings_address,
-                         sector_address(g_geometry.settings_sector),
-                         SETTINGS_JOURNAL_SIZE) ||
-       !write_settings_guard()) return false;
-  } else if(erase_settings) {
+  if(erase_settings) {
     if(!erase_sector(g_geometry.settings_sector) || !write_settings_guard()) return false;
   } else if(!settings_guard_valid(g_geometry)) {
     return false;
@@ -2870,9 +2892,12 @@ static bool format_internal(bool erase_settings,
 
 } // пространство имён
 
-static bool sweep_orphan_file_extents(void);
 
 void init(void) {
+  g_reverse_ready = g_import_applying = g_import_plan_ready = false;
+  g_reverse_window = g_chain_verified_id = NONE;
+  g_chain_verified_address = EMPTY_ADDRESS;
+  g_c9_pin_count = 0;
   DiskActivity activity;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
@@ -2881,31 +2906,29 @@ void init(void) {
   g_gc_victim = EMPTY_ADDRESS;
   memset(&g_geometry, 0, sizeof(g_geometry));
   if(!flash_is_ok) return;
-  dbgln(SPIROM, "C8 locator: scan");
+  dbgln(SPIROM, "C9 locator: scan");
   if(load_locator()) {
     if(!load_catalog_and_repair_locators()) {
-      dbgln(SPIROM, "C8 catalog: invalid");
-      // A valid locator identifies an existing C8 volume. A broken root,
+      dbgln(SPIROM, "C9 catalog: invalid");
+      // A valid locator identifies an existing C9 volume. A broken root,
       // page or read is not a blank device: require an explicit format.
       g_mount_status = MountStatus::REPAIR_REQUIRED;
     } else {
-      dbgln(SPIROM, "C8 catalog: ready");
+      dbgln(SPIROM, "C9 catalog: ready");
       g_ready = true;
       g_mount_status = MountStatus::READY;
     }
-  } else if(load_legacy_c5_locator()) {
-    dbgln(SPIROM, "C5 volume: explicit format required");
-    g_mount_status = MountStatus::FORMAT_REQUIRED;
+
   } else if(load_capacity_for_reformat()) {
-    // Recognizing the capacity is not compatibility: do not read the old
-    // catalog, migrate it, or destructively probe an existing volume.
+    // A current C9 locator with changed geometry requires explicit format;
+    // retain its measured capacity without probing the live volume.
     g_mount_status = MountStatus::FORMAT_REQUIRED;
   } else {
-    dbgln(SPIROM, "C8 locator: absent or incompatible");
+    dbgln(SPIROM, "C9 locator: absent or incompatible");
     u32 capacity = 0;
 #ifdef SPI_FLASH
     {
-      dbgln(SPIROM, "C8 capacity probe: start");
+      dbgln(SPIROM, "C9 capacity probe: start");
 #ifdef DEBUG_SPIFLASH
       const flash_capacity_probe::ProbeProgress progress =
           capacity_probe_debug;
@@ -2915,21 +2938,20 @@ void init(void) {
       if(!flash_capacity_probe::detect(
              flash_device(), flash_device().capacityProbeUpper(), capacity, progress) ||
          !flash_device().setCapacity(capacity)) {
-        dbgln(SPIROM, "C8 capacity probe: failed");
+        dbgln(SPIROM, "C9 capacity probe: failed");
         return;
       }
     }
 #endif
-    dbgln(SPIROM, "C8 capacity probe: ", (isize) capacity, " bytes");
-    dbgln(SPIROM, "C8 format: start");
+    dbgln(SPIROM, "C9 capacity probe: ", (isize) capacity, " bytes");
+    dbgln(SPIROM, "C9 format: start");
     if(!format_internal(true)) {
-      dbgln(SPIROM, "C8 format: failed");
+      dbgln(SPIROM, "C9 format: failed");
       return;
     }
-    dbgln(SPIROM, "C8 format: complete");
+    dbgln(SPIROM, "C9 format: complete");
   }
   if(g_ready) {
-    (void) sweep_orphan_file_extents();
     vfat_stage_clear();
   }
 }
@@ -2938,11 +2960,7 @@ bool format(void) {
   DiskActivity activity;
   if(!flash_is_ok) return false;
   if(g_mount_status == MountStatus::FORMAT_REQUIRED) {
-    u32 saved_settings = EMPTY_ADDRESS;
-    const bool legacy_settings = legacy_c5_settings_guard_valid(g_geometry);
-    const bool preserve_settings = legacy_settings || settings_guard_valid(g_geometry);
-    if(legacy_settings && !save_legacy_settings(saved_settings)) return false;
-    if(!format_internal(!preserve_settings, saved_settings)) return false;
+    if(!format_internal(!settings_guard_valid(g_geometry))) return false;
   } else if(!format_internal(false)) {
     return false;
   }
@@ -2956,6 +2974,10 @@ bool refresh(void) {
 }
 
 bool ready(void) { return g_ready; }
+
+u32 catalog_revision(void) {
+  return g_ready ? g_format_epoch ^ g_wal_sequence ^ (g_catalog_generation * 251U) : 0;
+}
 
 u32 media_revision(void) {
   if(!g_ready) return 0;
@@ -2980,13 +3002,7 @@ const storage_geometry::Geometry& geometry(void) { return g_geometry; }
 u16 max_nodes(void) { return g_ready ? g_geometry.max_nodes : 0; }
 
 u16 used_nodes(void) {
-  if(!g_ready) return 0;
-  u16 used = 0;
-  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode;
-    if(get_inode(id, inode) && inode_used(inode)) used++;
-  }
-  return used;
+  return g_ready ? g_meta.total_count : 0;
 }
 
 bool basename_valid(const char* name) { return valid_name(name); }
@@ -3211,7 +3227,7 @@ static bool select_large_sector(u32& output) {
 }
 
 // Keep large-file work buffers out of the caller's small-file/encoder paths.
-// GCC otherwise inlines them and reserves their stack for every C6 write.
+// GCC otherwise inlines them and reserves their stack for every C9 write.
 __attribute__((noinline))
 static bool program_large_source(u16 id, const FileSource& source,
                                  u16 data_len,
@@ -3259,7 +3275,7 @@ static bool program_large_source(u16 id, const FileSource& source,
 
     u8 header[LARGE_BLOCK_HEADER_SIZE];
     memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C6B0", 4);
+    memcpy(header, "C9B0", 4);
     header[4] = descriptor.version;
     header[5] = STATE_WRITING;
     put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
@@ -3333,7 +3349,7 @@ static bool finish_large_zx0_output(LargeZx0Output& output) {
     const u16 block_len = large_block_length(*output.descriptor, block);
     u8 header[LARGE_BLOCK_HEADER_SIZE];
     memset(header, 0xFF, sizeof(header));
-    memcpy(header, "C6B0", 4);
+    memcpy(header, "C9B0", 4);
     header[4] = output.descriptor->version;
     header[5] = STATE_WRITING;
     put_le16(header, 6, LARGE_BLOCK_HEADER_SIZE);
@@ -3400,139 +3416,14 @@ static bool program_large_zx0(u16 id,
          finish_large_zx0_output(encoded);
 }
 
-static bool collect_file_extents(u16 file_id, const Inode& file,
-                                 u16* output, u8& count) {
-  count = 0;
-  u16 current = file.first_child;
-  u16 previous = NONE;
-  while(current != NONE) {
-    if(count >= MAX_FAT_EXTENTS_PER_FILE || current == file_id) return false;
-    for(u8 index = 0; index < count; index++) {
-      if(output[index] == current) return false;
-    }
-    Inode extent;
-    if(!get_inode(current, extent) ||
-       inode_kind(extent) != NodeKind::FILE_EXTENT ||
-       extent.parent_id != file_id || extent.prev_sibling != previous ||
-       extent.data_len != (u16) (count + 1U)) return false;
-    output[count++] = current;
-    previous = current;
-    current = extent.next_sibling;
-  }
-  return true;
-}
+#include "program_store_fat_chain.inc"
 
-static bool id_selected(const u16* ids, u8 count, u16 id) {
-  for(u8 index = 0; index < count; index++) {
-    if(ids[index] == id) return true;
-  }
-  return false;
-}
-
-static bool choose_file_extents(u16 file_id, const Inode& old_inode,
-                                bool replacing, u8 wanted,
-                                const u16* requested, u8 requested_count,
-                                u16* output) {
-  if(wanted > MAX_FAT_EXTENTS_PER_FILE ||
-     (requested != NULL && requested_count != wanted) ||
-     (requested == NULL && requested_count != 0)) return false;
-
-  u8 chosen = 0;
-  if(requested != NULL) {
-    for(u8 index = 0; index < wanted; index++) {
-      const u16 id = requested[index];
-      if(id >= g_geometry.max_nodes || id == file_id ||
-         id_selected(output, chosen, id)) return false;
-      Inode inode;
-      if(!get_inode(id, inode) ||
-         (inode_used(inode) &&
-          (inode_kind(inode) != NodeKind::FILE_EXTENT ||
-           inode.parent_id != file_id))) return false;
-      output[chosen++] = id;
-    }
-    return true;
-  }
-
-  if(replacing && inode_kind(old_inode) == NodeKind::FILE) {
-    u16 old[MAX_FAT_EXTENTS_PER_FILE];
-    u8 old_count = 0;
-    if(!collect_file_extents(file_id, old_inode, old, old_count)) return false;
-    while(chosen < wanted && chosen < old_count) {
-      output[chosen] = old[chosen];
-      chosen++;
-    }
-  }
-  const u16 start = g_free_hint < g_geometry.max_nodes ? g_free_hint : 0;
-  for(u16 step = 0; chosen < wanted && step < g_geometry.max_nodes; step++) {
-    const u16 id = (u16) ((start + step) % g_geometry.max_nodes);
-    if(id == file_id || id_selected(output, chosen, id)) continue;
-    Inode inode;
-    if(get_inode(id, inode) && !inode_used(inode)) output[chosen++] = id;
-  }
-  if(chosen != wanted) return false;
-  if(wanted != 0) {
-    g_free_hint = (u16) ((output[wanted - 1] + 1U) % g_geometry.max_nodes);
-  }
-  return true;
-}
-
-static Inode file_extent_inode(u16 file_id, u8 index,
-                               u16 previous, u16 next,
-                               ProgramType type) {
-  Inode inode = empty_inode();
-  inode.address = EXTENT_ADDRESS;
-  inode.data_len = (u16) (index + 1U);
-  inode.record_len = 0;
-  inode.parent_id = file_id;
-  inode.first_child = NONE;
-  inode.next_sibling = next;
-  inode.prev_sibling = previous;
-  inode.name_hash = 0;
-  inode.kind_type = make_kind_type(NodeKind::FILE_EXTENT, type);
-  inode.flags = 0;
-  return inode;
-}
-
-static bool file_extent_referenced(u16 extent_id, const Inode& extent) {
-  if(inode_kind(extent) != NodeKind::FILE_EXTENT ||
-     extent.parent_id >= g_geometry.max_nodes) return false;
-  Inode file;
-  if(!get_inode(extent.parent_id, file) ||
-     inode_kind(file) != NodeKind::FILE) {
-    return false;
-  }
-  u16 ids[MAX_FAT_EXTENTS_PER_FILE];
-  u8 count = 0;
-  if(!collect_file_extents(extent.parent_id, file, ids, count)) return false;
-  return id_selected(ids, count, extent_id);
-}
-
-static bool sweep_orphan_file_extents(void) {
-  u16 id = 0;
-  while(id < g_geometry.max_nodes) {
-    Transaction transaction;
-    txn_begin(transaction);
-    while(id < g_geometry.max_nodes && transaction.count < WAL_MAX_UPDATES) {
-      Inode inode;
-      if(!get_inode(id, inode)) return false;
-      if(inode_used(inode) && inode_kind(inode) == NodeKind::FILE_EXTENT &&
-         !file_extent_referenced(id, inode) &&
-         !txn_set(transaction, id, empty_inode())) return false;
-      id++;
-    }
-    if(transaction.count != 0 && !append_transaction(transaction)) {
-      return false;
-    }
-  }
-  g_free_hint = 0;
-  return true;
-}
 
 static bool prepare_local_catalog_mutation(void) {
   // During MSC recovery the locked journal is the transaction being applied.
   // Outside that session, however, any surviving FAT stage describes an
   // older exported catalog.  A local/UI/terminal mutation establishes a new
-  // authoritative C6 state, so discard that stale stage before changing the
+  // authoritative C9 state, so discard that stale stage before changing the
   // catalog.  The stage records are invalidated one byte at a time and remain
   // power-loss safe; a later retry simply finishes the discard.
   return g_stage_locked || vfat_stage_discard_all();
@@ -3540,6 +3431,7 @@ static bool prepare_local_catalog_mutation(void) {
 
 bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
                       u16* out_id) {
+  C9Pins pins;
   DiskActivity activity;
   if(!g_ready || !prepare_local_catalog_mutation() ||
      !valid_name(name) || !parent_valid(parent_id)) return false;
@@ -3571,13 +3463,21 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
      WriteFailureDetail::NONE) return false;
   u16 id = NONE;
   if(!find_free_id(preferred_id, id)) return false;
+  u16 cluster = 0;
+  Inode empty = empty_inode();
+  const u16* requested = g_directory_requested_cluster == NONE ? nullptr : &g_directory_requested_cluster;
+  if(!c9_choose_file_chain(id, empty, 1, requested, requested == nullptr ? 0 : 1, &cluster)) return false;
+  C9ArraySource mapping = {&cluster, 1};
+  u32 fat_address = EMPTY_ADDRESS;
+  if(!c9_append_chain(id, 1, {&mapping, c9_array_cluster}, fat_address)) return false;
   u32 address = 0;
   u16 record_len = 0;
   if(!append_record(NodeKind::DIRECTORY, ProgramType::MK61, id, parent_id,
                     name, NULL, 0, address, record_len)) return false;
   Inode inode = empty_inode();
   inode.address = address;
-  inode.data_len = NONE; // первый экстент каталога
+  inode.data_len = NONE;
+  inode.fat_address = fat_address;
   inode.record_len = record_len;
   inode.parent_id = parent_id;
   inode.first_child = NONE;
@@ -3590,7 +3490,9 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
   Transaction transaction;
   txn_begin(transaction);
   transaction.meta.total_count++;
-  if(!link_at_head(transaction, id, inode, parent_id) ||
+  if(!c9_pin(address, id, false) ||
+     !link_at_head(transaction, id, inode, parent_id) ||
+     !c9_grow_directory(transaction, parent_id) ||
      !append_transaction(transaction)) return false;
   if(out_id != NULL) *out_id = id;
   return true;
@@ -3613,6 +3515,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     ~ImportProgressScope() { g_usb_file_import_progress = previous; }
   } import_progress;
 #endif
+  C9Pins pins;
   g_last_write_failure = WriteFailure::ARGUMENTS;
   g_last_write_failure_detail = WriteFailureDetail::NONE;
   DiskActivity activity;
@@ -3638,12 +3541,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   g_last_write_failure = WriteFailure::EXTENT_SHAPE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
-  const u8 required_clusters = fat_visible_size == 0 ? 1 : (u8) (
+  const u8 required_clusters = fat_visible_size == 0 ? 0 : (u8) (
       (fat_visible_size + cluster_bytes - 1U) / cluster_bytes);
-  const u8 required_extents = (u8) (required_clusters - 1U);
-  if(required_extents > MAX_FAT_EXTENTS_PER_FILE ||
+  if(required_clusters > MAX_FAT_EXTENTS_PER_FILE + 1U ||
      (fat_extents == NULL && fat_extent_count != 0) ||
-     (fat_extents != NULL && fat_extent_count != required_extents)) {
+     (fat_extents != NULL && fat_extent_count != required_clusters)) {
     return false;
   }
 
@@ -3655,11 +3557,6 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   Inode old_inode = empty_inode();
   bool replacing = false;
   if(preferred_id < g_geometry.max_nodes) {
-    // FAT can only present an occupied FILE id as free when its persistent
-    // record is unreadable.  If a host then allocates that exact cluster,
-    // reclaim the stale inode here, behind the established storage ABI.  The
-    // helper refuses to touch anything still linked from ROOT_ID.
-    if(!release_unreachable_file(preferred_id)) return false;
     if(!get_inode(preferred_id, old_inode)) return false;
     if(inode_used(old_inode)) {
       if(inode_kind(old_inode) != NodeKind::FILE ||
@@ -3690,21 +3587,12 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
       g_last_write_failure_detail = WriteFailureDetail::REPLACED_NAME;
       return false;
     }
-    bool same_extents = fat_extents == NULL;
-    if(fat_extents != NULL && inode_kind(old_inode) == NodeKind::FILE) {
-      u16 current[MAX_FAT_EXTENTS_PER_FILE];
-      u8 current_count = 0;
-      if(!collect_file_extents(id, old_inode, current, current_count)) {
-        g_last_write_failure_detail = WriteFailureDetail::REPLACED_EXTENTS;
-        return false;
-      }
-      same_extents = current_count == fat_extent_count &&
-          memcmp(current, fat_extents,
-                 (usize) current_count * sizeof(current[0])) == 0;
-    }
+    const bool same_extents = fat_extents == nullptr ||
+        c9_chain_equals(id, old_inode, fat_extents, fat_extent_count);
     if(old_inode.parent_id == parent_id && inode_type(old_inode) == type &&
        strcmp(old_name, name) == 0 && same_extents &&
        payload_equals_source(id, old_inode, name, source, data_len)) {
+      if(!c9_reserve_mapping(id)) return false;
       g_last_write_failure = WriteFailure::NONE;
       if(out_id != NULL) *out_id = id;
       return true;
@@ -3712,10 +3600,10 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   }
 
   g_last_write_failure = WriteFailure::EXTENT_SELECTION;
-  u16 extent_ids[MAX_FAT_EXTENTS_PER_FILE] = {};
-  if(!choose_file_extents(id, old_inode, replacing,
-                          required_extents, fat_extents,
-                          fat_extent_count, extent_ids)) return false;
+  u16 clusters[MAX_FAT_EXTENTS_PER_FILE + 1U] = {};
+  if(!c9_pin(old_inode.fat_address, id, true) ||
+     !c9_choose_file_chain(id, old_inode, required_clusters, fat_extents,
+                          fat_extent_count, clusters)) return false;
 
   g_last_write_failure = WriteFailure::COMPRESSION;
   CompressionBuffer compression(compression_buffer,
@@ -3779,7 +3667,12 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     return false;
   }
 
+  if(!c9_pin(address, id, false)) return false;
+  C9ArraySource mapping = {clusters, required_clusters};
+  u32 fat_address = EMPTY_ADDRESS;
+  if(!c9_append_chain(id, required_clusters, {&mapping, c9_array_cluster}, fat_address)) return false;
   Inode inode = replacing ? old_inode : empty_inode();
+  inode.fat_address = fat_address;
   inode.address = address;
   inode.data_len = data_len;
   inode.exported_size = (u16) fat_visible_size;
@@ -3789,8 +3682,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   inode.kind_type = make_kind_type(NodeKind::FILE, type);
   inode.flags = (large ? INODE_FLAG_LARGE_FILE : 0) |
                 (zx0 ? INODE_FLAG_ZX0 : 0);
-  inode.first_child = required_extents != 0
-      ? extent_ids[0] : NONE;
+  inode.first_child = NONE;
   if(!replacing) {
     inode.next_sibling = NONE;
     inode.prev_sibling = NONE;
@@ -3824,23 +3716,12 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
     if(index >= 0) transaction.meta.type_count[index]++;
     if(!link_at_head(transaction, id, inode, parent_id)) return false;
   }
-  if(required_extents != 0) {
-    for(u8 index = 0; index < required_extents; index++) {
-      const u16 previous = index == 0 ? NONE : extent_ids[index - 1];
-      const u16 next = index + 1U < required_extents
-          ? extent_ids[index + 1] : NONE;
-      if(!txn_set(transaction, extent_ids[index],
-                  file_extent_inode(id, index, previous, next, type))) {
-        return false;
-      }
-    }
-  }
+  if(!c9_grow_directory(transaction, parent_id)) return false;
   g_last_write_failure = WriteFailure::COMMIT;
   if(!append_transaction(transaction)) return false;
   g_last_write_failure = WriteFailure::NONE;
   g_verified_large_id = NONE;
   g_verified_large_block = 0xFF;
-  (void) sweep_orphan_file_extents();
   if(out_id != NULL) *out_id = id;
   return true;
 }
@@ -3981,10 +3862,6 @@ bool remove_id(u16 id) {
 
   // Reuse the bounded, power-safe tail trim instead of one transaction and
   // a traversal from the head for every directory extent.
-  if(inode_kind(inode) == NodeKind::DIRECTORY && inode.data_len != NONE) {
-    if(!trim_directory_extents(id, 0) || !get_inode(id, inode)) return false;
-  }
-
   Transaction transaction;
   txn_begin(transaction);
   if(!unlink_node(transaction, id, inode)) return false;
@@ -3992,15 +3869,6 @@ bool remove_id(u16 id) {
   if(inode_kind(inode) == NodeKind::FILE) {
     const int index = type_index(inode_type(inode));
     if(index >= 0 && transaction.meta.type_count[index] != 0) transaction.meta.type_count[index]--;
-    // The file already names all its FAT extents. Clear those exact nodes in
-    // the same WAL record as the unlink, rather than publishing orphan nodes
-    // and scanning the complete catalog after every single file deletion.
-    u16 extents[MAX_FAT_EXTENTS_PER_FILE];
-    u8 count = 0;
-    if(!collect_file_extents(id, inode, extents, count)) return false;
-    for(u8 i = 0; i < count; ++i) {
-      if(!txn_set(transaction, extents[i], empty_inode())) return false;
-    }
   }
   if(!txn_set(transaction, id, empty_inode())) return false;
   if(!append_transaction(transaction)) return false;
@@ -4051,92 +3919,8 @@ bool remove(ProgramType type, const char* name) {
   return find_global_file(type, name, id) && remove_id(id);
 }
 
-enum class Reachability : u8 {
-  INVALID = 0,
-  UNREACHABLE,
-  REACHABLE
-};
-
-static Reachability node_reachability(u16 id, const Inode& initial) {
-  u16 current = id;
-  Inode inode = initial;
-  for(u8 depth = 0; depth <= MAX_DIRECTORY_DEPTH; depth++) {
-    const u16 parent_id = inode.parent_id;
-    u16 sibling = NONE;
-    if(parent_id == ROOT_ID) {
-      sibling = g_meta.root_head;
-    } else {
-      Inode parent;
-      if(parent_id >= g_geometry.max_nodes ||
-         !get_inode(parent_id, parent) || !visible_inode(parent) ||
-         inode_kind(parent) != NodeKind::DIRECTORY) {
-        return Reachability::INVALID;
-      }
-      sibling = parent.first_child;
-    }
-
-    u16 previous = NONE;
-    bool found = false;
-    for(u16 guard = 0; sibling != NONE && guard < g_geometry.max_nodes;
-        guard++) {
-      if(sibling >= g_geometry.max_nodes) return Reachability::INVALID;
-      Inode child;
-      if(!get_inode(sibling, child) || !visible_inode(child) ||
-         child.parent_id != parent_id || child.prev_sibling != previous) {
-        return Reachability::INVALID;
-      }
-      if(sibling == current) {
-        found = true;
-        break;
-      }
-      previous = sibling;
-      sibling = child.next_sibling;
-    }
-    if(!found) {
-      return sibling == NONE ? Reachability::UNREACHABLE
-                             : Reachability::INVALID;
-    }
-    if(parent_id == ROOT_ID) return Reachability::REACHABLE;
-    current = parent_id;
-    if(!get_inode(current, inode)) return Reachability::INVALID;
-  }
-  return Reachability::INVALID;
-}
-
-bool release_unreachable_file(u16 id) {
-  DiskActivity activity;
-  if(!g_ready || id >= g_geometry.max_nodes ||
-     !prepare_local_catalog_mutation()) return false;
-  Inode inode;
-  if(!get_inode(id, inode)) return false;
-  if(!inode_used(inode) || inode_kind(inode) != NodeKind::FILE) return true;
-  // A readable FILE is represented as allocated in the base FAT and needs no
-  // repair here.  Besides narrowing the recovery to the inconsistency that
-  // can actually be advertised as a free cluster, this keeps PREPARE linear:
-  // ordinary imports do not rescan sibling chains for every existing file.
-  char name[NAME_SIZE];
-  if(read_inode_name(id, inode, name)) return true;
-  const Reachability reachability = node_reachability(id, inode);
-  if(reachability == Reachability::REACHABLE) return true;
-  if(reachability != Reachability::UNREACHABLE) return false;
-
-  Transaction transaction;
-  txn_begin(transaction);
-  if(transaction.meta.total_count != 0) transaction.meta.total_count--;
-  const int type = type_index(inode_type(inode));
-  if(type >= 0 && transaction.meta.type_count[type] != 0) {
-    transaction.meta.type_count[type]--;
-  }
-  if(!txn_set(transaction, id, empty_inode()) ||
-     !append_transaction(transaction)) return false;
-  g_verified_large_id = NONE;
-  g_verified_large_block = 0xFF;
-  if(!sweep_orphan_file_extents()) return false;
-  if(g_free_hint >= g_geometry.max_nodes || id < g_free_hint) g_free_hint = id;
-  return true;
-}
-
 bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
+  C9Pins pins;
   DiskActivity activity;
   if(!g_ready || !prepare_local_catalog_mutation() ||
      !valid_name(new_name) || !parent_valid(new_parent_id)) return false;
@@ -4160,35 +3944,20 @@ bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
   if(fat_name_available(new_parent_id, inode_kind(inode), inode_type(inode),
                         new_name, id) != WriteFailureDetail::NONE) return false;
 
-  shared_scratch::Lease scratch;
-  u8 descriptor[LARGE_DESCRIPTOR_SIZE];
-  const u8* payload = NULL;
-  u16 payload_len = 0;
   u8 header[RECORD_HEADER_SIZE];
   char old_name[NAME_SIZE];
   if(!read_inode_name(id, inode, old_name) ||
      !verify_record_crc(id, inode, old_name) ||
-     !read_record_header(inode, id, header)) return false;
-  payload_len = get_le16(header, 8);
-  if(payload_len != 0) {
-    u8* target = descriptor;
-    usize capacity = sizeof(descriptor);
-    if(!large_file_inode(inode)) {
-      if(!scratch.acquire(shared_scratch::Owner::PROGRAM_STORE_RENAME,
-                          payload_len)) return false;
-      target = scratch.data();
-      capacity = scratch.size();
-    }
-    if(payload_len > capacity ||
-       !read_bytes(inode.address + RECORD_HEADER_SIZE + header[10],
-                   target, payload_len)) return false;
-    payload = target;
-  }
+     !read_record_header(inode, id, header) ||
+     !c9_pin(inode.fat_address, id, true) ||
+     !c9_pin(inode.address, id, false)) return false;
+  const u16 payload_len = get_le16(header, 8);
+  C9RawSource raw = {inode.address + RECORD_HEADER_SIZE + header[10], payload_len};
+  const FileSource source = {&raw, c9_read_raw};
   u32 address = 0;
   u16 record_len = 0;
-  if(!append_record(inode_kind(inode), inode_type(inode), id,
-                    new_parent_id, new_name, payload, payload_len,
-                    address, record_len)) return false;
+  if(!append_record_source(inode_kind(inode), inode_type(inode), id,
+          new_parent_id, new_name, source, payload_len, address, record_len)) return false;
 
   Transaction transaction;
   txn_begin(transaction);
@@ -4204,7 +3973,8 @@ bool move_rename(u16 id, u16 new_parent_id, const char* new_name) {
     inode.name_hash = hash_name(new_name);
     if(!txn_set(transaction, id, inode)) return false;
   }
-  return append_transaction(transaction);
+  return c9_pin(address, id, false) &&
+      c9_grow_directory(transaction, new_parent_id) && append_transaction(transaction);
 }
 
 bool rename(ProgramType type, const char* old_name, const char* new_name) {
@@ -4212,316 +3982,6 @@ bool rename(ProgramType type, const char* old_name, const char* new_name) {
   Inode inode;
   return find_global_file(type, old_name, id) && get_inode(id, inode) &&
          move_rename(id, inode.parent_id, new_name);
-}
-
-bool allocate_directory_extent(u16 directory_id, u16 preferred_id) {
-  DiskActivity activity;
-  Inode directory;
-  if(!g_ready || !prepare_local_catalog_mutation() ||
-     !get_inode(directory_id, directory) ||
-     inode_kind(directory) != NodeKind::DIRECTORY) return false;
-  u16 id = NONE;
-  if(!find_free_id(preferred_id, id)) return false;
-  u16 tail = NONE;
-  if(directory.data_len != NONE) {
-    tail = directory.data_len;
-    Inode extent;
-    for(u16 guard = 0; guard < g_geometry.max_nodes; guard++) {
-      if(!get_inode(tail, extent) || inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
-         extent.parent_id != directory_id) return false;
-      if(extent.next_sibling == NONE) break;
-      tail = extent.next_sibling;
-    }
-  }
-  Inode extent = empty_inode();
-  extent.address = EXTENT_ADDRESS;
-  extent.data_len = 0;
-  extent.record_len = 0;
-  extent.parent_id = directory_id;
-  extent.first_child = NONE;
-  extent.next_sibling = NONE;
-  extent.prev_sibling = tail;
-  extent.name_hash = 0;
-  extent.kind_type = make_kind_type(NodeKind::DIRECTORY_EXTENT, ProgramType::MK61);
-  extent.flags = 0;
-
-  Transaction transaction;
-  txn_begin(transaction);
-  if(tail == NONE) {
-    directory.data_len = id;
-    if(!txn_set(transaction, directory_id, directory)) return false;
-  } else {
-    Inode previous;
-    if(!txn_get(transaction, tail, previous)) return false;
-    previous.next_sibling = id;
-    if(!txn_set(transaction, tail, previous)) return false;
-  }
-  return txn_set(transaction, id, extent) && append_transaction(transaction);
-}
-
-bool release_directory_extent(u16 extent_id) {
-  DiskActivity activity;
-  Inode extent;
-  if(!g_ready || !prepare_local_catalog_mutation() ||
-     !get_inode(extent_id, extent) ||
-     inode_kind(extent) != NodeKind::DIRECTORY_EXTENT) return false;
-  Inode directory;
-  if(!get_inode(extent.parent_id, directory) ||
-     inode_kind(directory) != NodeKind::DIRECTORY) return false;
-  Transaction transaction;
-  txn_begin(transaction);
-  if(extent.prev_sibling == NONE) {
-    if(directory.data_len != extent_id) return false;
-    directory.data_len = extent.next_sibling;
-    if(!txn_set(transaction, extent.parent_id, directory)) return false;
-  } else {
-    Inode previous;
-    if(!txn_get(transaction, extent.prev_sibling, previous) ||
-       inode_kind(previous) != NodeKind::DIRECTORY_EXTENT ||
-       previous.parent_id != extent.parent_id ||
-       previous.next_sibling != extent_id) return false;
-    previous.next_sibling = extent.next_sibling;
-    if(!txn_set(transaction, extent.prev_sibling, previous)) return false;
-  }
-  if(extent.next_sibling != NONE) {
-    Inode next;
-    if(!txn_get(transaction, extent.next_sibling, next) ||
-       inode_kind(next) != NodeKind::DIRECTORY_EXTENT ||
-       next.parent_id != extent.parent_id ||
-       next.prev_sibling != extent_id) return false;
-    next.prev_sibling = extent.prev_sibling;
-    if(!txn_set(transaction, extent.next_sibling, next)) return false;
-  }
-  if(!txn_set(transaction, extent_id, empty_inode()) ||
-     !append_transaction(transaction)) return false;
-  if(g_free_hint >= g_geometry.max_nodes || extent_id < g_free_hint) {
-    g_free_hint = extent_id;
-  }
-  return true;
-}
-
-DirectoryTrimResult trim_directory_extents_step(u16 directory_id,
-                                                u16 keep_count) {
-  DiskActivity activity;
-  Inode directory;
-  if(!g_ready || !prepare_local_catalog_mutation() ||
-     !get_inode(directory_id, directory) ||
-     inode_kind(directory) != NodeKind::DIRECTORY) {
-    return DirectoryTrimResult::FAILED;
-  }
-
-  u16 have = 0;
-  u16 current = directory.data_len;
-  u16 previous = NONE;
-  while(current != NONE && have < g_geometry.max_nodes) {
-    Inode extent;
-    if(!get_inode(current, extent) ||
-       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
-       extent.parent_id != directory_id ||
-       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
-    previous = current;
-    current = extent.next_sibling;
-    ++have;
-  }
-  if(current != NONE || keep_count > have) return DirectoryTrimResult::FAILED;
-  if(have == keep_count) return DirectoryTrimResult::COMPLETE;
-
-  // One step is exactly one WAL record: one updated link plus at most fifteen
-  // cleared tail nodes. Removing from the tail keeps every intermediate
-  // catalog state reachable and power-loss safe. The APP-facing adapter calls
-  // this repeatedly and services the foreground between steps.
-  static constexpr u8 MAX_TRIM_PER_TRANSACTION = WAL_MAX_UPDATES - 1U;
-  const u16 excess = (u16) (have - keep_count);
-  const u8 remove_count = (u8) (
-      excess < MAX_TRIM_PER_TRANSACTION ? excess : MAX_TRIM_PER_TRANSACTION);
-  const u16 kept = (u16) (have - remove_count);
-
-  if(!get_inode(directory_id, directory) ||
-     inode_kind(directory) != NodeKind::DIRECTORY) {
-    return DirectoryTrimResult::FAILED;
-  }
-  u16 predecessor = NONE;
-  current = directory.data_len;
-  previous = NONE;
-  for(u16 index = 0; index < kept; ++index) {
-    Inode extent;
-    if(current == NONE || !get_inode(current, extent) ||
-       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
-       extent.parent_id != directory_id ||
-       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
-    previous = current;
-    predecessor = current;
-    current = extent.next_sibling;
-  }
-
-  Transaction transaction;
-  txn_begin(transaction);
-  if(predecessor == NONE) {
-    directory.data_len = NONE;
-    if(!txn_set(transaction, directory_id, directory)) {
-      return DirectoryTrimResult::FAILED;
-    }
-  } else {
-    Inode kept_tail;
-    if(!txn_get(transaction, predecessor, kept_tail) ||
-       inode_kind(kept_tail) != NodeKind::DIRECTORY_EXTENT ||
-       kept_tail.parent_id != directory_id) return DirectoryTrimResult::FAILED;
-    kept_tail.next_sibling = NONE;
-    if(!txn_set(transaction, predecessor, kept_tail)) {
-      return DirectoryTrimResult::FAILED;
-    }
-  }
-
-  u16 first_freed = NONE;
-  for(u8 index = 0; index < remove_count; ++index) {
-    Inode extent;
-    if(current == NONE || !txn_get(transaction, current, extent) ||
-       inode_kind(extent) != NodeKind::DIRECTORY_EXTENT ||
-       extent.parent_id != directory_id ||
-       extent.prev_sibling != previous) return DirectoryTrimResult::FAILED;
-    const u16 freed = current;
-    previous = current;
-    current = extent.next_sibling;
-    if(!txn_set(transaction, freed, empty_inode())) {
-      return DirectoryTrimResult::FAILED;
-    }
-    if(first_freed == NONE || freed < first_freed) first_freed = freed;
-  }
-  if(current != NONE || !append_transaction(transaction)) {
-    return DirectoryTrimResult::FAILED;
-  }
-  if(first_freed != NONE &&
-     (g_free_hint >= g_geometry.max_nodes || first_freed < g_free_hint)) {
-    g_free_hint = first_freed;
-  }
-  return kept == keep_count
-      ? DirectoryTrimResult::COMPLETE : DirectoryTrimResult::MORE;
-}
-
-bool trim_directory_extents(u16 directory_id, u16 keep_count) {
-  for(u16 guard = 0; guard <= g_geometry.max_nodes; ++guard) {
-    const DirectoryTrimResult result =
-        trim_directory_extents_step(directory_id, keep_count);
-    if(result == DirectoryTrimResult::COMPLETE) return true;
-    if(result != DirectoryTrimResult::MORE) return false;
-  }
-  return false;
-}
-
-bool first_extent(u16 directory_id, u16& out_id) {
-  Inode directory;
-  if(!g_ready || !get_inode(directory_id, directory) ||
-     inode_kind(directory) != NodeKind::DIRECTORY || directory.data_len == NONE) return false;
-  out_id = directory.data_len;
-  return true;
-}
-
-bool next_extent(u16 id, u16& out_id) {
-  Inode inode;
-  if(!g_ready || !get_inode(id, inode)) return false;
-  if(inode_kind(inode) == NodeKind::DIRECTORY) {
-    if(inode.data_len == NONE) return false;
-    out_id = inode.data_len;
-    return true;
-  }
-  if(inode_kind(inode) != NodeKind::DIRECTORY_EXTENT || inode.next_sibling == NONE) return false;
-  out_id = inode.next_sibling;
-  return true;
-}
-
-bool extent_info(u16 extent_id, u16& directory_id, u16& next_id) {
-  Inode inode;
-  if(!g_ready || !get_inode(extent_id, inode) ||
-     inode_kind(inode) != NodeKind::DIRECTORY_EXTENT) return false;
-  directory_id = inode.parent_id;
-  next_id = inode.next_sibling;
-  return true;
-}
-
-bool release_file_extent(u16 extent_id) {
-  DiskActivity activity;
-  Inode extent;
-  if(!g_ready || !prepare_local_catalog_mutation() ||
-     !get_inode(extent_id, extent) ||
-     inode_kind(extent) != NodeKind::FILE_EXTENT) return false;
-  const u16 file_id = extent.parent_id;
-  Inode file;
-  if(!get_inode(file_id, file) ||
-     inode_kind(file) != NodeKind::FILE) return false;
-
-  u16 current[MAX_FAT_EXTENTS_PER_FILE] = {};
-  u8 current_count = 0;
-  if(!collect_file_extents(file_id, file, current, current_count) ||
-     current_count == 0) return false;
-  u8 removed_index = current_count;
-  for(u8 index = 0; index < current_count; index++) {
-    if(current[index] == extent_id) {
-      removed_index = index;
-      break;
-    }
-  }
-  if(removed_index == current_count) return false;
-
-  u16 remaining[MAX_FAT_EXTENTS_PER_FILE] = {};
-  u8 remaining_count = 0;
-  for(u8 index = 0; index < current_count; index++) {
-    if(index != removed_index) remaining[remaining_count++] = current[index];
-  }
-
-  Transaction transaction;
-  txn_begin(transaction);
-  file.first_child = remaining_count == 0 ? NONE : remaining[0];
-  if(!txn_set(transaction, file_id, file)) return false;
-  for(u8 index = 0; index < remaining_count; index++) {
-    const u16 previous = index == 0 ? NONE : remaining[index - 1];
-    const u16 next = index + 1U < remaining_count
-        ? remaining[index + 1] : NONE;
-    if(!txn_set(transaction, remaining[index],
-                file_extent_inode(file_id, index, previous, next,
-                                  inode_type(file)))) return false;
-  }
-  if(!txn_set(transaction, extent_id, empty_inode()) ||
-     !append_transaction(transaction)) return false;
-  if(g_free_hint >= g_geometry.max_nodes || extent_id < g_free_hint) {
-    g_free_hint = extent_id;
-  }
-  return true;
-}
-
-bool first_file_extent(u16 file_id, u16& out_id) {
-  Inode file;
-  if(!g_ready || !get_inode(file_id, file) ||
-     inode_kind(file) != NodeKind::FILE ||
-     file.first_child == NONE) return false;
-  out_id = file.first_child;
-  return true;
-}
-
-bool next_file_extent(u16 id, u16& out_id) {
-  Inode inode;
-  if(!g_ready || !get_inode(id, inode)) return false;
-  if(inode_kind(inode) == NodeKind::FILE) {
-    if(inode.first_child == NONE) return false;
-    out_id = inode.first_child;
-    return true;
-  }
-  if(inode_kind(inode) != NodeKind::FILE_EXTENT ||
-     inode.next_sibling == NONE) return false;
-  out_id = inode.next_sibling;
-  return true;
-}
-
-bool file_extent_info(u16 extent_id, u16& file_id, u8& cluster_index,
-                      u16& next_id) {
-  Inode inode;
-  if(!g_ready || !get_inode(extent_id, inode) ||
-     inode_kind(inode) != NodeKind::FILE_EXTENT ||
-     inode.data_len == 0 ||
-     inode.data_len > MAX_FAT_EXTENTS_PER_FILE) return false;
-  file_id = inode.parent_id;
-  cluster_index = (u8) inode.data_len;
-  next_id = inode.next_sibling;
-  return true;
 }
 
 u16 purge_empty(void) {
@@ -4588,7 +4048,9 @@ static shared_memory::EvictionDecision prepare_stage_index_eviction(void) {
 }
 
 static u16 stage_ref_limit(void) {
-  return g_geometry.physical_sectors == 128 ? STAGE_REF_CAPACITY : 384;
+  // 64 ordinary segments hold 448 records. Keep seven records spare in
+  // addition to the dedicated compaction segment so a full index can update.
+  return g_geometry.physical_sectors == 128 ? STAGE_REF_CAPACITY : 441;
 }
 
 static bool bind_full_stage_index(void) {
@@ -4632,24 +4094,43 @@ static u16 stage_index_ref(u16 index) {
   return (u16) (g_stage_index[index] & STAGE_REF_MASK);
 }
 
-static int stage_ref_index(u32 key) {
-  if(g_stage_index == nullptr) return -1;
+static u16 stage_lower_bound(u32 key) {
 #if defined(PROGRAM_STORE_HOST_TEST)
   g_stage_index_stats.lookups++;
 #endif
-  for(u16 i = 0; i < g_stage_ref_count; i++) {
+  u16 low = 0, high = g_stage_ref_count;
+  while(low < high) {
 #if defined(PROGRAM_STORE_HOST_TEST)
     g_stage_index_stats.probes++;
 #endif
-    if(stage_index_key(i) == key) return i;
+    const u16 middle = (u16) (low + (high - low) / 2U);
+    if(stage_index_key(middle) < key) low = (u16) (middle + 1U);
+    else high = middle;
   }
-  return -1;
+  return low;
+}
+static int stage_ref_index(u32 key) {
+  if(g_stage_index == nullptr) return -1;
+  const u16 position = stage_lower_bound(key);
+  return position < g_stage_ref_count && stage_index_key(position) == key ? position : -1;
+}
+static void stage_insert_index(u32 key, u16 ref) {
+  const u16 position = stage_lower_bound(key);
+  memmove(g_stage_index + position + 1U, g_stage_index + position,
+           (usize) (g_stage_ref_count - position) * sizeof(u32));
+  g_stage_index[position] = pack_stage_index(key, ref);
+  ++g_stage_ref_count;
+}
+static void stage_remove_index(u16 position) {
+  --g_stage_ref_count;
+  memmove(g_stage_index + position, g_stage_index + position + 1U,
+           (usize) (g_stage_ref_count - position) * sizeof(u32));
 }
 
 static bool stage_sector_header_valid(u16 sector) {
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   if(!read_bytes(stage_sector_address(sector), header, sizeof(header))) return false;
-  return memcmp(header, "C6S0", 4) == 0 &&
+  return memcmp(header, "C9S0", 4) == 0 &&
          header[4] == PHYSICAL_FORMAT_VERSION &&
          header[5] == STATE_ACTIVE && get_le32(header, 8) == g_format_epoch;
 }
@@ -4658,7 +4139,7 @@ static bool initialize_stage_sector(u16 sector) {
   if(!erase_sector(g_stage_physical[sector])) return false;
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   memset(header, 0xFF, sizeof(header));
-  memcpy(header, "C6S0", 4);
+  memcpy(header, "C9S0", 4);
   header[4] = PHYSICAL_FORMAT_VERSION;
   header[5] = STATE_WRITING;
   put_le32(header, 8, g_format_epoch);
@@ -4680,7 +4161,7 @@ static bool read_stage_record(u16 ref, u32& key, u16& generation,
                               u32& crc, u8& state) {
   u8 header[STAGE_RECORD_HEADER_SIZE];
   if(!read_bytes(stage_record_address(ref), header, sizeof(header))) return false;
-  if(header[0] != 'S' || header[1] != '6') return false;
+  if(header[0] != 'S' || header[1] != '9') return false;
   state = header[2];
   key = get_le32(header, 4);
   generation = get_le16(header, 8);
@@ -4748,7 +4229,7 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   u8 record[STAGE_RECORD_SIZE];
   memset(record, 0xFF, STAGE_RECORD_HEADER_SIZE);
   record[0] = 'S';
-  record[1] = '6';
+  record[1] = '9';
   // Полная запись программируется одним проверяемым потоком. Восстановление
   // принимает только записи ACTIVE с совпадающей CRC данных, поэтому отключение
   // питания во время программирования любой страницы NOR не заменит старую версию.
@@ -4767,9 +4248,8 @@ static bool append_stage_value(u16 sector, u32 key, const u8* data) {
   const u16 old_ref = index < 0 ? 0 : stage_index_ref((u16) index);
   if(index < 0) {
     if(g_stage_ref_count >= g_stage_index_capacity) return false;
-    index = g_stage_ref_count++;
-  }
-  g_stage_index[index] = pack_stage_index(key, ref);
+    stage_insert_index(key, ref);
+  } else g_stage_index[index] = pack_stage_index(key, ref);
   if(old_ref != 0) (void) write_byte(stage_record_address(old_ref) + 2,
                                       STATE_DELETED);
   return true;
@@ -4892,60 +4372,80 @@ static void mark_stage_borrow_occupied(u32 (&bits)[4], u32 physical) {
   bits[relative >> 5] |= 1UL << (relative & 31U);
 }
 
+#if defined(STM32F411xE)
+static u32 g_stage_borrow_diagnostic;
+#define C9_BORROW_TRACE(value) (g_stage_borrow_diagnostic = (value))
+#else
+#define C9_BORROW_TRACE(value) ((void) 0)
+#endif
+
 static bool borrow_stage_slot(u16& out_sector, u8& out_slot) {
+  C9_BORROW_TRACE(1U);
   if(g_geometry.physical_sectors != 128 ||
      g_geometry.data_sector_count > 128 ||
      g_stage_slot_count >= STAGE_MAX_SLOTS) return false;
-  u32 occupied[4] = {};
-  mark_stage_borrow_occupied(occupied, g_meta.current_sector);
-  mark_stage_borrow_occupied(occupied, g_meta.reserve_sector);
-  for(u8 index = 0; index < g_large_write_sector_count; index++) {
-    mark_stage_borrow_occupied(occupied, g_large_write_sectors[index]);
-  }
-  for(u16 id = 0; id < g_geometry.max_nodes; id++) {
-    Inode inode;
-    if(!get_inode(id, inode)) return false;
-    if(!visible_inode(inode)) continue;
-    if(inode.address < EXTENT_ADDRESS) {
-      mark_stage_borrow_occupied(
-          occupied, inode.address / storage_geometry::PHYSICAL_SECTOR_SIZE);
+  for(;;) {
+    u32 occupied[4] = {};
+    mark_stage_borrow_occupied(occupied, g_meta.current_sector);
+    mark_stage_borrow_occupied(occupied, g_meta.reserve_sector);
+    for(u8 index = 0; index < g_large_write_sector_count; index++) {
+      mark_stage_borrow_occupied(occupied, g_large_write_sectors[index]);
     }
-    if(large_file_inode(inode)) {
-      LargeDescriptor descriptor = {};
-      if(!read_large_descriptor(id, inode, descriptor)) return false;
-      for(u8 block = 0; block < descriptor.block_count; block++) {
-        mark_stage_borrow_occupied(occupied, descriptor.sectors[block]);
+    for(u8 index = 0; index < g_c9_pin_count; ++index) {
+      mark_stage_borrow_occupied(occupied, g_c9_pins[index].address / 4096U);
+    }
+    for(u16 id = 0; id < g_geometry.max_nodes; id++) {
+      Inode inode;
+      if(!get_inode(id, inode)) { C9_BORROW_TRACE(0x20000U | id); return false; }
+      if(!visible_inode(inode)) continue;
+      mark_stage_borrow_occupied(occupied, inode.address / 4096U);
+      mark_stage_borrow_occupied(occupied, inode.fat_address / 4096U);
+      if(large_file_inode(inode)) {
+        LargeDescriptor descriptor = {};
+        if(!read_large_descriptor(id, inode, descriptor)) { C9_BORROW_TRACE(0x30000U | id); return false; }
+        for(u8 block = 0; block < descriptor.block_count; block++) {
+          mark_stage_borrow_occupied(occupied, descriptor.sectors[block]);
+        }
       }
     }
+    u32 chosen = EMPTY_ADDRESS;
+    u16 reclaimable = 0;
+    const u32 end = g_geometry.data_first_sector +
+                    g_geometry.data_sector_count;
+    for(u32 physical = g_geometry.data_first_sector; physical < end;
+        physical++) {
+      const u32 relative = physical - g_geometry.data_first_sector;
+      if((occupied[relative >> 5] & (1UL << (relative & 31U))) != 0 ||
+         catalog_sector_busy(physical) || borrowed_stage_sector(physical)) continue;
+      chosen = physical;
+      reclaimable++;
+    }
+    // The imported C9 files and its COW collector must still have room to
+    // publish the batch after host sync. A borrowed sector is never taken from
+    // live file data, the current writer, or the GC reserve.
+    C9_BORROW_TRACE(0x40000U | reclaimable);
+    if(reclaimable <= STAGE_MIN_FREE_DATA_SECTORS) {
+      // Native directory growth/deletion leaves small live records spread over
+      // many otherwise empty sectors. Merge a live victim before lending more
+      // whole sectors; an empty GC victim would make no physical space here.
+      if(!garbage_collect(GC_MERGE | GC_LIVE_VICTIM) &&
+         (!garbage_collect(GC_LIVE_VICTIM) || !garbage_collect(GC_MERGE | GC_LIVE_VICTIM))) return false;
+      continue;
+    }
+    const u16 slot = g_stage_slot_count++;
+    g_stage_physical[slot] = chosen;
+    g_stage_used[slot] = 0;
+    g_stage_sealed[slot] = 0;
+    C9_BORROW_TRACE(0x50000U | chosen);
+    if(!initialize_stage_sector(slot)) {
+      if(!stage_sector_header_valid(slot)) g_stage_slot_count--;
+      return false;
+    }
+    C9_BORROW_TRACE(0x60000U | chosen);
+    out_sector = slot;
+    out_slot = 0;
+    return true;
   }
-  u32 chosen = EMPTY_ADDRESS;
-  u16 reclaimable = 0;
-  const u32 end = g_geometry.data_first_sector +
-                  g_geometry.data_sector_count;
-  for(u32 physical = g_geometry.data_first_sector; physical < end;
-      physical++) {
-    const u32 relative = physical - g_geometry.data_first_sector;
-    if((occupied[relative >> 5] & (1UL << (relative & 31U))) != 0 ||
-       catalog_sector_busy(physical) || borrowed_stage_sector(physical)) continue;
-    chosen = physical;
-    reclaimable++;
-  }
-  // The imported C6 files and its COW collector must still have room to
-  // publish the batch after host sync. A borrowed sector is never taken from
-  // live file data, the current writer, or the GC reserve.
-  if(chosen == EMPTY_ADDRESS ||
-     reclaimable <= STAGE_MIN_FREE_DATA_SECTORS) return false;
-  const u16 slot = g_stage_slot_count++;
-  g_stage_physical[slot] = chosen;
-  g_stage_used[slot] = 0;
-  g_stage_sealed[slot] = 0;
-  if(!initialize_stage_sector(slot)) {
-    if(!stage_sector_header_valid(slot)) g_stage_slot_count--;
-    return false;
-  }
-  out_sector = slot;
-  out_slot = 0;
-  return true;
 }
 
 static bool find_stage_slot(u16& out_sector, u8& out_slot) {
@@ -4978,7 +4478,7 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
     return true;
   }
   // A sector with fewer than seven live records can always be compacted into
-  // the fixed reserve. Do that before borrowing physical space from C6.
+  // the fixed reserve. Do that before borrowing physical space from C9.
   for(u16 sector = 0; sector < g_stage_slot_count; sector++) {
     if(normal_stage_slot(sector) &&
        stage_sector_live_count(sector) < STAGE_RECORDS_PER_SECTOR) {
@@ -4989,6 +4489,10 @@ static bool find_stage_slot(u16& out_sector, u8& out_slot) {
 }
 
 } // пространство имён
+
+#if defined(STM32F411xE)
+u32 vfat_stage_borrow_diagnostic(void) { return g_stage_borrow_diagnostic; }
+#endif
 
 void vfat_stage_clear(void) {
   const bool bound = !g_stage_external && bind_full_stage_index();
@@ -5038,7 +4542,7 @@ void vfat_stage_clear(void) {
       for(u8 i = 0; i < sizeof(raw); i++) if(raw[i] != 0xFF) erased = false;
       if(erased) break;
       g_stage_used[sector] = (u8) (slot + 1);
-      if(raw[0] != 'S' || raw[1] != '6') {
+      if(raw[0] != 'S' || raw[1] != '9') {
         g_stage_sealed[sector] = 1;
         continue;
       }
@@ -5070,8 +4574,7 @@ void vfat_stage_clear(void) {
         }
       } else if(key <= STAGE_KEY_MAX &&
                 g_stage_ref_count < g_stage_index_capacity) {
-        g_stage_index[g_stage_ref_count] = pack_stage_index(key, ref);
-        g_stage_ref_count++;
+        stage_insert_index(key, ref);
       } else {
         g_stage_recovery_ok = false;
       }
@@ -5127,6 +4630,11 @@ bool test_file_storage_info(u16 id, u16& stored_len,
   return true;
 }
 
+u16 test_current_record_space(void) {
+  return data_sector_in_range(g_meta.current_sector) && g_meta.current_offset <= 4096U
+      ? (u16) (4096U - g_meta.current_offset) : 0;
+}
+
 bool test_file_record_location(u16 id, u32& sector, u16& record_len) {
   Inode inode;
   if(!g_ready || !get_inode(id, inode) ||
@@ -5137,17 +4645,29 @@ bool test_file_record_location(u16 id, u32& sector, u16& record_len) {
   return true;
 }
 
-bool test_make_unreadable_orphan_file(u16 id) {
+
+bool test_relocate_fat_chain(u16 id, u32 sector) {
   Inode inode;
-  if(!g_ready || !get_inode(id, inode) ||
-     inode_kind(inode) != NodeKind::FILE) return false;
+  u16 bytes = 0;
+  if(!g_ready || !data_sector_in_range(sector) ||
+     sector == g_meta.current_sector || sector == g_meta.reserve_sector ||
+     catalog_sector_busy(sector) || borrowed_stage_sector(sector) ||
+     !get_inode(id, inode) || inode.fat_address == EMPTY_ADDRESS ||
+     !c9_map_size(id, inode, bytes) || !initialize_data_sector(sector)) return false;
+  const u32 target = sector_address(sector) + DATA_SECTOR_HEADER_SIZE;
+  u8 buffer[64];
+  for(u16 offset = 0; offset < bytes;) {
+    const u16 count = (u16) ((bytes - offset < sizeof(buffer)) ? bytes - offset : sizeof(buffer));
+    if(!read_bytes(inode.fat_address + offset, buffer, count) ||
+       !write_bytes(target + offset, buffer, count)) return false;
+    offset = (u16) (offset + count);
+  }
+  inode.fat_address = target;
   Transaction transaction;
   txn_begin(transaction);
-  if(!unlink_node(transaction, id, inode)) return false;
-  inode.name_hash ^= 1U;
-  if(!txn_set(transaction, id, inode)) return false;
-  return append_transaction(transaction);
+  return txn_set(transaction, id, inode) && append_transaction(transaction);
 }
+
 
 #endif
 
@@ -5206,10 +4726,19 @@ void vfat_stage_forget(u32 start_block, u16 blocks) {
     if(index < 0) continue;
     if(!write_byte(stage_record_address(stage_index_ref((u16) index)) + 2,
                    STATE_DELETED)) continue;
-    const u16 last = (u16) (g_stage_ref_count - 1);
-    g_stage_index[index] = g_stage_index[last];
-    g_stage_ref_count--;
+    stage_remove_index((u16) index);
   }
+}
+
+bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context) {
+  if(!g_ready || g_stage_external || include == nullptr || !ensure_stage_index()) return false;
+  u16 index = 0;
+  while(index < g_stage_ref_count) {
+    if(include(context, stage_index_key(index))) { ++index; continue; }
+    if(!write_byte(stage_record_address(stage_index_ref(index)) + 2, STATE_DELETED)) return false;
+    stage_remove_index(index);
+  }
+  return true;
 }
 
 bool vfat_stage_discard_all(void) {

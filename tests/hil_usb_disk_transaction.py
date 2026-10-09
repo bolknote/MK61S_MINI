@@ -52,7 +52,7 @@ DFU_PID = 0xDF11
 MAX_SAFE_MSC_BYTES = 32 * 1024 * 1024
 MIN_SAFE_MSC_BYTES = 32 * 1024
 
-USB_DISK_PROFILES = {"mini-v3-ws0010", "classic-v3-uc1609"}
+USB_DISK_PROFILES = {"mini-v3-a00", "mini-v3-ws0010", "classic-v3-uc1609"}
 
 
 def parse_vfat_diagnostic(report: str) -> dict[str, Any] | None:
@@ -62,7 +62,7 @@ def parse_vfat_diagnostic(report: str) -> dict[str, Any] | None:
     An unknown or malformed versioned record is always an error.
     """
     lines = [line.strip() for line in report.splitlines()
-             if line.startswith("VFAT ")]
+             if line.startswith("VFAT v=")]
     if not lines and "Trace is empty" in report:
         return None
     if len(lines) != 1:

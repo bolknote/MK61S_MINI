@@ -15,6 +15,7 @@ import glob
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -87,6 +88,10 @@ def wait_for_identity(expected: Identity, timeout: float) -> tuple[str, Identity
     last_error = "no CDC candidates"
     while time.monotonic() < deadline:
         for path in candidate_ports():
+            # macOS CDC names contain the device USB serial. Never probe a
+            # different board while another HIL job owns its terminal.
+            if sys.platform == "darwin" and expected.usb.lower() not in path.lower():
+                continue
             try:
                 current = read_identity(path, timeout=1.5)
             except (OSError, TimeoutError, AssertionError) as error:

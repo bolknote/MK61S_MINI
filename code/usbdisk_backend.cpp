@@ -12,11 +12,12 @@
 
 #include <string.h>
 
+
 namespace usbdisk_backend {
 namespace {
 
 static u16 diagnostic_operation_counts[
-    MK61_USBDISK_EXPORTED_SIZE + 1U];
+    MK61_USBDISK_CATALOG_REVISION + 1U];
 
 static void export_file(const program_store::Entry& entry,
                         mk61_system_file& output) {
@@ -140,11 +141,11 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   // Temporary qualification telemetry: distinguish one blocked primitive
   // from a hot path that repeatedly crosses the APP/resident boundary. READY
   // is the first primitive in a fresh USBDISK session and resets the counters.
-  if(operation == MK61_USBDISK_READY) {
+  if(operation == MK61_USBDISK_READY || operation == MK61_USBDISK_C9_READY) {
     memset(diagnostic_operation_counts, 0,
            sizeof(diagnostic_operation_counts));
   }
-  const u32 count = operation <= MK61_USBDISK_EXPORTED_SIZE
+  const u32 count = operation <= MK61_USBDISK_CATALOG_REVISION
       ? ++diagnostic_operation_counts[operation] : 0;
   // Unlock is cleanup after either success or failure.  Recording it as the
   // last operation used to erase the only evidence of the primitive that
@@ -156,12 +157,107 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   (void) c;
   switch(operation) {
     case MK61_USBDISK_READY:
-      return program_store::ready();
+      // The legacy private transport uses cluster == inode + 2. Refuse an
+      // incompatible volume before the old APP can expose or mutate it.
+      return 0;
+    case MK61_USBDISK_C9_READY:
+      return program_store::ready() && program_store::format_version() == 9 ? 9U : 0U;
     case MK61_USBDISK_GEOMETRY:
       if(payload == nullptr || !program_store::ready()) return 0;
       export_geometry(program_store::geometry(),
                       *(mk61_system_usbdisk_geometry*) payload);
       return 1;
+    case MK61_USBDISK_NODE_AVAILABLE:
+      return a <= 0xFFFFU && program_store::node_id_available((u16) a);
+    case MK61_USBDISK_FAT_FIRST_CLUSTER:
+    case MK61_USBDISK_FAT_CHAIN_COUNT:
+    case MK61_USBDISK_FAT_CHAIN_CLUSTER: {
+      if(payload == nullptr || a > 0xFFFFU || b > 0xFFFFU) return 0;
+      u16 value = 0;
+      const bool ok = operation == MK61_USBDISK_FAT_FIRST_CLUSTER
+          ? program_store::fat_first_cluster((u16) a, value)
+          : operation == MK61_USBDISK_FAT_CHAIN_COUNT
+              ? program_store::fat_chain_count((u16) a, value)
+              : program_store::fat_chain_cluster((u16) a, (u16) b, value);
+      ((mk61_system_usbdisk_extent*) payload)->id = value;
+      return ok;
+    }
+    case MK61_USBDISK_FAT_CLUSTER_INFO: {
+      if(payload == nullptr || a > 0xFFFFU) return 2U;
+      program_store::FatClusterInfo info = {};
+      const auto status = program_store::fat_cluster_info((u16) a, info);
+      auto& output = *(mk61_system_usbdisk_extent*) payload;
+      output.owner = info.owner; output.cluster_index = info.index; output.next = info.next;
+      return (u32) status;
+    }
+    case MK61_USBDISK_FAT_PROJECTION_BEGIN: return program_store::fat_projection_begin();
+    case MK61_USBDISK_IMPORT_PLAN_BEGIN: return program_store::import_plan_begin();
+    case MK61_USBDISK_IMPORT_PLAN_END: program_store::import_plan_end(); return 1;
+    case MK61_USBDISK_IMPORT_PLAN_PUT:
+    case MK61_USBDISK_IMPORT_PLAN_GET: {
+      if(payload == nullptr) return 0;
+      auto& value = *(mk61_system_usbdisk_extent*) payload;
+      if(value.id > 0xFFFFU || value.cluster_index > 0xFFFFU) return 0;
+      if(operation == MK61_USBDISK_IMPORT_PLAN_PUT) {
+        return value.owner <= 0xFFFFU && value.next <= 0xFFFFU &&
+            program_store::import_plan_put((u16) value.id, (u16) value.cluster_index,
+                                          (u16) value.owner, (u16) value.next);
+      }
+      u16 target = 0xFFFFU, source = 0xFFFFU;
+      const bool ok = program_store::import_plan_get((u16) value.id,
+                        (u16) value.cluster_index, target, source);
+      value.owner = target; value.next = source;
+      return ok;
+    }
+    case MK61_USBDISK_PREPARE_IMPORT_MAPPING:
+      return a <= 0xFFFFU && program_store::prepare_import_mapping((u16) a);
+    case MK61_USBDISK_CREATE_DIRECTORY_FROM_FAT: {
+      if(payload == nullptr) return 0;
+      auto& value = *(mk61_system_usbdisk_name*) payload;
+      if(value.parent > 0xFFFFU || value.preferred > 0xFFFFU || value.id > 0xFFFFU) return 0;
+      u16 output = 0xFFFFU;
+      const bool ok = program_store::create_directory_from_fat((u16) value.parent,
+          value.name, (u16) value.preferred, (u16) value.id, &output);
+      value.out_id = output;
+      return ok;
+    }
+    case MK61_USBDISK_SET_DIRECTORY_CHAIN: {
+      if(payload == nullptr) return 0;
+      auto& value = *(mk61_system_usbdisk_source*) payload;
+      if(value.preferred > 0xFFFFU || value.size > 0xFFFFU || value.read == nullptr) return 0;
+      SourceBridge bridge = {&value};
+      return program_store::set_directory_chain((u16) value.preferred,
+          (u16) value.size, {&bridge, read_source});
+    }
+    case MK61_USBDISK_ENSURE_DIRECTORY_CHAIN:
+      return a <= 0xFFFFU && program_store::ensure_directory_chain((u16) a);
+    case MK61_USBDISK_STAGE_DISCARD_UNMATCHED: {
+      if(payload == nullptr) return 0;
+      FilterBridge bridge = {(mk61_system_usbdisk_stage_filter*) payload};
+      return program_store::vfat_stage_discard_unmatched(include_stage_key, &bridge);
+    }
+    case MK61_USBDISK_FAT_FIND_CHILD: {
+      if(payload == nullptr) return 0;
+      auto& request = *(mk61_system_usbdisk_name*) payload;
+      if(request.parent > 0xFFFFU || request.preferred > 1U || request.id > 0xFFU || request.name == nullptr) return 0;
+      u16 id = 0xFFFFU;
+      const bool ok = program_store::fat_find_child((u16) request.parent, request.preferred != 0,
+          (program_store::ProgramType) request.id, request.name, id);
+      request.out_id = id;
+      return ok;
+    }
+    case MK61_USBDISK_IMPORT_NAME_GET:
+    case MK61_USBDISK_IMPORT_NAME_PUT: {
+      if(payload == nullptr || a > 0xFFFFU) return 0;
+      auto& request = *(mk61_system_usbdisk_extent*) payload;
+      if(operation == MK61_USBDISK_IMPORT_NAME_PUT) return request.owner <= 0xFFFFU &&
+          program_store::import_name_put((u16) a, (u16) request.owner, request.next);
+      u16 hash = 0; u32 location = 0xFFFFFFFFU;
+      const bool ok = program_store::import_name_get((u16) a, hash, location);
+      request.owner = hash; request.next = location;
+      return ok;
+    }
+    case MK61_USBDISK_CATALOG_REVISION: return program_store::catalog_revision();
     case MK61_USBDISK_MAX_NODES:
       return program_store::max_nodes();
     case MK61_USBDISK_CHILD_COUNT:
@@ -190,47 +286,19 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           program_store::move_rename((u16) request.id,
                                      (u16) request.parent, request.name);
     }
+    // Retired C8 extent opcodes keep their numeric positions; C9 does not
+    // implement the former cluster == inode + 2 transport.
     case MK61_USBDISK_ALLOCATE_DIRECTORY_EXTENT:
-      return a <= 0xFFFFU && b <= 0xFFFFU &&
-          program_store::allocate_directory_extent((u16) a, (u16) b);
     case MK61_USBDISK_RELEASE_DIRECTORY_EXTENT:
-      return a <= 0xFFFFU &&
-          program_store::release_directory_extent((u16) a);
     case MK61_USBDISK_FIRST_DIRECTORY_EXTENT:
     case MK61_USBDISK_NEXT_DIRECTORY_EXTENT:
     case MK61_USBDISK_FIRST_FILE_EXTENT:
-    case MK61_USBDISK_NEXT_FILE_EXTENT: {
-      if(payload == nullptr || a > 0xFFFFU) return 0;
-      u16 id = program_store::INVALID_ID;
-      bool ok = false;
-      if(operation == MK61_USBDISK_FIRST_DIRECTORY_EXTENT)
-        ok = program_store::first_extent((u16) a, id);
-      else if(operation == MK61_USBDISK_NEXT_DIRECTORY_EXTENT)
-        ok = program_store::next_extent((u16) a, id);
-      else if(operation == MK61_USBDISK_FIRST_FILE_EXTENT)
-        ok = program_store::first_file_extent((u16) a, id);
-      else
-        ok = program_store::next_file_extent((u16) a, id);
-      ((mk61_system_usbdisk_extent*) payload)->id = id;
-      return ok;
-    }
+    case MK61_USBDISK_NEXT_FILE_EXTENT:
     case MK61_USBDISK_DIRECTORY_EXTENT_INFO:
-    case MK61_USBDISK_FILE_EXTENT_INFO: {
-      if(payload == nullptr || a > 0xFFFFU) return 0;
-      auto& output = *(mk61_system_usbdisk_extent*) payload;
-      u16 owner = program_store::INVALID_ID;
-      u16 next = program_store::INVALID_ID;
-      u8 cluster = 0;
-      const bool ok = operation == MK61_USBDISK_DIRECTORY_EXTENT_INFO
-          ? program_store::extent_info((u16) a, owner, next)
-          : program_store::file_extent_info((u16) a, owner, cluster, next);
-      output.owner = owner;
-      output.next = next;
-      output.cluster_index = cluster;
-      return ok;
-    }
+    case MK61_USBDISK_FILE_EXTENT_INFO:
     case MK61_USBDISK_RELEASE_FILE_EXTENT:
-      return a <= 0xFFFFU && program_store::release_file_extent((u16) a);
+    case MK61_USBDISK_TRIM_DIRECTORY_EXTENTS:
+      return 0;
     case MK61_USBDISK_STAGE_WRITE:
       return payload != nullptr && program_store::vfat_stage_write(
           a, (const u8*) payload);
@@ -252,10 +320,6 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       request.count = count;
       return ok;
     }
-    case MK61_USBDISK_TRIM_DIRECTORY_EXTENTS:
-      if(a > 0xFFFFU || b > 0xFFFFU) return MK61_USBDISK_TRIM_FAILED;
-      return (u32) program_store::trim_directory_extents_step(
-          (u16) a, (u16) b);
     case MK61_USBDISK_STAGE_DISCARD_ALL:
       return program_store::vfat_stage_discard_all();
     case MK61_USBDISK_STAGE_FORGET:
@@ -285,7 +349,8 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
     case MK61_USBDISK_STAGE_UNLOCK:
       program_store::vfat_stage_unlock();
       return 1;
-    case MK61_USBDISK_WRITE_FILE_SOURCE: {
+    case MK61_USBDISK_WRITE_FILE_SOURCE: return 0;
+    case MK61_USBDISK_C9_WRITE_FILE_SOURCE: {
       if(payload == nullptr) return 0;
       auto& request = *(mk61_system_usbdisk_source*) payload;
       if(request.parent > 0xFFFFU || request.preferred > 0xFFFFU ||

@@ -224,6 +224,7 @@ add_executable(resident ${_mk61_project_sources})
 target_include_directories(resident PRIVATE "${MK61_PROJECT_ROOT}/code")
 target_compile_definitions(resident PRIVATE
   ${_mk61_profile_definitions}
+  ${MK61_CASE_DEFINITIONS}
   MK61_ENABLE_FOCAL=${MK61_ENABLE_FOCAL}
   MK61_ENABLE_TINYBASIC=${MK61_ENABLE_TINYBASIC}
   MK61_ENABLE_WBMP_VIEWER=${MK61_ENABLE_WBMP_VIEWER}

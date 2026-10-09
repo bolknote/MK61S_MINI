@@ -932,7 +932,7 @@ void init_external_flash(void) {
   // Инициализация SPI
   SPI.begin();
  
-  // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C6 проверяет границы.
+  // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C9 проверяет границы.
   flash_is_ok = external_flash().begin();
   #ifdef DEBUG_SPIFLASH
     if(flash_is_ok) {
@@ -947,20 +947,20 @@ void init_external_flash(void) {
   #endif
   if(!flash_is_ok) return;
 
-  dbgln(SPIROM, "C6 init: start");
+  dbgln(SPIROM, "C9 init: start");
   program_store::init();
   #ifdef DEBUG_SPIFLASH
     if(program_store::ready()) {
-      Serial.print("C6 init: ready, measured capacity: ");
+      Serial.print("C9 init: ready, measured capacity: ");
       Serial.print(external_flash().getCapacity()); Serial.println(" bytes");
     } else if(program_store::mount_status() ==
               program_store::MountStatus::FORMAT_REQUIRED) {
-      Serial.println("C5 init: legacy volume; explicit format required");
+      Serial.println("C9 init: geometry changed; explicit format required");
     } else if(program_store::mount_status() ==
               program_store::MountStatus::REPAIR_REQUIRED) {
-      Serial.println("C6 init: catalogs damaged; explicit format required");
+      Serial.println("C9 init: catalogs damaged; explicit format required");
     } else {
-      Serial.println("C6 init: failed");
+      Serial.println("C9 init: failed");
     }
   #endif
 }

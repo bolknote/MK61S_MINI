@@ -194,6 +194,10 @@ static bool terminal_vfat_log(const char* args) {
       usb_mass_storage::startup_diagnostic();
   terminal_output::field(Serial, "MSC startup valid=", startup.valid ? 1 : 0);
   terminal_output::line(Serial, " stage=", startup.valid ? startup.stage : 0);
+#if defined(STM32F411xE)
+  terminal_output::field(Serial, "VFAT staged=", program_store::vfat_stage_count());
+  terminal_output::line(Serial, " borrow=", program_store::vfat_stage_borrow_diagnostic());
+#endif
   return true;
 }
 
@@ -2265,7 +2269,9 @@ void class_terminal::dump_mk61_code_page(void) {
     }
 
 void class_terminal::output_version(void) {
+#if !MK61_PRODUCT_BUILD
       Serial.print("sizeof Serial "); Serial.println(sizeof(HardwareSerial));
+#endif
       Serial.print(MODEL);
       Serial.print(" ver. ");
       Serial.print(__DATE__);
@@ -3082,11 +3088,14 @@ void class_terminal::reset_line_editor(void) {
       hist_write            = 0;
     }
 
-void  class_terminal::init(void) {
+void  class_terminal::init(bool initial_startup) {
       current_directory = program_store::ROOT_ID;
       reset_command_state();
       reset_line_editor();
       Serial.begin(115200);
+      // A class handoff must return to the calculator immediately. The host
+      // can request identity/version after reconnect; the boot banner is cold-only.
+      if(!initial_startup) return;
 #if defined(USBCON) && defined(USBD_USE_CDC)
       // Сохраняем паузу для стартового баннера, не пропуская вслепую запрос
       // активации desktop-клиента. Открытие порта CDC поднимает DTR, поэтому при
@@ -3837,7 +3846,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               case CMD_FORMAT_STORAGE:
                 ok = program_store::format();
                 if(ok) current_directory = program_store::ROOT_ID;
-                Serial.println(ok ? "C6 formatted." : "C6 format failed!");
+                Serial.println(ok ? "C9 formatted." : "C9 format failed!");
                 break;
               default:
                 ok = false;
@@ -4076,7 +4085,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               const isize reg = HexdecimalDigit((char) input_buffer[1]);
               const isize reg_limit = core_61::expanded_program_is_on() ? 15 : 14;
               if(reg < 0 || reg > reg_limit) {
-                Serial.println("Illegal register, R0..RE (RF in expanded mode)!");
+                Serial.println("Use R0..RE; expanded RF.");
                 recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
@@ -4101,7 +4110,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 return terminal_protocol::Result::error();
               }
               pending_confirmation_cmd = command_id;
-              Serial.println("Enter Y/y to confirm formatting all C6 files!");
+              Serial.println("Format? Y/y.");
             break;
           case  CMD_CMD: {
               const terminal_protocol::Result result = command_to_kbd(script_mode);
@@ -4471,17 +4480,18 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               if(!program_store::ready()) {
                 if(program_store::mount_status() ==
                    program_store::MountStatus::FORMAT_REQUIRED) {
-                  Serial.println("C5: legacy volume; run format to create C6");
+                  Serial.println("C9: geometry changed; run format");
                   Serial.println("Files were not modified");
                 } else if(program_store::mount_status() ==
                           program_store::MountStatus::REPAIR_REQUIRED) {
-                  Serial.println("C6: catalog damaged; run format or use System > Format disk menu");
+                  Serial.println("C9: catalog damaged; run format or use System > Format disk menu");
                   Serial.println("Files were not modified");
                 } else {
-                  Serial.println("C6: unavailable");
+                  Serial.println("C9: unavailable");
                 }
                 break;
               }
+              Serial.println("Filesystem: C9");
               u16 directories = 0;
               const int stored_visible = program_store::total_count();
               for(int index = 0; index < stored_visible; index++) {
@@ -4501,8 +4511,7 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               Serial.print(maximum); Serial.println(" total");
               terminal_output::field(Serial, "Visible: ", stored_visible - directories);
               Serial.print(" files, "); Serial.print(directories);
-              terminal_output::field(Serial, " directories, ", used - stored_visible);
-              Serial.println(" hidden extents");
+              Serial.println(" directories");
               terminal_output::field(
                   Serial, "FAT12 cluster: ", (u32) program_store::geometry().sectors_per_cluster * 512U);
               Serial.println(" bytes (virtual)");
@@ -4790,8 +4799,8 @@ class_terminal::InputResult class_terminal::input_handler(u8 rx_char) {
         input_cursor = 0;
         // execute() may synchronously replace CDC with MSC and later create a
         // fresh CDC device.  The prompt for the old command must never be
-        // written into that new USB generation; terminal.init() owns its
-        // banner/prompt and future input starts a clean transaction there.
+        // written into that new USB generation; terminal.init() resets its
+        // parser, and future input starts a clean transaction there.
         if(usb_terminal_generation() == terminal_generation) print_prompt();
         return {
           result.kind == terminal_protocol::ResultKind::KEY ? result.key : -1,

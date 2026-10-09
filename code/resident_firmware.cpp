@@ -138,7 +138,12 @@ Result verify(void) {
       result.footer_offset, firmware_build::PROFILE_ID, flash_capacity());
   if(result.status != Status::VALID) return result;
 
-  const u32 started = DWT->CYCCNT;
+  // Cycle telemetry is optional. The early guard also runs in builds with
+  // the profiler disabled, before Arduino USB/delay enables the DWT block.
+  const bool counter_enabled =
+      (CoreDebug->DEMCR & CoreDebug_DEMCR_TRCENA_Msk) != 0 &&
+      (DWT->CTRL & DWT_CTRL_CYCCNTENA_Msk) != 0;
+  const u32 started = counter_enabled ? DWT->CYCCNT : 0;
   mk61_crc32::Context crc;
   result.hardware_crc = crc.using_hardware();
   const u8* const image = reinterpret_cast<const u8*>(
@@ -157,7 +162,7 @@ Result verify(void) {
       crc.update(image + build_offset + sizeof(u32),
                  result.image_size - build_offset - sizeof(u32));
   result.actual_crc32 = updated ? crc.finish() : 0;
-  result.cycles = DWT->CYCCNT - started;
+  result.cycles = counter_enabled ? DWT->CYCCNT - started : 0;
   if(!updated || result.actual_crc32 != result.expected_crc32)
     result.status = Status::CRC_MISMATCH;
 #endif

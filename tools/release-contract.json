@@ -349,7 +349,7 @@
       "defines": ["MK61_MATH_BACKEND=1"],
       "product": true,
       "publish": false,
-      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 7168, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 5120},
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 2048, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 5120},
       "expect": {"usb_suspend": false, "ws0010_graphics": null}
     },
     {
@@ -394,7 +394,7 @@
       "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
       "product": true,
       "publish": true,
-      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 7168, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 14336}
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 4096, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 14336}
     },
     {
       "id": "f401-product-classic-v3",
@@ -405,7 +405,7 @@
       "features": {"focal": 1, "basic": 1, "wbmp": 0, "markdown": 1, "chip8": 0, "usb_screen": 0, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
       "product": true,
       "publish": true,
-      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 7168, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 14336}
+      "budgets": {"flash_capacity": 262144, "flash_min_headroom": 4096, "ram_capacity": 65536, "ram_limit": 52428, "stack_frame_limit": 2048, "markdown_app_max": 14336}
     },
     {
       "id": "f401-capability-a00-usb",
@@ -414,6 +414,7 @@
       "builder": "gcc",
       "profile": "mini-v3-a00",
       "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "defines": ["MK61_ENABLE_DWT_PROFILER=0"],
       "product": false,
       "publish": false,
       "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}
@@ -425,6 +426,7 @@
       "builder": "gcc",
       "profile": "mini-v3-ws0010",
       "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 0, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "defines": ["MK61_ENABLE_READ_BENCHMARKS=0", "MK61_ENABLE_DWT_PROFILER=0"],
       "product": false,
       "publish": false,
       "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}
@@ -447,6 +449,7 @@
       "builder": "gcc",
       "profile": "mini-v3-ws0010",
       "features": {"focal": 0, "basic": 0, "wbmp": 0, "markdown": 0, "chip8": 0, "usb_screen": 1, "ws0010_graphics": 1, "extended_font_settings": 0, "user_explorer": 1, "math_backend": 1, "lto": 1},
+      "defines": ["MK61_ENABLE_READ_BENCHMARKS=0", "MK61_ENABLE_DWT_PROFILER=0"],
       "product": false,
       "publish": false,
       "budgets": {"flash_capacity": 262144, "flash_min_headroom": 512, "ram_capacity": 65536, "ram_limit": 65536, "stack_frame_limit": 2048}

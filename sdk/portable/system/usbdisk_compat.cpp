@@ -9,18 +9,14 @@
 
 namespace {
 
-static constexpr u16 STAGE_CACHE_CAPACITY = 384;
 // Preparing MSC runs synchronously while CDC is deliberately kept alive. A
-// corrupt legacy journal must not monopolize that foreground forever: after
+// corrupt journal must not monopolize that foreground forever: after
 // this bound every following resident primitive fails and the normal unwind
 // releases the stage lock and returns an actionable diagnostic to CDC.
 static constexpr u32 STARTUP_RECOVERY_BUDGET_MS = 4000U;
 static bool startup_recovery_active;
 static bool startup_recovery_expired;
 static u32 startup_recovery_started_ms;
-static u32 stage_keys[STAGE_CACHE_CAPACITY];
-static u16 stage_key_count;
-static bool stage_keys_valid;
 static program_store::WriteFailure last_write_failure_value =
     program_store::WriteFailure::NONE;
 static program_store::WriteFailureDetail last_write_failure_detail_value =
@@ -43,74 +39,10 @@ static u32 call(u32 operation, u32 a = 0, u32 b = 0, u32 c = 0,
   return portable_system::call(operation, a, b, c, data);
 }
 
-static u16 stage_lower_bound(u32 key) {
-  u16 first = 0;
-  u16 count = stage_key_count;
-  while(count != 0) {
-    const u16 step = (u16) (count / 2U);
-    const u16 middle = (u16) (first + step);
-    if(stage_keys[middle] < key) {
-      first = (u16) (middle + 1U);
-      count = (u16) (count - step - 1U);
-    } else {
-      count = step;
-    }
-  }
-  return first;
-}
-
-static bool stage_cache_contains(u32 key) {
-  const u16 index = stage_lower_bound(key);
-  return index < stage_key_count && stage_keys[index] == key;
-}
-
-static bool stage_cache_add(u32 key) {
-  const u16 index = stage_lower_bound(key);
-  if(index < stage_key_count && stage_keys[index] == key) return true;
-  if(stage_key_count == STAGE_CACHE_CAPACITY) return false;
-  memmove(stage_keys + index + 1U, stage_keys + index,
-          (usize) (stage_key_count - index) * sizeof(stage_keys[0]));
-  stage_keys[index] = key;
-  ++stage_key_count;
-  return true;
-}
-
-static void stage_cache_remove(u32 key) {
-  const u16 index = stage_lower_bound(key);
-  if(index >= stage_key_count || stage_keys[index] != key) return;
-  memmove(stage_keys + index, stage_keys + index + 1U,
-          (usize) (stage_key_count - index - 1U) * sizeof(stage_keys[0]));
-  --stage_key_count;
-}
-
-static bool refresh_stage_cache() {
-  mk61_service_usbdisk_stage_snapshot request = {
-      stage_keys, STAGE_CACHE_CAPACITY, 0};
-  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_SNAPSHOT,
-           0, 0, &request) || request.count > STAGE_CACHE_CAPACITY) {
-    stage_key_count = 0;
-    stage_keys_valid = false;
-    return false;
-  }
-  stage_key_count = (u16) request.count;
-  // The persistent index is append-ordered. Sort its public keys once so all
-  // sector-presence checks in both recovery passes become local binary search.
-  for(u16 index = 1; index < stage_key_count; ++index) {
-    const u32 key = stage_keys[index];
-    u16 position = index;
-    while(position != 0 && stage_keys[position - 1U] > key) {
-      stage_keys[position] = stage_keys[position - 1U];
-      --position;
-    }
-    stage_keys[position] = key;
-  }
-  stage_keys_valid = true;
-  return true;
-}
-
 static void import_geometry(const mk61_system_usbdisk_geometry& source,
                             storage_geometry::Geometry& output) {
-  output = {};
+  // Every member is assigned below; the sole caller's static object already
+  // has zero-initialized padding.
   output.capacity_bytes = source.capacity_bytes;
   output.physical_sectors = source.physical_sectors;
   output.locator_a_sector = source.locator_a_sector;
@@ -193,23 +125,23 @@ extern "C" void mk61_usbdisk_restart_startup_budget(void) {
 
 namespace program_store {
 
+u32 catalog_revision() { return call(MK61_SYS_USBDISK, MK61_USBDISK_CATALOG_REVISION); }
 u32 media_revision() {
   return call(MK61_SYS_USBDISK, MK61_USBDISK_MEDIA_REVISION);
 }
 
 bool ready() {
-  return call(MK61_SYS_USBDISK, MK61_USBDISK_READY) != 0;
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_C9_READY) == 9U;
 }
 
 const storage_geometry::Geometry& geometry() {
   static storage_geometry::Geometry value = {};
   static bool loaded = false;
   if(loaded) return value;
-  // This service runs synchronously and cannot be re-entered. Keep the large
-  // wire object out of the APP call stack: resident code fills it across the
-  // ABI boundary while the portable caller is still executing from SRAM.
-  static mk61_system_usbdisk_geometry wire = {};
-  wire = {};
+  // Used only while populating the persistent native geometry. A bounded
+  // 76-byte wire frame avoids retaining a second geometry for the whole MSC
+  // session; the ARM stack qualification covers this cold path.
+  mk61_system_usbdisk_geometry wire = {};
   const bool available =
       call(MK61_SYS_USBDISK, MK61_USBDISK_GEOMETRY, 0, 0, &wire) != 0;
   mk61_usbdisk_startup_stage(210);
@@ -243,84 +175,90 @@ bool move_rename(u16 id, u16 parent, const char* name) {
               0, 0, &request) != 0;
 }
 
-bool allocate_directory_extent(u16 directory, u16 preferred) {
-  return call(MK61_SYS_USBDISK, MK61_USBDISK_ALLOCATE_DIRECTORY_EXTENT,
-              directory, preferred) != 0;
+bool node_id_available(u16 id) {
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_NODE_AVAILABLE, id) != 0;
 }
-
-bool release_directory_extent(u16 extent) {
-  return call(MK61_SYS_USBDISK, MK61_USBDISK_RELEASE_DIRECTORY_EXTENT,
-              extent) != 0;
+u8 format_version() { return ready() ? 9U : 0U; }
+u16 max_fat_clusters() {
+  const auto& value = geometry();
+  const u32 overhead = 1U + 2U * value.fat_sectors + value.root_sectors;
+  return value.sectors_per_cluster != 0 && value.logical_sectors >= overhead
+      ? (u16) ((value.logical_sectors - overhead) / value.sectors_per_cluster) : 0;
 }
-
-bool trim_directory_extents(u16 directory, u16 keep_count) {
-  const u16 limit = max_nodes();
-  for(u16 guard = 0; guard <= limit; ++guard) {
-    const u32 result = call(MK61_SYS_USBDISK,
-                            MK61_USBDISK_TRIM_DIRECTORY_EXTENTS,
-                            directory, keep_count);
-    if(result == MK61_USBDISK_TRIM_COMPLETE) return true;
-    if(result != MK61_USBDISK_TRIM_MORE) return false;
-    // The resident operation deliberately performs only one WAL transaction.
-    // Return to the foreground before the next one so the watchdog, power
-    // monitor and display continue to make progress during legacy recovery.
-    idle_main_process();
-  }
-  return false;
-}
-
-static bool extent_id(u32 operation, u16 source, u16& output) {
-  mk61_system_usbdisk_extent value = {};
-  const bool ok = call(MK61_SYS_USBDISK, operation, source,
-                       0, &value) != 0;
-  output = (u16) value.id;
+static bool read_chain_fact(u32 operation, u16 id, u16 index, u16& value) {
+  mk61_system_usbdisk_extent request = {};
+  const bool ok = call(MK61_SYS_USBDISK, operation, id, index, &request) != 0;
+  value = (u16) request.id;
   return ok;
 }
-
-bool first_extent(u16 directory, u16& id) {
-  return extent_id(MK61_USBDISK_FIRST_DIRECTORY_EXTENT, directory, id);
+bool fat_first_cluster(u16 id, u16& cluster) {
+  return read_chain_fact(MK61_USBDISK_FAT_FIRST_CLUSTER, id, 0, cluster);
 }
-bool next_extent(u16 extent, u16& id) {
-  return extent_id(MK61_USBDISK_NEXT_DIRECTORY_EXTENT, extent, id);
+bool fat_chain_count(u16 id, u16& count) {
+  return read_chain_fact(MK61_USBDISK_FAT_CHAIN_COUNT, id, 0, count);
 }
-bool first_file_extent(u16 file, u16& id) {
-  return extent_id(MK61_USBDISK_FIRST_FILE_EXTENT, file, id);
+bool fat_chain_cluster(u16 id, u16 index, u16& cluster) {
+  return read_chain_fact(MK61_USBDISK_FAT_CHAIN_CLUSTER, id, index, cluster);
 }
-bool next_file_extent(u16 extent, u16& id) {
-  return extent_id(MK61_USBDISK_NEXT_FILE_EXTENT, extent, id);
+FatClusterStatus fat_cluster_info(u16 cluster, FatClusterInfo& output) {
+  mk61_system_usbdisk_extent request = {};
+  const u32 status = call(MK61_SYS_USBDISK, MK61_USBDISK_FAT_CLUSTER_INFO, cluster, 0, &request);
+  output = {(u16) request.owner, (u16) request.cluster_index, (u16) request.next};
+  return !startup_recovery_expired && status <= 2
+      ? (FatClusterStatus) status : FatClusterStatus::ERROR;
 }
-
-bool extent_info(u16 extent, u16& directory, u16& next) {
-  mk61_system_usbdisk_extent value = {};
-  const bool ok = call(MK61_SYS_USBDISK,
-      MK61_USBDISK_DIRECTORY_EXTENT_INFO, extent, 0, &value) != 0;
-  directory = (u16) value.owner;
-  next = (u16) value.next;
+bool fat_projection_begin() { return call(MK61_SYS_USBDISK, MK61_USBDISK_FAT_PROJECTION_BEGIN) != 0; }
+bool import_plan_begin() { return call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_PLAN_BEGIN) != 0; }
+void import_plan_end() { (void) call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_PLAN_END); }
+bool import_plan_put(u16 cluster, u16 empty_index, u16 target, u16 source) {
+  mk61_system_usbdisk_extent request = {};
+  request.id = cluster; request.owner = target;
+  request.cluster_index = empty_index; request.next = source;
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_PLAN_PUT, 0, 0, &request) != 0;
+}
+bool import_plan_get(u16 cluster, u16 empty_index, u16& target, u16& source) {
+  mk61_system_usbdisk_extent request = {};
+  request.id = cluster; request.owner = request.next = INVALID_ID;
+  request.cluster_index = empty_index;
+  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_PLAN_GET, 0, 0, &request) != 0;
+  target = (u16) request.owner; source = (u16) request.next;
   return ok;
 }
-
-bool file_extent_info(u16 extent, u16& file, u8& cluster, u16& next) {
-  mk61_system_usbdisk_extent value = {};
-  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_FILE_EXTENT_INFO,
-                       extent, 0, &value) != 0;
-  file = (u16) value.owner;
-  cluster = (u8) value.cluster_index;
-  next = (u16) value.next;
+bool prepare_import_mapping(u16 id) { return call(MK61_SYS_USBDISK, MK61_USBDISK_PREPARE_IMPORT_MAPPING, id) != 0; }
+bool import_name_get(u16 slot, u16& hash, u32& location) {
+  mk61_system_usbdisk_extent request = {};
+  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_NAME_GET, slot, 0, &request) != 0;
+  hash = (u16) request.owner; location = request.next;
   return ok;
 }
-
-bool release_file_extent(u16 extent) {
-  return call(MK61_SYS_USBDISK, MK61_USBDISK_RELEASE_FILE_EXTENT,
-              extent) != 0;
+bool import_name_put(u16 slot, u16 hash, u32 location) {
+  mk61_system_usbdisk_extent request = {};
+  request.owner = hash; request.next = location;
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_IMPORT_NAME_PUT, slot, 0, &request) != 0;
 }
+bool fat_find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output) {
+  mk61_system_usbdisk_name request = {(u32) type, parent, directory ? 1U : 0U, INVALID_ID, name};
+  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_FAT_FIND_CHILD, 0, 0, &request) != 0;
+  output = (u16) request.out_id;
+  return ok;
+}
+bool create_directory_from_fat(u16 parent, const char* name, u16 preferred, u16 first, u16* output) {
+  mk61_system_usbdisk_name request = {first, parent, preferred, INVALID_ID, name};
+  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_CREATE_DIRECTORY_FROM_FAT, 0, 0, &request) != 0;
+  if(output != nullptr) *output = (u16) request.out_id;
+  return ok;
+}
+bool set_directory_chain(u16 id, u16 count, const FileSource& source) {
+  SourceBridge bridge = {&source};
+  mk61_system_usbdisk_source request = {};
+  request.preferred = id; request.size = count;
+  request.context = &bridge; request.read = read_source;
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_SET_DIRECTORY_CHAIN, 0, 0, &request) != 0;
+}
+bool ensure_directory_chain(u16 id) { return call(MK61_SYS_USBDISK, MK61_USBDISK_ENSURE_DIRECTORY_CHAIN, id) != 0; }
 
 bool vfat_stage_write(u32 block, const u8* data) {
-  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_WRITE,
-                       block, 0, (void*) data) != 0;
-  if(ok && stage_keys_valid && !stage_cache_add(block)) {
-    stage_keys_valid = false;
-  }
-  return ok;
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_WRITE, block, 0, (void*) data) != 0;
 }
 
 bool exported_size_id(u16 id, u32& size) {
@@ -345,56 +283,21 @@ bool vfat_stage_read(u32 block, u8* data) {
               block, 0, data) != 0;
 }
 bool vfat_stage_exists(u32 block) {
-  if(stage_keys_valid) return stage_cache_contains(block);
   return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_EXISTS, block) != 0;
 }
-u16 vfat_stage_count() {
-  if(stage_keys_valid) return stage_key_count;
-  return (u16) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_COUNT);
+u16 vfat_stage_count() { return (u16) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_COUNT); }
+void vfat_stage_forget(u32 start, u16 count) {
+  if(count != 0) (void) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_FORGET, start, count);
 }
-void vfat_stage_forget(u32 start_block, u16 blocks) {
-  if(blocks == 0) return;
-  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_FORGET,
-           start_block, blocks)) {
-    stage_keys_valid = false;
-    return;
-  }
-  if(stage_keys_valid) {
-    for(u16 offset = 0; offset < blocks; ++offset) {
-      stage_cache_remove(start_block + offset);
-    }
-  }
+bool vfat_stage_discard_all() { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_DISCARD_ALL) != 0; }
+void vfat_stage_clear() { (void) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_CLEAR); }
+bool vfat_stage_lock() { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_LOCK) != 0; }
+bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context) {
+  FilterBridge bridge = {include, context};
+  mk61_system_usbdisk_stage_filter request = {&bridge, include_key, nullptr, 0};
+  return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_DISCARD_UNMATCHED, 0, 0, &request) != 0;
 }
-bool vfat_stage_discard_all() {
-  const bool ok = call(MK61_SYS_USBDISK,
-                       MK61_USBDISK_STAGE_DISCARD_ALL) != 0;
-  if(ok) {
-    stage_key_count = 0;
-    stage_keys_valid = true;
-  }
-  return ok;
-}
-void vfat_stage_clear() {
-  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_CLEAR)) {
-    stage_keys_valid = false;
-    return;
-  }
-  (void) refresh_stage_cache();
-}
-bool vfat_stage_lock() {
-  if(!call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_LOCK)) {
-    stage_key_count = 0;
-    stage_keys_valid = false;
-    return false;
-  }
-  // The resident lock has already ensured and frozen the authoritative
-  // staging index.  Snapshot that index once for APP-side binary searches;
-  // asking the resident to rebuild it from Flash again made every USB-disk
-  // startup pay for two complete journal scans.
-  if(refresh_stage_cache()) return true;
-  (void) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_UNLOCK);
-  return false;
-}
+
 bool vfat_stage_narrow_matching(VfatStageKeyFilter include, void* context,
                                 u32* storage, u16 capacity) {
   FilterBridge bridge = {include, context};
@@ -403,18 +306,10 @@ bool vfat_stage_narrow_matching(VfatStageKeyFilter include, void* context,
   return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_NARROW_MATCHING,
               0, 0, &request) != 0;
 }
-bool vfat_stage_restore_full() {
-  const bool ok = call(MK61_SYS_USBDISK,
-                       MK61_USBDISK_STAGE_RESTORE_FULL) != 0;
-  if(ok) (void) refresh_stage_cache();
-  else stage_keys_valid = false;
-  return ok;
-}
+bool vfat_stage_restore_full() { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_RESTORE_FULL) != 0; }
 void vfat_stage_unlock() {
   (void) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_UNLOCK);
   startup_recovery_active = false;
-  stage_key_count = 0;
-  stage_keys_valid = false;
 }
 
 bool write_file_from_source(u16 parent, u16 preferred, ProgramType type,
@@ -429,7 +324,7 @@ bool write_file_from_source(u16 parent, u16 preferred, ProgramType type,
       parent, preferred, (u32) type, size, INVALID_ID, extent_count,
       name, &bridge, read_source, extents, compression_buffer,
       (u32) compression_buffer_size, contiguous_data};
-  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_WRITE_FILE_SOURCE,
+  const bool ok = call(MK61_SYS_USBDISK, MK61_USBDISK_C9_WRITE_FILE_SOURCE,
                        0, 0, &request) != 0;
   last_write_failure_value = ok
       ? WriteFailure::NONE

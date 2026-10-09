@@ -293,7 +293,7 @@ class class_terminal {
     // старте интерактивного терминала, скриптовый init их не трогает.
     void reset_line_editor(void);
 
-    void  init(void);
+    void  init(bool initial_startup = true);
 
     void init_script(void);
 

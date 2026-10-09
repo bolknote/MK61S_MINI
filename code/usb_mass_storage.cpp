@@ -553,6 +553,10 @@ class PreparingScope {
   ~PreparingScope() { preparing = false; }
 };
 
+// Snapshot in the foreground: querying USBDISK.APP from USB IRQ is forbidden.
+static u8 write_cache_blocks = 1;
+extern "C" u32 MK61_VirtualFatWriteCacheBlocks(void) { return write_cache_blocks; }
+
 bool prepare(void) {
   if(is_initialized() ||
      (session_is_open() && !device_configured)) return true;
@@ -583,6 +587,13 @@ bool prepare(void) {
     if(virtual_fat::diagnostic().code == virtual_fat::ErrorCode::NONE) {
       virtual_fat::report_startup_failure(13, "session-reset");
     }
+    virtual_fat::end_session();
+    release_cache_buffer();
+    return false;
+  }
+  write_cache_blocks = virtual_fat::write_cache_capacity();
+  if(write_cache_blocks == 0) {
+    virtual_fat::report_startup_failure(13, "cache-empty");
     virtual_fat::end_session();
     release_cache_buffer();
     return false;
@@ -799,19 +810,22 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                     DeferredSyncState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-#if defined(MK61_DISPLAY_UC1609)
     const USBD_HandleTypeDef* const device = usb_device();
     const USBD_MSC_BOT_HandleTypeDef* const msc =
         device->classId < USBD_MAX_SUPPORTED_CLASS
         ? (const USBD_MSC_BOT_HandleTypeDef*) device->pClassDataCmsit[device->classId]
         : nullptr;
-    if(msc != nullptr && msc->host_eject_latched)
-      main_lcd().beginDiskSaving(library_mk61::language_is_ru());
+    const bool closing = msc != nullptr && msc->host_eject_latched;
+#if defined(MK61_DISPLAY_UC1609)
+    if(closing) main_lcd().beginDiskSaving(library_mk61::language_is_ru());
 #endif
     virtual_fat::CommitResult result = virtual_fat::CommitResult::IO_FAILED;
     if(apply_session_event(usb_disk_session::Event::SERVICE).accepted &&
        power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
-      result = virtual_fat::flush_pending_result();
+      // LOEJ closes the host view. Finish C9 and retire its journal before
+      // acknowledging eject, so deinit cannot import the same batch again.
+      result = closing ? virtual_fat::finalize_pending_result()
+                       : virtual_fat::flush_pending_result();
     }
     const bool state_ok = apply_session_event(commit_event(result)).accepted;
 #if defined(MK61_DISPLAY_UC1609)
@@ -876,6 +890,7 @@ extern "C" u8 MK61_VirtualFatSync(void) {
 #else
 
 namespace usb_mass_storage {
+extern "C" u32 MK61_VirtualFatWriteCacheBlocks(void) { return 1; }
 bool init(void) { return false; }
 bool prepare(void) { return false; }
 bool deinit(void) { return true; }

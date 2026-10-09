@@ -16,6 +16,7 @@ expected="$(
     build_mk61_program_pack.sh \
     build-portable-app.ps1 \
     build_portable_app.py \
+    build_sheet_app.py \
     build-system-app-bundle.ps1 \
     build_system_app_bundle.py \
     build-gcc.cmd \
