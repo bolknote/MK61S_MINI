@@ -252,7 +252,7 @@ void test_validation() {
   const auto image = std::vector<uint8_t>(f.image, f.image + f.view.size);
   const uint16_t size = f.view.size;
   View old;
-  for(uint8_t version:{1,2,3}) {
+  for(uint8_t version:{1,2,3,4,5,6}) {
     f.image[4]=version;assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
   }
   f.image[4]=VERSION;
@@ -549,6 +549,55 @@ void test_extension_image_validation_and_resume() {
   assert(inspect(f.image,f.view.size,checked)==Error::INVALID_IMAGE);
 }
 }  // namespace
+void test_basic_parameter_wire_validation() {
+  Fixture f;
+  f.compile("10 A=CALL(100,1,2);END\n100 RETURN ARG(1)+ARG(2)\n");
+  const uint16_t call = f.view.code + 5;
+  assert(f.image[call] == (uint8_t)Op::CALL_PARAMS);
+  assert(run(f.view, f.state, services).error == Error::NONE && f.vars[0] == 3);
+  View checked;
+  for (const auto mutation : {std::pair<unsigned, uint8_t>{5, 5}, {6, 2}}) {
+    const uint8_t previous = f.image[call + mutation.first];
+    f.image[call + mutation.first] = mutation.second; f.crc();
+    assert(inspect(f.image, f.view.size, checked) == Error::INVALID_IMAGE);
+    f.image[call + mutation.first] = previous;
+  }
+  f.image[call + 3] = f.image[call + 4] = 0; f.crc();
+  assert(inspect(f.image, f.view.size, checked) == Error::INVALID_IMAGE);
+  Fixture procedure;
+  procedure.compile("10 GOSUB 100,1;END\n100 RETURN\n");
+  const uint16_t at = procedure.view.code + 4;
+  assert(procedure.image[at] == (uint8_t)Op::CALL_PARAMS);
+  assert(procedure.image[at + 3] == 0 && procedure.image[at + 4] == 0);
+  procedure.image[at + 6] = 1; procedure.crc();
+  assert(inspect(procedure.image, procedure.view.size, checked) == Error::INVALID_IMAGE);
+}
+
+void test_parameter_call_yield_and_print_resume() {
+  Fixture f;
+  f.compile("10 PRINT #8:3,CALL(100,4);END\n100 INPUT N\n110 RETURN ARG(1)*N\n");
+  struct Format { unsigned width=0, precision=10; bool printed=false; } format;
+  Services host=services; host.context=&format; host.yield_input=true;
+  host.event=[](void* p,Event e,const char*,uint16_t n,double& value) {
+    auto& fmt=*static_cast<Format*>(p);
+    if(e==Event::PRINT_BEGIN){fmt.width=0;fmt.precision=10;}
+    if(e==Event::PRECISION){fmt.width=(unsigned)value;fmt.precision=n;}
+    if(e==Event::PRINT_STATE)value=fmt.width*16+fmt.precision;
+    if(e==Event::NUMBER){assert(value==20 && fmt.width==8 && fmt.precision==3);fmt.printed=true;}
+    return true;
+  };
+  Continuation control={}; const Bindings bindings={f.vars,f.array,385,f.values,MAX_STACK};
+  assert(run(f.view,control,bindings,host,1000).error==Error::YIELDED);
+  assert(control.call_count==1 && control.calls[0].mode==0x33 && control.calls[0].print_width==8);
+  assert(f.values[0]==4);
+  f.values[control.sp++]=5;
+  auto invalid=control; invalid.calls[0].mode|=4;
+  assert(run(f.view,invalid,bindings,host,1000,true).error==Error::INVALID_IMAGE);
+  invalid=control;invalid.calls[0].print_width=65;
+  assert(run(f.view,invalid,bindings,host,1000,true).error==Error::INVALID_IMAGE);
+  assert(run(f.view,control,bindings,host,1000,true).error==Error::NONE && format.printed);
+}
+
 int main() {
   test_literals();
   test_finite_results_and_decimal_cache();
@@ -565,5 +614,7 @@ int main() {
   test_parser_edges();
   test_yield_resume();
   test_extension_image_validation_and_resume();
+  test_basic_parameter_wire_validation();
+  test_parameter_call_yield_and_print_resume();
   puts("language_vm_self_test: ok");
 }

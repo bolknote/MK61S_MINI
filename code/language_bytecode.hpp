@@ -160,7 +160,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 6;
+static constexpr uint16_t VERSION = 7;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -205,7 +205,8 @@ enum class Event : uint8_t {
   RESOURCE_TEXT,
   RESOURCE_INPUT,
   PRECISION,
-  TRACE
+  TRACE,
+  PRINT_STATE // optional query: packed width/significant digits, zero if unavailable
 };
 struct Services {
   void* context;
@@ -222,7 +223,9 @@ struct CallFrame {
   uint8_t loops;
   bool group;
   uint8_t base = 0, arguments = 0, mode = 0; // mode: parameter call + value result
+  uint8_t print_width = 0; // fills the old padding byte; mode's high nibble saves precision
 };
+static_assert(sizeof(CallFrame) == 10, "call frame must retain its existing budget");
 struct LoopFrame {
   Value limit, step, value;
   uint16_t body, end;

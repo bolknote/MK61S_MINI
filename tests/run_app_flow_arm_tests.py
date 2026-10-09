@@ -220,6 +220,11 @@ def main():
                 (2, b"1.10 PRINT \"RAM FOCAL\"\n1.20 ASK A\n1.30 EXIT\n", ["7"], 7),
                 (1, b"10 REM M8 \x80\xff\r20 INPUT A\r\n30 A=A+5\n\r40 END", ["7"], 12),
                 (2, b"1.10 C M8 \x80\xff\r1.20 S A=CALL(2,7); E\r\n2.10 ASK N(3)\n\r2.20 R ARG(1)+N(3)", ["5"], 12)]
+            cases += [
+                (1, b'10 A=CALL(100,5);END\n100 IF ARG(1)<=1 THEN RETURN 1 ELSE RETURN ARG(1)*CALL(100,ARG(1)-1)\n', [], 120),
+                (1, b'10 PRINT "Head";3+CALL(100,4);END\n100 INPUT N\n110 RETURN ARG(1)*N\n', ["2+3"], 0),
+                (1, b'10 GOSUB 100,7,9;A=A+1;END\n100 A=ARG(1)+ARG(2);RETURN\n', [], 17),
+                (1, b'10 PRINT #8:3,CALL(100);END\n100 PRINT "x"\n110 RETURN PI\n', [], 0)]
             # The fixture does not model the calculator's CORE numeric CPU.
             # Ordinary double arithmetic is real ARM code; transcendental
             # probes require real resident LIBM or the APP's local float math.

@@ -44,6 +44,7 @@ struct Keyword {
 };
 // INPUT() is I/O, lowered to a dedicated opcode rather than a math callback.
 static constexpr uint8_t KEY_INPUT_FUNCTION = 254;
+static constexpr uint8_t CALL_FUNCTION = 253, ARG_FUNCTION = 252;
 enum Command : uint8_t {
   ASSIGN,
   REM,
@@ -97,7 +98,8 @@ const Keyword functions[] = {
     {"INT", 1, (uint8_t)Function::INT},     {"FRAC", 1, (uint8_t)Function::FRAC},
     {"ROUND", 2, (uint8_t)Function::ROUND}, {"SGN", 2, (uint8_t)Function::SGN},
     {"MAX", 1, (uint8_t)Function::MAX},
-    {"INPUT", 3, KEY_INPUT_FUNCTION},       {nullptr, 0, 0}};
+    {"INPUT", 3, KEY_INPUT_FUNCTION}, {"CALL", 3, CALL_FUNCTION},
+    {"ARG", 2, ARG_FUNCTION}, {nullptr, 0, 0}};
 struct ResourceWorkspace {
   uint8_t* first;
   uint8_t* second;
@@ -176,7 +178,7 @@ class Compiler {
       memcpy(out_, "LBV1", 4);
       out_[4] = (uint8_t)VERSION;
       out_[5] = (uint8_t)Lang;
-      out_[6] = maximum_ ? maximum_ : 1;
+      out_[6] = parameter_calls_ ? MAX_STACK : maximum_ ? maximum_ : 1;
       out_[7] = (rf_required_ ? 2 : 0) | (resource_size_ && resource_data_.first ?
                   RESOURCE_FLAG | (owned_resources() ? OWNED_RESOURCE_FLAG : 0) : 0);
       if (resource_size_ && resource_data_.first) {
@@ -203,7 +205,8 @@ class Compiler {
     }
     uint16_t offset =
         p_ >= source_ && p_ <= source_ + length_ ? (uint16_t)(p_ - source_) : 0;
-    return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, line_, offset, maximum_};
+    return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, line_, offset,
+            parameter_calls_ ? MAX_STACK : maximum_};
   }
   uint16_t resource_reservation() const { return resource_size_; }
   CompileResult expression_only() {
@@ -252,7 +255,7 @@ class Compiler {
   uint16_t line_;
   uint8_t pass_;
   uint16_t image_end_;
-  bool rf_available_, rf_required_, expression_only_;
+  bool rf_available_, rf_required_, expression_only_, parameter_calls_;
   const ResourceSource* resources_;
   uint16_t resource_size_;
   ResourceWorkspace resource_data_;
@@ -583,6 +586,21 @@ class Compiler {
     emit(sub ? Op::GOSUB_DIRECT : Op::GOTO_DIRECT);
     u16(target_pc(number));p_=q;return true;
   }
+  void basic_call(bool result) {
+    unsigned number = 0;
+    const char* after = tinybasic_syntax::integer(p_, end_, number);
+    if (!after || !number || number > 32767) { fail(Error::LINE_NUMBER); return; }
+    p_ = after;
+    unsigned arguments = 0;
+    while (match(',')) {
+      if (++arguments > 4) { fail(Error::STACK); return; }
+      expression();
+    }
+    parameter_calls_ = true;
+    operation(Op::CALL_PARAMS, int(result) - int(arguments));
+    u16(target_pc(number)); u16(result ? image_end_ : 0);
+    byte((uint8_t)arguments); byte(result);
+  }
   bool fixed_array_index(uint16_t& index) {
 #if defined(LANGUAGE_VM_TEST_NO_FUSION)
     (void)index;return false;
@@ -828,6 +846,13 @@ class Compiler {
         return;
       }
       const Function f = (Function)fn;
+      if (fn == CALL_FUNCTION || fn == ARG_FUNCTION) {
+        if (!basic() || expression_only_ || !match('(')) { fail(Error::FUNCTION); return; }
+        if (fn == CALL_FUNCTION) basic_call(true);
+        else { expression(); source_position(primary_start); emit(Op::LOAD_PARAMETER); }
+        if (!match(')')) fail(Error::EXPECTED_PAREN);
+        return;
+      }
       if (!basic() && f >= Function::SIZE) {
         fail(Error::FUNCTION);
         return;
@@ -898,6 +923,11 @@ class Compiler {
         --nesting;
       if (nesting) continue;
       if (q == alternate) return q;
+      if (print && *q == '#') {
+        unsigned width, digits;
+        const char* format = tinybasic_syntax::print_precision(q, end_, width, digits);
+        if (format) { q = format - 1; continue; }
+      }
       if (*q == ':') return q;
       if (*q == ';') {
         if (!print) return q;
@@ -1049,9 +1079,15 @@ class Compiler {
         continue;
       }
       bool format = false;
+      unsigned width = 0, digits = 0;
+      const char* precision = basic() ? tinybasic_syntax::print_precision(p_, end_, width, digits) : nullptr;
       const bool carriage =
           basic() && (*p_ == '_' || (p_ + 1 < end_ && *p_ == '^' && upper(p_[1]) == 'M'));
-      if (!basic() && match('!'))
+      if (precision) {
+        if (width > 63 || !digits || digits > 15) { fail(Error::FORMAT); return; }
+        p_ = precision; format = true;
+        emit(Op::PRINT_PRECISION); byte((uint8_t)width); byte((uint8_t)digits);
+      } else if (!basic() && match('!'))
         emit(Op::PRINT_FLUSH);
       else if (!text((uint8_t)Op::PRINT_TEXT)) {
         format = basic() && match('#');
@@ -1334,7 +1370,9 @@ class Compiler {
           break;
         case GOTO_CMD:
         case GOSUB_CMD:
-          if(!direct_basic_branch(cmd==GOSUB_CMD)) {
+          if (cmd == GOSUB_CMD && tinybasic_syntax::parameter_separator(p_, end_) < end_)
+            basic_call(false);
+          else if(!direct_basic_branch(cmd==GOSUB_CMD)) {
             expression();
             operation(cmd == GOTO_CMD ? Op::GOTO : Op::GOSUB, -1);
           }
@@ -1345,7 +1383,9 @@ class Compiler {
         case RETURN_CMD:
           if (segment < full_end && !tinybasic_syntax::word(segment, full_end, "ELSE", 2))
             fail(Error::SYNTAX);
-          emit(Op::RETURN);
+          skip();
+          if (p_ < end_) { expression(); operation(Op::RETURN_VALUE, -1); }
+          else emit(Op::RETURN);
           break;
         case FOR_CMD: {
           Target t = target();

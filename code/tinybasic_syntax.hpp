@@ -5,6 +5,38 @@
 namespace tinybasic_syntax {
 inline bool alpha(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
 inline char upper(char c) { return c >= 'a' && c <= 'z' ? (char)(c - 'a' + 'A') : c; }
+inline const char* skip(const char* p, const char* end) {
+  while (p < end && (*p == ' ' || *p == '\t')) ++p;
+  return p;
+}
+inline const char* integer(const char* p, const char* end, unsigned& value) {
+  p = skip(p, end); value = 0;
+  if (p == end || *p < '0' || *p > '9') return nullptr;
+  do {
+    if (value < 65536) value = value * 10 + unsigned(*p - '0');
+    ++p;
+  } while (p < end && *p >= '0' && *p <= '9');
+  return skip(p, end);
+}
+// A literal #width:digits is distinct from the existing #expression. In
+// particular #8:A=3 still ends PRINT at the ordinary command separator.
+inline const char* print_precision(const char* p, const char* end,
+                                   unsigned& width, unsigned& digits) {
+  if (p == end || *p != '#') return nullptr;
+  p = integer(p + 1, end, width);
+  if (!p || p == end || *p != ':') return nullptr;
+  return integer(p + 1, end, digits);
+}
+inline const char* parameter_separator(const char* p, const char* end) {
+  unsigned depth = 0;
+  while (p < end) {
+    if (*p == '(') ++depth;
+    else if (*p == ')' && depth) --depth;
+    else if (*p == ',' && !depth) return p;
+    ++p;
+  }
+  return end;
+}
 inline bool word(const char* p, const char* end, const char* name, unsigned minimum,
                  const char** after = nullptr) {
   if (p >= end || !alpha(*p)) return false;

@@ -338,7 +338,9 @@ enum class TbFunction : u8 {
   ROUND,
   SGN,
   MAX,
-  KEY_INPUT
+  KEY_INPUT,
+  CALL,
+  ARG
 };
 
 struct TbLine {
@@ -404,6 +406,37 @@ struct TbRunState {
   bool data_active;
   TbCallFrame call_stack[TB_CALL_DEPTH];
   TbForFrame for_stack[TB_FOR_DEPTH];
+};
+// The native fallback retains its compact control stack. Parameter values
+// belong to the bounded synchronous invocation, not persistent workspace.
+struct TbInvocation {
+  TbInvocation* parent;
+  const double* arguments;
+  double value;
+  i8 depth;
+  u8 count;
+  bool result, returned;
+};
+static TbRunState* tb_active_run = nullptr;
+static const char* tb_running_source = nullptr;
+static TbInvocation* tb_invocation = nullptr;
+static bool tb_function_stopped = false;
+static bool tb_invoke(unsigned, const double*, u8, bool, double&);
+struct TbNativeScope {
+  TbRunState* previous;
+  const char* source;
+  TbInvocation* invocation;
+  bool stopped;
+  TbNativeScope(TbRunState& state, const char* text)
+      : previous(tb_active_run), source(tb_running_source), invocation(tb_invocation),
+        stopped(tb_function_stopped) {
+    tb_active_run = &state; tb_running_source = text;
+    tb_invocation = nullptr; tb_function_stopped = false;
+  }
+  ~TbNativeScope() {
+    tb_active_run = previous; tb_running_source = source;
+    tb_invocation = invocation; tb_function_stopped = stopped;
+  }
 };
 
 static_assert(sizeof(TbForFrame) == 24,
@@ -760,8 +793,8 @@ static void tb_print_display_text(const char* text) {
 enum class TbError : u8 { WHAT, HOW, SORRY };
 
 static bool tb_error_code(TbError error) {
-  // ESC inside an INPUT() expression is cancellation, not a math/syntax error.
-  if(tb_key_cancelled) return false;
+  // ESC in INPUT or END inside a function terminates execution without an error screen.
+  if(tb_key_cancelled || tb_function_stopped) return false;
   tb_pause_is_final = false;
   const char* en = "SORRY";
   const char* ru = M8("НЕТ МЕСТА");
@@ -844,13 +877,13 @@ static void tb_report_interrupted(void) {
   }
 }
 
-static void tb_format_number(double value, char* out, usize size) {
+static void tb_format_number(double value, char* out, usize size, u8 precision = 10) {
 #if defined(MK61_BUILD_PORTABLE_SYSTEM) && !defined(TINYBASIC_HOST_TEST)
-  if(!portable_system::format_number(value, 10, out, size) && size != 0) {
+  if(!portable_system::format_number(value, precision, out, size) && size != 0) {
     out[0] = 0;
   }
 #else
-  (void) number_format::general(value, 10, out, size);
+  (void) number_format::general(value, precision, out, size);
 #endif
 }
 
@@ -1051,6 +1084,8 @@ static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::SGN,   0x23, 'S', 'G', 'N',
   (u8) TbFunction::MAX,   0x13, 'M', 'A', 'X',
   (u8) TbFunction::KEY_INPUT,   0x35, 'I', 'N', 'P', 'U', 'T',
+  (u8) TbFunction::CALL,  0x34, 'C', 'A', 'L', 'L',
+  (u8) TbFunction::ARG,   0x23, 'A', 'R', 'G',
   0
 };
 
@@ -1239,6 +1274,11 @@ static const char* tb_find_command_end(const char* begin, const char* end,
     }
     if(depth != 0) continue;
     if (p == alternate) return p;
+    if(semicolon_may_be_item && *p == '#') {
+      unsigned width, digits;
+      const char* format = tinybasic_syntax::print_precision(p, end, width, digits);
+      if(format) { p = format - 1; continue; }
+    }
     if(*p == ':') return p;
     if(*p == ';' &&
        (!semicolon_may_be_item ||
@@ -1402,6 +1442,7 @@ class TbExprParser {
 
    bool eval(double& out) {
      out = parse_binary(0);
+     if(evaluate && tb_function_stopped) return false;
      if (depth < 0) {
        tb_note_error(failure, failed_at ? failed_at : p);
        return false;
@@ -1697,6 +1738,35 @@ class TbExprParser {
           return value;
         }
 
+        if(function_id == TbFunction::CALL) {
+          unsigned number = 0;
+          const char* after = tinybasic_syntax::integer(p, end, number);
+          if(!after || !number || number > 32767 || !allow_key_input) {
+            fail(language_vm::Error::FUNCTION, function.begin); return 0;
+          }
+          p = after;
+          double arguments[4]; u8 count = 0;
+          while(match_char(',')) {
+            if(count == 4) { fail(language_vm::Error::STACK); return 0; }
+            arguments[count++] = parse_binary(0);
+          }
+          if(!match_char(')')) { fail(language_vm::Error::EXPECTED_PAREN); return 0; }
+          double value = 0;
+          if(evaluate && depth >= 0 && !tb_invoke(number, arguments, count, true, value))
+            fail(tb_detail == language_vm::Error::NONE ? language_vm::Error::RETURN : tb_detail, function.begin);
+          return value;
+        }
+        if(function_id == TbFunction::ARG) {
+          const double index = parse_binary(0);
+          if(!match_char(')') || !allow_key_input) { fail(language_vm::Error::FUNCTION); return 0; }
+          if(!evaluate) return 0;
+          if(!tb_invocation || !tb_active_run || tb_active_run->call_sp != tb_invocation->depth ||
+             index < 1 || index > tb_invocation->count || index != mk_math::floor(index)) {
+            fail(language_vm::Error::VARIABLE, function.begin); return 0;
+          }
+          return tb_invocation->arguments[(u8)index - 1];
+        }
+
         if(function_id == TbFunction::RND) {
           skip();
           if(match_char(')')) return evaluate ? tb_next_random() : 0.0;
@@ -1749,6 +1819,8 @@ class TbExprParser {
             return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
           case TbFunction::MAX:   return (a > b) ? a : b;
           case TbFunction::KEY_INPUT:
+          case TbFunction::CALL:
+          case TbFunction::ARG:
           case TbFunction::NONE:
           case TbFunction::SIZE:
           case TbFunction::COLS:
@@ -2172,6 +2244,7 @@ static bool tb_process_print(const char* begin, const char* end,
   // MK-61 keeps its compact display-friendly default.  PATB's historical
   // eight-column layout is available explicitly with PRINT #8,... .
   int field_width = 0;
+  u8 precision = 10;
   if(tb_skip_spaces(p) >= end) {
     if(execute) tb_flush_print();
     return true;
@@ -2204,32 +2277,42 @@ static bool tb_process_print(const char* begin, const char* end,
         return tb_error("SORRY");
       }
     } else {
-      const bool format = *p == '#';
-      item_was_format = format;
-      if(format) p++;
-      double value = 0.0;
-      const char* after_value = NULL;
-      if(!tb_eval_expr_range(p, end, value, &after_value, execute)) {
-        return tb_error("HOW?");
-      }
-      if(execute && format) {
-        const double rounded = mk_math::floor(value + 0.5);
-        if(value < 0.0 || value > 63.0 ||
-           mk_math::fabs(value - rounded) > 0.0000001) {
-          tb_note_error(language_vm::Error::FORMAT);
+      unsigned width = 0, digits = 0;
+      const char* format_end = tinybasic_syntax::print_precision(p, end, width, digits);
+      if(format_end) {
+        if(width > 63 || !digits || digits > 15) {
+          tb_note_error(language_vm::Error::FORMAT, p); return tb_error("HOW?");
+        }
+        field_width = (int)width; precision = (u8)digits;
+        p = format_end; item_was_format = true;
+      } else {
+        const bool format = *p == '#';
+        item_was_format = format;
+        if(format) p++;
+        double value = 0.0;
+        const char* after_value = NULL;
+        if(!tb_eval_expr_range(p, end, value, &after_value, execute)) {
           return tb_error("HOW?");
         }
-        field_width = (int) rounded;
-      } else if(execute) {
-        char number[24];
-        tb_format_number(value, number, sizeof(number));
-        const int number_len = (int) strlen(number);
-        for(int spaces = field_width - number_len; spaces > 0; spaces--) {
-          if(!tb_append_print(" ")) return tb_error("SORRY");
+        if(execute && format) {
+          const double rounded = mk_math::floor(value + 0.5);
+          if(value < 0.0 || value > 63.0 ||
+             mk_math::fabs(value - rounded) > 0.0000001) {
+            tb_note_error(language_vm::Error::FORMAT);
+            return tb_error("HOW?");
+          }
+          field_width = (int) rounded;
+        } else if(execute) {
+          char number[24];
+          tb_format_number(value, number, sizeof(number), precision);
+          const int number_len = (int) strlen(number);
+          for(int spaces = field_width - number_len; spaces > 0; spaces--) {
+            if(!tb_append_print(" ")) return tb_error("SORRY");
+          }
+          if(!tb_append_print(number)) return tb_error("SORRY");
         }
-        if(!tb_append_print(number)) return tb_error("SORRY");
+        p = after_value;
       }
-      p = after_value;
     }
 
     p = tb_skip_spaces(p);
@@ -2608,6 +2691,21 @@ static bool tb_process_next(const char* begin, const char* end,
   return true;
 }
 
+static bool tb_process_parameter_call(const char* p, const char* end, bool execute) {
+  unsigned number = 0;
+  const char* after = tinybasic_syntax::integer(p, end, number);
+  if(!after || !number || number > 32767) return tb_error("WHAT?");
+  p = after; double arguments[4]; u8 count = 0;
+  while(p < end && *p == ',') {
+    if(count == 4) { tb_note_error(language_vm::Error::STACK, p); return false; }
+    if(!tb_eval_expr_range(p + 1, end, arguments[count++], &after, execute)) return false;
+    p = tinybasic_syntax::skip(after, end);
+  }
+  if(p != end) return tb_error("WHAT?");
+  double ignored = 0;
+  return !execute || tb_invoke(number, arguments, count, false, ignored);
+}
+
 static bool tb_process_one(TbCommandContext& context) {
   const char*& cursor = context.cursor;
   const char* const end = context.end;
@@ -2711,6 +2809,10 @@ static bool tb_process_one(TbCommandContext& context) {
       cursor = end;
       return true;
     case TbCommand::CMD_GOSUB:
+      if(tinybasic_syntax::parameter_separator(cursor, segment_end) < segment_end) {
+        if(!tb_process_parameter_call(cursor, segment_end, execute)) return false;
+        break;
+      }
       if(!execute) {
         if(!tb_validate_expr_range(cursor, segment_end)) return false;
         break;
@@ -2724,13 +2826,20 @@ static bool tb_process_one(TbCommandContext& context) {
       state->for_base = (i8)(state->for_sp + 1);
       cursor = end;
       return true;
-    case TbCommand::CMD_RETURN:
-      if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
+    case TbCommand::CMD_RETURN: {
+      const bool has_value = tb_skip_spaces(cursor) < segment_end;
+      double value = 0;
+      if(has_value && !tb_eval_expr_range(cursor, segment_end, value, nullptr, execute)) return false;
       if(!execute) break;
       if (state->call_sp < 0) {
         tb_note_error(language_vm::Error::RETURN);
         return tb_error("HOW?");
       }
+      const bool parameter_call = tb_invocation && tb_invocation->depth == state->call_sp;
+      if((has_value && !parameter_call) || (parameter_call && tb_invocation->result && !has_value)) {
+        tb_note_error(language_vm::Error::RETURN); return tb_error("HOW?");
+      }
+      if(parameter_call) { tb_invocation->value = value; tb_invocation->returned = true; }
       *flow = tb_flow(TbFlowKind::JUMP, state->call_stack[state->call_sp].return_to.pc,
                       state->call_stack[state->call_sp].return_to.offset);
       state->for_sp = (i8)(state->for_base - 1);
@@ -2738,6 +2847,7 @@ static bool tb_process_one(TbCommandContext& context) {
       state->call_sp--;
       cursor = end;
       return true;
+    }
     case TbCommand::CMD_FOR:
       if(!tb_process_for(cursor, segment_end, continuation, context.source,
                          state, flow, execute)) return false;
@@ -2854,6 +2964,11 @@ static bool tb_process_command_list(TbCommandContext& context) {
         (!context.execute || context.flow->kind == TbFlowKind::NEXT)) {
     if(!tb_process_one(context)) {
       if(context.execute) {
+        if(tb_function_stopped) {
+          *context.flow = tb_flow(TbFlowKind::STOP, context.current_pc);
+          tb_last_error[0] = 0; tb_detail = language_vm::Error::NONE;
+          return true;
+        }
         *context.flow = tb_flow(TbFlowKind::ERROR, context.current_pc);
       }
       return false;
@@ -2890,6 +3005,43 @@ static bool tb_runtime_interrupted(void) {
   }
 #endif
   return false;
+}
+
+static bool tb_invoke(unsigned number, const double* arguments, u8 count, bool result, double& value) {
+  if(!tb_active_run || !tb_running_source) { tb_note_error(language_vm::Error::RETURN); return false; }
+  const int first = tb_find_line_number((int)number);
+  if(first < 0) { tb_note_error(language_vm::Error::MISSING_LINE); return false; }
+  auto& state = *tb_active_run;
+  if(state.call_sp + 1 == TB_CALL_DEPTH) { tb_note_error(language_vm::Error::CALL_STACK); return false; }
+  const i8 calls = state.call_sp, loops = state.for_sp, base = state.for_base;
+  TbInvocation invocation = {tb_invocation, arguments, 0, (i8)(calls + 1), count, result, false};
+  state.call_stack[++state.call_sp] = {{-1, 0}, base};
+  state.for_base = (i8)(loops + 1); tb_invocation = &invocation;
+  i16 pc = (i16)first; u16 offset = 0;
+  bool ok = true;
+  while(pc >= 0 && pc < tb_ast.line_count && !invocation.returned && !tb_function_stopped) {
+    if(tb_runtime_interrupted()) { tb_key_cancelled = true; ok = false; break; }
+    const auto& line = tb_ast.lines[pc];
+    TbFlow flow = tb_flow(TbFlowKind::NEXT, (i16)(pc + 1));
+    const char* begin = tb_running_source + line.offset;
+    if(offset > line.len || !tb_execute_command_list(begin + offset, begin + line.len,
+                                                    tb_running_source, pc, state, flow)) {
+      ok = false; break;
+    }
+    offset = 0;
+    if(flow.kind == TbFlowKind::NEXT) ++pc;
+    else if(flow.kind == TbFlowKind::JUMP) { pc = flow.pc; offset = flow.offset; }
+    else if(flow.kind == TbFlowKind::STOP) tb_function_stopped = true;
+    else { tb_key_cancelled = flow.kind == TbFlowKind::INTERRUPTED; ok = false; break; }
+  }
+  tb_invocation = invocation.parent;
+  state.call_sp = calls; state.for_sp = loops; state.for_base = base;
+  if(ok && !invocation.returned && !tb_function_stopped) {
+    if(result) { tb_note_error(language_vm::Error::RETURN); ok = false; }
+    else tb_function_stopped = true;
+  }
+  value = invocation.value;
+  return ok && !tb_function_stopped;
 }
 
 #ifndef TINYBASIC_HOST_TEST
@@ -3009,6 +3161,7 @@ static TinyBasicRunStatus tb_run_program(
   tb_print_row = 0;
   struct Context {
     int width;
+    u8 precision;
     bool cancelled, normal_pause;
     const char* failure;
     language_vm::Value* variables;
@@ -3046,6 +3199,7 @@ static TinyBasicRunStatus tb_run_program(
         switch (event) {
           case language_vm::Event::PRINT_BEGIN:
             c.width = 0;
+            c.precision = 10;
             tb_pause_is_final = false;
             return true;
           case language_vm::Event::RESOURCE_TEXT:
@@ -3056,13 +3210,16 @@ static TinyBasicRunStatus tb_run_program(
             return false;
           case language_vm::Event::NUMBER: {
             char number[24];
-            tb_format_number(value, number, sizeof(number));
+            tb_format_number(value, number, sizeof(number), c.precision);
             for (int n = c.width - (int)strlen(number); n > 0; --n)
               if (!tb_append_print(" ")) return false;
             return tb_append_print(number);
           }
           case language_vm::Event::TRACE:return true;
-          case language_vm::Event::PRECISION:return false; // FOCAL-only instruction
+          case language_vm::Event::PRECISION:
+            c.width = (int)value; c.precision = (u8)length; return true;
+          case language_vm::Event::PRINT_STATE:
+            value = c.width * 16 + c.precision; return true;
           case language_vm::Event::FORMAT: {
             const double n = mk_math::floor(value + .5);
             if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {
@@ -3155,6 +3312,7 @@ static TinyBasicRunStatus tb_run_program(
   memset(&state, 0, sizeof(state));
   state.call_sp = -1;
   state.for_sp = -1;
+  TbNativeScope native(state, source);
 
   i16 pc = 0;
   u16 entry_offset = 0;

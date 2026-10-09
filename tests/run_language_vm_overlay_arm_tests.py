@@ -335,6 +335,20 @@ def main():
             assert execute(m, packages, 2, focal, ["10", "20", "30"]) == (30, 0, 3, 3 if GENERATION>=14 else 0, 0)
             record(m)
             if GENERATION>=14:
+                for program, answers, expected in (
+                    (b'10 A=3+CALL(100,10);END\n100 GOSUB 200\n110 RETURN ARG(1)+B\n200 B=7\n210 B=B+2\n220 RETURN\n', [], 22),
+                    (b'10 A=CALL(100,5);END\n100 IF ARG(1)<=1 THEN RETURN 1 ELSE RETURN ARG(1)*CALL(100,ARG(1)-1)\n', [], 120),
+                    (b'10 GOSUB 100,7,9;A=A+1;END\n100 A=ARG(1)+ARG(2);RETURN\n', [], 17),
+                    (b'10 PRINT "Head";CALL(100,4);END\n100 INPUT N\n110 RETURN ARG(1)*N\n', ["2+3"], 0),
+                    (b'10 INPUT @(CALL(100,3));A=@(4);END\n100 RETURN ARG(1)+1\n', ["5"], 5),
+                    (b'10 PRINT #8:3,CALL(100);END\n100 PRINT "x"\n110 RETURN PI\n', [], 0),
+                    (b'10 W=14;PRINT #W,CALL(100);END\n100 PRINT #0:3,"x"\n110 RETURN PI\n', [], 0)):
+                    m = OverlayMachine(args.resident_elf, True, address)
+                    assert execute(m, packages, 1, program, answers)[:2] == (expected, 0)
+                    if b'Head' in program: assert 'Head20' in m.lines, m.lines
+                    if b'#8:3' in program: assert '    3.14' in m.lines, m.lines
+                    if b'W=14' in program: assert '   3.141592654' in m.lines, m.lines
+                    record(m)
                 for program,answers,expected in (
                     (b'1.10 S A=3+CALL(2,5); E\n2.10 ASK "Z=",Z(2); RETURN ARG(1)+Z(2)\n',["7"],15),
                     (b'1.10 S A=CALL(2,5); E\n2.10 IF(ARG(1)-1) 2.30,2.30; R ARG(1)*CALL(2,ARG(1)-1)\n2.30 R 1\n',[],120),

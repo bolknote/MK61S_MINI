@@ -92,7 +92,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   switch (event) {
     case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
-      s.width = 0;s.precision=8;
+      s.width = 0;s.precision=basic ? 10 : 8;
       request().pause_final = 0;
       if(!basic){s.row=0;s.output[0]=0;s.output_cursor=0;}
       return true;
@@ -102,7 +102,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
                                              resource_append, nullptr);
     case Event::NUMBER: {
       char number[24];
-      if (!portable_system::format_number(value, basic ? 10 : s.precision, number,
+      if (!portable_system::format_number(value, s.precision, number,
                                           sizeof(number))) return false;
       if(!basic && s.output[0] && !append(" ",1,false))return false;
       for (int n = (int)s.width - (int)strlen(number); n > 0; --n)
@@ -112,6 +112,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     case Event::PRECISION:
       if(value<0 || value>64 || !length || length>15)return false;
       s.width=(uint8_t)value;s.precision=(uint8_t)length;return true;
+    case Event::PRINT_STATE: value = s.width * 16 + s.precision; return true;
     case Event::FORMAT: {
       const double n = mk_math::floor(value + .5);
       if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {

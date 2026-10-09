@@ -796,6 +796,9 @@ static FocalRunStatus tb_run_program(int slot) {
           c.width = (unsigned)value;
           c.precision = length;
           return true;
+        case language_vm::Event::PRINT_STATE:
+          value = c.width * 16 + c.precision;
+          return true;
         case language_vm::Event::FLUSH:
           return next_newline(nullptr);
         case language_vm::Event::PRINT_END:
