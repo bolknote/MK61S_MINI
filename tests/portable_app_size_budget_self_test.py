@@ -70,7 +70,7 @@ except ValueError as error:
 else:
     raise AssertionError("oversize greedy-packed hybrid BASIC.APP was accepted")
 
-for local, limit in ((False, 13088), (True, 15872)):
+for local, limit in ((False, 15360), (True, 17408)):
     BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": limit},
                                        local, False, True)
     try:
@@ -81,9 +81,9 @@ for local, limit in ((False, 13088), (True, 15872)):
     else:
         raise AssertionError("hot overlay VM size regression was accepted")
 
-BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 11776, "app_bytes": 9200})
+BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 16000, "app_bytes": 12000})
 try:
-    BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 11777, "app_bytes": 9201})
+    BUILDER.enforce_system_size_budget("language-input", {"memory_bytes": 16001, "app_bytes": 12001})
 except ValueError:
     pass
 else:
@@ -101,3 +101,11 @@ for greedy, limit in ((False, 13880), (True, 14100)):
         raise AssertionError("compiler flow APP size regression was accepted")
 
 print("portable APP size budget tests: OK")
+
+BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19200,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+try:
+    BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19201,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+except ValueError:
+    pass
+else:
+    raise AssertionError("debug FOCAL size regression was accepted")

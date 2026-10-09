@@ -372,7 +372,7 @@ void test_fused_operations() {
           (subtract?"10 A=A-B\n":"10 A=A+B\n") :
           (subtract?"1.10 S A=A-B\n":"1.10 S A=A+B\n");
       f.compile(source,language);
-      const uint16_t pc=(uint16_t)(f.view.code+(language==Language::BASIC?3:0));
+      const uint16_t pc=(uint16_t)(f.view.code+3);
       assert((Op)f.image[pc]==Op::UPDATE_LOCAL);
       const auto sizing=compile(language,source,(uint16_t)strlen(source),nullptr,MAX_IMAGE);
       assert(sizing.size==f.view.size && sizing.stack==f.view.stack);

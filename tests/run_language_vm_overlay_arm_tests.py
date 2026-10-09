@@ -13,12 +13,12 @@ from pathlib import Path
 
 from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Machine, Elf, ROOT, run
-from unicorn.arm_const import UC_ARM_REG_SP
+from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_R0, UC_ARM_REG_LR
 
-STATE_SIZE = 1520
+STATE_SIZE = 1584
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 13
+GENERATION = 14
 
 
 def decode_number(data):
@@ -39,17 +39,30 @@ class OverlayMachine(Machine):
         self.stage_peaks = {}
         self.partitioned = False
         self.workspace_requests = []
+        self.debug_capability_return = None
 
     def hook(self, uc, address, size, ctx):
+        if address == self.debug_capability_return:
+            uc.reg_write(UC_ARM_REG_R0,uc.reg_read(UC_ARM_REG_R0) | (1 << 19))
+            self.debug_capability_return=None
+        if address == (self.syscall & ~1) and uc.reg_read(UC_ARM_REG_R0)==26:
+            # Execute the real capabilities dispatcher, then advertise the
+            # test UART. DEBUG_WRITE itself is modeled below, like the loader.
+            self.debug_capability_return=uc.reg_read(UC_ARM_REG_LR) & ~1
         sp = uc.reg_read(UC_ARM_REG_SP)
         self.stage_peaks[self.stage] = max(self.stage_peaks.get(self.stage, 0), self.stack_top-sp)
         return super().hook(uc, address, size, ctx)
 
     def system(self, op, a, b, c, p):
+        if op == 26: return (1 << 19) | (1 << 18)  # resources + opt-in diagnostic channel
+        if op == 38:
+            assert a <= 128
+            self.trace.append(("serial",bytes(self.uc.mem_read(p,a)).decode("ascii")))
+            return 1
         if op == 13 and a == 0 and self.partitioned:
             # Model the v5 prefix service, not the native allocator. Old
             # full-workspace restores are forbidden during the transaction.
-            if c > 4688 or (self.depth and self.owner != b): return 0
+            if c > (4176 if GENERATION>=14 else 4688) or (self.depth and self.owner != b): return 0
             crc = self.words(p+44,1)[0]
             fresh = self.owner != b or self.stamps.get(b) != crc
             if fresh: self.uc.mem_write(self.workspace,bytes(c))
@@ -90,21 +103,22 @@ class OverlayMachine(Machine):
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v14 = GENERATION >= 14
     v13 = GENERATION >= 13
     v12 = GENERATION >= 12
     v11 = GENERATION >= 11
     v10 = GENERATION >= 10
     v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
-    state_size = 1520 if v8 else 1504
-    control_size = 624 if v8 else 616
+    version = 8 if v14 else 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
+    state_size = 1584 if v14 else 1520 if v8 else 1504
+    control_size = 688 if v14 else 624 if v8 else 616
     stack_offset = control_size
     output_offset = stack_offset+768
     input_value_offset = output_offset+96
     prompt_offset_field = input_value_offset+12
     language_offset = prompt_offset_field+6
-    cancelled_offset = language_offset+(4 if v8 else 3)
+    cancelled_offset = language_offset+(5 if v14 else 4 if v8 else 3)
     execution_size = 48 if v8 else 44
     result_offset = 36 if v8 else 32
     v4 = GENERATION >= 4
@@ -122,14 +136,16 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     variables = m.input + 128
     compile_request, execution, overlay, input_request = [m.input+x for x in (512, 640, 720, 768)]
     main_metadata, expression_metadata = m.input+900, m.input+928
-    state = m.workspace if v5 else m.workspace + 3504
+    values_size = 4016 if v14 else 3504
+    prefix_size = 8192-values_size
+    state = m.workspace if v5 else m.workspace + values_size
     expression = state+stack_offset+512 if v6 else m.input+1024
     bytecode = state + state_size
     output = m.input+1280 if v5 else bytecode
-    array = m.workspace+4688+424 if v5 else m.workspace
+    array = m.workspace+prefix_size+424+(3080 if language==2 and v14 else 0) if v5 else m.workspace
     m.partitioned = v5
-    tail = bytes((0x5A,))*3504
-    if v5: m.uc.mem_write(m.workspace+4688,tail)
+    tail = bytes((0x5A,))*values_size
+    if v5: m.uc.mem_write(m.workspace+prefix_size,tail)
     m.load(packages[compiler])
     m.files[42] = (3 if language == 1 else 2, "VMTEST", source)
     request_size = 40 if v11 else 32
@@ -140,7 +156,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     wire = bytes(m.uc.mem_read(compile_request, request_size))
     assert wire[16] == 0 and wire[30] == 1, wire.hex()
     length = struct.unpack_from("<H", wire, 18)[0]
-    assert length <= 8192-3504-state_size
+    assert length <= 8192-values_size-state_size
     m.put(compile_request+8, output, length)
     reads = sum(x[0] == "file_read" for x in m.trace)
     assert m.call(0x704, 0, 0, compile_request) == 1
@@ -150,15 +166,15 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     image = bytes(m.uc.mem_read(output, length))
     if v5:
         assert length <= 768
-        assert bytes(m.uc.mem_read(m.workspace+4688,3504)) == tail
-        assert m.workspace_requests and max(size for _,size in m.workspace_requests) <= 4688
+        assert bytes(m.uc.mem_read(m.workspace+prefix_size,values_size)) == tail
+        assert m.workspace_requests and max(size for _,size in m.workspace_requests) <= prefix_size
         m.uc.mem_write(bytecode,image)
     m.uc.mem_write(variables, bytes(208))
-    m.uc.mem_write(array, bytes(3080))
+    m.uc.mem_write(array, bytes(512 if language==2 and v14 else 3080))
     m.uc.mem_write(state, bytes(state_size))
     m.uc.mem_write(state+language_offset, bytes((language,)))
     m.uc.mem_write(execution, bytes(execution_size))
-    m.put(execution, execution_size, version, bytecode, length, variables, array, 385 if language == 1 else 0)
+    m.put(execution, execution_size, version, bytecode, length, variables, array, 385 if language == 1 else 64 if v14 else 0)
     m.uc.mem_write(execution+28, bytes((mode, 0, 0, 0)))
     m.uc.mem_write(overlay, bytes(24 if v4 else 20))
     m.put(overlay, 24 if v4 else 20, version, execution, state)
@@ -217,7 +233,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
             after = bytes(m.uc.mem_read(state, state_size))
             if v6:
                 assert after[:stack_offset+512] == before[:stack_offset+512] and after[output_offset:] == before[output_offset:]
-                if language == 2: assert after == before  # FOCAL parses a scalar only
+                if language == 2 and not v14: assert after == before  # FOCAL parses a scalar only
             else:
                 assert after == before, [i for i,(a,b) in enumerate(zip(before,after)) if a!=b][:16]
             if result == 3:
@@ -237,7 +253,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
             m.put(overlay+8, temporary)
             m.uc.mem_write(overlay+action_offset, b"\x02")
             control = bytes(m.uc.mem_read(state, control_size))
-            sp = m.uc.mem_read(state+(614 if v8 else 610), 1)[0]
+            sp = m.uc.mem_read(state+(678 if v14 else 614 if v8 else 610), 1)[0]
             prefix = bytes(m.uc.mem_read(state+stack_offset, sp*8))
             output = bytes(m.uc.mem_read(state+output_offset, 96))
             if v4:
@@ -267,7 +283,8 @@ def main():
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13), default=13)
+    p.add_argument("--focal-trace",action="store_true")
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14), default=14)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
@@ -315,8 +332,38 @@ def main():
                 assert m.uc.mem_read(m.input+640+34,1)[0] == 1
                 assert any("DIV BY ZERO" in line for line in m.lines), m.lines
             m = OverlayMachine(args.resident_elf, True, address)
-            assert execute(m, packages, 2, focal, ["10", "20", "30"]) == (30, 0, 3, 0, 0)
+            assert execute(m, packages, 2, focal, ["10", "20", "30"]) == (30, 0, 3, 3 if GENERATION>=14 else 0, 0)
             record(m)
+            if GENERATION>=14:
+                for program,answers,expected in (
+                    (b'1.10 S A=3+CALL(2,5); E\n2.10 ASK "Z=",Z(2); RETURN ARG(1)+Z(2)\n',["7"],15),
+                    (b'1.10 S A=CALL(2,5); E\n2.10 IF(ARG(1)-1) 2.30,2.30; R ARG(1)*CALL(2,ARG(1)-1)\n2.30 R 1\n',[],120),
+                    (b'1.10 P "Head",CALL(2,4),!; E\n2.10 ASK N; R ARG(1)*N\n',["2+3"],0),
+                    (b'1.10 P %8.3,PI,!; S A=1; E\n',[],1),
+                    (b'1.10 D 2\n1.20 S A=99\n1.30 E\n2.10 G 3.10\n3.10 S A=5\n3.20 E\n',[],5),
+                    (b'1.10 P 1,2\n1.20 E\n',[],0),
+                    (b'1.10 P "ONE"\n1.20 P "TWO"\n1.30 E\n',[],0)):
+                    m=OverlayMachine(args.resident_elf,True,address)
+                    assert execute(m,packages,2,program,answers)[:2]==(expected,0)
+                    if args.focal_trace:
+                        log="".join(row[1] for row in m.trace if row[0]=="serial")
+                        assert "FOCAL RUN" in log and "FOCAL EXEC" in log,log
+                    if b'Head' in program:assert "Head 20" in "".join(m.lines),m.lines
+                    if b'P 1,2' in program:assert '1 2' in m.lines,m.lines
+                    if b'ONE' in program:assert m.lines[-1]=='TWO',m.lines
+                    if b'%8.3' in program:assert "3.14" in "".join(m.lines),m.lines
+                    record(m)
+
+            # Execute the actual ARM USUB8/SEL path with every supported
+            # delimiter, unaligned line starts, M8 high bytes and scalar tails.
+            for separator in (b'\n', b'\r', b'\r\n', b'\n\r'):
+                for language, program in (
+                    (1, b'10 REM M8 \x80\xff\n20 A=7+5\n30 END'),
+                    (2, b'1.10 C M8 \x80\xff\n1.20 S A(3)=5; S A=CALL(2,7); E\n2.10 R ARG(1)+A(3)')):
+                    m = OverlayMachine(args.resident_elf, True, address)
+                    assert execute(m, packages, language, program.replace(b'\n', separator), [])[:2] == (12, 0)
+                    record(m)
+
             m = OverlayMachine(args.resident_elf, True, address)
             assert execute(m, packages, 1, b'10 PRINT "HEAD";\n20 INPUT A\n30 PRINT A\n', ["5"])[0:2] == (5, 0)
             assert "HEAD5" in "".join(m.lines), m.lines

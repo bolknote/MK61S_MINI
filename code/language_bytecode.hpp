@@ -118,7 +118,13 @@ enum class Op : uint8_t {
   GOSUB_DIRECT,
   LOAD_ARRAY_FIXED,
   COMPARE_FALSE,
-  UPDATE_LOCAL
+  UPDATE_LOCAL,
+  ARRAY_CELL,       // name byte; two indices -> shared sparse value index
+  CALL_PARAMS,      // target/end words, argument count, result flag
+  LOAD_PARAMETER,   // one-based position -> current call argument
+  RETURN_VALUE,
+  DROP,
+  PRINT_PRECISION   // width and significant digit bytes
 };
 enum class Function : uint8_t {
   SIN,
@@ -154,7 +160,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 4;
+static constexpr uint16_t VERSION = 6;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -197,7 +203,9 @@ enum class Event : uint8_t {
   TARGET_REF,
   READ_KEY,
   RESOURCE_TEXT,
-  RESOURCE_INPUT
+  RESOURCE_INPUT,
+  PRECISION,
+  TRACE
 };
 struct Services {
   void* context;
@@ -213,6 +221,7 @@ struct CallFrame {
   uint16_t resume, end;
   uint8_t loops;
   bool group;
+  uint8_t base = 0, arguments = 0, mode = 0; // mode: parameter call + value result
 };
 struct LoopFrame {
   Value limit, step, value;
@@ -262,6 +271,7 @@ inline CompileResult compile(Language language, const char* source, uint16_t len
     return compile_focal(source, length, output, capacity, rf_available, resources);
   return {Error::SYNTAX, 0, 0, 0, 0};
 }
+bool validate_focal_expression(const char*,uint16_t,bool rf_available=true);
 CompileResult compile_expression(Language, const char*, uint16_t, uint8_t*, uint16_t);
 // No output buffer means validation/sizing only, with identical grammar.
 Error inspect(const uint8_t* bytes, uint16_t length, View& output);

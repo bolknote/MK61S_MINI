@@ -145,7 +145,7 @@ uint32_t flow_input(mk61_app_flow* flow, FlowExecute validate,
       if(c->input.result == InputResult::VALUE && s.language == Language::FOCAL) {
         s.input_value = c->input.value; returned(flow); return 1;
       }
-      if(c->input.result != InputResult::EXPRESSION || s.language != Language::BASIC ||
+      if(c->input.result != InputResult::EXPRESSION ||
          c->input.image_size < HEADER_SIZE || c->input.image_size > INPUT_IMAGE_CAPACITY) {
         returned(flow, 0, MK61_FLOW_CORRUPT); return 1;
       }

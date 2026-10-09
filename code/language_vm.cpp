@@ -29,9 +29,10 @@ constexpr uint8_t wire_widths[] = {
   1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
   255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
-  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3 // 80..96
+  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
+  2,7,1,1,1,3 // 97..102
 };
-static_assert(sizeof(wire_widths)==(unsigned)Op::UPDATE_LOCAL+1,"opcode width table changed");
+static_assert(sizeof(wire_widths)==(unsigned)Op::PRINT_PRECISION+1,"opcode width table changed");
 uint16_t next(const View& v, uint16_t pc) {
   if(pc>=v.end) return 0;
   const uint8_t op=v.bytes[pc];
@@ -210,7 +211,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
-        op != Op::LOAD_ARRAY && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
+        op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
     if (((op == Op::LOAD || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
@@ -226,7 +227,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             ((bytes[pc+2]&0x40) && (bytes[pc+2]&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
-    if (op >= Op::DATA && op <= Op::SOURCE_POS && v.language != Language::BASIC)
+    if (op >= Op::DATA && op < Op::SOURCE_POS && v.language != Language::BASIC)
       return Error::INVALID_IMAGE;
     if((op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) && v.language!=Language::BASIC)
       return Error::INVALID_IMAGE;
@@ -237,6 +238,11 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
           (op == Op::INPUT_RESOURCE && word(bytes + at) > 95))
         return Error::INVALID_IMAGE;
     }
+    if ((op == Op::ARRAY_CELL && bytes[pc+1]>=26) ||
+        (op == Op::CALL_PARAMS && (bytes[pc+5]>4 || bytes[pc+6]>1)) ||
+        (op == Op::PRINT_PRECISION && (bytes[pc+1]>64 || !bytes[pc+2] || bytes[pc+2]>15)) ||
+        (op >= Op::ARRAY_CELL && op <= Op::PRINT_PRECISION && v.language != Language::FOCAL))
+      return Error::INVALID_IMAGE;
     if (op == Op::DATA) {
       const uint16_t end = (uint16_t)(pc + 3 + word(bytes + pc + 1));
       for (uint16_t at = (uint16_t)(pc + 3); at < end;) {
@@ -282,6 +288,9 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       return Error::INVALID_IMAGE;
     if (op == Op::FOR_FOCAL && !target(word(bytes + pc + 2)))
       return Error::INVALID_IMAGE;
+    if (op == Op::CALL_PARAMS &&
+        (!target(word(bytes+pc+1)) || !target(word(bytes+pc+3)==0xFFFF?0xFFFF:uint16_t(word(bytes+pc+3)&0x7FFF)) ||
+         (word(bytes+pc+1)!=0xFFFF && (word(bytes+pc+3)==0xFFFF || (word(bytes+pc+3)&0x7FFF)<=word(bytes+pc+1))))) return Error::INVALID_IMAGE;
     if (op == Op::BRANCH)
       for (uint8_t i = 0; i < 3; ++i)
         if (!target(word(bytes + pc + 1 + i * 2))) return Error::INVALID_IMAGE;
@@ -366,6 +375,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     for (uint8_t i = 0; i < s.call_count; ++i) {
       const auto& f = s.calls[i];
       if (f.resume < v.code || f.resume >= v.end || f.loops > MAX_LOOPS ||
+          f.mode>3 || f.arguments>4 || unsigned(f.base)+f.arguments>data.stack_capacity ||
           (f.end && (f.end < v.code || f.end >= v.end)))
         return {Error::INVALID_IMAGE, 0, 0, 0};
     }
@@ -422,12 +432,30 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       jump(to);
     }
   };
+  // Procedure groups propagate a source-level jump to their caller. A
+  // single-line DO catches it and returns. Value calls keep their own frame
+  // so internal branches can still compute an explicit function result.
+  auto focal_jump = [&](uint16_t to) {
+    if(to<v.code || to>=v.end){error=Error::LINE;return;}
+    while(s.call_count) {
+      const auto frame=s.calls[s.call_count-1];
+      if(frame.mode&2)break;
+      --s.call_count;s.loop_count=frame.loops;if(frame.mode)s.sp=frame.base;
+      if(!frame.group){s.pc=frame.resume;return;}
+    }
+    while(s.loop_count && (to<s.loops[s.loop_count-1].body || to>=s.loops[s.loop_count-1].end))--s.loop_count;
+    jump(to);
+  };
   while (error == Error::NONE) {
     if (s.call_count && s.calls[s.call_count - 1].end &&
         s.pc >= s.calls[s.call_count - 1].end) {
       const auto frame = s.calls[--s.call_count];
       s.pc = frame.resume;
       s.loop_count = frame.loops;
+      if(frame.mode) {
+        if(frame.mode & 2) {error=Error::RETURN;break;}
+        s.sp=frame.base;
+      }
     }
     // SOURCE_POS is a diagnostic prefix, not work for the evaluator. Its
     // bytes remain available to source_column() even after a jump/resume.
@@ -456,11 +484,19 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #if defined(LANGUAGE_VM_TRACE)
     trace_instruction(v, s.pc, steps);
 #endif
+#if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
+    if(v.language==Language::FOCAL && host.event) {
+      double line=(double)source_line(v,s.pc);
+      if(!host.event(host.context,Event::TRACE,(const char*)v.bytes+s.pc,s.pc,line)) {error=Error::IO;break;}
+    }
+#endif
     // Metadata needs no operand decoder, constant decoder or value scratch.
     // Keep logical steps/service cadence and the original safety checks.
     if(op==Op::LINE) {
       ++s.pc;
-      if(s.sp) error=Error::STACK;
+      const uint8_t base=s.call_count && s.calls[s.call_count-1].mode
+          ? (uint8_t)(s.calls[s.call_count-1].base+s.calls[s.call_count-1].arguments) : 0;
+      if(s.sp!=base) error=Error::STACK;
       continue;
     }
     if(op>=Op::CONST_0 && op<=Op::CONST_15) {
@@ -496,9 +532,11 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::HALT: {
-        if (s.sp != (v.expression ? 1 : 0))
-          error = Error::STACK;
-        else if (!v.expression && host.event)
+        const uint8_t expected=v.expression?1:s.call_count && s.calls[s.call_count-1].mode
+            ? (uint8_t)(s.calls[s.call_count-1].base+s.calls[s.call_count-1].arguments):0;
+        if(s.sp!=expected)error=Error::STACK;
+        else if(v.language==Language::FOCAL && !v.expression)s.sp=s.call_count=s.loop_count=0;
+        if(error==Error::NONE && !v.expression && host.event)
           event(Event::FINISH, nullptr, 0, value);
         return {error, instruction, source_line(v, instruction), steps};
       }
@@ -612,6 +650,53 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         break;
       }
+      case Op::ARRAY_CELL: {
+        b=pop();a=pop();
+        if(error!=Error::NONE) break;
+        const double i=a.number(),j=b.number();
+        if(!data.array || i<0 || i>32767 || j<0 || j>32767 ||
+           mk_math::trunc(i)!=i || mk_math::trunc(j)!=j) {error=Error::ARRAY_RANGE;break;}
+        const double wanted=1.0+double(*p)*1073741824.0+i*32768.0+j;
+        uint16_t cell=0xFFFF,free=0xFFFF;
+        for(uint16_t n=0;n+1<data.array_count;n=(uint16_t)(n+2)) {
+          if(data.array[n].number()==wanted) {cell=n;break;}
+          if(data.array[n].zero() && free==0xFFFF) free=n;
+        }
+        if(cell==0xFFFF) {
+          if(free==0xFFFF) {error=Error::FULL;break;}
+          cell=free;data.array[cell]=wanted;data.array[cell+1]=0;
+        }
+        push((int32_t)(cell+1));break;
+      }
+      case Op::LOAD_PARAMETER:
+        a=pop();
+        if(error!=Error::NONE)break;
+        if(!s.call_count || !s.calls[s.call_count-1].mode || a<1 ||
+           a.number()>s.calls[s.call_count-1].arguments || a!=a.floor()) error=Error::VARIABLE;
+        else push(data.stack[s.calls[s.call_count-1].base+(uint8_t)a.number()-1]);
+        break;
+      case Op::CALL_PARAMS: {
+        const uint8_t count=p[4];
+        if(s.sp<count || count>4 || p[5]>1) {error=Error::STACK;break;}
+        const uint8_t base=(uint8_t)(s.sp-count);
+        call(word(p),word(p+2));
+        if(error==Error::NONE) {
+          auto& f=s.calls[s.call_count-1];f.base=base;f.arguments=count;f.mode=(uint8_t)(1|(p[5]?2:0));
+        }
+        break;
+      }
+      case Op::RETURN_VALUE: {
+        value=pop();
+        if(!s.call_count) {error=Error::RETURN;break;}
+        const auto frame=s.calls[--s.call_count];
+        if(!frame.mode) {error=Error::RETURN;break;}
+        s.pc=frame.resume;s.loop_count=frame.loops;s.sp=frame.base;
+        if(error==Error::NONE && (frame.mode&2))push(value);
+        break;
+      }
+      case Op::DROP: (void)pop();break;
+      case Op::PRINT_PRECISION:
+        value=*p;event(Event::PRECISION,nullptr,p[1],value);break;
       case Op::TARGET_ARRAY: {
         uint16_t index = 0;
         if (!s.sp)
@@ -779,28 +864,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::JUMP:
-        if (word(p) < v.code || word(p) >= v.end) {
-          error = Error::LINE;
-          break;
-        }
-        if (v.language == Language::FOCAL) {
-          bool swallowed = false;
-          while (s.call_count) {
-            const auto frame = s.calls[--s.call_count];
-            s.loop_count = frame.loops;
-            if (!frame.group) {
-              s.pc = frame.resume;
-              swallowed = true;
-              break;
-            }
-          }
-          if (!swallowed) {
-            s.loop_count = 0;
-            jump(word(p));
-          }
-        } else
-          jump(word(p));
-        break;
+        if(v.language==Language::FOCAL)focal_jump(word(p));else jump(word(p));break;
       case Op::JUMP_FALSE:
         a = pop();
         if (error == Error::NONE && a.zero()) jump(word(p));
@@ -834,35 +898,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           const auto frame = s.calls[--s.call_count];
           s.pc = frame.resume;
           s.loop_count = frame.loops;
+          if(frame.mode) {s.sp=frame.base;if(frame.mode&2)error=Error::RETURN;}
         }
         break;
       case Op::DO_FOCAL:
         call(word(p), word(p + 2));
         break;
       case Op::BRANCH:
-        a = pop();
-        if (error == Error::NONE) {
-          const uint16_t to = word(p + (a < 0 ? 0 : a == 0 ? 2 : 4));
-          if (to < v.code || to >= v.end) {
-            error = Error::LINE;
-            break;
-          }
-          bool swallowed = false;
-          while (s.call_count) {
-            const auto frame = s.calls[--s.call_count];
-            s.loop_count = frame.loops;
-            if (!frame.group) {
-              s.pc = frame.resume;
-              swallowed = true;
-              break;
-            }
-          }
-          if (!swallowed) {
-            s.loop_count = 0;
-            jump(word(p + (a < 0 ? 0 : a == 0 ? 2 : 4)));
-          }
-        }
-        break;
+        a=pop();if(error==Error::NONE){const uint16_t to=word(p+(a<0?0:a==0?2:4));if(to!=0xFFFF)focal_jump(to);}break;
       case Op::FOR_BASIC:
       case Op::FOR_ARRAY:
       case Op::FOR_FOCAL: {

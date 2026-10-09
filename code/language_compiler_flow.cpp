@@ -48,7 +48,8 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
     if(request.source_id != 0xFFFF) stage.values->selected[index] = request.source_id;
     if(request.clear_requested) {
       for(auto& value : stage.values->variables[index]) value=Value(0);
-      if(basic) for(auto& value : stage.values->array) value=Value(0);
+      if(basic){for(auto& value:stage.values->array)value=Value(0);}
+      else {for(auto& value:stage.values->focal_array)value=Value(0);}
     }
     if(!request.run_requested) {
       mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1;
@@ -97,8 +98,8 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
   c.execution = {};
   c.execution.size = sizeof(c.execution); c.execution.version = REQUEST_VERSION;
   c.execution.variables = stage.values->variables[index];
-  c.execution.array = basic ? stage.values->array : nullptr;
-  c.execution.array_count = basic ? 385 : 0; c.execution.mode = request.mode;
+  c.execution.array = basic?stage.values->array:stage.values->focal_array;
+  c.execution.array_count = basic ? 385 : 64; c.execution.mode = request.mode;
   // Tail handoff: never reload/initialize the compiler after its prefix is
   // reused for executable bytecode and continuation state.
   mk61_app_flow_next(flow, mk61_app_flow_to(MK61_APP_FLOW_HOST,

@@ -50,7 +50,7 @@ int main() {
   }
   assert(partition.close() && !workspace_partitioned() && validate_invariants());
   assert(resident_owner(Arena::WORKSPACE) == Owner::LANGUAGE_VM);
-  assert(owner_snapshot_schema(Owner::LANGUAGE_VM) == 6);
+  assert(owner_snapshot_schema(Owner::LANGUAGE_VM) == 8);
   {
     Lease lease; whole(lease);
     assert(!lease.fresh());

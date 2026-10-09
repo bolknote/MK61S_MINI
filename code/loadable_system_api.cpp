@@ -198,8 +198,16 @@ static u32 key_call(u32 operation, u32 value) {
 
 static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   switch(operation) {
+#if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
+    case MK61_SERVICE_DEBUG_WRITE:
+      if(!payload || a>128)return 0;
+      return Serial.write((const uint8_t*)payload,a)==a;
+#endif
     case MK61_SERVICE_CAPABILITIES:
       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES | MK61_SERVICE_CAP_RESOURCES |
+#if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
+          MK61_SERVICE_CAP_DEBUG_IO |
+#endif
           MK61_SERVICE_CAP_MEMORY |
 #if MK61_ENABLE_SETUP
           MK61_SERVICE_CAP_SETUP |

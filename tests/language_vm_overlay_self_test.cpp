@@ -253,7 +253,7 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
 }
 }
 int main() {
-  static_assert(sizeof(ExecutionState) == 1520, "measurement needs updating");
+  static_assert(sizeof(ExecutionState) == 1584, "measurement needs updating");
   uint32_t result;
 #if MK61_SCREEN_BUFFER_LOAN
   memset(screen_storage,0xDD,sizeof(screen_storage));

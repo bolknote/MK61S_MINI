@@ -46,7 +46,7 @@ SYSTEM_SIZE_BUDGETS = {
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.
-    "language-input": {"app_bytes": 9_200, "memory_bytes": 11_776},
+    "language-input": {"app_bytes": 12_000, "memory_bytes": 16_000},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -66,7 +66,8 @@ GREEDY_APP_SIZE_BUDGETS = {
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    # Qualified bounded DSP CR/LF scan: +57 stored bytes, no arena increase.
+    # Bounded DSP CR/LF scan; current FOCAL sizes are documented in
+    # doc/design/FOCAL-VM-next-2026-10-08.md. The APP arena stays unchanged.
     "focal": {"app_bytes": 13_880, "memory_bytes": 18_688},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
@@ -91,13 +92,15 @@ def enforce_system_size_budget(system: str | None, report: dict,
         budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
         # Includes FLOW_STEP, resource delivery and continuation policy.
-        # These are measured image ceilings, not larger APP/workspace arenas.
-        # The fused v4 executor uses 13,060 bytes: one additional 32-byte
-        # allocation quantum against the old ceiling, not a larger APP arena.
-        budget = {"memory_bytes": 15_872 if local_float_math else 13_088}
+        # Six FOCAL v5 operations add parameter frames, sparse array access
+        # and precision events. The measured split kernel uses 14,452 bytes;
+        # these ceilings do not enlarge the common 20-KiB APP arena.
+        budget = {"memory_bytes": 17_408 if local_float_math else 15_360}
     if budget is None:
         return
     budget = dict(budget)
+    if system == "focal" and language_vm_compiler and report.get("focal_trace"):
+        budget["memory_bytes"] = 19_200
     if greedy_packer:
         greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
         if language_vm_compiler and system == "focal":
@@ -112,6 +115,9 @@ def enforce_system_size_budget(system: str | None, report: dict,
 
 
 def build(args: argparse.Namespace) -> dict:
+    # FOCAL is now a VM frontend, never a self-contained native interpreter.
+    if args.system == "focal":
+        args.language_vm_compiler = True
     system = SYSTEM_MODULES.get(args.system)
     if getattr(args, "split_language_vm", False):
         if args.system != "language-vm":
@@ -182,6 +188,10 @@ def build(args: argparse.Namespace) -> dict:
              "-mfloat-abi=hard", "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if getattr(args,"focal_trace",False):
+        if args.system not in ("focal", "language-vm"):
+            raise ValueError("--focal-trace applies only to FOCAL or its shared VM")
+        flags.append("-DMK61_FOCAL_TRACE=1")
     if not system:
         flags.append("-ffreestanding")
     if args.shared_runtime:
@@ -337,6 +347,8 @@ def build(args: argparse.Namespace) -> dict:
             args.local_float_math_mask
             if args.local_float_math_mask is not None
             else DEFAULT_LOCAL_FLOAT_MASK)
+    if getattr(args,"focal_trace",False):
+        report["focal_trace"] = True
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
     if rust_compiler is not None:
@@ -353,6 +365,7 @@ def main() -> None:
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
+    parser.add_argument("--focal-trace", action="store_true", help="enable opt-in FOCAL Serial diagnostics in frontend/VM")
     parser.add_argument("--language-vm-compiler", action="store_true",
                         help="experimental compiler-only BASIC/FOCAL; requires a VM-aware resident")
     parser.add_argument("--split-language-vm", action="store_true",

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "tinybasic_diagnostic.hpp"
 #include "tinybasic_text.hpp"
+#include "focal_trace.hpp"
 #include "language_resources.hpp"
 #if !defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include "config.h"
@@ -89,7 +90,7 @@ struct Runtime {
   ExecuteRequest* request;
   Language language;
   char output[96];
-  uint8_t row, width, output_cursor;
+  uint8_t row, width, output_cursor, precision;
   bool cancelled, normal_stop;
   Error failure;
 };
@@ -108,8 +109,7 @@ bool background(void*) {
 double math(void*, Function f, double a, double b) {
   if ((uint8_t)f == 255) return mk_math::pow(a, b);
   const AngleUnit unit = read_grade_switch();
-  const bool basic = runtime.language == Language::BASIC;
-  if (basic && f <= Function::TAN && unit != RADIAN)
+  if (f <= Function::TAN && unit != RADIAN)
     a = a * 3.14159265358979323846 / (unit == DEGREE ? 180 : 200);
   double value = 0;
 #if !defined(MK61_BUILD_LANGUAGE_VM_MODULE) && MK61_APP_LOCAL_FLOAT_MATH
@@ -162,7 +162,7 @@ double math(void*, Function f, double a, double b) {
     default:
       return __builtin_nan("");
   }
-  if (basic && f >= Function::ASIN && f <= Function::ATAN && unit != RADIAN)
+  if (f >= Function::ASIN && f <= Function::ATAN && unit != RADIAN)
     value = value * (unit == DEGREE ? 180 : 200) / 3.14159265358979323846;
   return value;
 }
@@ -183,27 +183,13 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
                                ref < 4 ? (u32)ref : (u32)MK61_SERVICE_REF_R,
                                ref < 4 ? 0 : ref - 4, 0, &value) != 0;
 }
-bool append(const char* text, uint16_t length, bool separate) {
-  if(length != 0) runtime.request->pause_final = 0;
-  if (runtime.language == Language::BASIC) {
-    if (tinybasic_text::append(runtime.output, sizeof(runtime.output), runtime.output_cursor, text,
-                               length))
-      return true;
-    runtime.failure = Error::FULL;
-    return false;
-  }
-  size_t used = strlen(runtime.output);
-  if (separate && used && used + 1 < sizeof(runtime.output))
-    runtime.output[used++] = ' ';
-  if (runtime.language == Language::BASIC && length >= sizeof(runtime.output) - used) {
-    runtime.failure = Error::FULL;
-    return false;
-  }
-  while (length-- && used + 1 < sizeof(runtime.output))
-    runtime.output[used++] = *text++;
-  runtime.output[used] = 0;
-  return true;
+bool append(const char* text,uint16_t length,bool separate) {
+  if(length)runtime.request->pause_final=0;
+  if(separate && runtime.output[0] && !tinybasic_text::append(runtime.output,sizeof(runtime.output),runtime.output_cursor," ",1)) return false;
+  if(tinybasic_text::append(runtime.output,sizeof(runtime.output),runtime.output_cursor,text,length))return true;
+  runtime.failure=Error::FULL;return false;
 }
+
 void flush(bool empty) {
   const uint8_t rows = main_lcd().rows();
   if (!rows) return;
@@ -252,16 +238,9 @@ bool input(const char* prompt, uint16_t length, double& value) {
     }
     if (editor.shift == text_editor::Shift::NONE &&
         (key == KEY_OK || key == KEY_OK_PRESS)) {
-      if (runtime.language == Language::FOCAL) {
-        const char* end = nullptr;
-        if (portable_system::parse_number(text, value, end)) {
-          while (*end == ' ' || *end == '\t') ++end;
-          if (!*end && mk_math::is_finite(value)) return true;
-        }
-      } else {
         uint8_t image[768];
         const auto compiled =
-            compile_expression(Language::BASIC, text, editor.len, image, sizeof(image));
+            compile_expression(runtime.language, text, editor.len, image, sizeof(image));
         View view;
         if (compiled.error == Error::NONE &&
             inspect(image, compiled.size, view) == Error::NONE) {
@@ -279,7 +258,7 @@ bool input(const char* prompt, uint16_t length, double& value) {
           }
           if (runtime.cancelled) return false;
         }
-      }
+
       const char* message[] = {"Invalid number", "Try again"};
       portable_system::text_rows(message, 2);
       delay(500);
@@ -296,17 +275,14 @@ bool input(const char* prompt, uint16_t length, double& value) {
 bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   const bool basic = runtime.language == Language::BASIC;
   switch (event) {
+    case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
-      runtime.width = 0;
+      runtime.width = 0; runtime.precision = 8;
       runtime.request->pause_final = 0;
-      if (!basic) {
-        runtime.row = 0;
-        runtime.output[0] = 0;
-        runtime.output_cursor = 0;
-      }
+      if(!basic){runtime.row=0;runtime.output[0]=0;runtime.output_cursor=0;}
       return true;
     case Event::TEXT:
-      return append(text, length, !basic);
+      return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
       if(resource_text((const uint8_t*)text, portable_system::resource_read,
                        (void*)runtime.request->image, resource_append, nullptr)) return true;
@@ -314,14 +290,17 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return false;
     case Event::NUMBER: {
       char number[24];
-      if (!portable_system::format_number(value, basic ? 10 : 8, number,
+      if (!portable_system::format_number(value, basic ? 10 : runtime.precision, number,
                                           sizeof(number)))
         return false;
-      if (basic)
-        for (int n = (int)runtime.width - (int)strlen(number); n > 0; --n)
+      if(!basic && runtime.output[0] && !append(" ",1,false))return false;
+      for (int n = (int)runtime.width - (int)strlen(number); n > 0; --n)
           if (!append(" ", 1, false)) return false;
-      return append(number, (uint16_t)strlen(number), !basic);
+      return append(number,(uint16_t)strlen(number),false);
     }
+    case Event::PRECISION:
+      if(value<0 || value>64 || !length || length>15)return false;
+      runtime.width=(uint8_t)value;runtime.precision=(uint8_t)length;return true;
     case Event::FORMAT: {
       const double n = mk_math::floor(value + .5);
       if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {
@@ -341,7 +320,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       flush(true);
       return true;
     case Event::PRINT_END:
-      if (!length) flush(basic);
+      if(!basic || !length)flush(false);
       return true;
     case Event::READ_INPUT:
       return input(text, length, value);

@@ -4,9 +4,9 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 7;
+static constexpr uint32_t REQUEST_VERSION = 8;
 static constexpr uint32_t COMPILER_MAGIC = 0x3A4D5643UL;
-static constexpr uint16_t VALUES_SIZE = 3504;
+static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
 // none of the pointers may point into the native compiler's APP allocation.
@@ -63,7 +63,7 @@ struct ExecutionState {
   uint32_t steps;
   uint16_t prompt_offset, prompt_length, array_count;
   Language language;
-  uint8_t row, width, output_cursor;
+  uint8_t row, width, output_cursor, precision;
   bool cancelled, normal_stop;
   Error failure;
 };
@@ -76,7 +76,7 @@ inline void reset_execution_state(ExecutionState& state) {
                 "continuation must support in-place byte initialization");
   // Zero bits represent a valid double zero in Value. Unused number slots
   // are overwritten before reading; persistent variables have tagged zeros.
-  // Aggregate assignment can instead create a 1520-byte stack temporary.
+  // Aggregate assignment can instead create a 1584-byte stack temporary.
   memset(static_cast<void*>(&state), 0, sizeof(state));
 }
 inline uint8_t* input_image_storage(ExecutionState& state) {
@@ -191,7 +191,7 @@ static_assert(sizeof(ExecuteRequest) == 48, "execution request ARM ABI changed")
 static_assert(sizeof(OverlayRequest) == 24, "overlay request ARM ABI changed");
 static_assert(sizeof(ValidatedImage) == 16, "validated descriptor ARM ABI changed");
 static_assert(sizeof(InputRequest) == 40, "input request ARM ABI changed");
-static_assert(sizeof(ExecutionState) == 1520, "continuation layout changed; update measurements");
+static_assert(sizeof(ExecutionState) == 1584, "continuation layout changed; update measurements");
 #endif
 }  // namespace language_vm
 #endif

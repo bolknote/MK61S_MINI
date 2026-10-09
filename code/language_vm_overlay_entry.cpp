@@ -1,4 +1,5 @@
 #include "tinybasic_text.hpp"
+#include "focal_trace.hpp"
 #include "language_resources.hpp"
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
 #include <string.h>
@@ -26,8 +27,7 @@ bool background(void*) {
 double math(void*, Function f, double a, double b) {
   if ((uint8_t)f == 255) return mk_math::pow(a, b);
   const AngleUnit unit = read_grade_switch();
-  const bool basic = state().language == Language::BASIC;
-  if (basic && f <= Function::TAN && unit != RADIAN)
+  if (f <= Function::TAN && unit != RADIAN)
     a = a * 3.14159265358979323846 / (unit == DEGREE ? 180 : 200);
   double value;
   switch (f) {
@@ -43,7 +43,7 @@ double math(void*, Function f, double a, double b) {
     case Function::SQRT: value = mk_math::sqrt(a); break;
     default: return __builtin_nan("");
   }
-  if (basic && f >= Function::ASIN && f <= Function::ATAN && unit != RADIAN)
+  if (f >= Function::ASIN && f <= Function::ATAN && unit != RADIAN)
     value = value * (unit == DEGREE ? 180 : 200) / 3.14159265358979323846;
   return value;
 }
@@ -64,23 +64,13 @@ bool reference(void*, bool write, uint8_t ref, double& value) {
                                ref < 4 ? (u32)ref : (u32)MK61_SERVICE_REF_R,
                                ref < 4 ? 0 : ref - 4, 0, &value) != 0;
 }
-bool append(const char* text, uint16_t length, bool separate) {
-  if(length != 0) request().pause_final = 0;
-  auto& s = state();
-  if (s.language == Language::BASIC) {
-    if (tinybasic_text::append(s.output, sizeof(s.output), s.output_cursor, text, length))
-      return true;
-    s.failure = Error::FULL;
-    return false;
-  }
-  size_t used = strlen(s.output);
-  if (separate && used && used + 1 < sizeof(s.output)) s.output[used++] = ' ';
-  // BASIC has already returned through its bounded append above. FOCAL
-  // retains its historic truncation behavior; no second BASIC path exists.
-  while (length-- && used + 1 < sizeof(s.output)) s.output[used++] = *text++;
-  s.output[used] = 0;
-  return true;
+bool append(const char* text,uint16_t length,bool separate) {
+  if(length)request().pause_final=0;
+  if(separate && state().output[0] && !tinybasic_text::append(state().output,sizeof(state().output),state().output_cursor," ",1)) return false;
+  if(tinybasic_text::append(state().output,sizeof(state().output),state().output_cursor,text,length))return true;
+  state().failure=Error::FULL;return false;
 }
+
 void flush(bool empty) {
   auto& s = state();
   const uint8_t rows = main_lcd().rows();
@@ -100,28 +90,28 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   auto& s = state();
   const bool basic = s.language == Language::BASIC;
   switch (event) {
+    case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
-      s.width = 0;
+      s.width = 0;s.precision=8;
       request().pause_final = 0;
-      if (!basic) {
-        s.row = 0;
-        s.output[0] = 0;
-        s.output_cursor = 0;
-      }
+      if(!basic){s.row=0;s.output[0]=0;s.output_cursor=0;}
       return true;
-    case Event::TEXT: return append(text, length, !basic);
+    case Event::TEXT: return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
       return portable_system::resource_print(request().image, (const uint8_t*)text,
                                              resource_append, nullptr);
     case Event::NUMBER: {
       char number[24];
-      if (!portable_system::format_number(value, basic ? 10 : 8, number,
+      if (!portable_system::format_number(value, basic ? 10 : s.precision, number,
                                           sizeof(number))) return false;
-      if (basic)
-        for (int n = (int)s.width - (int)strlen(number); n > 0; --n)
+      if(!basic && s.output[0] && !append(" ",1,false))return false;
+      for (int n = (int)s.width - (int)strlen(number); n > 0; --n)
           if (!append(" ", 1, false)) return false;
-      return append(number, (uint16_t)strlen(number), !basic);
+      return append(number,(uint16_t)strlen(number),false);
     }
+    case Event::PRECISION:
+      if(value<0 || value>64 || !length || length>15)return false;
+      s.width=(uint8_t)value;s.precision=(uint8_t)length;return true;
     case Event::FORMAT: {
       const double n = mk_math::floor(value + .5);
       if (value < 0 || value > 63 || mk_math::fabs(value - n) > 1e-7) {
@@ -137,7 +127,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     }
     case Event::FLUSH: flush(true); return true;
-    case Event::PRINT_END: if (!length) flush(basic); return true;
+    case Event::PRINT_END: if(!basic || !length)flush(false);return true;
     // The kernel yields before dispatching this event. No parser/editor is
     // linked into the hot image, and no callback survives an APP replacement.
     case Event::READ_INPUT:

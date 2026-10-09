@@ -35,7 +35,8 @@ enum mk61_service_capability {
   /* Directory traversal and handoff policy used by EXPLORER.APP. */
   MK61_SERVICE_CAP_EXPLORER = 1U << 16,
   MK61_SERVICE_CAP_APP_FLOW = 1U << 17,
-  MK61_SERVICE_CAP_RESOURCES = 1U << 18
+  MK61_SERVICE_CAP_RESOURCES = 1U << 18,
+  MK61_SERVICE_CAP_DEBUG_IO = 1U << 19
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -82,7 +83,9 @@ enum mk61_service_operation {
   MK61_SERVICE_FILE_CHILD_COUNT,
   MK61_SERVICE_FILE_CHILD,
   MK61_SERVICE_FILE_ACTIONS,
-  MK61_SERVICE_RESOURCE_READ
+  MK61_SERVICE_RESOURCE_READ,
+  /* Opt-in Serial diagnostic line: a=byte count (<=128), payload=bytes. */
+  MK61_SERVICE_DEBUG_WRITE
 };
 
 /* Immutable resource spans. Operation 0 returns the current media revision;
