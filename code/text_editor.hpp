@@ -518,16 +518,12 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
 #endif
 }
 
+inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity,
+                          u16 start, u16 end, const char* replacement);
+
 inline bool insert_text(char* source, u16& len, u16& cursor, u16 capacity, const char* text) {
   if(!valid_buffer(source, len, cursor, capacity) || text == NULL || text[0] == 0) return false;
-  const usize remaining = (usize) capacity - len;
-  const usize text_len = bounded_length(text, remaining);
-  if(text_len == 0 || text_len >= remaining) return false;
-  memmove(&source[cursor + text_len], &source[cursor], len - cursor + 1);
-  memcpy(&source[cursor], text, text_len);
-  cursor = (u16) (cursor + text_len);
-  len = (u16) (len + text_len);
-  return true;
+  return replace_range(source, len, cursor, capacity, cursor, cursor, text);
 }
 
 inline bool backspace(char* source, u16& len, u16& cursor) {
@@ -556,8 +552,37 @@ inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16
   const usize remaining = (usize) capacity - base_len;
   const usize replacement_len = bounded_length(replacement, remaining);
   if(replacement_len >= remaining) return false;
-  memmove(&source[start + replacement_len], &source[end], len - end + 1);
-  memcpy(&source[start], replacement, replacement_len);
+  const uintptr_t buffer_address = (uintptr_t) source;
+  const uintptr_t text_address = (uintptr_t) replacement;
+  const bool inside = text_address >= buffer_address &&
+      text_address - buffer_address < capacity;
+  const usize offset = inside ? (usize) (text_address - buffer_address) : 0;
+  // Aliased input must be a complete span of the current text. Reject a span
+  // entering from outside the buffer or using its unused tail before any edit.
+  if(replacement_len &&
+     ((inside && (offset > len || replacement_len > len - offset)) ||
+      (text_address < buffer_address && buffer_address - text_address < replacement_len))) return false;
+  if(replacement_len <= old_len) {
+    // The replacement fits inside the removed range; copy it before shifting
+    // the tail left, which may overwrite its original bytes.
+    if(replacement_len) memmove(source + start, replacement, replacement_len);
+    memmove(source + start + replacement_len, source + end, len - end + 1);
+  } else {
+    const usize growth = replacement_len - old_len;
+    memmove(source + start + replacement_len, source + end, len - end + 1);
+    if(inside) {
+      // Original bytes before end stayed put; bytes from end onwards moved
+      // right by growth. The new gap cannot overwrite the relocated suffix.
+      const usize prefix = offset < end ?
+          ((usize) end - offset < replacement_len ? (usize) end - offset : replacement_len) : 0;
+      if(prefix) memmove(source + start, source + offset, prefix);
+      if(replacement_len > prefix)
+        memmove(source + start + prefix, source + offset + prefix + growth,
+                replacement_len - prefix);
+    } else {
+      if(replacement_len) memcpy(source + start, replacement, replacement_len);
+    }
+  }
   len = (u16) ((usize) len - old_len + replacement_len);
   cursor = (u16) (start + replacement_len);
   return true;

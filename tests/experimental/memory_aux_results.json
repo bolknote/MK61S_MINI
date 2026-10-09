@@ -1,0 +1,4004 @@
+{
+  "schema": 1,
+  "date": "2026-10-09",
+  "source_base_commit": "ba6bee75fedc00c6e24fb95277f53fb1efd3015c",
+  "status": "PASS",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "firmware": {
+      "bytes": 418516,
+      "footer": 416136,
+      "build": "0ABA79B1",
+      "sha256": "ca2686484278c47be2f17b4a13d2df846929817e31f77742159c81141c987eb5",
+      "symbols": {
+        "memcpy": {
+          "address": 134568589,
+          "code_hex": "0a44914200f1ff3300d1704710b511f8014b03f8014f9142f9d110bd38b50546"
+        },
+        "memcmp": {
+          "address": 134568205,
+          "code_hex": "10b501390244904201d1002005e0037811f8014fa34201d0181b10bd0130f2e7"
+        },
+        "memmove": {
+          "address": 134568237,
+          "code_hex": "884210b501eb020402d98442234607d8431ea14207d011f8012b03f8012ff8e7"
+        },
+        "memset": {
+          "address": 134568287,
+          "code_hex": "02440346934200d1704703f8011bf9e7c9b20346184613f8012b12b18a42f9d1"
+        },
+        "strlen": {
+          "address": 134218165,
+          "code_hex": "034613f8012b002afbd1181a0138704700000000000000000000000001f0ff01"
+        },
+        "strnlen": {
+          "address": 134568441,
+          "code_hex": "10b5024601448a42134603d01c780132002cf8d1181a10bd38b5064d00230446"
+        },
+        "strcmp": {
+          "address": 134218145,
+          "code_hex": "10f8012b11f8013b012a28bf9a42f7d0d01a7047034613f8012b002afbd1181a"
+        },
+        "strncmp": {
+          "address": 134568367,
+          "code_hex": "10b56ab10139841810f8012b11f8013f9a4203d1a04201d0002af5d1d01a10bd"
+        }
+      }
+    }
+  },
+  "implementation": "Bounded unaligned 32-bit ordinary-memory copy/move/fill; strings use sequential byte checks with four-byte loop unrolling. No speculative word reads past NUL, no DSP/NEON instructions.",
+  "scope": "Existing resident Flash functions vs matched scalar/candidate SRAM APP kernels. Includes same wrapper dispatch; not a resident replacement or end-to-end throughput claim. strcmp/strnlen private Flash addresses are qualification-only, guarded by exact firmware CRC, public anchors and code bytes.",
+  "source_sha256": {
+    "code/memory_word_ops.h": "210bd03c61504644b2ba1c0fc1f11358f12c234e7e6b6d0da60b67ff413761a7",
+    "tests/experimental/memory_aux_candidates.hpp": "acb583febbb0a5752f92f4d9f5a8f970bacf4661c2754e4ff4ca662d1807b31f",
+    "tests/experimental/memory_aux_hil.cpp": "4eca846d4bfe393b07a3e22552b21af524041f5f5071bdc42e96889448403a4a"
+  },
+  "measurement": {
+    "runs": 3,
+    "pages_per_run": 84,
+    "rows_total": 7344,
+    "samples_per_row": 7,
+    "lengths_bytes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      8,
+      16,
+      32,
+      128,
+      512,
+      2048
+    ],
+    "alignments": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "compiler": "xPack ARM GCC 14.2.1, wrappers noipa/16-byte aligned/-Os",
+    "cycles_include": "Identical APP function-pointer loop and return checksum. Median of seven samples, then median across three runs; scalar_sram and candidate_sram share code placement.",
+    "APP_bytes": 2768,
+    "APP_sha256": "7e6393017c366f2b89f0048fc4b29c50a1629bd796e33ecd05ab62aa36259c05",
+    "reproduced_APP_identical": true,
+    "transport": "Public FILE_WRITE to bounded base64 TEXT files, read over CDC; own files removed.",
+    "private_address_guards": "Sealed ELF must reproduce BIN exactly; identity and full resident CRC matched before installation; public memcpy/memcmp anchors matched in APP; strcmp/strnlen code prefixes matched each report."
+  },
+  "decisions": {
+    "memset": "Promising on blocks >=16; 512-byte word version is 5.47..7.57 times faster than matched SRAM byte control. Tiny-path overhead needs tuning before global qualification.",
+    "memmove": "Promising on blocks >=16; 512-byte overlapping shifts (excluding self) improve 2.32..3.72 times against matched SRAM byte control. Forward and backward correctness passed; tiny rightward overlaps regress.",
+    "strlen": "Byte unrolling improves matched SRAM control about 1.42 times on long strings, but measured candidate is slower than existing resident Flash strlen there. Keep resident until matched Flash qualification.",
+    "strnlen": "Byte unrolling improves matched SRAM control about 1.64 times on long strings; measured advantage over existing Flash code is only about 6%, and the bound-zero path regresses. Low priority.",
+    "strcmp": "Reject this four-byte unrolling: equal and late-difference cases are slower than both scalar SRAM and existing Flash. First-byte mismatch gives no gain over SRAM scalar.",
+    "strncmp": "Byte unrolling improves SRAM control about 1.23 times on long equal strings, but loses to existing resident Flash on those cases. Keep existing code.",
+    "memcpy": "Bounded word implementation is already globally committed in main by 0e139bc6a with separate matched Flash/end-to-end qualification. This APP reconfirms its SRAM advantage; no further production memcpy change."
+  },
+  "device_preservation": {
+    "firmware_unchanged": true,
+    "build_after": "0ABA79B1",
+    "original_file_hashes_preserved": 2,
+    "calculator_registers_stack_program_cwd_unchanged": true,
+    "DWT_settings_restored_each_run": true,
+    "temporary_APP_and_all_reports_removed": true,
+    "crash_after": "none"
+  },
+  "original_content": {
+    "files": {
+      "/System/HELP1.txt": {
+        "bytes": 1303,
+        "sha256": "74fcd8294712300591d844648115d4bcdaba19222484a3140eff47aa8edd118b"
+      },
+      "/System/HELP0.txt": {
+        "bytes": 1533,
+        "sha256": "82efdc3fdfc01a1c05d90729c29c9e7d3f72792582dabc17f99fe6ee06c4c05b"
+      }
+    },
+    "directories": [
+      "/System"
+    ]
+  },
+  "summary": [
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 63.005859375,
+        "scalar_sram": 54.005859375,
+        "candidate_sram": 37.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4593867102971447,
+        1.4593867102971447
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.702591439277986,
+        1.702591439277986
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -17.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 63.005859375,
+        "scalar_sram": 54.005859375,
+        "candidate_sram": 37.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4593867102971447,
+        1.4593867102971447
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.702591439277986,
+        1.702591439277986
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -17.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 63.005859375,
+        "scalar_sram": 54.005859375,
+        "candidate_sram": 37.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4593867102971447,
+        1.4593867102971447
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.702591439277986,
+        1.708027656093313
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -17.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 59.005859375,
+        "candidate_sram": 37.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.5945004486198342,
+        1.5945004486198342
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.7566369346070618,
+        1.7620731514223889
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -22.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 0,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 59.005859375,
+        "candidate_sram": 37.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.5945004486198342,
+        1.5945004486198342
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.7566369346070618,
+        1.7620731514223889
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -22.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 63.005859375,
+        "candidate_sram": 77.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8160018212632484,
+        0.8208080756841758
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8937090531960641,
+        0.8986734978567986
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 14.20703125
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 63.005859375,
+        "candidate_sram": 77.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8181956527252898,
+        0.8181956527252898
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8961118015573084,
+        0.8961118015573084
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 14.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 63.005859375,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4650529088514466,
+        1.4650529088514466
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.6045687815068803,
+        1.6045687815068803
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -20.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 71.005859375,
+        "scalar_sram": 68.208984375,
+        "candidate_sram": 81.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8395177817962628,
+        0.8420253164556962
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8765521398432791,
+        0.8790355635925257
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 1,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 71.208984375,
+        "scalar_sram": 68.005859375,
+        "candidate_sram": 81.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8395177817962628,
+        0.8395177817962628
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8765521398432791,
+        0.8790596745027125
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 13.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 72.005859375,
+        "candidate_sram": 82.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8780574939862338,
+        0.8805344511396385
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9268344963917403,
+        0.9268344963917403
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 10.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 72.005859375,
+        "candidate_sram": 82.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8780574939862338,
+        0.8780574939862338
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9268344963917403,
+        0.9268344963917403
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 10.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 72.005859375,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6743267178345973,
+        1.6743267178345973
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.7673372996048866,
+        1.7673372996048866
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -29.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 79.005859375,
+        "scalar_sram": 71.005859375,
+        "candidate_sram": 122.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5810013903760408,
+        0.581019961323936
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6464609336295207,
+        0.6464815969059149
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 51.20703125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 78.005859375,
+        "scalar_sram": 77.005859375,
+        "candidate_sram": 86.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8953559668445554,
+        0.8953559668445554
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9069830816396048,
+        0.9069830816396048
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 83.005859375,
+        "scalar_sram": 81.005859375,
+        "candidate_sram": 83.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9759053154191863,
+        0.9759053154191863
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 83.005859375,
+        "scalar_sram": 81.005859375,
+        "candidate_sram": 83.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9759053154191863,
+        0.9759053154191863
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 83.005859375,
+        "scalar_sram": 81.005859375,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.8836005268177483,
+        1.8836005268177483
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.930105817702893,
+        1.930105817702893
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 86.005859375,
+        "scalar_sram": 80.005859375,
+        "candidate_sram": 137.205078125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5830866025166543,
+        0.583111503366596
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.62681489494961,
+        0.6268416632265228
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 57.205078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 3,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 85.005859375,
+        "scalar_sram": 86.005859375,
+        "candidate_sram": 87.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9861820299202724,
+        0.9908186858823266
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9747155782495744,
+        0.9793252070846522
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 1.205078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 90.005859375,
+        "scalar_sram": 90.20703125,
+        "candidate_sram": 97.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9072349640712668,
+        0.9279328149800092
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9072349640712668,
+        0.9258634199264661
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 90.005859375,
+        "scalar_sram": 90.20703125,
+        "candidate_sram": 97.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.909096289282121,
+        0.9279328149800092
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9072349640712668,
+        0.9258634199264661
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 90.005859375,
+        "scalar_sram": 90.20703125,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.092874335800899,
+        2.0976883600526817
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.092874335800899,
+        2.092874335800899
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -47.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 93.005859375,
+        "scalar_sram": 89.005859375,
+        "candidate_sram": 109.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8150049181793794,
+        0.8244616523167452
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8516319413395332,
+        0.861392393639104
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 20.203125
+    },
+    {
+      "family": "memmove",
+      "bytes": 4,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 92.208984375,
+        "scalar_sram": 95.005859375,
+        "candidate_sram": 101.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9205541151757158,
+        0.9405975055593154
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8934539467458981,
+        0.9129072802861838
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 8.19921875
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 111.208984375,
+        "scalar_sram": 117.216796875,
+        "candidate_sram": 114.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0086048973966824,
+        1.0263009388306514
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9569250936959043,
+        0.9736990611693487
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 111.20703125,
+        "scalar_sram": 117.21484375,
+        "candidate_sram": 114.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.008638655462185,
+        1.0262838380901893
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9569411764705882,
+        0.9736819604288866
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 111.20703125,
+        "scalar_sram": 117.21484375,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.7255097870021343,
+        2.7255552023252645
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.5858576683773107,
+        2.5859030837004404
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -74.20703125
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 114.20703125,
+        "scalar_sram": 116.21484375,
+        "candidate_sram": 153.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7535842747859567,
+        0.7585380467345716
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7406023608085516,
+        0.7454329895592978
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 38.0
+    },
+    {
+      "family": "memmove",
+      "bytes": 7,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 113.005859375,
+        "scalar_sram": 122.212890625,
+        "candidate_sram": 118.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0166536686813543,
+        1.0338885033541523
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9417365308377201,
+        0.9559994712666469
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2.001953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 118.208984375,
+        "scalar_sram": 126.21484375,
+        "candidate_sram": 104.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1663748759137262,
+        1.2111704619998125
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0923743344463497,
+        1.1343454221722424
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 118.20703125,
+        "scalar_sram": 126.21484375,
+        "candidate_sram": 104.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1663748759137262,
+        1.2111931626494734
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0923743344463497,
+        1.1343479401731829
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 118.20703125,
+        "scalar_sram": 126.21484375,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.9348290113084157,
+        2.9348290113084157
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.748535355829057,
+        2.7486261864753168
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -83.208984375
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 121.208984375,
+        "scalar_sram": 125.2109375,
+        "candidate_sram": 126.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9920921091319891,
+        1.0080666719081688
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9603683070256887,
+        0.9758314332887805
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.998046875
+    },
+    {
+      "family": "memmove",
+      "bytes": 8,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 120.2109375,
+        "scalar_sram": 131.216796875,
+        "candidate_sram": 108.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1693791230787975,
+        1.212623865133657
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0713477572191954,
+        1.1109145714131003
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -19.005859375
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 174.208984375,
+        "scalar_sram": 198.216796875,
+        "candidate_sram": 138.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3373789286420241,
+        1.434161438019332
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1753969822758121,
+        1.260457294669606
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -50.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 174.208984375,
+        "scalar_sram": 198.216796875,
+        "candidate_sram": 138.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3373789286420241,
+        1.434161438019332
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1753969822758121,
+        1.260457294669606
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -50.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 174.208984375,
+        "scalar_sram": 198.216796875,
+        "candidate_sram": 43.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        4.609064898496753,
+        4.609064898496753
+      ],
+      "resident_vs_candidate_ratio_range": [
+        4.050774331259367,
+        4.050819746582497
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -155.2109375
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 177.208984375,
+        "scalar_sram": 197.21484375,
+        "candidate_sram": 147.21484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.29566801827234,
+        1.3396396635444583
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1642329210080582,
+        1.2037439966036034
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -45.00390625
+    },
+    {
+      "family": "memmove",
+      "bytes": 16,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 176.208984375,
+        "scalar_sram": 203.216796875,
+        "candidate_sram": 142.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3351169624411339,
+        1.428981486568148
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1576779458751973,
+        1.239067736087458
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -51.0078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 286.41796875,
+        "scalar_sram": 342.43359375,
+        "candidate_sram": 174.41796875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.7613421740004018,
+        1.96329309533941
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.4732167972674302,
+        1.6421356744529798
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -148.015625
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 286.41796875,
+        "scalar_sram": 342.4296875,
+        "candidate_sram": 174.4140625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.7613268770971047,
+        1.9633146696528556
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.4732072893853851,
+        1.642172452407615
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -148.015625
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 286.41796875,
+        "scalar_sram": 342.43359375,
+        "candidate_sram": 43.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        7.96131141585687,
+        7.9614022341295065
+      ],
+      "resident_vs_candidate_ratio_range": [
+        6.658977386250114,
+        6.65906820452275
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -299.41796875
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 289.4140625,
+        "scalar_sram": 341.4296875,
+        "candidate_sram": 202.4140625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6073484249434524,
+        1.6867883746960515
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.3624928740874234,
+        1.429812034428191
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -129.01171875
+    },
+    {
+      "family": "memmove",
+      "bytes": 32,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 289.41796875,
+        "scalar_sram": 341.4296875,
+        "candidate_sram": 202.4140625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6073188672305996,
+        1.6867883746960515
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.3624862081647664,
+        1.4298313327415184
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -129.0078125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 959.22265625,
+        "scalar_sram": 1207.27734375,
+        "candidate_sram": 390.421875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.5663502976857733,
+        3.0922379637411455
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.038229994436556,
+        2.456887581542402
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -736.8515625
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 959.2265625,
+        "scalar_sram": 1207.27734375,
+        "candidate_sram": 390.421875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.5663502976857733,
+        3.0922379637411455
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.0390437519202185,
+        2.4568975867451073
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -736.8515625
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 958.83984375,
+        "scalar_sram": 1207.28515625,
+        "candidate_sram": 43.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        28.06865861411316,
+        28.068749432385797
+      ],
+      "resident_vs_candidate_ratio_range": [
+        22.29252565616202,
+        22.30142584688039
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1164.26953125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 962.21875,
+        "scalar_sram": 1206.26171875,
+        "candidate_sram": 532.43359375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.1057792628456475,
+        2.265562753571088
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.6797640560537352,
+        1.8072089389081678
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -633.42578125
+    },
+    {
+      "family": "memmove",
+      "bytes": 128,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 962.21875,
+        "scalar_sram": 1206.25390625,
+        "candidate_sram": 532.4296875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.1057724436564493,
+        2.2655647019119307
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.6797708752429337,
+        1.807222197766724
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -633.421875
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 3650.0859375,
+        "scalar_sram": 4667.09375,
+        "candidate_sram": 1255.65625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.961999960333988,
+        3.716856225579254
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.316544693679221,
+        2.906914959806874
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -3091.4375
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 3650.0859375,
+        "scalar_sram": 4667.09375,
+        "candidate_sram": 1255.65625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.9620196050237255,
+        3.716856225579254
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.3165561797474252,
+        2.906914959806874
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -3091.453125
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 3650.0859375,
+        "scalar_sram": 4667.1015625,
+        "candidate_sram": 43.0234375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        108.47793717087343,
+        108.47811875794443
+      ],
+      "resident_vs_candidate_ratio_range": [
+        84.83911385509352,
+        84.83947702923552
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -4624.0703125
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 3653.078125,
+        "scalar_sram": 4666.0625,
+        "candidate_sram": 1853.671875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.3162705738175386,
+        2.5171998145572556
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8134239796472396,
+        1.9707253340076707
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2651.5859375
+    },
+    {
+      "family": "memmove",
+      "bytes": 512,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 3653.09375,
+        "scalar_sram": 4666.0546875,
+        "candidate_sram": 1853.6640625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.316265469085099,
+        2.517206208986425
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8134169468650743,
+        1.970742069128289
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2651.5859375
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_left17",
+      "aligned_cycles": {
+        "resident_flash": 14414.28125,
+        "scalar_sram": 18506.40625,
+        "candidate_sram": 4716.5625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        3.086147865194303,
+        3.923706353938912
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.403739623015149,
+        3.0560988537732725
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -12509.78125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_left1",
+      "aligned_cycles": {
+        "resident_flash": 14414.28125,
+        "scalar_sram": 18506.40625,
+        "candidate_sram": 4716.65625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        3.0861369937256375,
+        3.9236283649036325
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.4037323077564463,
+        3.0560381096248004
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -12509.78125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "self",
+      "aligned_cycles": {
+        "resident_flash": 14414.28125,
+        "scalar_sram": 18506.40625,
+        "candidate_sram": 43.09375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        429.44452501812907,
+        429.4452501812908
+      ],
+      "resident_vs_candidate_ratio_range": [
+        334.4865844815083,
+        334.48730964467006
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18463.28125
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_right1",
+      "aligned_cycles": {
+        "resident_flash": 14417.34375,
+        "scalar_sram": 18505.125,
+        "candidate_sram": 7138.6875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.377968123170335,
+        2.5922307146796943
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8526710598704528,
+        2.0196070706274787
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -10723.21875
+    },
+    {
+      "family": "memmove",
+      "bytes": 2048,
+      "scenario": "shift_right17",
+      "aligned_cycles": {
+        "resident_flash": 14417.3125,
+        "scalar_sram": 18505.15625,
+        "candidate_sram": 7138.71875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.3779776724761064,
+        2.5922237446320464
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.852686531202313,
+        2.0195938521881116
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -10723.25
+    },
+    {
+      "family": "memset",
+      "bytes": 0,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 55.005859375,
+        "scalar_sram": 39.005859375,
+        "candidate_sram": 77.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5065310573972152,
+        0.5065310573972152
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7143074542825982,
+        0.7143074542825982
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 38.0
+    },
+    {
+      "family": "memset",
+      "bytes": 0,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 55.005859375,
+        "scalar_sram": 39.005859375,
+        "candidate_sram": 77.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5065310573972152,
+        0.5065310573972152
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7143074542825982,
+        0.7143074542825982
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 38.0
+    },
+    {
+      "family": "memset",
+      "bytes": 1,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 61.005859375,
+        "scalar_sram": 50.005859375,
+        "candidate_sram": 90.21484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5542974669841957,
+        0.5555844888570622
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6762286209136177,
+        0.6800338519627629
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 40.208984375
+    },
+    {
+      "family": "memset",
+      "bytes": 1,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 61.005859375,
+        "scalar_sram": 50.005859375,
+        "candidate_sram": 90.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5555844888570622,
+        0.5555844888570622
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6777987544213702,
+        0.6777987544213702
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 40.0
+    },
+    {
+      "family": "memset",
+      "bytes": 2,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 67.005859375,
+        "scalar_sram": 61.005859375,
+        "candidate_sram": 103.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5910794035273635,
+        0.5922562050854207
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6492250629222414,
+        0.6511619105291045
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 42.205078125
+    },
+    {
+      "family": "memset",
+      "bytes": 2,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 67.20703125,
+        "scalar_sram": 61.005859375,
+        "candidate_sram": 103.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.5910682183744914,
+        0.5922562050854207
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.64920049200492,
+        0.6524583325432791
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 42.20703125
+    },
+    {
+      "family": "memset",
+      "bytes": 3,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 73.005859375,
+        "scalar_sram": 72.2109375,
+        "candidate_sram": 116.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.6196238592245248,
+        0.6213781512605042
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.628218487394958,
+        0.6282396046925947
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 44.203125
+    },
+    {
+      "family": "memset",
+      "bytes": 3,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 73.205078125,
+        "scalar_sram": 72.005859375,
+        "candidate_sram": 116.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.6196134453781512,
+        0.6207088138732216
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.628218487394958,
+        0.6299433603926117
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 44.205078125
+    },
+    {
+      "family": "memset",
+      "bytes": 4,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 79.005859375,
+        "scalar_sram": 83.005859375,
+        "candidate_sram": 90.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9001546184313642,
+        0.9201506917530907
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8567767352212314,
+        0.8758092103838743
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.20703125
+    },
+    {
+      "family": "memset",
+      "bytes": 4,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 79.005859375,
+        "scalar_sram": 83.005859375,
+        "candidate_sram": 90.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9002118195297606,
+        0.9222272855499859
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8568311798347807,
+        0.8777857344356921
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.201171875
+    },
+    {
+      "family": "memset",
+      "bytes": 7,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 97.208984375,
+        "scalar_sram": 116.20703125,
+        "candidate_sram": 129.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8856373081674879,
+        0.8993590906342585
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7393233004361482,
+        0.7523278311868916
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 15.005859375
+    },
+    {
+      "family": "memset",
+      "bytes": 7,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 97.20703125,
+        "scalar_sram": 116.208984375,
+        "candidate_sram": 129.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.885680261982733,
+        0.8993878013755574
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.740845489729086,
+        0.7523240873705691
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 15.0
+    },
+    {
+      "family": "memset",
+      "bytes": 8,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 103.20703125,
+        "scalar_sram": 127.208984375,
+        "candidate_sram": 103.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1865116956933615,
+        1.2325612202414746
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.962635040352699,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -19.99609375
+    },
+    {
+      "family": "memset",
+      "bytes": 8,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 103.20703125,
+        "scalar_sram": 127.2109375,
+        "candidate_sram": 103.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1865116956933615,
+        1.2325801445819613
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9607950301506623,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -19.99609375
+    },
+    {
+      "family": "memset",
+      "bytes": 16,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 151.208984375,
+        "scalar_sram": 215.212890625,
+        "candidate_sram": 98.205078125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.0074694844233925,
+        2.191463972474692
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.4104390599380578,
+        1.5397267357451125
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -108.005859375
+    },
+    {
+      "family": "memset",
+      "bytes": 16,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 151.208984375,
+        "scalar_sram": 215.21484375,
+        "candidate_sram": 98.20703125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.007341555389576,
+        2.1914402768386303
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.41036197693695,
+        1.5396961139175052
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -108.0
+    },
+    {
+      "family": "memset",
+      "bytes": 32,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 247.41796875,
+        "scalar_sram": 391.42578125,
+        "candidate_sram": 119.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.856849607982894,
+        3.2889683920307218
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8057875980042766,
+        2.078937867200578
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -254.41015625
+    },
+    {
+      "family": "memset",
+      "bytes": 32,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 247.4140625,
+        "scalar_sram": 391.421875,
+        "candidate_sram": 119.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.848594251925974,
+        3.2889355696327174
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8005514967166045,
+        2.0789050448025734
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -254.015625
+    },
+    {
+      "family": "memset",
+      "bytes": 128,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 823.8203125,
+        "scalar_sram": 1448.6640625,
+        "candidate_sram": 245.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        4.563900614085824,
+        5.912631729987405
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.5953925103680824,
+        3.362371060057714
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1131.24609375
+    },
+    {
+      "family": "memset",
+      "bytes": 128,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 823.82421875,
+        "scalar_sram": 1448.66015625,
+        "candidate_sram": 245.41796875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        4.563888307756679,
+        5.902828401801773
+      ],
+      "resident_vs_candidate_ratio_range": [
+        2.5953925103680824,
+        3.3568211119423177
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1131.2421875
+    },
+    {
+      "family": "memset",
+      "bytes": 512,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 3130.28125,
+        "scalar_sram": 5677.5625,
+        "candidate_sram": 749.8359375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        5.469776580048779,
+        7.571739651382073
+      ],
+      "resident_vs_candidate_ratio_range": [
+        3.016139230977688,
+        4.174621531793413
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -4638.9296875
+    },
+    {
+      "family": "memset",
+      "bytes": 512,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 3130.2890625,
+        "scalar_sram": 5676.7734375,
+        "candidate_sram": 749.828125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        5.470446983725517,
+        7.570766217258122
+      ],
+      "resident_vs_candidate_ratio_range": [
+        3.016093822922783,
+        4.1746754464564795
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -4639.6953125
+    },
+    {
+      "family": "memset",
+      "bytes": 2048,
+      "scenario": "zero",
+      "aligned_cycles": {
+        "resident_flash": 12356.03125,
+        "scalar_sram": 22593.375,
+        "candidate_sram": 2768.34375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        5.7622516978605365,
+        8.161332926953165
+      ],
+      "resident_vs_candidate_ratio_range": [
+        3.1517472818289067,
+        4.463329833948547
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18669.8125
+    },
+    {
+      "family": "memset",
+      "bytes": 2048,
+      "scenario": "value_0x1234",
+      "aligned_cycles": {
+        "resident_flash": 12356.03125,
+        "scalar_sram": 22593.375,
+        "candidate_sram": 2768.4375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        5.763110696606644,
+        8.161056552658314
+      ],
+      "resident_vs_candidate_ratio_range": [
+        3.1517724051621747,
+        4.463178688339542
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18673.03125
+    },
+    {
+      "family": "strlen",
+      "bytes": 0,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 57.005859375,
+        "scalar_sram": 43.005859375,
+        "candidate_sram": 40.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0749890152809647,
+        1.0749890152809647
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.4249377532588,
+        1.4249377532588
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -3.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 1,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 63.005859375,
+        "scalar_sram": 53.005859375,
+        "candidate_sram": 47.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1276436614451324,
+        1.1276436614451324
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.3403830971870196,
+        1.3403830971870196
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -6.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 2,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 63.005859375,
+        "candidate_sram": 53.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1886583882972843,
+        1.1886583882972843
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.301853421275655,
+        1.301853421275655
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -10.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 3,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 75.005859375,
+        "scalar_sram": 73.005859375,
+        "candidate_sram": 59.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2372645725067029,
+        1.2372645725067029
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.2711595114362317,
+        1.2711595114362317
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -14.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 4,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 81.005859375,
+        "scalar_sram": 83.005859375,
+        "candidate_sram": 69.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.202881322351476,
+        1.2067589369109282
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.173898276301265,
+        1.173898276301265
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -14.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 7,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 99.005859375,
+        "scalar_sram": 113.26953125,
+        "candidate_sram": 87.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2979275771003984,
+        1.3019058522459426
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1375050355847993,
+        1.1409298044761713
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -26.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 8,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 105.267578125,
+        "scalar_sram": 123.271484375,
+        "candidate_sram": 97.26953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.26729850206819,
+        1.2673386610979478
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0822256134291794,
+        1.0822256134291794
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -26.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 16,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 153.26953125,
+        "scalar_sram": 203.2734375,
+        "candidate_sram": 153.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3261974846133262,
+        1.3262143840154952
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.999961772239,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -49.998046875
+    },
+    {
+      "family": "strlen",
+      "bytes": 32,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 249.53125,
+        "scalar_sram": 363.546875,
+        "candidate_sram": 265.5390625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3690497205060312,
+        1.3690899997057873
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9396881435716388,
+        0.9397175639894086
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -98.0
+    },
+    {
+      "family": "strlen",
+      "bytes": 128,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 825.9453125,
+        "scalar_sram": 1324.78515625,
+        "candidate_sram": 937.9765625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4117999675298996,
+        1.4123938030984509
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8801894921759547,
+        0.880568049308679
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -386.41796875
+    },
+    {
+      "family": "strlen",
+      "bytes": 512,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 3132.4921875,
+        "scalar_sram": 5169.0,
+        "candidate_sram": 3629.3828125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4241436019304206,
+        1.4242103314519914
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8630882422582992,
+        0.8630925473887231
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1539.3828125
+    },
+    {
+      "family": "strlen",
+      "bytes": 2048,
+      "scenario": "terminated",
+      "aligned_cycles": {
+        "resident_flash": 12357.9375,
+        "scalar_sram": 20546.21875,
+        "candidate_sram": 14393.75
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.427440295267043,
+        1.4277772469445724
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8585627442466348,
+        0.8587641044795566
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -6152.46875
+    },
+    {
+      "family": "strnlen",
+      "bytes": 0,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 56.005859375,
+        "scalar_sram": 41.005859375,
+        "candidate_sram": 53.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7736099340432587,
+        0.7736099340432587
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0565975164891852,
+        1.0565975164891852
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 12.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 0,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 60.005859375,
+        "scalar_sram": 43.005859375,
+        "candidate_sram": 57.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7544112104704149,
+        0.7544112104704149
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.052626169184911,
+        1.052626169184911
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 14.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 1,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 55.005859375,
+        "candidate_sram": 67.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8209111843064097,
+        0.8209111843064097
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9701518640510683,
+        0.9701518640510683
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 12.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 1,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 57.005859375,
+        "candidate_sram": 60.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9500048823357095,
+        0.9500048823357095
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1499853529928719,
+        1.1499853529928719
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 3.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 2,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 74.005859375,
+        "scalar_sram": 69.005859375,
+        "candidate_sram": 78.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8846240516788102,
+        0.8846240516788102
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9487218007461379,
+        0.9487218007461379
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 2,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 78.005859375,
+        "scalar_sram": 71.005859375,
+        "candidate_sram": 69.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.028983046050211,
+        1.028983046050211
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1304237072259489,
+        1.1304237072259489
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 3,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 83.005859375,
+        "scalar_sram": 83.005859375,
+        "candidate_sram": 89.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9298341574410361,
+        0.9325887077307937
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9298341574410361,
+        0.9325887077307937
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 6.263671875
+    },
+    {
+      "family": "strnlen",
+      "bytes": 3,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 87.005859375,
+        "scalar_sram": 85.265625,
+        "candidate_sram": 75.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1333229174804051,
+        1.1367861885790174
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1599875009764862,
+        1.1599875009764862
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -10.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 4,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 92.005859375,
+        "scalar_sram": 97.26953125,
+        "candidate_sram": 87.26953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1115661787744506,
+        1.1145875296539993
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0542252260316891,
+        1.0542724139474509
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -9.736328125
+    },
+    {
+      "family": "strnlen",
+      "bytes": 4,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 96.267578125,
+        "scalar_sram": 99.265625,
+        "candidate_sram": 91.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0876524716456237,
+        1.090803734306256
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0518938583351167,
+        1.0578388239081447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -8.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 7,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 119.26953125,
+        "scalar_sram": 139.2734375,
+        "candidate_sram": 120.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.157954563907699,
+        1.1579733679766158
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9916370309023887,
+        0.9916531341344592
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -18.998046875
+    },
+    {
+      "family": "strnlen",
+      "bytes": 7,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 123.267578125,
+        "scalar_sram": 141.26953125,
+        "candidate_sram": 109.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.292807607063702,
+        1.2928895720873699
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1280653463930792,
+        1.1281056733278518
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -31.99609375
+    },
+    {
+      "family": "strnlen",
+      "bytes": 8,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 128.26953125,
+        "scalar_sram": 153.2734375,
+        "candidate_sram": 121.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2638665206467823,
+        1.2639394427444033
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.05768859112285,
+        1.0577226606538894
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -32.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 8,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 132.26953125,
+        "scalar_sram": 155.2734375,
+        "candidate_sram": 125.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2394761459307764,
+        1.2395846326556068
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0558465855940131,
+        1.055912436073344
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -30.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 16,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 200.26953125,
+        "scalar_sram": 265.27734375,
+        "candidate_sram": 189.27734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.4015271901764523,
+        1.4025838673394628
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0580745021153648,
+        1.0580854203427958
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -76.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 16,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 204.26953125,
+        "scalar_sram": 267.27734375,
+        "candidate_sram": 193.275390625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.3828695001920006,
+        1.3829036854391301
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0568726126235373,
+        1.0568832927433127
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -74.0
+    },
+    {
+      "family": "strnlen",
+      "bytes": 32,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 344.5390625,
+        "scalar_sram": 489.5546875,
+        "candidate_sram": 325.546875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.5037736528239403,
+        1.5038097409376163
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0583266339496766,
+        1.0583520320618198
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -164.00390625
+    },
+    {
+      "family": "strnlen",
+      "bytes": 32,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 348.5390625,
+        "scalar_sram": 491.5546875,
+        "candidate_sram": 329.55078125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.491590114383927,
+        1.4916077947939879
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.057606827475849,
+        1.0576312171068227
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -162.00390625
+    },
+    {
+      "family": "strnlen",
+      "bytes": 128,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 1209.3515625,
+        "scalar_sram": 1835.1953125,
+        "candidate_sram": 1142.37109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.606468136324624,
+        1.6064804683225735
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.058625606516008,
+        1.0586328462935164
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -692.81640625
+    },
+    {
+      "family": "strnlen",
+      "bytes": 128,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 1213.3515625,
+        "scalar_sram": 1837.19921875,
+        "candidate_sram": 1146.375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6026060407807219,
+        1.6026162632210228
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0584246538000217,
+        1.0584246538000217
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -690.8125
+    },
+    {
+      "family": "strnlen",
+      "bytes": 512,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 4669.140625,
+        "scalar_sram": 7217.5390625,
+        "candidate_sram": 4410.1953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6364940798004635,
+        1.6365576921373592
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0587113025856143,
+        1.0587151575273912
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2807.078125
+    },
+    {
+      "family": "strnlen",
+      "bytes": 512,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 4673.140625,
+        "scalar_sram": 7219.5078125,
+        "candidate_sram": 4414.1796875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6354571519592227,
+        1.6355264904471563
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0586545609004991,
+        1.0586656991407308
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2805.046875
+    },
+    {
+      "family": "strnlen",
+      "bytes": 2048,
+      "scenario": "limit_at_end",
+      "aligned_cycles": {
+        "resident_flash": 18507.59375,
+        "scalar_sram": 28745.40625,
+        "candidate_sram": 17480.96875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6443781820261998,
+        1.6443882722460677
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0587262599393628,
+        1.0587281525802168
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -11264.375
+    },
+    {
+      "family": "strnlen",
+      "bytes": 2048,
+      "scenario": "limit_past_nul",
+      "aligned_cycles": {
+        "resident_flash": 18511.59375,
+        "scalar_sram": 28748.09375,
+        "candidate_sram": 17484.96875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.6441574921361166,
+        1.6441663077261282
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0587128252788105,
+        1.0587167145949095
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -11263.09375
+    },
+    {
+      "family": "strcmp",
+      "bytes": 0,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 47.005859375,
+        "candidate_sram": 47.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0212739435741887,
+        1.0212739435741887
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 0,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 47.005859375,
+        "candidate_sram": 47.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0212739435741887,
+        1.0212739435741887
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 0,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 47.005859375,
+        "candidate_sram": 47.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0212739435741887,
+        1.0212739435741887
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 1,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 55.005859375,
+        "scalar_sram": 57.005859375,
+        "candidate_sram": 59.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.966105061070471,
+        0.966105061070471
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.932210122140942,
+        0.932210122140942
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 1,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 1,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 62.005859375,
+        "scalar_sram": 67.005859375,
+        "candidate_sram": 71.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9436666208224453,
+        0.9436666208224453
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.873249896850502,
+        0.873249896850502
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 4.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 55.005859375,
+        "scalar_sram": 55.005859375,
+        "candidate_sram": 61.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9016487914198815,
+        0.9016487914198815
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9016487914198815,
+        0.9016487914198815
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 6.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 3,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 77.005859375,
+        "candidate_sram": 83.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.927715946257559,
+        0.927715946257559
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8313372079343043,
+        0.8313372079343043
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 6.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 3,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 3,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 62.005859375,
+        "scalar_sram": 65.005859375,
+        "candidate_sram": 73.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.890419754407555,
+        0.890419754407555
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8493271623103882,
+        0.8493271623103882
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 8.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 4,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 87.005859375,
+        "candidate_sram": 99.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8764781111657649,
+        0.8791169873686696
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7656514382402707,
+        0.7676905170543095
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 12.26171875
+    },
+    {
+      "family": "strcmp",
+      "bytes": 4,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 4,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 69.005859375,
+        "scalar_sram": 75.005859375,
+        "candidate_sram": 91.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8241871445434059,
+        0.8241871445434059
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7582573237471831,
+        0.7582573237471831
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 16.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 7,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 97.267578125,
+        "scalar_sram": 117.271484375,
+        "candidate_sram": 135.26953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8669217441524689,
+        0.8669467787114846
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7171094426797574,
+        0.7190649455658552
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 18.001953125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 7,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 7,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 90.267578125,
+        "scalar_sram": 105.2734375,
+        "candidate_sram": 125.26953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8403492360461491,
+        0.8403754404565157
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.7184752104770814,
+        0.7205868595840219
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 20.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 8,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 104.267578125,
+        "scalar_sram": 127.271484375,
+        "candidate_sram": 151.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8413210762795021,
+        0.8413598099468058
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6892656096679234,
+        0.6892874204335645
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 24.00390625
+    },
+    {
+      "family": "strcmp",
+      "bytes": 8,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 8,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 97.26953125,
+        "scalar_sram": 115.271484375,
+        "candidate_sram": 143.275390625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8045448968741906,
+        0.8045694967010197
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6788947052729156,
+        0.6789083374229784
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 28.00390625
+    },
+    {
+      "family": "strcmp",
+      "bytes": 16,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 160.26953125,
+        "scalar_sram": 207.275390625,
+        "candidate_sram": 255.27734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8119615614145155,
+        0.8119739862280031
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6278251289192208,
+        0.6278347360367253
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 48.001953125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 16,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.005859375,
+        "scalar_sram": 45.005859375,
+        "candidate_sram": 45.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666579872412447,
+        1.0666579872412447
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 16,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 153.26953125,
+        "scalar_sram": 195.275390625,
+        "candidate_sram": 247.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7897019098620919,
+        0.789714385011532
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.6198284441495664,
+        0.6198412384976897
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 52.001953125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 32,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 272.5390625,
+        "scalar_sram": 367.54296875,
+        "candidate_sram": 463.55078125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7928860949363356,
+        0.7928962669587933
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5879244965029072,
+        0.5879378776260017
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 96.0078125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 32,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.01171875,
+        "scalar_sram": 45.01171875,
+        "candidate_sram": 45.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666493100755012,
+        1.0666493100755012
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 32,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 265.5390625,
+        "scalar_sram": 355.53515625,
+        "candidate_sram": 455.546875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7804578974446922,
+        0.7804921968787515
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5828917356930939,
+        0.58290173212142
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 100.01171875
+    },
+    {
+      "family": "strcmp",
+      "bytes": 128,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 945.34765625,
+        "scalar_sram": 1328.37890625,
+        "candidate_sram": 1713.15625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7753920099960554,
+        0.7756281195063057
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5515775024910334,
+        0.5518163659911348
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 384.79296875
+    },
+    {
+      "family": "strcmp",
+      "bytes": 128,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.01171875,
+        "scalar_sram": 45.01171875,
+        "candidate_sram": 45.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0666493100755012,
+        1.0666493100755012
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 128,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 938.3515625,
+        "scalar_sram": 1316.3828125,
+        "candidate_sram": 1705.18359375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7719889033209859,
+        0.7722253784407873
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.550056353773412,
+        0.5504183966198319
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 388.80078125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 512,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 3636.328125,
+        "scalar_sram": 5173.0078125,
+        "candidate_sram": 6710.6875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7708393240702474,
+        0.7708925631765591
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5418711756433301,
+        0.5418875779738329
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 1537.8203125
+    },
+    {
+      "family": "strcmp",
+      "bytes": 512,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.0234375,
+        "scalar_sram": 45.0234375,
+        "candidate_sram": 45.0234375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.066631962519521,
+        1.066631962519521
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 512,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 3629.34375,
+        "scalar_sram": 5161.0625,
+        "candidate_sram": 6702.6484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7699998717863541,
+        0.7700194424628984
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5414742005004994,
+        0.5414935727973368
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 1541.6171875
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2048,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 14400.34375,
+        "scalar_sram": 20550.1875,
+        "candidate_sram": 26700.5
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7696521972189354,
+        0.7696555307953035
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5392060822475103,
+        0.539328617441621
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 6150.4375
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2048,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 48.09375,
+        "scalar_sram": 45.09375,
+        "candidate_sram": 45.09375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0,
+        1.0
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0665280665280665,
+        1.0665280665280665
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 0.0
+    },
+    {
+      "family": "strcmp",
+      "bytes": 2048,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 14393.375,
+        "scalar_sram": 20538.21875,
+        "candidate_sram": 26692.75
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.7694297030212991,
+        0.7694317745455227
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.5392223318804592,
+        0.5392241338940349
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 6154.5625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 0,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 67.005859375,
+        "scalar_sram": 61.005859375,
+        "candidate_sram": 63.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9682569205493041,
+        0.9682569205493041
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0634861589013918,
+        1.0634861589013918
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 0,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 61.005859375,
+        "candidate_sram": 63.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9682569205493041,
+        0.9682569205493041
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0317430794506959,
+        1.0317430794506959
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 0,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 61.005859375,
+        "candidate_sram": 63.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9682569205493041,
+        0.9682569205493041
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0317430794506959,
+        1.0317430794506959
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 2.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 1,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 78.005859375,
+        "scalar_sram": 76.005859375,
+        "candidate_sram": 85.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8913601172751844,
+        0.8941249454311514
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9148151541527326,
+        0.91765273533534
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 9.263671875
+    },
+    {
+      "family": "strncmp",
+      "bytes": 1,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 65.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9230838566235015,
+        0.9230838566235015
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 1,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 65.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9230838566235015,
+        0.9230838566235015
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 89.005859375,
+        "scalar_sram": 92.005859375,
+        "candidate_sram": 107.271484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8576916774393242,
+        0.8601784413692644
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8297252517160388,
+        0.8321922796795339
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 15.265625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 65.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9230838566235015,
+        0.9230838566235015
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0,
+        1.0
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 74.005859375,
+        "candidate_sram": 87.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.8480338398872004,
+        0.8505847756302333
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8709518587318995,
+        0.873571733225582
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 13.26171875
+    },
+    {
+      "family": "strncmp",
+      "bytes": 3,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 100.265625,
+        "scalar_sram": 108.2734375,
+        "candidate_sram": 87.267578125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2407063405026746,
+        1.2444384582575707
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.148944741612766,
+        1.1524457314746224
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -21.005859375
+    },
+    {
+      "family": "strncmp",
+      "bytes": 3,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 55.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908994070233995,
+        1.0908994070233995
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181798814046799,
+        1.181798814046799
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 3,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 87.265625,
+        "scalar_sram": 90.005859375,
+        "candidate_sram": 77.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1688183224693738,
+        1.1722423719785933
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1298602480533644,
+        1.1332335709031882
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -13.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 4,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 111.26953125,
+        "scalar_sram": 124.26953125,
+        "candidate_sram": 113.26953125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0971101455272778,
+        1.0971290628502457
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9823088197258384,
+        0.9823430010001034
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -11.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 4,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 55.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908994070233995,
+        1.0908994070233995
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181798814046799,
+        1.181798814046799
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 4,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 98.26953125,
+        "scalar_sram": 106.26953125,
+        "candidate_sram": 89.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.187454875620802,
+        1.194004959294288
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1007723105869998,
+        1.1040793487086085
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -16.734375
+    },
+    {
+      "family": "strncmp",
+      "bytes": 7,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 144.26953125,
+        "scalar_sram": 172.275390625,
+        "candidate_sram": 139.271484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2369406386290651,
+        1.2369926794379154
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0358580263360866,
+        1.0359016071578828
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -33.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 7,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 55.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908994070233995,
+        1.0908994070233995
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181798814046799,
+        1.181798814046799
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 7,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 131.26953125,
+        "scalar_sram": 154.2734375,
+        "candidate_sram": 129.271484375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1933885296428355,
+        1.1934065602006436
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0154408654136702,
+        1.0154562074123317
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -25.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 8,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 155.26953125,
+        "scalar_sram": 188.275390625,
+        "candidate_sram": 165.2734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1391616738161923,
+        1.139176780628464
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9394594722350244,
+        0.9394816766919959
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -23.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 8,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 55.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908994070233995,
+        1.0908994070233995
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181798814046799,
+        1.181798814046799
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 8,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 142.26953125,
+        "scalar_sram": 170.2734375,
+        "candidate_sram": 141.275390625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2052590104101861,
+        1.2053366514585926
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.007036898787552,
+        1.0070786672196876
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -28.998046875
+    },
+    {
+      "family": "strncmp",
+      "bytes": 16,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 243.271484375,
+        "scalar_sram": 316.48046875,
+        "candidate_sram": 269.27734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1744279594987352,
+        1.1752955682889679
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9027621746598923,
+        0.9034307681148909
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -47.00390625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 16,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.005859375,
+        "scalar_sram": 60.005859375,
+        "candidate_sram": 55.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908994070233995,
+        1.0908994070233995
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181798814046799,
+        1.181798814046799
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 16,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 230.26953125,
+        "scalar_sram": 298.4765625,
+        "candidate_sram": 245.27734375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2160819225685209,
+        1.2169197569696053
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9388128871972098,
+        0.9388208501218327
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -53.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 32,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 419.5390625,
+        "scalar_sram": 572.953125,
+        "candidate_sram": 477.55078125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.1989317235568862,
+        1.1997742386689898
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8785152224058108,
+        0.8785224084480544
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -95.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 32,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.01171875,
+        "scalar_sram": 60.01171875,
+        "candidate_sram": 55.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908897252005965,
+        1.0908897252005965
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181779450401193,
+        1.181779450401193
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 32,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 406.53515625,
+        "scalar_sram": 554.5546875,
+        "candidate_sram": 453.5546875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2226853845491343,
+        1.2235724743777452
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8963310653690466,
+        0.8963551176490854
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -101.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 128,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 1476.75,
+        "scalar_sram": 2110.62109375,
+        "candidate_sram": 1727.18359375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.221973697601574,
+        1.2220015876641661
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8549907839833546,
+        0.855004647649375
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -383.39453125
+    },
+    {
+      "family": "strncmp",
+      "bytes": 128,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.01171875,
+        "scalar_sram": 60.01171875,
+        "candidate_sram": 55.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908897252005965,
+        1.0908897252005965
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.181779450401193,
+        1.181779450401193
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 128,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 1463.7578125,
+        "scalar_sram": 2092.6171875,
+        "candidate_sram": 1702.79296875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2289271327503464,
+        1.2289486361863688
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8596197432532874,
+        0.8596315753251818
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -389.81640625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 512,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 5705.75,
+        "scalar_sram": 8261.125,
+        "candidate_sram": 6724.4921875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2284734089950637,
+        1.2285128407698072
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8484771034003632,
+        0.8485027331292442
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1536.4140625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 512,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.0234375,
+        "scalar_sram": 60.0234375,
+        "candidate_sram": 55.0234375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0908703677410194,
+        1.0908703677410194
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1817407354820388,
+        1.1817407354820388
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 512,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 5691.71875,
+        "scalar_sram": 8243.0625,
+        "candidate_sram": 6700.65625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2301873417249243,
+        1.230228401330602
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8494270617150372,
+        0.8496112082102752
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -1542.40625
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2048,
+      "scenario": "equal",
+      "aligned_cycles": {
+        "resident_flash": 22620.875,
+        "scalar_sram": 32864.46875,
+        "candidate_sram": 26714.90625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2301912792030658,
+        1.230193887995321
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8466374070625448,
+        0.8467553735926305
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -6149.53125
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2048,
+      "scenario": "different_first",
+      "aligned_cycles": {
+        "resident_flash": 65.09375,
+        "scalar_sram": 60.09375,
+        "candidate_sram": 55.09375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0907543959160522,
+        1.0907543959160522
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.1815087918321043,
+        1.1815087918321043
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -5.0
+    },
+    {
+      "family": "strncmp",
+      "bytes": 2048,
+      "scenario": "different_last",
+      "aligned_cycles": {
+        "resident_flash": 22604.875,
+        "scalar_sram": 32846.625,
+        "candidate_sram": 26690.46875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2306413410123627,
+        1.2306499862427482
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8469209145054274,
+        0.8469268641076226
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -6155.96875
+    },
+    {
+      "family": "memcpy",
+      "bytes": 0,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 53.005859375,
+        "scalar_sram": 37.005859375,
+        "candidate_sram": 61.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.6065951656795262,
+        0.6065951656795262
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.8688650552265087,
+        0.8688650552265087
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 24.0
+    },
+    {
+      "family": "memcpy",
+      "bytes": 1,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 64.2109375,
+        "scalar_sram": 57.005859375,
+        "candidate_sram": 65.212890625
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.874150169217407,
+        0.8769341705976024
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9846167713247003,
+        0.9846356584503878
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 8.20703125
+    },
+    {
+      "family": "memcpy",
+      "bytes": 2,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 70.005859375,
+        "scalar_sram": 66.005859375,
+        "candidate_sram": 70.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9401602403605408,
+        0.9428619256200653
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9971345907750515,
+        1.002901542839606
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 4.201171875
+    },
+    {
+      "family": "memcpy",
+      "bytes": 3,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 76.005859375,
+        "scalar_sram": 75.005859375,
+        "candidate_sram": 71.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0563333791775547,
+        1.0563333791775547
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0704167239719433,
+        1.0704167239719433
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -4.0
+    },
+    {
+      "family": "memcpy",
+      "bytes": 4,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 82.005859375,
+        "scalar_sram": 84.005859375,
+        "candidate_sram": 81.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        0.9523503753072206,
+        1.0370343580470163
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9296769479441136,
+        1.012344786015672
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": 4.203125
+    },
+    {
+      "family": "memcpy",
+      "bytes": 7,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 100.005859375,
+        "scalar_sram": 111.21484375,
+        "candidate_sram": 102.2109375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.0671139681766215,
+        1.0880914163418176
+      ],
+      "resident_vs_candidate_ratio_range": [
+        0.9596304140037858,
+        0.9784262019414507
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -6.994140625
+    },
+    {
+      "family": "memcpy",
+      "bytes": 8,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 106.205078125,
+        "scalar_sram": 120.212890625,
+        "candidate_sram": 85.005859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.2240717538730783,
+        1.414171817200101
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.0814390549489887,
+        1.2493853824414678
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -22.005859375
+    },
+    {
+      "family": "memcpy",
+      "bytes": 16,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 154.208984375,
+        "scalar_sram": 192.216796875,
+        "candidate_sram": 118.208984375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.370878546852582,
+        1.6260760372089949
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.099834236442909,
+        1.304545379442526
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -52.001953125
+    },
+    {
+      "family": "memcpy",
+      "bytes": 32,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 250.41796875,
+        "scalar_sram": 336.43359375,
+        "candidate_sram": 142.01171875
+      },
+      "candidate_vs_scalar_speedup_range": [
+        1.7668369335548855,
+        2.369055150598267
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.3150552854534638,
+        1.7633612983083482
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -146.01953125
+    },
+    {
+      "family": "memcpy",
+      "bytes": 128,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 826.828125,
+        "scalar_sram": 1201.27734375,
+        "candidate_sram": 286.42578125
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.447508535682735,
+        4.194026593931128
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.6845896107410325,
+        2.886709853392431
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -710.4609375
+    },
+    {
+      "family": "memcpy",
+      "bytes": 512,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 3133.265625,
+        "scalar_sram": 4661.0859375,
+        "candidate_sram": 862.859375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.7553305962601544,
+        5.40190681418974
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.8521749571658823,
+        3.6312587146659907
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -2969.4296875
+    },
+    {
+      "family": "memcpy",
+      "bytes": 2048,
+      "scenario": "disjoint",
+      "aligned_cycles": {
+        "resident_flash": 12359.125,
+        "scalar_sram": 18500.375,
+        "candidate_sram": 3169.4375
+      },
+      "candidate_vs_scalar_speedup_range": [
+        2.847690146806996,
+        5.837116207528939
+      ],
+      "resident_vs_candidate_ratio_range": [
+        1.9023916264214111,
+        3.899469543097158
+      ],
+      "worst_candidate_vs_scalar_delta_cycles": -12003.75
+    }
+  ],
+  "raw_report_sha256": "29219320b3830bce0f8af391b7dee6a41bede2a193b1eeb22bdc346258604ce4"
+}

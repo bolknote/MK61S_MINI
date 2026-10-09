@@ -50,6 +50,7 @@ Status resolve_file(u16 cwd, const char* path,
 
 // Разбирает путь до последнего компонента, не предъявляя требований к его
 // расширению. Нужен для корневых псевдофайлов, которые не являются inode C6.
+// leaf may overlap path; the path is fully consumed before the leaf is copied.
 Status split_parent(u16 cwd, const char* path, u16& out_parent,
                     char* leaf, usize leaf_capacity);
 

@@ -24,6 +24,7 @@ class MK61DisplayUpdate {
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 
 namespace {
 
@@ -52,6 +53,48 @@ void test_edit_primitives_reject_corrupt_state(void) {
   assert(strcmp(source, "AxyzC") == 0);
   assert(len == 5 && cursor == 4);
   assert(!text_editor::replace_range(source, len, cursor, sizeof(source), 0, 0, "toolong"));
+}
+
+void test_edit_primitives_snapshot_aliased_text(void) {
+  // Hooks receive the current source and may return a suffix of it. Compare
+  // every splice with an independent immutable string snapshot.
+  for(u16 length = 0; length <= 24; ++length) {
+    std::string original;
+    for(u16 i = 0; i < length; ++i) original += (char) ('A' + i);
+    for(u16 offset = 0; offset <= length; ++offset) {
+      const std::string text = original.substr(offset);
+      for(u16 position = 0; position <= length; ++position) {
+        char source[96];
+        strcpy(source, original.c_str());
+        u16 len = length, cursor = position;
+        const bool inserted = text_editor::insert_text(source, len, cursor,
+                                                       sizeof(source), source + offset);
+        assert(inserted == !text.empty());
+        const std::string expected = original.substr(0, position) + text + original.substr(position);
+        assert(std::string(source) == expected && len == expected.size());
+        assert(cursor == position + text.size());
+      }
+      for(u16 start = 0; start <= length; ++start) for(u16 end = start; end <= length; ++end) {
+        char source[96];
+        strcpy(source, original.c_str());
+        u16 len = length, cursor = length;
+        assert(text_editor::replace_range(source, len, cursor, sizeof(source),
+                                         start, end, source + offset));
+        const std::string expected = original.substr(0, start) + text + original.substr(end);
+        assert(std::string(source) == expected && len == expected.size());
+        assert(cursor == start + text.size());
+      }
+    }
+  }
+  char full[10] = "abcdefghi";
+  u16 len = 9, cursor = 4;
+  assert(!text_editor::insert_text(full, len, cursor, sizeof(full), full + 6));
+  assert(strcmp(full, "abcdefghi") == 0 && len == 9 && cursor == 4);
+  char outer[64] = "XYZabcdefghi";
+  char* source = outer + 3;
+  len = 9; cursor = 4;
+  assert(!text_editor::replace_range(source, len, cursor, 61, 0, 0, outer));
+  assert(strcmp(outer, "XYZabcdefghi") == 0 && len == 9 && cursor == 4);
 }
 
 void test_sms_failure_does_not_arm_stale_state(void) {
@@ -599,6 +642,7 @@ void test_lcd1602_shifted_viewport_command_stream(void) {
 int main(void) {
   test_init_terminates_untrusted_buffer();
   test_edit_primitives_reject_corrupt_state();
+  test_edit_primitives_snapshot_aliased_text();
   test_sms_failure_does_not_arm_stale_state();
   test_hook_output_is_sanitized();
   test_sms_deadline_wraparound();

@@ -1208,6 +1208,19 @@ static void test_paths_and_recursive_tree_operations(void) {
       split_leaf, sizeof(split_leaf)) == storage_path::Status::OK);
   assert(split_parent == projects);
   assert(strcmp(split_leaf, "BASIC.APP") == 0);
+  // The public parser can extract the last component into the same path
+  // storage; trimming/quotes make even a root-level leaf partially overlap.
+  char inplace_path[64] = "  \"../BASIC.APP\"  ";
+  assert(storage_path::split_parent(year, inplace_path, split_parent,
+      inplace_path, sizeof(inplace_path)) == storage_path::Status::OK);
+  assert(split_parent == projects && strcmp(inplace_path, "BASIC.APP") == 0);
+  Entry alias_entry = {};
+  alias_entry.kind = NodeKind::FILE;
+  alias_entry.type = ProgramType::TEXT;
+  strcpy(alias_entry.name, "Example");
+  assert(storage_path::visible_name(alias_entry, alias_entry.name + 1,
+      sizeof(alias_entry.name) - 1));
+  assert(strcmp(alias_entry.name + 1, "Example.txt") == 0);
   assert(storage_path::split_parent(year, "/WBMP.APP/", split_parent,
       split_leaf, sizeof(split_leaf)) == storage_path::Status::INVALID);
 

@@ -9,7 +9,6 @@ import argparse
 from contextlib import ExitStack
 from dataclasses import asdict
 import errno
-import fcntl
 import hashlib
 import json
 from pathlib import Path
@@ -19,7 +18,6 @@ import statistics
 import struct
 import subprocess
 import sys
-import termios
 import time
 
 from hil_c6_system_bootstrap import read_file, write_file
@@ -43,24 +41,11 @@ def save(path, data):
 
 
 class ExclusiveScreenPort(ScreenPort):
-    def __init__(self, path):
-        super().__init__(path)
-        try:
-            fcntl.ioctl(self.fd, termios.TIOCEXCL)
-        except BaseException:
-            super().close()
-            raise
+    """Port already owns the advisory lock and TIOCEXCL for its lifetime.
 
-    def close(self):
-        if self.fd >= 0:
-            try:
-                fcntl.ioctl(self.fd, termios.TIOCNXCL)
-            except OSError as error:
-                # A successful reset can remove the USB endpoint before close.
-                if error.errno not in (errno.ENXIO, errno.ENODEV, errno.EBADF):
-                    raise
-            finally:
-                super().close()
+    Repeating TIOCEXCL on the same descriptor returns EBUSY on macOS.
+    Keep this name for callers, using Port's acquisition and cleanup.
+    """
 
 
 def connect(path, build=None, wait=30):

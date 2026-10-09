@@ -86,7 +86,8 @@ static bool copy_component(const char* begin, const char* end, char* out,
                            usize capacity) {
   const usize len = (usize) (end - begin);
   if(out == NULL || capacity == 0 || len == 0 || len >= capacity) return false;
-  memcpy(out, begin, len);
+  // split_parent may write the leaf back into the caller's path buffer.
+  memmove(out, begin, len);
   out[len] = 0;
   return true;
 }
@@ -350,14 +351,14 @@ bool visible_name(const program_store::Entry& entry, char* out,
   const usize base_len = strlen(entry.name);
   if(entry.kind == program_store::NodeKind::DIRECTORY) {
     if(base_len >= capacity) return false;
-    memcpy(out, entry.name, base_len + 1);
+    memmove(out, entry.name, base_len + 1);
     return true;
   }
   if(entry.kind != program_store::NodeKind::FILE) return false;
   const char* extension = program_store::file_extension(entry.type);
   const usize extension_len = strlen(extension);
   if(base_len + 1 + extension_len >= capacity) return false;
-  memcpy(out, entry.name, base_len);
+  memmove(out, entry.name, base_len);
   out[base_len] = '.';
   memcpy(out + base_len + 1, extension, extension_len + 1);
   return true;
@@ -528,7 +529,7 @@ Status move_target(u16 cwd, const program_store::Entry& source,
   if(status == Status::OK) {
     const usize len = strlen(source.name);
     if(len >= name_capacity) return Status::TOO_LONG;
-    memcpy(out_name, source.name, len + 1);
+    memmove(out_name, source.name, len + 1);
     out_parent = directory;
     return Status::OK;
   }
