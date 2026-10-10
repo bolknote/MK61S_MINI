@@ -88,6 +88,12 @@ constexpr bool from_codepoint(u32 value, u8& byte) {
     byte = (u8) value;
     return true;
   }
+  // The ordinary Russian alphabet cannot collide with private symbols.
+  // Avoid scanning their table for every imported Cyrillic character.
+  if(value >= 0x0410 && value <= 0x044F) {
+    byte = (u8) (0xC0U + value - 0x0410U);
+    return true;
+  }
   for(u8 index = 0;
       index < sizeof(PRIVATE_CODEPOINTS) / sizeof(PRIVATE_CODEPOINTS[0]);
       ++index) {
@@ -95,10 +101,6 @@ constexpr bool from_codepoint(u32 value, u8& byte) {
       byte = (u8) (BYTE_LEFT_ARROW + index);
       return true;
     }
-  }
-  if(value >= 0x0410 && value <= 0x044F) {
-    byte = (u8) (0xC0U + value - 0x0410U);
-    return true;
   }
   for(u8 index = 0; index < sizeof(CP1251_80_BF) / sizeof(CP1251_80_BF[0]);
       ++index) {

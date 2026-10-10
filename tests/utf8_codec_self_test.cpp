@@ -187,6 +187,30 @@ void test_every_m8_byte_round_trips_at_external_boundaries(void) {
   assert(!mk8::from_utf16(&surrogate, 1, &output, 1, output_size));
 }
 
+void test_reverse_mapping_rejects_every_unassigned_bmp_codepoint(void) {
+  // Derive the inverse from the unchanged forward code-page mapping, rather
+  // than duplicating the reverse function's ranges and table search order.
+  u8 assigned[65536] = {};
+  for(u16 value = 1; value <= 0xFFU; ++value) {
+    const u8 byte = (u8) value;
+    if(!mk8::valid_byte(byte)) continue;
+    const u16 codepoint = mk8::codepoint(byte);
+    assert(assigned[codepoint] == 0);
+    assigned[codepoint] = byte;
+  }
+  for(u32 codepoint = 0; codepoint < 65536; ++codepoint) {
+    u8 byte = 0x5A;
+    const bool converted = mk8::from_codepoint(codepoint, byte);
+    assert(converted == (assigned[codepoint] != 0));
+    assert(byte == (converted ? assigned[codepoint] : 0x5A));
+  }
+  const u32 supplementary[] = {0x10000U, 0x10FFFFU, 0x110000U, 0xFFFFFFFFU};
+  for(u32 codepoint : supplementary) {
+    u8 byte = 0x5A;
+    assert(!mk8::from_codepoint(codepoint, byte) && byte == 0x5A);
+  }
+}
+
 } // namespace
 
 int main(void) {
@@ -195,6 +219,7 @@ int main(void) {
   test_navigation_uses_the_same_decoder();
   test_mk8_compact_firmware_text();
   test_every_m8_byte_round_trips_at_external_boundaries();
+  test_reverse_mapping_rejects_every_unassigned_bmp_codepoint();
   puts("utf8_codec_self_test: ok");
   return 0;
 }
