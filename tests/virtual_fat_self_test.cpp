@@ -1766,8 +1766,13 @@ static void test_streaming_utf8_export_and_size_invalidation(void) {
         const u32 before = zx0::test_decode_calls();
         assert(virtual_fat::read_sector(cluster_lba(
             fs, cluster, (offset / 512) % fs.sectors_per_cluster), sector));
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+        assert(zx0::test_decode_calls() - before ==
+               (type == program_store::ProgramType::TINYBASIC && offset == 0 ? 1U : 0U));
+#else
         assert(zx0::test_decode_calls() - before ==
                (type == program_store::ProgramType::TINYBASIC ? 1U : 0U));
+#endif
         const u32 count = encoded.size() - offset < 512
             ? encoded.size() - offset : 512;
         assert(memcmp(sector, encoded.data() + offset, count) == 0);
@@ -1790,6 +1795,8 @@ static void test_streaming_utf8_export_and_size_invalidation(void) {
       }
     }
     assert(corrupted);
+    // Revoke the previously verified snapshot to exercise cold media CRC.
+    (void)program_store::read_cache_release();
     u8 sector[512];
     assert(!virtual_fat::read_sector(cluster_lba(fs, first_cluster_for_id(id)), sector));
   }

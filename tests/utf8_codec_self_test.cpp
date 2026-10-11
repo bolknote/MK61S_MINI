@@ -1,4 +1,8 @@
 #include "mk8_codec.hpp"
+#include "mk8_span.hpp"
+#include <vector>
+#include <sys/mman.h>
+#include <unistd.h>
 #include "mk8_literal.hpp"
 #include "utf8_codec.hpp"
 #include "utf8_view.hpp"
@@ -211,9 +215,88 @@ void test_reverse_mapping_rejects_every_unassigned_bmp_codepoint(void) {
   }
 }
 
+void test_word_spans_at_protected_ends(void) {
+  const usize page=(usize)sysconf(_SC_PAGESIZE);
+  auto mapping=[&]() {
+    auto* p=(u8*)mmap(nullptr,page*3,PROT_NONE,MAP_PRIVATE|MAP_ANON,-1,0);
+    assert(p!=MAP_FAILED&&mprotect(p+page,page,PROT_READ|PROT_WRITE)==0);return p;
+  };
+  u8* input=mapping();u8* output=mapping();
+  for(unsigned n=0;n<=31;++n)for(unsigned pattern=0;pattern<3;++pattern) {
+    std::vector<u8> text(n);
+    for(unsigned i=0;i<n;++i)text[i]=pattern==0?(u8)'A':pattern==1?(u8)0xDF:mk8::BYTE_RIGHT_ARROW;
+    std::vector<u8> utf8(n*3);std::vector<u16> wide(n);usize count;
+    assert(mk8::to_utf8(text.data(),n,utf8.data(),utf8.size(),count));utf8.resize(count);
+    assert(mk8::to_utf16(text.data(),n,wide.data(),n,count));
+    for(usize capacity=0;capacity<=n*3;++capacity) {
+      u8* in=input+2*page-n;u8* out=output+2*page-capacity;
+      if(n)memcpy(in,text.data(),n);usize consumed,written;
+      assert(mk8_span::to_utf8(in,n,out,capacity,consumed,written));
+      assert(!written||memcmp(out,utf8.data(),written)==0);
+      in=input+2*page-utf8.size();if(!utf8.empty())memcpy(in,utf8.data(),utf8.size());
+      assert(mk8_span::from_utf8(in,utf8.size(),out,capacity,true,consumed,written));
+      assert(!written||memcmp(out,text.data(),written)==0);
+      in=input+2*page-n*2;if(n)memcpy(in,wide.data(),n*2);
+      const bool ok=mk8_span::from_utf16((const u16*)in,n,out,capacity,written);
+      assert(ok==(n<=capacity));if(ok)assert(!n||memcmp(out,text.data(),n)==0);
+      in=input+2*page-n;if(n)memcpy(in,text.data(),n);
+      out=output+2*page-capacity*2;
+      assert(mk8_span::to_utf16(in,n,(u16*)out,capacity,written)==(n<=capacity));
+      if(n<=capacity)assert(!n||memcmp(out,wide.data(),n*2)==0);
+    }
+  }
+  assert(munmap(input,page*3)==0&&munmap(output,page*3)==0);
+}
+
+void test_bounded_word_spans(void) {
+  std::vector<u8> m8;
+  for(unsigned byte = 1; byte < 256; ++byte) if(mk8::valid_byte((u8)byte)) m8.push_back((u8)byte);
+  for(unsigned pattern = 0; pattern < 5; ++pattern) {
+    std::vector<u8> input(513);
+    for(usize i = 0; i < input.size(); ++i) input[i] = pattern == 0 ? (u8)(' '+i%95) :
+        pattern == 1 ? (u8)(0xC0+i%64) : pattern == 2 ? (i%2 ? (u8)0xDF : (u8)'A') :
+        pattern == 3 ? m8[i%m8.size()] : (i%7 ? (u8)0xDF : mk8::BYTE_RIGHT_ARROW);
+    std::vector<u8> expected(input.size()*3); usize length;
+    assert(mk8::to_utf8(input.data(),input.size(),expected.data(),expected.size(),length));expected.resize(length);
+    for(unsigned chunk : {1U,2U,3U,4U,7U,8U,31U,64U,512U}) {
+      std::vector<u8> received; usize at = 0;
+      while(at < expected.size()) {
+        const usize count = expected.size()-at < chunk+3U ? expected.size()-at : chunk+3U;
+        std::vector<u8> bytes(count); usize consumed,written;
+        assert(mk8_span::from_utf8(expected.data()+at,count,bytes.data(),bytes.size(),at+count==expected.size(),consumed,written));
+        assert(consumed && written);received.insert(received.end(),bytes.begin(),bytes.begin()+written);at+=consumed;
+      }
+      assert(received==input);
+    }
+    for(usize capacity=0;capacity<=expected.size();++capacity) {
+      std::vector<u8> bytes(capacity);usize consumed,written;
+      assert(mk8_span::to_utf8(input.data(),input.size(),bytes.data(),capacity,consumed,written));
+      assert(written<=capacity && (!written || memcmp(bytes.data(),expected.data(),written)==0));
+      usize check=0;for(usize i=0;i<consumed;++i)check+=mk8::utf8(input[i]).size;assert(check==written);
+    }
+    std::vector<u16> units(input.size());std::vector<u8> back(input.size());usize n;
+    assert(mk8_span::to_utf16(input.data(),input.size(),units.data(),units.size(),n)&&n==input.size());
+    assert(mk8_span::from_utf16(units.data(),units.size(),back.data(),back.size(),n)&&back==input);
+  }
+  for(unsigned lane=0;lane<4;++lane)for(unsigned cp=0;cp<65536;++cp) {
+    u16 units[]={0x0410,0x0411,0x0412,0x0413};units[lane]=(u16)cp;
+    u8 a[4]={},b[4]={};usize n,m;
+    const bool expected=mk8::from_utf16(units,4,a,4,n);
+    assert(mk8_span::from_utf16(units,4,b,4,m)==expected && n==m && memcmp(a,b,n)==0);
+  }
+  for(unsigned value=0;value<65536;++value) {
+    u8 input[]={'A','B','C','D',(u8)(value>>8),(u8)value,'E','F'};
+    u8 a[8]={},b[8]={};usize n,m,consumed;
+    const bool expected=mk8::from_utf8(input,sizeof(input),a,sizeof(a),n);
+    assert(mk8_span::from_utf8(input,sizeof(input),b,sizeof(b),true,consumed,m)==expected && n==m && memcmp(a,b,n)==0);
+  }
+}
+
 } // namespace
 
 int main(void) {
+  test_bounded_word_spans();
+  test_word_spans_at_protected_ends();
   test_scalar_boundaries();
   test_malformed_input();
   test_navigation_uses_the_same_decoder();

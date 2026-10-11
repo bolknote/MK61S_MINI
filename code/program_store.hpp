@@ -280,6 +280,11 @@ bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 // Exact USB-visible byte length, persisted in the CRC-protected catalog.
 bool exported_size_id(u16 id, u32& size);
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+// USB-visible text range. Full CRC is checked before publishing a decoded cache;
+// no space or an active APP uses the CRC-checked streaming fallback.
+bool read_utf8_range_id(u16 id, u32 offset, u8* data, u16 capacity, u16& copied);
+#endif
 struct FileSink {
   void* context;
   bool (*next)(void* context, u8 value);

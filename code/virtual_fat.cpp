@@ -13,6 +13,9 @@
 #include "fat_name.hpp"
 #include "language_workspace.hpp"
 #include "mk8_codec.hpp"
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+#include "mk8_span.hpp"
+#endif
 #if MK61_ANY_LOADABLE_MODULE
   #include "loadable_module_runtime.hpp"
 #endif
@@ -578,6 +581,7 @@ static u32 maximum_file_size(program_store::ProgramType type) {
 #endif
 }
 
+#if !MK61_PROGRAM_STORE_READ_CACHE_BYTES || defined(MK61_BUILD_USBDISK_MODULE)
 struct TextExport {
   u32 position;
   u32 offset;
@@ -597,6 +601,8 @@ static bool export_text_byte(void* context, u8 value) {
   }
   return true;
 }
+
+#endif
 
 static bool exported_file_size(const program_store::Entry& entry,
                                u32& output) {
@@ -618,11 +624,15 @@ static bool read_exported_range(const program_store::Entry& entry,
         entry.id, (u16) external_offset, output, wanted, &copied);
   }
 
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+  return program_store::read_utf8_range_id(entry.id, external_offset, output, capacity, copied);
+#else
   TextExport text = {0, external_offset, output, capacity, 0};
   const program_store::FileSink sink = {&text, export_text_byte};
   if(!program_store::stream_file_id(entry.id, sink)) return false;
   copied = text.copied;
   return true;
+#endif
 }
 
 static bool m8_to_utf16(const char* input, u16* output, u16 capacity,
@@ -631,8 +641,12 @@ static bool m8_to_utf16(const char* input, u16* output, u16 capacity,
   if(input == NULL) return false;
   usize converted = 0;
   const usize input_len = strlen(input);
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+  if(!mk8_span::to_utf16((const u8*)input, input_len, output, capacity, converted)) return false;
+#else
   if(!mk8::to_utf16((const u8*) input, input_len, output, capacity,
                     converted) || converted > 0xFFFFU) return false;
+#endif
   output_len = (u16) converted;
   return true;
 }
@@ -645,8 +659,12 @@ static bool utf16_to_m8(const u16* input, u16 input_len, char* output,
     ++units;
   }
   usize converted = 0;
-  if(!mk8::from_utf16(input, units, (u8*) output, capacity - 1U,
-                      converted) || converted == 0 || converted >= capacity) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+  const bool ok = mk8_span::from_utf16(input, units, (u8*)output, capacity - 1U, converted);
+#else
+  const bool ok = mk8::from_utf16(input, units, (u8*)output, capacity - 1U, converted);
+#endif
+  if(!ok || converted == 0 || converted >= capacity) {
     return false;
   }
   output[converted] = 0;
@@ -1638,6 +1656,19 @@ static bool read_file_chain_source(void* context, u32 offset,
   return true;
 }
 
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+static bool decode_chain_span(const FileChain& chain, u32& offset, u8* output, usize capacity, u16& count) {
+  count = 0;
+  u8 bytes[64];
+  const usize available = chain.size - offset < sizeof(bytes) ? chain.size - offset : sizeof(bytes);
+  if(!read_file_chain_source((void*)&chain, offset, bytes, available)) return false;
+  usize consumed, written;
+  if(!mk8_span::from_utf8(bytes, available, output, capacity, offset + available == chain.size, consumed, written) ||
+     !written) return false;
+  offset += consumed; count = (u16)written;
+  return true;
+}
+#else
 static bool decode_chain_m8(const FileChain& chain, u32& utf8_offset,
                             u8& output) {
   if(utf8_offset >= chain.size) return false;
@@ -1654,14 +1685,22 @@ static bool decode_chain_m8(const FileChain& chain, u32& utf8_offset,
   return true;
 }
 
+#endif
+
 static bool validate_text_chain(const FileChain& chain, u16 limit,
                                 u16& m8_size) {
   m8_size = 0;
   u32 offset = 0;
   while(offset < chain.size) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+    u8 bytes[64]; u16 count;
+    if(!decode_chain_span(chain, offset, bytes, sizeof(bytes), count) || count > limit - m8_size) return false;
+    m8_size += count;
+#else
     u8 byte = 0;
     if(!decode_chain_m8(chain, offset, byte) || m8_size == limit) return false;
     ++m8_size;
+#endif
   }
   return true;
 }
@@ -1680,9 +1719,16 @@ static bool seek_imported_text(ImportedTextSource& source, u16 wanted) {
     source.m8_offset = 0;
   }
   while(source.m8_offset < wanted) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+    u8 bytes[64]; u16 count;
+    const usize remaining = wanted - source.m8_offset;
+    if(!decode_chain_span(*source.chain, source.utf8_offset, bytes, remaining < sizeof(bytes) ? remaining : sizeof(bytes), count)) return false;
+    source.m8_offset += count;
+#else
     u8 byte = 0;
     if(!decode_chain_m8(*source.chain, source.utf8_offset, byte)) return false;
     ++source.m8_offset;
+#endif
   }
   return true;
 }
@@ -1692,12 +1738,20 @@ static bool read_imported_text(void* context, u32 offset,
   ImportedTextSource& source = *(ImportedTextSource*) context;
   if(output == NULL || offset > source.size || size > source.size - offset ||
      offset > 0xFFFFU || !seek_imported_text(source, (u16) offset)) return false;
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES && !defined(MK61_BUILD_USBDISK_MODULE)
+  while(size) {
+    u16 count;
+    if(!decode_chain_span(*source.chain, source.utf8_offset, output, size, count)) return false;
+    output += count; size -= count; source.m8_offset += count;
+  }
+#else
   while(size-- != 0) {
     if(!decode_chain_m8(*source.chain, source.utf8_offset, *output++)) {
       return false;
     }
     ++source.m8_offset;
   }
+#endif
   return true;
 }
 

@@ -13,6 +13,9 @@
 #include "flash_capacity_probe.hpp"
 #include "ledcontrol.h"
 #include "mk8_codec.hpp"
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+#include "mk8_span.hpp"
+#endif
 #include "shared_memory.hpp"
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
@@ -3911,6 +3914,9 @@ bool read_cache_release(void) {
 }
 
 #if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+struct TextCursor { u32 utf8; u32 m8; };
+static_assert(sizeof(TextCursor) == 8, "bounded export cursor header");
+static u8* read_cache_payload() { return g_read_cache_lease.data() + sizeof(TextCursor); }
 static bool cached_file_matches(u16 id, const Inode& inode) {
   const auto& key = g_read_cache_key;
   return g_read_cache_valid && g_read_cache_lease.ok() &&
@@ -3921,24 +3927,47 @@ static bool cached_file_matches(u16 id, const Inode& inode) {
       key.flags == inode.flags;
 }
 static bool acquire_read_cache(u16 bytes) {
+  bytes = (u16)(bytes + sizeof(TextCursor));
   if(g_read_cache_busy) return false;
   // This is the lowest-priority cache. Never reclaim a loading/idle APP or
   // another lower owner merely to accelerate a read. Only an idle stage
   // index can yield here; its registered callback protects live USB state.
   const auto owner = shared_memory::active_owner(shared_memory::Arena::OVERLAY);
-  if((owner != shared_memory::Owner::NONE &&
-      owner != shared_memory::Owner::PROGRAM_STORE_READ_CACHE &&
-      owner != shared_memory::Owner::VFAT_STAGE) ||
-     bytes > shared_memory::capacity(shared_memory::Arena::OVERLAY)) return false;
+  auto arena = shared_memory::Arena::OVERLAY;
+  if(owner == shared_memory::Owner::VFAT_STAGE) {
+    // A mounted stage index is pinned. Use only an empty APP arena; an idle
+    // or loading real APP is never evicted to accelerate a file read.
+    if(shared_memory::active_owner(shared_memory::Arena::APP) != shared_memory::Owner::NONE &&
+       shared_memory::active_owner(shared_memory::Arena::APP) != shared_memory::Owner::PROGRAM_STORE_READ_CACHE) return false;
+    arena = shared_memory::Arena::APP;
+  } else if(owner != shared_memory::Owner::NONE &&
+            owner != shared_memory::Owner::PROGRAM_STORE_READ_CACHE) return false;
+  if(arena == shared_memory::Arena::OVERLAY &&
+     bytes > shared_memory::capacity(arena)) return false;
   g_read_cache_valid = false;
-  if(g_read_cache_lease.ok() && g_read_cache_lease.size() < bytes)
+  if(g_read_cache_lease.ok() && (g_read_cache_lease.size() < bytes || g_read_cache_lease.arena() != arena))
     g_read_cache_lease.reset();
   if(g_read_cache_lease.ok()) return true;
-  if(!g_read_cache_lease.acquire_cache(shared_memory::Arena::OVERLAY,
+  if(!g_read_cache_lease.acquire_cache(arena,
        shared_memory::Owner::PROGRAM_STORE_READ_CACHE, bytes)) return false;
   if(g_read_cache_lease.set_evictable(prepare_read_cache_eviction)) return true;
   g_read_cache_lease.reset();
   return false;
+}
+// Distinguish no cache space from failed CRC/I/O: the latter must propagate.
+static u8 ensure_decoded_cache(u16 id, const Inode& inode) {
+  if(cached_file_matches(id, inode)) return 1;
+  if(!inode.data_len || inode.data_len > MK61_PROGRAM_STORE_READ_CACHE_BYTES ||
+     !acquire_read_cache(inode.data_len)) return 0;
+  struct Pin { Pin() { g_read_cache_busy = true; } ~Pin() { g_read_cache_busy = false; } } pin;
+  char name[NAME_SIZE];
+  if(!read_inode_name(id, inode, name) ||
+     !read_file_payload(id, inode, name, 0, read_cache_payload(), inode.data_len, nullptr)) return 2;
+  g_read_cache_key = {g_format_epoch, inode.address, id, inode.data_len,
+      inode.record_len, inode.parent_id, inode.name_hash, inode.kind_type, inode.flags};
+  memset(g_read_cache_lease.data(), 0, sizeof(TextCursor));
+  g_read_cache_valid = true;
+  return 1;
 }
 #endif
 
@@ -3964,20 +3993,10 @@ static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
 #if MK61_PROGRAM_STORE_READ_CACHE_BYTES
   if(sink == nullptr && copied != 0 &&
      inode.data_len <= MK61_PROGRAM_STORE_READ_CACHE_BYTES) {
-    if(!cached_file_matches(id, inode) && acquire_read_cache(inode.data_len)) {
-      struct Pin {
-        Pin() { g_read_cache_busy = true; }
-        ~Pin() { g_read_cache_busy = false; }
-      } pin;
-      if(!read_inode_name(id, inode, name) ||
-         !read_file_payload(id, inode, name, 0, g_read_cache_lease.data(),
-                             inode.data_len, nullptr)) return false;
-      g_read_cache_key = {g_format_epoch, inode.address, id, inode.data_len,
-          inode.record_len, inode.parent_id, inode.name_hash, inode.kind_type, inode.flags};
-      g_read_cache_valid = true;
-    }
-    if(cached_file_matches(id, inode)) {
-      memcpy(data, g_read_cache_lease.data() + offset, copied);
+    const u8 cache = ensure_decoded_cache(id, inode);
+    if(cache == 2) return false;
+    if(cache == 1) {
+      memcpy(data, read_cache_payload() + offset, copied);
       if(out_len != nullptr) *out_len = copied;
       return true;
     }
@@ -4010,6 +4029,60 @@ bool stream_file_id(u16 id, const FileSink& sink) {
   u8 unused;
   return read_file_range(id, 0, &unused, 0, nullptr, &output);
 }
+
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+bool read_utf8_range_id(u16 id, u32 offset, u8* data, u16 capacity, u16& copied) {
+  copied = 0;
+  if(data == nullptr && capacity) return false;
+  Inode inode;
+  if(!g_ready || !get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE ||
+     !text_content(inode_type(inode)) || inode.exported_size < inode.data_len ||
+     inode.exported_size > 3U * inode.data_len) return false;
+  if(offset >= inode.exported_size || !capacity) return true;
+  const u8 cache = ensure_decoded_cache(id, inode);
+  if(cache == 2) return false;
+  if(cache == 0) {
+    struct Range { u32 at, offset; u8* data; u16 capacity, copied; } range = {0, offset, data, capacity, 0};
+    const FileSink sink = {&range, [](void* context, u8 byte) {
+      auto& r = *(Range*)context;
+      if(!mk8::valid_byte(byte)) return false;
+      const auto e = mk8::utf8(byte);
+      for(u8 i = 0; i < e.size; ++i, ++r.at)
+        if(r.at >= r.offset && r.copied < r.capacity) r.data[r.copied++] = e.data[i];
+      return true;
+    }};
+    if(!stream_file_id(id, sink)) return false;
+    copied = range.copied;
+    return true;
+  }
+  struct Pin { Pin() { g_read_cache_busy = true; } ~Pin() { g_read_cache_busy = false; } } pin;
+  TextCursor cursor;
+  memcpy(&cursor, g_read_cache_lease.data(), sizeof(cursor));
+  const auto* bytes = read_cache_payload();
+  if(offset < cursor.utf8) { cursor.m8 = 0; cursor.utf8 = 0; }
+  while(cursor.m8 < g_read_cache_key.length) {
+    const auto e = mk8::utf8(bytes[cursor.m8]);
+    if(offset < cursor.utf8 + e.size) break;
+    cursor.utf8 += e.size; ++cursor.m8;
+  }
+  while(copied < capacity && cursor.m8 < g_read_cache_key.length) {
+    if(offset == cursor.utf8) {
+      usize consumed, written;
+      if(!mk8_span::to_utf8(bytes + cursor.m8, g_read_cache_key.length - cursor.m8,
+                            data + copied, capacity - copied, consumed, written)) return false;
+      cursor.m8 += consumed; cursor.utf8 += written;
+      copied += (u16)written; offset += written;
+      if(copied == capacity || cursor.m8 == g_read_cache_key.length) break;
+    }
+    const auto e = mk8::utf8(bytes[cursor.m8]);
+    u8 at = (u8)(offset - cursor.utf8);
+    while(at < e.size && copied < capacity) { data[copied++] = e.data[at++]; ++offset; }
+    if(at == e.size) { ++cursor.m8; cursor.utf8 += e.size; }
+  }
+  memcpy(g_read_cache_lease.data(), &cursor, sizeof(cursor));
+  return true;
+}
+#endif
 
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len) {
   Inode inode;

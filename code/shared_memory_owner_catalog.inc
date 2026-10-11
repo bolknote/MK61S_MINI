@@ -76,6 +76,6 @@ MK61_SHARED_MEMORY_OWNER(USB_SCREEN, "usb-screen",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
 
 MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_READ_CACHE, "store-cache",
-                         arena_mask(Arena::OVERLAY), 0,
-                         arena_mask(Arena::OVERLAY),
-                         arena_mask(Arena::OVERLAY), 0)
+                         (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)), 0,
+                         (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)),
+                         (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)), 0)

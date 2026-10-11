@@ -12,6 +12,8 @@
 #include "loadable_module_system_app.hpp"
 #include "mk8_codec.hpp"
 #include "program_store.hpp"
+#include "mk8_codec.hpp"
+#include <algorithm>
 #include "config.h"
 #include "zx0.hpp"
 #include "shared_memory.hpp"
@@ -4121,6 +4123,42 @@ static void test_read_cache_does_not_reclaim_loading_app(void) {
 #endif
 }
 
+static void test_usb_text_cache_with_pinned_stage_and_app(void) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  using namespace shared_memory;
+  fresh(16U * 1024U * 1024U);
+  std::vector<u8> text(3584), encoded;
+  for(usize i=0;i<text.size();++i) {
+    text[i]=i%3==0?mk8::BYTE_RIGHT_ARROW:i%3==1?(u8)0xDF:(u8)'A';
+    const auto e=mk8::utf8(text[i]);encoded.insert(encoded.end(),e.data,e.data+e.size);
+  }
+  u16 id;assert(program_store::write_file(program_store::ROOT_ID,77,ProgramType::TINYBASIC,"USB",text.data(),text.size(),&id));
+  assert(program_store::vfat_stage_lock());
+  u8 output[512];u16 copied;
+  const u32 before=zx0::test_decode_calls();
+  for(usize at=0;at<encoded.size();at+=sizeof(output)) {
+    assert(program_store::read_utf8_range_id(id,at,output,sizeof(output),copied));
+    assert(copied==std::min(sizeof(output),encoded.size()-at));
+    assert(memcmp(output,encoded.data()+at,copied)==0);
+  }
+  printf("USB text cache decodes=%u APPowner=%u overlay=%u capacity=%u\n",unsigned(zx0::test_decode_calls()-before),unsigned(snapshot(Arena::APP).active_owner),unsigned(snapshot(Arena::OVERLAY).active_owner),unsigned(capacity(Arena::OVERLAY)));fflush(stdout);
+  assert(zx0::test_decode_calls()-before==1);
+  assert(snapshot(Arena::APP).active_owner==Owner::PROGRAM_STORE_READ_CACHE);
+  for(u32 at:{4U,511U,1023U,7U,5U}) {
+    assert(program_store::read_utf8_range_id(id,at,output,1,copied)&&copied==1&&output[0]==encoded[at]);
+  }
+  Lease app(Arena::APP,Owner::LOADABLE_MODULE,APP_MAX_SIZE);
+  assert(app.ok());memset(app.data(),0xA7,app.size());
+  assert(program_store::read_utf8_range_id(id,0,output,sizeof(output),copied));
+  assert(copied==sizeof(output)&&memcmp(output,encoded.data(),copied)==0);
+  for(usize at=0;at<app.size();++at)assert(app.data()[at]==0xA7);
+  app.reset();program_store::vfat_stage_unlock();
+  text.assign(text.size(),'Z');
+  assert(program_store::write_file(program_store::ROOT_ID,id,ProgramType::TINYBASIC,"USB",text.data(),text.size()));
+  assert(program_store::read_utf8_range_id(id,5,output,3,copied)&&copied==3&&output[0]=='Z'&&output[2]=='Z');
+#endif
+}
+
 static bool put_requested_cluster(u16 id, const char* name, u16 cluster, u8 value) {
   TestSource memory = {&value, 1};
   const program_store::FileSource source = {&memory, read_test_source};
@@ -4287,6 +4325,7 @@ int main(int argc, char** argv) {
     test_read_cache_retries_io_and_crc_failures();
     test_read_cache_yields_to_real_app_allocator();
     test_read_cache_does_not_reclaim_loading_app();
+    test_usb_text_cache_with_pinned_stage_and_app();
     return 0;
   }
   if(argc == 2 && strcmp(argv[1], "--fragmented-stage") == 0) {
@@ -4322,6 +4361,7 @@ int main(int argc, char** argv) {
   test_read_cache_retries_io_and_crc_failures();
   test_read_cache_yields_to_real_app_allocator();
   test_read_cache_does_not_reclaim_loading_app();
+  test_usb_text_cache_with_pinned_stage_and_app();
   test_file_stream();
   test_exported_size_is_atomic_and_crc_protected();
 #if MK61_DISK_ACTIVITY_SUPPORTED
