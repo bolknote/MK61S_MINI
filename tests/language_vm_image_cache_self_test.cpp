@@ -172,7 +172,14 @@ void execute(uint16_t id,uint32_t mode=1,uint32_t expected=1) {
   assert(result==expected); // COMPLETED=1, STOPPED=2, runtime error=4.
 }
 int main() {
+  assert(prepare_image_cache() && prepare_image_cache());
+  CacheDiagnostics empty;
+  assert(cache_diagnostics(empty) && empty.used == 0 && empty.lookups == 0 &&
+         empty.publications == 0 && empty.invalidations == 0);
+  assert(shared_memory::resident_owner(shared_memory::Arena::WORKSPACE) ==
+         shared_memory::Owner::NONE);
   execute(1);assert(array[1]==2 && compiles==1 && validations==1 && finishes==0);
+  assert(prepare_image_cache()); // Must not discard a published image or values.
   const unsigned initial_swaps=swaps;
   const unsigned initial_resets=state_resets;
   for(unsigned i=0;i<20;++i)execute(1);

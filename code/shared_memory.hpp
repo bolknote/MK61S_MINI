@@ -12,6 +12,10 @@ namespace shared_memory {
 // Foreground-only, zeroed storage retained for the firmware lifetime.
 // Failure leaves the caller without a buffer; IRQ/eviction callbacks cannot allocate.
 void* allocate_retained_buffer(usize size);
+// Materialize lazy WORKSPACE/BULK before a long-lived OVERLAY pins the heap.
+// Does not acquire/change owners or clear existing contents. Foreground-only;
+// failure leaves already allocated buffers usable and the caller must not pin.
+bool prepare_retained_buffers(void);
 
 static constexpr usize WORKSPACE_SIZE = 8192;
 static constexpr usize SCRATCH_SIZE = 1600;

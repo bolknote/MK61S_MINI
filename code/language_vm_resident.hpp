@@ -11,6 +11,10 @@ struct CacheDiagnostics {
 };
 // Read-only bounded counters; false means this build has no persistent cache.
 bool cache_diagnostics(CacheDiagnostics&);
+// Allocate an empty configured cache before a long-lived OVERLAY pins _sbrk.
+// No source compilation or language-state initialization; OOM keeps the usual
+// uncached execution fallback available.
+bool prepare_image_cache();
 // Routes one existing frontend command, transfers pointer-free values around
 // its workspace, and executes a requested image. F411 retains verified M61
 // BASIC images without retaining compiler/executor pointers or mutable values.

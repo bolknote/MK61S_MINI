@@ -244,6 +244,12 @@ static void run_workspace_state_model(void) {
 }
 
 int main(void) {
+  assert(shared_memory::prepare_retained_buffers());
+  assert(shared_memory::prepare_retained_buffers());
+  assert(shared_memory::active_owner(shared_memory::Arena::WORKSPACE) ==
+         shared_memory::Owner::NONE);
+  assert(shared_memory::active_owner(shared_memory::Arena::BULK) ==
+         shared_memory::Owner::NONE);
   using language_workspace::Owner;
 
   static_assert(MK61_EXCLUSIVE_BUFFER_ENABLED,

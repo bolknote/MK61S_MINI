@@ -360,6 +360,33 @@ void* allocate_retained_buffer(usize size) {
   return value;
 }
 
+static bool prepare_resident_storage(Arena arena_id) {
+#if MK61_LAZY_RESIDENT_BUFFERS
+  ArenaState& arena = *state(arena_id);
+  if(arena.memory == nullptr) {
+    auto* storage = (u8*)allocate_retained_buffer(arena.capacity);
+    if(!storage) return false;
+    arena.memory = storage;
+    if(arena_id == Arena::WORKSPACE) workspace_storage = storage;
+#if MK61_SHARED_MEMORY_BULK_ENABLED
+    else bulk_storage = storage;
+#endif
+  }
+#else
+  (void)arena_id;
+#endif
+  return true;
+}
+
+bool prepare_retained_buffers(void) {
+  if(interrupt_context() || transition_in_progress()) return false;
+  return prepare_resident_storage(Arena::WORKSPACE)
+#if MK61_SHARED_MEMORY_BULK_ENABLED
+      && prepare_resident_storage(Arena::BULK)
+#endif
+      ;
+}
+
 OwnerPolicy owner_policy(Owner owner) {
   const usize index = (usize) owner;
   if(index >= (usize) Owner::COUNT) {
@@ -476,15 +503,7 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
 
 #if MK61_LAZY_RESIDENT_BUFFERS
   if((next_arena == Arena::WORKSPACE || next_arena == Arena::BULK) &&
-     arena->memory == nullptr) {
-    auto* storage = (u8*)allocate_retained_buffer(arena->capacity);
-    if(!storage) return false;
-    arena->memory = storage;
-    if(next_arena == Arena::WORKSPACE) workspace_storage = storage;
-#if MK61_SHARED_MEMORY_BULK_ENABLED
-    else bulk_storage = storage;
-#endif
-  }
+     !prepare_resident_storage(next_arena)) return false;
 #endif
 
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN

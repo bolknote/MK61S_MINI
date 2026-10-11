@@ -7,6 +7,8 @@
 #include <stdio.h>
 
 int main(void) {
+  assert(shared_memory::prepare_retained_buffers());
+  assert(shared_memory::prepare_retained_buffers());
   static_assert(!MK61_EXCLUSIVE_BUFFER_ENABLED,
                 "plain LCD profile must not allocate BULK");
   static_assert(!shared_memory::BULK_ENABLED,

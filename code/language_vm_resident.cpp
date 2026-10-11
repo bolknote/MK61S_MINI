@@ -76,13 +76,13 @@ __asm__(".global mk61_lazy_vm_cache_bytes\n.set mk61_lazy_vm_cache_bytes, "
         MK61_LAZY_STRING(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES) " + 32");
 class LazyProgramCache {
   ProgramCache* value_;
+public:
   bool ensure() {
     if(value_) return true;
     void* memory = shared_memory::allocate_retained_buffer(sizeof(ProgramCache));
     if(memory) value_ = new(memory) ProgramCache{};
     return value_ != nullptr;
   }
-public:
   ProgramCache::Handle find(ProgramCache::Key key) { return ensure() ? value_->find(key) : ProgramCache::Handle{}; }
   ProgramCache::Handle reserve(ProgramCache::Key key, uint16_t size) { return ensure() ? value_->reserve(key,size) : ProgramCache::Handle{}; }
   void synchronize(uint32_t revision) { if(value_) value_->synchronize(revision); }
@@ -539,6 +539,13 @@ loadable_module::RuntimeStatus invoke_resident(Language language, loadable_modul
                                edit_id, edit_position, ignored);
   }
   return status;
+}
+bool prepare_image_cache() {
+#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && defined(STM32F411xE)
+  return image_cache.ensure();
+#else
+  return true;
+#endif
 }
 bool cache_diagnostics(CacheDiagnostics& out) {
   out={};
