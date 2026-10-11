@@ -9,7 +9,11 @@ class SPIFlash {
   public:
     static constexpr uint32_t SECTOR_SIZE = 4096;
     static constexpr uint32_t DEFAULT_CAPACITY = 2U * 1024U * 1024U;
+#ifndef MK61_TEST_FLASH_MAX_CAPACITY_BYTES
     static constexpr uint32_t MAX_CAPACITY = 16U * 1024U * 1024U;
+#else
+    static constexpr uint32_t MAX_CAPACITY = MK61_TEST_FLASH_MAX_CAPACITY_BYTES;
+#endif
     enum class Tear { Before, Prefix, Bits, Complete };
 
     SPIFlash(uint8_t = 0) {}

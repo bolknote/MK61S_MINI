@@ -139,9 +139,24 @@ USBD_ClassTypeDef  USBD_MSC =
  * firmware heap deliberately refuses to grow in interrupt context, and the
  * stock heap-allocation path therefore made EP0 stall before MSC could become
  * configured.  There is only one mutually-exclusive MSC instance in the
- * calculator, so keep its BOT state in static storage instead of touching the
- * general-purpose heap from an interrupt. */
+ * calculator. F411 prepares its stable BOT storage in the foreground before
+ * enumeration; F401 keeps the compact static handle. Neither path allocates
+ * or frees the general-purpose heap from a USB interrupt. */
+#if defined(STM32F411xE)
+_Static_assert(sizeof(USBD_MSC_BOT_HandleTypeDef) == 8308U,
+               "update lazy MSC ELF reserve for changed transport layout");
+__asm__(".global mk61_lazy_msc_bytes\n.set mk61_lazy_msc_bytes, 8340");
+static USBD_MSC_BOT_HandleTypeDef* prepared_handle;
+#define USBD_MSC_BOT_Handle (*prepared_handle)
+uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size) {
+  if(memory == NULL || size != sizeof(USBD_MSC_BOT_HandleTypeDef)) return 0;
+  if(prepared_handle != NULL && prepared_handle != memory) return 0;
+  prepared_handle = (USBD_MSC_BOT_HandleTypeDef*)memory;
+  return 1;
+}
+#else
 static USBD_MSC_BOT_HandleTypeDef USBD_MSC_BOT_Handle;
+#endif
 static USBD_HandleTypeDef *USBD_MSC_BOT_HandleOwner;
 
 /* USB Mass storage device Configuration Descriptor */
@@ -302,6 +317,9 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     return (uint8_t)USBD_FAIL;
   }
 
+#if defined(STM32F411xE)
+  if(prepared_handle == NULL) return (uint8_t)USBD_FAIL;
+#endif
   hmsc = &USBD_MSC_BOT_Handle;
 
   (void)USBD_memset(hmsc, 0, sizeof(USBD_MSC_BOT_HandleTypeDef));

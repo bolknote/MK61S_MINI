@@ -179,7 +179,7 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
     sources += [ROOT / "sdk/portable/memory.c"]
     shared_system_runtime = args.system in (
-        "focal", "tinybasic", "language-vm", "language-input", "usbdisk")
+        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer")
     if shared_system_runtime:
         sources += [ROOT / "sdk/portable/system/runtime.S"]
     if args.system in ("focal", "tinybasic", "language-vm", "language-input"):

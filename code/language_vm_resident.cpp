@@ -13,6 +13,7 @@ __asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 0");
 #endif
 #if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
 #include <string.h>
+#include <new>
 #include "language_vm_resident.hpp"
 #include "language_vm_flow.hpp"
 #include "dwt_profiler.hpp"
@@ -68,7 +69,35 @@ static_assert(MK61_LANGUAGE_VM_CACHE_DENSITY == 0 || MK61_LANGUAGE_VM_CACHE_DENS
               "cache density must be 0 or 1");
 using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES, 16,
     MK61_LANGUAGE_VM_CACHE_DENSITY ? CachePolicy::REUSE_DENSITY : CachePolicy::LRU>;
+#if defined(STM32F411xE)
+#define MK61_LAZY_STRING_INNER(x) #x
+#define MK61_LAZY_STRING(x) MK61_LAZY_STRING_INNER(x)
+__asm__(".global mk61_lazy_vm_cache_bytes\n.set mk61_lazy_vm_cache_bytes, "
+        MK61_LAZY_STRING(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES) " + 32");
+class LazyProgramCache {
+  ProgramCache* value_;
+  bool ensure() {
+    if(value_) return true;
+    void* memory = shared_memory::allocate_retained_buffer(sizeof(ProgramCache));
+    if(memory) value_ = new(memory) ProgramCache{};
+    return value_ != nullptr;
+  }
+public:
+  ProgramCache::Handle find(ProgramCache::Key key) { return ensure() ? value_->find(key) : ProgramCache::Handle{}; }
+  ProgramCache::Handle reserve(ProgramCache::Key key, uint16_t size) { return ensure() ? value_->reserve(key,size) : ProgramCache::Handle{}; }
+  void synchronize(uint32_t revision) { if(value_) value_->synchronize(revision); }
+  uint8_t* building(ProgramCache::Handle h) { return value_ ? value_->building(h) : nullptr; }
+  const uint8_t* image(ProgramCache::Handle h) { return value_ ? value_->image(h) : nullptr; }
+  const ValidatedImage* certificate(ProgramCache::Handle h) { return value_ ? value_->certificate(h) : nullptr; }
+  bool publish(ProgramCache::Handle h,const ValidatedImage& v) { return value_ && value_->publish(h,v); }
+  bool release(ProgramCache::Handle h) { return value_ && value_->release(h); }
+  unsigned used() const { return value_ ? value_->used() : 0; }
+  const ProgramCache::Statistics& statistics() const { static const ProgramCache::Statistics empty={}; return value_ ? value_->statistics() : empty; }
+};
+LazyProgramCache image_cache;
+#else
 ProgramCache image_cache;
+#endif
 static_assert(sizeof(ProgramCache)<=MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,"cache exceeds total RAM budget");
 uint32_t image_revision() {
 #if defined(LANGUAGE_VM_HOST_TEST)

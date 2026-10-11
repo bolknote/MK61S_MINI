@@ -509,6 +509,47 @@
 #if MK61_OVERLAY_LANGUAGE_VM != 0 && MK61_OVERLAY_LANGUAGE_VM != 1
   #error "MK61_OVERLAY_LANGUAGE_VM must be 0 or 1"
 #endif
+// Verified decoded C9 data is an evictable lease, not a permanent buffer.
+// F401 retains its compact resident budget and uses the streaming fallback.
+#ifndef MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  #if defined(STM32F411xE) || (defined(PROGRAM_STORE_HOST_TEST) && !defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_PROGRAM_STORE_READ_CACHE_BYTES 4096
+  #else
+    #define MK61_PROGRAM_STORE_READ_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES < 0 || MK61_PROGRAM_STORE_READ_CACHE_BYTES > 4096
+  #error "C9 read cache must fit in 4 KiB"
+#endif
+
+// Precheck evicted FAT metadata before a whole-tree sidecar scan. The builtin
+// F411 path has room for this foreground validation; the 20-KiB external
+// USBDISK keeps its conservative path and the qualified image budget.
+// Volatile allocation proofs: FAT ownership and live physical sectors.
+#ifndef MK61_C9_ALLOCATION_CACHE
+  #if defined(STM32F411xE) || \
+      (!defined(ARDUINO_ARCH_STM32) && !defined(ARDUINO_BLACKPILL_F401CC))
+    #define MK61_C9_ALLOCATION_CACHE 1
+  #else
+    #define MK61_C9_ALLOCATION_CACHE 0
+  #endif
+#endif
+#if MK61_C9_ALLOCATION_CACHE != 0 && MK61_C9_ALLOCATION_CACHE != 1
+  #error "MK61_C9_ALLOCATION_CACHE must be 0 or 1"
+#endif
+
+#ifndef MK61_C9_METADATA_PRECHECK
+  #if !defined(MK61_BUILD_USBDISK_MODULE) && (defined(STM32F411xE) || \
+      (defined(PROGRAM_STORE_HOST_TEST) && !defined(ARDUINO_BLACKPILL_F401CC)))
+    #define MK61_C9_METADATA_PRECHECK 1
+  #else
+    #define MK61_C9_METADATA_PRECHECK 0
+  #endif
+#endif
+#if MK61_C9_METADATA_PRECHECK != 0 && MK61_C9_METADATA_PRECHECK != 1
+  #error "C9 metadata precheck must be 0 or 1"
+#endif
+
 // F411 can retain the hot working set of repeatedly opened M61 BASIC parts.
 // F401 keeps its existing RAM budget; explicit overrides are qualification-only.
 #ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES

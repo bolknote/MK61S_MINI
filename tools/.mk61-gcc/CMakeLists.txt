@@ -173,6 +173,16 @@ if(MK61_ENABLE_LTO)
 else()
   overall_settings(OPTIMIZATION s)
 endif()
+# GCC 14 supports Oz even though the pinned Arduino helper only accepts Os.
+# Whole-program size optimization keeps the F401 resident headroom without
+# removing features; the core hot paths retain their explicit O3 policy.
+get_target_property(_mk61_size_options user_settings INTERFACE_COMPILE_OPTIONS)
+list(REMOVE_ITEM _mk61_size_options -Os)
+list(APPEND _mk61_size_options -Oz)
+set_property(TARGET user_settings PROPERTY INTERFACE_COMPILE_OPTIONS "${_mk61_size_options}")
+target_compile_options(user_settings INTERFACE -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
+target_link_options(user_settings INTERFACE -Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
+
 target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607
   VECT_TAB_OFFSET=0x0

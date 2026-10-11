@@ -173,18 +173,25 @@ static bool c9_snapshot_sector(u32 lba) {
       program_store::vfat_stage_write(lba, bytes);
 }
 
-static bool c9_keep_stage(void*, u32 lba) {
-  if(lba >= fat_start() && lba < data_start()) return true;
-  if(lba < data_start() || lba >= geometry().logical_sectors) return false;
-  const u16 cluster = (u16) (2U + (lba - data_start()) / geometry().sectors_per_cluster);
-  return desired_kind(cluster) != DESIRED_NONE;
+// Both retirement passes use the same bounded LBA classification. Keep this
+// out of line so the external 20-KiB USBDISK does not duplicate its geometry
+// and cluster lookup. Four is outside every valid DesiredKind.
+__attribute__((noinline))
+static u8 c9_stage_kind(u32 lba) {
+  const u32 first = data_start();
+  if(lba - fat_start() < first - fat_start()) return DESIRED_DIRECTORY;
+  if(lba - first >= geometry().logical_sectors - first) return 4;
+  const u16 cluster = (u16) (2U + (lba - first) / geometry().sectors_per_cluster);
+  return desired_kind(cluster);
 }
-
-static bool c9_keep_host_metadata(void*, u32 lba) {
-  if(lba >= fat_start() && lba < data_start()) return true;
-  if(lba < data_start() || lba >= geometry().logical_sectors) return false;
-  const u16 cluster = (u16) (2U + (lba - data_start()) / geometry().sectors_per_cluster);
-  return desired_kind(cluster) == DESIRED_DIRECTORY;
+// PREPARE keeps claimed payload; a mounted checkpoint also keeps orphan
+// writes. After publication keep only directory metadata and mounted orphans.
+static_assert(DESIRED_NONE == 0 && DESIRED_FILE == 1 &&
+              DESIRED_DIRECTORY == 2 && DESIRED_EXTENT == 3,
+              "update staged-retirement masks for changed kinds");
+static const u8 c9_stage_masks[] = {0x0E, 0x0F, 0x04, 0x05};
+static bool c9_keep_stage(void* mask, u32 lba) {
+  return (*(const u8*) mask & (1U << c9_stage_kind(lba))) != 0;
 }
 
 static bool c9_visible_name(const ParsedNode& parsed, char* output, usize capacity) {

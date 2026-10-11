@@ -322,6 +322,8 @@ void vfat_stage_unlock(void);
 // Drop only an unlocked RAM cache; journal records remain in SPI Flash and
 // rebuild on demand. A live USB/terminal index must never yield to an APP.
 bool vfat_stage_release_cache(void);
+// Release verified read data to make room for a larger APP; false if absent.
+bool read_cache_release(void);
 
 #if defined(PROGRAM_STORE_HOST_TEST)
 struct StageIndexStats {

@@ -9,6 +9,9 @@
 // OVERLAY разделяют свободную RAM с системной кучей. Общими являются правила
 // владения, проверка контекста, поколение lease, вытеснение и диагностика.
 namespace shared_memory {
+// Foreground-only, zeroed storage retained for the firmware lifetime.
+// Failure leaves the caller without a buffer; IRQ/eviction callbacks cannot allocate.
+void* allocate_retained_buffer(usize size);
 
 static constexpr usize WORKSPACE_SIZE = 8192;
 static constexpr usize SCRATCH_SIZE = 1600;

@@ -80,6 +80,13 @@ static constexpr u8 WAL_MAX_UPDATES = 16;
 static constexpr u16 IMAGE1_WAL_COUNT_OFFSET = 506;
 static constexpr u16 WAL_CRC_OFFSET = 508;
 static constexpr u8 OVERLAY_CAPACITY = 32;
+#if MK61_C9_ALLOCATION_CACHE
+static u8 g_cluster_bitmap[fat_cluster_chain::BITMAP_BYTES];
+static bool g_cluster_bitmap_valid;
+static constexpr u16 LIVE_SECTOR_BITMAP_BYTES = 512;
+static u8 g_live_sector_bitmap[LIVE_SECTOR_BITMAP_BYTES];
+static bool g_live_sector_bitmap_valid;
+#endif
 static constexpr u16 STAGE_DATA_SIZE = VFAT_STAGE_BLOCK_SIZE;
 static constexpr u16 STAGE_SECTOR_HEADER_SIZE = 16;
 static constexpr u16 STAGE_RECORD_HEADER_SIZE = 16;
@@ -307,7 +314,12 @@ static WriteFailureDetail g_last_write_failure_detail =
     WriteFailureDetail::NONE;
 static u8 g_stage_used[STAGE_MAX_SLOTS];
 static u8 g_stage_sealed[STAGE_MAX_SLOTS];
-static u32 g_stage_physical[STAGE_MAX_SLOTS];
+// Geometry is capped at 128 MiB: every physical sector index fits 16 bits.
+// This is a transient RAM table; on-flash addresses and locators stay 32-bit.
+static_assert(storage_geometry::MAX_CAPACITY_BYTES /
+                  storage_geometry::PHYSICAL_SECTOR_SIZE <= 0x10000UL,
+              "stage physical indices exceed 16 bits");
+static u16 g_stage_physical[STAGE_MAX_SLOTS];
 static u8 g_stage_slot_count;
 static bool g_stage_recovery_ok;
 static bool g_stage_known_empty;
@@ -395,8 +407,31 @@ static bool read_bytes(u32 address, u8* out, usize len) {
   return false;
 }
 
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+struct ReadCacheKey {
+  u32 epoch, address;
+  u16 id, length, record_length, parent, name_hash;
+  u8 kind_type, flags;
+};
+static ReadCacheKey g_read_cache_key;
+static shared_memory::Lease g_read_cache_lease;
+static bool g_read_cache_valid, g_read_cache_busy;
+static shared_memory::EvictionDecision prepare_read_cache_eviction(void) {
+  if(g_read_cache_busy) return shared_memory::EvictionDecision::KEEP;
+  g_read_cache_valid = false;
+  return shared_memory::EvictionDecision::RELEASE;
+}
+#endif
+
+static void invalidate_read_cache(void) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  g_read_cache_valid = false;
+#endif
+}
+
 static bool write_bytes(u32 address, const u8* data, usize len) {
   if(len == 0) return true;
+  invalidate_read_cache();
 #ifdef SPI_FLASH
   if(flash_is_ok && data != NULL) {
     const bool ok = flash_device().writeByteArray(address, (u8*) data, len);
@@ -416,6 +451,7 @@ static bool write_bytes(u32 address, const u8* data, usize len) {
 }
 
 static bool write_byte(u32 address, u8 value) {
+  invalidate_read_cache();
 #ifdef SPI_FLASH
   if(flash_is_ok) {
     const bool ok = flash_device().writeByte(address, value);
@@ -435,6 +471,7 @@ static bool write_byte(u32 address, u8 value) {
 }
 
 static bool erase_sector(u32 sector) {
+  invalidate_read_cache();
 #ifdef SPI_FLASH
   if(!flash_is_ok || sector >= g_geometry.physical_sectors) return false;
   const u32 stop_at = millis() + ERASE_TIMEOUT_MS;
@@ -584,29 +621,24 @@ static bool valid_name(const char* name) {
   return storage_name::valid_basename(name, NAME_SIZE);
 }
 
+// Counter-backed types occupy 0, 2..7. Other C9 types are counted by inode.
+// Keep the wire values explicit: the compact range tests must never admit a
+// reserved type or silently change the persistent counter order.
+static_assert((u8) ProgramType::MK61 == 0 && (u8) ProgramType::FOCAL == 2 &&
+              (u8) ProgramType::TINYBASIC == 3 && (u8) ProgramType::TEXT == 4 &&
+              (u8) ProgramType::MK61_STATE == 5 && (u8) ProgramType::FONT == 6 &&
+              (u8) ProgramType::IMAGE1 == 7 && (u8) ProgramType::APP == 8 &&
+              (u8) ProgramType::CHIP8 == 9 && (u8) ProgramType::MARKDOWN == 10 &&
+              (u8) ProgramType::MK61_BINARY == 11 && (u8) ProgramType::SHEET == 12,
+              "update C9 type/counter ranges for changed wire values");
 static int type_index(ProgramType type) {
-  switch(type) {
-    case ProgramType::MK61: return 0;
-    case ProgramType::FOCAL: return 1;
-    case ProgramType::TINYBASIC: return 2;
-    case ProgramType::TEXT: return 3;
-    case ProgramType::MK61_STATE: return 4;
-    case ProgramType::FONT: return 5;
-    case ProgramType::IMAGE1: return 6;
-    case ProgramType::APP: return -1; // счётчик APP вычисляется по inode
-    case ProgramType::CHIP8: return -1; // счётчик CHIP-8 вычисляется по inode
-    case ProgramType::MARKDOWN: return -1; // новый тип без миграции каталога
-    case ProgramType::MK61_BINARY: return -1;
-    case ProgramType::SHEET: return -1;
-  }
-  return -1;
+  const u8 value = (u8) type;
+  return value == 0 ? 0 : value >= 2 && value <= 7 ? value - 1 : -1;
 }
 
 static bool supported_type(ProgramType type) {
-  return type == ProgramType::APP || type == ProgramType::CHIP8 ||
-         type == ProgramType::MARKDOWN || type == ProgramType::MK61_BINARY ||
-         type == ProgramType::SHEET ||
-         type_index(type) >= 0;
+  const u8 value = (u8) type;
+  return value <= (u8) ProgramType::SHEET && value != 1;
 }
 
 static u16 maximum_data_len(ProgramType type) {
@@ -956,6 +988,9 @@ static CatalogMeta decode_meta(const u8* record, u16 image_count_offset) {
   return meta;
 }
 
+#if MK61_C9_ALLOCATION_CACHE
+static bool c9_update_cluster_bitmap(const Transaction& transaction);
+#endif
 static bool checkpoint(bool empty_table = false, bool reserve_only = false);
 static bool load_catalog(void);
 static bool borrowed_stage_sector(u32 sector);
@@ -1085,6 +1120,9 @@ static bool publish_catalog_root(u32 generation) {
 }
 
 static bool checkpoint(bool empty_table, bool reserve_only) {
+#if MK61_C9_ALLOCATION_CACHE
+  if(empty_table) g_cluster_bitmap_valid = g_live_sector_bitmap_valid = false;
+#endif
   clear_pending_catalog();
   memcpy(g_catalog_pending, g_catalog_pages, sizeof(g_catalog_pending));
   if(empty_table) memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
@@ -1146,9 +1184,19 @@ static bool append_transaction_record(const Transaction& transaction) {
     if(!load_catalog()) g_ready = false;
     return false;
   }
+#if MK61_C9_ALLOCATION_CACHE
+  // Optional cache maintenance happens after durable publication, while the
+  // old overlay still identifies removed claims. Any read/shape failure leaves
+  // the cache invalid; it cannot turn a failed proof into a free cluster.
+  const bool cluster_bitmap_updated = c9_update_cluster_bitmap(transaction);
+  if(transaction.count != 0) g_live_sector_bitmap_valid = false;
+#endif
   for(u8 i = 0; i < transaction.count; ++i) {
     if(!overlay_set(transaction.updates[i].id, transaction.updates[i].inode)) return false;
   }
+#if MK61_C9_ALLOCATION_CACHE
+  g_cluster_bitmap_valid = cluster_bitmap_updated;
+#endif
   g_wal_sequence = next_sequence;
   g_meta = transaction.meta;
   ++g_wal_records;
@@ -1215,6 +1263,9 @@ static bool catalog_header_valid(u8* header) {
 
 __attribute__((noinline))
 static bool load_catalog(void) {
+#if MK61_C9_ALLOCATION_CACHE
+  g_cluster_bitmap_valid = g_live_sector_bitmap_valid = false;
+#endif
   clear_pending_catalog();
   memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
   g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
@@ -1543,6 +1594,33 @@ static void mark_sector_window(u32 sector, u32 first, u32 count, u32 start,
 
 // One table scan covers 32 candidates for either allocator, including all
 // large-file blocks. A read error must never make live data look reclaimable.
+#if MK61_C9_ALLOCATION_CACHE
+static bool mark_live_sector(u32 sector) {
+  if(sector >= g_geometry.physical_sectors) return false;
+  g_live_sector_bitmap[sector >> 3] |= (u8) (1U << (sector & 7U));
+  return true;
+}
+static bool build_live_sector_bitmap() {
+  g_live_sector_bitmap_valid = false;
+  memset(g_live_sector_bitmap, 0, sizeof(g_live_sector_bitmap));
+  for(u16 id = 0; id < g_geometry.max_nodes; ++id) {
+    Inode inode;
+    if(!get_inode(id, inode)) return false;
+    if(!visible_inode(inode)) continue;
+    if(inode.address < EXTENT_ADDRESS && !mark_live_sector(inode.address / 4096U)) return false;
+    if(inode.fat_address < EXTENT_ADDRESS && !mark_live_sector(inode.fat_address / 4096U)) return false;
+    if(large_file_inode(inode)) {
+      LargeDescriptor descriptor = {};
+      if(!read_large_descriptor(id, inode, descriptor)) return false;
+      for(u8 block = 0; block < descriptor.block_count; ++block)
+        if(!mark_live_sector(descriptor.sectors[block])) return false;
+    }
+  }
+  g_live_sector_bitmap_valid = true;
+  return true;
+}
+#endif
+
 static bool live_sector_window(u32 first, u32 count, u32 start,
                                u32 base, u8 window, u32& mask) {
   mask = 0;
@@ -1550,6 +1628,17 @@ static bool live_sector_window(u32 first, u32 count, u32 start,
     mark_sector_window(g_large_write_sectors[index], first, count, start,
                        base, window, mask);
   }
+#if MK61_C9_ALLOCATION_CACHE
+  if(g_geometry.physical_sectors <= LIVE_SECTOR_BITMAP_BYTES * 8U) {
+    if(!g_live_sector_bitmap_valid && !build_live_sector_bitmap()) return false;
+    for(u8 slot = 0; slot < window; ++slot) {
+      const u32 sector = first + (start - first + base + slot) % count;
+      if((g_live_sector_bitmap[sector >> 3] & (1U << (sector & 7U))) != 0)
+        mask |= 1UL << slot;
+    }
+    return true;
+  }
+#endif
   for(u16 id = 0; id < g_geometry.max_nodes; ++id) {
     Inode inode;
     if(!get_inode(id, inode)) return false;
@@ -2834,6 +2923,7 @@ static bool find_global_file(ProgramType type, const char* name, u16& out) {
 }
 
 static bool format_internal(bool erase_settings) {
+  (void) read_cache_release();
   g_reverse_ready = g_import_applying = g_import_plan_ready = false;
   g_reverse_window = g_chain_verified_id = NONE;
   g_chain_verified_address = EMPTY_ADDRESS;
@@ -2895,6 +2985,10 @@ static bool format_internal(bool erase_settings) {
 
 
 void init(void) {
+#if MK61_C9_ALLOCATION_CACHE
+  g_cluster_bitmap_valid = g_live_sector_bitmap_valid = false;
+#endif
+  (void) read_cache_release();
   g_reverse_ready = g_import_applying = g_import_plan_ready = false;
   g_reverse_window = g_chain_verified_id = NONE;
   g_chain_verified_address = EMPTY_ADDRESS;
@@ -3748,25 +3842,11 @@ bool write_from_usb(ProgramType type, const char* name, const u8* data, u16 data
   return write(type, name, data, data_len);
 }
 
-static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
-                            u16* out_len, const zx0::Output* sink) {
-  DiskActivity activity;
-  if(!g_ready || data == NULL) return false;
-  Inode inode;
-  char name[NAME_SIZE];
-  if(!get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE ||
-     offset > inode.data_len || !read_inode_name(id, inode, name)) return false;
-#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
-  const auto type = inode_type(inode);
-  const bool source = type == ProgramType::TINYBASIC || type == ProgramType::FOCAL || type == ProgramType::MK61;
-  const bool font = type == ProgramType::FONT;
-  dwt_profiler::Scope file_profile(source ? dwt_profiler::Point::FILE_SOURCE :
-      font ? dwt_profiler::Point::FILE_FONT : dwt_profiler::Point::FILE_OTHER);
-  dwt_profiler::DecodeContext decode_context(source ? dwt_profiler::Point::ZX0_SOURCE :
-      font ? dwt_profiler::Point::ZX0_FONT : dwt_profiler::decode_point);
-#endif
-  const u16 available = (u16) (inode.data_len - offset);
-  const u16 copied = available < len ? available : len;
+// All paths below finish CRC/ZX0 validation before a cache value is published.
+__attribute__((noinline))
+static bool read_file_payload(u16 id, const Inode& inode, const char* name,
+                              u16 offset, u8* data, u16 copied,
+                              const zx0::Output* sink) {
   if(large_file_inode(inode)) {
     LargeDescriptor descriptor = {};
     if(!read_large_descriptor(id, inode, descriptor)) return false;
@@ -3816,7 +3896,96 @@ static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
       return false;
     }
   }
-  if(out_len != NULL) *out_len = copied;
+  return true;
+}
+
+bool read_cache_release(void) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  if(g_read_cache_busy || !g_read_cache_lease.ok()) return false;
+  g_read_cache_valid = false;
+  g_read_cache_lease.reset();
+  return true;
+#else
+  return false;
+#endif
+}
+
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+static bool cached_file_matches(u16 id, const Inode& inode) {
+  const auto& key = g_read_cache_key;
+  return g_read_cache_valid && g_read_cache_lease.ok() &&
+      key.epoch == g_format_epoch && key.address == inode.address &&
+      key.id == id && key.length == inode.data_len &&
+      key.record_length == inode.record_len && key.parent == inode.parent_id &&
+      key.name_hash == inode.name_hash && key.kind_type == inode.kind_type &&
+      key.flags == inode.flags;
+}
+static bool acquire_read_cache(u16 bytes) {
+  if(g_read_cache_busy) return false;
+  // This is the lowest-priority cache. Never reclaim a loading/idle APP or
+  // another lower owner merely to accelerate a read. Only an idle stage
+  // index can yield here; its registered callback protects live USB state.
+  const auto owner = shared_memory::active_owner(shared_memory::Arena::OVERLAY);
+  if((owner != shared_memory::Owner::NONE &&
+      owner != shared_memory::Owner::PROGRAM_STORE_READ_CACHE &&
+      owner != shared_memory::Owner::VFAT_STAGE) ||
+     bytes > shared_memory::capacity(shared_memory::Arena::OVERLAY)) return false;
+  g_read_cache_valid = false;
+  if(g_read_cache_lease.ok() && g_read_cache_lease.size() < bytes)
+    g_read_cache_lease.reset();
+  if(g_read_cache_lease.ok()) return true;
+  if(!g_read_cache_lease.acquire_cache(shared_memory::Arena::OVERLAY,
+       shared_memory::Owner::PROGRAM_STORE_READ_CACHE, bytes)) return false;
+  if(g_read_cache_lease.set_evictable(prepare_read_cache_eviction)) return true;
+  g_read_cache_lease.reset();
+  return false;
+}
+#endif
+
+static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
+                            u16* out_len, const zx0::Output* sink) {
+  DiskActivity activity;
+  if(!g_ready || data == NULL) return false;
+  Inode inode;
+  if(!get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE ||
+     offset > inode.data_len) return false;
+#if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+  const auto type = inode_type(inode);
+  const bool source = type == ProgramType::TINYBASIC || type == ProgramType::FOCAL || type == ProgramType::MK61;
+  const bool font = type == ProgramType::FONT;
+  dwt_profiler::Scope file_profile(source ? dwt_profiler::Point::FILE_SOURCE :
+      font ? dwt_profiler::Point::FILE_FONT : dwt_profiler::Point::FILE_OTHER);
+  dwt_profiler::DecodeContext decode_context(source ? dwt_profiler::Point::ZX0_SOURCE :
+      font ? dwt_profiler::Point::ZX0_FONT : dwt_profiler::decode_point);
+#endif
+  const u16 available = (u16) (inode.data_len - offset);
+  const u16 copied = available < len ? available : len;
+  char name[NAME_SIZE];
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  if(sink == nullptr && copied != 0 &&
+     inode.data_len <= MK61_PROGRAM_STORE_READ_CACHE_BYTES) {
+    if(!cached_file_matches(id, inode) && acquire_read_cache(inode.data_len)) {
+      struct Pin {
+        Pin() { g_read_cache_busy = true; }
+        ~Pin() { g_read_cache_busy = false; }
+      } pin;
+      if(!read_inode_name(id, inode, name) ||
+         !read_file_payload(id, inode, name, 0, g_read_cache_lease.data(),
+                             inode.data_len, nullptr)) return false;
+      g_read_cache_key = {g_format_epoch, inode.address, id, inode.data_len,
+          inode.record_len, inode.parent_id, inode.name_hash, inode.kind_type, inode.flags};
+      g_read_cache_valid = true;
+    }
+    if(cached_file_matches(id, inode)) {
+      memcpy(data, g_read_cache_lease.data() + offset, copied);
+      if(out_len != nullptr) *out_len = copied;
+      return true;
+    }
+  }
+#endif
+  if(!read_inode_name(id, inode, name) ||
+     !read_file_payload(id, inode, name, offset, data, copied, sink)) return false;
+  if(out_len != nullptr) *out_len = copied;
   return true;
 }
 

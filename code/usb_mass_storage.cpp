@@ -7,6 +7,7 @@
 #include "power_monitor.hpp"
 #include "usb_disk_session.hpp"
 #include "virtual_fat.hpp"
+#include "program_store.hpp"
 #include "disk_activity.hpp"
 #if defined(MK61_DISPLAY_UC1609)
 #include "display.hpp"
@@ -133,6 +134,17 @@ static_assert(sizeof(DeferredWrite) <= 16,
 
 static DeferredWrite deferred_write = {};
 
+// Service and shutdown consume the same pinned BOT packet. Share the argument
+// loads in constrained resident builds; neither caller acknowledges it here.
+__attribute__((noinline))
+static bool write_deferred_sectors(void) {
+  // Check again here after any lengthy checkpoint and immediately before I/O.
+  return power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
+         virtual_fat::write_cached_sectors(deferred_write.block_addr,
+                                          deferred_write.buffer,
+                                          deferred_write.block_len);
+}
+
 static bool acquire_cache_buffer(void) {
 #if MK61_EXCLUSIVE_BUFFER_ENABLED
   return exclusive_buffer::acquire(exclusive_buffer::Owner::USB_CACHE,
@@ -186,6 +198,13 @@ enum class DeferredSyncState : u8 {
 };
 
 static DeferredSyncState deferred_sync_state = DeferredSyncState::EMPTY;
+// Mounted checkpoints bound the payload journal on a 512-KiB flash. The
+// public FAT/dirent view stays staged; an unclaimed accepted write is kept.
+static u16 checkpoint_cut = 0;
+static bool checkpoint_pressure() {
+  return program_store::vfat_stage_count() >= checkpoint_cut;
+}
+
 
 static DeferredWriteState deferred_state(void) {
   return __atomic_load_n(&deferred_write.state, __ATOMIC_ACQUIRE);
@@ -426,7 +445,8 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   // packet remains owned by STM32duino while BUSY is returned, and service()
   // hands it to the pinned APP from the main loop. F411 and host tests use the
   // full in-process implementation and may exercise the fast cache path.
-  if(virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
+  if(!checkpoint_pressure() &&
+     virtual_fat::try_write_cached_sectors(block_addr, buf, block_len)) {
     return apply_session_event(
         usb_disk_session::Event::WRITE_ACCEPTED).accepted
         ? USBD_MSC_STORAGE_OK : USBD_MSC_STORAGE_ERROR;
@@ -561,6 +581,12 @@ bool prepare(void) {
   if(is_initialized() ||
      (session_is_open() && !device_configured)) return true;
   if(preparing) return false;
+#if defined(STM32F411xE)
+  static USBD_MSC_BOT_HandleTypeDef* prepared_handle;
+  if(!prepared_handle) prepared_handle = (USBD_MSC_BOT_HandleTypeDef*)
+      shared_memory::allocate_retained_buffer(sizeof(USBD_MSC_BOT_HandleTypeDef));
+  if(!prepared_handle || !MK61_MSC_SetPreparedHandle(prepared_handle, sizeof(*prepared_handle))) return false;
+#endif
   PreparingScope scope;
   startup_tracking = true;
   mark_startup_stage(1);
@@ -592,6 +618,9 @@ bool prepare(void) {
     return false;
   }
   write_cache_blocks = virtual_fat::write_cache_capacity();
+  // Large volumes need no internal pressure import; 0xFFFF is beyond
+  // every staging index. Cache capacity is bounded at 32 sectors.
+  checkpoint_cut = program_store::geometry().physical_sectors == 128 ? 64 : 0xFFFF;
   if(write_cache_blocks == 0) {
     virtual_fat::report_startup_failure(13, "cache-empty");
     virtual_fat::end_session();
@@ -681,11 +710,7 @@ bool deinit(void) {
     if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
       pending_ok = false;
       pending_failure_stage = 23U;
-    } else if(!virtual_fat::write_cached_sectors(
-        deferred_write.block_addr,
-        deferred_write.buffer,
-        deferred_write.block_len
-      )) {
+    } else if(!write_deferred_sectors()) {
       pending_ok = false;
       pending_failure_stage = 24U;
     }
@@ -756,13 +781,14 @@ void service(void) {
     if(!__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                     DeferredWriteState::PROCESSING, false,
                                     __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
-    const bool ok =
-      power_monitor::allow(power_monitor::Operation::MSC_WRITE) &&
-      virtual_fat::write_cached_sectors(
-        deferred_write.block_addr,
-        deferred_write.buffer,
-        deferred_write.block_len
-      );
+    if(checkpoint_pressure() && power_monitor::allow(power_monitor::Operation::MSC_WRITE)) {
+      // This can see an incomplete host transaction. A read-only rejection
+      // is not a WRITE failure: retain its sectors and let the host finish.
+      // Successful imports retire only published payload, never orphan data.
+      (void) virtual_fat::flush_pending_result();
+      checkpoint_cut = (u16) (program_store::vfat_stage_count() + write_cache_blocks);
+    }
+    const bool ok = write_deferred_sectors();
     const bool tracked = ok && apply_session_event(
         usb_disk_session::Event::WRITE_ACCEPTED).accepted;
     disk_activity::note();

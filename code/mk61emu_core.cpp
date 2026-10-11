@@ -57,9 +57,26 @@
   #define MK61_CORE_TICK_FUNCTION void
 #endif
 
+// Internal ROM storage. The command's bit 24 uses the unused low-byte bit 7;
+// every literal is checked during constexpr ROM construction below.
+struct PackedInstruction {
+  u8 low, middle, high;
+  constexpr PackedInstruction(instruction_t value)
+    : low((u8)((value & 0x7FU) | ((value >> 17) & 0x80U))),
+      middle((u8)(value >> 8)), high((u8)(value >> 16)) {
+    // A non-representable ROM literal must fail constant initialization.
+    if((instruction_t) *this != value) __builtin_trap();
+  }
+  constexpr operator instruction_t() const {
+    return (low & 0x7FU) | ((instruction_t) middle << 8) |
+        ((instruction_t) high << 16) | ((instruction_t)(low & 0x80U) << 17);
+  }
+};
+static_assert(sizeof(PackedInstruction) == 3, "ROM commands must occupy three bytes");
+
 typedef struct {  // Структору ПЗУ для одной микросхемы комплекта К145ИК(02,03,06)
     microinstruction_t microinstructions[68]; // микрокоманды
-    instruction_t instructions[256];          // команды
+    PackedInstruction instructions[256];          // команды
 } IK13_ROM;
 
 typedef struct { // ПЗУ микрокода, микропрограмм для всего комплекта К145ИК(02,03,06) МК61
@@ -238,7 +255,7 @@ static  u8  __attribute__((aligned (16))) mod42_table[MOD42_TABLE_SIZE];
 #define MOD42(v)       (mod42_table[v])
 //#define MOD42(v)  ( ((v) %42) &0xff )
 
-static const mk61ROM_t ROM = {
+static constexpr mk61ROM_t ROM = {
         {
                 {
                         0x0000000, 0x0800001, 0x0A00820, 0x0040020, // 1

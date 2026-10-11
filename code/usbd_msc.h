@@ -22,6 +22,7 @@
 
 #include "msc_memory_policy.h"
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,6 +31,9 @@ extern "C" {
 #include  "usbd_msc_bot.h"
 #include  "usbd_msc_scsi.h"
 #include  "usbd_ioreq.h"
+#if defined(STM32F411xE)
+uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size);
+#endif
 
 /** @addtogroup USBD_MSC_BOT
   * @{

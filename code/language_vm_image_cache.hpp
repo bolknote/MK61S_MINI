@@ -106,7 +106,7 @@ class ImageCache {
     ++e->pins;e->age=age();return true;
   }
  private:
-  alignas(8) uint8_t bytes_[PAYLOAD_CAPACITY];
+  alignas(8) uint8_t bytes_[PAYLOAD_CAPACITY]={};
   Entry entries_[Slots]={}; Statistics statistics_={};
   uint32_t revision_=0,clock_=0,generation_=0,reserved_=0;
   static unsigned allocated(unsigned size) {return (size+7U)&~7U;}
@@ -133,7 +133,8 @@ class ImageCache {
       unsigned next=at;
       for(const auto& e:entries_) if(e.state!=State::EMPTY && at<e.offset+allocated(e.size) && e.offset<at+wanted)
         if(e.offset+allocated(e.size)>next) next=e.offset+allocated(e.size);
-      if(next==at) return true;at=next;
+      if(next==at) return true;
+      at=next;
     }
     return false;
   }

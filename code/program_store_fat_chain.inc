@@ -81,8 +81,104 @@ static bool c9_mark_map(u16 owner, const Inode& inode, u8* bits) {
   }
   return true;
 }
+#if MK61_C9_ALLOCATION_CACHE
+static bool owns_fat_clusters(const Inode& inode) {
+  return visible_inode(inode) && (inode.flags & INODE_FLAG_FAT_RELEASED) == 0;
+}
+static bool alter_cluster_bitmap(u16 id, const Inode& inode, bool add) {
+  // A warm header Plan does not certify newly read cluster bytes. Bit flips
+  // must not remove another inode's previously proved occupancy claim.
+  g_chain_verified_address = EMPTY_ADDRESS;
+  fat_cluster_chain::Plan plan;
+  if(!c9_chain_open(id, inode, plan)) return false;
+  C9MapReader input = {inode.fat_address};
+  for(u16 index = 0; index < plan.count; ++index) {
+    u16 cluster = 0;
+    if(!fat_cluster_chain::read_cluster({&input, c9_read_map}, plan, index, cluster) ||
+       cluster < 2 || cluster - 2U >= storage_geometry::fat_cluster_capacity(g_geometry)) return false;
+    const u16 bit = (u16) (cluster - 2U);
+    const u8 mask = (u8) (1U << (bit & 7U));
+    u8& byte = g_cluster_bitmap[bit >> 3];
+    if(add) {
+      // Clearing an excluded owner's claims is safe only after uniqueness
+      // has been proved for the complete catalog, including earlier updates.
+      if((byte & mask) != 0) return false;
+      byte |= mask;
+    } else {
+      if((byte & mask) == 0) return false;
+      byte &= (u8) ~mask;
+    }
+  }
+  return true;
+}
+static bool build_cluster_bitmap() {
+  g_cluster_bitmap_valid = false;
+  memset(g_cluster_bitmap, 0, sizeof(g_cluster_bitmap));
+  u16 remaining = g_meta.total_count;
+  for(u16 id = 0; id < g_geometry.max_nodes; ++id) {
+    Inode inode;
+    if(!get_inode(id, inode)) return false;
+    if(!visible_inode(inode)) continue;
+    if(remaining == 0) return false;
+    --remaining;
+    if(owns_fat_clusters(inode) && !alter_cluster_bitmap(id, inode, true)) return false;
+  }
+  if(remaining != 0) return false;
+  g_cluster_bitmap_valid = true;
+  return true;
+}
+static bool cluster_claim_changed(const Inode& old, const Inode& next) {
+  return owns_fat_clusters(old) != owns_fat_clusters(next) ||
+      (owns_fat_clusters(old) && old.fat_address != next.fat_address);
+}
+static bool c9_update_cluster_bitmap(const Transaction& transaction) {
+  if(!g_cluster_bitmap_valid) return false;
+  g_cluster_bitmap_valid = false;
+  // Remove the complete old transaction before adding any new chain. This
+  // also handles an atomic transfer of clusters between two inode updates.
+  for(u8 index = 0; index < transaction.count; ++index) {
+    const auto& update = transaction.updates[index];
+    Inode old;
+    if(!get_inode(update.id, old)) return false;
+    // Removal/release stays local even for a maximum APP chain. Rebuild
+    // lazily on the next allocation instead of rereading every freed extent.
+    if(owns_fat_clusters(old) && !owns_fat_clusters(update.inode)) return false;
+    if(cluster_claim_changed(old, update.inode) && owns_fat_clusters(old) &&
+       !alter_cluster_bitmap(update.id, old, false)) return false;
+  }
+  for(u8 index = 0; index < transaction.count; ++index) {
+    const auto& update = transaction.updates[index];
+    Inode old;
+    if(!get_inode(update.id, old)) return false;
+    if(cluster_claim_changed(old, update.inode) && owns_fat_clusters(update.inode) &&
+       !alter_cluster_bitmap(update.id, update.inode, true)) return false;
+  }
+  return true;
+}
+#endif
+
 static bool c9_occupied_clusters(u16 except, u8* bits) {
   memset(bits, 0, fat_cluster_chain::BITMAP_BYTES);
+#if MK61_C9_ALLOCATION_CACHE
+  if(!g_cluster_bitmap_valid && !build_cluster_bitmap()) return false;
+  memcpy(bits, g_cluster_bitmap, fat_cluster_chain::BITMAP_BYTES);
+  if(except < g_geometry.max_nodes) {
+    Inode old;
+    if(!get_inode(except, old)) return false;
+    if(owns_fat_clusters(old)) {
+      g_chain_verified_address = EMPTY_ADDRESS;
+      fat_cluster_chain::Plan plan;
+      if(!c9_chain_open(except, old, plan)) return false;
+      C9MapReader input = {old.fat_address};
+      for(u16 index = 0; index < plan.count; ++index) {
+        u16 cluster = 0;
+        if(!fat_cluster_chain::read_cluster({&input, c9_read_map}, plan, index, cluster)) return false;
+        const u16 bit = (u16) (cluster - 2U);
+        bits[bit >> 3] &= (u8) ~(1U << (bit & 7U));
+      }
+    }
+  }
+#else
   u16 remaining = g_meta.total_count;
   for(u16 id = 0; id < g_geometry.max_nodes && remaining != 0; ++id) {
     Inode inode;
@@ -93,6 +189,7 @@ static bool c9_occupied_clusters(u16 except, u8* bits) {
        (inode.flags & INODE_FLAG_FAT_RELEASED) != 0) continue;
     if(!c9_mark_map(id, inode, bits)) return false;
   }
+#endif
   for(u8 index = 0; index < g_c9_pin_count; ++index) {
     const auto& pin = g_c9_pins[index];
     if(!pin.mapping || pin.owner == except) continue;
