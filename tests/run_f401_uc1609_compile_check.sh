@@ -49,7 +49,11 @@ cp -R "$root/code/." "$sketch/"
 # gates still run on the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_flags="$board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=$product -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
+# Start with the direct GCC size policy for cold code, then override Arduino's
+# generic 500-insn threshold with the qualified 1000-insn policy. Check the
+# exact linked image; explicit core O3 attributes are retained.
+size_flags='-Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once -fno-partial-inlining --param=max-inline-insns-single=1000'
+strict_flags="$size_flags $board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=$product -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
 layout_properties="$build_root/layout.properties"
 "$arduino_cli" compile --fqbn "$fqbn" \
   --build-path "$build_root/properties-layout" \
@@ -61,7 +65,7 @@ ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
 portable_linker="$build_root/mk61-portable.ld"
 python3 "$root/tools/.mk61-gcc/portable-layout.py" \
   "$variant_path/$ld_name" "$portable_linker"
-resident_link_flags="-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
+resident_link_flags="$size_flags -Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
 
 set +e
 "$arduino_cli" compile \
@@ -69,7 +73,7 @@ set +e
   --fqbn "$fqbn" \
   --build-path "$compile_path" \
   --build-property "compiler.cpp.extra_flags=$strict_flags" \
-  --build-property "compiler.c.extra_flags=$platform_ram_flags" \
+  --build-property "compiler.c.extra_flags=$platform_ram_flags $size_flags" \
   --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
   --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
   "$sketch" 2>&1 | tee "$compile_log"

@@ -294,7 +294,7 @@
       "builder": "arduino",
       "profile": "classic-v3",
       "optimization": "osstd",
-      "defines": ["MK61_ENABLE_USB_SCREEN=1"],
+      "defines": ["MK61_ENABLE_USB_SCREEN=1", "MK61_SETUP_AS_APP=1"],
       "product": false,
       "publish": false,
       "budgets": {"flash_capacity": 524288, "flash_min_headroom": 16384, "stack_frame_limit": 5120},

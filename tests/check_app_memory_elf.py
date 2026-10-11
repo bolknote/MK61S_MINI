@@ -68,12 +68,18 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     end = value('__mk61_dynamic_end')
     assert end in (0x2000E700, 0x2001BF00), 'stack/guard budget changed'
     free = end - value('__mk61_dynamic_begin')
-    check_pool(free, disk_memory)
+    lazy = sum(symbols.get(name, (0, 0))[0] for name in (
+        'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
+        'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes'))
+    # Worst case after every retained foreground buffer has been initialized.
+    effective = (free - lazy) & ~(APP_ALIGNMENT - 1)
+    assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'
+    check_pool(effective, disk_memory)
     # Some builds never call malloc, so section GC may remove both _sbrk
     # implementations. If present, it must be our strong override, not Core's.
     assert '_sbrk' not in symbols or symbols['_sbrk'][1] == 1, 'weak Core _sbrk can overlap APP'
     print(f'APP RAM: {path}: reserve=0 free={free} system_max={module_memory} '
-          f'usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} top={end:#x} heap=guarded PASS')
+          f'lazy={lazy} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} top={end:#x} heap=guarded PASS')
 
 
 if __name__ == '__main__':

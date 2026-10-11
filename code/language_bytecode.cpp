@@ -1616,6 +1616,12 @@ uint32_t checksum(const uint8_t* p, size_t length) {
   }
   return ~crc;
 }
+// Resident/split-VM images only compile INPUT expressions. Full programs are
+// compiled by the language APP (or host tools), which owns the larger stack
+// budget. Keep those entry points out of the resident translation unit rather
+// than relying on LTO to discard their workspace frames.
+#if !defined(ARDUINO_ARCH_STM32) || defined(MK61_LANGUAGE_VM_COMPILER) || \
+    defined(MK61_LANGUAGE_VM_TEST) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
 CompileResult compile_basic(const char* source, uint16_t length, uint8_t* output,
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
@@ -1631,6 +1637,7 @@ CompileResult compile_focal(const char* source, uint16_t length, uint8_t* output
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   return focal_next::compile_program(source,length,output,capacity,rf_available,resources);
 }
+#endif
 bool validate_focal_expression(const char* source,uint16_t length,bool rf_available) {
   return focal_next::valid_fragment(source,length,rf_available);
 }

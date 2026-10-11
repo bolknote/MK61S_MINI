@@ -177,13 +177,32 @@ enum ClusterRole : u8 {
   CLUSTER_ROLE_SIDECAR = 1,
   CLUSTER_ROLE_DIRECTORY = 2
 };
-static bool g_sidecar_scan_pending;
+enum SidecarScan : u8 {
+  SIDECAR_SCAN_NONE = 0,
+#if MK61_C9_METADATA_PRECHECK
+  SIDECAR_SCAN_COMPARE,
+#endif
+  SIDECAR_SCAN_REQUIRED
+};
+static SidecarScan g_sidecar_scan_pending;
+#if MK61_C9_METADATA_PRECHECK
+static u16 g_sidecar_scan_pressure;
+static void refresh_sidecar_scan_pressure() {
+  g_sidecar_scan_pressure = (u16) (program_store::vfat_stage_count() +
+                                      (u16) g_cache_slots * 2U);
+}
+#endif
 static bool g_sidecar_candidate_seen;
 // A successful mounted SYNC leaves the exact host metadata in staging.
 // That retained view is already applied; a second SYNC/eject needs no import
-// until another accepted packet or persistent media mutation invalidates it.
+// until accepted file/namespace changes or a native catalog mutation. Timestamp
+// changes still persist, but staging generation alone does not change the tree.
 static bool g_host_view_applied;
-static u32 g_applied_media_revision;
+static u32 g_applied_catalog_revision;
+#if MK61_C9_METADATA_PRECHECK
+static bool g_equivalent_host_view;
+static u16 g_equivalent_nodes;
+#endif
 // Current directory and its parent cover sequential host scans. A miss
 // restarts the iterator without changing the generated directory contents.
 #if defined(MK61_BUILD_USBDISK_MODULE)
@@ -369,8 +388,9 @@ static bool valid_cluster(u16 cluster) {
 }
 
 static bool sidecar_filter_enabled(void) {
-  return g_session != NULL &&
-         program_store::max_fat_clusters() <= storage_geometry::FAT12_MAX_DATA_CLUSTERS;
+  // C9 admits only FAT12 geometry (at most 4084 clusters); the node limit is
+  // independent. Session map sizes are based on that checked geometry.
+  return g_session != NULL;
 }
 
 static bool cluster_marked(const u8* map, u16 cluster) {
@@ -379,14 +399,6 @@ static bool cluster_marked(const u8* map, u16 cluster) {
   return (map[id >> 3] & (u8) (1U << (id & 7U))) != 0;
 }
 
-static ClusterRole cluster_role(u16 cluster) {
-  if(!valid_cluster(cluster) || !sidecar_filter_enabled()) {
-    return CLUSTER_ROLE_NONE;
-  }
-  const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
-  const u16 bit = (u16) (id * 2U);
-  return (ClusterRole) ((session().desired_kinds[bit / 8] >> (bit & 7)) & 3U);
-}
 
 static void set_cluster_role(u16 cluster, ClusterRole role) {
   const u16 id = (u16) (cluster - FIRST_DATA_CLUSTER);
@@ -400,24 +412,24 @@ static void mark_cluster(u8* map, u16 cluster) {
   map[id >> 3] |= (u8) (1U << (id & 7U));
 }
 
+static ClusterRole data_lba_role(u32 lba) {
+  if(lba < data_start() || !sidecar_filter_enabled()) return CLUSTER_ROLE_NONE;
+  const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
+  if(id >= program_store::max_fat_clusters()) return CLUSTER_ROLE_NONE;
+  const u16 bit = (u16) (id * 2U);
+  return (ClusterRole) ((session().desired_kinds[bit / 8] >> (bit & 7U)) & 3U);
+}
+
 static bool sidecar_data_lba(u32 lba) {
   // A changed FAT/dirent may reuse a former sidecar cluster for real data.
   // Accept its bytes until a fresh scan proves that the ignore role still holds.
-  if(g_sidecar_scan_pending || lba < data_start() || !sidecar_filter_enabled()) return false;
-  const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
-  return id < program_store::max_fat_clusters() &&
-         cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
-             CLUSTER_ROLE_SIDECAR;
+  return !g_sidecar_scan_pending && data_lba_role(lba) == CLUSTER_ROLE_SIDECAR;
 }
 
 static bool directory_metadata_lba(u32 lba) {
-  if(!sidecar_filter_enabled()) return false;
-  if(lba >= fat_start() && lba < data_start()) return true;
-  if(lba < data_start()) return false;
-  const u32 id = (lba - data_start()) / geometry().sectors_per_cluster;
-  return id < program_store::max_fat_clusters() &&
-         cluster_role((u16) (id + FIRST_DATA_CLUSTER)) ==
-             CLUSTER_ROLE_DIRECTORY;
+  return sidecar_filter_enabled() &&
+      ((lba >= fat_start() && lba < data_start()) ||
+       data_lba_role(lba) == CLUSTER_ROLE_DIRECTORY);
 }
 
 static bool contains_sidecar_name(const u8* block) {
@@ -429,15 +441,6 @@ static bool contains_sidecar_name(const u8* block) {
        item[3] == '_' && item[4] == 0) return true;
   }
   return false;
-}
-
-__attribute__((noinline))
-static void note_host_metadata(u32 lba, const u8* block) {
-  const bool candidate = contains_sidecar_name(block) && sidecar_filter_enabled();
-  if(candidate) g_sidecar_candidate_seen = true;
-  if(candidate || (g_sidecar_candidate_seen && lba != 0 && directory_metadata_lba(lba))) {
-    g_sidecar_scan_pending = true;
-  }
 }
 
 static u16 cluster_for_id(u16 id) {
@@ -477,16 +480,6 @@ static char ascii_lower(char value) {
   return value >= 'A' && value <= 'Z' ? (char) (value - 'A' + 'a') : value;
 }
 
-static bool ends_with_ci(const char* text, const char* suffix) {
-  const usize text_len = strlen(text);
-  const usize suffix_len = strlen(suffix);
-  if(suffix_len > text_len) return false;
-  text += text_len - suffix_len;
-  for(usize i = 0; i < suffix_len; i++) {
-    if(ascii_lower(text[i]) != ascii_lower(suffix[i])) return false;
-  }
-  return true;
-}
 
 static const char* visible_extension(program_store::ProgramType type) {
   return program_store::file_extension(type);
@@ -514,8 +507,13 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
   struct Suffix {
     const char* text;
     program_store::ProgramType type;
+    u8 length;
+    constexpr Suffix(const char* value, program_store::ProgramType kind)
+        : text(value), type(kind), length(0) {
+      while(value[length] != 0) ++length;
+    }
   };
-  static const Suffix suffixes[] = {
+  static constexpr Suffix suffixes[] = {
     {".state.txt", program_store::ProgramType::MK61_STATE},
     {".m61", program_store::ProgramType::MK61},
     {".foc", program_store::ProgramType::FOCAL},
@@ -533,9 +531,13 @@ static bool parse_file_name(char* full_name, program_store::ProgramType& type) {
     // Псевдоним нужен при чтении записи без LFN: 8.3-проекция WBMP — WBM.
     {".wbm", program_store::ProgramType::IMAGE1}
   };
+  const usize name_len = strlen(full_name);
   for(const Suffix& suffix : suffixes) {
-    if(!ends_with_ci(full_name, suffix.text)) continue;
-    const usize base_len = strlen(full_name) - strlen(suffix.text);
+    if(suffix.length > name_len) continue;
+    const usize base_len = name_len - suffix.length;
+    usize i = 0;
+    while(i < suffix.length && ascii_lower(full_name[base_len + i]) == suffix.text[i]) ++i;
+    if(i != suffix.length) continue;
     if(base_len == 0 || base_len >= program_store::NAME_SIZE) return false;
     full_name[base_len] = 0;
     type = suffix.type;
@@ -991,6 +993,50 @@ static int cache_index(u32 lba) {
   return -1;
 }
 
+// Standard dirent timestamps do not change names, kinds, sizes or cluster
+// references. LFN fields occupy the same byte offsets and must all match.
+static bool same_host_metadata_layout(u32 lba, const u8* old, const u8* next) {
+  if(lba < root_start()) return memcmp(old, next, SECTOR_SIZE) == 0;
+  for(u16 byte = 0; byte < SECTOR_SIZE; ++byte) {
+    if(old[byte] == next[byte]) continue;
+    const u16 entry = byte & ~31U;
+    // Short timestamps are the only ignored bytes. LFN shares those offsets
+    // with characters/checksum, so every changed LFN byte is structural.
+    // Attribute byte 11 is structural and visited before ignored timestamps,
+    // so reaching those offsets already proves old/new attributes identical.
+    if((0xFC301FFFUL & (1UL << (byte & 31U))) != 0 ||
+       old[entry + 11] == ATTR_LFN) return false;
+  }
+  return true;
+}
+
+__attribute__((noinline))
+static void note_host_metadata(u32 lba, const u8* block) {
+  if(!sidecar_filter_enabled()) return;
+  if(!g_sidecar_candidate_seen) {
+    if(contains_sidecar_name(block)) {
+      g_sidecar_candidate_seen = true;
+      g_sidecar_scan_pending = SIDECAR_SCAN_REQUIRED;
+    }
+    return;
+  }
+  const bool metadata = directory_metadata_lba(lba);
+  if(!metadata && !contains_sidecar_name(block)) return;
+  // USB IRQ compares accepted RAM only. Unknown sectors remain conservative.
+  if(metadata) {
+    const int old = cache_index(lba);
+    if(old >= 0 && same_host_metadata_layout(lba, cache_bytes((u8) old), block)) return;
+#if MK61_C9_METADATA_PRECHECK
+    if(old < 0) {
+      if(g_sidecar_scan_pending == SIDECAR_SCAN_NONE)
+        g_sidecar_scan_pending = SIDECAR_SCAN_COMPARE;
+      return; // Disable stale roles until foreground compares persistent bytes.
+    }
+#endif
+  }
+  g_sidecar_scan_pending = SIDECAR_SCAN_REQUIRED;
+}
+
 static void touch_cache(u8 slot) {
   SessionState& state = session();
   state.cache_clock++;
@@ -1014,10 +1060,18 @@ static bool read_persistent_sector(u32 lba, u8* output) {
   return read_base_sector(lba, output);
 }
 
-static bool persist_cache_slot(u8 slot) {
+static bool persist_cache_slot(u8 slot
+#if MK61_C9_METADATA_PRECHECK
+                               , bool layout_only = false
+#endif
+                               ) {
   SessionState& state = session();
   CacheEntry& entry = state.cache[slot];
   if(entry.state != CACHE_UNCHECKED) return true;
+#if MK61_C9_METADATA_PRECHECK
+  const bool metadata = directory_metadata_lba(entry.lba);
+  if(layout_only && !metadata) return true;
+#endif
   u8 persistent[SECTOR_SIZE];
   if(!read_persistent_sector(entry.lba, persistent)) return false;
   if(memcmp(persistent, cache_bytes(slot), SECTOR_SIZE) == 0) {
@@ -1025,12 +1079,29 @@ static bool persist_cache_slot(u8 slot) {
     touch_cache(slot);
     return true;
   }
+  // A cache miss defers metadata comparison to this existing persistent
+  // read. SYNC tests the applied-view certificate only after all dirty slots
+  // have passed here, so a changed name/LFN/size/chain cannot use the shortcut.
+#if MK61_C9_METADATA_PRECHECK
+  if((g_host_view_applied || g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE) &&
+     (!metadata || !same_host_metadata_layout(entry.lba, persistent, cache_bytes(slot)))) {
+    g_host_view_applied = false;
+    if(metadata && g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE)
+      g_sidecar_scan_pending = SIDECAR_SCAN_REQUIRED;
+  }
+  if(layout_only) return true; // Reclaim proven sidecars before persisting data.
+#else
+  if(g_host_view_applied && (!directory_metadata_lba(entry.lba) ||
+     !same_host_metadata_layout(entry.lba, persistent, cache_bytes(slot))))
+    g_host_view_applied = false;
+#endif
   if(!program_store::vfat_stage_write(entry.lba, cache_bytes(slot))) return false;
   entry.state = CACHE_CLEAN;
   touch_cache(slot);
   return true;
 }
 
+__attribute__((noinline))
 static int oldest_cache(CacheState wanted) {
   SessionState& state = session();
   int oldest = -1;
@@ -1043,18 +1114,6 @@ static int oldest_cache(CacheState wanted) {
   return oldest;
 }
 
-static int oldest_dirty_cache(void) {
-  SessionState& state = session();
-  int oldest = -1;
-  for(u8 slot = 0; slot < g_cache_slots; slot++) {
-    const CacheState cache_state = state.cache[slot].state;
-    if(cache_state != CACHE_UNCHECKED) continue;
-    if(oldest < 0 || state.cache[slot].age < state.cache[(u8) oldest].age) {
-      oldest = slot;
-    }
-  }
-  return oldest;
-}
 
 static bool prepare_cache_slot(u8& output) {
   SessionState& state = session();
@@ -1068,7 +1127,7 @@ static bool prepare_cache_slot(u8& output) {
   // Предпочитаем удалить запись только для чтения. Лишь когда все слоты грязные,
   // добавляем в журнал NOR использовавшийся раньше всех.
   int victim = oldest_cache(CACHE_CLEAN);
-  if(victim < 0) victim = oldest_dirty_cache();
+  if(victim < 0) victim = oldest_cache(CACHE_UNCHECKED);
   if(victim < 0 || !persist_cache_slot((u8) victim)) return false;
   state.cache[(u8) victim].state = CACHE_EMPTY;
   output = (u8) victim;
@@ -1478,6 +1537,18 @@ static bool scan_host_directory(u16 first_cluster, u8 depth,
 
 static bool discard_known_sidecars(void) {
   if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
+#if MK61_C9_METADATA_PRECHECK
+  // IRQ cache misses suspend role-based discard, but do not prove a layout
+  // change. Compare accepted dirty metadata without programming it first:
+  // a full journal may need sidecar reclamation to make persistence possible.
+  for(u8 slot = 0; slot < g_cache_slots &&
+      g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE; ++slot)
+    if(!persist_cache_slot(slot, true)) return false;
+  if(g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE) {
+    g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
+    return true;
+  }
+#endif
 #if defined(ARDUINO_ARCH_STM32) && MK61_USBDISK_IS_BUILTIN
   SidecarScanMaps& maps = g_sidecar_scan_maps;
   memset(&maps, 0, sizeof(maps));
@@ -1514,7 +1585,10 @@ static bool discard_known_sidecars(void) {
       set_cluster_role(cluster, CLUSTER_ROLE_DIRECTORY);
     }
   }
-  g_sidecar_scan_pending = false;
+  g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
+#if MK61_C9_METADATA_PRECHECK
+  refresh_sidecar_scan_pressure();
+#endif
   return true;
 }
 
@@ -1851,9 +1925,57 @@ static bool validate_directory_capacity(u8 depth, bool root, u16 raw_clusters) {
   return true;
 }
 
+#if MK61_C9_METADATA_PRECHECK
+// Reserve/name discovery already walks the whole supported host tree. Prove
+// it still denotes exactly the native catalog before allocating an import WAL.
+// Ignored host entries and timestamps alone need no catalog/FAT publication.
+__attribute__((noinline))
+static bool equivalent_native_node(u16 parent_id, const ParsedNode& parsed) {
+  if(parsed.id >= geometry().max_nodes || desired_node(parsed.id) != DESIRED_NONE)
+    return false;
+  program_store::Entry current = {};
+  if(!program_store::entry_by_id(parsed.id, current) ||
+     current.parent_id != parent_id || strcmp(current.name, parsed.name) != 0 ||
+     parsed.directory != (current.kind == program_store::NodeKind::DIRECTORY) ||
+     (!parsed.directory && current.type != parsed.type)) return false;
+  if(parsed.directory) {
+    u16 count = 0, cluster = parsed.cluster;
+    if(!program_store::fat_chain_count(parsed.id, count) || count == 0) return false;
+    for(u16 index = 0; index < count; ++index) {
+      u16 native = 0, next = 0;
+      if(!program_store::fat_chain_cluster(parsed.id, index, native) || native != cluster ||
+         !effective_fat_value(cluster, next)) return false;
+      if(index + 1U == count) { if(!fat_eof(next)) return false; }
+      else cluster = next;
+    }
+  } else {
+    u32 size = 0;
+    FileChain chain = {};
+    if(!exported_file_size(current, size) || size != parsed.data_len ||
+       (size == 0 && parsed.cluster != 0) || !collect_file_chain(parsed, false, chain) ||
+       !file_chain_matches(chain, parsed.id)) return false;
+    const u32 cluster_bytes = (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
+    u32 remaining = size;
+    for(u8 index = 0; index < chain.cluster_count; ++index) {
+      const u32 bytes = remaining < cluster_bytes ? remaining : cluster_bytes;
+      for(u8 sector = 0; (u32) sector * SECTOR_SIZE < bytes; ++sector)
+        if(program_store::vfat_stage_exists(cluster_lba(chain.clusters[index], sector))) return false;
+      remaining -= bytes;
+    }
+  }
+  if(!set_desired_node(parsed.id, parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE)) return false;
+  ++g_equivalent_nodes;
+  return true;
+}
+#endif
+
 __attribute__((noinline))
 static bool process_node(u16 parent_id, ParsedNode& parsed, u8 depth, WalkPass pass, NextDirectory& next) {
   if(!c9_resolve_node(parent_id, parsed, pass)) return false;
+#if MK61_C9_METADATA_PRECHECK
+  if(pass == WalkPass::RESERVE_NAMES && g_equivalent_host_view)
+    g_equivalent_host_view = equivalent_native_node(parent_id, parsed);
+#endif
   if(pass == WalkPass::RESERVE) {
     if(parsed.cluster != 0 &&
        !set_desired_kind(parsed.cluster, parsed.directory ? DESIRED_DIRECTORY : DESIRED_FILE)) {
@@ -2233,7 +2355,10 @@ class ScopedDesiredKinds {
     // MSC session continues after sync, rebuild those roles before accepting
     // the next packet: a retryable commit failure keeps the host FAT batch.
     memset(session().desired_kinds, 0, session().kind_bytes);
-    g_sidecar_scan_pending = g_sidecar_candidate_seen;
+    g_sidecar_scan_pending = g_sidecar_candidate_seen ? SIDECAR_SCAN_REQUIRED : SIDECAR_SCAN_NONE;
+#if MK61_C9_METADATA_PRECHECK
+    refresh_sidecar_scan_pressure();
+#endif
   }
 
   ScopedDesiredKinds(const ScopedDesiredKinds&) = delete;
@@ -2243,7 +2368,7 @@ class ScopedDesiredKinds {
 static bool flush_write_cache_internal(void) {
   if(!discard_known_sidecars()) return false;
   while(true) {
-    const int slot = oldest_dirty_cache();
+    const int slot = oldest_cache(CACHE_UNCHECKED);
     if(slot < 0) return true;
     if(!persist_cache_slot((u8) slot)) return false;
   }
@@ -2355,13 +2480,11 @@ static void write_reserved_packet_sector(u32 lba, const u8* data) {
     if(found < 0) __builtin_trap(); // reserve_packet_cache_slots() гарантирует слот.
     CacheEntry& entry = session().cache[(u8) found];
     entry.lba = canonical_lba(lba);
-    g_host_view_applied = false;
     memcpy(cache_bytes((u8) found), data, SECTOR_SIZE);
     entry.state = CACHE_UNCHECKED;
   } else {
     u8* const bytes = cache_bytes((u8) found);
     if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
-      g_host_view_applied = false;
       memcpy(bytes, data, SECTOR_SIZE);
       session().cache[(u8) found].state = CACHE_UNCHECKED;
     }
@@ -2378,7 +2501,6 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
     slot = (u8) found;
     u8* const bytes = cache_bytes(slot);
     if(memcmp(bytes, data, SECTOR_SIZE) != 0) {
-      g_host_view_applied = false;
       memcpy(bytes, data, SECTOR_SIZE);
       session().cache[slot].state = CACHE_UNCHECKED;
     }
@@ -2395,7 +2517,6 @@ static void fast_cache_write_sector(u32 packet_lba, u16 packet_count,
   // обращается к SPI и потому безопасен внутри обратного вызова USB.
   entry.state = CACHE_EMPTY;
   entry.lba = key;
-  g_host_view_applied = false;
   memcpy(cache_bytes(slot), data, SECTOR_SIZE);
   touch_cache(slot);
   entry.state = CACHE_UNCHECKED;
@@ -2500,7 +2621,20 @@ bool write_cached_sectors(u32 lba, const u8* data, u16 count) {
   // Scanning every directory timestamp write makes a tiny macOS file create
   // traverse the entire volume dozens of times. Batch role changes until sync,
   // or scan early under staging pressure to reclaim AppleDouble payload.
-  const u16 pressure = (u16) ((geometry().stage_sector_count - 1U) * 7U / 2U);
+  u16 pressure = (u16) ((geometry().stage_sector_count - 1U) * 7U / 2U);
+#if MK61_C9_METADATA_PRECHECK
+  // Leave the compaction segment and seven index entries spare. Two
+  // cachefuls cover the old packet's eviction and the newly accepted packet.
+  // Once ordinary data passes the half-full mark, scan in batches instead
+  // of rescanning every structural write. Keep the journal sparse enough
+  // that compaction need not copy almost-full sectors on every new packet.
+  const u16 capacity = (u16) ((geometry().stage_sector_count - 2U) * 7U);
+  const u16 headroom = (u16) g_cache_slots * 2U;
+  if(capacity > headroom && capacity - headroom > pressure) {
+    if(g_sidecar_scan_pressure > pressure) pressure = g_sidecar_scan_pressure;
+    if(pressure > capacity - headroom) pressure = (u16) (capacity - headroom);
+  }
+#endif
   if(g_sidecar_scan_pending && program_store::vfat_stage_count() >= pressure &&
      !discard_known_sidecars()) return false;
   for(u16 i = 0; i < count; ++i)
@@ -2619,13 +2753,13 @@ static CommitResult commit_pending_result(bool final_view) {
     ScopedCommitScratch scratch;
     return close_applied_view(false);
   }
-  if(g_host_view_applied && g_applied_media_revision == program_store::media_revision()) {
+  if(g_host_view_applied && g_applied_catalog_revision == program_store::catalog_revision()) {
     if(!final_view) { clear_diagnostic(); return CommitResult::OK; }
     ScopedCommitScratch scratch;
     return close_applied_view(true);
   }
-  // Failed/partial attempts and reboot recovery always take the complete,
-  // validated import path. The shortcut is an SRAM fact about this session.
+  // Failed/partial attempts and reboot recovery must revalidate the accepted
+  // host tree; they cannot trust the volatile applied-view certificate.
   g_host_view_applied = false;
   startup_stage(50);
   ScopedCommitScratch commit_scratch;
@@ -2636,11 +2770,30 @@ static CommitResult commit_pending_result(bool final_view) {
     g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
+#if MK61_C9_METADATA_PRECHECK
+  g_equivalent_host_view = true;
+  g_equivalent_nodes = 0;
+#endif
   if(!walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::RESERVE) ||
      !walk_directory(program_store::ROOT_ID, true, 0, 0, WalkPass::RESERVE_NAMES)) {
     return (g_error.value.flags & RETRYABLE) != 0
         ? CommitResult::IO_FAILED : CommitResult::REJECTED;
   }
+#if MK61_C9_METADATA_PRECHECK
+  if(g_equivalent_host_view && g_equivalent_nodes == program_store::used_nodes()) {
+    if(!program_store::vfat_stage_discard_unmatched(c9_keep_stage, (void*)&c9_stage_masks[final_view ? 2 : 3]))
+      return close_io_failure(ErrorCode::STAGE_DISCARD);
+    if(final_view) return close_applied_view(true);
+    g_host_view_applied = true;
+    g_applied_catalog_revision = program_store::catalog_revision();
+    invalidate_clean_cache();
+    clear_diagnostic();
+    return CommitResult::OK;
+  }
+  // These marks only detect duplicates during the equivalence proof. The
+  // ordinary validator allocates fresh target IDs after any real change.
+  memset(session().desired_nodes, 0, session().node_bytes);
+#endif
   if(!program_store::import_plan_begin()) {
     g_error.fail(ErrorCode::CACHE_WRITE, Phase::VALIDATE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
@@ -2683,7 +2836,7 @@ static CommitResult commit_pending_result(bool final_view) {
     if(program_store::entry_by_id(id, old)) c9_mark_parent_changed(old.parent_id);
   }
   startup_stage(52);
-  if(!program_store::vfat_stage_discard_unmatched(c9_keep_stage, nullptr)) {
+  if(!program_store::vfat_stage_discard_unmatched(c9_keep_stage, (void*)&c9_stage_masks[final_view ? 0 : 1])) {
     g_error.fail(ErrorCode::CACHE_WRITE, Phase::PREPARE, 0, 0, nullptr, true);
     return CommitResult::IO_FAILED;
   }
@@ -2726,7 +2879,7 @@ static CommitResult commit_pending_result(bool final_view) {
   // Keep the exact accepted FAT/directory sectors while the host has open
   // vnodes. Canonical LFN records can change short-entry positions, so they
   // are generated only after this host session ends.
-  const bool discarded = program_store::vfat_stage_discard_unmatched(c9_keep_host_metadata, nullptr);
+  const bool discarded = program_store::vfat_stage_discard_unmatched(c9_keep_stage, (void*)&c9_stage_masks[final_view ? 2 : 3]);
   if(!discarded) {
     record_startup_timeout();
     g_error.fail(ErrorCode::STAGE_DISCARD, Phase::COMMIT, 0, 0, nullptr, true);
@@ -2741,7 +2894,7 @@ static CommitResult commit_pending_result(bool final_view) {
     return CommitResult::IO_FAILED;
   }
   g_host_view_applied = !final_view;
-  g_applied_media_revision = program_store::media_revision();
+  g_applied_catalog_revision = program_store::catalog_revision();
   startup_stage(57);
   clear_diagnostic();
   startup_stage(58);
@@ -2799,7 +2952,10 @@ bool reset_session(void) {
   }
   startup_stage(3);
   if(!initialize_session_layout()) return false;
-  g_sidecar_scan_pending = false;
+#if MK61_C9_METADATA_PRECHECK
+  g_sidecar_scan_pressure = 0;
+#endif
+  g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
   g_sidecar_candidate_seen = false;
   startup_stage(4);
   // Persistent staging is a write-ahead journal, not a second filesystem.
@@ -2836,6 +2992,13 @@ bool reset_session(void) {
   g_session_volume_serial_valid = true;
   startup_stage(7);
   invalidate_clean_cache();
+#if MK61_C9_METADATA_PRECHECK
+  // With no journal and the native projection built, the generated tree is
+  // already the catalog. Dirty-sector comparison revokes this certificate
+  // before a changed file, name, LFN, FAT chain or native catalog can reuse it.
+  g_host_view_applied = true;
+  g_applied_catalog_revision = program_store::catalog_revision();
+#endif
   return true;
 }
 
@@ -2854,7 +3017,7 @@ void end_session(void) {
   g_extra_cache_slots = 0;
   update_cache_slot_count();
   g_session_volume_serial_valid = false;
-  g_sidecar_scan_pending = false;
+  g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
   g_sidecar_candidate_seen = false;
   startup_stage(44);
 }

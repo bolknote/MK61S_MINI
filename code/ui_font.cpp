@@ -7,21 +7,9 @@
 namespace ui_font {
 namespace {
 
-struct GlyphRecord {
-  // Native compile-time data, not a file/ABI layout. The reviewed atlas bounds
-  // let all six fields share one word; the generator rejects truncation.
-  uint32_t offset : 11;
-  uint32_t width : 4;
-  uint32_t height : 4;
-  uint32_t bearing_x : 3;
-  int32_t bearing_y : 5;
-  uint32_t advance : 5;
-};
-static_assert(sizeof(GlyphRecord) == 4, "UI glyph records must stay compact");
-
 struct FaceData {
-  const GlyphRecord* records;
-  const uint8_t* bitmap;
+  const uint8_t* records;
+  const uint8_t* shapes;
   Metrics metrics;
 };
 
@@ -66,16 +54,21 @@ Glyph glyph(Face face, uint32_t codepoint) {
   int index = glyphIndex(codepoint);
   bool fallback = index < 0;
   if (index < 0) index = '?' - ' ';
-  if (FACES[selected].records[index].offset == MISSING_OFFSET) {
-    // The reviewed atlas is complete; keep a safe fallback if it ever isn't.
-    index = '?' - ' ';
-    fallback = true;
-  }
-  const GlyphRecord& record = FACES[selected].records[index];
-  return {FACES[selected].bitmap + record.offset,
-          static_cast<uint8_t>(record.width), static_cast<uint8_t>(record.height),
-          static_cast<int8_t>(record.bearing_x), static_cast<int8_t>(record.bearing_y),
-          static_cast<uint8_t>(record.advance),
+  const FaceData& data = FACES[selected];
+  const unsigned bit = (unsigned) index * 18U;
+  const uint8_t* encoded = data.records + bit / 8U;
+  const uint32_t value = ((uint32_t) encoded[0] | ((uint32_t) encoded[1] << 8) |
+      ((uint32_t) encoded[2] << 16)) >> (bit & 7U);
+  const unsigned offset = value & 0xFFFU;
+  const unsigned metric_bit = ((value >> 12) & 0x3FU) * 21U;
+  const uint8_t* metric = data.shapes + metric_bit / 8U;
+  const uint32_t fields = ((uint32_t) metric[0] | ((uint32_t) metric[1] << 8) |
+      ((uint32_t) metric[2] << 16) | ((uint32_t) metric[3] << 24)) >> (metric_bit & 7U);
+  const int bearing_y = (int) (((fields >> 11) & 0x1FU) ^ 16U) - 16;
+  return {PIXEL_BITMAP + offset,
+          static_cast<uint8_t>(fields & 0xFU), static_cast<uint8_t>((fields >> 4) & 0xFU),
+          static_cast<int8_t>((fields >> 8) & 7U), static_cast<int8_t>(bearing_y),
+          static_cast<uint8_t>((fields >> 16) & 0x1FU),
           font_glyph::BitmapLayout::TIGHT_MSB, fallback};
 }
 

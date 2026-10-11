@@ -18,11 +18,14 @@ import argparse
 import binascii
 import json
 import struct
+import sys
 import tempfile
 from pathlib import Path
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_CODE
 from unicorn.arm_const import *
 from run_portable_app_arm_tests import CALLBACKS, ROOT, BASE, OVERLAY, run, wbmp, oracle
+sys.path.insert(0, str(ROOT / "tools"))
+from m8_codec import encode as encode_m8
 
 class Elf:
     def __init__(self, path):
@@ -42,6 +45,14 @@ class Elf:
         found = [v for k,v in self.symbols.items() if name in k]
         assert len(found) == 1, (name, found)
         return found[0]
+    def fixture_buffer_begin(self):
+        # Leave every retained resident buffer below the fixture's source/APP
+        # area, including buffers whose first allocation happens later.
+        retained = sum(self.symbols.get(name, 0) for name in (
+            'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
+            'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes'))
+        return (self.symbol('__mk61_dynamic_begin') + retained + 7) & ~7
+
     def require_libm_math(self, path):
         # This is the CORE implementation's MatrixKey evaluator, including
         # GCC/LTO clone suffixes. Checking symbols avoids hard-coded addresses
@@ -121,7 +132,7 @@ class Machine:
         # Bind actual zeroed ELF storage, without guessing a C++ field offset;
         # INFO/current preferences continue to be mocked in system().
         self.put(elf.symbol('main_lcd_pointer'), elf.symbol('mk61_lcd_storage'))
-        self.input = elf.symbol('__mk61_dynamic_begin')
+        self.input = elf.fixture_buffer_begin()
         self.pool_begin = (self.input + 2048 + 31) & ~31
         self.pool_end = elf.symbol('__mk61_dynamic_end')
         self.stack_top = elf.symbol('_estack') - 16
@@ -130,7 +141,31 @@ class Machine:
         assert struct.unpack('<IHH', self.uc.mem_read(self.sys, 8)) == (0x31535953, 2, 28)
         self.mapping, self.syscall, _, _, _ = self.words(self.sys+8, 5)
         self.mapping = list(self.uc.mem_read(self.mapping, 42))
-        self.workspace = elf.symbol('17workspace_storageE')
+        if 'mk61_lazy_workspace_bytes' in elf.symbols:
+            # Create the real retained workspace before mocking its API leases.
+            # The initial pointer cell cannot be used as an 8-KiB backing array.
+            import re
+            names = re.findall(r'MK61_SHARED_MEMORY_OWNER\(\s*([A-Z_]+)',
+                               (ROOT / 'code/shared_memory_owner_catalog.inc').read_text())
+            owner = names.index('LANGUAGE_VM')
+            temporary = 0x2001C800
+            stop = 0x080FF000
+            self.uc.mem_write(temporary, bytes(48))
+            def native_call(symbol, arguments):
+                for register, value in zip(
+                        (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3), arguments):
+                    self.uc.reg_write(register, value)
+                self.uc.reg_write(UC_ARM_REG_SP, self.stack_top)
+                self.uc.reg_write(UC_ARM_REG_LR, stop | 1)
+                self.uc.emu_start(elf.symbol(symbol) | 1, stop, count=1000000)
+                assert self.uc.reg_read(UC_ARM_REG_PC) == stop
+                return self.uc.reg_read(UC_ARM_REG_R0)
+            assert native_call('_ZN13shared_memory5Lease7acquire',
+                               (temporary, 0, owner, 8192)) == 1
+            self.workspace = self.words(temporary + 4, 1)[0]
+            native_call('_ZN13shared_memory5Lease5reset', (temporary,))
+        else:
+            self.workspace = elf.symbol('17workspace_storageE')
         self.scratch = elf.symbol('15scratch_storageE')
         self.callbacks = {v & ~1: k for k,v in zip(CALLBACKS,self.words(self.api+12,23))}
         if '_ZN13program_store14media_revisionEv' in elf.symbols:
@@ -418,12 +453,206 @@ class Machine:
         self.uc.mem_write(self.input,text.encode()+b'\0'); return self.input
 
 
+def check_viewers(m, packages):
+    m.load(packages['markdown-viewer'])
+    runtime = m.words(m.sys + 24, 1)[0]
+    m.put(m.sys + 24, 0)
+    assert m.call(0, m.api, m.crc, 6) == 5, 'missing shared runtime must refuse Markdown'
+    m.put(m.sys + 24, runtime)
+    first_slot = m.words(runtime, 1)[0]
+    m.put(runtime, 0)
+    assert m.call(0, m.api, m.crc, 6) == 5, 'incomplete shared runtime must refuse Markdown'
+    m.put(runtime, first_slot)
+    # View WBMP with exact pixel checks and unsupported-display fallback.
+    m.files[42]=(7,'WIDE',wbmp(208,48)); m.keys=[m.mapping[37],m.mapping[37],m.mapping[39]]
+    m.load(packages['wbmp-viewer']); m.frames=[]
+    result=m.call(2,0,42)
+    assert result == (0 if m.graphics else 2),result
+    if m.graphics: assert m.frames == [oracle(208,48,x) for x in (0,8,16)]
+    m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
+    assert m.call(2,0,43)==0
+    assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
+    # Right selects a visible link before continuing normal
+    # scrolling, OK opens it, and ESC returns to the exact saved
+    # viewport before the final ESC closes the viewer.
+    m.files[43] = (10, 'README',
+                   b'# Links\n\n[Next](next.md)\n')
+    m.files[45] = (10, 'next.md',
+                   b'# Target\n\nArrived.\n')
+    m.keys = ([m.mapping[37]] * (1 if m.graphics else 2) + [m.mapping[38]] +
+              ([] if m.graphics else [m.mapping[37]]) + [m.mapping[39], m.mapping[39]])
+    m.frames = []; m.lines = []
+    assert m.call(2, 0, 43) == 0
+    if m.graphics:
+        assert len(m.frames) >= 4, len(m.frames)
+        assert m.frames[0] != m.frames[1]
+        assert m.frames[0] != m.frames[2]
+        assert m.frames[0] == m.frames[-1]
+    else:
+        assert any(line.startswith('> Next') for line in m.lines), m.lines
+        assert any('Arrived.' in line for line in m.lines), m.lines
+
+    if m.graphics:
+        inline_frames = {}
+        code_frame = None
+        for family, size in ((1, 12), (1, 14), (1, 16),
+                             (2, 12), (2, 14), (2, 16)):
+            m.ui_font = bytes((family, size))
+            text = 'Wi Ёж ←→'
+            m.files[43] = (10, 'README', encode_m8(text + '\n'))
+            m.keys = [m.mapping[39]]; m.frames = []
+            assert m.call(2, 0, 43) == 0
+            assert m.frames == [ui_font_oracle(family, size, text)], (family, size)
+            # Code blocks remain identical across all UI choices.
+            m.files[43] = (10, 'README', b'```\nWi\n```\n')
+            m.keys = [m.mapping[39]]; m.frames = []
+            assert m.call(2, 0, 43) == 0
+            if code_frame is None: code_frame = m.frames
+            assert m.frames == code_frame
+            # Inline code aligns to the selected baseline but is
+            # the same fixed-cell raster for either font family.
+            m.files[43] = (10, 'README', b'`WWii`\n')
+            m.keys = [m.mapping[39]]; m.frames = []
+            assert m.call(2, 0, 43) == 0
+            if size not in inline_frames: inline_frames[size] = m.frames
+            assert m.frames == inline_frames[size]
+        m.ui_font = bytes((0, 14))
+    m.files[43] = (10, 'README', b'# Test\n\nHello **world**.\n')
+    m.load(packages['markdown-text']); m.lines=[]
+    m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
+    assert m.call(2,0,43)==0
+    assert any('Hello' in line for line in m.lines), m.lines
+    m.files[43] = (10, 'README', b'[Next](next.md)\n')
+    m.keys = ([m.mapping[37], m.mapping[38]] +
+              ([] if m.graphics else [m.mapping[37]]) + [m.mapping[39], m.mapping[39]])
+    m.lines = []
+    assert m.call(2, 0, 43) == 0
+    assert any(line.startswith('> Next') for line in m.lines), m.lines
+    assert any('Arrived.' in line for line in m.lines), m.lines
+    m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
+    assert m.call(2,0,44)==(0 if m.graphics else 2)
+    # A truncated public service table is refused before callbacks run.
+    before=len(m.trace)
+    m.uc.mem_write(m.sys+6,struct.pack('<H',24))
+    assert m.call(0,m.api,m.crc,5) == 5
+    assert len(m.trace) == before
+    m.uc.mem_write(m.sys+6,struct.pack('<H',28))
+
+
+def check_setup(m, package):
+    m.load(package)
+    runtime = m.words(m.sys + 24, 1)[0]
+    m.put(m.sys + 24, 0)
+    assert m.call(0, m.api, m.crc, 7) == 1, 'missing shared runtime must refuse SETUP'
+    m.put(m.sys + 24, runtime)
+    first_slot = m.words(runtime, 1)[0]
+    m.put(runtime, 0)
+    assert m.call(0, m.api, m.crc, 7) == 1, 'incomplete shared runtime must refuse SETUP'
+    m.put(runtime, first_slot)
+    m.load(package); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]
+    assert m.call(0x400)==0
+    assert 'STM32F401' in ''.join(m.lines),m.lines
+    m.keys=[m.mapping[39]]; before=list(m.datetime)
+    assert m.call(0x401)==0 and not m.rtc_writes and m.datetime==before
+    m.keys=[m.mapping[38]]
+    assert m.call(0x401)==0 and m.rtc_writes==[before]
+    m.keys=[m.mapping[8],m.mapping[38]]
+    assert m.call(0x402)==0 and m.calibration==-123,m.calibration
+    for extended in (False,True):
+        m.extended=extended; m.profile=bytes((6,5,8,2))
+        m.keys=[m.mapping[41],m.mapping[39]]
+        assert m.call(0x403)==0
+        assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
+                             bytes((10,3,5,1)) if m.graphics else bytes((6,5,8,2))),m.profile
+    if m.graphics:
+        # Family is first. OK changes a value and ordinary arrows
+        # navigate. Calculator geometry is no longer configurable.
+        for extended in (False, True):
+            m.ui_fonts = True; m.extended = extended
+            m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
+            left, right, ok, esc, shg_left, shg_right = m.mapping[36:42]
+            before = len(m.trace)
+            m.keys = [left] * 2 + [right] * 5 + [left] * 5 + [esc]
+            assert m.call(0x403) == 0
+            assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
+            assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
+            # This fixture advertises the service-v2 chooser without a
+            # catalog. Keep each legacy family/size transition independent.
+            transitions = ((0, 14, 1, 16, [ok, right, ok, esc]),
+                           (1, 16, 3, 16, [ok, esc]),
+                           (1, 16, 1, 12, [right, ok, esc]))
+            for old_family, old_size, family, size, keys in transitions:
+                m.ui_font = bytes((old_family, old_size))
+                m.keys = keys
+                m.setup_views = []
+                assert m.call(0x403) == 0
+                assert m.ui_font == bytes((family, size)), m.ui_font
+                assert m.profile == bytes((6, 5, 8, 2)), m.profile
+                role, face, rows = m.setup_views[-1]
+                assert role and face == m.ui_font
+                sample_row = 4 if size == 12 and family else (2 if size == 16 and family else 3)
+                assert 'UI font:' in rows[0] and rows[sample_row] == ' Aa Bb Wi 123', rows
+                assert ('UI size:' in rows[1]) == bool(family), rows
+                assert not any('Calculator' in line for line in rows.values()), rows
+            # Even a stale two-row calculator profile cannot change
+            # the font-dependent UI geometry or reopen calculator font controls.
+            m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((1, 12))
+            m.legacy_rows = 2; m.keys = [right, esc]
+            m.setup_views = []; before = len(m.trace)
+            assert m.call(0x403) == 0
+            assert m.profile == bytes((6, 5, 8, 2))
+            assert m.ui_font == bytes((1, 12))
+            fixed_rows = m.setup_views[-1][2]
+            assert 'UI font:' in fixed_rows[0] and fixed_rows[1].startswith('>UI size:'), fixed_rows
+            assert fixed_rows[4] == ' Aa Bb Wi 123'
+            assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
+            m.legacy_rows = 4; m.ui_font = bytes((2, 12)); m.profile = bytes((6, 5, 8, 2))
+            # Proportional mode shows only size. OK advances it and
+            # shifted-left reverses it without opening another view.
+            m.keys = [right, ok, shg_left, esc]
+            m.setup_views = []
+            assert m.call(0x403) == 0
+            assert m.profile == bytes((6, 5, 8, 2))
+            assert m.ui_font == bytes((2, 12))
+            assert any(view[1] == bytes((2, 14)) for view in m.setup_views)
+            assert all(view[0] for view in m.setup_views)
+            assert m.setup_views[-1][2][4] == ' Aa Bb Wi 123'
+        # A display revision change to the monospaced USB backend
+        # leaves the live chooser safely without applying settings.
+        m.setup_views = []; m.drop_live_ui_on_wait = True; m.keys = [esc]
+        before = len(m.trace)
+        assert m.call(0x403) == 0 and not m.live_ui
+        assert m.setup_views[0][0]
+        assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
+        m.live_ui = True
+        m.ui_fonts = False
+    m.keys=[m.mapping[39]]
+    pointer=m.source('bad font'); m.lines=[]
+    assert m.call(0x404,pointer,pointer,8)==0
+    assert 'Bad font' in ''.join(m.lines),m.lines
+    assert m.font_restores>0
+    font=preview_font(); pointer=m.input+1024
+    m.uc.mem_write(pointer,font); m.keys=[m.mapping[39]]; m.lines=[]
+    trace_start=len(m.trace)
+    assert m.call(0x404,m.source('TEST'),pointer,len(font))==0
+    assert 'f2 3x5 TEST' in ''.join(m.lines),m.lines
+    operations=[x[1] for x in m.trace[trace_start:] if x[0]==25]
+    if m.graphics:
+        assert 7 in operations and 8 in operations
+    else:
+        assert operations.count(9)==8 and 10 in operations
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--resident-elf',type=Path,action='append',required=True)
     parser.add_argument('--apps-dir',type=Path,required=True)
     parser.add_argument('--expect-public-services',action='store_true',
                         help='verify new adapters require the common API')
+    parser.add_argument('--viewers-only', action='store_true',
+                        help='qualify WBMP, Markdown, UI glyphs and CHIP8 independently of languages')
+    parser.add_argument('--setup-only', action='store_true',
+                        help='qualify SETUP and font services independently of language APPs')
     parser.add_argument('--ui-only', action='store_true',
                         help='qualify UI on product residents without the '
                              'transcendental probe; CORE math is tested separately')
@@ -436,7 +665,8 @@ def main():
     assert len(args.resident_elf) == 2, 'classic graphics, then mini character resident'
     assert not (args.ui_only and args.local_float_math), \
         '--ui-only and --local-float-math are mutually exclusive'
-    if args.ui_only:
+    assert not (args.setup_only and args.viewers_only), 'select one focused qualification'
+    if args.ui_only or args.setup_only or args.viewers_only:
         print('UI qualification (transcendental math separately covered by '
               'core host suite)', flush=True)
     elif not args.local_float_math:
@@ -450,10 +680,17 @@ def main():
         run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
         for index,resident in enumerate(args.resident_elf):
             elf=Elf(resident)
-            low=(elf.symbol('__mk61_dynamic_begin')+2048+31)&~31
+            low=(elf.fixture_buffer_begin()+2048+31)&~31
             end=elf.symbol('__mk61_dynamic_end')
             packages={}
-            for kind,name in [('focal','FOCAL'),('tinybasic','BASIC'),('wbmp-viewer','WBMP'),('markdown-viewer','MARKDOWN'),('chip8','CHIP8'),('markdown-text','MARKDOWN'),('setup','SETUP')]:
+            modules = [('wbmp-viewer','WBMP'), ('markdown-viewer','MARKDOWN'),
+                       ('chip8','CHIP8'), ('markdown-text','MARKDOWN')]
+            if args.setup_only:
+                modules = [('setup', 'SETUP')]
+            elif not args.viewers_only:
+                modules = [('focal','FOCAL'), ('tinybasic','BASIC'), *modules,
+                           ('setup','SETUP')]
+            for kind,name in modules:
                 path=args.apps_dir/kind/(name+'.APP'); packed=path.read_bytes()
                 target=Path(temp)/(name+'.bin')
                 image_size,memory_size,entry=struct.unpack_from('<III',packed,28)
@@ -467,6 +704,14 @@ def main():
                 packages[kind]=(kind,variants,image_size,entry,crc)
             for address_index in range(3):
                 m=Machine(resident,index==0,address_index)
+                if args.setup_only:
+                    check_setup(m, packages['setup'])
+                    print(f'{resident}: address variant {address_index}, SETUP + font services PASS')
+                    continue
+                if args.viewers_only:
+                    check_viewers(m, packages)
+                    print(f'{resident}: address variant {address_index}, viewers + real UI glyphs PASS')
+                    continue
                 m.load(packages['focal'])
                 if args.expect_public_services:
                     # Every kind binds through the same public API. A
@@ -530,169 +775,8 @@ def main():
                     assert m.call(edit+2,inode) == 1
                     assert m.viewport_ends > 0
                 assert m.key_calls >= 4
-                # View WBMP with exact pixel checks and unsupported-display fallback.
-                m.files[42]=(7,'WIDE',wbmp(208,48)); m.keys=[m.mapping[37],m.mapping[37],m.mapping[39]]
-                m.load(packages['wbmp-viewer']); m.frames=[]
-                result=m.call(2,0,42)
-                assert result == (0 if m.graphics else 2),result
-                if m.graphics: assert m.frames == [oracle(208,48,x) for x in (0,8,16)]
-                m.load(packages['markdown-viewer']);m.files[43]=(10,'README',b'# Test\n\nHello **world**.\n');m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
-                assert m.call(2,0,43)==0
-                assert m.frames if m.graphics else any('Hello' in x for x in m.lines)
-                # Right selects a visible link before continuing normal
-                # scrolling, OK opens it, and ESC returns to the exact saved
-                # viewport before the final ESC closes the viewer.
-                m.files[43] = (10, 'README',
-                               b'# Links\n\n[Next](next.md)\n')
-                m.files[45] = (10, 'next.md',
-                               b'# Target\n\nArrived.\n')
-                m.keys = [m.mapping[37], m.mapping[38],
-                          m.mapping[39], m.mapping[39]]
-                m.frames = []; m.lines = []
-                assert m.call(2, 0, 43) == 0
-                if m.graphics:
-                    assert len(m.frames) >= 4, len(m.frames)
-                    assert m.frames[0] != m.frames[1]
-                    assert m.frames[0] != m.frames[2]
-                    assert m.frames[0] == m.frames[-1]
-                else:
-                    assert any(line.startswith('> Next') for line in m.lines), m.lines
-                    assert any('Arrived.' in line for line in m.lines), m.lines
-
-                if m.graphics:
-                    inline_frames = {}
-                    code_frame = None
-                    for family, size in ((1, 12), (1, 14), (1, 16),
-                                         (2, 12), (2, 14), (2, 16)):
-                        m.ui_font = bytes((family, size))
-                        text = 'Wi Ёж ←→'
-                        m.files[43] = (10, 'README', (text + '\n').encode())
-                        m.keys = [m.mapping[39]]; m.frames = []
-                        assert m.call(2, 0, 43) == 0
-                        assert m.frames == [ui_font_oracle(family, size, text)], (family, size)
-                        # Code blocks remain identical across all UI choices.
-                        m.files[43] = (10, 'README', b'```\nWi\n```\n')
-                        m.keys = [m.mapping[39]]; m.frames = []
-                        assert m.call(2, 0, 43) == 0
-                        if code_frame is None: code_frame = m.frames
-                        assert m.frames == code_frame
-                        # Inline code aligns to the selected baseline but is
-                        # the same fixed-cell raster for either font family.
-                        m.files[43] = (10, 'README', b'`WWii`\n')
-                        m.keys = [m.mapping[39]]; m.frames = []
-                        assert m.call(2, 0, 43) == 0
-                        if size not in inline_frames: inline_frames[size] = m.frames
-                        assert m.frames == inline_frames[size]
-                    m.ui_font = bytes((0, 14))
-                m.files[43] = (10, 'README', b'# Test\n\nHello **world**.\n')
-                m.load(packages['markdown-text']); m.lines=[]
-                m.keys=([m.mapping[39]] if m.graphics else [m.mapping[37],m.mapping[39]])
-                assert m.call(2,0,43)==0
-                assert any('Hello' in line for line in m.lines), m.lines
-                m.files[43] = (10, 'README', b'[Next](next.md)\n')
-                m.keys = [m.mapping[37], m.mapping[38],
-                          m.mapping[39], m.mapping[39]]
-                m.lines = []
-                assert m.call(2, 0, 43) == 0
-                assert any(line.startswith('> Next') for line in m.lines), m.lines
-                assert any('Arrived.' in line for line in m.lines), m.lines
-                m.load(packages['chip8']);m.files[44]=(9,'LOOP',bytes.fromhex('00e01200'));m.chip_exit=True;m.services=0
-                assert m.call(2,0,44)==(0 if m.graphics else 2)
-                # A truncated public service table is refused before callbacks run.
-                before=len(m.trace)
-                m.uc.mem_write(m.sys+6,struct.pack('<H',24))
-                assert m.call(0,m.api,m.crc,5) == 5
-                assert len(m.trace) == before
-                m.uc.mem_write(m.sys+6,struct.pack('<H',28))
-                m.load(packages['setup']); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]
-                assert m.call(0x400)==0
-                assert 'STM32F401' in ''.join(m.lines),m.lines
-                m.keys=[m.mapping[39]]; before=list(m.datetime)
-                assert m.call(0x401)==0 and not m.rtc_writes and m.datetime==before
-                m.keys=[m.mapping[38]]
-                assert m.call(0x401)==0 and m.rtc_writes==[before]
-                m.keys=[m.mapping[8],m.mapping[38]]
-                assert m.call(0x402)==0 and m.calibration==-123,m.calibration
-                for extended in (False,True):
-                    m.extended=extended; m.profile=bytes((6,5,8,2))
-                    m.keys=[m.mapping[41],m.mapping[39]]
-                    assert m.call(0x403)==0
-                    assert m.profile == (bytes((7,5,8,1)) if extended and m.graphics else
-                                         bytes((10,3,5,1)) if m.graphics else bytes((6,5,8,2))),m.profile
-                if m.graphics:
-                    # Family is first. OK changes a value and ordinary arrows
-                    # navigate. Calculator geometry is no longer configurable.
-                    for extended in (False, True):
-                        m.ui_fonts = True; m.extended = extended
-                        m.profile = bytes((6, 5, 8, 2)); m.ui_font = bytes((0, 14))
-                        left, right, ok, esc, shg_left, shg_right = m.mapping[36:42]
-                        before = len(m.trace)
-                        m.keys = [left] * 2 + [right] * 5 + [left] * 5 + [esc]
-                        assert m.call(0x403) == 0
-                        assert m.profile == bytes((6, 5, 8, 2)) and m.ui_font == bytes((0, 14))
-                        assert not [event for event in m.trace[before:] if event[0] == 25 and event[1] in (6, 15)]
-                        transitions = ((1, 16, [ok, right, ok, esc]),
-                                       (3, 16, [ok, esc]),
-                                       (1, 12, [ok, ok, right, ok, esc]))
-                        for family, size, keys in transitions:
-                            m.keys = keys
-                            m.setup_views = []
-                            assert m.call(0x403) == 0
-                            assert m.ui_font == bytes((family, size)), m.ui_font
-                            assert m.profile == bytes((6, 5, 8, 2)), m.profile
-                            role, face, rows = m.setup_views[-1]
-                            assert role and face == m.ui_font
-                            sample_row = 4 if size == 12 and family else (2 if size == 16 and family else 3)
-                            assert 'UI font:' in rows[0] and rows[sample_row] == ' Aa Bb Wi 123', rows
-                            assert ('UI size:' in rows[1]) == bool(family), rows
-                            assert not any('Calculator' in line for line in rows.values()), rows
-                        # Even a stale two-row calculator profile cannot change
-                        # the font-dependent UI geometry or reopen calculator font controls.
-                        m.profile = bytes((6, 5, 8, 2))
-                        m.legacy_rows = 2; m.keys = [right, ok, esc]
-                        m.setup_views = []; before = len(m.trace)
-                        assert m.call(0x403) == 0
-                        assert m.profile == bytes((6, 5, 8, 2))
-                        assert m.ui_font == bytes((1, 12))
-                        fixed_rows = m.setup_views[-1][2]
-                        assert fixed_rows[0].startswith('>UI font:')
-                        assert fixed_rows[4] == ' Aa Bb Wi 123'
-                        assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
-                        m.legacy_rows = 4; m.ui_font = bytes((2, 12)); m.profile = bytes((6, 5, 8, 2))
-                        # Proportional mode shows only size. OK advances it and
-                        # shifted-left reverses it without opening another view.
-                        m.keys = [right, ok, shg_left, esc]
-                        m.setup_views = []
-                        assert m.call(0x403) == 0
-                        assert m.profile == bytes((6, 5, 8, 2))
-                        assert m.ui_font == bytes((2, 12))
-                        assert any(view[1] == bytes((2, 14)) for view in m.setup_views)
-                        assert all(view[0] for view in m.setup_views)
-                        assert m.setup_views[-1][2][4] == ' Aa Bb Wi 123'
-                    # A display revision change to the monospaced USB backend
-                    # leaves the live chooser safely without applying settings.
-                    m.setup_views = []; m.drop_live_ui_on_wait = True; m.keys = [esc]
-                    before = len(m.trace)
-                    assert m.call(0x403) == 0 and not m.live_ui
-                    assert m.setup_views[0][0]
-                    assert not [e for e in m.trace[before:] if e[0] == 25 and e[1] in (6, 15)]
-                    m.live_ui = True
-                    m.ui_fonts = False
-                m.keys=[m.mapping[39]]
-                pointer=m.source('bad font'); m.lines=[]
-                assert m.call(0x404,pointer,pointer,8)==0
-                assert 'Bad font' in ''.join(m.lines),m.lines
-                assert m.font_restores>0
-                font=preview_font(); pointer=m.input+1024
-                m.uc.mem_write(pointer,font); m.keys=[m.mapping[39]]; m.lines=[]
-                trace_start=len(m.trace)
-                assert m.call(0x404,m.source('TEST'),pointer,len(font))==0
-                assert 'f2 3x5 TEST' in ''.join(m.lines),m.lines
-                operations=[x[1] for x in m.trace[trace_start:] if x[0]==25]
-                if m.graphics:
-                    assert 7 in operations and 8 in operations
-                else:
-                    assert operations.count(9)==8 and 10 in operations
+                check_viewers(m, packages)
+                check_setup(m, packages['setup'])
                 print(f'{resident}: address variant {address_index}, all six APPs + cross-address language state + SETUP PASS')
 
 if __name__=='__main__': main()

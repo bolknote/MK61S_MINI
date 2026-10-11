@@ -310,11 +310,15 @@ compile_variant() {
   local external_usbdisk
   external_usbdisk="$(define_value "$board_flags" \
     MK61_EXTERNALIZE_USBDISK 0)"
+  local fmk_check_flags=()
+  if [[ "$(define_value "$board_flags" MK61_SETUP_AS_APP 0)" == 0 ]]; then
+    fmk_check_flags=(--allow-fmk)
+  fi
   if [[ "$external_usbdisk" == 1 ]]; then
-    "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+    "$root/tests/check_no_resident_fmk_decoder_elf.sh" "${fmk_check_flags[@]}" \
       "$build_path/mk61s-M.ino.elf"
   else
-    "$root/tests/check_no_resident_fmk_decoder_elf.sh" --allow-fmk \
+    "$root/tests/check_no_resident_fmk_decoder_elf.sh" "${fmk_check_flags[@]}" \
       --allow-usbdisk "$build_path/mk61s-M.ino.elf"
   fi
   "$root/tests/check_power_monitor_elf.sh" \

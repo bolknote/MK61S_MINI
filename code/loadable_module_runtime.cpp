@@ -171,9 +171,11 @@ static u8* acquire_app_memory(const Header& header) {
   for(u8 attempt = 0; !g_app_cache.acquire_cache(
         shared_memory::Arena::APP, shared_memory::Owner::LOADABLE_MODULE,
         header.memory_size); ++attempt) {
-    // A large APP may need an idle FAT index's RAM. Ask its owner once;
-    // never evict an active USB/terminal index or an unrelated lower buffer.
-    if(attempt != 0 || !program_store::vfat_stage_release_cache()) return nullptr;
+    // Retry once after asking the two idle storage-cache owners. Active USB
+    // indexes and pinned cache fills retain their lower memory.
+    if(attempt != 0) return nullptr;
+    const bool read_released = program_store::read_cache_release();
+    if(!program_store::vfat_stage_release_cache() && !read_released) return nullptr;
   }
   if(!g_app_cache.set_evictable(prepare_app_eviction)) {
     g_app_cache.reset();

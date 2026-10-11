@@ -4,6 +4,7 @@
 #include "shared_memory.hpp"
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #if defined(ARDUINO_ARCH_STM32)
@@ -13,10 +14,30 @@
 namespace shared_memory {
 namespace {
 
+#if defined(STM32F411xE)
+#define MK61_LAZY_RESIDENT_BUFFERS 1
+static_assert(WORKSPACE_SIZE == 8192, "update lazy workspace ELF reserve");
+// nano malloc uses an eight-byte header; include 32 bytes per retained block
+// in the ELF reserve so APP qualification cannot rely on an empty heap.
+__asm__(".global mk61_lazy_workspace_bytes\n.set mk61_lazy_workspace_bytes, 8224");
+#define MK61_WORKSPACE_INITIAL nullptr
+static u8* workspace_storage;
+#else
+#define MK61_LAZY_RESIDENT_BUFFERS 0
+#define MK61_WORKSPACE_INITIAL workspace_storage
 alignas(8) static u8 workspace_storage[WORKSPACE_SIZE];
+#endif
 alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 #if MK61_SHARED_MEMORY_BULK_ENABLED
+#if MK61_LAZY_RESIDENT_BUFFERS
+#define MK61_BULK_INITIAL nullptr
+static_assert(BULK_SIZE == 8192, "update lazy bulk ELF reserve");
+__asm__(".global mk61_lazy_bulk_bytes\n.set mk61_lazy_bulk_bytes, 8224");
+static u8* bulk_storage;
+#else
+#define MK61_BULK_INITIAL bulk_storage
 alignas(8) static u8 bulk_storage[BULK_SIZE];
+#endif
 #endif
 
 #if defined(ARDUINO_ARCH_STM32)
@@ -202,10 +223,10 @@ struct ArenaState {
    0, 0, Owner::NONE, Owner::NONE, enabled_value, false, false}
 
 static ArenaState arenas[] = {
-  MK61_ARENA_STATE(workspace_storage, WORKSPACE_SIZE, true),
+  MK61_ARENA_STATE(MK61_WORKSPACE_INITIAL, WORKSPACE_SIZE, true),
   MK61_ARENA_STATE(scratch_storage, SCRATCH_SIZE, true),
 #if MK61_SHARED_MEMORY_BULK_ENABLED
-  MK61_ARENA_STATE(bulk_storage, BULK_SIZE, true),
+  MK61_ARENA_STATE(MK61_BULK_INITIAL, BULK_SIZE, true),
 #else
   MK61_ARENA_STATE(nullptr, BULK_SIZE, false),
 #endif
@@ -330,6 +351,15 @@ void* adjust_heap(i32 increment) {
   return (void*) previous;
 }
 
+bool detail_try_reclaim(Arena arena);
+void* allocate_retained_buffer(usize size) {
+  if(!size || interrupt_context() || transition_in_progress()) return nullptr;
+  void* value = malloc(size);
+  if(!value && detail_try_reclaim(Arena::OVERLAY)) value = malloc(size);
+  if(value) memset(value, 0, size);
+  return value;
+}
+
 OwnerPolicy owner_policy(Owner owner) {
   const usize index = (usize) owner;
   if(index >= (usize) Owner::COUNT) {
@@ -443,6 +473,19 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     increment(arena->invalid_failures);
     return false;
   }
+
+#if MK61_LAZY_RESIDENT_BUFFERS
+  if((next_arena == Arena::WORKSPACE || next_arena == Arena::BULK) &&
+     arena->memory == nullptr) {
+    auto* storage = (u8*)allocate_retained_buffer(arena->capacity);
+    if(!storage) return false;
+    arena->memory = storage;
+    if(next_arena == Arena::WORKSPACE) workspace_storage = storage;
+#if MK61_SHARED_MEMORY_BULK_ENABLED
+    else bulk_storage = storage;
+#endif
+  }
+#endif
 
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
   // A released lower lease does not release or move the independent buffer.
@@ -821,7 +864,12 @@ bool validate_invariants(void) {
        ((arena.allocated_size == 0) != (arena.depth == 0)) ||
        arena.high_water < arena.resident_size ||
        arena.max_depth < arena.depth ||
-       (arena.enabled && arena.memory == nullptr) ||
+       (arena.enabled && arena.memory == nullptr &&
+#if MK61_LAZY_RESIDENT_BUFFERS
+        !(arena.depth == 0 && arena.resident == Owner::NONE &&
+          (arena_id == Arena::WORKSPACE || arena_id == Arena::BULK)) &&
+#endif
+        true) ||
        (!arena.enabled && arena.memory != nullptr) ||
        ((arena.active == Owner::NONE) != (arena.depth == 0)) ||
        ((arena.resident == Owner::NONE) != (arena.resident_size == 0)) ||

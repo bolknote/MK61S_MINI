@@ -550,6 +550,40 @@ static void test_sync_preserves_short_entry_positions_until_close(void) {
   assert(file_id != program_store::INVALID_ID && program_store::entry_by_id(file_id, file));
 }
 
+static void test_mounted_sync_retains_data_before_dirent(void) {
+  for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
+    fresh(capacity);
+    u16 folder = program_store::INVALID_ID;
+    assert(program_store::create_directory(program_store::ROOT_ID, "Host",
+                                           program_store::INVALID_ID, &folder));
+    assert(virtual_fat::reset_session());
+    const Layout fs = layout();
+    const u16 data_cluster = 100, directory_cluster = first_cluster_for_id(folder);
+    assert(fat12_value(data_cluster) == 0);
+    u8 payload[512] = {}, received[512] = {}, directory[512], fat[512];
+    payload[0] = 'Z';
+    const u32 lba = cluster_lba(fs, data_cluster);
+    assert(virtual_fat::write_cached_sectors(lba, payload, 1));
+    assert(virtual_fat::flush_pending());
+    assert(program_store::vfat_stage_exists(lba));
+    assert(virtual_fat::read_sector(lba, received));
+    assert(memcmp(payload, received, sizeof(payload)) == 0);
+    assert(program_store::child_count(folder) == 0);
+    assert(virtual_fat::read_sector(1, fat));
+    set_fat12_value(fat, data_cluster, 0xFFF);
+    assert(virtual_fat::write_cached_sectors(1, fat, 1));
+    assert(virtual_fat::read_sector(cluster_lba(fs, directory_cluster), directory));
+    append_short_entry(directory, 2, "LATE    TXT", false, data_cluster, 1);
+    directory[3U * 32U] = 0;
+    assert(virtual_fat::write_cached_sectors(cluster_lba(fs, directory_cluster), directory, 1));
+    assert(virtual_fat::finalize_pending());
+    u16 file = program_store::INVALID_ID;
+    assert(program_store::fat_find_child(folder, false, program_store::ProgramType::TEXT, "LATE", file));
+    expect_file(file, payload, 1);
+    assert(program_store::vfat_stage_count() == 0);
+  }
+}
+
 static void test_sync_preserves_directory_continuations(void) {
   for(u32 capacity : {512U * 1024U, 16U * 1024U * 1024U}) {
     fresh(capacity);
@@ -3181,6 +3215,93 @@ static u16 prepare_short_host_directory_for_close(void) {
   return folder;
 }
 
+static void test_new_dirent_after_sync_invalidates_applied_view(void) {
+  for(bool fast : {false, true}) {
+    const u16 folder = prepare_short_host_directory_for_close();
+    const Layout fs = layout(); u8 root[512];
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    const u8 first = (u8) first_free_slot(root);
+    const u8 after = append_ascii_entry(root, first, "Fresh.txt", "FRESH   TXT", false, 0, 0);
+    root[after * 32U] = 0;
+    if(fast) assert(virtual_fat::try_write_cached_sectors(fs.root_start, root, 1));
+    else assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    assert(virtual_fat::flush_pending());
+    u16 id = program_store::INVALID_ID;
+    assert(program_store::fat_find_child(program_store::ROOT_ID, false,
+        program_store::ProgramType::TEXT, "Fresh", id) && id != program_store::INVALID_ID);
+    const u8 empty = 0; expect_file(id, &empty, 0);
+    assert(virtual_fat::finalize_pending());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && virtual_fat::reset_session());
+    assert(program_store::used_nodes() == 82 && program_store::child_count(folder) == 80);
+    expect_file(id, &empty, 0);
+  }
+}
+
+static void test_fresh_native_timestamp_close() {
+  for(bool fast:{false,true}) {
+    fresh(16U*1024U*1024U);
+    assert(program_store::create_directory(program_store::ROOT_ID,"Empty",700));
+    for(u16 i=0;i<640;++i){char n[12];snprintf(n,sizeof(n),"E%04u",unsigned(i));assert(program_store::write_file(700,i,program_store::ProgramType::TEXT,n,nullptr,0,nullptr));}
+    assert(virtual_fat::reset_session());const Layout fs=layout();u8 root[512];assert(virtual_fat::read_sector(fs.root_start,root));
+    u16 at=0;while(at<512&&root[at+11]!=0x10)at+=32;assert(at<512);root[at+22]^=1;
+    SPIFlash::resetOperationCounts();
+    if(fast)assert(virtual_fat::try_write_cached_sectors(fs.root_start,root,1));else assert(virtual_fat::write_cached_sectors(fs.root_start,root,1));
+    assert(virtual_fat::finalize_pending());
+#if MK61_C9_METADATA_PRECHECK
+    assert(SPIFlash::readOperations()<4000 && SPIFlash::mutationOperations()<16);
+#endif
+    printf("Fresh native timestamp close fast=%u reads=%u mutations=%u\n",unsigned(fast),SPIFlash::readOperations(),SPIFlash::mutationOperations());fflush(stdout);
+    virtual_fat::end_session();program_store::init();assert(program_store::ready()&&program_store::used_nodes()==641&&program_store::child_count(700)==640);
+  }
+}
+
+static void test_timestamp_sync_retries_io_failure(void) {
+  const u16 folder = prepare_short_host_directory_for_close();
+  const Layout fs = layout(); u8 root[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  u16 offset = 0;
+  while(offset < sizeof(root) && root[offset + 11] != 0x10) offset += 32;
+  assert(offset < sizeof(root)); root[offset + 22] ^= 1U;
+  assert(virtual_fat::try_write_cached_sectors(fs.root_start, root, 1));
+  SPIFlash::failReadsAfterOperations(0);
+  assert(virtual_fat::flush_pending_result() == virtual_fat::CommitResult::IO_FAILED);
+  SPIFlash::clearFailure();
+  assert(virtual_fat::flush_pending());
+  u8 retained[512]; assert(virtual_fat::read_sector(fs.root_start, retained));
+  assert(memcmp(root, retained, sizeof(root)) == 0);
+  assert(virtual_fat::finalize_pending());
+  virtual_fat::end_session(); program_store::init();
+  assert(program_store::ready() && virtual_fat::reset_session());
+  assert(program_store::used_nodes() == 81 && program_store::child_count(folder) == 80);
+}
+
+static void test_timestamp_sync_keeps_committed_host_view(void) {
+  for(bool fast : {false, true}) {
+    const u16 folder = prepare_short_host_directory_for_close();
+    const Layout fs = layout(); u8 root[512];
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    u16 offset = 0;
+    while(offset < sizeof(root) && (root[offset + 11] != 0x10 || root[offset] == '.')) offset += 32;
+    assert(offset < sizeof(root));
+    root[offset + 22] ^= 1U;
+    SPIFlash::resetOperationCounts();
+    if(fast) assert(virtual_fat::try_write_cached_sectors(fs.root_start, root, 1));
+    else assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    assert(virtual_fat::flush_pending());
+    printf("C9 timestamp sync: fast=%u reads=%u mutations=%u\n",
+        (unsigned) fast, SPIFlash::readOperations(), SPIFlash::mutationOperations());
+    fflush(stdout);
+    assert(SPIFlash::readOperations() < 128 && SPIFlash::mutationOperations() < 32);
+    u8 retained[512]; assert(virtual_fat::read_sector(fs.root_start, retained));
+    assert(memcmp(root, retained, sizeof(root)) == 0);
+    assert(virtual_fat::finalize_pending());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && virtual_fat::reset_session());
+    assert(program_store::used_nodes() == 81 && program_store::child_count(folder) == 80);
+  }
+}
+
 static void test_fast_close_power_cuts_are_recoverable(void) {
   const u16 directory = prepare_short_host_directory_for_close();
   SPIFlash::resetOperationCounts(); assert(virtual_fat::finalize_pending());
@@ -3277,6 +3398,123 @@ static void test_sidecar_metadata_writes_do_not_rescan_whole_tree(void) {
   assert(virtual_fat::flush_write_cache());
   assert(virtual_fat::finalize_pending());
   assert(program_store::used_nodes() == 641 && program_store::child_count(700) == 640);
+}
+
+static void test_lfn_checksum_update_invalidates_sidecar_role(void) {
+  for(bool cold : {false,true}) for(bool fast : {false, true}) {
+    fresh(16U * 1024U * 1024U);
+    const Layout fs = layout(); const u16 cluster = 100;
+    u8 fat[512], root[512], data[512] = {};
+    assert(virtual_fat::read_sector(1, fat)); set_fat12_value(fat, cluster, 0xFFF);
+    assert(virtual_fat::write_sector(1, fat));
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    const u8 first = (u8) first_free_slot(root);
+    const u8 after = append_ascii_entry(root, first, "._old.txt", "REAL    TXT", false, cluster, 1);
+    root[after * 32U] = 0;
+    assert(root[first * 32U + 11U] == 0x0F);
+    assert(virtual_fat::write_sector(fs.root_start, root));
+    data[0] = 'S'; assert(virtual_fat::write_sector(cluster_lba(fs, cluster), data));
+    assert(!program_store::vfat_stage_exists(cluster_lba(fs, cluster)));
+    if(cold) {
+      u8 unchanged[512] = {};
+      for(u8 i=0; i<=virtual_fat::write_cache_capacity(); ++i)
+        assert(virtual_fat::write_sector(cluster_lba(fs,300)+i,unchanged));
+    }
+    // Byte 13 is a timestamp in a short dirent, but the checksum in LFN.
+    // A broken long name falls back to its legal ordinary short alias.
+    root[first * 32U + 13U] ^= 1U; data[0] = 'R';
+    if(fast) {
+      SPIFlash::resetOperationCounts();
+      assert(virtual_fat::try_write_cached_sectors(fs.root_start, root, 1));
+      assert(SPIFlash::readOperations()==0 && SPIFlash::mutationOperations()==0);
+      assert(virtual_fat::try_write_cached_sectors(cluster_lba(fs, cluster), data, 1));
+    } else {
+      assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+      assert(virtual_fat::write_cached_sectors(cluster_lba(fs, cluster), data, 1));
+    }
+#if MK61_C9_METADATA_PRECHECK
+    if(cold) {
+      SPIFlash::failReadsAfterOperations(0);
+      assert(!virtual_fat::flush_write_cache());
+      SPIFlash::clearFailure();
+    }
+#endif
+    assert(virtual_fat::flush_write_cache());
+    assert(program_store::vfat_stage_exists(cluster_lba(fs, cluster)));
+    assert(virtual_fat::finalize_pending());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && virtual_fat::reset_session());
+    u16 id = program_store::INVALID_ID;
+    assert(program_store::fat_find_child(program_store::ROOT_ID, false,
+        program_store::ProgramType::TEXT, "REAL", id) && id != program_store::INVALID_ID);
+    const u8 expected = 'R'; expect_file(id, &expected, 1);
+  }
+}
+
+static void test_sidecar_timestamp_writes_under_stage_pressure(void) {
+  for(bool cold : {false, true}) for(bool fast : {false, true}) {
+    fresh(16U * 1024U * 1024U);
+    assert(program_store::create_directory(program_store::ROOT_ID, "Empty", 700));
+    for(u16 id = 0; id < 640; ++id) {
+      char name[12]; snprintf(name, sizeof(name), "E%04u", (unsigned) id);
+      assert(program_store::write_file(700, id, program_store::ProgramType::TEXT,
+                                       name, nullptr, 0, nullptr));
+    }
+    assert(virtual_fat::reset_session());
+    const Layout fs = layout(); u8 root[512];
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    const u8 slot = (u8) first_free_slot(root);
+    const u8 after = append_ascii_entry(root, slot, "._junk.txt", "_JUNK~1 TXT", false, 0, 0);
+    root[after * 32U] = 0;
+    assert(virtual_fat::write_sector(fs.root_start, root));
+    // Model acknowledged ordinary data not yet linked by the host, so the
+    // journal pressure is real while no sidecar payload can be reclaimed.
+    const u16 pressure = (u16) ((program_store::geometry().stage_sector_count - 1U) * 7U / 2U);
+    const u32 first = cluster_lba(fs, 1024); u8 data[512] = {0x5A};
+    for(u16 index = 0; index < pressure; ++index)
+      assert(virtual_fat::write_cached_sectors(first + index, data, 1));
+    assert(virtual_fat::flush_write_cache());
+    assert(program_store::vfat_stage_count() >= pressure);
+    const u32 pump = first + pressure - 1U;
+    assert(virtual_fat::read_sector(pump, data));
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    // Warm the accepted metadata and deferred role map before counting the
+    // repeated updates; an uncached first packet correctly requests a scan.
+    assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    assert(virtual_fat::write_cached_sectors(pump, data, 1));
+    u32 measured_reads=0, measured_mutations=0;
+    for(u8 update = 0; update < 20; ++update) {
+      if(cold) {
+        // Accepted unchanged data evict the directory sector, as mixed MSC
+        // packets do under pressure. Count the timestamp packet itself below.
+        for(u8 i=0; i<=virtual_fat::write_cache_capacity(); ++i)
+          assert(virtual_fat::write_cached_sectors(first+i,data,1));
+      }
+      SPIFlash::resetOperationCounts();
+      root[(after - 1U) * 32U + 22U] = update;
+      if(fast) {
+        if(!virtual_fat::try_write_cached_sectors(fs.root_start,root,1))
+          assert(virtual_fat::write_cached_sectors(fs.root_start,root,1));
+        // The next main-loop packet services any deferred role scan.
+        assert(virtual_fat::write_cached_sectors(pump, data, 1));
+      } else {
+        assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+      }
+      assert(virtual_fat::write_cached_sectors(pump,data,1));
+      measured_reads+=SPIFlash::readOperations();
+      measured_mutations+=SPIFlash::mutationOperations();
+    }
+    printf("C9 timestamp pressure: cold=%u fast=%u stage=%u reads=%u mutations=%u\n",
+        (unsigned)cold, (unsigned) fast, program_store::vfat_stage_count(), measured_reads, measured_mutations);
+    fflush(stdout);
+    assert(measured_mutations == 0);
+    if(!cold || MK61_C9_METADATA_PRECHECK) assert(measured_reads < 256);
+    assert(virtual_fat::flush_write_cache());
+    assert(virtual_fat::finalize_pending());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && virtual_fat::reset_session());
+    assert(program_store::used_nodes() == 641 && program_store::child_count(700) == 640);
+  }
 }
 
 static void test_close_after_sync_reuses_committed_host_view(void) {
@@ -3447,9 +3685,204 @@ static void test_classic_virtual_volume_accepts_appledouble_density(void) {
 }
 
 
+static void test_native_subdirectory_timestamp_close() {
+  for(bool fast : {false, true}) {
+    fresh(16U * 1024U * 1024U);
+    assert(program_store::create_directory(program_store::ROOT_ID, "Empty", 700));
+    for(u16 i = 0; i < 640; ++i) {
+      char name[12]; snprintf(name, sizeof(name), "E%04u", unsigned(i));
+      assert(program_store::write_file(700, i, program_store::ProgramType::TEXT,
+                                      name, nullptr, 0, nullptr));
+    }
+    assert(virtual_fat::reset_session());
+    const Layout fs = layout();
+    const u32 lba = cluster_lba(fs, first_cluster_for_id(700));
+    u8 block[512]; assert(virtual_fat::read_sector(lba, block));
+    u16 at = 0;
+    while(at < 512 && block[at + 11] != 0x20) at += 32;
+    assert(at < 512); block[at + 22] ^= 1;
+    SPIFlash::resetOperationCounts();
+    if(fast) assert(virtual_fat::try_write_cached_sectors(lba, block, 1));
+    else assert(virtual_fat::write_cached_sectors(lba, block, 1));
+    assert(virtual_fat::finalize_pending());
+#if MK61_C9_METADATA_PRECHECK
+    assert(SPIFlash::readOperations() < 20000 && SPIFlash::mutationOperations() < 16);
+#endif
+    printf("Native subdir timestamp fast=%u reads=%u mutations=%u\n",
+           unsigned(fast), SPIFlash::readOperations(), SPIFlash::mutationOperations());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && program_store::used_nodes() == 641);
+  }
+}
+
+// Reading a mounted FAT volume can create .fseventsd and alter its FAT.
+// Those accepted host writes must not republish an unchanged native catalog.
+static void test_ignored_host_directory_with_native_view() {
+  for(bool fast : {false, true}) for(bool changed : {false, true}) {
+    fresh(16U * 1024U * 1024U);
+    assert(program_store::create_directory(program_store::ROOT_ID, "Empty", 700));
+    for(u16 i = 0; i < 64; ++i) {
+      char name[12]; snprintf(name, sizeof(name), "E%04u", unsigned(i));
+      assert(program_store::write_file(700, i, program_store::ProgramType::TEXT,
+                                      name, nullptr, 0, nullptr));
+    }
+    u8 original[513]; memset(original, 'A', sizeof(original));
+    assert(program_store::write_file(program_store::ROOT_ID, 650,
+        program_store::ProgramType::CHIP8, "Guard", original, sizeof(original), nullptr));
+    assert(virtual_fat::reset_session()); const Layout fs = layout();
+    const u32 revision = program_store::catalog_revision();
+    (void) revision;
+    u8 root[512], fat[512], hidden[512];
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    assert(virtual_fat::read_sector(1, fat));
+    u16 cluster = 200;
+    program_store::FatClusterInfo info = {};
+    while(program_store::fat_cluster_info(cluster, info) != program_store::FatClusterStatus::FREE) ++cluster;
+    assert(cluster < 300);
+    set_fat12_value(fat, cluster, 0xFFF);
+    const u8 first = (u8) first_free_slot(root);
+    const u8 after = append_ascii_entry(root, first, ".fseventsd", "FSEVEN~1   ", true, cluster, 0);
+    root[(after - 1U) * 32U + 11] |= 0x02;
+    root[after * 32U] = 0;
+    dot_entries(hidden, cluster, 0);
+    hidden[11] |= 0x02;
+    auto accept = [fast](u32 lba, const u8* data) {
+      if(fast && virtual_fat::try_write_cached_sectors(lba, data, 1)) return;
+      assert(virtual_fat::write_cached_sectors(lba, data, 1));
+    };
+    SPIFlash::resetOperationCounts();
+    accept(cluster_lba(fs, cluster), hidden); accept(1, fat); accept(fs.root_start, root);
+    if(changed) {
+      u8 content[512]; memset(content, 'B', sizeof(content));
+      accept(cluster_lba(fs, first_cluster_for_id(650)), content);
+    }
+    assert(virtual_fat::flush_pending());
+    if(!changed) {
+#if MK61_C9_METADATA_PRECHECK
+      assert(program_store::catalog_revision() == revision);
+      assert(SPIFlash::mutationOperations() < 32);
+#endif
+      // This mounted view stays byte-exact until final close.
+      u8 retained[512]; assert(virtual_fat::read_sector(fs.root_start, retained));
+      assert(memcmp(root, retained, sizeof(root)) == 0);
+    }
+    assert(virtual_fat::finalize_pending());
+    printf("Ignored host dir fast=%u changed=%u reads=%u mutations=%u\n",
+        unsigned(fast), unsigned(changed), SPIFlash::readOperations(), SPIFlash::mutationOperations());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && program_store::used_nodes() == 66);
+    if(changed) memset(original, 'B', 512);
+    expect_file(650, original, sizeof(original));
+  }
+}
+
+static void test_sidecar_scan_waits_for_stage_headroom() {
+  for(bool near_full : {false, true}) {
+    fresh(16U * 1024U * 1024U);
+    assert(program_store::create_directory(program_store::ROOT_ID, "Empty", 700));
+    for(u16 id = 0; id < 640; ++id) {
+      char name[12]; snprintf(name, sizeof(name), "E%04u", unsigned(id));
+      assert(program_store::write_file(700, id, program_store::ProgramType::TEXT,
+                                      name, nullptr, 0, nullptr));
+    }
+    assert(virtual_fat::reset_session()); const Layout fs = layout();
+    u8 root[512]; assert(virtual_fat::read_sector(fs.root_start, root));
+    const u8 first = (u8) first_free_slot(root);
+    const u8 after = append_ascii_entry(root, first, "._junk.txt", "_JUNK~1 TXT", false, 0, 0);
+    root[after * 32U] = 0;
+    assert(virtual_fat::write_sector(fs.root_start, root));
+    const u16 half = (u16) ((program_store::geometry().stage_sector_count - 1U) * 7U / 2U);
+    const u32 first_data = cluster_lba(fs, 1024); u8 data[512] = {0x5A};
+    const u16 capacity = (u16) ((program_store::geometry().stage_sector_count - 2U) * 7U);
+    const u16 ordinary = near_full ? (u16) (capacity - virtual_fat::write_cache_capacity() - 1U) : half;
+    for(u16 index = 0; index < ordinary; ++index)
+      assert(virtual_fat::write_cached_sectors(first_data + index, data, 1));
+    assert(virtual_fat::flush_write_cache());
+    assert(program_store::vfat_stage_count() >= ordinary);
+    assert(virtual_fat::read_sector(fs.root_start, root));
+    const u8 end = append_ascii_entry(root, after, "Fresh.txt", "FRESH   TXT", false, 0, 0);
+    root[end * 32U] = 0;
+    assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    // Allow the first pressure scan, then make another structural change.
+    // Subsequent packets should wait for the next batch's headroom threshold.
+    assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    root[(end - 1U) * 32U + 11] ^= 0x02;
+    assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+    SPIFlash::resetOperationCounts();
+    assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+  #if MK61_C9_METADATA_PRECHECK
+    if(near_full) assert(SPIFlash::readOperations() > 0);
+    else assert(SPIFlash::readOperations() == 0 && SPIFlash::mutationOperations() == 0);
+  #endif
+    printf("Structural metadata near_full=%u stage=%u: reads=%u mutations=%u\n",
+           unsigned(near_full), program_store::vfat_stage_count(),
+           SPIFlash::readOperations(), SPIFlash::mutationOperations());
+    assert(virtual_fat::finalize_pending());
+    virtual_fat::end_session(); program_store::init();
+    assert(program_store::ready() && program_store::used_nodes() == 642);
+    u16 id = program_store::INVALID_ID;
+    assert(program_store::fat_find_child(program_store::ROOT_ID, false,
+        program_store::ProgramType::TEXT, "Fresh", id) && id != program_store::INVALID_ID);
+    const u8 empty = 0; expect_file(id, &empty, 0);
+  }
+}
+
+#if MK61_C9_METADATA_PRECHECK
+static void prepare_native_view_with_ignored_directory() {
+  fresh(16U * 1024U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Empty", 700));
+  for(u16 id = 0; id < 2; ++id) {
+    char name[8]; snprintf(name, sizeof(name), "E%04u", unsigned(id));
+    assert(program_store::write_file(700, id, program_store::ProgramType::TEXT,
+                                    name, nullptr, 0, nullptr));
+  }
+  const u8 guard[513] = {0xA5};
+  assert(program_store::write_file(program_store::ROOT_ID, 650,
+      program_store::ProgramType::CHIP8, "Guard", guard, sizeof(guard), nullptr));
+  assert(virtual_fat::reset_session()); const Layout fs = layout();
+  u8 root[512], fat[512], hidden[512];
+  assert(virtual_fat::read_sector(fs.root_start, root));
+  assert(virtual_fat::read_sector(1, fat));
+  const u16 cluster = 200; set_fat12_value(fat, cluster, 0xFFF);
+  const u8 first = (u8) first_free_slot(root);
+  const u8 after = append_ascii_entry(root, first, ".fseventsd", "FSEVEN~1   ", true, cluster, 0);
+  root[(after - 1U) * 32U + 11] |= 0x02; root[after * 32U] = 0;
+  dot_entries(hidden, cluster, 0);
+  assert(virtual_fat::write_cached_sectors(cluster_lba(fs, cluster), hidden, 1));
+  assert(virtual_fat::write_cached_sectors(1, fat, 1));
+  assert(virtual_fat::write_cached_sectors(fs.root_start, root, 1));
+}
+#endif
+
+static void test_equivalent_native_view_close_power_cuts() {
+#if MK61_C9_METADATA_PRECHECK
+  prepare_native_view_with_ignored_directory();
+  SPIFlash::resetOperationCounts(); assert(virtual_fat::finalize_pending());
+  const u32 operations = SPIFlash::mutationOperations();
+  assert(operations > 0 && operations < 64);
+  for(const auto tear : {SPIFlash::Tear::Before, SPIFlash::Tear::Prefix,
+                         SPIFlash::Tear::Bits, SPIFlash::Tear::Complete}) {
+    for(u32 cut = 0; cut <= operations; ++cut) {
+      prepare_native_view_with_ignored_directory();
+      SPIFlash::resetOperationCounts(); SPIFlash::tearAfterOperations((i32) cut, tear);
+      (void) virtual_fat::finalize_pending_result(); SPIFlash::clearFailure();
+      virtual_fat::end_session(); program_store::init();
+      assert(program_store::ready() && virtual_fat::reset_session());
+      assert(program_store::vfat_stage_count() == 0 && program_store::used_nodes() == 4);
+      assert(program_store::child_count(700) == 2);
+      const u8 guard[513] = {0xA5}; expect_file(650, guard, sizeof(guard));
+    }
+  }
+  printf("Equivalent native close: %u torn-write cases PASS\n", 4U * (operations + 1U));
+#endif
+}
+
 #include "fat12_namespace_cases.hpp"
 
 int main(void) {
+  if(getenv("MK61_C9_EQUIVALENCE") != nullptr) { test_native_subdirectory_timestamp_close(); test_ignored_host_directory_with_native_view(); test_sidecar_scan_waits_for_stage_headroom(); test_equivalent_native_view_close_power_cuts(); return 0; }
+  if(getenv("MK61_C9_TIMESTAMP_SYNC") != nullptr) { test_fresh_native_timestamp_close(); test_new_dirent_after_sync_invalidates_applied_view(); test_timestamp_sync_retries_io_failure(); test_timestamp_sync_keeps_committed_host_view(); return 0; }
+  if(getenv("MK61_C9_METADATA_PRESSURE") != nullptr) { test_lfn_checksum_update_invalidates_sidecar_role(); test_sidecar_timestamp_writes_under_stage_pressure(); return 0; }
   if(getenv("MK61_C9_CLOSE_PERF") != nullptr) { test_pending_sidecar_roles_accept_reused_cluster(); test_sidecar_metadata_writes_do_not_rescan_whole_tree(); test_fast_close_power_cuts_are_recoverable(); test_close_after_sync_reuses_committed_host_view(); return 0; }
   if(getenv("MK61_C9_NAMESPACE") != nullptr) { test_c9_name_cycle_and_collisions(); return 0; }
   if(getenv("MK61_C9_DENSITY") != nullptr) { test_c9_density_and_refill(); return 0; }
@@ -3463,6 +3896,16 @@ int main(void) {
   }
   test_pending_sidecar_roles_accept_reused_cluster();
   test_sidecar_metadata_writes_do_not_rescan_whole_tree();
+  test_lfn_checksum_update_invalidates_sidecar_role();
+  test_sidecar_timestamp_writes_under_stage_pressure();
+  test_new_dirent_after_sync_invalidates_applied_view();
+  test_native_subdirectory_timestamp_close();
+  test_ignored_host_directory_with_native_view();
+  test_sidecar_scan_waits_for_stage_headroom();
+  test_equivalent_native_view_close_power_cuts();
+  test_fresh_native_timestamp_close();
+  test_timestamp_sync_retries_io_failure();
+  test_timestamp_sync_keeps_committed_host_view();
   test_fast_close_power_cuts_are_recoverable();
   test_classic_virtual_volume_accepts_appledouble_density();
   test_close_after_sync_reuses_committed_host_view();
@@ -3476,6 +3919,7 @@ int main(void) {
   test_macos_no_index_marker();
   test_stable_clusters_and_nested_reads();
   test_sync_preserves_short_entry_positions_until_close();
+  test_mounted_sync_retains_data_before_dirent();
   test_sync_preserves_directory_continuations();
   test_empty_text_file_is_a_persistent_fat_object();
   test_m8_text_exports_as_utf16_name_and_utf8_content();

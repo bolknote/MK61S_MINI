@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+#include <utility>
 
 #include "SPIFlash.h"
 #include "disk_activity.hpp"
@@ -11,6 +12,8 @@
 #include "loadable_module_system_app.hpp"
 #include "mk8_codec.hpp"
 #include "program_store.hpp"
+#include "config.h"
+#include "zx0.hpp"
 #include "shared_memory.hpp"
 #include "storage_path.hpp"
 
@@ -3959,7 +3962,333 @@ static void test_fragmented_native_stage_compacts_before_borrow(void) {
   printf("C9 fragmented stage: 380 blocks, first reclaim=%u, torn reclaim cases=%u PASS\n", gc_block, (gc_operations + 1) * 4);
 }
 
+static void test_verified_read_cache_ranges_and_mutations(void) {
+  using namespace shared_memory;
+  for(unsigned fixture = 0; fixture < 4; ++fixture) {
+    fresh(16U * 1024U * 1024U);
+    const u16 size = fixture == 0 || fixture == 1 ? 1536 : fixture == 2 ? 4096 : 3584;
+    const bool packed = fixture == 1 || fixture == 3;
+    std::vector<u8> bytes(size);
+    u32 state = 0xB63F1234;
+    for(u16 offset = 0; offset < size; ++offset) {
+      state ^= state << 13; state ^= state >> 17; state ^= state << 5;
+      bytes[offset] = (u8) state;
+      if(packed && (fixture == 1 || offset >= 2000))
+        bytes[offset] = fixture == 1 ? (u8) (offset % 127) : bytes[1900U + offset % 100U];
+    }
+    u16 id;
+    const auto type = packed ? ProgramType::CHIP8 : ProgramType::MK61_BINARY;
+    assert(program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, type, "CACHE", bytes.data(), size, &id));
+    u16 stored = 0; bool large = false, zx = false;
+    assert(program_store::test_file_storage_info(id, stored, large, zx));
+    assert(zx == packed && large == (fixture >= 2));
+    u8 range[32]; u16 copied = 0;
+    SPIFlash::resetOperationCounts();
+    const auto decodes_before = zx0::test_decode_calls();
+    assert(program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    assert(copied == sizeof(range) && memcmp(range, bytes.data(), copied) == 0);
+    const auto cold_reads = SPIFlash::readOperations();
+    const auto cold_decodes = zx0::test_decode_calls() - decodes_before;
+    SPIFlash::resetOperationCounts();
+    const auto warm_decodes_before = zx0::test_decode_calls();
+    for(unsigned index = 0; index < 128; ++index) {
+      const u16 offset = (u16) ((index * 257U) % (size - sizeof(range)));
+      assert(program_store::read_range_id(id, offset, range, sizeof(range), &copied));
+      assert(copied == sizeof(range) && memcmp(range, bytes.data() + offset, copied) == 0);
+    }
+    const auto warm_reads = SPIFlash::readOperations();
+    const auto warm_decodes = zx0::test_decode_calls() - warm_decodes_before;
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+    assert(warm_reads == 0 && warm_decodes == 0);
+    assert(cold_decodes == (packed ? 1U : 0U));
+    assert(program_store::read_cache_release());
+#else
+    assert(warm_reads > 128 && !program_store::read_cache_release());
+#endif
+    printf("C9 read cache fixture=%u size=%u packed=%u cold_reads=%u cold_decodes=%u warm_reads=%u warm_decodes=%u\n",
+        fixture, size, packed, cold_reads, cold_decodes, warm_reads, warm_decodes);
+    // An active unrelated lower owner must keep its bytes. Reading falls back
+    // to the original validated stream instead of requiring a cache lease.
+    (void) program_store::vfat_stage_release_cache();
+    Lease owner(Arena::OVERLAY, Owner::USB_SCREEN, 512);
+    assert(owner.ok()); memset(owner.data(), 0xA5, owner.size());
+    assert(program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    assert(memcmp(range, bytes.data(), copied) == 0);
+    for(usize offset = 0; offset < owner.size(); ++offset) assert(owner.data()[offset] == 0xA5);
+    owner.reset();
+    // The cache must not survive COW replacement, rename, unlink/ID reuse,
+    // remount, or reformat at the same physical addresses.
+    bytes[0] ^= 0x55;
+    assert(program_store::write_file(program_store::ROOT_ID, id, type,
+        "CACHE", bytes.data(), size));
+    assert(program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    assert(memcmp(range, bytes.data(), copied) == 0);
+    assert(program_store::move_rename(id, program_store::ROOT_ID, "RENAMED"));
+    assert(program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    assert(memcmp(range, bytes.data(), copied) == 0);
+    assert(program_store::remove_id(id));
+    assert(!program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    bytes[0] ^= 0xAA;
+    assert(program_store::write_file(program_store::ROOT_ID, id, type,
+        "REUSED", bytes.data(), size));
+    program_store::init(); assert(program_store::ready());
+    assert(program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+    assert(memcmp(range, bytes.data(), copied) == 0);
+    assert(program_store::format());
+    assert(!program_store::read_range_id(id, 0, range, sizeof(range), &copied));
+  }
+}
+
+static void test_read_cache_retries_io_and_crc_failures(void) {
+  fresh(16U * 1024U * 1024U);
+  u8 bytes[1536];
+  for(usize offset = 0; offset < sizeof(bytes); ++offset) bytes[offset] = (u8) offset;
+  u16 id;
+  assert(program_store::write_file(program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::MK61_BINARY, "IO", bytes, sizeof(bytes), &id));
+  (void) program_store::read_cache_release();
+  SPIFlash::failReadsAfterOperations(0);
+  u8 output[32]; u16 copied = 0;
+  assert(!program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  SPIFlash::clearFailure();
+  assert(program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  assert(memcmp(output, bytes, copied) == 0);
+  (void) program_store::read_cache_release();
+  const auto& geometry = program_store::geometry();
+  // Locate this committed raw payload independently of the native reader.
+  u32 address = 0;
+  for(u32 at = geometry.data_first_sector * 4096U;
+      at + sizeof(bytes) <= geometry.stage_first_sector * 4096U; ++at) {
+    u8 candidate[32]; assert(flash.readByteArray(at, candidate, sizeof(candidate)));
+    if(memcmp(candidate, bytes, sizeof(candidate)) == 0) { address = at; break; }
+  }
+  assert(address != 0);
+  const u8 original = flash.readByte(address + 800U);
+  SPIFlash::corrupt(address + 800U, original ^ 1U);
+  assert(!program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  SPIFlash::corrupt(address + 800U, original);
+  assert(program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  assert(memcmp(output, bytes, copied) == 0);
+}
+
+static void test_read_cache_yields_to_real_app_allocator(void) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  using namespace shared_memory;
+  fresh(16U * 1024U * 1024U);
+  assert(program_store::vfat_stage_release_cache());
+  const usize gap = shared_memory::capacity(Arena::OVERLAY) - 21728;
+  assert(adjust_heap((i32) gap) != nullptr);
+  u8 bytes[4096]; memset(bytes, 0x55, sizeof(bytes)); u16 id;
+  assert(program_store::write_file(program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::MK61_BINARY, "BIG", bytes, sizeof(bytes), &id));
+  u8 output[32]; u16 copied = 0;
+  assert(program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  assert(snapshot(Arena::OVERLAY).active_owner == Owner::PROGRAM_STORE_READ_CACHE);
+  assert(app_memory_test::acquire_app_memory({APP_MAX_SIZE}) != nullptr);
+  assert(snapshot(Arena::OVERLAY).active_owner == Owner::NONE);
+  app_memory_test::g_app_cache.reset();
+  assert(adjust_heap(-(i32) gap) != nullptr);
+  assert(program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  assert(memcmp(output, bytes, copied) == 0);
+#endif
+}
+
+[[maybe_unused]] static shared_memory::EvictionDecision release_unpinned_app_for_test(void) {
+  return shared_memory::EvictionDecision::RELEASE;
+}
+static void test_read_cache_does_not_reclaim_loading_app(void) {
+#if MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  using namespace shared_memory;
+  fresh(16U * 1024U * 1024U);
+  u8 bytes[1536]; memset(bytes, 0x63, sizeof(bytes)); u16 id;
+  assert(program_store::write_file(program_store::ROOT_ID, program_store::INVALID_ID,
+      ProgramType::MK61_BINARY, "SOURCE", bytes, sizeof(bytes), &id));
+  (void) program_store::read_cache_release();
+  (void) program_store::vfat_stage_release_cache();
+  const usize gap = shared_memory::capacity(Arena::OVERLAY) - 21728;
+  assert(adjust_heap((i32) gap) != nullptr);
+  Lease app(Arena::APP, Owner::LOADABLE_MODULE, APP_MAX_SIZE);
+  assert(app.ok() && app.set_evictable(release_unpinned_app_for_test));
+  u8* const image = app.data(); memset(image, 0xA7, app.size());
+  assert(shared_memory::capacity(Arena::OVERLAY) < sizeof(bytes));
+  u8 output[32]; u16 copied = 0;
+  assert(program_store::read_range_id(id, 0, output, sizeof(output), &copied));
+  assert(copied == sizeof(output) && memcmp(output, bytes, copied) == 0);
+  assert(app.ok() && app.data() == image);
+  for(usize offset = 0; offset < app.size(); ++offset) assert(image[offset] == 0xA7);
+  app.reset(); assert(adjust_heap(-(i32) gap) != nullptr);
+#endif
+}
+
+static bool put_requested_cluster(u16 id, const char* name, u16 cluster, u8 value) {
+  TestSource memory = {&value, 1};
+  const program_store::FileSource source = {&memory, read_test_source};
+  return program_store::write_file_from_source(700, id, ProgramType::TEXT,
+      name, 1, source, &cluster, 1, nullptr);
+}
+
+static void test_cached_cluster_ownership_transitions() {
+  fresh(16U * 1024U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Owners", 700));
+  assert(put_requested_cluster(10, "A", 1000, 'A'));
+  assert(!put_requested_cluster(11, "B", 1000, 'B'));
+  assert(put_requested_cluster(11, "B", 1001, 'B'));
+  assert(!put_requested_cluster(12, "C", 1001, 'C'));
+  assert(program_store::remove_id(11));
+  assert(put_requested_cluster(12, "C", 1001, 'C'));
+  assert(put_requested_cluster(10, "A", 1002, 'N'));
+  assert(put_requested_cluster(13, "D", 1000, 'D'));
+  assert(!put_requested_cluster(14, "E", 1002, 'E'));
+  assert(program_store::import_plan_begin());
+  assert(program_store::prepare_import_mapping(10));
+  assert(put_requested_cluster(14, "E", 1002, 'E'));
+  assert(put_requested_cluster(10, "A", 1003, 'N'));
+  assert(!put_requested_cluster(15, "F", 1003, 'F'));
+  program_store::import_plan_end();
+  assert(program_store::ensure_directory_chain(700));
+  program_store::init(); assert(program_store::ready());
+  assert(program_store::used_nodes() == 5);
+  for(const auto& item : {std::pair<u16,u8>{10,'N'}, {12,'C'}, {13,'D'}, {14,'E'}}) {
+    const u8 value = item.second; expect_text(item.first, &value, 1);
+  }
+  puts("Allocation cache: create/collision/replace/delete/reuse/release/reboot PASS");
+}
+
+static void test_bulk_import_allocation_cost() {
+  fresh(16U * 1024U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Bulk", 700));
+  for(u16 id = 0; id < 320; ++id) {
+    char name[16]; snprintf(name, sizeof(name), "E%04u", unsigned(id));
+    assert(program_store::write_file(700, id, ProgramType::TEXT, name, nullptr, 0));
+  }
+  assert(program_store::import_plan_begin());
+  const u32 before_erases = SPIFlash::eraseCount();
+  SPIFlash::resetOperationCounts();
+  for(u16 index = 0; index < 320; ++index) {
+    char name[16]; snprintf(name, sizeof(name), "F%04u", unsigned(index));
+    assert(put_requested_cluster((u16) (320 + index), name,
+                                 (u16) (1000 + index), 'A'));
+  }
+  const u32 reads = SPIFlash::readOperations();
+  const u32 mutations = SPIFlash::mutationOperations();
+  printf("Bulk320 allocation cache=%d: reads=%u mutations=%u erases=%u\n",
+         MK61_C9_ALLOCATION_CACHE, reads, mutations, SPIFlash::eraseCount() - before_erases);
+#if MK61_C9_ALLOCATION_CACHE
+  assert(reads < 75000);
+#endif
+  program_store::import_plan_end();
+  assert(program_store::ensure_directory_chain(700));
+  program_store::init(); assert(program_store::ready() && program_store::used_nodes() == 641);
+  for(u16 index = 0; index < 320; ++index) {
+    const u8 value = 'A'; expect_text((u16) (320 + index), &value, 1);
+  }
+}
+
+static void prepare_cached_cluster_replace() {
+  fresh(16U * 1024U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Owners", 700));
+  assert(put_requested_cluster(10, "A", 1000, 'A'));
+  assert(put_requested_cluster(11, "B", 1001, 'B'));
+}
+static void check_cached_replace_after_reboot() {
+  program_store::init(); assert(program_store::ready());
+  u8 data[1]; u16 length = 0, cluster = 0;
+  assert(program_store::read_id(10, data, sizeof(data), &length) && length == 1);
+  assert(program_store::fat_first_cluster(10, cluster));
+  assert((data[0] == 'A' && cluster == 1000) || (data[0] == 'N' && cluster == 1002));
+  const u8 keep = 'B'; expect_text(11, &keep, 1);
+  const u16 free_cluster = cluster == 1000 ? 1002 : 1000;
+  assert(put_requested_cluster(12, "C", free_cluster, 'C'));
+  assert(!put_requested_cluster(13, "D", cluster, 'D'));
+  const u8 expected = data[0]; expect_text(10, &expected, 1);
+  expect_text(11, &keep, 1);
+}
+static void test_cached_allocation_faults() {
+  prepare_cached_cluster_replace(); SPIFlash::resetOperationCounts();
+  assert(put_requested_cluster(10, "A", 1002, 'N'));
+  const u32 mutations = SPIFlash::mutationOperations(), reads = SPIFlash::readOperations();
+  for(const auto tear : {SPIFlash::Tear::Before, SPIFlash::Tear::Prefix,
+                         SPIFlash::Tear::Bits, SPIFlash::Tear::Complete}) {
+    for(u32 cut = 0; cut <= mutations; ++cut) {
+      prepare_cached_cluster_replace();
+      SPIFlash::tearAfterOperations((i32) cut, tear);
+      (void) put_requested_cluster(10, "A", 1002, 'N');
+      SPIFlash::clearFailure(); check_cached_replace_after_reboot();
+    }
+  }
+  for(u32 cut = 0; cut <= reads; ++cut) {
+    prepare_cached_cluster_replace(); SPIFlash::failReadsAfterOperations((i32) cut);
+    (void) put_requested_cluster(10, "A", 1002, 'N');
+    SPIFlash::clearFailure(); check_cached_replace_after_reboot();
+  }
+  printf("Cached allocation: %u torn writes + %u read-failure points, owners/data/reuse PASS\n",
+         4U * (mutations + 1U), reads + 1U);
+}
+
+static void test_cached_ownership_rechecks_corrupt_excluded_chain() {
+#if MK61_C9_ALLOCATION_CACHE
+  prepare_cached_cluster_replace();
+  const auto& geometry = program_store::geometry();
+  u32 sector = geometry.data_first_sector + geometry.data_sector_count;
+  while(sector > geometry.data_first_sector &&
+        !program_store::test_relocate_fat_chain(10, --sector)) {}
+  assert(sector > geometry.data_first_sector);
+  assert(put_requested_cluster(12, "C", 1004, 'C'));
+  u16 cluster = 0;
+  assert(program_store::fat_chain_cluster(10, 0, cluster) && cluster == 1000);
+  u32 address = 0;
+  for(u16 offset = 0; offset < 128; ++offset) {
+    u8 marker[4]; assert(flash.readByteArray(sector * 4096U + offset, marker, 4));
+    if(memcmp(marker, "F9CH", 4) == 0) { address = sector * 4096U + offset; break; }
+  }
+  assert(address != 0);
+  const u8 original = flash.readByte(address + 16);
+  // The cached Plan is warm. A flipped cluster byte now falsely points at B.
+  SPIFlash::corrupt(address + 16, original ^ 1U);
+  SPIFlash::resetOperationCounts();
+  assert(!put_requested_cluster(10, "A", 1002, 'N'));
+  assert(SPIFlash::mutationOperations() == 0);
+  assert(!put_requested_cluster(13, "D", 1001, 'D'));
+  const u8 keep = 'B'; expect_text(11, &keep, 1);
+  SPIFlash::corrupt(address + 16, original);
+  program_store::init(); assert(program_store::ready());
+  assert(put_requested_cluster(10, "A", 1002, 'N'));
+  puts("Cached ownership: corrupt excluded map cannot clear another owner's claim PASS");
+#endif
+}
+
+static void test_stage_at_maximum_flash_capacity() {
+  fresh(SPIFlash::MAX_CAPACITY);
+  const auto& geometry = program_store::geometry();
+  assert(geometry.physical_sectors == SPIFlash::MAX_CAPACITY / 4096U);
+  assert(geometry.stage_first_sector > geometry.physical_sectors - 128U);
+  u8 data[program_store::VFAT_STAGE_BLOCK_SIZE];
+  u8 recovered[sizeof(data)];
+  for(usize i = 0; i < sizeof(data); ++i) data[i] = (u8) (i ^ 0xA5U);
+  assert(program_store::vfat_stage_write(17, data));
+  program_store::init(); assert(program_store::ready());
+  assert(program_store::vfat_stage_read(17, recovered));
+  assert(memcmp(data, recovered, sizeof(data)) == 0);
+  assert(program_store::vfat_stage_discard_all());
+  assert(program_store::vfat_stage_count() == 0);
+  program_store::init(); assert(!program_store::vfat_stage_exists(17));
+  printf("C9 stage: maximum mock %u-MiB physical sector index/write/remount/clear PASS\n",
+         unsigned(SPIFlash::MAX_CAPACITY / (1024U * 1024U)));
+}
+
 int main(int argc, char** argv) {
+  if(argc == 2 && strcmp(argv[1], "--stage-max-capacity") == 0) {
+    test_stage_at_maximum_flash_capacity(); return 0;
+  }
+  if(argc == 2 && strcmp(argv[1], "--allocation-cache") == 0) { test_cached_cluster_ownership_transitions(); test_bulk_import_allocation_cost(); test_cached_allocation_faults(); test_cached_ownership_rechecks_corrupt_excluded_chain(); return 0; }
+  if(argc == 2 && strcmp(argv[1], "--read-cache") == 0) {
+    test_verified_read_cache_ranges_and_mutations();
+    test_read_cache_retries_io_and_crc_failures();
+    test_read_cache_yields_to_real_app_allocator();
+    test_read_cache_does_not_reclaim_loading_app();
+    return 0;
+  }
   if(argc == 2 && strcmp(argv[1], "--fragmented-stage") == 0) {
     test_fragmented_native_stage_compacts_before_borrow(); return 0;
   }
@@ -3984,6 +4313,15 @@ int main(int argc, char** argv) {
     test_small_zx0_replacement_reuses_logical_fat_extents(); return 0;
   }
   assert(argc == 1);
+  test_stage_at_maximum_flash_capacity();
+  test_cached_cluster_ownership_transitions();
+  test_bulk_import_allocation_cost();
+  test_cached_allocation_faults();
+  test_cached_ownership_rechecks_corrupt_excluded_chain();
+  test_verified_read_cache_ranges_and_mutations();
+  test_read_cache_retries_io_and_crc_failures();
+  test_read_cache_yields_to_real_app_allocator();
+  test_read_cache_does_not_reclaim_loading_app();
   test_file_stream();
   test_exported_size_is_atomic_and_crc_protected();
 #if MK61_DISK_ACTIVITY_SUPPORTED
