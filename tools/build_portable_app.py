@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
 from app_relocations import extract
 SYSTEM_MODULES = {
+    "vm-file-cache": ("VMSTORE", "VM_FILE_CACHE", ["language_vm_file_cache_entry.cpp",
+        "language_vm_file_cache.cpp", "language_vm.cpp", "language_bytecode.cpp"], None),
     "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp",
         "setup_font_compiler.cpp", "fmk_font.cpp", "fmk_prepare.cpp",
         "prepared_font.cpp"], None),
@@ -173,13 +175,15 @@ def build(args: argparse.Namespace) -> dict:
                     ROOT / "code/language_compiler_flow.cpp"]
     if args.system in ("language-vm", "language-input"):
         sources += [ROOT / "sdk/portable/system/resource.cpp"]
+    if args.system == "vm-file-cache":
+        sources += [ROOT / "code/loadable_module_format.cpp", ROOT / "code/zx0.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system == "usbdisk":
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
     sources += [ROOT / "sdk/portable/memory.c"]
     shared_system_runtime = args.system in (
-        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer")
+        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer", "vm-file-cache")
     if shared_system_runtime:
         sources += [ROOT / "sdk/portable/system/runtime.S"]
     if args.system in ("focal", "tinybasic", "language-vm", "language-input"):
@@ -196,6 +200,15 @@ def build(args: argparse.Namespace) -> dict:
         if args.system not in ("focal", "language-vm"):
             raise ValueError("--focal-trace applies only to FOCAL or its shared VM")
         flags.append("-DMK61_FOCAL_TRACE=1")
+    if getattr(args, "vm_opcode_profile", False):
+        if args.system != "language-vm":
+            raise ValueError("--vm-opcode-profile applies only to language-vm")
+        flags.append("-DMK61_VM_OPCODE_PROFILE=1")
+    integer_block = getattr(args, "vm_integer_block", None)
+    if integer_block is not None:
+        if args.system != "language-vm" or getattr(args, "vm_opcode_profile", False):
+            raise ValueError("--vm-integer-block requires language-vm without opcode profiling")
+        flags.append(f"-DMK61_VM_INTEGER_BLOCK={int(integer_block)}")
     if not system:
         flags.append("-ffreestanding")
     if args.shared_runtime:
@@ -328,7 +341,7 @@ def build(args: argparse.Namespace) -> dict:
         elif packer.resolve() == python_packer:
             greedy_packer = True
         command = [packer]
-    command += ["--portable", "--kind", args.system or "app", "--image", image,
+    command += ["--portable", "--kind", "app" if args.system == "vm-file-cache" else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
     offsets, table = extract(elf, base, image.stat().st_size, memory_size)
@@ -357,6 +370,11 @@ def build(args: argparse.Namespace) -> dict:
             else DEFAULT_LOCAL_FLOAT_MASK)
     if getattr(args,"focal_trace",False):
         report["focal_trace"] = True
+    if getattr(args, "vm_opcode_profile", False):
+        report["vm_opcode_profile"] = True
+    if args.system in ("language-vm", "language-input"):
+        report["vm_integer_block"] = not getattr(args, "vm_opcode_profile", False) and (
+            not args.local_float_math if integer_block is None else integer_block)
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
     if rust_compiler is not None:
@@ -374,6 +392,10 @@ def main() -> None:
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)
     parser.add_argument("--focal-trace", action="store_true", help="enable opt-in FOCAL Serial diagnostics in frontend/VM")
+    parser.add_argument("--vm-opcode-profile", action="store_true",
+                        help="diagnostic DWT opcode groups; requires resident opcode-profile service")
+    parser.add_argument("--vm-integer-block", action=argparse.BooleanOptionalAction,
+                        default=None, help="guarded integer sequence (on except local float); unchanged bytecode/ABI")
     parser.add_argument("--language-vm-compiler", action="store_true",
                         help="experimental compiler-only BASIC/FOCAL; requires a VM-aware resident")
     parser.add_argument("--split-language-vm", action="store_true",

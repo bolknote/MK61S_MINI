@@ -12,6 +12,9 @@
 
 using namespace language_vm;
 using namespace loadable_module;
+#if defined(LANGUAGE_VM_TEST_FILE_CACHE)
+namespace language_vm_file_cache_test {void before_step(mk61_app_flow*);}
+#endif
 namespace {
 uint32_t revision=1;
 unsigned compiles,validations,finishes,swaps,activations;
@@ -155,6 +158,13 @@ RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) 
   select(kind);
   if(command==Command::APP_FLOW_INFO){result=MK61_APP_FLOW_MAGIC;return RuntimeStatus::OK;}
   assert(command==Command::APP_FLOW_STEP);
+#if defined(LANGUAGE_VM_TEST_FILE_CACHE)
+  if(kind==Kind::APPLICATION) {
+    language_vm_file_cache_test::before_step((mk61_app_flow*)payload);
+    result=mk61_app_flow_step((mk61_app_flow*)payload);
+    return RuntimeStatus::OK;
+  }
+#endif
   if(kind==Kind::TINYBASIC || kind==Kind::FOCAL) {
     result=flow_compile((mk61_app_flow*)payload,compiler_frontend);
     return RuntimeStatus::OK;
@@ -271,4 +281,5 @@ int main() {
   assert(diagnostic.budget==24576 && diagnostic.payload<diagnostic.budget && diagnostic.publications);
   assert(diagnostic.hits>20 && diagnostic.invalidations && !resource_reads);
   std::puts("language_vm_image_cache_self_test: invalidation, eviction policy, values, DATA, INPUT/cancel, stale editor, BUILDING rollback and no APP swaps PASS");
+  return 0;
 }

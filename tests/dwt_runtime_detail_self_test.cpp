@@ -139,10 +139,36 @@ static void context_and_cache() {
   assert(start() && vm_cache_row(0).id == 0xFFFF && vm_cache_dropped() == 0);
 }
 
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+static void opcode_batches() {
+  reset();
+  record_vm_opcodes(3,100,80,UINT64_C(0x100000000));
+  record_vm_opcodes(3,20,20,240);
+  const auto& row=statistics(Point::VM_ADD_SUB);
+  assert(row.samples==120 && row.total_cycles==UINT64_C(0x1000000F0));
+  assert(row.self_cycles==row.total_cycles && vm_opcode_integers(3)==100);
+  assert(!row.minimum_cycles && !row.maximum_cycles);
+  record_vm_opcodes(8,1,1,50);record_vm_opcodes(3,1,2,50);
+  record_vm_opcodes(3,0,0,50);
+  assert(row.samples==120);
+  stop();record_vm_opcodes(3,1,1,50);assert(row.samples==120);
+  assert(start() && row.samples==0 && vm_opcode_integers(3)==0);
+  record_vm_opcodes(3,UINT32_MAX,UINT32_MAX,1);
+  record_vm_opcodes(3,1,1,50);
+  assert(row.samples==UINT32_MAX && row.total_cycles==1 &&
+         vm_opcode_integers(3)==UINT32_MAX);
+  assert(!vm_opcode_integers(8));
+  reset();
+}
+#endif
+
 int main() {
-  static_assert(POINT_COUNT == 49);
+  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 8 : 0));
   initialize(); assert(available() && start());
   nested_scopes(); runner_and_invoke(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+  opcode_batches();
+#endif
   std::set<std::string> names;
   for(unsigned i = 0; i < POINT_COUNT; ++i) {
     const char* name = point_name((Point)i);

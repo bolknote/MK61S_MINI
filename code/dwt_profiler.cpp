@@ -17,6 +17,9 @@ u32 previous_cycle = 0;
 u64 extended_cycles = 0;
 VmCacheRow cache_rows[VM_CACHE_ROWS];
 u32 cache_dropped = 0;
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+u32 opcode_integers[8] = {};
+#endif
 VmCacheRow* cache_row(u16 id) {
   if(id == 0xFFFF) return nullptr;
   VmCacheRow* empty = nullptr;
@@ -72,6 +75,18 @@ void record_scope(Point point, u64 elapsed, u64 children) {
   const usize index = point_index(point);
   if(index < POINT_COUNT) point_statistics[index].add(elapsed, children <= elapsed ? elapsed - children : 0);
 }
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles) {
+  if(!collection_active || group>=8 || !count || integers>count) return;
+  auto& row=point_statistics[(usize)Point::VM_CONSTANTS+group];
+  if(count>UINT32_MAX-row.samples) return;
+  row.samples+=count;row.total_cycles+=cycles;row.self_cycles+=cycles;
+  // Batch attribution retains count/total/average, not per-opcode extrema.
+  row.minimum_cycles=row.maximum_cycles=0;
+  opcode_integers[group]+=integers;
+}
+u32 vm_opcode_integers(usize group) {return group<8?opcode_integers[group]:0;}
+#endif
 Point app_point(u8 kind, bool entry) {
   using K = loadable_module::Kind;
   switch((K)kind) {
@@ -152,6 +167,9 @@ void reset(void) {
   extended_cycles = 0;
   for(auto& row : cache_rows) row = {};
   cache_dropped = 0;
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+  for(auto& count : opcode_integers) count=0;
+#endif
 #endif
 }
 
@@ -210,6 +228,16 @@ const char* point_name(Point point) {
     case Point::TERMINAL_LOOKUP: return "terminal.lookup";
     case Point::M61_READ_LINE: return "m61.read.line";
     case Point::M61_COMMAND: return "m61.command";
+#if MK61_VM_OPCODE_PROFILE
+    case Point::VM_CONSTANTS: return "vm.op.constants";
+    case Point::VM_LOCALS: return "vm.op.locals";
+    case Point::VM_ARRAYS: return "vm.op.arrays";
+    case Point::VM_ADD_SUB: return "vm.op.addsub";
+    case Point::VM_MULTIPLY: return "vm.op.multiply";
+    case Point::VM_DIV_MOD: return "vm.op.divmod";
+    case Point::VM_COMPARE: return "vm.op.compare";
+    case Point::VM_OTHER: return "vm.op.other";
+#endif
 #endif
     case Point::COUNT:              break;
   }

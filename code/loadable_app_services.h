@@ -85,7 +85,11 @@ enum mk61_service_operation {
   MK61_SERVICE_FILE_ACTIONS,
   MK61_SERVICE_RESOURCE_READ,
   /* Opt-in Serial diagnostic line: a=byte count (<=128), payload=bytes. */
-  MK61_SERVICE_DEBUG_WRITE
+  MK61_SERVICE_DEBUG_WRITE,
+  /* Diagnostic only: a=opcode group (0..7), b=samples, c=integer pairs,
+   * payload=uint64_t cycles. No Serial output while a Screen packet is live.
+   * Ordinary residents reject this optional operation without side effects. */
+  MK61_SERVICE_VM_PROFILE
 };
 
 /* Immutable resource spans. Operation 0 returns the current media revision;

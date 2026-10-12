@@ -1747,6 +1747,12 @@ void class_terminal::print_profile_statistics(void) {
         Serial.println();
       }
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+      for(usize group=0;group<8;++group) {
+        terminal_output::field(Serial,"VMINT group=",group);
+        terminal_output::line(Serial," count=",dwt_profiler::vm_opcode_integers(group));
+      }
+#endif
       terminal_output::line(Serial, "VMCACHE dropped=", dwt_profiler::vm_cache_dropped());
       for(usize index = 0; index < dwt_profiler::VM_CACHE_ROWS; ++index) {
         const auto& row = dwt_profiler::vm_cache_row(index);

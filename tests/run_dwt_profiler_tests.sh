@@ -11,9 +11,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
 
 "$out"
 
+for vm_profile in 0 1; do
 clang++ -std=c++17 -Wall -Wextra -Werror \
   -DARDUINO_ARCH_STM32 -DMK61_DWT_RUNTIME_DETAIL=1 \
+  -DMK61_VM_OPCODE_PROFILE="$vm_profile" \
   -I"$root/tests/stubs/dwt" -I"$root/code" \
   "$root/tests/dwt_runtime_detail_self_test.cpp" "$root/code/dwt_profiler.cpp" \
   -o "$out-detail"
 "$out-detail"
+done

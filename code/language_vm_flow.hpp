@@ -13,7 +13,12 @@ struct FlowContext {
   ExecuteRequest expression;
   ValidatedImage expression_validated;
   OverlayRequest expression_request;
-  InputRequest input;
+  union {
+    InputRequest input;
+    // Only before START: publication epoch for optional cache persistence.
+    // FLOW_RUN clears input.size before INPUT begins, then binds InputRequest.
+    uint32_t file_cache_revision;
+  };
   uint32_t failure_status;
 };
 #if UINTPTR_MAX == UINT32_MAX

@@ -1,4 +1,5 @@
 #include "config.h"
+#include "dwt_profiler.hpp"
 
 #if MK61_ANY_LOADABLE_MODULE
 #include "loadable_system_api.hpp"
@@ -62,6 +63,9 @@ static language_workspace::Owner owner(u32 kind) {
   switch((Kind) kind) {
     case Kind::FOCAL: return language_workspace::Owner::FOCAL;
     case Kind::TINYBASIC: return language_workspace::Owner::TINYBASIC;
+#if MK61_VM_FILE_CACHE
+    case Kind::LANGUAGE_VM: return language_workspace::Owner::LANGUAGE_VM;
+#endif
     case Kind::WBMP_VIEWER: return language_workspace::Owner::IMAGE_VIEWER;
     case Kind::MARKDOWN_VIEWER: return language_workspace::Owner::MARKDOWN_VIEWER;
     case Kind::CHIP8: return language_workspace::Owner::CHIP8;
@@ -204,6 +208,15 @@ static u32 key_call(u32 operation, u32 value) {
 
 static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   switch(operation) {
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+    case MK61_SERVICE_VM_PROFILE: {
+      if(!payload || a>=8 || !b || c>b)return 0;
+      u64 cycles;
+      memcpy(&cycles,payload,sizeof(cycles));
+      dwt_profiler::record_vm_opcodes(a,b,c,cycles);
+      return 1;
+    }
+#endif
 #if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
     case MK61_SERVICE_DEBUG_WRITE:
       if(!payload || a>128)return 0;

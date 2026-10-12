@@ -19,7 +19,7 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   if(!sys || !sys->keyboard_mapping || !sys->math || !sys->format ||
       (base->capabilities & required) != required) return false;
   api = sys; app = base; image_crc = crc; kind = app_kind;
-#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_USBDISK_MODULE) || defined(MK61_BUILD_SETUP_MODULE) || defined(MK61_BUILD_MARKDOWN_MODULE)
+#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_USBDISK_MODULE) || defined(MK61_BUILD_SETUP_MODULE) || defined(MK61_BUILD_MARKDOWN_MODULE) || defined(MK61_BUILD_VM_FILE_CACHE_MODULE)
   // These System APPs share the resident's bounded memory/string primitives
   // instead of spending their fixed 20-KiB arena on duplicate implementations.
   if(!sys->runtime) return false;

@@ -3,6 +3,7 @@
 #include "language_vm_flow.hpp"
 #include "app_flow_transfer_abi.hpp"
 #include "loadable_module_abi.hpp"
+#include "language_vm_file_cache.hpp"
 namespace language_vm {
 struct PersistentValues {
   uint32_t magic;
@@ -20,6 +21,11 @@ struct CompilerStage {
   app_flow::ImageTransfer transfer;
   PersistentValues* values;
   uint32_t command, argument0, argument1;
+  // Optional file-cache handoff lives in the previously unused union tail.
+  // Existing frontend/request/transfer offsets and the 240-byte root stay fixed.
+  file_cache::Key file_key;
+  ValidatedImage file_validated;
+  uint16_t file_id, file_reserved;
 };
 struct CompilerContext {
   union {
@@ -36,7 +42,7 @@ struct CompilerContext {
   uint8_t reserved[2];
 };
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(CompilerStage) == 92 && offsetof(CompilerStage, request) == 8 &&
+static_assert(sizeof(CompilerStage) == 128 && offsetof(CompilerStage, request) == 8 &&
               offsetof(CompilerStage, transfer) == 48 && offsetof(CompilerStage, values) == 76 &&
               sizeof(CompilerContext) == 240 && offsetof(CompilerContext, execution) == 184 &&
               offsetof(CompilerContext, source_id) == 232,

@@ -9,6 +9,7 @@ enum class Owner : u8 {
   NONE = (u8) shared_memory::Owner::NONE,
   FOCAL = (u8) shared_memory::Owner::FOCAL,
   TINYBASIC = (u8) shared_memory::Owner::TINYBASIC,
+  LANGUAGE_VM = (u8) shared_memory::Owner::LANGUAGE_VM,
   IMAGE_VIEWER = (u8) shared_memory::Owner::IMAGE_VIEWER,
   MARKDOWN_VIEWER = (u8) shared_memory::Owner::MARKDOWN_VIEWER,
   CHIP8 = (u8) shared_memory::Owner::CHIP8,

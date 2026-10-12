@@ -2,8 +2,23 @@
 
 #include "language_bytecode.hpp"
 #include "mk_math.hpp"
+#include "language_vm_profile.hpp"
 
 namespace language_vm {
+#ifndef MK61_VM_INTEGER_BLOCK
+#if defined(MK61_APP_LOCAL_FLOAT_MATH) && MK61_APP_LOCAL_FLOAT_MATH
+// The local libm variant has only 124 spare bytes in its unchanged APP gate.
+#define MK61_VM_INTEGER_BLOCK 0
+#else
+#define MK61_VM_INTEGER_BLOCK 1
+#endif
+#endif
+#if MK61_VM_INTEGER_BLOCK != 0 && MK61_VM_INTEGER_BLOCK != 1
+#error "MK61_VM_INTEGER_BLOCK must be 0 or 1"
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
+void integer_block_applied(uint16_t, uint8_t);
+#endif
 #if defined(LANGUAGE_VM_TRACE)
 // Host-only instrumentation. No callback, counters or ABI fields are shipped.
 void trace_instruction(const View&, uint16_t, uint32_t);
@@ -133,6 +148,58 @@ Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
   if(!result.finite()) return Error::MATH;
   variables[index]=result;return Error::NONE;
 }
+#if MK61_VM_INTEGER_BLOCK && !MK61_VM_OPCODE_PROFILE
+// One guarded integer block, shared by both languages/arithmetic backends.
+// Recognize CONST_I16, LOAD, ADD, optionally LOAD_ARRAY and STORE. The original
+// bytes/branch targets stay intact. Every guard precedes any observable write;
+// overflow, floats, invalid bounds or a service/limit boundary deopt to run().
+__attribute__((noinline)) bool integer_block(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
+  const uint16_t first=instruction;
+  if(v.end-first<6 || (Op)v.bytes[first+3]!=Op::LOAD ||
+     (Op)v.bytes[first+5]!=Op::ADD || v.bytes[first+4]>=26 ||
+     data.stack_capacity-s.sp<2) return false;
+  const uint8_t src=v.bytes[first+4];
+  const Value variable=data.variables[src];
+  int32_t sum;
+  if(!variable.integer() || __builtin_add_overflow(
+       (int32_t)(int16_t)word(v.bytes+first+1),variable.integer_value(),&sum)) return false;
+  uint16_t after=(uint16_t)(first+6), last=(uint16_t)(first+5);
+  uint8_t count=3, dst=255;
+  Value value=sum;
+  if(after<v.end && (Op)v.bytes[after]==Op::LOAD_ARRAY) {
+    if(!data.array || sum<0 || (uint32_t)sum>=data.array_count ||
+       !data.array[sum].integer()) return false;
+    value=data.array[sum];last=after++;++count;
+  }
+  if(after<v.end && (Op)v.bytes[after]==Op::STORE) {
+    if(v.end-after<2 || v.bytes[after+1]>=26) return false;
+    dst=v.bytes[after+1];last=after;after=(uint16_t)(after+2);++count;
+  }
+  if(((steps-1)&31U)+count>32 || (limit && count-1U>limit-steps) ||
+     (s.call_count && s.calls[s.call_count-1].end && after>s.calls[s.call_count-1].end))
+    return false;
+#if defined(LANGUAGE_VM_TRACE)
+  trace_instruction(v,(uint16_t)(first+3),steps+1);
+  trace_instruction(v,(uint16_t)(first+5),steps+2);
+  uint16_t pc=(uint16_t)(first+6);
+  for(uint8_t n=3;n<count;++n) {
+    trace_instruction(v,pc,steps+n);
+    pc=(uint16_t)(pc+((Op)v.bytes[pc]==Op::STORE?2:1));
+  }
+#endif
+  // Match even unused operand cells, so snapshots/INPUT observe exactly the
+  // ordinary VM state, not only the final numerical answer.
+  data.stack[s.sp+1]=variable;data.stack[s.sp]=value;
+  if(dst<26)data.variables[dst]=value;
+  else ++s.sp;
+  s.pc=after;instruction=last;steps+=count-1;
+#if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
+  integer_block_applied(first,count);
+#endif
+  return true;
+}
+#endif
 }  // namespace
 
 Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
@@ -395,6 +462,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   Error error = Error::NONE;
   uint32_t steps = 0;
   uint16_t instruction = s.pc;
+  VM_OPCODE_PROFILE(v);
   // Compact decimal constants are exact wire recipes. Decode each hot recipe
   // once instead of repeating soft-double pow10/division in a loop. Eight
   // direct-mapped entries are bounded stack scratch, never part of an image
@@ -493,6 +561,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       break;
     }
     const Op op = (Op)v.bytes[s.pc];
+    VM_OPCODE_SAMPLE(op, s, data);
 #if defined(LANGUAGE_VM_TRACE)
     trace_instruction(v, s.pc, steps);
 #endif
@@ -527,8 +596,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     s.pc = after;
     Value a = 0, b = 0, value = 0;
     switch (op) {
-      case Op::CONST_I8:
+#if MK61_VM_INTEGER_BLOCK && !MK61_VM_OPCODE_PROFILE
       case Op::CONST_I16:
+        if(integer_block(v,s,data,steps,instruction,limit))break;
+        [[fallthrough]];
+#endif
+      case Op::CONST_I8:
+#if !MK61_VM_INTEGER_BLOCK || MK61_VM_OPCODE_PROFILE
+      case Op::CONST_I16:
+#endif
       case Op::CONST_I32:
       case Op::CONST_F64:
         (void)constant_value(v,instruction,value);push(value);

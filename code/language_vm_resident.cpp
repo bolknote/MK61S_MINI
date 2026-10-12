@@ -26,6 +26,9 @@ __asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 0");
 #if !defined(LANGUAGE_VM_HOST_TEST)
 #include "program_store.hpp"
 #include "development.hpp"
+#if MK61_VM_FILE_CACHE
+#include "storage_path.hpp"
+#endif
 #endif
 #endif
 
@@ -40,6 +43,9 @@ loadable_module::RuntimeStatus overlay(loadable_module::Kind,
 uint32_t media_revision();
 void activate_text_font();
 uint16_t resolve_name(language_vm::Language, uint32_t);
+#if MK61_VM_FILE_CACHE
+uint16_t file_cache_driver();
+#endif
 #endif
 #endif
 }
@@ -239,17 +245,58 @@ struct CompilerServices {
   ~CompilerServices() {if(object) (void)image_cache.release(object);}
 #endif
 };
+#if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+uint16_t file_cache_driver() {
+#if defined(LANGUAGE_VM_HOST_TEST)
+  return language_vm_test::file_cache_driver();
+#else
+  program_store::Entry entry={};
+  return storage_path::resolve_file(program_store::ROOT_ID,file_cache::DRIVER_PATH,
+      program_store::ProgramType::APP,entry)==storage_path::Status::OK?entry.id:0xFFFF;
+#endif
+}
+#endif
 loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) {
   auto& binding = *(CompilerServices*)raw;
   if(step.context != binding.context || step.context_size != sizeof(CompilerContext))
     return loadable_module::RuntimeStatus::CORRUPT_MODULE;
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#if MK61_VM_FILE_CACHE
+  if(step.current.phase==app_flow::DISCARD_CACHE_IMAGE) {
+    if(binding.object)(void)image_cache.release(binding.object);
+    binding.object={};binding.context->cache_target=false;
+    binding.context->compile.transfer={};binding.context->compile.file_validated={};
+    mk61_app_flow_next(&step,mk61_app_flow_to(binding.context->language==Language::BASIC?
+        MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE));
+    return loadable_module::RuntimeStatus::OK;
+  }
+  if(step.current.phase==app_flow::RESERVE_CACHE_IMAGE) {
+    auto& c=*binding.context;
+    auto& r=c.compile.request;
+    const uint32_t revision=image_revision();
+    if(binding.cacheable && r.source_id!=0xFFFF && r.source_revision==revision &&
+       r.resources==ResourceMode::EMBEDDED && c.compile.transfer.size<=MAX_MODULE)
+      binding.object=image_cache.reserve({revision,r.source_id,c.language,0},
+          (uint16_t)c.compile.transfer.size);
+    if(binding.object){c.compile.transfer.image=image_cache.building(binding.object);c.cache_target=true;}
+    mk61_app_flow_return(&step,1,binding.object?MK61_FLOW_OK:MK61_FLOW_BUSY);
+    return loadable_module::RuntimeStatus::OK;
+  }
+#endif
   if(step.current.phase==app_flow::PUBLISH_IMAGE) {
     if(!binding.context->prepared || !binding.object) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
     image_cache.synchronize(image_revision());
     if(!image_cache.publish(binding.object,binding.context->vm.program_validated)) return loadable_module::RuntimeStatus::IO_ERROR;
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
     dwt_profiler::record_vm_image(binding.context->source_id, binding.context->vm.program_validated.size);
+#endif
+#if MK61_VM_FILE_CACHE
+    const uint16_t driver=file_cache_driver();
+    if(driver!=0xFFFF) {
+      binding.context->vm.file_cache_revision=image_revision();
+      mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,driver,file_cache::STORE_COMPILED));
+      return loadable_module::RuntimeStatus::OK;
+    }
 #endif
     mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,
         MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM));return loadable_module::RuntimeStatus::OK;
@@ -281,6 +328,29 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
 #endif
     const auto status = binding.context->cache_target ? binding.memory->retain_image(plan) : binding.memory->commit(plan);
     if(status != loadable_module::RuntimeStatus::OK) return status;
+#if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+    auto& c=*binding.context;
+    const auto& checked=c.compile.file_validated;
+    if(checked.magic==VALIDATED_MAGIC && c.cache_target && binding.object) {
+      if(c.compile.request.source_revision!=image_revision()) {
+        (void)image_cache.release(binding.object);binding.object={};c.cache_target=false;
+        c.compile.transfer={};c.compile.file_validated={};
+        mk61_app_flow_next(&step,mk61_app_flow_to(c.language==Language::BASIC?
+            MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE));
+        return loadable_module::RuntimeStatus::OK;
+      }
+      if(!image_cache.publish(binding.object,checked))return loadable_module::RuntimeStatus::IO_ERROR;
+      c.source_id=c.compile.request.source_id;
+      auto& execution=c.execution;execution.image=plan.image;execution.image_size=plan.size;
+      auto* state=(ExecutionState*)plan.workspace;state->language=c.language;
+      uint32_t result=0;
+      const auto run_status=execute_overlay(execution,*state,
+          (loadable_module::Command)c.compile.original_command,result,&checked);
+      c.prepared=true;
+      mk61_app_flow_exit(&step,result,(uint32_t)run_status);
+      return loadable_module::RuntimeStatus::OK;
+    }
+#endif
     mk61_app_flow_next(&step, plan.next);
   } else return loadable_module::RuntimeStatus::CORRUPT_MODULE;
   return loadable_module::RuntimeStatus::OK;
@@ -373,14 +443,21 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   context.compile.magic=FLOW_CONTEXT_MAGIC; context.compile.original_command=(uint32_t)command;
   context.compile.values=values; context.compile.command=(uint32_t)command;
   context.compile.argument0=a; context.compile.argument1=b; context.language=language;
+#if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  context.source_id=source_id;
+#endif
   app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
   CompilerServices services = {&context, &memory
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
       ,cacheable,{}
 #endif
   };
-  const auto first=mk61_app_flow_to(language==Language::BASIC?MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,
+  auto first=mk61_app_flow_to(language==Language::BASIC?MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,
       MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE);
+#if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  const uint16_t driver=cacheable && source_id!=0xFFFF?file_cache_driver():0xFFFF;
+  if(driver!=0xFFFF)first=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,driver,file_cache::TRY_LOAD);
+#endif
 #if defined(LANGUAGE_VM_HOST_TEST)
   const auto status=(RuntimeStatus)app_flow::run(first,&context,sizeof(context),result,
                                                compiler_flow_invoke,&services);

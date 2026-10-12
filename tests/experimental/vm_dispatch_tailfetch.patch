@@ -1,0 +1,111 @@
+diff --git a/code/language_vm.cpp b/code/language_vm.cpp
+index a37d116..80007fb 100644
+--- a/code/language_vm.cpp
++++ b/code/language_vm.cpp
+@@ -3,6 +3,35 @@
+ #include "language_bytecode.hpp"
+ #include "mk_math.hpp"
+
++#if defined(LANGUAGE_VM_TRACE)
++  #define VM_TAIL_TRACE() trace_instruction(v, instruction, steps)
++#else
++  #define VM_TAIL_TRACE() ((void)0)
++#endif
++#if defined(__arm__) && defined(__GNUC__) && !defined(__clang__)
++  #define VM_TAIL_MARK(id, code) __asm__ __volatile__("vm_tail_fetch_" #id "_%=:" : : "r"((unsigned)(code)))
++#else
++  #define VM_TAIL_MARK(id, code) ((void)0)
++#endif
++#if (defined(MK61_BUILD_LANGUAGE_VM_MODULE) || !defined(ARDUINO_ARCH_STM32)) && \
++    !(defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE)
++// The next opcode is fetched AT THE HANDLER TAIL. Operand decoding and the
++// switch remain shared; slow boundaries retain all original checks/cadence.
++#define VM_TAIL_NEXT(fallback, id) do { \
++  if(error==Error::NONE && !s.call_count && (steps & 31U)!=0 && \
++     (!limit || steps!=limit) && s.pc<v.end) { \
++    const Op tail_op=(Op)v.bytes[s.pc]; \
++    VM_TAIL_MARK(id, tail_op); \
++    if(tail_op!=Op::SOURCE_POS) { \
++      instruction=s.pc; op=tail_op; ++steps; VM_TAIL_TRACE(); \
++      goto vm_opcode_ready; \
++    } \
++  } \
++} while(0); fallback
++#else
++  #define VM_TAIL_NEXT(fallback, id) fallback
++#endif
++
+ namespace language_vm {
+ #if defined(LANGUAGE_VM_TRACE)
+ // Host-only instrumentation. No callback, counters or ABI fields are shipped.
+@@ -458,6 +487,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+     while(s.loop_count && (to<s.loops[s.loop_count-1].body || to>=s.loops[s.loop_count-1].end))--s.loop_count;
+     jump(to);
+   };
++  Op op=Op::HALT;
+   while (error == Error::NONE) {
+     if (s.call_count && s.calls[s.call_count - 1].end &&
+         s.pc >= s.calls[s.call_count - 1].end) {
+@@ -492,7 +522,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+       error = Error::STOPPED;
+       break;
+     }
+-    const Op op = (Op)v.bytes[s.pc];
++    op = (Op)v.bytes[s.pc];
+ #if defined(LANGUAGE_VM_TRACE)
+     trace_instruction(v, s.pc, steps);
+ #endif
+@@ -501,6 +531,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+       double line=(double)source_line(v,s.pc);
+       if(!host.event(host.context,Event::TRACE,(const char*)v.bytes+s.pc,s.pc,line)) {error=Error::IO;break;}
+     }
++#endif
++#if (defined(MK61_BUILD_LANGUAGE_VM_MODULE) || !defined(ARDUINO_ARCH_STM32)) && !(defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE)
++  vm_opcode_ready:
+ #endif
+     // Metadata needs no operand decoder, constant decoder or value scratch.
+     // Keep logical steps/service cadence and the original safety checks.
+@@ -622,14 +655,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+           error = Error::INVALID_IMAGE;
+         else
+           push(data.variables[*p]);
+-        break;
++        VM_TAIL_NEXT(break, H7);
+       case Op::STORE:
+         value = pop();
+         if (*p >= 26)
+           error = Error::INVALID_IMAGE;
+         else if (error == Error::NONE)
+           data.variables[*p] = value;
+-        break;
++        VM_TAIL_NEXT(break, H8);
+       case Op::UPDATE_LOCAL:
+         error=update_local(data.variables,*p,p[1]);
+         break;
+@@ -660,7 +693,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+           else
+             push(data.array[index]);
+         }
+-        break;
++        VM_TAIL_NEXT(break, H11);
+       }
+       case Op::ARRAY_CELL: {
+         b=pop();a=pop();
+@@ -812,7 +845,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+           if(!value.finite()) error=Error::MATH;
+           else data.stack[s.sp++]=value;
+         }
+-        break;
++        VM_TAIL_NEXT(break, H19);
+       }
+       case Op::COMPARE_FALSE:
+         if(s.sp<2) error=Error::STACK;
+@@ -822,7 +855,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
+           // uses only four bounded order bits, never an unchecked table index.
+           if(!comparison(data.stack[s.sp],data.stack[s.sp+1],*p)) jump(word(p+1));
+         }
+-        break;
++        VM_TAIL_NEXT(break, H20);
+       case Op::FUNCTION: {
+         const Function f = (Function)*p;
+         if (f != Function::RND && f != Function::PI_VALUE && f < Function::SIZE) a = pop();

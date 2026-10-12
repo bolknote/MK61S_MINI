@@ -1,0 +1,561 @@
+--- a/code/language_vm.cpp
++++ b/code/language_vm.cpp
+@@ -459,6 +459,7 @@
+     jump(to);
+   };
+   while (error == Error::NONE) {
++  vm_fetch:
+     if (s.call_count && s.calls[s.call_count - 1].end &&
+         s.pc >= s.calls[s.call_count - 1].end) {
+       const auto frame = s.calls[--s.call_count];
+@@ -526,24 +527,137 @@
+     const uint8_t* p = v.bytes + s.pc + 1;
+     s.pc = after;
+     Value a = 0, b = 0, value = 0;
++    #if defined(__arm__)
++    using DispatchOffset = int16_t;
++    #else
++    using DispatchOffset = int32_t;
++    #endif
++    static const DispatchOffset dispatch_offsets[] = {
++      (DispatchOffset)((const char*)&&vm_HALT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_I8 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_I16 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_F64 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LOAD - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_STORE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LOAD_REF - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_STORE_REF - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LOAD_ARRAY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_STORE_ARRAY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NEG - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NOT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_ADD - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_SUB - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_MUL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_DIV - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_POW - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_MOD - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_EQ - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_AND - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_OR - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_XOR - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_FUNCTION - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_JUMP - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_JUMP_FALSE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GOTO - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GOSUB - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_RETURN - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_FOR_BASIC - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NEXT_BASIC - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_DO_FOCAL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_FOR_FOCAL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NEXT_FOCAL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_BRANCH - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_BEGIN - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_TEXT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_NUMBER - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_FORMAT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_SEPARATOR - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_FLUSH - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_END - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_READ_INPUT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_WAIT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CLEAR - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_TARGET_REF - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_TARGET_ARRAY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_DEC8 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_DEC16 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_READ_KEY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_DATA - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_READ_DATA - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_RESTORE_DATA - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_ON_GOTO - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_ON_GOSUB - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_FOR_ARRAY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_NEXT_ARRAY - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_invalid - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_RESOURCE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_INPUT_RESOURCE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CONST_I32 - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_FLOOR_DIV - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GOTO_DIRECT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_GOSUB_DIRECT - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LOAD_ARRAY_FIXED - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_COMPARE_FALSE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_UPDATE_LOCAL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_ARRAY_CELL - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_CALL_PARAMS - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_LOAD_PARAMETER - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_RETURN_VALUE - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_DROP - (const char*)&&vm_dispatch),
++      (DispatchOffset)((const char*)&&vm_PRINT_PRECISION - (const char*)&&vm_dispatch),
++    };
++    static_assert(sizeof(dispatch_offsets)/sizeof(dispatch_offsets[0]) == (unsigned)Op::PRINT_PRECISION+1, "dispatch table width");
++  vm_dispatch:
++    goto *((const char*)&&vm_dispatch + dispatch_offsets[(unsigned)op]);
+     switch (op) {
+-      case Op::CONST_I8:
+-      case Op::CONST_I16:
+-      case Op::CONST_I32:
+-      case Op::CONST_F64:
++      case Op::CONST_I8: vm_CONST_I8:
++      case Op::CONST_I16: vm_CONST_I16:
++      case Op::CONST_I32: vm_CONST_I32:
++      case Op::CONST_F64: vm_CONST_F64:
+         (void)constant_value(v,instruction,value);push(value);
+-        break;
+-      case Op::CONST_DEC8:
+-      case Op::CONST_DEC16: {
++        goto vm_next;
++      case Op::CONST_DEC8: vm_CONST_DEC8:
++      case Op::CONST_DEC16: vm_CONST_DEC16: {
+         const uint8_t slot=(instruction>>2)&7;
+         if(decimal_pcs[slot]!=instruction) {
+           (void)constant_value(v,instruction,decimal_values[slot]);
+           decimal_pcs[slot]=instruction;
+         }
+         push(decimal_values[slot]);
+-        break;
++        goto vm_next;
+       }
+-      case Op::HALT: {
++      case Op::HALT: vm_HALT: {
+         const uint8_t expected=v.expression?1:s.call_count
+             ? (uint8_t)(s.calls[s.call_count-1].base+s.calls[s.call_count-1].arguments):0;
+         if(s.sp!=expected)error=Error::STACK;
+@@ -552,9 +666,9 @@
+           event(Event::FINISH, nullptr, 0, value);
+         return {error, instruction, source_line(v, instruction), steps};
+       }
+-      case Op::DATA:
+-        break;
+-      case Op::READ_DATA: {
++      case Op::DATA: vm_DATA:
++        goto vm_next;
++      case Op::READ_DATA: vm_READ_DATA: {
+         while (s.data_pc < v.end) {
+           const uint16_t following = next(v, s.data_pc);
+           if (!following) {
+@@ -579,9 +693,9 @@
+           s.data_index = 0;
+         }
+         if (s.data_pc == v.end) error = Error::DATA_END;
+-        break;
++        goto vm_next;
+       }
+-      case Op::RESTORE_DATA: {
++      case Op::RESTORE_DATA: vm_RESTORE_DATA: {
+         a = pop();
+         b = (a + Value(.5)).floor();
+         if (error != Error::NONE) break;
+@@ -596,10 +710,10 @@
+         }
+         s.data_pc = to;
+         s.data_index = 0;
+-        break;
++        goto vm_next;
+       }
+-      case Op::ON_GOTO:
+-      case Op::ON_GOSUB: {
++      case Op::ON_GOTO: vm_ON_GOTO:
++      case Op::ON_GOSUB: vm_ON_GOSUB: {
+         a = pop();
+         if (error != Error::NONE) break;
+         if (!a.finite() || a < 0 || a != a.floor()) {
+@@ -615,26 +729,26 @@
+           call(to, 0);
+         else
+           jump(to);
+-        break;
++        goto vm_next;
+       }
+-      case Op::LOAD:
++      case Op::LOAD: vm_LOAD:
+         if (*p >= 26)
+           error = Error::INVALID_IMAGE;
+         else
+           push(data.variables[*p]);
+-        break;
+-      case Op::STORE:
++        goto vm_next;
++      case Op::STORE: vm_STORE:
+         value = pop();
+         if (*p >= 26)
+           error = Error::INVALID_IMAGE;
+         else if (error == Error::NONE)
+           data.variables[*p] = value;
+-        break;
+-      case Op::UPDATE_LOCAL:
++        goto vm_next;
++      case Op::UPDATE_LOCAL: vm_UPDATE_LOCAL:
+         error=update_local(data.variables,*p,p[1]);
+-        break;
+-      case Op::LOAD_REF:
+-      case Op::STORE_REF:
++        goto vm_next;
++      case Op::LOAD_REF: vm_LOAD_REF:
++      case Op::STORE_REF: vm_STORE_REF:
+         if (op == Op::STORE_REF) value = pop();
+         if(error == Error::NONE) {
+           double external=value.number();
+@@ -643,10 +757,10 @@
+           value=external;
+         }
+         if (op == Op::LOAD_REF && error == Error::NONE) push(value);
+-        break;
+-      case Op::LOAD_ARRAY:
+-      case Op::STORE_ARRAY:
+-      case Op::LOAD_ARRAY_FIXED: {
++        goto vm_next;
++      case Op::LOAD_ARRAY: vm_LOAD_ARRAY:
++      case Op::STORE_ARRAY: vm_STORE_ARRAY:
++      case Op::LOAD_ARRAY_FIXED: vm_LOAD_ARRAY_FIXED: {
+         if (op == Op::STORE_ARRAY) value = pop();
+         uint16_t index = 0;
+         bool valid;
+@@ -660,9 +774,9 @@
+           else
+             push(data.array[index]);
+         }
+-        break;
++        goto vm_next;
+       }
+-      case Op::ARRAY_CELL: {
++      case Op::ARRAY_CELL: vm_ARRAY_CELL: {
+         b=pop();a=pop();
+         if(error!=Error::NONE) break;
+         const double i=a.number(),j=b.number();
+@@ -680,14 +794,14 @@
+         }
+         push((int32_t)(cell+1));break;
+       }
+-      case Op::LOAD_PARAMETER:
++      case Op::LOAD_PARAMETER: vm_LOAD_PARAMETER:
+         a=pop();
+         if(error!=Error::NONE)break;
+         if(!s.call_count || !s.calls[s.call_count-1].mode || a<1 ||
+            a.number()>s.calls[s.call_count-1].arguments || a!=a.floor()) error=Error::VARIABLE;
+         else push(data.stack[s.calls[s.call_count-1].base+(uint8_t)a.number()-1]);
+-        break;
+-      case Op::CALL_PARAMS: {
++        goto vm_next;
++      case Op::CALL_PARAMS: vm_CALL_PARAMS: {
+         const uint8_t count=p[4];
+         if(s.sp<count || count>4 || p[5]>1) {error=Error::STACK;break;}
+         const uint8_t base=(uint8_t)(s.sp-count);
+@@ -703,9 +817,9 @@
+             }
+           }
+         }
+-        break;
++        goto vm_next;
+       }
+-      case Op::RETURN_VALUE: {
++      case Op::RETURN_VALUE: vm_RETURN_VALUE: {
+         value=pop();
+         if(!s.call_count) {error=Error::RETURN;break;}
+         const auto frame=s.calls[--s.call_count];
+@@ -713,47 +827,47 @@
+         s.pc=frame.resume;s.loop_count=frame.loops;s.sp=frame.base;
+         if(error==Error::NONE && (frame.mode&2))push(value);
+         if(error==Error::NONE)restore_print(frame);
+-        break;
++        goto vm_next;
+       }
+-      case Op::DROP: (void)pop();break;
+-      case Op::PRINT_PRECISION:
++      case Op::DROP: vm_DROP: (void)pop();break;
++      case Op::PRINT_PRECISION: vm_PRINT_PRECISION:
+         value=*p;event(Event::PRECISION,nullptr,p[1],value);break;
+-      case Op::TARGET_ARRAY: {
++      case Op::TARGET_ARRAY: vm_TARGET_ARRAY: {
+         uint16_t index = 0;
+         if (!s.sp)
+           error = Error::STACK;
+         else if (!data.array || !array_index(data.stack[s.sp - 1], data.array_count, index))
+           error = v.language == Language::BASIC ? Error::ARRAY_RANGE : Error::VARIABLE;
+-        break;
++        goto vm_next;
+       }
+-      case Op::TARGET_REF:
++      case Op::TARGET_REF: vm_TARGET_REF:
+         value = *p;
+         event(Event::TARGET_REF, nullptr, 0, value);
+-        break;
+-      case Op::NEG:
++        goto vm_next;
++      case Op::NEG: vm_NEG:
+         a = pop();
+         push(-a);
+-        break;
+-      case Op::NOT:
++        goto vm_next;
++      case Op::NOT: vm_NOT:
+         a = pop();
+         push((int32_t)a.zero());
+-        break;
+-      case Op::ADD:
+-      case Op::SUB:
+-      case Op::MUL:
+-      case Op::DIV:
+-      case Op::FLOOR_DIV:
+-      case Op::POW:
+-      case Op::MOD:
+-      case Op::EQ:
+-      case Op::NE:
+-      case Op::LT:
+-      case Op::LE:
+-      case Op::GT:
+-      case Op::GE:
+-      case Op::AND:
+-      case Op::OR:
+-      case Op::XOR: {
++        goto vm_next;
++      case Op::ADD: vm_ADD:
++      case Op::SUB: vm_SUB:
++      case Op::MUL: vm_MUL:
++      case Op::DIV: vm_DIV:
++      case Op::FLOOR_DIV: vm_FLOOR_DIV:
++      case Op::POW: vm_POW:
++      case Op::MOD: vm_MOD:
++      case Op::EQ: vm_EQ:
++      case Op::NE: vm_NE:
++      case Op::LT: vm_LT:
++      case Op::LE: vm_LE:
++      case Op::GT: vm_GT:
++      case Op::GE: vm_GE:
++      case Op::AND: vm_AND:
++      case Op::OR: vm_OR:
++      case Op::XOR: vm_XOR: {
+         if(s.sp<2) {error=Error::STACK;break;}
+         b=data.stack[s.sp-1];a=data.stack[s.sp-2];
+         s.sp=(uint8_t)(s.sp-2);
+@@ -812,9 +926,9 @@
+           if(!value.finite()) error=Error::MATH;
+           else data.stack[s.sp++]=value;
+         }
+-        break;
++        goto vm_next;
+       }
+-      case Op::COMPARE_FALSE:
++      case Op::COMPARE_FALSE: vm_COMPARE_FALSE:
+         if(s.sp<2) error=Error::STACK;
+         else {
+           s.sp=(uint8_t)(s.sp-2);
+@@ -822,8 +936,8 @@
+           // uses only four bounded order bits, never an unchecked table index.
+           if(!comparison(data.stack[s.sp],data.stack[s.sp+1],*p)) jump(word(p+1));
+         }
+-        break;
+-      case Op::FUNCTION: {
++        goto vm_next;
++      case Op::FUNCTION: vm_FUNCTION: {
+         const Function f = (Function)*p;
+         if (f != Function::RND && f != Function::PI_VALUE && f < Function::SIZE) a = pop();
+         if (f == Function::MAX) {
+@@ -882,16 +996,16 @@
+             break;
+         }
+         if (error == Error::NONE) push(value);
+-        break;
++        goto vm_next;
+       }
+-      case Op::JUMP:
++      case Op::JUMP: vm_JUMP:
+         if(v.language==Language::FOCAL)focal_jump(word(p));else jump(word(p));break;
+-      case Op::JUMP_FALSE:
++      case Op::JUMP_FALSE: vm_JUMP_FALSE:
+         a = pop();
+         if (error == Error::NONE && a.zero()) jump(word(p));
+-        break;
+-      case Op::GOTO:
+-      case Op::GOSUB:
++        goto vm_next;
++      case Op::GOTO: vm_GOTO:
++      case Op::GOSUB: vm_GOSUB:
+         a = pop();
+         b = (a + Value(.5)).floor();
+         if (!a.finite() || a < 1 || a > 32767 || mk_math::fabs((a - b).number()) > 1e-7)
+@@ -905,14 +1019,14 @@
+           else
+             call(to, 0);
+         }
+-        break;
+-      case Op::GOTO_DIRECT:
+-      case Op::GOSUB_DIRECT:
++        goto vm_next;
++      case Op::GOTO_DIRECT: vm_GOTO_DIRECT:
++      case Op::GOSUB_DIRECT: vm_GOSUB_DIRECT:
+         if(word(p)==0xFFFF) error=Error::MISSING_LINE;
+         else if(op==Op::GOSUB_DIRECT) call(word(p),0);
+         else jump(word(p));
+-        break;
+-      case Op::RETURN:
++        goto vm_next;
++      case Op::RETURN: vm_RETURN:
+         if (!s.call_count)
+           error = Error::RETURN;
+         else {
+@@ -922,15 +1036,15 @@
+           s.sp=frame.base;
+           if(frame.mode&2)error=Error::RETURN;
+         }
+-        break;
+-      case Op::DO_FOCAL:
++        goto vm_next;
++      case Op::DO_FOCAL: vm_DO_FOCAL:
+         call(word(p), word(p + 2));
+-        break;
+-      case Op::BRANCH:
++        goto vm_next;
++      case Op::BRANCH: vm_BRANCH:
+         a=pop();if(error==Error::NONE){const uint16_t to=word(p+(a<0?0:a==0?2:4));if(to!=0xFFFF)focal_jump(to);}break;
+-      case Op::FOR_BASIC:
+-      case Op::FOR_ARRAY:
+-      case Op::FOR_FOCAL: {
++      case Op::FOR_BASIC: vm_FOR_BASIC:
++      case Op::FOR_ARRAY: vm_FOR_ARRAY:
++      case Op::FOR_FOCAL: vm_FOR_FOCAL: {
+         Value step = pop(), end = pop(), start = pop();
+         uint16_t var = *p;
+         if (op == Op::FOR_ARRAY) {
+@@ -1018,11 +1132,11 @@
+         }
+         s.loops[s.loop_count++] = {
+             end, step, start, s.pc, op == Op::FOR_FOCAL ? word(p + 1) : (uint16_t)0, var};
+-        break;
++        goto vm_next;
+       }
+-      case Op::NEXT_BASIC:
+-      case Op::NEXT_ARRAY:
+-      case Op::NEXT_FOCAL: {
++      case Op::NEXT_BASIC: vm_NEXT_BASIC:
++      case Op::NEXT_ARRAY: vm_NEXT_ARRAY:
++      case Op::NEXT_FOCAL: vm_NEXT_FOCAL: {
+         // The dispatch loop polls before work and every 32 instructions,
+         // including empty FOR bodies. A second poll on every NEXT adds no
+         // cancellation bound, but dominates short numeric loops on hardware.
+@@ -1064,38 +1178,38 @@
+           s.pc = frame.body;
+         } else
+           --s.loop_count;
+-        break;
++        goto vm_next;
+       }
+-      case Op::PRINT_BEGIN:
++      case Op::PRINT_BEGIN: vm_PRINT_BEGIN:
+         event(Event::PRINT_BEGIN, nullptr, 0, value);
+-        break;
+-      case Op::PRINT_TEXT:
++        goto vm_next;
++      case Op::PRINT_TEXT: vm_PRINT_TEXT:
+         event(Event::TEXT, (const char*)p + 2, word(p), value);
+-        break;
+-      case Op::PRINT_RESOURCE:
++        goto vm_next;
++      case Op::PRINT_RESOURCE: vm_PRINT_RESOURCE:
+         p = v.bytes + v.end + word(p);
+         event((v.bytes[7] & OWNED_RESOURCE_FLAG) ? Event::TEXT : Event::RESOURCE_TEXT,
+               (const char*)p + ((v.bytes[7] & OWNED_RESOURCE_FLAG) ? 2 : 0), word(p), value);
+-        break;
+-      case Op::PRINT_NUMBER:
++        goto vm_next;
++      case Op::PRINT_NUMBER: vm_PRINT_NUMBER:
+         value = pop();
+         if (error == Error::NONE) event(Event::NUMBER, nullptr, 0, value);
+-        break;
+-      case Op::PRINT_FORMAT:
++        goto vm_next;
++      case Op::PRINT_FORMAT: vm_PRINT_FORMAT:
+         value = pop();
+         if (error == Error::NONE) event(Event::FORMAT, nullptr, 0, value);
+-        break;
+-      case Op::PRINT_SEPARATOR:
++        goto vm_next;
++      case Op::PRINT_SEPARATOR: vm_PRINT_SEPARATOR:
+         event(Event::SEPARATOR, nullptr, *p, value);
+-        break;
+-      case Op::PRINT_FLUSH:
++        goto vm_next;
++      case Op::PRINT_FLUSH: vm_PRINT_FLUSH:
+         event(Event::FLUSH, nullptr, 0, value);
+-        break;
+-      case Op::PRINT_END:
++        goto vm_next;
++      case Op::PRINT_END: vm_PRINT_END:
+         event(Event::PRINT_END, nullptr, *p, value);
+-        break;
+-      case Op::READ_INPUT:
+-      case Op::INPUT_RESOURCE: {
++        goto vm_next;
++      case Op::READ_INPUT: vm_READ_INPUT:
++      case Op::INPUT_RESOURCE: vm_INPUT_RESOURCE: {
+         if (host.yield_input)
+           return {Error::YIELDED, instruction, source_line(v, instruction), steps};
+         const bool pooled = op == Op::INPUT_RESOURCE;
+@@ -1104,22 +1218,24 @@
+         event(resource ? Event::RESOURCE_INPUT : Event::READ_INPUT,
+               (const char*)p + (resource ? 0 : 2), word(p), value);
+         if (error == Error::NONE) push(value);
+-        break;
++        goto vm_next;
+       }
+-      case Op::READ_KEY:
++      case Op::READ_KEY: vm_READ_KEY:
+         event(Event::READ_KEY, nullptr, 0, value);
+         if (error == Error::NONE) push(value);
+-        break;
+-      case Op::WAIT:
++        goto vm_next;
++      case Op::WAIT: vm_WAIT:
+         event(Event::WAIT, nullptr, 0, value);
+-        break;
+-      case Op::CLEAR:
++        goto vm_next;
++      case Op::CLEAR: vm_CLEAR:
+         event(Event::CLEAR, nullptr, 0, value);
+-        break;
+-      default:
++        goto vm_next;
++      default: vm_invalid:
+         error = Error::INVALID_IMAGE;
+-        break;
++        goto vm_next;
+     }
++  vm_next:
++    if(error == Error::NONE) goto vm_fetch;
+   }
+   return {error, instruction, source_line(v, instruction), steps};
+ }

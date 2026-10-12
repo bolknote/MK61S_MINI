@@ -1,0 +1,324 @@
+--- a/code/language_vm.cpp
++++ b/code/language_vm.cpp
+@@ -1,6 +1,16 @@
+ #include <string.h>
+
+ #include "language_bytecode.hpp"
++
++// Dispatch lives in LANGVM.APP. Keep the unused resident copy byte-for-byte
++// equivalent to the switch loop: changing it can perturb shared outlining.
++#if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || !defined(ARDUINO_ARCH_STM32)
++  #define MK61_VM_DIRECT_FETCH 1
++  #define MK61_VM_NEXT() goto vm_next
++#else
++  #define MK61_VM_DIRECT_FETCH 0
++  #define MK61_VM_NEXT() break
++#endif
+ #include "mk_math.hpp"
+
+ namespace language_vm {
+@@ -459,6 +469,9 @@
+     jump(to);
+   };
+   while (error == Error::NONE) {
++#if MK61_VM_DIRECT_FETCH
++  vm_fetch:
++#endif
+     if (s.call_count && s.calls[s.call_count - 1].end &&
+         s.pc >= s.calls[s.call_count - 1].end) {
+       const auto frame = s.calls[--s.call_count];
+@@ -532,7 +545,7 @@
+       case Op::CONST_I32:
+       case Op::CONST_F64:
+         (void)constant_value(v,instruction,value);push(value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::CONST_DEC8:
+       case Op::CONST_DEC16: {
+         const uint8_t slot=(instruction>>2)&7;
+@@ -541,7 +554,7 @@
+           decimal_pcs[slot]=instruction;
+         }
+         push(decimal_values[slot]);
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::HALT: {
+         const uint8_t expected=v.expression?1:s.call_count
+@@ -553,7 +566,7 @@
+         return {error, instruction, source_line(v, instruction), steps};
+       }
+       case Op::DATA:
+-        break;
++        MK61_VM_NEXT();
+       case Op::READ_DATA: {
+         while (s.data_pc < v.end) {
+           const uint16_t following = next(v, s.data_pc);
+@@ -579,7 +592,7 @@
+           s.data_index = 0;
+         }
+         if (s.data_pc == v.end) error = Error::DATA_END;
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::RESTORE_DATA: {
+         a = pop();
+@@ -596,7 +609,7 @@
+         }
+         s.data_pc = to;
+         s.data_index = 0;
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::ON_GOTO:
+       case Op::ON_GOSUB: {
+@@ -615,24 +628,24 @@
+           call(to, 0);
+         else
+           jump(to);
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::LOAD:
+         if (*p >= 26)
+           error = Error::INVALID_IMAGE;
+         else
+           push(data.variables[*p]);
+-        break;
++        MK61_VM_NEXT();
+       case Op::STORE:
+         value = pop();
+         if (*p >= 26)
+           error = Error::INVALID_IMAGE;
+         else if (error == Error::NONE)
+           data.variables[*p] = value;
+-        break;
++        MK61_VM_NEXT();
+       case Op::UPDATE_LOCAL:
+         error=update_local(data.variables,*p,p[1]);
+-        break;
++        MK61_VM_NEXT();
+       case Op::LOAD_REF:
+       case Op::STORE_REF:
+         if (op == Op::STORE_REF) value = pop();
+@@ -643,7 +656,7 @@
+           value=external;
+         }
+         if (op == Op::LOAD_REF && error == Error::NONE) push(value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::LOAD_ARRAY:
+       case Op::STORE_ARRAY:
+       case Op::LOAD_ARRAY_FIXED: {
+@@ -660,7 +673,7 @@
+           else
+             push(data.array[index]);
+         }
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::ARRAY_CELL: {
+         b=pop();a=pop();
+@@ -686,7 +699,7 @@
+         if(!s.call_count || !s.calls[s.call_count-1].mode || a<1 ||
+            a.number()>s.calls[s.call_count-1].arguments || a!=a.floor()) error=Error::VARIABLE;
+         else push(data.stack[s.calls[s.call_count-1].base+(uint8_t)a.number()-1]);
+-        break;
++        MK61_VM_NEXT();
+       case Op::CALL_PARAMS: {
+         const uint8_t count=p[4];
+         if(s.sp<count || count>4 || p[5]>1) {error=Error::STACK;break;}
+@@ -703,7 +716,7 @@
+             }
+           }
+         }
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::RETURN_VALUE: {
+         value=pop();
+@@ -713,7 +726,7 @@
+         s.pc=frame.resume;s.loop_count=frame.loops;s.sp=frame.base;
+         if(error==Error::NONE && (frame.mode&2))push(value);
+         if(error==Error::NONE)restore_print(frame);
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::DROP: (void)pop();break;
+       case Op::PRINT_PRECISION:
+@@ -724,20 +737,20 @@
+           error = Error::STACK;
+         else if (!data.array || !array_index(data.stack[s.sp - 1], data.array_count, index))
+           error = v.language == Language::BASIC ? Error::ARRAY_RANGE : Error::VARIABLE;
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::TARGET_REF:
+         value = *p;
+         event(Event::TARGET_REF, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::NEG:
+         a = pop();
+         push(-a);
+-        break;
++        MK61_VM_NEXT();
+       case Op::NOT:
+         a = pop();
+         push((int32_t)a.zero());
+-        break;
++        MK61_VM_NEXT();
+       case Op::ADD:
+       case Op::SUB:
+       case Op::MUL:
+@@ -812,7 +825,7 @@
+           if(!value.finite()) error=Error::MATH;
+           else data.stack[s.sp++]=value;
+         }
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::COMPARE_FALSE:
+         if(s.sp<2) error=Error::STACK;
+@@ -822,7 +835,7 @@
+           // uses only four bounded order bits, never an unchecked table index.
+           if(!comparison(data.stack[s.sp],data.stack[s.sp+1],*p)) jump(word(p+1));
+         }
+-        break;
++        MK61_VM_NEXT();
+       case Op::FUNCTION: {
+         const Function f = (Function)*p;
+         if (f != Function::RND && f != Function::PI_VALUE && f < Function::SIZE) a = pop();
+@@ -882,14 +895,14 @@
+             break;
+         }
+         if (error == Error::NONE) push(value);
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::JUMP:
+         if(v.language==Language::FOCAL)focal_jump(word(p));else jump(word(p));break;
+       case Op::JUMP_FALSE:
+         a = pop();
+         if (error == Error::NONE && a.zero()) jump(word(p));
+-        break;
++        MK61_VM_NEXT();
+       case Op::GOTO:
+       case Op::GOSUB:
+         a = pop();
+@@ -905,13 +918,13 @@
+           else
+             call(to, 0);
+         }
+-        break;
++        MK61_VM_NEXT();
+       case Op::GOTO_DIRECT:
+       case Op::GOSUB_DIRECT:
+         if(word(p)==0xFFFF) error=Error::MISSING_LINE;
+         else if(op==Op::GOSUB_DIRECT) call(word(p),0);
+         else jump(word(p));
+-        break;
++        MK61_VM_NEXT();
+       case Op::RETURN:
+         if (!s.call_count)
+           error = Error::RETURN;
+@@ -922,10 +935,10 @@
+           s.sp=frame.base;
+           if(frame.mode&2)error=Error::RETURN;
+         }
+-        break;
++        MK61_VM_NEXT();
+       case Op::DO_FOCAL:
+         call(word(p), word(p + 2));
+-        break;
++        MK61_VM_NEXT();
+       case Op::BRANCH:
+         a=pop();if(error==Error::NONE){const uint16_t to=word(p+(a<0?0:a==0?2:4));if(to!=0xFFFF)focal_jump(to);}break;
+       case Op::FOR_BASIC:
+@@ -1018,7 +1031,7 @@
+         }
+         s.loops[s.loop_count++] = {
+             end, step, start, s.pc, op == Op::FOR_FOCAL ? word(p + 1) : (uint16_t)0, var};
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::NEXT_BASIC:
+       case Op::NEXT_ARRAY:
+@@ -1064,36 +1077,36 @@
+           s.pc = frame.body;
+         } else
+           --s.loop_count;
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::PRINT_BEGIN:
+         event(Event::PRINT_BEGIN, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_TEXT:
+         event(Event::TEXT, (const char*)p + 2, word(p), value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_RESOURCE:
+         p = v.bytes + v.end + word(p);
+         event((v.bytes[7] & OWNED_RESOURCE_FLAG) ? Event::TEXT : Event::RESOURCE_TEXT,
+               (const char*)p + ((v.bytes[7] & OWNED_RESOURCE_FLAG) ? 2 : 0), word(p), value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_NUMBER:
+         value = pop();
+         if (error == Error::NONE) event(Event::NUMBER, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_FORMAT:
+         value = pop();
+         if (error == Error::NONE) event(Event::FORMAT, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_SEPARATOR:
+         event(Event::SEPARATOR, nullptr, *p, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_FLUSH:
+         event(Event::FLUSH, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::PRINT_END:
+         event(Event::PRINT_END, nullptr, *p, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::READ_INPUT:
+       case Op::INPUT_RESOURCE: {
+         if (host.yield_input)
+@@ -1104,22 +1117,26 @@
+         event(resource ? Event::RESOURCE_INPUT : Event::READ_INPUT,
+               (const char*)p + (resource ? 0 : 2), word(p), value);
+         if (error == Error::NONE) push(value);
+-        break;
++        MK61_VM_NEXT();
+       }
+       case Op::READ_KEY:
+         event(Event::READ_KEY, nullptr, 0, value);
+         if (error == Error::NONE) push(value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::WAIT:
+         event(Event::WAIT, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       case Op::CLEAR:
+         event(Event::CLEAR, nullptr, 0, value);
+-        break;
++        MK61_VM_NEXT();
+       default:
+         error = Error::INVALID_IMAGE;
+-        break;
++        MK61_VM_NEXT();
+     }
++#if MK61_VM_DIRECT_FETCH
++  vm_next:
++    if(error == Error::NONE) goto vm_fetch;
++#endif
+   }
+   return {error, instruction, source_line(v, instruction), steps};
+ }

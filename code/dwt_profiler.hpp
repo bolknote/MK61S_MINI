@@ -58,6 +58,14 @@
   (MK61_DWT_CORE_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
 #define MK61_DWT_RUNTIME_DETAIL_SUPPORTED \
   (MK61_DWT_RUNTIME_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
+#ifndef MK61_VM_OPCODE_PROFILE
+#define MK61_VM_OPCODE_PROFILE 0
+#endif
+#if MK61_VM_OPCODE_PROFILE != 0 && MK61_VM_OPCODE_PROFILE != 1
+#error "MK61_VM_OPCODE_PROFILE must be 0 or 1"
+#endif
+#define MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED \
+  (MK61_VM_OPCODE_PROFILE && MK61_DWT_RUNTIME_DETAIL_SUPPORTED)
 
 namespace dwt_profiler {
 
@@ -89,6 +97,10 @@ enum class Point : u8 {
   M61_RUNNER, VM_INVOKE,
   M61_OPERAND, M61_OPEN, TERMINAL_LOOKUP,
   M61_READ_LINE, M61_COMMAND,
+#if MK61_VM_OPCODE_PROFILE
+  VM_CONSTANTS, VM_LOCALS, VM_ARRAYS, VM_ADD_SUB, VM_MULTIPLY, VM_DIV_MOD,
+  VM_COMPARE, VM_OTHER,
+#endif
 #endif
   COUNT
 };
@@ -185,6 +197,10 @@ void record_vm_cache(u16 id, bool hit, u16 size);
 void record_vm_image(u16 id, u16 size);
 const VmCacheRow& vm_cache_row(usize index);
 u32 vm_cache_dropped(void);
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles);
+u32 vm_opcode_integers(usize group);
+#endif
 
 class DecodeContext {
  public:
