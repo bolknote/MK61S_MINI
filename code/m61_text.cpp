@@ -14,6 +14,7 @@
 #include "calculator_control.hpp"
 #include "development.hpp"
 #include "storage_path.hpp"
+#include "dwt_profiler.hpp"
 #include "tinybasic.hpp"
 #include "tools.hpp"
 #else
@@ -604,13 +605,8 @@ static void fail_script(const char* message, u16 line) {
 #endif
 }
 
-static bool read_script_byte(u8& value, bool& eof) {
-  eof = false;
-  if(script_pos >= script_len) {
-    eof = true;
-    return true;
-  }
-
+// Caller checks EOF before asking for a verified window.
+static bool prepare_read_window(void) {
   if(script_source == ScriptSource::STORE) {
     const u32 revision=program_store::media_revision();
     if(read_cache_revision!=revision || script_pos < read_cache_start ||
@@ -627,8 +623,6 @@ static bool read_script_byte(u8& value, bool& eof) {
       read_cache_len = got;
       read_cache_revision = revision;
     }
-    value = read_cache[script_pos - read_cache_start];
-    script_pos++;
     return true;
   }
 
@@ -636,40 +630,41 @@ static bool read_script_byte(u8& value, bool& eof) {
 }
 
 static bool read_next_line(char* line, u16 capacity) {
+#ifndef M61_TEXT_HOST_TEST
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_READ_LINE);
+#endif
   if(line == NULL || capacity == 0) return false;
 
   u16 line_len = 0;
-  while(true) {
-    u8 value = 0;
-    bool eof = false;
-    if(!read_script_byte(value, eof)) return false;
-    if(eof) {
-      line[line_len] = 0;
-      return line_len > 0;
-    }
-
-    const char c = (char) value;
-    if(c == '\r') {
-      // Принимаем CR и CRLF, не выдавая парный LF за пустую строку.
-      if(script_pos < script_len) {
-        u8 next = 0;
-        bool next_eof = false;
-        const u16 saved_pos = script_pos;
-        if(!read_script_byte(next, next_eof)) return false;
-        if(next_eof || next != '\n') script_pos = saved_pos;
+  while(script_pos < script_len) {
+    if(!prepare_read_window()) return false;
+    const u8* cursor = read_cache + (script_pos - read_cache_start);
+    const u8* end = read_cache + read_cache_len;
+    // No storage writes or event service occur while consuming this window.
+    // Refills and the next command recheck its revision.
+    do {
+      const char c = (char) *cursor++;
+      if(c == '\r' || c == '\n' || c == 0) {
+        script_pos = (u16) (read_cache_start + (cursor - read_cache));
+        // Принимаем CR и CRLF, не выдавая парный LF за пустую строку.
+        if(c == '\r' && script_pos < script_len) {
+          if(cursor == end && !prepare_read_window()) return false;
+          if(read_cache[script_pos - read_cache_start] == '\n') ++script_pos;
+        }
+        line[line_len] = 0;
+        script_line++;
+        return true;
       }
-      line[line_len] = 0;
-      script_line++;
-      return true;
-    }
-    if(c == '\n' || c == 0) {
-      line[line_len] = 0;
-      script_line++;
-      return true;
-    }
-    if(line_len + 1 >= capacity) return false;
-    line[line_len++] = c;
+      if(line_len + 1 >= capacity) {
+        script_pos = (u16) (read_cache_start + (cursor - read_cache));
+        return false;
+      }
+      line[line_len++] = c;
+    } while(cursor < end);
+    script_pos = (u16) (read_cache_start + read_cache_len);
   }
+  line[line_len] = 0;
+  return line_len > 0;
 }
 
 static u32 label_hash(const char* name, usize len) {
@@ -725,15 +720,21 @@ struct ParsedTrap {
   usize label_len;
 };
 
-static TrapParse parse_trap(const char* line, ParsedTrap& out) {
+static const char* keyword_end(const char* line, const char* keyword, usize length) {
   const char* p = skip_spaces(line);
-  static const char keyword[] = "trap";
-  if(strncmp(p, keyword, sizeof(keyword) - 1) != 0 ||
-     (!is_space(p[sizeof(keyword) - 1]) &&
-      !is_line_end(p[sizeof(keyword) - 1]))) {
-    return TrapParse::NONE;
-  }
-  p += sizeof(keyword) - 1;
+  if(strncmp(p, keyword, length) != 0 ||
+     (!is_space(p[length]) && !is_line_end(p[length]))) return NULL;
+  return p + length;
+}
+
+static bool parse_handler_target(const char* p, const char*& label, usize& length) {
+  if(strncmp(p, "run", 3) != 0 || !is_space(p[3])) return false;
+  return parse_label(skip_spaces(p + 3), label, length) == LabelParse::VALID;
+}
+
+static TrapParse parse_trap(const char* line, ParsedTrap& out) {
+  const char* p = keyword_end(line, "trap", 4);
+  if(p == NULL) return TrapParse::NONE;
   if(!is_space(*p)) return TrapParse::INVALID;
   p = skip_spaces(p);
 
@@ -750,25 +751,10 @@ static TrapParse parse_trap(const char* line, ParsedTrap& out) {
   if(digits == 0 || !is_space(p[digits])) return TrapParse::INVALID;
   p = skip_spaces(p + digits);
 
-  static const char run_keyword[] = "run";
-  if(strncmp(p, run_keyword, sizeof(run_keyword) - 1) != 0 ||
-     !is_space(p[sizeof(run_keyword) - 1])) {
+  if(!parse_handler_target(p, out.label, out.label_len)) {
     return TrapParse::INVALID;
   }
-  p = skip_spaces(p + sizeof(run_keyword) - 1);
-  if(*p != ':') return TrapParse::INVALID;
-  p = skip_spaces(p + 1);
-
-  usize label_len = 0;
-  while(!is_space(p[label_len]) && !is_line_end(p[label_len])) label_len++;
-  if(label_len == 0 || label_len > MAX_LABEL_SIZE ||
-     !token_ends(p + label_len)) {
-    return TrapParse::INVALID;
-  }
-
   out.address = (u8) address;
-  out.label = p;
-  out.label_len = label_len;
   return TrapParse::VALID;
 }
 
@@ -788,14 +774,8 @@ static i8 hex_value(char value) {
 }
 
 static BindParse parse_bind(const char* line, ParsedBind& out) {
-  const char* p = skip_spaces(line);
-  static const char keyword[] = "bind";
-  if(strncmp(p, keyword, sizeof(keyword) - 1) != 0 ||
-     (!is_space(p[sizeof(keyword) - 1]) &&
-      !is_line_end(p[sizeof(keyword) - 1]))) {
-    return BindParse::NONE;
-  }
-  p += sizeof(keyword) - 1;
+  const char* p = keyword_end(line, "bind", 4);
+  if(p == NULL) return BindParse::NONE;
   if(!is_space(*p)) return BindParse::INVALID;
   p = skip_spaces(p);
 
@@ -813,24 +793,9 @@ static BindParse parse_bind(const char* line, ParsedBind& out) {
   if(!is_space(*p)) return BindParse::INVALID;
   p = skip_spaces(p);
 
-  static const char run_keyword[] = "run";
-  if(strncmp(p, run_keyword, sizeof(run_keyword) - 1) != 0 ||
-     !is_space(p[sizeof(run_keyword) - 1])) {
+  if(!parse_handler_target(p, out.label, out.label_len)) {
     return BindParse::INVALID;
   }
-  p = skip_spaces(p + sizeof(run_keyword) - 1);
-  if(*p != ':') return BindParse::INVALID;
-  p = skip_spaces(p + 1);
-
-  usize label_len = 0;
-  while(!is_space(p[label_len]) && !is_line_end(p[label_len])) label_len++;
-  if(label_len == 0 || label_len > MAX_LABEL_SIZE ||
-     !token_ends(p + label_len)) {
-    return BindParse::INVALID;
-  }
-
-  out.label = p;
-  out.label_len = label_len;
   return BindParse::VALID;
 }
 
@@ -1256,8 +1221,8 @@ static bool goto_label(const char* args) {
   const LabelEntry& entry = labels[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
-  // A same-script jump can reuse its verified read window. read_script_byte
-  // checks the media revision before using any cached source byte.
+  // A same-script jump can reuse its verified read window. read_next_line
+  // checks the media revision before consuming it.
   return true;
 }
 
@@ -1430,6 +1395,7 @@ static u16 current_script_directory(void) {
 
 static ReferencedOpenResult open_referenced_file(const char* path) {
 #ifndef M61_TEXT_HOST_TEST
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPEN);
   const u16 cwd = current_script_directory();
   program_store::Entry entry;
   if(storage_path::resolve_file(cwd, path, entry) ==
@@ -1457,22 +1423,15 @@ static ReferencedOpenResult open_referenced_file(const char* path) {
 // launchers may offer a manual or another enhancement when its viewer exists,
 // while every mandatory program part continues to use strict `open`.
 static const char* optional_open_arguments(const char* line) {
-  static const char keyword[] = "open?";
-  const char* p = skip_spaces(line);
-  const usize length = sizeof(keyword) - 1U;
-  if(strncmp(p, keyword, length) != 0 ||
-     (!is_space(p[length]) && !is_line_end(p[length]))) return NULL;
-  return skip_spaces(p + length);
+  const char* p = keyword_end(line, "open?", 5);
+  return p == NULL ? NULL : skip_spaces(p);
 }
 
 #if M61_TEXT_FONT_COMMAND
 static bool loadfont_arguments(const char* line, const char*& args) {
-  static const char keyword[] = "loadfont";
-  const char* p = skip_spaces(line);
-  const usize length = sizeof(keyword) - 1U;
-  if(strncmp(p, keyword, length) != 0 ||
-     (!is_space(p[length]) && !is_line_end(p[length]))) return false;
-  args = skip_spaces(p + length);
+  const char* p = keyword_end(line, "loadfont", 8);
+  if(p == NULL) return false;
+  args = skip_spaces(p);
   return true;
 }
 
@@ -1589,6 +1548,9 @@ bool clear_bindings_and_traps(void) {
 // и скриптового режимов). Сценарию терминал возвращает только действия,
 // влияющие на поток выполнения: run, open, load, переходы по меткам и reinit.
 static bool execute_script_line(const char* raw_line) {
+#ifndef M61_TEXT_HOST_TEST
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_COMMAND);
+#endif
   line_error_message = NULL;
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
@@ -1735,6 +1697,9 @@ static bool execute_script_line(const char* raw_line) {
 }
 
 void service(void) {
+#ifndef M61_TEXT_HOST_TEST
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_RUNNER);
+#endif
   if(runner_state == RunnerState::WAIT_TIME) {
     if(!time_reached(runner_millis(), wait_until_ms)) return;
     wait_until_ms = 0;

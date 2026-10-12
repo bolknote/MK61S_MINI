@@ -12,9 +12,8 @@
 namespace terminal_catalog {
 // Единственный источник истины: имя <-> id <-> описание для help.
 // Добавление команды: строка здесь + case в execute().
-// Команды вводит человек, поэтому линейный проход по компактному пулу строк
-// быстрее терминала на несколько порядков. Он заодно убирает из F401
-// 128-байтный хеш-индекс и таблицу смещений с выравниванием.
+// Compact string pool: no hash index or aligned offset table in MCU Flash.
+// M61 scripts use this catalog too, so their hot IF lookup is handled below.
 #if MK61_TERMINAL_HELP_IS_EXTERNAL
 // ELF metadata for the host bundle builder; the linker marks it non-allocating.
 // The signature is constant-folded; the resource never occupies MCU Flash/RAM.
@@ -107,8 +106,22 @@ constexpr bool terminal_names_are_unique(void) {
 }
 static_assert(terminal_names_are_unique(), "terminal command name is duplicated");
 
+constexpr TerminalCommand conditional_command() {
+  for(usize i = 0; i < TERMINAL_COMMAND_COUNT; ++i) {
+    const auto command = entry(i);
+    if(command.id == CMD_IF) return command;
+  }
+  return {nullptr, CMD_UNKNOWN, nullptr};
+}
+static constexpr auto conditional = conditional_command();
+static_assert(conditional.id == CMD_IF, "IF must be in the shared catalog");
+static_assert(conditional.name[0] != 0, "IF word must not be empty");
+static_assert(conditional.name[1] != 0, "IF word must have two bytes");
+static_assert(conditional.name[2] == 0, "IF word must have only two bytes");
+
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 u8 lookup(const u8* line) {
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::TERMINAL_LOOKUP);
   usize len = 0;
   while(line[len] != 0 && !terminal_core::is_space((char) line[len])) len++;
   if(len == 0) return CMD_UNKNOWN;
@@ -117,6 +130,12 @@ u8 lookup(const u8* line) {
   // остатков предыдущей команды за нулём-терминатором):
   if(len == 3 && line[0] == 'R' && line[2] == '=' && terminal_core::is_space((char) line[3])) return CMD_REG_SET; // R0= <значение>
   if(len >= 4 && line[0] == 's' && line[1] == 'e' && line[2] == 't' && line[3] == '$') return CMD_SET_CODE;  // set$<hex>
+
+  // The name/ID still come from the single catalog. No game-specific command
+  // or second dispatch table; execute() retains all script/trap permission checks.
+  if(len == 2 && line[0] == (u8) conditional.name[0] &&
+     line[1] == (u8) conditional.name[1])
+    return conditional.id;
 
   const char* name = command_text.data();
   for(usize index = 0; index < TERMINAL_COMMAND_COUNT; ++index) {

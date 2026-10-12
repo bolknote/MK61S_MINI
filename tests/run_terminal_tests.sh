@@ -8,7 +8,8 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
 
-clang++ -std=c++17 -Wall -Wextra -Werror \
+for math_backend in 0 1; do
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_MATH_BACKEND="$math_backend" \
   "${sanitizer_flags[@]}" \
   -I"$root/code" \
   "$root/tests/terminal_self_test.cpp" \
@@ -17,6 +18,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$out"
 
 "$out"
+done
 python3 "$root/tests/terminal_run_self_test.py"
 
 for screen in 0 1; do

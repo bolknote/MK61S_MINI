@@ -299,6 +299,84 @@ static void test_decimal_parser_is_finite_and_bounded(void) {
   assert(!terminal_core::parse_single_decimal("1e", value));
   assert(!terminal_core::parse_single_decimal("1234567890123456789", value));
   assert(!terminal_core::parse_single_decimal("2.0 junk", value));
+  for(const char* text : {"0", "-0", "+0", "000000001", "999999999",
+      "-999999999", "1000000000", "-1000000000", "123456789012345678",
+      "1.0000000", "-0.000", ".5", "1e0", "1E+99", "1e-99",
+      "999999999999999999e99", "-.000000000000000001e-99"}) {
+    const char* parsed = text;
+    const char* expected_end = text;
+    const double expected = mk_math::strtod(text, &expected_end);
+    assert(terminal_core::parse_decimal(parsed, value));
+    assert(parsed == expected_end);
+    assert(mk_math::is_finite(value));
+    assert(mk_math::binary64_bits(value) == mk_math::binary64_bits(expected));
+  }
+  const char* tail = "-123<0";
+  assert(terminal_core::parse_decimal(tail, value) && value == -123 && *tail == '<');
+  for(const char* text : {"NaN", "Inf", "-Inf", "+Inf", "+.",
+      "1e100", "1e-100", "1234567890123456789e-99"})
+    assert(!terminal_core::parse_single_decimal(text, value));
+  // Character input may alias the result object: capture the sign before
+  // storing the converted value, just as the original strtod path does.
+  std::memcpy(&value, "-123", 5);
+  tail = reinterpret_cast<const char*>(&value);
+  assert(terminal_core::parse_decimal(tail, value) && value == -123);
+}
+
+static bool legacy_display_value(const char* v, double& out) {
+  char buffer[20]; char* w = buffer;
+  if(v[0] == '-') *w++ = '-';
+  for(int i = 1; i <= 9; ++i) {
+    const char c = v[i];
+    if(c == '.') { *w++ = c; continue; }
+    if(c == ' ') continue;
+    if(c < '0' || c > '9') return false;
+    *w++ = c;
+  }
+  if(v[12] < '0' || v[12] > '9' || v[13] < '0' || v[13] > '9') return false;
+  *w++ = 'e'; *w++ = v[11] == '-' ? '-' : '+';
+  *w++ = v[12]; *w++ = v[13]; *w = 0;
+  out = mk_math::atof(buffer);
+  return true;
+}
+
+static void check_display_value(const char* text) {
+  double actual = 123, expected = 123;
+  const bool ok = terminal_core::parse_mk_display_value(text, actual);
+  assert(ok == legacy_display_value(text, expected));
+  assert(mk_math::binary64_bits(actual) == mk_math::binary64_bits(expected));
+}
+
+static void test_display_integer_fast_path_matches_legacy(void) {
+  struct { double value; char tail[7]; } alias = {};
+  std::memcpy(&alias, "-1.0000000  00", 15);
+  assert(terminal_core::parse_mk_display_value(reinterpret_cast<const char*>(&alias),
+      alias.value) && alias.value == -1);
+  char value[15];
+  for(unsigned digit = 0; digit < 10; ++digit) {
+    for(char sign : {' ', '-'}) {
+      snprintf(value, sizeof(value), "%c%u.0000000  00", sign, digit);
+      check_display_value(value);
+      for(unsigned place = 0; place < 14; ++place) {
+        const char original = value[place];
+        for(char changed : {' ', '.', '-', '+', '0', '1', '9', 'e', 'F'}) {
+          value[place] = changed;
+          check_display_value(value);
+        }
+        value[place] = original;
+      }
+    }
+  }
+  // The fallback must retain exactly the old rounding at every MK-61 order.
+  u32 random = 17;
+  for(int exponent = -99; exponent <= 99; ++exponent) {
+    random = random * 1664525U + 1013904223U;
+    const unsigned mantissa = random % 100000000U;
+    snprintf(value, sizeof(value), "%c%u.%07u %c%02u", random & 1 ? '-' : ' ',
+        mantissa / 10000000U, mantissa % 10000000U,
+        exponent < 0 ? '-' : ' ', (unsigned) (exponent < 0 ? -exponent : exponent));
+    check_display_value(value);
+  }
 }
 
 static void test_register_initializer_parser_is_atomic(void) {
@@ -1045,6 +1123,7 @@ int main(void) {
   test_confirmation_is_a_complete_token();
   test_quoted_path_tokens();
   test_decimal_parser_is_finite_and_bounded();
+  test_display_integer_fast_path_matches_legacy();
   test_register_initializer_parser_is_atomic();
   test_assembler_accepts_final_mnemonic_and_is_atomic_input();
   test_terminal_mnemonic_front_coding();

@@ -166,13 +166,24 @@ inline bool parse_decimal(const char*& p, double& out) {
   if(*p == '+' || *p == '-') p++;
 
   usize digits = 0;
-  bool any = false;
-  while(*p >= '0' && *p <= '9') { any = true; digits++; p++; }
+  u32 integer = 0;
+  while(*p >= '0' && *p <= '9') {
+    // Unsigned wrapping is harmless: only <=9 digits use this accumulator.
+    integer = integer * 10 + (u32) (*p - '0');
+    digits++; p++;
+  }
+  // Up to nine integral digits fit in u32 and convert exactly to binary64.
+  // Decimal/exponent forms keep the established parser and rounding rules.
+  if(digits - 1U < 9 && *p != '.' && (*p | 0x20) != 'e') {
+    const double value = (double) integer;
+    out = *begin == '-' ? -value : value; // Preserve negative zero, too.
+    return true;
+  }
   if(*p == '.') {
     p++;
-    while(*p >= '0' && *p <= '9') { any = true; digits++; p++; }
+    while(*p >= '0' && *p <= '9') { digits++; p++; }
   }
-  if(!any || digits > 18) return false;
+  if(digits == 0 || digits > 18) return false;
 
   if(*p == 'e' || *p == 'E') {
     p++;
@@ -189,13 +200,50 @@ inline bool parse_decimal(const char*& p, double& out) {
 
   const char* parsed_end = begin;
   const double value = mk_math::strtod(begin, &parsed_end);
-  if(parsed_end != p || mk_math::is_nan(value) || mk_math::is_inf(value)) return false;
+  // The grammar above admits only decimal digits, <=18 digits total and
+  // |exponent|<=99: any nonzero magnitude is in [1e-117, 1e117]. It cannot
+  // overflow, underflow or produce NaN in binary64. Keep those bounds, not
+  // redundant soft-double comparisons after the conversion.
+  if(parsed_end != p) return false;
   out = value;
   return true;
 }
 
 inline bool parse_single_decimal(const char* p, double& out) {
   return parse_decimal(p, out) && at_end(p);
+}
+
+inline bool parse_mk_display_value(const char* v, double& out) {
+  // Normalized single-digit integers are common in script conditions. Their
+  // complete display representation is exact; avoid the string roundtrip.
+  if(v[1] >= '0' && v[1] <= '9' && v[2] == '.' &&
+     v[12] == '0' && v[13] == '0') {
+    int i = 3;
+    while(i <= 9 && (v[i] == '0' || v[i] == ' ')) ++i;
+    if(i == 10) {
+      const double value = (double) (v[1] - '0');
+      out = v[0] == '-' ? -value : value;
+      return true;
+    }
+  }
+  char buffer[20];
+  char* w = buffer;
+  if(v[0] == '-') *w++ = '-';
+  for(int i = 1; i <= 9; i++) {
+    const char c = v[i];
+    if(c == '.') { *w++ = c; continue; }
+    if(c == ' ') continue;
+    if(c < '0' || c > '9') return false;
+    *w++ = c;
+  }
+  if(v[12] < '0' || v[12] > '9' || v[13] < '0' || v[13] > '9') return false;
+  *w++ = 'e';
+  *w++ = (v[11] == '-') ? '-' : '+';
+  *w++ = v[12];
+  *w++ = v[13];
+  *w = 0;
+  out = mk_math::atof(buffer);
+  return true;
 }
 
 inline isize find_mnemonic(const char* isa, const char* token, usize token_len) {

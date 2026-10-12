@@ -203,6 +203,13 @@ const char* point_name(Point point) {
     case Point::FONT_ACTIVATE: return "font.activate";
     case Point::VM_CACHE_LOOKUP: return "vm.cache.lookup";
     case Point::VM_PREPARE: return "vm.prepare";
+    case Point::M61_RUNNER: return "m61.runner";
+    case Point::VM_INVOKE: return "vm.invoke";
+    case Point::M61_OPERAND: return "m61.operand";
+    case Point::M61_OPEN: return "m61.open";
+    case Point::TERMINAL_LOOKUP: return "terminal.lookup";
+    case Point::M61_READ_LINE: return "m61.read.line";
+    case Point::M61_COMMAND: return "m61.command";
 #endif
     case Point::COUNT:              break;
   }

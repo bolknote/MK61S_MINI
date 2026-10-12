@@ -50,6 +50,60 @@ static void wrap_and_long_scope() {
   assert(stats.maximum_cycles == 0xFFFFFFFFUL && stats.average_cycles() == 0xFFFFFFFFUL);
 }
 
+static void runner_and_invoke() {
+  reset();
+  {
+    Scope runner(Point::M61_RUNNER); tick(3);
+    {
+      Scope invoke(Point::VM_INVOKE); tick(4);
+      { Scope vm(Point::APP_ENTRY_VM); tick(5); }
+      tick(6);
+    }
+    tick(7);
+  }
+  const auto& runner = statistics(Point::M61_RUNNER);
+  const auto& invoke = statistics(Point::VM_INVOKE);
+  const auto& vm = statistics(Point::APP_ENTRY_VM);
+  assert(runner.total_cycles == 25 && runner.self_cycles == 10);
+  assert(invoke.total_cycles == 15 && invoke.self_cycles == 10);
+  assert(vm.total_cycles == 5 && vm.self_cycles == 5);
+  assert(runner.self_cycles + invoke.self_cycles + vm.self_cycles == runner.total_cycles);
+  assert(scope_top == nullptr);
+}
+
+static void script_detail_tree() {
+  reset();
+  {
+    Scope runner(Point::M61_RUNNER); tick(1);
+    { Scope read(Point::M61_READ_LINE); tick(2); }
+    {
+      Scope command(Point::M61_COMMAND); tick(3);
+      { Scope operand(Point::M61_OPERAND); tick(4); }
+      { Scope lookup(Point::TERMINAL_LOOKUP); tick(5); }
+      {
+        Scope open(Point::M61_OPEN); tick(6);
+        {
+          Scope invoke(Point::VM_INVOKE); tick(7);
+          { Scope vm(Point::APP_ENTRY_VM); tick(8); }
+        }
+      }
+    }
+  }
+  const Point points[] = {Point::M61_RUNNER, Point::M61_READ_LINE,
+      Point::M61_COMMAND, Point::M61_OPERAND, Point::TERMINAL_LOOKUP,
+      Point::M61_OPEN, Point::VM_INVOKE, Point::APP_ENTRY_VM};
+  u64 sum = 0;
+  for(usize i = 0; i < sizeof(points) / sizeof(points[0]); ++i) {
+    const auto& row = statistics(points[i]);
+    assert(row.samples == 1 && row.self_cycles == i + 1);
+    sum += row.self_cycles;
+  }
+  assert(sum == 36 && statistics(Point::M61_RUNNER).total_cycles == sum);
+  assert(statistics(Point::M61_COMMAND).total_cycles == 33);
+  assert(statistics(Point::M61_OPEN).total_cycles == 21);
+  assert(scope_top == nullptr);
+}
+
 static void reset_while_active() {
   reset();
   {
@@ -86,9 +140,9 @@ static void context_and_cache() {
 }
 
 int main() {
-  static_assert(POINT_COUNT == 42);
+  static_assert(POINT_COUNT == 49);
   initialize(); assert(available() && start());
-  nested_scopes(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
+  nested_scopes(); runner_and_invoke(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
   std::set<std::string> names;
   for(unsigned i = 0; i < POINT_COUNT; ++i) {
     const char* name = point_name((Point)i);

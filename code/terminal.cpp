@@ -3580,24 +3580,7 @@ bool class_terminal::exec_beep(void) {
     }
 
 bool class_terminal::parse_mk_display_value(const char* v, double& out) {
-      char buffer[20];
-      char* w = buffer;
-      if(v[0] == '-') *w++ = '-';
-      for(int i = 1; i <= 9; i++) {
-        const char c = v[i];
-        if(c == '.') { *w++ = c; continue; }
-        if(c == ' ') continue;
-        if(c < '0' || c > '9') return false;
-        *w++ = c;
-      }
-      if(v[12] < '0' || v[12] > '9' || v[13] < '0' || v[13] > '9') return false;
-      *w++ = 'e';
-      *w++ = (v[11] == '-') ? '-' : '+';
-      *w++ = v[12];
-      *w++ = v[13];
-      *w = 0;
-      out = mk_math::atof(buffer);
-      return true;
+      return terminal_core::parse_mk_display_value(v, out);
     }
 
 bool class_terminal::operand_delimiter(char c) {
@@ -3605,6 +3588,7 @@ bool class_terminal::operand_delimiter(char c) {
     }
 
 bool class_terminal::parse_if_operand(const char*& p, double& out) {
+      MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPERAND);
       p = terminal_core::skip_spaces(p);
       const char c = (*p >= 'A' && *p <= 'Z') ? (char) (*p - 'A' + 'a') : *p;
 

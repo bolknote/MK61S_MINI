@@ -651,6 +651,32 @@ static void test_line_limit_is_enforced_during_indexing(void) {
   assert(std::strstr(error.message, "line is too long") != nullptr);
 }
 
+static void test_line_reader_handles_window_edges_and_mixed_endings(void) {
+  for(unsigned edge : {0U, 1U, 61U, 62U, 63U, 64U, 65U, 1021U, 1022U, 1023U, 1024U}) {
+    reset_host();
+    std::string source(edge, '\n');
+    source += "ok\r\nok\rok\n";
+    source += std::string("ok\0ok", 5); // NUL is an M61 line delimiter, not EOF.
+    add_script("EDGES", source);
+    assert(m61_text::load_program("EDGES"));
+    for(unsigned i = 0; i < 150 && m61_text::active(); ++i) m61_text::service();
+    assert(!m61_text::active());
+    m61_text::Error error = {};
+    assert(!m61_text::last_error(error));
+    assert((executed_lines == std::vector<std::string>{"ok", "ok", "ok", "ok", "ok"}));
+  }
+  for(const char* ending : {"", "\r", "\n", "\r\n"}) {
+    reset_host();
+    const std::string line(terminal_core::MAX_INPUT_TEXT, 'x');
+    add_script("MAX", line + ending);
+    assert(m61_text::load_program("MAX"));
+    while(m61_text::active()) m61_text::service();
+    m61_text::Error error = {};
+    assert(!m61_text::last_error(error));
+    assert((executed_lines == std::vector<std::string>{line}));
+  }
+}
+
 static void test_indexed_loop_is_budgeted_and_uses_block_reads(void) {
   reset_host();
   std::string source;
@@ -1655,6 +1681,7 @@ int main(void) {
   test_long_missing_name_is_truncated_to_error_capacity();
   test_duplicate_and_oversized_labels_fail_before_execution();
   test_line_limit_is_enforced_during_indexing();
+  test_line_reader_handles_window_edges_and_mixed_endings();
   test_indexed_loop_is_budgeted_and_uses_block_reads();
   test_read_window_survives_goto_but_observes_writes();
   test_label_reference_rejects_trailing_tokens();
