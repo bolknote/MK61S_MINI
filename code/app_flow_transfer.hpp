@@ -16,7 +16,15 @@ class Transfer {
   loadable_module::RuntimeStatus commit(ImageTransfer&);
   // The caller separately owns and pins this immutable image (e.g. a cache
   // reservation). Only the runtime workspace is acquired here, no copy.
-  loadable_module::RuntimeStatus retain_image(ImageTransfer&);
+  // A source/compiler APP must be evicted before its workspace is reused.
+  // A data-only cache APP releases its Buffer on return and may stay hot.
+  loadable_module::RuntimeStatus retain_image(ImageTransfer&, bool evict = true);
+  // A retained-image rollback must release the VM prefix before the compiler
+  // reacquires it under its own owner. The caller separately releases image.
+  void release_workspace() { workspace_.reset(); }
+  // Warm execution borrows this same scoped lease without evicting the hot
+  // APP. Do not keep a second workspace lease alive alongside the transfer.
+  shared_memory::Lease& workspace_lease() { return workspace_; }
  private:
   shared_memory::Owner owner_;
   uint32_t reserved_size_ = 0;

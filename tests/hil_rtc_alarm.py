@@ -95,9 +95,12 @@ class Port:
     def read_prompt(self, timeout: float) -> str:
         deadline = time.monotonic() + timeout
         data = bytearray()
-        while time.monotonic() < deadline:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
             readable, _, _ = select.select(
-                [self.fd], [], [], min(0.1, deadline - time.monotonic())
+                [self.fd], [], [], min(0.1, remaining)
             )
             if readable:
                 block = os.read(self.fd, 4096)
@@ -177,6 +180,7 @@ def reconnect(path: str, public_id: str, timeout: float = 20.0) -> tuple[Port, s
         for candidate in candidates:
             if not os.path.exists(candidate):
                 continue
+            port = None
             try:
                 port = Port(candidate)
                 time.sleep(0.15)
@@ -184,12 +188,16 @@ def reconnect(path: str, public_id: str, timeout: float = 20.0) -> tuple[Port, s
                 match = IDENTITY.search(report)
                 if match and match.group(1) == public_id:
                     return port, candidate
-                port.close()
             except (OSError, TimeoutError):
-                try:
+                pass
+            except BaseException:
+                # Unexpected transport errors/cancellation must not leave the
+                # advisory lock or TIOCEXCL held and prevent firmware recovery.
+                if port is not None:
                     port.close()
-                except UnboundLocalError:
-                    pass
+                raise
+            if port is not None:
+                port.close()
         time.sleep(0.1)
     raise TimeoutError(f"device {public_id} did not re-enumerate")
 

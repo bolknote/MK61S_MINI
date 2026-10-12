@@ -19,6 +19,7 @@ namespace {
 uint32_t revision=1;
 unsigned compiles,validations,finishes,swaps,activations;
 unsigned state_resets;
+unsigned evictions;
 uint32_t selected_id,selected_mode;
 Kind cached=(Kind)0;
 Value* array;
@@ -59,7 +60,7 @@ namespace language_vm {
 void language_vm_test_state_reset(ExecutionState&) { ++state_resets; }
 }
 namespace loadable_module {
-RuntimeStatus evict_cached(){cached=(Kind)0;return RuntimeStatus::OK;}
+RuntimeStatus evict_cached(){++evictions;cached=(Kind)0;return RuntimeStatus::OK;}
 }
 namespace language_vm_test {
 uint32_t media_revision(){return revision;}
@@ -159,8 +160,8 @@ RuntimeStatus overlay(Kind kind,Command command,void* payload,uint32_t& result) 
   if(command==Command::APP_FLOW_INFO){result=MK61_APP_FLOW_MAGIC;return RuntimeStatus::OK;}
   assert(command==Command::APP_FLOW_STEP);
 #if defined(LANGUAGE_VM_TEST_FILE_CACHE)
+  language_vm_file_cache_test::before_step((mk61_app_flow*)payload);
   if(kind==Kind::APPLICATION) {
-    language_vm_file_cache_test::before_step((mk61_app_flow*)payload);
     result=mk61_app_flow_step((mk61_app_flow*)payload);
     return RuntimeStatus::OK;
   }

@@ -39,7 +39,9 @@ struct CompilerContext {
   uint8_t clear_requested;
   bool prepared;
   bool cache_target;
-  uint8_t reserved[2];
+  // Captured optional helper, or 0xFFFF for no persistence/already-loaded data.
+  // Survives compiler/VM union reuse without another resident path lookup.
+  uint16_t cache_driver;
 };
 #if UINTPTR_MAX == UINT32_MAX
 static_assert(sizeof(CompilerStage) == 128 && offsetof(CompilerStage, request) == 8 &&

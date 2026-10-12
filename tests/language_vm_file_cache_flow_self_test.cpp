@@ -22,6 +22,10 @@ unsigned writes,cache_reads,source_reads;
 bool driver_present=true,fail_buffer,fail_read,fail_write,change_on_cache_read;
 unsigned corrupt_cache_read;
 bool change_before_store;
+bool change_before_start;
+bool single_flow;
+void* root_context;
+unsigned cached_starts;
 constexpr uint16_t DRIVER=901, DIRECTORY=900, BASIC=101, FOCAL=102;
 
 void export_file(const File& file,mk61_service_file& out) {
@@ -126,6 +130,17 @@ bool bind(const mk61_app_api* api,uint32_t,uint32_t){mk61_api=api;return true;}
 }
 namespace language_vm_file_cache_test {
 void before_step(mk61_app_flow* flow) {
+  if(single_flow) {
+    assert(flow->context_size==sizeof(CompilerContext));
+    if(!root_context)root_context=flow->context;
+    assert(flow->context==root_context); // No nested FlowContext/run_flow.
+  }
+  if(flow->current.kind==MK61_APP_KIND_APPLICATION && flow->current.phase==file_cache::START_LOADED)
+    ++cached_starts;
+  if(change_before_start && flow->current.kind==MK61_APP_KIND_APPLICATION &&
+     flow->current.phase==file_cache::START_LOADED) {
+    ++revision;change_before_start=false;
+  }
   if(change_before_store && flow->current.phase==file_cache::STORE_COMPILED) {
     ++revision;change_before_store=false;
   }
@@ -150,7 +165,12 @@ int main() {
   files[DRIVER]={DRIVER,DIRECTORY,MK61_SERVICE_FILE_APP,"VMSTORE",{1}};
   assert(prepare_image_cache());
   execute(1);assert(compiles==1 && writes==1 && array[1]==2);
-  invalidate();execute(1);assert(compiles==1 && writes==1 && array[1]==4 && cache_reads>=2);
+  const auto initial_resets=state_resets;
+  const auto initial_evictions=evictions;
+  single_flow=true;invalidate();execute(1);single_flow=false;root_context=nullptr;
+  assert(compiles==1 && writes==1 && array[1]==4 && cache_reads>=2 && cached_starts==1);
+  assert(state_resets==initial_resets+1); // One reset, in the original flow.
+  assert(evictions==initial_evictions); // Keep VMSTORE through START_LOADED.
   const auto before_reads=source_reads;
   execute(1);assert(compiles==1 && source_reads==before_reads && array[1]==6);
   program1="10 READ @(0)\n20 @(1)=@(1)+@(0)\n30 DATA 5\n40 END\n";
@@ -170,8 +190,10 @@ int main() {
   input_text="3";invalidate();execute(4);assert(compiles==c0+1 && writes==before_writes);
   files.erase(cache_file(4));invalidate();execute(4);assert(writes==before_writes+1);
   const unsigned input_compiles=compiles;
-  invalidate();execute(4);assert(compiles==input_compiles);
-  cancel_input=true;invalidate();execute(4,1,2);assert(compiles==input_compiles);cancel_input=false;
+  single_flow=true;invalidate();execute(4);single_flow=false;root_context=nullptr;
+  assert(compiles==input_compiles);
+  cancel_input=true;single_flow=true;invalidate();execute(4,1,2);single_flow=false;root_context=nullptr;
+  assert(compiles==input_compiles);cancel_input=false;
   // The source/media epoch may change while a cache record is being read.
   change_on_cache_read=true;invalidate();execute(1);assert(compiles==input_compiles+1);
   // Replacing the compiler invalidates a cache even with unchanged source.
@@ -192,6 +214,11 @@ int main() {
   corrupt_cache_read=2;invalidate();execute(1);
   assert(compiles==before_reserved_fault+1 && !corrupt_cache_read);
   invalidate();execute(1);assert(compiles==before_reserved_fault+1);
+  // Recheck after HOST committed the workspace, not only during file reads.
+  const unsigned before_committed_race=compiles;
+  change_before_start=true;invalidate();execute(1);
+  assert(!change_before_start && compiles==before_committed_race+1);
+  invalidate();execute(1);assert(compiles==before_committed_race+1);
   uint32_t result=99;
   assert(invoke_resident(Language::FOCAL,Command::FOCAL_RUN_ID,201,0,result)==RuntimeStatus::OK && result==0);
   const auto focal_compiles=compiles;

@@ -18,7 +18,8 @@ sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
 from app_relocations import extract
 SYSTEM_MODULES = {
     "vm-file-cache": ("VMSTORE", "VM_FILE_CACHE", ["language_vm_file_cache_entry.cpp",
-        "language_vm_file_cache.cpp", "language_vm.cpp", "language_bytecode.cpp"], None),
+        "language_vm_file_cache.cpp", "language_compiler_flow.cpp", "language_vm.cpp",
+        "language_bytecode.cpp"], None),
     "setup": ("SETUP", "SETUP", ["setup_ui.cpp", "setup_module_entry.cpp",
         "setup_font_compiler.cpp", "fmk_font.cpp", "fmk_prepare.cpp",
         "prepared_font.cpp"], None),

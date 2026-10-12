@@ -95,6 +95,27 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   if(!api || !mk61_app_flow_compatible(flow) || flow->context_size!=sizeof(CompilerContext))return 0;
   auto& c=*(CompilerContext*)flow->context;
   if(c.compile.magic!=FLOW_CONTEXT_MAGIC || (c.language!=Language::BASIC && c.language!=Language::FOCAL))return 0;
+  if(flow->current.phase==file_cache::START_LOADED) {
+    if(c.prepared || !c.cache_target || c.compile.file_validated.magic!=VALIDATED_MAGIC)return 0;
+    if(c.compile.request.source_revision!=call(MK61_SERVICE_RESOURCE_READ)) {
+      mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
+          MK61_APP_FLOW_SYSTEM_FILE,app_flow::DISCARD_CACHE_IMAGE));return 1;
+    }
+    // Consume the certificate before prepare switches the compiler/VM union.
+    const auto checked=c.compile.file_validated;
+    if(!prepare_compiled_flow(flow))return 0;
+    c.vm.program_validated=checked;
+    View view;
+    if(!validated_view(c.vm.program,view))return 0;
+    initialize_validated_state(c.execution,checked,*c.vm.program.state);
+    c.cache_driver=0xFFFF; // Publish a file hit without rewriting it.
+    if(call(MK61_SERVICE_CAPABILITIES)&MK61_SERVICE_CAP_TEXT_FONT)
+      (void)call(MK61_SERVICE_TEXT_FONT,MK61_TEXT_FONT_ACTIVATE);
+    // Publish through the existing host phase, then tail into the shared VM.
+    // No second context or recursive cooperative interpreter is needed.
+    mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
+        MK61_APP_FLOW_SYSTEM_FILE,app_flow::PUBLISH_IMAGE));return 1;
+  }
   Buffer buffer;
   if(flow->current.phase==file_cache::STORE_COMPILED) {
     if(!c.prepared || !execution_compatible(&c.vm.program))return 0;
@@ -184,6 +205,8 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   stage.file_validated={VALIDATED_MAGIC,view.size,view.code,view.source_size,view.end,
       (uint8_t)view.lines,view.stack,(uint8_t)((view.requires_rf?2:0)|(image[7]&12)),view.language};
   stage.values->selected[c.language==Language::BASIC?0:1]=c.source_id;
+  stage.transfer.next=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,
+      flow->current.file_id,file_cache::START_LOADED);
   c.execution={};c.execution.size=sizeof(ExecuteRequest);c.execution.version=REQUEST_VERSION;
   c.execution.variables=stage.values->variables[c.language==Language::BASIC?0:1];
   c.execution.array=c.language==Language::BASIC?stage.values->array:stage.values->focal_array;

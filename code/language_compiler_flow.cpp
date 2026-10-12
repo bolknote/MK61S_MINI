@@ -122,7 +122,10 @@ bool prepare_compiled_flow(mk61_app_flow* flow) {
   c.source_id = stage.request.source_id; c.clear_requested = stage.request.clear_requested;
   c.execution.image = stage.transfer.image; c.execution.image_size = stage.transfer.size;
   auto* state = (ExecutionState*)stage.transfer.workspace;
-  reset_execution_state(*state); state->language = c.language;
+  // Compatibility/validation reads only the language tag before START. The
+  // verifier (or the already-verified cache path) initializes the full state
+  // exactly once; clearing it here would immediately repeat the same work.
+  state->language = c.language;
   // Start the VM member's lifetime only after consuming every compiler field.
   // The persistent execution request and final metadata are outside the union.
   c.vm = {}; c.vm.magic = FLOW_CONTEXT_MAGIC; c.vm.original_command = original;
