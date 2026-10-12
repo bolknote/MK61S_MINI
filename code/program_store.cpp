@@ -3648,25 +3648,19 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   }
 
   g_last_write_failure = WriteFailure::PREFERRED_ID;
-  u16 named_id = NONE;
-  const bool named = find_child_id(parent_id, NodeKind::FILE, type, name,
-                                   named_id);
   u16 id = NONE;
   Inode old_inode = empty_inode();
   bool replacing = false;
   if(preferred_id < g_geometry.max_nodes) {
+    // The ID selects the inode; the visible-name check below still rejects
+    // all conflicting siblings without a second full name lookup.
     if(!get_inode(preferred_id, old_inode)) return false;
     if(inode_used(old_inode)) {
-      if(inode_kind(old_inode) != NodeKind::FILE ||
-         (named && named_id != preferred_id)) return false;
-      id = preferred_id;
+      if(inode_kind(old_inode) != NodeKind::FILE) return false;
       replacing = true;
-    } else {
-      if(named) return false;
-      id = preferred_id;
     }
-  } else if(named) {
-    id = named_id;
+    id = preferred_id;
+  } else if(find_child_id(parent_id, NodeKind::FILE, type, name, id)) {
     if(!get_inode(id, old_inode)) return false;
     replacing = true;
   } else if(!find_free_id(INVALID_ID, id)) {
@@ -3823,6 +3817,102 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   if(out_id != NULL) *out_id = id;
   return true;
 }
+
+#if MK61_C9_BULK_IMPORT
+bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
+  DiskActivity activity;
+  if(!g_ready || !g_import_applying || !g_stage_locked || files == nullptr ||
+     !count || count > IMPORT_BATCH_COUNT || parent == ROOT_ID ||
+     !parent_valid(parent)) return false;
+  C9Pins pins;
+  LargeWriteGuard guard;
+#if !defined(PROGRAM_STORE_HOST_TEST)
+  struct Progress {
+    bool previous;
+    Progress() : previous(g_usb_file_import_progress) { g_usb_file_import_progress = true; }
+    ~Progress() { g_usb_file_import_progress = previous; }
+  } progress;
+#endif
+  u16 visible[IMPORT_BATCH_COUNT];
+  bool changed[IMPORT_BATCH_COUNT];
+  u16 required = 0;
+  u8 additions = 0;
+  for(u8 i = 0; i < count; ++i) {
+    const auto& file = files[i];
+    Inode old;
+    MemorySource memory = {file.data, file.size};
+    u32 bytes = 0;
+    u16 cluster = 0;
+    if(file.size > IMPORT_BATCH_BYTES || !valid_name(file.name) ||
+       !get_inode(file.id, old) ||
+       (inode_used(old) && (inode_kind(old) != NodeKind::FILE || inode_type(old) != ProgramType::TEXT ||
+          old.parent_id != parent || old.data_len > IMPORT_BATCH_BYTES)) ||
+       !visible_file_size(ProgramType::TEXT, {&memory, read_memory_source}, file.size, bytes) ||
+       (file.size == 0 ? file.cluster != 0 : file.cluster == 0) ||
+       !c9_choose_file_chain(file.id, old, file.size ? 1 : 0,
+         file.size ? &file.cluster : nullptr, file.size ? 1 : 0, &cluster) ||
+       fat_name_available(parent, NodeKind::FILE, ProgramType::TEXT, file.name, file.id) != WriteFailureDetail::NONE) return false;
+    visible[i] = (u16) bytes;
+    char old_name[NAME_SIZE];
+    const bool exists = inode_used(old);
+    if(!exists) ++additions;
+    if(exists && !read_inode_name(file.id, old, old_name)) return false;
+    changed[i] = !exists || strcmp(old_name, file.name) != 0 ||
+        (old.flags & INODE_FLAG_FAT_RELEASED) != 0 ||
+        !c9_chain_equals(file.id, old, &file.cluster, file.size ? 1 : 0) ||
+        !payload_equals_source(file.id, old, old_name, {&memory, read_memory_source}, file.size);
+    if(changed[i]) required += (u16) (RECORD_HEADER_SIZE + strlen(file.name) + file.size +
+        (file.size ? fat_cluster_chain::HEADER_BYTES + sizeof(u16) : 0));
+    for(u8 j = 0; j < i; ++j)
+      if(file.id == files[j].id || (file.cluster && file.cluster == files[j].cluster) ||
+         fat_name::equal(file.name, files[j].name)) return false;
+  }
+  // Reserve the entire bounded group in one data sector before its first
+  // write. Even an I/O failure that rotates the writer cannot reclaim it.
+  u32 beginning = EMPTY_ADDRESS;
+  if((u32) g_meta.total_count + additions > g_geometry.max_nodes) return false;
+  if(!required) return true;
+  if(!ensure_record_space(required, beginning)) return false;
+  const u32 sector = beginning / 4096U;
+  g_large_write_sectors[g_large_write_sector_count++] = sector;
+#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
+  g_write_workspace.transaction.count = 0;
+  Transaction& transaction = g_write_workspace.transaction;
+#else
+  Transaction transaction;
+#endif
+  txn_begin(transaction);
+  for(u8 i = 0; i < count; ++i) {
+    const auto& file = files[i];
+    if(!changed[i]) continue;
+    Inode inode;
+    if(!txn_get(transaction, file.id, inode)) return false;
+    const bool replacing = inode_used(inode);
+    if(!append_record(NodeKind::FILE, ProgramType::TEXT, file.id, parent,
+          file.name, file.data, file.size, inode.address, inode.record_len) ||
+       inode.address / 4096U != sector) return false;
+    C9ArraySource mapping = {&file.cluster, (u16) (file.size ? 1 : 0)};
+    if(!c9_append_chain(file.id, mapping.count, {&mapping, c9_array_cluster}, inode.fat_address) ||
+       (inode.fat_address != EMPTY_ADDRESS && inode.fat_address / 4096U != sector)) return false;
+    inode.data_len = file.size;
+    inode.exported_size = visible[i];
+    inode.parent_id = parent;
+    inode.first_child = NONE;
+    inode.name_hash = hash_name(file.name);
+    inode.kind_type = make_kind_type(NodeKind::FILE, ProgramType::TEXT);
+    inode.flags = 0;
+    if(replacing) {
+      if(!txn_set(transaction, file.id, inode)) return false;
+    } else {
+      if(!link_at_head(transaction, file.id, inode, parent)) return false;
+      ++transaction.meta.total_count;
+      ++transaction.meta.type_count[type_index(ProgramType::TEXT)];
+    }
+  }
+  transaction.meta.current_offset = g_meta.current_offset;
+  return append_transaction(transaction);
+}
+#endif
 
 WriteFailure last_write_failure(void) { return g_last_write_failure; }
 WriteFailureDetail last_write_failure_detail(void) {

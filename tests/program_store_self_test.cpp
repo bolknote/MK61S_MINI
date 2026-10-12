@@ -4315,6 +4315,117 @@ static void test_stage_at_maximum_flash_capacity() {
          unsigned(SPIFlash::MAX_CAPACITY / (1024U * 1024U)));
 }
 
+#if MK61_C9_BULK_IMPORT
+static void prepare_small_import_batch(program_store::ImportFile (&files)[4], bool checkpoint, bool mixed = false) {
+  fresh(512U * 1024U);
+  assert(program_store::create_directory(program_store::ROOT_ID, "Host", 900));
+  u8 value = 'G';
+  assert(program_store::write_file(900, 50, ProgramType::MK61_BINARY, "GUARD", &value, 1));
+  if(checkpoint) {
+    for(u8 pad = 0; program_store::test_catalog_wal_records() < program_store::test_catalog_wal_capacity(); ++pad) {
+      assert(pad < 16); value = (u8) ('H' + pad);
+      assert(program_store::write_file(900, 50, ProgramType::MK61_BINARY, "GUARD", &value, 1));
+    }
+  }
+  memset(files, 0, sizeof(files));
+  for(u8 i = 0; i < 4; ++i) {
+    files[i].id = i; files[i].cluster = (u16) (100U + i);
+    files[i].size = i == 0 ? 0 : i == 1 ? 1 : i == 2 ? 64 : 3;
+    if(!files[i].size) files[i].cluster = 0;
+    snprintf(files[i].name, sizeof(files[i].name), "B%u", unsigned(i));
+    memset(files[i].data, 'A' + i, sizeof(files[i].data));
+  }
+  if(mixed) {
+    u8 old_data[64]; memset(old_data, 'O', sizeof(old_data));
+    for(u8 i : {1U, 3U}) assert(program_store::write_file(900, files[i].id,
+        ProgramType::TEXT, files[i].name, old_data, files[i].size));
+    if(checkpoint) {
+      while(program_store::test_catalog_wal_records() < program_store::test_catalog_wal_capacity()) {
+        ++value;
+        assert(program_store::write_file(900, 50, ProgramType::MK61_BINARY, "GUARD", &value, 1));
+      }
+    }
+  }
+  assert(program_store::vfat_stage_lock() && program_store::import_plan_begin());
+}
+#endif
+
+static void test_small_import_batch_preflight_and_power_cuts(void) {
+#if MK61_C9_BULK_IMPORT
+  program_store::ImportFile files[4];
+  prepare_small_import_batch(files, false);
+  const u32 before = SPIFlash::mutationOperations();
+  const auto original = files[1];
+  files[1].id = files[0].id;
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original; files[1].cluster = files[2].cluster;
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original; strcpy(files[1].name, "b0");
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original; files[1].data[0] = 0;
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original; files[1].size = 65;
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original; files[1].id = 900;
+  assert(!program_store::write_import_batch(900, files, 4));
+  files[1] = original;
+  assert(SPIFlash::mutationOperations() == before);
+  program_store::import_plan_end(); program_store::vfat_stage_unlock();
+  u32 cases = 0;
+  for(bool mixed : {false, true}) for(bool checkpoint : {false, true}) {
+    prepare_small_import_batch(files, checkpoint, mixed);
+    SPIFlash::resetOperationCounts();
+    assert(program_store::write_import_batch(900, files, 4));
+    const u32 operations = SPIFlash::mutationOperations();
+    assert(operations >= 16 && operations <= 96);
+    for(auto mode : {SPIFlash::Tear::Before, SPIFlash::Tear::Prefix, SPIFlash::Tear::Bits, SPIFlash::Tear::Complete})
+    for(u32 cut = 0; cut <= operations; ++cut) {
+      prepare_small_import_batch(files, checkpoint, mixed);
+      u8 expected_guard; u16 guard_size;
+      assert(program_store::read_id(50, &expected_guard, 1, &guard_size) && guard_size == 1);
+      SPIFlash::resetOperationCounts(); SPIFlash::tearAfterOperations((i32) cut, mode);
+      const bool committed = program_store::write_import_batch(900, files, 4);
+      SPIFlash::clearFailure(); program_store::init();
+      assert(program_store::ready());
+      u8 found = 0;
+      for(const auto& file : files) {
+        Entry entry;
+        const bool exists = program_store::entry_by_id(file.id, entry);
+        if(exists) {
+          assert(entry.parent_id == 900 && strcmp(entry.name, file.name) == 0);
+          u8 bytes[64]; u16 size;
+          assert(program_store::read_id(file.id, bytes, sizeof(bytes), &size) && size == file.size);
+          if(memcmp(bytes, file.data, size) == 0) ++found;
+          else {
+            assert(mixed && (file.id == 1 || file.id == 3));
+            for(u16 i = 0; i < size; ++i) assert(bytes[i] == 'O');
+          }
+        } else assert(!mixed || (file.id != 1 && file.id != 3));
+      }
+      assert(found == 0 || found == 4);
+      assert(!committed || found == 4);
+      Entry guard; assert(program_store::entry_by_id(50, guard) && guard.parent_id == 900);
+      u8 readback; u16 size;
+      assert(program_store::read_id(50, &readback, 1, &size) && size == 1 && readback == expected_guard);
+      if(found == 0) {
+        assert(program_store::vfat_stage_lock() && program_store::import_plan_begin());
+        assert(program_store::write_import_batch(900, files, 4));
+        program_store::import_plan_end(); program_store::vfat_stage_unlock();
+      }
+      assert(program_store::vfat_stage_lock() && program_store::import_plan_begin());
+      const u32 after_plan = SPIFlash::mutationOperations();
+      assert(program_store::write_import_batch(900, files, 4));
+      assert(SPIFlash::mutationOperations() == after_plan);
+      program_store::import_plan_end(); program_store::vfat_stage_unlock();
+      for(const auto& file : files) expect_text(file.id, file.data, file.size);
+      assert(program_store::child_count(900) == 5 && program_store::used_nodes() == 6);
+      ++cases;
+    }
+  }
+  printf("C9 small import batch: preflight + %u torn-command cuts, checkpoint and retry PASS\n", cases);
+#endif
+}
+
 int main(int argc, char** argv) {
   if(argc == 2 && strcmp(argv[1], "--stage-max-capacity") == 0) {
     test_stage_at_maximum_flash_capacity(); return 0;
@@ -4351,7 +4462,9 @@ int main(int argc, char** argv) {
   if(argc == 2 && strcmp(argv[1], "--c9-density") == 0) {
     test_small_zx0_replacement_reuses_logical_fat_extents(); return 0;
   }
+  if(argc == 2 && strcmp(argv[1], "--import-batch") == 0) { test_small_import_batch_preflight_and_power_cuts(); return 0; }
   assert(argc == 1);
+  test_small_import_batch_preflight_and_power_cuts();
   test_stage_at_maximum_flash_capacity();
   test_cached_cluster_ownership_transitions();
   test_bulk_import_allocation_cost();

@@ -1859,6 +1859,24 @@ static bool read_materialized_file(void* context, u32 offset,
 
 #include "virtual_fat_c9_import.inc"
 
+#if MK61_C9_BULK_IMPORT
+struct ImportBatch {
+  u16 parent;
+  u8 count;
+  program_store::ImportFile files[program_store::IMPORT_BATCH_COUNT];
+};
+static ImportBatch* g_import_batch;
+static bool flush_import_batch() {
+  if(!g_import_batch || !g_import_batch->count) return true;
+  if(!program_store::write_import_batch(g_import_batch->parent,
+       g_import_batch->files, g_import_batch->count))
+    return g_error.fail(ErrorCode::APPLY, Phase::APPLY,
+         g_import_batch->files[0].id, 5U, g_import_batch->files[0].name, true);
+  g_import_batch->count = 0;
+  return true;
+}
+#endif
+
 static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   FileChain chain = {};
   if(!collect_file_chain(parsed, false, chain)) return false;
@@ -1881,6 +1899,9 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
     if(current.parent_id == parent_id && strcmp(current.name, parsed.name) == 0) {
       return true;
     }
+#if MK61_C9_BULK_IMPORT
+    if(!flush_import_batch()) return false;
+#endif
     if(program_store::move_rename(parsed.id, parent_id, parsed.name)) {
       return true;
     }
@@ -1888,6 +1909,30 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
                         parsed.id, 1U, parsed.name, true);
   }
 
+#if MK61_C9_BULK_IMPORT
+  if(g_import_batch) {
+    const bool eligible = parent_id != program_store::ROOT_ID &&
+        parsed.type == program_store::ProgramType::TEXT &&
+        parsed.data_len <= program_store::IMPORT_BATCH_BYTES &&
+        chain.cluster_count <= 1 && (parsed.data_len || !parsed.cluster) &&
+        (!exists || (parsed.id == parsed.source_id && current.parent_id == parent_id &&
+          current.type == parsed.type && current.data_len <= program_store::IMPORT_BATCH_BYTES));
+    if((!eligible || (g_import_batch->count && g_import_batch->parent != parent_id)) &&
+       !flush_import_batch()) return false;
+    if(eligible) {
+      u16 size = 0;
+      if(!validate_text_chain(chain, program_store::IMPORT_BATCH_BYTES, size)) return false;
+      auto& file = g_import_batch->files[g_import_batch->count];
+      ImportedTextSource source = {&chain, 0, 0, size};
+      file.id = parsed.id; file.cluster = parsed.cluster; file.size = (u8) size;
+      memcpy(file.name, parsed.name, sizeof(file.name));
+      if(size && !read_imported_text(&source, 0, file.data, size)) return false;
+      g_import_batch->parent = parent_id;
+      ++g_import_batch->count;
+      return g_import_batch->count < program_store::IMPORT_BATCH_COUNT || flush_import_batch();
+    }
+  }
+#endif
   u16 internal_size = parsed.data_len;
   ImportedTextSource text_source = {&chain, 0, 0, 0};
   program_store::FileSource source = {&chain, read_file_chain_source};
@@ -2213,6 +2258,16 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
 static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass,
                            bool preserve_host_tail) {
+#if MK61_C9_BULK_IMPORT
+  ImportBatch batch;
+  struct BatchScope {
+    ImportBatch* previous;
+    BatchScope(ImportBatch& current, WalkPass pass) : previous(g_import_batch) {
+      if(pass == WalkPass::APPLY) { current.count = 0; g_import_batch = &current; }
+    }
+    ~BatchScope() { g_import_batch = previous; }
+  } batch_scope(batch, pass);
+#endif
   if(depth > MAX_DEPTH) return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, depth, MAX_DEPTH);
   struct Cursor { u16 parent, cluster, guard, sector; u8 slot; bool root; };
   Cursor stack[MAX_DEPTH + 1U] = {};
@@ -2274,7 +2329,12 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
         }
       }
       if(pass == WalkPass::VALIDATE && !validate_directory_capacity(level, cursor.root, (u16) (cursor.guard + 1U))) return false;
-      if(level == depth) return true;
+      if(level == depth) {
+#if MK61_C9_BULK_IMPORT
+        if(pass == WalkPass::APPLY && !flush_import_batch()) return false;
+#endif
+        return true;
+      }
       --level; reset_lfn(lfn);
     } else if(next.enter) {
       if(level == MAX_DEPTH) return g_error.fail(ErrorCode::DEPTH, Phase::VALIDATE, level + 1U, MAX_DEPTH);

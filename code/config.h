@@ -626,6 +626,21 @@
   #define MK61_DISPLAY_LCD1602
 #endif
 
+// The bounded builtin TXT import batch has a ROM cost. Character-display
+// F411 profiles have this headroom; compact F401/Classic keep the per-file
+// path and their existing resident/APP reserves. No on-disk format changes.
+#ifndef MK61_C9_BULK_IMPORT
+  #if MK61_C9_ALLOCATION_CACHE && !defined(MK61_BUILD_USBDISK_MODULE) && \
+      !defined(MK61_DISPLAY_UC1609)
+    #define MK61_C9_BULK_IMPORT 1
+  #else
+    #define MK61_C9_BULK_IMPORT 0
+  #endif
+#endif
+#if MK61_C9_BULK_IMPORT != 0 && MK61_C9_BULK_IMPORT != 1
+  #error "MK61_C9_BULK_IMPORT must be 0 or 1"
+#endif
+
 // Proportional UI fonts belong to the UC1609 display profile, independently
 // of whether it is driven by an F401 or F411.  Numeric overrides remain
 // available for focused host/size tests.

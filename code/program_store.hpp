@@ -274,6 +274,20 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             u8* compression_buffer = nullptr,
                             usize compression_buffer_size = 0,
                             const u8* contiguous_data = nullptr);
+static constexpr u8 IMPORT_BATCH_COUNT = 4;
+static constexpr u8 IMPORT_BATCH_BYTES = 64;
+struct ImportFile {
+  u16 id, cluster;
+  u8 size;
+  char name[NAME_SIZE];
+  u8 data[IMPORT_BATCH_BYTES];
+};
+// Available with MK61_C9_BULK_IMPORT. Fully checked small TXT files under one
+// non-root parent. Payload and mappings stay pinned until one existing WAL
+// record publishes the whole bounded batch.
+// Requires an active import plan; a failed attempt remains retryable.
+bool write_import_batch(u16 parent, const ImportFile* files, u8 count);
+
 WriteFailure last_write_failure(void);
 WriteFailureDetail last_write_failure_detail(void);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
