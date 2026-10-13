@@ -554,5 +554,225 @@
   },
   "evidence_archive": ".build/stm32-narrow-drivers-artifacts-20261013",
   "archive_manifest": "artifact-manifest.json",
-  "source_manifest": "source-manifest.json"
+  "source_manifest": "source-manifest.json",
+  "main_integration": {
+    "main_base_commit": "c63b6bce1c2ccfa9cf8306fcfa2319dacf188c9b",
+    "integration_commit": "85ed047746b7c3f6107017d5dead37d0c6faa62b",
+    "host_suite": "PASS_FULL_SINGLE_RUN",
+    "release_matrices": "PASS_9_F401_16_F411",
+    "artifacts_root": ".build/stm32-narrow-drivers-merge-check",
+    "logs": [
+      "host.log",
+      "f401.log",
+      "f411.log"
+    ],
+    "source_manifest": "source-manifest.json",
+    "variants": {
+      "f401": [
+        {
+          "case": "f401-capability-a00-usb",
+          "profile": "mini-v3-a00",
+          "flash_bytes": 239760,
+          "flash_free": 22384,
+          "static_ram_bytes": 35464,
+          "resource_report": "f401/f401-capability-a00-usb/mini-v3-a00/resource-report.json"
+        },
+        {
+          "case": "f401-capability-ws-graphics",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 236452,
+          "flash_free": 25692,
+          "static_ram_bytes": 32048,
+          "resource_report": "f401/f401-capability-ws-graphics/mini-v3-ws0010/resource-report.json"
+        },
+        {
+          "case": "f401-capability-ws-usb",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 246808,
+          "flash_free": 15336,
+          "static_ram_bytes": 35472,
+          "resource_report": "f401/f401-capability-ws-usb/mini-v3-ws0010/resource-report.json"
+        },
+        {
+          "case": "f401-capability-ws-usb-graphics",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 248356,
+          "flash_free": 13788,
+          "static_ram_bytes": 35472,
+          "resource_report": "f401/f401-capability-ws-usb-graphics/mini-v3-ws0010/resource-report.json"
+        },
+        {
+          "case": "f401-product-a00",
+          "profile": "mini-v3-a00",
+          "flash_bytes": 221688,
+          "flash_free": 40456,
+          "static_ram_bytes": 31616,
+          "resource_report": "f401/f401-product-a00/mini-v3-a00/resource-report.json"
+        },
+        {
+          "case": "f401-product-classic-v2",
+          "profile": "classic-v2",
+          "flash_bytes": 252876,
+          "flash_free": 9268,
+          "static_ram_bytes": 35060,
+          "resource_report": "f401/f401-product-classic-v2/classic-v2/resource-report.json"
+        },
+        {
+          "case": "f401-product-classic-v3",
+          "profile": "classic-v3",
+          "flash_bytes": 252868,
+          "flash_free": 9276,
+          "static_ram_bytes": 35060,
+          "resource_report": "f401/f401-product-classic-v3/classic-v3/resource-report.json"
+        },
+        {
+          "case": "f401-product-mini-v2-a00",
+          "profile": "mini-v2-a00",
+          "flash_bytes": 221728,
+          "flash_free": 40416,
+          "static_ram_bytes": 31616,
+          "resource_report": "f401/f401-product-mini-v2-a00/mini-v2-a00/resource-report.json"
+        },
+        {
+          "case": "f401-product-ws0010",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 231456,
+          "flash_free": 30688,
+          "static_ram_bytes": 31624,
+          "resource_report": "f401/f401-product-ws0010/mini-v3-ws0010/resource-report.json"
+        }
+      ],
+      "f411": [
+        {
+          "case": "f411-40th",
+          "profile": "40th",
+          "flash_bytes": 349620,
+          "flash_free": 174668,
+          "static_ram_bytes": 31392,
+          "resource_report": "f411/build-40th/resource-report.json"
+        },
+        {
+          "case": "f411-classic-v2",
+          "profile": "classic-v2",
+          "flash_bytes": 349604,
+          "flash_free": 174684,
+          "static_ram_bytes": 31392,
+          "resource_report": "f411/build-classic-v2/resource-report.json"
+        },
+        {
+          "case": "f411-classic-v3",
+          "profile": "classic-v3",
+          "flash_bytes": 361044,
+          "flash_free": 163244,
+          "static_ram_bytes": 31624,
+          "resource_report": "f411/build-classic-v3/resource-report.json"
+        },
+        {
+          "case": "f411-classic-v3-usb-screen",
+          "profile": "classic-v3",
+          "flash_bytes": 363756,
+          "flash_free": 160532,
+          "static_ram_bytes": 33248,
+          "resource_report": "f411/build-classic-v3-usb-screen/resource-report.json"
+        },
+        {
+          "case": "f411-lcd1602-a00",
+          "profile": "mini-v3-a00",
+          "flash_bytes": 311356,
+          "flash_free": 212932,
+          "static_ram_bytes": 29472,
+          "resource_report": "f411/build-lcd1602-a00/resource-report.json"
+        },
+        {
+          "case": "f411-lcd1602-a00-no-lto",
+          "profile": "mini-v3-a00",
+          "flash_bytes": 329552,
+          "flash_free": 194736,
+          "static_ram_bytes": 29460,
+          "resource_report": "f411/build-lcd1602-a00-no-lto/resource-report.json"
+        },
+        {
+          "case": "f411-lcd1602-a00-usb-screen",
+          "profile": "mini-v3-a00",
+          "flash_bytes": 342900,
+          "flash_free": 181388,
+          "static_ram_bytes": 31808,
+          "resource_report": "f411/build-lcd1602-a00-usb-screen/resource-report.json"
+        },
+        {
+          "case": "f411-lcd1602-a02",
+          "profile": "mini-v3-a02",
+          "flash_bytes": 311204,
+          "flash_free": 213084,
+          "static_ram_bytes": 29472,
+          "resource_report": "f411/build-lcd1602-a02/resource-report.json"
+        },
+        {
+          "case": "f411-mini-v2-a00",
+          "profile": "mini-v2-a00",
+          "flash_bytes": 311364,
+          "flash_free": 212924,
+          "static_ram_bytes": 29472,
+          "resource_report": "f411/build-mini-v2-a00/resource-report.json"
+        },
+        {
+          "case": "f411-mini-v2-a02",
+          "profile": "mini-v2-a02",
+          "flash_bytes": 311228,
+          "flash_free": 213060,
+          "static_ram_bytes": 29472,
+          "resource_report": "f411/build-mini-v2-a02/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 341948,
+          "flash_free": 182340,
+          "static_ram_bytes": 29656,
+          "resource_report": "f411/build-oled1602-ws0010/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010-graphics-wbmp",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 328452,
+          "flash_free": 195836,
+          "static_ram_bytes": 29680,
+          "resource_report": "f411/build-oled1602-ws0010-graphics-wbmp/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 341940,
+          "flash_free": 182348,
+          "static_ram_bytes": 29656,
+          "resource_report": "f411/build-oled1602-ws0010-graphics-wbmp-markdown/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010-no-graphics",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 332428,
+          "flash_free": 191860,
+          "static_ram_bytes": 29656,
+          "resource_report": "f411/build-oled1602-ws0010-no-graphics/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010-usb-screen",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 362316,
+          "flash_free": 161972,
+          "static_ram_bytes": 32016,
+          "resource_report": "f411/build-oled1602-ws0010-usb-screen/resource-report.json"
+        },
+        {
+          "case": "f411-oled1602-ws0010-usb-screen-no-graphics",
+          "profile": "mini-v3-ws0010",
+          "flash_bytes": 361820,
+          "flash_free": 162468,
+          "static_ram_bytes": 31992,
+          "resource_report": "f411/build-oled1602-ws0010-usb-screen-no-graphics/resource-report.json"
+        }
+      ]
+    },
+    "hardware_scope": "The original matched measurements and hardware qualification above use the recorded 8e1145648 driver sources. Main integration changes VM/profiling code; all qualified hardware driver sources remain identical. Integration images are compile/test artifacts; mini keeps C9FF44C3 and Classic belongs to the Byte-code peer."
+  }
 }
