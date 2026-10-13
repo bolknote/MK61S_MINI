@@ -12,6 +12,7 @@
 #if !defined(PROGRAM_STORE_HOST_TEST)
 
 #include "spi1_bus.hpp"
+#include "stm32f4_gpio.hpp"
 #include "power_monitor.hpp"
 #include "disk_activity.hpp"
 
@@ -54,12 +55,12 @@ SpiNorFlash::SpiNorFlash(u8 chip_select, SPIClass* interface)
 bool SpiNorFlash::select(void) {
   if(!spi1_bus::acquire(spi1_arbiter::Owner::FLASH_CLIENT)) return false;
   spi_->beginTransaction(settings_);
-  digitalWrite(chip_select_, LOW);
+  stm32f4_gpio::write(chip_select_, LOW);
   return true;
 }
 
 bool SpiNorFlash::deselect(void) {
-  digitalWrite(chip_select_, HIGH);
+  stm32f4_gpio::write(chip_select_, HIGH);
   spi_->endTransaction();
   return spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT);
 }
@@ -284,8 +285,8 @@ bool SpiNorFlash::validCapacity(u32 capacity) {
 }
 
 bool SpiNorFlash::begin(u32 fallback_capacity) {
-  pinMode(chip_select_, OUTPUT);
-  digitalWrite(chip_select_, HIGH);
+  stm32f4_gpio::configure(chip_select_, OUTPUT);
+  stm32f4_gpio::write(chip_select_, HIGH);
   spi_->begin();
   if(!select()) return false;
   transfer(CMD_RELEASE_POWER_DOWN);

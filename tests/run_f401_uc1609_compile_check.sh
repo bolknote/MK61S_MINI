@@ -48,7 +48,7 @@ cp -R "$root/code/." "$sketch/"
 # F411 while keeping the sealed-image safety reserve. Strict warnings and ELF
 # gates still run on the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 # Start with the direct GCC size policy for cold code, then override Arduino's
 # generic 500-insn threshold with the qualified 1000-insn policy. Check the
 # exact linked image; explicit core O3 attributes are retained.
@@ -86,16 +86,9 @@ set -e
   fail "compile failed (status $compile_status)"
 [[ "$tee_status" -eq 0 ]] || fail 'could not record compiler output'
 
-unexpected_warnings="$(
-  grep -F 'warning:' "$compile_log" |
-    grep -Ev 'STM32RTC\.cpp:[0-9]+:[0-9]+: warning: #warning "only BCD mode is supported"|^lto-wrapper: warning: using serial compilation of [0-9]+ LTRANS jobs$' ||
-    true
-)"
-if [[ -n "$unexpected_warnings" ]]; then
-  printf 'Unexpected compiler warnings for F401 Classic V3 UC1609:\n%s\n' \
-    "$unexpected_warnings" >&2
-  exit 1
-fi
+python3 "$root/tests/check_compiler_warnings.py" \
+  --log "$compile_log" \
+  --compile-commands "$compile_path/compile_commands.json"
 python3 "$root/tests/analyze_stack_usage.py" \
   --compile-commands "$compile_path/compile_commands.json" \
   --source-root "$compile_path/sketch" --top 3 \

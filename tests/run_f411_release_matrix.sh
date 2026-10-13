@@ -81,14 +81,12 @@ if [[ -n "$output_dir" ]]; then
     --archive "$output_dir/UI_FONT_LICENSES.zip"
 fi
 
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
-# LTO is qualified with the same size-oriented optimization policy as the
-# release build.  The old o3lto probe already occupied 520964/524288 bytes at
-# the plan-hard baseline, so it had no safe growth margin and was not a viable
-# release configuration even before new features were added.
-fqbn_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+# Keep an explicit non-LTO comparison while publishing the smaller size-LTO
+# build. Both retain selective O3 only in the qualified calculator hot paths.
+fqbn_no_lto='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
 strict_flags='-DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F411_SELECTIVE_O3=1 -Werror -Wno-error=cpp'
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 variant_index=0
 variant_count="$(python3 "$contract" cases --group f411-release --format count)"
 
@@ -246,8 +244,8 @@ compile_variant() {
   local expect_ws0010_graphics="${11}"
   local name="${case_id#f411-}"
   local variant_fqbn="$fqbn"
-  if [[ "$optimization" == oslto ]]; then
-    variant_fqbn="$fqbn_lto"
+  if [[ "$optimization" == osstd ]]; then
+    variant_fqbn="$fqbn_no_lto"
   fi
   local build_path="$matrix_root/build-$name"
   local compile_log="$build_path/compile.log"
@@ -265,6 +263,7 @@ compile_variant() {
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
     --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker" \
     --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
+    --build-property "recipe.hooks.linking.prelink.30.pattern=python3 \"$root/tools/.mk61-gcc/protect-core-lto.py\" \"{build.path}\" \"{build.source.path}\" \"{compiler.path}{compiler.cpp.cmd}\" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}
@@ -274,17 +273,14 @@ compile_variant() {
     fail "compile failed for $name (status $compile_status)"
   [[ "$tee_status" -eq 0 ]] ||
     fail "could not record compiler output for $name"
-  local unexpected_warnings
-  unexpected_warnings="$(
-    grep -F 'warning:' "$compile_log" |
-      grep -Ev 'STM32RTC\.cpp:[0-9]+:[0-9]+: warning: #warning "only BCD mode is supported"|^lto-wrapper: warning: using serial compilation of [0-9]+ LTRANS jobs$' ||
-      true
-  )"
-  if [[ -n "$unexpected_warnings" ]]; then
-    printf 'Unexpected compiler warnings for %s:\n%s\n' \
-      "$name" "$unexpected_warnings" >&2
-    exit 1
-  fi
+  python3 "$root/tests/check_core_lto_objects.py" \
+    --compile-commands "$build_path/compile_commands.json"
+  python3 "$root/tests/check_compiler_warnings.py" \
+    --log "$compile_log" \
+    --compile-commands "$build_path/compile_commands.json"
+  python3 "$root/tests/check_foreground_stack_elf.py" \
+    "$build_path/mk61s-M.ino.elf" \
+    --compile-commands "$build_path/compile_commands.json"
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$build_path/compile_commands.json" \
     --source-root "$build_path/sketch" --top 3 \
@@ -301,6 +297,9 @@ compile_variant() {
     fail "missing ELF for $name"
   test -s "$build_path/mk61s-M.ino.bin" ||
     fail "missing BIN for $name"
+  python3 "$root/tests/check_usb_cdc_rx_elf.py" \
+    "$build_path/mk61s-M.ino.elf" \
+    --compile-commands "$build_path/compile_commands.json"
   "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" \
     "$build_path/mk61s-M.ino.bin"
   "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" \

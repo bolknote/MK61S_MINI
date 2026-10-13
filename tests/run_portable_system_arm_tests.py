@@ -156,12 +156,21 @@ class Machine:
                         (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3), arguments):
                     self.uc.reg_write(register, value)
                 self.uc.reg_write(UC_ARM_REG_SP, self.stack_top)
+                if len(arguments) > 4:
+                    self.put(self.stack_top, *arguments[4:])
                 self.uc.reg_write(UC_ARM_REG_LR, stop | 1)
                 self.uc.emu_start(elf.symbol(symbol) | 1, stop, count=1000000)
                 assert self.uc.reg_read(UC_ARM_REG_PC) == stop
                 return self.uc.reg_read(UC_ARM_REG_R0)
-            assert native_call('_ZN13shared_memory5Lease7acquire',
-                               (temporary, 0, owner, 8192)) == 1
+            acquire = '_ZN13shared_memory5Lease7acquire'
+            arguments = (temporary, 0, owner, 8192)
+            if not any(acquire in name for name in elf.symbols):
+                # LTO can inline the public four-argument wrapper. Execute
+                # its surviving implementation with opportunistic=false,
+                # exactly as Lease::acquire does; pass argument five on stack.
+                acquire = '_ZN13shared_memory5Lease12acquire_impl'
+                arguments += (0,)
+            assert native_call(acquire, arguments) == 1
             self.workspace = self.words(temporary + 4, 1)[0]
             native_call('_ZN13shared_memory5Lease5reset', (temporary,))
         else:
@@ -198,6 +207,15 @@ class Machine:
         self.drop_live_ui_on_wait = False
         self.ui_ends = 0
         self.font_restores = 0
+        self.resource_revision = 1
+        self.binary_stream_supported = True
+        self.binary_stream_late_failure = False
+        self.binary_stream_stale = False
+        self.binary_streams = 0
+        self.binary_pending = None
+        self.binary_stop = self.stop - 0x100
+        self.uc.mem_write(self.binary_stop, b'\x70\x47')
+        self.installed_font = b''
     def words(self, address, count):
         return struct.unpack('<'+'I'*count, self.uc.mem_read(address, count*4))
     def put(self, address, *values):
@@ -217,6 +235,9 @@ class Machine:
         self.uc.mem_write(payload+20, name.encode().ljust(32,b'\0'))
         return 1
     def hook(self, uc, address, size, ctx):
+        if address == self.binary_stop:
+            self.binary_next(bool(uc.reg_read(UC_ARM_REG_R0)))
+            return
         if self.float_return and address == self.float_return[0]:
             _, operation, payload = self.float_return
             value, bits = struct.unpack('<dI', uc.mem_read(payload, 12))
@@ -240,7 +261,7 @@ class Machine:
             name = self.callbacks[address]
             self.trace.append((name,a,b,c,d))
             result = 0
-            if name == 'media_revision': result = 1
+            if name == 'media_revision': result = self.resource_revision
             elif name == 'file_size': result = len(self.files[a][2]) if a in self.files else 0xFFFFFFFF
             elif name == 'file_read':
                 if a not in self.files: result = 0xFFFFFFFF
@@ -279,6 +300,22 @@ class Machine:
         if result is not None:
             uc.reg_write(UC_ARM_REG_R0, int(result)&0xFFFFFFFF)
             uc.reg_write(UC_ARM_REG_PC, uc.reg_read(UC_ARM_REG_LR))
+    def binary_next(self, accepted):
+        stream = self.binary_pending
+        if not accepted or stream['offset'] == len(stream['data']):
+            if self.binary_stream_stale: self.resource_revision += 1
+            result = (accepted and not self.binary_stream_late_failure and
+                      stream['revision'] == self.resource_revision)
+            self.binary_pending = None
+            self.uc.reg_write(UC_ARM_REG_R0, int(result))
+            self.uc.reg_write(UC_ARM_REG_PC, stream['return'])
+            return
+        value = stream['data'][stream['offset']]
+        stream['offset'] += 1
+        self.uc.reg_write(UC_ARM_REG_R0, stream['context'])
+        self.uc.reg_write(UC_ARM_REG_R1, value)
+        self.uc.reg_write(UC_ARM_REG_LR, self.binary_stop | 1)
+        self.uc.reg_write(UC_ARM_REG_PC, stream['callback'])
     def system(self, op, a, b, c, p):
         if op == 1:
             if a == 0: self.setup_rows = {}
@@ -401,11 +438,36 @@ class Machine:
                 assert b in (0, 1)
                 if b and not self.live_ui: return 0
                 self.ui_text = bool(b); return 1
+            if a == 22:
+                address, length, inode, key = self.words(p, 4)
+                assert self.owner == 7 and self.depth and address == self.workspace
+                data = bytes(self.uc.mem_read(address, length))
+                assert data[:4] == b'PFK2' and struct.unpack_from('<H', data, 16)[0] == length
+                crc = struct.unpack_from('<H', data, 18)[0]
+                assert crc == binascii.crc_hqx(data[:18] + b'\0\0' + data[20:], 0xffff)
+                self.installed_font = data
+                return 1
         if op == 37:
-            if a == 0: return 1
+            if a == 0: return self.resource_revision
+            if a == 3:
+                if not p: return int(self.binary_stream_supported)
+                if not self.binary_stream_supported: return 0
+                revision, inode, length, context, callback = struct.unpack(
+                    '<IHHII', self.uc.mem_read(p, 16))
+                if revision != self.resource_revision or inode not in self.files: return 0
+                data = self.files[inode][2]
+                if length != len(data): return 0
+                assert self.base <= (callback & ~1) < self.base + len(self.image)
+                assert BASE <= context < BASE + 131072 and self.binary_pending is None
+                self.binary_streams += 1
+                self.binary_pending = dict(data=data, offset=0, context=context,
+                                           callback=callback, revision=revision,
+                                           **{'return': self.uc.reg_read(UC_ARM_REG_LR)})
+                self.binary_next(True)
+                return None
             revision, inode, offset, output, length, reserved = struct.unpack(
                 '<IHHIHH', self.uc.mem_read(p, 16))
-            if revision != 1 or reserved or inode not in self.files: return 0
+            if revision != self.resource_revision or reserved or inode not in self.files: return 0
             data = self.files[inode][2][offset:offset+length]
             if len(data) != length: return 0
             self.uc.mem_write(output, data); return 1
@@ -549,6 +611,10 @@ def check_setup(m, package):
     m.put(runtime, 0)
     assert m.call(0, m.api, m.crc, 7) == 1, 'incomplete shared runtime must refuse SETUP'
     m.put(runtime, first_slot)
+    if m.graphics:
+        m.binary_stream_supported = False
+        assert m.call(0, m.api, m.crc, 7) == 1, 'missing binary font source service must refuse UI SETUP'
+        m.binary_stream_supported = True
     m.load(package); m.lines=[]; m.keys=[m.mapping[37],m.mapping[39]]
     assert m.call(0x400)==0
     assert 'STM32F401' in ''.join(m.lines),m.lines
@@ -641,6 +707,22 @@ def check_setup(m, package):
         assert 7 in operations and 8 in operations
     else:
         assert operations.count(9)==8 and 10 in operations
+    if m.graphics:
+        m.files[640] = (6, 'STREAMFONT', font)
+        before = m.binary_streams
+        assert m.call(0x406, 640) == 1  # SETUP_FONT_COMPILE (0x405 is STEP)
+        assert m.binary_streams == before + 1 and m.installed_font[:4] == b'PFK2'
+        installed = m.installed_font
+        for fault in ('binary_stream_late_failure', 'binary_stream_stale'):
+            setattr(m, fault, True)
+            assert m.call(0x406, 640) == 0xFFFFFFFD  # FONT_UNAVAILABLE
+            assert m.installed_font == installed
+            setattr(m, fault, False)
+        corrupt = bytearray(font); corrupt[-1] ^= 1
+        m.files[640] = (6, 'STREAMFONT', bytes(corrupt))
+        assert m.call(0x406, 640) == 0xFFFFFFFF  # FONT_INVALID
+        assert m.installed_font == installed
+        del m.files[640]
 
 
 def main():

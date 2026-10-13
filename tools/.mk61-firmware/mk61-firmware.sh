@@ -38,9 +38,9 @@ LAST_LOG="$BUILD_ROOT/last.log"
 
 STM32_CORE_VERSION=2.12.0
 STM32_PACKAGE_URL=https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 FQBN_F401='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
-PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'
 
 PROFILE=
@@ -2322,6 +2322,7 @@ prepare_and_compile_f411_worker() {
     --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
     --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
     --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$PROJECT_ROOT/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
+    --build-property "recipe.hooks.linking.prelink.30.pattern=python3 \"$PROJECT_ROOT/tools/.mk61-gcc/protect-core-lto.py\" \"{build.path}\" \"{build.source.path}\" \"{compiler.path}{compiler.cpp.cmd}\" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch_dir" || return 1
 
   source_artifact="$build_dir/mk61s-M.ino.bin"

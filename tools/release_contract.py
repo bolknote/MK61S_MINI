@@ -201,6 +201,9 @@ def validate_contract(raw: Any) -> None:
         if case["builder"] == "arduino":
             require(case.get("optimization") in ("osstd", "oslto"),
                     f"{where}.optimization: expected osstd or oslto")
+            if case["mcu"] == "f411" and case["product"]:
+                require(case["optimization"] == "oslto",
+                        f"{where}.optimization: F411 product requires oslto")
             expect = case.get("expect")
             require(isinstance(expect, dict), f"{where}.expect: expected object")
             require_keys(expect, {"usb_suspend", "ws0010_graphics"},

@@ -38,7 +38,7 @@ cp -R "$root/code/." "$sketch/"
 # Classic V3 is the largest normal UC1609 product.  If its standard -O3 build
 # retains a useful reserve, Mini and -O2 are covered with still more margin.
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=o3std'
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 strict_flags='-DMK61_BOARD_CLASSIC_V3 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_MIXED_OPTIMIZATION=1 -Werror -Wno-error=cpp'
 layout_properties="$build_root/layout.properties"
 "$arduino_cli" compile --fqbn "$fqbn" \
@@ -70,16 +70,9 @@ set -e
 [[ "$compile_status" -eq 0 ]] || fail "compile failed (status $compile_status)"
 [[ "$tee_status" -eq 0 ]] || fail 'could not record compiler output'
 
-unexpected_warnings="$(
-  grep -F 'warning:' "$compile_log" |
-    grep -Ev 'STM32RTC\.cpp:[0-9]+:[0-9]+: warning: #warning "only BCD mode is supported"' ||
-    true
-)"
-if [[ -n "$unexpected_warnings" ]]; then
-  printf 'Unexpected compiler warnings for F411 Classic V3 O3:\n%s\n' \
-    "$unexpected_warnings" >&2
-  exit 1
-fi
+python3 "$root/tests/check_compiler_warnings.py" \
+  --log "$compile_log" \
+  --compile-commands "$compile_path/compile_commands.json"
 
 python3 "$root/tests/analyze_stack_usage.py" \
   --compile-commands "$compile_path/compile_commands.json" \

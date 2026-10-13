@@ -183,12 +183,23 @@ set_property(TARGET user_settings PROPERTY INTERFACE_COMPILE_OPTIONS "${_mk61_si
 target_compile_options(user_settings INTERFACE -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
 target_link_options(user_settings INTERFACE -Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
 
+# Expose only the optional HAL configuration to Core/library translation
+# units. The entire firmware include directory must not shadow their headers.
+set(_mk61_hal_config_dir "${CMAKE_BINARY_DIR}/generated/hal-config")
+file(MAKE_DIRECTORY "${_mk61_hal_config_dir}")
+configure_file("${MK61_PROJECT_ROOT}/code/hal_conf_extra.h"
+  "${_mk61_hal_config_dir}/hal_conf_extra.h" COPYONLY)
+target_include_directories(user_settings INTERFACE "${_mk61_hal_config_dir}")
+
 target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607
   VECT_TAB_OFFSET=0x0
   # Terminal I/O is USB CDC. Disable the unused Arduino UART wrapper/debug
   # state while leaving the STM32 HAL UART module available.
   HAL_UART_MODULE_ONLY
+  # Project LL drivers own sound PWM and TIM9; this also changes the Core
+  # compile command so a cached HardwareTimer build cannot be reused.
+  HAL_TIM_MODULE_ONLY
   # CDC and our MSC class publish no class-specific user strings. The Core
   # default callback merely reserves an otherwise unused 255-byte RAM buffer.
   USBD_CLASS_USER_STRING_DESC=0)
@@ -198,13 +209,12 @@ add_subdirectory("${BUILD_VARIANT_PATH}" "${CMAKE_BINARY_DIR}/stm32/variant")
 add_subdirectory("${BUILD_CORE_PATH}" "${CMAKE_BINARY_DIR}/stm32/core")
 add_subdirectory("${BUILD_LIB_PATH}" "${CMAKE_BINARY_DIR}/stm32/libraries")
 
-# Keep the CDC queue-full call visible to GNU ld.  With whole-program LTO the
-# call to USBD_CDC_ClearBuffer is resolved inside usbd_cdc.c before --wrap can
-# redirect it, leaving F401 builds unprotected.  Only this small translation
-# unit needs to opt out; the rest of the resident firmware retains LTO.
+# Keep the CDC and suspend --wrap targets visible to GNU ld. Their defining
+# units must opt out of LTO; the HAL bridge stays in LTO so its strong MSP/IRQ
+# implementations replace HAL's weak no-op defaults before optimization.
 set_source_files_properties(
   "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c"
+  "${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 

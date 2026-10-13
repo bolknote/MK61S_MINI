@@ -75,6 +75,12 @@ build_group() {
     local elf="$build_path/resident.elf"
     [[ -s "$elf" ]] || fail "missing ELF for $case_id"
     "$root/tests/check_global_constructors.sh" "$elf"
+    if [[ "$product" == 1 ]]; then
+      # This retained-frame policy is qualified for product profiles. The
+      # capability builds keep their separate diagnostic stack-frame budget.
+      python3 "$root/tests/check_foreground_stack_elf.py" "$elf" \
+        --compile-commands "$build_path/compile_commands.json"
+    fi
     python3 "$root/tests/check_app_memory_elf.py" "$elf" \
       --system-dir "$build_path/bundle/System"
     "$root/tests/check_early_dfu_elf.sh" "$elf"

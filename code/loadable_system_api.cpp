@@ -350,6 +350,17 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_RESOURCE_READ: {
       const u32 revision = program_store::media_revision();
       if(a == 0) return revision;
+      if(a == 3) {
+        if(!payload) return 1;
+        const auto& r = *(const mk61_service_resource_bytes*)payload;
+        program_store::Entry entry = {};
+        if(r.revision != revision || !r.next ||
+           !program_store::entry_by_id(r.id, entry) ||
+           entry.data_len != r.source_size) return 0;
+        const program_store::FileSink sink = {r.context, r.next};
+        return program_store::stream_file_id(r.id, sink) &&
+            program_store::media_revision() == revision;
+      }
       if(a == 2 && payload) {
         const auto& r = *(const mk61_service_resource_stream*)payload;
         if(r.reserved || r.revision != revision || !r.append ||

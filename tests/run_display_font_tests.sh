@@ -7,6 +7,8 @@ ws0010_out="${TMPDIR:-/tmp}/mk61_ws0010_markdown_font_self_test"
 profile_out="${TMPDIR:-/tmp}/mk61_builtin_font_profile_self_test"
 lcd_ru_out="${TMPDIR:-/tmp}/mk61_lcd_ru_m8_self_test"
 prepared_out="${TMPDIR:-/tmp}/mk61_prepared_font_self_test"
+stream_out="${TMPDIR:-/tmp}/mk61_fmk_stream_self_test"
+setup_stream_out="${TMPDIR:-/tmp}/mk61_setup_font_stream_self_test"
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
@@ -40,6 +42,36 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/programs/games/High Noon/HighNoon.FMK" \
   "$root/programs/Fonts/DejaVu-12.FMK" \
   "$root/programs/Fonts/DejaVu-14.FMK"
+
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" -I"$root/code" \
+  "$root/tests/fmk_stream_self_test.cpp" \
+  "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" \
+  "$root/code/prepared_font.cpp" -o "$stream_out"
+"$stream_out"
+
+clang++ -std=c++17 -Wall -Wextra -Werror \
+  "${sanitizer_flags[@]}" -DCONFIG -DMK61_SETUP_IS_BUILTIN=1 \
+  -DMK61_UI_FONT_CLIENT=1 -DMK61_BOARD_CLASSIC_V3 -DMK61_VM_FILE_CACHE=0 \
+  -I"$root/code" -I"$root/tests/mk_math_shim" \
+  "$root/tests/setup_font_stream_self_test.cpp" \
+  "$root/code/setup_font_compiler.cpp" "$root/code/language_workspace.cpp" \
+  "$root/code/shared_memory.cpp" "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" \
+  "$root/code/prepared_font.cpp" -o "$setup_stream_out"
+"$setup_stream_out" "$root/programs/Fonts/DejaVu-14.FMK"
+
+for ui_fonts in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror -Wno-int-to-pointer-cast \
+    "${sanitizer_flags[@]}" -DMK61_BUILD_SETUP_MODULE \
+    -DMK61_PORTABLE_UI_FONTS="$ui_fonts" \
+    -include "$root/sdk/portable/system/system_compat.hpp" \
+    -I"$root/sdk/portable/system" -I"$root/sdk/portable/include" -I"$root/code" \
+    "$root/tests/setup_font_stream_app_self_test.cpp" \
+    "$root/code/setup_module_entry.cpp" "$root/code/setup_font_compiler.cpp" \
+    "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" "$root/code/prepared_font.cpp" \
+    -o "$setup_stream_out-app-$ui_fonts"
+  "$setup_stream_out-app-$ui_fonts" "$root/programs/Fonts/DejaVu-14.FMK"
+done
 
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \

@@ -33,8 +33,8 @@ sketch="$build_root/mk61s-M"
 mkdir -p "$sketch"
 cp -R "$root/code/." "$sketch/"
 
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 strict_optimization_flags='-DMK61_REQUIRE_F411_SELECTIVE_O3=1'
 layout_properties="$build_root/layout.properties"
 "$arduino_cli" compile --fqbn "$fqbn" \
@@ -58,6 +58,8 @@ compile_profile() {
   local ram_capacity="$6"
   local ram_limit="$7"
   local stack_frame_limit="$8"
+  local optimization="$9"
+  local variant_fqbn="${fqbn%opt=*}opt=$optimization"
   local name="${case_id#f411-stop-}"
   local compile_path="$build_root/build-$name"
   local compile_log="$compile_path/compile.log"
@@ -71,11 +73,12 @@ compile_profile() {
   set +e
   "$arduino_cli" compile \
     --warnings all \
-    --fqbn "$fqbn" \
+    --fqbn "$variant_fqbn" \
     --build-path "$compile_path" \
     --build-property "compiler.cpp.extra_flags=$strict_flags" \
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
     --build-property "compiler.c.elf.extra_flags=$wrap_flags" \
+    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}
@@ -86,17 +89,9 @@ compile_profile() {
     fail "$name compile failed (status $compile_status)"
   [[ "$tee_status" -eq 0 ]] || fail "$name compile log could not be recorded"
 
-  local unexpected_warnings
-  unexpected_warnings="$(
-    grep -F 'warning:' "$compile_log" |
-      grep -Ev 'STM32RTC\.cpp:[0-9]+:[0-9]+: warning: #warning "only BCD mode is supported"' ||
-      true
-  )"
-  if [[ -n "$unexpected_warnings" ]]; then
-    printf 'Unexpected compiler warnings for F411 USB suspend %s:\n%s\n' \
-      "$name" "$unexpected_warnings" >&2
-    exit 1
-  fi
+  python3 "$root/tests/check_compiler_warnings.py" \
+    --log "$compile_log" \
+    --compile-commands "$compile_path/compile_commands.json"
 
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$compile_path/compile_commands.json" \
@@ -127,6 +122,8 @@ compile_profile() {
   local bin="$compile_path/mk61s-M.ino.bin"
   [[ -s "$elf" ]] || fail "$name ELF is missing"
   [[ -s "$bin" ]] || fail "$name BIN is missing"
+  python3 "$root/tests/check_usb_cdc_rx_elf.py" "$elf" \
+    --compile-commands "$compile_path/compile_commands.json"
   "$root/tools/seal-firmware.sh" seal --max-size "$flash_capacity" "$bin"
   "$root/tools/seal-firmware.sh" check --max-size "$flash_capacity" "$bin"
   python3 "$contract" resource-report \
@@ -147,14 +144,14 @@ compile_profile() {
 
 profile_count="$(python3 "$contract" cases --group f411-stop --format count)"
 while IFS=$'\t' read -r \
-    case_id profile _optimization board_flags _artifact flash_capacity \
+    case_id profile optimization board_flags _artifact flash_capacity \
     minimum_flash_headroom ram_capacity ram_limit stack_frame_limit \
     _product _publish _usb_suspend _ws0010_graphics _focal _basic _wbmp \
     _markdown _chip8 _usb_screen _graphics _extended_font _user_explorer \
     _math_backend _lto; do
   compile_profile "$case_id" "$profile" "$board_flags" "$flash_capacity" \
     "$minimum_flash_headroom" "$ram_capacity" "$ram_limit" \
-    "$stack_frame_limit"
+    "$stack_frame_limit" "$optimization"
 done < <(python3 "$contract" cases --group f411-stop --format tsv)
 
 printf '\nF411 USB suspend production compile check: OK (%d profiles)\n' \

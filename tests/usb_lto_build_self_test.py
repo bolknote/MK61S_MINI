@@ -12,7 +12,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 HERE = Path(__file__).resolve()
-SOURCES = ('src/cdc/usbd_cdc.c', 'src/usbd_conf.c')
+SOURCES = ('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')
 
 
 def fake_compiler(arguments):
@@ -25,6 +25,85 @@ def fake_compiler(arguments):
     destination = Path(arguments[arguments.index('-o') + 1])
     destination.write_text(json.dumps(arguments))
     return 0
+
+
+class CoreLtoBuildTest(unittest.TestCase):
+    def exercise(self, powershell=False, flags=None, fail=False, missing=False):
+        with tempfile.TemporaryDirectory(prefix='mk61 core lto ') as temporary:
+            base = Path(temporary)
+            build = base / 'build with spaces'
+            sketch = base / 'sketch with spaces'
+            sketch.mkdir()
+            (sketch / 'mk61emu_core.cpp').touch()
+            obj = build / 'sketch/mk61emu_core.cpp.o'
+            obj.parent.mkdir(parents=True)
+            obj.write_text('original LTO object')
+            cold = obj.with_name('terminal.cpp.o')
+            cold.write_text('cold LTO object')
+            if missing:
+                obj.unlink()
+            fake = base / 'fake compiler'
+            shutil.copyfile(HERE, fake)
+            fake.chmod(0o755)
+            options = flags if flags is not None else ['-c', '-flto', '-Os',
+                '-std=gnu++17', '-fno-exceptions', '-DSTM32F411xE',
+                '-DMK61_BOARD_CLASSIC_V3', '-DNAME="space value"',
+                '-IC:/Program Files/STM32/core', r'-IE:\Arduino core\inc']
+            if fail:
+                options = options + ['--fail']
+            suffix = 'ps1' if powershell else 'py'
+            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
+                        if powershell else [sys.executable])
+            result = subprocess.run([*launcher,
+                str(ROOT / 'tools/.mk61-gcc' / ('protect-core-lto.' + suffix)),
+                str(build), str(sketch), str(fake), '--fake-compiler', *options],
+                capture_output=True, text=True)
+            self.assertEqual(cold.read_text(), 'cold LTO object')
+            if fail or missing:
+                self.assertNotEqual(result.returncode, 0)
+                return
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            if flags is not None:
+                self.assertEqual(obj.read_text(), 'original LTO object')
+                return
+            expected = options + ['-fno-lto', '-I' + str(sketch),
+                str(sketch / 'mk61emu_core.cpp'), '-o', str(obj)]
+            if powershell:
+                expected = [v.replace('\\', '/') for v in expected]
+            self.assertEqual(json.loads(obj.read_text()), expected)
+            self.assertIn('Core LTO barrier:', result.stdout)
+
+    def test_native_f411(self):
+        self.exercise()
+
+    def test_native_skips_f401_and_non_lto(self):
+        for flags in (['-flto', '-DSTM32F401xC'], ['-Os', '-DSTM32F411xE'],
+                      ['-flto=auto', '-fno-lto', '-DSTM32F411xE']):
+            self.exercise(flags=flags)
+
+    def test_native_failure_and_missing_object(self):
+        self.exercise(fail=True)
+        self.exercise(missing=True)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_f411(self):
+        self.exercise(powershell=True)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_skips_and_failure(self):
+        self.exercise(powershell=True, flags=['-flto', '-DSTM32F401xC'])
+        self.exercise(powershell=True, flags=['-flto', '-fno-lto', '-DSTM32F411xE'])
+        self.exercise(powershell=True, fail=True)
+        self.exercise(powershell=True, missing=True)
+
+    def test_all_f411_frontends_install_core_hook(self):
+        for name in ('tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt',
+                     'tools/.mk61-firmware/mk61-firmware.sh',
+                     'tools/.mk61-firmware/mk61-firmware.ps1',
+                     'tests/run_f411_release_matrix.sh'):
+            text = (ROOT / name).read_text()
+            self.assertIn('recipe.hooks.linking.prelink.30.pattern', text, name)
+            self.assertIn('protect-core-lto.', text, name)
 
 
 class UsbLtoBuildTest(unittest.TestCase):
@@ -43,6 +122,11 @@ class UsbLtoBuildTest(unittest.TestCase):
                 obj.write_text('original LTO object')
                 objects.append(obj)
             suffix = 'ps1' if powershell else 'py'
+            # HAL supplies weak empty hooks; its strong USB bridge must remain
+            # visible to LTO. Rewriting that bridge instead of the core target
+            # unit previously let MSP initialization disappear on real F411.
+            bridge = build / 'libraries/USBDevice/usbd_conf.c.o'
+            bridge.write_text('strong HAL callbacks in LTO')
             helper = ROOT / 'tools' / '.mk61-gcc' / ('protect-usb-lto.' + suffix)
             fake = base / 'fake compiler'
             shutil.copyfile(HERE, fake)
@@ -68,6 +152,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertEqual(json.loads(obj.read_text()),
                                  expected + ['-fno-lto', str(library / source), '-o', str(obj)])
             self.assertEqual(result.stdout.count('USB LTO barrier:'), 2)
+            self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
 
     def test_native(self):
         self.exercise()
@@ -150,11 +235,47 @@ class UsbLtoBuildTest(unittest.TestCase):
         spec.loader.exec_module(gate)
         protected = ' 8032aaa: f7fb fbb2 bl 802e212 <__wrap_USBD_CDC_ClearBuffer>\n'
         unprotected = ' 8033f52: f7ff ffc9 bl 8033ee8 <USBD_CDC_ClearBuffer>\n'
-        gate.check(protected)
-        for invalid in (unprotected, protected + unprotected,
+        hardware = ('08010000 <USBD_LL_Init>:\n'
+                    ' 8010000: f7fb fbb2 bl 8010100 <HAL_PCD_Init>\n'
+                    '08010100 <HAL_PCD_Init>:\n'
+                    ' 8010100: f7fb fbb2 bl 8010200 <HAL_PCD_MspInit>\n'
+                    '08010200 <HAL_PCD_MspInit>:\n'
+                    ' 8010200: f7fb fbb2 bl 8010300 <pin_function>\n')
+        gate.check(protected + hardware)
+        inlined = ('08010000 <USBD_LL_Init>:\n'
+                   ' 8010000: f7fb fbb2 bl 8010300 <pin_function>\n')
+        gate.check(protected + inlined)
+        # The broken F411 image had valid receive wrappers but HAL's empty
+        # default MSP hook was folded away with all USB GPIO configuration.
+        lost_msp = ('08010000 <USBD_LL_Init>:\n'
+                    ' 8010000: f7fb fbb2 bl 8010100 <HAL_PCD_Init>\n'
+                    '08010100 <HAL_PCD_Init>:\n'
+                    ' 8010100: 4770 bx lr\n')
+        for invalid in (protected, protected + lost_msp,
+                        unprotected + hardware, protected + unprotected + hardware,
                         '0802e0e6 <__wrap_USBD_CDC_ClearBuffer>:\n'):
             with self.assertRaises(ValueError):
                 gate.check(invalid)
+
+    def test_elf_gate_uses_exact_build_toolchain(self):
+        spec = importlib.util.spec_from_file_location('gate', ROOT / 'tests/check_usb_cdc_rx_elf.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        with tempfile.TemporaryDirectory(prefix='mk61 binutils ') as temporary:
+            root = Path(temporary)
+            database = root / 'compile_commands.json'
+            for suffix in ('', '.exe'):
+                compiler = root / ('arm-none-eabi-g++' + suffix)
+                for name in ('size', 'nm', 'objdump'):
+                    (root / ('arm-none-eabi-' + name + suffix)).touch()
+                database.write_text(json.dumps([{
+                    'directory': str(root), 'arguments': [str(compiler), '-c'],
+                }]))
+                expected = root / ('arm-none-eabi-objdump' + suffix)
+                self.assertEqual(gate.objdump_from_database(database), expected)
+                expected.unlink()
+                with self.assertRaisesRegex(ValueError, 'objdump tool not found'):
+                    gate.objdump_from_database(database)
 
 
 if __name__ == '__main__':

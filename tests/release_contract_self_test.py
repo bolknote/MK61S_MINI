@@ -30,7 +30,7 @@ class ReleaseContractTest(unittest.TestCase):
             "f411-release": [
                 "f411-lcd1602-a00",
                 "f411-lcd1602-a00-usb-screen",
-                "f411-lcd1602-a00-lto",
+                "f411-lcd1602-a00-no-lto",
                 "f411-lcd1602-a02",
                 "f411-oled1602-ws0010",
                 "f411-oled1602-ws0010-usb-screen",
@@ -80,6 +80,22 @@ class ReleaseContractTest(unittest.TestCase):
         self.assertEqual(classic["defines"], ["MK61_BOARD_CLASSIC_V3"])
         self.assertEqual(classic["artifacts"]["f401"],
                          "mk61s-M-classic-v3-uc1609-f401")
+
+    def test_f411_product_uses_lto_with_explicit_non_lto_comparison(self):
+        for case in self.cases.values():
+            if case["mcu"] == "f411" and case["product"]:
+                self.assertEqual(case["optimization"], "oslto", case["id"])
+        comparison = self.cases["f411-lcd1602-a00-no-lto"]
+        self.assertEqual(comparison["optimization"], "osstd")
+        self.assertFalse(comparison["product"])
+        self.assertFalse(comparison["publish"])
+        weak = copy.deepcopy(self.contract)
+        target = next(c for c in weak["cases"]
+                      if c["id"] == "f411-classic-v3")
+        target["optimization"] = "osstd"
+        with self.assertRaisesRegex(release_contract.ContractError,
+                                    "F411 product requires oslto"):
+            release_contract.validate_contract(weak)
 
     def test_product_and_laboratory_flash_contracts_differ_explicitly(self):
         for case in release_contract.cases_in_group(

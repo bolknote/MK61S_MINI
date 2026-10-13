@@ -6,7 +6,14 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api,
                                     u32 image_crc, u32 kind) {
   return portable_system::bind(api, image_crc, kind) &&
       portable_system::call(MK61_SYS_SETUP, MK61_SETUP_VERSION) ==
-          MK61_SETUP_API_VERSION ? 0 : 1;
+          MK61_SETUP_API_VERSION
+#if MK61_UI_FONT_CLIENT
+      // Binary font compilation needs a one-pass, revision-pinned source.
+      // Older ABI 6 residents reject this optional operation; fail startup
+      // before exposing an unsupported font installation command.
+      && portable_system::call(MK61_SERVICE_RESOURCE_READ, 3) != 0
+#endif
+      ? 0 : 1;
 }
 
 extern "C" u32 mk61_app_command(u32 command, u32 a, u32 b, u32 c, u32) {

@@ -14,6 +14,7 @@
   extern USBD_HandleTypeDef hUSBD_Device_CDC;
   extern PCD_HandleTypeDef g_hpcd;
   }
+  #include "stm32f4_usb_wakeup.hpp"
 #endif
 
 namespace usb_power {
@@ -280,13 +281,7 @@ static usb_power_policy::Conditions conditions(bool application_idle,
 #endif
 
 [[maybe_unused]] static void enable_usb_wakeup_irq(void) {
-#if MK61_USB_SUSPEND_SUPPORTED && defined(USB_OTG_FS) && \
-    defined(OTG_FS_WKUP_IRQn)
-  __HAL_USB_OTG_FS_WAKEUP_EXTI_ENABLE_RISING_EDGE();
-  __HAL_USB_OTG_FS_WAKEUP_EXTI_ENABLE_IT();
-  HAL_NVIC_SetPriority(OTG_FS_WKUP_IRQn, USBD_IRQ_PRIO, USBD_IRQ_SUBPRIO);
-  HAL_NVIC_EnableIRQ(OTG_FS_WKUP_IRQn);
-#endif
+  stm32f4_usb_wakeup::arm();
 }
 
 [[maybe_unused]] static void clear_usb_wakeup_flag(void) {

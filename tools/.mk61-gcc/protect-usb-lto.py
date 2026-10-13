@@ -6,7 +6,9 @@ import subprocess
 import sys
 
 
-SOURCES = ('src/cdc/usbd_cdc.c', 'src/usbd_conf.c')
+# Protect the definitions interposed by --wrap. Keep the HAL bridge in LTO:
+# HAL's weak no-op callbacks must see its strong MSP/IRQ implementations.
+SOURCES = ('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')
 
 
 def protect(build_path: Path, library: Path, command: list[str]) -> None:
@@ -16,7 +18,7 @@ def protect(build_path: Path, library: Path, command: list[str]) -> None:
             raise ValueError(f'expected one {source} object, found {len(matches)}')
         # Arduino's compilation database must retain the ordinary compiler
         # invocation for APP packing and stack analysis. Recompile only the
-        # two small USB units after Arduino has built them, before its link.
+        # two USB target units after Arduino has built them, before its link.
         subprocess.run([*command, '-fno-lto', str(library / source), '-o', str(matches[0])], check=True)
         print(f'USB LTO barrier: {source}', flush=True)
 

@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "stm32f4_gpio.hpp"
 #include "keyboard.h"
 #include "keyboard_layout.hpp"
 #include "entropy_pool.hpp"
@@ -33,21 +34,21 @@ extern void event_unhold_key(i32 unholded_key, i32 hold_quant);
 
 inline void scan_out(usize data) {
   for(int pin : scan_pins) {
-    digitalWrite(pin, data & 1);
+    stm32f4_gpio::write(pin, data & 1);
     data >>= 1;
   }
 }
 
 inline void bus_out(usize data) {
   for(int pin : data_pins) {
-    digitalWrite(pin, data & 1);
+    stm32f4_gpio::write(pin, data & 1);
     data >>= 1;
   }
 }
 
 inline usize bus_in(void) {
   usize input_data = 0;
-  for(int pin : data_pins) input_data = (input_data << 1) | digitalRead(pin);
+  for(int pin : data_pins) input_data = (input_data << 1) | stm32f4_gpio::read(pin);
   return input_data;
 }
 
@@ -115,7 +116,7 @@ static constexpr u32 STOP_WAKE_EXTI_MASK =
 static u8 sample_stop_wake_rows(void) {
   u8 result = 0;
   for(usize row = 0; row < KEY_IN_ROW; row++) {
-    if(digitalRead(scan_pins[row]) != LOW) result |= (u8) (1U << row);
+    if(stm32f4_gpio::read(scan_pins[row]) != LOW) result |= (u8) (1U << row);
   }
   return result;
 }
@@ -131,13 +132,13 @@ static void stop_wake_irq(void) {
 #endif
 
 inline void activate_scan_line(void) {
-  digitalWrite(scan_pins[scan_line], HIGH);
-  pinMode(scan_pins[scan_line], OUTPUT);
+  stm32f4_gpio::write(scan_pins[scan_line], HIGH);
+  stm32f4_gpio::configure(scan_pins[scan_line], OUTPUT);
   scan_line_started_us = micros();
 }
 
 inline void advance_scan_line(void) {
-  pinMode(scan_pins[scan_line], INPUT);
+  stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
   if(scan_line == LAST_SCAN_ROW) scan_line = 0; else scan_line++;
   activate_scan_line();
 }
@@ -185,7 +186,7 @@ i32   get_key(key_state state) {
 }
 
 void  reset_scan_line(void) {
-  pinMode(scan_pins[scan_line], INPUT);
+  stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
   scan_line = KEY_IN_ROW-1;
   activate_scan_line();
 }
@@ -250,13 +251,13 @@ bool prepare_stop_wake(void) {
   // Remove the one driven scan row first. Then every matrix column drives the
   // same HIGH level, so any number of simultaneous keys can only connect equal
   // outputs. Rows PB4..PB8 are unique EXTI lines and use pulldowns.
-  for(usize row = 0; row < KEY_IN_ROW; row++) pinMode(scan_pins[row], INPUT);
+  for(usize row = 0; row < KEY_IN_ROW; row++) stm32f4_gpio::configure(scan_pins[row], INPUT);
   for(usize column = 0; column < KEY_IN_COLUMN; column++) {
-    digitalWrite(data_pins[column], HIGH);
-    pinMode(data_pins[column], OUTPUT);
+    stm32f4_gpio::write(data_pins[column], HIGH);
+    stm32f4_gpio::configure(data_pins[column], OUTPUT);
   }
   for(usize row = 0; row < KEY_IN_ROW; row++) {
-    pinMode(scan_pins[row], INPUT_PULLDOWN);
+    stm32f4_gpio::configure(scan_pins[row], INPUT_PULLDOWN);
   }
 
   stop_wake_irq_seen = false;
@@ -331,11 +332,11 @@ static u8 restore_stop_wake(bool preserve_presses) {
     // ordinary scanner. Multiple samples reject GPIO/line-settling spikes;
     // restricting results to rows that caused the wake rejects later keys.
     for(usize column = 0; column < KEY_IN_COLUMN; column++) {
-      digitalWrite(data_pins[column], LOW);
+      stm32f4_gpio::write(data_pins[column], LOW);
     }
     delayMicroseconds(STOP_WAKE_SETTLE_US);
     for(usize data_index = 0; data_index < KEY_IN_COLUMN; data_index++) {
-      digitalWrite(data_pins[data_index], HIGH);
+      stm32f4_gpio::write(data_pins[data_index], HIGH);
       delayMicroseconds(STOP_WAKE_SETTLE_US);
       u8 high_votes[KEY_IN_ROW] = {};
       for(usize sample = 0; sample < STOP_WAKE_SAMPLE_COUNT; sample++) {
@@ -356,7 +357,7 @@ static u8 restore_stop_wake(bool preserve_presses) {
           pressed_by_row[row] |= (u8) (1U << logical_column);
         }
       }
-      digitalWrite(data_pins[data_index], LOW);
+      stm32f4_gpio::write(data_pins[data_index], LOW);
       delayMicroseconds(STOP_WAKE_DISCHARGE_US);
     }
   }
@@ -369,9 +370,9 @@ static u8 restore_stop_wake(bool preserve_presses) {
   __atomic_store_n(&stop_wake_rows_seen, (u8) 0, __ATOMIC_RELAXED);
   stop_wake_armed = false;
 
-  for(usize row = 0; row < KEY_IN_ROW; row++) pinMode(scan_pins[row], INPUT);
+  for(usize row = 0; row < KEY_IN_ROW; row++) stm32f4_gpio::configure(scan_pins[row], INPUT);
   for(usize column = 0; column < KEY_IN_COLUMN; column++) {
-    pinMode(data_pins[column], INPUT_PULLDOWN);
+    stm32f4_gpio::configure(data_pins[column], INPUT_PULLDOWN);
   }
 
   const t_time_ms now = millis();
@@ -472,10 +473,10 @@ void  init(void) {
   debounce_init();
   // Инициализация HAL
   for(usize i=0; i < KEY_IN_ROW; i++) {
-    digitalWrite(scan_pins[i], HIGH);
-    pinMode(scan_pins[i], INPUT);
+    stm32f4_gpio::write(scan_pins[i], HIGH);
+    stm32f4_gpio::configure(scan_pins[i], INPUT);
   }
-  for(usize pin : data_pins) pinMode(pin, INPUT_PULLDOWN);
+  for(usize pin : data_pins) stm32f4_gpio::configure(pin, INPUT_PULLDOWN);
   //
   scan_line = 0;
   activate_scan_line();
@@ -490,24 +491,24 @@ void  test(void) {
   dbgln(KBD, "test kbd. ");
   for(usize pin : data_pins) {
     //if(pin != 29) {
-      pinMode(pin, OUTPUT); digitalWrite(pin, HIGH);
-      dbghexln(KBD, "output kbd.data <- ", pin, ", kbd.data=", digitalRead(bus_in()));
-      digitalWrite(pin, LOW); pinMode(pin, INPUT_PULLDOWN);
+      stm32f4_gpio::configure(pin, OUTPUT); stm32f4_gpio::write(pin, HIGH);
+      dbghexln(KBD, "output kbd.data <- ", pin, ", kbd.data=", stm32f4_gpio::read(bus_in()));
+      stm32f4_gpio::write(pin, LOW); stm32f4_gpio::configure(pin, INPUT_PULLDOWN);
       delay(240);
     //}
   }
 /*
-  for(usize pin : data_pins) pinMode(pin, INPUT_PULLDOWN);
-  for(usize pin : scan_pins) pinMode(pin, INPUT);
+  for(usize pin : data_pins) stm32f4_gpio::configure(pin, INPUT_PULLDOWN);
+  for(usize pin : scan_pins) stm32f4_gpio::configure(pin, INPUT);
   isize i = 0;
   for(usize pin : scan_pins) {
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW);
-    dbghex(KBD, (const char*) "kbd.scan_line[", i++, (const char*) "] LOW, kbd.data=", digitalRead(bus_in()));
-    digitalWrite(pin, HIGH);
-    dbghex(KBD, " HIGH, kbd.data=", digitalRead(bus_in()));
-    pinMode(pin, INPUT);
-    dbghexln(KBD, " hi-Z, kbd.data=", digitalRead(bus_in()));
+    stm32f4_gpio::configure(pin, OUTPUT);
+    stm32f4_gpio::write(pin, LOW);
+    dbghex(KBD, (const char*) "kbd.scan_line[", i++, (const char*) "] LOW, kbd.data=", stm32f4_gpio::read(bus_in()));
+    stm32f4_gpio::write(pin, HIGH);
+    dbghex(KBD, " HIGH, kbd.data=", stm32f4_gpio::read(bus_in()));
+    stm32f4_gpio::configure(pin, INPUT);
+    dbghexln(KBD, " hi-Z, kbd.data=", stm32f4_gpio::read(bus_in()));
     delay(40);
   }
 */
@@ -589,7 +590,7 @@ isize scan_m61_controls(void) {
   // a trap/bind pauses the calculator; scan() still owns settle/debounce.
   constexpr u8 ok_row = keyboard_layout::ACTIVE.ok % KEY_IN_ROW;
   if(scan_line != LAST_SCAN_ROW && scan_line != ok_row) {
-    pinMode(scan_pins[scan_line], INPUT);
+    stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
     scan_line = LAST_SCAN_ROW;
     activate_scan_line();
     check_hold_key();
@@ -598,7 +599,7 @@ isize scan_m61_controls(void) {
   const u8 previous = scan_line;
   const isize result = scan();
   if(scan_line != previous) {
-    pinMode(scan_pins[scan_line], INPUT);
+    stm32f4_gpio::configure(scan_pins[scan_line], INPUT);
     scan_line = previous == LAST_SCAN_ROW ? ok_row : LAST_SCAN_ROW;
     activate_scan_line();
   }

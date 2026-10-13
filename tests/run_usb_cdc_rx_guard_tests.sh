@@ -20,6 +20,7 @@ handoff_out="${TMPDIR:-/tmp}/mk61_usb_mode_handoff_self_test"
 
 "$handoff_out"
 python3 "$root/tests/usb_lto_build_self_test.py"
+python3 "$root/tests/foreground_stack_elf_self_test.py"
 
 linker_flag='--wrap=USBD_CDC_ClearBuffer'
 for builder in \

@@ -23,6 +23,7 @@ for script in "$matrix" "$o3_build" "$stock_linker_build" "$usb_build" "$f401_ma
   bash -n "$script"
 done
 python3 "$contract" validate >/dev/null
+python3 "$root/tests/compiler_warning_policy_self_test.py"
 source "$budgets"
 
 require_equal() {
@@ -53,6 +54,23 @@ grep -Fq 'aggregate-reports' "$f401_matrix"
 grep -Fq -- '--system-dir "$build_path/bundle/System"' "$f401_matrix"
 grep -Fq 'MK61_REQUIRE_RESIDENT_CRC=1' "$matrix"
 grep -Fq 'analyze_stack_usage.py' "$matrix"
+grep -Fq 'usb=CDCgen,opt=oslto' \
+  "$root/tools/.mk61-firmware/mk61-firmware.sh"
+grep -Fq 'usb=CDCgen,opt=oslto' \
+  "$root/tools/.mk61-firmware/mk61-firmware.ps1"
+for script in "$matrix" "$usb_build"; do
+  grep -Fq 'usb=CDCgen,opt=oslto' "$script"
+  grep -Fq 'protect-usb-lto.py' "$script"
+  grep -Fq 'check_usb_cdc_rx_elf.py' "$script"
+done
+for script in "$matrix" "$usb_build" "$o3_build" \
+    "$root/tests/run_f401_uc1609_compile_check.sh"; do
+  grep -Fq 'check_compiler_warnings.py' "$script"
+  grep -Fq -- '-Werror -Wno-error=cpp' "$script"
+done
+require_equal f411_comparison_optimization \
+  "$(python3 "$contract" case --id f411-lcd1602-a00-no-lto --format tsv | cut -f3)" \
+  osstd
 grep -Fq 'shipping_artifact=untouched' "$root/tests/analyze_stack_usage.py"
 if grep -Eq '^compile_variant [a-z0-9]' "$matrix" ||
    grep -Eq '^compile_profile [a-z0-9]' "$usb_build"; then

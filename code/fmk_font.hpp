@@ -21,7 +21,7 @@ static constexpr u8 FLAG_MONOSPACED = 0x01;
 // Cheap resident-side gate before SETUP.APP reads and fully validates FMK2.
 // Keep the interchange header layout here with the decoder constants so a
 // format revision cannot leave the M61 `loadfont` preflight behind again.
-inline bool plausibleHeader(const u8* data, usize total_size) {
+__attribute__((noinline)) inline bool plausibleHeader(const u8* data, usize total_size) {
   if(data == nullptr || total_size < HEADER_SIZE ||
      total_size > MAX_FILE_SIZE ||
      data[0] != 'F' || data[1] != 'M' ||
@@ -86,12 +86,37 @@ class Face {
 };
 
 u16 checksum(const u8* data, usize size);
+u16 checksumByte(u16 crc, u8 byte);
+bool validGlyphByte(u8 byte);
 bool bitmapPixel(const u8* bitmap, u8 width, u8 x, u8 y);
 bool scaleToLcd5x8(const Face& face, const Glyph& glyph, u8 rows[8]);
 u8 selectPreviewGlyphs(const Face& face, Glyph out[8]);
 // Compiles FMK2 into the internal, uncompressed PFK2 runtime image.  This is
 // linked into SETUP (APP on F401, resident on F411) and host tools.
 bool prepare(const Face& face, u8* output, usize capacity, usize& output_size);
+
+// Read immutable FMK bytes in increasing, non-overlapping spans. The callback
+// must fill the complete span or fail. Compilation checks the checksum over
+// the same bytes it decodes and never retains the source or allocates a heap
+// buffer. The output is a candidate only when this returns true; its reported
+// size never exceeds capacity or prepared_font::MAX_IMAGE_SIZE.
+struct ReadSource {
+  void* context;
+  usize size;
+  bool (*read)(void* context, usize offset, u8* output, usize length);
+};
+bool prepare(const ReadSource& source, u8* output, usize capacity,
+             usize& output_size);
+
+// A storage decoder can produce the source once without restarting at every
+// input-cache boundary. No callback or context survives the synchronous call.
+struct StreamSource {
+  void* context;
+  usize size;
+  bool (*stream)(void* context, bool (*next)(void*, u8), void* consumer);
+};
+bool prepare(const StreamSource& source, u8* output, usize capacity,
+             usize& output_size);
 
 } // пространство имён fmk
 

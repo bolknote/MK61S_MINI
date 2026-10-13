@@ -1,0 +1,589 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "branch": "feature/stm32-size-optimization",
+  "source_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193",
+  "status": "FUNCTIONAL_HIL_PASS_WITH_STACK_LIMITATION",
+  "device_logs_root": ".build/hil-size-qualification",
+  "devices": [
+    {
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "66C953FB",
+        "profile": "classic-v3-uc1609"
+      },
+      "installed": {
+        "path": ".build/hil-size-qualification/AEB505B6E0067623/images/66C953FB.bin",
+        "bytes": 384128,
+        "footer": 381752,
+        "build": "66C953FB",
+        "sha256": "75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585"
+      },
+      "original_backup": {
+        "path": ".build/hil-size-qualification/AEB505B6E0067623/original-firmware.bin",
+        "bytes": 393212,
+        "footer": 390808,
+        "build": "7B7D50A3",
+        "sha256": "3e41064a25d07bc04bfb071af80a21014bafe6aede0fa2ef8b6d5474e77e0fd9"
+      },
+      "firmware_crc": "PASS",
+      "physical_keyboard": "PASS",
+      "C9_readback": {
+        "result": "PASS",
+        "writes": 26,
+        "readback_equal": true,
+        "temporary_files_removed": true,
+        "minimum_stack_remaining": 12376,
+        "cases": [
+          {
+            "bytes": 1,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 513,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 513,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1023,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1023,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1536,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1536,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1536,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1536,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1023,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1023,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 513,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 513,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1,
+            "repeat": 0,
+            "remaining": 12376
+          },
+          {
+            "bytes": 1,
+            "repeat": 1,
+            "remaining": 12376
+          }
+        ]
+      },
+      "extended_language_VM": {
+        "status": "PASS",
+        "checks": [
+          "physical-M61-language-state",
+          "USB-language-input",
+          "USB-large-image-detach-reattach-INPUT",
+          "USB-FOCAL-INPUT-FOR",
+          "USB-numeric.tbi-overflow-wide-floor-FOR",
+          "USB-numeric.foc-overflow-wide-floor-FOR",
+          "USB-large-image-INPUT-cancel"
+        ],
+        "usb_frames_crc_checked": 64,
+        "remaining_stack": 10032
+      },
+      "calculator_state": "RESTORED_EMPTY_BASELINE",
+      "user_files_sha256": "PASS",
+      "files_before": 36,
+      "files_after": 37,
+      "directories_before": [
+        "/Games",
+        "/Games/Turochamp",
+        "/System"
+      ],
+      "directories_after": [
+        "/Games",
+        "/Games/Turochamp",
+        "/System",
+        "/System/VMCache"
+      ],
+      "temporary_files": "REMOVED",
+      "system_manifest": {
+        "/System/HELP1.TXT": {
+          "bytes": 1340,
+          "sha256": "7ba4db448c5c5def076020c9d45234500d5ffefb89da710280c8b2aed57d94a5",
+          "replaced": true
+        },
+        "/System/HELP0.TXT": {
+          "bytes": 1533,
+          "sha256": "092fa5f9fc0d230e7ef5c27148f9c5a8f649be82972d084b4b7818463a33b2d8",
+          "replaced": true
+        },
+        "/System/FOCAL.APP": {
+          "bytes": 13384,
+          "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50",
+          "replaced": true
+        },
+        "/System/LANGVM.APP": {
+          "bytes": 10396,
+          "sha256": "d150b81c448eed5ca88735004852175cbb74c97cdd96a99b992770a6dce16006",
+          "replaced": true
+        },
+        "/System/BASIC.APP": {
+          "bytes": 13762,
+          "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a",
+          "replaced": true
+        },
+        "/System/LANGIN.APP": {
+          "bytes": 11778,
+          "sha256": "f0dd70bb63aaf6b7ef17481ae8a6ee5cf6ead91858ae364881c6882bfbf9c52d",
+          "replaced": true
+        },
+        "/System/VMCache/VMSTORE.APP": {
+          "bytes": 6837,
+          "sha256": "8751fba8512a5e102b9853badf7aba11a658ecf43781fe852fa87008607c3872",
+          "replaced": true
+        }
+      },
+      "usb_STOP": "NOT_RUN_USER_DEFERRED",
+      "SPI_DMA": {
+        "status": "PASS",
+        "iterations": 100,
+        "bytes_per_iteration": 65536,
+        "crc": "E1C1C002",
+        "spi": {
+          "backend": "polling-arbiter",
+          "state": "idle",
+          "owner": "none",
+          "acquisitions": "59501",
+          "releases": "59501",
+          "failures": "0",
+          "contentions": "0",
+          "double": "0",
+          "inactive": "0",
+          "wrong": "0",
+          "invalid": "0",
+          "latched": "0",
+          "recoveries": "0",
+          "last": "released",
+          "fault": "none"
+        },
+        "dma": {
+          "backend": "DMA2-S2/S3-C3",
+          "threshold": "64",
+          "transfers": "12800",
+          "bytes": "6553600",
+          "wfi": "27855",
+          "fallback": "0",
+          "init_errors": "0",
+          "errors": "0",
+          "timeouts": "0"
+        },
+        "scope": "Final 66C953FB build"
+      },
+      "font_stream_game": "PASS",
+      "RTC_alarms": {
+        "status": "NOT_RUN_CLOCK_UNSET",
+        "original_clock_unset": true,
+        "notes": "Original and final calendars both request Set the date; relative alarm is correctly refused. No calendar was changed. Both alarm slots off."
+      }
+    },
+    {
+      "identity": {
+        "public": "6FF33152484A4488",
+        "short": "484A4488",
+        "usb": "3688388E3233",
+        "volume": "0A24B723",
+        "build": "866C7001",
+        "profile": "mini-v3-a00"
+      },
+      "installed": {
+        "path": ".build/hil-size-qualification/6FF33152484A4488/images/866C7001.bin",
+        "bytes": 351448,
+        "footer": 349232,
+        "build": "866C7001",
+        "sha256": "0aec01bbeb08dd2b08bedc3f69c0ace5c2eb4aef08ff8cccacd62272b414bbd3"
+      },
+      "original_backup": {
+        "path": ".build/hil-size-qualification/6FF33152484A4488/original-firmware.bin",
+        "bytes": 341948,
+        "footer": 339808,
+        "build": "D44BEB86",
+        "sha256": "3e51aee7449cf7dd2ff177163e599ed73f2ecaf6a61458e9dc9351e071d71979"
+      },
+      "firmware_crc": "PASS",
+      "physical_keyboard": "PASS",
+      "C9_readback": {
+        "result": "PASS",
+        "writes": 26,
+        "readback_equal": true,
+        "temporary_files_removed": true,
+        "minimum_stack_remaining": 12368,
+        "cases": [
+          {
+            "bytes": 1,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 1,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 511,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 0,
+            "remaining": 12392
+          },
+          {
+            "bytes": 512,
+            "repeat": 1,
+            "remaining": 12392
+          },
+          {
+            "bytes": 513,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 513,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1023,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1023,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1536,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1536,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1536,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1536,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1023,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1023,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 513,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 513,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 512,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 512,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 511,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 511,
+            "repeat": 1,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1,
+            "repeat": 0,
+            "remaining": 12368
+          },
+          {
+            "bytes": 1,
+            "repeat": 1,
+            "remaining": 12368
+          }
+        ]
+      },
+      "extended_language_VM": {
+        "status": "PASS",
+        "checks": [
+          "physical-M61-language-state",
+          "USB-language-input",
+          "USB-large-image-detach-reattach-INPUT",
+          "USB-FOCAL-INPUT-FOR",
+          "USB-numeric.tbi-overflow-wide-floor-FOR",
+          "USB-numeric.foc-overflow-wide-floor-FOR",
+          "USB-large-image-INPUT-cancel"
+        ],
+        "usb_frames_crc_checked": 76,
+        "remaining_stack": 11216
+      },
+      "calculator_state": "RESTORED_EMPTY_BASELINE",
+      "user_files_sha256": "PASS",
+      "files_before": 6,
+      "files_after": 7,
+      "directories_before": [
+        "/System"
+      ],
+      "directories_after": [
+        "/System",
+        "/System/VMCache"
+      ],
+      "temporary_files": "REMOVED",
+      "system_manifest": {
+        "/System/HELP1.TXT": {
+          "bytes": 1338,
+          "sha256": "597f9535f36404801aa8f5b65e72fba855cf4580d3c0f5c475330c3bc1047915",
+          "replaced": true
+        },
+        "/System/HELP0.TXT": {
+          "bytes": 1533,
+          "sha256": "f23d7be7fbb14d4e60b97615a359c0a4843a4eefae43cd9369d35e02a39aa547",
+          "replaced": true
+        },
+        "/System/FOCAL.APP": {
+          "bytes": 13384,
+          "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50",
+          "replaced": true
+        },
+        "/System/LANGVM.APP": {
+          "bytes": 10396,
+          "sha256": "d150b81c448eed5ca88735004852175cbb74c97cdd96a99b992770a6dce16006",
+          "replaced": true
+        },
+        "/System/BASIC.APP": {
+          "bytes": 13762,
+          "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a",
+          "replaced": true
+        },
+        "/System/LANGIN.APP": {
+          "bytes": 11778,
+          "sha256": "f0dd70bb63aaf6b7ef17481ae8a6ee5cf6ead91858ae364881c6882bfbf9c52d",
+          "replaced": true
+        },
+        "/System/VMCache/VMSTORE.APP": {
+          "bytes": 6837,
+          "sha256": "8751fba8512a5e102b9853badf7aba11a658ecf43781fe852fa87008607c3872",
+          "replaced": true
+        }
+      },
+      "usb_STOP": "DISABLED_BY_A00_PROFILE",
+      "SPI_DMA": {
+        "status": "PASS",
+        "iterations": 100,
+        "bytes_per_iteration": 65536,
+        "crc": "CEC87527",
+        "spi": {
+          "backend": "polling-arbiter",
+          "state": "idle",
+          "owner": "none",
+          "acquisitions": "36734",
+          "releases": "36734",
+          "failures": "0",
+          "contentions": "0",
+          "double": "0",
+          "inactive": "0",
+          "wrong": "0",
+          "invalid": "0",
+          "latched": "0",
+          "recoveries": "0",
+          "last": "released",
+          "fault": "none"
+        },
+        "dma": {
+          "backend": "DMA2-S2/S3-C3",
+          "threshold": "64",
+          "transfers": "12800",
+          "bytes": "6553600",
+          "wfi": "27851",
+          "fallback": "0",
+          "init_errors": "0",
+          "errors": "0",
+          "timeouts": "0"
+        },
+        "scope": "Earlier USB-fixed 3EA2421F build; SPI driver source unchanged in final build"
+      },
+      "RTC_alarms": {
+        "status": "PASS_ON_EARLIER_USB_FIXED_BUILD",
+        "log": "6FF33152484A4488/rtc.log"
+      },
+      "USB_MSC_roundtrip": {
+        "status": "PASS_ON_EARLIER_BOUNDED_BUILD",
+        "log": "6FF33152484A4488/usb-disk-text.log"
+      }
+    }
+  ],
+  "issues": [
+    {
+      "issue": "Initial USB LTO barrier hid strong HAL MSP/IRQ callbacks",
+      "resolution": "Protect definition units instead; actual shipping USB GPIO initialization is now enforced by ELF regression gate",
+      "status": "FIXED_HARDWARE_VERIFIED"
+    },
+    {
+      "issue": "LTO retained cold setup and unrelated terminal scratch in foreground frames",
+      "resolution": "Keep setup out of main and prevent command-handler inlining; final main frame 80/72 and dispatch 608, all original C9 stack gates passed",
+      "status": "FIXED_HARDWARE_VERIFIED"
+    },
+    {
+      "issue": "Overlapped DFU transfers and 55-second deadline interrupted erase/programming",
+      "resolution": "All subsequent transfers serialized and pinned by serial, frozen BINs, 180-second timeout and healthy descriptors. Hardware BOOT0 recovery completed for both boards; the exact cause of mini ERASE error is not isolated.",
+      "status": "DEVICES_RECOVERED"
+    },
+    {
+      "issue": "Portable APP test requires 12288 bytes remaining stack",
+      "baseline_remaining_bytes": 11056,
+      "optimized_remaining_bytes": 10552,
+      "remaining_delta_bytes": -504,
+      "stack_budget_bytes": 16384,
+      "functional_tests": "PASS",
+      "crash": "NONE",
+      "status": "LIMITATION_NOT_RESOLVED_THRESHOLD_NOT_LOWERED"
+    }
+  ],
+  "not_run": [
+    "Physical USB suspend/STOP/re-entry not performed; user explicitly requested to defer this check on 2026-10-13.",
+    "Long CDC/DFU soak not performed"
+  ],
+  "source_binary_scope": "Some early checks ran on the first USB-fixed or bounded build. Final frozen CRC builds reran C5, physical keyboard, extended VM and data cleanup. The Classic font/SPI checks ran on final 66C953FB.",
+  "emulator_core_matched_AB": {
+    "runs_per_variant": 5,
+    "steps_per_run": 40,
+    "clock_hz": 96000000,
+    "baseline_crc": "FD9F977B",
+    "optimized_crc": "66C953FB",
+    "baseline_median_average_cycles": 1712600,
+    "optimized_median_average_cycles": 1745458,
+    "time_increase_percent": 1.9186032932383412,
+    "interpretation": "Classic emulation core became about 1.92% slower; the GPIO speedup does not imply whole-calculator speedup."
+  },
+  "core_slowdown_followup": {
+    "report": "stm32-core-lto-cause-20261013.json",
+    "cause": "mk61emu_core.cpp participation in LTO; confirmed by same-source single-unit A/B/A",
+    "experimental_native_core_median_cycles": 1711150,
+    "experimental_bin_bytes": 382868,
+    "production_configuration": "F411 native core policy integrated; boards retain prior verified images",
+    "production_source_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
+    "production_bin_bytes": 382860,
+    "production_core_text_matches_hardware_probe": true
+  }
+}
