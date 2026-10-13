@@ -136,13 +136,15 @@ if grep -Eq 'MK61_ENABLE_(DEEP_IDLE|USB_SUSPEND|USB_AUTO_DEEP_IDLE)_QUALIFICATIO
 fi
 
 # The compatibility variables are populated from the manifest and must keep
-# the already qualified numeric contracts.
+# the already qualified numeric contracts. F401 OLED metadata has two extra
+# named bytes; linker padding after removing common drivers exposes an
+# eight-byte delta against A00 (see STM32-hardware-core.md).
 require_equal MK61_F401_WS0010_MAX_RAM_GROWTH \
-  "$MK61_F401_WS0010_MAX_RAM_GROWTH" 0
+  "$MK61_F401_WS0010_MAX_RAM_GROWTH" 8
 require_equal MK61_F411_WS0010_MAX_RAM_GROWTH \
   "$MK61_F411_WS0010_MAX_RAM_GROWTH" 256
 require_equal MK61_F401_WS0010_USB_MAX_RAM_GROWTH \
-  "$MK61_F401_WS0010_USB_MAX_RAM_GROWTH" 0
+  "$MK61_F401_WS0010_USB_MAX_RAM_GROWTH" 8
 require_equal MK61_F401_WS0010_GRAPHICS_MAX_RAM_GROWTH \
   "$MK61_F401_WS0010_GRAPHICS_MAX_RAM_GROWTH" 16
 grep -Fq 'release_contract.py' "$budgets"

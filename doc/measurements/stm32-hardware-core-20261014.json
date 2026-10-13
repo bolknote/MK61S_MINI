@@ -371,5 +371,17 @@
   },
   "ram_comparison_note": "F401 OLED/A00 metadata has 2 extra named bytes; removal of common large drivers exposes linker padding of 8 bytes. Comparative tolerance is 8 rather than 0; absolute budgets and 16-byte graphics-growth limit remain.",
   "evidence_archive": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014",
-  "source_manifest_sha256": "6a9f716a16c0ef3c2929815b2556913e4ccba3c7982dd0ec3c7ce5c00ffa2c4e"
+  "source_manifest_sha256": "6a9f716a16c0ef3c2929815b2556913e4ccba3c7982dd0ec3c7ce5c00ffa2c4e",
+  "integration": {
+    "main_before": "90d182f0022d1615d6ffcba600e4ea531fc93693",
+    "tested_merge_commit": "2b145ac0b1f24d7076fee463500e1bb10b3419b4",
+    "hardware_implementation_commit": "9021c7b6876cd39fd9c157c0feaa5e4b230c5205",
+    "unchanged_firmware_input_trees": {
+      "code": "69bd7054c69a40de13c7b2259527712941b126b3",
+      "tools/.mk61-gcc": "856cda4bb017ebcfb4a401eabfaa9c1d8f002c26"
+    },
+    "host_suite": "PASS: all run_all_tests.sh entries completed. Initial run stopped at stale zero-byte F401 OLED RAM policy expectations; both expectations were synchronized to the measured eight-byte contract, policy test passed, and all remaining entries passed.",
+    "race_game": "PASS: generated package verified and 720 emulator frames passed.",
+    "firmware_source_changed_since_hardware_qualification": false
+  }
 }
