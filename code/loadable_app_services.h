@@ -111,6 +111,16 @@ typedef struct mk61_service_resource_stream {
   void* context;
   bool (*append)(void*, const char*, uint16_t, bool first);
 } mk61_service_resource_stream;
+/* Operation 3 synchronously streams unmodified binary file bytes once. With
+ * NULL payload it returns 1 when supported; older ABI 6 residents return 0.
+ * UI-enabled SETUP.APP requires this probe at initialization.
+ * File CRC and the media revision must still match after the final callback. */
+typedef struct mk61_service_resource_bytes {
+  uint32_t revision;
+  uint16_t id, source_size;
+  void* context;
+  bool (*next)(void*, uint8_t);
+} mk61_service_resource_bytes;
 
 /* Narrow resident C6 backend for USBDISK.APP. FAT, LFN, conversion and commit
  * policy remain in the APP; these operations only expose atomic store facts

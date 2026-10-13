@@ -198,6 +198,10 @@ function Test-ReleaseContract {
                 'optimization' $where)
             Assert-Contract ($optimization -in @('osstd', 'oslto')) `
                 "$where.optimization: expected osstd or oslto"
+            if ($mcu -eq 'f411' -and $product) {
+                Assert-Contract ($optimization -eq 'oslto') `
+                    "$where.optimization: F411 product requires oslto"
+            }
             $expect = Get-RequiredProperty $item 'expect' $where
             $null = Test-Boolean (Get-RequiredProperty $expect `
                 'usb_suspend' "$where.expect") "$where.expect.usb_suspend"

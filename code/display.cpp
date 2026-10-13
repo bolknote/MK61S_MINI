@@ -15,6 +15,7 @@
 #if defined(MK61_DISPLAY_LCD1602)
 
 #include "lcd_ru.hpp"
+#include "stm32f4_gpio.hpp"
 #include "lcd1602_shifted_viewport.hpp"
 #include "lcd_6800_4bit_bus.hpp"
 #include "lcd_charset.hpp"
@@ -289,8 +290,8 @@ static inline void lcdWritePin(PinName pin, bool high) {
 static inline void lcdPrepareOutputPinLow(PinName pin) {
   if(pin == NC) return;
 
-  // Unlike pinMode(), digitalWriteFast() and direct MODER access do not
-  // enable the GPIO peripheral clock.  The WS0010 backend does not construct
+  // digitalWriteFast() and direct MODER access do not enable the GPIO
+  // peripheral clock. The WS0010 backend does not construct
   // LiquidCrystal, so GPIOA (DB5..DB7 on mini V3) can still be clock-gated at
   // the first display transaction.  Enable the port before preloading ODR,
   // then establish the complete push-pull/no-pull configuration explicitly.
@@ -626,8 +627,8 @@ void MK61Display::begin(u8 cols, u8 rows) {
   #if MK61_LCD1602_BUSY_FLAG
   // RW должен быть прижат к записи ещё до стандартной последовательности
   // инициализации LiquidCrystal.
-  digitalWrite(PIN_LCD_RW, LOW);
-  pinMode(PIN_LCD_RW, OUTPUT);
+  stm32f4_gpio::write(PIN_LCD_RW, LOW);
+  stm32f4_gpio::configure(PIN_LCD_RW, OUTPUT);
   #endif
   lcd.begin(lcd_display::COLS, lcd_display::ROWS);
   lcd.noCursor();
@@ -2030,8 +2031,8 @@ void MK61Display::probeBusyFlag(void) {
   busy_flag_state = 0;
 
 #if MK61_LCD1602_BUSY_FLAG
-  digitalWrite(PIN_LCD_RW, LOW);
-  pinMode(PIN_LCD_RW, OUTPUT);
+  stm32f4_gpio::write(PIN_LCD_RW, LOW);
+  stm32f4_gpio::configure(PIN_LCD_RW, OUTPUT);
 
   const LcdParallelBus bus = lcdParallelBus();
   if(!bus.validForRead()) return;

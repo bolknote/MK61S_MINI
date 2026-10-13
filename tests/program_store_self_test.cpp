@@ -18,6 +18,8 @@
 #include "zx0.hpp"
 #include "shared_memory.hpp"
 #include "storage_path.hpp"
+#include "fmk_font.hpp"
+#include "prepared_font.hpp"
 
 SPIFlash flash;
 bool flash_is_ok = true;
@@ -3086,6 +3088,62 @@ static void test_file_stream(void) {
   assert(program_store::exported_size_id(empty, visible_size) && visible_size == 0);
 }
 
+static void test_font_compiler_uses_one_zx0_stream(void) {
+  for(auto type : {ProgramType::FONT, ProgramType::CHIP8}) {
+  fresh();
+  // Valid FMK2: 64 blank 8x8 glyphs in raw bitmap mode. C9 transparently
+  // compresses the binary CHIP8 fixture, while real FONT files remain raw.
+  std::vector<u8> font(538, 0);
+  memcpy(font.data(), "FMK2", 4);
+  font[4] = 1; font[5] = 8; font[6] = 8; font[7] = 0x70;
+  font[8] = 64; font[10] = 1; font[12] = 538U & 255U; font[13] = 538U >> 8U;
+  font[16] = ' '; font[17] = 63;
+  const u16 crc = fmk::checksum(font.data(), (usize) font.size());
+  font[14] = (u8) crc; font[15] = (u8) (crc >> 8U);
+  fmk::Face face;
+  assert(face.open(font.data(), (usize) font.size()));
+  u16 id = program_store::INVALID_ID, stored = 0;
+  bool large = false, packed = false;
+  assert(program_store::write_file(program_store::ROOT_ID, id, type,
+                                    "STREAMFONT", font.data(), (u16) font.size(), &id));
+  assert(program_store::test_file_storage_info(id, stored, large, packed));
+  assert(packed == (type == ProgramType::CHIP8));
+  // Prevent the opportunistic read cache from concealing repeated decodes.
+  (void) program_store::read_cache_release();
+  (void) program_store::vfat_stage_release_cache();
+  shared_memory::Lease usb(shared_memory::Arena::OVERLAY,
+                            shared_memory::Owner::USB_SCREEN, 512);
+  assert(usb.ok());
+  const fmk::ReadSource pull = {&id, (usize) font.size(),
+      [](void* raw, usize offset, u8* output, usize length) {
+        u16 received = 0;
+        return program_store::read_range_id(*(u16*) raw, (u16) offset, output,
+                                            (u16) length, &received) && received == length;
+      }};
+  const fmk::StreamSource stream = {&id, (usize) font.size(),
+      [](void* raw, bool (*next)(void*, u8), void* consumer) {
+        return program_store::stream_file_id(*(u16*) raw, {consumer, next});
+      }};
+  u8 pulled[1536], streamed[1536]; usize pull_size = 0, stream_size = 0;
+  const u32 before_pull = zx0::test_decode_calls();
+  SPIFlash::resetOperationCounts();
+  assert(fmk::prepare(pull, pulled, sizeof(pulled), pull_size));
+  const u32 pull_decodes = zx0::test_decode_calls() - before_pull;
+  const u64 pull_reads = SPIFlash::readBytes();
+  const u32 before_stream = zx0::test_decode_calls();
+  SPIFlash::resetOperationCounts();
+  assert(fmk::prepare(stream, streamed, sizeof(streamed), stream_size));
+  const u32 stream_decodes = zx0::test_decode_calls() - before_stream;
+  assert(pull_decodes == (packed ? 5U : 0U) && stream_decodes == (packed ? 1U : 0U));
+  assert(pull_reads > SPIFlash::readBytes());
+  assert(pull_size == stream_size && memcmp(pulled, streamed, pull_size) == 0);
+  printf("FMK C9 %s: uncached pull=%u decodes/%llu NOR bytes; production stream=%u decodes/%llu NOR bytes\n",
+         packed ? "ZX0 binary fixture" : "raw FONT", pull_decodes,
+         (unsigned long long) pull_reads, stream_decodes,
+         (unsigned long long) SPIFlash::readBytes());
+  }
+}
+
 static void prepare_exported_size_replacement(void) {
   fresh(512U * 1024U);
   const std::vector<u8> text(300, 'A');
@@ -4462,6 +4520,9 @@ int main(int argc, char** argv) {
   if(argc == 2 && strcmp(argv[1], "--c9-density") == 0) {
     test_small_zx0_replacement_reuses_logical_fat_extents(); return 0;
   }
+  if(argc == 2 && strcmp(argv[1], "--font-stream") == 0) {
+    test_font_compiler_uses_one_zx0_stream(); return 0;
+  }
   if(argc == 2 && strcmp(argv[1], "--import-batch") == 0) { test_small_import_batch_preflight_and_power_cuts(); return 0; }
   assert(argc == 1);
   test_small_import_batch_preflight_and_power_cuts();
@@ -4476,6 +4537,7 @@ int main(int argc, char** argv) {
   test_read_cache_does_not_reclaim_loading_app();
   test_usb_text_cache_with_pinned_stage_and_app();
   test_file_stream();
+  test_font_compiler_uses_one_zx0_stream();
   test_exported_size_is_atomic_and_crc_protected();
 #if MK61_DISK_ACTIVITY_SUPPORTED
   test_disk_activity_scope();

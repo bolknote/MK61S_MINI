@@ -1,11 +1,12 @@
 #include <Arduino.h>
+#include "stm32f4_gpio.hpp"
 #include "config.h"
 #include "runtime_safety.hpp"
 #include "sound_driver.hpp"
 #include "stm32f4_platform_resources.hpp"
 
 #if defined(ARDUINO_ARCH_STM32) && defined(HAL_TIM_MODULE_ENABLED) && \
-    !defined(HAL_TIM_MODULE_ONLY)
+    (!defined(HAL_TIM_MODULE_ONLY) || MK61_STM32F4_RESOURCE_MAP_SUPPORTED)
   #define MK61_SOUND_DRIVER_STM32 1
 #else
   #define MK61_SOUND_DRIVER_STM32 0
@@ -90,8 +91,8 @@ static u32 duration_to_ticks(usize duration_ms) {
 }
 
 static void force_buzzer_low(void) {
-  pinMode(pwm_pin, OUTPUT);
-  digitalWrite(pwm_pin, LOW);
+  stm32f4_gpio::configure(pwm_pin, OUTPUT);
+  stm32f4_gpio::write(pwm_pin, LOW);
 }
 
 static u32 channel_to_ll(u32 channel) {
@@ -341,8 +342,8 @@ static u32 duration_ms_to_us(usize duration_ms) {
 }
 
 static void force_buzzer_low(void) {
-  pinMode(pwm_pin, OUTPUT);
-  digitalWrite(pwm_pin, LOW);
+  stm32f4_gpio::configure(pwm_pin, OUTPUT);
+  stm32f4_gpio::write(pwm_pin, LOW);
 }
 
 static void clear_cutoff_interrupt(void) {
@@ -507,8 +508,8 @@ void sound_driver_construct(void) {}
 
 void sound_driver_init(usize pin) {
   fallback_pin = pin;
-  pinMode(pin, OUTPUT);
-  digitalWrite(pin, LOW);
+  stm32f4_gpio::configure(pin, OUTPUT);
+  stm32f4_gpio::write(pin, LOW);
 }
 
 void sound_driver_play_scaled(usize pin, isize frequency_Hz,
@@ -530,8 +531,8 @@ void sound_driver_play(usize pin, isize frequency_Hz, usize duration_ms,
 
 void sound_driver_stop(void) {
   noTone(fallback_pin);
-  pinMode(fallback_pin, OUTPUT);
-  digitalWrite(fallback_pin, LOW);
+  stm32f4_gpio::configure(fallback_pin, OUTPUT);
+  stm32f4_gpio::write(fallback_pin, LOW);
 }
 
 void sound_driver_poll(void) {}

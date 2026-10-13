@@ -38,7 +38,7 @@ cp -R "$root/code/." "$sketch/"
 # Classic V3 is the largest normal UC1609 product.  If its standard -O3 build
 # retains a useful reserve, Mini and -O2 are covered with still more margin.
 fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=o3std'
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 strict_flags='-DMK61_BOARD_CLASSIC_V3 -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_MIXED_OPTIMIZATION=1 -Werror -Wno-error=cpp'
 layout_properties="$build_root/layout.properties"
 "$arduino_cli" compile --fqbn "$fqbn" \

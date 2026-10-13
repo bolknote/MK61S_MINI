@@ -38,9 +38,9 @@ LAST_LOG="$BUILD_ROOT/last.log"
 
 STM32_CORE_VERSION=2.12.0
 STM32_PACKAGE_URL=https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
-FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
+FQBN_F411='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 FQBN_F401='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=osstd'
-PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
+PLATFORM_RAM_FLAGS='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'
 
 PROFILE=

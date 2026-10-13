@@ -405,6 +405,8 @@ try {
     Assert-True ($script:State.ExternalizeUsbDisk -eq 0) `
         'F411 USB disk must be resident by default'
     Assert-True ($script:State.Mcu -eq 'f411') 'F411 must be the default MCU'
+    Assert-True ((Get-Fqbn 'f411') -match ',opt=oslto$') `
+        'F411 default build must use size LTO'
     Normalize-ComponentPlacements
     Assert-True (
         $script:State.FocalAsApp -eq 1 -and

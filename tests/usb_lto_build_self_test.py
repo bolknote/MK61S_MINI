@@ -156,6 +156,26 @@ class UsbLtoBuildTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 gate.check(invalid)
 
+    def test_elf_gate_uses_exact_build_toolchain(self):
+        spec = importlib.util.spec_from_file_location('gate', ROOT / 'tests/check_usb_cdc_rx_elf.py')
+        gate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gate)
+        with tempfile.TemporaryDirectory(prefix='mk61 binutils ') as temporary:
+            root = Path(temporary)
+            database = root / 'compile_commands.json'
+            for suffix in ('', '.exe'):
+                compiler = root / ('arm-none-eabi-g++' + suffix)
+                for name in ('size', 'nm', 'objdump'):
+                    (root / ('arm-none-eabi-' + name + suffix)).touch()
+                database.write_text(json.dumps([{
+                    'directory': str(root), 'arguments': [str(compiler), '-c'],
+                }]))
+                expected = root / ('arm-none-eabi-objdump' + suffix)
+                self.assertEqual(gate.objdump_from_database(database), expected)
+                expected.unlink()
+                with self.assertRaisesRegex(ValueError, 'objdump tool not found'):
+                    gate.objdump_from_database(database)
+
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1].startswith('@'):

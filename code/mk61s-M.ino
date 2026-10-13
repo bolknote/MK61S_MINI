@@ -3,6 +3,7 @@
 class_calc_config config;
 
 #include <Arduino.h>
+#include "stm32f4_gpio.hpp"
 #include "rust_types.h"
 #include "keyboard.h"
 #include "m61_text.hpp"
@@ -500,11 +501,11 @@ void setup() {
     // Резервный путь для других STM32. На F401/F411 ESC уже проверен прямым
     // доступом к GPIO до HAL, тактового дерева, USB CDC и входа в setup().
     const bool dfu_reboot_requested = early_dfu::consume_request();
-    pinMode(PIN_KBD_COL0, INPUT_PULLDOWN);
-    pinMode(PIN_KBD_ROW0, OUTPUT);
-    digitalWrite(PIN_KBD_ROW0, HIGH);
+    stm32f4_gpio::configure(PIN_KBD_COL0, INPUT_PULLDOWN);
+    stm32f4_gpio::configure(PIN_KBD_ROW0, OUTPUT);
+    stm32f4_gpio::write(PIN_KBD_ROW0, HIGH);
     const bool dfu_requested = dfu_reboot_requested ||
-        digitalRead(PIN_KBD_COL0) != LOW;
+        stm32f4_gpio::read(PIN_KBD_COL0) != LOW;
   #endif
 
   // В mini V2 линия PC15 используется как DB7 ЖКИ. Сохранённый после сброса
@@ -512,12 +513,12 @@ void setup() {
   // обращаться к выводам и посылать команды уже внутри конструктора.
   rtc_clock::prepare_display_gpio();
   #if defined(MK61_DISPLAY_LCD1602) && (defined(REVISION_V2) || defined(REVISION_V3))
-    digitalWrite(PIN_LCD_RW, LOW);
-    pinMode(PIN_LCD_RW, OUTPUT);
+    stm32f4_gpio::write(PIN_LCD_RW, LOW);
+    stm32f4_gpio::configure(PIN_LCD_RW, OUTPUT);
   #endif
   #if defined(MK61_DISPLAY_LCD1602) && defined(REVISION_V2)
-    digitalWrite(PIN_LCD_DB7, LOW);
-    pinMode(PIN_LCD_DB7, OUTPUT);
+    stm32f4_gpio::write(PIN_LCD_DB7, LOW);
+    stm32f4_gpio::configure(PIN_LCD_DB7, OUTPUT);
   #endif
 
   // F401/F411 попадает сюда только при обычной загрузке: сверхаварийный ESC

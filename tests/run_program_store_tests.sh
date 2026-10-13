@@ -44,6 +44,7 @@ for backend in software stm32; do
     "$root/code/workspace_swap.cpp" \
     "$root/code/zx0.cpp" \
     "$root/code/zx0_encode.cpp" \
+    "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" "$root/code/prepared_font.cpp" \
     -o "$out-$backend"
 
   "$out-$backend" "$@"
@@ -73,6 +74,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/workspace_swap.cpp" \
   "$root/code/zx0.cpp" \
   "$root/code/zx0_encode.cpp" \
+  "$root/code/fmk_font.cpp" "$root/code/fmk_prepare.cpp" "$root/code/prepared_font.cpp" \
   -o "$out-f411-font"
 
 "$out-f411-font" "$@"

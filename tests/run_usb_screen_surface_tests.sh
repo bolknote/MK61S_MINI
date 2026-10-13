@@ -9,8 +9,10 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
 fi
 
 for panel in uc1609 uc1609-shared lcd1602; do
-panel_flags=(-DMK61_DISPLAY_UC1609=1 -DMK61_PROPORTIONAL_UI_FONTS=1)
-if [[ "$panel" == uc1609-shared ]]; then panel_flags+=(-DMK61_SHARED_SCREEN_GRID=1); fi
+panel_flags=(-DMK61_DISPLAY_UC1609=1 -DMK61_PROPORTIONAL_UI_FONTS=1 -DMK61_SHARED_SCREEN_GRID=0)
+if [[ "$panel" == uc1609-shared ]]; then
+  panel_flags=(-DMK61_DISPLAY_UC1609=1 -DMK61_PROPORTIONAL_UI_FONTS=1 -DMK61_SHARED_SCREEN_GRID=1)
+fi
 if [[ "$panel" == lcd1602 ]]; then
   panel_flags=(-DMK61_LCD1602_A00 -DMK61_PROPORTIONAL_UI_FONTS=0)
 fi

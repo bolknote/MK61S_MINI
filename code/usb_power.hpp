@@ -97,9 +97,18 @@ u32 stop_blockers(bool application_idle, u32 now_ms);
 
 // These calls bracket only a confirmed USB-suspended STOP interval. They do
 // not stop, deinitialize or re-enumerate the USB device.
-PrepareResult prepare_stop(bool application_idle, u32 now_ms);
-bool stop_wake_pending(void);
-StopCompletion finish_stop(bool usb_host_wake, bool keyboard_wake);
+// Keep the three hardware boundaries visible to the shipping ELF check under
+// GCC LTO. It verifies real calls around STOP, rather than trusting retained
+// but unused symbols or losing the boundary through inlining/cloning.
+#if MK61_USB_SUSPEND_SUPPORTED && defined(__GNUC__) && !defined(__clang__)
+  #define MK61_USB_STOP_BOUNDARY __attribute__((noipa, externally_visible))
+#else
+  #define MK61_USB_STOP_BOUNDARY
+#endif
+MK61_USB_STOP_BOUNDARY PrepareResult prepare_stop(bool application_idle, u32 now_ms);
+MK61_USB_STOP_BOUNDARY bool stop_wake_pending(void);
+MK61_USB_STOP_BOUNDARY StopCompletion finish_stop(bool usb_host_wake, bool keyboard_wake);
+#undef MK61_USB_STOP_BOUNDARY
 void cancel_stop(void);
 
 } // namespace usb_power

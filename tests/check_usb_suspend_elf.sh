@@ -36,7 +36,11 @@ find_arm_tool() {
 }
 
 nm_tool="$(find_arm_tool "${ARM_NONE_EABI_NM:-}" arm-none-eabi-nm)"
-symbols="$($nm_tool -C --defined-only "$elf")"
+cxxfilt_tool="$(find_arm_tool "${ARM_NONE_EABI_CXXFILT:-}" arm-none-eabi-c++filt)"
+# GCC LTO can promote private state and append .lto_priv.N. Remove only that
+# generated suffix before demangling, including in the disabled-profile gate.
+symbols="$("$nm_tool" --defined-only "$elf" |
+  sed -E 's/\.lto_priv\.[0-9]+$//' | "$cxxfilt_tool")"
 
 require_text_symbol() {
   local pattern="$1"
@@ -104,6 +108,37 @@ require_text_symbol 'usb_power::stop_wake_pending\(\)' \
   'USB wake-source classifier'
 require_text_symbol 'OTG_FS_WKUP_IRQHandler' \
   'USB OTG FS wake interrupt'
+
+objdump_tool="$(find_arm_tool \
+  "${ARM_NONE_EABI_OBJDUMP:-}" arm-none-eabi-objdump)"
+disassembly="$("$objdump_tool" -d -C "$elf")"
+sized_symbols="$("$nm_tool" -S --defined-only "$elf")"
+
+require_called_boundary() {
+  local pattern="$1"
+  local mangled="$2"
+  local minimum_size="$3"
+  local label="$4"
+  grep -Eq "[[:space:]](bl|blx|b\\.w)[[:space:]][^<]*<${pattern}>" \
+    <<<"$disassembly" || {
+      printf 'USB suspend ELF check: no actual call to %s\n' "$label" >&2
+      exit 1
+    }
+  local size_hex
+  size_hex="$(awk -v name="$mangled" '$4 == name {print $2; exit}' \
+    <<<"$sized_symbols")"
+  [[ -n "$size_hex" ]] && ((16#$size_hex >= minimum_size)) || {
+    printf 'USB suspend ELF check: empty or trivial %s\n' "$label" >&2
+    exit 1
+  }
+}
+
+require_called_boundary 'usb_power::prepare_stop\(bool, unsigned long\)' \
+  '_ZN9usb_power12prepare_stopEbm' 32 'USB STOP preparation path'
+require_called_boundary 'usb_power::finish_stop\(bool, bool\)' \
+  '_ZN9usb_power11finish_stopEbb' 16 'USB STOP recovery path'
+require_called_boundary 'usb_power::stop_wake_pending\(\)' \
+  '_ZN9usb_power17stop_wake_pendingEv' 8 'USB wake-source classifier'
 require_data_symbol \
   'deep_idle::\(anonymous namespace\)::automatic_controller' \
   'automatic STOP controller'

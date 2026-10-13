@@ -22,7 +22,9 @@ static u32 now, row_started;
 static u8 scan_line;
 static std::vector<u8> scanned_rows;
 
-void pinMode(u8, int) {}
+namespace stm32f4_gpio {
+void configure(u8, int) {}
+}
 void activate_scan_line(void) { row_started = now; }
 void check_hold_key(void) {}
 void lcd_std_display_redraw(void) { ++redraws; }

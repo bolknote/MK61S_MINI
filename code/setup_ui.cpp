@@ -19,6 +19,8 @@
 #include <stdio.h>
 extern void idle_main_process(void);
 namespace setup_ui {
+static_assert(prepared_font::MAX_IMAGE_SIZE <= 0xFFFFU,
+              "prepared font preview length must fit 16 bits");
 #if MK61_UI_FONT_CLIENT
   #define MK61_SETUP_UI_FONT_CHOOSER 1
 #else
@@ -453,12 +455,9 @@ static void formatUiFontLine(char* out, usize size, u8 field,
     return;
   }
   if(field == 0) {
-    if(choice.setting.family == 4) {
-      snprintf(out, size, "Classic 10x16");
-      return;
-    }
-    if(choice.setting.family == 5) {
-      snprintf(out, size, "Compact 3x5");
+    if(choice.setting.family == 4 || choice.setting.family == 5) {
+      snprintf(out, size, "%s", choice.setting.family == 4
+          ? "Classic 10x16" : "Compact 3x5");
       return;
     }
     const char* name = choice.setting.family == 3 &&
@@ -951,7 +950,6 @@ void preview(const char* name, const u8* data, u16 len) {
     if(!workspace.ok() ||
        !fmk::prepare(face, static_cast<u8*>(workspace.data()),
                      workspace.size(), prepared_size) ||
-       prepared_size > 0xFFFFU ||
        !service(MK61_SETUP_FONT_PREVIEW, (u32) prepared_size, 0,
                 workspace.data())) {
       show_message("Preview error", M8("Ошибка просмотра"), name, name);

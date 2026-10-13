@@ -666,10 +666,15 @@
   #error "proportional UI fonts require UC1609"
 #endif
 
-// Experimental: UC1609 and USB Screen render one canonical text grid.
-// Keep default-off until display-mode/HIL qualification is complete.
+// UC1609 and USB Screen hand off the same canonical text grid. Only the
+// active renderer consumes its damage flags; character panels retain their
+// independent surface because their DDRAM is the physical source of truth.
 #ifndef MK61_SHARED_SCREEN_GRID
-  #define MK61_SHARED_SCREEN_GRID 0
+  #if defined(MK61_DISPLAY_UC1609) && MK61_ENABLE_USB_SCREEN
+    #define MK61_SHARED_SCREEN_GRID 1
+  #else
+    #define MK61_SHARED_SCREEN_GRID 0
+  #endif
 #endif
 #if MK61_SHARED_SCREEN_GRID != 0 && MK61_SHARED_SCREEN_GRID != 1
   #error "MK61_SHARED_SCREEN_GRID must be 0 or 1"

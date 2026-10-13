@@ -30,6 +30,21 @@ usize verify(const char* path, bool must_fit_f401) {
   std::vector<u8> image(prepared_font::MAX_IMAGE_SIZE);
   usize image_size = 0;
   assert(fmk::prepare(source, image.data(), image.size(), image_size));
+  struct Input { const std::vector<u8>& bytes; usize position = 0; } input{source_bytes};
+  const fmk::ReadSource reader = {&input, (usize) source_bytes.size(),
+      [](void* raw, usize offset, u8* output, usize length) {
+        auto& input = *static_cast<Input*>(raw);
+        assert(offset == input.position && length <= 128U &&
+               offset + length <= input.bytes.size());
+        std::memcpy(output, input.bytes.data() + offset, length);
+        input.position += length;
+        return true;
+      }};
+  std::vector<u8> streamed(image.size());
+  usize streamed_size = 0;
+  assert(fmk::prepare(reader, streamed.data(), streamed.size(), streamed_size));
+  assert(streamed_size == image_size && input.position == source_bytes.size());
+  assert(std::memcmp(streamed.data(), image.data(), image_size) == 0);
   assert(image_size >= prepared_font::HEADER_SIZE &&
          image_size <= prepared_font::MAX_IMAGE_SIZE);
   if(must_fit_f401) assert(image_size <= 1536);

@@ -1858,6 +1858,44 @@ void test_usb_return_to_ui_geometry() {
   expectFrame(expected);
 }
 
+void test_repeated_usb_handoff_with_wide_ui_redraw() {
+  MK61Display display;
+  startUi(display, 5, 5);
+  const auto redraw = [&](u8 value) {
+    display.clear();
+    display.setCursor(0, 0);
+    display.writeCodepoint(0x0411);
+    display.setCursor(46, 9);
+    display.writeCodepoint('Z');
+    display.setCursor(20, 2);
+    display.writeCodepoint(value);
+    display.flush();
+  };
+  redraw('A');
+  assert(display.cols() == 47 && display.rows() == 10);
+
+  for(u8 cycle = 0; cycle < 12; ++cycle) {
+    const Frame before = ui_display_test::frame;
+    assert(display.enterUsbScreen());
+    assert(std::memcmp(before.data(), display.usbScreenFramebuffer(),
+                       before.size()) == 0);
+    display.setCursor(20, 2);
+    display.writeCodepoint('B' + cycle);
+    display.flush();
+    Frame updated{};
+    std::memcpy(updated.data(), display.usbScreenFramebuffer(), updated.size());
+    expectFrame(before); // USB writes must not reach the sleeping panel.
+    const u32 revision = display.displayModeRevision();
+    display.leaveUsbScreen();
+    display.flush();
+    assert(display.cols() == 47 && display.rows() == 10);
+    assert(display.displayModeRevision() == revision + 1);
+    expectFrame(Frame{}); // UI owners redraw on a new display-mode epoch.
+    redraw('B' + cycle);
+    expectFrame(updated);
+  }
+}
+
 void test_usb_classic_10x16_parity() {
   MK61Display display;
   startUi(display, 4, 16);
@@ -2015,6 +2053,7 @@ int main() {
   test_disk_usb_display_integration();
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
+  test_repeated_usb_handoff_with_wide_ui_redraw();
   test_usb_classic_10x16_parity();
   test_usb_compact_3x5_parity();
   test_usb_calculator_to_runtime_font_switches_renderer();

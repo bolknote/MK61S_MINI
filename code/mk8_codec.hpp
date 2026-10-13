@@ -33,7 +33,7 @@ static constexpr u8 BYTE_XOR           = 0x1D;
 static constexpr u8 BYTE_POWER_MINUS   = 0x1E;
 static constexpr u8 BYTE_RETURN_ARROW  = 0x1F;
 
-static constexpr u16 PRIVATE_CODEPOINTS[] = {
+inline constexpr u16 PRIVATE_CODEPOINTS[] = {
   0x2190, 0x2192, 0x2191, 0x2193, 0x03C0, 0x221A,
   0x21BB, 0x2260, 0x2264, 0x2265, 0x00D7, 0x00F7,
   0x00B2, 0x02B8, 0x02E3, 0x22BB, 0x207B, 0x21B5
@@ -42,7 +42,7 @@ static constexpr u16 PRIVATE_CODEPOINTS[] = {
 // Windows-1251 80..BF. 98 is intentionally undefined by the code page.
 // Keeping this as one 128-byte table is smaller than the collection of
 // exceptional branches and also makes import/export strictly reversible.
-static constexpr u16 CP1251_80_BF[] = {
+inline constexpr u16 CP1251_80_BF[] = {
   0x0402, 0x0403, 0x201A, 0x0453, 0x201E, 0x2026, 0x2020, 0x2021,
   0x20AC, 0x2030, 0x0409, 0x2039, 0x040A, 0x040C, 0x040B, 0x040F,
   0x0452, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,

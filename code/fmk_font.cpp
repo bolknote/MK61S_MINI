@@ -5,14 +5,14 @@
 
 namespace fmk {
 
-namespace {
-
-static constexpr u8 CRC_OFFSET = 14;
-
-static bool fontByteValid(u8 value) {
+__attribute__((noinline)) bool validGlyphByte(u8 value) {
   return mk8::valid_byte(value) && value != '\t' && value != '\n' &&
          value != '\r';
 }
+
+namespace {
+
+static constexpr u8 CRC_OFFSET = 14;
 
 static u16 readLe16(const u8* data) {
   return (u16) data[0] | ((u16) data[1] << 8);
@@ -160,24 +160,29 @@ void Face::reset(void) {
   face_metrics = {false, 0, 0, 0, 0, 0};
 }
 
+// Share the FMK CRC update between contiguous validation and the producer
+// compiler, rather than emitting another polynomial loop in SETUP.APP.
+__attribute__((noinline)) u16 checksumByte(u16 crc, u8 byte) {
+  crc ^= (u16) byte << 8;
+  for(u8 bit = 0; bit < 8; bit++) {
+    crc = (crc & 0x8000) ? (u16) ((crc << 1) ^ 0x1021) : (u16) (crc << 1);
+  }
+  return crc;
+}
+
 u16 checksum(const u8* data, usize size) {
   if(data == NULL) return 0;
   u16 crc = 0xFFFF;
   for(usize i = 0; i < size; i++) {
     const u8 byte = (i == CRC_OFFSET || i == CRC_OFFSET + 1) ? 0 : data[i];
-    crc ^= (u16) byte << 8;
-    for(u8 bit = 0; bit < 8; bit++) {
-      crc = (crc & 0x8000) ? (u16) ((crc << 1) ^ 0x1021) : (u16) (crc << 1);
-    }
+    crc = checksumByte(crc, byte);
   }
   return crc;
 }
 
 bool Face::open(const u8* data, usize size) {
   reset();
-  if(data == NULL || size < HEADER_SIZE || size > MAX_FILE_SIZE) return false;
-  if(data[0] != 'F' || data[1] != 'M' || data[2] != 'K' || data[3] != '2') return false;
-  if((data[4] & (u8) ~FLAG_MONOSPACED) != 0) return false;
+  if(!plausibleHeader(data, size)) return false;
 
   Metrics metrics = {
     (data[4] & FLAG_MONOSPACED) != 0,
@@ -188,16 +193,8 @@ bool Face::open(const u8* data, usize size) {
     readLe16(data + 8)
   };
   const u8 ranges = data[10];
-  const u16 declared_size = readLe16(data + 12);
   const u16 declared_crc = readLe16(data + CRC_OFFSET);
-
-  if(metrics.max_width == 0 || metrics.max_width > MAX_GLYPH_WIDTH) return false;
-  if(metrics.height == 0 || metrics.height > MAX_GLYPH_HEIGHT) return false;
-  if(metrics.default_advance > MAX_GLYPH_WIDTH) return false;
-  if(metrics.glyph_count == 0 || ranges == 0) return false;
-  if(data[11] != 0) return false;
-  if(declared_size != size || declared_crc != checksum(data, size)) return false;
-  if(HEADER_SIZE + (usize) ranges * RANGE_SIZE > size) return false;
+  if(declared_crc != checksum(data, size)) return false;
 
   u32 glyphs_in_ranges = 0;
   u32 previous_end = 0;
@@ -209,7 +206,7 @@ bool Face::open(const u8* data, usize size) {
     previous_end = (u32) start + count;
     if(previous_end > 0x100UL) return false;
     for(u16 value = start; value < previous_end; ++value) {
-      if(!fontByteValid((u8) value)) return false;
+      if(!validGlyphByte((u8) value)) return false;
     }
     glyphs_in_ranges += count;
     if(glyphs_in_ranges > metrics.glyph_count) return false;

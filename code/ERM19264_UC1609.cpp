@@ -10,6 +10,7 @@
 #ifdef MK61_DISPLAY_UC1609
 
 #include "ERM19264_UC1609.h"
+#include "stm32f4_gpio.hpp"
 #include "spi1_bus.hpp"
 #include "uc1609_safety.hpp"
 
@@ -117,9 +118,9 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
  */
 void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 {
-	pinMode(_LCD_CD , OUTPUT);
-	pinMode(_LCD_RST, OUTPUT);
-	pinMode(_LCD_CS, OUTPUT);
+	stm32f4_gpio::configure(_LCD_CD , OUTPUT);
+	stm32f4_gpio::configure(_LCD_RST, OUTPUT);
+	stm32f4_gpio::configure(_LCD_CS, OUTPUT);
 
 	_VbiasPOT  = VbiasPOT;
 	
@@ -135,8 +136,8 @@ void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 	}else
 	{
 	 // Set software SPI specific pin outputs.
-		pinMode(_LCD_DIN, OUTPUT);
-		pinMode(_LCD_SCLK, OUTPUT);
+		stm32f4_gpio::configure(_LCD_DIN, OUTPUT);
+		stm32f4_gpio::configure(_LCD_SCLK, OUTPUT);
 	}
 
 	LCDinit();
@@ -148,15 +149,15 @@ void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 */
 void ERM19264_UC1609::LCDinit()
  {
-	UC1609_CD_SetHigh;
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CD, HIGH);
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
 	delay(UC1609_INIT_DELAY2);
 
 	LCDReset();
 
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 
 	send_command(UC1609_TEMP_COMP_REG, UC1609_TEMP_COMP_SET);
 	send_command(UC1609_ADDRESS_CONTROL, _AddressCtrl);
@@ -171,7 +172,7 @@ void ERM19264_UC1609::LCDinit()
 	send_command(UC1609_DISPLAY_ON, 0x01); // turn on display
 	send_command(UC1609_LCD_CONTROL, UC1609_ROTATION_NORMAL); // rotate to normal
 
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 
@@ -183,9 +184,9 @@ void ERM19264_UC1609::LCDinit()
 */
 void ERM19264_UC1609::send_command (uint8_t command, uint8_t value)
 {
-	UC1609_CD_SetLow;
+	stm32f4_gpio::write(_LCD_CD, LOW);
 	send_data(command | value);
-	UC1609_CD_SetHigh;
+	stm32f4_gpio::write(_LCD_CD, HIGH);
 }
 
 /*!
@@ -194,9 +195,9 @@ void ERM19264_UC1609::send_command (uint8_t command, uint8_t value)
 */
 void ERM19264_UC1609::LCDReset ()
 {
-	UC1609_RST_SetLow;
+	stm32f4_gpio::write(_LCD_RST, LOW);
 	delay(UC1609_RESET_DELAY);
-	UC1609_RST_SetHigh;
+	stm32f4_gpio::write(_LCD_RST, HIGH);
 	delay(UC1609_RESET_DELAY2);
 }
 
@@ -236,9 +237,9 @@ bool ERM19264_UC1609::LCDSetSleep(bool sleep)
 	// instead of latching the shared arbiter in ERROR.
 	BusTransaction transaction(*this, true);
 	if (!transaction.ready()) {return false;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	send_command(UC1609_DISPLAY_ON, sleep ? 0x00U : 0x01U);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 	// The controller specification requires at least 10 us before subsequent
 	// commands after display on/off. Keep that boundary inside the transaction
 	// API so every caller gets the same safe sequence.
@@ -257,9 +258,9 @@ void ERM19264_UC1609::LCDscroll (uint8_t bits)
 {
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	send_command(UC1609_SCROLL, bits);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -272,7 +273,7 @@ void ERM19264_UC1609::LCDrotate(uint8_t rotatevalue)
 {
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	switch (rotatevalue)
 	{
 		case 0: rotatevalue = 0; break;
@@ -282,7 +283,7 @@ void ERM19264_UC1609::LCDrotate(uint8_t rotatevalue)
 		default: rotatevalue = UC1609_ROTATION_NORMAL; break;
 	}
 	send_command(UC1609_LCD_CONTROL, rotatevalue);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -293,9 +294,9 @@ void ERM19264_UC1609::LCDInvertDisplay (uint8_t bits)
 {
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	send_command(UC1609_INVERSE_DISPLAY, bits);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -307,9 +308,9 @@ void ERM19264_UC1609::LCDallpixelsOn(uint8_t bits)
 {
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	send_command(UC1609_ALL_PIXEL_ON, bits);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -321,14 +322,14 @@ void ERM19264_UC1609::LCDFillScreen(uint8_t dataPattern=0, uint8_t delay=0)
 {
 	 BusTransaction transaction(*this);
 	 if (!transaction.ready()) {return;}
-	 UC1609_CS_SetLow;
+	 stm32f4_gpio::write(_LCD_CS, LOW);
 	uint16_t numofbytes = _widthScreen * (_heightScreen/8); // width * height
 	for (uint16_t i = 0; i < numofbytes; i++)
 	{
 			send_data(dataPattern);
 			delayMicroseconds(delay);
 	}
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -339,13 +340,13 @@ void ERM19264_UC1609::LCDFillPage(uint8_t dataPattern=0)
 {
 	 BusTransaction transaction(*this);
 	 if (!transaction.ready()) {return;}
-	 UC1609_CS_SetLow;
+	 stm32f4_gpio::write(_LCD_CS, LOW);
 	uint16_t numofbytes = ((_widthScreen * (_heightScreen/8))/8); // (width * height/8)/8 = 192 bytes
 	for (uint16_t i = 0; i < numofbytes; i++)
 	{
 		send_data(dataPattern);
 	}
-	 UC1609_CS_SetHigh;
+	 stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -357,9 +358,9 @@ void ERM19264_UC1609::LCDGotoXY(uint8_t column , uint8_t page)
 {
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 	set_address(column, page);
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 }
 
 /*!
@@ -388,7 +389,7 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 #endif
 	BusTransaction transaction(*this);
 	if (!transaction.ready()) {return LCD_SPIBusBusy;}
-	UC1609_CS_SetLow;
+	stm32f4_gpio::write(_LCD_CS, LOW);
 
 	const int16_t visible_left = x < 0 ? 0 : x;
 	const int16_t right = x + w;
@@ -412,7 +413,7 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 		}
 #endif
 	}
-	UC1609_CS_SetHigh;
+	stm32f4_gpio::write(_LCD_CS, HIGH);
 	#if defined(ESP8266)
 		yield();
 	#endif
@@ -437,14 +438,12 @@ void ERM19264_UC1609::CustomshiftOut(uint8_t bitOrder, uint8_t value)
 {
 	for (uint8_t i = 0; i < 8; i++)
 	{
-		if (bitOrder == LSBFIRST)
-			!!(value & (1 << i)) ?  UC1609_SDA_SetHigh :  UC1609_SDA_SetLow;
-		else
-			!!(value & (1 << (7 - i))) ?  UC1609_SDA_SetHigh :  UC1609_SDA_SetLow;
+		const uint8_t bit = bitOrder == LSBFIRST ? i : (7 - i);
+		stm32f4_gpio::write(_LCD_DIN, (value >> bit) & 1U);
 
-		UC1609_SCLK_SetHigh ;
+		stm32f4_gpio::write(_LCD_SCLK, HIGH);
 		delayMicroseconds(_HighFreqDelay);
-		UC1609_SCLK_SetLow;
+		stm32f4_gpio::write(_LCD_SCLK, LOW);
 		delayMicroseconds(_HighFreqDelay);
 	}
 }
@@ -498,9 +497,9 @@ void ERM19264_UC1609::set_address(uint8_t column, uint8_t page)
 		(uint8_t) (UC1609_SET_COLADD_MSB | ((column & 0xF0) >> 4)),
 		(uint8_t) (UC1609_SET_PAGEADD | page),
 	};
-	UC1609_CD_SetLow;
+	stm32f4_gpio::write(_LCD_CD, LOW);
 	send_data_buffer(commands, sizeof(commands));
-	UC1609_CD_SetHigh;
+	stm32f4_gpio::write(_LCD_CD, HIGH);
 }
 
 
@@ -544,7 +543,7 @@ void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint
 #endif
  BusTransaction transaction(*this);
  if (!transaction.ready()) {return;}
- UC1609_CS_SetLow;
+ stm32f4_gpio::write(_LCD_CS, LOW);
 
 	const int16_t visible_left = x < 0 ? 0 : x;
 	const int16_t right = x + w;
@@ -561,7 +560,7 @@ void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint
 		send_data_buffer(data + offset, visible_width);
 	}
 
-UC1609_CS_SetHigh;
+stm32f4_gpio::write(_LCD_CS, HIGH);
 #if defined(ESP8266)
 	yield();
 #endif

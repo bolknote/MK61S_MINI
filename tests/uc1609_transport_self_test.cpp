@@ -217,6 +217,7 @@ static void test_software_spi_does_not_claim_spi1(void) {
   const spi1_arbiter::Snapshot before = spi1_bus::statistics();
 
   SPI.clear();
+  arduino_test::clear();
   lcd.LCDGotoXY(1, 2);
 
   const spi1_arbiter::Snapshot after = spi1_bus::statistics();
@@ -225,6 +226,26 @@ static void test_software_spi_does_not_claim_spi1(void) {
   assert(after.acquisitions == before.acquisitions);
   assert(after.releases == before.releases);
   assert(after.failures == before.failures);
+
+  // The address commands 01, 10, B2 must reach the panel in MSB-first order,
+  // with stable DIN before each complete high/low SCLK pulse.
+  const uint8_t expected_bits[] = {
+    0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 1, 0, 0, 0, 0,
+    1, 0, 1, 1, 0, 0, 1, 0
+  };
+  const auto& writes = arduino_test::pin_writes;
+  assert(writes.size() == 4 + sizeof(expected_bits) * 3);
+  assert(writes[0].pin == 3 && writes[0].value == LOW);
+  assert(writes[1].pin == 1 && writes[1].value == LOW);
+  for(size_t bit = 0; bit < sizeof(expected_bits); ++bit) {
+    const size_t at = 2 + bit * 3;
+    assert(writes[at].pin == 5 && writes[at].value == expected_bits[bit]);
+    assert(writes[at + 1].pin == 4 && writes[at + 1].value == HIGH);
+    assert(writes[at + 2].pin == 4 && writes[at + 2].value == LOW);
+  }
+  assert(writes[writes.size() - 2].pin == 1 && writes[writes.size() - 2].value == HIGH);
+  assert(writes.back().pin == 3 && writes.back().value == HIGH);
 }
 
 } // безымянное пространство имён

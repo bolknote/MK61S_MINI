@@ -2,6 +2,7 @@
 #include "config.h"
 #include "ledcontrol.h"
 #include "runtime_safety.hpp"
+#include "stm32f4_gpio.hpp"
 
 struct t_blink_state {
   bool active;
@@ -33,8 +34,8 @@ static inline u8 inactive_level(void) {
 }
 
 void init(void) {
-  pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, inactive_level());
+  stm32f4_gpio::configure(PIN_LED, OUTPUT);
+  stm32f4_gpio::write(PIN_LED, inactive_level());
   blink_state = {};
   pattern_count = 0;
   pattern_index = 0;
@@ -113,11 +114,11 @@ void control(t_time_ms now) {
 }
 
 void on(void) {
-  digitalWrite(PIN_LED, active_level());
+  stm32f4_gpio::write(PIN_LED, active_level());
 }
 
 void off(void) {
-  digitalWrite(PIN_LED, inactive_level());
+  stm32f4_gpio::write(PIN_LED, inactive_level());
 }
 
 void blink(usize count, t_time_ms on_ms, t_time_ms off_ms) {
