@@ -18,11 +18,13 @@ struct File {
 std::map<uint16_t,File> files;
 std::unique_ptr<language_workspace::Lease> buffer;
 uint16_t next_id=1000;
-unsigned writes,cache_reads,source_reads;
+unsigned writes,cache_reads,cache_prefix_reads,cache_full_reads,cache_reserved_reads,source_reads;
 bool driver_present=true,fail_buffer,fail_read,fail_write,change_on_cache_read;
 unsigned corrupt_cache_read;
 bool change_before_store;
 bool change_before_start;
+bool resize_after_reservation;
+uint32_t cache_phase;
 bool single_flow;
 void* root_context;
 unsigned cached_starts;
@@ -54,6 +56,13 @@ uint32_t read(uint32_t id,uint32_t offset,uint8_t* output,uint32_t length) {
   memcpy(output,e.bytes.data()+offset,length);
   if(e.parent==DIRECTORY && id!=DRIVER) {
     ++cache_reads;
+    assert(!offset);
+    if(length==e.bytes.size()) {
+      ++cache_full_reads;
+      if(cache_phase==file_cache::LOAD_RESERVED)++cache_reserved_reads;
+    } else {
+      assert(length==file_cache::PROBE_BYTES);++cache_prefix_reads;
+    }
     if(corrupt_cache_read && --corrupt_cache_read==0 && length)output[length-1]^=1;
     if(change_on_cache_read){++revision;change_on_cache_read=false;}
   } else if(id<=7 || id==201)++source_reads;
@@ -130,6 +139,12 @@ bool bind(const mk61_app_api* api,uint32_t,uint32_t){mk61_api=api;return true;}
 }
 namespace language_vm_file_cache_test {
 void before_step(mk61_app_flow* flow) {
+  cache_phase=flow->current.phase;
+  if(resize_after_reservation && flow->current.kind==MK61_APP_KIND_APPLICATION &&
+     flow->current.phase==file_cache::LOAD_RESERVED) {
+    const auto& stage=((CompilerContext*)flow->context)->compile;
+    files[stage.file_id].bytes.push_back(0);resize_after_reservation=false;
+  }
   if(single_flow) {
     assert(flow->context_size==sizeof(CompilerContext));
     if(!root_context)root_context=flow->context;
@@ -167,8 +182,12 @@ int main() {
   execute(1);assert(compiles==1 && writes==1 && array[1]==2);
   const auto initial_resets=state_resets;
   const auto initial_evictions=evictions;
+  const auto initial_prefix_reads=cache_prefix_reads,initial_full_reads=cache_full_reads;
+  const auto initial_reserved_reads=cache_reserved_reads;
   single_flow=true;invalidate();execute(1);single_flow=false;root_context=nullptr;
-  assert(compiles==1 && writes==1 && array[1]==4 && cache_reads>=2 && cached_starts==1);
+  assert(compiles==1 && writes==1 && array[1]==4 && cached_starts==1);
+  assert(cache_prefix_reads==initial_prefix_reads+1 && cache_full_reads==initial_full_reads+1 &&
+      cache_reserved_reads==initial_reserved_reads+1); // Exactly one full read, after reserve.
   assert(state_resets==initial_resets+1); // One reset, in the original flow.
   assert(evictions==initial_evictions); // Keep VMSTORE through START_LOADED.
   const auto before_reads=source_reads;
@@ -211,9 +230,53 @@ int main() {
   invalidate();execute(1);assert(compiles==old_compiles+1 && writes==old_writes+1);
   // A read fault after reservation must roll back BUILDING before compiling.
   const unsigned before_reserved_fault=compiles;
+  const unsigned before_reserved_reads=cache_reserved_reads;
   corrupt_cache_read=2;invalidate();execute(1);
-  assert(compiles==before_reserved_fault+1 && !corrupt_cache_read);
+  assert(compiles==before_reserved_fault+1 && !corrupt_cache_read &&
+      cache_reserved_reads==before_reserved_reads+1); // Second read is now prefix -> full.
   invalidate();execute(1);assert(compiles==before_reserved_fault+1);
+  // Neither a checked header/key prefix nor an unverified payload may publish
+  // malformed data. Header/key reject before reserve; payload rejects after it.
+  auto& record=files[cache_file(1)].bytes;
+  const auto valid_record=record;
+  const uint8_t key_magic[]={'V','M','C','1'};
+  const auto key_at=std::search(record.begin()+64,record.end(),std::begin(key_magic),std::end(key_magic));
+  assert(key_at!=record.end());
+  const unsigned key_offset=(unsigned)(key_at-record.begin());
+  for(const unsigned at:{60U,key_offset+4,(unsigned)record.size()-1}) {
+    record[at]^=1;
+    const unsigned before=compiles,full=cache_reserved_reads,written=writes;
+    invalidate();execute(1);
+    assert(compiles==before+1 && writes==written &&
+        cache_reserved_reads==full+(at==valid_record.size()-1?1U:0U));
+    record=valid_record;
+  }
+  // Check exact size again after host reserve even if a broken storage backend
+  // fails to advance its revision when changing the file.
+  const unsigned before_resized=compiles,before_resized_reads=cache_reserved_reads;
+  resize_after_reservation=true;invalidate();execute(1);
+  assert(!resize_after_reservation && compiles==before_resized+1 &&
+      cache_reserved_reads==before_resized_reads);
+  record=valid_record;invalidate();execute(1);assert(compiles==before_resized+1);
+  // Valid outer C6/key CRCs cannot stand in for the executable VM verifier.
+  const auto word=[](const uint8_t* p){return(uint16_t)(p[0]|((uint16_t)p[1]<<8));};
+  const auto* plain=valid_record.data()+key_offset;
+  file_cache::Key valid_key={};
+  memcpy(&valid_key.compiler_crc,plain+4,4);memcpy(&valid_key.source_crc,plain+8,4);
+  valid_key.source_id=word(plain+12);valid_key.source_size=word(plain+14);
+  valid_key.language=(Language)plain[20];
+  const uint16_t vm_size=word(plain+16);
+  std::vector<uint8_t> invalid_vm(plain+file_cache::KEY_BYTES,plain+file_cache::KEY_BYTES+vm_size);
+  invalid_vm[0]^=1;
+  record.resize(MAX_MODULE+128);uint16_t invalid_length=0;
+  assert(file_cache::pack(valid_key,invalid_vm.data(),vm_size,record.data(),
+      (uint16_t)record.size(),invalid_length));record.resize(invalid_length);
+  const uint8_t* ignored_image=nullptr;uint16_t ignored_size=0;
+  assert(file_cache::view(valid_key,record.data(),invalid_length,ignored_image,ignored_size));
+  const unsigned before_invalid_vm=compiles,before_invalid_reads=cache_reserved_reads;
+  invalidate();execute(1);
+  assert(compiles==before_invalid_vm+1 && cache_reserved_reads==before_invalid_reads+1);
+  record=valid_record;invalidate();execute(1);assert(compiles==before_invalid_vm+1);
   // Recheck after HOST committed the workspace, not only during file reads.
   const unsigned before_committed_race=compiles;
   change_before_start=true;invalidate();execute(1);

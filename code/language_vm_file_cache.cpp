@@ -73,38 +73,59 @@ bool pack(const Key& key,const uint8_t* image,uint16_t size,
   return true;
 }
 namespace {
+bool header(const uint8_t* file,uint16_t size,loadable_module::Header& h) {
+  return file && size>=PROBE_BYTES &&
+      loadable_module::decode_header(file,size,loadable_module::Kind::APPLICATION,h)==
+        loadable_module::HeaderStatus::OK && !h.relocation_count &&
+      h.compression==loadable_module::Compression::ZX0 && h.memory_size==h.image_size &&
+      h.flags==(MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG) &&
+      h.stored_size==size-64U && h.code_stored_size==h.stored_size;
+}
+bool literal(Reader& r,const loadable_module::Header& h,
+             const uint8_t*& data,uint16_t& image_size) {
+  unsigned logical;
+  if(!r.gamma(logical,false) || logical!=h.image_size || logical<KEY_BYTES+HEADER_SIZE+4 ||
+     logical>h.stored_size-r.position || h.entry_offset+sizeof(entry)!=logical ||
+     r.size-r.position<KEY_BYTES)return false;
+  data=r.input+r.position;image_size=word(data+16);
+  return image_size>=HEADER_SIZE && image_size<=MAX_MODULE &&
+      h.entry_offset==((KEY_BYTES+image_size+3)&~3U);
+}
+bool matches(const Key& key,const uint8_t* plain,uint16_t image_size) {
+  uint8_t expected[KEY_BYTES];key_bytes(key,image_size,expected);
+  return !memcmp(plain,expected,sizeof(expected));
+}
 bool container(const uint8_t* file,uint16_t size,
                const uint8_t*& plain,uint16_t& image_size) {
   plain=nullptr;image_size=0;
-  if(!file || size<64)return false;
   loadable_module::Header h;
-  if(loadable_module::decode_header(file,size,loadable_module::Kind::APPLICATION,h)!=
-       loadable_module::HeaderStatus::OK || h.relocation_count ||
-     h.compression!=loadable_module::Compression::ZX0 || h.memory_size!=h.image_size ||
-     h.flags!=(MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG) ||
-     h.stored_size!=size-64U || h.code_stored_size!=h.stored_size ||
+  if(!header(file,size,h) ||
      loadable_module::crc32(file+64,h.stored_size)!=h.stored_crc32)return false;
-  Reader r={file+64,h.stored_size};unsigned logical;
-  if(!r.gamma(logical,false) || logical!=h.image_size || logical<KEY_BYTES+HEADER_SIZE+4 ||
-     logical>r.size-r.position || h.entry_offset+sizeof(entry)!=logical)return false;
-  const uint8_t* data=r.input+r.position;
-  image_size=word(data+16);
-  if(image_size<HEADER_SIZE || image_size>MAX_MODULE ||
-     h.entry_offset!=((KEY_BYTES+image_size+3)&~3U) ||
+  Reader r={file+64,h.stored_size};const uint8_t* data;
+  if(!literal(r,h,data,image_size) ||
      memcmp(data+h.entry_offset,entry,sizeof(entry)) ||
-     loadable_module::crc32(data,logical)!=h.image_crc32)return false;
-  r.position+=logical;bool end;unsigned marker;
+     loadable_module::crc32(data,h.image_size)!=h.image_crc32)return false;
+  r.position+=h.image_size;bool end;unsigned marker;
   if(!r.bit(end) || !end || !r.gamma(marker,true) || marker!=256 || r.position!=r.size)return false;
   plain=data;return true;
 }
+}
+bool probe(const Key& key,const uint8_t* prefix,uint16_t prefix_size,
+           uint16_t size,uint16_t& image_size) {
+  image_size=0;loadable_module::Header h;
+  if(prefix_size<PROBE_BYTES || !header(prefix,size,h))return false;
+  Reader r={prefix+64,PROBE_BYTES-64};const uint8_t* plain;
+  if(!literal(r,h,plain,image_size) || !matches(key,plain,image_size)) {
+    image_size=0;return false;
+  }
+  return true;
 }
 bool view(const Key& key,const uint8_t* file,uint16_t size,
           const uint8_t*& image,uint16_t& image_size) {
   image=nullptr;
   const uint8_t* plain=nullptr;
   if(!container(file,size,plain,image_size))return false;
-  uint8_t expected[KEY_BYTES];key_bytes(key,image_size,expected);
-  if(memcmp(plain,expected,sizeof(expected))){image_size=0;return false;}
+  if(!matches(key,plain,image_size)){image_size=0;return false;}
   image=plain+KEY_BYTES;return true;
 }
 bool owned(uint16_t source_id,Language language,const uint8_t* file,uint16_t size) {
@@ -113,7 +134,6 @@ bool owned(uint16_t source_id,Language language,const uint8_t* file,uint16_t siz
   Key key={};
   memcpy(&key.compiler_crc,plain+4,4);memcpy(&key.source_crc,plain+8,4);
   key.source_id=source_id;key.source_size=word(plain+14);key.language=language;
-  uint8_t expected[KEY_BYTES];key_bytes(key,image_size,expected);
-  return !memcmp(plain,expected,sizeof(expected));
+  return matches(key,plain,image_size);
 }
 }

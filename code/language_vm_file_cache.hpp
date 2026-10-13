@@ -13,6 +13,9 @@ namespace language_vm::file_cache {
 // new file type or extra native execution path. Its four-byte entry rejects
 // INITIALIZE, so opening a cache file cannot execute its bytecode as ARM.
 static constexpr unsigned KEY_BYTES=24;
+// The literal-only recipe starts with at most four gamma-control bytes for
+// the bounded image followed by the key. No payload CRC is trusted yet.
+static constexpr unsigned PROBE_BYTES=loadable_module::HEADER_SIZE+4+KEY_BYTES;
 static constexpr unsigned MAX_FILES=32, MAX_TOTAL_BYTES=65536;
 static constexpr char DRIVER_PATH[]="/System/VMCache/VMSTORE.APP";
 struct Key {
@@ -22,6 +25,10 @@ struct Key {
 };
 bool pack(const Key&,const uint8_t* image,uint16_t size,
           uint8_t* output,uint16_t capacity,uint16_t& written);
+// Only grants a bounded reservation: checked C6 header, literal length and
+// complete key. The subsequent single full read must still pass view/verifier.
+bool probe(const Key&,const uint8_t* prefix,uint16_t prefix_size,
+           uint16_t file_size,uint16_t& image_size);
 // Full C6 CRCs, key, canonical literal-only recipe and non-executable entry
 // are checked. The returned span still needs the ordinary VM verifier.
 bool view(const Key&,const uint8_t* file,uint16_t size,

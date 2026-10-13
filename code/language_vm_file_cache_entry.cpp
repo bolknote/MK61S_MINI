@@ -177,17 +177,19 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
         (uint16_t)source.size,c.language};
     if(!compiler(c.language,buffer.lease.data,stage.file_key.compiler_crc) ||
        !resolve(file_cache::DRIVER_PATH,driver) || !find((uint16_t)driver.parent,filename,cache) ||
-       cache.size>buffer.lease.size || mk61_api->file_read(cache.id,0,buffer.lease.data,cache.size)!=cache.size) {
+       cache.size>buffer.lease.size || cache.size<file_cache::PROBE_BYTES ||
+       mk61_api->file_read(cache.id,0,buffer.lease.data,file_cache::PROBE_BYTES)!=file_cache::PROBE_BYTES) {
       miss(flow,c);return 1;
     }
-    const uint8_t* image=nullptr;uint16_t bytes=0;
-    if(!file_cache::view(stage.file_key,buffer.lease.data,(uint16_t)cache.size,image,bytes) ||
+    uint16_t bytes=0;
+    if(!file_cache::probe(stage.file_key,buffer.lease.data,file_cache::PROBE_BYTES,(uint16_t)cache.size,bytes) ||
        call(MK61_SERVICE_RESOURCE_READ)!=revision){miss(flow,c);return 1;}
     stage.request={};stage.request.size=sizeof(Request);stage.request.version=REQUEST_VERSION;
     stage.request.source_id=c.source_id;stage.request.source_revision=revision;
     stage.request.resources=ResourceMode::EMBEDDED;stage.request.language=(uint8_t)c.language;
     stage.request.compiled.size=bytes;stage.request.compiled.error=Error::NONE;
     stage.file_id=(uint16_t)cache.id;
+    stage.file_reserved=(uint16_t)cache.size;
     stage.transfer.size=bytes;stage.transfer.prefix=sizeof(ExecutionState);
     mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
         MK61_APP_FLOW_SYSTEM_FILE,app_flow::RESERVE_CACHE_IMAGE),file_cache::LOAD_RESERVED);
@@ -201,7 +203,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   }
   const uint32_t file_size=mk61_api->file_size(stage.file_id);
   const uint8_t* image=nullptr;uint16_t bytes=0;View view={};
-  if(file_size>buffer.lease.size ||
+  if(file_size!=stage.file_reserved || file_size>buffer.lease.size ||
      mk61_api->file_read(stage.file_id,0,buffer.lease.data,file_size)!=file_size ||
      !file_cache::view(stage.file_key,buffer.lease.data,(uint16_t)file_size,image,bytes) ||
      bytes!=stage.transfer.size || !executable(image,bytes,stage.file_key,view) ||
