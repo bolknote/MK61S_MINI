@@ -38,7 +38,8 @@ done
 
 # Arduino compiles every .cpp, including this experimental compiler when both
 # VM placements are off. Its unused APP-only frames must not enter resident
-# stack analysis. Host/portable builds and both explicit VM modes retain it.
+# stack analysis. Only compiler APPs retain full-program entry points;
+# resident/hot/cold VM placements retain the expression-only INPUT compiler.
 for placement in disabled resident overlay compiler-module vm-module input-module; do
   extra=()
   if [[ "$placement" == resident ]]; then
@@ -57,9 +58,11 @@ for placement in disabled resident overlay compiler-module vm-module input-modul
     -o "$work/compiler-$placement.o"
   symbols="$(nm "$work/compiler-$placement.o")"
   if [[ "$placement" == disabled ]]; then
-    [[ "$symbols" != *compile_basic* && "$symbols" != *compile_focal* ]]
-  else
+    [[ "$symbols" != *compile_basic* && "$symbols" != *compile_focal* && "$symbols" != *compile_expression* ]]
+  elif [[ "$placement" == compiler-module ]]; then
     [[ "$symbols" == *compile_basic* && "$symbols" == *compile_focal* ]]
+  else
+    [[ "$symbols" == *compile_expression* && "$symbols" != *compile_basic* && "$symbols" != *compile_focal* ]]
   fi
 done
 MK61_LANGUAGE_VM_TEST=1 bash "$root/tests/run_tinybasic_tests.sh"

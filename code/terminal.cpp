@@ -1748,7 +1748,7 @@ void class_terminal::print_profile_statistics(void) {
       }
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
-      for(usize group=0;group<8;++group) {
+      for(usize group=0;group<dwt_profiler::VM_OPCODE_GROUPS;++group) {
         terminal_output::field(Serial,"VMINT group=",group);
         terminal_output::line(Serial," count=",dwt_profiler::vm_opcode_integers(group));
       }

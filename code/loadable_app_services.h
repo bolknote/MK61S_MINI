@@ -86,11 +86,14 @@ enum mk61_service_operation {
   MK61_SERVICE_RESOURCE_READ,
   /* Opt-in Serial diagnostic line: a=byte count (<=128), payload=bytes. */
   MK61_SERVICE_DEBUG_WRITE,
-  /* Diagnostic only: a=opcode group (0..7), b=samples, c=integer pairs,
+  /* Diagnostic only: a=opcode group (0..8), b=samples, c=integer pairs,
    * payload=uint64_t cycles. No Serial output while a Screen packet is live.
+   * With RAW_OPCODE set, a's lower bits contain a wire opcode, or 256 for
+   * a fused integer block; sampling ends before the service call.
    * Ordinary residents reject this optional operation without side effects. */
   MK61_SERVICE_VM_PROFILE
 };
+#define MK61_VM_PROFILE_RAW_OPCODE UINT32_C(0x80000000)
 
 /* Immutable resource spans. Operation 0 returns the current media revision;
  * operation 1 reads exactly length bytes only while that revision matches.

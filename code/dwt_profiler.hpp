@@ -113,7 +113,7 @@ enum class Point : u8 {
   M61_READ_LINE, M61_COMMAND,
 #if MK61_VM_OPCODE_PROFILE
   VM_CONSTANTS, VM_LOCALS, VM_ARRAYS, VM_ADD_SUB, VM_MULTIPLY, VM_DIV_MOD,
-  VM_COMPARE, VM_OTHER,
+  VM_COMPARE, VM_OTHER, VM_INTEGER_BLOCK,
 #endif
 #if MK61_DWT_IDLE_DETAIL
   IDLE_POWER, IDLE_RTC, IDLE_MSC, IDLE_USB_POWER, IDLE_TERMINAL,
@@ -217,6 +217,8 @@ void record_vm_image(u16 id, u16 size);
 const VmCacheRow& vm_cache_row(usize index);
 u32 vm_cache_dropped(void);
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+static constexpr usize VM_OPCODE_GROUPS = 9;
+u32 vm_opcode_group(u32 opcode);
 void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles);
 u32 vm_opcode_integers(usize group);
 #endif

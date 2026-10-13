@@ -210,7 +210,11 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
   switch(operation) {
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
     case MK61_SERVICE_VM_PROFILE: {
-      if(!payload || a>=8 || !b || c>b)return 0;
+      if(a & MK61_VM_PROFILE_RAW_OPCODE) {
+        a=dwt_profiler::vm_opcode_group(a & ~MK61_VM_PROFILE_RAW_OPCODE);
+        if(a==8)c=b; // Successful guarded blocks contain only integer work.
+      }
+      if(!payload || a>=dwt_profiler::VM_OPCODE_GROUPS || !b || c>b)return 0;
       u64 cycles;
       memcpy(&cycles,payload,sizeof(cycles));
       dwt_profiler::record_vm_opcodes(a,b,c,cycles);

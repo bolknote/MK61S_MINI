@@ -3,70 +3,82 @@
 
 // Diagnostic-only cycle attribution. No fields, callbacks or counters enter
 // the VM ABI; ordinary APPs compile this completely out.
-#if defined(MK61_VM_OPCODE_PROFILE) && MK61_VM_OPCODE_PROFILE && \
-    defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(__arm__)
+#if (defined(MK61_VM_OPCODE_PROFILE) && MK61_VM_OPCODE_PROFILE && \
+     defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(__arm__)) || \
+    defined(LANGUAGE_VM_OPCODE_PROFILE_TEST)
+#define LANGUAGE_VM_OPCODE_PROFILE_SUPPORTED 1
+#ifndef MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS
+#define MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS 1
+#endif
+#ifndef MK61_VM_OPCODE_PROFILE_TIMING
+#define MK61_VM_OPCODE_PROFILE_TIMING 1
+#endif
+#if (MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS != 0 && MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS != 1) || \
+    (MK61_VM_OPCODE_PROFILE_TIMING != 0 && MK61_VM_OPCODE_PROFILE_TIMING != 1)
+#error "VM profile timing/integer census must be 0 or 1"
+#endif
 namespace language_vm {
+#if defined(LANGUAGE_VM_OPCODE_PROFILE_TEST)
+uint32_t opcode_profile_test_cycles();
+#endif
 class OpcodeProfile {
-  struct Row { uint64_t cycles; uint32_t count, integers; };
-  Row rows_[8] = {};
   uint32_t overhead_;
   static uint32_t cycles() {
+#if defined(LANGUAGE_VM_OPCODE_PROFILE_TEST)
+    return opcode_profile_test_cycles();
+#else
     __asm__ __volatile__("" ::: "memory");
     const uint32_t value = *(volatile uint32_t*)UINT32_C(0xE0001004);
     __asm__ __volatile__("" ::: "memory");
     return value;
-  }
-  static unsigned group(Op op) {
-    if((op>=Op::LOAD && op<=Op::STORE) || op==Op::UPDATE_LOCAL) return 1;
-    if(op==Op::LOAD_ARRAY || op==Op::STORE_ARRAY || op==Op::LOAD_ARRAY_FIXED ||
-       op==Op::ARRAY_CELL || op==Op::TARGET_ARRAY) return 2;
-    if(op==Op::ADD || op==Op::SUB) return 3;
-    if(op==Op::MUL) return 4;
-    if(op==Op::DIV || op==Op::MOD || op==Op::FLOOR_DIV) return 5;
-    if((op>=Op::EQ && op<=Op::XOR) || op==Op::COMPARE_FALSE) return 6;
-    if((op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::CONST_I8 ||
-       op==Op::CONST_I16 || op==Op::CONST_I32 || op==Op::CONST_F64 ||
-       op==Op::CONST_DEC8 || op==Op::CONST_DEC16) return 0;
-    return 7;
+#endif
   }
 public:
   explicit OpcodeProfile(const View&) {
+#if MK61_VM_OPCODE_PROFILE_TIMING
     const uint32_t start=cycles();
     overhead_=cycles()-start;
-  }
-  ~OpcodeProfile() {
-    for(unsigned i=0;i<8;++i) {
-      const auto& r=rows_[i];
-      if(!r.count) continue;
-      (void)portable_system::call(MK61_SERVICE_VM_PROFILE,i,r.count,r.integers,
-                                  (void*)&r.cycles);
-    }
+#else
+    overhead_=0;
+#endif
   }
   class Sample {
     OpcodeProfile& owner_;
-    unsigned group_;
+    uint16_t opcode_;
     bool integer_;
+    uint8_t count_=1;
     uint32_t start_;
   public:
     Sample(OpcodeProfile& owner, Op op, const Continuation& s, const Bindings& data)
-        : owner_(owner), group_(group(op)), integer_(false) {
-      if(group_>=3 && group_<=6 && s.sp>=2)
+        : owner_(owner), opcode_((uint8_t)op), integer_(false) {
+      if(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS &&
+         ((op>=Op::ADD && op<=Op::XOR && op!=Op::POW) || op==Op::FLOOR_DIV || op==Op::COMPARE_FALSE) && s.sp>=2)
         integer_=data.stack[s.sp-1].integer() && data.stack[s.sp-2].integer();
-      start_=cycles();
+      start_=MK61_VM_OPCODE_PROFILE_TIMING?cycles():0;
     }
-    ~Sample() {
-      const uint32_t elapsed=cycles()-start_;
-      auto& row=owner_.rows_[group_];
-      row.cycles += elapsed>owner_.overhead_ ? elapsed-owner_.overhead_ : 0;
-      ++row.count;row.integers+=integer_;
+    // A guarded block replaces several logical instructions, not their
+    // semantics. Attribute its elapsed time once, separately from scalar
+    // opcode groups; n is the number of useful instructions it consumed.
+    void fused(uint8_t count) {opcode_=256;integer_=MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS!=0;count_=count;}
+    __attribute__((noinline)) ~Sample() {
+      const uint32_t elapsed=MK61_VM_OPCODE_PROFILE_TIMING?cycles()-start_:0;
+      const uint64_t measured=elapsed>owner_.overhead_ ? elapsed-owner_.overhead_ : 0;
+      // Classification/accumulation is diagnostic resident code. Sampling
+      // stops before this call, so its cost is not attributed to an opcode.
+      (void)portable_system::call(MK61_SERVICE_VM_PROFILE,
+          MK61_VM_PROFILE_RAW_OPCODE|opcode_,count_,
+          MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS && integer_?count_:0,(void*)&measured);
     }
   };
 };
 }
 #define VM_OPCODE_PROFILE(view) language_vm::OpcodeProfile vm_opcode_profile(view)
 #define VM_OPCODE_SAMPLE(op,state,data) language_vm::OpcodeProfile::Sample vm_opcode_sample(vm_opcode_profile,op,state,data)
+#define VM_OPCODE_FUSED(count) vm_opcode_sample.fused((uint8_t)(count))
 #else
+#define LANGUAGE_VM_OPCODE_PROFILE_SUPPORTED 0
 #define VM_OPCODE_PROFILE(view) ((void)0)
 #define VM_OPCODE_SAMPLE(op,state,data) ((void)0)
+#define VM_OPCODE_FUSED(count) ((void)0)
 #endif
 #endif

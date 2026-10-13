@@ -205,10 +205,16 @@ def build(args: argparse.Namespace) -> dict:
         if args.system != "language-vm":
             raise ValueError("--vm-opcode-profile applies only to language-vm")
         flags.append("-DMK61_VM_OPCODE_PROFILE=1")
+        if getattr(args,"vm_opcode_profile_no_integer_counts",False):
+            flags.append("-DMK61_VM_OPCODE_PROFILE_INTEGER_COUNTS=0")
+        if getattr(args,"vm_opcode_profile_counts_only",False):
+            flags.append("-DMK61_VM_OPCODE_PROFILE_TIMING=0")
+    elif getattr(args,"vm_opcode_profile_no_integer_counts",False) or getattr(args,"vm_opcode_profile_counts_only",False):
+        raise ValueError("opcode profile options require --vm-opcode-profile")
     integer_block = getattr(args, "vm_integer_block", None)
     if integer_block is not None:
-        if args.system != "language-vm" or getattr(args, "vm_opcode_profile", False):
-            raise ValueError("--vm-integer-block requires language-vm without opcode profiling")
+        if args.system != "language-vm":
+            raise ValueError("--vm-integer-block requires language-vm")
         flags.append(f"-DMK61_VM_INTEGER_BLOCK={int(integer_block)}")
     if not system:
         flags.append("-ffreestanding")
@@ -373,8 +379,11 @@ def build(args: argparse.Namespace) -> dict:
         report["focal_trace"] = True
     if getattr(args, "vm_opcode_profile", False):
         report["vm_opcode_profile"] = True
+        report["vm_opcode_profile_raw_service"] = True
+        report["vm_opcode_profile_integer_counts"] = not getattr(args,"vm_opcode_profile_no_integer_counts",False)
+        report["vm_opcode_profile_timing"] = not getattr(args,"vm_opcode_profile_counts_only",False)
     if args.system in ("language-vm", "language-input"):
-        report["vm_integer_block"] = not getattr(args, "vm_opcode_profile", False) and (
+        report["vm_integer_block"] = (
             not args.local_float_math if integer_block is None else integer_block)
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
@@ -395,6 +404,10 @@ def main() -> None:
     parser.add_argument("--focal-trace", action="store_true", help="enable opt-in FOCAL Serial diagnostics in frontend/VM")
     parser.add_argument("--vm-opcode-profile", action="store_true",
                         help="diagnostic DWT opcode groups; requires resident opcode-profile service")
+    parser.add_argument("--vm-opcode-profile-no-integer-counts",action="store_true",
+                        help="omit scalar operand-type census for a compact cycle-attribution pass")
+    parser.add_argument("--vm-opcode-profile-counts-only",action="store_true",
+                        help="count groups/types without cycle sampling; same executor and size ceilings")
     parser.add_argument("--vm-integer-block", action=argparse.BooleanOptionalAction,
                         default=None, help="guarded integer sequence (on except local float); unchanged bytecode/ABI")
     parser.add_argument("--language-vm-compiler", action="store_true",

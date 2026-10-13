@@ -66,7 +66,8 @@ enum Command : uint8_t {
   RESTORE_CMD,
   ON_CMD
 };
-const Keyword basic_commands[] = {{"REM", 3, REM},
+// Expression-only INPUT/VM placements do not emit the BASIC statement lexer.
+[[maybe_unused]] const Keyword basic_commands[] = {{"REM", 3, REM},
                                   {"REMARK", 3, REM},
                                   {"LET", 1, ASSIGN},
                                   {"PRINT", 1, PRINT},
