@@ -47,7 +47,8 @@ class HalTimerPolicyTest(unittest.TestCase):
                       '#include "hal_conf_extra.h"\n')
             for name in ("Arduino.h", "timer.h", "HardwareTimer.h"):
                 (includes / name).write_text(common)
-            for name in ("PeripheralPins.h", "pinmap.h", "core_debug.h", "board.h"):
+            for name in ("PeripheralPins.h", "pinmap.h", "core_debug.h", "board.h",
+                         "stm32yyxx_ll_tim.h"):
                 (includes / name).write_text("#pragma once\n")
             command = [self.compiler, "-std=c++17", "-E", "-x", "c++",
                        "-DCONFIG", "-DTIMER_TONE=1", "-I" + str(includes),

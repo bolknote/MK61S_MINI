@@ -107,7 +107,7 @@ class CoreLtoBuildTest(unittest.TestCase):
 
 
 class UsbLtoBuildTest(unittest.TestCase):
-    def exercise(self, powershell=False, fail=False):
+    def exercise(self, powershell=False, fail=False, owned=None, missing_owned=False):
         with tempfile.TemporaryDirectory(prefix='mk61 usb lto ') as temporary:
             base = Path(temporary)
             build = base / 'build with spaces'
@@ -127,6 +127,14 @@ class UsbLtoBuildTest(unittest.TestCase):
             # unit previously let MSP initialization disappear on real F411.
             bridge = build / 'libraries/USBDevice/usbd_conf.c.o'
             bridge.write_text('strong HAL callbacks in LTO')
+            request = build / 'libraries/USBDevice/usb_device_ctlreq.c.o'
+            request.write_text('generic control requests')
+            snapshot = build / 'sketch'
+            snapshot.mkdir()
+            for name in ('stm32f4_usb_device.cpp','stm32f4_usbd_ctlreq.c'):
+                (snapshot / name).write_text('// snapshot fixture')
+            if missing_owned:
+                (snapshot / 'stm32f4_usb_device.cpp').unlink()
             helper = ROOT / 'tools' / '.mk61-gcc' / ('protect-usb-lto.' + suffix)
             fake = base / 'fake compiler'
             shutil.copyfile(HERE, fake)
@@ -137,14 +145,16 @@ class UsbLtoBuildTest(unittest.TestCase):
                        '-IC:/Program Files/STM32/USBDevice/inc',
                        '-Id:/Arduino/core/inc', r'-IE:\Arduino core\USBDevice\inc',
                        '-I', 'F:/separate include option']
+            if owned:
+                options += ['-D' + owned, '-include', 'stm32f4_usbd_def.h']
             if fail:
                 options.append('--fail')
             result = subprocess.run([*launcher, str(helper), str(build), str(library),
                                      str(fake), '--fake-compiler', *options],
                                     capture_output=True, text=True)
-            if fail:
+            if fail or missing_owned:
                 self.assertNotEqual(result.returncode, 0)
-                self.assertEqual(objects[0].read_text(), 'original LTO object')
+                if fail:self.assertEqual(objects[0].read_text(), 'original LTO object')
                 return
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             expected = [arg.replace('\\', '/') for arg in options] if powershell else options
@@ -152,10 +162,35 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertEqual(json.loads(obj.read_text()),
                                  expected + ['-fno-lto', str(library / source), '-o', str(obj)])
             self.assertEqual(result.stdout.count('USB LTO barrier:'), 2)
-            self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
+            if owned:
+                bridge_args=json.loads(bridge.read_text())
+                request_args=json.loads(request.read_text())
+                normalize=lambda s:s.replace('\\','/') if powershell else s
+                self.assertIn(normalize(str(snapshot/'stm32f4_usb_device.cpp')),bridge_args)
+                self.assertIn(normalize(str(snapshot/'stm32f4_usbd_ctlreq.c')),request_args)
+                self.assertIn('-DMK61_USB_BUILD_BRIDGE=1',bridge_args)
+                self.assertIn('-DMK61_USB_BUILD_CTLREQ=1',request_args)
+                self.assertIn('-fno-exceptions',bridge_args)
+                self.assertNotIn('-fno-lto',bridge_args)
+                self.assertNotIn('-fno-lto',request_args)
+                self.assertIn('stm32f4_usbd_def.h',bridge_args)
+            else:
+                self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
+                self.assertEqual(request.read_text(), 'generic control requests')
 
     def test_native(self):
         self.exercise()
+
+    def test_native_owned_f4_snapshot(self):
+        for mcu in ('STM32F401xC','STM32F401xE','STM32F411xE'):
+            self.exercise(owned=mcu)
+        self.exercise(owned='STM32F411xE',missing_owned=True)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_owned_f4_snapshot(self):
+        for mcu in ('STM32F401xC','STM32F411xE'):
+            self.exercise(powershell=True,owned=mcu)
+        self.exercise(powershell=True,owned='STM32F411xE',missing_owned=True)
 
     def test_native_failure(self):
         self.exercise(fail=True)

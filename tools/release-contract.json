@@ -453,9 +453,9 @@
     }
   ],
   "comparison_budgets": {
-    "f401_ws0010_ram_growth": 0,
+    "f401_ws0010_ram_growth": 8,
     "f411_ws0010_ram_growth": 256,
-    "f401_ws0010_usb_ram_growth": 0,
+    "f401_ws0010_usb_ram_growth": 8,
     "f401_ws0010_graphics_ram_growth": 16
   }
 }

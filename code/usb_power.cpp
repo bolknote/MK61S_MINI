@@ -1,4 +1,5 @@
 #include "usb_power.hpp"
+#include "stm32f4_usb_device.hpp"
 
 #if MK61_USB_POWER_OBSERVER_SUPPORTED
   #include <Arduino.h>
@@ -12,7 +13,9 @@
   #include "usbd_msc.h"
 
   extern USBD_HandleTypeDef hUSBD_Device_CDC;
+  #if !MK61_USB_DIRECT_SUPPORTED
   extern PCD_HandleTypeDef g_hpcd;
+  #endif
   }
   #include "stm32f4_usb_wakeup.hpp"
 #endif
@@ -224,7 +227,11 @@ static void service_hardware_suspend_fallback(void) {
   if(hardware_suspended_now() && load_bool(link_present) &&
      device()->dev_state != USBD_STATE_SUSPENDED) {
     (void) __wrap_USBD_LL_Suspend(device());
+    #if MK61_USB_DIRECT_SUPPORTED
+    stm32f4_usb_device::gate_phy();
+#else
     __HAL_PCD_GATE_PHYCLOCK(&g_hpcd);
+#endif
     increment(recovered_suspend_events);
   }
   __set_PRIMASK(primask);
@@ -332,7 +339,11 @@ extern "C" USBD_StatusTypeDef __wrap_USBD_LL_Resume(
   store(suspend_started_ms, 0);
 #if MK61_USB_SUSPEND_SUPPORTED
   note_stop_host_event();
+  #if MK61_USB_DIRECT_SUPPORTED
+  stm32f4_usb_device::set_low_power(false);
+#else
   g_hpcd.Init.low_power_enable = DISABLE;
+#endif
 #endif
   observe(value, true);
   return result;
@@ -354,7 +365,11 @@ extern "C" USBD_StatusTypeDef __wrap_USBD_LL_DevDisconnected(
   note_wrapper(SEEN_DISCONNECT, disconnect_callbacks);
 #if MK61_USB_SUSPEND_SUPPORTED
   note_stop_host_event();
+  #if MK61_USB_DIRECT_SUPPORTED
+  stm32f4_usb_device::set_low_power(false);
+#else
   g_hpcd.Init.low_power_enable = DISABLE;
+#endif
 #endif
   observe(value, false);
   return result;
@@ -536,7 +551,11 @@ PrepareResult prepare_stop(bool application_idle, u32 now_ms) {
   // The Core's suspend callback has already run, so enabling this here cannot
   // trigger its automatic SLEEPONEXIT path. It only lets the stock wake IRQ
   // restore clocks and ungate the PHY if the host resumes during our STOP.
+  #if MK61_USB_DIRECT_SUPPORTED
+  stm32f4_usb_device::set_low_power(true);
+#else
   g_hpcd.Init.low_power_enable = ENABLE;
+#endif
   store_u8(stop_session, usb_power_policy::begin_stop_session());
   increment(stop_arms);
   if(stop_wake_pending()) {
@@ -575,8 +594,16 @@ StopCompletion finish_stop(bool usb_host_wake, bool keyboard_wake) {
   if(completion.host_wake) {
     // The host owns resume.  Restore the PHY immediately and let the pending
     // USB core IRQ complete the middleware CONFIGURED transition.
+    #if MK61_USB_DIRECT_SUPPORTED
+    stm32f4_usb_device::ungate_phy();
+#else
     __HAL_PCD_UNGATE_PHYCLOCK(&g_hpcd);
-    g_hpcd.Init.low_power_enable = DISABLE;
+#endif
+    #if MK61_USB_DIRECT_SUPPORTED
+  stm32f4_usb_device::set_low_power(false);
+#else
+  g_hpcd.Init.low_power_enable = DISABLE;
+#endif
     clear_usb_wakeup_flag();
   }
   // For keyboard and RTC wake the host is still suspended.  Keep its PHY
@@ -596,8 +623,16 @@ void cancel_stop(void) {
       stop_session, usb_power_policy::STOP_SESSION_IDLE);
   if((session & usb_power_policy::STOP_SESSION_ARMED) == 0U) return;
   if(!suspended()) {
+    #if MK61_USB_DIRECT_SUPPORTED
+    stm32f4_usb_device::ungate_phy();
+#else
     __HAL_PCD_UNGATE_PHYCLOCK(&g_hpcd);
-    g_hpcd.Init.low_power_enable = DISABLE;
+#endif
+    #if MK61_USB_DIRECT_SUPPORTED
+  stm32f4_usb_device::set_low_power(false);
+#else
+  g_hpcd.Init.low_power_enable = DISABLE;
+#endif
     clear_usb_wakeup_flag();
   }
   increment(stop_aborts);

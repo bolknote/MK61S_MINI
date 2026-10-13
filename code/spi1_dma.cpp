@@ -51,13 +51,22 @@ static bool stop_streams() {
   return true;
 }
 static void wait_for_interrupt() {
-  const u32 saved = SCB->SCR;
-  SCB->SCR = saved & ~SCB_SCR_SLEEPDEEP_Msk;
-  __DSB();
-  __WFI();
-  __ISB();
-  SCB->SCR = saved;
-  __DSB();
+  // An IRQ can finish DMA between the loop's flag check and WFI. Mask
+  // interrupts and recheck before sleeping. Cortex-M WFI wakes on a pending
+  // enabled interrupt even with PRIMASK set; its handler runs on restore.
+  const u32 mask = __get_PRIMASK();
+  __disable_irq();
+  if (completed != 3 && errors == 0) {
+    const u32 saved = SCB->SCR;
+    SCB->SCR = saved & ~SCB_SCR_SLEEPDEEP_Msk;
+    counters.wfi_entries = saturated_increment(counters.wfi_entries);
+    __DSB();
+    __WFI();
+    __ISB();
+    SCB->SCR = saved;
+    __DSB();
+  }
+  __set_PRIMASK(mask);
 }
 
 #endif
@@ -117,7 +126,6 @@ Result transfer(const void *tx_buffer, void *rx_buffer, usize count) {
       timeout = true;
       break;
     }
-    counters.wfi_entries = saturated_increment(counters.wfi_entries);
     wait_for_interrupt();
   }
   while (!timeout && errors == 0 && (SPI1->SR & SPI_SR_BSY) != 0) {

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "stm32f4_gpio.hpp"
+#include "stm32f4_keyboard_exti.hpp"
 #include "keyboard.h"
 #include "keyboard_layout.hpp"
 #include "entropy_pool.hpp"
@@ -102,7 +103,7 @@ static  keyboard_core::ExternalKeyState external_keys;
 static  keyboard_core::PressEdgeLatch immediate_presses;
 
 #if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
-static bool stop_wake_armed;
+static volatile bool stop_wake_armed;
 static volatile bool stop_wake_irq_seen;
 static volatile u8 stop_wake_rows_seen;
 static u32 stop_wake_capture_events;
@@ -262,12 +263,18 @@ bool prepare_stop_wake(void) {
 
   stop_wake_irq_seen = false;
   __atomic_store_n(&stop_wake_rows_seen, (u8) 0, __ATOMIC_RELAXED);
+  stop_wake_armed = true;
+#if MK61_STM32F4_RESOURCE_MAP_SUPPORTED
+  static_assert(PIN_KBD_ROW0 == PB4 && PIN_KBD_ROW1 == PB5 &&
+                PIN_KBD_ROW2 == PB6 && PIN_KBD_ROW3 == PB7 && PIN_KBD_ROW4 == PB8,
+                "qualify EXTI routing for this keyboard");
+  stm32f4_keyboard_exti::arm();
+#else
   EXTI->PR = STOP_WAKE_EXTI_MASK;
   for(usize row = 0; row < KEY_IN_ROW; row++) {
     attachInterrupt(scan_pins[row], stop_wake_irq, RISING);
   }
-  EXTI->PR = STOP_WAKE_EXTI_MASK;
-  stop_wake_armed = true;
+#endif
 
   // A key which became active while GPIO/EXTI were changing directions must
   // abort the pending STOP instead of being erased with the setup flags.
@@ -362,10 +369,14 @@ static u8 restore_stop_wake(bool preserve_presses) {
     }
   }
 
+#if MK61_STM32F4_RESOURCE_MAP_SUPPORTED
+  stm32f4_keyboard_exti::disarm();
+#else
   for(usize row = 0; row < KEY_IN_ROW; row++) {
     detachInterrupt(scan_pins[row]);
   }
   EXTI->PR = STOP_WAKE_EXTI_MASK;
+#endif
   stop_wake_irq_seen = false;
   __atomic_store_n(&stop_wake_rows_seen, (u8) 0, __ATOMIC_RELAXED);
   stop_wake_armed = false;
@@ -609,3 +620,18 @@ isize scan_m61_controls(void) {
 
 
 }
+
+#if MK61_KEYBOARD_STOP_WAKE_SUPPORTED && MK61_STM32F4_RESOURCE_MAP_SUPPORTED
+static void keyboard_exti_irq() {
+  const u32 pending = stm32f4_keyboard_exti::take_pending();
+  if(pending == 0) return;
+  u8 rows = 0;
+  for(u8 row = 0; row < 5; ++row) {
+    if((pending & (1UL << (8U-row))) != 0) rows |= (u8)(1U << row);
+  }
+  note_stop_wake_rows(rows);
+  stop_wake_irq();
+}
+extern "C" void EXTI4_IRQHandler() { keyboard_exti_irq(); }
+extern "C" void EXTI9_5_IRQHandler() { keyboard_exti_irq(); }
+#endif

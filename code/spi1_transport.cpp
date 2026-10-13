@@ -6,9 +6,18 @@ namespace spi1_transport {
 namespace {
 static bool initialized;
 static bool healthy = true;
-static bool wait_flag(u32 mask, bool set, u32 started) {
+static __attribute__((always_inline)) inline bool wait_flag(u32 mask, bool set, u32 started) {
+  // Resolve the ordinary wire wait with a tight, bounded burst before
+  // adding the deadline bookkeeping to a peripheral that is still stalled.
+  for (unsigned probe = 0; probe < 4; ++probe) {
+    if (((SPI1->SR & mask) != 0) == set)
+      return true;
+  }
+  u32 polls = 0;
   while (((SPI1->SR & mask) != 0) != set) {
-    if ((u32)(millis() - started) >= 100U) {
+    // The wire takes tens of CPU cycles per byte. Keep its ordinary flag
+    // loop short; recheck the deadline at most every 32 unsuccessful polls.
+    if ((++polls & 31U) == 0 && (u32)(HAL_GetTick() - started) >= 100U) {
       healthy = false;
       return false;
     }
@@ -18,7 +27,7 @@ static bool wait_flag(u32 mask, bool set, u32 started) {
 static bool polling(const void *tx_buffer, void *rx_buffer, usize count) {
   const u8 *tx = static_cast<const u8 *>(tx_buffer);
   u8 *rx = static_cast<u8 *>(rx_buffer);
-  const u32 started = millis();
+  const u32 started = HAL_GetTick();
   for (usize i = 0; i < count; ++i) {
     if (!wait_flag(SPI_SR_TXE, true, started))
       return false;
@@ -30,6 +39,11 @@ static bool polling(const void *tx_buffer, void *rx_buffer, usize count) {
       rx[i] = value;
   }
   return wait_flag(SPI_SR_BSY, false, started);
+}
+static __attribute__((always_inline)) inline bool wait_flag(u32 mask, bool set) {
+  if (((SPI1->SR & mask) != 0) == set)
+    return true;
+  return wait_flag(mask, set, HAL_GetTick());
 }
 } // namespace
 bool begin() {
@@ -70,8 +84,7 @@ void end() {
 bool begin_transaction(u32 requested_hz) {
   if (requested_hz == 0 || !begin())
     return false;
-  const u32 started = millis();
-  if (!wait_flag(SPI_SR_BSY, false, started)) {
+  if (!wait_flag(SPI_SR_BSY, false)) {
     (void)end_transaction();
     return false;
   }
@@ -79,17 +92,21 @@ bool begin_transaction(u32 requested_hz) {
   u8 code = 0;
   while (code < 7 && stm32_spi_clock::actual_hz(pclk, code) > requested_hz)
     ++code;
-  SPI1->CR1 &= ~SPI_CR1_SPE;
-  SPI1->CR1 = SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI | ((u32)code << SPI_CR1_BR_Pos);
-  SPI1->CR2 = 0;
-  SPI1->CR1 |= SPI_CR1_SPE;
+  const u32 desired = SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI |
+      ((u32)code << SPI_CR1_BR_Pos) | SPI_CR1_SPE;
+  if(SPI1->CR1 != desired || SPI1->CR2 != 0) {
+    SPI1->CR1 &= ~SPI_CR1_SPE;
+    SPI1->CR1 = desired & ~SPI_CR1_SPE;
+    SPI1->CR2 = 0;
+    SPI1->CR1 |= SPI_CR1_SPE;
+  }
   healthy = true;
   return true;
 }
 bool end_transaction() {
   if (!initialized)
     return false;
-  const bool ok = healthy && wait_flag(SPI_SR_BSY, false, millis());
+  const bool ok = healthy && wait_flag(SPI_SR_BSY, false);
   if (!ok) {
     // A timed-out peripheral must not contaminate the next client's bus.
     RCC->APB2RSTR |= RCC_APB2RSTR_SPI1RST;
@@ -99,9 +116,12 @@ bool end_transaction() {
   return ok;
 }
 u8 transfer(u8 value) {
-  u8 result = 0xFF;
-  if (healthy && !polling(&value, &result, 1))
-    healthy = false;
+  if(!healthy) return 0xFF;
+  if(!wait_flag(SPI_SR_TXE,true)) return 0xFF;
+  *reinterpret_cast<volatile u8*>(&SPI1->DR) = value;
+  if(!wait_flag(SPI_SR_RXNE,true)) return 0xFF;
+  const u8 result = *reinterpret_cast<volatile u8*>(&SPI1->DR);
+  if(!wait_flag(SPI_SR_BSY,false)) return 0xFF;
   return result;
 }
 bool transfer_buffer(const void *tx, void *rx, usize count, bool allow_dma) {

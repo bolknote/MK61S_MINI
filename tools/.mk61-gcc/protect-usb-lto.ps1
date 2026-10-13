@@ -31,7 +31,7 @@ try {
     $env:TEMP = $safeTemp
     $env:TMP = $safeTemp
     $env:TMPDIR = $safeTemp
-    # Keep usbd_conf.c in LTO so HAL sees its strong MSP/IRQ callbacks.
+    # Keep wrapped middleware definitions outside LTO; replace the F4 bridge below.
     foreach ($source in @('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')) {
         $leaf = [IO.Path]::GetFileName($source)
         $objects = @([IO.Directory]::GetFiles($objectDirectory,
@@ -48,6 +48,27 @@ try {
         & $compiler ('@' + $response.Replace('\', '/'))
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Write-Host "USB LTO barrier: $source"
+    }
+    if (@($flags | Where-Object { $_ -in @('-DSTM32F401xC','-DSTM32F401xE','-DSTM32F411xE') }).Count -gt 0) {
+        $sketch = Join-Path $buildPath 'sketch'
+        foreach ($item in @(
+            @{ source='stm32f4_usb_device.cpp'; object='usbd_conf.c.o'; define='MK61_USB_BUILD_BRIDGE=1'; cxx=$true },
+            @{ source='stm32f4_usbd_ctlreq.c'; object='usb_device_ctlreq.c.o'; define='MK61_USB_BUILD_CTLREQ=1'; cxx=$false })) {
+            $source = Join-Path $sketch $item.source
+            $objects = @([IO.Directory]::GetFiles($objectDirectory,$item.object,[IO.SearchOption]::AllDirectories))
+            if ($objects.Count -ne 1 -or -not [IO.File]::Exists($source)) { throw "Missing owned USB object/source $($item.source)" }
+            $command = @($flags)
+            if ($item.cxx) { $command += @('-std=gnu++17','-fno-exceptions','-fno-rtti','-fno-threadsafe-statics') }
+            $command += @(('-D' + $item.define),$source,'-o',$objects[0])
+            $response = Join-Path $safeTemp ($item.source + '.rsp')
+            $lines = foreach ($argument in $command) {
+                '"' + ([string]$argument).Replace('\','/').Replace('"','\"') + '"'
+            }
+            [IO.File]::WriteAllLines($response,[string[]]$lines,[Text.Encoding]::Default)
+            & $compiler ('@' + $response.Replace('\','/'))
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Write-Host "Owned F4 USB source: $($item.source)"
+        }
     }
 } catch {
     [Console]::Error.WriteLine("USB LTO barrier: $($_.Exception.Message)")

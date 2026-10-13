@@ -1,0 +1,375 @@
+{
+  "schema": 1,
+  "date": "2026-10-14",
+  "branch": "feature/stm32-hardware-core",
+  "baseline_commit": "ca479035c1a2b7c6fd9d94058d6177494fe497fb",
+  "changes": [
+    "Fixed PWM routes PA0/TIM2 CH1, PB9/TIM4 CH4, PB10/TIM2 CH3 replace PinMap_TIM lookup.",
+    "Owned keyboard EXTI4/EXTI9_5 replaces Arduino callback registry; short edge flags remain latched.",
+    "F4 UC1609 supports only hardware SPI. Disabled WS0010 graphics uses a constexpr NONE owner.",
+    "Owned four-endpoint OTG FS bridge replaces HAL PCD; CDC/MSC, safety wrappers and protocol stay. Middleware handle arrays also shrink 16 to 4 with validated standard endpoint requests.",
+    "Bounded integer/string formatter preserves C and System APP ABI; deterministic explicit octal precision replaces undefined nano behavior.",
+    "SPI polling avoids generic scalar trampolines/deadline work on ready flags; DMA check-to-WFI race closes through masked recheck."
+  ],
+  "toolchain": {
+    "arduino_cli": "1.5.1",
+    "stm32_core": "2.12.0",
+    "gcc": "xPack 14.2.1 20241119",
+    "source_date_epoch": 1791849600
+  },
+  "matched_full_feature_builds": {
+    "baseline-classic": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014/baseline-classic/build/mk61s-M.ino.bin",
+      "bytes": 375468,
+      "footer": 373152,
+      "build": "3E0BD74D",
+      "sha256": "ace5888a1b0dbb10d5b234c5dd4064333120af0aa6e9aae7bcef987f8f8e3d13"
+    },
+    "baseline-mini": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014/baseline-mini/build/mk61s-M.ino.bin",
+      "bytes": 345460,
+      "footer": 343304,
+      "build": "0C703B24",
+      "sha256": "5b108679ca26b0b7c62204517dccae9e50d70fd5d71ac337b3fd704a9150f732"
+    },
+    "shipping-classic": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014/shipping-classic/build/mk61s-M.ino.bin",
+      "bytes": 370404,
+      "footer": 368096,
+      "build": "157199F5",
+      "sha256": "1502622e24bc156f075fb7eb345998af181fce161716b901172f06c1469c30e3"
+    },
+    "shipping-mini": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014/shipping-mini/build/mk61s-M.ino.bin",
+      "bytes": 341684,
+      "footer": 339536,
+      "build": "0579C96C",
+      "sha256": "bfbf98b6c166cc4443143f7ffbb3104f046226c7b234b1fa6f3cece0c9f84b46"
+    }
+  },
+  "static_ram": {
+    "classic": {
+      "before": 33216,
+      "after": 31304,
+      "saved": 1912
+    },
+    "mini": {
+      "before": 31808,
+      "after": 29896,
+      "saved": 1912
+    }
+  },
+  "linker_evidence": {
+    "removed_g_hpcd_bytes": 1252,
+    "removed_arduino_exti_callback_table_bytes": 320,
+    "removed_PinMap_TIM_flash_bytes": 444,
+    "usb_middleware_handle_before": 732,
+    "usb_middleware_handle_after": 252,
+    "owned_endpoint_context_bytes": 128
+  },
+  "release_matrix": [
+    {
+      "case": "f411-40th",
+      "status": "ok",
+      "flash_before": 349620,
+      "flash_after": 345292,
+      "flash_saved": 4328,
+      "ram_before": 31392,
+      "ram_after": 29480,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-classic-v2",
+      "status": "ok",
+      "flash_before": 349604,
+      "flash_after": 345252,
+      "flash_saved": 4352,
+      "ram_before": 31392,
+      "ram_after": 29480,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-classic-v3",
+      "status": "ok",
+      "flash_before": 361044,
+      "flash_after": 356020,
+      "flash_saved": 5024,
+      "ram_before": 31624,
+      "ram_after": 29712,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-classic-v3-usb-screen",
+      "status": "ok",
+      "flash_before": 363756,
+      "flash_after": 358780,
+      "flash_saved": 4976,
+      "ram_before": 33248,
+      "ram_after": 31304,
+      "ram_saved": 1944
+    },
+    {
+      "case": "f411-lcd1602-a00",
+      "status": "ok",
+      "flash_before": 311356,
+      "flash_after": 307724,
+      "flash_saved": 3632,
+      "ram_before": 29472,
+      "ram_after": 27544,
+      "ram_saved": 1928
+    },
+    {
+      "case": "f411-lcd1602-a00-no-lto",
+      "status": "ok",
+      "flash_before": 329552,
+      "flash_after": 325880,
+      "flash_saved": 3672,
+      "ram_before": 29460,
+      "ram_after": 27532,
+      "ram_saved": 1928
+    },
+    {
+      "case": "f411-lcd1602-a00-usb-screen",
+      "status": "ok",
+      "flash_before": 342900,
+      "flash_after": 339108,
+      "flash_saved": 3792,
+      "ram_before": 31808,
+      "ram_after": 29896,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-lcd1602-a02",
+      "status": "ok",
+      "flash_before": 311204,
+      "flash_after": 307588,
+      "flash_saved": 3616,
+      "ram_before": 29472,
+      "ram_after": 27544,
+      "ram_saved": 1928
+    },
+    {
+      "case": "f411-mini-v2-a00",
+      "status": "ok",
+      "flash_before": 311364,
+      "flash_after": 307740,
+      "flash_saved": 3624,
+      "ram_before": 29472,
+      "ram_after": 27544,
+      "ram_saved": 1928
+    },
+    {
+      "case": "f411-mini-v2-a02",
+      "status": "ok",
+      "flash_before": 311228,
+      "flash_after": 307604,
+      "flash_saved": 3624,
+      "ram_before": 29472,
+      "ram_after": 27544,
+      "ram_saved": 1928
+    },
+    {
+      "case": "f411-oled1602-ws0010",
+      "status": "ok",
+      "flash_before": 341948,
+      "flash_after": 337524,
+      "flash_saved": 4424,
+      "ram_before": 29656,
+      "ram_after": 27744,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp",
+      "status": "ok",
+      "flash_before": 328452,
+      "flash_after": 323732,
+      "flash_saved": 4720,
+      "ram_before": 29680,
+      "ram_after": 27744,
+      "ram_saved": 1936
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+      "status": "ok",
+      "flash_before": 341940,
+      "flash_after": 337524,
+      "flash_saved": 4416,
+      "ram_before": 29656,
+      "ram_after": 27744,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-oled1602-ws0010-no-graphics",
+      "status": "ok",
+      "flash_before": 332428,
+      "flash_after": 324364,
+      "flash_saved": 8064,
+      "ram_before": 29656,
+      "ram_after": 27752,
+      "ram_saved": 1904
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen",
+      "status": "ok",
+      "flash_before": 362316,
+      "flash_after": 357812,
+      "flash_saved": 4504,
+      "ram_before": 32016,
+      "ram_after": 30104,
+      "ram_saved": 1912
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen-no-graphics",
+      "status": "ok",
+      "flash_before": 361820,
+      "flash_after": 356532,
+      "flash_saved": 5288,
+      "ram_before": 31992,
+      "ram_after": 30096,
+      "ram_saved": 1896
+    },
+    {
+      "case": "f401-capability-a00-usb",
+      "status": "ok",
+      "flash_before": 239760,
+      "flash_after": 235316,
+      "flash_saved": 4444,
+      "ram_before": 35464,
+      "ram_after": 33128,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "status": "ok",
+      "flash_before": 236452,
+      "flash_after": 231992,
+      "flash_saved": 4460,
+      "ram_before": 32048,
+      "ram_after": 29712,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "status": "ok",
+      "flash_before": 246808,
+      "flash_after": 241696,
+      "flash_saved": 5112,
+      "ram_before": 35472,
+      "ram_after": 33136,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "status": "ok",
+      "flash_before": 248356,
+      "flash_after": 243928,
+      "flash_saved": 4428,
+      "ram_before": 35472,
+      "ram_after": 33136,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-product-a00",
+      "status": "ok",
+      "flash_before": 221688,
+      "flash_after": 217232,
+      "flash_saved": 4456,
+      "ram_before": 31616,
+      "ram_after": 29280,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-product-classic-v2",
+      "status": "ok",
+      "flash_before": 252876,
+      "flash_after": 247756,
+      "flash_saved": 5120,
+      "ram_before": 35060,
+      "ram_after": 32740,
+      "ram_saved": 2320
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "status": "ok",
+      "flash_before": 252868,
+      "flash_after": 247772,
+      "flash_saved": 5096,
+      "ram_before": 35060,
+      "ram_after": 32740,
+      "ram_saved": 2320
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "status": "ok",
+      "flash_before": 221728,
+      "flash_after": 217280,
+      "flash_saved": 4448,
+      "ram_before": 31616,
+      "ram_after": 29280,
+      "ram_saved": 2336
+    },
+    {
+      "case": "f401-product-ws0010",
+      "status": "ok",
+      "flash_before": 231456,
+      "flash_after": 225492,
+      "flash_saved": 5964,
+      "ram_before": 31624,
+      "ram_after": 29288,
+      "ram_saved": 2336
+    }
+  ],
+  "validation": {
+    "host": "PASS complete run_all_tests; targeted WS/UI/contract rerun after graphics specialization; DMA/SPI/deep-idle policy and ASan/UBSan hardware model rerun after race repair",
+    "f411": "PASS all 16 final variants",
+    "f401": "PASS all 9 final variants including four cross-MCU WS RAM comparisons",
+    "formatter_host_differential_cases": 14364,
+    "formatter_arm_nano_differential_cases": 7048,
+    "usb_production_arm_model": "PASS F411 and F401 init, endpoint bounds, W1C, short TX/RX, rearm, queued RX/setup, bad requests, reset, suspend/resume and reinit",
+    "prelink_adapters": "PASS Python and PowerShell snapshot/failure/missing-source cases",
+    "physical_deep_stop_wake": "NOT_RUN_USER_DEFERRED"
+  },
+  "performance": {
+    "workload": "Installed Turochamp book off, level 2, maximum depth 8; e2-e3/420 nodes; 96 MHz; same feature flags, game and System APP bytes. Warm median of two repeats following a cold pass.",
+    "before_build": "3E0BD74D",
+    "after_build": "157199F5",
+    "before_warm_seconds": 49.4012450625014,
+    "after_warm_seconds": 48.03260158350167,
+    "change_percent": -2.7704635323829385,
+    "flash_read_calls_each_warm_run": 109335,
+    "before_flash_read_seconds": [
+      6.935580666666667,
+      6.93667196875
+    ],
+    "after_flash_read_seconds": [
+      5.583371510416667,
+      5.583458875
+    ],
+    "all_final_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "dropped_sleep_race": "Intermediate full candidate took 56.63 s with flash.read 14.13 s. Masked recheck removed the already-completed DMA sleep; regression model injects this race."
+  },
+  "hardware": {
+    "classic": {
+      "public": "AEB505B6E0067623",
+      "tested_build": "157199F5",
+      "cdc_storage_boundaries": "PASS sizes 1..4096",
+      "msc": "PASS 4096-byte binary readback/import/export, two eject-to-CDC transitions and warm reset",
+      "usb_screen": "PASS 100 requested CRC-complete frames plus 1003 game frames",
+      "pwm": "Register-state model and command accepted; physical audio confirmation optional",
+      "final_state": "PASS: original 66C953FB restored for peer; original 44 files/4 directories and reg/stk/dump/pwd compared exactly; CRC/CRASH/MPU healthy.",
+      "restoration_note": "Retained workspace initially reported PUT_BUSY before write. Cancel + warm reset released it; original bytes and names then compared exactly."
+    },
+    "mini": {
+      "public": "6FF33152484A4488",
+      "tested_build": "0579C96C",
+      "cdc_storage_boundaries": "PASS sizes 1..4096",
+      "msc": "PASS same owned controller, prior intermediate E88FF7FB, 4096-byte import/export/eject/reset",
+      "usb_screen": "PASS 100 requested CRC-complete frames on final 0579C96C; SPI sizes 63/64/65/512/65536",
+      "pwm": "Register-state model and command accepted; optional physical confirmation pending",
+      "final_state": "PASS: final 0579C96C installed; original 7 files/2 directories and reg/stk/dump/pwd compared exactly; no calendar/calibration writes."
+    }
+  },
+  "ram_comparison_note": "F401 OLED/A00 metadata has 2 extra named bytes; removal of common large drivers exposes linker padding of 8 bytes. Comparative tolerance is 8 rather than 0; absolute budgets and 16-byte graphics-growth limit remain.",
+  "evidence_archive": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-hardware-core-artifacts-20261014",
+  "source_manifest_sha256": "6a9f716a16c0ef3c2929815b2556913e4ccba3c7982dd0ec3c7ce5c00ffa2c4e"
+}

@@ -14,8 +14,8 @@
 
 #if MK61_SOUND_DRIVER_STM32 && MK61_STM32F4_RESOURCE_MAP_SUPPORTED
   #define MK61_SOUND_DRIVER_DIRECT 1
-  #include "PeripheralPins.h"
-  #include "pinmap.h"
+  #include "stm32f4_buzzer.hpp"
+  #include <stm32yyxx_ll_tim.h>
   #include "stm32f4_timer_math.hpp"
 #else
   #define MK61_SOUND_DRIVER_DIRECT 0
@@ -46,10 +46,10 @@ static constexpr usize SOUND_VOLUME_MAX = 10;
 static constexpr u32 SOUND_DUTY_MAX = 128;
 
 static volatile bool pwm_ready = false;
-static usize pwm_pin = PIN_BUZZER;
-static PinName pwm_pin_name = NC;
-static u32 pwm_ll_channel = 0;
-static TIM_TypeDef* pwm_timer_instance = NULL;
+static constexpr usize pwm_pin = PIN_BUZZER;
+static constexpr u32 pwm_ll_channel = stm32f4_buzzer::CHANNEL == 1 ? LL_TIM_CHANNEL_CH1 :
+    (stm32f4_buzzer::CHANNEL == 3 ? LL_TIM_CHANNEL_CH3 : LL_TIM_CHANNEL_CH4);
+static TIM_TypeDef* const pwm_timer_instance = PIN_BUZZER == PB9 ? TIM4 : TIM2;
 static volatile bool sound_active = false;
 static volatile bool stop_cleanup_pending = false;
 static volatile u32 cutoff_ticks = 0;
@@ -95,32 +95,6 @@ static void force_buzzer_low(void) {
   stm32f4_gpio::write(pwm_pin, LOW);
 }
 
-static u32 channel_to_ll(u32 channel) {
-  switch(channel) {
-    case 1: return LL_TIM_CHANNEL_CH1;
-    case 2: return LL_TIM_CHANNEL_CH2;
-    case 3: return LL_TIM_CHANNEL_CH3;
-    case 4: return LL_TIM_CHANNEL_CH4;
-    default: return 0;
-  }
-}
-
-static bool enable_pwm_timer_clock(TIM_TypeDef* timer) {
-  if(timer == TIM2) {
-    __HAL_RCC_TIM2_CLK_ENABLE();
-    return true;
-  }
-  if(timer == TIM4) {
-    __HAL_RCC_TIM4_CLK_ENABLE();
-    return true;
-  }
-  if(timer == TIM5) {
-    __HAL_RCC_TIM5_CLK_ENABLE();
-    return true;
-  }
-  return false;
-}
-
 static void set_compare(TIM_TypeDef* timer, u32 channel, u32 compare) {
   switch(channel) {
     case LL_TIM_CHANNEL_CH1: LL_TIM_OC_SetCompareCH1(timer, compare); break;
@@ -140,27 +114,9 @@ static void mute_pwm_from_interrupt(void) {
 
 static bool configure_pwm_mapping(usize pin) {
   pwm_ready = false;
-  pwm_timer_instance = NULL;
-  pwm_ll_channel = 0;
-
-  const PinName pin_name = digitalPinToPinName(pin);
-  if(pin_name == NC) return false;
-
-  TIM_TypeDef* const timer =
-    (TIM_TypeDef*) pinmap_peripheral(pin_name, PinMap_TIM);
-  if(timer == NULL || !enable_pwm_timer_clock(timer)) return false;
-
-  const u32 function = pinmap_function(pin_name, PinMap_TIM);
-  if(STM_PIN_INVERTED(function)) return false;
-  const u32 ll_channel = channel_to_ll(STM_PIN_CHANNEL(function));
-  if(ll_channel == 0) return false;
-
-  pwm_pin = pin;
-  pwm_pin_name = pin_name;
-  pwm_timer_instance = timer;
-  pwm_ll_channel = ll_channel;
+  if(pin != PIN_BUZZER) return false;
+  stm32f4_buzzer::enable_timer_clock();
   pwm_ready = true;
-
   mute_pwm_from_interrupt();
   force_buzzer_low();
   return true;
@@ -196,7 +152,7 @@ static void configure_pwm(u32 frequency_hz, u32 duty) {
   // stop() возвращает вывод в GPIO LOW; альтернативная функция включается
   // лишь после полной настройки таймера, поэтому на буззере нет стартового
   // выброса.
-  pinmap_pinout(pwm_pin_name, PinMap_TIM);
+  stm32f4_buzzer::alternate_function();
   LL_TIM_CC_EnableChannel(timer, pwm_ll_channel);
   LL_TIM_EnableCounter(timer);
 }

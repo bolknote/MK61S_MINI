@@ -437,7 +437,11 @@ class MK61Display : public Print {
       // see the active virtual display, not the dormant physical mode.
       if(usb_screen_active) return true;
 #endif
+#if MK61_WS0010_GRAPHICS_100X16
       return ws0010::graphicsOwned(ws0010_graphics_owner);
+#else
+      return false;
+#endif
 #elif MK61_ENABLE_USB_SCREEN
       return usb_screen_active;
 #else
@@ -510,7 +514,11 @@ class MK61Display : public Print {
     static constexpr u8 WS0010_DEEP_RESTORE_POWER = 0x02u;
     u16 reinitialization_count;
     ws0010::InitializationPhase initialization_phase;
+#if MK61_WS0010_GRAPHICS_100X16
     ws0010::GraphicsOwner ws0010_graphics_owner;
+#else
+    static constexpr ws0010::GraphicsOwner ws0010_graphics_owner = ws0010::GraphicsOwner::NONE;
+#endif
     // Bit 0 is the tracked WS0010 DC/DC PWR state; bit 1 records whether a
     // deep-idle transaction must restore it. Packed explicitly so the normal
     // OLED timeout costs no extra bool/padding pair on F401/F411.

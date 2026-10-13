@@ -115,7 +115,9 @@ class  ERM19264_UC1609_Screen
 /*! @brief class to drive the ERM19264_UC1609 LCD */
 class ERM19264_UC1609 : public ERM19264_graphics {
   public:
+#if !MK61_SPI1_DIRECT_SUPPORTED
     ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight, int8_t cd, int8_t rst, int8_t cs, int8_t sclk, int8_t din);
+#endif
     ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight, int8_t cd, int8_t rst, int8_t cs);
 
     ~ERM19264_UC1609(){};

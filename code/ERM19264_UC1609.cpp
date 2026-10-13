@@ -103,6 +103,7 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
 	@param din GPIO MOSI
 	@note Software  SPI version , sub class of ERM19264_graphics
  */
+#if !MK61_SPI1_DIRECT_SUPPORTED
 ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd, int8_t rst, int8_t cs, int8_t sclk, int8_t din) : ERM19264_graphics(lcdwidth, lcdheight )
 
 {
@@ -115,6 +116,8 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
 	_widthScreen = (lcdwidth > 0 && lcdwidth <= 255) ? (uint8_t) lcdwidth : 0;
 	_heightScreen = (lcdheight > 0 && lcdheight <= 255) ? (uint8_t) lcdheight : 0;
 }
+
+#endif
 
 // === Methods ===
 
@@ -442,7 +445,11 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 	 @returns true 1 if hardware SPi on , false 0 for software spi
 */
 bool ERM19264_UC1609::isHardwareSPI() {
-	return (_LCD_DIN == -1 && _LCD_SCLK == -1);
+	#if MK61_SPI1_DIRECT_SUPPORTED
+  return true;
+#else
+  return (_LCD_DIN == -1 && _LCD_SCLK == -1);
+#endif
 }
 
 /*!
@@ -451,6 +458,7 @@ bool ERM19264_UC1609::isHardwareSPI() {
 	 @param value the byte to go out 
 	 @details if using high freq MCU the delay define can be changed by LCDHighFreqDelaySet function . Default is at UC1609_HIGHFREQ_DELAY
 */
+#if !MK61_SPI1_DIRECT_SUPPORTED
 void ERM19264_UC1609::CustomshiftOut(uint8_t bitOrder, uint8_t value)
 {
 	for (uint8_t i = 0; i < 8; i++)
@@ -465,6 +473,7 @@ void ERM19264_UC1609::CustomshiftOut(uint8_t bitOrder, uint8_t value)
 	}
 }
 
+#endif
 
 /*!
 	 @brief Send data byte with SPI to UC1609
@@ -481,7 +490,9 @@ void ERM19264_UC1609::send_data(uint8_t byte)
 #endif
 	}else
 	{
+#if !MK61_SPI1_DIRECT_SUPPORTED
 		CustomshiftOut(MSBFIRST, byte); //Software SPI
+#endif
 	}
 }
 
@@ -504,9 +515,11 @@ void ERM19264_UC1609::send_data_buffer(const uint8_t* data, size_t length)
 #endif
 	}else
 	{
+#if !MK61_SPI1_DIRECT_SUPPORTED
 		for (size_t i = 0; i < length; i++) {
 			CustomshiftOut(MSBFIRST, data[i]);
 		}
+#endif
 	}
 }
 

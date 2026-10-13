@@ -449,7 +449,9 @@ MK61Display::MK61Display(void)
 #if defined(MK61_OLED1602_WS0010)
     , reinitialization_count(0),
     initialization_phase(ws0010::InitializationPhase::IDLE),
+#if MK61_WS0010_GRAPHICS_100X16
     ws0010_graphics_owner(ws0010::GraphicsOwner::NONE),
+#endif
     ws0010_power_state(0),
     oled_protection_state()
 #endif
@@ -650,7 +652,9 @@ void MK61Display::begin(u8 cols, u8 rows) {
   shifted_viewport_active = false;
   shifted_viewport_shift = 0;
 #if defined(MK61_OLED1602_WS0010)
+#if MK61_WS0010_GRAPHICS_100X16
   ws0010_graphics_owner = ws0010::GraphicsOwner::NONE;
+#endif
   ws0010_power_state = controller_ready ? WS0010_POWER_ENABLED : 0;
   oled_protection_state.configure(oled_protection::Timeout::MINUTES_15,
                                   millis());
@@ -690,7 +694,9 @@ bool MK61Display::reinitialize(void) {
   // sendDisplayControl() below restores the exact on/off/cursor/blink state in
   // one command and prevents a flash of half-restored contents.
   if(!initializeWs0010Controller(false, false)) return false;
+#if MK61_WS0010_GRAPHICS_100X16
   ws0010_graphics_owner = ws0010::GraphicsOwner::NONE;
+#endif
   ws0010_power_state = WS0010_POWER_ENABLED;
 
   initialization_phase = ws0010::InitializationPhase::RESTORING_CGRAM;

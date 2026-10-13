@@ -7,6 +7,8 @@
 // existing Arduino timer backend.
 #if defined(ARDUINO_ARCH_STM32) && \
     (defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE))
+  // Project handlers own keyboard EXTI4/EXTI9_5; omit the 16-line Arduino callback table.
+  #define HAL_EXTI_MODULE_DISABLED
   #ifndef HAL_TIM_MODULE_ONLY
     #define HAL_TIM_MODULE_ONLY
   #endif

@@ -3,10 +3,14 @@
 #include "stm32f4_rtc.hpp"
 #include "spi1_transport.hpp"
 #include "spi1_dma.hpp"
+#include "stm32f4_buzzer.hpp"
+#include "stm32f4_keyboard_exti.hpp"
 #include <iostream>
 #include <array>
 RCC_TypeDef model_rcc;
-GPIO_TypeDef model_gpio;
+GPIO_TypeDef model_gpio, model_gpio_b;
+TIM_TypeDef model_tim2, model_tim4;
+SYSCFG_TypeDef model_syscfg;
 PWR_TypeDef model_pwr;
 ADC_TypeDef model_adc;
 ADC_Common_TypeDef model_common;
@@ -23,7 +27,9 @@ static unsigned conversions, channel_samples[19];
 static bool fail_adc, raw_noise, unlocked, inject_alarm_a, rollover;
 static unsigned ssr_reads, init_exits, synchronizations;
 static int dma_mode;
-static bool primask, in_irq;
+static bool primask, in_irq, inject_keyboard, dma_pending;
+static bool nvic_enabled[64];
+static unsigned nvic_priority[64];
 
 uint32_t model_read(const void *address, uint32_t value) {
   if (address == &model_common.CCR)
@@ -96,6 +102,7 @@ void model_write(void *address, uint32_t value) {
   if (address == &model_dma.LIFCR)
     model_dma.LISR.value &= ~value;
   if (address == &model_exti.PR) {
+    if(inject_keyboard) { reg->value |= 1U << 6; inject_keyboard = false; }
     reg->value &= ~value;
     return;
   }
@@ -135,10 +142,7 @@ void __DSB() {
 }
 void __ISB() {
 }
-void __WFI() {
-  elapsed += 1000;
-  if (dma_mode == 2)
-    return; // Lost IRQ: bounded timeout must stop both streams.
+static void dma_complete() {
   model_dma.LISR.value |=
       dma_mode == 1 ? DMA_LISR_TEIF3 : DMA_LISR_TCIF2 | DMA_LISR_TCIF3 | DMA_LISR_FEIF3;
   model_rx.CR.value &= ~DMA_SxCR_EN;
@@ -146,8 +150,22 @@ void __WFI() {
   DMA2_Stream2_IRQHandler();
   DMA2_Stream3_IRQHandler();
 }
-uint32_t __get_PRIMASK() {
-  return primask;
+void __WFI() {
+  assert(primask); // No gap for an IRQ to be consumed before the sleep.
+  elapsed += 1000;
+  if (dma_mode == 2)
+    return; // Lost IRQ: bounded timeout must stop both streams.
+  dma_pending = true; // PRIMASK delays the handler, but the IRQ wakes WFI.
+}
+uint32_t __get_PRIMASK() { return primask; }
+void __disable_irq() {
+  if(dma_mode == 3 && (model_rx.CR.value & DMA_SxCR_EN))
+    dma_complete(); // Completion in the original check-to-WFI race window.
+  primask = true;
+}
+void __set_PRIMASK(uint32_t value) {
+  primask = value != 0;
+  if(!primask && dma_pending) { dma_pending = false; dma_complete(); }
 }
 uint32_t __get_IPSR() {
   return in_irq;
@@ -156,9 +174,11 @@ void NVIC_ClearPendingIRQ(int) {
 }
 void NVIC_SetPendingIRQ(int) {
 }
-void NVIC_SetPriority(int, unsigned) {
+void NVIC_SetPriority(int irq, unsigned value) { nvic_priority[irq] = value;
 }
-void NVIC_EnableIRQ(int) {
+void NVIC_EnableIRQ(int irq) { nvic_enabled[irq] = true;
+}
+void NVIC_DisableIRQ(int irq) { nvic_enabled[irq] = false;
 }
 static void reset_model() {
   elapsed = 0;
@@ -284,6 +304,16 @@ static void spi_tests() {
   assert(spi1_dma::transfer(bytes.data(), bytes.data(), bytes.size()) ==
          spi1_dma::Result::NOT_USED);
   primask = false;
+  dma_mode = 3;
+  spi1_dma::reset_statistics();
+  model_scb.SCR.value = SCB_SCR_SLEEPDEEP_Msk;
+  assert(spi1_dma::transfer(bytes.data(),bytes.data(),bytes.size()) == spi1_dma::Result::COMPLETE);
+  assert(!primask && spi1_dma::statistics().wfi_entries == 0);
+  assert(model_scb.SCR.value == SCB_SCR_SLEEPDEEP_Msk);
+  dma_mode = 0;
+  assert(spi1_dma::transfer(bytes.data(),bytes.data(),bytes.size()) == spi1_dma::Result::COMPLETE);
+  assert(!primask && spi1_dma::statistics().wfi_entries == 1);
+  assert(model_scb.SCR.value == SCB_SCR_SLEEPDEEP_Msk);
   model_spi.SR.value = SPI_SR_BSY;
   assert(!spi1_transport::begin_transaction(24000000));
   assert(model_spi.CR1.value == 0);
@@ -292,7 +322,48 @@ static void spi_tests() {
   assert(spi1_transport::transfer(0xAA) == 0xAA);
   spi1_transport::end();
 }
+static void fixed_pin_checks() {
+  reset_model();
+  GPIO_TypeDef& gpio = PIN_BUZZER == PA0 ? model_gpio : model_gpio_b;
+  gpio.MODER.value = 0x55555555; gpio.AFR[0].value = 0x12345678;
+  gpio.AFR[1].value = 0x87654321; gpio.PUPDR.value = 0xAAAAAAAA;
+  gpio.OTYPER.value = 0xFFFF; gpio.OSPEEDR.value = 0x55555555;
+  const auto before = gpio;
+  stm32f4_buzzer::enable_timer_clock();
+  assert(model_rcc.APB1ENR.value & (PIN_BUZZER == PB9 ? RCC_APB1ENR_TIM4EN : RCC_APB1ENR_TIM2EN));
+  assert(stm32f4_buzzer::timer() == (PIN_BUZZER == PB9 ? TIM4 : TIM2));
+  assert(stm32f4_buzzer::CHANNEL == (PIN_BUZZER == PB9 ? 4 : (PIN_BUZZER == PB10 ? 3 : 1)));
+  stm32f4_buzzer::alternate_function();
+  constexpr uint32_t pair = 3UL << (stm32f4_buzzer::BIT * 2U);
+  constexpr uint32_t af_mask = 15UL << ((stm32f4_buzzer::BIT & 7U) * 4U);
+  assert((gpio.MODER.value & pair) == (2UL << (stm32f4_buzzer::BIT * 2U)));
+  assert((gpio.MODER.value & ~pair) == (before.MODER.value & ~pair));
+  assert((gpio.PUPDR.value & pair) == 0 && (gpio.PUPDR.value & ~pair) == (before.PUPDR.value & ~pair));
+  assert((gpio.OTYPER.value & (1UL << stm32f4_buzzer::BIT)) == 0);
+  assert((gpio.AFR[stm32f4_buzzer::BIT >> 3].value & ~af_mask) == (before.AFR[stm32f4_buzzer::BIT >> 3].value & ~af_mask));
+  assert(((gpio.AFR[stm32f4_buzzer::BIT >> 3].value & af_mask) >> ((stm32f4_buzzer::BIT & 7U) * 4U)) == stm32f4_buzzer::AF);
+  model_exti.IMR.value = 1U << 17; model_exti.RTSR.value = 1U << 17;
+  model_exti.FTSR.value = 0xFFFF;
+  model_syscfg.EXTICR[1].value = 0xABCD0000; model_syscfg.EXTICR[2].value = 0x76543210;
+  model_exti.PR.value = stm32f4_keyboard_exti::MASK | (1U << 17);
+  stm32f4_keyboard_exti::arm();
+  assert(model_exti.PR.value == (1U << 17));
+  assert(model_exti.IMR.value == (stm32f4_keyboard_exti::MASK | (1U << 17)));
+  assert(model_syscfg.EXTICR[1].value == 0xABCD1111 && model_syscfg.EXTICR[2].value == 0x76543211);
+  assert((model_exti.FTSR.value & stm32f4_keyboard_exti::MASK) == 0);
+  assert(nvic_enabled[EXTI4_IRQn] && nvic_enabled[EXTI9_5_IRQn]);
+  assert(nvic_priority[EXTI4_IRQn] == 6 && nvic_priority[EXTI9_5_IRQn] == 6);
+  model_exti.PR.value |= (1U << 4) | (1U << 8); inject_keyboard = true;
+  assert(stm32f4_keyboard_exti::take_pending() == ((1U << 4) | (1U << 8)));
+  assert(model_exti.PR.value == ((1U << 6) | (1U << 17)));
+  assert(stm32f4_keyboard_exti::take_pending() == (1U << 6));
+  stm32f4_keyboard_exti::disarm();
+  assert(model_exti.IMR.value == (1U << 17) && model_exti.PR.value == (1U << 17));
+  assert(!nvic_enabled[EXTI4_IRQn] && !nvic_enabled[EXTI9_5_IRQn]);
+}
+
 int main() {
+  fixed_pin_checks();
   adc_tests();
   rtc_tests();
   spi_tests();

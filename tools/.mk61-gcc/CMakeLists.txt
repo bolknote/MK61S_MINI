@@ -188,6 +188,14 @@ file(MAKE_DIRECTORY "${_mk61_hal_config_dir}")
 configure_file("${MK61_PROJECT_ROOT}/code/hal_conf_extra.h"
   "${_mk61_hal_config_dir}/hal_conf_extra.h" COPYONLY)
 target_include_directories(user_settings INTERFACE "${_mk61_hal_config_dir}")
+configure_file("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h"
+  "${_mk61_hal_config_dir}/stm32f4_usbd_def.h" COPYONLY)
+target_include_directories(user_settings INTERFACE
+  "${BUILD_LIB_PATH}/USBDevice/inc"
+  "${CORE_PATH}/system/Middlewares/ST/STM32_USB_Device_Library/Core/Inc")
+target_compile_options(user_settings INTERFACE
+  "-include" "${_mk61_hal_config_dir}/stm32f4_usbd_def.h")
+
 
 target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607
@@ -215,6 +223,22 @@ set_source_files_properties(
   "${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
+
+# F401 owns its OTG FS controller, retaining the CDC/MSC protocol middleware.
+get_target_property(_mk61_usb_sources USBDevice_bin SOURCES)
+list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c" "src/usbd_conf.c")
+list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usb_device_ctlreq.c" "src/usb_device_ctlreq.c")
+list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c")
+list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp")
+set_property(TARGET USBDevice_bin PROPERTY SOURCES "${_mk61_usb_sources}")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
+  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1"
+  COMPILE_OPTIONS "-fno-exceptions;-fno-rtti;-fno-threadsafe-statics")
+
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
+  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
 
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"

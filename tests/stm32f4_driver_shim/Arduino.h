@@ -15,6 +15,8 @@ struct Register {
 struct RCC_TypeDef {
   Register AHB1ENR, APB1ENR, APB2ENR, APB2RSTR, CFGR, DCKCFGR, BDCR, CSR;
 };
+struct TIM_TypeDef { uint32_t reserved; };
+struct SYSCFG_TypeDef { Register EXTICR[4]; };
 struct PWR_TypeDef {
   Register CR;
 };
@@ -36,7 +38,7 @@ struct RTC_TypeDef {
   uint32_t BKP0R, other_backup[19];
 };
 struct EXTI_TypeDef {
-  Register PR, IMR, RTSR;
+  Register PR, IMR, RTSR, FTSR;
 };
 struct DMA_Stream_TypeDef {
   Register CR, FCR, PAR, M0AR, NDTR;
@@ -48,7 +50,9 @@ struct SCB_TypeDef {
   Register SCR;
 };
 extern RCC_TypeDef model_rcc;
-extern GPIO_TypeDef model_gpio;
+extern GPIO_TypeDef model_gpio, model_gpio_b;
+extern TIM_TypeDef model_tim2, model_tim4;
+extern SYSCFG_TypeDef model_syscfg;
 extern PWR_TypeDef model_pwr;
 extern ADC_TypeDef model_adc;
 extern ADC_Common_TypeDef model_common;
@@ -62,6 +66,10 @@ extern SCB_TypeDef model_scb;
 constexpr uint32_t PWR_CR_DBP = 1U << 8;
 #define PWR (&model_pwr)
 #define GPIOA (&model_gpio)
+#define GPIOB (&model_gpio_b)
+#define TIM2 (&model_tim2)
+#define TIM4 (&model_tim4)
+#define SYSCFG (&model_syscfg)
 #define ADC1 (&model_adc)
 #define ADC (&model_common)
 #define SPI1 (&model_spi)
@@ -73,12 +81,17 @@ constexpr uint32_t PWR_CR_DBP = 1U << 8;
 #define SCB (&model_scb)
 #define RTC_BASE (reinterpret_cast<uintptr_t>(&model_rtc))
 enum {
+  EXTI4_IRQn = 10,
+  EXTI9_5_IRQn = 23,
   RTC_Alarm_IRQn = 41,
   RTC_WKUP_IRQn = 3,
   DMA2_Stream2_IRQn = 58,
   DMA2_Stream3_IRQn = 59
 };
-constexpr uint32_t PA5 = 5, PA6 = 6, PA7 = 7;
+constexpr uint32_t PA0 = 0, PA5 = 5, PA6 = 6, PA7 = 7, PB9 = 25, PB10 = 26;
+#ifndef PIN_BUZZER
+#define PIN_BUZZER PA0
+#endif
 #define PIN_SPI_SCK PA5
 #define PIN_SPI_MISO PA6
 #define PIN_SPI_MOSI PA7
@@ -119,6 +132,10 @@ constexpr uint32_t LSI_VALUE = 32000;
 #define DMA_SxCR_TEIE 0x00000004U
 #define RCC_AHB1ENR_DMA2EN 0x00400000U
 #define RCC_AHB1ENR_GPIOAEN 0x00000001U
+#define RCC_AHB1ENR_GPIOBEN 0x00000002U
+#define RCC_APB1ENR_TIM2EN 0x00000001U
+#define RCC_APB1ENR_TIM4EN 0x00000004U
+#define RCC_APB2ENR_SYSCFGEN 0x00004000U
 #define RCC_APB1ENR_PWREN 0x10000000U
 #define RCC_APB2ENR_ADC1EN 0x00000100U
 #define RCC_APB2ENR_SPI1EN 0x00001000U
@@ -197,6 +214,7 @@ struct RTC_AlarmTypeDef {
   uint32_t Alarm{}, AlarmMask{}, AlarmDateWeekDay{}, AlarmSubSecondMask{};
 };
 uint32_t millis();
+inline uint32_t HAL_GetTick() { return millis(); }
 uint32_t micros();
 void yield();
 void delayMicroseconds(uint32_t);
@@ -205,11 +223,14 @@ void __DMB();
 void __ISB();
 void __WFI();
 uint32_t __get_PRIMASK();
+void __disable_irq();
+void __set_PRIMASK(uint32_t);
 uint32_t __get_IPSR();
 void NVIC_ClearPendingIRQ(int);
 void NVIC_SetPendingIRQ(int);
 void NVIC_SetPriority(int, unsigned);
 void NVIC_EnableIRQ(int);
+void NVIC_DisableIRQ(int);
 inline uint32_t HAL_RCC_GetPCLK2Freq() {
   return 96000000;
 }

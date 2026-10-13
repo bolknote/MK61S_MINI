@@ -1,3 +1,4 @@
+#include "compact_format.hpp"
 #include "config.h"
 #include "dwt_profiler.hpp"
 
@@ -600,7 +601,7 @@ static double system_math(u32 operation, double x, double y) {
 }
 
 static int system_format(char* output, u32 size, const char* format, va_list args) {
-  return vsnprintf(output, size, format, args);
+  return compact_format::vsnprintf(output, size, format, args);
 }
 
 } // namespace
