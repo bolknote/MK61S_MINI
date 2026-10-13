@@ -575,5 +575,12 @@
     "optimized_median_average_cycles": 1745458,
     "time_increase_percent": 1.9186032932383412,
     "interpretation": "Classic emulation core became about 1.92% slower; the GPIO speedup does not imply whole-calculator speedup."
+  },
+  "core_slowdown_followup": {
+    "report": "stm32-core-lto-cause-20261013.json",
+    "cause": "mk61emu_core.cpp participation in LTO; confirmed by same-source single-unit A/B/A",
+    "experimental_native_core_median_cycles": 1711150,
+    "experimental_bin_bytes": 382868,
+    "production_configuration": "UNCHANGED; 66C953FB restored"
   }
 }

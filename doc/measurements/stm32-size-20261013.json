@@ -398,5 +398,12 @@
     "named_HAL_symbols_bytes": 3216,
     "HAL_attribution_note": "Named HAL functions only; LTO-inlined HAL and shared USB/core code are not fully attributable from symbol names. This is not an upper bound on bare-metal savings."
   },
-  "hardware_fixes_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193"
+  "hardware_fixes_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193",
+  "core_slowdown_followup": {
+    "report": "stm32-core-lto-cause-20261013.json",
+    "cause": "mk61emu_core.cpp participation in LTO; confirmed by same-source single-unit A/B/A",
+    "experimental_native_core_median_cycles": 1711150,
+    "experimental_bin_bytes": 382868,
+    "production_configuration": "UNCHANGED; 66C953FB restored"
+  }
 }

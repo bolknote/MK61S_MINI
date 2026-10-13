@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "source_commit": "41d7c9cbe",
+  "status": "CAUSE_CONFIRMED_BY_SINGLE_TRANSLATION_UNIT_ABA",
+  "question": "Why did the optimized F411 Classic core benchmark take 1.9% longer?",
+  "only_change": "mk61emu_core.cpp compiled with -fno-lto; rest remains -Os+LTO, same frozen source/features",
+  "clock_hz": 96000000,
+  "runs_per_variant": 5,
+  "steps_per_run": 40,
+  "variants": {
+    "A0_LTO": {
+      "runs": [
+        {
+          "min": 1745381,
+          "avg": 1745461,
+          "max": 1745609,
+          "total": 69818477
+        },
+        {
+          "min": 1745401,
+          "avg": 1745459,
+          "max": 1745589,
+          "total": 69818375
+        },
+        {
+          "min": 1745384,
+          "avg": 1745458,
+          "max": 1745590,
+          "total": 69818343
+        },
+        {
+          "min": 1745402,
+          "avg": 1745460,
+          "max": 1745580,
+          "total": 69818403
+        },
+        {
+          "min": 1745388,
+          "avg": 1745459,
+          "max": 1745564,
+          "total": 69818360
+        }
+      ],
+      "median_avg": 1745459
+    },
+    "B_native_core": {
+      "runs": [
+        {
+          "min": 1710814,
+          "avg": 1711145,
+          "max": 1711309,
+          "total": 68445820
+        },
+        {
+          "min": 1710869,
+          "avg": 1711150,
+          "max": 1711316,
+          "total": 68446022
+        },
+        {
+          "min": 1710817,
+          "avg": 1711153,
+          "max": 1711325,
+          "total": 68446129
+        },
+        {
+          "min": 1710840,
+          "avg": 1711151,
+          "max": 1711322,
+          "total": 68446042
+        },
+        {
+          "min": 1710895,
+          "avg": 1711150,
+          "max": 1711339,
+          "total": 68446018
+        }
+      ],
+      "median_avg": 1711150
+    },
+    "A1_LTO_restored": {
+      "runs": [
+        {
+          "min": 1745378,
+          "avg": 1745456,
+          "max": 1745565,
+          "total": 69818260
+        },
+        {
+          "min": 1745401,
+          "avg": 1745463,
+          "max": 1745589,
+          "total": 69818546
+        },
+        {
+          "min": 1745388,
+          "avg": 1745460,
+          "max": 1745582,
+          "total": 69818404
+        },
+        {
+          "min": 1745403,
+          "avg": 1745457,
+          "max": 1745590,
+          "total": 69818280
+        },
+        {
+          "min": 1745409,
+          "avg": 1745459,
+          "max": 1745583,
+          "total": 69818392
+        }
+      ],
+      "median_avg": 1745459
+    }
+  },
+  "original_matched_baseline_median_cycles": 1712600,
+  "native_core_time_delta_percent_vs_LTO": -1.9656147752539543,
+  "native_core_time_delta_percent_vs_original": -0.08466658881233213,
+  "probe_image": {
+    "path": ".build/hil-size-qualification/AEB505B6E0067623/images/740EEBA4.bin",
+    "bytes": 382868,
+    "footer": 380496,
+    "build": "740EEBA4",
+    "sha256": "7d97a3e586b037ed94debe94d005701308895b107237d869ea87a2f654f933b5"
+  },
+  "probe_static_ram_bytes": 33672,
+  "shipping_image_flash_bytes": 384128,
+  "shipping_static_ram_bytes": 33668,
+  "additional_flash_saving_bytes": 1260,
+  "instruction_width_counts": {
+    "baseline": {
+      "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 3100,
+        "wide": 1550,
+        "instruction_bytes": 12400
+      },
+      "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 2547,
+        "wide": 1340,
+        "instruction_bytes": 10454
+      }
+    },
+    "optimized": {
+      "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 2412,
+        "wide": 2178,
+        "instruction_bytes": 13536
+      },
+      "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 2030,
+        "wide": 1828,
+        "instruction_bytes": 11372
+      }
+    },
+    "native-core": {
+      "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 3100,
+        "wide": 1550,
+        "instruction_bytes": 12400
+      },
+      "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)": {
+        "narrow": 2547,
+        "wide": 1340,
+        "instruction_bytes": 10454
+      }
+    }
+  },
+  "hot_function_sizes_bytes": {
+    "IK130X_Tick_All": {
+      "baseline": 13220,
+      "LTO": 14296,
+      "native_core": 13220
+    },
+    "IK1302_1303_Tick_All": {
+      "baseline": 10976,
+      "LTO": 11870,
+      "native_core": 10976
+    }
+  },
+  "interpretation": "LTO participation of mk61emu_core.cpp causes the reproducible regression in this benchmark. Excluding that unit restores baseline instruction selection and performance while retaining LTO elsewhere. Exact per-instruction/cache contributions have not been isolated.",
+  "probe_ELF_checks": [
+    "actual USB GPIO/MSP initialization PASS",
+    "main frame80 and terminal dispatch608 PASS",
+    "sealed BIN/ELF exact match PASS"
+  ],
+  "deployment_status": "EXPERIMENT_ONLY_NOT_INTEGRATED; shipping 66C953FB restored after test",
+  "final_hardware_state": {
+    "build_crc": "66C953FB",
+    "hardware_crc": "PASS",
+    "crash": "NONE",
+    "calculator_state": "EMPTY_ORIGINAL_RESTORED",
+    "all37_files_sha256": "PASS",
+    "serial_port": "CLOSED"
+  },
+  "evidence_root": ".build/hil-size-qualification/core-codegen-analysis",
+  "gcc_reference": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Optimize-Options.html#Optimize-Options"
+}
