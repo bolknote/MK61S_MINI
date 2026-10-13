@@ -263,6 +263,7 @@ compile_variant() {
     --build-property "compiler.c.extra_flags=$platform_ram_flags" \
     --build-property "compiler.c.elf.extra_flags=-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker" \
     --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
+    --build-property "recipe.hooks.linking.prelink.30.pattern=python3 \"$root/tools/.mk61-gcc/protect-core-lto.py\" \"{build.path}\" \"{build.source.path}\" \"{compiler.path}{compiler.cpp.cmd}\" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch" 2>&1 | tee "$compile_log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}
@@ -272,6 +273,8 @@ compile_variant() {
     fail "compile failed for $name (status $compile_status)"
   [[ "$tee_status" -eq 0 ]] ||
     fail "could not record compiler output for $name"
+  python3 "$root/tests/check_core_lto_objects.py" \
+    --compile-commands "$build_path/compile_commands.json"
   python3 "$root/tests/check_compiler_warnings.py" \
     --log "$compile_log" \
     --compile-commands "$build_path/compile_commands.json"

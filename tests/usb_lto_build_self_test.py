@@ -27,6 +27,85 @@ def fake_compiler(arguments):
     return 0
 
 
+class CoreLtoBuildTest(unittest.TestCase):
+    def exercise(self, powershell=False, flags=None, fail=False, missing=False):
+        with tempfile.TemporaryDirectory(prefix='mk61 core lto ') as temporary:
+            base = Path(temporary)
+            build = base / 'build with spaces'
+            sketch = base / 'sketch with spaces'
+            sketch.mkdir()
+            (sketch / 'mk61emu_core.cpp').touch()
+            obj = build / 'sketch/mk61emu_core.cpp.o'
+            obj.parent.mkdir(parents=True)
+            obj.write_text('original LTO object')
+            cold = obj.with_name('terminal.cpp.o')
+            cold.write_text('cold LTO object')
+            if missing:
+                obj.unlink()
+            fake = base / 'fake compiler'
+            shutil.copyfile(HERE, fake)
+            fake.chmod(0o755)
+            options = flags if flags is not None else ['-c', '-flto', '-Os',
+                '-std=gnu++17', '-fno-exceptions', '-DSTM32F411xE',
+                '-DMK61_BOARD_CLASSIC_V3', '-DNAME="space value"',
+                '-IC:/Program Files/STM32/core', r'-IE:\Arduino core\inc']
+            if fail:
+                options = options + ['--fail']
+            suffix = 'ps1' if powershell else 'py'
+            launcher = ([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-File']
+                        if powershell else [sys.executable])
+            result = subprocess.run([*launcher,
+                str(ROOT / 'tools/.mk61-gcc' / ('protect-core-lto.' + suffix)),
+                str(build), str(sketch), str(fake), '--fake-compiler', *options],
+                capture_output=True, text=True)
+            self.assertEqual(cold.read_text(), 'cold LTO object')
+            if fail or missing:
+                self.assertNotEqual(result.returncode, 0)
+                return
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            if flags is not None:
+                self.assertEqual(obj.read_text(), 'original LTO object')
+                return
+            expected = options + ['-fno-lto', '-I' + str(sketch),
+                str(sketch / 'mk61emu_core.cpp'), '-o', str(obj)]
+            if powershell:
+                expected = [v.replace('\\', '/') for v in expected]
+            self.assertEqual(json.loads(obj.read_text()), expected)
+            self.assertIn('Core LTO barrier:', result.stdout)
+
+    def test_native_f411(self):
+        self.exercise()
+
+    def test_native_skips_f401_and_non_lto(self):
+        for flags in (['-flto', '-DSTM32F401xC'], ['-Os', '-DSTM32F411xE'],
+                      ['-flto=auto', '-fno-lto', '-DSTM32F411xE']):
+            self.exercise(flags=flags)
+
+    def test_native_failure_and_missing_object(self):
+        self.exercise(fail=True)
+        self.exercise(missing=True)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_f411(self):
+        self.exercise(powershell=True)
+
+    @unittest.skipUnless(shutil.which('pwsh'), 'PowerShell unavailable')
+    def test_powershell_skips_and_failure(self):
+        self.exercise(powershell=True, flags=['-flto', '-DSTM32F401xC'])
+        self.exercise(powershell=True, flags=['-flto', '-fno-lto', '-DSTM32F411xE'])
+        self.exercise(powershell=True, fail=True)
+        self.exercise(powershell=True, missing=True)
+
+    def test_all_f411_frontends_install_core_hook(self):
+        for name in ('tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt',
+                     'tools/.mk61-firmware/mk61-firmware.sh',
+                     'tools/.mk61-firmware/mk61-firmware.ps1',
+                     'tests/run_f411_release_matrix.sh'):
+            text = (ROOT / name).read_text()
+            self.assertIn('recipe.hooks.linking.prelink.30.pattern', text, name)
+            self.assertIn('protect-core-lto.', text, name)
+
+
 class UsbLtoBuildTest(unittest.TestCase):
     def exercise(self, powershell=False, fail=False):
         with tempfile.TemporaryDirectory(prefix='mk61 usb lto ') as temporary:

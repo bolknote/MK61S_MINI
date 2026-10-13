@@ -2568,6 +2568,11 @@ function Build-Selected {
         '{compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} ' +
         '{build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"'
 
+    $coreGuardRecipe = $usbGuardRecipe.Replace('protect-usb-lto.ps1', 'protect-core-lto.ps1').Replace(
+        '{build.core.path}/../../libraries/USBDevice', '{build.source.path}').Replace(
+        '{compiler.c.cmd}', '{compiler.cpp.cmd}').Replace('{compiler.c.flags}', '{compiler.cpp.flags}').Replace(
+        '{compiler.c.st_extra_flags} ', '').Replace('{compiler.c.extra_flags}', '{compiler.cpp.extra_flags}')
+
     $arguments = @(
         'compile', '--fqbn', $script:FqbnF411,
         '--build-path', $buildDir,
@@ -2575,6 +2580,7 @@ function Build-Selected {
         '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
         '--build-property', "compiler.c.elf.extra_flags=$residentLinkFlags",
         '--build-property', "recipe.hooks.linking.prelink.20.pattern=$usbGuardRecipe",
+        '--build-property', "recipe.hooks.linking.prelink.30.pattern=$coreGuardRecipe",
         $sketchDir)
     if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
         $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {
