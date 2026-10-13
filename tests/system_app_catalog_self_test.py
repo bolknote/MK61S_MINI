@@ -84,6 +84,56 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
         self.assertNotEqual(plain["language-vm"],bundle.app_build_key("sources","language-vm.APP","language-vm",args))
         self.assertEqual(plain["tinybasic"],bundle.app_build_key("sources","tinybasic.APP","tinybasic",args))
 
+    def test_file_cache_policy_is_read_from_the_resident(self) -> None:
+        for enabled in (0, 1):
+            args=arguments(Path("catalog"));args.overlay_language_vm=True
+            with patch.object(bundle,"run",return_value=f"{enabled:08x} A mk61_vm_file_cache_enabled\n"):
+                bundle.resolve_vm_file_cache(args,Path("toolchain"),Path("resident.elf"))
+            self.assertEqual(args.vm_file_cache,bool(enabled))
+        args=arguments(Path("catalog"));args.overlay_language_vm=False
+        with patch.object(bundle,"run",return_value=""):
+            bundle.resolve_vm_file_cache(args,Path("toolchain"),Path("resident.elf"))
+        self.assertFalse(args.vm_file_cache) # Existing pre-cache firmware.
+        for symbols in ("00000001 A mk61_vm_file_cache_enabled\n",
+                        "00000002 A mk61_vm_file_cache_enabled\n"):
+            with patch.object(bundle,"run",return_value=symbols),self.assertRaises(ValueError):
+                bundle.resolve_vm_file_cache(args,Path("toolchain"),Path("resident.elf"))
+
+    def test_nested_cache_helper_is_owned_but_cache_data_is_not(self) -> None:
+        self.assertIn("VMCache/VMSTORE.APP",bundle.CANONICAL)
+        self.assertIn(("vm-file-cache","VMCache/VMSTORE.APP","vm-file-cache"),bundle.MODULES)
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);output=root/"System";toolchain=root/"tools"
+            output.mkdir();toolchain.mkdir();(toolchain/"arm-none-eabi-gcc").touch()
+            resident=root/"resident.elf";resident.touch()
+            args=arguments(root/"catalog");args.catalog_dir=None
+            args.resident_elf=resident;args.arm_toolchain_bin=toolchain;args.output_dir=output
+            args.packer=None;args.language_vm_compiler=True;args.overlay_language_vm=True
+            for name in ("setup","usbdisk","explorer","wbmp","markdown","chip8"):
+                setattr(args,name,False)
+            args.basic=args.focal=True
+            enabled=1
+            def fake_build(command,**_kwargs):
+                if Path(command[0]).name=="arm-none-eabi-nm":
+                    return f"{enabled:08x} A mk61_vm_file_cache_enabled\n"
+                target=Path(command[command.index("--output-dir")+1]);target.mkdir(parents=True,exist_ok=True)
+                if "--system" in command:
+                    system=command[command.index("--system")+1]
+                    names={"tinybasic":"BASIC","focal":"FOCAL","language-vm":"LANGVM",
+                           "language-input":"LANGIN","vm-file-cache":"VMSTORE"}
+                    (target/(names[system]+".APP")).write_bytes(app_payload(1))
+                else:
+                    for name in ("HELP0.TXT","HELP1.TXT"):(target/name).write_bytes(b"help")
+            with patch.object(bundle,"run",side_effect=fake_build):
+                result=bundle.build(args)
+                self.assertTrue(result["vm_file_cache"])
+                self.assertTrue((output/"VMCache/VMSTORE.APP").is_file())
+                owned_data=output/"VMCache/VMC-0042.APP";owned_data.write_bytes(b"keep cache data")
+                enabled=0;result=bundle.build(args)
+            self.assertFalse(result["vm_file_cache"])
+            self.assertFalse((output/"VMCache/VMSTORE.APP").exists())
+            self.assertEqual(owned_data.read_bytes(),b"keep cache data")
+
     def test_vm_variants_do_not_reuse_interpreter_or_math_packages(self) -> None:
         args = arguments(Path("catalog"))
         basic = bundle.app_variant("tinybasic", args)

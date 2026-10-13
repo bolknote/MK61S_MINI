@@ -4,6 +4,12 @@
 #include "config.h"
 
 int main(void) {
+#if defined(MK61_CONFIG_EXPECT_FILE_CACHE_DISABLED)
+  static_assert(MK61_VM_FILE_CACHE==0,"explicit/no-RAM cache policy must remain disabled");
+#else
+  static_assert(MK61_VM_FILE_CACHE==(MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES!=0),
+                "file cache must track the compiled VM/RAM policy");
+#endif
 #if defined(MK61_CONFIG_EXPECT_NATIVE_HOT_PATHS)
   static_assert(MK61_CORE_NATIVE_HOT_PATHS == 1,
                 "size-optimised F411 must enable native core hot paths");

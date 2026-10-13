@@ -562,6 +562,14 @@
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
   #error "language image cache must fit in 32 KiB"
 #endif
+// Persistence is useful only when verified images can be pinned in RAM.
+// F401/no-cache profiles retain their existing compile/execute path.
+#ifndef MK61_VM_FILE_CACHE
+  #define MK61_VM_FILE_CACHE (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
+#endif
+#if MK61_VM_FILE_CACHE != 0 && MK61_VM_FILE_CACHE != 1
+  #error "MK61_VM_FILE_CACHE must be 0 or 1"
+#endif
 // Qualified reuse/byte policy is the default for an enabled image cache.
 // Retain the original LRU as an explicit A/B and compatibility override.
 #ifndef MK61_LANGUAGE_VM_CACHE_DENSITY

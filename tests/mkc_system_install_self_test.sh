@@ -19,6 +19,17 @@ install_system_unattended
 remote_get_file /System/HELP0.TXT "$work/help"
 grep -q 'Справка' "$work/help"
 
+# The one owned nested helper is synced; bytecode/user data is not deleted.
+mkdir -p "$LOCAL_PATH/VMCache"
+dd if=/dev/zero of="$LOCAL_PATH/VMCache/VMSTORE.APP" bs=64 count=1 2>/dev/null
+install_system_unattended
+cmp "$LOCAL_PATH/VMCache/VMSTORE.APP" "$MOCK_ROOT/System/VMCache/VMSTORE.APP"
+printf 'retained-cache' > "$MOCK_ROOT/System/VMCache/VMC-0042.APP"
+rm "$LOCAL_PATH/VMCache/VMSTORE.APP"
+install_system_unattended
+test ! -e "$MOCK_ROOT/System/VMCache/VMSTORE.APP"
+test "$(<"$MOCK_ROOT/System/VMCache/VMC-0042.APP")" = retained-cache
+
 # A malformed source is rejected before old files can be removed.
 printf x > "$LOCAL_PATH/BASIC.APP"
 printf keep > "$MOCK_ROOT/System/FOCAL.APP"

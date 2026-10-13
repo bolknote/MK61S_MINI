@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
     "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
-    "LANGVM.APP", "LANGIN.APP",
+    "LANGVM.APP", "LANGIN.APP", "VMCache/VMSTORE.APP",
 )
 MODULES = (
     ("setup", "SETUP.APP", "setup"),
@@ -37,6 +37,7 @@ MODULES = (
     ("explorer", "EXPLORER.APP", "explorer"),
     ("language-vm", "LANGVM.APP", "language-vm"),
     ("language-input", "LANGIN.APP", "language-input"),
+    ("vm-file-cache", "VMCache/VMSTORE.APP", "vm-file-cache"),
 )
 CATALOG_LOCK_TIMEOUT_SECONDS = 120.0
 
@@ -391,6 +392,22 @@ def resolve_language_vm_placement(args: argparse.Namespace, toolchain: Path,
     args.overlay_language_vm = overlay
 
 
+def resolve_vm_file_cache(args: argparse.Namespace, toolchain: Path,
+                          resident: Path) -> None:
+    # Read the compiled policy, not a guess from the selected MCU/profile.
+    suffix = ".exe" if os.name == "nt" else ""
+    symbols = run([toolchain / ("arm-none-eabi-nm" + suffix),
+                   "--defined-only", resident], capture=True)
+    match = re.search(r"^([0-9a-fA-F]+)\s+A\s+mk61_vm_file_cache_enabled\s*$",
+                      symbols, re.MULTILINE)
+    enabled = int(match[1], 16) if match else 0
+    if enabled not in (0, 1):
+        raise ValueError("invalid resident VM file cache policy")
+    if enabled and not args.overlay_language_vm:
+        raise ValueError("VM file cache requires the matched overlay VM")
+    args.vm_file_cache = bool(enabled)
+
+
 def build(args: argparse.Namespace) -> dict:
     resident = args.resident_elf.resolve()
     if not resident.is_file():
@@ -408,6 +425,7 @@ def build(args: argparse.Namespace) -> dict:
     if not (toolchain / ("arm-none-eabi-gcc" + suffix)).is_file():
         raise ValueError(f"ARM GCC toolchain not found in: {toolchain}")
     resolve_language_vm_placement(args, toolchain, resident)
+    resolve_vm_file_cache(args, toolchain, resident)
     overlay_vm = args.overlay_language_vm
 
     output = args.output_dir.resolve()
@@ -423,6 +441,7 @@ def build(args: argparse.Namespace) -> dict:
         "explorer": args.explorer,
         "language-vm": overlay_vm and (args.basic or args.focal),
         "language-input": overlay_vm and (args.basic or args.focal),
+        "vm-file-cache": args.vm_file_cache and (args.basic or args.focal),
     }
     built: list[str] = []
     catalog_hits: list[str] = []
@@ -460,9 +479,10 @@ def build(args: argparse.Namespace) -> dict:
                 command.append("--split-language-vm")
                 if args.local_float_math: command.append("--local-float-math")
             destination = stage / filename
+            destination.parent.mkdir(parents=True, exist_ok=True)
             if cached is None:
                 run(command)
-                source = work / key / filename
+                source = work / key / Path(filename).name
                 if build_key:
                     publish_catalog(source, filename, system, build_key, args)
                 shutil.copy2(source, destination)
@@ -482,6 +502,7 @@ def build(args: argparse.Namespace) -> dict:
             destination = output / filename
             source = stage / filename
             if source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
                 temporary_file = output / (filename + ".tmp")
                 shutil.copy2(source, temporary_file)
                 os.replace(temporary_file, destination)
@@ -498,6 +519,7 @@ def build(args: argparse.Namespace) -> dict:
         "local_float_math": args.local_float_math,
         "language_vm_compiler": getattr(args,"language_vm_compiler",False),
         "overlay_language_vm": overlay_vm,
+        "vm_file_cache": args.vm_file_cache,
         "catalog": str(args.catalog_dir.resolve()) if args.catalog_dir else None,
         "catalog_hits": catalog_hits,
     }

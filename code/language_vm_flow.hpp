@@ -18,6 +18,10 @@ struct FlowContext {
     // Only before START: publication epoch for optional cache persistence.
     // FLOW_RUN clears input.size before INPUT begins, then binds InputRequest.
     uint32_t file_cache_revision;
+    struct {
+      uint32_t revision;
+      mk61_app_flow_target next; // APP-selected continuation after publication.
+    } publication;
   };
   uint32_t failure_status;
 };
@@ -27,7 +31,7 @@ static_assert(sizeof(FlowContext) == 184 && offsetof(FlowContext, input) == 136,
 #endif
 // Request growth moved compiler-stage fields without changing its total
 // union size. Reject older language APPs before they read those offsets.
-static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x35564C46UL;
+static constexpr uint32_t FLOW_CONTEXT_MAGIC = 0x36564C46UL;
 enum FlowPhase : uint32_t {
   FLOW_VALIDATE_PROGRAM = 0, FLOW_RUN_PROGRAM, FLOW_AFTER_INPUT,
   FLOW_EDIT_INPUT, FLOW_AFTER_EXPRESSION, FLOW_EVALUATE_EXPRESSION, FLOW_FINISH

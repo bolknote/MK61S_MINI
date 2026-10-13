@@ -62,8 +62,14 @@ mk61_app_flow_target frontend(const CompilerContext& c) {
       MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE);
 }
 void miss(mk61_app_flow* flow,CompilerContext& c) {
+  c.cache_target=false;
+  c.compile.transfer={};
   c.compile.file_validated={};
   mk61_app_flow_next(flow,frontend(c));
+}
+void discard(mk61_app_flow* flow) {
+  mk61_app_flow_call(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
+      MK61_APP_FLOW_SYSTEM_FILE,app_flow::DISCARD_CACHE_IMAGE),file_cache::AFTER_DISCARD);
 }
 bool executable(const uint8_t* image,uint16_t bytes,const file_cache::Key& key,View& view) {
   uint32_t source_crc=0;
@@ -95,20 +101,23 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   if(!api || !mk61_app_flow_compatible(flow) || flow->context_size!=sizeof(CompilerContext))return 0;
   auto& c=*(CompilerContext*)flow->context;
   if(c.compile.magic!=FLOW_CONTEXT_MAGIC || (c.language!=Language::BASIC && c.language!=Language::FOCAL))return 0;
+  if(flow->current.phase==file_cache::AFTER_DISCARD) {
+    if(c.prepared || flow->status!=MK61_FLOW_OK)return 0;
+    miss(flow,c);return 1;
+  }
   if(flow->current.phase==file_cache::START_LOADED) {
     if(c.prepared || !c.cache_target || c.compile.file_validated.magic!=VALIDATED_MAGIC)return 0;
     if(c.compile.request.source_revision!=call(MK61_SERVICE_RESOURCE_READ)) {
-      mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
-          MK61_APP_FLOW_SYSTEM_FILE,app_flow::DISCARD_CACHE_IMAGE));return 1;
+      discard(flow);return 1;
     }
     // Consume the certificate before prepare switches the compiler/VM union.
     const auto checked=c.compile.file_validated;
+    c.cache_driver=0xFFFF; // Publish a file hit without rewriting it.
     if(!prepare_compiled_flow(flow))return 0;
     c.vm.program_validated=checked;
     View view;
     if(!validated_view(c.vm.program,view))return 0;
     initialize_validated_state(c.execution,checked,*c.vm.program.state);
-    c.cache_driver=0xFFFF; // Publish a file hit without rewriting it.
     if(call(MK61_SERVICE_CAPABILITIES)&MK61_SERVICE_CAP_TEXT_FONT)
       (void)call(MK61_SERVICE_TEXT_FONT,MK61_TEXT_FONT_ACTIVATE);
     // Publish through the existing host phase, then tail into the shared VM.
@@ -186,8 +195,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   }
   if(flow->current.phase!=file_cache::LOAD_RESERVED)return 0;
   if(flow->status!=MK61_FLOW_OK || !stage.transfer.image || !buffer) {
-    if(flow->status==MK61_FLOW_OK)mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
-        MK61_APP_FLOW_SYSTEM_FILE,app_flow::DISCARD_CACHE_IMAGE));
+    if(flow->status==MK61_FLOW_OK)discard(flow);
     else miss(flow,c);
     return 1;
   }
@@ -198,8 +206,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
      !file_cache::view(stage.file_key,buffer.lease.data,(uint16_t)file_size,image,bytes) ||
      bytes!=stage.transfer.size || !executable(image,bytes,stage.file_key,view) ||
      call(MK61_SERVICE_RESOURCE_READ)!=stage.request.source_revision) {
-    mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,
-        MK61_APP_FLOW_SYSTEM_FILE,app_flow::DISCARD_CACHE_IMAGE));return 1;
+    discard(flow);return 1;
   }
   memcpy(stage.transfer.image,image,bytes);
   stage.file_validated={VALIDATED_MAGIC,view.size,view.code,view.source_size,view.end,

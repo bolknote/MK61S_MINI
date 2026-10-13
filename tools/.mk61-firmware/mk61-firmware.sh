@@ -2413,7 +2413,7 @@ expected_system_app_names() {
 }
 
 all_system_app_names() {
-  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT LANGVM.APP LANGIN.APP
+  printf '%s\n' FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT LANGVM.APP LANGIN.APP VMCache/VMSTORE.APP
 }
 
 system_app_enabled() {
@@ -2421,6 +2421,7 @@ system_app_enabled() {
     FOCAL.APP) [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
     BASIC.APP) [ "$ENABLE_TINYBASIC" -eq 1 ] && [ "$TINYBASIC_AS_APP" -eq 1 ] ;;
     LANGVM.APP|LANGIN.APP) [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
+    VMCache/VMSTORE.APP) [ "$MCU" = f411 ] && [ "$ENABLE_FOCAL" -eq 1 ] && [ "$FOCAL_AS_APP" -eq 1 ] ;;
     WBMP.APP)
       [ "$ENABLE_WBMP_VIEWER" -eq 1 ] && \
         [ "$WBMP_VIEWER_AS_APP" -eq 1 ] && \

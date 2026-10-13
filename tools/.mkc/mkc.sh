@@ -3465,7 +3465,7 @@ main_loop() {
 install_system_unattended() {
   local source=$LOCAL_PATH name kind size remote_name deadline reason
   local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP WBMP.APP MARKDOWN.APP
-    CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT)
+    CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT VMCache/VMSTORE.APP)
   if [ "$RESIDENT_USBDISK" -eq 0 ] && [ ! -s "$source/USBDISK.APP" ]; then
     STATUS_TEXT='нет обязательного USBDISK.APP'; return 1
   fi
@@ -3473,6 +3473,9 @@ install_system_unattended() {
     STATUS_TEXT='resident USB-диск не должен содержать USBDISK.APP'; return 1
   fi
   # Validate every source before deleting or uploading anything.
+  if [ -e "$source/VMCache/VMSTORE.APP" ] && [ -L "$source/VMCache" ]; then
+    STATUS_TEXT='неверный каталог VMCache'; return 1
+  fi
   for name in "${canonical[@]}"; do
     [ -e "$source/$name" ] || [ -L "$source/$name" ] || continue
     [ -f "$source/$name" ] && [ ! -L "$source/$name" ] || {
@@ -3504,8 +3507,24 @@ install_system_unattended() {
       fi
     done
   done < "$SESSION_DIR/system-list"
+  # Synchronise only our nested helper; retained bytecode and other caller
+  # files in VMCache are not part of the System bundle and must survive.
+  if [ ! -f "$source/VMCache/VMSTORE.APP" ]; then
+    while IFS=$'\t' read -r kind size remote_name; do
+      [ "$kind" = d ] && [ "$(uppercase "$remote_name")" = VMCACHE ] || continue
+      remote_list_raw "/System/$remote_name" "$SESSION_DIR/vmcache-list" || return 1
+      local cache_kind cache_size cache_name
+      while IFS=$'\t' read -r cache_kind cache_size cache_name; do
+        if [ "$cache_kind" = f ] && [ "$(uppercase "$cache_name")" = VMSTORE.APP ]; then
+          remote_delete "/System/$remote_name/$cache_name" || return 1
+          printf 'Removed disabled /System/%s/%s\n' "$remote_name" "$cache_name"
+        fi
+      done < "$SESSION_DIR/vmcache-list"
+    done < "$SESSION_DIR/system-list"
+  fi
   for name in "${canonical[@]}"; do
     [ -f "$source/$name" ] || continue
+    [ "$name" != VMCache/VMSTORE.APP ] || remote_mkdir /System/VMCache || return 1
     if ! remote_put_file "$source/$name" "/System/$name"; then
       [ -n "$MOCK_ROOT" ] || remote_send 'fsput cancel' || true
       return 1

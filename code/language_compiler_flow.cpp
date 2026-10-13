@@ -131,6 +131,9 @@ bool prepare_compiled_flow(mk61_app_flow* flow) {
   c.vm = {}; c.vm.magic = FLOW_CONTEXT_MAGIC; c.vm.original_command = original;
   c.vm.program = {sizeof(OverlayRequest), REQUEST_VERSION, &c.execution,
       state, &c.vm.program_validated, OverlayAction::START, {0,0,0}};
+  c.vm.publication.next=c.cache_driver==0xFFFF ?
+      mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM) :
+      mk61_app_flow_to(MK61_APP_KIND_APPLICATION,c.cache_driver,file_cache::STORE_COMPILED);
   c.prepared = true;
   return true;
 }

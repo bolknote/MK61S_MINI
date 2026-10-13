@@ -180,13 +180,30 @@ package_system_apps() {
   resident_vm="$(define_value "$board_flags" MK61_RESIDENT_LANGUAGE_VM 0)"
   overlay_vm="$(define_value "$board_flags" MK61_OVERLAY_LANGUAGE_VM "$((focal && !resident_vm))")"
   [[ "$overlay_vm" == 0 ]] || expected+=(LANGVM.APP LANGIN.APP)
+  # The ELF selects helper packaging, including explicit no-cache overrides.
+  local helper_policy
+  helper_policy="$(python3 - "$build_path/mk61s-M.ino.elf" "$root/tools" <<'PY'
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[2])
+from build_system_app_bundle import run, compiler_from_database
+elf=Path(sys.argv[1]);toolchain=compiler_from_database(elf.parent/'compile_commands.json').parent
+symbols=run([toolchain/'arm-none-eabi-nm','--defined-only',elf],capture=True)
+import re
+m=re.search(r'^([0-9a-fA-F]+)\s+A\s+mk61_vm_file_cache_enabled\s*$',symbols,re.M)
+mode=int(m[1],16) if m else 0
+assert mode in (0,1)
+print(mode)
+PY
+)"
+  [[ "$helper_policy" == 0 || ( "$basic" == 0 && "$focal" == 0 ) ]] || expected+=(VMCache/VMSTORE.APP)
   local file wanted expected_file
   for file in "${expected[@]}" HELP0.TXT HELP1.TXT; do
     [[ -s "$bundle/System/$file" ]] ||
       fail "missing product artifact: $bundle_name/System/$file"
   done
   for file in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP SETUP.APP \
-      USBDISK.APP EXPLORER.APP LANGVM.APP LANGIN.APP; do
+      USBDISK.APP EXPLORER.APP LANGVM.APP LANGIN.APP VMCache/VMSTORE.APP; do
     wanted=0
     for expected_file in "${expected[@]}"; do
       [[ "$file" != "$expected_file" ]] || wanted=1

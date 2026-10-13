@@ -29,6 +29,6 @@ bool view(const Key&,const uint8_t* file,uint16_t size,
 // Before replacing a stale entry, prove it is our valid cache for this source.
 // A colliding filename or damaged/unrecognised file is never overwritten.
 bool owned(uint16_t source_id,Language,const uint8_t* file,uint16_t size);
-enum Phase:uint32_t { TRY_LOAD=0x200, LOAD_RESERVED, STORE_COMPILED, START_LOADED };
+enum Phase:uint32_t { TRY_LOAD=0x200, LOAD_RESERVED, STORE_COMPILED, START_LOADED, AFTER_DISCARD };
 }
 #endif

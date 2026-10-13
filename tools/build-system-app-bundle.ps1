@@ -32,7 +32,7 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $Canonical = @(
     'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
     'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
-    'LANGVM.APP', 'LANGIN.APP')
+    'LANGVM.APP', 'LANGIN.APP', 'VMCache/VMSTORE.APP')
 $Modules = @(
     [pscustomobject]@{ Key = 'setup'; Name = 'SETUP.APP'; System = 'setup' },
     [pscustomobject]@{ Key = 'focal'; Name = 'FOCAL.APP'; System = 'focal' },
@@ -43,7 +43,8 @@ $Modules = @(
     [pscustomobject]@{ Key = 'usbdisk'; Name = 'USBDISK.APP'; System = 'usbdisk' },
     [pscustomobject]@{ Key = 'explorer'; Name = 'EXPLORER.APP'; System = 'explorer' },
     [pscustomobject]@{ Key = 'language-vm'; Name = 'LANGVM.APP'; System = 'language-vm' },
-    [pscustomobject]@{ Key = 'language-input'; Name = 'LANGIN.APP'; System = 'language-input' })
+    [pscustomobject]@{ Key = 'language-input'; Name = 'LANGIN.APP'; System = 'language-input' },
+    [pscustomobject]@{ Key = 'vm-file-cache'; Name = 'VMCache/VMSTORE.APP'; System = 'vm-file-cache' })
 $Enabled = @{
     setup = $Setup -eq '1'; focal = $Focal -eq '1'; basic = $Basic -eq '1'
     wbmp = $Wbmp -eq '1' -and $Markdown -ne '1'
@@ -217,6 +218,22 @@ function Set-LanguageVmPlacement {
     $Enabled['language-vm'] = $OverlayLanguageVm -eq '1' -and
         ($Focal -eq '1' -or $Basic -eq '1')
     $Enabled['language-input'] = $Enabled['language-vm']
+}
+
+function Set-VmFileCachePolicy {
+    param([string]$Toolchain, [string]$Resident)
+    $suffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
+    $symbols = Invoke-BuildTool (Join-Path $Toolchain "arm-none-eabi-nm$suffix") `
+        @('--defined-only', $Resident) -Capture
+    $mode = 0
+    if ($symbols -match '(?m)^([0-9a-fA-F]+)\s+A\s+mk61_vm_file_cache_enabled\s*$') {
+        $mode = [Convert]::ToInt32($Matches[1], 16)
+    }
+    if ($mode -notin @(0, 1)) { throw 'invalid resident VM file cache policy' }
+    if ($mode -eq 1 -and $OverlayLanguageVm -ne '1') {
+        throw 'VM file cache requires the matched overlay VM'
+    }
+    $Enabled['vm-file-cache'] = $mode -eq 1 -and $Enabled['language-vm']
 }
 
 function Get-SourceKey {
@@ -395,6 +412,7 @@ try {
         throw "ARM GCC toolchain not found in: $toolchain"
     }
     Set-LanguageVmPlacement $toolchain $resident
+    Set-VmFileCachePolicy $toolchain $resident
     $output = [IO.Path]::GetFullPath($OutputDirectory)
     [IO.Directory]::CreateDirectory($output) | Out-Null
     if (-not [string]::IsNullOrWhiteSpace($CatalogDirectory)) {
@@ -419,6 +437,7 @@ try {
                 Get-CachedPayload $module $buildKey
             } else { $null }
             $destination = Join-Path $stage $module.Name
+            [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination)) | Out-Null
             if ($null -eq $cached) {
                 $moduleOutput = Join-Path $workspace $module.Key
                 $arguments = New-Object 'System.Collections.Generic.List[string]'
@@ -448,7 +467,7 @@ try {
                     $arguments.Add('-FocalTrace')
                 }
                 Invoke-BuildTool $powerShell $arguments.ToArray()
-                $source = Join-Path $moduleOutput $module.Name
+                $source = Join-Path $moduleOutput ([IO.Path]::GetFileName($module.Name))
                 if (-not [IO.File]::Exists($source)) {
                     throw "System APP build did not produce: $source"
                 }
@@ -487,6 +506,7 @@ try {
             local_float_math = $LocalFloatMath -eq '1'
             language_vm_compiler = $LanguageVmCompiler -eq '1'
             overlay_language_vm = $OverlayLanguageVm -eq '1'
+            vm_file_cache = $Enabled['vm-file-cache']
             focal_trace = $FocalTrace -eq '1'
             catalog = $CatalogDirectory; catalog_hits = $hits.ToArray()
             builder = 'PowerShell'

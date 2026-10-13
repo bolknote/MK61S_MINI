@@ -15,7 +15,8 @@ def app_memory_size(path):
     data = path.read_bytes()
     assert len(data) >= 64 and data[:8] == b'MK61APP\0', f'{path}: invalid APP header'
     assert struct.unpack_from('<3H', data, 8) == (1, 64, 6), f'{path}: incompatible APP'
-    assert data[14] in (1, 2, 3, 5, 6, 7, 8, 9, 10, 11), f'{path}: not a System APP'
+    helper=path.name.upper()=='VMSTORE.APP' and path.parent.name.upper()=='VMCACHE'
+    assert data[14] in ((4,) if helper else (1, 2, 3, 5, 6, 7, 8, 9, 10, 11)), f'{path}: not a System APP'
     assert zlib.crc32(data[:60]) == struct.unpack_from('<I', data, 60)[0], f'{path}: header CRC'
     stored, image, memory = struct.unpack_from('<3I', data, 24)
     assert len(data) == 64 + stored, f'{path}: truncated APP'
@@ -26,6 +27,8 @@ def app_memory_size(path):
 
 def system_memory_sizes(directory):
     apps = sorted(directory.glob('*.APP'))
+    helper=directory/'VMCache/VMSTORE.APP'
+    if helper.is_file():apps.append(helper)
     assert apps, f'{directory}: System APP bundle is missing or empty'
     sizes = {path.name: app_memory_size(path) for path in apps}
     disk = directory / 'USBDISK.APP'

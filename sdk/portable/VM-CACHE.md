@@ -1187,3 +1187,57 @@ LANGVM, все 36 исходных файлов/3 каталога, пустая
 RTC/HIL transport теперь вычисляет остаток времени один раз и закрывает
 порт при неожиданной ошибке reconnect; три mock-регрессии без устройств
 включены в `run_all_tests.sh`.
+
+## Штатный файловый кеш и неизменённые бюджеты — 2026-10-12
+
+Кеш включён по умолчанию при overlay VM и ненулевом RAM image cache.
+F411 получает его автоматически; F401 и explicit cache=0 — нет.
+`MK61_VM_FILE_CACHE=0` остаётся явным выключением для A/B. Резидент с
+активным кешем, но без helper, использует обычную компиляцию.
+
+После публикации следующий target выбирает APP, не отдельная native
+политика. Target и publication revision занимают прежний временный INPUT
+union; контексты 184/240 байт, persistent values 4016 и VM state 1584
+не увеличились. Откат HOST освобождает pin/workspace и возвращает управление
+helper, который очищает временную transfer/certificate и выбирает frontend.
+Tagged zeros всех 501 значений инициализируются одним byte-copy циклом
+вместо memset и трёх отдельных циклов. Представление всех чисел прежнее;
+проверка физических tagged zeros входит в RAM cache regression.
+
+Приватный `FLOW_CONTEXT_MAGIC` стал 0x36564C46: предыдущие APP не могут
+молча прочитать новый publication contract. Bytecode VERSION=7, C6 ABI=6,
+request ABI=8 и filesystem C9 не меняются. Нужно обновлять BASIC/FOCAL,
+LANGVM/LANGIN согласованным комплектом. Старый persistent bytecode cache
+проверяется по новому CRC compiler APP, поэтому корректно пересоздаётся.
+
+Штатный F411 Classic sealed **393196**, свободно **131092** при прежнем
+required **131072**: 224 байта сняты с прошлого варианта 393420, остаток
+сверх обязательного резерва — 20 байт. F401 Classic sealed **259952**,
+свободно **2192** при required 2048. Static RAM Classic F411/F401 прежняя
+40272/35364, frame ceiling 5120 и 16-КиБ C-stack reserve не ослаблены.
+Hot LANGVM 15188/15360, cold LANGIN 15480/16000, VMSTORE loaded 8476;
+наибольшим APP остаётся BASIC (19120), отдельного retained buffer нет.
+
+Нулевой по размеру ELF symbol `mk61_vm_file_cache_enabled` сообщает policy
+Python и PowerShell bundle builder. Включённый resident получает обычный
+C6 APP `/System/VMCache/VMSTORE.APP`; explicit off и pre-cache ELF — нет.
+Оба build frontend собирают helper с shared runtime; Windows greedy file
+7529 байт против desktop optimal 6837, loaded size одинаков. Bash и
+PowerShell System installer создают вложенную папку и проверяют readback.
+При отключении удаляется только собственный helper, не VMC-*.APP и чужие
+файлы. Bundle builder также не удаляет retained bytecode. Есть mock tests
+включения/отключения/вложенной установки, source symlink checks и тесты
+выбора policy по ELF; ожидания gate используют compiled metadata.
+
+Артефакты: `tmp/vm-cache-default-20261012.Hj8B7V/`. Полная F411 strict release
+matrix — **PASS, 16/16**, включая LTO, USB Screen, WS0010/no-graphics,
+Classic V2/V3 и 40th; обязательное наличие helper проверено по ELF policy.
+Production STOP gates WS0010/Classic и F401 Classic — PASS. Targeted
+Clang 18 и ASan/UBSan: оба math backend, USB=0/1, compiler flow,
+RAM/file cache, rollback, INPUT/ESC и overlay — PASS. Bash/PowerShell
+catalog, packaging и вложенная System installation — PASS. Полный
+`run_ci_strict.sh` завершился с exit=0: Clang 18 и Apple Clang ASan/UBSan.
+Параметры budget в контракте не изменены. Аппаратная проверка новой
+штатной прошивки пока не проведена: ожидается подтверждение доступности
+Classic. Платы в этом этапе не прошивались. Ранние результаты предыдущего
+handoff выше относятся к старому прототипу, не являются новым замером.

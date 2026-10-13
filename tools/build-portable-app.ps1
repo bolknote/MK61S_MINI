@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('setup', 'focal', 'tinybasic', 'wbmp-viewer',
                  'markdown-viewer', 'chip8', 'usbdisk', 'explorer',
-                 'language-vm', 'language-input')]
+                 'language-vm', 'language-input', 'vm-file-cache')]
     [string]$System,
     [Parameter(Mandatory = $true)]
     [string]$ArmToolchainBin,
@@ -27,6 +27,12 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $DefaultLocalFloatMask = 0x3C0
 
 $Systems = @{
+    'vm-file-cache' = @{
+        Name = 'VMSTORE'; Macro = 'VM_FILE_CACHE'; Magic = $null
+        Sources = @('language_vm_file_cache_entry.cpp', 'language_vm_file_cache.cpp',
+            'language_compiler_flow.cpp', 'language_vm.cpp', 'language_bytecode.cpp',
+            'loadable_module_format.cpp', 'zx0.cpp')
+    }
     'setup' = @{
         Name = 'SETUP'; Macro = 'SETUP'; Magic = $null
         Sources = @('setup_ui.cpp', 'setup_module_entry.cpp',
@@ -320,11 +326,11 @@ try {
             'sdk/portable/system/usbdisk_compat.cpp'))
     }
     $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
-    $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'usbdisk')
+    $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'usbdisk', 'vm-file-cache')
     if ($sharedSystemRuntime) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/runtime.S'))
-        if ($System -ne 'usbdisk') {
+        if ($System -notin @('usbdisk', 'vm-file-cache')) {
             $sources.Add((Join-Path $ProjectRoot `
                 'sdk/portable/system/editor.cpp'))
         }
@@ -457,8 +463,9 @@ try {
     $imageSize = [int](Get-Item -LiteralPath $image).Length
     $relocationCount = [Mk61.Build.AppPacker]::ExtractRelocations(
         $elf, $base, $imageSize, $memorySize, $relocations)
+    $kind = if ($System -eq 'vm-file-cache') { 'app' } else { $System }
     $packed = [Mk61.Build.AppPacker]::PackFile(
-        $System, $image, $relocations, $memorySize, $entryOffset,
+        $kind, $image, $relocations, $memorySize, $entryOffset,
         $base, $definition.Magic, $app)
     $selected = if ($packed.UsesBcj) { 'BCJ' } else { 'plain' }
     Write-Host ("ZX0 candidates: plain=$($packed.PlainBytes) " +

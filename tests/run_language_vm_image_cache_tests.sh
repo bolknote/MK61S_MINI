@@ -15,6 +15,7 @@ for density in "${policies[@]}"; do
 for usb in 0 1; do
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DCONFIG -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST \
+  -DMK61_VM_FILE_CACHE=0 \
   -DLANGUAGE_VM_TEST_STATE_RESETS \
   -DMK61_ENABLE_USB_SCREEN="$usb" \
   -DMK61_LANGUAGE_VM_CACHE_DENSITY="$density" \

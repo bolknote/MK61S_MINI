@@ -1288,11 +1288,20 @@ function Install-SystemBundle {
     param([string]$Directory)
     $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP', 'LANGVM.APP', 'LANGIN.APP',
         'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'EXPLORER.APP',
-        'HELP0.TXT', 'HELP1.TXT')
+        'HELP0.TXT', 'HELP1.TXT', 'VMCache/VMSTORE.APP')
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
         throw "нет каталога System: $Directory"
     }
     $system = (Resolve-Path -LiteralPath $Directory).Path
+    $helper = Join-Path $system 'VMCache/VMSTORE.APP'
+    if (Test-Path -LiteralPath $helper) {
+        if ((Get-LocalItemKind (Get-Item -LiteralPath (Join-Path $system 'VMCache') -Force)) -ne 'd' -or
+            (Get-LocalItemKind (Get-Item -LiteralPath $helper -Force)) -ne 'f') {
+            throw 'неверный файл или каталог VMCache'
+        }
+        $reason = Get-UnsupportedReason $helper 'f'
+        if (-not [string]::IsNullOrEmpty($reason)) { throw "VMSTORE.APP: $reason" }
+    }
     if (-not $script:ResidentUsbDisk -and
         -not (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
         throw "нет обязательного USBDISK.APP в $system"
@@ -1329,11 +1338,27 @@ function Install-SystemBundle {
         [Console]::WriteLine("Removed disabled /System/$name")
     }
 
+    if (-not (Test-Path -LiteralPath (Join-Path $system 'VMCache/VMSTORE.APP') -PathType Leaf)) {
+        foreach ($cacheFolder in @($installed | Where-Object { $_.Kind -eq 'd' -and $_.Name -ieq 'VMCache' })) {
+            $remoteDirectory = '/System/' + $cacheFolder.Name
+            foreach ($entry in @(Get-RemoteEntries $remoteDirectory)) {
+                if ($entry.Kind -eq 'f' -and $entry.Name -ieq 'VMSTORE.APP') {
+                    if (-not (Remove-RemoteItem "$remoteDirectory/$($entry.Name)")) {
+                        throw "удаление старого VMSTORE.APP: $($script:StatusText)"
+                    }
+                }
+            }
+        }
+    }
+
     foreach ($name in $canonical) {
         $source = Join-Path $system $name
         if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { continue }
         $remote = "/System/$name"
-        $readback = Join-Path $script:SessionDir ("verify-$name")
+        if ($name -eq 'VMCache/VMSTORE.APP' -and -not (New-RemoteDirectory '/System/VMCache')) {
+            throw "не удалось создать VMCache: $($script:StatusText)"
+        }
+        $readback = Join-Path $script:SessionDir ("verify-" + $name.Replace('/', '-'))
         if (-not (Send-RemoteFile $source $remote)) {
             [void](Send-RemoteLine 'fsput cancel')
             throw "загрузка ${name}: $($script:StatusText)"

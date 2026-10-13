@@ -10,6 +10,11 @@ __asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 1");
 #else
 __asm__(".global mk61_language_vm_mode\n.set mk61_language_vm_mode, 0");
 #endif
+#if MK61_VM_FILE_CACHE && MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+__asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 1");
+#else
+__asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0");
+#endif
 #endif
 #if MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
 #include <string.h>
@@ -160,12 +165,17 @@ bool workspace(shared_memory::Lease& lease) {
                                  workspace_swap::AcquireMode::REQUIRED, lease);
 }
 void initialize(Persistent& state) {
-  memset(static_cast<void*>(&state), 0, sizeof(state));
   state.magic = SESSION_MAGIC;
   state.selected[0] = state.selected[1] = 0xFFFF;
-  for(auto& language : state.variables) for(auto& value : language) value=Value(0);
-  for(auto& value : state.array) value=Value(0);
-  for(auto& value : state.focal_array) value=Value(0);
+  static_assert(offsetof(Persistent,variables)==8 &&
+      sizeof(Persistent)==8+(2*26+385+64)*sizeof(Value),
+      "persistent numeric region must remain contiguous");
+  // All three numeric banks have the same tagged zero representation. Byte
+  // copies are legal across their array boundaries; Value* arithmetic is not.
+  const Value zero(0);
+  auto* bytes=reinterpret_cast<uint8_t*>(&state);
+  for(unsigned offset=8;offset<sizeof(state);offset+=sizeof(Value))
+    memcpy(bytes+offset,&zero,sizeof(zero));
 }
 #if !MK61_OVERLAY_LANGUAGE_VM
 bool is_index(Language language, loadable_module::Command command) {
@@ -235,10 +245,8 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
   if(step.current.phase==app_flow::DISCARD_CACHE_IMAGE) {
     if(binding.object)(void)image_cache.release(binding.object);
     binding.memory->release_workspace();
-    binding.object={};binding.context->cache_target=false;
-    binding.context->compile.transfer={};binding.context->compile.file_validated={};
-    mk61_app_flow_next(&step,mk61_app_flow_to(binding.context->language==Language::BASIC?
-        MK61_APP_KIND_TINYBASIC:MK61_APP_KIND_FOCAL,MK61_APP_FLOW_SYSTEM_FILE,FLOW_COMPILE_SOURCE));
+    binding.object={};
+    mk61_app_flow_return(&step,1,MK61_FLOW_OK);
     return loadable_module::RuntimeStatus::OK;
   }
 #endif
@@ -249,16 +257,9 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
     dwt_profiler::record_vm_image(binding.context->source_id, binding.context->vm.program_validated.size);
 #endif
-#if MK61_VM_FILE_CACHE
-    const uint16_t driver=binding.context->cache_driver;
-    if(driver!=0xFFFF) {
-      binding.context->vm.file_cache_revision=image_revision();
-      mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,driver,file_cache::STORE_COMPILED));
-      return loadable_module::RuntimeStatus::OK;
-    }
-#endif
-    mk61_app_flow_next(&step,mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,
-        MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM));return loadable_module::RuntimeStatus::OK;
+    binding.context->vm.publication.revision=image_revision();
+    mk61_app_flow_next(&step,binding.context->vm.publication.next);
+    return loadable_module::RuntimeStatus::OK;
   }
 #endif
   if(binding.context->prepared) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
@@ -351,6 +352,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   context.compile.magic=FLOW_CONTEXT_MAGIC; context.compile.original_command=(uint32_t)command;
   context.compile.values=values; context.compile.command=(uint32_t)command;
   context.compile.argument0=a; context.compile.argument1=b; context.language=language;
+  context.cache_driver=0xFFFF;
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   context.source_id=source_id;
 #endif

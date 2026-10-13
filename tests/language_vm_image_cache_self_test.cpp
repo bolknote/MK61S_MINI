@@ -190,6 +190,8 @@ int main() {
   assert(shared_memory::resident_owner(shared_memory::Arena::WORKSPACE) ==
          shared_memory::Owner::NONE);
   execute(1);assert(array[1]==2 && compiles==1 && validations==1 && finishes==0);
+  assert(variables[25].representation()==Value(0).representation() &&
+         array[384].representation()==Value(0).representation());
   assert(prepare_image_cache()); // Must not discard a published image or values.
   const unsigned initial_swaps=swaps;
   const unsigned initial_resets=state_resets;

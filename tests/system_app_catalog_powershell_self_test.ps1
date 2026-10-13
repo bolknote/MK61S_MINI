@@ -96,6 +96,15 @@ Publish-Catalog '$($source.Replace("'", "''"))' `$module 'build-$index'
             'resident VM metadata selected the wrong cold executor'
     }
     $compilerVariant = Get-AppVariant 'tinybasic'
+    foreach ($cacheMode in @(0, 1)) {
+        $script:residentSymbols = '{0:x8} A mk61_vm_file_cache_enabled' -f $cacheMode
+        $OverlayLanguageVm = '1'
+        $Enabled['language-vm'] = $true
+        Set-VmFileCachePolicy 'toolchain' 'resident.elf'
+        Assert-Test ($Enabled['vm-file-cache'] -eq ($cacheMode -eq 1)) `
+            'resident cache metadata selected the wrong helper policy'
+    }
+    Assert-Test ('VMCache/VMSTORE.APP' -in $Canonical) 'nested helper is not canonical'
     $LanguageVmCompiler = '0'
     Assert-Test ($compilerVariant -ne (Get-AppVariant 'tinybasic')) `
         'compiler BASIC reused the native interpreter cache variant'

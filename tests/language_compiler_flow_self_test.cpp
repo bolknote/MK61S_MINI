@@ -34,6 +34,7 @@ uint32_t frontend(C command, uint32_t a, uint32_t, Request* r, uint32_t& result)
 }
 CompilerContext make(Language language = Language::BASIC) {
   CompilerContext c = {};
+  c.cache_driver = 0xFFFF;
   c.compile.magic = FLOW_CONTEXT_MAGIC; c.compile.values = &values;
   c.language = language; c.compile.argument0 = 42;
   c.compile.command = (uint32_t)(language == Language::BASIC ? C::TINYBASIC_RUN_ID : C::FOCAL_RUN_ID);
@@ -96,6 +97,9 @@ int main() {
              : "compiler FOCAL specialization: wrong language, index, clear, tail handoff PASS");
 #else
   auto c = make(); auto f = step(c);
+  c.compile.magic=0x35564C46UL; // Previous publication-continuation contract.
+  assert(!flow_compile(&f,frontend) && !calls);
+  c.compile.magic=FLOW_CONTEXT_MAGIC;
   assert(!flow_vm(&f, unexpected_execute));
   f.context_size--;
   assert(!flow_compile(&f, frontend) && !calls);
@@ -153,6 +157,19 @@ int main() {
   assert(c.source_id == 42 && c.clear_requested == 1);
   assert(c.vm.original_command == (uint32_t)C::TINYBASIC_RUN_INDEX);
   assert(c.vm.program.state->language == Language::BASIC && c.vm.program.execution == &c.execution);
+  assert(c.vm.publication.next.kind==MK61_APP_KIND_LANGUAGE_VM &&
+         c.vm.publication.next.phase==FLOW_RUN_PROGRAM);
+  // The APP selects persistence, not a second native publication policy.
+  auto stored=make();stored.cache_driver=901;
+  stored.compile.transfer={};stored.compile.transfer.image=image;
+  stored.compile.transfer.size=HEADER_SIZE;stored.compile.transfer.workspace=workspace;
+  stored.compile.transfer.workspace_size=sizeof(workspace);
+  stored.compile.request.compiled={};stored.compile.request.compiled.size=HEADER_SIZE;
+  auto storing=step(stored);
+  assert(prepare_compiled_flow(&storing));
+  assert(stored.vm.publication.next.kind==MK61_APP_KIND_APPLICATION &&
+         stored.vm.publication.next.file_id==901 &&
+         stored.vm.publication.next.phase==file_cache::STORE_COMPILED);
   assert(!flow_compile(&f, frontend));
   c.vm.program.state->control.sp = 7;
   memset(&c.vm.expression, 0xCC, sizeof(c.vm.expression));

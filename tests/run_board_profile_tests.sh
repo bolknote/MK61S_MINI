@@ -70,6 +70,16 @@ clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
 "$out-f411-unified-apps"
 
 clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_VM_FILE_CACHE=0 -DMK61_CONFIG_EXPECT_FILE_CACHE_DISABLED \
+  -DMK61_CONFIG_EXPECT_V3 -o "$out-f411-file-cache-disabled"
+"$out-f411-file-cache-disabled"
+
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=0 -DMK61_CONFIG_EXPECT_FILE_CACHE_DISABLED \
+  -DMK61_CONFIG_EXPECT_V3 -o "$out-f411-no-image-cache"
+"$out-f411-no-image-cache"
+
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
   -DMK61_ENABLE_FOCAL=0 -DMK61_TINYBASIC_AS_APP=0 \
   -DMK61_MARKDOWN_VIEWER_AS_APP=1 -DMK61_SETUP_AS_APP=1 \
   -DMK61_EXPLORER_AS_APP=1 \

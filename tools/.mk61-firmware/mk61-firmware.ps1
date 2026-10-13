@@ -1325,7 +1325,7 @@ function Get-AllSystemAppNames {
     return [string[]]@(
         'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
         'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
-        'LANGVM.APP', 'LANGIN.APP')
+        'LANGVM.APP', 'LANGIN.APP', 'VMCache/VMSTORE.APP')
 }
 
 function Find-BashExecutable {
@@ -2727,6 +2727,8 @@ function Test-SystemBundleReady {
     }
     foreach ($app in @(Get-AllSystemAppNames)) {
         $path = Join-Path $source $app
+        if ($app -eq 'VMCache/VMSTORE.APP' -and $script:State.Mcu -eq 'f411' -and
+            $script:State.EnableFocal -eq 1 -and $script:State.FocalAsApp -eq 1) { continue }
         if ($app -notin $expectedApps -and
             (Test-Path -LiteralPath $path)) {
             Write-LastLog "Bundle contains stale disabled file: $path. Rebuild it first."
