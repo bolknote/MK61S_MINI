@@ -33,8 +33,6 @@
   #define MK61_SPI1_DMA_SUPPORTED 0
 #endif
 
-class SPIClass;
-
 namespace spi1_dma {
 
 enum class Result : u8 {
@@ -55,7 +53,7 @@ struct Snapshot {
   u32 timeouts;
 };
 
-Result transfer(SPIClass* interface, const void* tx_buffer, void* rx_buffer,
+Result transfer(const void* tx_buffer, void* rx_buffer,
                 usize count);
 Snapshot statistics(void);
 void reset_statistics(void);

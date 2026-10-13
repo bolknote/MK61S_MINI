@@ -1,0 +1,558 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "branch": "feature/stm32-narrow-drivers",
+  "baseline_commit": "8708704b30d095e5e7e471c7456d2a185acdaa5e",
+  "optimized_source_manifest_sha256": "3a868a16db217b717be505f37e770cdc19173f9934171867870a056940b62b3b",
+  "toolchain": {
+    "stm32_core": "2.12.0",
+    "gnu_arm": "14.2.1-1.1",
+    "arduino_cli": "1.5.1",
+    "cmsis": "6.2.0",
+    "cmsis_dsp": "1.16.2",
+    "required_external_hardware_libraries": {}
+  },
+  "matched_features": {
+    "MCU": "STM32F411CE",
+    "math": "LIBM",
+    "usb_CDC": true,
+    "usb_screen": true,
+    "chip8_resident": true,
+    "markdown_resident": true,
+    "setup_resident": true,
+    "focal_compiler_APP": true,
+    "basic_compiler_APP": true,
+    "loadable_modules": true,
+    "VM_cache": "default capacity unchanged",
+    "emulator_native_translation_unit": "retained"
+  },
+  "changes": [
+    "Internal ADC1 channels use a fixed 12-bit register driver; diagnostics keep the discard plus median5 for each of three channels, while entropy keeps raw VBAT samples.",
+    "SPI1 PA5/PA6/PA7 mode0 master uses owned polling and DMA2 stream2/3 channel3; NOR settings, SFDP, write verification, power gates and shared bus arbiter remain. UC1609 keeps synchronous polling.",
+    "HD44780 A00/A02 initialization uses the existing owned four-bit bus, with cold/warm nibble synchronization. WS0010 controller sequence and text rendering remain.",
+    "F401/F411 RTC calendar, alarm A/B, wakeup timer, backup registers, calibration and LSE/LSI source switching use owned registers. ES0287 synchronization and alarm interrupt workarounds are covered by the hardware-state model.",
+    "Release contract, dependency installer and F401 CMake remove the external LiquidCrystal/STM32RTC requirements. Final ELF gates prevent the removed adapters and HAL ADC/SPI/DMA/RTC symbols from returning."
+  ],
+  "measurements": [
+    {
+      "profile": "classic-v3-uc1609",
+      "baseline": {
+        "path": "baseline-classic/build/mk61s-M.ino.bin",
+        "bytes": 382924,
+        "footer": 380552,
+        "build_crc": "711E1121",
+        "sha256": "704163671c6364ac98d4430c3032ac26f5e51a8d5fddb39b547511edaa4dad1f",
+        "sections": {
+          ".mk61_help": 2856,
+          ".isr_vector": 408,
+          ".text": 339756,
+          ".rodata": 40376,
+          ".mk61_fw_footer": 40,
+          ".ARM.extab": 0,
+          ".ARM": 8,
+          ".preinit_array": 4,
+          ".init_array": 12,
+          ".fini_array": 12,
+          ".data": 2296,
+          ".bss": 31080,
+          ".noinit": 296,
+          "._user_heap_stack": 1536,
+          ".ARM.attributes": 48,
+          ".comment": 56
+        },
+        "static_ram_bytes": 33672
+      },
+      "optimized": {
+        "path": "all-drivers-rtc-fixed-classic/build/mk61s-M.ino.bin",
+        "bytes": 375452,
+        "footer": 373136,
+        "build_crc": "7279B1B3",
+        "sha256": "c402c0f02e807458dfbdbb14bd20f6fdf90f4cd49173888a8d0233f4d94d55ba",
+        "sections": {
+          ".mk61_help": 2856,
+          ".isr_vector": 408,
+          ".text": 332768,
+          ".rodata": 39952,
+          ".mk61_fw_footer": 40,
+          ".ARM.extab": 0,
+          ".ARM": 8,
+          ".preinit_array": 4,
+          ".init_array": 12,
+          ".fini_array": 12,
+          ".data": 2240,
+          ".bss": 30680,
+          ".noinit": 296,
+          "._user_heap_stack": 1536,
+          ".ARM.attributes": 48,
+          ".comment": 56
+        },
+        "static_ram_bytes": 33216
+      },
+      "saved_flash_bytes": 7472,
+      "saved_static_ram_bytes": 456
+    },
+    {
+      "profile": "mini-v3-a00",
+      "baseline": {
+        "path": "baseline-mini/build/mk61s-M.ino.bin",
+        "bytes": 353300,
+        "footer": 351088,
+        "build_crc": "380273F8",
+        "sha256": "2728b76441dbc979bb95c83fc4c677ef00e1297b7b5de1286ce4c3c10816aae0",
+        "sections": {
+          ".mk61_help": 2854,
+          ".isr_vector": 408,
+          ".text": 316740,
+          ".rodata": 33928,
+          ".mk61_fw_footer": 40,
+          ".ARM.extab": 0,
+          ".ARM": 8,
+          ".preinit_array": 4,
+          ".init_array": 12,
+          ".fini_array": 12,
+          ".data": 2136,
+          ".bss": 29864,
+          ".noinit": 296,
+          "._user_heap_stack": 1536,
+          ".ARM.attributes": 48,
+          ".comment": 56
+        },
+        "static_ram_bytes": 32296
+      },
+      "optimized": {
+        "path": "all-drivers-rtc-fixed-mini/build/mk61s-M.ino.bin",
+        "bytes": 345468,
+        "footer": 343312,
+        "build_crc": "C9FF44C3",
+        "sha256": "32d0c6bb367ce896949650b3d4846641d67e56204b1d0563d09b5018fbaec22f",
+        "sections": {
+          ".mk61_help": 2854,
+          ".isr_vector": 408,
+          ".text": 309400,
+          ".rodata": 33496,
+          ".mk61_fw_footer": 40,
+          ".ARM.extab": 0,
+          ".ARM": 8,
+          ".preinit_array": 4,
+          ".init_array": 12,
+          ".fini_array": 12,
+          ".data": 2080,
+          ".bss": 29432,
+          ".noinit": 296,
+          "._user_heap_stack": 1536,
+          ".ARM.attributes": 48,
+          ".comment": 56
+        },
+        "static_ram_bytes": 31808
+      },
+      "saved_flash_bytes": 7832,
+      "saved_static_ram_bytes": 488
+    }
+  ],
+  "counts_notes": [
+    "Flash is the complete sealed BIN, including data load image, padding and integrity footer.",
+    "Static RAM is .data+.bss+.noinit, excluding stack, lazy workspaces, VM cache and transient APP/overlay storage.",
+    "Compiler options and user-facing features match between baseline and optimized builds; no reduced math precision, smaller ROM, fewer registers or reduced cache capacity.",
+    "This replaces four hardware adapters on F401/F411. Arduino startup, CMSIS, USB, RCC clock code and other retained services remain; no complete bare-metal migration is claimed.",
+    "Peer changes later than the baseline commit are outside the matched measurement and are not included in these images."
+  ],
+  "f401_classic_v2_release": {
+    "flash_bytes": 252884,
+    "flash_free": 9260,
+    "static_ram_bytes": 35060,
+    "status": "ok",
+    "qualification": "Final product build, not a matched F401 before/after comparison."
+  },
+  "validation": {
+    "host_suite": "PASS_FULL_SINGLE_RUN",
+    "host_log": "host-final.log",
+    "F411_strict_release_variants": 16,
+    "F411_log": "f411-rtc-final.log",
+    "F401_product_and_capability_cases": 9,
+    "F401_log": "f401-rtc-final.log",
+    "ELF_removed_adapter_gate": "PASS_FINAL_MATRICES",
+    "strong_RTC_IRQ_handlers": "PASS",
+    "native_emulator_core_and_cold_LTO_policy": "PASS",
+    "USB_MSP_GPIO_NAK_wrappers": "PASS",
+    "sealed_firmware_crc": "PASS",
+    "retained_foreground_frames_and_original_APP_RAM_stack_budgets": "PASS",
+    "HD44780_model": "PASS_COLD_AND_WARM_NIBBLE_PHASES",
+    "ADC_SPI_DMA_RTC_production_driver_model": "PASS",
+    "ASan_UBSan_driver_model": "PASS",
+    "RTC_transport_regressions": "PASS_4_CASES",
+    "physical_USB_STOP": "NOT_RUN_USER_DEFERRED"
+  },
+  "hardware": [
+    {
+      "device": "classic",
+      "profile": "classic-v3-uc1609",
+      "public_id": "AEB505B6E0067623",
+      "usb_serial": "2068336B4731",
+      "original_firmware": {
+        "path": "hardware/classic/original-firmware.bin",
+        "bytes": 384128,
+        "footer": 381752,
+        "build_crc": "66C953FB",
+        "sha256": "75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585"
+      },
+      "firmware_hardware_crc": "PASS",
+      "crash_record": "NONE",
+      "user_files_and_calculator_state": "PASS",
+      "files": 44,
+      "temporary_files": "REMOVED",
+      "analog": {
+        "samples_per_probe": 12,
+        "conversions_per_sample": 18,
+        "baseline_build": "711E1121",
+        "candidate_build": "8C78BACB",
+        "baseline_median_us": 1765.0,
+        "candidate_median_us": 439.0,
+        "control_median_us": 1770.0,
+        "final_median_us": null,
+        "speedup": 4.020501138952164
+      },
+      "emulator_core": {
+        "runs_per_probe": 5,
+        "steps_per_run": 40,
+        "clock_hz": 96000000,
+        "baseline_median_cycles": 1709496,
+        "candidate_median_cycles": 1711150,
+        "control_median_cycles": 1709496,
+        "final_median_cycles": null,
+        "measured_time_change_percent": 0.09675366306793887,
+        "qualification": "Classic performance/SPI/ADC A/B/A used 8C78BACB; final 7279B1B3 then changed RTC-only startup handling. Mini performance/SPI/ADC was also rerun on final C9FF44C3. These measurements show approximately 0.1% variation; do not claim an emulator speedup."
+      },
+      "SPI_DMA": {
+        "status": "PASS",
+        "probes": {
+          "baseline": {
+            "build_crc": "711E1121",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "82134D1C"
+          },
+          "candidate": {
+            "build_crc": "8C78BACB",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "82134D1C"
+          },
+          "control": {
+            "build_crc": "711E1121",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "D456BE85"
+          }
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "arbiter_acquisitions_equal_releases": true
+      },
+      "C9_write_readback": {
+        "status": "PASS",
+        "cases_bytes": [
+          1,
+          63,
+          64,
+          65,
+          255,
+          256,
+          257,
+          4095,
+          4096
+        ],
+        "sha256_equal": true,
+        "qualification": "The earlier 4097-byte upload was rejected by the existing 4096-byte terminal fsput limit; the production limit was not changed."
+      },
+      "RTC": {
+        "status": "PASS",
+        "checks": [
+          "alarm-A-relative",
+          "alarm-B-relative",
+          "daily-alarm",
+          "warm-reset-restoration"
+        ],
+        "log": "hardware/classic/rtc-corrected-final.log",
+        "alarms_after_cleanup": "A/B off",
+        "midnight_year_rollover": {
+          "status": "PASS",
+          "from": "2026-12-31",
+          "to": "2027-01-01",
+          "samples": 42,
+          "monotonic": true,
+          "evidence": "hardware/classic/rtc-midnight.json"
+        },
+        "true_missed_alarm": {
+          "status": "PASS",
+          "ROM_hold_seconds": 2.2,
+          "baseline_build": "711E1121",
+          "optimized_build": "7279B1B3",
+          "flash_erase_or_write": false,
+          "evidence": [
+            "hardware/classic/real-missed-711E1121.json",
+            "hardware/classic/real-missed-7279B1B3.json"
+          ]
+        },
+        "active_alarm_B_after_reset": "PASS_FINAL_7279B1B3",
+        "restoration": {
+          "unset_calendar_marker": "RESTORED",
+          "calibration_ppm": 0,
+          "calibration_CALR": 0,
+          "calibration_backup_record": 0
+        }
+      },
+      "final_installed_build_at_handoff": "66C953FB",
+      "serial_closed_at_handoff": true,
+      "resource_owner_after_handoff": "Byte-code peer; do not open or flash Classic during its VM profiling",
+      "original_calendar": "RESTORED_UNSET_WITH_ELAPSED_TIME"
+    },
+    {
+      "device": "mini",
+      "profile": "mini-v3-a00",
+      "public_id": "6FF33152484A4488",
+      "usb_serial": "3688388E3233",
+      "original_firmware": {
+        "path": "hardware/mini/original-firmware.bin",
+        "bytes": 351448,
+        "footer": 349232,
+        "build_crc": "866C7001",
+        "sha256": "0aec01bbeb08dd2b08bedc3f69c0ace5c2eb4aef08ff8cccacd62272b414bbd3"
+      },
+      "firmware_hardware_crc": "PASS",
+      "crash_record": "NONE",
+      "user_files_and_calculator_state": "PASS",
+      "files": 7,
+      "temporary_files": "REMOVED",
+      "analog": {
+        "samples_per_probe": 12,
+        "conversions_per_sample": 18,
+        "baseline_build": "380273F8",
+        "candidate_build": "78DE3CD0",
+        "baseline_median_us": 1767.5,
+        "candidate_median_us": 437.5,
+        "control_median_us": 1770.0,
+        "final_median_us": 437.0,
+        "speedup": 4.04462242562929
+      },
+      "emulator_core": {
+        "runs_per_probe": 5,
+        "steps_per_run": 40,
+        "clock_hz": 96000000,
+        "baseline_median_cycles": 1707876,
+        "candidate_median_cycles": 1707436,
+        "control_median_cycles": 1707877,
+        "final_median_cycles": 1709328,
+        "measured_time_change_percent": 0.08501788186028314,
+        "qualification": "Classic performance/SPI/ADC A/B/A used 8C78BACB; final 7279B1B3 then changed RTC-only startup handling. Mini performance/SPI/ADC was also rerun on final C9FF44C3. These measurements show approximately 0.1% variation; do not claim an emulator speedup."
+      },
+      "SPI_DMA": {
+        "status": "PASS",
+        "probes": {
+          "baseline": {
+            "build_crc": "380273F8",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "CEC87527"
+          },
+          "candidate": {
+            "build_crc": "78DE3CD0",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "CEC87527"
+          },
+          "control": {
+            "build_crc": "380273F8",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "CEC87527"
+          },
+          "final": {
+            "build_crc": "C9FF44C3",
+            "iterations": 100,
+            "bytes_per_iteration": 65536,
+            "crc": "CEC87527"
+          }
+        },
+        "errors": 0,
+        "timeouts": 0,
+        "arbiter_acquisitions_equal_releases": true
+      },
+      "C9_write_readback": {
+        "status": "PASS",
+        "cases_bytes": [
+          1,
+          63,
+          64,
+          65,
+          255,
+          256,
+          257,
+          4095,
+          4096
+        ],
+        "sha256_equal": true,
+        "qualification": "The earlier 4097-byte upload was rejected by the existing 4096-byte terminal fsput limit; the production limit was not changed."
+      },
+      "RTC": {
+        "status": "PASS",
+        "checks": [
+          "alarm-A-relative",
+          "alarm-B-relative",
+          "daily-alarm",
+          "warm-reset-restoration"
+        ],
+        "log": "hardware/mini/rtc-correlated-final.log",
+        "alarms_after_cleanup": "A/B off",
+        "calibration": {
+          "test_ppm": 37,
+          "actual_CALR": 33241,
+          "backup_record": 1128333349,
+          "warm_reset_retained": true,
+          "restored_ppm": 0,
+          "restored_CALR": 0,
+          "restored_backup_record": 1128333312,
+          "restoration_authority": "User confirmed that calibration had never been changed and explicitly requested 0 ppm. The previous raw record was not saved before the +37 ppm test; semantic setting restored, not a claim of raw record identity."
+        }
+      },
+      "final_installed_build": "C9FF44C3",
+      "physical_A00_screen": "PASS_USER_CONFIRMED",
+      "original_calendar": "PRESERVED"
+    }
+  ],
+  "test_harness_corrections": [
+    "The DFU preflight accepts the actual whitespace in the Internal Flash descriptor but still requires the pinned serial, all four alternates and healthy USB descriptors before any write.",
+    "RTC replies are correlated with command echoes, including a prompt-prefixed echo, so queued identity replies cannot be mistaken for alarm status. Mutating commands are sent once.",
+    "A one-second alarm can fire before USB reconnect on both baseline and candidate. The HIL accepts either real normal firing or missed-alarm restoration; a separate 2.2-second ROM hold verified a genuinely missed deadline on both baseline and final Classic."
+  ],
+  "linker_analysis": {
+    "top_flash_symbols": [
+      {
+        "address": 134488224,
+        "bytes": 13220,
+        "kind": "t",
+        "name": "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)"
+      },
+      {
+        "address": 134501456,
+        "bytes": 10976,
+        "kind": "t",
+        "name": "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)"
+      },
+      {
+        "address": 134395240,
+        "bytes": 10580,
+        "kind": "T",
+        "name": "class_terminal::execute(bool, bool)"
+      },
+      {
+        "address": 134314754,
+        "bytes": 7990,
+        "kind": "T",
+        "name": "idle_main_process()"
+      },
+      {
+        "address": 134322744,
+        "bytes": 6244,
+        "kind": "T",
+        "name": "setup"
+      },
+      {
+        "address": 134275412,
+        "bytes": 5412,
+        "kind": "t",
+        "name": "loadable_module::(anonymous namespace)::other_system_call(unsigned long, unsigned long, unsigned long, unsigned long, void*)"
+      },
+      {
+        "address": 134523660,
+        "bytes": 4404,
+        "kind": "T",
+        "name": "cycle()"
+      },
+      {
+        "address": 134271296,
+        "bytes": 4116,
+        "kind": "T",
+        "name": "file_handlers::open(program_store::Entry const&)"
+      },
+      {
+        "address": 134431240,
+        "bytes": 3376,
+        "kind": "T",
+        "name": "virtual_fat::(anonymous namespace)::process_node(unsigned short, virtual_fat::(anonymous namespace)::ParsedNode&, unsigned char, virtual_fat::(anonymous namespace)::WalkPass, virtual_fat::(anonymous namespace)::NextDirectory&) [clone .lto_priv.0]"
+      },
+      {
+        "address": 134370700,
+        "bytes": 3316,
+        "kind": "T",
+        "name": "setup_ui::service(unsigned long, unsigned long, unsigned long, void*)"
+      },
+      {
+        "address": 134540832,
+        "bytes": 3196,
+        "kind": "T",
+        "name": "__ieee754_pow"
+      },
+      {
+        "address": 134382162,
+        "bytes": 3162,
+        "kind": "T",
+        "name": "class_terminal::exec_profile()"
+      }
+    ],
+    "top_ram_symbols": [
+      {
+        "address": 536896988,
+        "bytes": 3616,
+        "kind": "b",
+        "name": "(anonymous namespace)::extended_bank_slots"
+      },
+      {
+        "address": 536883896,
+        "bytes": 3568,
+        "kind": "b",
+        "name": "mk61_lcd_storage"
+      },
+      {
+        "address": 536891032,
+        "bytes": 1600,
+        "kind": "b",
+        "name": "shared_memory::(anonymous namespace)::scratch_storage"
+      },
+      {
+        "address": 536893297,
+        "bytes": 1533,
+        "kind": "B",
+        "name": "_ZN11virtual_fat12_GLOBAL__N_1L19g_sidecar_scan_mapsE.lto_priv.0"
+      },
+      {
+        "address": 536882624,
+        "bytes": 1252,
+        "kind": "B",
+        "name": "g_hpcd"
+      },
+      {
+        "address": 536889732,
+        "bytes": 1024,
+        "kind": "b",
+        "name": "program_store::(anonymous namespace)::g_write_workspace"
+      },
+      {
+        "address": 536875276,
+        "bytes": 1024,
+        "kind": "B",
+        "name": "_ZN8m61_textL10read_cacheE.lto_priv.0"
+      },
+      {
+        "address": 536878480,
+        "bytes": 896,
+        "kind": "b",
+        "name": "program_store::(anonymous namespace)::g_overlay_inodes"
+      }
+    ],
+    "named_remaining_HAL_bytes": 624,
+    "attribution_note": "LTO inlining and shared routines prevent summing symbol names into a complete framework cost or a bare-metal savings estimate."
+  },
+  "evidence_archive": ".build/stm32-narrow-drivers-artifacts-20261013",
+  "archive_manifest": "artifact-manifest.json",
+  "source_manifest": "source-manifest.json"
+}

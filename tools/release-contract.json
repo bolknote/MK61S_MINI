@@ -7,10 +7,7 @@
     "gnu_arm": "14.2.1-1.1",
     "cmsis": "6.2.0",
     "cmsis_dsp": "1.16.2",
-    "libraries": {
-      "LiquidCrystal": "1.0.7",
-      "STM32duino RTC": "1.9.0"
-    }
+    "libraries": {}
   },
   "profiles": [
     {

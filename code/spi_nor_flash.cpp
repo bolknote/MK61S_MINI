@@ -42,9 +42,14 @@ static bool power_of_two(u32 value) {
 
 } // анонимное пространство имён
 
+#if MK61_SPI1_DIRECT_SUPPORTED
+SpiNorFlash::SpiNorFlash(u8 chip_select)
+    : chip_select_(chip_select), capacity_(0),
+#else
 SpiNorFlash::SpiNorFlash(u8 chip_select, SPIClass* interface)
     : chip_select_(chip_select), spi_(interface),
       settings_(CLOCK_HZ, MSBFIRST, SPI_MODE0), capacity_(0),
+#endif
       probe_upper_(0), jedec_id_(0), erase_opcode_(CMD_ERASE_4K),
       erase_opcode_4b_(0x21),
       address_mode_method_(spi_nor_sfdp::EN4B_EX4B),
@@ -54,28 +59,47 @@ SpiNorFlash::SpiNorFlash(u8 chip_select, SPIClass* interface)
 
 bool SpiNorFlash::select(void) {
   if(!spi1_bus::acquire(spi1_arbiter::Owner::FLASH_CLIENT)) return false;
+#if MK61_SPI1_DIRECT_SUPPORTED
+  if(!spi1_transport::begin_transaction(CLOCK_HZ)) {
+    (void)spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT);
+    return false;
+  }
+#else
   spi_->beginTransaction(settings_);
+#endif
   stm32f4_gpio::write(chip_select_, LOW);
   return true;
 }
 
 bool SpiNorFlash::deselect(void) {
-  stm32f4_gpio::write(chip_select_, HIGH);
+#if MK61_SPI1_DIRECT_SUPPORTED
+  const bool ok = spi1_transport::end_transaction();
+#else
   spi_->endTransaction();
-  return spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT);
+  const bool ok = true;
+#endif
+  stm32f4_gpio::write(chip_select_, HIGH);
+  const bool released = spi1_bus::release(spi1_arbiter::Owner::FLASH_CLIENT);
+  return ok && released;
 }
 
-u8 SpiNorFlash::transfer(u8 value) { return spi_->transfer(value); }
+u8 SpiNorFlash::transfer(u8 value) {
+#if MK61_SPI1_DIRECT_SUPPORTED
+  return spi1_transport::transfer(value);
+#else
+  return spi_->transfer(value);
+#endif
+}
 
 bool SpiNorFlash::transferBuffer(const void* tx_buffer, void* rx_buffer,
                                  usize len) {
   if(len == 0) return true;
-  const spi1_dma::Result dma =
-      spi1_dma::transfer(spi_, tx_buffer, rx_buffer, len);
-  if(dma == spi1_dma::Result::COMPLETE) return true;
-  if(dma == spi1_dma::Result::FAILED) return false;
+#if MK61_SPI1_DIRECT_SUPPORTED
+  return spi1_transport::transfer_buffer(tx_buffer, rx_buffer, len);
+#else
   spi_->transfer(tx_buffer, rx_buffer, len);
   return true;
+#endif
 }
 
 void SpiNorFlash::sendAddress(u32 address) {
@@ -119,6 +143,10 @@ bool SpiNorFlash::diagnostics(Diagnostics& out) {
     out.status_count = 3;
   }
 
+#if MK61_SPI1_DIRECT_SUPPORTED
+  out.peripheral_clock_hz = spi1_transport::peripheral_clock_hz();
+  const u8 br_code = spi1_transport::br_code();
+#else
   SPI_HandleTypeDef* const handle = spi_->getHandle();
   if(handle == NULL || handle->Instance == NULL) return false;
   if(handle->Instance == SPI1) {
@@ -130,6 +158,7 @@ bool SpiNorFlash::diagnostics(Diagnostics& out) {
   }
   const u8 br_code = (u8) ((handle->Instance->CR1 & SPI_CR1_BR_Msk) >>
                            SPI_CR1_BR_Pos);
+#endif
   out.prescaler = stm32_spi_clock::prescaler_from_br(br_code);
   out.actual_clock_hz = stm32_spi_clock::actual_hz(
       out.peripheral_clock_hz, br_code);
@@ -287,7 +316,11 @@ bool SpiNorFlash::validCapacity(u32 capacity) {
 bool SpiNorFlash::begin(u32 fallback_capacity) {
   stm32f4_gpio::configure(chip_select_, OUTPUT);
   stm32f4_gpio::write(chip_select_, HIGH);
+#if MK61_SPI1_DIRECT_SUPPORTED
+  if(!spi1_transport::begin()) return false;
+#else
   spi_->begin();
+#endif
   if(!select()) return false;
   transfer(CMD_RELEASE_POWER_DOWN);
   if(!deselect()) return false;
@@ -353,10 +386,7 @@ bool SpiNorFlash::rawRead(u32 address, u8* output, usize len) {
   if(!select()) return false;
   transfer(four_byte_address_ && four_byte_opcodes_ ? CMD_READ_4B : CMD_READ);
   sendAddress(address);
-  // SPIClass::transfer(byte) входит в HAL STM32 для каждого байта. Поэтому
-  // виртуальный сектор FAT пересекал бы эту сравнительно дорогую границу 512
-  // раз. Перегрузка с буфером выполняет тот же обмен за один вызов HAL и
-  // подставляет стандартные фиктивные байты передачи 0xFF, если tx_buf равен NULL.
+  // Large buffers use owned SPI1 DMA, with 0xFF on the unused TX side.
   if(!transferBuffer(NULL, output, len)) {
     (void) deselect();
     return false;

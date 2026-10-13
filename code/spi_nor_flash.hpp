@@ -11,7 +11,10 @@ using SpiNorFlash = SPIFlash;
 #else
 
 #include <Arduino.h>
+#include "spi1_transport.hpp"
+#if !MK61_SPI1_DIRECT_SUPPORTED
 #include <SPI.h>
+#endif
 
 #ifndef MK61_SPI_NOR_CLOCK_HZ
   // На F411 запрос 20 МГц округлялся вниз до PCLK2/8 = 12 МГц. Ступень
@@ -53,7 +56,11 @@ class SpiNorFlash {
       bool four_byte_opcodes;
     };
 
+#if MK61_SPI1_DIRECT_SUPPORTED
+    explicit SpiNorFlash(u8 chip_select);
+#else
     explicit SpiNorFlash(u8 chip_select, SPIClass* interface = &SPI);
+#endif
 
     bool begin(u32 fallback_capacity = 0);
     u32 getCapacity(void) const { return capacity_; }
@@ -81,8 +88,10 @@ class SpiNorFlash {
     static constexpr u32 CLOCK_HZ = MK61_SPI_NOR_CLOCK_HZ;
 
     u8 chip_select_;
+#if !MK61_SPI1_DIRECT_SUPPORTED
     SPIClass* spi_;
     SPISettings settings_;
+#endif
     u32 capacity_;
     u32 probe_upper_;
     u32 jedec_id_;

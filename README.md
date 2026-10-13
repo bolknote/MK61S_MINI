@@ -265,8 +265,9 @@ F401, A00/A02, mini V2, Classic V2 и 40th продолжают использо
 на Linux. Если ничего не найдено, меню просит полный путь и сохраняет его в том же
 конфиге.
 
-Для воспроизводимой сборки нужны STM32 Arduino Core `2.12.0`,
-`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Для F411 по-прежнему нужен
+Для воспроизводимой сборки нужен STM32 Arduino Core `2.12.0`.
+F401/F411 используют собственные драйверы АЦП, SPI1/DMA, LCD и RTC;
+LiquidCrystal и STM32duino RTC для этих сборок не требуются. Для F411 нужен
 `arduino-cli`. Каноническая сборка F401 на Windows и macOS/Linux выполняется
 напрямую через CMake, Ninja и GNU Arm GCC; `arduino-cli` для неё не
 запускается. На macOS/Linux дополнительно нужен `pwsh`, на Windows достаточно
@@ -274,7 +275,7 @@ F401, A00/A02, mini V2, Classic V2 и 40th продолжают использо
 
 Состояние зависимостей видно в пункте «Проверить зависимости». Пункт
 «Установить Arduino-зависимости» использует установленный `arduino-cli` только
-как установщик Core и библиотек. На Windows для DFU-загрузки пока требуются
+как установщик Core. На Windows для DFU-загрузки пока требуются
 `arduino-cli` и STM32CubeProgrammer; на macOS/Linux загрузка выполняется
 напрямую через `dfu-util`.
 
@@ -414,8 +415,8 @@ tools\mk61-arduino-board.cmd
 `C:\Users\Public\Documents\MK61Arduino`: это обходит ошибку GNU Arm LTO при открытии
 `objs.a`, не отключая LTO и не меняя имя пользователя. В Boards Manager
 самой Arduino IDE должен быть установлен
-`STM32 MCU based boards 2.12.0`, а в Library Manager —
-`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`.
+`STM32 MCU based boards 2.12.0`. Сборки F401/F411 не требуют внешних
+аппаратных библиотек из Library Manager.
 На Windows путь sketchbook берётся из конфигурации Arduino IDE 2, включая
 OneDrive и перенесённые каталоги. Для Arduino IDE 1 используется стандартный
 `Documents\Arduino`; нестандартный путь передайте установщику ключом
@@ -478,8 +479,7 @@ tools\build-gcc.cmd -Profile mini-v3-a00
 Сам скрипт не запускает Arduino IDE или `arduino-cli`. Он вызывает CMake и Ninja,
 а те напрямую запускают `arm-none-eabi-gcc/g++` из установленного пакета STM32
 Core. От Arduino-инсталляции используются только файлы STM32 Core `2.12.0`,
-его GNU Arm toolchain и CMSIS, а также библиотеки `LiquidCrystal 1.0.7` и
-`STM32duino RTC 1.9.0`. В `PATH` дополнительно нужны CMake 3.21 или новее и
+его GNU Arm toolchain и CMSIS. В `PATH` дополнительно нужны CMake 3.21 или новее и
 Ninja. На macOS/Linux для ZX0-паковщика нужен нативный C++17-компилятор
 (`c++`, `clang++` или `g++`; путь задаётся в `MK61_HOST_CXX`) и `pwsh`.
 На Windows хватает встроенного Windows PowerShell 5.1.
@@ -670,10 +670,11 @@ release-сборки, точную Arduino-сборку F401 Classic V3 с UC160
 эта проверка одинакова локально и в CI на всех ОС. Host-тесты не заменяют
 полную сборку: переполнение Flash обнаруживается только после линковки.
 F411 собирается теми же закреплёнными
-`arduino-cli 1.5.1`, STM32 Core 2.12.0 и библиотеками, что CI, с
+`arduino-cli 1.5.1` и STM32 Core 2.12.0, что CI, с
 `--warnings all -Werror`; отдельно проверяются предупреждения LTO и отсутствие
-проектных конструкторов до `setup()`. Единственное разрешённое предупреждение
-исходника — штатное сообщение STM32duino RTC 1.9.0 о BCD-режиме. Тот же
+проектных конструкторов до `setup()`. ELF-проверка запрещает возвращение
+analogRead, SPIClass, LiquidCrystal, STM32RTC и HAL ADC/SPI/DMA/RTC в F401/F411.
+Тот же
 `tests/run_f411_release_matrix.sh` вызывается непосредственно release workflow,
 поэтому локальная и внешняя матрицы больше не могут разойтись незаметно.
 
@@ -713,8 +714,8 @@ Virtual FAT и реальное
 исправление обработки операндов JMP/условных переходов описаны в
 [проверке ядра](doc/src/MK61s-Core-Verification.md).
 
-Референсная сборка прошивки использует STM32 Arduino Core `2.12.0`,
-`LiquidCrystal 1.0.7` и `STM32duino RTC 1.9.0`. Драйвер SPI NOR входит в проект
+Референсная сборка F401/F411 использует STM32 Arduino Core `2.12.0` и
+собственные драйверы АЦП, SPI1/DMA, LCD и RTC. Драйвер SPI NOR входит в проект
 и не зависит от таблицы моделей `SPIMemory`. Точная матрица плат, дисплеев,
 распиновки и аппаратных особенностей приведена в
 [описании аппаратной платформы](doc/src/MK61s-mini-Hardware.md) и зафиксирована

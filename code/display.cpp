@@ -292,7 +292,7 @@ static inline void lcdPrepareOutputPinLow(PinName pin) {
 
   // digitalWriteFast() and direct MODER access do not enable the GPIO
   // peripheral clock. The WS0010 backend does not construct
-  // LiquidCrystal, so GPIOA (DB5..DB7 on mini V3) can still be clock-gated at
+  // a library bus, so GPIOA (DB5..DB7 on mini V3) can still be clock-gated at
   // the first display transaction.  Enable the port before preloading ODR,
   // then establish the complete push-pull/no-pull configuration explicitly.
   (void) set_GPIO_Port_Clock(STM_PORT(pin));
@@ -433,12 +433,9 @@ static LcdReadyResult lcdWaitReady(const LcdParallelBus& bus, u32 timeout_us) {
 } // анонимное пространство имён
 
 MK61Display::MK61Display(void)
-#if defined(MK61_OLED1602_WS0010)
   : ddram_shadow{{0}},
+#if defined(MK61_OLED1602_WS0010)
     ddram_home_shadow{{0}},
-#else
-  : lcd(PIN_LCD_RS, PIN_LCD_E, PIN_LCD_DB4, PIN_LCD_DB5, PIN_LCD_DB6, PIN_LCD_DB7),
-    ddram_shadow{{0}},
 #endif
     shadow_cursor_x(0),
     shadow_cursor_y(0),
@@ -624,15 +621,21 @@ void MK61Display::begin(u8 cols, u8 rows) {
   const bool controller_ready =
     initializeWs0010Controller(cold_start, false);
 #else
-  #if MK61_LCD1602_BUSY_FLAG
-  // RW должен быть прижат к записи ещё до стандартной последовательности
-  // инициализации LiquidCrystal.
-  stm32f4_gpio::write(PIN_LCD_RW, LOW);
-  stm32f4_gpio::configure(PIN_LCD_RW, OUTPUT);
-  #endif
-  lcd.begin(lcd_display::COLS, lcd_display::ROWS);
-  lcd.noCursor();
-  lcd.noBlink();
+  const LcdParallelBus bus = lcdParallelBus();
+  if(!bus.validForWrite()) return;
+  LcdHardwareWriteSink hardware_sink = {bus};
+  lcd_6800_4bit_bus::prepareWrite(hardware_sink);
+  struct InitSink {
+    const LcdParallelBus& bus;
+    void nibble(u8 value) { lcdWriteNibble(bus, value); }
+    void command(u8 value) {
+      lcdWriteByte(bus, value, false);
+      ::delayMicroseconds(value == LCD_CLEARDISPLAY ? 2000 : 50);
+    }
+    void delayMilliseconds(u32 ms) { ::delay(ms); }
+    void delayMicroseconds(u32 us) { ::delayMicroseconds(us); }
+  } sink = {bus};
+  hd44780::initialize(sink);
 #endif
   display_control = LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
 #if !defined(MK61_OLED1602_WS0010)
@@ -2118,12 +2121,7 @@ void MK61Display::sendByte(u8 value, bool data, u32 fallback_delay_us) {
   }
 #endif
 
-  // Не вызываем LiquidCrystal::command/write: в Arduino LiquidCrystal 1.0.7
-  // эти методы ошибочно определены как inline только в .cpp. При -O2 их
-  // внешние символы исчезают, и прошивка не линкуется. Стандартная
-  // инициализация HD44780 остаётся за библиотекой; WS0010 инициализируется
-  // выше явной последовательностью. Последующий обмен обоих контроллеров идёт
-  // через тот же четырёхбитный интерфейс напрямую.
+  // Both character controllers use the owned four-bit bus.
   const LcdParallelBus bus = lcdParallelBus();
   if(!bus.validForWrite()) return;
   lcdWriteByte(bus, value, data);

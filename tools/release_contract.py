@@ -119,9 +119,8 @@ def validate_contract(raw: Any) -> None:
                 "gnu_arm", "cmsis", "cmsis_dsp"):
         require(isinstance(toolchain[key], str) and toolchain[key],
                 f"toolchain.{key}: expected non-empty string")
-    require(isinstance(toolchain["libraries"], dict)
-            and toolchain["libraries"],
-            "toolchain.libraries: expected non-empty object")
+    require(isinstance(toolchain["libraries"], dict),
+            "toolchain.libraries: expected object")
     for name, version in toolchain["libraries"].items():
         require(isinstance(name, str) and name and isinstance(version, str)
                 and version, "toolchain.libraries: invalid name/version")

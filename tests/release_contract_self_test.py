@@ -25,6 +25,13 @@ class ReleaseContractTest(unittest.TestCase):
         self.profiles = release_contract.profile_index(self.contract)
         self.cases = release_contract.case_index(self.contract)
 
+    def test_owned_hardware_drivers_require_no_external_libraries(self):
+        self.assertEqual(self.contract["toolchain"]["libraries"], {})
+        bad = copy.deepcopy(self.contract)
+        bad["toolchain"]["libraries"] = []
+        with self.assertRaisesRegex(release_contract.ContractError, "expected object"):
+            release_contract.validate_contract(bad)
+
     def test_characterized_release_groups_are_complete_and_ordered(self):
         expected = {
             "f411-release": [

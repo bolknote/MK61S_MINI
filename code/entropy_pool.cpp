@@ -1,6 +1,7 @@
 #include "entropy_pool.hpp"
 
 #include <Arduino.h>
+#include "stm32f4_adc.hpp"
 
 #include "device_identity.hpp"
 #include "mk61emu_core.h"
@@ -24,7 +25,9 @@ static u8 extracted_bit_count;
 static u8 first_pair_bit;
 static bool have_first_pair_bit;
 static bool collection_started;
+#if !MK61_STM32F4_ADC_SUPPORTED
 static bool adc_resolution_owned;
+#endif
 static bool streams_ready;
 static bool calculator_enhanced;
 
@@ -59,7 +62,12 @@ static void initialize_streams(void) {
 static void sample_adc(void) {
   if(!collection_started || raw_sample_count >= MAX_STARTUP_SAMPLES) return;
 
+#if MK61_STM32F4_ADC_SUPPORTED
+  u16 value = 0;
+  (void)stm32f4_adc::read_vbat(value);
+#else
   const u16 value = (u16) analogRead(AVBAT);
+#endif
   const u32 timestamp = micros();
   raw_sample_count++;
   absorb(((u64) value << 48) ^ ((u64) timestamp << 16) ^ raw_sample_count);
@@ -106,9 +114,14 @@ void begin(void) {
     absorb(((u64) uid.word2 << 32) ^ 0x554944ULL);
   }
 
+#if MK61_STM32F4_ADC_SUPPORTED
+  u16 discarded = 0;
+  (void)stm32f4_adc::read_vbat(discarded);
+#else
   analogReadResolution(12);
   adc_resolution_owned = true;
-  (void) analogRead(AVBAT); // отбрасываем первый отсчёт во время установления внутреннего мультиплексора
+  (void)analogRead(AVBAT);
+#endif
 }
 
 void poll_startup(void) {
@@ -124,10 +137,12 @@ void finish_startup(void) {
   }
 
   absorb(((u64) micros() << 32) ^ raw_sample_count ^ ((u64) extracted_bit_count << 16));
+#if !MK61_STM32F4_ADC_SUPPORTED
   if(adc_resolution_owned) {
     analogReadResolution(ADC_RESOLUTION);
     adc_resolution_owned = false;
   }
+#endif
   initialize_streams();
 }
 

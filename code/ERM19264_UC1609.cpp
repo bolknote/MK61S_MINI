@@ -27,7 +27,12 @@ ERM19264_UC1609::BusTransaction::BusTransaction(
 		? spi1_bus::try_acquire(spi1_arbiter::Owner::DISPLAY_CLIENT)
 		: spi1_bus::acquire(spi1_arbiter::Owner::DISPLAY_CLIENT);
 	if (!acquired) {return;}
-#ifdef SPI_HAS_TRANSACTION
+#if MK61_SPI1_DIRECT_SUPPORTED
+  if(!spi1_transport::begin_transaction(UC_SPI_FREQ)) {
+    (void)spi1_bus::release(spi1_arbiter::Owner::DISPLAY_CLIENT);
+    return;
+  }
+#elif defined(SPI_HAS_TRANSACTION)
 	SPI.beginTransaction(
 		SPISettings(UC_SPI_FREQ, UC_SPI_DIRECTION, UC_SPI_UC1609_MODE));
 #else
@@ -39,7 +44,9 @@ ERM19264_UC1609::BusTransaction::BusTransaction(
 ERM19264_UC1609::BusTransaction::~BusTransaction()
 {
 	if (!ready_ || !hardware_) {return;}
-#ifdef SPI_HAS_TRANSACTION
+#if MK61_SPI1_DIRECT_SUPPORTED
+  (void)spi1_transport::end_transaction();
+#elif defined(SPI_HAS_TRANSACTION)
 	SPI.endTransaction();
 #endif
 	(void) spi1_bus::release(spi1_arbiter::Owner::DISPLAY_CLIENT);
@@ -132,7 +139,11 @@ void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 
 	if (isHardwareSPI())
 	{
+#if MK61_SPI1_DIRECT_SUPPORTED
+    (void)spi1_transport::begin();
+#else
 		SPI.begin();
+#endif
 	}else
 	{
 	 // Set software SPI specific pin outputs.
@@ -211,7 +222,13 @@ bool ERM19264_UC1609::LCDPowerDown(void)
 	// On shared SPI1, stopping the peripheral here would also tear down the
 	// external NOR client. Preserve the legacy behaviour only when no common
 	// ownership boundary is active.
-	if(isHardwareSPI() && !spi1_bus::enabled()) {SPI.end();}
+	if(isHardwareSPI() && !spi1_bus::enabled()) {
+#if MK61_SPI1_DIRECT_SUPPORTED
+    spi1_transport::end();
+#else
+    SPI.end();
+#endif
+  }
 	return disabled;
 }
 
@@ -457,7 +474,11 @@ void ERM19264_UC1609::send_data(uint8_t byte)
 {
 	if (isHardwareSPI())
 	{
+#if MK61_SPI1_DIRECT_SUPPORTED
+    (void)spi1_transport::transfer(byte);
+#else
 		(void)SPI.transfer(byte); // Hardware SPI
+#endif
 	}else
 	{
 		CustomshiftOut(MSBFIRST, byte); //Software SPI
@@ -474,7 +495,9 @@ void ERM19264_UC1609::send_data_buffer(const uint8_t* data, size_t length)
 	if (data == nullptr || length == 0) {return;}
 	if (isHardwareSPI())
 	{
-#if defined(ARDUINO_ARCH_STM32)
+#if MK61_SPI1_DIRECT_SUPPORTED
+    (void)spi1_transport::transfer_buffer(data, nullptr, length, false);
+#elif defined(ARDUINO_ARCH_STM32)
 		SPI.transfer((const void*) data, nullptr, length);
 #else
 		for (size_t i = 0; i < length; i++) {(void) SPI.transfer(data[i]);}

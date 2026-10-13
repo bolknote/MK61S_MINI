@@ -7,7 +7,7 @@ int main(void) {
   static_assert(!MK61_SPI1_DMA_SUPPORTED,
                 "host test must use the explicit disabled backend");
   spi1_dma::reset_statistics();
-  assert(spi1_dma::transfer(nullptr, nullptr, nullptr, 512) ==
+  assert(spi1_dma::transfer(nullptr, nullptr, 512) ==
          spi1_dma::Result::NOT_USED);
   const spi1_dma::Snapshot snapshot = spi1_dma::statistics();
   assert(!snapshot.supported);

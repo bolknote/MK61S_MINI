@@ -50,8 +50,7 @@ STM32 Arduino Core 2.12.0
 Board: Generic F4 / BLACKPILL_F411CE
 Upload: DFU
 USB: generic CDC
-LiquidCrystal 1.0.7
-STM32duino RTC 1.9.0
+ADC/SPI1/DMA/LCD/RTC: собственные драйверы F401/F411
 ```
 
 Полный FQBN разделён на строки только для удобства чтения:

@@ -28,7 +28,10 @@
   #include "virtual_fat.hpp"
 #endif
 #ifdef SPI_FLASH
-  #include <SPI.h>
+  #include "spi1_transport.hpp"
+  #if !MK61_SPI1_DIRECT_SUPPORTED
+    #include <SPI.h>
+  #endif
   #include "spi_nor_flash.hpp"
   #include "manual_lifetime.hpp"
 #endif
@@ -406,7 +409,11 @@ SpiNorFlash* external_flash_pointer;
 
 void construct_external_flash(void) {
   external_flash_pointer =
+#if MK61_SPI1_DIRECT_SUPPORTED
+    &mk61_flash_storage.construct(PIN_SPIFLASH_CS);
+#else
     &mk61_flash_storage.construct(PIN_SPIFLASH_CS, &SPI);
+#endif
 }
 #else
 SpiNorFlash flash(PIN_SPIFLASH_CS);
@@ -930,7 +937,11 @@ void init_external_flash(void) {
   dbgln(SPIROM, "Init flash -> ");
 
   // Инициализация SPI
+#if MK61_SPI1_DIRECT_SUPPORTED
+  (void)spi1_transport::begin();
+#else
   SPI.begin();
+#endif
  
   // Обнаружение через JEDEC/SFDP; для неизвестных микросхем C9 проверяет границы.
   flash_is_ok = external_flash().begin();

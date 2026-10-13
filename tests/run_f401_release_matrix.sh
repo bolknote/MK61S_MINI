@@ -74,6 +74,7 @@ build_group() {
     local build_path="$case_root/$profile"
     local elf="$build_path/resident.elf"
     [[ -s "$elf" ]] || fail "missing ELF for $case_id"
+    python3 "$root/tests/check_narrow_stm32_drivers_elf.py" "$elf"
     "$root/tests/check_global_constructors.sh" "$elf"
     if [[ "$product" == 1 ]]; then
       # This retained-frame policy is qualified for product profiles. The

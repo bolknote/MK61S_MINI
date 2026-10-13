@@ -133,3 +133,7 @@ python3 "$root/tests/hil_dfu_safety_self_test.py"
 "$root/tests/run_usb_screen_virtual_keys_tests.sh"
 "$root/tests/run_virtual_fat_tests.sh"
 "$root/tests/run_zx0_encode_tests.sh"
+
+bash "$root/tests/run_hd44780_controller_tests.sh"
+python3 "$root/tests/narrow_stm32_drivers_elf_self_test.py"
+bash "$root/tests/run_stm32f4_driver_tests.sh"

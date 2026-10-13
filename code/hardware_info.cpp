@@ -4,6 +4,7 @@
 
 #include "config.h"
 #include "stm32f4xx_ll_adc.h"
+#include "stm32f4_adc.hpp"
 
 namespace hardware_info {
 namespace {
@@ -22,6 +23,7 @@ static constexpr char configured_pin_count_code(void) {
 #endif
 }
 
+#if !MK61_STM32F4_ADC_SUPPORTED
 static u16 filtered_adc(u32 pin) {
   u16 samples[ADC_FILTER_SAMPLES];
   for(u8 sample = 0; sample < ADC_FILTER_SAMPLES; sample++) {
@@ -35,6 +37,8 @@ static u16 filtered_adc(u32 pin) {
   }
   return samples[ADC_FILTER_SAMPLES / 2U];
 }
+
+#endif
 
 static u16 elapsed_u16(u32 started_at) {
   const u32 elapsed = micros() - started_at;
@@ -71,6 +75,13 @@ AnalogSnapshot read_analog_snapshot(void) {
     defined(VREFINT_CAL_ADDR) && defined(TEMPSENSOR_CAL1_ADDR) && \
     defined(TEMPSENSOR_CAL2_ADDR)
   const u32 started_at = micros();
+#if MK61_STM32F4_ADC_SUPPORTED
+  if(!stm32f4_adc::read_internal(result.raw_vref, result.raw_temperature,
+                               result.raw_vbat)) {
+    result.elapsed_us = elapsed_u16(started_at);
+    return result;
+  }
+#else
   analogReadResolution(12);
 
   // STM32duino selects the maximum (480-cycle on F4) internal-channel sample
@@ -84,12 +95,12 @@ AnalogSnapshot read_analog_snapshot(void) {
   (void) analogRead(AVBAT);
   result.raw_vbat = filtered_adc(AVBAT);
 
+  analogReadResolution(ADC_RESOLUTION);
+#endif
   const u16 calibrated_vref = *VREFINT_CAL_ADDR;
   const u16 calibrated_temperature_30 = *TEMPSENSOR_CAL1_ADDR;
   const u16 calibrated_temperature_110 = *TEMPSENSOR_CAL2_ADDR;
   result.conversion_count = 3U * (ADC_FILTER_SAMPLES + 1U);
-
-  analogReadResolution(ADC_RESOLUTION);
 
   result.vdda = calculate_vdda_millivolts(
     result.raw_vref, calibrated_vref);

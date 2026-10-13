@@ -34,7 +34,7 @@
   #include "ws0010_controller.hpp"
   #include "oled_protection.hpp"
 #endif
-  #include <LiquidCrystal.h>
+  #include "hd44780_controller.hpp"
 #else
   #include "ERM19264_UC1609.h"
   #include "builtin_font.hpp"
@@ -491,9 +491,6 @@ class MK61Display : public Print {
 #endif
     bool writeCellAnimationFrame(const u8* cells, usize count);
 #if defined(MK61_DISPLAY_LCD1602)
-#if !defined(MK61_OLED1602_WS0010)
-    LiquidCrystal lcd;
-#endif
     u8 ddram_shadow[lcd_display::ROWS][lcd_display::DDRAM_SHADOW_COLS];
 #if defined(MK61_OLED1602_WS0010)
     u8 ddram_home_shadow[lcd_display::ROWS][lcd_display::COLS];

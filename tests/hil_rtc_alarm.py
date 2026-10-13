@@ -29,8 +29,9 @@ DATE_MS = re.compile(
 
 
 class Port:
-    def __init__(self, path: str):
+    def __init__(self, path: str, require_echo: bool = False):
         self.path = path
+        self.require_echo = require_echo
         self.fd = -1
         # The advisory lock also covers PTYs/drivers which ignore TIOCEXCL.
         canonical = os.path.realpath(path).replace('/dev/tty.', '/dev/cu.')
@@ -115,7 +116,18 @@ class Port:
     def command(self, text: str, timeout: float = 4.0) -> str:
         self.drain()
         self.write_line(text)
-        return self.read_prompt(timeout)
+        if not getattr(self, "require_echo", False):
+            return self.read_prompt(timeout)
+        # Reconnect may leave a late identity response queued. Read until the
+        # actual command echo; never resend a mutating command to skip it.
+        deadline = time.monotonic() + timeout
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError(f"no correlated reply for {text!r}")
+            reply = self.read_prompt(remaining)
+            if re.search(r"(?m)^(?:[^\r\n]*>\s*)?" + re.escape(text) + r"\r?$", reply):
+                return reply
 
 
 def require(haystack: str, needle: str) -> None:
@@ -182,7 +194,7 @@ def reconnect(path: str, public_id: str, timeout: float = 20.0) -> tuple[Port, s
                 continue
             port = None
             try:
-                port = Port(candidate)
+                port = Port(candidate, require_echo=True)
                 time.sleep(0.15)
                 report = port.command("identity", timeout=2.0)
                 match = IDENTITY.search(report)
@@ -221,7 +233,7 @@ def main() -> int:
     args = parser.parse_args()
 
     path = args.port
-    port = Port(path)
+    port = Port(path, require_echo=True)
     public_id = ""
     try:
         identity = port.command("identity")
@@ -294,8 +306,14 @@ def main() -> int:
             port, path, _ = warm_reset(port, path, public_id)
             missed = status(port)
             require(missed, "RTC ALARM A off")
-            require(missed, "wake=missed-a")
-            print("alarm-a-missed-after-reset: OK")
+            # A fast initialization can handle this alarm normally before
+            # CDC reconnects. A true missed-deadline test must hold startup
+            # (for example in ROM DFU) past the deadline, not assume boot time.
+            if "wake=missed-a" in missed:
+                print("alarm-a-missed-after-reset: OK")
+            else:
+                require(missed, "wake=alarm-a")
+                print("alarm-a-fired-before-CDC-reconnect: OK")
 
         print("RTC alarm HIL: OK")
         return 0

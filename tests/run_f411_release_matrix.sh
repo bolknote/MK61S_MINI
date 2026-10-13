@@ -20,8 +20,6 @@ python3 "$contract" validate >/dev/null ||
   fail 'release contract is invalid'
 expected_cli_version="$(python3 "$contract" toolchain --field arduino_cli)"
 expected_core_version="$(python3 "$contract" toolchain --field stm32_core)"
-expected_lcd_version="$(python3 "$contract" toolchain --field 'library:LiquidCrystal')"
-expected_rtc_version="$(python3 "$contract" toolchain --field 'library:STM32duino RTC')"
 
 cli_version="$("$arduino_cli" version 2>/dev/null || true)"
 printf '%s\n' "$cli_version" |
@@ -31,12 +29,6 @@ printf '%s\n' "$cli_version" |
 "$arduino_cli" core list |
   grep -Eq "^STMicroelectronics:stm32[[:space:]]+$expected_core_version([[:space:]]|$)" ||
   fail "STM32 Core $expected_core_version is required"
-"$arduino_cli" lib list |
-  grep -Eq "^LiquidCrystal[[:space:]]+$expected_lcd_version([[:space:]]|$)" ||
-  fail "LiquidCrystal $expected_lcd_version is required"
-"$arduino_cli" lib list |
-  grep -Eq "^STM32duino RTC[[:space:]]+$expected_rtc_version([[:space:]]|$)" ||
-  fail "STM32duino RTC $expected_rtc_version is required"
 
 if [[ "${1:-}" == "--check-dependencies" ]]; then
   printf 'F411 release dependencies: OK\n'
@@ -275,6 +267,7 @@ compile_variant() {
     fail "could not record compiler output for $name"
   python3 "$root/tests/check_core_lto_objects.py" \
     --compile-commands "$build_path/compile_commands.json"
+  python3 "$root/tests/check_narrow_stm32_drivers_elf.py" "$build_path/mk61s-M.ino.elf"
   python3 "$root/tests/check_compiler_warnings.py" \
     --log "$compile_log" \
     --compile-commands "$build_path/compile_commands.json"

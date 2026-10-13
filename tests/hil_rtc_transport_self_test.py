@@ -22,6 +22,20 @@ class TransportTests(unittest.TestCase):
                 port.read_prompt(1)
         self.assertEqual(select.call_count, 1)
 
+    def test_late_identity_is_skipped_without_replaying_command(self):
+        port = rtc.Port.__new__(rtc.Port)
+        port.require_echo = True
+        port.drain = Mock()
+        port.write_line = Mock()
+        port.read_prompt = Mock(side_effect=[
+            "identity\r\nMK61 ID public=AEB505B6E0067623\r\n/> ",
+            "/> alarm\r\nRTC META valid=1\r\n/> ",
+        ])
+        result = port.command("alarm")
+        self.assertIn("RTC META valid=1", result)
+        port.write_line.assert_called_once_with("alarm")
+        self.assertEqual(port.read_prompt.call_count, 2)
+
     def test_reconnect_closes_unexpected_failure(self):
         port = Mock()
         port.command.side_effect = ValueError("transport failure")

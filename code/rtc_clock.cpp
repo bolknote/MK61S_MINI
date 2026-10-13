@@ -1,6 +1,9 @@
 #include "rtc_clock.hpp"
 
+#include "stm32f4_rtc.hpp"
+#if !MK61_STM32F4_RTC_SUPPORTED
 #include <STM32RTC.h>
+#endif
 #include <backup.h>
 
 #include "config.h"
@@ -25,6 +28,9 @@ namespace {
 // хода. Версионированная запись проекта занимает только DR11..DR19.
 static constexpr u32 TIME_SET_MARKER = 0x4D4B5254UL; // "MKRT"
 static bool initialized = false;
+#if MK61_STM32F4_RTC_SUPPORTED
+static bool alarm_callbacks_ready = false;
+#endif
 static bool metadata_valid_at_boot = false;
 static volatile u32 pending_alarm_irqs = 0;
 static u8 pending_alarm_events = 0;
@@ -62,6 +68,7 @@ static constexpr u32 LSI_CAPTURE_CYCLES =
 static constexpr u32 LSI_MIN_PLAUSIBLE_HZ = 10000;
 static constexpr u32 LSI_MAX_PLAUSIBLE_HZ = 60000;
 
+#if !MK61_STM32F4_RTC_SUPPORTED
 STM32RTC& hardware_rtc(void) {
   return STM32RTC::getInstance();
 }
@@ -69,25 +76,45 @@ STM32RTC& hardware_rtc(void) {
 RTC_HandleTypeDef* rtc_handle(void) {
   return hardware_rtc().getHandle();
 }
+#define MK61_RTC_REGISTERS (rtc_handle()->Instance)
+#else
+#define MK61_RTC_REGISTERS RTC
+#endif
+
+u32 read_backup_register(u32 index) {
+#if MK61_STM32F4_RTC_SUPPORTED
+  return stm32f4_rtc::backup_read(index);
+#else
+  return HAL_RTCEx_BKUPRead(rtc_handle(), index);
+#endif
+}
 
 bool marker_is_set(void) {
-  return HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR2) == TIME_SET_MARKER;
+  return read_backup_register(RTC_BKP_DR2) == TIME_SET_MARKER;
 }
 
 u32 backup_register_before_rtc_begin(u32 index) {
   // Обычная переменная RAM переживёт сброс только резервного домена, который
   // STM32RTC выполняет внутри begin() при смене источника LSE/LSI.
+#if MK61_STM32F4_RTC_SUPPORTED
+  return stm32f4_rtc::backup_read(index);
+#else
   enableBackupDomain();
   return getBackupRegister(index);
+#endif
 }
 
 void write_backup_register(u32 index, u32 value) {
   // Повторный вызов соответствует вспомогательной функции домена резервного
   // питания ядра STM32 и гарантирует, что запись DBP прошла через мост APB/AHB
   // до записи в резервный регистр.
+#if MK61_STM32F4_RTC_SUPPORTED
+  stm32f4_rtc::backup_write(index, value);
+#else
   HAL_PWR_EnableBkUpAccess();
   HAL_PWR_EnableBkUpAccess();
   HAL_RTCEx_BKUPWrite(rtc_handle(), index, value);
+#endif
 }
 
 void write_marker(u32 value) {
@@ -97,8 +124,7 @@ void write_marker(u32 value) {
 rtc_backup_layout::Words read_metadata_words(void) {
   rtc_backup_layout::Words words = {};
   for(u8 index = 0; index < rtc_backup_layout::WORD_COUNT; index++) {
-    words.value[index] = HAL_RTCEx_BKUPRead(
-        rtc_handle(), rtc_backup_layout::FIRST_REGISTER + index);
+    words.value[index] = read_backup_register(rtc_backup_layout::FIRST_REGISTER + index);
   }
   return words;
 }
@@ -178,7 +204,7 @@ void restore_backup_state(const PreservedBackupState& state) {
   }
 
   if(state.calibration_was_set &&
-     HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3) !=
+     read_backup_register(RTC_BKP_DR3) !=
        state.calibration_record) {
     write_backup_register(RTC_BKP_DR3, state.calibration_record);
     dbgln(SPIROM, "RTC init: restored calibration after source change");
@@ -193,7 +219,7 @@ void restore_backup_state(const PreservedBackupState& state) {
 
 i16 stored_calibration_ppm(void) {
   i16 ppm = 0;
-  const u32 record = HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3);
+  const u32 record = read_backup_register(RTC_BKP_DR3);
   return decode_calibration_record(record, ppm) ? ppm : 0;
 }
 
@@ -207,11 +233,15 @@ bool apply_smooth_calibration(i16 ppm) {
   const u32 desired = plus | calibration.minus_pulses;
   const u32 mask = RTC_CALR_CALP | RTC_CALR_CALW8 |
                    RTC_CALR_CALW16 | RTC_CALR_CALM;
-  if((rtc_handle()->Instance->CALR & mask) == desired) return true;
+  if((MK61_RTC_REGISTERS->CALR & mask) == desired) return true;
 
+#if MK61_STM32F4_RTC_SUPPORTED
+  return stm32f4_rtc::smooth_calibration(desired);
+#else
   return HAL_RTCEx_SetSmoothCalib(
       rtc_handle(), RTC_SMOOTHCALIB_PERIOD_32SEC, plus,
       calibration.minus_pulses) == HAL_OK;
+#endif
 }
 
 u8 alarm_index(rtc_backup_layout::AlarmId id) {
@@ -230,14 +260,14 @@ u32 hardware_alarm_id(rtc_backup_layout::AlarmId id) {
 #endif
 }
 
-void alarm_a_callback(void*) {
+__attribute__((noinline)) void alarm_a_callback(void*) {
   __atomic_fetch_or(&pending_alarm_irqs,
                     alarm_event_bit(rtc_backup_layout::AlarmId::A),
                     __ATOMIC_RELEASE);
 }
 
 #if defined(RTC_ALARM_B)
-void alarm_b_callback(void*) {
+__attribute__((noinline)) void alarm_b_callback(void*) {
   __atomic_fetch_or(&pending_alarm_irqs,
                     alarm_event_bit(rtc_backup_layout::AlarmId::B),
                     __ATOMIC_RELEASE);
@@ -251,7 +281,11 @@ void increment_alarm_arm_failures(void) {
 bool disable_hardware_alarm(rtc_backup_layout::AlarmId id) {
   const u32 hardware_id = hardware_alarm_id(id);
   if(hardware_id == 0xFFFFFFFFUL) return false;
+#if MK61_STM32F4_RTC_SUPPORTED
+  return stm32f4_rtc::deactivate_alarm(hardware_id);
+#else
   return HAL_RTC_DeactivateAlarm(rtc_handle(), hardware_id) == HAL_OK;
+#endif
 }
 
 bool arm_hardware_alarm(rtc_backup_layout::AlarmId id,
@@ -261,7 +295,9 @@ bool arm_hardware_alarm(rtc_backup_layout::AlarmId id,
   const u32 hardware_id = hardware_alarm_id(id);
   if(hardware_id == 0xFFFFFFFFUL) return false;
 
+#if !MK61_STM32F4_RTC_SUPPORTED
   (void) HAL_RTC_DeactivateAlarm(rtc_handle(), hardware_id);
+#endif
   RTC_AlarmTypeDef value = {};
   value.AlarmTime.Hours = alarm.when.hour;
   value.AlarmTime.Minutes = alarm.when.minute;
@@ -275,7 +311,7 @@ bool arm_hardware_alarm(rtc_backup_layout::AlarmId id,
     value.AlarmTime.SubSeconds = 0;
     value.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
   } else {
-    const u32 fraction = rtc_handle()->Instance->PRER & RTC_PRER_PREDIV_S;
+    const u32 fraction = MK61_RTC_REGISTERS->PRER & RTC_PRER_PREDIV_S;
     u32 significant_bits = 0;
     for(u32 bits = fraction; bits != 0; bits >>= 1) significant_bits++;
     if(significant_bits == 0 || significant_bits > 15) return false;
@@ -288,19 +324,27 @@ bool arm_hardware_alarm(rtc_backup_layout::AlarmId id,
       ? 1 : alarm.when.day;
   value.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
   value.Alarm = hardware_id;
+#if MK61_STM32F4_RTC_SUPPORTED
+  if(!stm32f4_rtc::set_alarm(value)) {
+#else
   if(HAL_RTC_SetAlarm_IT(rtc_handle(), &value, RTC_FORMAT_BIN) != HAL_OK) {
+#endif
     return false;
   }
-  HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
+  HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 2, 0);
   HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   return true;
 }
 
 void attach_alarm_callbacks(void) {
+#if MK61_STM32F4_RTC_SUPPORTED
+  alarm_callbacks_ready = true;
+#else
   STM32RTC& rtc = hardware_rtc();
   rtc.attachInterrupt(alarm_a_callback, nullptr, STM32RTC::ALARM_A);
 #if defined(RTC_ALARM_B)
   rtc.attachInterrupt(alarm_b_callback, nullptr, STM32RTC::ALARM_B);
+#endif
 #endif
 }
 
@@ -617,6 +661,9 @@ bool start_lse_without_fatal_handler(void) {
 }
 
 bool apply_measured_prescalers(const Prescalers& prescalers) {
+#if MK61_STM32F4_RTC_SUPPORTED
+  return stm32f4_rtc::prescalers(prescalers.asynchronous, prescalers.synchronous);
+#else
   RTC_HandleTypeDef* const handle = rtc_handle();
   const u32 desired =
       ((u32) prescalers.asynchronous << RTC_PRER_PREDIV_A_Pos) |
@@ -639,11 +686,15 @@ bool apply_measured_prescalers(const Prescalers& prescalers) {
   __HAL_RTC_WRITEPROTECTION_ENABLE(handle);
   return status == HAL_OK &&
          (handle->Instance->PRER & mask) == desired;
+#endif
 }
 
 bool begin_with_clock_source(ClockSource source,
                              const PreservedBackupState& backup,
                              const Prescalers* measured_prescalers) {
+#if MK61_STM32F4_RTC_SUPPORTED
+  if(!stm32f4_rtc::begin(source, measured_prescalers)) return false;
+#else
   STM32RTC& rtc = hardware_rtc();
   if(source == ClockSource::LSI && measured_prescalers != nullptr) {
     rtc.setClockSource(STM32RTC::LSI_CLOCK,
@@ -655,6 +706,7 @@ bool begin_with_clock_source(ClockSource source,
         : STM32RTC::LSI_CLOCK);
   }
   rtc.begin();
+#endif
   const bool prescalers_applied = measured_prescalers == nullptr ||
       apply_measured_prescalers(*measured_prescalers);
   restore_backup_state(backup);
@@ -734,13 +786,13 @@ bool set_calibration_ppm(i16 ppm) {
   if(!initialized || !calibration_ppm_is_valid(ppm)) return false;
 
   const u32 old_record =
-      HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3);
+      read_backup_register(RTC_BKP_DR3);
   const i16 old_ppm = stored_calibration_ppm();
   if(!apply_smooth_calibration(ppm)) return false;
 
   const u32 new_record = encode_calibration_record(ppm);
   write_backup_register(RTC_BKP_DR3, new_record);
-  if(HAL_RTCEx_BKUPRead(rtc_handle(), RTC_BKP_DR3) == new_record) {
+  if(read_backup_register(RTC_BKP_DR3) == new_record) {
     return true;
   }
 
@@ -754,6 +806,9 @@ bool startup_snapshot(StartupSnapshot& out) {
 
   RTC_TimeTypeDef time = {};
   RTC_DateTypeDef date = {};
+#if MK61_STM32F4_RTC_SUPPORTED
+  if(!stm32f4_rtc::snapshot(time, date)) return false;
+#else
   RTC_HandleTypeDef* handle = rtc_handle();
 
   // STM32 требует вызвать GetTime, а затем GetDate для разблокировки теневых
@@ -762,6 +817,7 @@ bool startup_snapshot(StartupSnapshot& out) {
   const HAL_StatusTypeDef time_status = HAL_RTC_GetTime(handle, &time, RTC_FORMAT_BIN);
   const HAL_StatusTypeDef date_status = HAL_RTC_GetDate(handle, &date, RTC_FORMAT_BIN);
   if(time_status != HAL_OK || date_status != HAL_OK) return false;
+#endif
 
   const StartupSnapshot current = {
     {
@@ -805,10 +861,14 @@ bool set(const DateTime& value) {
   time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
   time.StoreOperation = RTC_STOREOPERATION_RESET;
 
-  RTC_HandleTypeDef* handle = rtc_handle();
   write_marker(0);
+#if MK61_STM32F4_RTC_SUPPORTED
+  if(!stm32f4_rtc::set_calendar(time, date)) return false;
+#else
+  RTC_HandleTypeDef* handle = rtc_handle();
   if(HAL_RTC_SetDate(handle, &date, RTC_FORMAT_BIN) != HAL_OK) return false;
   if(HAL_RTC_SetTime(handle, &time, RTC_FORMAT_BIN) != HAL_OK) return false;
+#endif
   write_marker(TIME_SET_MARKER);
   if(!marker_is_set()) return false;
   rtc_backup_layout::Metadata metadata = {};
@@ -916,14 +976,30 @@ bool backup_status(BackupStatus& out) {
   return valid;
 }
 
+#if MK61_STM32F4_RTC_SUPPORTED
+bool arm_stop_wakeup(u8 seconds) {
+  if(!initialized || seconds == 0 || seconds > 5) return false;
+  const u32 value = RTC->PRER;
+  u16 counter = 0;
+  return stop_wakeup_counter((value & RTC_PRER_PREDIV_A) >> RTC_PRER_PREDIV_A_Pos,
+                            value & RTC_PRER_PREDIV_S, seconds, counter) &&
+         stm32f4_rtc::arm_wakeup(counter);
+}
+bool stop_wakeup_pending(void) { return stm32f4_rtc::wakeup_pending(); }
+bool alarm_wakeup_pending(void) {
+  return (RTC->ISR & (RTC_ISR_ALRAF | RTC_ISR_ALRBF)) != 0 ||
+         __atomic_load_n(&pending_alarm_irqs, __ATOMIC_ACQUIRE) != 0;
+}
+bool disarm_stop_wakeup(void) { return stm32f4_rtc::disarm_wakeup(); }
+#else
 bool arm_stop_wakeup(u8 seconds) {
 #if defined(RTC_CR_WUTE) && defined(RTC_WAKEUPCLOCK_RTCCLK_DIV16) && \
     defined(RTC_PRER_PREDIV_A) && defined(RTC_PRER_PREDIV_S)
   if(!initialized || seconds == 0 || seconds > 5) return false;
   RTC_HandleTypeDef* const handle = rtc_handle();
-  if((handle->Instance->CR & RTC_CR_WUTE) != 0) return false;
+  if((MK61_RTC_REGISTERS->CR & RTC_CR_WUTE) != 0) return false;
 
-  const u32 prescalers = handle->Instance->PRER;
+  const u32 prescalers = MK61_RTC_REGISTERS->PRER;
   const u32 prediv_async =
       (prescalers & RTC_PRER_PREDIV_A) >> RTC_PRER_PREDIV_A_Pos;
   const u32 prediv_sync = prescalers & RTC_PRER_PREDIV_S;
@@ -972,7 +1048,7 @@ bool alarm_wakeup_pending(void) {
 bool disarm_stop_wakeup(void) {
 #if defined(RTC_CR_WUTE)
   RTC_HandleTypeDef* const handle = rtc_handle();
-  const bool ok = (handle->Instance->CR & RTC_CR_WUTE) == 0 ||
+  const bool ok = (MK61_RTC_REGISTERS->CR & RTC_CR_WUTE) == 0 ||
       HAL_RTCEx_DeactivateWakeUpTimer(handle) == HAL_OK;
   __HAL_RTC_WAKEUPTIMER_CLEAR_FLAG(handle, RTC_FLAG_WUTF);
   __HAL_RTC_WAKEUPTIMER_EXTI_CLEAR_FLAG();
@@ -982,6 +1058,7 @@ bool disarm_stop_wakeup(void) {
   return false;
 #endif
 }
+#endif
 
 void poll(void) {
   const u32 irq_events = __atomic_exchange_n(
@@ -1039,3 +1116,16 @@ bool take_alarm_event(AlarmEvent& out) {
 }
 
 } // пространство имён rtc_clock
+
+#if MK61_STM32F4_RTC_SUPPORTED
+extern "C" void RTC_Alarm_IRQHandler(void) {
+  const u32 events = stm32f4_rtc::alarm_irq();
+  // Retained alarms can fire during clock/display startup after a reset.
+  // The old RTC callback table was empty until metadata initialization.
+  // Clear the hardware source now; restore_scheduled_alarms owns reporting
+  // a missed startup alarm once the calendar and backup metadata are ready.
+  if(!rtc_clock::alarm_callbacks_ready) return;
+  if(events & 1) rtc_clock::alarm_a_callback(nullptr);
+  if(events & 2) rtc_clock::alarm_b_callback(nullptr);
+}
+#endif

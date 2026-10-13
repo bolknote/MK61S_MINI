@@ -15,7 +15,10 @@
 #endif
 
 #include "ERM19264_graphics.h"
+#include "spi1_transport.hpp"
+#if !MK61_SPI1_DIRECT_SUPPORTED
 #include <SPI.h>
+#endif
 
 /*!
     @brief Display Pixel colours  definition

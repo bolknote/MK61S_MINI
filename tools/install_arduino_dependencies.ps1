@@ -43,7 +43,9 @@ Invoke-ArduinoCli -Arguments @('core', 'update-index') -Attempts 4
 Invoke-ArduinoCli -Arguments @(
     'core', 'install',
     "STMicroelectronics:stm32@$($manifest.toolchain.stm32_core)") -Attempts 4
-Invoke-ArduinoCli -Arguments @('lib', 'update-index') -Attempts 4
+if (@($manifest.toolchain.libraries.PSObject.Properties).Count -gt 0) {
+    Invoke-ArduinoCli -Arguments @('lib', 'update-index') -Attempts 4
+}
 foreach ($library in $manifest.toolchain.libraries.PSObject.Properties) {
     Invoke-ArduinoCli -Arguments @(
         'lib', 'install', "$($library.Name)@$($library.Value)") -Attempts 4

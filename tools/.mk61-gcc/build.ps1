@@ -542,26 +542,8 @@ try {
     Test-RequiredDirectory $cmsisDspRoot `
         "CMSIS DSP $script:CmsisDspVersion"
 
-    if ([string]::IsNullOrWhiteSpace($LibrariesPath)) {
-        $LibrariesPath = Get-DefaultLibrariesPath
-    } else {
-        $LibrariesPath = Get-FullPath $LibrariesPath (Get-Location).Path
-    }
-    Test-RequiredDirectory $LibrariesPath 'Arduino libraries directory'
-    $liquidCrystal = Join-Path $LibrariesPath 'LiquidCrystal'
-    $rtc = Join-Path $LibrariesPath 'STM32duino_RTC'
-    Test-RequiredDirectory $liquidCrystal 'LiquidCrystal library'
-    Test-RequiredDirectory $rtc 'STM32duino RTC library'
-    $lcdVersion = [string](
-        $script:ReleaseManifest.toolchain.libraries.LiquidCrystal)
-    $rtcVersion = [string](
-        $script:ReleaseManifest.toolchain.libraries.'STM32duino RTC')
-    if ((Get-LibraryVersion $liquidCrystal) -ne $lcdVersion) {
-        Stop-GccBuild "LiquidCrystal $lcdVersion is required"
-    }
-    if ((Get-LibraryVersion $rtc) -ne $rtcVersion) {
-        Stop-GccBuild "STM32duino RTC $rtcVersion is required"
-    }
+    # F401/F411 own their ADC, SPI, character LCD and RTC drivers.
+    # Keep -LibrariesPath accepted for older invocations; it is no dependency.
 
     $cmake = Get-CommandPath 'cmake' 'CMake 3.21 or newer'
     $ninja = Get-CommandPath 'ninja' 'Ninja'
@@ -587,7 +569,6 @@ try {
         [Console]::WriteLine("  GNU Arm: $toolchainBin")
         [Console]::WriteLine("  CMSIS: $cmsisRoot")
         [Console]::WriteLine("  CMSIS DSP: $cmsisDspRoot")
-        [Console]::WriteLine("  Arduino libraries: $LibrariesPath")
         [Console]::WriteLine("  CMake: $cmakeVersion")
         [Console]::WriteLine("  Ninja: $ninja")
         exit 0
@@ -633,8 +614,6 @@ try {
         "-DMK61_STM32_CORE=$CorePath",
         "-DMK61_CMSIS_ROOT=$cmsisRoot",
         "-DMK61_CMSIS_DSP_ROOT=$cmsisDspRoot",
-        "-DMK61_LIQUIDCRYSTAL_ROOT=$liquidCrystal",
-        "-DMK61_RTC_ROOT=$rtc",
         "-DMK61_PROFILE=$Profile",
         "-DMK61_ENABLE_FOCAL=$Focal",
         "-DMK61_ENABLE_TINYBASIC=$Basic",

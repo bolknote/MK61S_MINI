@@ -4,9 +4,7 @@ foreach(_mk61_path_variable
     MK61_PROJECT_ROOT
     MK61_STM32_CORE
     MK61_CMSIS_ROOT
-    MK61_CMSIS_DSP_ROOT
-    MK61_LIQUIDCRYSTAL_ROOT
-    MK61_RTC_ROOT)
+    MK61_CMSIS_DSP_ROOT)
   if(NOT DEFINED ${_mk61_path_variable} OR
      NOT IS_DIRECTORY "${${_mk61_path_variable}}")
     message(FATAL_ERROR
@@ -218,18 +216,6 @@ set_source_files_properties(
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 
-add_library(mk61_liquidcrystal STATIC
-  "${MK61_LIQUIDCRYSTAL_ROOT}/src/LiquidCrystal.cpp")
-target_include_directories(mk61_liquidcrystal PUBLIC
-  "${MK61_LIQUIDCRYSTAL_ROOT}/src")
-target_link_libraries(mk61_liquidcrystal PUBLIC base_config)
-
-add_library(mk61_rtc STATIC
-  "${MK61_RTC_ROOT}/src/STM32RTC.cpp"
-  "${MK61_RTC_ROOT}/src/rtc.c")
-target_include_directories(mk61_rtc PUBLIC "${MK61_RTC_ROOT}/src")
-target_link_libraries(mk61_rtc PUBLIC base_config)
-
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"
   "${MK61_PROJECT_ROOT}/code/*.cpp")
@@ -282,10 +268,7 @@ target_compile_options(resident PRIVATE
   -Wno-error=cpp)
 target_link_libraries(resident PRIVATE
   stm32_runtime
-  SPI
-  USBDevice
-  mk61_liquidcrystal
-  mk61_rtc)
+  USBDevice)
 target_link_options(resident PRIVATE
   "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map"
   "LINKER:--wrap=USBD_CDC_ClearBuffer"
