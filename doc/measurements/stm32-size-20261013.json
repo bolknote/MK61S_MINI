@@ -1,8 +1,8 @@
 {
-  "schema": 1,
+  "schema": 2,
   "date": "2026-10-13",
   "baseline_commit": "f0006ef148da0821f7c822cc96476fb80c8bd95a",
-  "implementation_commit": "d0baf8109c1af18c86b18b20053134d553d64453",
+  "implementation_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193",
   "profile": "F411 Classic V3 UC1609 USB Screen CHIP8 Markdown LIBM with default VM cache",
   "toolchain": {
     "stm32_core": "2.12.0",
@@ -49,38 +49,41 @@
     },
     {
       "variant": "optimized",
-      "flash_bytes": 384212,
-      "static_ram_bytes": 33672,
+      "flash_bytes": 384128,
+      "static_ram_bytes": 33668,
       "sections": {
         ".mk61_help": 2856,
         ".isr_vector": 408,
-        ".text": 341068,
-        ".rodata": 40352,
+        ".text": 340964,
+        ".rodata": 40368,
         ".mk61_fw_footer": 40,
         ".ARM.extab": 0,
         ".ARM": 8,
         ".preinit_array": 4,
         ".init_array": 12,
         ".fini_array": 8,
-        ".data": 2300,
-        ".bss": 31080,
-        ".noinit": 292,
-        "._user_heap_stack": 1540,
+        ".data": 2304,
+        ".bss": 31068,
+        ".noinit": 296,
+        "._user_heap_stack": 1536,
         ".ARM.attributes": 48,
         ".comment": 56
       },
-      "sha256": "c46c629e39770bf6371710881183aa7ae34c37bb5fed9d75c9a98e8e25b7ab75"
+      "sha256": "75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585",
+      "build_crc": "66C953FB"
     }
   ],
-  "saved_flash_bytes": 26244,
-  "saved_static_ram_bytes": 9660,
+  "saved_flash_bytes": 26328,
+  "saved_static_ram_bytes": 9664,
   "changes": [
-    "F411 Os+LTO with USB linker-wrapper barriers",
+    "F411 Os+LTO; CDC and USB core target units use native objects, HAL USB bridge remains in LTO for strong MSP/IRQ callbacks",
     "Owned F401/F411 GPIO uses registers, retaining other-platform fallback",
     "Arduino timer wrappers disabled while direct PWM and TIM9 remain active",
     "One canonical UC1609/USB text grid",
     "One-pass FMK source compiler removes permanent8192-byte buffer",
-    "Shared M8 and FMK validation/checksum helpers"
+    "Shared M8 and FMK validation/checksum helpers",
+    "Cold setup frame is not retained in main; no inlining of unrelated command handlers into the terminal dispatch frame",
+    "Shipping ELF checks require actual USB GPIO/MSP initialization and bound retained foreground frames"
   ],
   "app_compatibility": "New UI SETUP.APP requires matching resident binary-resource-stream capability. It probes support before initialization. Previous APPs and no-UI SETUP remain compatible.",
   "counts_notes": [
@@ -89,16 +92,16 @@
     "Lazy retained WORKSPACE/BULK/MSC/VM-cache reserves are unchanged; savings increase the available dynamic interval.",
     "Compact ROM, lower math precision and reduced cache/bank capacity were not used."
   ],
-  "hardware_qualification": "Not run for this branch; firmware was not installed on a device.",
-  "validation_status": "Passed: host set, F411/F401 strict profile matrices, STOP/O3/stock-linker gates and actual ARM SETUP fixtures. Hardware installation/qualification not performed.",
+  "hardware_qualification": "Both F411 devices installed and verified with hardware firmware CRC. Physical keyboard, C9 readback, SPI DMA, BASIC/FOCAL/VM and USB Screen checks passed. Classic custom font/game passed. Independent APP headroom gate fails on baseline and optimized; physical USB STOP test not performed.",
+  "validation_status": "Host, 16 F411 and 9 F401 profile matrices, four cross-MCU RAM checks passed after hardware fixes. Functional HIL passed; strict APP stack-headroom gate is not passed. See stm32-size-hil-20261013.json.",
   "f401_classic_v2": {
     "features": "Canonical f401-product-classic-v2, CORE math, independent System APPs, LTO both sides",
     "baseline_flash_bytes": 257360,
-    "optimized_flash_bytes": 255468,
-    "saved_flash_bytes": 1892,
+    "optimized_flash_bytes": 257868,
+    "saved_flash_bytes": -508,
     "baseline_static_ram_bytes": 35364,
-    "optimized_static_ram_bytes": 35300,
-    "saved_static_ram_bytes": 64,
+    "optimized_static_ram_bytes": 35328,
+    "saved_static_ram_bytes": 36,
     "setup_app": [
       {
         "variant": "baseline",
@@ -115,7 +118,8 @@
         "zero_filled_bss_bytes": 25
       }
     ],
-    "setup_note": "Package grows816 bytes; APP total RAM shrinks7200 bytes. Permanent resident FMK input storage is removed on F411; F401 input storage was inside transient APP BSS."
+    "setup_note": "Package grows816 bytes; APP total RAM shrinks7200 bytes. Permanent resident FMK input storage is removed on F411; F401 input storage was inside transient APP BSS.",
+    "qualification_note": "Final USB/stack correctness fixes erase the earlier resident Flash saving: final F401 Classic V2 is 508 bytes larger than baseline, with 4276 bytes free; static RAM saves 36 bytes. Streaming SETUP still saves 7200 bytes APP RAM."
   },
   "validation_completed": [
     "All six relocated ARM SETUP/font service variants passed",
@@ -128,7 +132,10 @@
     "Strict F411 release matrix:16 variants passed",
     "F401 product/capability matrix:9 cases passed, all matching System APPs fit original budgets",
     "Cross-MCU WS0010 RAM comparisons:4 passed",
-    "Compiler warning policy and real ARM FMK decoder-leak gate regressions:4+4 passed"
+    "Compiler warning policy and real ARM FMK decoder-leak gate regressions:4+4 passed",
+    "USB LTO regressions: 8 passed; retained foreground frame regressions: 3 passed",
+    "Final cross-MCU WS0010 RAM comparisons: 4 passed after USB and frame fixes",
+    "Two F411 physical devices restored, final hardware CRCs verified, original calculator state and non-System file hashes preserved"
   ],
   "checks": {
     "host_set": "passed in two segments; syntax checked final runner and new ELF/warning regressions separately",
@@ -138,6 +145,257 @@
     "arm_setup_profile_address_variants": 6,
     "ws0010_ram_comparisons": 4,
     "o3_compatibility": "passed",
-    "stock_linker_f401_f411": "passed"
-  }
+    "stock_linker_f401_f411": "passed",
+    "foreground_stack_elf": "All F411 release and F401 product variants passed; capability variants retain their diagnostic frame policy.",
+    "usb_hardware_initialization_elf": "Broken initial LTO image rejected; final images and all matrices accepted."
+  },
+  "linker_analysis": {
+    "top_flash_symbols": [
+      {
+        "address": 134306208,
+        "bytes": 14296,
+        "kind": "t",
+        "name": "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)"
+      },
+      {
+        "address": 134320512,
+        "bytes": 11870,
+        "kind": "t",
+        "name": "IK1302_1303_Tick_All(unsigned long, unsigned int, unsigned long)"
+      },
+      {
+        "address": 134443176,
+        "bytes": 10624,
+        "kind": "T",
+        "name": "class_terminal::execute(bool, bool)"
+      },
+      {
+        "address": 134348980,
+        "bytes": 8072,
+        "kind": "T",
+        "name": "idle_main_process()"
+      },
+      {
+        "address": 134359464,
+        "bytes": 7452,
+        "kind": "T",
+        "name": "setup"
+      },
+      {
+        "address": 134276276,
+        "bytes": 5420,
+        "kind": "t",
+        "name": "loadable_module::(anonymous namespace)::other_system_call(unsigned long, unsigned long, unsigned long, unsigned long, void*)"
+      },
+      {
+        "address": 134334512,
+        "bytes": 4404,
+        "kind": "T",
+        "name": "cycle()"
+      },
+      {
+        "address": 134272160,
+        "bytes": 4116,
+        "kind": "T",
+        "name": "file_handlers::open(program_store::Entry const&)"
+      },
+      {
+        "address": 134477108,
+        "bytes": 3380,
+        "kind": "T",
+        "name": "virtual_fat::(anonymous namespace)::process_node(unsigned short, virtual_fat::(anonymous namespace)::ParsedNode&, unsigned char, virtual_fat::(anonymous namespace)::WalkPass, virtual_fat::(anonymous namespace)::NextDirectory&) [clone .lto_priv.0]"
+      },
+      {
+        "address": 134405012,
+        "bytes": 3320,
+        "kind": "T",
+        "name": "setup_ui::service(unsigned long, unsigned long, unsigned long, void*)"
+      },
+      {
+        "address": 134549040,
+        "bytes": 3196,
+        "kind": "T",
+        "name": "__ieee754_pow"
+      },
+      {
+        "address": 134424872,
+        "bytes": 3184,
+        "kind": "T",
+        "name": "class_terminal::exec_profile()"
+      },
+      {
+        "address": 134566008,
+        "bytes": 3120,
+        "kind": "r",
+        "name": "ROM"
+      },
+      {
+        "address": 134391720,
+        "bytes": 3100,
+        "kind": "T",
+        "name": "program_store::write_file_from_source(unsigned short, unsigned short, program_store::ProgramType, char const*, unsigned short, program_store::FileSource const&, unsigned short const*, unsigned char, unsigned short*, unsigned char*, unsigned int, unsigned char const*)"
+      },
+      {
+        "address": 134267580,
+        "bytes": 2780,
+        "kind": "T",
+        "name": "explorer_ui::select(loadable_module::ExplorerSession&) [clone .part.0]"
+      },
+      {
+        "address": 134579668,
+        "bytes": 2613,
+        "kind": "r",
+        "name": "ui_font::(anonymous namespace)::PIXEL_BITMAP"
+      },
+      {
+        "address": 134491576,
+        "bytes": 2212,
+        "kind": "T",
+        "name": "OTG_FS_IRQHandler"
+      },
+      {
+        "address": 134553424,
+        "bytes": 2184,
+        "kind": "T",
+        "name": "__kernel_rem_pio2"
+      },
+      {
+        "address": 134242464,
+        "bytes": 2180,
+        "kind": "T",
+        "name": "(anonymous namespace)::view_entry(program_store::Entry const&) [clone .lto_priv.0]"
+      },
+      {
+        "address": 134422736,
+        "bytes": 2136,
+        "kind": "t",
+        "name": "class_terminal::print_profile_statistics()"
+      },
+      {
+        "address": 134302556,
+        "bytes": 2052,
+        "kind": "T",
+        "name": "m61_text::service()"
+      },
+      {
+        "address": 134521460,
+        "bytes": 2020,
+        "kind": "T",
+        "name": "markdown_viewer::(anonymous namespace)::layout_graphic_region(markdown_viewer::(anonymous namespace)::ViewerWorkspace&, unsigned short, unsigned short, markdown_viewer::(anonymous namespace)::GraphicViewport const&, unsigned char*, unsigned short, unsigned char, unsigned short, markdown_scroll::Metrics&, unsigned short, markdown_viewer::(anonymous namespace)::LinkLayout*) [clone .isra.0]"
+      },
+      {
+        "address": 134235202,
+        "bytes": 1870,
+        "kind": "T",
+        "name": "MK61Display::flush()"
+      },
+      {
+        "address": 134524868,
+        "bytes": 1868,
+        "kind": "t",
+        "name": "language_vm::invoke_resident_impl(language_vm::Language, loadable_module::Command, unsigned long, unsigned long, unsigned long&, unsigned short*, unsigned long*) [clone .part.0] [clone .constprop.0]"
+      },
+      {
+        "address": 134259704,
+        "bytes": 1824,
+        "kind": "T",
+        "name": "language_vm::(anonymous namespace)::compiler_memory(void*, mk61_app_flow&) [clone .lto_priv.0]"
+      }
+    ],
+    "top_ram_symbols": [
+      {
+        "address": 536881164,
+        "bytes": 3616,
+        "kind": "b",
+        "name": "(anonymous namespace)::extended_bank_slots"
+      },
+      {
+        "address": 536886952,
+        "bytes": 3568,
+        "kind": "b",
+        "name": "mk61_lcd_storage"
+      },
+      {
+        "address": 536898376,
+        "bytes": 1600,
+        "kind": "b",
+        "name": "shared_memory::(anonymous namespace)::scratch_storage"
+      },
+      {
+        "address": 536900657,
+        "bytes": 1533,
+        "kind": "B",
+        "name": "_ZN11virtual_fat12_GLOBAL__N_1L19g_sidecar_scan_mapsE.lto_priv.0"
+      },
+      {
+        "address": 536885516,
+        "bytes": 1252,
+        "kind": "B",
+        "name": "g_hpcd"
+      },
+      {
+        "address": 536896172,
+        "bytes": 1024,
+        "kind": "b",
+        "name": "program_store::(anonymous namespace)::g_write_workspace"
+      },
+      {
+        "address": 536877316,
+        "bytes": 1024,
+        "kind": "B",
+        "name": "_ZN8m61_textL10read_cacheE.lto_priv.0"
+      },
+      {
+        "address": 536890924,
+        "bytes": 896,
+        "kind": "b",
+        "name": "program_store::(anonymous namespace)::g_overlay_inodes"
+      },
+      {
+        "address": 536876016,
+        "bytes": 896,
+        "kind": "B",
+        "name": "_ZN7core_6112_GLOBAL__N_1L21shared_context_bufferE.lto_priv.0"
+      },
+      {
+        "address": 536878340,
+        "bytes": 768,
+        "kind": "B",
+        "name": "_ZN8m61_textL6labelsE.lto_priv.0"
+      },
+      {
+        "address": 536879132,
+        "bytes": 732,
+        "kind": "B",
+        "name": "hUSBD_Device_CDC"
+      },
+      {
+        "address": 536874537,
+        "bytes": 672,
+        "kind": "B",
+        "name": "ringM"
+      },
+      {
+        "address": 536903416,
+        "bytes": 540,
+        "kind": "B",
+        "name": "_hcdc"
+      },
+      {
+        "address": 536880636,
+        "bytes": 528,
+        "kind": "B",
+        "name": "_ZN12_GLOBAL__N_1L16extended_programE.lto_priv.0"
+      },
+      {
+        "address": 536895438,
+        "bytes": 512,
+        "kind": "b",
+        "name": "program_store::(anonymous namespace)::g_wal_record"
+      }
+    ],
+    "named_HAL_symbols_bytes": 3216,
+    "HAL_attribution_note": "Named HAL functions only; LTO-inlined HAL and shared USB/core code are not fully attributable from symbol names. This is not an upper bound on bare-metal savings."
+  },
+  "hardware_fixes_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193"
 }
