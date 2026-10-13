@@ -442,5 +442,24 @@
     "classic": "66C953FB",
     "mini_A00": "866C7001",
     "note": "Commit request did not install the new production defaults; hardware A/B/A probe was restored to the prior verified images."
+  },
+  "merged_main_validation": {
+    "merge_commit": "0b5c4ce6210c7eb4711fcd10a9baf92138d28442",
+    "flash_bytes": 382924,
+    "static_ram_bytes": 33672,
+    "build_crc": "1A8E4410",
+    "sha256": "a461ef43684750a9cce091f61cbbd6f171658542b9b755c0316288b0714e47c7",
+    "binary": ".build/stm32-size-merge-check/build/mk61s-M.ino.bin",
+    "checks": [
+      "USB screen shared/independent surface PASS",
+      "display and font streaming PASS",
+      "DWT attribution and runtime counters PASS",
+      "idle sleep policy PASS",
+      "native core and cold LTO object policy PASS",
+      "USB hardware initialization and NAK wrapper PASS",
+      "foreground retained frames80/608 PASS",
+      "compiler warning policy PASS"
+    ],
+    "hardware_installation": "NOT_RUN; devices keep prior verified images"
   }
 }

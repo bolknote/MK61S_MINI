@@ -119,7 +119,7 @@
   "native_core_time_delta_percent_vs_LTO": -1.9656147752539543,
   "native_core_time_delta_percent_vs_original": -0.08466658881233213,
   "probe_image": {
-    "path": ".build/hil-size-qualification/AEB505B6E0067623/images/740EEBA4.bin",
+    "path": ".build/stm32-size-artifacts-20261013/hil-size-qualification/AEB505B6E0067623/images/740EEBA4.bin",
     "bytes": 382868,
     "footer": 380496,
     "build": "740EEBA4",
@@ -194,7 +194,7 @@
     "all37_files_sha256": "PASS",
     "serial_port": "CLOSED"
   },
-  "evidence_root": ".build/hil-size-qualification/core-codegen-analysis",
+  "evidence_root": ".build/stm32-size-artifacts-20261013/hil-size-qualification/core-codegen-analysis",
   "gcc_reference": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Optimize-Options.html#Optimize-Options",
   "production_integration": {
     "source_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
@@ -205,6 +205,6 @@
     "matches_measured_core_machine_code": true,
     "f411_strict_matrix_variants_passed": 16,
     "adapter_tests_passed": 14,
-    "binary": ".build/hil-size-qualification/core-codegen-analysis/production-build/mk61s-M.ino.bin"
+    "binary": ".build/stm32-size-artifacts-20261013/hil-size-qualification/core-codegen-analysis/production-build/mk61s-M.ino.bin"
   }
 }

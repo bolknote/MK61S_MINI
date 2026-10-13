@@ -4,7 +4,7 @@
   "branch": "feature/stm32-size-optimization",
   "source_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193",
   "status": "FUNCTIONAL_HIL_PASS_WITH_STACK_LIMITATION",
-  "device_logs_root": ".build/hil-size-qualification",
+  "device_logs_root": ".build/stm32-size-artifacts-20261013/hil-size-qualification",
   "devices": [
     {
       "identity": {
@@ -16,14 +16,14 @@
         "profile": "classic-v3-uc1609"
       },
       "installed": {
-        "path": ".build/hil-size-qualification/AEB505B6E0067623/images/66C953FB.bin",
+        "path": ".build/stm32-size-artifacts-20261013/hil-size-qualification/AEB505B6E0067623/images/66C953FB.bin",
         "bytes": 384128,
         "footer": 381752,
         "build": "66C953FB",
         "sha256": "75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585"
       },
       "original_backup": {
-        "path": ".build/hil-size-qualification/AEB505B6E0067623/original-firmware.bin",
+        "path": ".build/stm32-size-artifacts-20261013/hil-size-qualification/AEB505B6E0067623/original-firmware.bin",
         "bytes": 393212,
         "footer": 390808,
         "build": "7B7D50A3",
@@ -280,14 +280,14 @@
         "profile": "mini-v3-a00"
       },
       "installed": {
-        "path": ".build/hil-size-qualification/6FF33152484A4488/images/866C7001.bin",
+        "path": ".build/stm32-size-artifacts-20261013/hil-size-qualification/6FF33152484A4488/images/866C7001.bin",
         "bytes": 351448,
         "footer": 349232,
         "build": "866C7001",
         "sha256": "0aec01bbeb08dd2b08bedc3f69c0ace5c2eb4aef08ff8cccacd62272b414bbd3"
       },
       "original_backup": {
-        "path": ".build/hil-size-qualification/6FF33152484A4488/original-firmware.bin",
+        "path": ".build/stm32-size-artifacts-20261013/hil-size-qualification/6FF33152484A4488/original-firmware.bin",
         "bytes": 341948,
         "footer": 339808,
         "build": "D44BEB86",
