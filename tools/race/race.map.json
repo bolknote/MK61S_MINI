@@ -1,0 +1,182 @@
+{
+  "occupied_bytes": 1854,
+  "free_bytes": 1730,
+  "labels": {
+    "start": 0,
+    "new_game": 39,
+    "tick": 54,
+    "cooldown_done": 69,
+    "bend_done": 85,
+    "wall_done": 104,
+    "rival_done": 2144,
+    "section_done": 2175,
+    "checkpoint": 2193,
+    "read_steering": 112,
+    "steer_left": 129,
+    "steer_right": 133,
+    "damage": 136,
+    "damage_end": 148,
+    "section_parameters": 149,
+    "draw_road": 224,
+    "draw_rival": 336,
+    "rival_far": 393,
+    "rival_small": 402,
+    "rival_on_nose": 429,
+    "rival_medium": 437,
+    "rival_hidden": 316,
+    "draw_guide": 448,
+    "guide_right": 451,
+    "guide_test_right": 455,
+    "guide_target": 460,
+    "guide_clip": 486,
+    "guide_left_edge": 500,
+    "guide_center": 504,
+    "guide_place": 506,
+    "paint_cell": 560,
+    "paint_end": 596,
+    "cell_weight": 597,
+    "weight_one": 623,
+    "weight_256": 626,
+    "score": 672,
+    "finish": 737,
+    "defeat": 181,
+    "section_table": 784,
+    "road_alphabet": 844,
+    "art_0": 896,
+    "art_1": 915,
+    "art_2": 934,
+    "art_3": 953,
+    "art_4": 972,
+    "art_5": 1008,
+    "art_6": 1027,
+    "art_7": 1046,
+    "art_8": 1065,
+    "art_9": 1084,
+    "art_10": 1120,
+    "art_11": 1139,
+    "art_12": 1158,
+    "art_13": 1177,
+    "art_14": 1196,
+    "art_15": 1232,
+    "art_16": 1251,
+    "art_17": 1270,
+    "art_18": 1289,
+    "art_19": 1308,
+    "art_20": 1344,
+    "art_21": 1363,
+    "art_22": 1382,
+    "art_23": 1401,
+    "art_24": 1420,
+    "art_25": 1456,
+    "art_26": 1475,
+    "art_27": 1494,
+    "art_28": 1513,
+    "art_29": 1532,
+    "art_30": 1568,
+    "art_31": 1587,
+    "art_32": 1606,
+    "art_33": 1625,
+    "art_34": 1644,
+    "art_35": 1680,
+    "art_36": 1699,
+    "art_37": 1718,
+    "art_38": 1737,
+    "art_39": 1756,
+    "art_40": 1792,
+    "art_41": 1811,
+    "art_42": 1830,
+    "art_43": 1849,
+    "art_44": 1868,
+    "art_45": 1904,
+    "art_46": 1923,
+    "art_47": 1942,
+    "art_48": 1961,
+    "art_49": 1980,
+    "art_50": 2016,
+    "art_51": 2035,
+    "art_52": 2054,
+    "art_53": 2073
+  },
+  "banks": {
+    "0": {
+      "module": "start and race loop",
+      "used": 112
+    },
+    "19": {
+      "module": " / start and race loop",
+      "used": 73
+    },
+    "1": {
+      "module": "steering and damage / score and results",
+      "used": 107
+    },
+    "2": {
+      "module": "frame selection and publication / approaching rival",
+      "used": 93
+    },
+    "3": {
+      "module": "approaching rival",
+      "used": 112
+    },
+    "4": {
+      "module": "safe-path marker",
+      "used": 72
+    },
+    "5": {
+      "module": "atomic cell overlays",
+      "used": 71
+    },
+    "6": {
+      "module": "score and results",
+      "used": 112
+    },
+    "7": {
+      "module": "section pattern and alphabet",
+      "used": 76
+    },
+    "8": {
+      "module": "wall sprites 0",
+      "used": 95
+    },
+    "9": {
+      "module": "wall sprites 1",
+      "used": 95
+    },
+    "10": {
+      "module": "wall sprites 2",
+      "used": 95
+    },
+    "11": {
+      "module": "wall sprites 3",
+      "used": 95
+    },
+    "12": {
+      "module": "wall sprites 4",
+      "used": 95
+    },
+    "13": {
+      "module": "wall sprites 5",
+      "used": 95
+    },
+    "14": {
+      "module": "wall sprites 6",
+      "used": 95
+    },
+    "15": {
+      "module": "wall sprites 7",
+      "used": 95
+    },
+    "16": {
+      "module": "wall sprites 8",
+      "used": 95
+    },
+    "17": {
+      "module": "wall sprites 9",
+      "used": 95
+    },
+    "18": {
+      "module": "wall sprites 10",
+      "used": 76
+    }
+  }
+}
