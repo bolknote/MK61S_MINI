@@ -1,0 +1,86 @@
+#include "language_bytecode.hpp"
+#include "language_vm_profile.hpp"
+#include <cassert>
+#include <cstdio>
+#include <cstring>
+
+namespace {
+struct Row {uint64_t cycles=0;uint32_t count=0,integers=0;};
+Row rows[9];
+uint32_t clock_value=0,reads=0;
+unsigned applied=0;
+void reset() {for(auto& row:rows)row={};clock_value=reads=applied=0;}
+}
+namespace portable_system {
+uint32_t call(uint32_t operation,uint32_t group,uint32_t count,uint32_t integers,void* payload) {
+  using language_vm::Op;
+  assert(group & MK61_VM_PROFILE_RAW_OPCODE);
+  const auto raw=group & ~MK61_VM_PROFILE_RAW_OPCODE;
+  const auto op=(Op)raw;
+  group=raw==256?8:
+    ((op>=Op::LOAD && op<=Op::STORE) || op==Op::UPDATE_LOCAL)?1:
+    (op==Op::LOAD_ARRAY || op==Op::STORE_ARRAY || op==Op::LOAD_ARRAY_FIXED || op==Op::ARRAY_CELL || op==Op::TARGET_ARRAY)?2:
+    (op==Op::ADD || op==Op::SUB)?3:op==Op::MUL?4:
+    (op==Op::DIV || op==Op::MOD || op==Op::FLOOR_DIV)?5:
+    ((op>=Op::EQ && op<=Op::XOR) || op==Op::COMPARE_FALSE)?6:
+    ((op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 || op==Op::CONST_F64 || op==Op::CONST_DEC8 || op==Op::CONST_DEC16)?0:7;
+  if(group==8)integers=count;
+  assert(operation==MK61_SERVICE_VM_PROFILE && group<9 && count && integers<=count && payload);
+  uint64_t cycles;std::memcpy(&cycles,payload,sizeof(cycles));
+  rows[group].count+=count;rows[group].integers+=integers;rows[group].cycles+=cycles;
+  return 1;
+}
+}
+namespace language_vm {
+uint32_t opcode_profile_test_cycles() {clock_value+=(reads++<2?1U:11U);return clock_value;}
+void integer_block_applied(uint16_t,uint8_t count) {assert(count>=3 && count<=5);++applied;}
+}
+int main() {
+  using namespace language_vm;
+  reset();
+  {
+    OpcodeProfile profile(View{});
+    Continuation state={};Bindings data={};
+    {OpcodeProfile::Sample sample(profile,Op::CONST_I16,state,data);sample.fused(5);}
+  }
+  assert(rows[8].count==5 && rows[8].integers==5 &&
+         rows[8].cycles==(MK61_VM_OPCODE_PROFILE_TIMING?10U:0U));
+  for(unsigned i=0;i<8;++i)assert(!rows[i].count && !rows[i].cycles);
+  reset();
+  {
+    OpcodeProfile profile(View{});
+    Value operands[2]={7,2};Continuation state={};state.sp=2;
+    Bindings data={};data.stack=operands;data.stack_capacity=2;
+    {OpcodeProfile::Sample sample(profile,Op::FLOOR_DIV,state,data);}
+  }
+  assert(rows[5].count==1 && rows[5].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?1U:0U));
+
+  const char source[]="10 A=128+I\n";
+  uint8_t image[MAX_IMAGE]={};View view={};
+  const auto compiled=compile(Language::BASIC,source,sizeof(source)-1,image,sizeof(image));
+  assert(compiled.error==Error::NONE && inspect(image,compiled.size,view)==Error::NONE);
+  Value variables[26]={},stack[MAX_STACK]={};variables[8]=7;
+  State state={};state.variables=variables;state.stack=stack;state.stack_capacity=MAX_STACK;
+  reset();
+  const auto result=run(view,state,Services{});
+  assert(result.error==Error::NONE && variables[0]==135);
+  uint32_t total=0;for(const auto& row:rows)total+=row.count;
+  assert(total==result.steps);
+#if MK61_VM_INTEGER_BLOCK
+  assert(applied==1 && rows[8].count==4 && rows[8].integers==4);
+  assert((rows[8].cycles!=0)==(MK61_VM_OPCODE_PROFILE_TIMING!=0));
+  assert(!rows[0].count && !rows[1].count && !rows[3].count);
+#else
+  assert(!applied && !rows[8].count);
+  assert(rows[0].count==1 && rows[1].count==2 && rows[3].count==1);
+  assert(rows[3].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?1U:0U));
+#endif
+  // A limit before the block's last instruction must keep scalar semantics,
+  // not report an executed block which the VM had to reject.
+  reset();variables[0]=0;state={};state.variables=variables;state.stack=stack;state.stack_capacity=MAX_STACK;
+  const auto limited=run(view,state,Services{},3);
+  assert(limited.error==Error::LIMIT && variables[0]==0 && !applied && !rows[8].count);
+  total=0;for(const auto& row:rows)total+=row.count;
+  assert(total==limited.steps);
+  std::puts("VM opcode profile: active block, logical counts, single elapsed attribution and limit fallback PASS");
+}

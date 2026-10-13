@@ -33,6 +33,7 @@ struct Fixture {
     const auto result=language_vm::run(view,state,host,limit);
     hash(&result.error,sizeof(result.error));hash(&result.pc,sizeof(result.pc));
     hash(&result.line,sizeof(result.line));hash(&result.steps,sizeof(result.steps));
+    const auto column=source_column(view,result.pc);hash(&column,sizeof(column));
     hash(vars,sizeof(vars));hash(array,sizeof(array));hash(stack,sizeof(stack));
     hash(&state.pc,sizeof(state.pc));hash(&state.sp,sizeof(state.sp));
     hash(&state.call_count,sizeof(state.call_count));hash(&state.loop_count,sizeof(state.loop_count));
@@ -43,7 +44,8 @@ int main() {
   const char* basic[]={"10 A=128+I\n","10 A=@(128+I)\n",
     "10 B=@(128+I);A=128+B\n","10 A=128+I+2\n",
     "10 A=(128+I)/2\n","10 A=0;FOR J=1 TO 80;A=128+I;NEXT J\n",
-    "10 FOR J=1 TO 40;GOSUB 100;NEXT J;END\n100 A=@(128+I);RETURN\n"};
+    "10 FOR J=1 TO 40;GOSUB 100;NEXT J;END\n100 A=@(128+I);RETURN\n",
+    "10 A=@(128+I);IF A>0 THEN GOTO 30\n20 END\n30 A=128+I;END\n"};
   const char* focal[]={"1.10 S A=128+I\n","1.10 S A=(128+I)/2\n",
     "1.10 F J=1,80;S A=128+I\n","1.10 D 2\n1.20 E\n2.10 S A=128+I\n"};
   const Value inputs[]={Value(-129),Value(-128),Value(0),Value(255),Value(256),
@@ -69,6 +71,14 @@ int main() {
     if(mode==3)f.array[128]=Value(std::numeric_limits<double>::quiet_NaN());
     f.run(0);++cases;
   }
+  // Bounds, trailing SOURCE_POS and stop/limit semantics must remain exact
+  // even when a caller hands run() a truncated view of otherwise valid bytes.
+  Fixture complete(basic[1],Language::BASIC,Value(0),MAX_STACK,0);
+  for(uint16_t end=complete.view.code;end<=complete.view.end;++end)
+    for(unsigned limit:{0U,1U,2U,3U,4U,5U,6U,31U,32U}) {
+      Fixture f(basic[1],Language::BASIC,Value(0),MAX_STACK,0);
+      f.view.end=end;f.run(limit);++cases;
+    }
 #if MK61_VM_INTEGER_BLOCK
   assert(applied>100);
 #else

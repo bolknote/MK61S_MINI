@@ -1,6 +1,9 @@
 #include "dwt_profiler.hpp"
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 #include "loadable_module_format.hpp"
+#if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+#include "language_bytecode.hpp"
+#endif
 #endif
 
 #if MK61_DWT_PROFILER_SUPPORTED
@@ -18,7 +21,7 @@ u64 extended_cycles = 0;
 VmCacheRow cache_rows[VM_CACHE_ROWS];
 u32 cache_dropped = 0;
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
-u32 opcode_integers[8] = {};
+u32 opcode_integers[VM_OPCODE_GROUPS] = {};
 #endif
 VmCacheRow* cache_row(u16 id) {
   if(id == 0xFFFF) return nullptr;
@@ -76,8 +79,25 @@ void record_scope(Point point, u64 elapsed, u64 children) {
   if(index < POINT_COUNT) point_statistics[index].add(elapsed, children <= elapsed ? elapsed - children : 0);
 }
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
+u32 vm_opcode_group(u32 opcode) {
+  using language_vm::Op;
+  if(opcode==256)return 8;
+  if(opcode>(u32)Op::PRINT_PRECISION)return VM_OPCODE_GROUPS;
+  const auto op=(Op)opcode;
+  if((op>=Op::LOAD && op<=Op::STORE) || op==Op::UPDATE_LOCAL)return 1;
+  if(op==Op::LOAD_ARRAY || op==Op::STORE_ARRAY || op==Op::LOAD_ARRAY_FIXED ||
+     op==Op::ARRAY_CELL || op==Op::TARGET_ARRAY)return 2;
+  if(op==Op::ADD || op==Op::SUB)return 3;
+  if(op==Op::MUL)return 4;
+  if(op==Op::DIV || op==Op::MOD || op==Op::FLOOR_DIV)return 5;
+  if((op>=Op::EQ && op<=Op::XOR) || op==Op::COMPARE_FALSE)return 6;
+  if((op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::CONST_I8 ||
+     op==Op::CONST_I16 || op==Op::CONST_I32 || op==Op::CONST_F64 ||
+     op==Op::CONST_DEC8 || op==Op::CONST_DEC16)return 0;
+  return 7;
+}
 void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles) {
-  if(!collection_active || group>=8 || !count || integers>count) return;
+  if(!collection_active || group>=VM_OPCODE_GROUPS || !count || integers>count) return;
   auto& row=point_statistics[(usize)Point::VM_CONSTANTS+group];
   if(count>UINT32_MAX-row.samples) return;
   row.samples+=count;row.total_cycles+=cycles;row.self_cycles+=cycles;
@@ -85,7 +105,7 @@ void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles) {
   row.minimum_cycles=row.maximum_cycles=0;
   opcode_integers[group]+=integers;
 }
-u32 vm_opcode_integers(usize group) {return group<8?opcode_integers[group]:0;}
+u32 vm_opcode_integers(usize group) {return group<VM_OPCODE_GROUPS?opcode_integers[group]:0;}
 #endif
 Point app_point(u8 kind, bool entry) {
   using K = loadable_module::Kind;
@@ -237,6 +257,7 @@ const char* point_name(Point point) {
     case Point::VM_DIV_MOD: return "vm.op.divmod";
     case Point::VM_COMPARE: return "vm.op.compare";
     case Point::VM_OTHER: return "vm.op.other";
+    case Point::VM_INTEGER_BLOCK: return "vm.block.integer";
 #endif
 #if MK61_DWT_IDLE_DETAIL
     case Point::IDLE_POWER: return "idle.power";

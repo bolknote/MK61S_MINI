@@ -22,6 +22,7 @@ if command -v pwsh >/dev/null 2>&1; then
 fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"
+bash "$root/tests/run_language_vm_opcode_profile_tests.sh"
 "$root/tests/run_core_packed_amk_tests.sh"
 bash "$root/tests/run_core_native_tests.sh"
 bash "$root/tests/run_calculator_control_tests.sh"

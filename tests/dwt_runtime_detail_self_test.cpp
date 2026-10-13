@@ -161,6 +161,8 @@ static void context_and_cache() {
 
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
 static void opcode_batches() {
+  assert(vm_opcode_group(5)==1 && vm_opcode_group(9)==2 && vm_opcode_group(13)==3);
+  assert(vm_opcode_group(256)==8 && vm_opcode_group(257)==VM_OPCODE_GROUPS);
   reset();
   record_vm_opcodes(3,100,80,UINT64_C(0x100000000));
   record_vm_opcodes(3,20,20,240);
@@ -168,7 +170,10 @@ static void opcode_batches() {
   assert(row.samples==120 && row.total_cycles==UINT64_C(0x1000000F0));
   assert(row.self_cycles==row.total_cycles && vm_opcode_integers(3)==100);
   assert(!row.minimum_cycles && !row.maximum_cycles);
-  record_vm_opcodes(8,1,1,50);record_vm_opcodes(3,1,2,50);
+  record_vm_opcodes(8,5,5,50);
+  assert(statistics(Point::VM_INTEGER_BLOCK).samples==5 && vm_opcode_integers(8)==5);
+  assert(statistics(Point::VM_INTEGER_BLOCK).total_cycles==50);
+  record_vm_opcodes(9,1,1,50);record_vm_opcodes(3,1,2,50);
   record_vm_opcodes(3,0,0,50);
   assert(row.samples==120);
   stop();record_vm_opcodes(3,1,1,50);assert(row.samples==120);
@@ -177,13 +182,13 @@ static void opcode_batches() {
   record_vm_opcodes(3,1,1,50);
   assert(row.samples==UINT32_MAX && row.total_cycles==1 &&
          vm_opcode_integers(3)==UINT32_MAX);
-  assert(!vm_opcode_integers(8));
+  assert(!vm_opcode_integers(9));
   reset();
 }
 #endif
 
 int main() {
-  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 8 : 0) +
+  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 9 : 0) +
       (MK61_DWT_IDLE_DETAIL ? 15 : 0));
   initialize(); assert(available() && start());
   nested_scopes(); runner_and_invoke(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();

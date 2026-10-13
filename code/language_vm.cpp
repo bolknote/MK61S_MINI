@@ -148,12 +148,21 @@ Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
   if(!result.finite()) return Error::MATH;
   variables[index]=result;return Error::NONE;
 }
-#if MK61_VM_INTEGER_BLOCK && !MK61_VM_OPCODE_PROFILE
+#if MK61_VM_INTEGER_BLOCK
+uint16_t block_next(const View& v,uint16_t pc) {
+  // Inspect diagnostic prefixes without committing them: trailing/broken
+  // prefixes still belong to the ordinary loop's exact error/limit path.
+  while(pc<v.end && (Op)v.bytes[pc]==Op::SOURCE_POS) {
+    if(v.end-pc<3)return 0;
+    pc=(uint16_t)(pc+3);
+  }
+  return pc;
+}
 // One guarded integer block, shared by both languages/arithmetic backends.
 // Recognize CONST_I16, LOAD, ADD, optionally LOAD_ARRAY and STORE. The original
 // bytes/branch targets stay intact. Every guard precedes any observable write;
 // overflow, floats, invalid bounds or a service/limit boundary deopt to run().
-__attribute__((noinline)) bool integer_block(const View& v, Continuation& s,
+__attribute__((noinline)) uint8_t integer_block(const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
   const uint16_t first=instruction;
   if(v.end-first<6 || (Op)v.bytes[first+3]!=Op::LOAD ||
@@ -167,14 +176,16 @@ __attribute__((noinline)) bool integer_block(const View& v, Continuation& s,
   uint16_t after=(uint16_t)(first+6), last=(uint16_t)(first+5);
   uint8_t count=3, dst=255;
   Value value=sum;
-  if(after<v.end && (Op)v.bytes[after]==Op::LOAD_ARRAY) {
+  uint16_t candidate=block_next(v,after);
+  if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::LOAD_ARRAY) {
     if(!data.array || sum<0 || (uint32_t)sum>=data.array_count ||
        !data.array[sum].integer()) return false;
-    value=data.array[sum];last=after++;++count;
+    value=data.array[sum];last=candidate;after=(uint16_t)(candidate+1);++count;
   }
-  if(after<v.end && (Op)v.bytes[after]==Op::STORE) {
-    if(v.end-after<2 || v.bytes[after+1]>=26) return false;
-    dst=v.bytes[after+1];last=after;after=(uint16_t)(after+2);++count;
+  candidate=block_next(v,after);
+  if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::STORE) {
+    if(v.end-candidate<2 || v.bytes[candidate+1]>=26) return false;
+    dst=v.bytes[candidate+1];last=candidate;after=(uint16_t)(candidate+2);++count;
   }
   if(((steps-1)&31U)+count>32 || (limit && count-1U>limit-steps) ||
      (s.call_count && s.calls[s.call_count-1].end && after>s.calls[s.call_count-1].end))
@@ -184,6 +195,7 @@ __attribute__((noinline)) bool integer_block(const View& v, Continuation& s,
   trace_instruction(v,(uint16_t)(first+5),steps+2);
   uint16_t pc=(uint16_t)(first+6);
   for(uint8_t n=3;n<count;++n) {
+    pc=block_next(v,pc);
     trace_instruction(v,pc,steps+n);
     pc=(uint16_t)(pc+((Op)v.bytes[pc]==Op::STORE?2:1));
   }
@@ -197,7 +209,7 @@ __attribute__((noinline)) bool integer_block(const View& v, Continuation& s,
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
   integer_block_applied(first,count);
 #endif
-  return true;
+  return count;
 }
 #endif
 }  // namespace
@@ -596,13 +608,19 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     s.pc = after;
     Value a = 0, b = 0, value = 0;
     switch (op) {
-#if MK61_VM_INTEGER_BLOCK && !MK61_VM_OPCODE_PROFILE
+#if MK61_VM_INTEGER_BLOCK
       case Op::CONST_I16:
-        if(integer_block(v,s,data,steps,instruction,limit))break;
+        {
+          const uint8_t count=integer_block(v,s,data,steps,instruction,limit);
+          if(count) {
+            VM_OPCODE_FUSED(count);
+            break;
+          }
+        }
         [[fallthrough]];
 #endif
       case Op::CONST_I8:
-#if !MK61_VM_INTEGER_BLOCK || MK61_VM_OPCODE_PROFILE
+#if !MK61_VM_INTEGER_BLOCK
       case Op::CONST_I16:
 #endif
       case Op::CONST_I32:
