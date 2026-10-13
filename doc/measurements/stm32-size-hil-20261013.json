@@ -581,6 +581,9 @@
     "cause": "mk61emu_core.cpp participation in LTO; confirmed by same-source single-unit A/B/A",
     "experimental_native_core_median_cycles": 1711150,
     "experimental_bin_bytes": 382868,
-    "production_configuration": "UNCHANGED; 66C953FB restored"
+    "production_configuration": "F411 native core policy integrated; boards retain prior verified images",
+    "production_source_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
+    "production_bin_bytes": 382860,
+    "production_core_text_matches_hardware_probe": true
   }
 }

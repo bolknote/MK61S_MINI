@@ -2,7 +2,7 @@
   "schema": 2,
   "date": "2026-10-13",
   "baseline_commit": "f0006ef148da0821f7c822cc96476fb80c8bd95a",
-  "implementation_commit": "41d7c9cbeda81d50428cdf97cb217bbb80c54193",
+  "implementation_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
   "profile": "F411 Classic V3 UC1609 USB Screen CHIP8 Markdown LIBM with default VM cache",
   "toolchain": {
     "stm32_core": "2.12.0",
@@ -48,7 +48,7 @@
       "sha256": "debe109925f65cb402596e68de9f8a66b9bb5226276c3a21df3fe2d9ece8dc4c"
     },
     {
-      "variant": "optimized",
+      "variant": "whole_LTO_before_core_fix",
       "flash_bytes": 384128,
       "static_ram_bytes": 33668,
       "sections": {
@@ -71,12 +71,38 @@
       },
       "sha256": "75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585",
       "build_crc": "66C953FB"
+    },
+    {
+      "variant": "optimized",
+      "flash_bytes": 382860,
+      "static_ram_bytes": 33672,
+      "sections": {
+        ".mk61_help": 2856,
+        ".isr_vector": 408,
+        ".text": 339692,
+        ".rodata": 40376,
+        ".mk61_fw_footer": 40,
+        ".ARM.extab": 0,
+        ".ARM": 8,
+        ".preinit_array": 4,
+        ".init_array": 12,
+        ".fini_array": 12,
+        ".data": 2296,
+        ".bss": 31080,
+        ".noinit": 296,
+        "._user_heap_stack": 1536,
+        ".ARM.attributes": 48,
+        ".comment": 56
+      },
+      "sha256": "a07c14b91317188f1d3c7e59dd70d165ce3f30f09d5f9c9002cb7f9f0d20c72c",
+      "build_crc": "DB1561C8",
+      "core_policy": "F411 emulator native, rest LTO"
     }
   ],
-  "saved_flash_bytes": 26328,
-  "saved_static_ram_bytes": 9664,
+  "saved_flash_bytes": 27596,
+  "saved_static_ram_bytes": 9660,
   "changes": [
-    "F411 Os+LTO; CDC and USB core target units use native objects, HAL USB bridge remains in LTO for strong MSP/IRQ callbacks",
+    "F411 Os+LTO with native emulator translation unit, native USB --wrap definitions and HAL USB bridge kept in LTO",
     "Owned F401/F411 GPIO uses registers, retaining other-platform fallback",
     "Arduino timer wrappers disabled while direct PWM and TIM9 remain active",
     "One canonical UC1609/USB text grid",
@@ -135,7 +161,8 @@
     "Compiler warning policy and real ARM FMK decoder-leak gate regressions:4+4 passed",
     "USB LTO regressions: 8 passed; retained foreground frame regressions: 3 passed",
     "Final cross-MCU WS0010 RAM comparisons: 4 passed after USB and frame fixes",
-    "Two F411 physical devices restored, final hardware CRCs verified, original calculator state and non-System file hashes preserved"
+    "Two F411 physical devices restored, final hardware CRCs verified, original calculator state and non-System file hashes preserved",
+    "Final hybrid F411 strict matrix: all16 variants passed, actual native core object and retained cold LTO checked"
   ],
   "checks": {
     "host_set": "passed in two segments; syntax checked final runner and new ELF/warning regressions separately",
@@ -148,7 +175,9 @@
     "stock_linker_f401_f411": "passed",
     "foreground_stack_elf": "All F411 release and F401 product variants passed; capability variants retain their diagnostic frame policy.",
     "usb_hardware_initialization_elf": "Broken initial LTO image rejected; final images and all matrices accepted.",
-    "usb_stop_hardware": "NOT_RUN_USER_DEFERRED; compile/link checks passed, physical sleep/wake not qualified."
+    "usb_stop_hardware": "NOT_RUN_USER_DEFERRED; compile/link checks passed, physical sleep/wake not qualified.",
+    "f411_hybrid_release_variants": 16,
+    "hybrid_adapter_regressions": "14 Python/PowerShell tests + 3 foreground frame tests passed"
   },
   "linker_analysis": {
     "top_flash_symbols": [
@@ -404,6 +433,14 @@
     "cause": "mk61emu_core.cpp participation in LTO; confirmed by same-source single-unit A/B/A",
     "experimental_native_core_median_cycles": 1711150,
     "experimental_bin_bytes": 382868,
-    "production_configuration": "UNCHANGED; 66C953FB restored"
+    "production_configuration": "F411 native core policy integrated",
+    "production_source_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
+    "production_bin_bytes": 382860,
+    "production_core_text_matches_hardware_probe": true
+  },
+  "installed_hardware_images_current": {
+    "classic": "66C953FB",
+    "mini_A00": "866C7001",
+    "note": "Commit request did not install the new production defaults; hardware A/B/A probe was restored to the prior verified images."
   }
 }

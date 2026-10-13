@@ -185,7 +185,7 @@
     "main frame80 and terminal dispatch608 PASS",
     "sealed BIN/ELF exact match PASS"
   ],
-  "deployment_status": "EXPERIMENT_ONLY_NOT_INTEGRATED; shipping 66C953FB restored after test",
+  "deployment_status": "INTEGRATED_IN_F411_BUILDERS; physical boards remain on prior verified images",
   "final_hardware_state": {
     "build_crc": "66C953FB",
     "hardware_crc": "PASS",
@@ -195,5 +195,16 @@
     "serial_port": "CLOSED"
   },
   "evidence_root": ".build/hil-size-qualification/core-codegen-analysis",
-  "gcc_reference": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Optimize-Options.html#Optimize-Options"
+  "gcc_reference": "https://gcc.gnu.org/onlinedocs/gcc-14.2.0/gcc/Optimize-Options.html#Optimize-Options",
+  "production_integration": {
+    "source_commit": "bb34057df349a662fb5f0e73e84c8a3f3a0ffd51",
+    "flash_bytes": 382860,
+    "static_ram_bytes": 33672,
+    "build_crc": "DB1561C8",
+    "sha256": "a07c14b91317188f1d3c7e59dd70d165ce3f30f09d5f9c9002cb7f9f0d20c72c",
+    "matches_measured_core_machine_code": true,
+    "f411_strict_matrix_variants_passed": 16,
+    "adapter_tests_passed": 14,
+    "binary": ".build/hil-size-qualification/core-codegen-analysis/production-build/mk61s-M.ino.bin"
+  }
 }
