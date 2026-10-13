@@ -147,7 +147,8 @@
     "o3_compatibility": "passed",
     "stock_linker_f401_f411": "passed",
     "foreground_stack_elf": "All F411 release and F401 product variants passed; capability variants retain their diagnostic frame policy.",
-    "usb_hardware_initialization_elf": "Broken initial LTO image rejected; final images and all matrices accepted."
+    "usb_hardware_initialization_elf": "Broken initial LTO image rejected; final images and all matrices accepted.",
+    "usb_stop_hardware": "NOT_RUN_USER_DEFERRED; compile/link checks passed, physical sleep/wake not qualified."
   },
   "linker_analysis": {
     "top_flash_symbols": [

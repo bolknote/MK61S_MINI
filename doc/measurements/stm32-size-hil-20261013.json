@@ -227,7 +227,7 @@
           "replaced": true
         }
       },
-      "usb_STOP": "NOT_RUN",
+      "usb_STOP": "NOT_RUN_USER_DEFERRED",
       "SPI_DMA": {
         "status": "PASS",
         "iterations": 100,
@@ -561,7 +561,7 @@
     }
   ],
   "not_run": [
-    "Physical USB suspend/STOP/re-entry not performed; availability question was unanswered when reports were finalized.",
+    "Physical USB suspend/STOP/re-entry not performed; user explicitly requested to defer this check on 2026-10-13.",
     "Long CDC/DFU soak not performed"
   ],
   "source_binary_scope": "Some early checks ran on the first USB-fixed or bounded build. Final frozen CRC builds reran C5, physical keyboard, extended VM and data cleanup. The Classic font/SPI checks ran on final 66C953FB.",
