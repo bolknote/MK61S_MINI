@@ -1,3 +1,6 @@
+#if defined(ARDUINO_ARCH_STM32)
+#include "config.h"
+#endif
 #include "language_workspace.hpp"
 #include "workspace_swap.hpp"
 
