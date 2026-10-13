@@ -3814,6 +3814,12 @@ terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mo
       return result;
     }
 
+#if defined(ARDUINO_ARCH_STM32) && defined(__GNUC__) && !defined(__clang__) && \
+    (defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE))
+// This frame remains live while OPEN runs a foreground APP. LTO must not
+// merge unrelated handlers' scratch arrays into every command's frame.
+__attribute__((optimize("no-inline")))
+#endif
 terminal_protocol::Result class_terminal::execute(bool script_mode,
                                       bool trap_mode) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();

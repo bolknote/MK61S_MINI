@@ -209,13 +209,12 @@ add_subdirectory("${BUILD_VARIANT_PATH}" "${CMAKE_BINARY_DIR}/stm32/variant")
 add_subdirectory("${BUILD_CORE_PATH}" "${CMAKE_BINARY_DIR}/stm32/core")
 add_subdirectory("${BUILD_LIB_PATH}" "${CMAKE_BINARY_DIR}/stm32/libraries")
 
-# Keep the CDC queue-full call visible to GNU ld.  With whole-program LTO the
-# call to USBD_CDC_ClearBuffer is resolved inside usbd_cdc.c before --wrap can
-# redirect it, leaving F401 builds unprotected.  Only this small translation
-# unit needs to opt out; the rest of the resident firmware retains LTO.
+# Keep the CDC and suspend --wrap targets visible to GNU ld. Their defining
+# units must opt out of LTO; the HAL bridge stays in LTO so its strong MSP/IRQ
+# implementations replace HAL's weak no-op defaults before optimization.
 set_source_files_properties(
   "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c"
+  "${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 

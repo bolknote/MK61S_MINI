@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reject an ELF whose CDC queue-full call bypasses the NAK wrapper."""
+"""Reject a CDC image that bypasses the receive guard or loses USB GPIO init."""
 import argparse
 from pathlib import Path
 import re
@@ -25,6 +25,28 @@ def check(disassembly: str) -> None:
         raise ValueError('no call reaches the CDC receive guard')
     if 'USBD_CDC_ClearBuffer' in calls:
         raise ValueError('CDC queue-full call bypasses --wrap (LTO resolved it early)')
+    functions = dict(re.findall(
+        r'^[0-9a-f]+ <([^>]+)>:\n(.*?)(?=\n[0-9a-f]+ <|\Z)',
+        disassembly, re.M | re.S))
+    pending = ['USBD_LL_Init']
+    visited = set()
+    while pending:
+        name = pending.pop()
+        if name in visited:
+            continue
+        visited.add(name)
+        body = functions.get(name, '')
+        targets = re.findall(
+            r'\s(?:b|bl|blx)(?:\.[a-z]+)?\s+[0-9a-f]+\s+<([^>]+)>', body)
+        if any(re.fullmatch(r'(?:pin_function|HAL_GPIO_Init)(?:\..*)?', t)
+               for t in targets):
+            return
+        # Fully inlined F4 setup still has actual GPIOA and RCC references.
+        if '0x40020000' in body and '0x40023800' in body:
+            return
+        pending.extend(t for t in targets
+                       if re.fullmatch(r'HAL_PCD_(?:Init|MspInit)(?:\..*)?', t))
+    raise ValueError('USB initialization lost its hardware GPIO/MSP path')
 
 
 if __name__ == '__main__':

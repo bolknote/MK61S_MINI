@@ -275,6 +275,9 @@ compile_variant() {
   python3 "$root/tests/check_compiler_warnings.py" \
     --log "$compile_log" \
     --compile-commands "$build_path/compile_commands.json"
+  python3 "$root/tests/check_foreground_stack_elf.py" \
+    "$build_path/mk61s-M.ino.elf" \
+    --compile-commands "$build_path/compile_commands.json"
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$build_path/compile_commands.json" \
     --source-root "$build_path/sketch" --top 3 \

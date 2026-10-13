@@ -487,6 +487,11 @@ void inline lcd_stack_output(void) {
   //main_lcd().print("Z "); main_lcd().print(read_stack_register(stack::Z, cvalue, display_symbols));
 }
 
+#if defined(ARDUINO_ARCH_STM32) && defined(__GNUC__) && !defined(__clang__) && \
+    (defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE))
+// Keep cold boot scratch off main's frame for the entire foreground lifetime.
+__attribute__((noinline))
+#endif
 void setup() {
   crash_dump::initialize();
   dwt_profiler::initialize();

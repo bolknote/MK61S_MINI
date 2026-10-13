@@ -12,7 +12,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 HERE = Path(__file__).resolve()
-SOURCES = ('src/cdc/usbd_cdc.c', 'src/usbd_conf.c')
+SOURCES = ('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')
 
 
 def fake_compiler(arguments):
@@ -43,6 +43,11 @@ class UsbLtoBuildTest(unittest.TestCase):
                 obj.write_text('original LTO object')
                 objects.append(obj)
             suffix = 'ps1' if powershell else 'py'
+            # HAL supplies weak empty hooks; its strong USB bridge must remain
+            # visible to LTO. Rewriting that bridge instead of the core target
+            # unit previously let MSP initialization disappear on real F411.
+            bridge = build / 'libraries/USBDevice/usbd_conf.c.o'
+            bridge.write_text('strong HAL callbacks in LTO')
             helper = ROOT / 'tools' / '.mk61-gcc' / ('protect-usb-lto.' + suffix)
             fake = base / 'fake compiler'
             shutil.copyfile(HERE, fake)
@@ -68,6 +73,7 @@ class UsbLtoBuildTest(unittest.TestCase):
                 self.assertEqual(json.loads(obj.read_text()),
                                  expected + ['-fno-lto', str(library / source), '-o', str(obj)])
             self.assertEqual(result.stdout.count('USB LTO barrier:'), 2)
+            self.assertEqual(bridge.read_text(), 'strong HAL callbacks in LTO')
 
     def test_native(self):
         self.exercise()
@@ -150,8 +156,24 @@ class UsbLtoBuildTest(unittest.TestCase):
         spec.loader.exec_module(gate)
         protected = ' 8032aaa: f7fb fbb2 bl 802e212 <__wrap_USBD_CDC_ClearBuffer>\n'
         unprotected = ' 8033f52: f7ff ffc9 bl 8033ee8 <USBD_CDC_ClearBuffer>\n'
-        gate.check(protected)
-        for invalid in (unprotected, protected + unprotected,
+        hardware = ('08010000 <USBD_LL_Init>:\n'
+                    ' 8010000: f7fb fbb2 bl 8010100 <HAL_PCD_Init>\n'
+                    '08010100 <HAL_PCD_Init>:\n'
+                    ' 8010100: f7fb fbb2 bl 8010200 <HAL_PCD_MspInit>\n'
+                    '08010200 <HAL_PCD_MspInit>:\n'
+                    ' 8010200: f7fb fbb2 bl 8010300 <pin_function>\n')
+        gate.check(protected + hardware)
+        inlined = ('08010000 <USBD_LL_Init>:\n'
+                   ' 8010000: f7fb fbb2 bl 8010300 <pin_function>\n')
+        gate.check(protected + inlined)
+        # The broken F411 image had valid receive wrappers but HAL's empty
+        # default MSP hook was folded away with all USB GPIO configuration.
+        lost_msp = ('08010000 <USBD_LL_Init>:\n'
+                    ' 8010000: f7fb fbb2 bl 8010100 <HAL_PCD_Init>\n'
+                    '08010100 <HAL_PCD_Init>:\n'
+                    ' 8010100: 4770 bx lr\n')
+        for invalid in (protected, protected + lost_msp,
+                        unprotected + hardware, protected + unprotected + hardware,
                         '0802e0e6 <__wrap_USBD_CDC_ClearBuffer>:\n'):
             with self.assertRaises(ValueError):
                 gate.check(invalid)

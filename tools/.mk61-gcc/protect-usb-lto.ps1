@@ -31,7 +31,8 @@ try {
     $env:TEMP = $safeTemp
     $env:TMP = $safeTemp
     $env:TMPDIR = $safeTemp
-    foreach ($source in @('src/cdc/usbd_cdc.c', 'src/usbd_conf.c')) {
+    # Keep usbd_conf.c in LTO so HAL sees its strong MSP/IRQ callbacks.
+    foreach ($source in @('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')) {
         $leaf = [IO.Path]::GetFileName($source)
         $objects = @([IO.Directory]::GetFiles($objectDirectory,
             "$leaf.o", [IO.SearchOption]::AllDirectories))
