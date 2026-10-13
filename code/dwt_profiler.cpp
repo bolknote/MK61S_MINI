@@ -238,6 +238,23 @@ const char* point_name(Point point) {
     case Point::VM_COMPARE: return "vm.op.compare";
     case Point::VM_OTHER: return "vm.op.other";
 #endif
+#if MK61_DWT_IDLE_DETAIL
+    case Point::IDLE_POWER: return "idle.power";
+    case Point::IDLE_RTC: return "idle.rtc";
+    case Point::IDLE_MSC: return "idle.msc";
+    case Point::IDLE_USB_POWER: return "idle.usb.power";
+    case Point::IDLE_TERMINAL: return "idle.terminal";
+    case Point::IDLE_SOUND: return "idle.sound";
+    case Point::IDLE_LED: return "idle.led";
+    case Point::IDLE_DISK: return "idle.disk";
+    case Point::IDLE_FLUSH: return "idle.flush";
+    case Point::IDLE_OLED: return "idle.oled";
+    case Point::IDLE_SIGNAL: return "idle.signal";
+    case Point::IDLE_WATCHDOG: return "idle.watchdog";
+    case Point::IDLE_SLEEP_CONDITIONS: return "idle.sleep.conditions";
+    case Point::IDLE_SLEEP_ATTEMPT: return "idle.sleep.attempt";
+    case Point::IDLE_DEEP: return "idle.deep";
+#endif
 #endif
     case Point::COUNT:              break;
   }

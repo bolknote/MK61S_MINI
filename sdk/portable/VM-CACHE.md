@@ -1400,11 +1400,206 @@ Flash/RAM/stack ceilings прошли; цена APP и стека явно ук�
 
 Артефакты: `tmp/vm-cache-single-read-20261013.r0Y02v/`: `hil-profile.json`,
 `hil-ab.json`, `chess-{profile,baseline,candidate,control}`, matched native
-report/BIN, ARM APP/ELF/stack reports и логи. Полный первый проход
-`run_ci_strict.sh` под Clang 18 — PASS; второй полный ASan/UBSan идёт.
+report/BIN, ARM APP/ELF/stack reports и логи. Полный `run_ci_strict.sh`
+завершился с exit=0: Clang 18 и второй полный Apple Clang ASan/UBSan — PASS.
 Целевые file-cache тесты под ASan/UBSan для обоих backend × USB=0/1 уже PASS.
 
 `hil-ab.json` — PASS вместе с recovery: исходные 7B7D50A3 и System APP,
 все 36 файлов/три каталога и пустое состояние калькулятора восстановлены
 побайтно. Созданные VMC/helper, VMCache и временный SETUP.APP удалены;
 serial закрыт. Mini не тронут. Экспериментальные APP на плате не оставлены.
+
+## Foreground idle epoch: профиль и быстрые пути — 2026-10-13
+
+Штатные ~7 с `idle.main self` — сумма около 230 тысяч foreground epochs
+за поиск, не семисекундная задержка. USB Screen имеет отдельную вложенную
+точку: его время нельзя повторно прибавлять к self idle. VM service cadence
+(не более 32 полезных инструкций между опросами) и вызовы kbd::scan не меняются.
+
+Добавлен opt-in `MK61_DWT_IDLE_DETAIL=1` вместе с runtime detail: 15 точек
+power/RTC/MSC/USB power/terminal/sound/LED/disk/flush/OLED/signal/watchdog/
+sleep conditions/attempt/deep. В штатной сборке флаг 0, прежние point table,
+statistics layout и вызовы остаются; idle probes полностью компилируются прочь.
+Проверены сочетания idle=0/1 × opcode=0/1, уникальные имена и вложенное self
+учитывание. Opcode profile при аппаратном исследовании выключен; LANGVM
+сохраняет integer block. VMSTORE — текущий single-read из 4ff7b2719.
+
+Diagnostic 7638B34B/402448 прошёл прежний USB Screen contract. Два полных
+e2-e3/420 поиска PASS, warm 62,690 с. Частые точки измерены 229702 раза:
+
+| Idle участок | Self, с |
+| --- | ---: |
+| Подготовка WFI conditions | 1,520 |
+| WFI attempt/accounting | 0,527 |
+| Flush дисплея | 1,630 |
+| Power monitor | 0,566 |
+| Sound/alarm | 0,577 |
+| Terminal | 0,551 |
+| Disk activity | 0,482 |
+| USB power | 0,440 |
+| LED | 0,347 |
+| Watchdog | 0,308 |
+| RTC | 0,290 |
+| MSC | 0,280 |
+| Inactivity signal | 0,264 |
+
+Это сырые времена диагностических участков, не проценты штатного поиска.
+Миллионы добавленных Scope constructor/destructor/bookkeeping операций
+заметно замедляют диагностический resident: оставшиеся idle self=7,874
+содержат эту обвязку, idle total=17,304. Не объявлять этот остаток новой
+неатрибутированной штатной работой и не обещать сумму сырых значений как выигрыш.
+Профиль восстановил исходные firmware/System/36 файлов/три каталога byte-exact.
+
+Первый быстрый путь: WFI snapshot/attempt вызываются только при
+top_level_idle_sleep_permitted и depth=1. Все power/RTC/MSC/USB/terminal/
+alarm/sound/LED/disk/flush/signal/watchdog службы остаются без нового divider
+и в прежнем порядке. Deep-idle request service не пропускается даже в модальном
+контексте; его реальная проверка условий сохранена. Статистика WFI теперь
+не считает заведомо запрещённые модальные попытки. Настоящий top-level сон
+использует прежние полные Conditions, IRQ/wake checks и WFI wrapper.
+
+Второй путь: proportional Grid::anyDirty сканирует ceil(rows*cols/8) байт,
+не всю вместимость 64×10. reset/reshape очищают всю карту, а markCell/markAll
+ставят только видимые биты. Размер Grid/ABI не меняется; новый dirty counter,
+копия framebuffer и word/unaligned loads не добавлены. Проверены все геометрии,
+каждая dirty ячейка, non-byte-aligned границы, shrink/grow и 20000 seeded
+операций против OR всех видимых dirtyMask; обычный и ASan/UBSan PASS.
+
+Host regression компилирует actual idle_main_process с I/O spies: WFI=0,
+WFI=1 и deep=1, top-level/modal/nested, alarms/sound. Все службы вызываются
+на каждом epoch, deep обслуживается, watchdog в конце, сон только depth=1.
+Clang 18 и Apple ASan/UBSan scoped suite: profiler, idle/deep/power/watchdog,
+keyboard, USB power/protocol/surface/virtual keys, epoch regression — PASS.
+
+Matched native production Classic: sealed 393196 → 393212 (+16), static RAM
+40272 без роста, free 131076 >= 131072. USB measurement 398624 → 398640;
+static RAM прежняя. Max native frame 1928/5120; idle_main ELF frame 112
+в обеих версиях. F401 compile gate: 259964, free 2180 >= 2048, frame1552;
+исходные resource и ELF guards проходят, ни один лимит не повышен.
+
+Ранние hardware FAIL сохранены отдельно: `hil-ab-initial-fail.json` —
+CDC fsget timeout на baseline до измерений; `hil-ab.json` — прерванный
+baseline (четвёртый поиск остановился на 105). Кандидат ещё не прошивался.
+Второй лог показывает 217 с WFI, выход из foreground, рабочие ESC/terminal
+и отсутствие crash, не зависание CPU. Пользователь сообщил о возможном
+случайном нажатии; это возможная причина, не доказанный дефект оптимизации.
+Оба recovery PASS. HIL теперь сразу отвергает DETACH вместо ожидания
+необновляемого кадра и сохраняет последний failure frame; regression PASS.
+
+Последующий `hil-final-ab.json` остался RUNNING: исполняющий сеанс был
+прерван, процесс завершился без своего finally. До прерывания исходный
+C898C481 дал полные поиски 62,168 и 50,384 с; кандидат 615B4F72 ещё не
+прошивался. Эти два результата не составляют A/B и не доказывают ускорение.
+Отдельный `aborted-recovery.json` — PASS: оригинал 7B7D50A3, System APP,
+все 36 файлов/три каталога и пустое состояние восстановлены byte-exact;
+18 временных cache/helper файлов и SETUP.APP удалены, serial закрыт.
+На этом этапе замер кандидата и USB PONG/ESC latency ещё не были завершены;
+выигрыш тогда не заявлялся. Завершённые серии приведены ниже.
+
+### Завершённый speed A/B/A после согласованной передачи Classic
+
+Соседняя задача по размеру/GPIO передала Classic на неизменяемой 66C953FB:
+384128 байт, SHA256 `75e5fbc014400b271aac4da94707d5d65c465057e47f3adab3fa0136ad176585`,
+37 файлов/четыре каталога, включая исходный VMCache/VMSTORE.app. Именно этот
+resident/System/манифест сохраняются и восстанавливаются, не старая 7B7D50A3.
+Mini не используется. Код соседнего worktree не включался в matched A/B:
+в обоих вариантах прежний Os/no-LTO resident и одинаковые пять System APP,
+single-read VMSTORE, неизменённая игра и одинаковые готовые VMC.
+
+DFU-стенд теперь проверяет точный serial 2068336B4731, VID/PID0483:df11,
+все четыре ROM alt и @Internal Flash с адресом0x08000000, отвергает UNKNOWN/
+Broken LANGID/ошибки перечисления. Только последовательная запись alt0 с
+timeout180с, без изменения firmware limits. Первый допуск ошибочно ожидал
+один пробел в названии вместо штатных двух; запись не начиналась. Этот FAIL
+сохранён, ROM leave выполнен через upload одного байта без стирания, CRC66C953FB
+подтверждена. Whitespace parser исправлен и покрыт независимой регрессией.
+
+`hil-qualified-ab.json` — PASS, четыре поиска на этап:
+
+| Вариант | Первый поиск, с | Повторы, с | Warm median, с |
+| --- | ---: | ---: | ---: |
+| Исходный C898C481 | 62,159 | 50,391 / 50,598 / 50,392 | 50,392 |
+| Idle 615B4F72 | 48,818 | 48,051 / 48,151 / 48,040 | 48,051 |
+| Возврат C898C481 | 51,259 | 50,393 / 50,604 / 50,372 | 50,393 |
+
+Время поиска **−4,6466%**, производительность **1,04873×**, drift контроля
+**+0,0014%**. Первый A заполняет файловый кеш, B/C его уже используют;
+первые поиски не выдаются за одинаковый cold startup. Все 12 e2-e3/420,
+одинаковая полная доска, 4046 кадров проверены по CRC. 17 VMC/33891 байт
+byte-exact, warm ZX0=174 и write/erase=0 во всех трёх вариантах.
+
+Штатные DWT (без idle-detail probes), медианы повторов:
+
+| Участок/счётчик | A | B | C |
+| --- | ---: | ---: | ---: |
+| Idle total, с | 8,202 | 5,946 | 8,215 |
+| Idle minus вложенный USB, с | 6,632 | 4,380 | 6,647 |
+| Idle calls | 230765 | 232272 | 231081 |
+| USB calls | 230766 | 232273 | 231082 |
+
+Не уменьшено число polls: на том же поиске B имеет немного больше epochs.
+Оставшийся idle без USB уменьшен примерно на34%, не устранён целиком.
+C-stack watermark B/C одинаковый10968/16384 свободных. A с заполнением
+10152 не является matched доказательством роста/экономии общего cold peak.
+Ранее пройденные ELF/frame/Flash/RAM gates и бюджет сохранены.
+
+Первичные отдельные load probes: по24/24 PONG на A/B/C; median RTT
+0,612 / 0,567 / 1,144мс, maximum128,085 / 108,713 / 124,905мс.
+Одна ESC-to-visible-frame проба61 /155 /62мс не доказывает отсутствие
+ухудшения: включает hold/release60мс, загрузки APP/ФС и публикацию кадра.
+Поэтому выполнены дополнительные серии после одинакового заполнения кеша.
+IRQ/scan/service cadence в коде не менялись.
+
+Speed runner recovery PASS: 66C953FB expected/build/actual и state=valid,
+crash none, все37 исходных файлов/четыре каталога/пустое состояние восстановлены,
+исходный helper6837 сохранён byte-exact, добавленные17 VMC и SETUP удалены,
+будильники off, serial закрыт. Дополнительные latency runners занимали Classic
+по подтверждённой координации и повторили тот же recovery.
+
+### USB и ESC: повторная проверка с учётом фазы поиска
+
+`hil-latency-ab.json` — PASS исполнения и восстановления, по пять проб на
+этап A/B/A. Получены все 360/360 PONG. ESC-to-visible-frame, мс:
+
+| Вариант | Пять проб | Медиана |
+| --- | --- | ---: |
+| A | 61,034 / 61,065 / 61,212 / 60,864 / 60,955 | 61,034 |
+| B | 159,074 / 166,503 / 157,404 / 154,238 / 163,402 | 159,074 |
+| Контроль A | 9,939 / 185,299 / 62,266 / 60,897 / 60,913 | 60,913 |
+
+Эта разница сохранена как фактический результат, не объявлена отсутствием
+регрессии. ESC отправлялся через одинаковое время от начала поиска: более
+быстрый B при этом находится в другом участке игры. Метрика включает
+виртуальное удержание/release 60 мс, USB/host scheduling, выход из APP и
+публикацию нового кадра; это не чистая задержка физического kbd::scan.
+Разброс контроля 10–185 мс также требует учитывать фазу, но сам по себе
+не отменяет повторяющееся различие медиан A/B.
+
+Поэтому `hil-phase-ready-ab.json` проверяет ESC после публикации **точно
+узла 84**, по две пробы на A/B/A, с активным heartbeat до нужного кадра:
+
+| Вариант | ESC-to-visible, мс | Median PONG RTT, мс | Max PONG RTT, мс |
+| --- | --- | --- | --- |
+| A | 71,590 / 61,502 | 0,707 / 0,792 | 121,521 / 121,534 |
+| B | 71,227 / 71,138 | 0,817 / 0,449 | 114,112 / 112,631 |
+| Контроль A | 71,508 / 71,523 | 0,600 / 0,602 | 122,489 / 122,236 |
+
+144/144 PONG, без потерь. В этом phase-matched тесте дополнительная задержка
+~100 мс у B не воспроизвелась; B внутри исходного диапазона. Вместе с тестом
+фактических service epochs это подтверждает сохранение частоты обслуживания
+и отсутствие наблюдаемого ухудшения в проверенной фазе. Две пробы на этап
+не доказывают worst-case latency для всех участков игры или физической клавиатуры.
+Ранний `hil-phase-ab.json` с прерванной подготовкой стенда сохранён отдельно:
+исправлено возобновление heartbeat при ожидании узла; DFU write не прерывался,
+recovery также PASS.
+
+Оба дополнительных recovery PASS: original 66C953FB expected/build/actual,
+state=valid, crash none, полное равенство манифеста всех 37 файлов/четырёх
+каталогов, исходные System APP и VMCache/VMSTORE.app побайтно восстановлены.
+Пустые регистры/стек/105 кодов/IP=0, pwd=/, будильники off. Только наши
+17 VMC и временный SETUP удалены; serial закрыт. Classic освобождён и передан
+соседней задаче; Mini не тронут.
+
+Артефакты всех серий: `tmp/vm-idle-20261013.fYrAck/`, включая
+`hil-qualified-ab.json`, `hil-latency-ab.json`, `hil-phase-ready-ab.json`,
+подробный профиль, build/resource reports и scoped Clang18/ASan/UBSan логи.

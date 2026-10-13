@@ -91,6 +91,17 @@ def require_empty(state):
     assert len(codes) == 105 and set(codes) == {'00'} and '\r\n/\r\n' in state['pwd']
 
 
+def valid_classic_dfu_listing(stdout, stderr, returncode=0):
+    """Do not erase through a partial/unknown ROM descriptor or another UID."""
+    if returncode or stderr.strip() or re.search(r'Broken\s+LANGID|UNKNOWN', stdout, re.I):
+        return False
+    entries = re.findall(r'Found DFU: \[0483:df11\].*alt=(\d+), name="([^"]*)", serial="([^"]*)"', stdout)
+    pinned = [(int(alt), name) for alt, name, serial in entries if serial == SERIAL]
+    return ({serial for _, _, serial in entries} == {SERIAL} and
+            {alt for alt, _ in pinned} == {0, 1, 2, 3} and
+            any(alt == 0 and re.match(r'^@Internal Flash\s+/0x08000000/', name) for alt, name in pinned))
+
+
 def flash(args, target, output):
     previous = None
     try:
@@ -104,7 +115,7 @@ def flash(args, target, output):
     deadline = time.monotonic() + 15
     while True:
         listing = subprocess.run([str(args.dfu_util), '-l'], capture_output=True, text=True, timeout=8)
-        if '[0483:df11]' in listing.stdout and f'serial="{SERIAL}"' in listing.stdout:
+        if valid_classic_dfu_listing(listing.stdout, listing.stderr, listing.returncode):
             break
         if time.monotonic() >= deadline:
             raise TimeoutError('pinned Classic DFU absent')
@@ -112,7 +123,7 @@ def flash(args, target, output):
     command = [str(args.dfu_util), '-d', '0483:df11', '-S', SERIAL,
                '-a', '0', '-s', '0x08000000:leave', '-D', target['path']]
     try:
-        downloaded = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        downloaded = subprocess.run(command, capture_output=True, text=True, timeout=180)
         transfer = {'returncode': downloaded.returncode, 'stdout': downloaded.stdout,
                     'stderr': downloaded.stderr, 'timed_out': False}
     except subprocess.TimeoutExpired as error:

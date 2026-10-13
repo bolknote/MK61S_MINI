@@ -1115,6 +1115,7 @@ static bool idle_terminal_work_pending(void) {
 }
 
 static idle_sleep_policy::Conditions idle_sleep_conditions(void) {
+  MK61_IDLE_PROFILE_SCOPE(IDLE_SLEEP_CONDITIONS);
   const classic_scheduler::Snapshot classic = classic_timer::statistics();
   const bool calculator_idle =
       input_focus == &mk61_baseloop_hook &&
@@ -1313,19 +1314,21 @@ void idle_main_process(void) {
   idle_main_depth++;
   #endif
   MK61_PROFILE_SCOPE(dwt_profiler::Point::IDLE_MAIN);
-  power_monitor::poll(millis());
-  rtc_clock::poll();
-  usb_mass_storage::service();
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_POWER); power_monitor::poll(millis()); }
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_RTC); rtc_clock::poll(); }
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_MSC); usb_mass_storage::service(); }
   usb_screen::service();
-  usb_power::service(millis());
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_USB_POWER); usb_power::service(millis()); }
   // Уведомление принимается здесь, но нельзя считать, что передним планом
   // владеет калькулятор. Активный редактор или меню перерисуется при смене
   // ревизии режима дисплея, а внешний цикл обработает калькулятор после выхода
   // из вложенного интерфейса.
   (void) usb_screen::takeEvent();
   #ifdef TERMINAL
-  service_terminal();
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_TERMINAL); service_terminal(); }
   #endif
+  {
+  MK61_IDLE_PROFILE_SCOPE(IDLE_SOUND);
   if(!sound_busy()) {
     rtc_clock::AlarmEvent alarm_event = {};
     if(rtc_clock::take_alarm_event(alarm_event)) {
@@ -1336,10 +1339,13 @@ void idle_main_process(void) {
     }
   }
   sound_poll();
-  led::control();
-  disk_activity::poll();
-  main_lcd().flush();
+  }
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_LED); led::control(); }
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_DISK); disk_activity::poll(); }
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_FLUSH); main_lcd().flush(); }
 #if defined(MK61_OLED1602_WS0010)
+  {
+  MK61_IDLE_PROFILE_SCOPE(IDLE_OLED);
   bool passive_calculator_wait =
       input_focus == &mk61_baseloop_hook &&
       core_61::is_CALC() &&
@@ -1359,19 +1365,26 @@ void idle_main_process(void) {
       top_level_idle_sleep_permitted && idle_main_depth == 1;
   #endif
   main_lcd().pollOledProtection(millis(), passive_calculator_wait);
+  }
 #endif
-  idle_signal_poll();
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_SIGNAL); idle_signal_poll(); }
   // Единственная production reload-точка IWDG: все foreground-сервисы этого
   // epoch уже вернулись. Зависание внутри любого из них не дойдёт сюда.
-  independent_watchdog::foreground_epoch(millis());
+  { MK61_IDLE_PROFILE_SCOPE(IDLE_WATCHDOG); independent_watchdog::foreground_epoch(millis()); }
   #if MK61_IDLE_WFI_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
   if(deep_idle::service_needed()) {
+    MK61_IDLE_PROFILE_SCOPE(IDLE_DEEP);
     const idle_sleep_policy::Conditions light = idle_sleep_conditions();
     (void) deep_idle::service(deep_idle_conditions(light), millis());
   }
   #endif
-  (void) idle_sleep::attempt(idle_sleep_conditions());
+  // Nested/modal services still poll every peripheral above. WFI can only
+  // belong to the top-level epoch, so do not build its expensive snapshot or
+  // count impossible attempts while a VM/editor owns the foreground.
+  if(top_level_idle_sleep_permitted && idle_main_depth == 1) {
+    (void) idle_sleep::attempt(idle_sleep_conditions());
+  }
   idle_main_depth--;
   #endif
 }

@@ -221,7 +221,10 @@ void Grid::clearColumns(u16 mask) {
 }
 
 bool Grid::anyDirty(void) const {
-  for(usize byte = 0; byte < FLAG_BYTES; byte++) {
+  // reset/reshape clear the whole bitmap; markCell/markAll can only dirty
+  // visible cells. Do not scan the unused 64x10 capacity on every clean flush.
+  const usize used_bytes = ((usize) row_count * column_count + 7U) / 8U;
+  for(usize byte = 0; byte < used_bytes; byte++) {
     if(dirty_cells[byte] != 0) return true;
   }
   return false;

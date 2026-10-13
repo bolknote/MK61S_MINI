@@ -1,4 +1,5 @@
 #include "idle_sleep.hpp"
+#include "dwt_profiler.hpp"
 
 #if MK61_IDLE_WFI_SUPPORTED
   #include <Arduino.h>
@@ -13,6 +14,7 @@ static idle_sleep_policy::Tracker tracker;
 } // namespace
 
 bool attempt(const idle_sleep_policy::Conditions& conditions) {
+  MK61_IDLE_PROFILE_SCOPE(IDLE_SLEEP_ATTEMPT);
   u32 mask = idle_sleep_policy::blockers(conditions);
 
 #if MK61_IDLE_WFI_SUPPORTED

@@ -2,6 +2,11 @@
 """Pure pixel/profile tests for the chess HIL benchmark, without devices."""
 from hil_turochamp_performance import Font, ROOT, profile, completed_board, board_pixels
 from m8_codec import encode
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+import tempfile
+import hil_turochamp_performance as benchmark
 
 font=Font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes())
 frame=bytearray(1536)
@@ -50,4 +55,24 @@ for x,y in ((175,0),(176,16),(191,16),(0,7)):
 try:profile('invalid')
 except AssertionError:pass
 else:raise AssertionError('missing profile clock accepted')
+
+class DetachedPort:
+    attached=True
+    frames=[bytes(1536)]
+    frame_times=[0]
+    text=bytearray()
+    open_text_start=0
+    def open(self,path):pass
+    def key(self,key):pass
+    def command(self,command):return 'PROF started'
+    def pump(self,duration):self.attached=False
+class NoBookFont:
+    def has(self,frame,text):return False
+with tempfile.TemporaryDirectory(prefix='mk61-chess-detach-') as temp:
+    options=SimpleNamespace(game_dir='/game',timeout=1,build_id='TEST')
+    with patch.object(benchmark,'wait_screen'),patch.object(benchmark,'png'):
+        try:benchmark.search(DetachedPort(),NoBookFont(),options,0,Path(temp))
+        except AssertionError as error:
+            assert 'USB Screen detached during search' in str(error)
+        else:raise AssertionError('detached stale frame accepted as a live search')
 print('Turochamp performance oracle: M8, eight ranks, bounded disk mask and DWT timing PASS')

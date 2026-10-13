@@ -153,6 +153,7 @@ def search(port,font,args,index,out):
     progress=[];seen=set();last_notice=started;finished=None
     while time.monotonic()-started<args.timeout:
         port.pump(.04)
+        assert port.attached, 'USB Screen detached during search'
         for frame,stamp in zip(port.frames[cursor:],port.frame_times[cursor:]):
             if font.has(frame,'ДУМАЕТ...'):
                 nodes=font.number_after(frame,'ПОЗ ')
@@ -237,6 +238,10 @@ def main():
             report['result']='PASS'
         except BaseException as error:
             report['result']='FAIL';report['error']=repr(error)
+            report['screen_attached_at_failure']=port.attached
+            if port.frames:
+                png(port.frames[-1],args.output_dir/'failure-screen.png')
+                (args.output_dir/'failure.frame').write_bytes(port.frames[-1])
             try:
                 if port.attached:stop_game(port)
             except (OSError,AssertionError,TimeoutError) as cleanup:report['stop_error']=repr(cleanup)

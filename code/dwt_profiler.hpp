@@ -32,6 +32,18 @@
   #error "MK61_DWT_RUNTIME_DETAIL must be 0 or 1"
 #endif
 
+// Investigation-only attribution of the foreground service epoch. Ordinary
+// builds keep the original point table and all idle probes compile out.
+#ifndef MK61_DWT_IDLE_DETAIL
+  #define MK61_DWT_IDLE_DETAIL 0
+#endif
+#if MK61_DWT_IDLE_DETAIL != 0 && MK61_DWT_IDLE_DETAIL != 1
+  #error "MK61_DWT_IDLE_DETAIL must be 0 or 1"
+#endif
+#if MK61_DWT_IDLE_DETAIL && !MK61_DWT_RUNTIME_DETAIL
+  #error "MK61_DWT_IDLE_DETAIL requires MK61_DWT_RUNTIME_DETAIL"
+#endif
+
 // APP исполняется из динамически выделенного блока SRAM и не должен тянуть в
 // образ resident-состояние профилировщика или дополнительные импорты.
 #if defined(MK61_BUILD_FOCAL_MODULE) || \
@@ -58,6 +70,8 @@
   (MK61_DWT_CORE_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
 #define MK61_DWT_RUNTIME_DETAIL_SUPPORTED \
   (MK61_DWT_RUNTIME_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
+#define MK61_DWT_IDLE_DETAIL_SUPPORTED \
+  (MK61_DWT_IDLE_DETAIL && MK61_DWT_RUNTIME_DETAIL_SUPPORTED)
 #ifndef MK61_VM_OPCODE_PROFILE
 #define MK61_VM_OPCODE_PROFILE 0
 #endif
@@ -100,6 +114,11 @@ enum class Point : u8 {
 #if MK61_VM_OPCODE_PROFILE
   VM_CONSTANTS, VM_LOCALS, VM_ARRAYS, VM_ADD_SUB, VM_MULTIPLY, VM_DIV_MOD,
   VM_COMPARE, VM_OTHER,
+#endif
+#if MK61_DWT_IDLE_DETAIL
+  IDLE_POWER, IDLE_RTC, IDLE_MSC, IDLE_USB_POWER, IDLE_TERMINAL,
+  IDLE_SOUND, IDLE_LED, IDLE_DISK, IDLE_FLUSH, IDLE_OLED, IDLE_SIGNAL,
+  IDLE_WATCHDOG, IDLE_SLEEP_CONDITIONS, IDLE_SLEEP_ATTEMPT, IDLE_DEEP,
 #endif
 #endif
   COUNT
@@ -377,6 +396,13 @@ class AccumulatingScope {
   #define MK61_RUNTIME_PROFILE_SCOPE(point) MK61_PROFILE_SCOPE(point)
 #else
   #define MK61_RUNTIME_PROFILE_SCOPE(point) ((void) 0)
+#endif
+
+#if MK61_DWT_IDLE_DETAIL_SUPPORTED
+  #define MK61_IDLE_PROFILE_SCOPE(point) \
+    MK61_PROFILE_SCOPE(dwt_profiler::Point::point)
+#else
+  #define MK61_IDLE_PROFILE_SCOPE(point) ((void) 0)
 #endif
 
 #endif

@@ -117,6 +117,26 @@ static void reset_while_active() {
   assert(statistics(Point::FILE_FONT).total_cycles == 9);
 }
 
+#if MK61_DWT_IDLE_DETAIL_SUPPORTED
+static void idle_detail_tree() {
+  reset();
+  {
+    Scope epoch(Point::IDLE_MAIN); tick(1);
+    { Scope power(Point::IDLE_POWER); tick(2); }
+    { Scope conditions(Point::IDLE_SLEEP_CONDITIONS); tick(3); }
+    { Scope attempt(Point::IDLE_SLEEP_ATTEMPT); tick(4); }
+    { Scope usb(Point::USB_SCREEN_SERVICE); tick(5); }
+  }
+  assert(statistics(Point::IDLE_MAIN).total_cycles==15);
+  assert(statistics(Point::IDLE_MAIN).self_cycles==1);
+  assert(statistics(Point::IDLE_POWER).self_cycles==2);
+  assert(statistics(Point::IDLE_SLEEP_CONDITIONS).self_cycles==3);
+  assert(statistics(Point::IDLE_SLEEP_ATTEMPT).self_cycles==4);
+  assert(statistics(Point::USB_SCREEN_SERVICE).self_cycles==5);
+  assert(scope_top==nullptr);
+}
+#endif
+
 static void context_and_cache() {
   reset();
   {
@@ -163,9 +183,13 @@ static void opcode_batches() {
 #endif
 
 int main() {
-  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 8 : 0));
+  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 8 : 0) +
+      (MK61_DWT_IDLE_DETAIL ? 15 : 0));
   initialize(); assert(available() && start());
   nested_scopes(); runner_and_invoke(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
+#if MK61_DWT_IDLE_DETAIL_SUPPORTED
+  idle_detail_tree();
+#endif
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
   opcode_batches();
 #endif
