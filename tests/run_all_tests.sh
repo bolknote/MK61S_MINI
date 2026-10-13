@@ -8,6 +8,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 "$root/tests/ui_font_license_packaging_self_test.py"
 "$root/tests/run_f401_bundle_tool_tests.sh"
 python3 "$root/tests/release_contract_self_test.py"
+python3 "$root/tests/no_resident_fmk_decoder_elf_self_test.py"
 python3 "$root/tests/flash_budget_self_test.py"
 "$root/tests/run_arduino_board_tests.sh"
 if command -v pwsh >/dev/null 2>&1; then

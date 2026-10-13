@@ -1,0 +1,143 @@
+{
+  "schema": 1,
+  "date": "2026-10-13",
+  "baseline_commit": "f0006ef148da0821f7c822cc96476fb80c8bd95a",
+  "implementation_commit": "d0baf8109c1af18c86b18b20053134d553d64453",
+  "profile": "F411 Classic V3 UC1609 USB Screen CHIP8 Markdown LIBM with default VM cache",
+  "toolchain": {
+    "stm32_core": "2.12.0",
+    "gcc": "14.2.1",
+    "arduino_cli": "1.5.1"
+  },
+  "features": {
+    "mcu": "STM32F411CE",
+    "board": "classic-v3",
+    "display": "uc1609",
+    "usb_screen": true,
+    "chip8": true,
+    "markdown": true,
+    "focal_compiler_app": true,
+    "basic_compiler_app": true,
+    "overlay_language_vm": true,
+    "math": "LIBM",
+    "vm_cache_bytes": 24576
+  },
+  "measurements": [
+    {
+      "variant": "baseline",
+      "flash_bytes": 410456,
+      "static_ram_bytes": 43332,
+      "sections": {
+        ".mk61_help": 2856,
+        ".isr_vector": 408,
+        ".text": 365148,
+        ".rodata": 42456,
+        ".mk61_fw_footer": 40,
+        ".ARM.extab": 0,
+        ".ARM": 8,
+        ".preinit_array": 4,
+        ".init_array": 20,
+        ".fini_array": 36,
+        ".data": 2324,
+        ".bss": 40712,
+        ".noinit": 296,
+        "._user_heap_stack": 1536,
+        ".ARM.attributes": 48,
+        ".comment": 56
+      },
+      "sha256": "debe109925f65cb402596e68de9f8a66b9bb5226276c3a21df3fe2d9ece8dc4c"
+    },
+    {
+      "variant": "optimized",
+      "flash_bytes": 384212,
+      "static_ram_bytes": 33672,
+      "sections": {
+        ".mk61_help": 2856,
+        ".isr_vector": 408,
+        ".text": 341068,
+        ".rodata": 40352,
+        ".mk61_fw_footer": 40,
+        ".ARM.extab": 0,
+        ".ARM": 8,
+        ".preinit_array": 4,
+        ".init_array": 12,
+        ".fini_array": 8,
+        ".data": 2300,
+        ".bss": 31080,
+        ".noinit": 292,
+        "._user_heap_stack": 1540,
+        ".ARM.attributes": 48,
+        ".comment": 56
+      },
+      "sha256": "c46c629e39770bf6371710881183aa7ae34c37bb5fed9d75c9a98e8e25b7ab75"
+    }
+  ],
+  "saved_flash_bytes": 26244,
+  "saved_static_ram_bytes": 9660,
+  "changes": [
+    "F411 Os+LTO with USB linker-wrapper barriers",
+    "Owned F401/F411 GPIO uses registers, retaining other-platform fallback",
+    "Arduino timer wrappers disabled while direct PWM and TIM9 remain active",
+    "One canonical UC1609/USB text grid",
+    "One-pass FMK source compiler removes permanent8192-byte buffer",
+    "Shared M8 and FMK validation/checksum helpers"
+  ],
+  "app_compatibility": "New UI SETUP.APP requires matching resident binary-resource-stream capability. It probes support before initialization. Previous APPs and no-UI SETUP remain compatible.",
+  "counts_notes": [
+    "Flash uses complete sealed BIN size including data load image, padding and footer.",
+    "Static RAM is .data+.bss+.noinit; excludes dynamic buffers, APP/OVERLAY and stack.",
+    "Lazy retained WORKSPACE/BULK/MSC/VM-cache reserves are unchanged; savings increase the available dynamic interval.",
+    "Compact ROM, lower math precision and reduced cache/bank capacity were not used."
+  ],
+  "hardware_qualification": "Not run for this branch; firmware was not installed on a device.",
+  "validation_status": "Passed: host set, F411/F401 strict profile matrices, STOP/O3/stock-linker gates and actual ARM SETUP fixtures. Hardware installation/qualification not performed.",
+  "f401_classic_v2": {
+    "features": "Canonical f401-product-classic-v2, CORE math, independent System APPs, LTO both sides",
+    "baseline_flash_bytes": 257360,
+    "optimized_flash_bytes": 255468,
+    "saved_flash_bytes": 1892,
+    "baseline_static_ram_bytes": 35364,
+    "optimized_static_ram_bytes": 35300,
+    "saved_static_ram_bytes": 64,
+    "setup_app": [
+      {
+        "variant": "baseline",
+        "package_bytes": 9158,
+        "image_bytes": 12227,
+        "memory_bytes": 20448,
+        "zero_filled_bss_bytes": 8221
+      },
+      {
+        "variant": "optimized",
+        "package_bytes": 9974,
+        "image_bytes": 13223,
+        "memory_bytes": 13248,
+        "zero_filled_bss_bytes": 25
+      }
+    ],
+    "setup_note": "Package grows816 bytes; APP total RAM shrinks7200 bytes. Permanent resident FMK input storage is removed on F411; F401 input storage was inside transient APP BSS."
+  },
+  "validation_completed": [
+    "All six relocated ARM SETUP/font service variants passed",
+    "Both F411 preserving USB STOP profiles passed",
+    "F411 global O3 compatibility passed with82804 bytes Flash free",
+    "F401/F411 stock-linker LTO compatibility passed",
+    "ASan/UBSan font streaming, converter, GPIO and USB wake tests passed",
+    "Independent GPIO, LTO and font API/source lifetime reviews found no actionable issue",
+    "Every command in host set passed across initial through-storage run and immutable remaining-run snapshot; new gate regressions passed separately.",
+    "Strict F411 release matrix:16 variants passed",
+    "F401 product/capability matrix:9 cases passed, all matching System APPs fit original budgets",
+    "Cross-MCU WS0010 RAM comparisons:4 passed",
+    "Compiler warning policy and real ARM FMK decoder-leak gate regressions:4+4 passed"
+  ],
+  "checks": {
+    "host_set": "passed in two segments; syntax checked final runner and new ELF/warning regressions separately",
+    "f411_release_variants": 16,
+    "f401_product_and_capability_cases": 9,
+    "f411_usb_stop_profiles": 2,
+    "arm_setup_profile_address_variants": 6,
+    "ws0010_ram_comparisons": 4,
+    "o3_compatibility": "passed",
+    "stock_linker_f401_f411": "passed"
+  }
+}

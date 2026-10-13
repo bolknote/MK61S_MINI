@@ -40,17 +40,33 @@ find_arm_tool() {
 }
 
 nm_tool="$(find_arm_tool "${ARM_NONE_EABI_NM:-}" arm-none-eabi-nm)"
-symbols="$($nm_tool -C --defined-only "$elf")"
+symbols="$($nm_tool -S -C --defined-only "$elf")"
 
 # FMK decoding remains outside the tight F401 resident. F411 deliberately
 # embeds SETUP, so its FMK parser is expected in the resident ELF.
 if [[ "$allow_fmk" == 0 ]]; then
+  # M61 must check the fixed 16-byte interchange header before handing the
+  # file to SETUP.APP. Its shared, outlined gate is not the glyph/CRC decoder.
+  # Allow only this exact signature (plus ordinary GCC clone suffixes), and
+  # bound its text size so the exception cannot hide a growing parser.
+  preflight_pattern=' [tTwW] fmk::plausibleHeader\(unsigned char const\*, unsigned int\)( \[clone \.(isra|constprop|part)\.[0-9]+\])?$'
   unexpected="$({ grep -F 'fmk::' <<<"$symbols" || true; } |
-    grep -Fv 'fmk::bitmapPixel(' || true)"
+    grep -Fv 'fmk::bitmapPixel(' | grep -Ev "$preflight_pattern" || true)"
   if [[ -n "$unexpected" ]]; then
     printf 'resident FMK decoder ELF check: compressed-font code leaked into resident:\n%s\n' \
       "$unexpected" >&2
     exit 1
+  fi
+  preflights="$(grep -E "$preflight_pattern" <<<"$symbols" || true)"
+  if [[ -n "$preflights" ]]; then
+    while read -r address size kind name; do
+      if [[ ! "$size" =~ ^[[:xdigit:]]+$ ]] ||
+         (( 16#$size == 0 || 16#$size > 128 )); then
+        printf 'resident FMK decoder ELF check: header preflight must be 1..128 text bytes:\n%s\n' \
+          "$address $size $kind $name" >&2
+        exit 1
+      fi
+    done <<<"$preflights"
   fi
 fi
 

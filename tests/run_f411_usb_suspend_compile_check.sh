@@ -89,17 +89,9 @@ compile_profile() {
     fail "$name compile failed (status $compile_status)"
   [[ "$tee_status" -eq 0 ]] || fail "$name compile log could not be recorded"
 
-  local unexpected_warnings
-  unexpected_warnings="$(
-    grep -F 'warning:' "$compile_log" |
-      grep -Ev 'STM32RTC\.cpp:[0-9]+:[0-9]+: warning: #warning "only BCD mode is supported"|^lto-wrapper: warning: using serial compilation of [0-9]+ LTRANS jobs$' ||
-      true
-  )"
-  if [[ -n "$unexpected_warnings" ]]; then
-    printf 'Unexpected compiler warnings for F411 USB suspend %s:\n%s\n' \
-      "$name" "$unexpected_warnings" >&2
-    exit 1
-  fi
+  python3 "$root/tests/check_compiler_warnings.py" \
+    --log "$compile_log" \
+    --compile-commands "$compile_path/compile_commands.json"
 
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$compile_path/compile_commands.json" \

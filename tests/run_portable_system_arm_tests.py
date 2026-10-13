@@ -156,12 +156,21 @@ class Machine:
                         (UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R3), arguments):
                     self.uc.reg_write(register, value)
                 self.uc.reg_write(UC_ARM_REG_SP, self.stack_top)
+                if len(arguments) > 4:
+                    self.put(self.stack_top, *arguments[4:])
                 self.uc.reg_write(UC_ARM_REG_LR, stop | 1)
                 self.uc.emu_start(elf.symbol(symbol) | 1, stop, count=1000000)
                 assert self.uc.reg_read(UC_ARM_REG_PC) == stop
                 return self.uc.reg_read(UC_ARM_REG_R0)
-            assert native_call('_ZN13shared_memory5Lease7acquire',
-                               (temporary, 0, owner, 8192)) == 1
+            acquire = '_ZN13shared_memory5Lease7acquire'
+            arguments = (temporary, 0, owner, 8192)
+            if not any(acquire in name for name in elf.symbols):
+                # LTO can inline the public four-argument wrapper. Execute
+                # its surviving implementation with opportunistic=false,
+                # exactly as Lease::acquire does; pass argument five on stack.
+                acquire = '_ZN13shared_memory5Lease12acquire_impl'
+                arguments += (0,)
+            assert native_call(acquire, arguments) == 1
             self.workspace = self.words(temporary + 4, 1)[0]
             native_call('_ZN13shared_memory5Lease5reset', (temporary,))
         else:
@@ -701,17 +710,17 @@ def check_setup(m, package):
     if m.graphics:
         m.files[640] = (6, 'STREAMFONT', font)
         before = m.binary_streams
-        assert m.call(0x405, 640) == 1
+        assert m.call(0x406, 640) == 1  # SETUP_FONT_COMPILE (0x405 is STEP)
         assert m.binary_streams == before + 1 and m.installed_font[:4] == b'PFK2'
         installed = m.installed_font
         for fault in ('binary_stream_late_failure', 'binary_stream_stale'):
             setattr(m, fault, True)
-            assert m.call(0x405, 640) == 0xFFFFFFFD  # FONT_UNAVAILABLE
+            assert m.call(0x406, 640) == 0xFFFFFFFD  # FONT_UNAVAILABLE
             assert m.installed_font == installed
             setattr(m, fault, False)
         corrupt = bytearray(font); corrupt[-1] ^= 1
         m.files[640] = (6, 'STREAMFONT', bytes(corrupt))
-        assert m.call(0x405, 640) == 0xFFFFFFFF  # FONT_INVALID
+        assert m.call(0x406, 640) == 0xFFFFFFFF  # FONT_INVALID
         assert m.installed_font == installed
         del m.files[640]
 
