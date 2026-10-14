@@ -12,7 +12,7 @@ FORBIDDEN = re.compile(r"(?:\banalogRead(?:Resolution)?\b|\bSPI(?:Class|Settings
                        r"\b(?:Print|Stream|USBSerial)::|gpio_irq_conf|ERM19264_UC1609::CustomshiftOut|\bg_hpcd\b|\bHAL_PCD[A-Za-z_]|"
                        r"\bHAL_(?:ADC|SPI|DMA|RTC)[A-Za-z_])")
 
-def check_symbols(text):
+def check_symbols(text, native_panel=False):
     symbols = []
     usb_handle_size = None
     cdc_handle_size = None
@@ -23,6 +23,11 @@ def check_symbols(text):
             if fields[3] == "hUSBD_Device_CDC": usb_handle_size = int(fields[1],16)
             if fields[3] == "_hcdc": cdc_handle_size = int(fields[1],16)
     offenders = [name for _kind, name in symbols if FORBIDDEN.search(name)]
+    if native_panel:
+        offenders += [name for _kind, name in symbols if
+                      "ERM19264_graphics::" in name or
+                      "vtable for ERM19264_UC1609" in name or
+                      "ERM19264_UC1609::drawPixel" in name]
     if offenders:
         raise ValueError("removed STM32 hardware adapter remains: " + ", ".join(offenders))
     if usb_handle_size is not None and usb_handle_size != 252:
@@ -36,6 +41,7 @@ def check_symbols(text):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("elf", type=Path)
+    p.add_argument("--native-panel", action="store_true", help="also reject the unused UC1609 graphics base/vtable")
     args = p.parse_args()
     nm = os.environ.get("ARM_NONE_EABI_NM") or shutil.which("arm-none-eabi-nm")
     if not nm:
@@ -47,7 +53,7 @@ def main():
         p.error("arm-none-eabi-nm not found")
     try:
         result = subprocess.check_output([nm, "-S", "-C", "--defined-only", str(args.elf)], text=True)
-        check_symbols(result)
+        check_symbols(result, args.native_panel)
     except (ValueError, subprocess.CalledProcessError) as error:
         p.exit(1, str(error)+"\n")
     print("Owned STM32 drivers: no generic ADC/SPI/RTC/PWM/EXTI/PCD adapters; USB handle uses four endpoints")

@@ -16,6 +16,11 @@
 
 #include "ERM19264_graphics.h"
 #include "spi1_transport.hpp"
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#define MK61_UC1609_PANEL_ONLY 1
+#else
+#define MK61_UC1609_PANEL_ONLY 0
+#endif
 #if !MK61_SPI1_DIRECT_SUPPORTED
 #include <SPI.h>
 #endif
@@ -113,18 +118,30 @@ class  ERM19264_UC1609_Screen
 };
 
 /*! @brief class to drive the ERM19264_UC1609 LCD */
+#if MK61_UC1609_PANEL_ONLY
+// Rendering belongs to MK61Display. This hardware client stores only the two
+// UC1609 control bytes; no graphics vtable, cursor, rotation or framebuffer.
+class ERM19264_UC1609 {
+#else
 class ERM19264_UC1609 : public ERM19264_graphics {
+#endif
   public:
+#if MK61_UC1609_PANEL_ONLY
+    ERM19264_UC1609() = default;
+#else
 #if !MK61_SPI1_DIRECT_SUPPORTED
     ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight, int8_t cd, int8_t rst, int8_t cs, int8_t sclk, int8_t din);
 #endif
     ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight, int8_t cd, int8_t rst, int8_t cs);
 
+#endif
     ~ERM19264_UC1609(){};
 
+#if !MK61_UC1609_PANEL_ONLY
     virtual void drawPixel(int16_t x, int16_t y, uint8_t colour) override;
-     void LCDupdate(void);
-     void LCDclearBuffer(void);
+    void LCDupdate(void);
+    void LCDclearBuffer(void);
+#endif
      void LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t* data);
 
     void LCDbegin(uint8_t VbiasPot = UC1609_DEFAULT_GN_PM , uint8_t AddressSet =UC1609_ADDRESS_SET);
@@ -148,13 +165,17 @@ class ERM19264_UC1609 : public ERM19264_graphics {
     LCD_Return_Codes_e LCDBitmap(int16_t x, int16_t y, uint8_t w, uint8_t h, const uint8_t* data);
     bool LCDPowerDown(void);
     
+#if !MK61_UC1609_PANEL_ONLY
     uint16_t LCDLibVerNumGet(void);
     uint16_t LCDHighFreqDelayGet(void);
     void LCDHighFreqDelaySet(uint16_t);
+#endif
     uint8_t LCDGetConstrast(void);
     uint8_t LCDGetAddressCtrl(void);
+#if !MK61_UC1609_PANEL_ONLY
     ERM19264_UC1609_Screen* ActiveBuffer = nullptr; /**< Active buffer pointer , a pointer to which screen object shared buffer will be written to */
  
+#endif
   private:
 	class BusTransaction {
 	  public:
@@ -175,21 +196,34 @@ class ERM19264_UC1609 : public ERM19264_graphics {
     void send_command(uint8_t command, uint8_t value);
     void set_address(uint8_t column, uint8_t page);
     bool isHardwareSPI(void);
+#if !MK61_UC1609_PANEL_ONLY
     void CustomshiftOut(uint8_t bitOrder, uint8_t val);
+#endif
 
+#if MK61_UC1609_PANEL_ONLY
+    static constexpr uint8_t _LCD_CS = PIN_GLCD_CS;
+    static constexpr uint8_t _LCD_CD = PIN_GLCD_CD;
+    static constexpr uint8_t _LCD_RST = PIN_GLCD_RST;
+#else
 	int8_t _LCD_CS;    /**< GPIO Chip select  line */
 	int8_t _LCD_CD;   /**< GPIO Data or command line */
 	int8_t _LCD_RST;  /**< GPIO Reset line */
 	int8_t _LCD_SCLK; /**< GPIO Clock Line Software SPI only*/
 	int8_t _LCD_DIN;  /**< GPIO MOSI Line Software SPI only*/
     
+#endif
     uint8_t _VbiasPOT= 0x49; /**< Contrast default 0x49 datasheet 00-FE */
     uint8_t _AddressCtrl= 0x02; /**< Set AC [2:0] Program registers  for RAM address control. 0x00 to 0x07*/
+#if MK61_UC1609_PANEL_ONLY
+    static constexpr uint8_t _widthScreen = 192;
+    static constexpr uint8_t _heightScreen = 64;
+#else
     uint16_t _HighFreqDelay = UC1609_HIGHFREQ_DELAY; /**< uS GPIO Communications delay, SW SPI ONLY */
      const uint16_t _LibVersionNum = 181; /**< Library version number 180 = 1.8.0*/
      
      uint8_t _widthScreen = 192; /**< Width of screen in pixels */
      uint8_t _heightScreen = 64;  /**< Height of screen in pixels */
+#endif
    
 };
 

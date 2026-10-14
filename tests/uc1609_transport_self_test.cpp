@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#if !MK61_UC1609_PANEL_ONLY
 // Для транспортного теста графические примитивы не нужны. Эти три определения
 // дают реальному драйверу минимальную базу, не подменяя проверяемый SPI-код.
 ERM19264_graphics::ERM19264_graphics(int16_t width, int16_t height)
@@ -25,7 +26,18 @@ size_t ERM19264_graphics::write(uint8_t) {
   return 1;
 }
 
+#endif
+
 namespace {
+
+static ERM19264_UC1609 make_lcd() {
+#if MK61_UC1609_PANEL_ONLY
+  static_assert(sizeof(ERM19264_UC1609) == 2, "panel stores only contrast/address control");
+  return ERM19264_UC1609();
+#else
+  return ERM19264_UC1609(192, 64, 1, 2, 3);
+#endif
+}
 
 static void assert_bytes(const std::vector<uint8_t>& actual,
                          const uint8_t* expected, size_t size) {
@@ -44,7 +56,7 @@ static void assert_balanced_hardware_transaction(void) {
 }
 
 static void test_page_is_two_spi_transfers(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
   uint8_t page[192];
   for(size_t i = 0; i < sizeof(page); i++) page[i] = (uint8_t) i;
 
@@ -58,7 +70,7 @@ static void test_page_is_two_spi_transfers(void) {
 }
 
 static void test_full_frame_batches_every_page(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
   uint8_t frame[192 * 8];
   for(size_t i = 0; i < sizeof(frame); i++) frame[i] = (uint8_t) (i >> 4);
 
@@ -75,7 +87,7 @@ static void test_full_frame_batches_every_page(void) {
 }
 
 static void test_clipping_preserves_source_offsets(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
   uint8_t data[24];
   for(size_t i = 0; i < sizeof(data); i++) data[i] = (uint8_t) (0x40U + i);
 
@@ -101,7 +113,7 @@ static void test_clipping_preserves_source_offsets(void) {
 }
 
 static void test_progmem_bitmap_uses_the_same_bulk_path(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
   const uint8_t bitmap[24] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
     12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
@@ -120,7 +132,7 @@ static void test_progmem_bitmap_uses_the_same_bulk_path(void) {
 }
 
 static void test_goto_xy_is_a_complete_owned_transaction(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
 
   SPI.clear();
   lcd.LCDGotoXY(0x2A, 5);
@@ -132,7 +144,7 @@ static void test_goto_xy_is_a_complete_owned_transaction(void) {
 }
 
 static void test_contention_fails_closed(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
   const uint8_t bitmap[8] = {};
 
   SPI.clear();
@@ -183,7 +195,7 @@ static void test_contention_fails_closed(void) {
 }
 
 static void test_power_down_keeps_shared_spi_alive(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
 
   SPI.clear();
   assert(lcd.LCDPowerDown());
@@ -194,7 +206,7 @@ static void test_power_down_keeps_shared_spi_alive(void) {
 }
 
 static void test_display_sleep_retains_controller_state(void) {
-  ERM19264_UC1609 lcd(192, 64, 1, 2, 3);
+  auto lcd = make_lcd();
 
   SPI.clear();
   assert(lcd.LCDEnable(0));
@@ -212,6 +224,7 @@ static void test_display_sleep_retains_controller_state(void) {
 
 }
 
+#if !MK61_UC1609_PANEL_ONLY
 static void test_software_spi_does_not_claim_spi1(void) {
   ERM19264_UC1609 lcd(192, 64, 1, 2, 3, 4, 5);
   const spi1_arbiter::Snapshot before = spi1_bus::statistics();
@@ -248,6 +261,8 @@ static void test_software_spi_does_not_claim_spi1(void) {
   assert(writes.back().pin == 3 && writes.back().value == HIGH);
 }
 
+#endif
+
 } // безымянное пространство имён
 
 int main(void) {
@@ -257,7 +272,9 @@ int main(void) {
   test_progmem_bitmap_uses_the_same_bulk_path();
   test_goto_xy_is_a_complete_owned_transaction();
   test_power_down_keeps_shared_spi_alive();
+#if !MK61_UC1609_PANEL_ONLY
   test_software_spi_does_not_claim_spi1();
+#endif
   test_display_sleep_retains_controller_state();
   test_contention_fails_closed();
   printf("uc1609_transport_self_test: ok\n");

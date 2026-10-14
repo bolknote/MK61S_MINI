@@ -159,5 +159,6 @@ host/ARM и аппаратные проверки обеих плат. На од
 Classic и mini экономят ещё по 6048 байт Flash без увеличения RAM; чтение
 Flash сохраняет прежнюю скорость. Реализация, пределы точности и сравнение
 по исходным входам SEGGER приведены в [STM32-compact-math.md](STM32-compact-math.md).
-Графика, CMSIS startup, libgcc, libc_nano и общий USB protocol остаются
-отдельными следующими этапами; этот результат относится только к математике.
+[Графический этап](STM32-owned-graphics.md) убрал ещё 1104 байта Flash и
+48 байт RAM на Classic. CMSIS startup, libgcc, libc_nano и общий USB protocol
+остаются отдельными следующими этапами.

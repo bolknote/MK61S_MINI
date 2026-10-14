@@ -231,6 +231,8 @@ endif()
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"
   "${MK61_PROJECT_ROOT}/code/*.cpp")
+# Native UC1609 renders through our framebuffer, never the generic graphics base.
+list(FILTER _mk61_project_sources EXCLUDE REGEX "/ERM19264_graphics\\.cpp$")
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/firmware_main.cpp.in"
   "${CMAKE_BINARY_DIR}/generated/firmware_main.cpp"

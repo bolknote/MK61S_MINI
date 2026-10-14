@@ -18,6 +18,7 @@ owned = 0
 vendor = set()
 for entry in entries:
     source = Path(entry['file']).resolve()
+    assert source.name != 'ERM19264_graphics.cpp', 'generic graphics must not enter the native source set'
     args = entry.get('arguments') or shlex.split(entry['command'])
     if source.name == 'firmware_main.cpp' or source.parent.name == 'code':
         owned += 1

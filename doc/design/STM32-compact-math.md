@@ -149,4 +149,5 @@ keyboard-layout и output-dir. Он проверяет состояние до/�
 перепрошивает устройство автоматически.
 
 Полный отчёт: [stm32-owned-math-20261014.json](../measurements/stm32-owned-math-20261014.json).
-Следующие отдельные этапы: графика, CMSIS startup, libgcc, libc_nano и USB.
+Отдельный [графический этап](STM32-owned-graphics.md) также завершён.
+Остаются CMSIS startup, libgcc, libc_nano и USB.

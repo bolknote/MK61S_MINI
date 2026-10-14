@@ -2281,6 +2281,10 @@ void MK61Display::write(uint8_t value) {
 
 #else
 
+#if MK61_UC1609_PANEL_ONLY
+static_assert(lcd_display::PIXEL_WIDTH == 192 && lcd_display::PIXEL_HEIGHT == 64,
+              "native UC1609 client requires the fixed 192x64 panel");
+#endif
 static constexpr t_time_ms CURSOR_BLINK_MS = 500;
 static_assert(text_screen::COLS == lcd_display::COLS, "text grid width must match display layout");
 static_assert(text_screen::MAX_ROWS == lcd_display::MAX_ROWS, "text grid height must match display layout");
@@ -2291,7 +2295,11 @@ static inline bool timeReached(t_time_ms now, t_time_ms target) {
 
 MK61Display::MK61Display(void)
   : render_buffer{0},
+#if MK61_UC1609_PANEL_ONLY
+    lcd(),
+#else
     lcd(lcd_display::PIXEL_WIDTH, lcd_display::PIXEL_HEIGHT, PIN_GLCD_CD, PIN_GLCD_RST, PIN_GLCD_CS),
+#endif
     render_width(lcd_display::PIXEL_WIDTH),
     grid(),
     custom_glyphs{{0}},
