@@ -83,7 +83,6 @@ static void USBD_GetConfig(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_GetStatus(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_SetFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_ClrFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
-static uint8_t USBD_GetLen(uint8_t *buf);
 
 /**
   * @}
@@ -939,53 +938,19 @@ void USBD_CtlError(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
   */
 void USBD_GetString(uint8_t *desc, uint8_t *unicode, uint16_t *len)
 {
-  uint8_t idx = 0U;
-  uint8_t *pdesc;
-
-  if (desc == NULL)
+  if (desc == NULL || unicode == NULL || len == NULL) return;
+  uint16_t bytes = 2U;
+  while (*desc != 0U && bytes + 2U <= USBD_MAX_STR_DESC_SIZ && bytes + 2U <= 254U)
   {
-    return;
+    unicode[bytes++] = *desc++;
+    unicode[bytes++] = 0U;
   }
-
-  pdesc = desc;
-  *len = MIN(USBD_MAX_STR_DESC_SIZ, ((uint16_t)USBD_GetLen(pdesc) * 2U) + 2U);
-
-  unicode[idx] = *(uint8_t *)len;
-  idx++;
-  unicode[idx] = USB_DESC_TYPE_STRING;
-  idx++;
-
-  while (*pdesc != (uint8_t)'\0')
-  {
-    unicode[idx] = *pdesc;
-    pdesc++;
-    idx++;
-
-    unicode[idx] = 0U;
-    idx++;
-  }
+  unicode[0] = (uint8_t)bytes;
+  unicode[1] = USB_DESC_TYPE_STRING;
+  *len = bytes;
 }
 
 
-/**
-  * @brief  USBD_GetLen
-  *         return the string length
-   * @param  buf : pointer to the ascii string buffer
-  * @retval string length
-  */
-static uint8_t USBD_GetLen(uint8_t *buf)
-{
-  uint8_t  len = 0U;
-  uint8_t *pbuff = buf;
-
-  while (*pbuff != (uint8_t)'\0')
-  {
-    len++;
-    pbuff++;
-  }
-
-  return len;
-}
 /**
   * @}
   */

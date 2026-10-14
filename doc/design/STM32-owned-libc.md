@@ -82,3 +82,6 @@ GCC attribution remains explicit.
 
 Real RTC/keyboard STOP against host suspend is deferred until the final USB
 qualification, as agreed. USB specialization and that manual scenario remain.
+
+The subsequent [fixed-FS USB phase](STM32-owned-usb-fs.md) removes those last
+five external USB/LL compilation inputs and records the new measurements.

@@ -20,7 +20,12 @@
 // One fixed CDC instance. Queue capacities and packet size match the baseline.
 #if defined(MK61_USB_BUILD_CDC_IF)
 #include <usbd_cdc_if.h>
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#include "stm32f4_usbd_desc.h"
+#else
 #include <usbd_desc.h>
+#define mk61_usb_descriptors USBD_Desc
+#endif
 USBD_HandleTypeDef hUSBD_Device_CDC;
 CDC_TransmitQueue_TypeDef TransmitQueue;
 CDC_ReceiveQueue_TypeDef ReceiveQueue;
@@ -70,12 +75,18 @@ static int8_t cdc_if_transmitted(uint8_t* bytes,uint32_t* size,uint8_t ep) {
   (void)bytes;(void)size;(void)ep;
   transmit_started=0;CDC_TransmitQueue_CommitRead(&TransmitQueue);CDC_continue_transmit();return USBD_OK;
 }
-USBD_CDC_ItfTypeDef USBD_CDC_fops={cdc_if_init,cdc_if_deinit,cdc_if_control,cdc_if_receive,cdc_if_transmitted};
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+static const USBD_CDC_ItfTypeDef mk61_cdc_functions=
+#else
+#define mk61_cdc_functions USBD_CDC_fops
+USBD_CDC_ItfTypeDef USBD_CDC_fops=
+#endif
+{cdc_if_init,cdc_if_deinit,cdc_if_control,cdc_if_receive,cdc_if_transmitted};
 void CDC_init(void) {
   if(initialized) return;
-  if(USBD_Init(&hUSBD_Device_CDC,&USBD_Desc,0)==USBD_OK &&
-     USBD_RegisterClass(&hUSBD_Device_CDC,USBD_CDC_CLASS)==USBD_OK &&
-     USBD_CDC_RegisterInterface(&hUSBD_Device_CDC,&USBD_CDC_fops)==USBD_OK) {
+  if(USBD_Init(&hUSBD_Device_CDC,(USBD_DescriptorsTypeDef*)&mk61_usb_descriptors,0)==USBD_OK &&
+     USBD_RegisterClass(&hUSBD_Device_CDC,(USBD_ClassTypeDef*)USBD_CDC_CLASS)==USBD_OK &&
+     USBD_CDC_RegisterInterface(&hUSBD_Device_CDC,(USBD_CDC_ItfTypeDef*)&mk61_cdc_functions)==USBD_OK) {
     initialized=true;
     if(USBD_Start(&hUSBD_Device_CDC)==USBD_OK) return;
     initialized=false;

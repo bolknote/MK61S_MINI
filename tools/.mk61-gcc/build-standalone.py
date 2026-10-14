@@ -3,7 +3,8 @@
 
 A reference compile database is optional metadata for matched experiments.
 Normal builds select a board/MCU and may override individual MK61 definitions.
-The installed STM32 package supplies pinned CMSIS/LL and USB protocol sources.
+The installed STM32 package supplies pinned CMSIS/LL and USB interface headers.
+All compiled implementations are owned and versioned in this repository.
 """
 import argparse
 import json

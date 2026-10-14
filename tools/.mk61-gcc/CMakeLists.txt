@@ -191,7 +191,8 @@ target_compile_definitions(user_settings INTERFACE
   ARDUINO=10607 ARDUINO_ARCH_STM32 ARDUINO_${_mk61_board}
   BOARD_NAME="${_mk61_board}" VECT_TAB_OFFSET=0x0
   USBCON USBD_USE_CDC HWSERIAL_NONE HAL_PCD_MODULE_ENABLED
-  USBD_VID=0x0483 USBD_PID=0x5740 USBD_CLASS_USER_STRING_DESC=0)
+  USBD_VID=0x0483 USBD_PID=0x5740 USBD_CLASS_USER_STRING_DESC=0
+  USBD_MAX_STR_DESC_SIZ=64)
 target_include_directories(user_settings INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/standalone"
   "${MK61_PROJECT_ROOT}/code"
@@ -207,16 +208,8 @@ target_compile_options(user_settings INTERFACE
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h\">"
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.h\">")
 
-set(_mk61_vendor_sources
-  "${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/usb_device_ioreq.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/usbd_desc.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/cdc/cdc_queue.c"
-  "${BUILD_SYSTEM_PATH}/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c")
-add_library(stm32_protocol OBJECT ${_mk61_vendor_sources})
-target_link_libraries(stm32_protocol PRIVATE user_settings)
 # Preserve the real middleware call boundaries needed by GNU ld --wrap.
-set_source_files_properties("${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_core.c"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.c"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC=1" COMPILE_OPTIONS "-fno-lto")
@@ -251,7 +244,6 @@ list(APPEND _mk61_project_sources
   "${CMAKE_BINARY_DIR}/generated/firmware_main.cpp")
 
 add_executable(resident ${_mk61_project_sources}
-  $<TARGET_OBJECTS:stm32_protocol>
   "${MK61_PROJECT_ROOT}/code/stm32f4_startup.S"
   "${MK61_PROJECT_ROOT}/code/native_eabi_arm.S"
   "${MK61_PROJECT_ROOT}/code/native_eabi_fixed.S")

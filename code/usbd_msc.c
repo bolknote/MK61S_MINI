@@ -111,7 +111,12 @@ uint8_t *USBD_MSC_GetDeviceQualifierDescriptor(uint16_t *length);
   */
 
 
-USBD_ClassTypeDef  USBD_MSC =
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+const USBD_ClassTypeDef USBD_MSC
+#else
+USBD_ClassTypeDef USBD_MSC
+#endif
+=
 {
   USBD_MSC_Init,
   USBD_MSC_DeInit,

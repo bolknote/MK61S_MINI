@@ -133,7 +133,11 @@ typedef struct {
   * @{
   */
 
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+extern const USBD_ClassTypeDef USBD_CDC;
+#else
 extern USBD_ClassTypeDef USBD_CDC;
+#endif
 #define USBD_CDC_CLASS &USBD_CDC
 /**
   * @}

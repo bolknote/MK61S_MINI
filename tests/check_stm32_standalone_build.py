@@ -9,10 +9,7 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('compile_commands', type=Path)
 a = p.parse_args()
 entries = json.loads(a.compile_commands.read_text())
-allowed = {
-    'usb_device_core.c', 'usb_device_ioreq.c', 'usbd_desc.c',
-    'cdc_queue.c', 'stm32f4xx_ll_usb.c',
-}
+allowed = set()
 owned = 0
 vendor = set()
 for entry in entries:
@@ -28,7 +25,10 @@ for entry in entries:
         vendor.add(source.name)
     assert not any('/cores/arduino' in v or '/libraries/SrcWrapper' in v for v in args), source
 assert owned >= 100, 'project sources missing'
-assert len(vendor) == 5, vendor
+assert not vendor, vendor
+for name in ("stm32f4_usb_ll.c", "stm32f4_usbd_core.c", "stm32f4_usbd_ioreq.c",
+             "stm32f4_usbd_desc.c", "stm32f4_cdc_queue.c"):
+    assert any(Path(e["file"]).name == name for e in entries), name
 assert any(Path(e['file']).name == 'stm32f4_startup.S' for e in entries)
 assert any(Path(e['file']).name == 'stm32f4_runtime.cpp' for e in entries)
-print('Standalone source gate: owned startup/project/runtime + 5 USB/LL sources; no Arduino Core, HAL or generic libraries PASS')
+print('Standalone source gate: owned startup/project/runtime and specialized FS USB; zero external implementation sources; no Arduino Core, HAL or generic libraries PASS')

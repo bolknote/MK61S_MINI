@@ -115,7 +115,11 @@ typedef struct
 } USBD_MSC_BOT_HandleTypeDef;
 
 /* Structure for MSC process */
-extern USBD_ClassTypeDef  USBD_MSC;
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+extern const USBD_ClassTypeDef USBD_MSC;
+#else
+extern USBD_ClassTypeDef USBD_MSC;
+#endif
 #define USBD_MSC_CLASS    &USBD_MSC
 
 uint8_t  USBD_MSC_RegisterStorage(USBD_HandleTypeDef   *pdev,
