@@ -1,0 +1,239 @@
+{
+  "status": "PASS",
+  "tested_on": "2026-10-08",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "107A3AC2",
+    "profile": "classic-v3-uc1609"
+  },
+  "compiler": "ARM GCC 14.2.1, kernels Os/LTO; full compiler Oz/LTO with public shared runtime",
+  "kernel_scope": "branch-shape coalesced weighted replay of actual sizing+EMIT scanner calls; all three variants in one SRAM APP",
+  "kernel_repeats": 3,
+  "samples_per_repeat": 7,
+  "alignments": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "kernel_measured_rows": 396,
+  "kernel_results": [
+    {
+      "source": "programs/games/Turochamp/search.tbi",
+      "family": "line_end",
+      "calls_per_replay": 96,
+      "word_time_change_percent": -41.86,
+      "word_alignment_range_percent": [
+        -42.419,
+        -41.604
+      ],
+      "dsp_time_change_percent": -53.433,
+      "dsp_alignment_range_percent": [
+        -53.995,
+        -53.183
+      ]
+    },
+    {
+      "source": "programs/games/Turochamp/search.tbi",
+      "family": "space_prefix",
+      "calls_per_replay": 39074,
+      "word_time_change_percent": 71.914,
+      "word_alignment_range_percent": [
+        60.826,
+        73.234
+      ],
+      "dsp_time_change_percent": 70.626,
+      "dsp_alignment_range_percent": [
+        59.541,
+        71.95
+      ]
+    },
+    {
+      "source": "programs/games/Turochamp/search.tbi",
+      "family": "keyword_scan",
+      "calls_per_replay": 16912,
+      "word_time_change_percent": 30.858,
+      "word_alignment_range_percent": [
+        29.024,
+        32.391
+      ],
+      "dsp_time_change_percent": 39.94,
+      "dsp_alignment_range_percent": [
+        38.105,
+        41.473
+      ]
+    },
+    {
+      "source": "programs/games/High Noon/intro.tbi",
+      "family": "line_end",
+      "calls_per_replay": 196,
+      "word_time_change_percent": -41.628,
+      "word_alignment_range_percent": [
+        -41.779,
+        -41.252
+      ],
+      "dsp_time_change_percent": -53.315,
+      "dsp_alignment_range_percent": [
+        -53.466,
+        -52.939
+      ]
+    },
+    {
+      "source": "programs/games/High Noon/intro.tbi",
+      "family": "space_prefix",
+      "calls_per_replay": 13604,
+      "word_time_change_percent": 78.006,
+      "word_alignment_range_percent": [
+        65.581,
+        79.385
+      ],
+      "dsp_time_change_percent": 75.475,
+      "dsp_alignment_range_percent": [
+        63.051,
+        76.856
+      ]
+    },
+    {
+      "source": "programs/games/High Noon/intro.tbi",
+      "family": "keyword_scan",
+      "calls_per_replay": 7224,
+      "word_time_change_percent": 30.599,
+      "word_alignment_range_percent": [
+        29.072,
+        31.583
+      ],
+      "dsp_time_change_percent": 38.446,
+      "dsp_alignment_range_percent": [
+        36.917,
+        39.428
+      ]
+    },
+    {
+      "source": "tests/data/language_compression/statistics.foc",
+      "family": "line_end",
+      "calls_per_replay": 180,
+      "word_time_change_percent": -42.401,
+      "word_alignment_range_percent": [
+        -43.474,
+        -40.569
+      ],
+      "dsp_time_change_percent": -53.615,
+      "dsp_alignment_range_percent": [
+        -54.686,
+        -51.781
+      ]
+    },
+    {
+      "source": "tests/data/language_compression/statistics.foc",
+      "family": "space_prefix",
+      "calls_per_replay": 15524,
+      "word_time_change_percent": 39.419,
+      "word_alignment_range_percent": [
+        34.197,
+        40.177
+      ],
+      "dsp_time_change_percent": 42.283,
+      "dsp_alignment_range_percent": [
+        37.055,
+        43.047
+      ]
+    },
+    {
+      "source": "tests/data/language_compression/statistics.foc",
+      "family": "keyword_scan",
+      "calls_per_replay": 7864,
+      "word_time_change_percent": 25.533,
+      "word_alignment_range_percent": [
+        23.287,
+        25.789
+      ],
+      "dsp_time_change_percent": 39.114,
+      "dsp_alignment_range_percent": [
+        36.869,
+        39.371
+      ]
+    }
+  ],
+  "resource_comparisons": [
+    {
+      "source": "intro",
+      "calls": 1860,
+      "equal_length_calls": 48,
+      "equal_contents_calls": 0,
+      "note": "equal-length comparisons differ at the first byte; no long equal prefix in this corpus"
+    },
+    {
+      "source": "statistics",
+      "calls": 144,
+      "equal_length_calls": 144,
+      "equal_contents_calls": 0,
+      "note": "equal-length comparisons differ at the first byte; no long equal prefix in this corpus"
+    }
+  ],
+  "full_focal": {
+    "source": "tests/data/language_compression/statistics.foc",
+    "scope": "full sizing+owned EMIT, compiler Oz/LTO in SRAM; excludes file/app loading, interpreter execution and USB",
+    "repeats": 3,
+    "samples_per_repeat": 7,
+    "compile_pairs_per_sample": 3,
+    "results": {
+      "scalar": {
+        "cycles": 3135466.6666666665,
+        "milliseconds": 32.66111111111111,
+        "run_medians_cycles": [
+          3135716.6666666665,
+          3135459.6666666665,
+          3135466.6666666665
+        ],
+        "time_change_percent": 0.0
+      },
+      "line_word": {
+        "cycles": 3082440.3333333335,
+        "milliseconds": 32.108753472222226,
+        "run_medians_cycles": [
+          3082673.6666666665,
+          3082427.6666666665,
+          3082440.3333333335
+        ],
+        "time_change_percent": -1.691
+      },
+      "line_dsp": {
+        "cycles": 3078631.6666666665,
+        "milliseconds": 32.069079861111106,
+        "run_medians_cycles": [
+          3078888.0,
+          3078627.6666666665,
+          3078631.6666666665
+        ],
+        "time_change_percent": -1.813
+      }
+    },
+    "native_images_byte_equal": true
+  },
+  "full_basic": {
+    "status": "NOT_RUN",
+    "reason": "APP files are 10583..10655 bytes (6 C6 nodes), device has only 4 free nodes; no existing file was replaced or deleted"
+  },
+  "decision": "DSP CR/LF scan is a candidate; word/DSP whitespace and keyword scans rejected for the observed short prefixes; no whole-VM execution speed claim",
+  "validation": [
+    "host ASan/UBSan exhaustive lane masks and exact buffer tails",
+    "native all-alignments/tails differential checks",
+    "CRC-verified USB packet/frame reports",
+    "native compiler bytecode fully received and SHA256-matched for all 9 full-compile runs",
+    "calculator pixels/renderer and registers/stack/program/cwd restored",
+    "all 111 original C6 file hashes preserved"
+  ],
+  "cleanup": {
+    "temporary_apps_removed": true,
+    "firmware": "107A3AC2",
+    "file_hashes_preserved": 111,
+    "empty_calculator_resets_release_retained_test_caches": true
+  },
+  "raw_reports": {
+    "kernels": "tmp/vm-scan-app-check/hil-final/report.json",
+    "full_focal": "tmp/vm-scan-app-check/compile-hil-final/report.json"
+  }
+}
