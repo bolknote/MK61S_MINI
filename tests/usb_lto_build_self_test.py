@@ -127,11 +127,15 @@ class UsbLtoBuildTest(unittest.TestCase):
             # unit previously let MSP initialization disappear on real F411.
             bridge = build / 'libraries/USBDevice/usbd_conf.c.o'
             bridge.write_text('strong HAL callbacks in LTO')
+            cdc_interface = build / 'libraries/USBDevice/usbd_cdc_if.c.o'
+            cdc_interface.write_text('generic CDC interface')
+            serial = build / 'libraries/USBDevice/USBSerial.cpp.o'
+            serial.write_text('Arduino Serial object')
             request = build / 'libraries/USBDevice/usb_device_ctlreq.c.o'
             request.write_text('generic control requests')
             snapshot = build / 'sketch'
             snapshot.mkdir()
-            for name in ('stm32f4_usb_device.cpp','stm32f4_usbd_ctlreq.c'):
+            for name in ('stm32f4_usb_device.cpp','stm32f4_usbd_ctlreq.c','stm32f4_usbd_cdc.c','stm32f4_usb_serial_stub.cpp','stm32f4_cdc_if.c'):
                 (snapshot / name).write_text('// snapshot fixture')
             if missing_owned:
                 (snapshot / 'stm32f4_usb_device.cpp').unlink()
@@ -159,10 +163,18 @@ class UsbLtoBuildTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             expected = [arg.replace('\\', '/') for arg in options] if powershell else options
             for source, obj in zip(SOURCES, objects):
+                extra = ['-fno-lto']
+                actual = library/source
+                if owned and source == 'src/cdc/usbd_cdc.c':
+                    extra += ['-DMK61_USB_BUILD_CDC=1']
+                    actual = snapshot/'stm32f4_usbd_cdc.c'
                 self.assertEqual(json.loads(obj.read_text()),
-                                 expected + ['-fno-lto', str(library / source), '-o', str(obj)])
+                                 expected + extra + ['-I'+str(snapshot), str(actual), '-o', str(obj)])
             self.assertEqual(result.stdout.count('USB LTO barrier:'), 2)
             if owned:
+                interface_args=json.loads(cdc_interface.read_text())
+                self.assertIn('-DMK61_USB_BUILD_CDC_IF=1',interface_args)
+                self.assertIn('-std=gnu++17',json.loads(serial.read_text()))
                 bridge_args=json.loads(bridge.read_text())
                 request_args=json.loads(request.read_text())
                 normalize=lambda s:s.replace('\\','/') if powershell else s

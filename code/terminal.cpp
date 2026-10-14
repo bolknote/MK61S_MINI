@@ -2303,7 +2303,7 @@ void class_terminal::dump_mk61_code_page(void) {
 
 void class_terminal::output_version(void) {
 #if !MK61_PRODUCT_BUILD
-      Serial.print("sizeof Serial "); Serial.println(sizeof(HardwareSerial));
+      Serial.print("sizeof Serial "); Serial.println(sizeof(Serial));
 #endif
       Serial.print(MODEL);
       Serial.print(" ver. ");

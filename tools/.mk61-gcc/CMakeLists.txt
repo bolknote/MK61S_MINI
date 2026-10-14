@@ -190,11 +190,14 @@ configure_file("${MK61_PROJECT_ROOT}/code/hal_conf_extra.h"
 target_include_directories(user_settings INTERFACE "${_mk61_hal_config_dir}")
 configure_file("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h"
   "${_mk61_hal_config_dir}/stm32f4_usbd_def.h" COPYONLY)
+configure_file("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.h"
+  "${_mk61_hal_config_dir}/stm32f4_usbd_cdc.h" COPYONLY)
 target_include_directories(user_settings INTERFACE
   "${BUILD_LIB_PATH}/USBDevice/inc"
   "${CORE_PATH}/system/Middlewares/ST/STM32_USB_Device_Library/Core/Inc")
 target_compile_options(user_settings INTERFACE
-  "-include" "${_mk61_hal_config_dir}/stm32f4_usbd_def.h")
+  "SHELL:-include \"${_mk61_hal_config_dir}/stm32f4_usbd_def.h\""
+  "SHELL:-include \"${_mk61_hal_config_dir}/stm32f4_usbd_cdc.h\"")
 
 
 target_compile_definitions(user_settings INTERFACE
@@ -230,6 +233,16 @@ list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c"
 list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usb_device_ctlreq.c" "src/usb_device_ctlreq.c")
 list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c")
 list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp")
+list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c" "src/cdc/usbd_cdc.c" "${BUILD_LIB_PATH}/USBDevice/src/USBSerial.cpp" "src/USBSerial.cpp")
+list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.c")
+list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc_if.c" "src/cdc/usbd_cdc_if.c")
+list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_cdc_if.c")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_cdc_if.c"
+  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC_IF=1")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.c"
+  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC=1" COMPILE_OPTIONS "-fno-lto")
 set_property(TARGET USBDevice_bin PROPERTY SOURCES "${_mk61_usb_sources}")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
   DIRECTORY "${BUILD_LIB_PATH}/USBDevice"

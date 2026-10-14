@@ -458,34 +458,8 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *r
       break;
 
     case USB_DESC_TYPE_CONFIGURATION:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetHSConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetHSConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-      }
-      else
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetFSConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetFSConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-      }
+      /* This backend is FS-only and both class descriptors live in Flash. */
+      pbuf = (uint8_t *)pdev->pClass[0]->GetFSConfigDescriptor(&len);
       break;
 
     case USB_DESC_TYPE_STRING:
@@ -607,46 +581,9 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *r
       break;
 
     case USB_DESC_TYPE_DEVICE_QUALIFIER:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetDeviceQualifierDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetDeviceQualifierDescriptor(&len);
-        }
-      }
-      else
-      {
-        USBD_CtlError(pdev, req);
-        err++;
-      }
-      break;
-
     case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetOtherSpeedConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetOtherSpeedConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION;
-      }
-      else
-      {
-        USBD_CtlError(pdev, req);
-        err++;
-      }
+      USBD_CtlError(pdev, req);
+      err++;
       break;
 
     default:

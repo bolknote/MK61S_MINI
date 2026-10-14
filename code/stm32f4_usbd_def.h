@@ -4,6 +4,7 @@
  */
 #if !defined(__ASSEMBLER__) && defined(USBCON) && (defined(STM32F401xC) || defined(STM32F401xE) || defined(STM32F411xE))
 #define MK61_USBD_ENDPOINTS 4U
+#define MK61_USB_FIXED_FS 1
 /**
   ******************************************************************************
   * @file    usbd_def.h

@@ -128,10 +128,14 @@ USBD_ClassTypeDef  USBD_MSC =
   NULL,
   NULL,
 #else
+#if MK61_USB_FIXED_FS
+  NULL, USBD_MSC_GetFSCfgDesc, NULL, NULL,
+#else
   USBD_MSC_GetHSCfgDesc,
   USBD_MSC_GetFSCfgDesc,
   USBD_MSC_GetOtherSpeedCfgDesc,
   USBD_MSC_GetDeviceQualifierDescriptor,
+#endif
 #endif /* USE_USBD_COMPOSITE */
 };
 
@@ -163,7 +167,12 @@ static USBD_HandleTypeDef *USBD_MSC_BOT_HandleOwner;
 #ifndef USE_USBD_COMPOSITE
 /* USB Mass storage device Configuration Descriptor */
 /* All Descriptors (Configuration, Interface, Endpoint, Class, Vendor */
-__ALIGN_BEGIN static uint8_t USBD_MSC_CfgDesc[USB_MSC_CONFIG_DESC_SIZ]  __ALIGN_END =
+#if MK61_USB_FIXED_FS
+#define MK61_MSC_DESCRIPTOR_CONST const
+#else
+#define MK61_MSC_DESCRIPTOR_CONST
+#endif
+__ALIGN_BEGIN static MK61_MSC_DESCRIPTOR_CONST uint8_t USBD_MSC_CfgDesc[USB_MSC_CONFIG_DESC_SIZ]  __ALIGN_END =
 {
   0x09,                                            /* bLength: Configuration Descriptor size */
   USB_DESC_TYPE_CONFIGURATION,                     /* bDescriptorType: Configuration */
@@ -208,6 +217,7 @@ __ALIGN_BEGIN static uint8_t USBD_MSC_CfgDesc[USB_MSC_CONFIG_DESC_SIZ]  __ALIGN_
   0x00                                             /* Polling interval in milliseconds */
 };
 
+#if !MK61_USB_FIXED_FS
 /* USB Standard Device Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_MSC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC]  __ALIGN_END =
 {
@@ -222,6 +232,7 @@ __ALIGN_BEGIN static uint8_t USBD_MSC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_
   0x01,
   0x00,
 };
+#endif
 #endif /* USE_USBD_COMPOSITE */
 
 uint8_t MSCInEpAdd  = MSC_EPIN_ADDR;
@@ -341,7 +352,11 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
     return (uint8_t)USBD_FAIL;
   }
 
+#if MK61_USB_FIXED_FS
+  packet_size = MSC_MAX_FS_PACKET;
+#else
   packet_size = (pdev->dev_speed == USBD_SPEED_HIGH) ? MSC_MAX_HS_PACKET : MSC_MAX_FS_PACKET;
+#endif
   if (USBD_LL_OpenEP(pdev, MSCOutEpAdd, USBD_EP_TYPE_BULK, packet_size) != USBD_OK)
   {
     USBD_MSC_ReleaseHandle(pdev);
@@ -430,7 +445,7 @@ uint8_t USBD_MSC_Setup(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 {
   USBD_MSC_BOT_HandleTypeDef *hmsc;
   USBD_StatusTypeDef ret = USBD_OK;
-  uint16_t status_info = 0U;
+  static const uint16_t status_info = 0U;
 
   if (!USBD_MSC_ValidContext(pdev) || (req == NULL))
   {
@@ -619,6 +634,7 @@ uint8_t USBD_MSC_DataOut(USBD_HandleTypeDef *pdev, uint8_t epnum)
   * @param  length : pointer data length
   * @retval pointer to descriptor buffer
   */
+#if !MK61_USB_FIXED_FS
 uint8_t *USBD_MSC_GetHSCfgDesc(uint16_t *length)
 {
   USBD_EpDescTypeDef *pEpInDesc = USBD_GetEpDesc(USBD_MSC_CfgDesc, MSC_EPIN_ADDR);
@@ -637,6 +653,7 @@ uint8_t *USBD_MSC_GetHSCfgDesc(uint16_t *length)
   *length = (uint16_t)sizeof(USBD_MSC_CfgDesc);
   return USBD_MSC_CfgDesc;
 }
+#endif
 
 /**
   * @brief  USBD_MSC_GetFSCfgDesc
@@ -646,6 +663,7 @@ uint8_t *USBD_MSC_GetHSCfgDesc(uint16_t *length)
   */
 uint8_t *USBD_MSC_GetFSCfgDesc(uint16_t *length)
 {
+#if !MK61_USB_FIXED_FS
   USBD_EpDescTypeDef *pEpInDesc = USBD_GetEpDesc(USBD_MSC_CfgDesc, MSC_EPIN_ADDR);
   USBD_EpDescTypeDef *pEpOutDesc = USBD_GetEpDesc(USBD_MSC_CfgDesc, MSC_EPOUT_ADDR);
 
@@ -659,8 +677,9 @@ uint8_t *USBD_MSC_GetFSCfgDesc(uint16_t *length)
     pEpOutDesc->wMaxPacketSize = MSC_MAX_FS_PACKET;
   }
 
+#endif
   *length = (uint16_t)sizeof(USBD_MSC_CfgDesc);
-  return USBD_MSC_CfgDesc;
+  return (uint8_t*)USBD_MSC_CfgDesc;
 }
 
 /**
@@ -669,6 +688,7 @@ uint8_t *USBD_MSC_GetFSCfgDesc(uint16_t *length)
   * @param  length : pointer data length
   * @retval pointer to descriptor buffer
   */
+#if !MK61_USB_FIXED_FS
 uint8_t *USBD_MSC_GetOtherSpeedCfgDesc(uint16_t *length)
 {
   USBD_EpDescTypeDef *pEpInDesc = USBD_GetEpDesc(USBD_MSC_CfgDesc, MSC_EPIN_ADDR);
@@ -687,18 +707,21 @@ uint8_t *USBD_MSC_GetOtherSpeedCfgDesc(uint16_t *length)
   *length = (uint16_t)sizeof(USBD_MSC_CfgDesc);
   return USBD_MSC_CfgDesc;
 }
+#endif
 /**
   * @brief  DeviceQualifierDescriptor
   *         return Device Qualifier descriptor
   * @param  length : pointer data length
   * @retval pointer to descriptor buffer
   */
+#if !MK61_USB_FIXED_FS
 uint8_t *USBD_MSC_GetDeviceQualifierDescriptor(uint16_t *length)
 {
   *length = (uint16_t)sizeof(USBD_MSC_DeviceQualifierDesc);
 
   return USBD_MSC_DeviceQualifierDesc;
 }
+#endif
 #endif /* USE_USBD_COMPOSITE */
 /**
   * @brief  USBD_MSC_RegisterStorage

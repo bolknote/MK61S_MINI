@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "date": "2026-10-14",
+  "branch": "feature/stm32-standalone-runtime",
+  "baseline_commit": "205e64396ef531ad1ce1daac01327f7db9cb6f56",
+  "stage": "owned-usb-and-output",
+  "devices": {
+    "classic": {
+      "flash_before": 370404,
+      "flash_after": 368112,
+      "flash_saved": 2292,
+      "ram_before": 31304,
+      "ram_after": 30488,
+      "ram_saved": 816,
+      "core_cycles_before": 1709946,
+      "core_cycles_after": 1709570,
+      "core_time_change_percent": -0.021988998482991295,
+      "cdc_storage": "PASS byte sizes 1,63,64,65,255,256,257,4095,4096",
+      "msc": "PASS 4096-byte binary import/export, two ejects and reset",
+      "screen": "PASS 100 CRC-complete frames",
+      "shipping_equals_hil_image": true,
+      "source_state_restoration": "Original logical state recovered after reset where needed; all file fingerprints preserved",
+      "short_flash_baseline_median_us": 60.0,
+      "short_flash_io_median_us": 61.0
+    },
+    "mini": {
+      "flash_before": 341676,
+      "flash_after": 339456,
+      "flash_saved": 2220,
+      "ram_before": 29896,
+      "ram_after": 29096,
+      "ram_saved": 800,
+      "core_cycles_before": 1707859,
+      "core_cycles_after": 1708351,
+      "core_time_change_percent": 0.028807998786795075,
+      "cdc_storage": "PASS byte sizes 1,63,64,65,255,256,257,4095,4096",
+      "msc": "PASS 4096-byte binary import/export, two ejects and reset",
+      "screen": "PASS 100 CRC-complete frames",
+      "shipping_equals_hil_image": true,
+      "source_state_restoration": "Original logical state recovered after reset where needed; all file fingerprints preserved",
+      "short_flash_baseline_median_us": 57.0,
+      "short_flash_io_median_us": 59.0
+    }
+  },
+  "validation": {
+    "host_suite": "PASS",
+    "f411_matrix": "PASS all 16 variants",
+    "f401_matrix": "PASS all 9 variants",
+    "numeric_output": "PASS ASan/UBSan differential formatting and truncation",
+    "usb_arm_model": "PASS controller and CDC protocol, bounds, ZLP, RX full/NAK/rearm and disconnect",
+    "prelink": "PASS 16 Python/PowerShell cases",
+    "physical_deep_stop_wake": "pending stage 2"
+  },
+  "evidence_archive": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-standalone-artifacts-20261014"
+}

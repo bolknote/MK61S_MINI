@@ -3,6 +3,11 @@
 
 #include "firmware_optimization.hpp"
 #include "Arduino.h"
+#include "mk61_io.hpp"
+#if MK61_NARROW_USB_SERIAL_SUPPORTED
+  #undef Serial
+  #define Serial mk61_io::serial
+#endif
 #include "rust_types.h"
 #include "portable_app_config.h"
 

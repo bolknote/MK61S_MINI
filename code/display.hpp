@@ -137,7 +137,14 @@ static constexpr u8 RUNTIME_MAX_ROWS = MAX_ROWS;
 
 } // пространство имён lcd_display
 
-class MK61Display : public Print {
+class MK61Display;
+#if MK61_NARROW_IO_SUPPORTED
+using MK61DisplayOutput = mk61_io::Output<MK61Display>;
+#else
+using MK61DisplayOutput = Print;
+#endif
+
+class MK61Display : public MK61DisplayOutput {
   public:
     MK61Display(void);
 
@@ -467,11 +474,13 @@ class MK61Display : public Print {
     u32 usbScreenRevision(void) const { return 0; }
 #endif
 
-    using Print::print;
-    using Print::println;
-    using Print::write;
+    using MK61DisplayOutput::print;
+    using MK61DisplayOutput::println;
+    using MK61DisplayOutput::write;
 
-#if ARDUINO >= 100
+#if MK61_NARROW_IO_SUPPORTED
+    size_t write(uint8_t value);
+#elif ARDUINO >= 100
     virtual size_t write(uint8_t value) override;
 #else
     virtual void write(uint8_t value) override;
