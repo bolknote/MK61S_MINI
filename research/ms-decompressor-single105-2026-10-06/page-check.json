@@ -1,0 +1,15 @@
+{
+  "loaded_native_bytes": 57,
+  "highest_address_written": 102,
+  "highest_game_address_traced": 79,
+  "all_commands_in_00_through_104": true,
+  "extra_banks": 0,
+  "rf_preserved_byte_for_byte": true,
+  "rf_access_commands": 0,
+  "bank_prefix_commands": 0,
+  "game_commands_traced": 146,
+  "checked_stops": 47,
+  "entry_zero_verified": true,
+  "victory": 30,
+  "restart": 0
+}

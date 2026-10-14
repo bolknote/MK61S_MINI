@@ -1,0 +1,114 @@
+[
+  {
+    "decoder_bytes": 82,
+    "stream_bytes": 14,
+    "patcher_bytes": 4,
+    "output_head_bytes": 63,
+    "labels": {
+      "unpack": 112,
+      "fill": 125,
+      "have_run": 150,
+      "flush": 171,
+      "done": 193
+    },
+    "name": "nine_repeats",
+    "runs": [
+      [
+        10005203,
+        9
+      ]
+    ],
+    "loader_and_initial_run_steps": 187,
+    "execution_steps": 27,
+    "decoder_plus_stream_plus_patchers": 100
+  },
+  {
+    "decoder_bytes": 82,
+    "stream_bytes": 28,
+    "patcher_bytes": 12,
+    "output_head_bytes": 189,
+    "labels": {
+      "unpack": 112,
+      "fill": 125,
+      "have_run": 150,
+      "flush": 171,
+      "done": 193
+    },
+    "name": "cross_bank_run",
+    "runs": [
+      [
+        10005203,
+        4
+      ],
+      [
+        10005204,
+        23
+      ]
+    ],
+    "loader_and_initial_run_steps": 525,
+    "execution_steps": 83,
+    "decoder_plus_stream_plus_patchers": 122
+  },
+  {
+    "decoder_bytes": 82,
+    "stream_bytes": 28,
+    "patcher_bytes": 12,
+    "output_head_bytes": 189,
+    "labels": {
+      "unpack": 112,
+      "fill": 125,
+      "have_run": 150,
+      "flush": 171,
+      "done": 193
+    },
+    "name": "run_at_bank_boundary",
+    "runs": [
+      [
+        10005203,
+        9
+      ],
+      [
+        10005209,
+        18
+      ]
+    ],
+    "loader_and_initial_run_steps": 525,
+    "execution_steps": 83,
+    "decoder_plus_stream_plus_patchers": 122
+  },
+  {
+    "decoder_bytes": 82,
+    "stream_bytes": 56,
+    "patcher_bytes": 12,
+    "output_head_bytes": 189,
+    "labels": {
+      "unpack": 112,
+      "fill": 125,
+      "have_run": 150,
+      "flush": 171,
+      "done": 193
+    },
+    "name": "four_runs",
+    "runs": [
+      [
+        10005201,
+        1
+      ],
+      [
+        10005202,
+        8
+      ],
+      [
+        10005203,
+        10
+      ],
+      [
+        10005204,
+        8
+      ]
+    ],
+    "loader_and_initial_run_steps": 548,
+    "execution_steps": 83,
+    "decoder_plus_stream_plus_patchers": 150
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "command": "2F 7r",
+  "native_setup": "numeric values entered by ordinary digit opcodes; extended lookup command",
+  "instruction_symbols": 44,
+  "all_indices_verified": true,
+  "ordinary_source_words": 8,
+  "command_bytes_for_six_symbols": 2,
+  "table_bytes": 16,
+  "returns_normal_24_bit_integers": true,
+  "full_native_self_extractor": false
+}

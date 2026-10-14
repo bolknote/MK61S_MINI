@@ -1,0 +1,9 @@
+{
+  "cases": 2885,
+  "every_old_new_pair_per_slot": 1805,
+  "random_cases": 1000,
+  "boundary_cases": 80,
+  "max_packed": 2476098,
+  "steps": 113745,
+  "all_four_spare_words_preserved": true
+}

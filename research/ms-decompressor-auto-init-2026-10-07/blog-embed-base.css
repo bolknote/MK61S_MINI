@@ -1,0 +1,22 @@
+/* Local defaults for an ordinary article, without Codex's visualization CSS. */
+#mk61-unpacker-auto-init {
+  --foreground: var(--mk61-text, CanvasText);
+  --muted-foreground: color-mix(in srgb, var(--foreground) 60%, transparent);
+  --viz-series-1: var(--mk61-highlight, LinkText);
+  --accent: color-mix(in srgb, var(--viz-series-1) 13%, Canvas);
+  --font-size-small: 12px;
+  --line-height-small: 16px;
+  font: 13px/1.35 system-ui, sans-serif;
+}
+#mk61-unpacker-auto-init * { box-sizing: border-box; }
+#mk61-unpacker-auto-init .viz-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+#mk61-unpacker-auto-init .btn {
+  appearance: none; padding: 4px 10px; border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  border-radius: 5px; font: inherit; color: var(--foreground); background: transparent; cursor: pointer;
+}
+#mk61-unpacker-auto-init .btn:hover:enabled { background: color-mix(in srgb, var(--foreground) 6%, transparent); }
+#mk61-unpacker-auto-init .btn:disabled { opacity: .35; cursor: default; }
+#mk61-unpacker-auto-init [data-status] { padding-left: 4px; font-variant-numeric: tabular-nums; }
+@media (pointer: coarse) {
+  #mk61-unpacker-auto-init .btn { min-width: 44px; min-height: 44px; }
+}

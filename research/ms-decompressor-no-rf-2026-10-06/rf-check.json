@@ -1,0 +1,13 @@
+{
+  "rf_canary": 98765.43,
+  "rf_preserved_byte_for_byte": true,
+  "rf_access_instructions": 0,
+  "native_commands_checked": 266,
+  "checked_stops": 48,
+  "all_map_cells_checked": 30,
+  "victory_x": 30,
+  "restart_x": 0,
+  "maximum_local_address_loaded_and_executed": 102,
+  "uses_only_registers_0_through_e": true,
+  "requires_expanded_mode_for_ms_and_banks": true
+}

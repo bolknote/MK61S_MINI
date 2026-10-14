@@ -1,0 +1,4 @@
+open? manual.md
+reinit
+load 0000 elite.bin
+run

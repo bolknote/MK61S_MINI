@@ -1,0 +1,29 @@
+{
+  "full_7_byte_code_records_in_exchange_heads": 221,
+  "canonical_bounded_integer_words": [],
+  "adjacent_equal_7_byte_code_runs": [],
+  "code_bytes": 2506,
+  "byte_rle_pairs_bytes": 4862,
+  "most_frequent_record_counts": [
+    [
+      "2f502f2a0d490d",
+      1
+    ],
+    [
+      "4a020001064f1f",
+      1
+    ],
+    [
+      "5330060d501f53",
+      1
+    ],
+    [
+      "01121f5301501f",
+      1
+    ],
+    [
+      "5305291f531904",
+      1
+    ]
+  ]
+}

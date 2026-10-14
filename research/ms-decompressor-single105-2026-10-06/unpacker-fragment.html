@@ -1,0 +1,74 @@
+<div id="mk61-unpacker">
+  <div class="viz-controls"><button class="btn" type="button" data-back aria-label="Предыдущая команда">←</button><button class="btn" type="button" data-next aria-label="Следующая команда">→</button><span data-status aria-live="polite"></span></div>
+  <div data-program class="memory" aria-label="Программная память"></div>
+  <h2>Ms</h2><div data-ms class="ms" aria-label="Девять блоков Ms"></div>
+</div>
+<style>
+#mk61-unpacker{font:13px/1.35 system-ui,sans-serif;color:var(--foreground);max-width:1000px;margin:auto}
+#mk61-unpacker h2{font-size:13px;font-weight:500;margin:12px 0 5px}
+#mk61-unpacker .memory{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:2px;margin-top:10px}
+#mk61-unpacker .cell{padding:5px 3px;min-width:0;background:color-mix(in srgb,var(--foreground) 4%,transparent);white-space:nowrap;font-size:12px;font-variant-numeric:tabular-nums}
+#mk61-unpacker .cell code{font:inherit;color:inherit;margin-right:4px}
+#mk61-unpacker .cell.target{background:color-mix(in srgb,var(--primary) 7%,transparent)}
+#mk61-unpacker .cell.pending{color:var(--muted-foreground)}
+#mk61-unpacker .cell.changed{background:color-mix(in srgb,var(--primary) 22%,transparent)}
+#mk61-unpacker .cell.current{outline:2px solid var(--primary);outline-offset:-2px;background:var(--accent)}
+#mk61-unpacker .changed{background:color-mix(in srgb,var(--primary) 16%,transparent)}
+#mk61-unpacker .ms{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+#mk61-unpacker .block{padding:6px;background:color-mix(in srgb,var(--foreground) 4%,transparent);font:12px/1.5 ui-monospace,monospace;text-align:center;white-space:nowrap}
+#mk61-unpacker .block.changed{background:color-mix(in srgb,var(--primary) 16%,transparent)}
+#mk61-unpacker .block .service{color:var(--muted-foreground)}
+@media(max-width:800px){#mk61-unpacker .memory{grid-template-columns:repeat(5,minmax(0,1fr))}}
+@media(max-width:580px){#mk61-unpacker .memory{grid-template-columns:repeat(3,minmax(0,1fr))}#mk61-unpacker .ms{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:360px){#mk61-unpacker .ms{grid-template-columns:1fr}}
+</style>
+<script>
+(()=>{
+const root=document.getElementById('mk61-unpacker');
+const hex=n=>n.toString(16).toUpperCase().padStart(2,'0');
+const names={16:'+',17:'−',20:'X↔Y',80:'С/П',81:'БП',82:'В/О',84:'NOP',85:'К ПВ',86:'К ОД',89:'x≥0',93:'FL0',138:'К БП A',139:'К БП B',188:'К x→ПC'};
+function cmd(b,a,m=mem){if(a===2&&m[1]===81)return '→83';if(a===98)return '→91';if(a===77)return '→80';if(b<=9)return String(b);if(b>=64&&b<=78)return 'x→П'+(b-64).toString(16).toUpperCase();if(b>=96&&b<=110)return 'П→x'+(b-96).toString(16).toUpperCase();return names[b]||'код '+hex(b);}
+function pack(cents){if(!cents)return [0,0,0,0,0,0,0];let s=String(Math.abs(cents));let exp=s.length-3;let digits=s.padEnd(8,'0').slice(0,8).split('').reverse().map(Number);digits.push(cents<0?9:0,((exp%10)+10)%10,Math.floor(Math.abs(exp)/10),exp<0?9:0);return [0,...Array.from({length:6},(_,i)=>digits[2*i]+16*digits[2*i+1])];}
+function unpack(b){const digits=b.slice(1,5).reverse().map(x=>hex(x)).join('');if(/[^0-9]/.test(digits))return null;const exponent=(b[6]&15)*10+(b[5]>>4);return Math.round(Number('0.'+digits)*10**(exponent+3))*((b[5]&15)===9?-1:1);}
+const fmt=n=>n===null?'—':(n/100).toLocaleString('ru-RU',{maximumFractionDigits:2,useGrouping:false});
+const kernel=[86,85,104,75,103,8,64,20,96,76,20,188,107,17,93,145,64,85,86,82];
+const tail=[110,1,16,78,80,109,1,17,77,80,110,3,17,89,128,108,80,2,0,80];
+let mem=Array(105).fill(0),ms=Array(63).fill(0),regs=Array(15).fill(0),stack=[0,0,0,0];
+for(const [a,b] of [[0,84],[7,138],[14,139],[21,84],[28,139],[35,138],[42,139],[49,138]])mem[a]=b;
+mem[1]=81;mem[2]=131;mem.splice(50,6,...pack(69005068).slice(1));mem.splice(56,7,...pack(1000001));mem.splice(63,20,...tail);mem.splice(83,20,...kernel);
+let pc=0;const states=[];const push=x=>{stack=[x,stack[0],stack[1],stack[2]]};
+function snap(note){states.push({mem:[...mem],ms:[...ms],regs:[...regs],stack:[...stack],pc,note});}
+snap('До К ОД: исходные числа находятся в ячейках 49–62; Ms заполнена нулями.');
+let guard=0;
+while(pc!==null&&guard++<110){const at=pc,b=mem[pc];let note='';pc++;
+if(b===84){note='НОП';}
+else if(b===81){pc=(mem[pc]>>4)*10+(mem[pc]&15);note='Переход к распаковщику';}
+else if(b===86){const head=mem.slice(0,63);mem.splice(0,63,...ms);ms=head;note='К ОД: обмен первых 63 байтов программы и области Ms.';}
+else if(b===85){for(let r=0;r<9;r++){const old=pack(regs[r]);regs[r]=unpack(ms.slice(r*7,r*7+7));ms.splice(r*7+1,6,...old.slice(1));}note='К ПВ: обмен числовых частей Ms и R0–R8. Служебные байты S сохраняются.';}
+else if(b>=96&&b<=110){const r=b-96;push(regs[r]);note='Получено значение R'+r.toString(16).toUpperCase()+': '+fmt(stack[0])+'.';}
+else if(b>=64&&b<=78){const r=b-64;regs[r]=stack[0];note='Записано '+fmt(stack[0])+' в R'+r.toString(16).toUpperCase()+'.';}
+else if(b===8){push(800);note='Введено 8 — начальный счётчик блоков.';}
+else if(b===20){[stack[0],stack[1]]=[stack[1],stack[0]];note='X и Y поменялись местами.';}
+else if(b===188){const r=regs[12]/100;regs[r]=stack[0];note='Косвенная запись: RC='+r+', поэтому '+fmt(stack[0])+' записано в R'+r+'.';}
+else if(b===17){stack=[stack[1]-stack[0],stack[2],stack[3],stack[3]];note='Вычтен шаг 10000,01. Следующий шаблон: '+fmt(stack[0])+'.';}
+else if(b===93){pc++;if(regs[0]>100){regs[0]-=100;pc=91;note='FL0: счётчик уменьшен до '+fmt(regs[0])+', переход на 91.';}else note='FL0: счётчик равен 1; выход из цикла без его уменьшения.';}
+else if(b===80){pc=null;note='Остановка после распаковки';}
+else if(b===82){pc=0;note='В/О: возврат. Все 63 байта восстановлены; R0–R8 и Ms возвращены.';}
+else throw Error('Неизвестная команда '+b);
+snap('Выполнено '+at+' · '+hex(b)+' '+cmd(b,at)+'. '+note);
+}
+if(states.at(-1).pc!==null)throw Error('Цикл не завершён');
+for(let r=0;r<9;r++){let expected=[mem[r*7],96+r,80,0,97+r,80,0];if(expected.some((v,i)=>mem[r*7+i]!==v))throw Error('Ошибка выходного блока');}
+if(regs.slice(0,9).some((n,i)=>n!==0)||ms.some(Boolean))throw Error('Данные не восстановлены');
+let index=0;const q=s=>root.querySelector(s);
+function render(){const s=states[index],prev=states[Math.max(0,index-1)];q('[data-status]').textContent=index+' / '+(states.length-1);q('[data-back]').disabled=index===0;q('[data-next]').disabled=index===states.length-1;
+q('[data-program]').innerHTML=s.mem.map((b,a)=>{const changed=b!==prev.mem[a],active=a===s.pc,pending=a<63&&b===0;return '<div class="cell '+(a<63?'target ':'')+(changed?'changed ':'')+(pending?'pending ':'')+(active?'current':'')+'" title="Адрес '+a+'" aria-label="Адрес '+a+', код '+hex(b)+', '+cmd(b,a,s.mem)+'"><code>'+hex(b)+'</code>'+(pending?'':cmd(b,a,s.mem))+'</div>';}).join('');
+q('[data-ms]').innerHTML=Array.from({length:9},(_,r)=>{let a=r*7,block=s.ms.slice(a,a+7),changed=block.some((v,i)=>v!==prev.ms[a+i]);return '<div class="block '+(changed?'changed':'')+'" title="Блок '+r+', адреса '+a+'–'+(a+6)+'" aria-label="Блок Ms '+r+'"><span class="service">'+hex(block[0])+'</span> '+block.slice(1).map(hex).join(' ')+'</div>';}).join('');}
+
+function move(delta){index=Math.max(0,Math.min(states.length-1,index+delta));render();if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{step:index,nextAddress:states[index].pc},privateContent:{step:index}}).catch(()=>{});}
+q('[data-back]').onclick=()=>move(-1);q('[data-next]').onclick=()=>move(1);
+root.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowLeft'?-1:1);}});
+function restore(state){let n=state?.privateContent?.step;if(Number.isInteger(n)){index=Math.max(0,Math.min(states.length-1,n));render();}}
+render();restore(window.openai?.widgetState);window.addEventListener('openai:set_globals',e=>restore(e.detail?.globals?.widgetState));
+})();
+</script>

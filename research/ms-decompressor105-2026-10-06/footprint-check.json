@@ -1,0 +1,10 @@
+{
+  "loaded_highest_local_address": 101,
+  "native_trace_highest_local_address": 101,
+  "native_traced_commands": 122,
+  "saved_file_stops": 17,
+  "victory_x": 30,
+  "restart_x": 0,
+  "all_loaded_and_executed_commands_below_105": true,
+  "requires_112_rf_mode_for_ms": true
+}

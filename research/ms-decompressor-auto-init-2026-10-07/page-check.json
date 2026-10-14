@@ -1,0 +1,46 @@
+{
+  "complete_native_bytes_including_initialization": 79,
+  "highest_address_written": 104,
+  "highest_address_executed": 104,
+  "extra_banks": 0,
+  "rf_preserved_byte_for_byte": true,
+  "native_commands_traced": 200,
+  "checked_stops": 47,
+  "regs_before_first_kod": [
+    0.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0,
+    15.0,
+    16.0,
+    17.0,
+    18.0
+  ],
+  "regs_in_ms_after_first_kpv": [
+    0,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "regs_after_final_kpv": [
+    0.0,
+    11.0,
+    12.0,
+    13.0,
+    14.0,
+    15.0,
+    16.0,
+    17.0,
+    18.0
+  ],
+  "game_registers_initialized_by_native_code": true,
+  "m61_register_assignments_in_production": 0,
+  "victory": 30,
+  "restart": 0
+}

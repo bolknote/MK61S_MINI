@@ -1,0 +1,66 @@
+[
+  {
+    "title": "Радиация",
+    "file": "/Users/bolk/Projects/MK-61/games/logic/radiatsiya-kabardcomp.txt",
+    "length": 36,
+    "shift": 0,
+    "saving": 6,
+    "duplicates": [
+      [
+        "3b 65 12 34 01 10",
+        [
+          0,
+          1
+        ]
+      ]
+    ]
+  },
+  {
+    "title": "Безрукий бандит",
+    "file": "/Users/bolk/Projects/MK-61/games/gambling/bezrukiy-bandit-trokhimenko-lyubich-1985.txt",
+    "length": 62,
+    "shift": 1,
+    "saving": 6,
+    "duplicates": [
+      [
+        "68 68 68 68 62 68",
+        [
+          2,
+          7
+        ]
+      ]
+    ]
+  },
+  {
+    "title": "Тренировка памяти",
+    "file": "/Users/bolk/Projects/MK-61/games/educational/trenirovka-pamyati-kibernetika-1986.txt",
+    "length": 94,
+    "shift": 0,
+    "saving": 6,
+    "duplicates": [
+      [
+        "0e 0e 0e 0e 6c 6c",
+        [
+          6,
+          7
+        ]
+      ]
+    ]
+  },
+  {
+    "title": "Галактические пираты",
+    "file": "/Users/bolk/Projects/MK-61/games/action/galakticheskie-piraty.txt",
+    "length": 104,
+    "shift": 0,
+    "saving": 6,
+    "duplicates": [
+      [
+        "20 20 20 20 20 20",
+        [
+          6,
+          7
+        ]
+      ]
+    ]
+  }
+]

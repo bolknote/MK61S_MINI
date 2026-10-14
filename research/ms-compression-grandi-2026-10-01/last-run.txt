@@ -1,0 +1,188 @@
+{
+  "source": "/Users/bolk/Projects/MK61S_MINI/tmp/ms-compression-grandi-2026-10-01/original.raw",
+  "source_sha256": "496d9ffdf3d87f486a5becabce0fed04aedbce31f16785f54432a4042b94d9fd",
+  "original_bytes": 49,
+  "distinct_bytes": 19,
+  "huffman": {
+    "bits": 182,
+    "packed_bytes": 23,
+    "numeric_words": [
+      60804023,
+      44753997,
+      3667729,
+      20147708,
+      9693072,
+      598408,
+      11675032
+    ],
+    "numeric_record_bytes": 49,
+    "explicit_canonical_table_bytes": 22,
+    "data_plus_table_bytes": 45,
+    "codebook": [
+      {
+        "byte": "00",
+        "count": 2,
+        "code": "10100"
+      },
+      {
+        "byte": "01",
+        "count": 12,
+        "code": "00"
+      },
+      {
+        "byte": "02",
+        "count": 8,
+        "code": "010"
+      },
+      {
+        "byte": "03",
+        "count": 4,
+        "code": "0110"
+      },
+      {
+        "byte": "04",
+        "count": 1,
+        "code": "111110"
+      },
+      {
+        "byte": "05",
+        "count": 1,
+        "code": "111111"
+      },
+      {
+        "byte": "06",
+        "count": 1,
+        "code": "10101"
+      },
+      {
+        "byte": "07",
+        "count": 1,
+        "code": "10110"
+      },
+      {
+        "byte": "08",
+        "count": 1,
+        "code": "10111"
+      },
+      {
+        "byte": "0D",
+        "count": 1,
+        "code": "11000"
+      },
+      {
+        "byte": "0E",
+        "count": 1,
+        "code": "11001"
+      },
+      {
+        "byte": "11",
+        "count": 3,
+        "code": "0111"
+      },
+      {
+        "byte": "14",
+        "count": 1,
+        "code": "11010"
+      },
+      {
+        "byte": "30",
+        "count": 1,
+        "code": "11011"
+      },
+      {
+        "byte": "35",
+        "count": 1,
+        "code": "11100"
+      },
+      {
+        "byte": "49",
+        "count": 2,
+        "code": "11101"
+      },
+      {
+        "byte": "50",
+        "count": 3,
+        "code": "1000"
+      },
+      {
+        "byte": "51",
+        "count": 3,
+        "code": "1001"
+      },
+      {
+        "byte": "5E",
+        "count": 2,
+        "code": "11110"
+      }
+    ],
+    "native_reader": {
+      "reader_bytes": 14,
+      "reader_hex": "69 0e 0e 02 13 34 49 0a 69 12 11 50 51 00",
+      "words": 7,
+      "symbols": 182,
+      "core_steps": 1428
+    }
+  },
+  "nibble": {
+    "nibbles": 54,
+    "packed_bytes": 27
+  },
+  "nibble_pairs_full": {
+    "nibbles": 49,
+    "packed_bytes": 25
+  },
+  "nibble_pairs": {
+    "nibbles": 48,
+    "packed_bytes": 24,
+    "numeric_words": [
+      10326666,
+      3129639,
+      5943606,
+      4184547,
+      16572979,
+      12460612,
+      14819855,
+      13304318
+    ],
+    "numeric_record_bytes": 56,
+    "explicit_non_digit_map_bytes": 10,
+    "implicit_suffix_hex": "00",
+    "destination_must_be_zero_filled": true,
+    "pair_code": "E -> 01 01, implemented by decoder",
+    "encoded": "A829D9721CF2631BA53E9DF3332ECF4422EBF0222EEF10BC",
+    "native_reader": {
+      "reader_bytes": 15,
+      "reader_hex": "69 0e 0e 01 06 13 34 49 0a 69 12 11 50 51 00",
+      "words": 8,
+      "symbols": 48,
+      "core_steps": 384
+    }
+  },
+  "base100": {
+    "opcode_bytes_per_8_digit_number": 4,
+    "numeric_words": [
+      17020873,
+      2071794,
+      6208101,
+      73800103,
+      1010305,
+      3489417,
+      1010203,
+      2045381,
+      80010102,
+      2020213,
+      1010101,
+      81800014,
+      0
+    ],
+    "numeric_record_bytes": 91
+  },
+  "verification": {
+    "host_exact_round_trips": true,
+    "native_self_extractor": false,
+    "real_core_arithmetic_readers": true,
+    "decoded_input_bits": 182,
+    "decoded_input_nibbles": 48,
+    "input_read_on_core_then_decoded_on_host_matches_original": true
+  }
+}

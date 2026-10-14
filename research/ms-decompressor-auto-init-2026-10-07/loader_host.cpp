@@ -1,0 +1,187 @@
+// Host storage/terminal adapters for the actual M61 runner and calculator core.
+// Only file I/O and the Markdown viewer are replaced; nested calls and clears
+// execute code/m61_text.cpp and MK61Emu_ClearCodePage from the real core.
+#include "m61_text.hpp"
+#include "mk61emu_core.h"
+#include "program_store.hpp"
+#include "program_load.hpp"
+#include "program_execution.hpp"
+#include "terminal_script.hpp"
+#include "terminal_core.hpp"
+#include "mk61_ref.hpp"
+#include <algorithm>
+#include <cassert>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <sstream>
+#include <string>
+#include <vector>
+
+void elite_tracked_step();
+void elite_enable_trace_if_requested();
+
+namespace {
+struct File { std::string name, text; program_store::ProgramType type; };
+std::vector<File> files;
+std::filesystem::path directory;
+unsigned elapsed = 0;
+unsigned written_bytes = 0;
+
+void press(int x, int y) {
+  core_61::clear_displayed();
+  for(unsigned i=0; i<4; ++i) {
+    MK61Emu_SetKeyPress(x,y); elite_tracked_step();
+    if(core_61::is_RUN()) break;
+  }
+  MK61Emu_SetKeyPress(0,0);
+  for(unsigned i=0; i<64; ++i) {
+    elite_tracked_step();
+    if(core_61::is_RUN() || core_61::is_displayed()) break;
+  }
+}
+}
+
+namespace program_store {
+u32 media_revision() { return 1; }
+bool entry_by_id(u16 id, Entry& out) {
+  if(id>=files.size()) return false;
+  out={}; out.type=files[id].type; out.kind=NodeKind::FILE;
+  out.id=id; out.parent_id=ROOT_ID; out.data_len=files[id].text.size();
+  std::strncpy(out.name,files[id].name.c_str(),NAME_SIZE-1);
+  return true;
+}
+int count(ProgramType type) {
+  return std::count_if(files.begin(),files.end(),[type](const File& f){return f.type==type;});
+}
+bool entry(ProgramType type, int index, Entry& out) {
+  if(index<0) return false;
+  for(size_t i=0;i<files.size();++i)
+    if(files[i].type==type && index--==0) return entry_by_id(i,out);
+  return false;
+}
+int child_count(u16 parent) { return parent==ROOT_ID ? files.size() : 0; }
+bool child(u16 parent, int index, Entry& out) {
+  return parent==ROOT_ID && index>=0 && entry_by_id(index,out);
+}
+bool read_range_id(u16 id, u16 offset, u8* data, u16 length, u16* got) {
+  if(got) *got=0;
+  if(id>=files.size()) return false;
+  const auto& source=files[id].text;
+  if(offset>=source.size()) return true;
+  auto size=std::min<size_t>(length,source.size()-offset);
+  std::memcpy(data,source.data()+offset,size);
+  if(got) *got=size;
+  return true;
+}
+}
+
+bool OpenStoredFile(const char* name) {
+  return m61_text::open_program(name);
+}
+u8 m61_text_host_open_file(const char* name, u16) {
+  if(std::filesystem::path(name).extension()==".md")
+    return std::filesystem::is_regular_file(directory/name) ? 0 : 2;
+  return OpenStoredFile(name) ? 0 : 2;
+}
+void hidden_start_loaded_program(u8 address) { press(11,9); press(8,8); press(4,9); core_61::set_IP(address); press(2,9); }
+// Firmware updates its UI/timer here; the host measures core steps instead.
+void mk61_program_started() { assert(core_61::is_RUN()); }
+void reinit_mk61_calculator_state() {
+  core_61::clear_extended_program_banks(); core_61::enable();
+}
+void lcd_std_display_redraw() {}
+u32 m61_text_host_millis() { return elapsed; }
+i32 program_store_text_font_begin() { return -1; }
+i32 program_store_text_font_load_from(const char*,u16) { return -1; }
+i32 program_store_text_font_restore() { return 1; }
+i32 program_store_text_font_end() { return 1; }
+
+namespace terminal_script {
+void reset() {}
+terminal_protocol::Result execute(const char* line, bool) {
+  using namespace terminal_protocol;
+  if(std::strncmp(line,"open ",5)==0) return Result::action(ResultKind::OPEN_FILE,line+5);
+  if(std::strcmp(line,"reinit")==0) return Result::action(ResultKind::REINIT_CALCULATOR,"");
+  if(std::strcmp(line,"run")==0) return Result::action(ResultKind::RUN_PROGRAM,"");
+  if(std::strncmp(line,"run ",4)==0) {
+    u8 address=0;
+    const auto parsed=terminal_core::parse_run_address(line+4,core_61::program_steps(),address);
+    if(parsed==terminal_core::RunAddressParse::VALID)return Result::run_program(address);
+    if(parsed==terminal_core::RunAddressParse::INVALID)return Result::error();
+    return Result::action(ResultKind::OPEN_FILE,line+4);
+  }
+  if(std::strncmp(line,"cmd ",4)==0) {
+    std::istringstream c(line+4);std::string h,extra;
+    if(!(c>>h) || c>>extra) return Result::error();
+    unsigned op=std::stoul(h,nullptr,16);
+    if(op==0x51)press(3,9);
+    else if(op==0x50)press(2,9);
+    else if(op<=9)press(op+2,1);
+    else return Result::error();
+    return Result::ok();
+  }
+  if(line[0]=='R' && line[1] && line[2]=='=') {
+    const int reg=mk61_ref::hex_digit(line[1]);
+    if(reg<0 || reg>15) return Result::error();
+    char* end=nullptr;const double value=std::strtod(line+3,&end);
+    if(end==line+3 || *end) return Result::error();
+    return mk61_ref::write({mk61_ref::Kind::R,(u8)reg},value) ? Result::ok() : Result::error();
+  }
+  if(std::strncmp(line,"load ",5)==0) return Result::action(ResultKind::LOAD_BINARY,line+5);
+  std::istringstream input(line);
+  std::string op, hex, extra; unsigned address;
+  if(!(input>>op>>address>>hex) || op!="hin" || input>>extra || hex.size()%2) return Result::error();
+  for(size_t i=0;i<hex.size();i+=2) {
+    if(address+i/2>=105) return Result::error();
+    if(!core_61::write_absolute_program(address+i/2,std::stoul(hex.substr(i,2),nullptr,16)))
+      return Result::error();
+    ++written_bytes;
+  }
+  return Result::ok();
+}
+}
+
+bool load_binary_program(u16, const char* args) {
+  program_load::Request request={};
+  if(program_load::parse(args,request)!=program_load::Syntax::BINARY)
+    return program_load::reject("Invalid binary load");
+  for(size_t i=0;i<files.size();++i) {
+    if(files[i].name!=request.path) continue;
+    const bool ok=program_load::load(i,request.address,10000);
+    written_bytes+=program_load::written();
+    return ok;
+  }
+  return program_load::reject("Cannot open binary program");
+}
+
+unsigned elite_load_game(const char* path) {
+  directory=path;
+  for(const auto& p:std::filesystem::directory_iterator(directory)) {
+    if(p.path().extension()!=".m61" && p.path().extension()!=".bin") continue;
+    std::ifstream f(p.path(),std::ios::binary);
+    files.push_back({p.path().filename().string(),{std::istreambuf_iterator<char>(f),{}},
+      p.path().extension()==".bin" ? program_store::ProgramType::MK61_BINARY : program_store::ProgramType::MK61});
+  }
+  core_61::set_expanded_program_mode(true); core_61::enable();
+  // A previous program must be discarded by the new root loader.
+  assert(core_61::write_absolute_program(0,0xEE));
+  if(!m61_text::load_program("autoexec.m61")) {m61_text::Error error={};m61_text::last_error(error);std::cerr<<error.script<<':'<<error.line<<": "<<error.message<<'\n';std::exit(5);}
+  bool trace_attached=false;
+  while((m61_text::active() || core_61::is_RUN()) && elapsed<20000) {
+    if(!m61_text::active() && !trace_attached) {elite_enable_trace_if_requested();trace_attached=true;}
+    if(core_61::is_RUN()) elite_tracked_step();
+    m61_text::service(); ++elapsed;
+  }
+  m61_text::Error error={};
+  if(m61_text::last_error(error)) {
+    std::cerr<<error.script<<':'<<error.line<<": "<<error.message<<'\n'; std::exit(6);
+  }
+  if(m61_text::active() || core_61::is_RUN() || written_bytes==0) {
+    std::cerr<<"ELITE loader failed to reach the title stop; bytes="<<written_bytes<<'\n';
+    std::exit(7);
+  }
+  return elapsed;
+}

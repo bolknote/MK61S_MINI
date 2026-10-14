@@ -1,0 +1,3475 @@
+{
+  "prefix_dense": [
+    {
+      "family": "prefix-2",
+      "merges": 2,
+      "tokens": 40,
+      "fields": 168,
+      "radix": 2,
+      "bits": 168.0,
+      "dense_bytes": 21,
+      "dense_hex": "b6a0a91335ee90ead685349f08c76f60df00d3291e",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 26,
+      "explicit_tree_bytes": 40,
+      "dense_plus_explicit_table": 87,
+      "canonical_table_bytes": 29,
+      "canonical_table_hex": "00810c028201018302010103114950515e000104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          1,
+          8,
+          12
+        ]
+      },
+      "dense_plus_canonical_table": 50,
+      "numeric_words": [
+        61448374,
+        3902788,
+        6123177,
+        2260178,
+        56651719,
+        41205815,
+        482
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-2",
+      "merges": 3,
+      "tokens": 38,
+      "fields": 164,
+      "radix": 2,
+      "bits": 164.0,
+      "dense_bytes": 21,
+      "dense_hex": "b648532741dc21e0d605359f488ddfd837319ee201",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 42,
+      "dense_plus_explicit_table": 94,
+      "canonical_table_bytes": 34,
+      "canonical_table_hex": "00a00c0182010102840202010103114950515e008302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          0,
+          10,
+          12
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        55789750,
+        7802953,
+        6123010,
+        19037396,
+        64544653,
+        10980429,
+        30
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-2",
+      "merges": 4,
+      "tokens": 38,
+      "fields": 164,
+      "radix": 2,
+      "bits": 164.0,
+      "dense_bytes": 21,
+      "dense_hex": "b648532741dc21e0d605359f488ddfd837319ee201",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 42,
+      "dense_plus_explicit_table": 94,
+      "canonical_table_bytes": 34,
+      "canonical_table_hex": "00a00c0182010102840202010103114950515e008302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          0,
+          10,
+          12
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        55789750,
+        7802953,
+        6123010,
+        19037396,
+        64544653,
+        10980429,
+        30
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-2",
+      "merges": 5,
+      "tokens": 38,
+      "fields": 164,
+      "radix": 2,
+      "bits": 164.0,
+      "dense_bytes": 21,
+      "dense_hex": "b648532741dc21e0d605359f488ddfd837319ee201",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 42,
+      "dense_plus_explicit_table": 94,
+      "canonical_table_bytes": 34,
+      "canonical_table_hex": "00a00c0182010102840202010103114950515e008302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          0,
+          10,
+          12
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        55789750,
+        7802953,
+        6123010,
+        19037396,
+        64544653,
+        10980429,
+        30
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            0,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        }
+      ]
+    }
+  ],
+  "prefix_registers": [
+    {
+      "family": "prefix-10",
+      "merges": 3,
+      "tokens": 38,
+      "fields": 54,
+      "radix": 10,
+      "bits": 179.384,
+      "dense_bytes": 23,
+      "dense_hex": "c4101399aa293d41c901c9dce50dc1d2757ec5c775cb06",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 30,
+      "dense_plus_explicit_table": 84,
+      "canonical_table_bytes": 32,
+      "canonical_table_hex": "e802840202010103114950515e00018201018302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          8,
+          14
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        83730884,
+        81961807,
+        58451826,
+        22973282,
+        48396382,
+        28109851,
+        650809
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            8,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            8,
+            1
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            8,
+            2
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            8,
+            3
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            8,
+            4
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            8,
+            5
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            8,
+            6
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            8,
+            7
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            8,
+            8
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            8,
+            9
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            4
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            5
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            6
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-10",
+      "merges": 4,
+      "tokens": 38,
+      "fields": 54,
+      "radix": 10,
+      "bits": 179.384,
+      "dense_bytes": 23,
+      "dense_hex": "c4101399aa293d41c901c9dce50dc1d2757ec5c775cb06",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 30,
+      "dense_plus_explicit_table": 84,
+      "canonical_table_bytes": 32,
+      "canonical_table_hex": "e802840202010103114950515e00018201018302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          8,
+          14
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        83730884,
+        81961807,
+        58451826,
+        22973282,
+        48396382,
+        28109851,
+        650809
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            8,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            8,
+            1
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            8,
+            2
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            8,
+            3
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            8,
+            4
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            8,
+            5
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            8,
+            6
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            8,
+            7
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            8,
+            8
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            8,
+            9
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            4
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            5
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            6
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-10",
+      "merges": 5,
+      "tokens": 38,
+      "fields": 54,
+      "radix": 10,
+      "bits": 179.384,
+      "dense_bytes": 23,
+      "dense_hex": "c4101399aa293d41c901c9dce50dc1d2757ec5c775cb06",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 30,
+      "dense_plus_explicit_table": 84,
+      "canonical_table_bytes": 32,
+      "canonical_table_hex": "e802840202010103114950515e00018201018302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          8,
+          14
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        83730884,
+        81961807,
+        58451826,
+        22973282,
+        48396382,
+        28109851,
+        650809
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            8,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            8,
+            1
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            8,
+            2
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            8,
+            3
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            8,
+            4
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            8,
+            5
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            8,
+            6
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            8,
+            7
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            8,
+            8
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            8,
+            9
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            4
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            5
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            6
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-10",
+      "merges": 6,
+      "tokens": 38,
+      "fields": 54,
+      "radix": 10,
+      "bits": 179.384,
+      "dense_bytes": 23,
+      "dense_hex": "c4101399aa293d41c901c9dce50dc1d2757ec5c775cb06",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 31,
+      "explicit_tree_bytes": 30,
+      "dense_plus_explicit_table": 84,
+      "canonical_table_bytes": 32,
+      "canonical_table_hex": "e802840202010103114950515e00018201018302010104050607080d0e143035",
+      "canonical_table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          8,
+          14
+        ]
+      },
+      "dense_plus_canonical_table": 55,
+      "numeric_words": [
+        83730884,
+        81961807,
+        58451826,
+        22973282,
+        48396382,
+        28109851,
+        650809
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            8,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            8,
+            1
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            8,
+            2
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "020101",
+          "code": [
+            8,
+            3
+          ]
+        },
+        {
+          "phrase": "02020101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            8,
+            4
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            8,
+            5
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            8,
+            6
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            8,
+            7
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            8,
+            8
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            8,
+            9
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            4
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            5
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            6
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            7
+          ]
+        }
+      ]
+    }
+  ],
+  "prefix_canonical": [
+    {
+      "family": "prefix-4",
+      "merges": 0,
+      "tokens": 48,
+      "fields": 89,
+      "radix": 4,
+      "bits": 178.0,
+      "dense_bytes": 23,
+      "dense_hex": "ff968d2de1cf2de87f0ad87c2281bf5781ae15c07ea803",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 19,
+      "explicit_tree_bytes": 24,
+      "dense_plus_explicit_table": 66,
+      "canonical_table_bytes": 21,
+      "canonical_table_hex": "520c0102031150515e0004050607080d0e14303549",
+      "canonical_table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          2,
+          5,
+          12
+        ]
+      },
+      "dense_plus_canonical_table": 44,
+      "numeric_words": [
+        26056447,
+        57931851,
+        11009666,
+        9040736,
+        22527873,
+        355232,
+        3835884
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            3,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            3,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            3,
+            1,
+            2
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            3,
+            1,
+            3
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            3,
+            2,
+            2
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            3,
+            2,
+            3
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            3,
+            3,
+            2
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            3,
+            3,
+            3
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            3,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-2",
+      "merges": 0,
+      "tokens": 48,
+      "fields": 177,
+      "radix": 2,
+      "bits": 177.0,
+      "dense_bytes": 23,
+      "dense_hex": "b7cb9f3791ab1a718b81bf6d26c8f34b104312c0fc2201",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 19,
+      "explicit_tree_bytes": 36,
+      "dense_plus_explicit_table": 78,
+      "canonical_table_bytes": 22,
+      "canonical_table_hex": "10412b010203115051050607080d0e143035495e0004",
+      "canonical_table_parameters": {
+        "max_code_length": 6,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          1,
+          1,
+          4,
+          11,
+          2
+        ]
+      },
+      "dense_plus_canonical_table": 45,
+      "numeric_words": [
+        60804023,
+        44753997,
+        1619729,
+        10073854,
+        4977608,
+        299204,
+        1191884
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            1,
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            1,
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-10",
+      "merges": 0,
+      "tokens": 48,
+      "fields": 58,
+      "radix": 10,
+      "bits": 192.672,
+      "dense_bytes": 25,
+      "dense_hex": "abb7fed4417472520550160f4bca1afaefcfdbdb29ea593601",
+      "register_count": 8,
+      "register_bytes": 56,
+      "phrase_bytes": 19,
+      "explicit_tree_bytes": 20,
+      "dense_plus_explicit_table": 64,
+      "canonical_table_bytes": 20,
+      "canonical_table_hex": "a901020311354950515e0004050607080d0e1430",
+      "canonical_table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          9,
+          10
+        ]
+      },
+      "dense_plus_canonical_table": 45,
+      "numeric_words": [
+        93831595,
+        39897014,
+        2295602,
+        12299830,
+        11194700,
+        11169600,
+        9790000,
+        76
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            9,
+            4
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            9,
+            5
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            9,
+            6
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            9,
+            7
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            9,
+            8
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            9,
+            9
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            4
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            5
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            6
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            7
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "family": "prefix-4",
+      "merges": 1,
+      "tokens": 43,
+      "fields": 88,
+      "radix": 4,
+      "bits": 176.0,
+      "dense_bytes": 22,
+      "dense_hex": "b6d1d30be1cf9da17666f57c9994cb05a52b50b51fea",
+      "register_count": 7,
+      "register_bytes": 49,
+      "phrase_bytes": 22,
+      "explicit_tree_bytes": 28,
+      "dense_plus_explicit_table": 72,
+      "canonical_table_bytes": 24,
+      "canonical_table_hex": "910a02018201010311354950515e0004050607080d0e1430",
+      "canonical_table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          1,
+          9,
+          10
+        ]
+      },
+      "dense_plus_canonical_table": 46,
+      "numeric_words": [
+        64213430,
+        57931842,
+        40331801,
+        40235989,
+        17157012,
+        22285033,
+        958971
+      ],
+      "implicit_suffix": "00",
+      "codes": [
+        {
+          "phrase": "00",
+          "code": [
+            3,
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "01",
+          "code": [
+            1,
+            0
+          ]
+        },
+        {
+          "phrase": "0101",
+          "code": [
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "phrase": "03",
+          "code": [
+            1,
+            2
+          ]
+        },
+        {
+          "phrase": "04",
+          "code": [
+            3,
+            1,
+            1
+          ]
+        },
+        {
+          "phrase": "05",
+          "code": [
+            3,
+            1,
+            2
+          ]
+        },
+        {
+          "phrase": "06",
+          "code": [
+            3,
+            1,
+            3
+          ]
+        },
+        {
+          "phrase": "07",
+          "code": [
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "phrase": "08",
+          "code": [
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "phrase": "0d",
+          "code": [
+            3,
+            2,
+            2
+          ]
+        },
+        {
+          "phrase": "0e",
+          "code": [
+            3,
+            2,
+            3
+          ]
+        },
+        {
+          "phrase": "11",
+          "code": [
+            1,
+            3
+          ]
+        },
+        {
+          "phrase": "14",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "phrase": "30",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        },
+        {
+          "phrase": "35",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "phrase": "49",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "phrase": "50",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "phrase": "51",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "phrase": "5e",
+          "code": [
+            3,
+            0
+          ]
+        }
+      ]
+    }
+  ],
+  "macro_dense": [
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "020101",
+        "0101",
+        "115e"
+      ],
+      "direct_non_digits": [
+        "49",
+        "50",
+        "51"
+      ],
+      "nibbles": 44,
+      "dense_bytes": 22,
+      "explicit_table_bytes": 21,
+      "dense_plus_explicit_table": 43,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "020101",
+        "0301",
+        "115e"
+      ],
+      "direct_non_digits": [
+        "49",
+        "50",
+        "51"
+      ],
+      "nibbles": 44,
+      "dense_bytes": 22,
+      "explicit_table_bytes": 21,
+      "dense_plus_explicit_table": 43,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "02020101",
+        "0101",
+        "115e"
+      ],
+      "direct_non_digits": [
+        "49",
+        "50",
+        "51"
+      ],
+      "nibbles": 43,
+      "dense_bytes": 22,
+      "explicit_table_bytes": 22,
+      "dense_plus_explicit_table": 44,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "02020101",
+        "0151",
+        "115e"
+      ],
+      "direct_non_digits": [
+        "0d",
+        "49",
+        "50"
+      ],
+      "nibbles": 44,
+      "dense_bytes": 22,
+      "explicit_table_bytes": 22,
+      "dense_plus_explicit_table": 44,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    }
+  ],
+  "macro_with_table": [
+    {
+      "family": "nibble-macros",
+      "macros": [],
+      "direct_non_digits": [
+        "0d",
+        "11",
+        "49",
+        "50",
+        "51",
+        "5e"
+      ],
+      "nibbles": 52,
+      "dense_bytes": 26,
+      "explicit_table_bytes": 11,
+      "dense_plus_explicit_table": 37,
+      "register_count": 9,
+      "register_bytes": 63,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "0101"
+      ],
+      "direct_non_digits": [
+        "11",
+        "49",
+        "50",
+        "51",
+        "5e"
+      ],
+      "nibbles": 48,
+      "dense_bytes": 24,
+      "explicit_table_bytes": 14,
+      "dense_plus_explicit_table": 38,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "020101"
+      ],
+      "direct_non_digits": [
+        "11",
+        "49",
+        "50",
+        "51",
+        "5e"
+      ],
+      "nibbles": 47,
+      "dense_bytes": 24,
+      "explicit_table_bytes": 15,
+      "dense_plus_explicit_table": 39,
+      "register_count": 8,
+      "register_bytes": 56,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    },
+    {
+      "family": "nibble-macros",
+      "macros": [
+        "0201"
+      ],
+      "direct_non_digits": [
+        "11",
+        "49",
+        "50",
+        "51",
+        "5e"
+      ],
+      "nibbles": 49,
+      "dense_bytes": 25,
+      "explicit_table_bytes": 14,
+      "dense_plus_explicit_table": 39,
+      "register_count": 9,
+      "register_bytes": 63,
+      "implicit_suffix": "00",
+      "search": "exhaustive"
+    }
+  ],
+  "lz": [
+    {
+      "family": "lz",
+      "literal_bits": 7,
+      "distance_bits": 5,
+      "length_bits": 1,
+      "bits": 295,
+      "dense_bytes": 37,
+      "dictionary_bytes": 0,
+      "max_distance": 32,
+      "max_length": 3,
+      "operations": [
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          8
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          94
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          7
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          81
+        ],
+        [
+          "literal",
+          20
+        ],
+        [
+          "literal",
+          6
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          5
+        ],
+        [
+          "copy",
+          5,
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "copy",
+          17,
+          2
+        ],
+        [
+          "literal",
+          48
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "copy",
+          18,
+          2
+        ],
+        [
+          "copy",
+          19,
+          2
+        ],
+        [
+          "literal",
+          53
+        ],
+        [
+          "literal",
+          4
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          2
+        ],
+        [
+          "copy",
+          21,
+          2
+        ],
+        [
+          "literal",
+          13
+        ],
+        [
+          "copy",
+          6,
+          2
+        ],
+        [
+          "copy",
+          7,
+          2
+        ],
+        [
+          "copy",
+          1,
+          3
+        ],
+        [
+          "literal",
+          14
+        ],
+        [
+          "literal",
+          0
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          81
+        ]
+      ],
+      "register_count": 12,
+      "register_bytes": 84,
+      "implicit_suffix": "00",
+      "remaining_native_code_for_strict_byte_win": 11
+    },
+    {
+      "family": "lz",
+      "literal_bits": 7,
+      "distance_bits": 3,
+      "length_bits": 1,
+      "bits": 302,
+      "dense_bytes": 38,
+      "dictionary_bytes": 0,
+      "max_distance": 8,
+      "max_length": 3,
+      "operations": [
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          8
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          94
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          7
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          81
+        ],
+        [
+          "literal",
+          20
+        ],
+        [
+          "literal",
+          6
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          5
+        ],
+        [
+          "copy",
+          5,
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          94
+        ],
+        [
+          "literal",
+          48
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          8,
+          2
+        ],
+        [
+          "literal",
+          81
+        ],
+        [
+          "literal",
+          53
+        ],
+        [
+          "literal",
+          4
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          3
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          13
+        ],
+        [
+          "copy",
+          6,
+          2
+        ],
+        [
+          "copy",
+          7,
+          2
+        ],
+        [
+          "copy",
+          1,
+          3
+        ],
+        [
+          "literal",
+          14
+        ],
+        [
+          "literal",
+          0
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          81
+        ]
+      ],
+      "register_count": 12,
+      "register_bytes": 84,
+      "implicit_suffix": "00",
+      "remaining_native_code_for_strict_byte_win": 10
+    },
+    {
+      "family": "lz",
+      "literal_bits": 7,
+      "distance_bits": 5,
+      "length_bits": 2,
+      "bits": 304,
+      "dense_bytes": 38,
+      "dictionary_bytes": 0,
+      "max_distance": 32,
+      "max_length": 5,
+      "operations": [
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          8
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          94
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          7
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          81
+        ],
+        [
+          "literal",
+          20
+        ],
+        [
+          "literal",
+          6
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          5
+        ],
+        [
+          "copy",
+          5,
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "copy",
+          17,
+          2
+        ],
+        [
+          "literal",
+          48
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "copy",
+          18,
+          2
+        ],
+        [
+          "copy",
+          19,
+          2
+        ],
+        [
+          "literal",
+          53
+        ],
+        [
+          "literal",
+          4
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          2
+        ],
+        [
+          "copy",
+          21,
+          2
+        ],
+        [
+          "literal",
+          13
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          3
+        ],
+        [
+          "copy",
+          1,
+          3
+        ],
+        [
+          "literal",
+          14
+        ],
+        [
+          "literal",
+          0
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          81
+        ]
+      ],
+      "register_count": 12,
+      "register_bytes": 84,
+      "implicit_suffix": "00",
+      "remaining_native_code_for_strict_byte_win": 10
+    },
+    {
+      "family": "lz",
+      "literal_bits": 7,
+      "distance_bits": 6,
+      "length_bits": 1,
+      "bits": 304,
+      "dense_bytes": 38,
+      "dictionary_bytes": 0,
+      "max_distance": 64,
+      "max_length": 3,
+      "operations": [
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          8
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          94
+        ],
+        [
+          "literal",
+          17
+        ],
+        [
+          "literal",
+          7
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          81
+        ],
+        [
+          "literal",
+          20
+        ],
+        [
+          "literal",
+          6
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          73
+        ],
+        [
+          "literal",
+          5
+        ],
+        [
+          "copy",
+          5,
+          2
+        ],
+        [
+          "literal",
+          1
+        ],
+        [
+          "copy",
+          17,
+          2
+        ],
+        [
+          "literal",
+          48
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "literal",
+          3
+        ],
+        [
+          "copy",
+          18,
+          2
+        ],
+        [
+          "copy",
+          19,
+          2
+        ],
+        [
+          "literal",
+          53
+        ],
+        [
+          "literal",
+          4
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          2
+        ],
+        [
+          "copy",
+          21,
+          2
+        ],
+        [
+          "literal",
+          13
+        ],
+        [
+          "literal",
+          2
+        ],
+        [
+          "copy",
+          7,
+          3
+        ],
+        [
+          "copy",
+          1,
+          3
+        ],
+        [
+          "literal",
+          14
+        ],
+        [
+          "literal",
+          0
+        ],
+        [
+          "literal",
+          80
+        ],
+        [
+          "literal",
+          81
+        ]
+      ],
+      "register_count": 12,
+      "register_bytes": 84,
+      "implicit_suffix": "00",
+      "remaining_native_code_for_strict_byte_win": 10
+    }
+  ],
+  "branch_aware": {
+    "family": "branch-aware-nibbles",
+    "instruction_fields": 44,
+    "dense_bytes": 22,
+    "alphabet": [
+      "00",
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "0d",
+      "0e",
+      "11",
+      "49",
+      "50",
+      "51",
+      "5e"
+    ],
+    "non_digit_map_bytes": 7,
+    "operand_bytes": [
+      17,
+      20,
+      48,
+      53,
+      0
+    ],
+    "relative_offsets": [
+      7,
+      5,
+      9,
+      7,
+      -47
+    ],
+    "relative_offset_nibbles": 4,
+    "relative_offset_bytes": 2,
+    "fixed_last_target": 0,
+    "dense_plus_maps_and_offsets": 31,
+    "prefix_2": {
+      "fields": 147,
+      "tokens": 39,
+      "distinct": 17,
+      "bits": 147.0,
+      "register_count": 6
+    },
+    "prefix_10": {
+      "fields": 47,
+      "tokens": 39,
+      "distinct": 17,
+      "bits": 156.131,
+      "register_count": 6
+    }
+  },
+  "native": {
+    "decimal_prefix": {
+      "reader_bytes": 15,
+      "reader_hex": "69 0e 0e 01 00 13 34 49 0a 69 12 11 50 51 00",
+      "words": 7,
+      "symbols": 54,
+      "core_steps": 432,
+      "merges": 3,
+      "numeric_words": [
+        83730884,
+        81961807,
+        58451826,
+        22973282,
+        48396382,
+        28109851,
+        650809
+      ]
+    },
+    "quaternary_prefix": {
+      "reader_bytes": 14,
+      "reader_hex": "69 0e 0e 04 13 34 49 0a 69 12 11 50 51 00",
+      "words": 7,
+      "symbols": 89,
+      "core_steps": 697,
+      "numeric_words": [
+        26056447,
+        57931851,
+        11009666,
+        9040736,
+        22527873,
+        355232,
+        3835884
+      ]
+    }
+  }
+}

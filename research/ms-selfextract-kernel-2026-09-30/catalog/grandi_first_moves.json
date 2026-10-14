@@ -1,0 +1,30 @@
+[
+  {
+    "human": 91,
+    "cpu": 631,
+    "legal_split": true,
+    "listed_bytes": 48,
+    "including_last_branch_operand": 49
+  },
+  {
+    "human": 82,
+    "cpu": 721,
+    "legal_split": true,
+    "listed_bytes": 48,
+    "including_last_branch_operand": 49
+  },
+  {
+    "human": 73,
+    "cpu": 631,
+    "legal_split": true,
+    "listed_bytes": 48,
+    "including_last_branch_operand": 49
+  },
+  {
+    "human": 64,
+    "cpu": 631,
+    "legal_split": true,
+    "listed_bytes": 48,
+    "including_last_branch_operand": 49
+  }
+]

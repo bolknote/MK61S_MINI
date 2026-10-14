@@ -1,0 +1,51 @@
+[
+  {
+    "title": "The Land of Psycho Lamers",
+    "file": "/Users/bolk/Projects/MK-61/games/adventure/the-land-of-psycho-lamers.txt",
+    "bytes": 105,
+    "good": [
+      {
+        "word": 2,
+        "m": 66005065,
+        "sign": 0,
+        "e": 5,
+        "raw": "00 65 50 00 66 50 00"
+      },
+      {
+        "word": 4,
+        "m": 69005068,
+        "sign": 0,
+        "e": 5,
+        "raw": "00 68 50 00 69 50 00"
+      },
+      {
+        "word": 7,
+        "m": 64005063,
+        "sign": 0,
+        "e": 5,
+        "raw": "54 63 50 00 64 50 00"
+      }
+    ]
+  },
+  {
+    "title": "Одинокий ферзь",
+    "file": "/Users/bolk/Projects/MK-61/games/logic/odinokiy-ferz-c3000.txt",
+    "bytes": 78,
+    "good": [
+      {
+        "word": 2,
+        "m": 40044604,
+        "sign": 9,
+        "e": 16,
+        "raw": "49 04 46 04 40 69 01"
+      },
+      {
+        "word": 6,
+        "m": 36571169,
+        "sign": 0,
+        "e": 16,
+        "raw": "d0 69 11 57 36 60 01"
+      }
+    ]
+  }
+]

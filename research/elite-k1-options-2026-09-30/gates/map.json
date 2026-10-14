@@ -1,0 +1,303 @@
+{
+  "occupied_bytes": 2905,
+  "free_bytes": 679,
+  "labels": {
+    "start": 0,
+    "new_game": 19,
+    "redraw": 31,
+    "main": 37,
+    "result_input_entry": 45,
+    "port_input_entry": 51,
+    "combat_input_entry": 57,
+    "input_invalid": 63,
+    "bad_action": 67,
+    "port_input": 1344,
+    "station_check": 1395,
+    "select_check": 1405,
+    "set_view": 1417,
+    "show": 1904,
+    "port_view": 1932,
+    "show_cached_price": 1977,
+    "show_price": 1983,
+    "good_prefix": 1991,
+    "draw_number": 2240,
+    "number_frame": 2244,
+    "number_common": 2246,
+    "show_stat": 2259,
+    "stat_get": 2283,
+    "show_missiles": 2305,
+    "read_credits": 2316,
+    "show_credits": 2322,
+    "show_hold": 2327,
+    "show_world": 2352,
+    "show_destination": 2364,
+    "draw_name": 2374,
+    "name_frame": 2378,
+    "show_invalid": 2397,
+    "invalid_frame": 2401,
+    "name_alphabet": 224,
+    "glyph_table": 336,
+    "glyph": 360,
+    "bar_patterns": 365,
+    "bar_pattern": 401,
+    "range_patterns": 2576,
+    "range_pattern": 2624,
+    "mod16": 448,
+    "title": 2016,
+    "victory": 2044,
+    "defeat": 2073,
+    "escape": 2088,
+    "pirate": 2104,
+    "thargoid": 2975,
+    "text_zero": 2999,
+    "text_end": 3001,
+    "show_message": 3006,
+    "draw_gauge": 896,
+    "gauge_frame": 914,
+    "instrument_frame": 925,
+    "draw_range": 946,
+    "range_far": 960,
+    "range_index": 961,
+    "range_frame": 970,
+    "drone_alphabet": 1001,
+    "bar_alphabet": 2764,
+    "range_alphabet": 2772,
+    "init_pilot": 112,
+    "init_hold": 150,
+    "sum_hold": 177,
+    "world": 560,
+    "world_ready": 589,
+    "select_world": 590,
+    "price": 672,
+    "price_market": 678,
+    "price_wrapped": 692,
+    "price_clamp": 727,
+    "price_ready": 729,
+    "trade": 784,
+    "clamp0_7_9": 800,
+    "trade_quote": 801,
+    "trade_hold": 827,
+    "buy_done": 857,
+    "sell_checks": 874,
+    "trade_commit": 270,
+    "trade_price_clamp": 310,
+    "trade_price_ready": 312,
+    "sell_empty": 319,
+    "trade_refused": 323,
+    "station": 2128,
+    "service_hull": 2170,
+    "service_missile": 2183,
+    "service_ready": 2190,
+    "service_hold": 2211,
+    "service_commit": 2225,
+    "service_done": 2232,
+    "service_check": 197,
+    "service_checked": 207,
+    "service_full": 212,
+    "distance": 1008,
+    "distance_view": 1049,
+    "jump": 1120,
+    "jump_tick": 1163,
+    "jump_tick_done": 1191,
+    "alien_contact": 464,
+    "pirate_contact": 470,
+    "arrive": 476,
+    "arrived_pilot": 480,
+    "finish_arrive": 492,
+    "init_market": 496,
+    "market_stock": 510,
+    "finish_new_game": 529,
+    "start_contact": 1232,
+    "init_enemy": 1259,
+    "enemy_fields": 1277,
+    "init_drones": 1296,
+    "drones_done": 1333,
+    "combat_input": 1456,
+    "fight_command": 1480,
+    "choose_target": 1511,
+    "select_target": 1524,
+    "select_carrier": 1542,
+    "select_hp": 1544,
+    "select_done": 1551,
+    "fight": 2477,
+    "missile_empty": 2504,
+    "ammo_ready": 2513,
+    "shot_ready": 2543,
+    "apply_damage": 2549,
+    "clamp0_13_105": 2558,
+    "enemy_hit_done": 2560,
+    "won": 3377,
+    "reward": 3381,
+    "reward_done": 3402,
+    "count_kill": 3410,
+    "escaped": 3428,
+    "lost": 3437,
+    "weapon": 1568,
+    "clamp0_14_5": 1579,
+    "no_shot": 1607,
+    "laser": 1611,
+    "missile": 1625,
+    "weapon_done": 1634,
+    "player_hit": 1634,
+    "clamp0_14_58": 1645,
+    "shield_holds": 1648,
+    "enemy_tick": 1680,
+    "clamp0_15_13": 1699,
+    "motion_ready": 1710,
+    "charge_reset": 1722,
+    "charge_ready": 1724,
+    "enemy_ready": 1737,
+    "incoming_ready": 1750,
+    "weapon_ready": 1760,
+    "combat_view": 1792,
+    "range_view": 1817,
+    "target_view": 1827,
+    "battle_frame": 1837,
+    "formation_ready": 1870,
+    "drones_view": 1885,
+    "charge_view": 1894,
+    "target_number": 628,
+    "contact_name": 638,
+    "alien_name": 657,
+    "show_result": 666,
+    "swarm_update": 3472,
+    "drone_tick": 3476,
+    "drones_hit": 3493,
+    "clamp0_15_94": 3509,
+    "drones_ready": 3519,
+    "carrier_launch": 3526,
+    "carrier_launch_done": 3532
+  },
+  "banks": {
+    "0": {
+      "module": "kernel",
+      "used": 71
+    },
+    "12": {
+      "module": "input",
+      "used": 76
+    },
+    "17": {
+      "module": "views",
+      "used": 106
+    },
+    "20": {
+      "module": " / views",
+      "used": 105
+    },
+    "21": {
+      "module": " / views",
+      "used": 73
+    },
+    "2": {
+      "module": "name alphabet / trade",
+      "used": 107
+    },
+    "3": {
+      "module": "glyphs",
+      "used": 74
+    },
+    "23": {
+      "module": "range table",
+      "used": 53
+    },
+    "4": {
+      "module": "arithmetic / flight / contacts",
+      "used": 107
+    },
+    "18": {
+      "module": "messages",
+      "used": 108
+    },
+    "26": {
+      "module": "data / messages",
+      "used": 105
+    },
+    "8": {
+      "module": "format",
+      "used": 111
+    },
+    "24": {
+      "module": "data / format",
+      "used": 88
+    },
+    "1": {
+      "module": "initialization / station",
+      "used": 103
+    },
+    "5": {
+      "module": "world / combat views",
+      "used": 112
+    },
+    "6": {
+      "module": "prices",
+      "used": 65
+    },
+    "7": {
+      "module": "trade",
+      "used": 111
+    },
+    "19": {
+      "module": "station",
+      "used": 112
+    },
+    "9": {
+      "module": "navigation",
+      "used": 50
+    },
+    "10": {
+      "module": "flight",
+      "used": 111
+    },
+    "11": {
+      "module": "contacts",
+      "used": 112
+    },
+    "13": {
+      "module": "combat",
+      "used": 111
+    },
+    "22": {
+      "module": " / combat",
+      "used": 112
+    },
+    "30": {
+      "module": " / combat",
+      "used": 86
+    },
+    "14": {
+      "module": "weapons",
+      "used": 96
+    },
+    "15": {
+      "module": "enemies",
+      "used": 81
+    },
+    "16": {
+      "module": "combat views",
+      "used": 112
+    },
+    "31": {
+      "module": "generated drone gates",
+      "used": 61
+    },
+    "25": {
+      "module": "data",
+      "used": 76
+    },
+    "27": {
+      "module": "data",
+      "used": 76
+    },
+    "28": {
+      "module": "data",
+      "used": 71
+    },
+    "29": {
+      "module": "data",
+      "used": 63
+    }
+  },
+  "variant": "gates",
+  "bin_bytes": 1998
+}

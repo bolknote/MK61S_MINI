@@ -1,0 +1,46 @@
+{
+  "baseline_elite_commit": "527b4349",
+  "core_sha256": "b391670e6237600af85a22042a3b0df1c17167fbcb46a26906ca477b02a299c6",
+  "states_per_variant": 5765,
+  "baseline_steps": 416779,
+  "variants": [
+    {
+      "name": "base",
+      "occupied_bytes": 2884,
+      "bin_bytes": 1975,
+      "bin_sha256": "debd9dcdbbab6e1781a458b3f1052af80eef3910b1df0d6401416b3a5228ef02"
+    },
+    {
+      "name": "specialized",
+      "occupied_bytes": 2970,
+      "bin_bytes": 2021,
+      "bin_sha256": "efd819e7612c50dbd22c632484d2f42169a7b6fc1e00107945aa5f19ee77fde3"
+    },
+    {
+      "name": "gates",
+      "occupied_bytes": 2905,
+      "bin_bytes": 1998,
+      "bin_sha256": "45222f22bae83a8ca3372e75c3d03b9c18422169e256db2d8952ad4cc479f71d"
+    },
+    {
+      "name": "packed-drones",
+      "occupied_bytes": 2957,
+      "bin_bytes": 2019,
+      "bin_sha256": "b592691a736ce3c5e61691e18198080b2be6e55a4c2546fc1943d5b5be19cb38"
+    },
+    {
+      "name": "overlay",
+      "occupied_bytes": 3046,
+      "bin_bytes": 2030,
+      "bin_sha256": "9440665067c30e0bb21a6750dcc5cfece3cf4ca5d75b5eed9d0a6b33821834b9"
+    },
+    {
+      "name": "rle",
+      "occupied_bytes": 3032,
+      "bin_bytes": 2072,
+      "bin_sha256": "2cf26518a2c8d94c1bf79f56f3b71e23ec540f3f54328bbd101f93a138389f2b"
+    }
+  ],
+  "additional_packed_hull_cases": 2885,
+  "production_bin_changed": false
+}

@@ -1,0 +1,6314 @@
+{
+  "original_bytes": 49,
+  "instruction_bytes": 44,
+  "relative_offsets": [
+    7,
+    5,
+    9,
+    7,
+    -47
+  ],
+  "relative_offset_bytes": 2,
+  "structural_rule_host_round_trip": true,
+  "plain_nibbles": {
+    "family": "branch-fixed-16-symbols",
+    "fields": 44,
+    "radix": 16,
+    "packed_bytes": 22,
+    "payload_hex": "8cb27f126e13cd3511fb3312e12412d1292211110aed",
+    "table_bytes": 7,
+    "table_hex": "0d0e114950515e",
+    "with_explicit_offsets": 31,
+    "with_structural_addresses": 29,
+    "input_registers": 8,
+    "input_register_bytes": 56,
+    "numeric_words": [
+      8368780,
+      1273362,
+      1127885,
+      1192955,
+      1189089,
+      2238929,
+      659729,
+      237
+    ],
+    "codes": [
+      {
+        "token": "00",
+        "code": [
+          0
+        ]
+      },
+      {
+        "token": "01",
+        "code": [
+          1
+        ]
+      },
+      {
+        "token": "02",
+        "code": [
+          2
+        ]
+      },
+      {
+        "token": "03",
+        "code": [
+          3
+        ]
+      },
+      {
+        "token": "04",
+        "code": [
+          4
+        ]
+      },
+      {
+        "token": "05",
+        "code": [
+          5
+        ]
+      },
+      {
+        "token": "06",
+        "code": [
+          6
+        ]
+      },
+      {
+        "token": "07",
+        "code": [
+          7
+        ]
+      },
+      {
+        "token": "08",
+        "code": [
+          8
+        ]
+      },
+      {
+        "token": "0d",
+        "code": [
+          9
+        ]
+      },
+      {
+        "token": "0e",
+        "code": [
+          10
+        ]
+      },
+      {
+        "token": "11",
+        "code": [
+          11
+        ]
+      },
+      {
+        "token": "49",
+        "code": [
+          12
+        ]
+      },
+      {
+        "token": "50",
+        "code": [
+          13
+        ]
+      },
+      {
+        "token": "51",
+        "code": [
+          14
+        ]
+      },
+      {
+        "token": "5e",
+        "code": [
+          15
+        ]
+      }
+    ]
+  },
+  "prefix": [
+    {
+      "family": "branch-prefix-2",
+      "fields": 152,
+      "radix": 2,
+      "packed_bytes": 19,
+      "payload_hex": "71e57d446d236319789b096a4a904f12c01f59",
+      "table_bytes": 19,
+      "table_hex": "106108010203114950515e0004050607080d0e",
+      "with_explicit_offsets": 40,
+      "with_structural_addresses": 38,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        8250737,
+        13163345,
+        28803478,
+        19507238,
+        1200016,
+        1460208
+      ],
+      "merges": 0,
+      "table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          1,
+          1,
+          6,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0,
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-2",
+      "fields": 147,
+      "radix": 2,
+      "packed_bytes": 19,
+      "payload_hex": "71e97d68b565194bf096889a24f29104fec802",
+      "table_bytes": 22,
+      "table_hex": "006308820101020301114950515e0004050607080d0e",
+      "with_explicit_offsets": 43,
+      "with_structural_addresses": 41,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        8251761,
+        39415130,
+        24052913,
+        9595426,
+        33853938,
+        45631
+      ],
+      "merges": 1,
+      "table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          3,
+          6,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "0101",
+          "code": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-2",
+      "fields": 143,
+      "radix": 2,
+      "packed_bytes": 18,
+      "payload_hex": "71e17d20b529198bea4d5a4d583ec0f48f2c",
+      "table_bytes": 26,
+      "table_hex": "00820802030182010183020101114950515e0004050607080d0e",
+      "with_explicit_offsets": 46,
+      "with_structural_addresses": 44,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        8249713,
+        38432072,
+        14592177,
+        23147881,
+        66371646,
+        2851
+      ],
+      "merges": 2,
+      "table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          2,
+          8,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "02",
+          "code": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-2",
+      "fields": 140,
+      "radix": 2,
+      "packed_bytes": 18,
+      "payload_hex": "f1c4fb0ad501656cb037306b697e51b69105",
+      "table_bytes": 31,
+      "table_hex": "00a10803018201010284020201010e114950515e008302010104050607080d",
+      "with_explicit_offsets": 51,
+      "with_structural_addresses": 49,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        50054385,
+        21001538,
+        58394310,
+        27634880,
+        28725630,
+        356
+      ],
+      "merges": 3,
+      "table_parameters": {
+        "max_code_length": 5,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          0,
+          1,
+          10,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "03",
+          "code": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            0,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            0,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "02020101",
+          "code": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            0,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            0,
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            1,
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            1,
+            1,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            0
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            1,
+            1,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-4",
+      "fields": 76,
+      "radix": 4,
+      "packed_bytes": 19,
+      "payload_hex": "fa65f7c4ec82eb2a602712cc56e06f05f02f3e",
+      "table_bytes": 18,
+      "table_hex": "6208010203114950515e0004050607080d0e",
+      "with_explicit_offsets": 39,
+      "with_structural_addresses": 37,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        16213498,
+        48282417,
+        41288366,
+        22753352,
+        356320,
+        1018876
+      ],
+      "merges": 0,
+      "table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          2,
+          6,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            3,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            3,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            3,
+            2,
+            2
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            3,
+            2,
+            3
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            3,
+            3,
+            2
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            3,
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-4",
+      "fields": 76,
+      "radix": 4,
+      "packed_bytes": 19,
+      "payload_hex": "fa61f710b367b8ae597699d46c50de40952c3e",
+      "table_bytes": 21,
+      "table_hex": "a1060201820101030d0e114950515e000405060708",
+      "with_explicit_offsets": 42,
+      "with_structural_addresses": 40,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        16212474,
+        35253444,
+        56990443,
+        28529253,
+        21028432,
+        1018661
+      ],
+      "merges": 1,
+      "table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          1,
+          10,
+          6
+        ]
+      },
+      "codes": [
+        {
+          "token": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1,
+            1
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            1,
+            2
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            1,
+            3
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            3,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            3,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            3,
+            2,
+            2
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            3,
+            2,
+            3
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-4",
+      "fields": 74,
+      "radix": 4,
+      "packed_bytes": 19,
+      "payload_hex": "fa61f710b377b8ae5d76dd391be92f64c9e203",
+      "table_bytes": 25,
+      "table_hex": "a107020182010183020101030e114950515e0004050607080d",
+      "with_explicit_offsets": 46,
+      "with_structural_addresses": 44,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        16212474,
+        35515588,
+        57006827,
+        7137141,
+        23343081,
+        63666
+      ],
+      "merges": 2,
+      "table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          1,
+          10,
+          7
+        ]
+      },
+      "codes": [
+        {
+          "token": "02",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            1,
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1,
+            1
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            1,
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            1,
+            3
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            3,
+            0
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            3,
+            1
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            3,
+            2,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            3,
+            2,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            3,
+            2,
+            2
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            3,
+            2,
+            3
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            3,
+            3,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-4",
+      "fields": 72,
+      "radix": 4,
+      "packed_bytes": 18,
+      "payload_hex": "dea89b085701e37f906ec4772f8f20933d73",
+      "table_bytes": 30,
+      "table_hex": "f00401820101028402020101030607080d0e114950515e00830201010405",
+      "with_explicit_offsets": 50,
+      "with_structural_addresses": 48,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        10201310,
+        12604866,
+        48826366,
+        12443409,
+        26419343,
+        7375
+      ],
+      "merges": 3,
+      "table_parameters": {
+        "max_code_length": 3,
+        "count_bits": 4,
+        "length_counts": [
+          0,
+          15,
+          4
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0,
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            0,
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            0,
+            2
+          ]
+        },
+        {
+          "token": "02020101",
+          "code": [
+            0,
+            3
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            1,
+            0
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            1,
+            1
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            1,
+            2
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            1,
+            3
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            2,
+            0
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            2,
+            1
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            2,
+            2
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            2,
+            3
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            3,
+            0
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            3,
+            1
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            3,
+            2
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            3,
+            3,
+            0
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            3,
+            3,
+            1
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            3,
+            3,
+            2
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            3,
+            3,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-10",
+      "fields": 51,
+      "radix": 10,
+      "packed_bytes": 22,
+      "payload_hex": "bb3a220b26d768033bb774cecc16cd40b84c41a60802",
+      "table_bytes": 17,
+      "table_hex": "790102030e114950515e0004050607080d",
+      "with_explicit_offsets": 41,
+      "with_structural_addresses": 39,
+      "input_registers": 7,
+      "input_register_bytes": 49,
+      "numeric_words": [
+        49841595,
+        60239701,
+        84002295,
+        19700122,
+        16960011,
+        93000011,
+        760
+      ],
+      "merges": 0,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          9,
+          7
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            9,
+            4
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            9,
+            5
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            9,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-10",
+      "fields": 47,
+      "radix": 10,
+      "packed_bytes": 20,
+      "payload_hex": "a3bf82488210e975bcd19de603320fe12d59540d",
+      "table_bytes": 20,
+      "table_hex": "89018201010203114950515e0004050607080d0e",
+      "with_explicit_offsets": 42,
+      "with_structural_addresses": 40,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        49842595,
+        60339702,
+        38413295,
+        22197123,
+        12226961,
+        7609791
+      ],
+      "merges": 1,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          9,
+          8
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            9,
+            4
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            9,
+            5
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            9,
+            6
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-10",
+      "fields": 46,
+      "radix": 10,
+      "packed_bytes": 20,
+      "payload_hex": "9fa36ef13efe78f83292cd0cddc3c762413d5501",
+      "table_bytes": 24,
+      "table_hex": "99820101028302010103114950515e000104050607080d0e",
+      "with_explicit_offsets": 46,
+      "with_structural_addresses": 44,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        59841695,
+        93497191,
+        40339561,
+        12972338,
+        2117962,
+        760989
+      ],
+      "merges": 2,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          9,
+          9
+        ]
+      },
+      "codes": [
+        {
+          "token": "0101",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            9,
+            4
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            9,
+            5
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            9,
+            6
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            9,
+            7
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-10",
+      "fields": 45,
+      "radix": 10,
+      "packed_bytes": 19,
+      "payload_hex": "83da892bf135cc2e748c8f1bc4efc720d71f22",
+      "table_bytes": 29,
+      "table_hex": "a982010102840202010103114950515e00018302010104050607080d0e",
+      "with_explicit_offsets": 50,
+      "with_structural_addresses": 48,
+      "input_registers": 6,
+      "input_register_bytes": 42,
+      "numeric_words": [
+        69841795,
+        93597191,
+        40349561,
+        39729338,
+        90218962,
+        76099
+      ],
+      "merges": 3,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          9,
+          10
+        ]
+      },
+      "codes": [
+        {
+          "token": "0101",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02020101",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            9,
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            9,
+            1
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            9,
+            2
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            9,
+            3
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            9,
+            4
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            9,
+            5
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            9,
+            6
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            9,
+            7
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            9,
+            8
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9,
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-16",
+      "fields": 44,
+      "radix": 16,
+      "packed_bytes": 22,
+      "payload_hex": "8cb27f126e13cd3511fb3312e12412d1292211110aed",
+      "table_bytes": 17,
+      "table_hex": "100001020304050607080d0e114950515e",
+      "with_explicit_offsets": 41,
+      "with_structural_addresses": 39,
+      "input_registers": 8,
+      "input_register_bytes": 56,
+      "numeric_words": [
+        8368780,
+        1273362,
+        1127885,
+        1192955,
+        1189089,
+        2238929,
+        659729,
+        237
+      ],
+      "merges": 0,
+      "table_parameters": {
+        "max_code_length": 1,
+        "count_bits": 8,
+        "length_counts": [
+          16
+        ]
+      },
+      "codes": [
+        {
+          "token": "00",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "01",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            9
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            10
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            11
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            12
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            13
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            14
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-16",
+      "fields": 41,
+      "radix": 16,
+      "packed_bytes": 21,
+      "payload_hex": "7ba26e025d03bc34a13e23d11f22c1282211f9c00d",
+      "table_bytes": 20,
+      "table_hex": "2f018201010203050607080d0e114950515e0004",
+      "with_explicit_offsets": 43,
+      "with_structural_addresses": 41,
+      "input_registers": 7,
+      "input_register_bytes": 49,
+      "numeric_words": [
+        7250555,
+        220418,
+        10564796,
+        13706046,
+        12657183,
+        1122856,
+        901369
+      ],
+      "merges": 1,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          15,
+          2
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            10
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            11
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            12
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            13
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            14
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            15,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            15,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-16",
+      "fields": 39,
+      "radix": 16,
+      "packed_bytes": 20,
+      "payload_hex": "7ba26e025d04bc2f14ea44d31f328c2213f9c00d",
+      "table_bytes": 24,
+      "table_hex": "3f018201010283020101030607080d0e114950515e000405",
+      "with_explicit_offsets": 46,
+      "with_structural_addresses": 44,
+      "input_registers": 7,
+      "input_register_bytes": 49,
+      "numeric_words": [
+        7250555,
+        285954,
+        1322940,
+        13845738,
+        9187871,
+        16323362,
+        3520
+      ],
+      "merges": 2,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          15,
+          3
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            10
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            11
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            12
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            13
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            14
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            15,
+            0
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            15,
+            1
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            15,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "family": "branch-prefix-16",
+      "fields": 38,
+      "radix": 16,
+      "packed_bytes": 19,
+      "payload_hex": "7ba26e025d04bc3f14ea441ffd328c32910fdc",
+      "table_bytes": 29,
+      "table_hex": "4f01820101028402020101030607080d0e114950515e00830201010405",
+      "with_explicit_offsets": 50,
+      "with_structural_addresses": 48,
+      "input_registers": 7,
+      "input_register_bytes": 49,
+      "numeric_words": [
+        7250555,
+        285954,
+        1327036,
+        2049258,
+        9188093,
+        1020210,
+        220
+      ],
+      "merges": 3,
+      "table_parameters": {
+        "max_code_length": 2,
+        "count_bits": 4,
+        "length_counts": [
+          15,
+          4
+        ]
+      },
+      "codes": [
+        {
+          "token": "01",
+          "code": [
+            0
+          ]
+        },
+        {
+          "token": "0101",
+          "code": [
+            1
+          ]
+        },
+        {
+          "token": "02",
+          "code": [
+            2
+          ]
+        },
+        {
+          "token": "02020101",
+          "code": [
+            3
+          ]
+        },
+        {
+          "token": "03",
+          "code": [
+            4
+          ]
+        },
+        {
+          "token": "06",
+          "code": [
+            5
+          ]
+        },
+        {
+          "token": "07",
+          "code": [
+            6
+          ]
+        },
+        {
+          "token": "08",
+          "code": [
+            7
+          ]
+        },
+        {
+          "token": "0d",
+          "code": [
+            8
+          ]
+        },
+        {
+          "token": "0e",
+          "code": [
+            9
+          ]
+        },
+        {
+          "token": "11",
+          "code": [
+            10
+          ]
+        },
+        {
+          "token": "49",
+          "code": [
+            11
+          ]
+        },
+        {
+          "token": "50",
+          "code": [
+            12
+          ]
+        },
+        {
+          "token": "51",
+          "code": [
+            13
+          ]
+        },
+        {
+          "token": "5e",
+          "code": [
+            14
+          ]
+        },
+        {
+          "token": "00",
+          "code": [
+            15,
+            0
+          ]
+        },
+        {
+          "token": "020101",
+          "code": [
+            15,
+            1
+          ]
+        },
+        {
+          "token": "04",
+          "code": [
+            15,
+            2
+          ]
+        },
+        {
+          "token": "05",
+          "code": [
+            15,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "nibble": {
+    "allocations": 18564,
+    "repeated_phrases": 11,
+    "best_total": [
+      {
+        "family": "branch-nibble-macros",
+        "fields": 45,
+        "radix": 16,
+        "packed_bytes": 23,
+        "payload_hex": "8ba27e126d13bc3511ea3312d12412c1292211110fc00d",
+        "table_bytes": 7,
+        "table_hex": "0d114950515e0e",
+        "with_explicit_offsets": 32,
+        "with_structural_addresses": 30,
+        "input_registers": 8,
+        "input_register_bytes": 56,
+        "numeric_words": [
+          8299147,
+          1273106,
+          1127868,
+          1192938,
+          1189073,
+          2238913,
+          987409,
+          3520
+        ],
+        "macros": [],
+        "direct_common": [
+          "0d",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              14
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 40,
+        "radix": 16,
+        "packed_bytes": 20,
+        "payload_hex": "8a927d126c13ab3511d933ce24be0f221ef101cb",
+        "table_bytes": 11,
+        "table_hex": "114950515e0d0e03020101",
+        "with_explicit_offsets": 33,
+        "with_structural_addresses": 31,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          8229514,
+          1272850,
+          1127851,
+          13513689,
+          1031716,
+          15801890,
+          51969
+        ],
+        "macros": [
+          "020101"
+        ],
+        "direct_common": [
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 41,
+        "radix": 16,
+        "packed_bytes": 21,
+        "payload_hex": "8a927d126c13ab359e3d23ce24e2fb2022ee1fb00c",
+        "table_bytes": 10,
+        "table_hex": "114950515e0d0e020101",
+        "with_explicit_offsets": 33,
+        "with_structural_addresses": 31,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          8229514,
+          1272850,
+          10368427,
+          13509437,
+          16507428,
+          15606304,
+          831519
+        ],
+        "macros": [
+          "0101"
+        ],
+        "direct_common": [
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 42,
+        "radix": 16,
+        "packed_bytes": 21,
+        "payload_hex": "8a927dce36b15a13913de3c1241efb20e211f101cb",
+        "table_bytes": 10,
+        "table_hex": "114950515e0d0e020201",
+        "with_explicit_offsets": 33,
+        "with_structural_addresses": 31,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          8229514,
+          11613902,
+          9507674,
+          12706621,
+          16457252,
+          1172000,
+          13304305
+        ],
+        "macros": [
+          "0201"
+        ],
+        "direct_common": [
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "0201",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 42,
+        "radix": 16,
+        "packed_bytes": 21,
+        "payload_hex": "8be227d136c15b13e13312d12412c1292211110adc",
+        "table_bytes": 10,
+        "table_hex": "0d0e495051115e02115e",
+        "with_explicit_offsets": 33,
+        "with_structural_addresses": 31,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          2613899,
+          12662481,
+          14750555,
+          13701683,
+          12653092,
+          1122857,
+          14420497
+        ],
+        "macros": [
+          "115e"
+        ],
+        "direct_common": [
+          "0d",
+          "0e",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 40,
+        "radix": 16,
+        "packed_bytes": 20,
+        "payload_hex": "8a927d126c13ab3511d93312c1e4fb201ef101cb",
+        "table_bytes": 12,
+        "table_hex": "114950515e0d0e0402020101",
+        "with_explicit_offsets": 34,
+        "with_structural_addresses": 32,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          8229514,
+          1272850,
+          1127851,
+          1192921,
+          16508097,
+          15801888,
+          51969
+        ],
+        "macros": [
+          "02020101"
+        ],
+        "direct_common": [
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "02020101",
+            "code": [
+              14
+            ]
+          }
+        ]
+      }
+    ],
+    "best_stream": [
+      {
+        "family": "branch-nibble-macros",
+        "fields": 36,
+        "radix": 16,
+        "packed_bytes": 18,
+        "payload_hex": "89e227b136a159d33ec34bc2fa20c2fd01ba",
+        "table_bytes": 17,
+        "table_hex": "4950510d0e115e0302010102010102115e",
+        "with_explicit_offsets": 37,
+        "with_structural_addresses": 35,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          2613897,
+          10565297,
+          4117337,
+          12733379,
+          12722426,
+          12190205
+        ],
+        "macros": [
+          "020101",
+          "0101",
+          "115e"
+        ],
+        "direct_common": [
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              3
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 36,
+        "radix": 16,
+        "packed_bytes": 18,
+        "payload_hex": "89e227b1d69ad5e133bc24ac0f221cf101ba",
+        "table_bytes": 17,
+        "table_hex": "4950510d0e115e0302010102030102115e",
+        "with_explicit_offsets": 37,
+        "with_structural_addresses": 35,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          2613897,
+          10147505,
+          3400149,
+          11281596,
+          1843727,
+          12190193
+        ],
+        "macros": [
+          "020101",
+          "0301",
+          "115e"
+        ],
+        "direct_common": [
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              3
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0301",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 36,
+        "radix": 16,
+        "packed_bytes": 18,
+        "payload_hex": "89e227a1369d35ec33c24adb0fb2c11ff0a3",
+        "table_bytes": 20,
+        "table_hex": "49510d0e11505e0302020102010102015002115e",
+        "with_explicit_offsets": 40,
+        "with_structural_addresses": 38,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          2613897,
+          10303137,
+          3402805,
+          14371522,
+          12694031,
+          10743839
+        ],
+        "macros": [
+          "020201",
+          "0101",
+          "0150",
+          "115e"
+        ],
+        "direct_common": [
+          "49",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              15,
+              3
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              4
+            ]
+          },
+          {
+            "token": "020201",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0150",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 36,
+        "radix": 16,
+        "packed_bytes": 18,
+        "payload_hex": "89e2276dc359b33e23d1a4fc201afb013f4f",
+        "table_bytes": 23,
+        "table_hex": "490d0e1150515e0302020102010102015002015102115e",
+        "with_explicit_offsets": 43,
+        "with_structural_addresses": 41,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          2613897,
+          5882733,
+          2309811,
+          16557265,
+          16456224,
+          5193473
+        ],
+        "macros": [
+          "020201",
+          "0101",
+          "0150",
+          "0151",
+          "115e"
+        ],
+        "direct_common": [
+          "49"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              15,
+              3
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              15,
+              4
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              5
+            ]
+          },
+          {
+            "token": "020201",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "0150",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0151",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 38,
+        "radix": 16,
+        "packed_bytes": 19,
+        "payload_hex": "8ae227c136b15ad33e23cd24d29b22d2fd00cb",
+        "table_bytes": 13,
+        "table_hex": "0d4950510e115e02010102115e",
+        "with_explicit_offsets": 34,
+        "with_structural_addresses": 32,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          2613898,
+          11613889,
+          4117338,
+          2411811,
+          2268114,
+          64978,
+          203
+        ],
+        "macros": [
+          "0101",
+          "115e"
+        ],
+        "direct_common": [
+          "0d",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-nibble-macros",
+        "fields": 37,
+        "radix": 16,
+        "packed_bytes": 19,
+        "payload_hex": "8ae227c136b15a13e133cd24bd29d2110fb00c",
+        "table_bytes": 14,
+        "table_hex": "0d4950510e115e0302010102115e",
+        "with_explicit_offsets": 35,
+        "with_structural_addresses": 33,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          2613898,
+          11613889,
+          14750554,
+          2411827,
+          13773245,
+          11538193,
+          12
+        ],
+        "macros": [
+          "020101",
+          "115e"
+        ],
+        "direct_common": [
+          "0d",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              10
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              11
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              12
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              15,
+              0
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              15,
+              1
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              15,
+              2
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              13
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              14
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "decimal": {
+    "allocations": 2103530,
+    "search": "exhaustive within <=3 macro tokens",
+    "best_registers": [
+      {
+        "family": "branch-decimal-macros",
+        "fields": 41,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "d9e7fda4ff2f8c9d3e61eba93a39cbfa9e00",
+        "table_bytes": 27,
+        "table_hex": "0102034950510004050607080d0e115e040202010102010102115e",
+        "with_explicit_offsets": 47,
+        "with_structural_addresses": 45,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          14981593,
+          34023950,
+          12287229,
+          69461957,
+          40979761,
+          5
+        ],
+        "macros": [
+          "02020101",
+          "0101",
+          "115e"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "02020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 42,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "d9e77d3bdf616e1045faf6346622f0cb3506",
+        "table_bytes": 26,
+        "table_hex": "0102034950510004050607080d0e115e0302010102010102115e",
+        "with_explicit_offsets": 46,
+        "with_structural_addresses": 44,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          14981593,
+          34023950,
+          62287229,
+          69461195,
+          9797611,
+          54
+        ],
+        "macros": [
+          "020101",
+          "0101",
+          "115e"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 42,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "d9775965914eb9ef5ba86ca36fb75ecb3506",
+        "table_bytes": 26,
+        "table_hex": "0102034950510004050607080d0e115e0302010102030102115e",
+        "with_explicit_offsets": 46,
+        "with_structural_addresses": 44,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          14981593,
+          93473950,
+          56228072,
+          16946119,
+          9790061,
+          54
+        ],
+        "macros": [
+          "020101",
+          "0301",
+          "115e"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0301",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 42,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "9e62a58b69ebf1d72f4093367e54295f460a",
+        "table_bytes": 27,
+        "table_hex": "00010203495004050607080d0e11515e040202010102015102115e",
+        "with_explicit_offsets": 47,
+        "with_structural_addresses": 45,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          23982494,
+          94513297,
+          23381131,
+          59560971,
+          50691162,
+          89
+        ],
+        "macros": [
+          "02020101",
+          "0151",
+          "115e"
+        ],
+        "direct_common": [
+          "00",
+          "01",
+          "02",
+          "03",
+          "49",
+          "50"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "02020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0151",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 42,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "d9db510ec62ac6cbb50b3a7b06ba5ecb3506",
+        "table_bytes": 27,
+        "table_hex": "0102034950510004050607080d0e115e040202010102020102115e",
+        "with_explicit_offsets": 47,
+        "with_structural_addresses": 45,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          74981593,
+          93402395,
+          72280022,
+          69461950,
+          9790061,
+          54
+        ],
+        "macros": [
+          "02020101",
+          "0201",
+          "115e"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "02020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0201",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 42,
+        "radix": 10,
+        "packed_bytes": 18,
+        "payload_hex": "d9779970ee7ceb744075397b06ba5ecb3506",
+        "table_bytes": 27,
+        "table_hex": "0102034950510004050607080d0e115e040202010102030102115e",
+        "with_explicit_offsets": 47,
+        "with_structural_addresses": 45,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          14981593,
+          93473950,
+          1228072,
+          69461950,
+          9790061,
+          54
+        ],
+        "macros": [
+          "02020101",
+          "0301",
+          "115e"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "02020101",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "0301",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              8
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              9
+            ]
+          }
+        ]
+      }
+    ],
+    "best_total": [
+      {
+        "family": "branch-decimal-macros",
+        "fields": 51,
+        "radix": 10,
+        "packed_bytes": 22,
+        "payload_hex": "bf229641240900697e3a011c3354ad39c326697c0802",
+        "table_bytes": 16,
+        "table_hex": "00010203114950515e04050607080d0e",
+        "with_explicit_offsets": 40,
+        "with_structural_addresses": 38,
+        "input_registers": 7,
+        "input_register_bytes": 49,
+        "numeric_words": [
+          39842495,
+          61329712,
+          84113195,
+          9711233,
+          25961122,
+          69111122,
+          760
+        ],
+        "macros": [],
+        "direct_common": [
+          "00",
+          "01",
+          "02",
+          "03",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              6
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 47,
+        "radix": 10,
+        "packed_bytes": 20,
+        "payload_hex": "0a29add8b13ae8a3525ef962e9ec1f304118670b",
+        "table_bytes": 19,
+        "table_hex": "010203114950515e0004050607080d0e020101",
+        "with_explicit_offsets": 41,
+        "with_structural_addresses": 39,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          49731594,
+          50239601,
+          27382294,
+          11196812,
+          81116958,
+          6509798
+        ],
+        "macros": [
+          "0101"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "0101",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 48,
+        "radix": 10,
+        "packed_bytes": 20,
+        "payload_hex": "0ab822c77b5b750006a1597489a02ce570e80672",
+        "table_bytes": 19,
+        "table_hex": "010203114950515e0004050607080d0e020201",
+        "with_explicit_offsets": 41,
+        "with_structural_addresses": 39,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          49731594,
+          45023968,
+          27300229,
+          81196082,
+          8116950,
+          65097900
+        ],
+        "macros": [
+          "0201"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "0201",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 48,
+        "radix": 10,
+        "packed_bytes": 20,
+        "payload_hex": "fbd1be54356e8e771e1bc13322c9b851c2153a85",
+        "table_bytes": 19,
+        "table_hex": "0001020304495051050607080d0e115e02115e",
+        "with_explicit_offsets": 41,
+        "with_structural_addresses": 39,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          22982395,
+          56131971,
+          33811309,
+          12247112,
+          12224961,
+          76059111
+        ],
+        "macros": [
+          "115e"
+        ],
+        "direct_common": [
+          "00",
+          "01",
+          "02",
+          "03",
+          "04",
+          "49",
+          "50",
+          "51"
+        ],
+        "codes": [
+          {
+            "token": "00",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "01",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "115e",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 46,
+        "radix": 10,
+        "packed_bytes": 20,
+        "payload_hex": "0a29cdf5e736e4ccccb065d77bf3e3a9b9e82301",
+        "table_bytes": 20,
+        "table_hex": "010203114950515e0004050607080d0e03020101",
+        "with_explicit_offsets": 42,
+        "with_structural_addresses": 40,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          49731594,
+          50239601,
+          73002294,
+          81196822,
+          811695,
+          650979
+        ],
+        "macros": [
+          "020101"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "020101",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          }
+        ]
+      },
+      {
+        "family": "branch-decimal-macros",
+        "fields": 48,
+        "radix": 10,
+        "packed_bytes": 20,
+        "payload_hex": "0a29cd597b0296d74a49b25572d820e970e80672",
+        "table_bytes": 20,
+        "table_hex": "010203114950515e0004050607080d0e03020201",
+        "with_explicit_offsets": 42,
+        "with_structural_addresses": 40,
+        "input_registers": 6,
+        "input_register_bytes": 42,
+        "numeric_words": [
+          49731594,
+          50239601,
+          73002294,
+          19600122,
+          8169508,
+          65097900
+        ],
+        "macros": [
+          "020201"
+        ],
+        "direct_common": [
+          "01",
+          "02",
+          "03",
+          "11",
+          "49",
+          "50",
+          "51",
+          "5e"
+        ],
+        "codes": [
+          {
+            "token": "01",
+            "code": [
+              0
+            ]
+          },
+          {
+            "token": "02",
+            "code": [
+              1
+            ]
+          },
+          {
+            "token": "03",
+            "code": [
+              2
+            ]
+          },
+          {
+            "token": "11",
+            "code": [
+              3
+            ]
+          },
+          {
+            "token": "49",
+            "code": [
+              4
+            ]
+          },
+          {
+            "token": "50",
+            "code": [
+              5
+            ]
+          },
+          {
+            "token": "51",
+            "code": [
+              6
+            ]
+          },
+          {
+            "token": "5e",
+            "code": [
+              7
+            ]
+          },
+          {
+            "token": "020201",
+            "code": [
+              8
+            ]
+          },
+          {
+            "token": "00",
+            "code": [
+              9,
+              0
+            ]
+          },
+          {
+            "token": "04",
+            "code": [
+              9,
+              1
+            ]
+          },
+          {
+            "token": "05",
+            "code": [
+              9,
+              2
+            ]
+          },
+          {
+            "token": "06",
+            "code": [
+              9,
+              3
+            ]
+          },
+          {
+            "token": "07",
+            "code": [
+              9,
+              4
+            ]
+          },
+          {
+            "token": "08",
+            "code": [
+              9,
+              5
+            ]
+          },
+          {
+            "token": "0d",
+            "code": [
+              9,
+              6
+            ]
+          },
+          {
+            "token": "0e",
+            "code": [
+              9,
+              7
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "native": {
+    "branch-decimal": {
+      "reader_bytes": 15,
+      "reader_hex": "69 0e 0e 01 00 13 34 49 0a 69 12 11 50 51 00",
+      "words": 6,
+      "symbols": 41,
+      "core_steps": 328
+    },
+    "branch-nibble": {
+      "reader_bytes": 15,
+      "reader_hex": "69 0e 0e 01 06 13 34 49 0a 69 12 11 50 51 00",
+      "words": 6,
+      "symbols": 36,
+      "core_steps": 288
+    }
+  },
+  "full_native_self_extractors": 0
+}

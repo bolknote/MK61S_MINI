@@ -1,0 +1,312 @@
+{
+  "recover_bytes": 20,
+  "recover_hex": "69 17 34 4c 69 6c 15 13 0e 01 0c 07 12 0e 02 0c 07 11 49 50",
+  "payload_bits": 26,
+  "order_bits": 6,
+  "groups": {
+    "huffman": {
+      "bits": 177,
+      "numeric_records": 6,
+      "numeric_record_bytes": 42
+    },
+    "branch-huffman": {
+      "bits": 147,
+      "numeric_records": 5,
+      "numeric_record_bytes": 35
+    }
+  },
+  "results": [
+    {
+      "name": "huffman-0",
+      "payload": 6172445,
+      "exponent": 40,
+      "normal_mantissa": 26172445,
+      "recovered_payload": 6172445,
+      "recovered_order": 40,
+      "core_steps": 14
+    },
+    {
+      "name": "huffman-1",
+      "payload": 27135065,
+      "exponent": 54,
+      "normal_mantissa": 47135065,
+      "recovered_payload": 27135065,
+      "recovered_order": 54,
+      "core_steps": 14
+    },
+    {
+      "name": "huffman-2",
+      "payload": 37513665,
+      "exponent": 31,
+      "normal_mantissa": 57513665,
+      "recovered_payload": 37513665,
+      "recovered_order": 31,
+      "core_steps": 14
+    },
+    {
+      "name": "huffman-3",
+      "payload": 66497847,
+      "exponent": 27,
+      "normal_mantissa": 86497847,
+      "recovered_payload": 66497847,
+      "recovered_order": 27,
+      "core_steps": 14
+    },
+    {
+      "name": "huffman-4",
+      "payload": 43738266,
+      "exponent": 10,
+      "normal_mantissa": 63738266,
+      "recovered_payload": 43738266,
+      "recovered_order": 10,
+      "core_steps": 14
+    },
+    {
+      "name": "huffman-5",
+      "payload": 45821,
+      "exponent": 0,
+      "normal_mantissa": 20045821,
+      "recovered_payload": 45821,
+      "recovered_order": 0,
+      "core_steps": 14
+    },
+    {
+      "name": "branch-huffman-0",
+      "payload": 35311378,
+      "exponent": 19,
+      "normal_mantissa": 55311378,
+      "recovered_payload": 35311378,
+      "recovered_order": 19,
+      "core_steps": 14
+    },
+    {
+      "name": "branch-huffman-1",
+      "payload": 35865067,
+      "exponent": 3,
+      "normal_mantissa": 55865067,
+      "recovered_payload": 35865067,
+      "recovered_order": 3,
+      "core_steps": 14
+    },
+    {
+      "name": "branch-huffman-2",
+      "payload": 31327589,
+      "exponent": 45,
+      "normal_mantissa": 51327589,
+      "recovered_payload": 31327589,
+      "recovered_order": 45,
+      "core_steps": 14
+    },
+    {
+      "name": "branch-huffman-3",
+      "payload": 66922367,
+      "exponent": 27,
+      "normal_mantissa": 86922367,
+      "recovered_payload": 66922367,
+      "recovered_order": 27,
+      "core_steps": 14
+    },
+    {
+      "name": "branch-huffman-4",
+      "payload": 367027,
+      "exponent": 0,
+      "normal_mantissa": 20367027,
+      "recovered_payload": 367027,
+      "recovered_order": 0,
+      "core_steps": 14
+    },
+    {
+      "name": "boundary-0-0",
+      "payload": 0,
+      "exponent": 0,
+      "normal_mantissa": 20000000,
+      "recovered_payload": 0,
+      "recovered_order": 0,
+      "core_steps": 14
+    },
+    {
+      "name": "boundary-0-67108863",
+      "payload": 67108863,
+      "exponent": 0,
+      "normal_mantissa": 87108863,
+      "recovered_payload": 67108863,
+      "recovered_order": 0,
+      "core_steps": 13
+    },
+    {
+      "name": "boundary-63-0",
+      "payload": 0,
+      "exponent": 63,
+      "normal_mantissa": 20000000,
+      "recovered_payload": 0,
+      "recovered_order": 63,
+      "core_steps": 14
+    },
+    {
+      "name": "boundary-63-67108863",
+      "payload": 67108863,
+      "exponent": 63,
+      "normal_mantissa": 87108863,
+      "recovered_payload": 67108863,
+      "recovered_order": 63,
+      "core_steps": 14
+    }
+  ],
+  "optimized_31": {
+    "recover_bytes": 15,
+    "recover_hex": "69 17 34 4c 69 6c 15 13 0e 01 0c 07 12 49 50",
+    "payload_bits": 25,
+    "order_bits": 6,
+    "discard_bit_25": true,
+    "groups": {
+      "huffman": {
+        "bits": 177,
+        "numeric_records": 6,
+        "numeric_record_bytes": 42
+      },
+      "branch-huffman": {
+        "bits": 147,
+        "numeric_records": 5,
+        "numeric_record_bytes": 35
+      }
+    },
+    "results": [
+      {
+        "name": "optimized-huffman-0",
+        "payload": 6172445,
+        "exponent": 16,
+        "normal_mantissa": 39726877,
+        "recovered_payload": 39726877,
+        "recovered_order": 16,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-huffman-1",
+        "payload": 20715699,
+        "exponent": 25,
+        "normal_mantissa": 54270131,
+        "recovered_payload": 54270131,
+        "recovered_order": 25,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-huffman-2",
+        "payload": 15836935,
+        "exponent": 60,
+        "normal_mantissa": 49391367,
+        "recovered_payload": 49391367,
+        "recovered_order": 60,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-huffman-3",
+        "payload": 28666299,
+        "exponent": 63,
+        "normal_mantissa": 62220731,
+        "recovered_payload": 62220731,
+        "recovered_order": 63,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-huffman-4",
+        "payload": 28723622,
+        "exponent": 20,
+        "normal_mantissa": 62278054,
+        "recovered_payload": 62278054,
+        "recovered_order": 20,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-huffman-5",
+        "payload": 1466277,
+        "exponent": 0,
+        "normal_mantissa": 35020709,
+        "recovered_payload": 35020709,
+        "recovered_order": 0,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-branch-huffman-0",
+        "payload": 1756946,
+        "exponent": 39,
+        "normal_mantissa": 35311378,
+        "recovered_payload": 35311378,
+        "recovered_order": 39,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-branch-huffman-1",
+        "payload": 4621270,
+        "exponent": 14,
+        "normal_mantissa": 38175702,
+        "recovered_payload": 38175702,
+        "recovered_order": 14,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-branch-huffman-2",
+        "payload": 24647060,
+        "exponent": 43,
+        "normal_mantissa": 58201492,
+        "recovered_payload": 58201492,
+        "recovered_order": 43,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-branch-huffman-3",
+        "payload": 32062461,
+        "exponent": 63,
+        "normal_mantissa": 65616893,
+        "recovered_payload": 65616893,
+        "recovered_order": 63,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-branch-huffman-4",
+        "payload": 5872438,
+        "exponent": 0,
+        "normal_mantissa": 39426870,
+        "recovered_payload": 39426870,
+        "recovered_order": 0,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-boundary-0-0",
+        "payload": 0,
+        "exponent": 0,
+        "normal_mantissa": 33554432,
+        "recovered_payload": 33554432,
+        "recovered_order": 0,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-boundary-0-33554431",
+        "payload": 33554431,
+        "exponent": 0,
+        "normal_mantissa": 67108863,
+        "recovered_payload": 67108863,
+        "recovered_order": 0,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-boundary-63-0",
+        "payload": 0,
+        "exponent": 63,
+        "normal_mantissa": 33554432,
+        "recovered_payload": 33554432,
+        "recovered_order": 63,
+        "core_steps": 11
+      },
+      {
+        "name": "optimized-boundary-63-33554431",
+        "payload": 33554431,
+        "exponent": 63,
+        "normal_mantissa": 67108863,
+        "recovered_payload": 67108863,
+        "recovered_order": 63,
+        "core_steps": 11
+      }
+    ]
+  },
+  "full_native_self_extractor": false
+}

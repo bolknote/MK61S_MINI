@@ -1,0 +1,23 @@
+{
+  "parsed": 488,
+  "failed": 163,
+  "small": 114,
+  "ordinaryCompatible": [
+    {
+      "file": "/Users/bolk/Projects/MK-61/games/utilities/sum-natural-formula-gaishtut-1988.txt",
+      "title": "Сумма 1+2+...+n, 2-й способ",
+      "bytes": 8,
+      "raw": "4001100213601250",
+      "ordinaryLayouts": [
+        {
+          "shift": 5,
+          "words": 2,
+          "serviceBytes": [
+            0,
+            16
+          ]
+        }
+      ]
+    }
+  ]
+}

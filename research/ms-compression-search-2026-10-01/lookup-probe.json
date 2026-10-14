@@ -1,0 +1,517 @@
+{
+  "command": "2F 7r",
+  "native_setup": "numeric values entered by ordinary digit opcodes; extended lookup command",
+  "instruction_symbols": 44,
+  "all_indices_verified": true,
+  "ordinary_source_words": 8,
+  "command_bytes_for_six_symbols": 2,
+  "table_bytes": 16,
+  "returns_normal_24_bit_integers": true,
+  "full_native_self_extractor": false,
+  "rows": [
+    {
+      "name": "block-0",
+      "input_words": [
+        13118455,
+        2221617
+      ],
+      "groups": 2,
+      "native_lookup_bytes": 4,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        73,
+        8,
+        2,
+        17,
+        94,
+        7,
+        2,
+        1,
+        81,
+        6,
+        3,
+        1
+      ],
+      "steps": 19
+    },
+    {
+      "name": "block-1",
+      "input_words": [
+        14439185,
+        12530465
+      ],
+      "groups": 2,
+      "native_lookup_bytes": 4,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        80,
+        73,
+        5,
+        3,
+        1,
+        1,
+        17,
+        94,
+        3,
+        3,
+        2,
+        1
+      ],
+      "steps": 20
+    },
+    {
+      "name": "block-2",
+      "input_words": [
+        1983009,
+        1937954
+      ],
+      "groups": 2,
+      "native_lookup_bytes": 4,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        1,
+        81,
+        4,
+        2,
+        2,
+        1,
+        1,
+        80,
+        13,
+        2,
+        2,
+        2
+      ],
+      "steps": 18
+    },
+    {
+      "name": "block-3",
+      "input_words": [
+        1118624,
+        14548992
+      ],
+      "groups": 2,
+      "native_lookup_bytes": 4,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        1,
+        1,
+        1,
+        1,
+        14,
+        0,
+        80,
+        81,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 19
+    },
+    {
+      "name": "index-0",
+      "input_words": [
+        0
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 9
+    },
+    {
+      "name": "index-1",
+      "input_words": [
+        1118481
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-2",
+      "input_words": [
+        2236962
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-3",
+      "input_words": [
+        3355443
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-4",
+      "input_words": [
+        4473924
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-5",
+      "input_words": [
+        5592405
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-6",
+      "input_words": [
+        6710886
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        6,
+        6,
+        6,
+        6,
+        6,
+        6,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-7",
+      "input_words": [
+        7829367
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        7,
+        7,
+        7,
+        7,
+        7,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-8",
+      "input_words": [
+        8947848
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 12
+    },
+    {
+      "name": "index-9",
+      "input_words": [
+        10066329
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-10",
+      "input_words": [
+        11184810
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        14,
+        14,
+        14,
+        14,
+        14,
+        14,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-11",
+      "input_words": [
+        12303291
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        17,
+        17,
+        17,
+        17,
+        17,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-12",
+      "input_words": [
+        13421772
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        73,
+        73,
+        73,
+        73,
+        73,
+        73,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-13",
+      "input_words": [
+        14540253
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-14",
+      "input_words": [
+        15658734
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        81,
+        81,
+        81,
+        81,
+        81,
+        81,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    },
+    {
+      "name": "index-15",
+      "input_words": [
+        16777215
+      ],
+      "groups": 1,
+      "native_lookup_bytes": 2,
+      "cursor_initialization_bytes": 2,
+      "table_bytes": 16,
+      "output": [
+        94,
+        94,
+        94,
+        94,
+        94,
+        94,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "steps": 13
+    }
+  ]
+}
