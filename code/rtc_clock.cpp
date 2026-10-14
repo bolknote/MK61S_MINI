@@ -4,7 +4,9 @@
 #if !MK61_STM32F4_RTC_SUPPORTED
 #include <STM32RTC.h>
 #endif
+#if !MK61_STM32F4_RTC_SUPPORTED
 #include <backup.h>
+#endif
 
 #include "config.h"
 #include "crash_dump.hpp"

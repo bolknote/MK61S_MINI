@@ -35,5 +35,5 @@ done
 
 cmake="$root/tools/.mk61-gcc/CMakeLists.txt"
 grep -Fq -- 'LINKER:--wrap=USBD_CDC_ClearBuffer' "$cmake"
-grep -Fq -- 'USBDevice/src/cdc/usbd_cdc.c' "$cmake"
+grep -Fq -- 'code/stm32f4_usbd_cdc.c' "$cmake"
 grep -Fq -- 'PROPERTIES COMPILE_OPTIONS "-fno-lto"' "$cmake"

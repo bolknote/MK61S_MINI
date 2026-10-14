@@ -71,7 +71,8 @@ AnalogSnapshot read_analog_snapshot(void) {
   result.mcu_temperature = {false, 0};
   result.battery = unqualified_battery_status({false, 0});
 
-#if defined(AVREF) && defined(ATEMP) && defined(AVBAT) && \
+#if (MK61_STM32F4_ADC_SUPPORTED || \
+     (defined(AVREF) && defined(ATEMP) && defined(AVBAT))) && \
     defined(VREFINT_CAL_ADDR) && defined(TEMPSENSOR_CAL1_ADDR) && \
     defined(TEMPSENSOR_CAL2_ADDR)
   const u32 started_at = micros();

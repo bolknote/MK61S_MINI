@@ -284,7 +284,11 @@ static LcdParallelBus lcdParallelBus(void) {
 }
 
 static inline void lcdWritePin(PinName pin, bool high) {
+#if MK61_GPIO_USES_STM32F4
+  stm32f4_gpio::write_physical((u32)pin, high ? HIGH : LOW);
+#else
   digitalWriteFast(pin, high ? HIGH : LOW);
+#endif
 }
 
 static inline void lcdPrepareOutputPinLow(PinName pin) {
@@ -295,23 +299,43 @@ static inline void lcdPrepareOutputPinLow(PinName pin) {
   // a library bus, so GPIOA (DB5..DB7 on mini V3) can still be clock-gated at
   // the first display transaction.  Enable the port before preloading ODR,
   // then establish the complete push-pull/no-pull configuration explicitly.
+#if MK61_GPIO_USES_STM32F4
+  const stm32f4_gpio::PinDescription description((u32)pin);
+  RCC->AHB1ENR |= description.clock_mask();
+  (void)RCC->AHB1ENR;
+  lcdWritePin(pin, false);
+  stm32f4_gpio::configure_physical((u32)pin, OUTPUT);
+#else
   (void) set_GPIO_Port_Clock(STM_PORT(pin));
   lcdWritePin(pin, false);
   pin_function(pin, STM_PIN_DATA(STM_MODE_OUTPUT_PP, GPIO_NOPULL, 0));
+#endif
   lcdWritePin(pin, false);
 }
 
 static inline void lcdSetPinOutput(PinName pin, bool output) {
+#if MK61_GPIO_USES_STM32F4
+  const stm32f4_gpio::PinDescription description((u32)pin);
+  GPIO_TypeDef* const port = stm32f4_gpio::physical_port(description);
+  const u32 shift = description.shift();
+#else
   GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
   const u32 shift = (u32) STM_PIN(pin) * 2u;
+#endif
   const u32 mask = 0x3u << shift;
   const u32 mode = output ? (0x1u << shift) : 0u;
   port->MODER = (port->MODER & ~mask) | mode;
 }
 
 static inline void lcdDisablePull(PinName pin) {
+#if MK61_GPIO_USES_STM32F4
+  const stm32f4_gpio::PinDescription description((u32)pin);
+  GPIO_TypeDef* const port = stm32f4_gpio::physical_port(description);
+  const u32 shift = description.shift();
+#else
   GPIO_TypeDef* const port = get_GPIO_Port(STM_PORT(pin));
   const u32 shift = (u32) STM_PIN(pin) * 2u;
+#endif
   port->PUPDR &= ~(0x3u << shift);
 }
 
@@ -343,7 +367,13 @@ struct LcdHardwareBusySource {
   const LcdParallelBus& bus;
 
   void enable(bool high) { lcdWritePin(bus.enable, high); }
-  bool busyBit(void) { return digitalReadFast(bus.data[3]) != LOW; }
+  bool busyBit(void) {
+#if MK61_GPIO_USES_STM32F4
+    return stm32f4_gpio::read_physical((u32)bus.data[3]) != LOW;
+#else
+    return digitalReadFast(bus.data[3]) != LOW;
+#endif
+  }
   void delayMicroseconds(u8 duration) { ::delayMicroseconds(duration); }
 };
 
@@ -354,7 +384,11 @@ struct LcdHardwareDataSource {
   u8 nibble(void) {
     u8 value = 0;
     for(u8 bit = 0; bit < 4; bit++) {
+#if MK61_GPIO_USES_STM32F4
+      if(stm32f4_gpio::read_physical((u32)bus.data[bit]) != LOW) value |= (u8) 1u << bit;
+#else
       if(digitalReadFast(bus.data[bit]) != LOW) value |= (u8) 1u << bit;
+#endif
     }
     return value;
   }
