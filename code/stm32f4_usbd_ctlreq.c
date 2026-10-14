@@ -83,7 +83,6 @@ static void USBD_GetConfig(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_GetStatus(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_SetFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static void USBD_ClrFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
-static uint8_t USBD_GetLen(uint8_t *buf);
 
 /**
   * @}
@@ -458,34 +457,8 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *r
       break;
 
     case USB_DESC_TYPE_CONFIGURATION:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetHSConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetHSConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-      }
-      else
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetFSConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetFSConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_CONFIGURATION;
-      }
+      /* This backend is FS-only and both class descriptors live in Flash. */
+      pbuf = (uint8_t *)pdev->pClass[0]->GetFSConfigDescriptor(&len);
       break;
 
     case USB_DESC_TYPE_STRING:
@@ -607,46 +580,9 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *r
       break;
 
     case USB_DESC_TYPE_DEVICE_QUALIFIER:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetDeviceQualifierDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetDeviceQualifierDescriptor(&len);
-        }
-      }
-      else
-      {
-        USBD_CtlError(pdev, req);
-        err++;
-      }
-      break;
-
     case USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION:
-      if (pdev->dev_speed == USBD_SPEED_HIGH)
-      {
-#ifdef USE_USBD_COMPOSITE
-        if ((uint8_t)(pdev->NumClasses) > 0U)
-        {
-          pbuf = (uint8_t *)USBD_CMPSIT.GetOtherSpeedConfigDescriptor(&len);
-        }
-        else
-#endif /* USE_USBD_COMPOSITE */
-        {
-          pbuf = (uint8_t *)pdev->pClass[0]->GetOtherSpeedConfigDescriptor(&len);
-        }
-        pbuf[1] = USB_DESC_TYPE_OTHER_SPEED_CONFIGURATION;
-      }
-      else
-      {
-        USBD_CtlError(pdev, req);
-        err++;
-      }
+      USBD_CtlError(pdev, req);
+      err++;
       break;
 
     default:
@@ -1002,53 +938,19 @@ void USBD_CtlError(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
   */
 void USBD_GetString(uint8_t *desc, uint8_t *unicode, uint16_t *len)
 {
-  uint8_t idx = 0U;
-  uint8_t *pdesc;
-
-  if (desc == NULL)
+  if (desc == NULL || unicode == NULL || len == NULL) return;
+  uint16_t bytes = 2U;
+  while (*desc != 0U && bytes + 2U <= USBD_MAX_STR_DESC_SIZ && bytes + 2U <= 254U)
   {
-    return;
+    unicode[bytes++] = *desc++;
+    unicode[bytes++] = 0U;
   }
-
-  pdesc = desc;
-  *len = MIN(USBD_MAX_STR_DESC_SIZ, ((uint16_t)USBD_GetLen(pdesc) * 2U) + 2U);
-
-  unicode[idx] = *(uint8_t *)len;
-  idx++;
-  unicode[idx] = USB_DESC_TYPE_STRING;
-  idx++;
-
-  while (*pdesc != (uint8_t)'\0')
-  {
-    unicode[idx] = *pdesc;
-    pdesc++;
-    idx++;
-
-    unicode[idx] = 0U;
-    idx++;
-  }
+  unicode[0] = (uint8_t)bytes;
+  unicode[1] = USB_DESC_TYPE_STRING;
+  *len = bytes;
 }
 
 
-/**
-  * @brief  USBD_GetLen
-  *         return the string length
-   * @param  buf : pointer to the ascii string buffer
-  * @retval string length
-  */
-static uint8_t USBD_GetLen(uint8_t *buf)
-{
-  uint8_t  len = 0U;
-  uint8_t *pbuff = buf;
-
-  while (*pbuff != (uint8_t)'\0')
-  {
-    len++;
-    pbuff++;
-  }
-
-  return len;
-}
 /**
   * @}
   */

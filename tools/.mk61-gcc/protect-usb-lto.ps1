@@ -31,6 +31,7 @@ try {
     $env:TEMP = $safeTemp
     $env:TMP = $safeTemp
     $env:TMPDIR = $safeTemp
+    $owned = @($flags | Where-Object { $_ -in @('-DSTM32F401xC','-DSTM32F401xE','-DSTM32F411xE') }).Count -gt 0
     # Keep wrapped middleware definitions outside LTO; replace the F4 bridge below.
     foreach ($source in @('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')) {
         $leaf = [IO.Path]::GetFileName($source)
@@ -39,7 +40,14 @@ try {
         if ($objects.Count -ne 1) {
             throw "Expected one $source object, found $($objects.Count)"
         }
-        $command = @($flags) + @('-fno-lto', (Join-Path $library $source), '-o', $objects[0])
+        $actualSource = Join-Path $library $source
+        $extra = @('-fno-lto')
+        if ($owned -and $source -eq 'src/cdc/usbd_cdc.c') {
+            $actualSource = Join-Path $buildPath 'sketch/stm32f4_usbd_cdc.c'
+            if (-not [IO.File]::Exists($actualSource)) { throw 'Missing owned F4 CDC snapshot' }
+            $extra += '-DMK61_USB_BUILD_CDC=1'
+        }
+        $command = @($flags) + $extra + @(('-I' + (Join-Path $buildPath 'sketch')), $actualSource, '-o', $objects[0])
         $response = Join-Path $safeTemp "$leaf.rsp"
         $lines = foreach ($argument in $command) {
             '"' + ([string]$argument).Replace('\', '/').Replace('"', '\"') + '"'
@@ -53,7 +61,9 @@ try {
         $sketch = Join-Path $buildPath 'sketch'
         foreach ($item in @(
             @{ source='stm32f4_usb_device.cpp'; object='usbd_conf.c.o'; define='MK61_USB_BUILD_BRIDGE=1'; cxx=$true },
-            @{ source='stm32f4_usbd_ctlreq.c'; object='usb_device_ctlreq.c.o'; define='MK61_USB_BUILD_CTLREQ=1'; cxx=$false })) {
+            @{ source='stm32f4_usbd_ctlreq.c'; object='usb_device_ctlreq.c.o'; define='MK61_USB_BUILD_CTLREQ=1'; cxx=$false },
+            @{ source='stm32f4_usb_serial_stub.cpp'; object='USBSerial.cpp.o'; define='MK61_USB_BUILD_SERIAL_STUB=1'; cxx=$true },
+            @{ source='stm32f4_cdc_if.c'; object='usbd_cdc_if.c.o'; define='MK61_USB_BUILD_CDC_IF=1'; cxx=$false })) {
             $source = Join-Path $sketch $item.source
             $objects = @([IO.Directory]::GetFiles($objectDirectory,$item.object,[IO.SearchOption]::AllDirectories))
             if ($objects.Count -ne 1 -or -not [IO.File]::Exists($source)) { throw "Missing owned USB object/source $($item.source)" }

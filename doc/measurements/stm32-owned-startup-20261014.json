@@ -1,0 +1,447 @@
+{
+  "schema": 1,
+  "stage": "owned_stm32_startup",
+  "baseline_commit": "eaa5008a4",
+  "change": "Project Reset_Handler and101/102vector slots, data/BSS loops and preinit/constructor traversal. __libc_init_array andexternalCMSISstartup notlinked. Runtime clock/power logic unchanged.",
+  "tests": {
+    "fixtures": "18 ARM cases, F401/F411, data/BSS0/1/7words,0/1/2callbacks, exactwritebounds/count, noinit/SPalignment/strongIRQoverride PASS",
+    "vectors": "Allslots checked against independentCMSISdeviceIRQenum inclreservedzero/Thumbtargets; originalvendorvectorstablealso agrees",
+    "runtime": "Both productionELFs executeSystemInit,preinit,C++ctors,96MHz/USB48,SysTick,micros,DWT;ClassicSTOPmodelPASS,miniSTOPomittedbyprofile",
+    "math": {
+      "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-classic/resident.elf": {
+        "status": "PASS",
+        "compact": true,
+        "sha256": "c842e9f0006afb08ec3ac065cfebdcd04f59664e67c5b07cfca1d924544b0017",
+        "vectors": 1897,
+        "IEEE_edge_cases": 54,
+        "stats": {
+          "sin": {
+            "cases": 199,
+            "worst_ulp": 0
+          },
+          "cos": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "tan": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "asin": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "acos": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "atan": {
+            "cases": 133,
+            "worst_ulp": 0
+          },
+          "ln": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "log10": {
+            "cases": 122,
+            "worst_ulp": 1
+          },
+          "exp": {
+            "cases": 139,
+            "worst_ulp": 1
+          },
+          "sqrt": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "pow": {
+            "cases": 440,
+            "worst_ulp": 0
+          }
+        },
+        "sample_instructions": {
+          "sin": 572,
+          "cos": 584,
+          "tan": 1650,
+          "asin": 3184,
+          "acos": 2902,
+          "atan": 1326,
+          "ln": 1705,
+          "log10": 1852,
+          "exp": 1642,
+          "sqrt": 260,
+          "pow": 5812
+        },
+        "large_angle_instructions": {
+          "float32_1e38": {
+            "sin": 2916,
+            "cos": 2910,
+            "tan": 4075
+          },
+          "binary64_max": {
+            "sin": 1803,
+            "cos": 1832,
+            "tan": 2954
+          }
+        },
+        "ABI": "AAPCS integer/VFP callee-saved and SP preserved; compact math writes stack only"
+      },
+      "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-mini/resident.elf": {
+        "status": "PASS",
+        "compact": true,
+        "sha256": "bf9c540352a09f1b6028e4bd21eeebcd1158f670317d341157d3791383dd5916",
+        "vectors": 1897,
+        "IEEE_edge_cases": 54,
+        "stats": {
+          "sin": {
+            "cases": 199,
+            "worst_ulp": 0
+          },
+          "cos": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "tan": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "asin": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "acos": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "atan": {
+            "cases": 133,
+            "worst_ulp": 0
+          },
+          "ln": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "log10": {
+            "cases": 122,
+            "worst_ulp": 1
+          },
+          "exp": {
+            "cases": 139,
+            "worst_ulp": 1
+          },
+          "sqrt": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "pow": {
+            "cases": 440,
+            "worst_ulp": 0
+          }
+        },
+        "sample_instructions": {
+          "sin": 572,
+          "cos": 584,
+          "tan": 1650,
+          "asin": 3184,
+          "acos": 2902,
+          "atan": 1326,
+          "ln": 1705,
+          "log10": 1852,
+          "exp": 1642,
+          "sqrt": 260,
+          "pow": 5812
+        },
+        "large_angle_instructions": {
+          "float32_1e38": {
+            "sin": 2916,
+            "cos": 2910,
+            "tan": 4075
+          },
+          "binary64_max": {
+            "sin": 1803,
+            "cos": 1832,
+            "tan": 2954
+          }
+        },
+        "ABI": "AAPCS integer/VFP callee-saved and SP preserved; compact math writes stack only"
+      }
+    },
+    "services": "threeordinaryAPPs xthreeaddresses, both productionELFs PASS",
+    "F411": [
+      {
+        "case": "f411-lcd1602-a00",
+        "profile": "mini-v3-a00",
+        "status": "PASS",
+        "unsealed_bin_bytes": 298992,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-lcd1602-a00"
+      },
+      {
+        "case": "f411-lcd1602-a00-usb-screen",
+        "profile": "mini-v3-a00",
+        "status": "PASS",
+        "unsealed_bin_bytes": 330384,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-lcd1602-a00-usb-screen"
+      },
+      {
+        "case": "f411-lcd1602-a00-no-lto",
+        "profile": "mini-v3-a00",
+        "status": "PASS",
+        "unsealed_bin_bytes": 316788,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-lcd1602-a00-no-lto"
+      },
+      {
+        "case": "f411-lcd1602-a02",
+        "profile": "mini-v3-a02",
+        "status": "PASS",
+        "unsealed_bin_bytes": 298884,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-lcd1602-a02"
+      },
+      {
+        "case": "f411-oled1602-ws0010",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 328540,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010"
+      },
+      {
+        "case": "f411-oled1602-ws0010-usb-screen",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 349176,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010-usb-screen"
+      },
+      {
+        "case": "f411-oled1602-ws0010-no-graphics",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 315364,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010-no-graphics"
+      },
+      {
+        "case": "f411-oled1602-ws0010-graphics-wbmp",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 314896,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010-graphics-wbmp"
+      },
+      {
+        "case": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 328540,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010-graphics-wbmp-markdown"
+      },
+      {
+        "case": "f411-oled1602-ws0010-usb-screen-no-graphics",
+        "profile": "mini-v3-ws0010",
+        "status": "PASS",
+        "unsealed_bin_bytes": 347692,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-oled1602-ws0010-usb-screen-no-graphics"
+      },
+      {
+        "case": "f411-mini-v2-a00",
+        "profile": "mini-v2-a00",
+        "status": "PASS",
+        "unsealed_bin_bytes": 299032,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-mini-v2-a00"
+      },
+      {
+        "case": "f411-mini-v2-a02",
+        "profile": "mini-v2-a02",
+        "status": "PASS",
+        "unsealed_bin_bytes": 298924,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-mini-v2-a02"
+      },
+      {
+        "case": "f411-classic-v2",
+        "profile": "classic-v2",
+        "status": "PASS",
+        "unsealed_bin_bytes": 335672,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-classic-v2"
+      },
+      {
+        "case": "f411-classic-v3",
+        "profile": "classic-v3",
+        "status": "PASS",
+        "unsealed_bin_bytes": 345892,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-classic-v3"
+      },
+      {
+        "case": "f411-classic-v3-usb-screen",
+        "profile": "classic-v3",
+        "status": "PASS",
+        "unsealed_bin_bytes": 349036,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-classic-v3-usb-screen"
+      },
+      {
+        "case": "f411-40th",
+        "profile": "40th",
+        "status": "PASS",
+        "unsealed_bin_bytes": 335712,
+        "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/startup-f411-matrix/f411-40th"
+      }
+    ],
+    "F401": [
+      {
+        "case": "f401-capability-a00-usb",
+        "build": "PASS",
+        "bytes": 232040,
+        "baseline_bytes": 232068,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 232068
+      },
+      {
+        "case": "f401-capability-ws-graphics",
+        "build": "PASS",
+        "bytes": 228560,
+        "baseline_bytes": 228588,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 228588
+      },
+      {
+        "case": "f401-capability-ws-usb",
+        "build": "PASS",
+        "bytes": 238484,
+        "baseline_bytes": 238512,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 238512
+      },
+      {
+        "case": "f401-capability-ws-usb-graphics",
+        "build": "PASS",
+        "bytes": 240724,
+        "baseline_bytes": 240752,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 240752
+      },
+      {
+        "case": "f401-product-a00",
+        "build": "PASS",
+        "bytes": 213940,
+        "baseline_bytes": 213964,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 213964
+      },
+      {
+        "case": "f401-product-classic-v2",
+        "build": "PASS",
+        "bytes": 244048,
+        "baseline_bytes": 245104,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 244080
+      },
+      {
+        "case": "f401-product-classic-v3",
+        "build": "PASS",
+        "bytes": 244088,
+        "baseline_bytes": 245144,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 244120
+      },
+      {
+        "case": "f401-product-mini-v2-a00",
+        "build": "PASS",
+        "bytes": 214032,
+        "baseline_bytes": 214064,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 214064
+      },
+      {
+        "case": "f401-product-ws0010",
+        "build": "PASS",
+        "bytes": 222100,
+        "baseline_bytes": 222124,
+        "math_backend": "CORE1 unchanged; compact math excluded",
+        "startup": "owned assembly vectors, BSS/data and constructors",
+        "before_bytes": 222124
+      }
+    ],
+    "source_gates": "Projectstartup, noArduinocore/HALdrivers/genericgraphics. Only5externalUSB/LLcompiledobjects remain."
+  },
+  "manual_sleep": "Deferred to final qualification afterUSBstage peragreedplan; no newphysicalSTOPtest claimed onthisstartup. Previous0c0732707 manualRTC+ESC qualification andnewproductionARMSTOPmodel exist.",
+  "boards": {
+    "classic": {
+      "before_crc": "BB67EF5C",
+      "after_crc": "0D18CD78",
+      "Flash_before": 360656,
+      "Flash_after": 360632,
+      "Flash_saved": 24,
+      "RAM_before": 28560,
+      "RAM_after": 28560,
+      "image_sha256": "90bdad5624550cb1963d3c788cf4d5fdf9a48c009433069ef3d166a4d0970fe3",
+      "frames": {
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "0D18CD78",
+          "profile": "classic-v3-uc1609"
+        },
+        "frames": 103,
+        "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=30870 releases=30870 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=5 bytes=1391 wfi=6 fallback=17 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=2056 entries=589 total_us=554407 min_us=7 avg_us=941 max_us=967 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=1456 msc=0 uscreen=23 terminal=1 sound=0 keyboard=1456 classic=0 scheduled=1456 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=434/18 raw(v/t/b)=1493/947/1018 val(mV/dC/mV)=3329/307/3310 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F90 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13028 observed_remaining=13028 sram_xn=1\r\n/> ",
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=460/18 raw(v/t/b)=1493/947/1018 val(mV/dC/mV)=3329/307/3310 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360632 footer=358616 expected=0x0D18CD78 build=0x0D18CD78 actual=0x0D18CD78 backend=hardware cycles=1062576\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F90 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13320 observed_remaining=13320 sram_xn=1\r\n/> "
+        },
+        "preservation": "Original files/program/registers/stack/pwd exact",
+        "restart_after_graphics": true
+      },
+      "core_before_cycles": 1712200,
+      "core_after_cycles": 1709891,
+      "read64KiB_before_us": 25008,
+      "read64KiB_after_us": 25046.0,
+      "SPI_DMA": "100x64KiB CRCequal zeroerrors/ownershipleaks; ADCrangePASS",
+      "preservation": "Originalfiles/program/registers/stack/IP/pwd exact; RTCsettings untouched"
+    },
+    "mini": {
+      "before_crc": "F8C56B67",
+      "after_crc": "4E21F305",
+      "Flash_before": 333160,
+      "Flash_after": 333120,
+      "Flash_saved": 40,
+      "RAM_before": 27224,
+      "RAM_after": 27224,
+      "image_sha256": "a685cf85ddc2f6fdfad7286f80a786ec6eb2fc2a2ded9ceeb007709b2f8eab07",
+      "frames": {
+        "identity": {
+          "public": "6FF33152484A4488",
+          "short": "484A4488",
+          "usb": "3688388E3233",
+          "volume": "0A24B723",
+          "build": "4E21F305",
+          "profile": "mini-v3-a00"
+        },
+        "frames": 103,
+        "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=38181 releases=38181 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=5 bytes=1391 wfi=7 fallback=17 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=0 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=0 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=2019 entries=566 total_us=535560 min_us=15 avg_us=946 max_us=971 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=1433 msc=0 uscreen=32 terminal=1 sound=0 keyboard=1433 classic=0 scheduled=1433 wake=0 irq=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=438/18 raw(v/t/b)=1514/960/1007 val(mV/dC/mV)=3293/322/3239 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A60 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13080 observed_remaining=13080 sram_xn=1\r\n/> ",
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=444/18 raw(v/t/b)=1508/964/1015 val(mV/dC/mV)=3307/348/3279 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=333120 footer=331272 expected=0x4E21F305 build=0x4E21F305 actual=0x4E21F305 backend=hardware cycles=981359\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A60 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13280 observed_remaining=13280 sram_xn=1\r\n/> "
+        },
+        "preservation": "Original files/program/registers/stack/pwd exact",
+        "restart_after_graphics": true
+      },
+      "core_before_cycles": 1711025,
+      "core_after_cycles": 1708406,
+      "read64KiB_before_us": 24772,
+      "read64KiB_after_us": 24768.0,
+      "SPI_DMA": "100x64KiB CRCequal zeroerrors/ownershipleaks; ADCrangePASS",
+      "preservation": "Originalfiles/program/registers/stack/IP/pwd exact; RTCsettings untouched"
+    }
+  }
+}

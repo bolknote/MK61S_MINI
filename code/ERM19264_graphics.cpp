@@ -18,7 +18,9 @@
  #include <avr/pgmspace.h>
 #else
 #ifndef  ESP8266
- #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+ #ifndef pgm_read_byte
+#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+#endif
  #endif
 #endif
 

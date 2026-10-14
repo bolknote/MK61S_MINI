@@ -42,7 +42,24 @@ struct PinDescription {
 // driver owns and explicitly stops its PWM before reconfiguring its pin.
 // Keeping this narrow GPIO API avoids pulling Arduino's PWM/HardwareTimer
 // teardown into every GPIO configuration.
+void configure_physical(uint32_t name, uint32_t mode);
 void configure(uint32_t pin, uint32_t mode);
+
+inline GPIO_TypeDef* physical_port(const PinDescription& pin) {
+  return pin.valid() ? get_GPIO_Port(pin.port_index()) : nullptr;
+}
+
+inline void write_physical(uint32_t name, uint32_t level) {
+  const PinDescription pin(name);
+  GPIO_TypeDef* const port = physical_port(pin);
+  if(port != nullptr) port->BSRR = level != LOW ? pin.bit_mask() : pin.bit_mask() << 16;
+}
+
+inline int read_physical(uint32_t name) {
+  const PinDescription pin(name);
+  GPIO_TypeDef* const port = physical_port(pin);
+  return port != nullptr && (port->IDR & pin.bit_mask()) != 0 ? HIGH : LOW;
+}
 void write(uint32_t pin, uint32_t level);
 int read(uint32_t pin);
 

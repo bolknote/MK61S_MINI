@@ -18,6 +18,7 @@
 #include "zx0.hpp"
 #include "shared_memory.hpp"
 #include "storage_path.hpp"
+#include "storage_workspace.hpp"
 #include "fmk_font.hpp"
 #include "prepared_font.hpp"
 
@@ -4484,7 +4485,83 @@ static void test_small_import_batch_preflight_and_power_cuts(void) {
 #endif
 }
 
+static void test_shared_storage_excludes_writes_before_mutation() {
+#if MK61_STORAGE_SHARED_TEMP
+  using namespace storage_workspace;
+  fresh();
+  const u8 bytes[] = {1, 2, 3, 4};
+  u16 directory = program_store::INVALID_ID;
+  assert(program_store::create_directory(program_store::ROOT_ID, "BUSYDIR",
+      program_store::INVALID_ID, &directory));
+  u16 first_cluster = 0;
+  assert(program_store::fat_first_cluster(directory, first_cluster));
+  const program_store::FileSource chain_source = {&first_cluster,
+      [](void* context, u32 offset, u8* output, usize size) -> bool {
+        if(offset > 2 || size > 2 - offset) return false;
+        const u16 cluster = *(u16*) context;
+        const u8 data[] = {(u8) cluster, (u8) (cluster >> 8)};
+        memcpy(output, data + offset, size); return true;
+      }};
+  u8 sector[512] = {};
+  assert(program_store::vfat_stage_write(7, sector));
+  const u32 before = SPIFlash::mutationOperations();
+  {
+    Lease scan(Owner::SIDECAR_SCAN, SIZE);
+    assert(scan.ok());
+    memset(scan.data(), 0xA7, SIZE);
+    assert(!program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::MK61_BINARY, "BUSY", bytes, sizeof(bytes)));
+    assert(!program_store::set_directory_chain(directory, 1, chain_source));
+    assert(!program_store::ensure_directory_chain(directory));
+    assert(!program_store::create_directory(program_store::ROOT_ID, "BLOCKED",
+        program_store::INVALID_ID, nullptr));
+    assert(SPIFlash::mutationOperations() == before);
+    assert(program_store::vfat_stage_exists(7));
+    for(usize i = 0; i < SIZE; ++i) assert(scan.data()[i] == 0xA7);
+  }
+  assert(program_store::write_file(program_store::ROOT_ID,
+      program_store::INVALID_ID, ProgramType::MK61_BINARY, "READY", bytes, sizeof(bytes)));
+  assert(!program_store::vfat_stage_exists(7));
+  assert(program_store::set_directory_chain(directory, 1, chain_source));
+  assert(program_store::ensure_directory_chain(directory));
+  printf("Shared storage scratch: busy writer leaves stage, Flash and owner bytes unchanged; release/retry PASS\n");
+#endif
+}
+
+static void test_shared_storage_batch_survives_file_writes() {
+#if MK61_STORAGE_SHARED_TEMP
+  using namespace storage_workspace;
+  fresh();
+  const u8 payload[] = {8, 9, 10, 11};
+  {
+    Lease batch(Owner::IMPORT_BATCH, BATCH_BYTES);
+    assert(batch.ok());
+    memset(batch.data(), 0xB7, BATCH_BYTES);
+    Lease duplicate(Owner::IMPORT_BATCH, 1);
+    Lease scan(Owner::SIDECAR_SCAN, SIZE);
+    Lease oversize(Owner::FILE_WRITE, WRITE_BYTES + 1);
+    assert(!duplicate.ok() && !scan.ok() && !oversize.ok());
+    assert(program_store::write_file(program_store::ROOT_ID,
+        program_store::INVALID_ID, ProgramType::MK61_BINARY, "WITH_BATCH",
+        payload, sizeof(payload)));
+    {
+      Lease writer(Owner::FILE_WRITE, WRITE_BYTES);
+      assert(writer.ok() && batch.data() == writer.data() + WRITE_BYTES);
+      memset(writer.data(), 0xA3, WRITE_BYTES);
+      Lease overlapping_scan(Owner::SIDECAR_SCAN, SIZE);
+      assert(!overlapping_scan.ok());
+    }
+    for(usize i = 0; i < BATCH_BYTES; ++i) assert(batch.data()[i] == 0xB7);
+  }
+  Lease scan(Owner::SIDECAR_SCAN, SIZE);
+  assert(scan.ok());
+  printf("Shared storage scratch: real file write preserves live USB batch; partitions, exclusion and release PASS\n");
+#endif
+}
+
 int main(int argc, char** argv) {
+  test_shared_storage_excludes_writes_before_mutation();
+  test_shared_storage_batch_survives_file_writes();
   if(argc == 2 && strcmp(argv[1], "--stage-max-capacity") == 0) {
     test_stage_at_maximum_flash_capacity(); return 0;
   }

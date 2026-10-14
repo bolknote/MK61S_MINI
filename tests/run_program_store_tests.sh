@@ -9,6 +9,10 @@ capacity_flags=()
 if [[ "${1:-}" == --stage-max-capacity ]]; then
   capacity_flags=(-DMK61_TEST_FLASH_MAX_CAPACITY_BYTES=134217728)
 fi
+shared_flags=()
+if [[ "${MK61_TEST_STORAGE_SHARED_TEMP:-0}" == 1 ]]; then
+  shared_flags=(-DMK61_STORAGE_SHARED_TEMP=1)
+fi
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
@@ -23,7 +27,7 @@ for backend in software stm32; do
     backend_flags=(-DMK61_ENABLE_USB_SCREEN=1)
   fi
   clang++ -std=c++17 -Wall -Wextra -Werror \
-    "${sanitizer_flags[@]}" "${capacity_flags[@]}" \
+    "${sanitizer_flags[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
     "${backend_flags[@]}" \
     -DARDUINO_BLACKPILL_F401CC \
     -include "$root/tests/program_store_shim/program_store_test_shim.h" \
@@ -34,7 +38,7 @@ for backend in software stm32; do
     "$root/code/explorer_autoexec.cpp" \
     "$root/code/loadable_module_system_app.cpp" \
     "$root/code/loadable_module_format.cpp" \
-    "$root/code/program_store.cpp" \
+    "$root/code/program_store.cpp" "$root/code/storage_workspace.cpp" \
     "$root/code/shared_memory.cpp" \
     "$root/code/storage_geometry.cpp" \
   "$root/code/fat_cluster_chain.cpp" \
@@ -55,7 +59,7 @@ done
 # C9 large-file path; otherwise a parser-only size increase could pass CI while
 # USB imports of a real large font still fail on hardware.
 clang++ -std=c++17 -Wall -Wextra -Werror \
-  "${sanitizer_flags[@]}" "${capacity_flags[@]}" \
+  "${sanitizer_flags[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
   -include "$root/tests/program_store_shim/program_store_test_shim.h" \
   -I"$root/tests/program_store_shim" \
   -I"$build_dir" \
@@ -64,7 +68,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/code/explorer_autoexec.cpp" \
   "$root/code/loadable_module_system_app.cpp" \
   "$root/code/loadable_module_format.cpp" \
-  "$root/code/program_store.cpp" \
+  "$root/code/program_store.cpp" "$root/code/storage_workspace.cpp" \
   "$root/code/shared_memory.cpp" \
   "$root/code/storage_geometry.cpp" \
   "$root/code/fat_cluster_chain.cpp" \

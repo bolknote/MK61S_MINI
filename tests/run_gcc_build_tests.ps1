@@ -177,8 +177,12 @@ Assert-True ($backendText -match
     '-LiteralPath \$customApps -Recurse -Force') `
     'direct GCC backend can leave stale custom APP in a rebuilt bundle'
 Assert-True ($cmakeText -match
-    'add_library\(board ALIAS BLACKPILL_F401CC\)') `
+    'set\(_mk61_device STM32F401xC\)') `
     'CMake build does not select the F401 board'
+Assert-True ($cmakeText -notmatch 'add_subdirectory\("\$\{BUILD_CORE_PATH\}') `
+    'standalone build still compiles Arduino Core'
+Assert-True ($cmakeText -match 'startup_\$\{_mk61_startup\}\.s') `
+    'standalone build does not own startup selection'
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
 Assert-True ($cmakeText -match
@@ -198,8 +202,8 @@ Assert-True ($cmakeText -match '-P "\$\{CMAKE_CURRENT_SOURCE_DIR\}/check-flash\.
 Assert-True ($cmakeText -match
     '(?s)if\(MK61_ENABLE_LTO\).*?target_link_options\(resident PRIVATE -ffunction-sections -fdata-sections\)') `
     'LTO build does not retain per-function/data garbage collection'
-Assert-True ($cmakeText -match 'HAL_UART_MODULE_ONLY') `
-    'canonical F401 build still retains the unused hardware UART state'
+Assert-True ($cmakeText -match 'MK61_NATIVE_RUNTIME=1') `
+    'canonical F401 build does not select the owned runtime'
 Assert-True ($cmakeText -match 'USBD_CLASS_USER_STRING_DESC=0') `
     'canonical F401 build still retains the empty USB user-string buffer'
 foreach ($section in @('_mk61_data', '_mk61_bss', '_mk61_noinit')) {
@@ -229,7 +233,7 @@ Assert-True ($cmakeText -match
 Assert-True ($cmakeText -match 'MK61_WS0010_GRAPHICS_100X16') `
     'CMake build does not forward WS0010 graphics qualification'
 Assert-True ($cmakeText -match
-    'overall_settings\(OPTIMIZATION s LTO\)') `
+    'target_compile_options\(user_settings INTERFACE -flto\)') `
     'CMake build does not enable GNU Arm LTO'
 Assert-True ($cmakeText -notmatch '--export-dynamic-symbol-list') `
     'resident still exports C++ symbols to a private System APP ABI'

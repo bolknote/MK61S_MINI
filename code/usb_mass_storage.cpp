@@ -658,7 +658,7 @@ bool init(void) {
   }
   device_configured = true;
   mark_startup_stage(8);
-  if(USBD_RegisterClass(usb_device(), USBD_MSC_CLASS) != USBD_OK) {
+  if(USBD_RegisterClass(usb_device(), const_cast<USBD_ClassTypeDef*>(USBD_MSC_CLASS)) != USBD_OK) {
     virtual_fat::report_startup_failure(16, "usb-class");
     abort_session();
     return false;

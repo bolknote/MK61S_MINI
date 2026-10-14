@@ -156,6 +156,13 @@ static bool run_cycle(u8 seconds,
   const bool alarm_wake = rtc_clock::alarm_wakeup_pending();
   const bool usb_wake = usb_power::stop_wake_pending();
 
+#if defined(MK61_NATIVE_RUNTIME)
+  // The owned clock sequence uses bounded register polls, so it needs no
+  // interrupt-driven HAL timeout. Restore the full clock tree before any
+  // pending USB or keyboard handler can use peripheral timing.
+  SystemClock_Config();
+  __set_PRIMASK(saved_primask);
+#else
   // STOP returns on HSI. Let the minimal pending ISR run and let SysTick supply
   // bounded HAL timeouts while the board's weak variant function restores the
   // exact HSE/PLL/APB/48 MHz USB clock tree. The RTC correction below replaces
@@ -163,6 +170,7 @@ static bool run_cycle(u8 seconds,
   HAL_ResumeTick();
   __set_PRIMASK(saved_primask);
   SystemClock_Config();
+#endif
   SystemCoreClockUpdate();
 
   const bool clock_ok = SystemCoreClock == (u32) F_CPU;

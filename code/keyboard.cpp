@@ -245,7 +245,7 @@ void set_external_key_pressed(i32 key_code, bool pressed) {
   if(unhold_quant >= 0) event_unhold_key(key_code, unhold_quant);
 }
 
-bool prepare_stop_wake(void) {
+__attribute__((noinline)) bool prepare_stop_wake(void) {
 #if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
   if(stop_wake_armed || any_key_pressed() || kbd::last_key() >= 0) return false;
 
@@ -260,6 +260,11 @@ bool prepare_stop_wake(void) {
   for(usize row = 0; row < KEY_IN_ROW; row++) {
     stm32f4_gpio::configure(scan_pins[row], INPUT_PULLDOWN);
   }
+
+  // The last driven row can remain charged after switching to pulldown.
+  // Use the scanner's qualified settle interval before clearing setup edges
+  // and arming EXTI. A real held key remains HIGH and is sampled below.
+  delayMicroseconds(STOP_WAKE_SETTLE_US);
 
   stop_wake_irq_seen = false;
   __atomic_store_n(&stop_wake_rows_seen, (u8) 0, __ATOMIC_RELAXED);

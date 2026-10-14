@@ -12,6 +12,7 @@ SOURCES = ('src/cdc/usbd_cdc.c', 'src/usb_device_core.c')
 
 
 def protect(build_path: Path, library: Path, command: list[str]) -> None:
+    owned = any(flag in command for flag in ('-DSTM32F401xC', '-DSTM32F401xE', '-DSTM32F411xE'))
     for source in SOURCES:
         matches = list((build_path / 'libraries' / 'USBDevice').rglob(Path(source).name + '.o'))
         if len(matches) != 1:
@@ -19,7 +20,13 @@ def protect(build_path: Path, library: Path, command: list[str]) -> None:
         # Arduino's compilation database must retain the ordinary compiler
         # invocation for APP packing and stack analysis. Recompile only the
         # two USB target units after Arduino has built them, before its link.
-        subprocess.run([*command, '-fno-lto', str(library / source), '-o', str(matches[0])], check=True)
+        flags = ['-fno-lto']
+        actual = library / source
+        if owned and source == 'src/cdc/usbd_cdc.c':
+            actual = build_path / 'sketch/stm32f4_usbd_cdc.c'
+            if not actual.is_file(): raise ValueError('missing owned F4 CDC snapshot')
+            flags += ['-DMK61_USB_BUILD_CDC=1']
+        subprocess.run([*command, *flags, '-I'+str(build_path / 'sketch'), str(actual), '-o', str(matches[0])], check=True)
         print(f'USB LTO barrier: {source}', flush=True)
 
     if any(flag in command for flag in ('-DSTM32F401xC', '-DSTM32F401xE', '-DSTM32F411xE')):
@@ -40,6 +47,16 @@ def protect(build_path: Path, library: Path, command: list[str]) -> None:
             subprocess.run([*command, '-DMK61_USB_BUILD_CTLREQ=1', str(requests),
                             '-o', str(matches[0])], check=True)
             print('Bounded F4 USB control requests', flush=True)
+            interface = bridge.with_name('stm32f4_cdc_if.c')
+            matches = list((build_path / 'libraries' / 'USBDevice').rglob('usbd_cdc_if.c.o'))
+            if len(matches) != 1 or not interface.is_file(): raise ValueError('missing owned F4 CDC interface')
+            subprocess.run([*command, '-DMK61_USB_BUILD_CDC_IF=1', str(interface), '-o', str(matches[0])], check=True)
+            print('Owned F4 CDC queue interface', flush=True)
+            serial = list((build_path / 'libraries' / 'USBDevice').rglob('USBSerial.cpp.o'))
+            stub = bridge.with_name('stm32f4_usb_serial_stub.cpp')
+            if len(serial) != 1 or not stub.is_file(): raise ValueError('missing owned F4 serial snapshot/object')
+            subprocess.run([*command, '-std=gnu++17', str(stub), '-o', str(serial[0])], check=True)
+            print('Owned F4 serial replaces Arduino USBSerial', flush=True)
 
 
 

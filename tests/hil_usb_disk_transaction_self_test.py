@@ -16,6 +16,7 @@ from hil_usb_disk_transaction import (
     posix_cksum,
     parse_vfat_diagnostic,
     require_file_contents,
+    require_stack_headroom,
     validate_new_disk,
     wait_for_msc_disk,
 )
@@ -40,6 +41,17 @@ def usb_node(pid: int, serial: str, location: int, configured: bool = True):
 
 
 class UsbDiskTransactionTest(unittest.TestCase):
+    def test_stack_gate_rejects_pre_reset_import_peak(self):
+        report = ("MPU backend=ARMv7-M enabled=1 layout=ok "
+                  "watermark=1 watermark_remaining=13012 observed_remaining=13012")
+        self.assertEqual(require_stack_headroom(report, 12288), 13012)
+        for bad in (report.replace("13012", "11096"),
+                    report.replace("watermark=1", "watermark=0"),
+                    report.replace("enabled=1", "enabled=0"),
+                    report.replace("observed_remaining=13012", "")):
+            with self.subTest(report=bad), self.assertRaises(AssertionError):
+                require_stack_headroom(bad, 12288)
+
     def test_vfat_record_ignores_human_language_and_preserves_context(self):
         machine = ("VFAT v=1 code=1221 phase=3 flags=0 actual=7492 "
                    "limit=1536 subject=524541444D45")

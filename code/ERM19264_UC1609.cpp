@@ -69,6 +69,7 @@ ERM19264_UC1609_Screen::ERM19264_UC1609_Screen(uint8_t* mybuffer, uint8_t w,  ui
 	yoffset = y; // y offset
 }
 
+#if !MK61_UC1609_PANEL_ONLY
 // Class Constructors main  class, 2 off Hardware + software SPI
 
 /*!
@@ -119,6 +120,8 @@ ERM19264_UC1609::ERM19264_UC1609(int16_t lcdwidth , int16_t lcdheight ,int8_t cd
 
 #endif
 
+#endif // legacy graphics object
+
 // === Methods ===
 
 /*!
@@ -149,9 +152,11 @@ void ERM19264_UC1609::LCDbegin (uint8_t VbiasPOT, uint8_t AddressSet)
 #endif
 	}else
 	{
+#if !MK61_UC1609_PANEL_ONLY
 	 // Set software SPI specific pin outputs.
 		stm32f4_gpio::configure(_LCD_DIN, OUTPUT);
 		stm32f4_gpio::configure(_LCD_SCLK, OUTPUT);
+#endif
 	}
 
 	LCDinit();
@@ -445,7 +450,7 @@ if(!uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)){
 	 @returns true 1 if hardware SPi on , false 0 for software spi
 */
 bool ERM19264_UC1609::isHardwareSPI() {
-	#if MK61_SPI1_DIRECT_SUPPORTED
+	#if MK61_SPI1_DIRECT_SUPPORTED || MK61_UC1609_PANEL_ONLY
   return true;
 #else
   return (_LCD_DIN == -1 && _LCD_SCLK == -1);
@@ -458,7 +463,7 @@ bool ERM19264_UC1609::isHardwareSPI() {
 	 @param value the byte to go out 
 	 @details if using high freq MCU the delay define can be changed by LCDHighFreqDelaySet function . Default is at UC1609_HIGHFREQ_DELAY
 */
-#if !MK61_SPI1_DIRECT_SUPPORTED
+#if !MK61_SPI1_DIRECT_SUPPORTED && !MK61_UC1609_PANEL_ONLY
 void ERM19264_UC1609::CustomshiftOut(uint8_t bitOrder, uint8_t value)
 {
 	for (uint8_t i = 0; i < 8; i++)
@@ -490,7 +495,7 @@ void ERM19264_UC1609::send_data(uint8_t byte)
 #endif
 	}else
 	{
-#if !MK61_SPI1_DIRECT_SUPPORTED
+#if !MK61_SPI1_DIRECT_SUPPORTED && !MK61_UC1609_PANEL_ONLY
 		CustomshiftOut(MSBFIRST, byte); //Software SPI
 #endif
 	}
@@ -515,7 +520,7 @@ void ERM19264_UC1609::send_data_buffer(const uint8_t* data, size_t length)
 #endif
 	}else
 	{
-#if !MK61_SPI1_DIRECT_SUPPORTED
+#if !MK61_SPI1_DIRECT_SUPPORTED && !MK61_UC1609_PANEL_ONLY
 		for (size_t i = 0; i < length; i++) {
 			CustomshiftOut(MSBFIRST, data[i]);
 		}
@@ -543,6 +548,7 @@ void ERM19264_UC1609::set_address(uint8_t column, uint8_t page)
 	 @brief updates the LCD  i.e. writes the  shared buffer to the active screen
 		pointed to by ActiveBuffer
 */
+#if !MK61_UC1609_PANEL_ONLY
 void ERM19264_UC1609::LCDupdate()
 {
 	if (this->ActiveBuffer == nullptr || this->ActiveBuffer->screenBuffer == nullptr) {return;}
@@ -571,6 +577,7 @@ void ERM19264_UC1609::LCDclearBuffer()
 	 @param data pointer to the data array
 	 @note Called by LCDupdate internally to write buffer to screen , can be called standalone 	as well
 */
+#endif // legacy framebuffer state
 void ERM19264_UC1609::LCDBuffer(int16_t x, int16_t y, uint8_t w, uint8_t h, uint8_t* data)
 {
 	if (data == nullptr || !uc1609_safety::intersects_panel(x, y, w, h, _widthScreen, _heightScreen)) {return;}
@@ -608,6 +615,7 @@ stm32f4_gpio::write(_LCD_CS, HIGH);
 	@param y y co-ord of pixel
 	@param colour colour of  pixel
 */
+#if !MK61_UC1609_PANEL_ONLY
 void ERM19264_UC1609::drawPixel(int16_t x, int16_t y, uint8_t colour)
 {
 		if (this->ActiveBuffer == nullptr || this->ActiveBuffer->screenBuffer == nullptr) {return;}
@@ -653,6 +661,7 @@ void ERM19264_UC1609::drawPixel(int16_t x, int16_t y, uint8_t colour)
 	@brief Getter for _VbiasPOT contrast member
 	@return value of_VbiasPOT
 */
+#endif // legacy drawing
 uint8_t ERM19264_UC1609::LCDGetConstrast(void){return _VbiasPOT;}
 
 /*!
@@ -666,6 +675,7 @@ uint8_t ERM19264_UC1609::LCDGetAddressCtrl(void){return _AddressCtrl;}
 	@brief Library version number getter
 	@return The lib version number eg 180 = 1.8.0
 */
+#if !MK61_UC1609_PANEL_ONLY
 uint16_t ERM19264_UC1609::LCDLibVerNumGet(void) {return _LibVersionNum;}
 
 /*!
@@ -680,6 +690,8 @@ uint16_t ERM19264_UC1609::LCDHighFreqDelayGet(void){return _HighFreqDelay;}
 */
 void  ERM19264_UC1609::LCDHighFreqDelaySet(uint16_t CommDelay){_HighFreqDelay = CommDelay;}
 
+
+#endif // legacy software-SPI metadata
 
 // === EOF ===
 

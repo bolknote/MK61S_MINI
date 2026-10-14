@@ -25,6 +25,7 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "language_compiler_flow.hpp"
 #include "app_flow_transfer.hpp"
 #include "shared_memory.hpp"
+#include "native_libc.h"
 #include "workspace_swap.hpp"
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
 #include "language_vm_image_cache.hpp"
@@ -83,8 +84,15 @@ using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES, 16,
 #if defined(STM32F411xE)
 #define MK61_LAZY_STRING_INNER(x) #x
 #define MK61_LAZY_STRING(x) MK61_LAZY_STRING_INNER(x)
+#if MK61_USE_NATIVE_LIBC
+static_assert(sizeof(ProgramCache) <= MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,
+              "native lazy cache reserve must include all metadata");
+__asm__(".global mk61_lazy_vm_cache_bytes\n.set mk61_lazy_vm_cache_bytes, "
+        MK61_LAZY_STRING(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES));
+#else
 __asm__(".global mk61_lazy_vm_cache_bytes\n.set mk61_lazy_vm_cache_bytes, "
         MK61_LAZY_STRING(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES) " + 32");
+#endif
 class LazyProgramCache {
   ProgramCache* value_;
 public:

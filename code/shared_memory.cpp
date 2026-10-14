@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 #include "shared_memory.hpp"
+#include "native_libc.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -17,9 +18,13 @@ namespace {
 #if defined(STM32F411xE)
 #define MK61_LAZY_RESIDENT_BUFFERS 1
 static_assert(WORKSPACE_SIZE == 8192, "update lazy workspace ELF reserve");
-// nano malloc uses an eight-byte header; include 32 bytes per retained block
-// in the ELF reserve so APP qualification cannot rely on an empty heap.
+// Native retained blocks have no allocator header. The legacy malloc path
+// reserves its conservative header/alignment allowance for APP qualification.
+#if MK61_USE_NATIVE_LIBC
+__asm__(".global mk61_lazy_workspace_bytes\n.set mk61_lazy_workspace_bytes, 8192");
+#else
 __asm__(".global mk61_lazy_workspace_bytes\n.set mk61_lazy_workspace_bytes, 8224");
+#endif
 #define MK61_WORKSPACE_INITIAL nullptr
 static u8* workspace_storage;
 #else
@@ -32,7 +37,11 @@ alignas(8) static u8 scratch_storage[SCRATCH_SIZE];
 #if MK61_LAZY_RESIDENT_BUFFERS
 #define MK61_BULK_INITIAL nullptr
 static_assert(BULK_SIZE == 8192, "update lazy bulk ELF reserve");
+#if MK61_USE_NATIVE_LIBC
+__asm__(".global mk61_lazy_bulk_bytes\n.set mk61_lazy_bulk_bytes, 8192");
+#else
 __asm__(".global mk61_lazy_bulk_bytes\n.set mk61_lazy_bulk_bytes, 8224");
+#endif
 static u8* bulk_storage;
 #else
 #define MK61_BULK_INITIAL bulk_storage
@@ -354,8 +363,24 @@ void* adjust_heap(i32 increment) {
 bool detail_try_reclaim(Arena arena);
 void* allocate_retained_buffer(usize size) {
   if(!size || interrupt_context() || transition_in_progress()) return nullptr;
+#if MK61_USE_NATIVE_LIBC
+  // Allocate once for the firmware lifetime. APP/OVERLAY ownership and the
+  // MPU guard still bound every byte; failed requests never move the cursor.
+  if(size > (usize)INT32_MAX - 15U) return nullptr;
+  auto reserve = [size]() -> void* {
+    const uintptr_t begin = (uintptr_t)adjust_heap(0);
+    if(!begin) return nullptr;
+    const usize padding = (0U - begin) & 7U;
+    const usize bytes = padding + ((size + 7U) & ~(usize)7U);
+    void* value = adjust_heap((i32)bytes);
+    return value ? (void*)((uintptr_t)value + padding) : nullptr;
+  };
+  void* value = reserve();
+  if(!value && detail_try_reclaim(Arena::OVERLAY)) value = reserve();
+#else
   void* value = malloc(size);
   if(!value && detail_try_reclaim(Arena::OVERLAY)) value = malloc(size);
+#endif
   if(value) memset(value, 0, size);
   return value;
 }
@@ -1033,7 +1058,7 @@ const char* owner_name(Owner owner) {
 
 } // namespace shared_memory
 
-#if defined(ARDUINO_ARCH_STM32)
+#if defined(ARDUINO_ARCH_STM32) && !MK61_USE_NATIVE_LIBC
 #include <errno.h>
 #undef errno
 extern int errno;

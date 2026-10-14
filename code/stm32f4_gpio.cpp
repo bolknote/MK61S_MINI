@@ -22,8 +22,8 @@ static void enable_clock(PinDescription pin) {
 
 } // namespace
 
-void configure(uint32_t digital_pin, uint32_t mode) {
-  const PinDescription pin((uint32_t) digitalPinToPinName(digital_pin));
+void configure_physical(uint32_t name, uint32_t mode) {
+  const PinDescription pin(name);
   GPIO_TypeDef* const port = port_for(pin);
   if(port == NULL) return;
 
@@ -52,6 +52,10 @@ void configure(uint32_t digital_pin, uint32_t mode) {
   }
   port->PUPDR = (port->PUPDR & ~pair) | (pull << shift);
   port->MODER = (port->MODER & ~pair) | (direction << shift);
+}
+
+void configure(uint32_t digital_pin, uint32_t mode) {
+  configure_physical((uint32_t)digitalPinToPinName(digital_pin), mode);
 }
 
 void write(uint32_t digital_pin, uint32_t level) {

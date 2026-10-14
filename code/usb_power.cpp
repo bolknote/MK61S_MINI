@@ -134,7 +134,7 @@ static void observe(USBD_HandleTypeDef* value, bool present) {
 }
 
 static bool active_class_is(USBD_HandleTypeDef* value,
-                            USBD_ClassTypeDef* expected) {
+                            const USBD_ClassTypeDef* expected) {
   return value != nullptr && expected != nullptr &&
          value->classId < USBD_MAX_SUPPORTED_CLASS &&
          value->pClass[value->classId] == expected;

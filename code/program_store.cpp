@@ -20,6 +20,8 @@
 #include "shared_scratch.hpp"
 #include "spi_nor_flash.hpp"
 #include "storage_name.hpp"
+#include "storage_workspace.hpp"
+#include <new>
 #include "tools.hpp"
 #include "workspace_swap.hpp"
 #include "zx0.hpp"
@@ -218,23 +220,16 @@ union WriteWorkspace {
   Transaction transaction;
 };
 
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-// C9 writes are serialized by the store and already use process-wide
-// transaction state. F411 can therefore keep this temporary workspace in BSS
-// and preserve the production stack-headroom gate; the compact F401 APP keeps
-// the same workspace on the stack instead of permanently enlarging its arena.
-static WriteWorkspace g_write_workspace;
-// Catalog verification runs during every boot and may sit below several SPI
-// and CRC frames.  The store is single-owner, so its synchronous read helpers
-// can share one resident chunk instead of spending another 512 bytes of the
-// protected stack.  F401 keeps the buffer local to avoid growing the APP
-// arena, where RAM is much tighter than on F411.
-static u8 g_crc_read_chunk[MK61_PROGRAM_STORE_READ_CHUNK];
-// WAL replay and append never overlap: a failed append may reload the
-// catalog only after the outgoing record is no longer needed.  Sharing this
-// sector removes the other 512-byte boot-time frame without making the F401
-// loadable implementation permanently larger.
-static u8 g_wal_record[WAL_RECORD_SIZE];
+#if MK61_STORAGE_SHARED_TEMP
+static_assert(sizeof(WriteWorkspace) <= storage_workspace::WRITE_BYTES,
+              "file-write workspace exceeds shared storage scratch");
+// WAL serialization/replay, catalog CRC reads and immutable FAT-chain
+// verification are separate synchronous phases. Their raw Flash callbacks
+// do not invoke another phase. Append recovery reloads only after the outgoing
+// record is no longer needed; replay only deserializes inode/meta bytes.
+static constexpr usize CATALOG_IO_BYTES = MK61_PROGRAM_STORE_READ_CHUNK > WAL_RECORD_SIZE
+    ? MK61_PROGRAM_STORE_READ_CHUNK : WAL_RECORD_SIZE;
+alignas(4) static u8 g_catalog_io[CATALOG_IO_BYTES];
 #endif
 
 static storage_geometry::Geometry g_geometry;
@@ -530,13 +525,13 @@ static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
 
 static bool crc32_flash(mk61_crc32::Context& crc,
                         u32 address, u32 len) {
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-  u8 (&buffer)[MK61_PROGRAM_STORE_READ_CHUNK] = g_crc_read_chunk;
+#if MK61_STORAGE_SHARED_TEMP
+  u8* const buffer = g_catalog_io;
 #else
   u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
 #endif
   while(len != 0) {
-    const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
+    const u16 count = len > MK61_PROGRAM_STORE_READ_CHUNK ? MK61_PROGRAM_STORE_READ_CHUNK : (u16) len;
     if(!read_bytes(address, buffer, count) ||
        !crc.update(buffer, count)) return false;
     address += count;
@@ -554,13 +549,13 @@ static bool crc32_flash(u32 address, u32 len, u32& output) {
 
 static bool crc32_flash_software(u32 address, u32 len, u32& output) {
   u32 state = mk61_crc32::INITIAL_STATE;
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-  u8 (&buffer)[MK61_PROGRAM_STORE_READ_CHUNK] = g_crc_read_chunk;
+#if MK61_STORAGE_SHARED_TEMP
+  u8* const buffer = g_catalog_io;
 #else
   u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
 #endif
   while(len != 0) {
-    const u16 count = len > sizeof(buffer) ? sizeof(buffer) : (u16) len;
+    const u16 count = len > MK61_PROGRAM_STORE_READ_CHUNK ? MK61_PROGRAM_STORE_READ_CHUNK : (u16) len;
     if(!read_bytes(address, buffer, count)) return false;
     state = crc32_bytes(buffer, count, state);
     address += count;
@@ -1158,12 +1153,12 @@ static bool checkpoint(bool empty_table, bool reserve_only) {
 // commits up to 16 changed inodes atomically, including an entire APP's extents.
 __attribute__((noinline))
 static bool append_transaction_record(const Transaction& transaction) {
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-  u8 (&record)[WAL_RECORD_SIZE] = g_wal_record;
+#if MK61_STORAGE_SHARED_TEMP
+  u8* const record = g_catalog_io;
 #else
   u8 record[WAL_RECORD_SIZE];
 #endif
-  memset(record, 0xFF, sizeof(record));
+  memset(record, 0xFF, WAL_RECORD_SIZE);
   record[0] = 'W';
   record[1] = '9';
   record[2] = CATALOG_VERSION;
@@ -1179,9 +1174,9 @@ static bool append_transaction_record(const Transaction& transaction) {
     offset = (u16) (offset + 2 + storage_geometry::INODE_BYTES);
   }
   put_le32(record, WAL_CRC_OFFSET,
-           normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3));
+           normalized_record_crc(record, WAL_RECORD_SIZE, WAL_CRC_OFFSET, 3));
   const u32 address = wal_record_address(g_wal_records);
-  if(!write_bytes(address, record, sizeof(record)) ||
+  if(!write_bytes(address, record, WAL_RECORD_SIZE) ||
      !write_byte(address + 3, STATE_ACTIVE)) {
     g_wal_sealed = true;
     if(!load_catalog()) g_ready = false;
@@ -1223,19 +1218,19 @@ static bool replay_wal(void) {
   g_wal_records = 0;
   g_wal_sealed = false;
   for(u8 index = 0; index < CATALOG_WAL_RECORDS; ++index) {
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-    u8 (&record)[WAL_RECORD_SIZE] = g_wal_record;
+#if MK61_STORAGE_SHARED_TEMP
+    u8* const record = g_catalog_io;
 #else
     u8 record[WAL_RECORD_SIZE];
 #endif
-    if(!read_bytes(wal_record_address(index), record, sizeof(record))) return false;
+    if(!read_bytes(wal_record_address(index), record, WAL_RECORD_SIZE)) return false;
     bool erased = true;
-    for(u16 i = 0; i < sizeof(record); ++i) if(record[i] != 0xFF) erased = false;
+    for(u16 i = 0; i < WAL_RECORD_SIZE; ++i) if(record[i] != 0xFF) erased = false;
     if(erased) break;
     if(record[0] != 'W' || record[1] != '9' ||
        record[2] != CATALOG_VERSION || record[3] != STATE_ACTIVE ||
        record[8] > WAL_MAX_UPDATES || get_le32(record, 4) != g_wal_sequence + 1 ||
-       normalized_record_crc(record, sizeof(record), WAL_CRC_OFFSET, 3) != get_le32(record, WAL_CRC_OFFSET)) {
+       normalized_record_crc(record, WAL_RECORD_SIZE, WAL_CRC_OFFSET, 3) != get_le32(record, WAL_CRC_OFFSET)) {
       g_wal_sealed = true;
       break;
     }
@@ -3529,6 +3524,11 @@ static bool prepare_local_catalog_mutation(void) {
 
 bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
                       u16* out_id) {
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease transaction_lease(storage_workspace::Owner::FILE_WRITE,
+                                             sizeof(Transaction));
+  if(!transaction_lease.ok()) return false;
+#endif
   C9Pins pins;
   DiskActivity activity;
   if(!g_ready || !prepare_local_catalog_mutation() ||
@@ -3585,7 +3585,11 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
   inode.kind_type = make_kind_type(NodeKind::DIRECTORY, ProgramType::MK61);
   inode.flags = 0;
 
+#if MK61_STORAGE_SHARED_TEMP
+  Transaction& transaction = *new(transaction_lease.data()) Transaction;
+#else
   Transaction transaction;
+#endif
   txn_begin(transaction);
   transaction.meta.total_count++;
   if(!c9_pin(address, id, false) ||
@@ -3604,6 +3608,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             u8* compression_buffer,
                             usize compression_buffer_size,
                             const u8* contiguous_data) {
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease workspace_lease(storage_workspace::Owner::FILE_WRITE,
+                                           sizeof(WriteWorkspace));
+  if(!workspace_lease.ok()) return false;
+#endif
 #if !defined(PROGRAM_STORE_HOST_TEST)
   struct ImportProgressScope {
     bool previous;
@@ -3620,8 +3629,8 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   if(!g_ready || !prepare_local_catalog_mutation()) return false;
   LargeWriteGuard large_guard;
   // The compression plan is consumed before the catalog transaction starts.
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-  WriteWorkspace& write_workspace = g_write_workspace;
+#if MK61_STORAGE_SHARED_TEMP
+  WriteWorkspace& write_workspace = *new(workspace_lease.data()) WriteWorkspace;
 #else
   WriteWorkspace write_workspace;
 #endif
@@ -3820,6 +3829,11 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
 
 #if MK61_C9_BULK_IMPORT
 bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease workspace_lease(storage_workspace::Owner::FILE_WRITE,
+                                           sizeof(Transaction));
+  if(!workspace_lease.ok()) return false;
+#endif
   DiskActivity activity;
   if(!g_ready || !g_import_applying || !g_stage_locked || files == nullptr ||
      !count || count > IMPORT_BATCH_COUNT || parent == ROOT_ID ||
@@ -3875,9 +3889,8 @@ bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
   if(!ensure_record_space(required, beginning)) return false;
   const u32 sector = beginning / 4096U;
   g_large_write_sectors[g_large_write_sector_count++] = sector;
-#if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE)
-  g_write_workspace.transaction.count = 0;
-  Transaction& transaction = g_write_workspace.transaction;
+#if MK61_STORAGE_SHARED_TEMP
+  Transaction& transaction = *new(workspace_lease.data()) Transaction;
 #else
   Transaction transaction;
 #endif

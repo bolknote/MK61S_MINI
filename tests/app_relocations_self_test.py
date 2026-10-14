@@ -12,7 +12,7 @@ from app_relocations import extract
 BASE = 0x20000000
 
 
-def elf_fixture(extra_name, extra_flags=0, extra_size=4, debug_relocations=False):
+def elf_fixture(extra_name, extra_flags=0, extra_size=4, debug_relocations=False, relocation_kind=2, target_section=2):
     # A linked ARM ELF with one initialized pointer to its BSS, plus an orphan
     # section. It needs no host ARM toolchain, so all CI hosts exercise the gate.
     names = ['', '.module_image', '.module_bss', '.symtab',
@@ -34,9 +34,9 @@ def elf_fixture(extra_name, extra_flags=0, extra_size=4, debug_relocations=False
 
     section(1, 1, 3, BASE, struct.pack('<I', BASE + 4))
     section(2, 8, 3, BASE + 4, b'', size=4)
-    symbols = bytes(16) + struct.pack('<IIIBBH', 0, BASE + 4, 4, 1, 0, 2)
+    symbols = bytes(16) + struct.pack('<IIIBBH', 0, BASE + 4, 4, 1, 0, target_section)
     section(3, 2, 0, 0, symbols, link=5, info=2, entry=16)
-    section(4, 9, 0, 0, struct.pack('<II', BASE, (1 << 8) | 2), link=3, info=1, entry=8)
+    section(4, 9, 0, 0, struct.pack('<II', BASE, (1 << 8) | relocation_kind), link=3, info=1, entry=8)
     section(5, 3, 0, 0, strings)
     section(6, 1, extra_flags, 0, bytes(extra_size))
     if debug_relocations:
@@ -74,6 +74,17 @@ class AppSectionTests(unittest.TestCase):
             with self.subTest(name=name):
                 with self.assertRaisesRegex(ValueError, 'unpacked ELF section'):
                     self.extract_fixture(name, extra_flags=2)
+
+    def test_thumb2_conditional_branch_is_position_invariant(self):
+        self.assertEqual(self.extract_fixture('.debug_frame', relocation_kind=51,
+                                               target_section=1), ([], b''))
+
+    def test_thumb2_conditional_branch_cannot_leave_app(self):
+        for target in (0,6,0xFFF1):
+            with self.subTest(target=target):
+                with self.assertRaisesRegex(ValueError, 'PC-relative relocation 51 leaves APP'):
+                    self.extract_fixture('.debug_frame', relocation_kind=51,
+                                         target_section=target)
 
     def test_empty_orphan_needs_no_storage(self):
         self.assertEqual(self.extract_fixture('.empty', extra_flags=2, extra_size=0),

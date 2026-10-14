@@ -1,0 +1,209 @@
+{
+  "schema": 1,
+  "date": "2026-10-14",
+  "stage": "shared-storage-lifetimes",
+  "baseline_commit": "bed13c56a",
+  "source_date_epoch": 1791969300,
+  "devices": {
+    "classic": {
+      "flash_before": 367600,
+      "flash_after": 367808,
+      "flash_change": 208,
+      "ram_before": 30144,
+      "ram_after": 28608,
+      "ram_saved": 1536,
+      "build_crc": "A9B39168",
+      "image_sha256": "bc9aa51eaa899a14ab313bafe76183b8e5d30f4dc6d4408e5d7cbdb0de4b2f74",
+      "core_cycles_before": 1711191,
+      "core_cycles_after": 1711192,
+      "core_time_change_percent": 5.8438830041751544e-05,
+      "adc_median_us": 440.0,
+      "nor_reads": {
+        "64": {
+          "samples": 60,
+          "median_us_before": 61.0,
+          "median_us_after": 61.0,
+          "min_us": 46,
+          "max_us": 67
+        },
+        "512": {
+          "samples": 60,
+          "median_us_before": 210.0,
+          "median_us_after": 210.0,
+          "min_us": 195,
+          "max_us": 223
+        },
+        "4096": {
+          "samples": 60,
+          "median_us_before": 1576.0,
+          "median_us_after": 1575.5,
+          "min_us": 1560,
+          "max_us": 1580
+        },
+        "65536": {
+          "samples": 60,
+          "median_us_before": 25002.0,
+          "median_us_after": 24986.0,
+          "min_us": 24970,
+          "max_us": 24994
+        }
+      },
+      "msc_minimum_stack_remaining": 12632,
+      "msc_stack_before_reset": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006FC0 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12632 observed_remaining=12632 sram_xn=1\r\n/> ",
+      "usb_screen_frames": 100,
+      "checks": {
+        "flash_dma": "PASS 100 x65536-byte reads, consistent CRC, zero SPI/DMA errors",
+        "cdc_storage": "PASS 1,63,64,65,255,256,257,4095,4096-byte write/read",
+        "msc": "PASS binary contents, Russian LFN, two ejects/CDC reconnects, reset persistence and cleanup",
+        "usb_screen": "PASS 100 requested CRC-complete 1536-byte frames",
+        "state": "PASS original files, program, registers, complete stack, IP and directory restored and compared"
+      },
+      "all_three_stages": {
+        "flash_before": 370404,
+        "flash_after": 367808,
+        "flash_saved": 2596,
+        "ram_before": 31304,
+        "ram_after": 28608,
+        "ram_saved": 2696
+      }
+    },
+    "mini": {
+      "flash_before": 338872,
+      "flash_after": 339208,
+      "flash_change": 336,
+      "ram_before": 28744,
+      "ram_after": 27224,
+      "ram_saved": 1520,
+      "build_crc": "E0EBD3C3",
+      "image_sha256": "173cdbadaa494f4a77649b3556e873d02ce5adef442a818bdd700f8a5f0508a7",
+      "core_cycles_before": 1709273,
+      "core_cycles_after": 1709186,
+      "core_time_change_percent": -0.005089883242759274,
+      "adc_median_us": 441.5,
+      "nor_reads": {
+        "64": {
+          "samples": 60,
+          "median_us_before": 59.0,
+          "median_us_after": 59.0,
+          "min_us": 44,
+          "max_us": 72
+        },
+        "512": {
+          "samples": 60,
+          "median_us_before": 208.0,
+          "median_us_after": 208.0,
+          "min_us": 194,
+          "max_us": 221
+        },
+        "4096": {
+          "samples": 60,
+          "median_us_before": 1566.0,
+          "median_us_after": 1562.0,
+          "min_us": 1546,
+          "max_us": 1575
+        },
+        "65536": {
+          "samples": 60,
+          "median_us_before": 24807.0,
+          "median_us_after": 24773.0,
+          "min_us": 24750,
+          "max_us": 24782
+        }
+      },
+      "msc_minimum_stack_remaining": 12536,
+      "msc_stack_before_reset": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A60 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=12536 observed_remaining=12536 sram_xn=1\r\n/> ",
+      "usb_screen_frames": 101,
+      "checks": {
+        "flash_dma": "PASS 100 x65536-byte reads, consistent CRC, zero SPI/DMA errors",
+        "cdc_storage": "PASS 1,63,64,65,255,256,257,4095,4096-byte write/read",
+        "msc": "PASS binary contents, Russian LFN, two ejects/CDC reconnects, reset persistence and cleanup",
+        "usb_screen": "PASS 100 requested CRC-complete 1536-byte frames",
+        "state": "PASS original files, program, registers, complete stack, IP and directory restored and compared"
+      },
+      "all_three_stages": {
+        "flash_before": 341676,
+        "flash_after": 339208,
+        "flash_saved": 2468,
+        "ram_before": 29896,
+        "ram_after": 27224,
+        "ram_saved": 2672
+      }
+    }
+  },
+  "methodology": {
+    "flash": "Sealed resident.bin bytes, including CRC footer; identical reference features",
+    "ram": "Static .data + .bss + .noinit; protected stack measured separately",
+    "core": "Median of five seeded prof core 40 reports; original logical state restored",
+    "nor": "60 timed reads per size; unchanged caches and transfer chunks",
+    "msc": "4096-byte binary roundtrip, watermark before reset and after second export; required 12288 bytes"
+  },
+  "checks": {
+    "c9": "PASS ASan/UBSan: software/STM32 CRC and F411 large font; faults/torn writes, checkpoints, allocation/cache, busy ownership exclusion and disjoint batch preservation",
+    "vfat": "PASS ASan/UBSan 587 mutations, 69 rejections, C6 preserved; bulk import, compression and uncached paths",
+    "f411": "PASS 16 native compile/stack/RAM profiles",
+    "f401": "PASS 9 strict resident+System APP profiles; final guarded changes preserve all nine sealed BINs byte-for-byte",
+    "arm": "PASS production reset/data/BSS/noinit, preinit, PLL/USB48, SysTick/micros, DWT wrap and Classic STOP model; mini STOP disabled by profile",
+    "msc_gate": "PASS 10 unit tests and both real boards; import watermark checked before reset"
+  },
+  "workspace": {
+    "pool_bytes": 1536,
+    "file_write_partition": 1024,
+    "live_import_batch_partition": 512,
+    "catalog_io_bytes": 512,
+    "ownership": "Sidecar discovery owns full pool; file/directory transactions and import batch use disjoint partitions. Busy/oversized/interrupt leases rejected before mutations.",
+    "stack": "Isolate APP validation, directory growth, FAT preparation and uncached span frames. Raw FAT verification shares catalog I/O; source preparation keeps a private bitmap to avoid nested callback aliasing.",
+    "caches": "Read-cache capacities and NOR transfer chunk sizes unchanged"
+  },
+  "inherited_stack_regression": {
+    "mini_runtime_peak": 11096,
+    "mini_first_pool_peak": 11096,
+    "mini_final_peak": 12536,
+    "required": 12288
+  },
+  "host_hil_fix": "Inventory only external physical media: a stalled macOS disk image blocked full inventory before the test. USB identity/media safety validation retained.",
+  "remaining_hardware_check": null,
+  "sleep_qualification_followup": {
+    "date": "2026-10-14",
+    "device": "AEB505B6E0067623",
+    "build_crc": "A9B39168",
+    "image": "Final Stage3 resident, containing the same standalone runtime",
+    "rtc": {
+      "status": "PASS",
+      "requested_seconds": 5,
+      "requested_cycles": 4,
+      "entries": 4,
+      "rtc_wakes": 4,
+      "keyboard_wakes": 0,
+      "failures": 0,
+      "usb_suspend": 1,
+      "usb_resume": 1,
+      "host_wakes": 0,
+      "local_wakes": 0,
+      "clock_hz": 96000000
+    },
+    "keyboard": {
+      "status": "PASS",
+      "entries": 1,
+      "rtc_wakes": 0,
+      "keyboard_wakes": 1,
+      "failures": 0,
+      "physical_key_code": 39,
+      "captured_key_count": 1,
+      "wake_rows": "0x10",
+      "captured_rows": "0x10",
+      "usb_suspend": 1,
+      "usb_resume": 1,
+      "host_wakes": 0,
+      "local_wakes": 1,
+      "clock_hz": 96000000,
+      "operator": "Calculator woke after ESC while Mac stayed asleep; Mac manually resumed"
+    },
+    "recovery": "PASS USB configured, no STOP aborts or blockers, stable PVD/write gate, clock 96 MHz; physical ESC captured exactly once",
+    "preservation": "PASS original file fingerprints, program, IP, registers, complete stack and directory; valid firmware CRC and CRASH none after both sleep tests",
+    "commands": [
+      "tests/hil_usb_suspend.py verify --expected rtc",
+      "tests/hil_usb_suspend.py verify --expected keyboard --expected-key-code 39"
+    ],
+    "mini": "STOP disabled by hardware profile; common standalone-runtime hardware checks passed separately"
+  }
+}

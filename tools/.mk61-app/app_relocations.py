@@ -7,7 +7,7 @@ import struct
 from pathlib import Path
 
 ABS32 = 2
-PC_RELATIVE = {3, 10, 30, 42}  # REL32, THM_CALL, THM_JUMP24, PREL31
+PC_RELATIVE = {3, 10, 30, 42, 51}  # REL32, THM_CALL, THM_JUMP24, PREL31, THM_JUMP19
 
 
 def encode_offsets(offsets):

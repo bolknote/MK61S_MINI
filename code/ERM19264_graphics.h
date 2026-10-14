@@ -9,6 +9,7 @@
 
 #ifndef _ERM19264_GRAPHICS_H
 #define _ERM19264_GRAPHICS_H
+#include "mk61_io.hpp"
 
 #if ARDUINO >= 100
  #include "Arduino.h"
@@ -44,7 +45,13 @@ enum LCD_Return_Codes_e : uint8_t
 };
 
 /*! @brief Graphics class to hold graphic related functions */
-class ERM19264_graphics : public Print {
+class ERM19264_graphics;
+#if MK61_NARROW_IO_SUPPORTED
+using ERM19264Output = mk61_io::Output<ERM19264_graphics>;
+#else
+using ERM19264Output = Print;
+#endif
+class ERM19264_graphics : public ERM19264Output {
 
  public:
 

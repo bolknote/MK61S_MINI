@@ -16,7 +16,7 @@ if(NOT DEFINED MK61_CORE_VERSION OR MK61_CORE_VERSION STREQUAL "")
   message(FATAL_ERROR "MK61_CORE_VERSION is required")
 endif()
 
-project(mk61s_f401_gcc LANGUAGES C CXX ASM)
+project(mk61s_stm32_gcc LANGUAGES C CXX ASM)
 
 if(CMAKE_HOST_WIN32)
   if(NOT DEFINED MK61_POWERSHELL OR
@@ -65,6 +65,16 @@ if(NOT _mk61_platform_text MATCHES
   message(FATAL_ERROR "STM32 Arduino Core ${MK61_CORE_VERSION} is required")
 endif()
 
+if(NOT DEFINED MK61_USE_COMPACT_LIBM)
+  set(MK61_USE_COMPACT_LIBM 1)
+endif()
+if(NOT DEFINED MK61_USE_NATIVE_EABI)
+  set(MK61_USE_NATIVE_EABI 1)
+endif()
+if(NOT DEFINED MK61_USE_NATIVE_LIBC)
+  set(MK61_USE_NATIVE_LIBC 1)
+endif()
+
 foreach(_mk61_bool
     MK61_ENABLE_FOCAL
     MK61_ENABLE_TINYBASIC
@@ -85,6 +95,9 @@ foreach(_mk61_bool
     MK61_ENABLE_EXTENDED_FONT_SETTINGS
     MK61_USER_EXPLORER_SHORTCUT
     MK61_APP_LOCAL_FLOAT_MATH
+    MK61_USE_COMPACT_LIBM
+    MK61_USE_NATIVE_EABI
+    MK61_USE_NATIVE_LIBC
     MK61_F401_PRODUCT_BUILD
     MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
@@ -118,131 +131,111 @@ else()
   endif()
 endif()
 
-# Reuse the board, core, HAL and Arduino-library targets shipped with the
-# pinned STM32 Core.  Include its generated board database directly so this
-# build never invokes Arduino CLI or the database updater.
-include("${CORE_PATH}/cmake/boards_db.cmake")
+# The installed package supplies CMSIS device definitions, LL USB and ST USB
+# protocol sources only. No Core, variant, HAL or Arduino library target is built.
+set(MK61_TARGET_MCU "f401" CACHE STRING "Qualified STM32 target: f401 or f411")
+if(MK61_TARGET_MCU STREQUAL "f411")
+  set(_mk61_device STM32F411xE)
+  set(_mk61_board BLACKPILL_F411CE)
+  set(BOARD_MAXSIZE 524288)
+  set(BOARD_MAXDATASIZE 131072)
+  set(_mk61_frequency 96000000UL)
+  set(_mk61_size_option -Os)
+elseif(MK61_TARGET_MCU STREQUAL "f401")
+  set(_mk61_device STM32F401xC)
+  set(_mk61_board BLACKPILL_F401CC)
+  set(BOARD_MAXSIZE 262144)
+  set(BOARD_MAXDATASIZE 65536)
+  set(_mk61_frequency 84000000UL)
+  set(_mk61_size_option -Oz)
+else()
+  message(FATAL_ERROR "MK61_TARGET_MCU must be f401 or f411")
+endif()
+set(MK61_COLD_OPTIMIZATION "${_mk61_size_option}" CACHE STRING "Size optimization: -Os or -Oz")
+if(NOT MK61_COLD_OPTIMIZATION MATCHES "^-O[sz]$")
+  message(FATAL_ERROR "MK61_COLD_OPTIMIZATION must be -Os or -Oz")
+endif()
+set(_mk61_size_option "${MK61_COLD_OPTIMIZATION}")
 set(_mk61_portable_ld "${CMAKE_BINARY_DIR}/portable-resident.ld")
-if(CMAKE_HOST_WIN32)
-  execute_process(
-    COMMAND "${MK61_POWERSHELL}" -NoLogo -NoProfile -File
-      "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.ps1"
-      "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld"
-      "${_mk61_portable_ld}"
-    COMMAND_ERROR_IS_FATAL ANY)
-else()
-  execute_process(
-    COMMAND "${Python3_EXECUTABLE}"
-      "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py"
-      "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld" "${_mk61_portable_ld}"
-    COMMAND_ERROR_IS_FATAL ANY)
-endif()
-get_target_property(_mk61_board_link BLACKPILL_F401CC INTERFACE_LINK_OPTIONS)
-list(REMOVE_ITEM _mk61_board_link
-  "LINKER:--default-script=${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
-list(APPEND _mk61_board_link "LINKER:--default-script=${_mk61_portable_ld}")
-set_property(TARGET BLACKPILL_F401CC PROPERTY
-  INTERFACE_LINK_OPTIONS "${_mk61_board_link}")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-  "${BLACKPILL_F401CC_VARIANT_PATH}/ldscript.ld")
-if(CMAKE_HOST_WIN32)
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.ps1")
-else()
-  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/portable-layout.py")
-endif()
-add_library(board ALIAS BLACKPILL_F401CC)
-set(BUILD_VARIANT_PATH "${BLACKPILL_F401CC_VARIANT_PATH}")
-set(BOARD_MAXSIZE "${BLACKPILL_F401CC_MAXSIZE}")
-set(BOARD_MAXDATASIZE "${BLACKPILL_F401CC_MAXDATASIZE}")
-set(MCU "${BLACKPILL_F401CC_MCU}")
-set(FPCONF "${BLACKPILL_F401CC_FPCONF}")
-target_link_libraries(BLACKPILL_F401CC INTERFACE
-  # The firmware terminal is USB CDC.  Instantiating the board's unused UART
-  # Serial1 object costs SRAM and also pulls the HAL UART debug state in.
-  BLACKPILL_F401CC_serial_none
-  BLACKPILL_F401CC_usb_CDCgen
-  BLACKPILL_F401CC_xusb_FS)
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/standalone/resident.ld"
+  "${_mk61_portable_ld}" COPYONLY)
 
-include("${CORE_PATH}/cmake/overall_settings.cmake")
-if(MK61_ENABLE_LTO)
-  overall_settings(OPTIMIZATION s LTO)
-else()
-  overall_settings(OPTIMIZATION s)
-endif()
-# GCC 14 supports Oz even though the pinned Arduino helper only accepts Os.
-# Whole-program size optimization keeps the F401 resident headroom without
-# removing features; the core hot paths retain their explicit O3 policy.
-get_target_property(_mk61_size_options user_settings INTERFACE_COMPILE_OPTIONS)
-list(REMOVE_ITEM _mk61_size_options -Os)
-list(APPEND _mk61_size_options -Oz)
-set_property(TARGET user_settings PROPERTY INTERFACE_COMPILE_OPTIONS "${_mk61_size_options}")
-target_compile_options(user_settings INTERFACE -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
-target_link_options(user_settings INTERFACE -Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
-
-# Expose only the optional HAL configuration to Core/library translation
-# units. The entire firmware include directory must not shadow their headers.
-set(_mk61_hal_config_dir "${CMAKE_BINARY_DIR}/generated/hal-config")
-file(MAKE_DIRECTORY "${_mk61_hal_config_dir}")
-configure_file("${MK61_PROJECT_ROOT}/code/hal_conf_extra.h"
-  "${_mk61_hal_config_dir}/hal_conf_extra.h" COPYONLY)
-target_include_directories(user_settings INTERFACE "${_mk61_hal_config_dir}")
-configure_file("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h"
-  "${_mk61_hal_config_dir}/stm32f4_usbd_def.h" COPYONLY)
-target_include_directories(user_settings INTERFACE
-  "${BUILD_LIB_PATH}/USBDevice/inc"
-  "${CORE_PATH}/system/Middlewares/ST/STM32_USB_Device_Library/Core/Inc")
+add_library(user_settings INTERFACE)
 target_compile_options(user_settings INTERFACE
-  "-include" "${_mk61_hal_config_dir}/stm32f4_usbd_def.h")
-
-
+  -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+  ${_mk61_size_option} -ffunction-sections -fdata-sections
+  "$<$<COMPILE_LANGUAGE:CXX>:-fno-rtti;-fno-exceptions;-fno-use-cxa-atexit;-fno-threadsafe-statics>"
+  "$<$<COMPILE_LANGUAGE:CXX>:--param=max-inline-insns-single=500>")
+target_link_options(user_settings INTERFACE
+  -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+  ${_mk61_size_option} -nostartfiles --specs=nano.specs --specs=nosys.specs
+  "LINKER:--gc-sections"
+  "LINKER:--default-script=${_mk61_portable_ld}"
+  "LINKER:--defsym=LD_FLASH_OFFSET=0"
+  "LINKER:--defsym=LD_MAX_SIZE=${BOARD_MAXSIZE}"
+  "LINKER:--defsym=LD_MAX_DATA_SIZE=${BOARD_MAXDATASIZE}")
+if(MK61_ENABLE_LTO)
+  target_compile_options(user_settings INTERFACE -flto)
+  target_link_options(user_settings INTERFACE -flto -flto-partition=one)
+endif()
+if(MK61_TARGET_MCU STREQUAL "f401")
+  target_compile_options(user_settings INTERFACE
+    -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
+  target_link_options(user_settings INTERFACE
+    -flto-partition=one -fipa-pta -fno-inline-functions-called-once)
+endif()
 target_compile_definitions(user_settings INTERFACE
-  ARDUINO=10607
-  VECT_TAB_OFFSET=0x0
-  # Terminal I/O is USB CDC. Disable the unused Arduino UART wrapper/debug
-  # state while leaving the STM32 HAL UART module available.
-  HAL_UART_MODULE_ONLY
-  # Project LL drivers own sound PWM and TIM9; this also changes the Core
-  # compile command so a cached HardwareTimer build cannot be reused.
-  HAL_TIM_MODULE_ONLY
-  # CDC and our MSC class publish no class-specific user strings. The Core
-  # default callback merely reserves an otherwise unused 255-byte RAM buffer.
-  USBD_CLASS_USER_STRING_DESC=0)
+  ${_mk61_device} STM32F4xx USE_FULL_LL_DRIVER NDEBUG
+  MK61_NATIVE_RUNTIME=1 F_CPU=${_mk61_frequency}
+  # Source compatibility markers; no Arduino implementation is linked.
+  ARDUINO=10607 ARDUINO_ARCH_STM32 ARDUINO_${_mk61_board}
+  BOARD_NAME="${_mk61_board}" VECT_TAB_OFFSET=0x0
+  USBCON USBD_USE_CDC HWSERIAL_NONE HAL_PCD_MODULE_ENABLED
+  USBD_VID=0x0483 USBD_PID=0x5740 USBD_CLASS_USER_STRING_DESC=0
+  USBD_MAX_STR_DESC_SIZ=64)
+target_include_directories(user_settings INTERFACE
+  "${CMAKE_CURRENT_SOURCE_DIR}/standalone"
+  "${MK61_PROJECT_ROOT}/code"
+  "${BUILD_SYSTEM_PATH}/Drivers/STM32F4xx_HAL_Driver/Inc"
+  "${BUILD_SYSTEM_PATH}/Drivers/CMSIS/Device/ST/STM32F4xx/Include"
+  "${CMSIS6_PATH}/CMSIS/Core/Include"
+  "${CMSIS_DSP_PATH}/Include"
+  "${CMSIS_DSP_PATH}/PrivateInclude"
+  "${BUILD_LIB_PATH}/USBDevice/inc"
+  "${BUILD_SYSTEM_PATH}/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"
+  "${BUILD_SYSTEM_PATH}/Middlewares/ST/STM32_USB_Device_Library/Core/Src")
+target_compile_options(user_settings INTERFACE
+  "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h\">"
+  "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.h\">")
 
-include("${CORE_PATH}/cmake/set_base_arduino_config.cmake")
-add_subdirectory("${BUILD_VARIANT_PATH}" "${CMAKE_BINARY_DIR}/stm32/variant")
-add_subdirectory("${BUILD_CORE_PATH}" "${CMAKE_BINARY_DIR}/stm32/core")
-add_subdirectory("${BUILD_LIB_PATH}" "${CMAKE_BINARY_DIR}/stm32/libraries")
-
-# Keep the CDC and suspend --wrap targets visible to GNU ld. Their defining
-# units must opt out of LTO; the HAL bridge stays in LTO so its strong MSP/IRQ
-# implementations replace HAL's weak no-op defaults before optimization.
-set_source_files_properties(
-  "${BUILD_LIB_PATH}/USBDevice/src/cdc/usbd_cdc.c"
-  "${BUILD_LIB_PATH}/USBDevice/src/usb_device_core.c"
-  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
+# Preserve the real middleware call boundaries needed by GNU ld --wrap.
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_core.c"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
-
-# F401 owns its OTG FS controller, retaining the CDC/MSC protocol middleware.
-get_target_property(_mk61_usb_sources USBDevice_bin SOURCES)
-list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usbd_conf.c" "src/usbd_conf.c")
-list(REMOVE_ITEM _mk61_usb_sources "${BUILD_LIB_PATH}/USBDevice/src/usb_device_ctlreq.c" "src/usb_device_ctlreq.c")
-list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c")
-list(APPEND _mk61_usb_sources "${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp")
-set_property(TARGET USBDevice_bin PROPERTY SOURCES "${_mk61_usb_sources}")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.c"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC=1" COMPILE_OPTIONS "-fno-lto")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_cdc_if.c"
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CDC_IF=1")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
-  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
-  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1"
-  COMPILE_OPTIONS "-fno-exceptions;-fno-rtti;-fno-threadsafe-statics")
-
+  PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
-  DIRECTORY "${BUILD_LIB_PATH}/USBDevice"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/system_strings.c"
+  PROPERTIES COMPILE_OPTIONS "-fno-builtin;-fno-lto")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/native_eabi.cpp"
+  PROPERTIES COMPILE_OPTIONS "-fno-lto")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/compact_math.cpp"
+  PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
+if(MK61_TARGET_MCU STREQUAL "f411")
+  # The measured emulator policy matches the Arduino control image exactly.
+  set_source_files_properties("${MK61_PROJECT_ROOT}/code/mk61emu_core.cpp"
+    PROPERTIES COMPILE_OPTIONS "-fno-lto")
+endif()
 
 file(GLOB _mk61_project_sources CONFIGURE_DEPENDS
   "${MK61_PROJECT_ROOT}/code/*.c"
   "${MK61_PROJECT_ROOT}/code/*.cpp")
+# Native UC1609 renders through our framebuffer, never the generic graphics base.
+list(FILTER _mk61_project_sources EXCLUDE REGEX "/ERM19264_graphics\\.cpp$")
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/firmware_main.cpp.in"
   "${CMAKE_BINARY_DIR}/generated/firmware_main.cpp"
@@ -250,7 +243,10 @@ configure_file(
 list(APPEND _mk61_project_sources
   "${CMAKE_BINARY_DIR}/generated/firmware_main.cpp")
 
-add_executable(resident ${_mk61_project_sources})
+add_executable(resident ${_mk61_project_sources}
+  "${MK61_PROJECT_ROOT}/code/stm32f4_startup.S"
+  "${MK61_PROJECT_ROOT}/code/native_eabi_arm.S"
+  "${MK61_PROJECT_ROOT}/code/native_eabi_fixed.S")
 target_include_directories(resident PRIVATE "${MK61_PROJECT_ROOT}/code")
 target_compile_definitions(resident PRIVATE
   ${_mk61_profile_definitions}
@@ -275,13 +271,21 @@ target_compile_definitions(resident PRIVATE
   MK61_USER_EXPLORER_SHORTCUT=${MK61_USER_EXPLORER_SHORTCUT}
   MK61_MATH_BACKEND=${MK61_MATH_BACKEND}
   MK61_APP_LOCAL_FLOAT_MATH=${MK61_APP_LOCAL_FLOAT_MATH}
+  MK61_USE_COMPACT_LIBM=${MK61_USE_COMPACT_LIBM}
+  MK61_USE_NATIVE_EABI=${MK61_USE_NATIVE_EABI}
+  MK61_USE_NATIVE_LIBC=${MK61_USE_NATIVE_LIBC}
   MK61_F401_PRODUCT_BUILD=${MK61_F401_PRODUCT_BUILD}
   MK61_ENABLE_LOADABLE_MODULES=1
   MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}
   # F401 release builds deliberately combine global -Os(+LTO) with O3 only
   # on the measured emulator loops.  Fail configuration drift instead of
   # silently shipping a uniformly size-optimised core.
-  MK61_REQUIRE_F401_SELECTIVE_O3=1)
+)
+if(MK61_TARGET_MCU STREQUAL "f401")
+  target_compile_definitions(resident PRIVATE MK61_REQUIRE_F401_SELECTIVE_O3=1)
+else()
+  target_compile_definitions(resident PRIVATE MK61_REQUIRE_F411_SELECTIVE_O3=1)
+endif()
 # Keep the direct F401 path at least as strict as the Arduino release matrix.
 # This applies only to project sources; warnings in pinned third-party targets
 # stay visible without making their upstream diagnostics our build failures.
@@ -290,9 +294,12 @@ target_compile_options(resident PRIVATE
   -Wextra
   -Werror
   -Wno-error=cpp)
-target_link_libraries(resident PRIVATE
-  stm32_runtime
-  USBDevice)
+target_link_libraries(resident PRIVATE user_settings)
+if(MK61_USE_NATIVE_EABI AND MK61_USE_NATIVE_LIBC AND MK61_USE_COMPACT_LIBM)
+  target_link_options(resident PRIVATE -nostdlib)
+else()
+  target_link_libraries(resident PRIVATE -Wl,--start-group m c stdc++ gcc -Wl,--end-group)
+endif()
 target_link_options(resident PRIVATE
   "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map"
   "LINKER:--wrap=USBD_CDC_ClearBuffer"

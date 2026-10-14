@@ -67,9 +67,17 @@ class Elf:
         # Fail closed if a stripped or otherwise incompatible ELF does not
         # positively identify the math implementation exercised by this suite.
         required = {'sin', 'cos', 'sqrt', 'exp', 'log'}
-        if not required.issubset(self.symbols):
+        compact_kernel_sets = (
+            ('fixed_kernel', 'natural_log', 'reduce_large', 'square_root'),
+            ('fixed_kernel', 'natural_log', 'integer_reduction', 'square_root'),
+        )
+        compact = any(all(any('_ZN12compact_math' in symbol and kernel in symbol
+                              for symbol in self.symbols)
+                          for kernel in kernels)
+                      for kernels in compact_kernel_sets)
+        if not required.issubset(self.symbols) and not compact:
             raise ValueError(
-                f'{path}: cannot confirm LIBM math in the resident ELF; '
+                f'{path}: cannot confirm LIBM or compact binary64 math in the resident ELF; '
                 'provide an unstripped test-only MK61_MATH_BACKEND=0 build.')
     def load(self, uc):
         for s in self.sections:
