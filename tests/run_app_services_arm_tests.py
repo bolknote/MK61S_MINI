@@ -15,7 +15,7 @@ def package(reader, path, elf, work):
     packed = path.read_bytes()
     image_size, memory_size, entry = struct.unpack_from('<III', packed, 28)
     crc = struct.unpack_from('<I', packed, 52)[0]
-    low = (elf.symbol('__mk61_dynamic_begin') + 2048 + 31) & ~31
+    low = (elf.fixture_buffer_begin() + 2048 + 31) & ~31
     high = elf.symbol('__mk61_dynamic_end') - ((memory_size + 31) & ~31)
     assert low <= high
     variants = []

@@ -4,7 +4,7 @@
 // Единый математический интерфейс для интерпретаторов FOCAL/TinyBASIC.
 //
 // Трансцендентные функции предоставляют две выбираемые реализации:
-//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> тонкие обёртки над <math.h>
+//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> binary64: своё ядро в native, <math.h> в контрольной сборке
 //   MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE  -> вычисление на ядре МК-61
 //
 // Реализация CORE повторно использует уже скомпонованный с прошивкой движок
@@ -28,6 +28,17 @@
 #endif
 #ifndef MK61_MATH_BACKEND
   #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+#endif
+
+#ifndef MK61_USE_COMPACT_LIBM
+  #if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+    #define MK61_USE_COMPACT_LIBM 1
+  #else
+    #define MK61_USE_COMPACT_LIBM 0
+  #endif
+#endif
+#if MK61_USE_COMPACT_LIBM != 0 && MK61_USE_COMPACT_LIBM != 1
+  #error "MK61_USE_COMPACT_LIBM must be 0 or 1"
 #endif
 
 #if MK61_MATH_BACKEND != MK61_MATH_BACKEND_LIBM && \
@@ -270,6 +281,22 @@ double log10(double x);
 double exp(double x);
 double sqrt(double x);
 double pow(double base, double exponent);
+
+#elif MK61_USE_COMPACT_LIBM
+} // namespace mk_math
+#include "compact_math.hpp"
+namespace mk_math {
+inline double sin(double x) { return compact_math::sin(x); }
+inline double cos(double x) { return compact_math::cos(x); }
+inline double tan(double x) { return compact_math::tan(x); }
+inline double asin(double x) { return compact_math::asin(x); }
+inline double acos(double x) { return compact_math::acos(x); }
+inline double atan(double x) { return compact_math::atan(x); }
+inline double ln(double x) { return compact_math::ln(x); }
+inline double log10(double x) { return compact_math::log10(x); }
+inline double exp(double x) { return compact_math::exp(x); }
+inline double sqrt(double x) { return compact_math::sqrt(x); }
+inline double pow(double x, double y) { return compact_math::pow(x,y); }
 
 #else // MK61_MATH_BACKEND_LIBM
 

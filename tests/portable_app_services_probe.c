@@ -85,6 +85,7 @@ int main(void) {
   default_editor.backspace_key = -1;
   s->call(MK61_SERVICE_EDITOR_KEY, 0, 0, 0, &default_editor);
   if(default_editor.length != 1 || default_source[0] != '2') result = 24;
+  default_editor.options |= 4U; /* Enable ALPHA+Cx clear-line explicitly. */
   default_editor.shift = 1; /* text_editor::Shift::ALPHA */
   default_editor.key = s->keyboard_mapping->cx;
   s->call(MK61_SERVICE_EDITOR_KEY, 0, 0, 0, &default_editor);

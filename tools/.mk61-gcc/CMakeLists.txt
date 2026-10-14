@@ -65,6 +65,10 @@ if(NOT _mk61_platform_text MATCHES
   message(FATAL_ERROR "STM32 Arduino Core ${MK61_CORE_VERSION} is required")
 endif()
 
+if(NOT DEFINED MK61_USE_COMPACT_LIBM)
+  set(MK61_USE_COMPACT_LIBM 1)
+endif()
+
 foreach(_mk61_bool
     MK61_ENABLE_FOCAL
     MK61_ENABLE_TINYBASIC
@@ -85,6 +89,7 @@ foreach(_mk61_bool
     MK61_ENABLE_EXTENDED_FONT_SETTINGS
     MK61_USER_EXPLORER_SHORTCUT
     MK61_APP_LOCAL_FLOAT_MATH
+    MK61_USE_COMPACT_LIBM
     MK61_F401_PRODUCT_BUILD
     MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
@@ -215,6 +220,8 @@ set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/compact_math.cpp"
+  PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 if(MK61_TARGET_MCU STREQUAL "f411")
   # The measured emulator policy matches the Arduino control image exactly.
   set_source_files_properties("${MK61_PROJECT_ROOT}/code/mk61emu_core.cpp"
@@ -258,6 +265,7 @@ target_compile_definitions(resident PRIVATE
   MK61_USER_EXPLORER_SHORTCUT=${MK61_USER_EXPLORER_SHORTCUT}
   MK61_MATH_BACKEND=${MK61_MATH_BACKEND}
   MK61_APP_LOCAL_FLOAT_MATH=${MK61_APP_LOCAL_FLOAT_MATH}
+  MK61_USE_COMPACT_LIBM=${MK61_USE_COMPACT_LIBM}
   MK61_F401_PRODUCT_BUILD=${MK61_F401_PRODUCT_BUILD}
   MK61_ENABLE_LOADABLE_MODULES=1
   MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}
