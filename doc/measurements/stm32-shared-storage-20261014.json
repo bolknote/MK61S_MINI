@@ -161,5 +161,49 @@
     "required": 12288
   },
   "host_hil_fix": "Inventory only external physical media: a stalled macOS disk image blocked full inventory before the test. USB identity/media safety validation retained.",
-  "remaining_hardware_check": "Classic RTC and physical-key STOP wake with real host USB suspend pending. ARM model does not qualify physical sleep."
+  "remaining_hardware_check": null,
+  "sleep_qualification_followup": {
+    "date": "2026-10-14",
+    "device": "AEB505B6E0067623",
+    "build_crc": "A9B39168",
+    "image": "Final Stage3 resident, containing the same standalone runtime",
+    "rtc": {
+      "status": "PASS",
+      "requested_seconds": 5,
+      "requested_cycles": 4,
+      "entries": 4,
+      "rtc_wakes": 4,
+      "keyboard_wakes": 0,
+      "failures": 0,
+      "usb_suspend": 1,
+      "usb_resume": 1,
+      "host_wakes": 0,
+      "local_wakes": 0,
+      "clock_hz": 96000000
+    },
+    "keyboard": {
+      "status": "PASS",
+      "entries": 1,
+      "rtc_wakes": 0,
+      "keyboard_wakes": 1,
+      "failures": 0,
+      "physical_key_code": 39,
+      "captured_key_count": 1,
+      "wake_rows": "0x10",
+      "captured_rows": "0x10",
+      "usb_suspend": 1,
+      "usb_resume": 1,
+      "host_wakes": 0,
+      "local_wakes": 1,
+      "clock_hz": 96000000,
+      "operator": "Calculator woke after ESC while Mac stayed asleep; Mac manually resumed"
+    },
+    "recovery": "PASS USB configured, no STOP aborts or blockers, stable PVD/write gate, clock 96 MHz; physical ESC captured exactly once",
+    "preservation": "PASS original file fingerprints, program, IP, registers, complete stack and directory; valid firmware CRC and CRASH none after both sleep tests",
+    "commands": [
+      "tests/hil_usb_suspend.py verify --expected rtc",
+      "tests/hil_usb_suspend.py verify --expected keyboard --expected-key-code 39"
+    ],
+    "mini": "STOP disabled by hardware profile; common standalone-runtime hardware checks passed separately"
+  }
 }
