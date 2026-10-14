@@ -1,0 +1,394 @@
+{
+  "status": "PASS",
+  "tested_on": "2026-10-08",
+  "decision": "do not promote this candidate; regressions on literal-heavy frames",
+  "device": "STM32F411CE, Classic V3, UC1609, 96 MHz",
+  "compiler": "ARM GCC 14.2.1, -Os without LTO",
+  "code_location": "actual resident firmware in internal Flash",
+  "runs_per_case": 3,
+  "frames_per_run": 32,
+  "measured_frames_per_variant": 672,
+  "cpu_scope": "snapshot/CRC + rectangle encode + packet CRC/COBS; PACKBITS is nested in rectangle and is not double-counted",
+  "wall_scope": "host REQUEST_KEYFRAME to CRC-verified FRAME_END; includes transport and host scheduling",
+  "pixels": "CRC-verified full frames; independent bitmap oracle and identical cross-image pixels outside disk overlay",
+  "flash_delta_bytes": 24,
+  "qualification_global_ram_bytes": 82268,
+  "cases": {
+    "blank": {
+      "packbits_cycles_per_frame": {
+        "baseline": 23688.0,
+        "candidate": 7208.0,
+        "time_change_percent": -69.571,
+        "speedup": 3.2863,
+        "baseline_repeat_range": [
+          23688.0,
+          23688.0
+        ],
+        "candidate_repeat_range": [
+          7208.0,
+          7208.0
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 193791.875,
+        "candidate": 179355.34375,
+        "time_change_percent": -7.45,
+        "speedup": 1.0805,
+        "baseline_repeat_range": [
+          193779.1875,
+          193792.1875
+        ],
+        "candidate_repeat_range": [
+          179342.65625,
+          179355.5
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.00585548,
+        "candidate": 0.00579637,
+        "time_change_percent": -1.009,
+        "speedup": 1.0102,
+        "baseline_repeat_range": [
+          0.005792603995359968,
+          0.005902812503336463
+        ],
+        "candidate_repeat_range": [
+          0.0057782080039032735,
+          0.006027874995197635
+        ]
+      },
+      "wire_bytes_per_frame": [
+        228
+      ],
+      "pixel_sha256": "f7f8603928890fb13d022d828c8a602cf7a7619ab24de82c7de4ae86ec337e6a"
+    },
+    "cursor": {
+      "packbits_cycles_per_frame": {
+        "baseline": 40529.0625,
+        "candidate": 11416.0,
+        "time_change_percent": -71.833,
+        "speedup": 3.5502,
+        "baseline_repeat_range": [
+          40480.0,
+          43676.46875
+        ],
+        "candidate_repeat_range": [
+          11416.0,
+          11416.0
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 212631.09375,
+        "candidate": 185363.71875,
+        "time_change_percent": -12.824,
+        "speedup": 1.1471,
+        "baseline_repeat_range": [
+          212383.9375,
+          215777.34375
+        ],
+        "candidate_repeat_range": [
+          185363.5,
+          185363.90625
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.005996,
+        "candidate": 0.00594669,
+        "time_change_percent": -0.822,
+        "speedup": 1.0083,
+        "baseline_repeat_range": [
+          0.005899145995499566,
+          0.005998437496600673
+        ],
+        "candidate_repeat_range": [
+          0.005941104500379879,
+          0.005999833498208318
+        ]
+      },
+      "wire_bytes_per_frame": [
+        244
+      ],
+      "pixel_sha256": "0dd6d0f8ed1d1a62580011d7ee9eca1b7dea4e13c6f29df095fa63cbe2575a8d"
+    },
+    "mixed": {
+      "packbits_cycles_per_frame": {
+        "baseline": 68345.25,
+        "candidate": 68481.6875,
+        "time_change_percent": 0.2,
+        "speedup": 0.998,
+        "baseline_repeat_range": [
+          67585.03125,
+          70537.53125
+        ],
+        "candidate_repeat_range": [
+          68481.09375,
+          69505.0625
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 342524.09375,
+        "candidate": 344551.625,
+        "time_change_percent": 0.592,
+        "speedup": 0.9941,
+        "baseline_repeat_range": [
+          340708.53125,
+          342562.0
+        ],
+        "candidate_repeat_range": [
+          344376.46875,
+          345367.0625
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.0084981,
+        "candidate": 0.0084871,
+        "time_change_percent": -0.129,
+        "speedup": 1.0013,
+        "baseline_repeat_range": [
+          0.008316749990626704,
+          0.009645874502894003
+        ],
+        "candidate_repeat_range": [
+          0.008474145499349106,
+          0.008698771001945715
+        ]
+      },
+      "wire_bytes_per_frame": [
+        1108
+      ],
+      "pixel_sha256": "d8c144cd1cb6218b6f4ea76e66ca204a0470e9a18055eed2b3357a799619e0cf"
+    },
+    "random": {
+      "packbits_cycles_per_frame": {
+        "baseline": 82380.75,
+        "candidate": 104060.40625,
+        "time_change_percent": 26.316,
+        "speedup": 0.7917,
+        "baseline_repeat_range": [
+          82374.0,
+          82741.53125
+        ],
+        "candidate_repeat_range": [
+          103956.4375,
+          104327.90625
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 436541.28125,
+        "candidate": 463451.15625,
+        "time_change_percent": 6.164,
+        "speedup": 0.9419,
+        "baseline_repeat_range": [
+          436216.0625,
+          436609.25
+        ],
+        "candidate_repeat_range": [
+          463399.53125,
+          463549.96875
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.01069602,
+        "candidate": 0.01064419,
+        "time_change_percent": -0.485,
+        "speedup": 1.0049,
+        "baseline_repeat_range": [
+          0.01064754200342577,
+          0.01075472900265595
+        ],
+        "candidate_repeat_range": [
+          0.010578811998129822,
+          0.010743375001766253
+        ]
+      },
+      "wire_bytes_per_frame": [
+        1732
+      ],
+      "pixel_sha256": "ce57e217d775dfa47d4ace486c5baef7fd8e0258f2602e8ab9cdd8b63513e0d2"
+    },
+    "alternating": {
+      "packbits_cycles_per_frame": {
+        "baseline": 82791.3125,
+        "candidate": 103108.75,
+        "time_change_percent": 24.541,
+        "speedup": 0.803,
+        "baseline_repeat_range": [
+          82735.59375,
+          83581.59375
+        ],
+        "candidate_repeat_range": [
+          101382.09375,
+          104688.375
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 435379.4375,
+        "candidate": 462072.8125,
+        "time_change_percent": 6.131,
+        "speedup": 0.9422,
+        "baseline_repeat_range": [
+          435205.40625,
+          436290.59375
+        ],
+        "candidate_repeat_range": [
+          461488.40625,
+          462346.03125
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.01078046,
+        "candidate": 0.01073694,
+        "time_change_percent": -0.404,
+        "speedup": 1.0041,
+        "baseline_repeat_range": [
+          0.010764645499875769,
+          0.010812249995069578
+        ],
+        "candidate_repeat_range": [
+          0.010716187505749986,
+          0.011156604501593392
+        ]
+      },
+      "wire_bytes_per_frame": [
+        1732
+      ],
+      "pixel_sha256": "af75aadf12b6a1c7406a2ac078e5e4273ce2628bdffcb7794867e096cd5133fc"
+    },
+    "white": {
+      "packbits_cycles_per_frame": {
+        "baseline": 23688.0,
+        "candidate": 7208.0,
+        "time_change_percent": -69.571,
+        "speedup": 3.2863,
+        "baseline_repeat_range": [
+          23688.0,
+          23688.0
+        ],
+        "candidate_repeat_range": [
+          7208.0,
+          7208.0
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 193843.78125,
+        "candidate": 179407.40625,
+        "time_change_percent": -7.447,
+        "speedup": 1.0805,
+        "baseline_repeat_range": [
+          193843.78125,
+          193843.9375
+        ],
+        "candidate_repeat_range": [
+          179407.34375,
+          179407.40625
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.00594598,
+        "candidate": 0.0062081,
+        "time_change_percent": 4.408,
+        "speedup": 0.9578,
+        "baseline_repeat_range": [
+          0.005922874996031169,
+          0.006003499496728182
+        ],
+        "candidate_repeat_range": [
+          0.0059951455041300505,
+          0.0062331869994523
+        ]
+      },
+      "wire_bytes_per_frame": [
+        228
+      ],
+      "pixel_sha256": "c0d68c424753a9f6033e8a0a1f9a04e35b1340fb5a3b9a6e5527fa555ac00ce7"
+    },
+    "rendered_text": {
+      "packbits_cycles_per_frame": {
+        "baseline": 52377.1875,
+        "candidate": 39121.15625,
+        "time_change_percent": -25.309,
+        "speedup": 1.3388,
+        "baseline_repeat_range": [
+          51821.21875,
+          53182.9375
+        ],
+        "candidate_repeat_range": [
+          37602.90625,
+          40644.15625
+        ]
+      },
+      "cpu_preparation_cycles_per_frame": {
+        "baseline": 277284.09375,
+        "candidate": 267805.53125,
+        "time_change_percent": -3.418,
+        "speedup": 1.0354,
+        "baseline_repeat_range": [
+          276698.75,
+          278014.34375
+        ],
+        "candidate_repeat_range": [
+          267571.375,
+          267990.71875
+        ]
+      },
+      "request_to_end_median_seconds": {
+        "baseline": 0.0059055,
+        "candidate": 0.00596785,
+        "time_change_percent": 1.056,
+        "speedup": 0.9896,
+        "baseline_repeat_range": [
+          0.005882166500668973,
+          0.005954271000518929
+        ],
+        "candidate_repeat_range": [
+          0.005830125490319915,
+          0.006125311992946081
+        ]
+      },
+      "wire_bytes_per_frame": [
+        697
+      ],
+      "pixel_sha256": "cfc36f45e07d7b28ded1a02b898e65aec179dc396cdb8770609c34d18566a437"
+    }
+  },
+  "restoration": {
+    "firmware_build": "EB19D4DA",
+    "verified_mcu_crc": true,
+    "calculator_ram_equal": true,
+    "c6_file_hashes_equal": 111,
+    "temporary_app_removed": true
+  },
+  "limitations": [
+    "Private DWT instrumentation identical in both snapshots; absolute timings include its overhead.",
+    "PackBits point is nested in rectangle point and excluded from the sum to avoid double counting.",
+    "Host delivery time includes USB/OS scheduling; small changes overlap repeat-to-repeat variation.",
+    "Test APP/USB transitions temporarily change display rendering mode; exact original firmware restored."
+  ],
+  "reports": {
+    "raw": "tmp/packbits-firmware-check/hil-final/report.json",
+    "callbacks": "tmp/packbits-firmware-check/qualified-fixture/callbacks.json"
+  },
+  "images": {
+    "baseline": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/packbits-firmware-check/baseline/build/mk61s-M.ino.bin",
+      "bytes": 358756,
+      "footer": 356408,
+      "build": "68311239",
+      "sha256": "d24052c62d0919bb5a0dcd5012f69d316d86ed24ee4635e0df1ad6082b29057c"
+    },
+    "candidate": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/packbits-firmware-check/candidate/build/mk61s-M.ino.bin",
+      "bytes": 358780,
+      "footer": 356432,
+      "build": "5199A479",
+      "sha256": "69ac735d9443149f1d6586be140057811d1f4c549ccb2cefd2b082edfe824d7e"
+    },
+    "restore": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/packbits-firmware-check/hil-final/original-firmware.bin",
+      "bytes": 358580,
+      "footer": 356232,
+      "build": "EB19D4DA",
+      "sha256": "bac157dfe0c28e332d6dffcbdf9970d9c2cc701176d9ba7d13f8d3aec42e02e4"
+    }
+  }
+}
