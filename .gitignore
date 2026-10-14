@@ -5,6 +5,13 @@
 /.mk61-firmware.conf
 /.mkc.conf
 
+# Локальные стенды; исходники исследований сохраняются в research/
+/tmp/
+
+# Рабочие планы VM сохраняются локально по просьбе пользователя
+/plan-vm.md
+/plan-vm-cache.md
+
 # Кэши инструментов Python
 __pycache__/
 *.py[cod]
