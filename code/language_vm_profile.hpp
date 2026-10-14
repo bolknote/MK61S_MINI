@@ -34,7 +34,7 @@ class OpcodeProfile {
 #endif
   }
 public:
-  explicit OpcodeProfile(const View&) {
+  __attribute__((noinline)) explicit OpcodeProfile(const View&) {
 #if MK61_VM_OPCODE_PROFILE_TIMING
     const uint32_t start=cycles();
     overhead_=cycles()-start;
@@ -43,14 +43,14 @@ public:
 #endif
   }
   class Sample {
-    OpcodeProfile& owner_;
-    uint16_t opcode_;
+    uint32_t overhead_;
+    uint8_t opcode_;
     bool integer_;
     uint8_t count_=1;
     uint32_t start_;
   public:
     Sample(OpcodeProfile& owner, Op op, const Continuation& s, const Bindings& data)
-        : owner_(owner), opcode_((uint8_t)op), integer_(false) {
+        : overhead_(owner.overhead_), opcode_((uint8_t)op), integer_(false) {
       if(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS &&
          ((op>=Op::ADD && op<=Op::XOR && op!=Op::POW) || op==Op::FLOOR_DIV || op==Op::COMPARE_FALSE) && s.sp>=2)
         integer_=data.stack[s.sp-1].integer() && data.stack[s.sp-2].integer();
@@ -59,14 +59,14 @@ public:
     // A guarded block replaces several logical instructions, not their
     // semantics. Attribute its elapsed time once, separately from scalar
     // opcode groups; n is the number of useful instructions it consumed.
-    void fused(uint8_t count) {opcode_=256;integer_=MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS!=0;count_=count;}
+    void fused(uint8_t count) {integer_=MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS!=0;count_=count;}
     __attribute__((noinline)) ~Sample() {
       const uint32_t elapsed=MK61_VM_OPCODE_PROFILE_TIMING?cycles()-start_:0;
-      const uint64_t measured=elapsed>owner_.overhead_ ? elapsed-owner_.overhead_ : 0;
+      const uint64_t measured=((uint64_t)overhead_<<32)|elapsed;
       // Classification/accumulation is diagnostic resident code. Sampling
       // stops before this call, so its cost is not attributed to an opcode.
       (void)portable_system::call(MK61_SERVICE_VM_PROFILE,
-          MK61_VM_PROFILE_RAW_OPCODE|opcode_,count_,
+          MK61_VM_PROFILE_RAW_OPCODE|MK61_VM_PROFILE_CYCLE_PAIR|opcode_,count_,
           MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS && integer_?count_:0,(void*)&measured);
     }
   };

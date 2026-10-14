@@ -1752,6 +1752,16 @@ void class_terminal::print_profile_statistics(void) {
         terminal_output::field(Serial,"VMINT group=",group);
         terminal_output::line(Serial," count=",dwt_profiler::vm_opcode_integers(group));
       }
+#if MK61_DWT_VM_OPCODE_DETAIL
+      for(usize opcode=0;opcode<=256;++opcode) {
+        const auto& row=dwt_profiler::vm_opcode_row(opcode);
+        if(!row.count)continue;
+        terminal_output::field(Serial,"VMOP op=",opcode);
+        terminal_output::field(Serial," n=",row.count);
+        terminal_output::field(Serial," integers=",row.integers);
+        Serial.print(" cycles=");print_u64(row.cycles);Serial.println();
+      }
+#endif
 #endif
       terminal_output::line(Serial, "VMCACHE dropped=", dwt_profiler::vm_cache_dropped());
       for(usize index = 0; index < dwt_profiler::VM_CACHE_ROWS; ++index) {

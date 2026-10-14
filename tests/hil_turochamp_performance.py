@@ -102,6 +102,17 @@ def profile(report):
                  r'^VMCACHE id=(\d+) bytes=(\d+) hits=(\d+) misses=(\d+) name=(.*)$',report,re.M)]
     dropped=re.search(r'^VMCACHE dropped=(\d+)',report,re.M)
     result={'clock_hz':hz,'points':points}
+    opcodes=[{'opcode':int(op),'instructions':int(n),'integer_pairs':int(integers),
+              'cycles':int(cycles),'seconds':int(cycles)/hz if hz else None}
+             for op,n,integers,cycles in re.findall(
+                 r'^VMOP op=(\d+) n=(\d+) integers=(\d+) cycles=(\d+)',report,re.M)]
+    if opcodes:
+        assert len({row['opcode'] for row in opcodes})==len(opcodes), 'duplicate raw opcode rows'
+        assert all(row['integer_pairs']<=row['instructions'] for row in opcodes)
+        groups=[value for name,value in points.items() if name.startswith('vm.op.') or name=='vm.block.integer']
+        assert sum(row['instructions'] for row in opcodes)==sum(row['calls'] for row in groups)
+        assert sum(row['cycles'] for row in opcodes)==sum(row['total_cycles'] for row in groups)
+        result['vm_opcodes']=opcodes
     if dropped:
         result.update(vm_cache=cache,vm_cache_dropped=int(dropped.group(1)))
     return result

@@ -94,6 +94,10 @@ enum mk61_service_operation {
   MK61_SERVICE_VM_PROFILE
 };
 #define MK61_VM_PROFILE_RAW_OPCODE UINT32_C(0x80000000)
+/* RAW_OPCODE only: payload low word = elapsed cycles, high word = calibrated
+ * read overhead. b>1 identifies one fused integer block, not a scalar batch.
+ * Resident subtracts/clamps, keeping the diagnostic APP small. */
+#define MK61_VM_PROFILE_CYCLE_PAIR UINT32_C(0x40000000)
 
 /* Immutable resource spans. Operation 0 returns the current media revision;
  * operation 1 reads exactly length bytes only while that revision matches.

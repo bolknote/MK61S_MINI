@@ -382,6 +382,7 @@ def build(args: argparse.Namespace) -> dict:
         report["vm_opcode_profile_raw_service"] = True
         report["vm_opcode_profile_integer_counts"] = not getattr(args,"vm_opcode_profile_no_integer_counts",False)
         report["vm_opcode_profile_timing"] = not getattr(args,"vm_opcode_profile_counts_only",False)
+        report["vm_opcode_profile_phase"] = "body-including-decode-dispatch"
     if args.system in ("language-vm", "language-input"):
         report["vm_integer_block"] = (
             not args.local_float_math if integer_block is None else integer_block)

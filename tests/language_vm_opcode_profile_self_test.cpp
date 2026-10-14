@@ -15,7 +15,8 @@ namespace portable_system {
 uint32_t call(uint32_t operation,uint32_t group,uint32_t count,uint32_t integers,void* payload) {
   using language_vm::Op;
   assert(group & MK61_VM_PROFILE_RAW_OPCODE);
-  const auto raw=group & ~MK61_VM_PROFILE_RAW_OPCODE;
+  assert(group & MK61_VM_PROFILE_CYCLE_PAIR);
+  const auto raw=count>1?256:group & ~(MK61_VM_PROFILE_RAW_OPCODE|MK61_VM_PROFILE_CYCLE_PAIR);
   const auto op=(Op)raw;
   group=raw==256?8:
     ((op>=Op::LOAD && op<=Op::STORE) || op==Op::UPDATE_LOCAL)?1:
@@ -27,6 +28,9 @@ uint32_t call(uint32_t operation,uint32_t group,uint32_t count,uint32_t integers
   if(group==8)integers=count;
   assert(operation==MK61_SERVICE_VM_PROFILE && group<9 && count && integers<=count && payload);
   uint64_t cycles;std::memcpy(&cycles,payload,sizeof(cycles));
+  // The wire flag is set by the APP; this test receiver mirrors subtraction.
+  const uint32_t elapsed=(uint32_t)cycles,overhead=(uint32_t)(cycles>>32);
+  cycles=elapsed>overhead ? elapsed-overhead : 0;
   rows[group].count+=count;rows[group].integers+=integers;rows[group].cycles+=cycles;
   return 1;
 }

@@ -81,6 +81,17 @@
 #define MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED \
   (MK61_VM_OPCODE_PROFILE && MK61_DWT_RUNTIME_DETAIL_SUPPORTED)
 
+// Optional raw-opcode rows for investigations; no storage in ordinary builds.
+#ifndef MK61_DWT_VM_OPCODE_DETAIL
+#define MK61_DWT_VM_OPCODE_DETAIL 0
+#endif
+#if MK61_DWT_VM_OPCODE_DETAIL != 0 && MK61_DWT_VM_OPCODE_DETAIL != 1
+#error "MK61_DWT_VM_OPCODE_DETAIL must be 0 or 1"
+#endif
+#if MK61_DWT_VM_OPCODE_DETAIL && (!MK61_VM_OPCODE_PROFILE || !MK61_DWT_RUNTIME_DETAIL)
+#error "raw opcode detail requires VM opcode and runtime profiling"
+#endif
+
 namespace dwt_profiler {
 
 enum class Point : u8 {
@@ -220,7 +231,13 @@ u32 vm_cache_dropped(void);
 static constexpr usize VM_OPCODE_GROUPS = 9;
 u32 vm_opcode_group(u32 opcode);
 void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles);
+void record_vm_opcode(u32 opcode, u32 count, u32 integers, u64 cycles);
 u32 vm_opcode_integers(usize group);
+#if MK61_DWT_VM_OPCODE_DETAIL
+struct VmOpcodeRow { u64 cycles = 0; u32 count = 0, integers = 0; };
+// Wire opcodes are byte-sized; slot 256 is the guarded integer block.
+const VmOpcodeRow& vm_opcode_row(usize opcode);
+#endif
 #endif
 
 class DecodeContext {

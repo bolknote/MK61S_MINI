@@ -22,6 +22,14 @@ VmCacheRow cache_rows[VM_CACHE_ROWS];
 u32 cache_dropped = 0;
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
 u32 opcode_integers[VM_OPCODE_GROUPS] = {};
+#if MK61_DWT_VM_OPCODE_DETAIL
+// Only valid wire values plus one fused-block row, not a 257-slot table.
+static constexpr usize OPCODE_ROWS = (usize)language_vm::Op::PRINT_PRECISION + 2;
+VmOpcodeRow opcode_rows[OPCODE_ROWS];
+usize opcode_index(u32 opcode) {
+  return opcode == 256 ? OPCODE_ROWS - 1 : opcode;
+}
+#endif
 #endif
 VmCacheRow* cache_row(u16 id) {
   if(id == 0xFFFF) return nullptr;
@@ -106,6 +114,26 @@ void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles) {
   opcode_integers[group]+=integers;
 }
 u32 vm_opcode_integers(usize group) {return group<VM_OPCODE_GROUPS?opcode_integers[group]:0;}
+void record_vm_opcode(u32 opcode, u32 count, u32 integers, u64 cycles) {
+  const u32 group=vm_opcode_group(opcode);
+  if(opcode==256)integers=count;
+  if(!collection_active || group>=VM_OPCODE_GROUPS || !count || integers>count)return;
+  if(count>UINT32_MAX-point_statistics[(usize)Point::VM_CONSTANTS+group].samples)return;
+#if MK61_DWT_VM_OPCODE_DETAIL
+  auto& row=opcode_rows[opcode_index(opcode)];
+  if(count>UINT32_MAX-row.count)return;
+#endif
+  record_vm_opcodes(group,count,integers,cycles);
+#if MK61_DWT_VM_OPCODE_DETAIL
+  row.count+=count;row.integers+=integers;row.cycles+=cycles;
+#endif
+}
+#if MK61_DWT_VM_OPCODE_DETAIL
+const VmOpcodeRow& vm_opcode_row(usize opcode) {
+  static const VmOpcodeRow empty;
+  return vm_opcode_group((u32)opcode)<VM_OPCODE_GROUPS ? opcode_rows[opcode_index((u32)opcode)] : empty;
+}
+#endif
 #endif
 Point app_point(u8 kind, bool entry) {
   using K = loadable_module::Kind;
@@ -189,6 +217,9 @@ void reset(void) {
   cache_dropped = 0;
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
   for(auto& count : opcode_integers) count=0;
+#if MK61_DWT_VM_OPCODE_DETAIL
+  for(auto& row : opcode_rows)row={};
+#endif
 #endif
 #endif
 }
