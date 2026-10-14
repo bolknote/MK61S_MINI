@@ -392,7 +392,7 @@ void mk61_display_refresh(void) {
         main_lcd().createChar(slot, rows);
       }
       main_lcd().setCursor(0, 0);
-      main_lcd().print(frame.overflow_count ? "SEG!" : "SEG ");
+      main_lcd().print(frame.overflow_count ? "SEG!" : "    ");
       main_lcd().setCursor(0, 1);
       for(u8 cell = 0; cell < segment_lcd1602::CELLS; ++cell)
         main_lcd().write(frame.characters[cell]);
