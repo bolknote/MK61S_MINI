@@ -213,6 +213,9 @@ __attribute__((noinline)) uint8_t integer_block(const View& v, Continuation& s,
 }
 #endif
 }  // namespace
+#if defined(LANGUAGE_VM_TRACE)
+uint16_t trace_following(const View& v,uint16_t pc) {return next(v,pc);}
+#endif
 
 Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   out = {};
