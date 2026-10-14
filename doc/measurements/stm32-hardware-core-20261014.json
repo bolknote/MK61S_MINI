@@ -365,7 +365,9 @@
       "cdc_storage_boundaries": "PASS sizes 1..4096",
       "msc": "PASS same owned controller, prior intermediate E88FF7FB, 4096-byte import/export/eject/reset",
       "usb_screen": "PASS 100 requested CRC-complete frames on final 0579C96C; SPI sizes 63/64/65/512/65536",
-      "pwm": "Register-state model and command accepted; optional physical confirmation pending",
+      "pwm": "PASS: register-state model and command accepted; user tested 10 volume levels, confirmed increasing sound level and silence at zero.",
+      "display_visual": "PASS: user confirmed the normal calculator screen on the final firmware.",
+      "user_confirmation_date": "2026-10-14",
       "final_state": "PASS: final 0579C96C installed; original 7 files/2 directories and reg/stk/dump/pwd compared exactly; no calendar/calibration writes."
     }
   },
