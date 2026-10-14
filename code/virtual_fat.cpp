@@ -22,6 +22,8 @@
 #include "program_store.hpp"
 #include "shared_scratch.hpp"
 #include "storage_name.hpp"
+#include "storage_workspace.hpp"
+#include <new>
 
 #include <stdio.h>
 #include <string.h>
@@ -168,12 +170,9 @@ struct SidecarScanMaps {
   u8 regular[CLUSTER_MAP_BYTES];
   u8 directories[CLUSTER_MAP_BYTES];
 };
-#if defined(ARDUINO_ARCH_STM32) && MK61_USBDISK_IS_BUILTIN
-// The F411 has ample resident RAM, and keeping these three transient maps in
-// BSS preserves the production 12 KiB stack-headroom gate after a worst-case
-// FAT scan. The F401 APP still keeps them on the stack so its scarce dynamic
-// module arena is not permanently enlarged.
-static SidecarScanMaps g_sidecar_scan_maps;
+#if MK61_STORAGE_SHARED_TEMP
+static_assert(sizeof(SidecarScanMaps) <= storage_workspace::SIZE,
+              "sidecar maps exceed shared storage scratch");
 #endif
 enum ClusterRole : u8 {
   CLUSTER_ROLE_NONE = 0,
@@ -1567,9 +1566,11 @@ static bool discard_known_sidecars(void) {
     return true;
   }
 #endif
-#if defined(ARDUINO_ARCH_STM32) && MK61_USBDISK_IS_BUILTIN
-  SidecarScanMaps& maps = g_sidecar_scan_maps;
-  memset(&maps, 0, sizeof(maps));
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease maps_lease(storage_workspace::Owner::SIDECAR_SCAN,
+                                      sizeof(SidecarScanMaps));
+  if(!maps_lease.ok()) return false;
+  SidecarScanMaps& maps = *new(maps_lease.data()) SidecarScanMaps{};
 #else
   // These maps are needed only during this bounded scan. Keeping them on the
   // stack avoids adding 1.5 KiB of permanent BSS to the 20-KiB USBDISK.APP.
@@ -1617,6 +1618,18 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass,
                            bool preserve_host_tail = false);
 
+#if MK61_STORAGE_SHARED_TEMP
+// The fallback sector is needed only while compression owns all cache slots.
+// Keep it out of the cached reader's frame below the C9 large-file writer.
+__attribute__((noinline))
+static bool copy_uncached_file_span(u32 lba, u16 offset, u8* output, usize size) {
+  u8 bytes[SECTOR_SIZE];
+  if(!read_effective_sector(lba, bytes)) return false;
+  memcpy(output, bytes + offset, size);
+  return true;
+}
+#endif
+
 static bool read_file_chain_source(void* context, u32 offset,
                                    u8* output, usize size) {
   const FileChain& chain = *(FileChain*) context;
@@ -1632,6 +1645,19 @@ static bool read_file_chain_source(void* context, u32 offset,
     const u8 sector = (u8) (in_cluster / SECTOR_SIZE);
     const u16 in_sector = (u16) (in_cluster % SECTOR_SIZE);
     const u32 lba = cluster_lba(chain.clusters[cluster_index], sector);
+#if MK61_STORAGE_SHARED_TEMP
+    usize count = SECTOR_SIZE - in_sector;
+    if(count > size) count = size;
+    const u8* block = nullptr;
+    const bool loaded = g_cache_slots != 0
+        ? cached_effective_sector(lba, block)
+        : copy_uncached_file_span(lba, in_sector, output, count);
+    if(!loaded) {
+      return g_error.fail(ErrorCode::FILE_READ, Phase::VALIDATE,
+                          lba, chain.size, nullptr, true);
+    }
+    if(g_cache_slots != 0) memcpy(output, block + in_sector, count);
+#else
     u8 uncached[SECTOR_SIZE];
     const u8* block = uncached;
     // UTF-8 decoding requests at most four bytes per character. Merely
@@ -1649,6 +1675,7 @@ static bool read_file_chain_source(void* context, u32 offset,
     usize count = SECTOR_SIZE - in_sector;
     if(count > size) count = size;
     memcpy(output, block + in_sector, count);
+#endif
     output += count;
     offset += (u32) count;
     size -= count;
@@ -1815,6 +1842,9 @@ static bool app_chain_contains_stage_key(void* context, u32 key) {
   return false;
 }
 
+// APP validation's sector index is needed only in this phase; do not retain
+// it in process_node while a different file is being applied to C9.
+__attribute__((noinline))
 static bool validate_app_chain(const ParsedNode& parsed,
                                FileChain& chain) {
   if(parsed.type != program_store::ProgramType::APP) return true;
@@ -2259,11 +2289,24 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass,
                            bool preserve_host_tail) {
 #if MK61_C9_BULK_IMPORT
-  ImportBatch batch;
+#if MK61_STORAGE_SHARED_TEMP
+  static_assert(sizeof(ImportBatch) <= storage_workspace::BATCH_BYTES,
+                "USB short-file batch exceeds its storage scratch partition");
+  storage_workspace::Lease batch_lease(
+      pass == WalkPass::APPLY ? storage_workspace::Owner::IMPORT_BATCH :
+                               storage_workspace::Owner::NONE,
+      sizeof(ImportBatch));
+  if(pass == WalkPass::APPLY && !batch_lease.ok()) return false;
+  ImportBatch* batch = pass == WalkPass::APPLY
+      ? new(batch_lease.data()) ImportBatch : nullptr;
+#else
+  ImportBatch local_batch;
+  ImportBatch* batch = &local_batch;
+#endif
   struct BatchScope {
     ImportBatch* previous;
-    BatchScope(ImportBatch& current, WalkPass pass) : previous(g_import_batch) {
-      if(pass == WalkPass::APPLY) { current.count = 0; g_import_batch = &current; }
+    BatchScope(ImportBatch* current, WalkPass pass) : previous(g_import_batch) {
+      if(pass == WalkPass::APPLY) { current->count = 0; g_import_batch = current; }
     }
     ~BatchScope() { g_import_batch = previous; }
   } batch_scope(batch, pass);

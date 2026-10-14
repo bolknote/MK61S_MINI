@@ -27,7 +27,13 @@ static bool c9_chain_open(u16 id, const Inode& inode, fat_cluster_chain::Plan& p
   if(bytes > fat_cluster_chain::MAX_RECORD_BYTES ||
      inode.fat_address % 4096U + bytes > 4096U) return false;
   C9MapReader input = {inode.fat_address};
+#if MK61_STORAGE_SHARED_TEMP
+  static_assert(sizeof(fat_cluster_chain::Workspace) <= CATALOG_IO_BYTES,
+                "FAT verifier exceeds shared catalog I/O buffer");
+  auto& workspace = *new(g_catalog_io) fat_cluster_chain::Workspace;
+#else
   fat_cluster_chain::Workspace workspace;
+#endif
   if(!fat_cluster_chain::verify({&input, c9_read_map}, (u16) bytes, id,
       storage_geometry::fat_cluster_capacity(g_geometry), workspace, plan)) return false;
   g_chain_verified_address = inode.fat_address;
@@ -245,15 +251,31 @@ static bool c9_array_cluster(void* context, u16 index, u16& value) {
   value = source.values[index];
   return true;
 }
+#if MK61_STORAGE_SHARED_TEMP
+// Source callbacks may read the projected FAT and use catalog I/O themselves.
+// Keep preparation's bitmap private, and release its frame before NOR writes.
+__attribute__((noinline))
+static bool c9_prepare_chain(u16 owner, u16 count,
+                             const fat_cluster_chain::Source& source,
+                             fat_cluster_chain::Plan& plan) {
+  fat_cluster_chain::Workspace workspace;
+  return fat_cluster_chain::prepare(owner, count,
+      storage_geometry::fat_cluster_capacity(g_geometry), source, workspace, plan);
+}
+#endif
 static bool c9_append_chain(u16 owner, u16 count,
                             const fat_cluster_chain::Source& source,
                             u32& address) {
   address = EMPTY_ADDRESS;
   if(count == 0) return true;
-  fat_cluster_chain::Workspace workspace;
   fat_cluster_chain::Plan plan;
+#if MK61_STORAGE_SHARED_TEMP
+  if(!c9_prepare_chain(owner, count, source, plan)) return false;
+#else
+  fat_cluster_chain::Workspace workspace;
   if(!fat_cluster_chain::prepare(owner, count,
         storage_geometry::fat_cluster_capacity(g_geometry), source, workspace, plan)) return false;
+#endif
   const u16 bytes = fat_cluster_chain::encoded_size(plan);
   if(!ensure_record_space(bytes, address)) return false;
   u8 buffer[64];
@@ -264,6 +286,11 @@ static bool c9_append_chain(u16 owner, u16 count,
     offset = (u16) (offset + size);
   }
   C9MapReader input = {address};
+#if MK61_STORAGE_SHARED_TEMP
+  // Preparation and record allocation are over. Verification only reads raw
+  // NOR bytes, so it can reuse the catalog buffer without a nested phase.
+  auto& workspace = *new(g_catalog_io) fat_cluster_chain::Workspace;
+#endif
   fat_cluster_chain::Plan verified;
   if(!fat_cluster_chain::verify({&input, c9_read_map}, bytes, owner,
       storage_geometry::fat_cluster_capacity(g_geometry), workspace, verified)) return false;
@@ -511,8 +538,10 @@ static bool c9_directory_source(void* context, u16 index, u16& value) {
   }
   return false;
 }
-static bool c9_grow_directory(Transaction& transaction, u16 parent_id, bool trim = false) {
-  if(parent_id == ROOT_ID || g_import_applying) return true;
+// The no-op during USB import must not retain this worker's two cluster
+// bitmaps below the directory walker and file writer.
+__attribute__((noinline))
+static bool c9_resize_directory(Transaction& transaction, u16 parent_id, bool trim) {
   Inode parent;
   if(!txn_get(transaction, parent_id, parent) ||
      inode_kind(parent) != NodeKind::DIRECTORY) return false;
@@ -561,6 +590,10 @@ static bool c9_grow_directory(Transaction& transaction, u16 parent_id, bool trim
   parent.fat_address = address;
   parent.flags &= (u8) ~INODE_FLAG_FAT_RELEASED;
   return txn_set(transaction, parent_id, parent);
+}
+static bool c9_grow_directory(Transaction& transaction, u16 parent_id, bool trim = false) {
+  return parent_id == ROOT_ID || g_import_applying ||
+      c9_resize_directory(transaction, parent_id, trim);
 }
 static bool c9_reserve_mapping(u16 id) {
   Inode inode;
@@ -764,7 +797,17 @@ static bool c9_chain_from_bytes(void* context, u16 index, u16& value) {
   value = get_le16(bytes, 0);
   return true;
 }
+#if MK61_STORAGE_SHARED_TEMP
+// Its occupancy bitmap and transaction belong to directory APPLY, not the
+// general node handler's VALIDATE, CHANGES or regular-file phases.
+__attribute__((noinline))
+#endif
 bool set_directory_chain(u16 id, u16 count, const FileSource& source) {
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease transaction_lease(storage_workspace::Owner::FILE_WRITE,
+                                             sizeof(Transaction));
+  if(!transaction_lease.ok()) return false;
+#endif
   if(count == 0 || count > fat_cluster_chain::MAX_CHAIN_LENGTH || source.read == nullptr) return false;
   C9Pins pins;
   Inode inode;
@@ -799,13 +842,26 @@ bool set_directory_chain(u16 id, u16 count, const FileSource& source) {
   if(!get_inode(id, inode)) return false;
   inode.fat_address = address;
   inode.flags &= (u8) ~INODE_FLAG_FAT_RELEASED;
+#if MK61_STORAGE_SHARED_TEMP
+  Transaction& transaction = *new(transaction_lease.data()) Transaction;
+#else
   Transaction transaction;
+#endif
   txn_begin(transaction);
   return txn_set(transaction, id, inode) && append_transaction(transaction);
 }
 bool ensure_directory_chain(u16 id) {
+#if MK61_STORAGE_SHARED_TEMP
+  storage_workspace::Lease transaction_lease(storage_workspace::Owner::FILE_WRITE,
+                                             sizeof(Transaction));
+  if(!transaction_lease.ok()) return false;
+#endif
   C9Pins pins;
+#if MK61_STORAGE_SHARED_TEMP
+  Transaction& transaction = *new(transaction_lease.data()) Transaction;
+#else
   Transaction transaction;
+#endif
   txn_begin(transaction);
   if(!c9_grow_directory(transaction, id, true)) return false;
   return transaction.count == 0 || append_transaction(transaction);

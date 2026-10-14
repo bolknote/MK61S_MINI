@@ -209,7 +209,9 @@ def msc_configured(node: dict[str, Any]) -> bool:
 
 
 def whole_disks() -> set[str]:
-    value = read_plist(["diskutil", "list", "-plist"])
+    # Only external USB media can pass validate_new_disk. Avoid querying disk
+    # images: a stalled diskimagesiod can block the unrelated full inventory.
+    value = read_plist(["diskutil", "list", "-plist", "external", "physical"])
     disks = value.get("WholeDisks", []) if isinstance(value, dict) else []
     if not isinstance(disks, list) or not all(
         isinstance(item, str) for item in disks
@@ -404,15 +406,32 @@ def terminal_report(target: Target, command: str, timeout: float = 6.0) -> str:
         return port.command(command, timeout=timeout)
 
 
+def require_stack_headroom(report: str, minimum: int) -> int:
+    match = re.search(r"\bobserved_remaining=(\d+)\b", report)
+    if (not match or "enabled=1 layout=ok" not in report or
+            "watermark=1" not in report):
+        raise AssertionError(f"stack watermark unavailable:\n{report}")
+    remaining = int(match[1])
+    if remaining < minimum:
+        raise AssertionError(
+            f"MSC stack remainder {remaining} below {minimum}:\n{report}"
+        )
+    return remaining
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", required=True)
     parser.add_argument("--binary", action="store_true",
                         help="roundtrip a 4096-byte binary program file")
     parser.add_argument("--public-id", default="")
+    parser.add_argument("--minimum-stack-remaining", type=int, default=0,
+                        help="check watermark before reset and after export; F411: 12288")
     parser.add_argument("--msc-timeout", type=float, default=25.0)
     parser.add_argument("--reconnect-timeout", type=float, default=20.0)
     args = parser.parse_args()
+    if args.minimum_stack_remaining < 0:
+        parser.error("--minimum-stack-remaining must be nonnegative")
     if args.msc_timeout <= 0 or args.reconnect_timeout <= 0:
         parser.error("timeouts must be positive")
 
@@ -501,6 +520,14 @@ def main() -> int:
         if diagnostic is not None and diagnostic["code"] != 0:
             raise AssertionError(f"USB import retained an error: {diagnostic}")
 
+        # Reset discards the cumulative watermark. Check the complete import
+        # path now, including FAT scan and publication, before losing evidence.
+        if args.minimum_stack_remaining:
+            remaining = require_stack_headroom(
+                terminal_report(target, "mpu status", timeout=10.0),
+                args.minimum_stack_remaining)
+            print(f"USB DISK STACK phase=import remaining={remaining}", flush=True)
+
         request_transition(target, "rst now", timeout=5.0)
         reconnect(target, args.reconnect_timeout)
         after_reset = terminal_report(target, "ls /", timeout=10.0)
@@ -554,6 +581,12 @@ def main() -> int:
         crash = terminal_report(target, "crash show", timeout=10.0)
         if "FIRMWARE CRC state=valid" not in health or "CRASH none" not in crash:
             raise AssertionError(f"post-MSC health failed:\n{health}\n{crash}")
+
+        if args.minimum_stack_remaining:
+            remaining = require_stack_headroom(
+                terminal_report(target, "mpu status", timeout=10.0),
+                args.minimum_stack_remaining)
+            print(f"USB DISK STACK phase=export remaining={remaining}", flush=True)
 
         print(vlog.strip())
         print(
