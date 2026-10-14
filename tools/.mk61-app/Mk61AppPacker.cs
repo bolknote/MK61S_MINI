@@ -541,7 +541,7 @@ namespace Mk61.Build {
           ushort targetSection = U16(symbolData, (int)symbolOffset + 14);
           ++records;
           if(kind == 0 || kind == 40) continue;
-          if(kind == 3 || kind == 10 || kind == 30 || kind == 42) {
+          if(kind == 3 || kind == 10 || kind == 30 || kind == 42 || kind == 51) {
             if(!moduleSections.Contains(targetSection))
               throw new InvalidDataException(String.Format(
                 "PC-relative relocation {0} leaves APP at 0x{1:x}", kind, address));

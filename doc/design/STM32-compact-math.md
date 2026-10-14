@@ -152,3 +152,42 @@ keyboard-layout и output-dir. Он проверяет состояние до/�
 Отдельный [графический этап](STM32-owned-graphics.md) также завершён.
 [Свой startup](STM32-owned-startup.md) также прошёл основные проверки;
 физический STOP отложен до итогового USB-теста. Остаются libgcc, libc_nano и USB.
+
+
+## Repeat after Cortex-M4 EABI specialization
+
+The same 51 SEGGER inputs were repeated on Classic with the current owned
+integer reciprocal division, with **all local math and EABI code in SRAM**.
+The EABI archive is built without LTO, matching the resident policy. Published
+SEGGER columns remain binary32, on a different MCU; there is no local emFloat
+binary. These are representative net cycles from nine 512-call DWT batches:
+
+| Input | SEGGER binary32 published | GNU binary32 RAM | GNU binary64 RAM | Native binary64 RAM | Native binary64 Flash |
+|---|---:|---:|---:|---:|---:|
+| sin(1) | 139 | 190.137 | 3358.885 | 2040.166 | 1569.484 |
+| sin(1e38) | 186 | 4096.283 | 15638.621 | 5585.109 | 4172.154 |
+| cos(1) | 136 | 176.135 | 3072.764 | 1992.176 | 1572.240 |
+| tan(1) | 258 | 268.227 | 7048.928 | 3874.195 | 3026.086 |
+| exp(0.25123) | 81 | 159.133 | 3287.881 | 2269.264 | 1638.467 |
+| log(4177.25) | 140 | 177.131 | 4447.504 | 3855.191 | 2616.170 |
+| sqrt(1e-4) | 68 (KB) | 47.000 | 1918.061 | 475.338 | 320.344 |
+
+All 51 native outputs rounded to binary32 match the published expected bits.
+The full binary64 implementation still passes the independent 1897-vector
+high-precision oracle; rounding to float in this particular comparison does
+not substitute for that test. The current raw report and APP/source hashes
+are in `doc/measurements/stm32-owned-eabi-20261015.json`.
+
+Reproduce the current native RAM APP with
+`tests/build_owned_math_cycles.py --arm-toolchain-bin ARM_BIN --output-dir OUT`,
+then pass `OUT/SEGGD.APP` to `tests/hil_math_cycles.py` with the same GNU control
+APPs described above. The packer admits internal Thumb-2 conditional branches
+without adding runtime relocations; foreign branch targets remain rejected.
+
+SEGGER's [implementation description](https://www.segger.com/products/development-tools/runtime-library/technology/floating-point-library/)
+also describes flushing subnormals to signed zero. Our binary64 implementation
+retains gradual underflow; a prospective emFloat integration must explicitly
+match that contract. Its separately published EABI double averages (e.g.
+division 134 cycles in RAM, speed-optimized configuration) are useful targets,
+but their unspecified input distribution prevents a controlled ratio against
+our individual input measurements from Flash.

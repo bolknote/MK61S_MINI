@@ -68,6 +68,9 @@ endif()
 if(NOT DEFINED MK61_USE_COMPACT_LIBM)
   set(MK61_USE_COMPACT_LIBM 1)
 endif()
+if(NOT DEFINED MK61_USE_NATIVE_EABI)
+  set(MK61_USE_NATIVE_EABI 1)
+endif()
 
 foreach(_mk61_bool
     MK61_ENABLE_FOCAL
@@ -90,6 +93,7 @@ foreach(_mk61_bool
     MK61_USER_EXPLORER_SHORTCUT
     MK61_APP_LOCAL_FLOAT_MATH
     MK61_USE_COMPACT_LIBM
+    MK61_USE_NATIVE_EABI
     MK61_F401_PRODUCT_BUILD
     MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
@@ -218,6 +222,8 @@ set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/native_eabi.cpp"
+  PROPERTIES COMPILE_OPTIONS "-fno-lto")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/compact_math.cpp"
   PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 if(MK61_TARGET_MCU STREQUAL "f411")
@@ -240,7 +246,9 @@ list(APPEND _mk61_project_sources
 
 add_executable(resident ${_mk61_project_sources}
   $<TARGET_OBJECTS:stm32_protocol>
-  "${MK61_PROJECT_ROOT}/code/stm32f4_startup.S")
+  "${MK61_PROJECT_ROOT}/code/stm32f4_startup.S"
+  "${MK61_PROJECT_ROOT}/code/native_eabi_arm.S"
+  "${MK61_PROJECT_ROOT}/code/native_eabi_fixed.S")
 target_include_directories(resident PRIVATE "${MK61_PROJECT_ROOT}/code")
 target_compile_definitions(resident PRIVATE
   ${_mk61_profile_definitions}
@@ -266,6 +274,7 @@ target_compile_definitions(resident PRIVATE
   MK61_MATH_BACKEND=${MK61_MATH_BACKEND}
   MK61_APP_LOCAL_FLOAT_MATH=${MK61_APP_LOCAL_FLOAT_MATH}
   MK61_USE_COMPACT_LIBM=${MK61_USE_COMPACT_LIBM}
+  MK61_USE_NATIVE_EABI=${MK61_USE_NATIVE_EABI}
   MK61_F401_PRODUCT_BUILD=${MK61_F401_PRODUCT_BUILD}
   MK61_ENABLE_LOADABLE_MODULES=1
   MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}

@@ -71,7 +71,7 @@ def main():
         MK61_WS0010_GRAPHICS_100X16='0', MK61_ENABLE_EXTENDED_FONT_SETTINGS='0',
         MK61_USER_EXPLORER_SHORTCUT='1', MK61_MATH_BACKEND='0',
         MK61_APP_LOCAL_FLOAT_MATH='0', MK61_F401_PRODUCT_BUILD='0',
-        MK61_USE_COMPACT_LIBM='1',
+        MK61_USE_COMPACT_LIBM='1', MK61_USE_NATIVE_EABI='1',
         MK61_REQUIRE_RESIDENT_CRC='1', MK61_ENABLE_LTO='1')
     reference_definitions = {}
     if args.reference:
@@ -84,8 +84,9 @@ def main():
         defaults.update(reference_features(entry, defaults))
         # This new native implementation defaults on when an older control
         # database predates the option; explicit old/new controls are retained.
-        if 'MK61_USE_COMPACT_LIBM' not in reference_definitions:
-            defaults['MK61_USE_COMPACT_LIBM'] = '1'
+        for option in ('MK61_USE_COMPACT_LIBM', 'MK61_USE_NATIVE_EABI'):
+            if option not in reference_definitions:
+                defaults[option] = '1'
     for definition in args.define:
         if '=' not in definition:
             parser.error('--define needs NAME=VALUE')
