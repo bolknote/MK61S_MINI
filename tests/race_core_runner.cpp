@@ -13,9 +13,12 @@
 unsigned elite_load_game(const char* directory);
 static unsigned steps = 0;
 static unsigned changes = 0;
+static unsigned bank_steps[32] = {};
 static const char symbols[] = "0123456789-     ";
 
 void elite_tracked_step() {
+  const unsigned bank = core_61::active_program_bank();
+  if(bank < 32) ++bank_steps[bank];
   u8 before[12] = {};
   const u8* frame = core_61::segment_display_frame();
   if(frame) std::memcpy(before, frame, 12);
@@ -86,6 +89,11 @@ static void dump() {
     if(cell) std::cout << ',';
     std::cout << (frame ? unsigned(frame[cell]) : 0);
   }
+  std::cout << "],\"bank_steps\":[";
+  for(unsigned bank = 0; bank < 32; ++bank) {
+    if(bank) std::cout << ',';
+    std::cout << bank_steps[bank];
+  }
   std::cout << "]}" << std::endl;
 }
 
@@ -98,6 +106,7 @@ int main(int argc, char** argv) {
     std::istringstream input(line);
     std::string op; input >> op;
     steps = changes = 0;
+    std::memset(bank_steps, 0, sizeof(bank_steps));
     if(op == "angle") {
       std::string mode; input >> mode;
       if(mode == "P") MK61Emu_SetAngleUnit(RADIAN);

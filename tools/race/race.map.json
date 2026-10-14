@@ -1,182 +1,268 @@
 {
-  "occupied_bytes": 1854,
-  "free_bytes": 1730,
+  "occupied_bytes": 3037,
+  "free_bytes": 547,
   "labels": {
     "start": 0,
     "new_game": 39,
     "tick": 54,
-    "cooldown_done": 69,
-    "bend_done": 85,
-    "wall_done": 104,
-    "rival_done": 2144,
-    "section_done": 2175,
-    "checkpoint": 2193,
-    "read_steering": 112,
-    "steer_left": 129,
-    "steer_right": 133,
-    "damage": 136,
-    "damage_end": 148,
-    "section_parameters": 149,
-    "draw_road": 224,
-    "draw_rival": 336,
-    "rival_far": 393,
-    "rival_small": 402,
-    "rival_on_nose": 429,
-    "rival_medium": 437,
-    "rival_hidden": 316,
-    "draw_guide": 448,
-    "guide_right": 451,
-    "guide_test_right": 455,
-    "guide_target": 460,
-    "guide_clip": 486,
-    "guide_left_edge": 500,
-    "guide_center": 504,
-    "guide_place": 506,
-    "paint_cell": 560,
-    "paint_end": 596,
-    "cell_weight": 597,
-    "weight_one": 623,
-    "weight_256": 626,
-    "score": 672,
-    "finish": 737,
-    "defeat": 181,
-    "section_table": 784,
-    "road_alphabet": 844,
-    "art_0": 896,
-    "art_1": 915,
-    "art_2": 934,
-    "art_3": 953,
-    "art_4": 972,
-    "art_5": 1008,
-    "art_6": 1027,
-    "art_7": 1046,
-    "art_8": 1065,
-    "art_9": 1084,
-    "art_10": 1120,
-    "art_11": 1139,
-    "art_12": 1158,
-    "art_13": 1177,
-    "art_14": 1196,
-    "art_15": 1232,
-    "art_16": 1251,
-    "art_17": 1270,
-    "art_18": 1289,
-    "art_19": 1308,
-    "art_20": 1344,
-    "art_21": 1363,
-    "art_22": 1382,
-    "art_23": 1401,
-    "art_24": 1420,
-    "art_25": 1456,
-    "art_26": 1475,
-    "art_27": 1494,
-    "art_28": 1513,
-    "art_29": 1532,
-    "art_30": 1568,
-    "art_31": 1587,
-    "art_32": 1606,
-    "art_33": 1625,
-    "art_34": 1644,
-    "art_35": 1680,
-    "art_36": 1699,
-    "art_37": 1718,
-    "art_38": 1737,
-    "art_39": 1756,
-    "art_40": 1792,
-    "art_41": 1811,
-    "art_42": 1830,
-    "art_43": 1849,
-    "art_44": 1868,
-    "art_45": 1904,
-    "art_46": 1923,
-    "art_47": 1942,
-    "art_48": 1961,
-    "art_49": 1980,
-    "art_50": 2016,
-    "art_51": 2035,
-    "art_52": 2054,
-    "art_53": 2073
+    "cooldown_done": 67,
+    "bend_done": 81,
+    "wall_done": 101,
+    "checkpoint": 692,
+    "section_end": 700,
+    "rival_done": 715,
+    "steer_left": 113,
+    "read_steering": 119,
+    "steer_right": 202,
+    "steer_neutral": 212,
+    "damage": 224,
+    "damage_end": 237,
+    "section_parameters": 239,
+    "score": 336,
+    "finish": 375,
+    "finish_stop": 421,
+    "defeat": 426,
+    "defeat_stop": 751,
+    "section_table": 448,
+    "draw_road": 560,
+    "frame_page_0": 959,
+    "frame_palette_0": 983,
+    "frame_page_1": 1071,
+    "frame_palette_1": 1095,
+    "frame_page_2": 1183,
+    "frame_palette_2": 1207,
+    "frame_page_3": 1295,
+    "frame_palette_3": 1319,
+    "frame_page_4": 1407,
+    "frame_palette_4": 1431,
+    "frame_page_5": 1519,
+    "frame_palette_5": 1543,
+    "frame_page_6": 1631,
+    "frame_palette_6": 1655,
+    "frame_page_7": 1743,
+    "frame_palette_7": 1767,
+    "frame_page_8": 1855,
+    "frame_palette_8": 1879,
+    "frame_page_9": 1967,
+    "frame_palette_9": 1991,
+    "frame_page_10": 2079,
+    "frame_palette_10": 2103,
+    "frame_page_11": 2191,
+    "frame_palette_11": 2215,
+    "frame_page_12": 2303,
+    "frame_palette_12": 2327,
+    "frame_page_13": 2415,
+    "frame_palette_13": 2439,
+    "frame_page_14": 2527,
+    "frame_palette_14": 2551,
+    "frame_page_15": 2639,
+    "frame_palette_15": 2663,
+    "frame_page_16": 2751,
+    "frame_palette_16": 2775,
+    "frame_page_17": 2863,
+    "frame_palette_17": 2887,
+    "frame_page_18": 2975,
+    "frame_palette_18": 2999,
+    "select_frame_0": 3024,
+    "select_frame_1": 3031,
+    "select_frame_2": 3038,
+    "select_frame_3": 3045,
+    "select_frame_4": 3052,
+    "select_frame_5": 3059,
+    "select_frame_6": 3066,
+    "select_frame_7": 3073,
+    "select_frame_8": 3080,
+    "select_frame_9": 3087,
+    "select_frame_10": 3094,
+    "select_frame_11": 3101,
+    "select_frame_12": 3108,
+    "select_frame_13": 3115,
+    "select_frame_14": 3122,
+    "select_frame_15": 3129,
+    "select_frame_16": 3136,
+    "select_frame_17": 3143,
+    "select_frame_18": 3150,
+    "select_frame_19": 3157,
+    "select_frame_20": 3164,
+    "select_frame_21": 3171,
+    "select_frame_22": 3178,
+    "select_frame_23": 3185,
+    "select_frame_24": 3192,
+    "select_frame_25": 3199,
+    "select_frame_26": 3206,
+    "select_frame_27": 3213,
+    "select_frame_28": 3220,
+    "select_frame_29": 3227,
+    "select_frame_30": 3234,
+    "select_frame_31": 3241,
+    "select_frame_32": 3248,
+    "select_frame_33": 3255,
+    "select_frame_34": 3262,
+    "select_frame_35": 3269,
+    "select_frame_36": 3276,
+    "select_frame_37": 3283,
+    "select_frame_38": 3290,
+    "select_frame_39": 3297,
+    "select_frame_40": 3304,
+    "select_frame_41": 3311,
+    "select_frame_42": 3318,
+    "select_frame_43": 3325,
+    "select_frame_44": 3332,
+    "select_frame_45": 3339,
+    "select_frame_46": 3346,
+    "select_frame_47": 3353,
+    "select_frame_48": 3360,
+    "select_frame_49": 3367,
+    "select_frame_50": 3374,
+    "select_frame_51": 3381,
+    "select_frame_52": 3388,
+    "select_frame_53": 3395,
+    "select_frame_54": 3402,
+    "select_frame_55": 3409,
+    "select_frame_56": 3416,
+    "select_frame_57": 3423,
+    "select_frame_58": 3430,
+    "select_frame_59": 3437,
+    "select_frame_60": 3444,
+    "select_frame_61": 3451,
+    "select_frame_62": 3458,
+    "select_frame_63": 3465,
+    "select_frame_64": 3472,
+    "select_frame_65": 3479,
+    "select_frame_66": 3486,
+    "select_frame_67": 3493,
+    "select_frame_68": 3500,
+    "select_frame_69": 3507,
+    "select_frame_70": 3514,
+    "select_frame_71": 3521,
+    "select_frame_72": 3528,
+    "select_frame_73": 3535,
+    "select_frame_74": 3542
   },
   "banks": {
     "0": {
       "module": "start and race loop",
-      "used": 112
-    },
-    "19": {
-      "module": " / start and race loop",
-      "used": 73
-    },
-    "1": {
-      "module": "steering and damage / score and results",
-      "used": 107
-    },
-    "2": {
-      "module": "frame selection and publication / approaching rival",
-      "used": 93
-    },
-    "3": {
-      "module": "approaching rival",
-      "used": 112
-    },
-    "4": {
-      "module": "safe-path marker",
-      "used": 72
-    },
-    "5": {
-      "module": "atomic cell overlays",
-      "used": 71
+      "used": 109
     },
     "6": {
+      "module": " / start and race loop / score and results",
+      "used": 84
+    },
+    "1": {
+      "module": "angle-switch dispatch",
+      "used": 101
+    },
+    "2": {
+      "module": "damage and section parameters",
+      "used": 39
+    },
+    "3": {
       "module": "score and results",
       "used": 112
     },
-    "7": {
-      "module": "section pattern and alphabet",
-      "used": 76
+    "4": {
+      "module": "section pattern",
+      "used": 84
+    },
+    "5": {
+      "module": "complete frame lookup",
+      "used": 26
     },
     "8": {
-      "module": "wall sprites 0",
-      "used": 95
+      "module": "complete sprites 0",
+      "used": 103
     },
     "9": {
-      "module": "wall sprites 1",
-      "used": 95
+      "module": "complete sprites 1",
+      "used": 103
     },
     "10": {
-      "module": "wall sprites 2",
-      "used": 95
+      "module": "complete sprites 2",
+      "used": 103
     },
     "11": {
-      "module": "wall sprites 3",
-      "used": 95
+      "module": "complete sprites 3",
+      "used": 103
     },
     "12": {
-      "module": "wall sprites 4",
-      "used": 95
+      "module": "complete sprites 4",
+      "used": 103
     },
     "13": {
-      "module": "wall sprites 5",
-      "used": 95
+      "module": "complete sprites 5",
+      "used": 103
     },
     "14": {
-      "module": "wall sprites 6",
-      "used": 95
+      "module": "complete sprites 6",
+      "used": 103
     },
     "15": {
-      "module": "wall sprites 7",
-      "used": 95
+      "module": "complete sprites 7",
+      "used": 103
     },
     "16": {
-      "module": "wall sprites 8",
-      "used": 95
+      "module": "complete sprites 8",
+      "used": 103
     },
     "17": {
-      "module": "wall sprites 9",
-      "used": 95
+      "module": "complete sprites 9",
+      "used": 103
     },
     "18": {
-      "module": "wall sprites 10",
-      "used": 76
+      "module": "complete sprites 10",
+      "used": 103
+    },
+    "19": {
+      "module": "complete sprites 11",
+      "used": 103
+    },
+    "20": {
+      "module": "complete sprites 12",
+      "used": 103
+    },
+    "21": {
+      "module": "complete sprites 13",
+      "used": 103
+    },
+    "22": {
+      "module": "complete sprites 14",
+      "used": 103
+    },
+    "23": {
+      "module": "complete sprites 15",
+      "used": 103
+    },
+    "24": {
+      "module": "complete sprites 16",
+      "used": 103
+    },
+    "25": {
+      "module": "complete sprites 17",
+      "used": 103
+    },
+    "26": {
+      "module": "complete sprites 18",
+      "used": 103
+    },
+    "27": {
+      "module": "frame selectors 0",
+      "used": 112
+    },
+    "28": {
+      "module": "frame selectors 1",
+      "used": 112
+    },
+    "29": {
+      "module": "frame selectors 2",
+      "used": 112
+    },
+    "30": {
+      "module": "frame selectors 3",
+      "used": 112
+    },
+    "31": {
+      "module": "frame selectors 4",
+      "used": 77
     }
   }
 }

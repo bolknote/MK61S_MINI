@@ -22,9 +22,13 @@ from hil_portable_system_apps import png
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools/race'))
-from game import create_game
+from game import create_game, SECTION_FRAMES, THUNK_BANK, THUNK_STRIDE, SPRITES_PER_RIVAL
 
 FIELDS = dict(lateral=4, phase=5, completed=6, lives=7, recovery=8, bend=9, rival=10)
+
+
+def frame_base(rival):
+    return THUNK_BANK * 112 - THUNK_STRIDE + (rival + 1) * SPRITES_PER_RIVAL * THUNK_STRIDE
 
 
 def registers(port):
@@ -59,6 +63,7 @@ def expect(port, expected, timeout=12):
 def oracle(runner, mode, fixture):
     inputs = ['angle ' + mode, 'start']
     inputs += [f'set {FIELDS[name]} {value}' for name, value in fixture.items()]
+    inputs += [f'set 11 {frame_base(fixture["rival"])}']
     inputs += ['angle ' + mode, 'next']
     result = subprocess.run([str(runner), str(ROOT / 'programs/games/RACE')],
                             input='\n'.join(inputs) + '\n', text=True,
@@ -84,11 +89,11 @@ def main():
     base = dict(lateral=0, phase=0, completed=0, lives=3, recovery=0, bend=0, rival=0)
     cases = [
         ('neutral', 'GRD', {}), ('left', 'P', {}), ('right', 'G', {}),
-        ('wall', 'G', dict(lateral=12)),
-        ('rival', 'GRD', dict(phase=32)),
-        ('cooldown', 'G', dict(lateral=12, recovery=8)),
-        ('finish', 'GRD', dict(lateral=9, phase=35, completed=19)),
-        ('fatal-finish', 'G', dict(lateral=12, phase=35, completed=19, lives=1)),
+        ('wall', 'G', dict(lateral=2)),
+        ('rival', 'GRD', dict(phase=SECTION_FRAMES - 1)),
+        ('cooldown', 'G', dict(lateral=2, recovery=2)),
+        ('finish', 'GRD', dict(lateral=1, phase=SECTION_FRAMES - 1, completed=19)),
+        ('fatal-finish', 'G', dict(lateral=2, phase=SECTION_FRAMES - 1, completed=19, lives=1)),
     ]
     expected = {name: oracle(args.runner, mode, base | fixture)
                 for name, mode, fixture in cases}
@@ -99,13 +104,14 @@ def main():
     # input, arithmetic, rendering, collision checks and result code intact.
     original_jump = bytes.fromhex('1f51') + bytes.fromhex(f'{tick:04d}')
     loop_backs = []
-    for bank in (0, 19):
+    for bank in banks:
+        if info['banks'][str(bank)]['module'].startswith('complete sprites'):
+            continue
         for offset in range(len(banks[bank]) - 3):
             if banks[bank][offset:offset + 4] == original_jump:
                 loop_backs.append(bank * 112 + offset)
     assert len(loop_backs) == 2, loop_backs
-    sentinel = 31 * 112
-    assert 31 not in banks
+    sentinel = next(bank for bank in range(32) if bank not in banks) * 112
     stop_jump = '1F51' + f'{sentinel:04d}'
     measurements = []
     with ScreenPort(args.port, keyboard_layout=0) as port:
@@ -139,6 +145,7 @@ def main():
                 command(port, f'hin {tick:04d} {banks[0][tick:tick + 4].hex()}')
                 for field, value in (base | fixture).items():
                     command(port, f'R{FIELDS[field]:X}= {value}')
+                command(port, f'RB= {frame_base((base | fixture)["rival"])}')
                 port.key(keys[mode])
                 started = time.monotonic()
                 command(port, f'run {tick}')

@@ -1,0 +1,723 @@
+{
+  "schema": 1,
+  "date": "2026-10-14",
+  "identity": {
+    "public": "6FF33152484A4488",
+    "short": "484A4488",
+    "usb": "3688388E3233",
+    "volume": "0A24B723",
+    "build": "0579C96C",
+    "profile": "mini-v3-a00"
+  },
+  "installed_game": {
+    "race_bin_sha256": "f14e8f420b144237f59eace9eb3dc3d86567d1814b4f51f65ae79250d6eee2a9",
+    "matches_local_package": true,
+    "bin_bytes": 1510,
+    "occupied_bytes": 3037,
+    "free_bytes": 547,
+    "source_and_device_manual_match": true
+  },
+  "runtime": {
+    "clock_hz": 96000000,
+    "speed": "MAXIMUM",
+    "firmware_changed": false,
+    "classic_active": false,
+    "controller": "HD44780",
+    "cgrom": "A00",
+    "keyboard_overflow": 0
+  },
+  "host_full_race": {
+    "profiles": [
+      "native/packed",
+      "scalar/LCD1602-A00"
+    ],
+    "frames": 120,
+    "sections": 20,
+    "lives_remaining": 3,
+    "steps_total": 7138,
+    "steps_per_frame": {
+      "minimum": 52,
+      "maximum": 79,
+      "mean": 59.4833
+    },
+    "controller": "Steering chosen from the published guide at each frame; actual ROM and M61/BIN loader."
+  },
+  "comparison": {
+    "baseline_file": "doc/measurements/race-mini-20261014.json",
+    "baseline_frames": 720,
+    "baseline_steps_per_frame_mean": 209.5,
+    "frame_computation_speedup": 3.522,
+    "frames_per_section": {
+      "before": 36,
+      "after": 6
+    },
+    "note": "Core-step reduction and the sixfold reduction in section length are separate changes. Baseline full-race time was estimated; it was not a measured hardware completion."
+  },
+  "hardware_boundary_cases": [
+    {
+      "case": "neutral",
+      "seconds_to_stable_state": 1.712,
+      "core_steps": 53,
+      "registers": [
+        57,
+        4718640,
+        426024,
+        983040,
+        0,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        3192,
+        6,
+        8390154,
+        6033412
+      ]
+    },
+    {
+      "case": "left",
+      "seconds_to_stable_state": 1.715,
+      "core_steps": 56,
+      "registers": [
+        14592,
+        4730880,
+        40,
+        134,
+        -1,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        3192,
+        4,
+        589947,
+        6295040
+      ]
+    },
+    {
+      "case": "right",
+      "seconds_to_stable_state": 1.784,
+      "core_steps": 57,
+      "registers": [
+        3145728,
+        13107200,
+        1576,
+        15,
+        1,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        3192,
+        0,
+        24585,
+        5309440
+      ]
+    },
+    {
+      "case": "wall",
+      "seconds_to_stable_state": 1.773,
+      "core_steps": 58,
+      "registers": [
+        23352,
+        4144980,
+        5963776,
+        63,
+        1,
+        1,
+        0,
+        2,
+        3,
+        0,
+        0,
+        3192,
+        0,
+        0,
+        448
+      ]
+    },
+    {
+      "case": "rival",
+      "seconds_to_stable_state": 2.322,
+      "core_steps": 85,
+      "registers": [
+        23352,
+        409428,
+        5963776,
+        63,
+        0,
+        0,
+        1,
+        2,
+        3,
+        1,
+        -1,
+        3017,
+        0,
+        0,
+        462
+      ]
+    },
+    {
+      "case": "cooldown",
+      "seconds_to_stable_state": 1.926,
+      "core_steps": 65,
+      "registers": [
+        3145728,
+        13107200,
+        1576,
+        15,
+        1,
+        1,
+        0,
+        3,
+        1,
+        0,
+        0,
+        3192,
+        0,
+        24585,
+        5309440
+      ]
+    },
+    {
+      "case": "finish",
+      "seconds_to_stable_state": 1.87,
+      "core_steps": 64,
+      "registers": [
+        5506673,
+        7761158,
+        4152064,
+        5191680,
+        1,
+        0,
+        20,
+        3,
+        0,
+        0,
+        0,
+        3192,
+        0,
+        3,
+        448
+      ]
+    },
+    {
+      "case": "fatal-finish",
+      "seconds_to_stable_state": 1.694,
+      "core_steps": 54,
+      "registers": [
+        7819321,
+        30317,
+        28422,
+        16219,
+        3,
+        6,
+        19,
+        0,
+        3,
+        0,
+        0,
+        3192,
+        0,
+        0,
+        19
+      ]
+    }
+  ],
+  "boundary_method": "Temporary RAM stops at frame boundaries, real USB steering keys; all R0..RE agree with the ROM oracle.",
+  "hardware_guide_race": {
+    "seconds_to_finish": 136.188,
+    "lives_remaining": 3,
+    "completed": 20,
+    "logical_frames": 120,
+    "control_samples": 139,
+    "control_wait_ms": 50,
+    "registers": [
+      5506673,
+      7761158,
+      4152064,
+      5191680,
+      0,
+      0,
+      20,
+      3,
+      0,
+      1,
+      -1,
+      3017,
+      6,
+      3,
+      2491648
+    ],
+    "key_events": [
+      {
+        "seconds": 1.9612,
+        "key": 4
+      },
+      {
+        "seconds": 3.0941,
+        "key": 9
+      },
+      {
+        "seconds": 9.727,
+        "key": 4
+      },
+      {
+        "seconds": 10.7841,
+        "key": 9
+      },
+      {
+        "seconds": 11.8582,
+        "key": 4
+      },
+      {
+        "seconds": 12.9192,
+        "key": 9
+      },
+      {
+        "seconds": 15.4051,
+        "key": 14
+      },
+      {
+        "seconds": 16.5124,
+        "key": 4
+      },
+      {
+        "seconds": 17.58,
+        "key": 9
+      },
+      {
+        "seconds": 18.6535,
+        "key": 4
+      },
+      {
+        "seconds": 19.7291,
+        "key": 9
+      },
+      {
+        "seconds": 22.2051,
+        "key": 4
+      },
+      {
+        "seconds": 25.5609,
+        "key": 9
+      },
+      {
+        "seconds": 29.0476,
+        "key": 14
+      },
+      {
+        "seconds": 33.3868,
+        "key": 9
+      },
+      {
+        "seconds": 35.9144,
+        "key": 4
+      },
+      {
+        "seconds": 37.0509,
+        "key": 14
+      },
+      {
+        "seconds": 38.0931,
+        "key": 9
+      },
+      {
+        "seconds": 39.1665,
+        "key": 14
+      },
+      {
+        "seconds": 40.211,
+        "key": 9
+      },
+      {
+        "seconds": 42.6742,
+        "key": 14
+      },
+      {
+        "seconds": 43.7874,
+        "key": 9
+      },
+      {
+        "seconds": 50.4112,
+        "key": 4
+      },
+      {
+        "seconds": 51.4814,
+        "key": 9
+      },
+      {
+        "seconds": 52.5447,
+        "key": 4
+      },
+      {
+        "seconds": 53.626,
+        "key": 9
+      },
+      {
+        "seconds": 56.0883,
+        "key": 14
+      },
+      {
+        "seconds": 57.2109,
+        "key": 4
+      },
+      {
+        "seconds": 58.2711,
+        "key": 9
+      },
+      {
+        "seconds": 59.3421,
+        "key": 4
+      },
+      {
+        "seconds": 60.4214,
+        "key": 9
+      },
+      {
+        "seconds": 62.905,
+        "key": 4
+      },
+      {
+        "seconds": 66.2467,
+        "key": 9
+      },
+      {
+        "seconds": 69.7442,
+        "key": 14
+      },
+      {
+        "seconds": 74.0811,
+        "key": 9
+      },
+      {
+        "seconds": 76.6146,
+        "key": 4
+      },
+      {
+        "seconds": 77.7411,
+        "key": 14
+      },
+      {
+        "seconds": 78.7933,
+        "key": 9
+      },
+      {
+        "seconds": 79.8568,
+        "key": 14
+      },
+      {
+        "seconds": 80.911,
+        "key": 9
+      },
+      {
+        "seconds": 83.3713,
+        "key": 14
+      },
+      {
+        "seconds": 84.4802,
+        "key": 9
+      },
+      {
+        "seconds": 91.1206,
+        "key": 4
+      },
+      {
+        "seconds": 92.1741,
+        "key": 9
+      },
+      {
+        "seconds": 93.2564,
+        "key": 4
+      },
+      {
+        "seconds": 94.3097,
+        "key": 9
+      },
+      {
+        "seconds": 96.7877,
+        "key": 14
+      },
+      {
+        "seconds": 97.9047,
+        "key": 4
+      },
+      {
+        "seconds": 98.9647,
+        "key": 9
+      },
+      {
+        "seconds": 100.0402,
+        "key": 4
+      },
+      {
+        "seconds": 101.1185,
+        "key": 9
+      },
+      {
+        "seconds": 103.5967,
+        "key": 4
+      },
+      {
+        "seconds": 106.9439,
+        "key": 9
+      },
+      {
+        "seconds": 110.4403,
+        "key": 14
+      },
+      {
+        "seconds": 114.7716,
+        "key": 9
+      },
+      {
+        "seconds": 117.3083,
+        "key": 4
+      },
+      {
+        "seconds": 118.4374,
+        "key": 14
+      },
+      {
+        "seconds": 119.4853,
+        "key": 9
+      },
+      {
+        "seconds": 120.5566,
+        "key": 14
+      },
+      {
+        "seconds": 121.6034,
+        "key": 9
+      },
+      {
+        "seconds": 124.0588,
+        "key": 14
+      },
+      {
+        "seconds": 125.18,
+        "key": 9
+      },
+      {
+        "seconds": 131.8103,
+        "key": 4
+      },
+      {
+        "seconds": 132.8802,
+        "key": 9
+      },
+      {
+        "seconds": 133.9376,
+        "key": 4
+      },
+      {
+        "seconds": 135.0045,
+        "key": 9
+      }
+    ],
+    "controller": "Readonly M61 traps emit snapshots and wait 50 ms at the local tick address. Local-address aliases can produce extra snapshots. Host follows the published guide using binary USB keys. No register fixtures or host physics. Timing includes observation hooks.",
+    "distinct_frame_observations": 120,
+    "observed_tick_interval_seconds": {
+      "median": 1.0691,
+      "minimum": 0.6562,
+      "maximum": 1.8613
+    },
+    "temporary_launcher_removed": true,
+    "normal_title_restored": true
+  },
+  "guide_race_section_observations": [
+    {
+      "seconds": 0.8401,
+      "completed": 0,
+      "phase": 0,
+      "lateral": 0,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 6.7204,
+      "completed": 1,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 13.4694,
+      "completed": 2,
+      "phase": 0,
+      "lateral": 0,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 20.2611,
+      "completed": 3,
+      "phase": 0,
+      "lateral": -2,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 27.0984,
+      "completed": 4,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 33.9272,
+      "completed": 5,
+      "phase": 0,
+      "lateral": 0,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 40.7504,
+      "completed": 6,
+      "phase": 0,
+      "lateral": 2,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 47.411,
+      "completed": 7,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 54.1611,
+      "completed": 8,
+      "phase": 0,
+      "lateral": 0,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 60.9602,
+      "completed": 9,
+      "phase": 0,
+      "lateral": -2,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 67.7928,
+      "completed": 10,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 74.6278,
+      "completed": 11,
+      "phase": 0,
+      "lateral": 0,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 81.4409,
+      "completed": 12,
+      "phase": 0,
+      "lateral": 2,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 88.1072,
+      "completed": 13,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 94.8521,
+      "completed": 14,
+      "phase": 0,
+      "lateral": 0,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 101.6568,
+      "completed": 15,
+      "phase": 0,
+      "lateral": -2,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 108.4937,
+      "completed": 16,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    },
+    {
+      "seconds": 115.3217,
+      "completed": 17,
+      "phase": 0,
+      "lateral": 0,
+      "rival": 1,
+      "lives": 3
+    },
+    {
+      "seconds": 122.1439,
+      "completed": 18,
+      "phase": 0,
+      "lateral": 2,
+      "rival": -1,
+      "lives": 3
+    },
+    {
+      "seconds": 128.8063,
+      "completed": 19,
+      "phase": 0,
+      "lateral": 1,
+      "rival": 0,
+      "lives": 3
+    }
+  ],
+  "core_during_instrumented_race": {
+    "n": 7369,
+    "minimum_cycles": 90546,
+    "average_cycles": 1656004,
+    "maximum_cycles": 1722193,
+    "total_cycles": 12203094086
+  },
+  "findings": [
+    "All 75 complete sprites and repeated page/palette reads pass in both host profiles.",
+    "Complete guide-controlled hardware race reaches FInISH 20 L3. It uses read-only observations and 50 ms control windows; elapsed time is instrumented.",
+    "Raw USB bitmap redraws include M61 context transitions and must not be treated as game frame intervals.",
+    "USB terminal responses in normal MAXIMUM execution are serviced about once per second on this firmware, which limits external feedback control.",
+    "USB steering tests exercise the runtime key handler; physical GPIO scanning is not covered."
+  ],
+  "final_state": {
+    "temporary_launcher_removed": true,
+    "normal_loader_restored": true,
+    "title_restored": true,
+    "angle": "GRD",
+    "game_and_manual_byte_verified": true
+  },
+  "reproduce": [
+    "bash tests/run_race_tests.sh",
+    "python3 tests/hil_race_game.py --port PORT --public-id 6FF33152484A4488 --build-id 0579C96C --runner RUNNER --output-dir OUTPUT --confirm-game-reset",
+    "python3 tests/hil_race_play.py --port PORT --public-id 6FF33152484A4488 --build-id 0579C96C --output-dir OUTPUT --confirm-game-reset"
+  ]
+}
