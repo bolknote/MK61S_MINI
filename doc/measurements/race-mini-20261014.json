@@ -1,0 +1,512 @@
+{
+  "schema": 1,
+  "date": "2026-10-14",
+  "identity": {
+    "public": "6FF33152484A4488",
+    "short": "484A4488",
+    "usb": "3688388E3233",
+    "volume": "0A24B723",
+    "build": "0579C96C",
+    "profile": "mini-v3-a00"
+  },
+  "installed_game": {
+    "race_bin_sha256": "6646507c50c4bdddd0b1795867220f1501040dbaeae5b821abad878352c2e1a6",
+    "matches_local_package": true
+  },
+  "runtime": {
+    "clock_hz": 96000000,
+    "speed": "MAXIMUM",
+    "classic_active": false,
+    "controller": "HD44780",
+    "cgrom": "A00",
+    "keyboard_overflow": 0
+  },
+  "core_during_game": {
+    "n": 882,
+    "minimum_cycles": 1678374,
+    "average_cycles": 1699608,
+    "maximum_cycles": 1723113,
+    "total_cycles": 1499055085
+  },
+  "display_during_game": {
+    "n": 57,
+    "minimum_cycles": 271,
+    "average_cycles": 27643,
+    "maximum_cycles": 392298,
+    "total_cycles": 1575658
+  },
+  "corebench_physical_screen": {
+    "n": 40,
+    "minimum_cycles": 1708962,
+    "average_cycles": 1709240,
+    "maximum_cycles": 1709485,
+    "total_cycles": 68369612
+  },
+  "corebench_physical_step_ms": 17.805,
+  "host_full_race": {
+    "frames": 720,
+    "sections": 20,
+    "lives_remaining": 3,
+    "steps_per_frame": {
+      "minimum": 83,
+      "maximum": 269,
+      "mean": 209.5
+    }
+  },
+  "estimated_full_race_seconds": 2685.6,
+  "natural_wall_run": {
+    "duration_until_crash_seconds": 155.17,
+    "hits": [
+      {
+        "seconds": 40.541,
+        "lateral": -11,
+        "phase": 19,
+        "sections": 0,
+        "lives": 2,
+        "recovery": 14
+      },
+      {
+        "seconds": 101.366,
+        "lateral": -10,
+        "phase": 33,
+        "sections": 0,
+        "lives": 1,
+        "recovery": 15
+      },
+      {
+        "seconds": 155.17,
+        "lateral": -10,
+        "phase": 12,
+        "sections": 1,
+        "lives": 0,
+        "recovery": 15
+      }
+    ],
+    "restart": {
+      "lateral": 0,
+      "phase": 0,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0
+    },
+    "observed_bitmap_interval_seconds": {
+      "samples": 35,
+      "median": 4.51,
+      "minimum": 1.654,
+      "maximum": 4.792,
+      "selection": "Consecutive received frames in the natural wall run; intervals between 1 and 6 seconds, excludes startup/restart. Not a full-race average."
+    }
+  },
+  "runtime_controls": [
+    {
+      "time": 0.08,
+      "event": "before",
+      "lateral": -3,
+      "phase": 4,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "10",
+      "rc": -1
+    },
+    {
+      "time": 1.261,
+      "event": "after-wait",
+      "lateral": -3,
+      "phase": 4,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "10",
+      "rc": -1
+    },
+    {
+      "time": 3.706,
+      "event": "straight0",
+      "lateral": -3,
+      "phase": 4,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "37",
+      "rc": 1
+    },
+    {
+      "time": 4.86,
+      "event": "straight1",
+      "lateral": -3,
+      "phase": 5,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "65",
+      "rc": 0
+    },
+    {
+      "time": 6.017,
+      "event": "straight2",
+      "lateral": -3,
+      "phase": 5,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "84",
+      "rc": 448
+    },
+    {
+      "time": 7.133,
+      "event": "left0",
+      "lateral": -3,
+      "phase": 5,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "0",
+      "rc": 1
+    },
+    {
+      "time": 8.284,
+      "event": "left1",
+      "lateral": -4,
+      "phase": 6,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "83",
+      "rc": -1
+    },
+    {
+      "time": 9.39,
+      "event": "left2",
+      "lateral": -4,
+      "phase": 6,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "59",
+      "rc": 336
+    },
+    {
+      "time": 10.556,
+      "event": "right0",
+      "lateral": -4,
+      "phase": 6,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "0",
+      "rc": 1
+    },
+    {
+      "time": 11.658,
+      "event": "right1",
+      "lateral": -4,
+      "phase": 6,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "55",
+      "rc": 3
+    },
+    {
+      "time": 12.805,
+      "event": "right2",
+      "lateral": -3,
+      "phase": 7,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "10",
+      "rc": 1
+    },
+    {
+      "time": 13.975,
+      "event": "neutral0",
+      "lateral": -3,
+      "phase": 7,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "14",
+      "rc": 336
+    },
+    {
+      "time": 15.08,
+      "event": "neutral1",
+      "lateral": -3,
+      "phase": 7,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "17",
+      "rc": 1
+    },
+    {
+      "time": 16.235,
+      "event": "neutral2",
+      "lateral": -3,
+      "phase": 8,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "14",
+      "rc": 0
+    },
+    {
+      "time": 18.248,
+      "event": "pause",
+      "lateral": -3,
+      "phase": 8,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "4",
+      "rc": 448
+    },
+    {
+      "time": 19.529,
+      "event": "pause-wait",
+      "lateral": -3,
+      "phase": 8,
+      "sections": 0,
+      "lives": 3,
+      "recovery": 0,
+      "bend": 0,
+      "rival": 0,
+      "ip": "4",
+      "rc": 448
+    }
+  ],
+  "boundary_cases": [
+    {
+      "case": "neutral",
+      "seconds_to_stable_state": 4.287,
+      "core_steps": 200,
+      "registers": [
+        57,
+        4718640,
+        393256,
+        983168,
+        0,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        9,
+        9
+      ]
+    },
+    {
+      "case": "left",
+      "seconds_to_stable_state": 4.243,
+      "core_steps": 197,
+      "registers": [
+        57,
+        4718640,
+        393256,
+        983168,
+        -1,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        3,
+        10,
+        9
+      ]
+    },
+    {
+      "case": "right",
+      "seconds_to_stable_state": 4.39,
+      "core_steps": 206,
+      "registers": [
+        57,
+        4718640,
+        8781864,
+        983040,
+        1,
+        1,
+        0,
+        3,
+        0,
+        0,
+        0,
+        0,
+        2,
+        8,
+        8
+      ]
+    },
+    {
+      "case": "wall",
+      "seconds_to_stable_state": 2.476,
+      "core_steps": 96,
+      "registers": [
+        23352,
+        409428,
+        5963776,
+        63,
+        10,
+        1,
+        0,
+        2,
+        15,
+        0,
+        0,
+        0,
+        16191,
+        2,
+        409407
+      ]
+    },
+    {
+      "case": "rival",
+      "seconds_to_stable_state": 2.515,
+      "core_steps": 99,
+      "registers": [
+        23352,
+        409428,
+        5963776,
+        63,
+        0,
+        33,
+        0,
+        2,
+        15,
+        0,
+        0,
+        0,
+        16191,
+        2,
+        409407
+      ]
+    },
+    {
+      "case": "cooldown",
+      "seconds_to_stable_state": 4.372,
+      "core_steps": 204,
+      "registers": [
+        1536,
+        13107200,
+        995368,
+        0,
+        10,
+        1,
+        0,
+        3,
+        7,
+        0,
+        0,
+        0,
+        1,
+        -1,
+        5
+      ]
+    },
+    {
+      "case": "finish",
+      "seconds_to_stable_state": 2.328,
+      "core_steps": 83,
+      "registers": [
+        5506673,
+        7761158,
+        4152064,
+        5191680,
+        9,
+        0,
+        20,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        3,
+        409407
+      ]
+    },
+    {
+      "case": "fatal-finish",
+      "seconds_to_stable_state": 2.079,
+      "core_steps": 74,
+      "registers": [
+        7819321,
+        30317,
+        28422,
+        16219,
+        10,
+        36,
+        19,
+        0,
+        15,
+        0,
+        0,
+        0,
+        1,
+        3,
+        19
+      ]
+    }
+  ],
+  "boundary_method": {
+    "ram_loop_stop_addresses": [
+      2189,
+      2197
+    ],
+    "oracle": "Real ROM, scalar host build; all R0..RE compared after each complete frame. Temporary STOPs only at loop boundaries.",
+    "full_uninterrupted_hardware_race": false
+  },
+  "findings": {
+    "original_keyboard_loss": "Not reproduced; USB runtime steering and pause work. USB tests do not exercise the physical GPIO scan. User reports physical keys now work.",
+    "slowness": "Approximately 200 emulator steps per road frame at approximately 18 ms/step. Runtime input works; movement becomes visible only after frame publication.",
+    "lcd_rendering": "Segment mask 06 is mapped to CGROM digit 1; a right wall therefore looks like a numeral. LCD1602-profile USB Screen retains the small character presentation.",
+    "drivers": "No evidence of a driver-induced core slowdown. Previous Classic core measurements were also around 1.7M cycles at 96 MHz; no pre/post driver HIL of RACE on the same mini was performed."
+  },
+  "final_state": {
+    "original_loader_reopened": true,
+    "physical_display_restored": true,
+    "angle": "GRD",
+    "game": "title",
+    "c6_files_changed": false,
+    "firmware_flashed": false
+  },
+  "reproduce": "tests/hil_race_game.py --port PORT --public-id ID --build-id BUILD --runner ROM_RUNNER --output-dir OUTPUT --confirm-game-reset",
+  "runtime_controls_note": "Mid-frame snapshots. RC holds steering during input and is reused for rendering temporaries later in the frame."
+}
