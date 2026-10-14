@@ -1,0 +1,413 @@
+{
+  "status": "PASS",
+  "tested_on": "2026-10-09",
+  "identity": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "B88CD4F1",
+    "profile": "classic-v3-uc1609"
+  },
+  "compiler": "ARM GCC 14.2.1; APP kernels Oz/LTO; resident helpers via public runtime service",
+  "app": {
+    "name": "FSCHECK",
+    "abi": 6,
+    "load_address": 536870912,
+    "relocations": 54,
+    "relocation_bytes": 59,
+    "entry_offset": 0,
+    "image_bytes": 3484,
+    "bss_bytes": 3120,
+    "memory_bytes": 6604,
+    "app_bytes": 2615,
+    "compression": "ZX0+BCJ",
+    "zx0_parser": "optimal",
+    "resident_imports": 0,
+    "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+  },
+  "scope": "DWT RAM sector operations in an ordinary Oz/LTO APP; actual resident helpers run from Flash, matched scalar/word/DSP kernels run from SRAM; no NOR/USB/import throughput measurement",
+  "repeats": 3,
+  "samples_per_repeat": 7,
+  "iterations_per_sample": 128,
+  "measured_rows": 3072,
+  "source_alignments": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "target_alignments": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "sector_bytes": 512,
+  "results": [
+    {
+      "pattern": "equal",
+      "aligned_cycles": {
+        "resident_memcmp": 6221.727,
+        "scalar_memcmp": 8263.219,
+        "word_memcmp": 2628.727,
+        "dsp_memcmp": 2889.484,
+        "word_equal_full": 2124.742,
+        "dsp_equal_full": 2128.719,
+        "resident_memcpy": 3155.477,
+        "scalar_memcpy": 4671.25,
+        "word_memcpy": 1994.719,
+        "unrolled_memcpy": 949.078,
+        "resident_cache_update": 6240.523,
+        "scalar_cache_update": 6206.945,
+        "word_cache_update": 2374.734,
+        "dsp_cache_update": 2629.531,
+        "word_full_cache_update": 2118.727,
+        "dsp_full_cache_update": 2132.719
+      },
+      "aligned_speedups": {
+        "resident_memcmp": 1.0,
+        "scalar_memcmp": 0.7529,
+        "word_memcmp": 2.3668,
+        "dsp_memcmp": 2.1532,
+        "word_equal_full": 2.9282,
+        "dsp_equal_full": 2.9228,
+        "resident_memcpy": 1.0,
+        "scalar_memcpy": 0.6755,
+        "word_memcpy": 1.5819,
+        "unrolled_memcpy": 3.3248,
+        "resident_cache_update": 1.0,
+        "scalar_cache_update": 1.0054,
+        "word_cache_update": 2.6279,
+        "dsp_cache_update": 2.3732,
+        "word_full_cache_update": 2.9454,
+        "dsp_full_cache_update": 2.9261
+      },
+      "alignment_speedup_ranges": {
+        "word_memcmp": [
+          1.9805,
+          2.3668
+        ],
+        "dsp_memcmp": [
+          1.7006,
+          2.1532
+        ],
+        "word_equal_full": [
+          2.1501,
+          2.9282
+        ],
+        "dsp_equal_full": [
+          2.1472,
+          2.9228
+        ],
+        "word_memcpy": [
+          1.3265,
+          1.5819
+        ],
+        "unrolled_memcpy": [
+          1.7709,
+          3.3248
+        ],
+        "word_cache_update": [
+          1.835,
+          2.6279
+        ],
+        "dsp_cache_update": [
+          1.8365,
+          2.3732
+        ],
+        "word_full_cache_update": [
+          2.1609,
+          2.9454
+        ],
+        "dsp_full_cache_update": [
+          2.1505,
+          2.9261
+        ]
+      }
+    },
+    {
+      "pattern": "different_first",
+      "aligned_cycles": {
+        "resident_memcmp": 75.016,
+        "scalar_memcmp": 68.016,
+        "word_memcmp": 80.016,
+        "dsp_memcmp": 78.016,
+        "word_equal_full": 2124.75,
+        "dsp_equal_full": 2128.734,
+        "resident_cache_update": 3198.25,
+        "scalar_cache_update": 4687.328,
+        "word_cache_update": 2025.688,
+        "dsp_cache_update": 2022.711,
+        "word_full_cache_update": 4056.359,
+        "dsp_full_cache_update": 4062.156
+      },
+      "aligned_speedups": {
+        "resident_memcmp": 1.0,
+        "scalar_memcmp": 1.1029,
+        "word_memcmp": 0.9375,
+        "dsp_memcmp": 0.9615,
+        "word_equal_full": 0.0353,
+        "dsp_equal_full": 0.0352,
+        "resident_cache_update": 1.0,
+        "scalar_cache_update": 0.6823,
+        "word_cache_update": 1.5788,
+        "dsp_cache_update": 1.5812,
+        "word_full_cache_update": 0.7885,
+        "dsp_full_cache_update": 0.7873
+      },
+      "alignment_speedup_ranges": {
+        "word_memcmp": [
+          0.8523,
+          0.9375
+        ],
+        "dsp_memcmp": [
+          0.8619,
+          0.9615
+        ],
+        "word_equal_full": [
+          0.0259,
+          0.0353
+        ],
+        "dsp_equal_full": [
+          0.0259,
+          0.0352
+        ],
+        "word_cache_update": [
+          1.323,
+          1.5788
+        ],
+        "dsp_cache_update": [
+          1.3241,
+          1.5812
+        ],
+        "word_full_cache_update": [
+          0.6137,
+          0.7885
+        ],
+        "dsp_full_cache_update": [
+          0.613,
+          0.7873
+        ]
+      }
+    },
+    {
+      "pattern": "different_byte4",
+      "aligned_cycles": {
+        "resident_memcmp": 123.016,
+        "scalar_memcmp": 132.016,
+        "word_memcmp": 100.016,
+        "dsp_memcmp": 100.016,
+        "word_equal_full": 2124.734,
+        "dsp_equal_full": 2128.734,
+        "resident_cache_update": 3245.25,
+        "scalar_cache_update": 4736.133,
+        "word_cache_update": 2044.711,
+        "dsp_cache_update": 2042.719,
+        "word_full_cache_update": 4056.359,
+        "dsp_full_cache_update": 4062.328
+      },
+      "aligned_speedups": {
+        "resident_memcmp": 1.0,
+        "scalar_memcmp": 0.9318,
+        "word_memcmp": 1.23,
+        "dsp_memcmp": 1.23,
+        "word_equal_full": 0.0579,
+        "dsp_equal_full": 0.0578,
+        "resident_cache_update": 1.0,
+        "scalar_cache_update": 0.6852,
+        "word_cache_update": 1.5871,
+        "dsp_cache_update": 1.5887,
+        "word_full_cache_update": 0.8,
+        "dsp_full_cache_update": 0.7989
+      },
+      "alignment_speedup_ranges": {
+        "word_memcmp": [
+          1.0982,
+          1.23
+        ],
+        "dsp_memcmp": [
+          1.0789,
+          1.23
+        ],
+        "word_equal_full": [
+          0.0425,
+          0.0579
+        ],
+        "dsp_equal_full": [
+          0.0425,
+          0.0578
+        ],
+        "word_cache_update": [
+          1.3286,
+          1.5871
+        ],
+        "dsp_cache_update": [
+          1.3297,
+          1.5887
+        ],
+        "word_full_cache_update": [
+          0.6229,
+          0.8
+        ],
+        "dsp_full_cache_update": [
+          0.6222,
+          0.7989
+        ]
+      }
+    },
+    {
+      "pattern": "different_middle255",
+      "aligned_cycles": {
+        "resident_memcmp": 3138.469,
+        "scalar_memcmp": 4153.227,
+        "word_memcmp": 1341.891,
+        "dsp_memcmp": 1513.891,
+        "word_equal_full": 2124.734,
+        "dsp_equal_full": 2128.719,
+        "resident_cache_update": 6260.727,
+        "scalar_cache_update": 7750.625,
+        "word_cache_update": 3161.539,
+        "dsp_cache_update": 3325.508,
+        "word_full_cache_update": 4057.148,
+        "dsp_full_cache_update": 4062.391
+      },
+      "aligned_speedups": {
+        "resident_memcmp": 1.0,
+        "scalar_memcmp": 0.7557,
+        "word_memcmp": 2.3388,
+        "dsp_memcmp": 2.0731,
+        "word_equal_full": 1.4771,
+        "dsp_equal_full": 1.4743,
+        "resident_cache_update": 1.0,
+        "scalar_cache_update": 0.8078,
+        "word_cache_update": 1.9803,
+        "dsp_cache_update": 1.8826,
+        "word_full_cache_update": 1.5431,
+        "dsp_full_cache_update": 1.5411
+      },
+      "alignment_speedup_ranges": {
+        "word_memcmp": [
+          1.9592,
+          2.3388
+        ],
+        "dsp_memcmp": [
+          1.6512,
+          2.0731
+        ],
+        "word_equal_full": [
+          1.0847,
+          1.4771
+        ],
+        "dsp_equal_full": [
+          1.0832,
+          1.4743
+        ],
+        "word_cache_update": [
+          1.5431,
+          1.9803
+        ],
+        "dsp_cache_update": [
+          1.5283,
+          1.8826
+        ],
+        "word_full_cache_update": [
+          1.2016,
+          1.5431
+        ],
+        "dsp_full_cache_update": [
+          1.2003,
+          1.5411
+        ]
+      }
+    },
+    {
+      "pattern": "different_last511",
+      "aligned_cycles": {
+        "resident_memcmp": 6214.297,
+        "scalar_memcmp": 8253.383,
+        "word_memcmp": 2622.695,
+        "dsp_memcmp": 2923.508,
+        "word_equal_full": 2124.734,
+        "dsp_equal_full": 2128.727,
+        "resident_cache_update": 9335.766,
+        "scalar_cache_update": 10825.734,
+        "word_cache_update": 4315.008,
+        "dsp_cache_update": 4607.164,
+        "word_full_cache_update": 4056.383,
+        "dsp_full_cache_update": 4063.125
+      },
+      "aligned_speedups": {
+        "resident_memcmp": 1.0,
+        "scalar_memcmp": 0.7529,
+        "word_memcmp": 2.3694,
+        "dsp_memcmp": 2.1256,
+        "word_equal_full": 2.9247,
+        "dsp_equal_full": 2.9193,
+        "resident_cache_update": 1.0,
+        "scalar_cache_update": 0.8624,
+        "word_cache_update": 2.1636,
+        "dsp_cache_update": 2.0264,
+        "word_full_cache_update": 2.3015,
+        "dsp_full_cache_update": 2.2977
+      },
+      "alignment_speedup_ranges": {
+        "word_memcmp": [
+          1.9791,
+          2.3694
+        ],
+        "dsp_memcmp": [
+          1.6819,
+          2.1256
+        ],
+        "word_equal_full": [
+          2.1474,
+          2.9247
+        ],
+        "dsp_equal_full": [
+          2.1445,
+          2.9193
+        ],
+        "word_cache_update": [
+          1.6315,
+          2.1636
+        ],
+        "dsp_cache_update": [
+          1.6202,
+          2.0264
+        ],
+        "word_full_cache_update": [
+          1.792,
+          2.3015
+        ],
+        "dsp_full_cache_update": [
+          1.7898,
+          2.2977
+        ]
+      }
+    }
+  ],
+  "conclusions": [
+    "Word memcmp retains the sign of the first unsigned-byte difference and is the best ordered-comparison candidate on equal/late-difference sectors.",
+    "Word unrolled memcpy is the best copy candidate; memcpy overlap is outside its standard contract.",
+    "DSP SAD instructions do not beat ordinary word operations in these measurements.",
+    "Full-scan XOR/SAD equality helpers have no lexical ordering and regress badly on early differences; they are not system memcmp replacements.",
+    "Early word memcmp costs about five extra cycles when byte zero differs; generic promotion needs a short-input/early-mismatch path and resident-Flash qualification.",
+    "No filesystem/NOR throughput or USB exit time improvement is inferred from RAM kernel measurements."
+  ],
+  "validation": {
+    "host": "ASan/UBSan, lengths 0..513, all 16 alignments, every mismatch position; extra 1024-byte accumulation fallback",
+    "native": "runtime vs scalar vs word/DSP sign/equality/copy checks; native sector cache-update output verified",
+    "transport": "CRC-verified packets and full USB frames; calculator pixels restored",
+    "original_file_hashes_preserved": 40,
+    "firmware_unchanged": "B88CD4F1",
+    "temporary_app_removed": true,
+    "calculator_registers_stack_program_cwd_preserved": true
+  },
+  "code_origin": {
+    "memcmp_flash": "0x8047f5d",
+    "memcpy_flash": "0x80480dd",
+    "candidate_sram": "0x2001ae31"
+  },
+  "raw_report": "tmp/fs-sector-app-check/hil/report.json"
+}
