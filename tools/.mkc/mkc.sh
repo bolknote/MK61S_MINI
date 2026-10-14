@@ -208,7 +208,7 @@ Keys:
 Type a command and press Enter: the left panel runs it locally, while the
 right panel sends it to the MK61s terminal and captures its output.
 
-Supported device files: .m61, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
+Supported device files: .m61, .bin, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
 System apps: /System/FOCAL.APP, /System/BASIC.APP, /System/WBMP.APP, /System/MARKDOWN.APP, /System/CHIP8.APP
 Legacy aliases accepted on upload: .t1, .m2, .wbm
 EOF
@@ -289,6 +289,11 @@ unsupported_reason() {
         base=${name:0:$(( ${#name} - 4 ))}
         limit=20544
         minimum=64
+        ;;
+      *.bin)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=4096
+        minimum=5 # CRC32 plus a nonempty ZX0 stream; program_load::load.
         ;;
       *.state.txt) base=${name:0:$(( ${#name} - 10 ))} ;;
       *.m61|*.foc|*.txt|*.fmk)
@@ -2634,7 +2639,7 @@ show_file() {
   extension=$(lowercase "$name")
   case "$extension" in
     *.wbmp|*.wbm) show_wbmp "$name" "$source"; return ;;
-    *.fmk|*.app) binary=1 ;;
+    *.fmk|*.app|*.bin) binary=1 ;;
   esac
   if [ "$binary" -eq 0 ] && { [ ! -s "$source" ] || LC_ALL=C grep -Iq . "$source" 2>/dev/null; }; then
     sed -n '1,400p' "$source" > "$view"
@@ -2665,7 +2670,7 @@ editor_text_file() {
   EDITOR_ERROR=
   lower=$(lowercase "$name")
   case "$lower" in
-    *.fmk|*.app|*.wbmp|*.wbm)
+    *.fmk|*.app|*.bin|*.wbmp|*.wbm)
       EDITOR_ERROR='Двоичные файлы доступны только для просмотра'
       return 1
       ;;

@@ -135,7 +135,7 @@ Keys:
   Ctrl-O    last MK61s output
 
 The left command line runs through cmd.exe; the right one is sent to MK61s.
-Supported device files: .m61, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
+Supported device files: .m61, .bin, .foc, .tbi, .txt, .md, .state.txt, .fmk, .wbmp, .ch8, .mks, .app
 System apps include /System/MARKDOWN.APP; other APP containers may live in any directory.
 '@
 }
@@ -997,6 +997,10 @@ function Get-UnsupportedReason {
         $lower = $name.ToLowerInvariant()
         if ($lower.EndsWith('.app')) {
             $base = $name.Substring(0, $name.Length - 4); $limit = 20544; $minimum = 64
+        }
+        elseif ($lower.EndsWith('.bin')) {
+            # CRC32 plus a nonempty ZX0 stream; mirrors program_load::load.
+            $base = $name.Substring(0, $name.Length - 4); $limit = 4096; $minimum = 5
         }
         elseif ($lower.EndsWith('.state.txt')) { $base = $name.Substring(0, $name.Length - 10) }
         elseif ($lower -match '\.(m61|foc|txt|fmk)$') { $base = $name.Substring(0, $name.Length - 4) }
@@ -2533,7 +2537,7 @@ function Test-TextBytes {
 function Test-EditableTextBytes {
     param([byte[]]$Bytes, [string]$Name)
     $lower = $Name.ToLowerInvariant()
-    if ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app') -or
+    if ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app') -or $lower.EndsWith('.bin') -or
         $lower.EndsWith('.wbmp') -or $lower.EndsWith('.wbm')) {
         $script:EditorError = 'Двоичные файлы доступны только для просмотра'
         return $false
@@ -2975,7 +2979,7 @@ function Show-SelectedFile {
     }
     try { [byte[]]$bytes = [IO.File]::ReadAllBytes($source) }
     catch { Show-Alert 'View' $_.Exception.Message; return }
-    if (-not ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app')) -and
+    if (-not ($lower.EndsWith('.fmk') -or $lower.EndsWith('.app') -or $lower.EndsWith('.bin')) -and
         (Test-TextBytes $bytes)) {
         $text = [Text.Encoding]::UTF8.GetString($bytes)
         Show-Lines $entry.Name @([regex]::Split($text, "\r?\n") | Select-Object -First 400)

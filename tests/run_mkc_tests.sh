@@ -10,7 +10,8 @@ trap cleanup_test EXIT
 
 mkdir -p "$work/local/Good" "$work/device/Programs" "$work/session" \
   "$work/app-limits" "$work/device/System" "$work/preflight-bad" "$work/editor" \
-  "$work/chip8-limits" "$work/navigation/.mkc"
+  "$work/chip8-limits" "$work/navigation/.mkc" "$work/binary-limits" \
+  "$work/local/CalculatorProgram"
 printf '2+2\n' > "$work/local/demo.foc"
 printf '# Demo\n' > "$work/local/manual.md"
 printf 'Привет → ≤ ↵\n' > "$work/local/Игра.m61"
@@ -23,8 +24,14 @@ printf 'AppleDouble\n' > "$work/local/Good/._program.m61"
 printf 'metadata\n' > "$work/local/Good/.DS_Store"
 mkdir -p "$work/local/Good/System Volume Information"
 printf 'metadata\n' > "$work/local/Good/System Volume Information/index.txt"
-printf 'raw\n' > "$work/local/blocked.bin"
-printf 'raw\n' > "$work/preflight-bad/blocked.bin"
+printf 'raw\n' > "$work/local/blocked.dat"
+printf 'raw\n' > "$work/preflight-bad/blocked.dat"
+printf '\000\001\177\200\377\015\012' > "$work/local/CalculatorProgram/program.bin"
+printf 'load 0000 program.bin\nrun\n' > "$work/local/CalculatorProgram/autoexec.m61"
+dd if=/dev/zero of="$work/binary-limits/MAX.BIN" bs=1 count=4096 2>/dev/null
+dd if=/dev/zero of="$work/binary-limits/HUGE.BIN" bs=1 count=4097 2>/dev/null
+printf '1234' > "$work/binary-limits/SHORT.BIN"
+printf 'ABCDE' > "$work/editor/printable.bin"
 printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 printf '\000\340\240\000' > "$work/local/game.ch8"
@@ -60,7 +67,18 @@ case "$("$root/tools/mkc.cmd" --classify "$work/local/emoji.txt" || true)" in
   'unsupported: текст содержит символ вне M8'* ) ;;
   *) echo 'mkc: text containing emoji was accepted' >&2; exit 1 ;;
 esac
-test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.bin" || true)" = \
+test "$("$root/tools/mkc.cmd" --classify "$work/local/CalculatorProgram/program.bin")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/binary-limits/MAX.BIN")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/editor/printable.bin")" = supported
+case "$("$root/tools/mkc.cmd" --classify "$work/binary-limits/SHORT.BIN" || true)" in
+  'unsupported: слишком маленький:'*'минимум 5') ;;
+  *) echo 'mkc: BIN without a complete CRC/header was accepted' >&2; exit 1 ;;
+esac
+case "$("$root/tools/mkc.cmd" --classify "$work/binary-limits/HUGE.BIN" || true)" in
+  'unsupported: слишком большой:'*'максимум 4096') ;;
+  *) echo 'mkc: oversized BIN was accepted' >&2; exit 1 ;;
+esac
+test "$("$root/tools/mkc.cmd" --classify "$work/local/blocked.dat" || true)" = \
   'unsupported: формат не поддерживается'
 case "$("$root/tools/mkc.cmd" --classify "$work/app-limits/SMALL.APP" || true)" in
   'unsupported: слишком маленький:'*) ;;
@@ -394,6 +412,11 @@ if editor_load_file "$work/editor/control.txt" control.txt; then
   echo 'mkc: editor accepted terminal control bytes' >&2
   exit 1
 fi
+if editor_load_file "$work/editor/printable.bin" printable.bin; then
+  echo 'mkc: F4 accepted a BIN whose bytes happen to be printable' >&2
+  exit 1
+fi
+test "$EDITOR_ERROR" = 'Двоичные файлы доступны только для просмотра'
 
 remote_put_file "$work/local/demo.foc" /demo.foc
 cmp "$work/local/demo.foc" "$work/device/demo.foc"
@@ -407,6 +430,10 @@ cmp "$work/local/Игра.m61" "$work/download-russian.m61"
 remote_put_file "$work/local/FOCAL.APP" /System/FOCAL.APP
 remote_get_file /System/FOCAL.APP "$work/download.app"
 cmp "$work/local/FOCAL.APP" "$work/download.app"
+remote_put_file "$work/local/CalculatorProgram/program.bin" /program.bin
+cmp "$work/local/CalculatorProgram/program.bin" "$work/device/program.bin"
+remote_get_file /program.bin "$work/download.bin"
+cmp "$work/local/CalculatorProgram/program.bin" "$work/download.bin"
 file_to_hex "$work/local/binary.wbmp" > "$work/session/binary.hex"
 hex_file_to_binary "$work/session/binary.hex" "$work/binary.roundtrip"
 cmp "$work/local/binary.wbmp" "$work/binary.roundtrip"
@@ -578,7 +605,7 @@ if plan_local_tree "$work/preflight-bad" /Imported; then
   echo 'mkc: a directory containing an unsupported file was accepted' >&2
   exit 1
 fi
-case "$PLAN_ERROR" in blocked.bin:*|large.tbi:*) ;;
+case "$PLAN_ERROR" in blocked.dat:*|large.tbi:*) ;;
   *) echo "mkc: unexpected preflight error: $PLAN_ERROR" >&2; exit 1 ;;
 esac
 
@@ -586,6 +613,18 @@ plan_reset
 plan_local_tree "$work/local/Good" /Good
 test "${#PLAN_KINDS[@]}" -eq 2
 test "$PLAN_TOTAL" -eq 4
+
+# F5's recursive plan must accept a calculator package and preserve BIN bytes.
+(
+  progress_draw() { :; }
+  plan_reset
+  plan_local_tree "$work/local/CalculatorProgram" /CalculatorProgram
+  test "${#PLAN_KINDS[@]}" -eq 3
+  test "$PLAN_TOTAL" -eq 33
+  execute_plan L2R
+  cmp "$work/local/CalculatorProgram/program.bin" "$work/device/CalculatorProgram/program.bin"
+  cmp "$work/local/CalculatorProgram/autoexec.m61" "$work/device/CalculatorProgram/autoexec.m61"
+)
 
 plan_reset
 plan_local_tree "$work/local/FOCAL.APP" /System/FOCAL.APP

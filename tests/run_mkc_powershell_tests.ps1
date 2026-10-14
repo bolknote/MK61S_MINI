@@ -45,6 +45,8 @@ $session = Join-Path $tempRoot 'session'
 [void](New-Item -ItemType Directory -Path (Join-Path $local 'Good'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'app-limits'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'chip8-limits'))
+[void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'binary-limits'))
+[void](New-Item -ItemType Directory -Path (Join-Path $local 'CalculatorProgram'))
 [void](New-Item -ItemType Directory -Path (Join-Path $tempRoot 'editor'))
 $navigation = Join-Path $tempRoot 'navigation'
 [void](New-Item -ItemType Directory -Path (Join-Path $navigation '.mkc') -Force)
@@ -52,7 +54,13 @@ $navigation = Join-Path $tempRoot 'navigation'
 [IO.File]::WriteAllText((Join-Path $local 'manual.md'), "# Demo`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'Игра.m61'), "Привет → ≤ ↵`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $local 'emoji.txt'), "Ошибка 😀`n", [Text.UTF8Encoding]::new($false))
-[IO.File]::WriteAllText((Join-Path $local 'blocked.bin'), 'raw', [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'blocked.dat'), 'raw', [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllBytes((Join-Path $local 'CalculatorProgram/program.bin'), [byte[]](0,1,127,128,255,13,10))
+[IO.File]::WriteAllText((Join-Path $local 'CalculatorProgram/autoexec.m61'), "load 0000 program.bin`nrun`n", [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'binary-limits/MAX.BIN'), [byte[]]::new(4096))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'binary-limits/HUGE.BIN'), [byte[]]::new(4097))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'binary-limits/SHORT.BIN'), [byte[]](1,2,3,4))
+[IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/printable.bin'), [byte[]](65,66,67,68,69))
 [IO.File]::WriteAllText((Join-Path $local 'Good/program.m61'), "001`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $local 'Good/._program.m61'), [byte[]](0,5,22,7))
 [IO.File]::WriteAllText((Join-Path $local 'Good/.DS_Store'), 'metadata')
@@ -150,8 +158,16 @@ try {
     Assert-True ($russian.ExitCode -eq 0 -and ($russian.Output -join '') -eq 'supported') 'PowerShell classifier rejected M8 text/name'
     $emoji = Invoke-MkcTool @('--classify', (Join-Path $local 'emoji.txt'))
     Assert-True ($emoji.ExitCode -eq 1 -and ($emoji.Output -join '') -match 'unsupported: текст содержит символ вне M8') 'PowerShell classifier accepted unsupported Unicode'
-    $unsupported = Invoke-MkcTool @('--classify', (Join-Path $local 'blocked.bin'))
-    Assert-True ($unsupported.ExitCode -eq 1 -and ($unsupported.Output -join '') -eq 'unsupported: формат не поддерживается') 'PowerShell classifier accepted .bin'
+    $binaryProgram = Invoke-MkcTool @('--classify', (Join-Path $local 'CalculatorProgram/program.bin'))
+    Assert-True ($binaryProgram.ExitCode -eq 0 -and ($binaryProgram.Output -join '') -eq 'supported') 'PowerShell classifier rejected calculator BIN'
+    $maxBinary = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'binary-limits/MAX.BIN'))
+    Assert-True ($maxBinary.ExitCode -eq 0 -and ($maxBinary.Output -join '') -eq 'supported') 'PowerShell classifier rejected a 4096-byte BIN'
+    $shortBinary = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'binary-limits/SHORT.BIN'))
+    Assert-True ($shortBinary.ExitCode -eq 1 -and ($shortBinary.Output -join '') -match '^unsupported: слишком маленький:.*минимум 5$') 'PowerShell classifier accepted a BIN without CRC and stream'
+    $hugeBinary = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'binary-limits/HUGE.BIN'))
+    Assert-True ($hugeBinary.ExitCode -eq 1 -and ($hugeBinary.Output -join '') -match '^unsupported: слишком большой:.*максимум 4096$') 'PowerShell classifier accepted oversized BIN'
+    $unsupported = Invoke-MkcTool @('--classify', (Join-Path $local 'blocked.dat'))
+    Assert-True ($unsupported.ExitCode -eq 1 -and ($unsupported.Output -join '') -eq 'unsupported: формат не поддерживается') 'PowerShell classifier accepted an unknown extension'
     $smallApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/SMALL.APP'))
     Assert-True ($smallApp.ExitCode -eq 1 -and ($smallApp.Output -join '') -match '^unsupported: слишком маленький:') 'PowerShell classifier accepted undersized APP'
     $largeApp = Invoke-MkcTool @('--classify', (Join-Path $tempRoot 'app-limits/HUGE.APP'))
@@ -621,6 +637,8 @@ try {
     Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 3584 TinyBASIC bytes'
     Assert-True ($script:EditorError -match 'максимум MK61s — 3584') 'PowerShell TinyBASIC editor size error is unclear'
     Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/control.txt') 'control.txt')) 'PowerShell editor accepted terminal control bytes'
+    Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/printable.bin') 'printable.bin')) 'PowerShell editor accepted a BIN with printable bytes'
+    Assert-True ($script:EditorError -eq 'Двоичные файлы доступны только для просмотра') 'PowerShell BIN editor error differs'
 
     Assert-True (Send-RemoteFile (Join-Path $local 'demo.foc') '/demo.foc') 'mock upload failed'
     Assert-True (Receive-RemoteFile '/demo.foc' (Join-Path $tempRoot 'download.foc')) 'mock download failed'
@@ -634,6 +652,10 @@ try {
     Assert-True (Send-RemoteFile (Join-Path $local 'FOCAL.APP') '/System/FOCAL.APP') 'mock system APP upload failed'
     Assert-True (Receive-RemoteFile '/System/FOCAL.APP' (Join-Path $tempRoot 'download.app')) 'mock system APP download failed'
     Assert-True ([IO.File]::ReadAllBytes((Join-Path $tempRoot 'download.app')).Length -eq 64) 'mock APP transfer changed bytes'
+    Assert-True (Send-RemoteFile (Join-Path $local 'CalculatorProgram/program.bin') '/program.bin') 'mock BIN upload failed'
+    Assert-True ((Convert-BytesToHex ([IO.File]::ReadAllBytes((Join-Path $device 'program.bin')))) -eq '00017F80FF0D0A') 'BIN upload applied text conversion'
+    Assert-True (Receive-RemoteFile '/program.bin' (Join-Path $tempRoot 'download.bin')) 'mock BIN download failed'
+    Assert-True ((Convert-BytesToHex ([IO.File]::ReadAllBytes((Join-Path $tempRoot 'download.bin')))) -eq '00017F80FF0D0A') 'BIN round-trip changed bytes'
     Assert-True (New-RemoteDirectory '/Programs') 'mock mkdir failed'
     Assert-True (Move-RemoteItem '/demo.foc' '/Programs/moved.foc') 'mock move failed'
     $remoteEntries = @(Get-RemoteEntries '/Programs')
@@ -647,6 +669,9 @@ try {
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan (Join-Path $local 'Good') '/Good') 'supported directory preflight failed'
     Assert-True ($script:CopyPlan.Count -eq 2 -and $script:CopyTotal -eq 4) 'copy plan differs'
+    Reset-CopyPlan
+    Assert-True (Add-LocalTreeToPlan (Join-Path $local 'CalculatorProgram') '/CalculatorProgram') 'calculator BIN package failed recursive preflight'
+    Assert-True ($script:CopyPlan.Count -eq 3 -and $script:CopyTotal -eq 33) 'calculator BIN copy plan differs'
     Reset-CopyPlan
     Assert-True (-not (Add-LocalTreeToPlan $local '/Imported')) 'unsupported subtree passed preflight'
     Assert-True (-not [string]::IsNullOrEmpty($script:PlanError)) 'preflight did not report the bad file'
