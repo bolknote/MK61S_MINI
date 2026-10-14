@@ -150,4 +150,5 @@ keyboard-layout и output-dir. Он проверяет состояние до/�
 
 Полный отчёт: [stm32-owned-math-20261014.json](../measurements/stm32-owned-math-20261014.json).
 Отдельный [графический этап](STM32-owned-graphics.md) также завершён.
-Остаются CMSIS startup, libgcc, libc_nano и USB.
+[Свой startup](STM32-owned-startup.md) также прошёл основные проверки;
+физический STOP отложен до итогового USB-теста. Остаются libgcc, libc_nano и USB.

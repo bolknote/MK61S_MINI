@@ -128,7 +128,6 @@ endif()
 set(MK61_TARGET_MCU "f401" CACHE STRING "Qualified STM32 target: f401 or f411")
 if(MK61_TARGET_MCU STREQUAL "f411")
   set(_mk61_device STM32F411xE)
-  set(_mk61_startup stm32f411xe)
   set(_mk61_board BLACKPILL_F411CE)
   set(BOARD_MAXSIZE 524288)
   set(BOARD_MAXDATASIZE 131072)
@@ -136,7 +135,6 @@ if(MK61_TARGET_MCU STREQUAL "f411")
   set(_mk61_size_option -Os)
 elseif(MK61_TARGET_MCU STREQUAL "f401")
   set(_mk61_device STM32F401xC)
-  set(_mk61_startup stm32f401xc)
   set(_mk61_board BLACKPILL_F401CC)
   set(BOARD_MAXSIZE 262144)
   set(BOARD_MAXDATASIZE 65536)
@@ -242,7 +240,7 @@ list(APPEND _mk61_project_sources
 
 add_executable(resident ${_mk61_project_sources}
   $<TARGET_OBJECTS:stm32_protocol>
-  "${BUILD_SYSTEM_PATH}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_${_mk61_startup}.s")
+  "${MK61_PROJECT_ROOT}/code/stm32f4_startup.S")
 target_include_directories(resident PRIVATE "${MK61_PROJECT_ROOT}/code")
 target_compile_definitions(resident PRIVATE
   ${_mk61_profile_definitions}

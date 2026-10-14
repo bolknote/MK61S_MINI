@@ -160,5 +160,7 @@ Classic и mini экономят ещё по 6048 байт Flash без увел
 Flash сохраняет прежнюю скорость. Реализация, пределы точности и сравнение
 по исходным входам SEGGER приведены в [STM32-compact-math.md](STM32-compact-math.md).
 [Графический этап](STM32-owned-graphics.md) убрал ещё 1104 байта Flash и
-48 байт RAM на Classic. CMSIS startup, libgcc, libc_nano и общий USB protocol
-остаются отдельными следующими этапами.
+48 байт RAM на Classic. Затем [свой startup](STM32-owned-startup.md) убрал
+внешний CMSIS startup и CRT-диспетчер конструкторов: ещё 24/40 байт Flash
+на Classic/mini. Его физическая проверка STOP отложена до итогового USB-теста.
+Следующие отдельные этапы — libgcc, libc_nano и общий USB protocol.
