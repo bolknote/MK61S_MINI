@@ -252,10 +252,11 @@ try {
     & {
         function Get-CdcPorts { return @('COM12','COM16') }
         function Start-Sleep { param([int]$Milliseconds) }
+        $script:selectionTestIdentity = 'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)'
         function New-ConfiguredSerialPort {
             param([string]$PortName)
             $identity = if ($PortName -eq 'COM16') {
-                'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)'
+                $script:selectionTestIdentity
             } else {
                 'unrelated STM32 firmware'
             }
@@ -290,6 +291,9 @@ try {
         $oldPortExplicit = $script:PortExplicit
         $oldDirectSerial = $script:DirectSerial
         $oldStatusText = $script:StatusText
+        $oldDeviceSelector = $script:DeviceSelector
+        $oldDeviceExplicit = $script:DeviceSelectorExplicit
+        $oldConfigFile = $script:ConfigFile
         try {
             $script:Port = 'COM12'
             $script:PortExplicit = $false
@@ -297,12 +301,102 @@ try {
             Assert-True (Start-DirectSerial) 'automatic COM probing did not find MK61s'
             Assert-True ($script:Port -eq 'COM16') 'automatic COM probing stayed on unrelated COM12'
             Assert-True ($script:DirectSerial.PortName -eq 'COM16') 'automatic COM probing retained the wrong serial object'
+            $script:DeviceSelector = 'DEADBEEF'
+            $script:DeviceSelectorExplicit = $false
+            Assert-True (Start-DirectSerial) 'stale preference rejected the sole legacy MK61s'
+            Assert-True ([string]::IsNullOrEmpty($script:DeviceSelector)) 'legacy fallback retained the stale ID'
+            $script:selectionTestIdentity = $identityLine
+            $script:DeviceSelector = 'DEADBEEF'
+            Assert-True (Start-DirectSerial) 'stale preference rejected the sole modern MK61s'
+            Assert-True ($script:DetectedDeviceId -eq '0123456789ABCDEF' -and
+                $script:DeviceSelector -eq '0123456789ABCDEF') 'fallback did not retain the chosen ID'
+            $script:ConfigFile = Join-Path $tempRoot 'device-selection.conf'
+            Save-Config
+            Assert-True ([IO.File]::ReadAllText($script:ConfigFile) -match
+                'DEVICE_ID=0123456789ABCDEF') 'fallback did not save the new ID'
+            $script:DeviceSelector = 'DEADBEEF'
+            $script:DeviceSelectorExplicit = $true
+            Assert-True (-not (Start-DirectSerial)) 'explicit missing ID selected another calculator'
+            Assert-True ($script:StatusText -match 'выбрал 0 устройств') 'explicit ID failure lost its diagnostic'
         } finally {
             Close-DirectSerialPort $script:DirectSerial
             $script:Port = $oldPort
             $script:PortExplicit = $oldPortExplicit
             $script:DirectSerial = $oldDirectSerial
             $script:StatusText = $oldStatusText
+            $script:DeviceSelector = $oldDeviceSelector
+            $script:DeviceSelectorExplicit = $oldDeviceExplicit
+            $script:ConfigFile = $oldConfigFile
+            Remove-Variable -Scope Script -Name selectionTestIdentity -ErrorAction SilentlyContinue
+        }
+    }
+
+    & {
+        $devices = @(
+            [pscustomobject]@{ Port = 'COM1'; Identity = (ConvertFrom-Mk61IdentityLine `
+                'MK61 ID v=1 public=1111111111111111 short=11111111 usb=AAAAAAAAAAAA volume=A1B2C3D4 build=12345678 profile=classic-v3-uc1609') },
+            [pscustomobject]@{ Port = 'COM2'; Identity = (ConvertFrom-Mk61IdentityLine `
+                'MK61 ID v=1 public=2222222222222222 short=22222222 usb=BBBBBBBBBBBB volume=A1B2C3D4 build=12345678 profile=mini-v3-a00') }
+        )
+        $saved = @{
+            DeviceSelector = $script:DeviceSelector
+            DeviceSelectorExplicit = $script:DeviceSelectorExplicit
+            AllowDevicePrompt = $script:AllowDevicePrompt
+            InstallSystemDir = $script:InstallSystemDir
+            StatusText = $script:StatusText
+        }
+        $script:selectionInputs = [Collections.Generic.Queue[string]]::new()
+        function Read-Host {
+            param([string]$Prompt)
+            if ($script:selectionInputs.Count -eq 0) { return $null }
+            return $script:selectionInputs.Dequeue()
+        }
+        try {
+            $script:DeviceSelectorExplicit = $false
+            $script:AllowDevicePrompt = $true
+            $script:InstallSystemDir = ''
+            $script:DeviceSelector = '11111111'
+            $chosen = Select-Mk61Device $devices
+            Assert-True ($chosen.Port -eq 'COM1') 'present saved preference did not select its device'
+
+            $script:DeviceSelector = 'DEADBEEF'
+            foreach ($answer in @('invalid','99','999999999999999999999999999999','02')) {
+                $script:selectionInputs.Enqueue($answer)
+            }
+            $chosen = Select-Mk61Device $devices
+            Assert-True ($chosen.Port -eq 'COM2') 'multiple devices did not honor the numbered choice'
+            Assert-True ($script:selectionInputs.Count -eq 0) 'invalid choices were not retried'
+
+            $script:DeviceSelector = ''
+            $script:selectionInputs.Enqueue('1')
+            $chosen = Select-Mk61Device $devices
+            Assert-True ($chosen.Port -eq 'COM1') 'first run with multiple devices did not offer a choice'
+
+            $script:DeviceSelector = 'DEADBEEF'
+            $script:DeviceSelectorExplicit = $true
+            $script:selectionInputs.Enqueue('2')
+            Assert-True ($null -eq (Select-Mk61Device $devices)) 'explicit missing selector offered fallback'
+            Assert-True ($script:selectionInputs.Count -eq 1) 'explicit missing selector consumed input'
+            $script:selectionInputs.Clear()
+            $script:DeviceSelectorExplicit = $false
+
+            $script:selectionInputs.Enqueue('0')
+            Assert-True ($null -eq (Select-Mk61Device $devices)) 'cancel selected a device'
+            Assert-True ($script:StatusText -eq 'выбор калькулятора отменён') 'cancel diagnostic missing'
+            Assert-True ($null -eq (Select-Mk61Device $devices)) 'EOF selected a device'
+            Assert-True ($script:StatusText -eq 'выбор калькулятора отменён') 'EOF diagnostic missing'
+
+            $script:AllowDevicePrompt = $false
+            Assert-True ($null -eq (Select-Mk61Device $devices)) 'noninteractive selection chose an arbitrary device'
+            Assert-True ($script:StatusText -match 'несколько MK61s') 'ambiguity diagnostic missing'
+            $script:AllowDevicePrompt = $true
+            $script:InstallSystemDir = $local
+            $script:selectionInputs.Enqueue('2')
+            Assert-True ($null -eq (Select-Mk61Device $devices)) 'batch install offered a numbered choice'
+            Assert-True ($script:selectionInputs.Count -eq 1) 'batch install consumed input'
+        } finally {
+            foreach ($name in $saved.Keys) { Set-Variable -Scope Script -Name $name -Value $saved[$name] }
+            Remove-Variable -Scope Script -Name selectionInputs -ErrorAction SilentlyContinue
         }
     }
 

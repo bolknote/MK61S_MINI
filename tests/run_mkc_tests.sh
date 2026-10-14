@@ -98,7 +98,8 @@ if grep -Eq 'encoding[[:space:]]+(utf-8|cp1251)' "$root/tools/.mkc/mkc.sh"; then
 fi
 
 # Автовыбор CDC не доверяет сохранённому/первому порту: каждый кандидат
-# обязан ответить identity handshake. Несколько MK61s требуют selector.
+# обязан ответить identity handshake. Сохранённый ID — предпочтение;
+# явный selector обязателен, интерактивная неоднозначность требует выбора.
 parse_identity_line \
   'MK61 ID v=1 public=0123456789ABCDEF short=89ABCDEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00'
 test "$PROBE_KIND:$PROBE_PUBLIC:$PROBE_SHORT:$PROBE_USB:$PROBE_PROFILE" = \
@@ -138,6 +139,7 @@ test "$PROBE_KIND:$PROBE_PROFILE" = legacy:legacy
 (
   list_cdc_ports() { printf '%s\n' /dev/cu.ONE /dev/cu.TWO; }
   probe_port() {
+    case "$1" in /dev/cu.ONE|/dev/cu.TWO) ;; *) return 1 ;; esac
     PROBE_KIND=identity
     PROBE_PROFILE=mini-v3-a00
     if [ "$1" = /dev/cu.ONE ]; then
@@ -160,6 +162,116 @@ test "$PROBE_KIND:$PROBE_PROFILE" = legacy:legacy
   select_mk61_port
   test "$PORT:$DETECTED_DEVICE_ID" = \
     '/dev/cu.TWO:2222222222222222'
+
+  # The remembered device vanished: select the only responding calculator
+  # and persist its full ID instead of retaining the stale preference.
+  list_cdc_ports() { printf '%s\n' /dev/cu.TWO; }
+  PORT=/dev/cu.MISSING
+  DEVICE_SELECTOR=DEADBEEF
+  DEVICE_SELECTOR_EXPLICIT=0
+  select_mk61_port
+  test "$PORT:$DEVICE_SELECTOR" = '/dev/cu.TWO:2222222222222222'
+  CONFIG_FILE="$work/device-selection.conf"
+  save_config
+  test "$(sed -n 's/^DEVICE_ID=//p' "$CONFIG_FILE")" = 2222222222222222
+  cp "$CONFIG_FILE" "$work/device-selection.before"
+
+  # Explicit IDs and ports remain strict, even with an interactive reader.
+  TTY_FD=0
+  DEVICE_SELECTOR=DEADBEEF
+  DEVICE_SELECTOR_EXPLICIT=1
+  if select_mk61_port </dev/null; then
+    echo 'mkc: ignored an explicitly requested missing ID' >&2; exit 1
+  fi
+  case "$SELECT_ERROR" in *'совпадений: 0'*) ;; *) exit 1 ;; esac
+  DEVICE_SELECTOR_EXPLICIT=0
+  PORT_EXPLICIT=1
+  PORT=/dev/cu.MISSING
+  probe_port() {
+    [ "$1" = /dev/cu.TWO ] || return 1
+    PROBE_KIND=identity; PROBE_PROFILE=mini-v3-a00
+    PROBE_PUBLIC=2222222222222222; PROBE_SHORT=22222222
+    PROBE_USB=BBBBBBBBBBBB
+  }
+  if select_mk61_port </dev/null; then
+    echo 'mkc: ignored an explicitly requested missing port' >&2; exit 1
+  fi
+  PORT_EXPLICIT=0
+
+  # The same fallback also supports a legacy calculator without a public ID.
+  probe_port() {
+    [ "$1" = /dev/cu.TWO ] || return 1
+    PROBE_KIND=legacy; PROBE_PROFILE=legacy
+    PROBE_PUBLIC=; PROBE_SHORT=; PROBE_USB=
+  }
+  select_mk61_port
+  test "$PORT:$DEVICE_SELECTOR:$DETECTED_DEVICE_ID" = '/dev/cu.TWO::'
+
+  list_cdc_ports() { printf '%s\n' /dev/cu.ONE /dev/cu.TWO /dev/cu.OTHER; }
+  probe_port() {
+    PROBE_KIND=identity
+    case "$1" in
+      /dev/cu.ONE)
+        PROBE_PROFILE=classic-v3-uc1609
+        PROBE_PUBLIC=1111111111111111; PROBE_SHORT=11111111
+        PROBE_USB=AAAAAAAAAAAA ;;
+      /dev/cu.TWO)
+        PROBE_PROFILE=mini-v3-a00
+        PROBE_PUBLIC=2222222222222222; PROBE_SHORT=22222222
+        PROBE_USB=BBBBBBBBBBBB ;;
+      *) return 1 ;;
+    esac
+  }
+  PORT=/dev/cu.MISSING
+  DEVICE_SELECTOR=DEADBEEF
+  printf 'invalid\n99\n999999999999999999999999999999\n02\n' > "$work/device-choice"
+  select_mk61_port < "$work/device-choice" 2> "$work/device-menu"
+  test "$PORT:$DETECTED_DEVICE_ID" = '/dev/cu.TWO:2222222222222222'
+  grep -Fq '1) classic-v3-uc1609 · 1111111111111111 · /dev/cu.ONE' "$work/device-menu"
+  grep -Fq '2) mini-v3-a00 · 2222222222222222 · /dev/cu.TWO' "$work/device-menu"
+  if grep -Fq '/dev/cu.OTHER' "$work/device-menu"; then
+    echo 'mkc: offered a port that did not answer as MK61s' >&2; exit 1
+  fi
+  save_config
+  cmp "$CONFIG_FILE" "$work/device-selection.before"
+
+  # A present preference needs no input even when other devices are present.
+  DEVICE_SELECTOR=11111111
+  select_mk61_port </dev/null 2> "$work/device-menu"
+  test "$PORT:$DETECTED_DEVICE_ID" = '/dev/cu.ONE:1111111111111111'
+  test ! -s "$work/device-menu"
+
+  # No preference also offers a choice, and explicit selectors stay strict.
+  PORT=/dev/cu.MISSING
+  DEVICE_SELECTOR=
+  printf '2\n' > "$work/device-choice"
+  select_mk61_port < "$work/device-choice" 2> "$work/device-menu"
+  test "$PORT" = /dev/cu.TWO
+  DEVICE_SELECTOR=DEADBEEF
+  DEVICE_SELECTOR_EXPLICIT=1
+  if select_mk61_port < "$work/device-choice" 2> "$work/device-menu"; then
+    echo 'mkc: offered fallback for an explicit missing ID' >&2; exit 1
+  fi
+  test ! -s "$work/device-menu"
+  DEVICE_SELECTOR_EXPLICIT=0
+
+  for cancel in zero eof; do
+    if [ "$cancel" = zero ]; then printf '0\n' > "$work/device-choice"
+    else : > "$work/device-choice"; fi
+    if select_mk61_port < "$work/device-choice" 2> "$work/device-menu"; then
+      echo 'mkc: opened a device after cancelled selection' >&2; exit 1
+    fi
+    test "$SELECT_ERROR" = 'выбор калькулятора отменён'
+    cmp "$CONFIG_FILE" "$work/device-selection.before"
+  done
+
+  # Batch installation must never ask or pick an arbitrary calculator.
+  INSTALL_SYSTEM_DIR="$work/system-bundle"
+  if select_mk61_port </dev/null 2> "$work/device-menu"; then
+    echo 'mkc: batch installation chose an arbitrary device' >&2; exit 1
+  fi
+  case "$SELECT_ERROR" in *'несколько MK61s'*) ;; *) exit 1 ;; esac
+  test ! -s "$work/device-menu"
 )
 
 # Возврат через `..` или Backspace должен оставлять курсор на каталоге,

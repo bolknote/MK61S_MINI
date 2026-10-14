@@ -53,6 +53,7 @@ $script:Port = ''
 $script:PortExplicit = $false
 $script:DeviceSelector = ''
 $script:DeviceSelectorExplicit = $false
+$script:AllowDevicePrompt = $false
 $script:DetectedDeviceId = ''
 $script:DetectedUsbSerial = ''
 $script:DetectedProfile = ''
@@ -501,6 +502,56 @@ function Get-SerialOpenFailureText {
     return $Exception.Message
 }
 
+function Read-Mk61DeviceChoice {
+    param([object[]]$Devices)
+    [Console]::WriteLine('Выберите калькулятор:')
+    for ($index = 0; $index -lt $Devices.Count; $index++) {
+        $item = $Devices[$index]
+        $id = [string]$item.Identity.PublicId
+        if ([string]::IsNullOrEmpty($id)) { $id = 'без ID' }
+        [Console]::WriteLine(('  {0}) {1} · {2} · {3}' -f
+            ($index + 1), $item.Identity.Profile, $id, $item.Port))
+    }
+    while ($true) {
+        $answer = Read-Host 'Номер (0 — выход)'
+        if ([string]::IsNullOrEmpty($answer)) {
+            $script:StatusText = 'выбор калькулятора отменён'
+            return $null
+        }
+        $number = 0
+        if ($answer -match '^[0-9]+$' -and [int]::TryParse($answer, [ref]$number)) {
+            if ($number -eq 0) {
+                $script:StatusText = 'выбор калькулятора отменён'
+                return $null
+            }
+            if ($number -ge 1 -and $number -le $Devices.Count) {
+                return $Devices[$number - 1]
+            }
+        }
+        [Console]::WriteLine('Введите число от 1 до {0} или 0 для выхода.', $Devices.Count)
+    }
+}
+
+function Select-Mk61Device {
+    param([object[]]$Devices)
+    $selected = @($Devices | Where-Object {
+        Test-Mk61IdentitySelector $_.Identity $script:DeviceSelector
+    })
+    if ($selected.Count -eq 1) { return $selected[0] }
+    if ($script:DeviceSelectorExplicit -and
+        -not [string]::IsNullOrWhiteSpace($script:DeviceSelector)) {
+        $script:StatusText = "ID '$($script:DeviceSelector)' выбрал $($selected.Count) устройств MK61s"
+        return $null
+    }
+    if ($Devices.Count -eq 1) { return $Devices[0] }
+    $script:StatusText = "Подключено несколько MK61s ($($Devices.Count)); укажите --device PUBLIC_ID"
+    if (-not $script:AllowDevicePrompt -or
+        -not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
+        return $null
+    }
+    return Read-Mk61DeviceChoice $Devices
+}
+
 function Start-DirectSerial {
     $detected = if ($script:PortExplicit) { @() } else { @(Get-CdcPorts) }
     $candidates = @(Get-DirectSerialCandidates $script:Port $detected)
@@ -571,20 +622,8 @@ function Start-DirectSerial {
         return $false
     }
 
-    $selected = @($matches | Where-Object {
-        Test-Mk61IdentitySelector $_.Identity $script:DeviceSelector
-    })
-    if ($selected.Count -ne 1) {
-        if ([string]::IsNullOrWhiteSpace($script:DeviceSelector) -and
-            $matches.Count -gt 1) {
-            $script:StatusText = "Подключено несколько MK61s ($($matches.Count)); укажите --device PUBLIC_ID"
-        } else {
-            $script:StatusText = "ID '$($script:DeviceSelector)' выбрал $($selected.Count) устройств MK61s"
-        }
-        return $false
-    }
-
-    $chosen = $selected[0]
+    $chosen = Select-Mk61Device @($matches.ToArray())
+    if ($null -eq $chosen) { return $false }
     try {
         $serial = New-ConfiguredSerialPort $chosen.Port
         $serial.Open()
@@ -594,6 +633,9 @@ function Start-DirectSerial {
         $script:DetectedDeviceId = [string]$chosen.Identity.PublicId
         $script:DetectedUsbSerial = [string]$chosen.Identity.UsbSerial
         $script:DetectedProfile = [string]$chosen.Identity.Profile
+        if (-not $script:DeviceSelectorExplicit) {
+            $script:DeviceSelector = $script:DetectedDeviceId
+        }
         $script:StatusText = "MK61s найден на $($chosen.Port)"
         return $true
     } catch {
@@ -3407,6 +3449,8 @@ function Invoke-MkcApplication {
     }
     $script:SessionDir = Join-Path ([IO.Path]::GetTempPath()) ('mkc.' + [guid]::NewGuid().ToString('N'))
     [void](New-Item -ItemType Directory -Path $script:SessionDir)
+    $script:AllowDevicePrompt = [string]::IsNullOrEmpty($script:InstallSystemDir) -and
+        -not [Console]::IsInputRedirected
     if (-not (Start-Monitor)) {
         if ([string]::IsNullOrWhiteSpace($script:StatusText)) { throw "не удалось открыть $($script:Port)" }
         throw $script:StatusText

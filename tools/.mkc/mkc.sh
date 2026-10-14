@@ -37,6 +37,7 @@ DETECTED_USB_SERIAL=
 DETECTED_PROFILE=
 SELECT_ERROR=
 CANDIDATE_COUNT=0
+DEVICE_CHOICE_INDEX=-1
 PROBE_SEQUENCE=0
 LOCAL_PATH=$(pwd -P)
 REMOTE_PATH=/
@@ -575,11 +576,46 @@ selector_matches_probe() {
   return 1
 }
 
+prompt_mk61_device() {
+  local label number=0 choice count=$#
+  DEVICE_CHOICE_INDEX=-1
+  printf 'Выберите калькулятор:\n' >&2
+  for label in "$@"; do
+    number=$((number + 1))
+    printf '  %s) %s\n' "$number" "$label" >&2
+  done
+  while :; do
+    printf 'Номер (0 — выход): ' >&2
+    if ! IFS= read -r choice <&"$TTY_FD"; then
+      SELECT_ERROR='выбор калькулятора отменён'
+      return 1
+    fi
+    case "$choice" in
+      *[!0-9]*) ;;
+      *)
+        # Strip leading zeroes before Bash arithmetic, which treats them as
+        # octal; bound the length before comparing a pasted large number.
+        choice=${choice#"${choice%%[!0]*}"}
+        if [ -z "$choice" ]; then
+          SELECT_ERROR='выбор калькулятора отменён'
+          return 1
+        fi
+        if [ "${#choice}" -le "${#count}" ] &&
+            [ "$choice" -ge 1 ] && [ "$choice" -le "$count" ]; then
+          DEVICE_CHOICE_INDEX=$((choice - 1))
+          return 0
+        fi
+        ;;
+    esac
+    printf 'Введите число от 1 до %s или 0 для выхода.\n' "$count" >&2
+  done
+}
+
 select_mk61_port() {
   local candidate duplicate found_count=0 match_count=0
   local candidate_count=0 candidate_index=0 existing_index=0 selected_index=-1
   local candidates=() found_ports=() found_public=() found_short=()
-  local found_usb=() found_profile=() found_kind=()
+  local found_usb=() found_profile=() found_kind=() device_labels=()
   SELECT_ERROR=
   CANDIDATE_COUNT=0
   PROBE_SEQUENCE=0
@@ -639,21 +675,36 @@ select_mk61_port() {
         match_count=$((match_count + 1))
       fi
     done
-    if [ "$match_count" -ne 1 ]; then
+    if [ "$match_count" -ne 1 ] && [ "$DEVICE_SELECTOR_EXPLICIT" -eq 1 ]; then
       SELECT_ERROR="ID '$DEVICE_SELECTOR' не выбрал ровно один MK61s (совпадений: $match_count)"
       return 1
     fi
-  elif [ "$found_count" -eq 1 ]; then
-    selected_index=0
-  else
-    SELECT_ERROR="подключено несколько MK61s ($found_count); укажите --device PUBLIC_ID"
-    return 1
+    [ "$match_count" -eq 1 ] || selected_index=-1
+  fi
+  if [ "$selected_index" -lt 0 ]; then
+    if [ "$found_count" -eq 1 ]; then
+      selected_index=0
+    else
+      SELECT_ERROR="подключено несколько MK61s ($found_count); укажите --device PUBLIC_ID"
+      # Only the interactive manager may ask; System APP installation keeps
+      # deterministic device selection even when started from a terminal.
+      [ -n "$TTY_FD" ] && [ -z "$INSTALL_SYSTEM_DIR" ] || return 1
+      for ((candidate_index=0; candidate_index<found_count; candidate_index++)); do
+        device_labels[$candidate_index]="${found_profile[$candidate_index]} · ${found_public[$candidate_index]:-без ID} · ${found_ports[$candidate_index]}"
+      done
+      prompt_mk61_device "${device_labels[@]}" || return 1
+      selected_index=$DEVICE_CHOICE_INDEX
+    fi
   fi
 
   PORT=${found_ports[$selected_index]}
   DETECTED_DEVICE_ID=${found_public[$selected_index]}
   DETECTED_USB_SERIAL=${found_usb[$selected_index]}
   DETECTED_PROFILE=${found_profile[$selected_index]}
+  if [ "$DEVICE_SELECTOR_EXPLICIT" -eq 0 ]; then
+    DEVICE_SELECTOR=$DETECTED_DEVICE_ID
+  fi
+  SELECT_ERROR=
   return 0
 }
 
