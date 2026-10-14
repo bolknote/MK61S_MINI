@@ -71,6 +71,9 @@ endif()
 if(NOT DEFINED MK61_USE_NATIVE_EABI)
   set(MK61_USE_NATIVE_EABI 1)
 endif()
+if(NOT DEFINED MK61_USE_NATIVE_LIBC)
+  set(MK61_USE_NATIVE_LIBC 1)
+endif()
 
 foreach(_mk61_bool
     MK61_ENABLE_FOCAL
@@ -94,6 +97,7 @@ foreach(_mk61_bool
     MK61_APP_LOCAL_FLOAT_MATH
     MK61_USE_COMPACT_LIBM
     MK61_USE_NATIVE_EABI
+    MK61_USE_NATIVE_LIBC
     MK61_F401_PRODUCT_BUILD
     MK61_REQUIRE_RESIDENT_CRC
     MK61_ENABLE_LTO)
@@ -222,6 +226,8 @@ set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usb_device.cpp"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_BRIDGE=1")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/stm32f4_usbd_ctlreq.c"
   PROPERTIES COMPILE_DEFINITIONS "MK61_USB_BUILD_CTLREQ=1")
+set_source_files_properties("${MK61_PROJECT_ROOT}/code/system_strings.c"
+  PROPERTIES COMPILE_OPTIONS "-fno-builtin;-fno-lto")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/native_eabi.cpp"
   PROPERTIES COMPILE_OPTIONS "-fno-lto")
 set_source_files_properties("${MK61_PROJECT_ROOT}/code/compact_math.cpp"
@@ -275,6 +281,7 @@ target_compile_definitions(resident PRIVATE
   MK61_APP_LOCAL_FLOAT_MATH=${MK61_APP_LOCAL_FLOAT_MATH}
   MK61_USE_COMPACT_LIBM=${MK61_USE_COMPACT_LIBM}
   MK61_USE_NATIVE_EABI=${MK61_USE_NATIVE_EABI}
+  MK61_USE_NATIVE_LIBC=${MK61_USE_NATIVE_LIBC}
   MK61_F401_PRODUCT_BUILD=${MK61_F401_PRODUCT_BUILD}
   MK61_ENABLE_LOADABLE_MODULES=1
   MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}
@@ -295,9 +302,12 @@ target_compile_options(resident PRIVATE
   -Wextra
   -Werror
   -Wno-error=cpp)
-target_link_libraries(resident PRIVATE
-  user_settings
-  -Wl,--start-group m c stdc++ gcc -Wl,--end-group)
+target_link_libraries(resident PRIVATE user_settings)
+if(MK61_USE_NATIVE_EABI AND MK61_USE_NATIVE_LIBC AND MK61_USE_COMPACT_LIBM)
+  target_link_options(resident PRIVATE -nostdlib)
+else()
+  target_link_libraries(resident PRIVATE -Wl,--start-group m c stdc++ gcc -Wl,--end-group)
+endif()
 target_link_options(resident PRIVATE
   "LINKER:-Map,${CMAKE_BINARY_DIR}/resident.map"
   "LINKER:--wrap=USBD_CDC_ClearBuffer"

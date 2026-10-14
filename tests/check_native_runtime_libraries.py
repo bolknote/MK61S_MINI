@@ -7,7 +7,7 @@ p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('map',type=Path)
 p.add_argument('--without-libc',action='store_true')
 a=p.parse_args()
-s=a.map.read_text();assert 'Archive member included to satisfy reference' in s
+s=a.map.read_text();assert 'Linker script and memory map' in s
 included=s.split('Discarded input sections',1)[0]
 for library in ('libgcc', 'libm', 'libstdc++') + (('libc_nano','libc','libnosys') if a.without_libc else ()):
     assert not re.search(r'/'+re.escape(library)+r'\.a\(',included),('unexpected runtime archive member',library)

@@ -1,3 +1,4 @@
+#include "native_libc.h"
 /**
   ******************************************************************************
   * @file    usbd_msc.c
@@ -149,7 +150,11 @@ USBD_ClassTypeDef  USBD_MSC =
 #if defined(STM32F411xE)
 _Static_assert(sizeof(USBD_MSC_BOT_HandleTypeDef) == 8308U,
                "update lazy MSC ELF reserve for changed transport layout");
+#if MK61_USE_NATIVE_LIBC
+__asm__(".global mk61_lazy_msc_bytes\n.set mk61_lazy_msc_bytes, 8312");
+#else
 __asm__(".global mk61_lazy_msc_bytes\n.set mk61_lazy_msc_bytes, 8340");
+#endif
 static USBD_MSC_BOT_HandleTypeDef* prepared_handle;
 #define USBD_MSC_BOT_Handle (*prepared_handle)
 uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size) {

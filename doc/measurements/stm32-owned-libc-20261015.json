@@ -1,0 +1,1745 @@
+{
+  "stage": 5,
+  "baseline": "e942e73ce",
+  "name": "Owned strings and retained allocation; no runtime archives",
+  "size": {
+    "classic": {
+      "before_flash": 361336,
+      "after_flash": 360920,
+      "before_ram": 28560,
+      "after_ram": 28464,
+      "crc": "BDB8BB8C"
+    },
+    "mini": {
+      "before_flash": 333824,
+      "after_flash": 333408,
+      "before_ram": 27224,
+      "after_ram": 27128,
+      "crc": "8C1AA83C"
+    }
+  },
+  "tests": {
+    "host": [
+      "ISO strings ASan/UBSan + exact guard pages",
+      "Retained allocator alignment/padding/zeroing/OOM/eviction/nested callback isolation ASan/UBSan",
+      "Entire previous memory-buffer/APP/overlay qualification suite ASan/UBSan"
+    ],
+    "ARM_string_calls": {
+      "classic": 12000,
+      "mini": 10500,
+      "unreferenced_functions_standalone": 13500,
+      "without_LTO": 10500
+    },
+    "ARM_apps": "Three ordinary service APPs at three addresses, both ELFs PASS",
+    "math": {
+      ".build/stm32-narrow-libraries-20261014/libc-classic/resident.elf": {
+        "status": "PASS",
+        "compact": true,
+        "sha256": "9cd2b4b27a0e502e68db07ae1a8dc7dc9a15a8e45ccac74342ba3b036400e899",
+        "vectors": 1897,
+        "IEEE_edge_cases": 54,
+        "stats": {
+          "sin": {
+            "cases": 199,
+            "worst_ulp": 0
+          },
+          "cos": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "tan": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "asin": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "acos": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "atan": {
+            "cases": 133,
+            "worst_ulp": 0
+          },
+          "ln": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "log10": {
+            "cases": 122,
+            "worst_ulp": 1
+          },
+          "exp": {
+            "cases": 139,
+            "worst_ulp": 1
+          },
+          "sqrt": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "pow": {
+            "cases": 440,
+            "worst_ulp": 0
+          }
+        },
+        "sample_instructions": {
+          "sin": 572,
+          "cos": 584,
+          "tan": 1425,
+          "asin": 2745,
+          "acos": 2463,
+          "atan": 1109,
+          "ln": 1506,
+          "log10": 1662,
+          "exp": 1648,
+          "sqrt": 260,
+          "pow": 5555
+        },
+        "large_angle_instructions": {
+          "float32_1e38": {
+            "sin": 2916,
+            "cos": 2910,
+            "tan": 3849
+          },
+          "binary64_max": {
+            "sin": 1803,
+            "cos": 1832,
+            "tan": 2741
+          }
+        },
+        "ABI": "AAPCS integer/VFP callee-saved and SP preserved; compact math writes stack only"
+      },
+      ".build/stm32-narrow-libraries-20261014/libc-mini/resident.elf": {
+        "status": "PASS",
+        "compact": true,
+        "sha256": "9f40e9f9c3b8a9d8af7d6a1abae00a2592f651dc27ed1182282c2be9731d82cc",
+        "vectors": 1897,
+        "IEEE_edge_cases": 54,
+        "stats": {
+          "sin": {
+            "cases": 199,
+            "worst_ulp": 0
+          },
+          "cos": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "tan": {
+            "cases": 199,
+            "worst_ulp": 1
+          },
+          "asin": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "acos": {
+            "cases": 111,
+            "worst_ulp": 1
+          },
+          "atan": {
+            "cases": 133,
+            "worst_ulp": 0
+          },
+          "ln": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "log10": {
+            "cases": 122,
+            "worst_ulp": 1
+          },
+          "exp": {
+            "cases": 139,
+            "worst_ulp": 1
+          },
+          "sqrt": {
+            "cases": 122,
+            "worst_ulp": 0
+          },
+          "pow": {
+            "cases": 440,
+            "worst_ulp": 0
+          }
+        },
+        "sample_instructions": {
+          "sin": 572,
+          "cos": 584,
+          "tan": 1425,
+          "asin": 2745,
+          "acos": 2463,
+          "atan": 1109,
+          "ln": 1506,
+          "log10": 1662,
+          "exp": 1648,
+          "sqrt": 260,
+          "pow": 5555
+        },
+        "large_angle_instructions": {
+          "float32_1e38": {
+            "sin": 2916,
+            "cos": 2910,
+            "tan": 3849
+          },
+          "binary64_max": {
+            "sin": 1803,
+            "cos": 1832,
+            "tan": 2741
+          }
+        },
+        "ABI": "AAPCS integer/VFP callee-saved and SP preserved; compact math writes stack only"
+      }
+    },
+    "GNU_control": "compact libm disabled, GNU libm enabled; builds and 1897+54 math cases PASS",
+    "archive_gate": "All27 ELF maps: no included libgcc/libm/libstdc++/libc_nano/libc/libnosys members"
+  },
+  "matrix_f411": [
+    {
+      "case": "f411-lcd1602-a00",
+      "profile": "mini-v3-a00",
+      "status": "PASS",
+      "unsealed_bin_bytes": 299264,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-lcd1602-a00"
+    },
+    {
+      "case": "f411-lcd1602-a00-usb-screen",
+      "profile": "mini-v3-a00",
+      "status": "PASS",
+      "unsealed_bin_bytes": 330672,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-lcd1602-a00-usb-screen"
+    },
+    {
+      "case": "f411-lcd1602-a00-no-lto",
+      "profile": "mini-v3-a00",
+      "status": "PASS",
+      "unsealed_bin_bytes": 317076,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-lcd1602-a00-no-lto"
+    },
+    {
+      "case": "f411-lcd1602-a02",
+      "profile": "mini-v3-a02",
+      "status": "PASS",
+      "unsealed_bin_bytes": 299156,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-lcd1602-a02"
+    },
+    {
+      "case": "f411-oled1602-ws0010",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 328796,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010"
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 349432,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010-usb-screen"
+    },
+    {
+      "case": "f411-oled1602-ws0010-no-graphics",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 315652,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010-no-graphics"
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 315152,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010-graphics-wbmp"
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 328796,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010-graphics-wbmp-markdown"
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen-no-graphics",
+      "profile": "mini-v3-ws0010",
+      "status": "PASS",
+      "unsealed_bin_bytes": 347980,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-oled1602-ws0010-usb-screen-no-graphics"
+    },
+    {
+      "case": "f411-mini-v2-a00",
+      "profile": "mini-v2-a00",
+      "status": "PASS",
+      "unsealed_bin_bytes": 299320,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-mini-v2-a00"
+    },
+    {
+      "case": "f411-mini-v2-a02",
+      "profile": "mini-v2-a02",
+      "status": "PASS",
+      "unsealed_bin_bytes": 299196,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-mini-v2-a02"
+    },
+    {
+      "case": "f411-classic-v2",
+      "profile": "classic-v2",
+      "status": "PASS",
+      "unsealed_bin_bytes": 335960,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-classic-v2"
+    },
+    {
+      "case": "f411-classic-v3",
+      "profile": "classic-v3",
+      "status": "PASS",
+      "unsealed_bin_bytes": 346180,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-classic-v3"
+    },
+    {
+      "case": "f411-classic-v3-usb-screen",
+      "profile": "classic-v3",
+      "status": "PASS",
+      "unsealed_bin_bytes": 349324,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-classic-v3-usb-screen"
+    },
+    {
+      "case": "f411-40th",
+      "profile": "40th",
+      "status": "PASS",
+      "unsealed_bin_bytes": 336000,
+      "build": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-narrow-libraries-20261014/libc-f411-matrix/f411-40th"
+    }
+  ],
+  "matrix_f401": [
+    {
+      "case": "f401-capability-a00-usb",
+      "build": "PASS",
+      "bytes": 232904,
+      "baseline_bytes": 232068,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 232904
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "build": "PASS",
+      "bytes": 229440,
+      "baseline_bytes": 228588,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 229440
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "build": "PASS",
+      "bytes": 239364,
+      "baseline_bytes": 238512,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 239364
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "build": "PASS",
+      "bytes": 241604,
+      "baseline_bytes": 240752,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 241604
+    },
+    {
+      "case": "f401-product-a00",
+      "build": "PASS",
+      "bytes": 214820,
+      "baseline_bytes": 213964,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 214820
+    },
+    {
+      "case": "f401-product-classic-v2",
+      "build": "PASS",
+      "bytes": 244928,
+      "baseline_bytes": 245104,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 244928
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "build": "PASS",
+      "bytes": 244968,
+      "baseline_bytes": 245144,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 244968
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "build": "PASS",
+      "bytes": 214912,
+      "baseline_bytes": 214064,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 214912
+    },
+    {
+      "case": "f401-product-ws0010",
+      "build": "PASS",
+      "bytes": 222964,
+      "baseline_bytes": 222124,
+      "math_backend": "CORE1 unchanged; compact math excluded",
+      "startup": "owned assembly vectors, BSS/data and constructors",
+      "before_bytes": 222964
+    }
+  ],
+  "hardware": {
+    "classic": {
+      "msc": {
+        "status": "PASS",
+        "minimum_required": 12288,
+        "minimum_remaining": 12628,
+        "samples": [
+          {
+            "after_command": "ls /",
+            "remaining": 12628,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12628 observed_remaining=12628 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "fsget \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-7623.bin\"",
+            "remaining": 12628,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12628 observed_remaining=12628 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "vlog",
+            "remaining": 12628,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12628 observed_remaining=12628 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "mpu status",
+            "remaining": 12628,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12628 observed_remaining=12628 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "ls /",
+            "remaining": 14736,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=14736 observed_remaining=14736 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "fsget \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-7623.bin\"",
+            "remaining": 14112,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=14112 observed_remaining=14112 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "rm \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-7623.bin\"",
+            "remaining": 12984,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "ls /",
+            "remaining": 12984,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "df",
+            "remaining": 12984,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "crash show",
+            "remaining": 12984,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "mpu status",
+            "remaining": 12984,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+          }
+        ]
+      },
+      "graphics": {
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "BDB8BB8C",
+          "profile": "classic-v3-uc1609"
+        },
+        "frames": 103,
+        "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=52553 releases=52553 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=5 bytes=1391 wfi=7 fallback=17 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=1920 entries=585 total_us=551376 min_us=7 avg_us=942 max_us=966 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=1323 msc=0 uscreen=22 terminal=1 sound=0 keyboard=1323 classic=0 scheduled=1323 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=437/18 raw(v/t/b)=1492/949/1020 val(mV/dC/mV)=3331/316/3319 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> ",
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=451/18 raw(v/t/b)=1493/947/1019 val(mV/dC/mV)=3329/307/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360920 footer=358992 expected=0xBDB8BB8C build=0xBDB8BB8C actual=0xBDB8BB8C backend=hardware cycles=1063403\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13320 observed_remaining=13320 sram_xn=1\r\n/> "
+        },
+        "preservation": "Original files/program/registers/stack/pwd exact",
+        "restart_after_graphics": true
+      },
+      "probe": {
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "BDB8BB8C",
+          "profile": "classic-v3-uc1609"
+        },
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1492/948/1020 val(mV/dC/mV)=3331/313/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360920 footer=358992 expected=0xBDB8BB8C build=0xBDB8BB8C actual=0xBDB8BB8C backend=hardware cycles=1063048\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13320 observed_remaining=13320 sram_xn=1\r\n/> "
+        },
+        "analog": [
+          [
+            432,
+            18,
+            1493,
+            946,
+            1018,
+            3329,
+            303,
+            3310
+          ],
+          [
+            440,
+            18,
+            1492,
+            947,
+            1019,
+            3331,
+            310,
+            3316
+          ],
+          [
+            428,
+            18,
+            1492,
+            946,
+            1018,
+            3331,
+            307,
+            3312
+          ],
+          [
+            447,
+            18,
+            1493,
+            945,
+            1018,
+            3329,
+            300,
+            3310
+          ],
+          [
+            432,
+            18,
+            1492,
+            947,
+            1019,
+            3331,
+            310,
+            3316
+          ],
+          [
+            438,
+            18,
+            1492,
+            947,
+            1021,
+            3331,
+            310,
+            3322
+          ],
+          [
+            436,
+            18,
+            1492,
+            947,
+            1019,
+            3331,
+            310,
+            3316
+          ],
+          [
+            443,
+            18,
+            1492,
+            947,
+            1019,
+            3331,
+            310,
+            3316
+          ],
+          [
+            429,
+            18,
+            1492,
+            946,
+            1019,
+            3331,
+            307,
+            3316
+          ],
+          [
+            444,
+            18,
+            1492,
+            946,
+            1019,
+            3331,
+            307,
+            3316
+          ],
+          [
+            450,
+            18,
+            1492,
+            947,
+            1019,
+            3331,
+            310,
+            3316
+          ],
+          [
+            448,
+            18,
+            1492,
+            946,
+            1017,
+            3331,
+            307,
+            3309
+          ]
+        ],
+        "analog_median_us": 439.0,
+        "core": [
+          {
+            "min": 1711800,
+            "avg": 1712126,
+            "max": 1712287,
+            "total": 68485051
+          },
+          {
+            "min": 1711797,
+            "avg": 1712125,
+            "max": 1712300,
+            "total": 68485029
+          },
+          {
+            "min": 1711874,
+            "avg": 1712124,
+            "max": 1712300,
+            "total": 68484984
+          },
+          {
+            "min": 1711813,
+            "avg": 1712123,
+            "max": 1712284,
+            "total": 68484938
+          },
+          {
+            "min": 1711875,
+            "avg": 1712126,
+            "max": 1712297,
+            "total": 68485055
+          }
+        ],
+        "core_median_cycles": 1712125,
+        "spi_crcs": [
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3",
+          "5B40F3D3"
+        ],
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=65535 releases=65535 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=12800 bytes=6553600 wfi=15100 fallback=0 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=6594 entries=6594 total_us=6125188 min_us=7 avg_us=928 max_us=998 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=451/18 raw(v/t/b)=1493/946/1019 val(mV/dC/mV)=3329/303/3314 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> "
+      },
+      "read_flash": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=BDB8BB8C profile=classic-v3-uc1609\r\n/> ",
+        "64": {
+          "median_us": 61.0,
+          "min_us": 46,
+          "max_us": 68,
+          "samples": [
+            64,
+            61,
+            64,
+            60,
+            66,
+            60,
+            65,
+            61,
+            61,
+            60,
+            68,
+            47,
+            60,
+            52,
+            63,
+            60,
+            62,
+            62,
+            67,
+            60,
+            63,
+            61,
+            62,
+            59,
+            60,
+            47,
+            60,
+            60,
+            59,
+            60,
+            61,
+            60,
+            46,
+            55,
+            61,
+            61,
+            61,
+            60,
+            63,
+            60,
+            67,
+            61,
+            65,
+            64,
+            60,
+            60,
+            62,
+            60,
+            61,
+            66,
+            64,
+            60,
+            61,
+            60,
+            60,
+            60,
+            62,
+            60,
+            64,
+            62
+          ],
+          "reports": [
+            "bench flash 64 20\r\nBENCH kind=flash address=159744 bytes=64 passes=20\r\nBENCH pass=1 read_us=64 crc=0x54974B40\r\nBENCH pass=2 read_us=61 crc=0x54974B40\r\nBENCH pass=3 read_us=64 crc=0x54974B40\r\nBENCH pass=4 read_us=60 crc=0x54974B40\r\nBENCH pass=5 read_us=66 crc=0x54974B40\r\nBENCH pass=6 read_us=60 crc=0x54974B40\r\nBENCH pass=7 read_us=65 crc=0x54974B40\r\nBENCH pass=8 read_us=61 crc=0x54974B40\r\nBENCH pass=9 read_us=61 crc=0x54974B40\r\nBENCH pass=10 read_us=60 crc=0x54974B40\r\nBENCH pass=11 read_us=68 crc=0x54974B40\r\nBENCH pass=12 read_us=47 crc=0x54974B40\r\nBENCH pass=13 read_us=60 crc=0x54974B40\r\nBENCH pass=14 read_us=52 crc=0x54974B40\r\nBENCH pass=15 read_us=63 crc=0x54974B40\r\nBENCH pass=16 read_us=60 crc=0x54974B40\r\nBENCH pass=17 read_us=62 crc=0x54974B40\r\nBENCH pass=18 read_us=62 crc=0x54974B40\r\nBENCH pass=19 read_us=67 crc=0x54974B40\r\nBENCH pass=20 read_us=60 crc=0x54974B40\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=47 avg_us=61 max_us=68 read_Bps=1049180 crc=0x54974B40\r\n/> ",
+            "bench flash 64 20\r\nBENCH kind=flash address=159744 bytes=64 passes=20\r\nBENCH pass=1 read_us=63 crc=0x54974B40\r\nBENCH pass=2 read_us=61 crc=0x54974B40\r\nBENCH pass=3 read_us=62 crc=0x54974B40\r\nBENCH pass=4 read_us=59 crc=0x54974B40\r\nBENCH pass=5 read_us=60 crc=0x54974B40\r\nBENCH pass=6 read_us=47 crc=0x54974B40\r\nBENCH pass=7 read_us=60 crc=0x54974B40\r\nBENCH pass=8 read_us=60 crc=0x54974B40\r\nBENCH pass=9 read_us=59 crc=0x54974B40\r\nBENCH pass=10 read_us=60 crc=0x54974B40\r\nBENCH pass=11 read_us=61 crc=0x54974B40\r\nBENCH pass=12 read_us=60 crc=0x54974B40\r\nBENCH pass=13 read_us=46 crc=0x54974B40\r\nBENCH pass=14 read_us=55 crc=0x54974B40\r\nBENCH pass=15 read_us=61 crc=0x54974B40\r\nBENCH pass=16 read_us=61 crc=0x54974B40\r\nBENCH pass=17 read_us=61 crc=0x54974B40\r\nBENCH pass=18 read_us=60 crc=0x54974B40\r\nBENCH pass=19 read_us=63 crc=0x54974B40\r\nBENCH pass=20 read_us=60 crc=0x54974B40\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=46 avg_us=58 max_us=63 read_Bps=1103448 crc=0x54974B40\r\n/> ",
+            "bench flash 64 20\r\nBENCH kind=flash address=159744 bytes=64 passes=20\r\nBENCH pass=1 read_us=67 crc=0x54974B40\r\nBENCH pass=2 read_us=61 crc=0x54974B40\r\nBENCH pass=3 read_us=65 crc=0x54974B40\r\nBENCH pass=4 read_us=64 crc=0x54974B40\r\nBENCH pass=5 read_us=60 crc=0x54974B40\r\nBENCH pass=6 read_us=60 crc=0x54974B40\r\nBENCH pass=7 read_us=62 crc=0x54974B40\r\nBENCH pass=8 read_us=60 crc=0x54974B40\r\nBENCH pass=9 read_us=61 crc=0x54974B40\r\nBENCH pass=10 read_us=66 crc=0x54974B40\r\nBENCH pass=11 read_us=64 crc=0x54974B40\r\nBENCH pass=12 read_us=60 crc=0x54974B40\r\nBENCH pass=13 read_us=61 crc=0x54974B40\r\nBENCH pass=14 read_us=60 crc=0x54974B40\r\nBENCH pass=15 read_us=60 crc=0x54974B40\r\nBENCH pass=16 read_us=60 crc=0x54974B40\r\nBENCH pass=17 read_us=62 crc=0x54974B40\r\nBENCH pass=18 read_us=60 crc=0x54974B40\r\nBENCH pass=19 read_us=64 crc=0x54974B40\r\nBENCH pass=20 read_us=62 crc=0x54974B40\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=60 avg_us=61 max_us=67 read_Bps=1049180 crc=0x54974B40\r\n/> "
+          ]
+        },
+        "512": {
+          "median_us": 210.0,
+          "min_us": 195,
+          "max_us": 215,
+          "samples": [
+            213,
+            211,
+            209,
+            210,
+            208,
+            215,
+            215,
+            201,
+            210,
+            196,
+            210,
+            209,
+            211,
+            196,
+            211,
+            210,
+            196,
+            210,
+            210,
+            208,
+            213,
+            212,
+            210,
+            215,
+            210,
+            215,
+            215,
+            212,
+            211,
+            215,
+            208,
+            210,
+            211,
+            212,
+            210,
+            196,
+            212,
+            209,
+            210,
+            196,
+            213,
+            209,
+            209,
+            210,
+            196,
+            209,
+            211,
+            212,
+            209,
+            195,
+            211,
+            209,
+            211,
+            210,
+            209,
+            209,
+            211,
+            210,
+            210,
+            210
+          ],
+          "reports": [
+            "bench flash 512 20\r\nBENCH kind=flash address=159744 bytes=512 passes=20\r\nBENCH pass=1 read_us=213 crc=0x2DA9F7F7\r\nBENCH pass=2 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=3 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=4 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=5 read_us=208 crc=0x2DA9F7F7\r\nBENCH pass=6 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=7 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=8 read_us=201 crc=0x2DA9F7F7\r\nBENCH pass=9 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=10 read_us=196 crc=0x2DA9F7F7\r\nBENCH pass=11 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=12 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=13 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=14 read_us=196 crc=0x2DA9F7F7\r\nBENCH pass=15 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=16 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=17 read_us=196 crc=0x2DA9F7F7\r\nBENCH pass=18 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=19 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=20 read_us=208 crc=0x2DA9F7F7\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=196 avg_us=207 max_us=215 read_Bps=2473429 crc=0x2DA9F7F7\r\n/> ",
+            "bench flash 512 20\r\nBENCH kind=flash address=159744 bytes=512 passes=20\r\nBENCH pass=1 read_us=213 crc=0x2DA9F7F7\r\nBENCH pass=2 read_us=212 crc=0x2DA9F7F7\r\nBENCH pass=3 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=4 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=5 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=6 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=7 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=8 read_us=212 crc=0x2DA9F7F7\r\nBENCH pass=9 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=10 read_us=215 crc=0x2DA9F7F7\r\nBENCH pass=11 read_us=208 crc=0x2DA9F7F7\r\nBENCH pass=12 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=13 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=14 read_us=212 crc=0x2DA9F7F7\r\nBENCH pass=15 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=16 read_us=196 crc=0x2DA9F7F7\r\nBENCH pass=17 read_us=212 crc=0x2DA9F7F7\r\nBENCH pass=18 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=19 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=20 read_us=196 crc=0x2DA9F7F7\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=196 avg_us=210 max_us=215 read_Bps=2438095 crc=0x2DA9F7F7\r\n/> ",
+            "bench flash 512 20\r\nBENCH kind=flash address=159744 bytes=512 passes=20\r\nBENCH pass=1 read_us=213 crc=0x2DA9F7F7\r\nBENCH pass=2 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=3 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=4 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=5 read_us=196 crc=0x2DA9F7F7\r\nBENCH pass=6 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=7 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=8 read_us=212 crc=0x2DA9F7F7\r\nBENCH pass=9 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=10 read_us=195 crc=0x2DA9F7F7\r\nBENCH pass=11 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=12 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=13 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=14 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=15 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=16 read_us=209 crc=0x2DA9F7F7\r\nBENCH pass=17 read_us=211 crc=0x2DA9F7F7\r\nBENCH pass=18 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=19 read_us=210 crc=0x2DA9F7F7\r\nBENCH pass=20 read_us=210 crc=0x2DA9F7F7\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=195 avg_us=208 max_us=213 read_Bps=2461538 crc=0x2DA9F7F7\r\n/> "
+          ]
+        },
+        "4096": {
+          "median_us": 1576.0,
+          "min_us": 1560,
+          "max_us": 1581,
+          "samples": [
+            1562,
+            1578,
+            1578,
+            1576,
+            1575,
+            1577,
+            1577,
+            1578,
+            1575,
+            1561,
+            1561,
+            1577,
+            1575,
+            1577,
+            1576,
+            1577,
+            1563,
+            1561,
+            1581,
+            1574,
+            1578,
+            1576,
+            1577,
+            1575,
+            1577,
+            1575,
+            1576,
+            1578,
+            1561,
+            1575,
+            1580,
+            1575,
+            1560,
+            1576,
+            1576,
+            1577,
+            1576,
+            1574,
+            1575,
+            1576,
+            1562,
+            1575,
+            1561,
+            1561,
+            1562,
+            1575,
+            1561,
+            1575,
+            1576,
+            1577,
+            1575,
+            1578,
+            1577,
+            1575,
+            1576,
+            1578,
+            1576,
+            1579,
+            1575,
+            1577
+          ],
+          "reports": [
+            "bench flash 4096 20\r\nBENCH kind=flash address=159744 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1562 crc=0x93FC6BA7\r\nBENCH pass=2 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=3 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=4 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=5 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=6 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=7 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=8 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=9 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=10 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=11 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=12 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=13 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=14 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=15 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=16 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=17 read_us=1563 crc=0x93FC6BA7\r\nBENCH pass=18 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=19 read_us=1581 crc=0x93FC6BA7\r\nBENCH pass=20 read_us=1574 crc=0x93FC6BA7\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1561 avg_us=1572 max_us=1581 read_Bps=2605597 crc=0x93FC6BA7\r\n/> ",
+            "bench flash 4096 20\r\nBENCH kind=flash address=159744 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=2 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=3 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=4 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=5 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=6 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=7 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=8 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=9 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=10 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=11 read_us=1580 crc=0x93FC6BA7\r\nBENCH pass=12 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=13 read_us=1560 crc=0x93FC6BA7\r\nBENCH pass=14 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=15 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=16 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=17 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=18 read_us=1574 crc=0x93FC6BA7\r\nBENCH pass=19 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=20 read_us=1576 crc=0x93FC6BA7\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1560 avg_us=1574 max_us=1580 read_Bps=2602287 crc=0x93FC6BA7\r\n/> ",
+            "bench flash 4096 20\r\nBENCH kind=flash address=159744 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1562 crc=0x93FC6BA7\r\nBENCH pass=2 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=3 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=4 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=5 read_us=1562 crc=0x93FC6BA7\r\nBENCH pass=6 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=7 read_us=1561 crc=0x93FC6BA7\r\nBENCH pass=8 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=9 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=10 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=11 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=12 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=13 read_us=1577 crc=0x93FC6BA7\r\nBENCH pass=14 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=15 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=16 read_us=1578 crc=0x93FC6BA7\r\nBENCH pass=17 read_us=1576 crc=0x93FC6BA7\r\nBENCH pass=18 read_us=1579 crc=0x93FC6BA7\r\nBENCH pass=19 read_us=1575 crc=0x93FC6BA7\r\nBENCH pass=20 read_us=1577 crc=0x93FC6BA7\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1561 avg_us=1572 max_us=1579 read_Bps=2605597 crc=0x93FC6BA7\r\n/> "
+          ]
+        },
+        "65536": {
+          "median_us": 24988.5,
+          "min_us": 24973,
+          "max_us": 24996,
+          "samples": [
+            24977,
+            24987,
+            24988,
+            24988,
+            24989,
+            24986,
+            24990,
+            24987,
+            24987,
+            24990,
+            24993,
+            24990,
+            24990,
+            24993,
+            24973,
+            24989,
+            24979,
+            24994,
+            24992,
+            24995,
+            24993,
+            24988,
+            24975,
+            24990,
+            24988,
+            24989,
+            24990,
+            24987,
+            24991,
+            24986,
+            24991,
+            24992,
+            24974,
+            24988,
+            24990,
+            24993,
+            24977,
+            24987,
+            24992,
+            24993,
+            24991,
+            24976,
+            24988,
+            24988,
+            24987,
+            24991,
+            24987,
+            24986,
+            24988,
+            24988,
+            24989,
+            24991,
+            24978,
+            24989,
+            24996,
+            24975,
+            24990,
+            24991,
+            24987,
+            24987
+          ],
+          "reports": [
+            "bench flash 65536 20\r\nBENCH kind=flash address=159744 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24977 crc=0x5B40F3D3\r\nBENCH pass=2 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=3 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=4 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=5 read_us=24989 crc=0x5B40F3D3\r\nBENCH pass=6 read_us=24986 crc=0x5B40F3D3\r\nBENCH pass=7 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=8 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=9 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=10 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=11 read_us=24993 crc=0x5B40F3D3\r\nBENCH pass=12 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=13 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=14 read_us=24993 crc=0x5B40F3D3\r\nBENCH pass=15 read_us=24973 crc=0x5B40F3D3\r\nBENCH pass=16 read_us=24989 crc=0x5B40F3D3\r\nBENCH pass=17 read_us=24979 crc=0x5B40F3D3\r\nBENCH pass=18 read_us=24994 crc=0x5B40F3D3\r\nBENCH pass=19 read_us=24992 crc=0x5B40F3D3\r\nBENCH pass=20 read_us=24995 crc=0x5B40F3D3\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24973 avg_us=24987 max_us=24995 read_Bps=2622803 crc=0x5B40F3D3\r\n/> ",
+            "bench flash 65536 20\r\nBENCH kind=flash address=159744 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24993 crc=0x5B40F3D3\r\nBENCH pass=2 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=3 read_us=24975 crc=0x5B40F3D3\r\nBENCH pass=4 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=5 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=6 read_us=24989 crc=0x5B40F3D3\r\nBENCH pass=7 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=8 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=9 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=10 read_us=24986 crc=0x5B40F3D3\r\nBENCH pass=11 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=12 read_us=24992 crc=0x5B40F3D3\r\nBENCH pass=13 read_us=24974 crc=0x5B40F3D3\r\nBENCH pass=14 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=15 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=16 read_us=24993 crc=0x5B40F3D3\r\nBENCH pass=17 read_us=24977 crc=0x5B40F3D3\r\nBENCH pass=18 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=19 read_us=24992 crc=0x5B40F3D3\r\nBENCH pass=20 read_us=24993 crc=0x5B40F3D3\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24974 avg_us=24987 max_us=24993 read_Bps=2622803 crc=0x5B40F3D3\r\n/> ",
+            "bench flash 65536 20\r\nBENCH kind=flash address=159744 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=2 read_us=24976 crc=0x5B40F3D3\r\nBENCH pass=3 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=4 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=5 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=6 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=7 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=8 read_us=24986 crc=0x5B40F3D3\r\nBENCH pass=9 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=10 read_us=24988 crc=0x5B40F3D3\r\nBENCH pass=11 read_us=24989 crc=0x5B40F3D3\r\nBENCH pass=12 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=13 read_us=24978 crc=0x5B40F3D3\r\nBENCH pass=14 read_us=24989 crc=0x5B40F3D3\r\nBENCH pass=15 read_us=24996 crc=0x5B40F3D3\r\nBENCH pass=16 read_us=24975 crc=0x5B40F3D3\r\nBENCH pass=17 read_us=24990 crc=0x5B40F3D3\r\nBENCH pass=18 read_us=24991 crc=0x5B40F3D3\r\nBENCH pass=19 read_us=24987 crc=0x5B40F3D3\r\nBENCH pass=20 read_us=24987 crc=0x5B40F3D3\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24975 avg_us=24987 max_us=24996 read_Bps=2622803 crc=0x5B40F3D3\r\n/> "
+          ]
+        },
+        "mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> ",
+        "display": "display\r\nDISPLAY controller=UC1609 mode=graphics\r\n/> "
+      }
+    },
+    "mini": {
+      "msc": {
+        "status": "PASS",
+        "minimum_required": 12288,
+        "minimum_remaining": 12544,
+        "samples": [
+          {
+            "after_command": "ls /",
+            "remaining": 12544,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=12544 observed_remaining=12544 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "fsget \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-4488.bin\"",
+            "remaining": 12544,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=12544 observed_remaining=12544 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "vlog",
+            "remaining": 12544,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=12544 observed_remaining=12544 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "mpu status",
+            "remaining": 12544,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=12544 observed_remaining=12544 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "ls /",
+            "remaining": 14644,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=14644 observed_remaining=14644 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "fsget \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-4488.bin\"",
+            "remaining": 14112,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=14112 observed_remaining=14112 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "rm \"/\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430-4488.bin\"",
+            "remaining": 13120,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "ls /",
+            "remaining": 13120,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "df",
+            "remaining": 13120,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "crash show",
+            "remaining": 13120,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+          },
+          {
+            "after_command": "mpu status",
+            "remaining": 13120,
+            "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+          }
+        ]
+      },
+      "graphics": {
+        "identity": {
+          "public": "6FF33152484A4488",
+          "short": "484A4488",
+          "usb": "3688388E3233",
+          "volume": "0A24B723",
+          "build": "8C1AA83C",
+          "profile": "mini-v3-a00"
+        },
+        "frames": 103,
+        "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=65535 releases=65535 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=5 bytes=1391 wfi=6 fallback=17 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=0 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=0 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=2137 entries=569 total_us=535736 min_us=7 avg_us=941 max_us=970 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=1548 msc=0 uscreen=31 terminal=0 sound=0 keyboard=1548 classic=0 scheduled=1548 wake=0 irq=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1531/970/1011 val(mV/dC/mV)=3257/319/3216 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13088 observed_remaining=13088 sram_xn=1\r\n/> ",
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1509/969/1011 val(mV/dC/mV)=3304/361/3263 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=333408 footer=331648 expected=0x8C1AA83C build=0x8C1AA83C actual=0x8C1AA83C backend=hardware cycles=982217\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13288 observed_remaining=13288 sram_xn=1\r\n/> "
+        },
+        "preservation": "Original files/program/registers/stack/pwd exact",
+        "restart_after_graphics": true
+      },
+      "probe": {
+        "identity": {
+          "public": "6FF33152484A4488",
+          "short": "484A4488",
+          "usb": "3688388E3233",
+          "volume": "0A24B723",
+          "build": "8C1AA83C",
+          "profile": "mini-v3-a00"
+        },
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=438/18 raw(v/t/b)=1584/955/1048 val(mV/dC/mV)=3148/171/3223 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=333408 footer=331648 expected=0x8C1AA83C build=0x8C1AA83C actual=0x8C1AA83C backend=hardware cycles=983757\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13288 observed_remaining=13288 sram_xn=1\r\n/> "
+        },
+        "analog": [
+          [
+            440,
+            18,
+            1491,
+            1008,
+            1023,
+            3344,
+            525,
+            3342
+          ],
+          [
+            441,
+            18,
+            1482,
+            1023,
+            999,
+            3365,
+            596,
+            3284
+          ],
+          [
+            450,
+            18,
+            1584,
+            1019,
+            1009,
+            3148,
+            367,
+            3103
+          ],
+          [
+            444,
+            18,
+            1459,
+            1007,
+            983,
+            3418,
+            596,
+            3282
+          ],
+          [
+            438,
+            18,
+            1512,
+            971,
+            1039,
+            3298,
+            361,
+            3347
+          ],
+          [
+            430,
+            18,
+            1523,
+            966,
+            1012,
+            3274,
+            322,
+            3236
+          ],
+          [
+            430,
+            18,
+            1535,
+            972,
+            1015,
+            3248,
+            319,
+            3220
+          ],
+          [
+            432,
+            18,
+            1511,
+            969,
+            1019,
+            3300,
+            358,
+            3285
+          ],
+          [
+            443,
+            18,
+            1536,
+            964,
+            1007,
+            3246,
+            290,
+            3193
+          ],
+          [
+            443,
+            18,
+            1519,
+            974,
+            1012,
+            3283,
+            358,
+            3245
+          ],
+          [
+            445,
+            18,
+            1536,
+            969,
+            1008,
+            3246,
+            306,
+            3196
+          ],
+          [
+            451,
+            18,
+            1522,
+            965,
+            1014,
+            3276,
+            322,
+            3245
+          ]
+        ],
+        "analog_median_us": 442.0,
+        "core": [
+          {
+            "min": 1710788,
+            "avg": 1711105,
+            "max": 1711279,
+            "total": 68444210
+          },
+          {
+            "min": 1710852,
+            "avg": 1711104,
+            "max": 1711267,
+            "total": 68444186
+          },
+          {
+            "min": 1710778,
+            "avg": 1711109,
+            "max": 1711274,
+            "total": 68444394
+          },
+          {
+            "min": 1710814,
+            "avg": 1711105,
+            "max": 1711303,
+            "total": 68444216
+          },
+          {
+            "min": 1710772,
+            "avg": 1711106,
+            "max": 1711273,
+            "total": 68444268
+          }
+        ],
+        "core_median_cycles": 1711105,
+        "spi_crcs": [
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527",
+          "CEC87527"
+        ],
+        "profile": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=65535 releases=65535 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=12800 bytes=6553600 wfi=15094 fallback=0 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=0 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=0/0/0/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=0 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=6664 entries=6661 total_us=6207424 min_us=6 avg_us=931 max_us=991 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=3 sound=0 keyboard=0 classic=0 scheduled=0 wake=0 irq=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=442/18 raw(v/t/b)=1531/968/1012 val(mV/dC/mV)=3257/313/3220 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> "
+      },
+      "read_flash": {
+        "identity": "identity\r\nMK61 ID v=1 public=6FF33152484A4488 short=484A4488 usb=3688388E3233 volume=0A24B723 build=8C1AA83C profile=mini-v3-a00\r\n/> ",
+        "64": {
+          "median_us": 59.0,
+          "min_us": 44,
+          "max_us": 79,
+          "samples": [
+            61,
+            65,
+            59,
+            58,
+            45,
+            60,
+            58,
+            58,
+            59,
+            68,
+            60,
+            59,
+            45,
+            59,
+            58,
+            59,
+            59,
+            44,
+            45,
+            59,
+            51,
+            59,
+            59,
+            61,
+            59,
+            58,
+            45,
+            60,
+            60,
+            59,
+            58,
+            59,
+            58,
+            59,
+            59,
+            44,
+            45,
+            60,
+            58,
+            60,
+            73,
+            60,
+            59,
+            59,
+            59,
+            60,
+            58,
+            79,
+            59,
+            59,
+            60,
+            59,
+            60,
+            60,
+            59,
+            45,
+            59,
+            59,
+            58,
+            59
+          ],
+          "reports": [
+            "bench flash 64 20\r\nBENCH kind=flash address=655360 bytes=64 passes=20\r\nBENCH pass=1 read_us=61 crc=0x1E3EEEC2\r\nBENCH pass=2 read_us=65 crc=0x1E3EEEC2\r\nBENCH pass=3 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=4 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=5 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=6 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=7 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=8 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=9 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=10 read_us=68 crc=0x1E3EEEC2\r\nBENCH pass=11 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=12 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=13 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=14 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=15 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=16 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=17 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=18 read_us=44 crc=0x1E3EEEC2\r\nBENCH pass=19 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=20 read_us=59 crc=0x1E3EEEC2\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=44 avg_us=56 max_us=68 read_Bps=1142857 crc=0x1E3EEEC2\r\n/> ",
+            "bench flash 64 20\r\nBENCH kind=flash address=655360 bytes=64 passes=20\r\nBENCH pass=1 read_us=51 crc=0x1E3EEEC2\r\nBENCH pass=2 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=3 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=4 read_us=61 crc=0x1E3EEEC2\r\nBENCH pass=5 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=6 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=7 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=8 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=9 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=10 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=11 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=12 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=13 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=14 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=15 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=16 read_us=44 crc=0x1E3EEEC2\r\nBENCH pass=17 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=18 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=19 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=20 read_us=60 crc=0x1E3EEEC2\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=44 avg_us=56 max_us=61 read_Bps=1142857 crc=0x1E3EEEC2\r\n/> ",
+            "bench flash 64 20\r\nBENCH kind=flash address=655360 bytes=64 passes=20\r\nBENCH pass=1 read_us=73 crc=0x1E3EEEC2\r\nBENCH pass=2 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=3 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=4 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=5 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=6 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=7 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=8 read_us=79 crc=0x1E3EEEC2\r\nBENCH pass=9 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=10 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=11 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=12 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=13 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=14 read_us=60 crc=0x1E3EEEC2\r\nBENCH pass=15 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=16 read_us=45 crc=0x1E3EEEC2\r\nBENCH pass=17 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=18 read_us=59 crc=0x1E3EEEC2\r\nBENCH pass=19 read_us=58 crc=0x1E3EEEC2\r\nBENCH pass=20 read_us=59 crc=0x1E3EEEC2\r\nBENCH summary kind=flash bytes=64 passes=20 min_us=45 avg_us=60 max_us=79 read_Bps=1066666 crc=0x1E3EEEC2\r\n/> "
+          ]
+        },
+        "512": {
+          "median_us": 208.0,
+          "min_us": 194,
+          "max_us": 214,
+          "samples": [
+            211,
+            194,
+            209,
+            213,
+            209,
+            209,
+            212,
+            206,
+            199,
+            208,
+            208,
+            209,
+            208,
+            207,
+            209,
+            194,
+            209,
+            194,
+            209,
+            208,
+            211,
+            209,
+            208,
+            208,
+            206,
+            209,
+            208,
+            209,
+            208,
+            208,
+            209,
+            208,
+            213,
+            208,
+            209,
+            214,
+            208,
+            208,
+            208,
+            207,
+            211,
+            207,
+            208,
+            208,
+            209,
+            208,
+            208,
+            209,
+            208,
+            209,
+            208,
+            209,
+            209,
+            208,
+            194,
+            208,
+            209,
+            195,
+            209,
+            209
+          ],
+          "reports": [
+            "bench flash 512 20\r\nBENCH kind=flash address=655360 bytes=512 passes=20\r\nBENCH pass=1 read_us=211 crc=0x56C8EF6F\r\nBENCH pass=2 read_us=194 crc=0x56C8EF6F\r\nBENCH pass=3 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=4 read_us=213 crc=0x56C8EF6F\r\nBENCH pass=5 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=6 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=7 read_us=212 crc=0x56C8EF6F\r\nBENCH pass=8 read_us=206 crc=0x56C8EF6F\r\nBENCH pass=9 read_us=199 crc=0x56C8EF6F\r\nBENCH pass=10 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=11 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=12 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=13 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=14 read_us=207 crc=0x56C8EF6F\r\nBENCH pass=15 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=16 read_us=194 crc=0x56C8EF6F\r\nBENCH pass=17 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=18 read_us=194 crc=0x56C8EF6F\r\nBENCH pass=19 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=20 read_us=208 crc=0x56C8EF6F\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=194 avg_us=206 max_us=213 read_Bps=2485436 crc=0x56C8EF6F\r\n/> ",
+            "bench flash 512 20\r\nBENCH kind=flash address=655360 bytes=512 passes=20\r\nBENCH pass=1 read_us=211 crc=0x56C8EF6F\r\nBENCH pass=2 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=3 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=4 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=5 read_us=206 crc=0x56C8EF6F\r\nBENCH pass=6 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=7 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=8 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=9 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=10 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=11 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=12 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=13 read_us=213 crc=0x56C8EF6F\r\nBENCH pass=14 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=15 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=16 read_us=214 crc=0x56C8EF6F\r\nBENCH pass=17 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=18 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=19 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=20 read_us=207 crc=0x56C8EF6F\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=206 avg_us=208 max_us=214 read_Bps=2461538 crc=0x56C8EF6F\r\n/> ",
+            "bench flash 512 20\r\nBENCH kind=flash address=655360 bytes=512 passes=20\r\nBENCH pass=1 read_us=211 crc=0x56C8EF6F\r\nBENCH pass=2 read_us=207 crc=0x56C8EF6F\r\nBENCH pass=3 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=4 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=5 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=6 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=7 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=8 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=9 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=10 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=11 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=12 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=13 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=14 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=15 read_us=194 crc=0x56C8EF6F\r\nBENCH pass=16 read_us=208 crc=0x56C8EF6F\r\nBENCH pass=17 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=18 read_us=195 crc=0x56C8EF6F\r\nBENCH pass=19 read_us=209 crc=0x56C8EF6F\r\nBENCH pass=20 read_us=209 crc=0x56C8EF6F\r\nBENCH summary kind=flash bytes=512 passes=20 min_us=194 avg_us=207 max_us=211 read_Bps=2473429 crc=0x56C8EF6F\r\n/> "
+          ]
+        },
+        "4096": {
+          "median_us": 1562.0,
+          "min_us": 1546,
+          "max_us": 1567,
+          "samples": [
+            1566,
+            1547,
+            1560,
+            1548,
+            1563,
+            1562,
+            1567,
+            1548,
+            1561,
+            1561,
+            1567,
+            1548,
+            1561,
+            1546,
+            1547,
+            1547,
+            1562,
+            1563,
+            1548,
+            1548,
+            1564,
+            1563,
+            1562,
+            1562,
+            1563,
+            1563,
+            1562,
+            1548,
+            1562,
+            1562,
+            1563,
+            1561,
+            1562,
+            1564,
+            1548,
+            1563,
+            1562,
+            1549,
+            1562,
+            1564,
+            1567,
+            1562,
+            1562,
+            1561,
+            1561,
+            1563,
+            1563,
+            1562,
+            1548,
+            1562,
+            1562,
+            1560,
+            1547,
+            1565,
+            1562,
+            1562,
+            1548,
+            1563,
+            1562,
+            1562
+          ],
+          "reports": [
+            "bench flash 4096 20\r\nBENCH kind=flash address=655360 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1566 crc=0x840C705C\r\nBENCH pass=2 read_us=1547 crc=0x840C705C\r\nBENCH pass=3 read_us=1560 crc=0x840C705C\r\nBENCH pass=4 read_us=1548 crc=0x840C705C\r\nBENCH pass=5 read_us=1563 crc=0x840C705C\r\nBENCH pass=6 read_us=1562 crc=0x840C705C\r\nBENCH pass=7 read_us=1567 crc=0x840C705C\r\nBENCH pass=8 read_us=1548 crc=0x840C705C\r\nBENCH pass=9 read_us=1561 crc=0x840C705C\r\nBENCH pass=10 read_us=1561 crc=0x840C705C\r\nBENCH pass=11 read_us=1567 crc=0x840C705C\r\nBENCH pass=12 read_us=1548 crc=0x840C705C\r\nBENCH pass=13 read_us=1561 crc=0x840C705C\r\nBENCH pass=14 read_us=1546 crc=0x840C705C\r\nBENCH pass=15 read_us=1547 crc=0x840C705C\r\nBENCH pass=16 read_us=1547 crc=0x840C705C\r\nBENCH pass=17 read_us=1562 crc=0x840C705C\r\nBENCH pass=18 read_us=1563 crc=0x840C705C\r\nBENCH pass=19 read_us=1548 crc=0x840C705C\r\nBENCH pass=20 read_us=1548 crc=0x840C705C\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1546 avg_us=1556 max_us=1567 read_Bps=2632390 crc=0x840C705C\r\n/> ",
+            "bench flash 4096 20\r\nBENCH kind=flash address=655360 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1564 crc=0x840C705C\r\nBENCH pass=2 read_us=1563 crc=0x840C705C\r\nBENCH pass=3 read_us=1562 crc=0x840C705C\r\nBENCH pass=4 read_us=1562 crc=0x840C705C\r\nBENCH pass=5 read_us=1563 crc=0x840C705C\r\nBENCH pass=6 read_us=1563 crc=0x840C705C\r\nBENCH pass=7 read_us=1562 crc=0x840C705C\r\nBENCH pass=8 read_us=1548 crc=0x840C705C\r\nBENCH pass=9 read_us=1562 crc=0x840C705C\r\nBENCH pass=10 read_us=1562 crc=0x840C705C\r\nBENCH pass=11 read_us=1563 crc=0x840C705C\r\nBENCH pass=12 read_us=1561 crc=0x840C705C\r\nBENCH pass=13 read_us=1562 crc=0x840C705C\r\nBENCH pass=14 read_us=1564 crc=0x840C705C\r\nBENCH pass=15 read_us=1548 crc=0x840C705C\r\nBENCH pass=16 read_us=1563 crc=0x840C705C\r\nBENCH pass=17 read_us=1562 crc=0x840C705C\r\nBENCH pass=18 read_us=1549 crc=0x840C705C\r\nBENCH pass=19 read_us=1562 crc=0x840C705C\r\nBENCH pass=20 read_us=1564 crc=0x840C705C\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1548 avg_us=1560 max_us=1564 read_Bps=2625641 crc=0x840C705C\r\n/> ",
+            "bench flash 4096 20\r\nBENCH kind=flash address=655360 bytes=4096 passes=20\r\nBENCH pass=1 read_us=1567 crc=0x840C705C\r\nBENCH pass=2 read_us=1562 crc=0x840C705C\r\nBENCH pass=3 read_us=1562 crc=0x840C705C\r\nBENCH pass=4 read_us=1561 crc=0x840C705C\r\nBENCH pass=5 read_us=1561 crc=0x840C705C\r\nBENCH pass=6 read_us=1563 crc=0x840C705C\r\nBENCH pass=7 read_us=1563 crc=0x840C705C\r\nBENCH pass=8 read_us=1562 crc=0x840C705C\r\nBENCH pass=9 read_us=1548 crc=0x840C705C\r\nBENCH pass=10 read_us=1562 crc=0x840C705C\r\nBENCH pass=11 read_us=1562 crc=0x840C705C\r\nBENCH pass=12 read_us=1560 crc=0x840C705C\r\nBENCH pass=13 read_us=1547 crc=0x840C705C\r\nBENCH pass=14 read_us=1565 crc=0x840C705C\r\nBENCH pass=15 read_us=1562 crc=0x840C705C\r\nBENCH pass=16 read_us=1562 crc=0x840C705C\r\nBENCH pass=17 read_us=1548 crc=0x840C705C\r\nBENCH pass=18 read_us=1563 crc=0x840C705C\r\nBENCH pass=19 read_us=1562 crc=0x840C705C\r\nBENCH pass=20 read_us=1562 crc=0x840C705C\r\nBENCH summary kind=flash bytes=4096 passes=20 min_us=1547 avg_us=1560 max_us=1567 read_Bps=2625641 crc=0x840C705C\r\n/> "
+          ]
+        },
+        "65536": {
+          "median_us": 24767.0,
+          "min_us": 24750,
+          "max_us": 24781,
+          "samples": [
+            24781,
+            24765,
+            24752,
+            24768,
+            24768,
+            24769,
+            24755,
+            24754,
+            24766,
+            24753,
+            24753,
+            24766,
+            24767,
+            24754,
+            24766,
+            24767,
+            24768,
+            24768,
+            24750,
+            24750,
+            24768,
+            24768,
+            24768,
+            24767,
+            24768,
+            24750,
+            24768,
+            24769,
+            24767,
+            24771,
+            24770,
+            24769,
+            24765,
+            24765,
+            24766,
+            24768,
+            24767,
+            24768,
+            24770,
+            24770,
+            24768,
+            24768,
+            24763,
+            24768,
+            24751,
+            24765,
+            24770,
+            24763,
+            24764,
+            24768,
+            24760,
+            24769,
+            24766,
+            24751,
+            24752,
+            24768,
+            24766,
+            24768,
+            24767,
+            24768
+          ],
+          "reports": [
+            "bench flash 65536 20\r\nBENCH kind=flash address=655360 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24781 crc=0xCEC87527\r\nBENCH pass=2 read_us=24765 crc=0xCEC87527\r\nBENCH pass=3 read_us=24752 crc=0xCEC87527\r\nBENCH pass=4 read_us=24768 crc=0xCEC87527\r\nBENCH pass=5 read_us=24768 crc=0xCEC87527\r\nBENCH pass=6 read_us=24769 crc=0xCEC87527\r\nBENCH pass=7 read_us=24755 crc=0xCEC87527\r\nBENCH pass=8 read_us=24754 crc=0xCEC87527\r\nBENCH pass=9 read_us=24766 crc=0xCEC87527\r\nBENCH pass=10 read_us=24753 crc=0xCEC87527\r\nBENCH pass=11 read_us=24753 crc=0xCEC87527\r\nBENCH pass=12 read_us=24766 crc=0xCEC87527\r\nBENCH pass=13 read_us=24767 crc=0xCEC87527\r\nBENCH pass=14 read_us=24754 crc=0xCEC87527\r\nBENCH pass=15 read_us=24766 crc=0xCEC87527\r\nBENCH pass=16 read_us=24767 crc=0xCEC87527\r\nBENCH pass=17 read_us=24768 crc=0xCEC87527\r\nBENCH pass=18 read_us=24768 crc=0xCEC87527\r\nBENCH pass=19 read_us=24750 crc=0xCEC87527\r\nBENCH pass=20 read_us=24750 crc=0xCEC87527\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24750 avg_us=24762 max_us=24781 read_Bps=2646635 crc=0xCEC87527\r\n/> ",
+            "bench flash 65536 20\r\nBENCH kind=flash address=655360 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24768 crc=0xCEC87527\r\nBENCH pass=2 read_us=24768 crc=0xCEC87527\r\nBENCH pass=3 read_us=24768 crc=0xCEC87527\r\nBENCH pass=4 read_us=24767 crc=0xCEC87527\r\nBENCH pass=5 read_us=24768 crc=0xCEC87527\r\nBENCH pass=6 read_us=24750 crc=0xCEC87527\r\nBENCH pass=7 read_us=24768 crc=0xCEC87527\r\nBENCH pass=8 read_us=24769 crc=0xCEC87527\r\nBENCH pass=9 read_us=24767 crc=0xCEC87527\r\nBENCH pass=10 read_us=24771 crc=0xCEC87527\r\nBENCH pass=11 read_us=24770 crc=0xCEC87527\r\nBENCH pass=12 read_us=24769 crc=0xCEC87527\r\nBENCH pass=13 read_us=24765 crc=0xCEC87527\r\nBENCH pass=14 read_us=24765 crc=0xCEC87527\r\nBENCH pass=15 read_us=24766 crc=0xCEC87527\r\nBENCH pass=16 read_us=24768 crc=0xCEC87527\r\nBENCH pass=17 read_us=24767 crc=0xCEC87527\r\nBENCH pass=18 read_us=24768 crc=0xCEC87527\r\nBENCH pass=19 read_us=24770 crc=0xCEC87527\r\nBENCH pass=20 read_us=24770 crc=0xCEC87527\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24750 avg_us=24767 max_us=24771 read_Bps=2646101 crc=0xCEC87527\r\n/> ",
+            "bench flash 65536 20\r\nBENCH kind=flash address=655360 bytes=65536 passes=20\r\nBENCH pass=1 read_us=24768 crc=0xCEC87527\r\nBENCH pass=2 read_us=24768 crc=0xCEC87527\r\nBENCH pass=3 read_us=24763 crc=0xCEC87527\r\nBENCH pass=4 read_us=24768 crc=0xCEC87527\r\nBENCH pass=5 read_us=24751 crc=0xCEC87527\r\nBENCH pass=6 read_us=24765 crc=0xCEC87527\r\nBENCH pass=7 read_us=24770 crc=0xCEC87527\r\nBENCH pass=8 read_us=24763 crc=0xCEC87527\r\nBENCH pass=9 read_us=24764 crc=0xCEC87527\r\nBENCH pass=10 read_us=24768 crc=0xCEC87527\r\nBENCH pass=11 read_us=24760 crc=0xCEC87527\r\nBENCH pass=12 read_us=24769 crc=0xCEC87527\r\nBENCH pass=13 read_us=24766 crc=0xCEC87527\r\nBENCH pass=14 read_us=24751 crc=0xCEC87527\r\nBENCH pass=15 read_us=24752 crc=0xCEC87527\r\nBENCH pass=16 read_us=24768 crc=0xCEC87527\r\nBENCH pass=17 read_us=24766 crc=0xCEC87527\r\nBENCH pass=18 read_us=24768 crc=0xCEC87527\r\nBENCH pass=19 read_us=24767 crc=0xCEC87527\r\nBENCH pass=20 read_us=24768 crc=0xCEC87527\r\nBENCH summary kind=flash bytes=65536 passes=20 min_us=24751 avg_us=24764 max_us=24770 read_Bps=2646422 crc=0xCEC87527\r\n/> "
+          ]
+        },
+        "mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13124 observed_remaining=13124 sram_xn=1\r\n/> ",
+        "display": "display\r\nDISPLAY controller=HD44780 cgrom=A00 ddram=2x40\r\n/> "
+      }
+    }
+  },
+  "source_sha256": {
+    "code/system_strings.c": "93a2c1a5a1016422f422abdcc701392333106fd8cf1801e9c27f4202cf4e6d5c",
+    "code/shared_memory.cpp": "2a113f3a11f1d9a8b313a0a82f313ddb17b370fe612b8620bf1e614f81ce38ca",
+    "code/language_vm_resident.cpp": "af26cfb08fb768f45e8a73849b1078e4889d23de9426cd4d940f4a1a7f393ed7",
+    "code/usbd_msc.c": "573f978cc732fea7da796799c68481e6f8203d639be48afb6e3e935680f7c38a",
+    "tools/.mk61-gcc/standalone/resident.ld": "7b390de2bc9b06f6790ab10ae4cb18e3f59ef09616450d29376aba3493a31bce"
+  },
+  "limits": [
+    "Known earlier USB-screen cleanup defect still uses an explicit zero-state reset in graphics HIL; investigate USB stage",
+    "Actual host-suspend RTC+keyboard STOP deferred until final USB qualification",
+    "libgcc fast ASM derives from GCC; zero archive members does not mean every algorithm independently authored"
+  ],
+  "preservation": {
+    "classic": {
+      "status": "PASS",
+      "build": "BDB8BB8C",
+      "files": "original files and directories byte fingerprints exact",
+      "logical": "program,registers,stack,pwd equal fresh snapshot",
+      "health": {
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=432/18 raw(v/t/b)=1492/945/1020 val(mV/dC/mV)=3331/303/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360920 footer=358992 expected=0xBDB8BB8C build=0xBDB8BB8C actual=0xBDB8BB8C backend=hardware cycles=1063876\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006F30 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12984 observed_remaining=12984 sram_xn=1\r\n/> "
+      }
+    },
+    "mini": {
+      "status": "PASS",
+      "build": "8C1AA83C",
+      "files": "original files and directories byte fingerprints exact",
+      "logical": "program,registers,stack,pwd equal fresh snapshot",
+      "health": {
+        "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=442/18 raw(v/t/b)=1524/964/1016 val(mV/dC/mV)=3272/316/3247 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=333408 footer=331648 expected=0x8C1AA83C build=0x8C1AA83C actual=0x8C1AA83C backend=hardware cycles=983285\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006A00 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13124 observed_remaining=13124 sram_xn=1\r\n/> "
+      }
+    }
+  },
+  "status": "PASS: code and both-board qualification; USB and final manual STOP remain"
+}
