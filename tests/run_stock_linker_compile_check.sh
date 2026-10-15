@@ -58,6 +58,8 @@ compile_case() {
     --build-path "$path" \
     --build-property "compiler.cpp.extra_flags=$case_flags $platform_flags" \
     --build-property "compiler.c.extra_flags=$platform_flags" \
+    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
+    --build-property "recipe.hooks.linking.prelink.30.pattern=python3 \"$root/tools/.mk61-gcc/protect-core-lto.py\" \"{build.path}\" \"{build.source.path}\" \"{compiler.path}{compiler.cpp.cmd}\" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
     "$sketch" 2>&1 | tee "$log"
   local pipeline_status=("${PIPESTATUS[@]}")
   local compile_status=${pipeline_status[0]}

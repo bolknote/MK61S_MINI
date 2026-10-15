@@ -58,9 +58,13 @@ grep -Fq 'usb=CDCgen,opt=oslto' \
   "$root/tools/.mk61-firmware/mk61-firmware.sh"
 grep -Fq 'usb=CDCgen,opt=oslto' \
   "$root/tools/.mk61-firmware/mk61-firmware.ps1"
+# Every direct Generic STM32 recipe must install the owned USB bridge too.
+for script in "$matrix" "$usb_build" "$o3_build" "$stock_linker_build" \
+    "$root/tests/run_f401_uc1609_compile_check.sh"; do
+  grep -Fq 'protect-usb-lto.py' "$script"
+done
 for script in "$matrix" "$usb_build"; do
   grep -Fq 'usb=CDCgen,opt=oslto' "$script"
-  grep -Fq 'protect-usb-lto.py' "$script"
   grep -Fq 'check_usb_cdc_rx_elf.py' "$script"
 done
 for script in "$matrix" "$usb_build" "$o3_build" \
