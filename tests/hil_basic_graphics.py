@@ -4,12 +4,15 @@
 Firmware/System installation is separate. Reserves one unused temporary file,
 then removes it and verifies all files and calculator state. A warm reset after
 leaving the foreground releases the USB Screen workspace before cleanup.
+When installed, VMCache/VMSTORE.APP must match the language APPs. Derived
+VMCache/VMC-xxxx.app entries are removed or restored from their saved bytes.
 """
 import argparse
 from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
+import re
 import time
 
 from hil_c5_stack import read_file
@@ -22,6 +25,28 @@ from hil_portable_system_apps import png
 
 ROOT = Path(__file__).resolve().parents[1]
 REMOTE = '/GFXDEMO.tbi'
+
+
+def cache_entry(path):
+    file = Path(path)
+    return file.parent.as_posix().casefold() == '/system/vmcache' and re.fullmatch(r'VMC-[0-9a-f]{4}\.app', file.name, re.IGNORECASE)
+
+
+def restore_cache(port, saved):
+    current = fingerprint(port)['files']
+    expected = {path.casefold() for path in saved}
+    removed = restored = 0
+    for path in current:
+        if cache_entry(path) and path.casefold() not in expected:
+            assert 'Removed 1 entry.' in port.command('rm "'+path+'"')
+            removed += 1
+    found = {path.casefold(): info for path, info in current.items()}
+    for path, data in saved.items():
+        if found.get(path.casefold(), {}).get('sha256') != hashlib.sha256(data).hexdigest():
+            write_file(port, path, data)
+            assert read_file(port, path) == data
+            restored += 1
+    return {'removed': removed, 'restored': restored}
 
 
 def pixel(frame, x, y):
@@ -53,6 +78,7 @@ def main():
     port = None
     written = screen_started = False
     before = saved = None
+    cache_saved = {}
 
     def connect():
         p = ScreenPort(args.port)
@@ -75,6 +101,7 @@ def main():
         result['before'] = health(port)
         before = fingerprint(port)
         assert REMOTE.casefold() not in {n.casefold() for n in before['files']}, REMOTE
+        cache_saved = {path: read_file(port, path) for path in before['files'] if cache_entry(path)}
         saved = {c: port.command(c) for c in ('reg', 'stk', 'dump', 'pwd')}
         result['alarms'] = [line for line in port.command('alarm').splitlines()
                             if line.startswith('RTC ALARM ')]
@@ -92,6 +119,7 @@ def main():
         (args.output_dir/'primitives.bin').write_bytes(frame)
         result['pages'].append({'name': 'primitives', 'sha256': hashlib.sha256(frame).hexdigest()})
         first = len(port.frames)
+        port.pump(.2)  # Let SHOW return and PAUSE enter its key wait.
         port.key(37)
         frame = wait_page(port, first, lambda f:
             pixel(f, 48, 42) and pixel(f, 144, 42) and pixel(f, 96, 20)
@@ -99,6 +127,7 @@ def main():
         png(frame, args.output_dir/'graph.png')
         (args.output_dir/'graph.bin').write_bytes(frame)
         result['pages'].append({'name': 'graph', 'sha256': hashlib.sha256(frame).hexdigest()})
+        port.pump(.2)
         port.key(37)
         deadline = time.monotonic()+5
         while not PROMPT.search(port.text[port.open_text_start:]) and time.monotonic() < deadline:
@@ -139,6 +168,8 @@ def main():
                 if written:
                     assert read_file(port, REMOTE) == source
                     assert 'Removed 1 entry.' in port.command('rm "'+REMOTE+'"')
+                if before is not None:
+                    result['vm_cache_cleanup'] = restore_cache(port, cache_saved)
                 if saved is not None:
                     cwd = saved['pwd'].splitlines()[1].strip()
                     port.command('cd "'+cwd+'"')
