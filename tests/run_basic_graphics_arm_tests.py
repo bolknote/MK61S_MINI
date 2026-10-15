@@ -33,6 +33,18 @@ def main():
                   for kind,name in (('tinybasic','BASIC.APP'),('language-vm','LANGVM.APP'),
                                     ('language-input','LANGIN.APP'))}
         native=package(reader,args.native_basic,elf,work,'tinybasic')
+        # A prior ABI-6 resident lacks the new synchronous BASIC frontend.
+        # Reject both BASIC placements before any source or callbacks run.
+        for packed in (native,packages['tinybasic']):
+            machine=OverlayMachine(args.resident_elf,True,0)
+            machine.service_capabilities_mask=0xFFFFFFFF ^ (1 << 20)
+            machine.kind,variants,machine.image_size,machine.entry,machine.crc=packed
+            machine.base,machine.image=variants[0]
+            machine.uc.mem_write(machine.pool_begin,b'\xCD'*(machine.pool_end-machine.pool_begin))
+            machine.uc.mem_write(machine.base,machine.image)
+            machine.uc.ctl_remove_cache(machine.pool_begin,machine.pool_end)
+            assert machine.call(0,machine.api,machine.crc,2)!=0,'BASIC accepted a missing resident frontend'
+            assert not machine.frames
         for address in range(3):
             for width,height in ((80,16),(192,64)):
                 for mode in ('native','vm'):

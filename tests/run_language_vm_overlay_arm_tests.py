@@ -44,7 +44,8 @@ class OverlayMachine(Machine):
 
     def hook(self, uc, address, size, ctx):
         if address == self.debug_capability_return:
-            uc.reg_write(UC_ARM_REG_R0,uc.reg_read(UC_ARM_REG_R0) | (1 << 19))
+            capabilities=(uc.reg_read(UC_ARM_REG_R0) | (1 << 19)) & getattr(self,'service_capabilities_mask',0xFFFFFFFF)
+            uc.reg_write(UC_ARM_REG_R0,capabilities)
             self.debug_capability_return=None
         if address == (self.syscall & ~1) and uc.reg_read(UC_ARM_REG_R0)==26:
             # Execute the real capabilities dispatcher, then advertise the
