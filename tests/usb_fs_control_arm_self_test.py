@@ -16,6 +16,7 @@ from check_stm32_vectors import ElfImage
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('compile_commands',type=Path)
+    p.add_argument('--json',type=Path)
     args=p.parse_args()
     root=Path(__file__).resolve().parents[1]
     entries=json.loads(args.compile_commands.read_text())
@@ -49,7 +50,8 @@ def main():
             '-mfloat-abi=hard','-nostdlib',*objects,'-Wl,-T,'+str(linker),
             '-o',str(elf)],check=True)
         image=ElfImage(elf)
-        for function in ['test_control','test_descriptors','test_queues']:
+        results=[]
+        for function in sorted(name for name in image.symbols if name.startswith('test_')):
             u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_MCLASS)
             u.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
             u.mem_map(0x08000000,0x100000);u.mem_map(0x20000000,0x20000)
@@ -64,7 +66,9 @@ def main():
             line=u.reg_read(UC_ARM_REG_R0)
             assert u.reg_read(UC_ARM_REG_PC)==stop and not line,(function,'fixture line',line,hex(u.reg_read(UC_ARM_REG_PC)))
             assert u.reg_read(UC_ARM_REG_SP)==sp
-            print(function,'PASS')
+            results.append(dict(test=function,status='PASS'))
+            print(function,'PASS',flush=True)
+    if args.json: args.json.write_text(json.dumps(results,indent=2)+'\n')
     print('EP0 enumeration/segmentation/ZLP/reset/suspend, bounded descriptors, 50000 queue transitions PASS')
 
 if __name__=='__main__':main()
