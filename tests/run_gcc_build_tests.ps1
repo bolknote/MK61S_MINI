@@ -181,8 +181,10 @@ Assert-True ($cmakeText -match
     'CMake build does not select the F401 board'
 Assert-True ($cmakeText -notmatch 'add_subdirectory\("\$\{BUILD_CORE_PATH\}') `
     'standalone build still compiles Arduino Core'
-Assert-True ($cmakeText -match 'startup_\$\{_mk61_startup\}\.s') `
-    'standalone build does not own startup selection'
+Assert-True ($cmakeText -match '\$\{MK61_PROJECT_ROOT\}/code/stm32f4_startup\.S') `
+    'standalone build does not compile the repository-owned startup'
+Assert-True ($cmakeText -notmatch 'startup_\$\{_mk61_startup\}\.s') `
+    'standalone build still compiles the SDK startup'
 Assert-True ($cmakeText -match 'CMAKE_EXPORT_COMPILE_COMMANDS ON') `
     'CMake build does not emit compile_commands.json'
 Assert-True ($cmakeText -match

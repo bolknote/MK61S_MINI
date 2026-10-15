@@ -21,12 +21,15 @@ expected="$(
     build_system_app_bundle.py \
     build-gcc.cmd \
     font_preview_study.py \
+    generate_compact_math_tables.py \
+    generate_compact_math_vectors.py \
     generate_eliza_doctor.py \
     generate_highnoon_font.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
     language_vm_cache_replay.cpp \
     language_vm_cache_codec_probe.cpp \
+    language_vm_mixed_cache_replay.cpp \
     language_vm_probe.cpp \
     m8_codec.py \
     measure_app_flow.py \
@@ -34,15 +37,19 @@ expected="$(
     measure_overlay_language_vm.py \
     measure_resident_language_vm.py \
     measure_vm_cache.py \
+    measure_vm_cache_codec_arm.py \
     measure_vm_cache_storage.py \
     mk61-arduino-board.cmd \
     mk61-firmware.cmd \
     mkc.cmd \
+    model_vm_cache_packing.py \
     program_pack.py \
+    qualify_vm_cache_trace.py \
     release-contract.json \
     release-contract.ps1 \
     release_contract.py \
     replay_vm_cache.py \
+    replay_vm_mixed_cache.py \
     vfat_diagnostic.py \
     seal-firmware-elf.py \
     seal-firmware-elf.ps1 \
