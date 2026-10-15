@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Classic VM wire-version A/B/A with per-stage APP and VMC restoration.
+"""Classic VM A/B/A or cache A/B/C/A with exact APP and VMC restoration.
 
 Requires exclusive ownership of the verified Classic and a pinned recovery BIN.
-Three searches per stage by default; compare warm searches, not cache creation.
+Three searches per stage by default; compare warm searches after cache creation.
 """
 from dataclasses import asdict
 import argparse
@@ -132,6 +132,25 @@ def restore_cache(port, snapshot, saved_directory):
     return removed,replaced
 
 
+def stage_plan(baseline, candidate, baseline_system, candidate_system, *, raw32=None, single=False):
+    if raw32 is not None:
+        assert not single, 'Cache comparison needs all four stages'
+        return [('baseline', baseline, baseline_system),
+                ('candidate', candidate, candidate_system),
+                ('raw32', raw32, baseline_system),
+                ('control', baseline, baseline_system)]
+    if single:
+        return [('qualification', candidate, candidate_system)]
+    return [('baseline', baseline, baseline_system),
+            ('candidate', candidate, candidate_system),
+            ('control', baseline, baseline_system)]
+
+
+def require_common_apps(stages, bundles):
+    first = bundles[stages[0][2]]
+    assert all(bundles[directory] == first for _, _, directory in stages), 'Cache comparison must use byte-identical System APPs'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--original', type=Path, required=True)
@@ -139,12 +158,15 @@ def main():
     parser.add_argument('--original-sha256', required=True)
     parser.add_argument('--baseline', type=Path, required=True)
     parser.add_argument('--candidate', type=Path, required=True)
+    parser.add_argument('--raw32', type=Path, help='Compare baseline raw24, candidate mixed24, raw32, baseline control; same APPs required')
     parser.add_argument('--baseline-system', type=Path, required=True)
     parser.add_argument('--candidate-system', type=Path, required=True)
     parser.add_argument('--runs', type=int, default=3, choices=range(2,8))
     parser.add_argument('--single-candidate',action='store_true',help='Ordinary combined-main qualification only; no matched speedup claim')
     parser.add_argument('--output-dir', type=Path, required=True)
     options = parser.parse_args()
+    if options.raw32 and options.single_candidate:
+        parser.error('--raw32 cannot be combined with --single-candidate')
     output = options.output_dir.resolve()
     assert not output.exists(), 'Keep prior attempts and recovery evidence intact'
     output.mkdir(parents=True)
@@ -154,10 +176,9 @@ def main():
     assert original['sha256'] == options.original_sha256.lower()
     baseline = capture_image(options.baseline, output / 'images/baseline.bin')
     candidate = capture_image(options.candidate, output / 'images/candidate.bin')
-    stages = [('baseline', baseline, options.baseline_system),
-              ('candidate', candidate, options.candidate_system),
-              ('control', baseline, options.baseline_system)]
-    if options.single_candidate:stages=[('qualification',candidate,options.candidate_system)]
+    raw32 = capture_image(options.raw32, output / 'images/raw32.bin') if options.raw32 else None
+    stages = stage_plan(baseline, candidate, options.baseline_system, options.candidate_system,
+                        raw32=raw32, single=options.single_candidate)
     bundles = {}
     for _, _, directory in stages:
         if directory not in bundles:
@@ -166,6 +187,8 @@ def main():
             # Refuse damaged/mismatched transport payloads before flashing.
             from check_app_memory_elf import app_memory_size
             for app in bundles[directory]:app_memory_size(directory/app)
+    if options.raw32:
+        require_common_apps(stages, bundles)
     args = SimpleNamespace(port=PORT, runs=options.runs, dfu_util=Path(
         '/Users/bolk/Library/Arduino15/packages/arduino/tools/dfu-util/0.11.0-arduino5/dfu-util'))
     print('Fresh pinned Classic snapshot:', original['build'], flush=True)
@@ -178,8 +201,15 @@ def main():
              health=before, files=files, alarms=alarms, firmware=original))
     print('Snapshot complete:', len(files['files']), 'files,', len(files['directories']), 'directories', flush=True)
     scenario = 'Ordinary combined-main qualification; not matched A/B/A' if options.single_candidate else 'A/B/A, per-stage System APP and original VMC snapshot'
+    if options.raw32:
+        scenario = 'raw24 / mixed24 / raw32 / raw24 control; common APPs and original VMC snapshot'
     result = dict(status='RUNNING', scenario=scenario, original=original, stages=[], restored=False,
         runs_per_stage=options.runs, vm_cache_normalized_before_each_stage=True)
+    if options.raw32:
+        result['cache_configurations'] = dict(baseline=dict(bytes=24576,mixed=False),
+            candidate=dict(bytes=24576,mixed=True),raw32=dict(bytes=32768,mixed=False),
+            control=dict(bytes=24576,mixed=False))
+        result['same_system_apps_required'] = True
     save(output / 'report.json', result)
     changed = set()
     touched = False
@@ -190,7 +220,7 @@ def main():
             touched = True
             memory_hil.flash(args, target, output / (name + '-flash.json'))
             with connect(PORT, target['build']) as port:
-                # Baseline v7 cannot claim ownership of a future v8 cache.
+                # A previous wire version cannot claim ownership of a future cache.
                 # Start every stage with the exact original cache contents:
                 # remove only added VMC, and restore original bytes in place.
                 removed,replaced=restore_cache(port,files,output/'original-files')

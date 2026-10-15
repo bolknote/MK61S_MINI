@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual C++ mixed cache/codec over a device-qualified module-order window.
+"""Actual C++ raw24/mixed24/raw32 over a device-qualified module-order window.
 
 Checks every returned image against the original complete owned image and
 workspace-tail canaries. This is a host correctness/counter replay, not time.
@@ -70,8 +70,9 @@ def replay(trace, images, qualification, repeats=3, sanitizers=False):
         data += ''.join(f'{i} {d["language"]} {json.dumps(d["file"])}\n' for i, d in sorted(descriptors.items()))
         data += '\n'.join(map(str, order)) + '\n'
         result = json.loads(subprocess.check_output([str(binary)], input=data, text=True))
+    assert [(v['budget'], v['mixed']) for v in result['variants']] == [(24576, False), (24576, True), (32768, False)]
     for v in result['variants']:
-        assert (v['object_bytes'], v['metadata'], v['payload']) == (24576, 688, 23888)
+        assert (v['object_bytes'], v['metadata'], v['payload']) == (v['budget'], 688, v['budget'] - 688)
         for p in v['passes']:
             assert p['hits'] + p['misses'] == end - start and not p['fallback']
             assert sum(p['miss_modules'].values()) == p['misses']

@@ -318,7 +318,7 @@ int main() {
   auto bad=small.reserve({2,4,Language::BASIC,0},32);
   cert.flags=RESOURCE_FLAG;assert(!small.publish(bad,cert));assert(small.release(bad));
   CacheDiagnostics diagnostic={};assert(cache_diagnostics(diagnostic));
-  assert(diagnostic.budget==24576 && diagnostic.payload<diagnostic.budget && diagnostic.publications);
+  assert(diagnostic.budget==MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && diagnostic.payload<diagnostic.budget && diagnostic.publications);
   assert(diagnostic.hits>20 && diagnostic.invalidations && !resource_reads);
   std::puts("language_vm_image_cache_self_test: invalidation, eviction policy, values, DATA, INPUT/cancel, stale editor, BUILDING rollback and no APP swaps PASS");
   return 0;

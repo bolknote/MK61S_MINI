@@ -42,6 +42,20 @@ def main():
   try:exercise({**original,OLD:b'new'},snapshot,backup)
   except AssertionError:pass
   else:raise AssertionError('bad backup accepted')
+ a,b,c = 'raw24.bin','mixed24.bin','raw32.bin'
+ common=Path('System');other=Path('other-System')
+ planned=h.stage_plan(a,b,common,other,raw32=c)
+ assert [name for name,_,_ in planned]==['baseline','candidate','raw32','control']
+ assert [image for _,image,_ in planned]==[a,b,c,a]
+ assert h.stage_plan(a,b,common,other)==[planned[0],planned[1],planned[3]]
+ assert h.stage_plan(a,b,common,other,single=True)==[('qualification',b,other)]
+ h.require_common_apps(planned,{common:{'LANGVM.APP':b'wire9'},other:{'LANGVM.APP':b'wire9'}})
+ try:h.require_common_apps(planned,{common:{'LANGVM.APP':b'wire9'},other:{'LANGVM.APP':b'other'}})
+ except AssertionError:pass
+ else:raise AssertionError('mixed System accepted')
+ try:h.stage_plan(a,b,common,other,raw32=c,single=True)
+ except AssertionError:pass
+ else:raise AssertionError('single raw32 accepted')
  assert h.is_vm_cache('/system/vmcache/vmc-abcd.APP')
  print('Versioned VM HIL: cache-only restoration, original SHA checks, foreign-file rejection and no-op PASS')
 if __name__=='__main__':main()

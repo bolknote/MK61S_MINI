@@ -19,7 +19,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DLANGUAGE_VM_TEST_STATE_RESETS \
   -DMK61_ENABLE_USB_SCREEN="$usb" \
   -DMK61_LANGUAGE_VM_CACHE_DENSITY="$density" \
-  -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576 -I"$root/code" \
+  -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES="${MK61_VM_CACHE_BYTES_TEST:-24576}" -I"$root/code" \
   "$root/tests/language_vm_image_cache_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
   "$root/code/language_vm_validation.cpp" "$root/code/language_bytecode.cpp" \

@@ -25,7 +25,7 @@ def load_images(directory):
     images = {}
     for path in sorted(directory.glob('*-owned.bvm')):
         data = path.read_bytes()
-        if len(data) < 32 or data[:4] != b'LBV1' or data[4] not in (4,5,6,7) or data[5] not in (1,2):
+        if len(data) < 32 or data[:4] != b'LBV1' or data[4] not in (4,5,6,7,8,9) or data[5] not in (1,2):
             raise ValueError(f'unsupported image: {path}')
         if struct.unpack_from('<H', data, 8)[0] != len(data) or zlib.crc32(data[32:]) != struct.unpack_from('<I', data, 20)[0]:
             raise ValueError(f'image size/CRC: {path}')
