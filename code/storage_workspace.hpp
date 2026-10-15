@@ -1,7 +1,6 @@
 #ifndef MK61_STORAGE_WORKSPACE_HPP
 #define MK61_STORAGE_WORKSPACE_HPP
 #include "rust_types.h"
-#include "shared_memory.hpp"
 
 #ifndef MK61_STORAGE_SHARED_TEMP
 #if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE) && !defined(MK61_BUILD_USBDISK_MODULE)
@@ -9,6 +8,12 @@
 #else
 #define MK61_STORAGE_SHARED_TEMP 0
 #endif
+#endif
+
+// Portable USBDISK.APP supplies its own ABI compatibility declarations and
+// has no resident shared workspace. Import the manager only where it is used.
+#if MK61_STORAGE_SHARED_TEMP
+#include "shared_memory.hpp"
 #endif
 
 namespace storage_workspace {
