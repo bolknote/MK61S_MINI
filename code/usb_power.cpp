@@ -145,7 +145,11 @@ static void* active_class_data(USBD_HandleTypeDef* value) {
     return nullptr;
   }
   void* result = value->pClassDataCmsit[value->classId];
+#if MK61_USB_COMPACT_STATE
+  return result;
+#else
   return result != nullptr ? result : value->pClassData;
+#endif
 }
 
 static u8 endpoint_blockers_now(void) {

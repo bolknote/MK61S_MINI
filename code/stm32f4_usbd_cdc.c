@@ -84,14 +84,16 @@ static uint8_t cdc_init(USBD_HandleTypeDef* d, uint8_t configuration_index) {
   if(d->classId != 0 || d->dev_speed != USBD_SPEED_FULL || !interface(d)) return USBD_FAIL;
   memset(&_hcdc,0,sizeof(_hcdc));
   _hcdc.CmdOpCode=0xFF;
-  d->pClassDataCmsit[0]=d->pClassData=&_hcdc;
+  MK61_USBD_SetClassData(d,&_hcdc);
   if(USBD_LL_OpenEP(d,CDC_IN_EP,USBD_EP_TYPE_BULK,64)!=USBD_OK ||
      USBD_LL_OpenEP(d,CDC_OUT_EP,USBD_EP_TYPE_BULK,64)!=USBD_OK ||
      USBD_LL_OpenEP(d,CDC_CMD_EP,USBD_EP_TYPE_INTR,CDC_CMD_PACKET_SIZE)!=USBD_OK) return USBD_FAIL;
   d->ep_in[CDC_IN_EP&15].is_used=1;
   d->ep_out[CDC_OUT_EP&15].is_used=1;
   d->ep_in[CDC_CMD_EP&15].is_used=1;
+#if !MK61_USB_COMPACT_STATE
   d->ep_in[CDC_CMD_EP&15].bInterval=CDC_FS_BINTERVAL;
+#endif
   if(interface(d)->Init()!=0 || !_hcdc.RxBuffer) return USBD_FAIL;
   return USBD_LL_PrepareReceive(d,CDC_OUT_EP,_hcdc.RxBuffer,64);
 }
@@ -101,9 +103,11 @@ static uint8_t cdc_deinit(USBD_HandleTypeDef* d,uint8_t configuration_index) {
   d->ep_in[CDC_IN_EP&15].is_used=0;
   d->ep_out[CDC_OUT_EP&15].is_used=0;
   d->ep_in[CDC_CMD_EP&15].is_used=0;
+#if !MK61_USB_COMPACT_STATE
   d->ep_in[CDC_CMD_EP&15].bInterval=0;
+#endif
   if(handle(d) && interface(d)) interface(d)->DeInit();
-  d->pClassDataCmsit[0]=d->pClassData=NULL;
+  MK61_USBD_SetClassData(d,NULL);
   return USBD_OK;
 }
 static uint8_t reject(USBD_HandleTypeDef* d,USBD_SetupReqTypedef* r) {
@@ -161,8 +165,13 @@ static uint8_t cdc_data_in(USBD_HandleTypeDef* d,uint8_t ep) {
   USBD_CDC_HandleTypeDef* h=handle(d);
   if(!h || ep!=(CDC_IN_EP&15)) return USBD_FAIL;
   // Fixed packet size: no cast of the owned bridge to a HAL PCD handle.
+#if MK61_USB_COMPACT_STATE
+  if(h->TxState==1 && h->TxLength && !(h->TxLength&63)) {
+    h->TxState=2;
+#else
   if(d->ep_in[ep].total_length && !(d->ep_in[ep].total_length&63)) {
     d->ep_in[ep].total_length=0;
+#endif
     return USBD_LL_Transmit(d,CDC_IN_EP,NULL,0);
   }
   h->TxState=0;
@@ -183,8 +192,9 @@ const USBD_ClassTypeDef USBD_CDC
 USBD_ClassTypeDef USBD_CDC
 #endif
 = {
-  cdc_init,cdc_deinit,cdc_setup,NULL,cdc_rx_ready,cdc_data_in,cdc_data_out,
-  NULL,NULL,NULL,NULL,fs_descriptor,NULL,NULL
+  .Init=cdc_init, .DeInit=cdc_deinit, .Setup=cdc_setup,
+  .EP0_RxReady=cdc_rx_ready, .DataIn=cdc_data_in, .DataOut=cdc_data_out,
+  .GetFSConfigDescriptor=fs_descriptor
 };
 uint8_t USBD_CDC_RegisterInterface(USBD_HandleTypeDef* d,USBD_CDC_ItfTypeDef* api) {
   if(!api || d->classId!=0) return USBD_FAIL;
@@ -201,7 +211,10 @@ uint8_t USBD_CDC_SetRxBuffer(USBD_HandleTypeDef* d,uint8_t* data) {
 uint8_t USBD_CDC_TransmitPacket(USBD_HandleTypeDef* d) {
   USBD_CDC_HandleTypeDef* h=handle(d); if(!h) return USBD_FAIL;
   if(h->TxState) return USBD_BUSY;
-  h->TxState=1; d->ep_in[CDC_IN_EP&15].total_length=h->TxLength;
+  h->TxState=1;
+#if !MK61_USB_COMPACT_STATE
+  d->ep_in[CDC_IN_EP&15].total_length=h->TxLength;
+#endif
   const uint8_t status=USBD_LL_Transmit(d,CDC_IN_EP,h->TxBuffer,h->TxLength);
   if(status!=USBD_OK) h->TxState=0;
   return status;

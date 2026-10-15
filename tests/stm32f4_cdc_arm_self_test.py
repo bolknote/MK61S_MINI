@@ -14,9 +14,22 @@ mock_names=['USBD_LL_Init','USBD_LL_Start','USBD_LL_Stop','USBD_LL_DeInit','USBD
  'USBD_LL_PrepareReceive','USBD_LL_Transmit','USBD_LL_GetRxDataSize','USBD_LL_SetUSBAddress',
  'USBD_CtlSendData','USBD_CtlPrepareRx','USBD_CtlSendStatus','USBD_CtlError']
 mocks={value&~1:name for name,value in e.symbols.items() if any(name==n or name.startswith(n+'.') for n in mock_names)}
-events=[];rx_size=0
+events=[];rx_size=0;rx_buffer=None
+rx_setters={value&~1 for name,value in e.symbols.items() if name=='USBD_CDC_SetRxBuffer' or name.startswith('USBD_CDC_SetRxBuffer.')}
+assert rx_setters, 'real RX buffer setter is missing'
+# Read the ELF symbol size instead of assuming the historical C struct layout.
+cdc_size=None
+for section in e.sections:
+ if section[1]!=2:continue
+ strings=e.sections[section[6]];names=e.data[strings[4]:strings[4]+strings[5]]
+ for off in range(section[4],section[4]+section[5],section[9]):
+  name,value,size,info,other,index=struct.unpack_from('<IIIBBH',e.data,off)
+  if names[name:names.find(b'\0',name)]==b'_hcdc':cdc_size=size
+assert cdc_size in (28,36), cdc_size
 
 def hook(uc,address,size,unused):
+ global rx_buffer
+ if address in rx_setters:rx_buffer=uc.reg_read(UC_ARM_REG_R1)
  name=mocks.get(address)
  if name:
   args=[uc.reg_read(reg) for reg in [UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3]]
@@ -63,10 +76,10 @@ assert setup(0xA1,0x21,length=7)==0
 address,data=reply();assert data==bytes([0,0xC2,1,0,0,0,8]),data
 assert address==e.symbols['_hcdc']
 for length in [0,1,2,6,8,64,255,65535]:
- before=bytes(u.mem_read(e.symbols['_hcdc'],36))
+ before=bytes(u.mem_read(e.symbols['_hcdc'],cdc_size))
  assert setup(0x21,0x20,length=length)!=0
  assert not any(name=='USBD_CtlPrepareRx' for name,args in events)
- assert bytes(u.mem_read(e.symbols['_hcdc'],36))==before
+ assert bytes(u.mem_read(e.symbols['_hcdc'],cdc_size))==before
 for bm,request,value,index,length in [(0xA1,0x20,0,0,7),(0x21,0x20,1,0,7),(0x21,0x20,0,1,7),(0x21,0x22,0,0,1),(0xA1,0x21,0,2,7),(0xA1,0x00,0,0,65535)]:
  assert setup(bm,request,value,index,length)!=0
 assert setup(0x21,0x20,length=7)==0
@@ -89,33 +102,40 @@ for descriptor in [0x0600,0x0700]:
  events.clear();standard(0x80,6,descriptor,0,255);assert any(n=='USBD_CtlError' for n,args in events)
 # Exact 64/128-byte packets need one ZLP before completion; 63/65 do not.
 buffer=0x20019000;u.mem_write(buffer,bytes(range(128)))
-for length in [63,64,65,128]:
+for length in [0,1,63,64,65,128,65535,65536,0x10000+64]:
  assert call('USBD_CDC_SetTxBuffer',d,buffer,length)==0
  events.clear();assert call('USBD_CDC_TransmitPacket',d)==0
+ transfer=[args for name,args in events if name=='USBD_LL_Transmit'];assert len(transfer)==1 and transfer[0][1:]==[0x82,buffer,length],transfer
  assert call('USBD_CDC_TransmitPacket',d)==1 # busy until final completion
  events.clear();assert call('cdc_data_in',d,2)==0
  zeroes=[args for n,args in events if n=='USBD_LL_Transmit' and args[3]==0]
- if length%64==0:
+ if length and length%64==0:
   assert len(zeroes)==1 and call('USBD_CDC_TransmitPacket',d)==1
   events.clear();assert call('cdc_data_in',d,2)==0
   assert not any(n=='USBD_LL_Transmit' for n,args in events)
  else:assert not zeroes
 assert call('cdc_data_in',d,15)!=0
+# Full-width malformed lengths must fail before consuming or rearming RX.
+for oversized in [65,65535,65536,0xffffffff]:
+ rx_size=oversized;events.clear()
+ assert call('cdc_data_out',d,1)!=0
+ assert not any(n=='USBD_LL_PrepareReceive' for n,args in events)
+rx_size=64
 # Fill the real RX queue, require NAK, then drain/rearm without byte loss.
 h=e.symbols['_hcdc'];received=[]
 for first in [0,64]:
- pointer=struct.unpack('<I',u.mem_read(h+12,4))[0]
+ pointer=rx_buffer;assert pointer is not None
  u.mem_write(pointer,bytes(range(first,first+64)));rx_size=64
  events.clear();assert call('cdc_data_out',d,1)==0
  if first==64:assert not any(n=='USBD_LL_PrepareReceive' for n,args in events)
-received.append(call('CDC_ReceiveQueue_Dequeue'));assert received==[0]
+received.append(call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue')));assert received==[0]
 assert call('CDC_resume_receive')==1
-pointer=struct.unpack('<I',u.mem_read(h+12,4))[0];u.mem_write(pointer,bytes(range(128,192)))
+pointer=rx_buffer;assert pointer is not None;u.mem_write(pointer,bytes(range(128,192)))
 events.clear();assert call('cdc_data_out',d,1)==0
 assert not any(n=='USBD_LL_PrepareReceive' for n,args in events)
 for _ in range(191):
- received.append(call('CDC_ReceiveQueue_Dequeue'));call('CDC_resume_receive')
-assert received==list(range(192)) and call('CDC_ReceiveQueue_Dequeue')==0xFFFFFFFF
+ received.append(call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue')));call('CDC_resume_receive')
+assert received==list(range(192)) and call('CDC_ReceiveQueue_Dequeue',resolve('ReceiveQueue'))==0xFFFFFFFF
 call('CDC_deInit');call('CDC_continue_transmit');assert call('CDC_resume_receive')==0
 assert u.reg_read(UC_ARM_REG_PRIMASK)==0
 print('Owned CDC production ARM model: FS enumeration, readonly descriptor, ACM bounds, persistent EP0 replies and ZLP completion PASS')
