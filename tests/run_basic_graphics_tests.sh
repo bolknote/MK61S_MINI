@@ -8,5 +8,14 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undef
 clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" -I"$root/code" \
   "$root/tests/basic_graphics_self_test.cpp" "$root/code/basic_graphics.cpp" -o "$work/raster"
 "$work/raster"
+for graphics in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+    -DMK61_HAS_COMPILED_GRAPHICS="$graphics" \
+    -include "$root/tests/basic_graphics_runtime_fixture.hpp" -I"$root/code" \
+    "$root/tests/basic_graphics_runtime_self_test.cpp" \
+    "$root/code/basic_graphics_runtime.cpp" "$root/code/basic_graphics.cpp" \
+    -o "$work/runtime"
+  "$work/runtime"
+done
 bash "$root/tests/run_tinybasic_tests.sh"
 MK61_LANGUAGE_VM_TEST=1 bash "$root/tests/run_tinybasic_tests.sh"
