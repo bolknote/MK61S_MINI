@@ -1116,7 +1116,8 @@ static const usize indicator_pos[12] =
     {24, 21, 18, 15, 12, 9, 6, 3, 0, 33, 30, 27};
 
 struct ExtendedProgramState {
-  u8* banks[EXTENDED_BANK_COUNT];
+  // Zero means absent; other values are one-based backing-slot indices.
+  u8 bank_slots[EXTENDED_BANK_COUNT];
   u16 return_addresses[EXTENDED_RETURN_DEPTH];
   // Address + 1. Flags: 8000 display strobe; 4000 target after a ROM FL.
   u16 pending_prefix;
@@ -1139,17 +1140,23 @@ static ExtendedProgramState extended_program = {};
 // banks are calculator state, so they must not depend on that transient heap.
 static u8 extended_bank_slots[EXTENDED_BANK_SLOT_COUNT]
                              [core_61::CODE_PAGE_BUFFER_SIZE];
+static_assert(EXTENDED_BANK_SLOT_COUNT < 256, "bank slot indices fit one byte");
+
+static u8* extended_bank(u8 bank) {
+  const u8 slot = extended_program.bank_slots[bank];
+  return slot == 0 ? nullptr : extended_bank_slots[slot - 1U];
+}
 
 static u8* ensure_extended_bank(u8 bank) {
   if(bank >= EXTENDED_BANK_COUNT) return nullptr;
-  if(extended_program.banks[bank] != nullptr) return extended_program.banks[bank];
+  if(u8* existing = extended_bank(bank)) return existing;
   if(extended_program.bank_slots_used >= EXTENDED_BANK_SLOT_COUNT)
     return nullptr;
   u8* page = extended_bank_slots[extended_program.bank_slots_used++];
   // Banks are also used as register snapshots and lookup tables. Their
   // unwritten bytes have the same zero value as ordinary cleared memory.
   memset(page, 0, core_61::CODE_PAGE_BUFFER_SIZE);
-  extended_program.banks[bank] = page;
+  extended_program.bank_slots[bank] = extended_program.bank_slots_used;
   return page;
 }
 
@@ -1449,7 +1456,7 @@ static bool execute_far_ms_exchange(u16 absolute) {
       bool duplicate = false;
       for(u8 prior = 0; prior < index; ++prior)
         duplicate |= needed[index] == needed[prior];
-      if(!duplicate && extended_program.banks[needed[index]] == nullptr)
+      if(!duplicate && extended_bank(needed[index]) == nullptr)
         ++missing;
     }
     if(extended_program.bank_slots_used + missing > EXTENDED_BANK_SLOT_COUNT)
@@ -1460,10 +1467,10 @@ static bool execute_far_ms_exchange(u16 absolute) {
   for(usize offset = 0; offset < MK61_EXPANDED_MS_PROGRAM_STEPS; ++offset) {
     const int program_address = (int) core_61::get_ring_address(offset);
     const u8 incoming = bank == active ? core_61::get_code(program_address) :
-        extended_program.banks[bank][offset];
+        extended_bank(bank)[offset];
     const u8 saved = core_61::get_code(program_address - 1);
     if(bank == active) MK61Emu_SetCode(program_address, saved);
-    else extended_program.banks[bank][offset] = saved;
+    else extended_bank(bank)[offset] = saved;
     MK61Emu_SetCode(program_address - 1, incoming);
   }
   return set_extended_next_pc(next);
@@ -4121,13 +4128,11 @@ u8 active_program_bank(void) {
 void clear_extended_program_banks(void) {
   if(extended_program.active_bank != 0) {
     u8 bank_zero[CODE_PAGE_BUFFER_SIZE] = {};
-    if(extended_program.banks[0] != nullptr)
-      memcpy(bank_zero, extended_program.banks[0], MAX_PROGRAM_STEP);
+    if(extended_bank(0) != nullptr)
+      memcpy(bank_zero, extended_bank(0), MAX_PROGRAM_STEP);
     set_code_page(bank_zero);
   }
-  for(usize index = 0; index < EXTENDED_BANK_COUNT; index++) {
-    extended_program.banks[index] = nullptr;
-  }
+  memset(extended_program.bank_slots, 0, sizeof(extended_program.bank_slots));
   extended_program.active_bank = 0;
   extended_program.bank_slots_used = 0;
   extended_program.return_depth = 0;
@@ -4142,7 +4147,7 @@ bool read_absolute_program(u16 address, u8& opcode) {
   if(bank == extended_program.active_bank) {
     opcode = get_code(get_ring_address(offset));
   } else {
-    const u8* page = extended_program.banks[bank];
+    const u8* page = extended_bank(bank);
     opcode = page == nullptr ? 0x00U : page[offset];
   }
   return true;
@@ -4157,7 +4162,7 @@ bool write_absolute_program(u16 address, u8 opcode) {
     MK61Emu_SetCode((int) get_ring_address(offset), opcode);
     return true;
   }
-  if(extended_program.banks[extended_program.active_bank] == nullptr) {
+  if(extended_bank(extended_program.active_bank) == nullptr) {
     u8* active_page = ensure_extended_bank(extended_program.active_bank);
     if(active_page == nullptr) return false;
     get_code_page(active_page);

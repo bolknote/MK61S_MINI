@@ -491,9 +491,14 @@ MK61Display::MK61Display(void)
     oled_protection_state()
 #endif
 #if MK61_ENABLE_USB_SCREEN
+#if MK61_SCOPED_RESIDENT_BUFFERS
+    , usb_text_profile(lcd_display::defaultSettingsTextProfile()),
+    usb_surface(nullptr),
+#else
     , usb_framebuffer{0},
     usb_text_profile(lcd_display::defaultSettingsTextProfile()),
     usb_surface(usb_framebuffer),
+#endif
     usb_screen_active(false),
     display_mode_revision(0),
     physical_screen_enabled(true),
@@ -2338,7 +2343,12 @@ MK61Display::MK61Display(void)
     ui_row_tails(0)
 #endif
 #if MK61_ENABLE_USB_SCREEN
-    , usb_surface(render_buffer
+    , usb_surface(
+#if MK61_SCOPED_RESIDENT_BUFFERS
+                  nullptr
+#else
+                  render_buffer
+#endif
 #if MK61_SHARED_SCREEN_GRID
                   , grid
 #endif
@@ -3817,12 +3827,39 @@ usb_screen::TextProfile MK61Display::usbTextProfile(
   });
 }
 
+#if MK61_SCOPED_RESIDENT_BUFFERS
+#if defined(ARDUINO_ARCH_STM32)
+static_assert(usb_screen::FRAME_BYTES == 1536, "update scoped USB frame ELF reserve");
+__asm__(".global mk61_usb_framebuffer_bytes\n.set mk61_usb_framebuffer_bytes, 1536");
+#endif
+bool MK61Display::prepareUsbFramebuffer() {
+  if(!usb_surface.setFramebuffer(nullptr)) return false;
+  if(!usb_framebuffer_storage.acquire(shared_memory::Owner::USB_FRAMEBUFFER,
+                                      usb_screen::FRAME_BYTES)) return false;
+  return usb_surface.setFramebuffer(usb_framebuffer_storage.data());
+}
+void MK61Display::releaseUsbFramebuffer() {
+  usb_surface.end();
+  (void)usb_surface.setFramebuffer(nullptr);
+  usb_framebuffer_storage.reset();
+}
+#endif
+
 bool MK61Display::enterUsbScreen(void) {
   if(usb_screen_active) return true;
 #if MK61_SCREEN_BUFFER_LOAN
   // This check precedes Surface::begin/clearPixels and all mode changes.
   // Never erase a compiler's staging image merely to accept ATTACH.
   if(screen_buffer_loan_active) return false;
+#endif
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  if(!prepareUsbFramebuffer()) return false;
+  struct PendingFrame {
+    MK61Display& display;
+    ~PendingFrame() {
+      if(!display.usbScreenActive()) display.releaseUsbFramebuffer();
+    }
+  } pending_frame{*this};
 #endif
 
 #if defined(MK61_OLED1602_WS0010)
@@ -4026,6 +4063,9 @@ void MK61Display::leaveUsbScreen(void) {
 #endif
   usb_surface.end();
   usb_screen_active = false;
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  releaseUsbFramebuffer();
+#endif
   display_mode_revision++;
 #if defined(MK61_DISPLAY_LCD1602)
   // Восстанавливаем физический текстовый дисплей перед включением. Так на экране

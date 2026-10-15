@@ -15,6 +15,9 @@ shared_flags=()
 if [[ "${MK61_TEST_STORAGE_SHARED_TEMP:-0}" == 1 ]]; then
   shared_flags=(-DMK61_STORAGE_SHARED_TEMP=1)
 fi
+if [[ "${MK61_TEST_SCOPED_RESIDENT_BUFFERS:-0}" == 1 ]]; then
+  shared_flags+=(-DMK61_SCOPED_RESIDENT_BUFFERS=1)
+fi
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)

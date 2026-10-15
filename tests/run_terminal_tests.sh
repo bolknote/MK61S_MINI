@@ -21,6 +21,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_MATH_BACKEND="$math_backend" \
 done
 python3 "$root/tests/terminal_assembly_self_test.py"
 python3 "$root/tests/terminal_run_self_test.py"
+python3 "$root/tests/terminal_result_return_self_test.py"
 python3 "$root/tests/terminal_if_self_test.py"
 
 for screen in 0 1; do

@@ -83,7 +83,14 @@ Surface::Surface(u8* framebuffer)
 #endif
 }
 
+bool Surface::setFramebuffer(u8* pixels) {
+  if(active_) return false;
+  framebuffer_ = pixels;
+  return true;
+}
+
 void Surface::begin(TextProfile profile, bool preserve_text, u8 cols) {
+  if(framebuffer_ == nullptr) return;
 #if MK61_DISK_ACTIVITY_SUPPORTED
   disk_overlay_ = disk_activity::Overlay{};
 #endif

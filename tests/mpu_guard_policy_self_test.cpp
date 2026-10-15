@@ -72,6 +72,39 @@ int main(void) {
     }
   }
   assert(maximum_regions == APP_REGION_COUNT);
+  // Exhaust every 256-aligned end in F411 SRAM and every 32-byte payload
+  // size through the unchanged 20-KiB limit. Decode only the real MPU
+  // base/size/SRD fields; the planner's cached end is not the coverage oracle.
+  unsigned placements=0;u8 displaced_max=0;
+  for(u32 end=f411.ram_start+APP_END_ALIGNMENT;end<=f411.guard_base;end+=APP_END_ALIGNMENT)
+    for(u32 bytes=32;bytes<=20U*1024U && bytes<=end-f411.ram_start;bytes+=32) {
+      const u32 begin=end-bytes;u32 cursor=begin,covered=begin;u8 count=0;
+      while(cursor<end) {
+        assert(count++<APP_REGION_COUNT);
+        const auto region=next_app_region(cursor,end);
+        assert(power_of_two(region.size) && !(region.base&(region.size-1)));
+        const u32 step=region.size>=256?region.size/8:region.size;
+        const u32 parts=region.size>=256?8:1;
+        for(u32 i=0;i<parts;++i) {
+          if(region.size>=256 && (region.disabled_subregions&(1U<<i)))continue;
+          const u32 first=region.base+i*step;
+          assert(first==covered && first>=begin && step<=end-first);
+          covered=first+step;
+        }
+        assert(covered==region.end && covered>cursor);cursor=region.end;
+      }
+      assert(covered==end);if(count>displaced_max)displaced_max=count;++placements;
+    }
+  assert(displaced_max==APP_REGION_COUNT && placements>250000);
+  // An arbitrary end can really require six slots. The allocator's alignment
+  // rule is necessary; do not solve it by widening executable SRAM.
+  unsigned unaligned_count=0;
+  for(u32 cursor=0x200136E0U;cursor<0x20014920U;++unaligned_count)
+    cursor=next_app_region(cursor,0x20014920U).end;
+  assert(unaligned_count==6);
+  std::cout<<"MPU displaced APP: "<<placements<<" exact spans, maximum "
+           <<unsigned(displaced_max)<<" regions, six-region rejection case PASS\n";
+
   assert(next_app_region(f411.guard_base - 1, f411.guard_base).size == 0);
   assert(next_app_region(f411.guard_base, f411.guard_base).size == 0);
 

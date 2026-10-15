@@ -8,6 +8,7 @@
 #include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
+#include "shared_memory.hpp"
 
 #ifndef M61_TEXT_HOST_TEST
 #include "Arduino.h"
@@ -36,6 +37,7 @@ i32 program_store_text_font_end(void);
 
 void lcd_std_display_redraw(void);
 
+#include <new>
 #include <stdio.h>
 #include <string.h>
 
@@ -123,6 +125,45 @@ struct BindEntry {
   u8 target;
 };
 
+struct RuntimeBuffers {
+  LabelEntry label_entries[MAX_LABELS];
+  u8 cache_bytes[READ_CACHE_SIZE];
+  ReturnFrame frames[RETURN_STACK_DEPTH];
+};
+#if MK61_SCOPED_RESIDENT_BUFFERS
+static shared_memory::LifetimeBuffer runtime_storage;
+static RuntimeBuffers& runtime_buffers() {
+  return *std::launder(reinterpret_cast<RuntimeBuffers*>(runtime_storage.data()));
+}
+static bool prepare_runtime() {
+  if(runtime_storage.ok()) return true;
+  if(!runtime_storage.acquire(shared_memory::Owner::M61_RUNTIME,
+                              sizeof(RuntimeBuffers))) return false;
+  new(runtime_storage.data()) RuntimeBuffers{};
+  return true;
+}
+static void release_runtime() { runtime_storage.reset(); }
+#if defined(ARDUINO_ARCH_STM32)
+// Keep the full live-script cost in APP qualification after removing its BSS.
+static_assert(sizeof(RuntimeBuffers) == READ_CACHE_SIZE + 1076U,
+              "update the scoped M61 ELF reserve when runtime shapes change");
+#define MK61_M61_STRING_IMPL(x) #x
+#define MK61_M61_STRING(x) MK61_M61_STRING_IMPL(x)
+__asm__(".global mk61_m61_runtime_bytes\n.set mk61_m61_runtime_bytes, (("
+        MK61_M61_STRING(MK61_M61_READ_CACHE_BYTES) "+1076+31)&-32)");
+#undef MK61_M61_STRING
+#undef MK61_M61_STRING_IMPL
+#endif
+#else
+static RuntimeBuffers runtime_storage;
+static RuntimeBuffers& runtime_buffers() { return runtime_storage; }
+static bool prepare_runtime() { return true; }
+static void release_runtime() {}
+#endif
+static auto& read_cache() { return runtime_buffers().cache_bytes; }
+static auto& labels() { return runtime_buffers().label_entries; }
+static auto& return_stack() { return runtime_buffers().frames; }
+
 static RunnerState runner_state = RunnerState::IDLE;
 static ScriptSource script_source = ScriptSource::NONE;
 static char script_name[program_store::NAME_SIZE] = {};
@@ -135,14 +176,11 @@ static volatile u8 active_traps[TRAP_BITMAP_SIZE] = {};
 #else
 static u8 active_traps[TRAP_BITMAP_SIZE] = {};
 #endif
-static ReturnFrame return_stack[RETURN_STACK_DEPTH];
 static u8 return_stack_depth = 0;
 static u8 script_stack_depth = 0;
-static u8 read_cache[READ_CACHE_SIZE];
 static u16 read_cache_start = 0;
 static u16 read_cache_len = 0;
 static u32 read_cache_revision;
-static LabelEntry labels[MAX_LABELS];
 static u8 label_count = 0;
 static u8 trap_targets[TRAP_ADDRESS_COUNT];
 static BindEntry binds[MAX_BINDS];
@@ -488,7 +526,7 @@ static bool push_current_frame(ReturnKind kind) {
   if(kind == ReturnKind::SCRIPT && script_stack_depth >= SCRIPT_STACK_DEPTH) {
     return false;
   }
-  ReturnFrame& frame = return_stack[return_stack_depth++];
+  ReturnFrame& frame = return_stack()[return_stack_depth++];
   frame.kind = kind;
   frame.runner_state = runner_state;
   store_current_frame(frame.script);
@@ -574,6 +612,7 @@ static void stop_runner(void) {
   clear_current_script();
   return_stack_depth = 0;
   script_stack_depth = 0;
+  release_runtime();
 }
 
 void cancel(void) {
@@ -615,7 +654,7 @@ static bool prepare_read_window(void) {
       const u16 remaining = (u16) (script_len - read_cache_start);
       const u16 wanted = remaining < READ_CACHE_SIZE ? remaining : READ_CACHE_SIZE;
       u16 got = 0;
-      if(!program_store::read_range_id(script_id, read_cache_start, read_cache,
+      if(!program_store::read_range_id(script_id, read_cache_start, read_cache(),
                                        wanted, &got) || got == 0) {
         read_cache_len = 0;
         return false;
@@ -638,25 +677,25 @@ static bool read_next_line(char* line, u16 capacity) {
   u16 line_len = 0;
   while(script_pos < script_len) {
     if(!prepare_read_window()) return false;
-    const u8* cursor = read_cache + (script_pos - read_cache_start);
-    const u8* end = read_cache + read_cache_len;
+    const u8* cursor = read_cache() + (script_pos - read_cache_start);
+    const u8* end = read_cache() + read_cache_len;
     // No storage writes or event service occur while consuming this window.
     // Refills and the next command recheck its revision.
     do {
       const char c = (char) *cursor++;
       if(c == '\r' || c == '\n' || c == 0) {
-        script_pos = (u16) (read_cache_start + (cursor - read_cache));
+        script_pos = (u16) (read_cache_start + (cursor - read_cache()));
         // Принимаем CR и CRLF, не выдавая парный LF за пустую строку.
         if(c == '\r' && script_pos < script_len) {
           if(cursor == end && !prepare_read_window()) return false;
-          if(read_cache[script_pos - read_cache_start] == '\n') ++script_pos;
+          if(read_cache()[script_pos - read_cache_start] == '\n') ++script_pos;
         }
         line[line_len] = 0;
         script_line++;
         return true;
       }
       if(line_len + 1 >= capacity) {
-        script_pos = (u16) (read_cache_start + (cursor - read_cache));
+        script_pos = (u16) (read_cache_start + (cursor - read_cache()));
         return false;
       }
       line[line_len++] = c;
@@ -694,7 +733,7 @@ static bool stored_label_equals(const LabelEntry& entry, const char* name, usize
   if(read_cache_revision==program_store::media_revision() &&
      entry.name_pos>=read_cache_start &&
      (u32)entry.name_pos+entry.len<=(u32)read_cache_start+read_cache_len)
-    return memcmp(read_cache+(entry.name_pos-read_cache_start),name,len)==0;
+    return memcmp(read_cache()+(entry.name_pos-read_cache_start),name,len)==0;
   char stored[MAX_LABEL_SIZE + 1];
   u16 got = 0;
   if(!program_store::read_range_id(script_id, entry.name_pos, (u8*) stored,
@@ -705,7 +744,7 @@ static bool stored_label_equals(const LabelEntry& entry, const char* name, usize
 static i16 find_label_index(const char* name, usize len) {
   const u32 hash = label_hash(name, len);
   for(u8 i = 0; i < label_count; i++) {
-    if(labels[i].hash == hash && stored_label_equals(labels[i], name, len)) {
+    if(labels()[i].hash == hash && stored_label_equals(labels()[i], name, len)) {
       return (i16) i;
     }
   }
@@ -859,14 +898,14 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
       return false;
     }
     for(u8 i = 0; i < label_count; i++) {
-      if(stored_label_equals(labels[i], name, len)) {
+      if(stored_label_equals(labels()[i], name, len)) {
         error_message = "duplicate label";
         error_line = line_number;
         return false;
       }
     }
 
-    LabelEntry& entry = labels[label_count++];
+    LabelEntry& entry = labels()[label_count++];
     entry.hash = label_hash(name, len);
     entry.name_pos = (u16) (line_start + (u16) (name - line));
     entry.target_pos = script_pos;
@@ -1066,7 +1105,7 @@ static bool return_from_script(void) {
     return true;
   }
 
-  const ReturnFrame returned = return_stack[--return_stack_depth];
+  const ReturnFrame returned = return_stack()[--return_stack_depth];
   if(returned.kind == ReturnKind::BIND) {
     if(!bind_handler_active) {
       fail_script("bind handler context is unavailable", script_line);
@@ -1113,7 +1152,7 @@ static bool return_from_script(void) {
 
 static void finish_script(void) {
   if(return_stack_depth > 0) {
-    const ReturnKind kind = return_stack[return_stack_depth - 1].kind;
+    const ReturnKind kind = return_stack()[return_stack_depth - 1].kind;
     if(kind == ReturnKind::TRAP) {
       fail_script("trap handler reached end of script without ret", script_line);
       return;
@@ -1134,7 +1173,7 @@ static bool open_store_script(const char* name) {
   const char* error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
-    const ReturnFrame parent = return_stack[--return_stack_depth];
+    const ReturnFrame parent = return_stack()[--return_stack_depth];
     if(script_stack_depth > 0) script_stack_depth--;
     restore_frame(parent.script);
     return false;
@@ -1154,7 +1193,7 @@ static bool open_store_script(u16 id) {
   const char* error_message = NULL;
   u16 error_line = 0;
   if(!activate_frame(child, error_message, error_line)) {
-    const ReturnFrame parent = return_stack[--return_stack_depth];
+    const ReturnFrame parent = return_stack()[--return_stack_depth];
     if(script_stack_depth > 0) script_stack_depth--;
     restore_frame(parent.script);
     return false;
@@ -1218,7 +1257,7 @@ static bool goto_label(const char* args) {
     line_error_message = "label return stack is full";
     return false;
   }
-  const LabelEntry& entry = labels[target];
+  const LabelEntry& entry = labels()[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   // A same-script jump can reuse its verified read window. read_next_line
@@ -1274,7 +1313,7 @@ static bool enter_pending_bind(void) {
   pending_bind_sequence = 0;
   bind_handler_active = true;
 
-  const LabelEntry& entry = labels[target];
+  const LabelEntry& entry = labels()[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   invalidate_read_cache();
@@ -1336,7 +1375,7 @@ static bool enter_pending_trap(void) {
   pending_trap_target = INVALID_TRAP_TARGET;
   suspended_trap_address = address;
 
-  const LabelEntry& entry = labels[target];
+  const LabelEntry& entry = labels()[target];
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   invalidate_read_cache();
@@ -1500,7 +1539,7 @@ static void clear_active_handlers(void) {
   clear_active_traps();
   clear_active_binds();
   for(u8 i = 0; i < return_stack_depth; i++) {
-    clear_frame_handlers(return_stack[i].script);
+    clear_frame_handlers(return_stack()[i].script);
   }
 
   trap_pending = false;
@@ -1532,7 +1571,7 @@ bool clear_bindings_and_traps(void) {
       bind_pending || bind_handler_active ||
       runner_state == RunnerState::WATCH_EVENTS;
   for(u8 i = 0; i < return_stack_depth && !had_handlers; i++) {
-    had_handlers = frame_has_active_handlers(return_stack[i].script);
+    had_handlers = frame_has_active_handlers(return_stack()[i].script);
   }
   if(!had_handlers) return false;
 
@@ -1786,6 +1825,11 @@ static bool load_frame(const ScriptFrame& frame) {
   }
   if(active()) stop_runner();
   clear_error();
+  if(!prepare_runtime()) {
+    copy_script_name(script_name, "");
+    fail_script("not enough RAM for script runtime", 0);
+    return false;
+  }
 
   const char* error_message = NULL;
   u16 error_line = 0;

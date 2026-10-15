@@ -23,7 +23,16 @@ bool DisplayBufferLoan::acquire(MK61Display& display, usize required) {
     return false;
 #if MK61_ENABLE_USB_SCREEN
   if(display.usb_screen_active) return false;
+#if MK61_SCOPED_RESIDENT_BUFFERS
 #if defined(MK61_DISPLAY_UC1609)
+  constexpr usize limit = usb_screen::FRAME_BYTES-lcd_display::PIXEL_WIDTH;
+#else
+  constexpr usize limit = usb_screen::FRAME_BYTES;
+#endif
+  if(required > limit || !display.usb_framebuffer_storage.acquire(
+      shared_memory::Owner::USB_FRAMEBUFFER, required)) return false;
+  memory_ = display.usb_framebuffer_storage.data();
+#elif defined(MK61_DISPLAY_UC1609)
   constexpr usize prefix = lcd_display::PIXEL_WIDTH;
   if(required > usb_screen::FRAME_BYTES-prefix) return false;
   memory_ = display.render_buffer+prefix;
@@ -44,6 +53,9 @@ void DisplayBufferLoan::reset() {
   if(display_ && interrupt_context()) __builtin_trap();
   if(display_) {
     display_->screen_buffer_loan_active = false;
+#if MK61_ENABLE_USB_SCREEN && MK61_SCOPED_RESIDENT_BUFFERS
+    display_->usb_framebuffer_storage.reset();
+#endif
 #if !MK61_ENABLE_USB_SCREEN
     display_->endUpdate();
 #endif

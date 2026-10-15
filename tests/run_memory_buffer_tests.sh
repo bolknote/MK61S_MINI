@@ -84,3 +84,14 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "$root/tests/qualified_app_memory_self_test.cpp" \
   "$root/code/shared_memory.cpp" -o "$qualified_out"
 "$qualified_out"
+
+# Independently released native resident buffers coexist with ordinary APP,
+# MSC transport and staging. No production stack or APP limit is reduced.
+lifetime_out="${TMPDIR:-/tmp}/mk61_lifetime_buffer_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  -DMK61_SCOPED_RESIDENT_BUFFERS=1 -DMK61_TEST_RAM_SIZE=49152 \
+  "${sanitizer_flags[@]}" "$root/tests/lifetime_buffer_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$lifetime_out"
+"$lifetime_out"
+
+bash "$root/tests/run_storage_workspace_tests.sh"

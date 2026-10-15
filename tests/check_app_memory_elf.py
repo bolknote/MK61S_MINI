@@ -76,8 +76,15 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     lazy = sum(symbols.get(name, (0, 0))[0] for name in (
         'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
         'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes'))
-    # Worst case after every retained foreground buffer has been initialized.
-    effective = (free - lazy) & ~(APP_ALIGNMENT - 1)
+    # Qualify the same simultaneous live state even when its bytes are no
+    # longer permanently in BSS. Idle savings must not weaken the APP gate.
+    scoped = sum(symbols.get(name, (0, 0))[0] for name in (
+        'mk61_m61_runtime_bytes', 'mk61_usb_framebuffer_bytes',
+        'mk61_storage_workspace_bytes'))
+    # Worst case after every retained/foreground buffer has been initialized.
+    # High gaps may need up to 224 bytes before a 256-aligned APP end.
+    placement = symbols.get('mk61_app_placement_slack_bytes', (0, 0))[0]
+    effective = (free - lazy - scoped - placement) & ~(APP_ALIGNMENT - 1)
     assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'
     msc = symbols.get('mk61_session_msc_bytes', (0, 0))[0]
     fs = symbols.get('mk61_fs_temporary_bytes', (0, 0))[0]
@@ -86,7 +93,7 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     # implementations. If present, it must be our strong override, not Core's.
     assert '_sbrk' not in symbols or symbols['_sbrk'][1] == 1, 'weak Core _sbrk can overlap APP'
     print(f'APP RAM: {path}: reserve=0 free={free} system_max={module_memory} '
-          f'lazy={lazy} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} '
+          f'lazy={lazy} scoped={scoped} placement={placement} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} '
           f'msc_session={msc} fs_temporary={fs} top={end:#x} heap=guarded PASS')
 
 

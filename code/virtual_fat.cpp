@@ -1552,30 +1552,12 @@ static bool scan_host_directory(u16 first_cluster, u8 depth,
   return true;
 }
 
-static bool discard_known_sidecars(void) {
-  if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
-#if MK61_C9_METADATA_PRECHECK
-  // IRQ cache misses suspend role-based discard, but do not prove a layout
-  // change. Compare accepted dirty metadata without programming it first:
-  // a full journal may need sidecar reclamation to make persistence possible.
-  for(u8 slot = 0; slot < g_cache_slots &&
-      g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE; ++slot)
-    if(!persist_cache_slot(slot, true)) return false;
-  if(g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE) {
-    g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
-    return true;
-  }
-#endif
-#if MK61_STORAGE_SHARED_TEMP
-  storage_workspace::Lease maps_lease(storage_workspace::Owner::SIDECAR_SCAN,
-                                      sizeof(SidecarScanMaps));
-  if(!maps_lease.ok()) return false;
-  SidecarScanMaps& maps = *new(maps_lease.data()) SidecarScanMaps{};
+#if MK61_SCOPED_RESIDENT_BUFFERS && defined(__GNUC__) && !defined(__clang__)
+#define VFAT_MUTATION_IMPL __attribute__((noinline))
 #else
-  // These maps are needed only during this bounded scan. Keeping them on the
-  // stack avoids adding 1.5 KiB of permanent BSS to the 20-KiB USBDISK.APP.
-  SidecarScanMaps maps = {};
+#define VFAT_MUTATION_IMPL
 #endif
+VFAT_MUTATION_IMPL static bool discard_known_sidecars_impl(SidecarScanMaps& maps) {
   if(!scan_host_directory(0, 0, maps)) return false;
   for(u16 byte = 0; byte < CLUSTER_MAP_BYTES; byte++) {
     // A transient host directory may mention a cluster twice. Never discard
@@ -1609,6 +1591,33 @@ static bool discard_known_sidecars(void) {
   refresh_sidecar_scan_pressure();
 #endif
   return true;
+}
+
+static bool discard_known_sidecars(void) {
+  if(!g_sidecar_scan_pending || !sidecar_filter_enabled()) return true;
+#if MK61_C9_METADATA_PRECHECK
+  // IRQ cache misses suspend role-based discard, but do not prove a layout
+  // change. Compare accepted dirty metadata without programming it first:
+  // a full journal may need sidecar reclamation to make persistence possible.
+  for(u8 slot = 0; slot < g_cache_slots &&
+      g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE; ++slot)
+    if(!persist_cache_slot(slot, true)) return false;
+  if(g_sidecar_scan_pending == SIDECAR_SCAN_COMPARE) {
+    g_sidecar_scan_pending = SIDECAR_SCAN_NONE;
+    return true;
+  }
+#endif
+
+#if MK61_STORAGE_SHARED_TEMP
+  return storage_workspace::with_buffer(storage_workspace::Owner::SIDECAR_SCAN,
+      sizeof(SidecarScanMaps), [&](u8* memory) {
+        SidecarScanMaps& maps = *new(memory) SidecarScanMaps{};
+        return discard_known_sidecars_impl(maps);
+      });
+#else
+  SidecarScanMaps maps = {};
+  return discard_known_sidecars_impl(maps);
+#endif
 }
 
 enum class WalkPass : u8 { RESERVE, RESERVE_NAMES, VALIDATE, CHANGES, SNAPSHOT, DISPLACE, APPLY };
@@ -2285,24 +2294,14 @@ static bool handle_directory_item(u16 parent_id, const u8* item,
 // A parent is suspended immediately after a short entry, when its LFN state
 // has been reset. Only its next slot needs saving; one LFN parser is reused
 // for all 32 levels instead of nesting file/APP/CRC frames at every level.
-static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
+VFAT_MUTATION_IMPL static bool walk_directory_impl(u16 parent_id, bool root, u16 first_cluster,
                            u8 depth, WalkPass pass,
-                           bool preserve_host_tail) {
-#if MK61_C9_BULK_IMPORT
-#if MK61_STORAGE_SHARED_TEMP
-  static_assert(sizeof(ImportBatch) <= storage_workspace::BATCH_BYTES,
-                "USB short-file batch exceeds its storage scratch partition");
-  storage_workspace::Lease batch_lease(
-      pass == WalkPass::APPLY ? storage_workspace::Owner::IMPORT_BATCH :
-                               storage_workspace::Owner::NONE,
-      sizeof(ImportBatch));
-  if(pass == WalkPass::APPLY && !batch_lease.ok()) return false;
-  ImportBatch* batch = pass == WalkPass::APPLY
-      ? new(batch_lease.data()) ImportBatch : nullptr;
-#else
-  ImportBatch local_batch;
-  ImportBatch* batch = &local_batch;
+                           bool preserve_host_tail, void* batch_memory) {
+#if !MK61_C9_BULK_IMPORT
+  (void)batch_memory;
 #endif
+#if MK61_C9_BULK_IMPORT
+  auto* batch = static_cast<ImportBatch*>(batch_memory);
   struct BatchScope {
     ImportBatch* previous;
     BatchScope(ImportBatch* current, WalkPass pass) : previous(g_import_batch) {
@@ -2387,6 +2386,28 @@ static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
       if(pass == WalkPass::VALIDATE) g_validated_directory_slots[level] = 2;
     }
   }
+}
+
+static bool walk_directory(u16 parent_id, bool root, u16 first_cluster,
+                           u8 depth, WalkPass pass,
+                           bool preserve_host_tail) {
+#if MK61_C9_BULK_IMPORT
+#if MK61_STORAGE_SHARED_TEMP
+  static_assert(sizeof(ImportBatch) <= storage_workspace::BATCH_BYTES,
+                "USB short-file batch exceeds its storage scratch partition");
+  if(pass != WalkPass::APPLY) return walk_directory_impl(parent_id, root, first_cluster, depth, pass, preserve_host_tail, nullptr);
+  return storage_workspace::with_buffer(storage_workspace::Owner::IMPORT_BATCH,
+      sizeof(ImportBatch), [&](u8* memory) {
+        auto* batch = new(memory) ImportBatch;
+        return walk_directory_impl(parent_id, root, first_cluster, depth, pass, preserve_host_tail, batch);
+      });
+#else
+  ImportBatch batch;
+  return walk_directory_impl(parent_id, root, first_cluster, depth, pass, preserve_host_tail, &batch);
+#endif
+#else
+  return walk_directory_impl(parent_id, root, first_cluster, depth, pass, preserve_host_tail, nullptr);
+#endif
 }
 
 static bool prepare_import_mappings(void) {

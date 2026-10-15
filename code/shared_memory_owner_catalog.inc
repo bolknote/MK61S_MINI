@@ -89,3 +89,11 @@ MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_CATALOG, "store-catalog",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_IO, "store-io",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+
+// Independently released foreground state; IDs are appended for ABI stability.
+MK61_SHARED_MEMORY_OWNER(M61_RUNTIME, "m61-runtime",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(USB_FRAMEBUFFER, "usb-framebuffer",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(STORAGE_WORKSPACE, "store-workspace",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
