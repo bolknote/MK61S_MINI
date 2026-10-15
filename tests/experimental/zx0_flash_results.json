@@ -1,0 +1,510 @@
+{
+  "status": "INTEGRATED_MAIN_FLASH_A_B_A_PASS",
+  "tested_on": "2026-10-15",
+  "implementation_commit": "f72e21103",
+  "common_base_commit": "6781f4a248ecfcc683f70a75269cbb21052f34d7",
+  "normal_resident_images": {
+    "control": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/firmware/control/build/resident.bin",
+      "bytes": 373420,
+      "footer": 371708,
+      "build": "97E53E38",
+      "sha256": "681ed6b04a94914f282eb59883c7a9b04a4d870fe3700c91a17215770b51a7d6"
+    },
+    "candidate": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/firmware/candidate/build/resident.bin",
+      "bytes": 373724,
+      "footer": 372012,
+      "build": "7F477836",
+      "sha256": "9c2467e1e0bfe2681ee60e97394d897c7d62f2b98dfdd32507842edcfeb55519"
+    }
+  },
+  "firmware_source_difference": [
+    "code/zx0_encode.cpp"
+  ],
+  "sealed_flash_delta_bytes": 304,
+  "static_RAM_delta_bytes": 0,
+  "validation": {
+    "existing_encoder_ASan_UBSan_scalar_and_word": "PASS",
+    "differential_checks": 2842601,
+    "encoded_streams_byte_identical": true,
+    "actual_APP_streams": 3,
+    "Cortex_M4_kernel_checks": 8876,
+    "actual_Flash_ELF_calls": {
+      "status": "PASS",
+      "actual_resident_ELF_calls": 774,
+      "maximum_stack_access_bytes": 824,
+      "identical_streams_and_prepared_plans": true,
+      "read_write_bounds": true,
+      "SP_and_callee_saved_registers": true,
+      "scope": "Actual control/candidate Flash ELF prepare+emit calls in Cortex-M4 ISA; no device cycle claim."
+    },
+    "C6_C9_store_ASan_UBSan": "PASS, all 3 configurations",
+    "memory_arenas_and_workspace_ASan_UBSan": "PASS",
+    "F401_product_ClassicV3": {
+      "status": "PASS",
+      "sealed_bytes": 255404,
+      "free_bytes": 6740
+    },
+    "F401_WS0010_USB_graphics": {
+      "status": "PASS",
+      "sealed_bytes": 251520,
+      "free_bytes": 10624
+    },
+    "post_main_encoder_ASan_UBSan_scalar_and_word": "PASS on merged RAM/MPU + encoder source",
+    "post_main_C6_C9_store_ASan_UBSan": "PASS, all three configurations with word kernels enabled"
+  },
+  "confirmed_actual_encoder_opcodes": {
+    "control": {
+      "symbols": [
+        {
+          "name": "zx0::(anonymous namespace)::build_bounded_optimal_plan(unsigned char const*, unsigned short, unsigned char*, unsigned int, zx0::(anonymous namespace)::Plan&)",
+          "address": 134271100,
+          "bytes": 606,
+          "opcodes": {
+            "usub8": 0,
+            "uadd16": 0,
+            "usub16": 0,
+            "sel": 0
+          }
+        }
+      ],
+      "opcodes": {
+        "usub8": 0,
+        "uadd16": 0,
+        "usub16": 0,
+        "sel": 0
+      }
+    },
+    "candidate": {
+      "symbols": [
+        {
+          "name": "zx0_encode_kernels::match_length(unsigned char const*, unsigned short, unsigned short, unsigned short)",
+          "address": 134335396,
+          "bytes": 104,
+          "opcodes": {
+            "usub8": 0,
+            "uadd16": 0,
+            "usub16": 0,
+            "sel": 0
+          }
+        },
+        {
+          "name": "zx0_encode_kernels::lcp_range(unsigned char const*, unsigned short, unsigned short*, unsigned short, unsigned short)",
+          "address": 134337076,
+          "bytes": 220,
+          "opcodes": {
+            "usub8": 1,
+            "uadd16": 2,
+            "usub16": 2,
+            "sel": 3
+          }
+        },
+        {
+          "name": "zx0::(anonymous namespace)::build_bounded_optimal_plan(unsigned char const*, unsigned short, unsigned char*, unsigned int, zx0::(anonymous namespace)::Plan&)",
+          "address": 134337296,
+          "bytes": 614,
+          "opcodes": {
+            "usub8": 0,
+            "uadd16": 0,
+            "usub16": 0,
+            "sel": 0
+          }
+        }
+      ],
+      "opcodes": {
+        "usub8": 1,
+        "uadd16": 2,
+        "usub16": 2,
+        "sel": 3
+      }
+    }
+  },
+  "app": {
+    "profiles": [
+      {
+        "variant": "control",
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/firmware/control/build/resident.bin",
+        "bytes": 373420,
+        "footer": 371708,
+        "build": "97E53E38",
+        "sha256": "681ed6b04a94914f282eb59883c7a9b04a4d870fe3700c91a17215770b51a7d6",
+        "symbols": {
+          "emit": {
+            "address": 134272889,
+            "bytes": 580,
+            "code_hex": "2de9f04f036893b0804605931bb9002013b0bde8f08fd0f80490b9f1000ff6d0"
+          },
+          "prepare": {
+            "address": 134271957,
+            "bytes": 814,
+            "code_hex": "2de9f04f93b01446049007911c98182200211d46fbf79af9049b002b00f0e580"
+          }
+        }
+      },
+      {
+        "variant": "candidate",
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/firmware/candidate/build/resident.bin",
+        "bytes": 373724,
+        "footer": 372012,
+        "build": "7F477836",
+        "sha256": "9c2467e1e0bfe2681ee60e97394d897c7d62f2b98dfdd32507842edcfeb55519",
+        "symbols": {
+          "emit": {
+            "address": 134271165,
+            "bytes": 580,
+            "code_hex": "2de9f04f036893b0804605931bb9002013b0bde8f08fd0f80490b9f1000ff6d0"
+          },
+          "prepare": {
+            "address": 134337911,
+            "bytes": 814,
+            "code_hex": "2de9f04f93b01446049007911c98182200211d46ebf7c9f8049b002b00f0e580"
+          }
+        }
+      }
+    ],
+    "app": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/app/build/ZX0FLASH.APP",
+    "app_sha256": "7d08d3cd48556c13d1e789287ff2cedb085000140885143d0c3c4171566a7d92",
+    "corpus_header": "/Users/bolk/.codex/worktrees/zx0-flash/MK61S_MINI/tests/experimental/zx0_flash_corpus.hpp",
+    "corpus_header_sha256": "c9c64d2fce0fa68a0878114f9d6fb20dfeab2bd8e0e0be8506c045f024d172fb",
+    "job": {
+      "name": "ZX0FLASH",
+      "kind": 3,
+      "app": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/app/build/ZX0FLASH.APP",
+      "cases": [
+        {
+          "family": 4,
+          "size": 16,
+          "parameter": 0,
+          "pattern": 4
+        },
+        {
+          "family": 4,
+          "size": 16,
+          "parameter": 0,
+          "pattern": 5
+        },
+        {
+          "family": 4,
+          "size": 64,
+          "parameter": 0,
+          "pattern": 4
+        },
+        {
+          "family": 4,
+          "size": 64,
+          "parameter": 0,
+          "pattern": 5
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 0,
+          "pattern": 3
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 0,
+          "pattern": 4
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 0,
+          "pattern": 5
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 1,
+          "pattern": 2
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 1,
+          "pattern": 4
+        },
+        {
+          "family": 4,
+          "size": 512,
+          "parameter": 1,
+          "pattern": 5
+        }
+      ],
+      "variants_by_family": {
+        "4": [
+          "resident_flash"
+        ]
+      }
+    },
+    "metadata": {
+      "name": "ZX0FLASH",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 39,
+      "relocation_bytes": 43,
+      "entry_offset": 0,
+      "image_bytes": 6056,
+      "bss_bytes": 4804,
+      "memory_bytes": 10860,
+      "app_bytes": 4527,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+    },
+    "scope": "Actual normal resident prepare+emit in Flash; original scalar SRAM encoder outside timed intervals checks byte-identical streams and canaries."
+  },
+  "hardware": {
+    "status": "PASS",
+    "public": "AEB505B6E0067623",
+    "USB": "2068336B4731",
+    "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/qualified-flash-report.json",
+    "raw_report_sha256": "bb54fd7ee6087c76aa58a59921b08d0c52b4ff8324d912c3bdd35cb89327adc3",
+    "phases": {
+      "control1": ".build/zx0-flash-20261015/hil-v3/control1/hil/report.json",
+      "candidate": ".build/zx0-flash-20261015/hil-v3/candidate/hil/report.json",
+      "control2": ".build/zx0-flash-20261015/hil-control2-final/control2/hil/report.json"
+    },
+    "runs_per_phase": 3,
+    "cases_per_run": 10,
+    "alignments": 4,
+    "samples_per_row": 7,
+    "raw_frames": 90,
+    "measured_rows": 360,
+    "summary": [
+      {
+        "size": 16,
+        "mode": 0,
+        "pattern": 4,
+        "aligned_cycles": {
+          "control": 94421.5,
+          "candidate": 57152.0
+        },
+        "candidate_speedup_range": [
+          1.652090231878606,
+          1.652583977632218
+        ],
+        "control2_vs_control1_range": [
+          0.9999973523049509,
+          1.0
+        ]
+      },
+      {
+        "size": 16,
+        "mode": 0,
+        "pattern": 5,
+        "aligned_cycles": {
+          "control": 94421.625,
+          "candidate": 57134.75
+        },
+        "candidate_speedup_range": [
+          1.6521552742320715,
+          1.652612901955465
+        ],
+        "control2_vs_control1_range": [
+          0.9999973523049509,
+          1.0
+        ]
+      },
+      {
+        "size": 64,
+        "mode": 0,
+        "pattern": 4,
+        "aligned_cycles": {
+          "control": 463548.0,
+          "candidate": 315733.0
+        },
+        "candidate_speedup_range": [
+          1.4680590964513627,
+          1.4681645567615675
+        ],
+        "control2_vs_control1_range": [
+          1.0,
+          1.0000064718775348
+        ]
+      },
+      {
+        "size": 64,
+        "mode": 0,
+        "pattern": 5,
+        "aligned_cycles": {
+          "control": 426350.0,
+          "candidate": 279256.0
+        },
+        "candidate_speedup_range": [
+          1.5265525070006947,
+          1.5267353252929212
+        ],
+        "control2_vs_control1_range": [
+          1.0,
+          1.0000046909815878
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "control": 7109721.5,
+          "candidate": 6289159.0
+        },
+        "candidate_speedup_range": [
+          1.1304725321779907,
+          1.1304730921721597
+        ],
+        "control2_vs_control1_range": [
+          0.9999995780425139,
+          1.0000002813050304
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 0,
+        "pattern": 4,
+        "aligned_cycles": {
+          "control": 9538805.0,
+          "candidate": 8664300.0
+        },
+        "candidate_speedup_range": [
+          1.1009147967819726,
+          1.1009319852729014
+        ],
+        "control2_vs_control1_range": [
+          0.9999996854953276,
+          1.000000419339871
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 0,
+        "pattern": 5,
+        "aligned_cycles": {
+          "control": 7967615.5,
+          "candidate": 7126729.0
+        },
+        "candidate_speedup_range": [
+          1.1179876482198188,
+          1.118002761746015
+        ],
+        "control2_vs_control1_range": [
+          0.9999994979677735,
+          1.0000002510163022
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 1,
+        "pattern": 2,
+        "aligned_cycles": {
+          "control": 20251.0,
+          "candidate": 17313.0
+        },
+        "candidate_speedup_range": [
+          1.1611811926605504,
+          1.1696990700629584
+        ],
+        "control2_vs_control1_range": [
+          1.0,
+          1.0
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 1,
+        "pattern": 4,
+        "aligned_cycles": {
+          "control": 1356473.0,
+          "candidate": 1333010.0
+        },
+        "candidate_speedup_range": [
+          1.0172314494575145,
+          1.0176015183682043
+        ],
+        "control2_vs_control1_range": [
+          0.9999977883804457,
+          1.0000036860407426
+        ]
+      },
+      {
+        "size": 512,
+        "mode": 1,
+        "pattern": 5,
+        "aligned_cycles": {
+          "control": 3369269.0,
+          "candidate": 3310525.0
+        },
+        "candidate_speedup_range": [
+          1.0176463961174878,
+          1.0177446175455556
+        ],
+        "control2_vs_control1_range": [
+          0.9999982192014603,
+          1.0000008903992699
+        ]
+      }
+    ],
+    "original_files_preserved": 44,
+    "original_directories_preserved": 4,
+    "original_calculator_state_preserved": true,
+    "alarms_A_B_off": true,
+    "temporary_files_removed": true,
+    "CDC_closed": true,
+    "recovery": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/recovery/classic.bin",
+      "bytes": 360564,
+      "footer": 358852,
+      "build": "122A5FF9",
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+    },
+    "phase_provenance": "Complete A1/B phases from hil-v3 and complete A2 from hil-control2-final after a terminal trailing-space comparison fix. All firmware and APP bytes were unchanged; raw failed/interrupted attempts are retained separately.",
+    "comparison": "Median of six control launch medians (A1+A2) versus three candidate launch medians, separately for each input alignment.",
+    "maximum_control_drift_percent": 0.0006471877534774961
+  },
+  "prior_attempts": [
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/hil",
+      "result": "Stopped before any firmware write because dfu-util path was missing; exact recovery PASS."
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/hil-v2",
+      "result": "Control and candidate each completed 3 native runs. Final candidate status read timed out; outer exact recovery PASS. Not the published A/B/A."
+    },
+    {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/hil-v3",
+      "result": "All nine measurement launches completed; the first A2 cleanup compared raw terminal prompt trailing space and rejected. Complete A1/B reports are retained; A2 was repeated alone and fully passed."
+    }
+  ],
+  "modes": {
+    "0": "BOUNDED_OPTIMAL",
+    "1": "GREEDY"
+  },
+  "patterns": {
+    "2": "three-byte period",
+    "3": "random",
+    "4": "BASIC M8 prefix",
+    "5": "ARM image prefix"
+  },
+  "integration": {
+    "implementation_main_commit": "12fba17e7",
+    "feature_commit": "f72e21103",
+    "RAM_MPU_main_base": "7cd70e188",
+    "merged_normal_build": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/integrated-firmware/candidate/build/resident.bin",
+      "bytes": 374976,
+      "footer": 373264,
+      "build": "342D9231",
+      "sha256": "8179695796cb939e2ee912e3b25a98488ea304e3790b24022dceba112041b6dd"
+    },
+    "source_relationship": "Physical pair uses base 6781f4a24 plus the same encoder files now in main. A separate normal build on 7cd70e188 + these identical files passes build/Flash/RAM/stack gates.",
+    "physical_device": "Exact original 122A5FF9 + original files restored and Classic handed to Tiny BASIC raw32 qualification."
+  },
+  "scope": "Complete bounded fragments, 16/64/512 bytes, from normal resident Flash. Not whole-filesystem, USB or application-loading throughput.",
+  "source_snapshots": {
+    "source-snapshot": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/source-snapshot/manifest.json",
+    "source-snapshot-v3": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/source-snapshot-v3/manifest.json",
+    "source-snapshot-control2-final": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/source-snapshot-control2-final/manifest.json"
+  }
+}

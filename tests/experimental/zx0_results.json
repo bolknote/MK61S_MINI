@@ -1,0 +1,5274 @@
+{
+  "status": "PROTOTYPES_HOST_ISA_AND_CLASSIC_PASS",
+  "tested_on": "2026-10-15",
+  "source_commit": "b0c7528a2f567c41e3af8d59ba6ddcc88cf636d5",
+  "production_sha256": {
+    "zx0.hpp": "396768ed27e06bcc7d2a42b189af1e653dc3798c55f04633878f70112982d6d5",
+    "zx0.cpp": "f575fd42ea9357f8766c0e5dccec4877a56818de2140c6a0e46a622bdb296018",
+    "zx0_encode.cpp": "b0a0aba300e5a51448ed0155fd11a158604b4985a94526393c98eca88f88d50e"
+  },
+  "compiler": "ARM GCC 14.2.1; matched SRAM APP kernels -Os with SDK LTO",
+  "candidates": [
+    "bounded LZ forward word copy and periods 1/2/3",
+    "word XOR match length with immediate-byte mismatch path",
+    "word/SIMD32 bounded-optimal LCP table update",
+    "register-cursor decoder with scalar matches below eight bytes"
+  ],
+  "validation": {
+    "host_sanitizers": "ASan/UBSan PASS",
+    "host_differential_checks": 2842601,
+    "complete_encoded_streams_byte_identical": true,
+    "malformed_prefix_and_callback_semantics_preserved": true,
+    "protected_page_bounds": "PASS",
+    "actual_APP_streams": [
+      "Actual APP stream .build/portable-system-hil/apps/wbmp-viewer/WBMP.APP: 1552 -> 1905 bytes, all prototypes and image CRC PASS",
+      "Actual APP stream .build/portable-system-hil/apps/focal/FOCAL.APP: 13556 -> 20060 bytes, all prototypes and image CRC PASS",
+      "Actual APP stream .build/portable-system-hil/apps/tinybasic/BASIC.APP: 11458 -> 17176 bytes, all prototypes and image CRC PASS"
+    ],
+    "cortex_m4_isa": {
+      "status": "PASS",
+      "checks": 8876,
+      "maximum_stack_access_bytes": 108,
+      "scope": "Actual Cortex-M4 ISA; exact normal-memory reads/writes, immutable sources, SP and callee-saved registers. No hardware cycle claim.",
+      "commands": [
+        [
+          "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+          "-Os",
+          "-mcpu=cortex-m4",
+          "-mthumb",
+          "-mfpu=fpv4-sp-d16",
+          "-mfloat-abi=hard",
+          "-fno-builtin",
+          "-ffunction-sections",
+          "-fdata-sections",
+          "-fstack-usage",
+          "-std=c++17",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-I/Users/bolk/Projects/MK61S_MINI/code",
+          "-c",
+          "/Users/bolk/Projects/MK61S_MINI/tests/experimental/zx0_candidates_arm_probe.cpp",
+          "-o",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-prototypes-20261015/arm/probe.o"
+        ],
+        [
+          "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+          "-Os",
+          "-mcpu=cortex-m4",
+          "-mthumb",
+          "-mfpu=fpv4-sp-d16",
+          "-mfloat-abi=hard",
+          "-fno-builtin",
+          "-ffunction-sections",
+          "-fdata-sections",
+          "-fstack-usage",
+          "-nostdlib",
+          "-Wl,-Ttext=0x08010000,-e,zx0_probe,--gc-sections",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-prototypes-20261015/arm/probe.o",
+          "-o",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-prototypes-20261015/arm/probe.elf"
+        ]
+      ]
+    },
+    "confirmed_DSP_opcodes": [
+      "USUB8",
+      "UADD16",
+      "USUB16",
+      "SEL"
+    ],
+    "register_copy_host_checks": 2842601,
+    "register_copy_actual_APP_streams": [
+      "Actual APP stream .build/portable-system-hil/apps/wbmp-viewer/WBMP.APP: 1552 -> 1905 bytes, all prototypes and image CRC PASS",
+      "Actual APP stream .build/portable-system-hil/apps/focal/FOCAL.APP: 13556 -> 20060 bytes, all prototypes and image CRC PASS",
+      "Actual APP stream .build/portable-system-hil/apps/tinybasic/BASIC.APP: 11458 -> 17176 bytes, all prototypes and image CRC PASS"
+    ],
+    "register_copy_cortex_m4_isa": {
+      "status": "PASS",
+      "checks": 8876,
+      "register_copy": true,
+      "maximum_stack_access_bytes": 108,
+      "scope": "Actual Cortex-M4 ISA; exact normal-memory reads/writes, immutable sources, SP and callee-saved registers. No hardware cycle claim.",
+      "commands": [
+        [
+          "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+          "-Os",
+          "-mcpu=cortex-m4",
+          "-mthumb",
+          "-mfpu=fpv4-sp-d16",
+          "-mfloat-abi=hard",
+          "-fno-builtin",
+          "-ffunction-sections",
+          "-fdata-sections",
+          "-fstack-usage",
+          "-DZX0_REGISTER_COPY=1",
+          "-std=c++17",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-fno-exceptions",
+          "-fno-rtti",
+          "-I/Users/bolk/Projects/MK61S_MINI/code",
+          "-c",
+          "/Users/bolk/Projects/MK61S_MINI/tests/experimental/zx0_candidates_arm_probe.cpp",
+          "-o",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-register-v2-20261015/arm/probe.o"
+        ],
+        [
+          "/Users/bolk/Library/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/arm-none-eabi-g++",
+          "-Os",
+          "-mcpu=cortex-m4",
+          "-mthumb",
+          "-mfpu=fpv4-sp-d16",
+          "-mfloat-abi=hard",
+          "-fno-builtin",
+          "-ffunction-sections",
+          "-fdata-sections",
+          "-fstack-usage",
+          "-DZX0_REGISTER_COPY=1",
+          "-nostdlib",
+          "-Wl,-Ttext=0x08010000,-e,zx0_probe,--gc-sections",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-register-v2-20261015/arm/probe.o",
+          "-o",
+          "/Users/bolk/Projects/MK61S_MINI/tmp/zx0-register-v2-20261015/arm/probe.elf"
+        ]
+      ]
+    },
+    "corrected_full_native_corpus_host_checks": 672,
+    "focused_native_corpus_host_checks": 160,
+    "correlated_CDC_PTY": "PASS: stale reply ignored; complete canonical profile and build pinning retained; no new device run after transport-only change"
+  },
+  "native_apps": {
+    "ZX0KERN": {
+      "metadata": {
+        "name": "ZX0KERN",
+        "abi": 6,
+        "load_address": 536870912,
+        "relocations": 65,
+        "relocation_bytes": 74,
+        "entry_offset": 0,
+        "image_bytes": 6780,
+        "bss_bytes": 5084,
+        "memory_bytes": 11864,
+        "app_bytes": 3584,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      "cases": 196
+    },
+    "ZX0CODEC": {
+      "metadata": {
+        "name": "ZX0CODEC",
+        "abi": 6,
+        "load_address": 536870912,
+        "relocations": 53,
+        "relocation_bytes": 58,
+        "entry_offset": 0,
+        "image_bytes": 13652,
+        "bss_bytes": 5388,
+        "memory_bytes": 19040,
+        "app_bytes": 6608,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      "cases": 72
+    }
+  },
+  "hardware": {
+    "initial_run_status": "INCOMPLETE",
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "122A5FF9",
+      "profile": "classic-v3-uc1609"
+    },
+    "kernel_runs": 3,
+    "kernel_measured_rows": 5376,
+    "kernel_summary": [
+      {
+        "family": "LCP_table",
+        "size": 0,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9325.09375,
+          "word": 3402.84375,
+          "DSP": 3402.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.740204046025143,
+            2.7403825844192817
+          ],
+          "DSP": [
+            2.740078235477769,
+            2.740407750941317
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9998898091862408,
+          1.0000642850583157
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 0,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9325.0625,
+          "word": 3403.28125,
+          "DSP": 3403.1875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.74001193700932,
+            2.7404169345210763
+          ],
+          "DSP": [
+            2.74001193700932,
+            2.7403917679147036
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.999990816504578,
+          1.0000275477034397
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 0,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9325.0625,
+          "word": 3402.84375,
+          "DSP": 3402.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.7403642174284375,
+            2.74037340092386
+          ],
+          "DSP": [
+            2.74037340092386,
+            2.7404237342614954
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0,
+          1.0000183673281966
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 0,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9325.03125,
+          "word": 3402.875,
+          "DSP": 3402.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.740339051537303,
+            2.7403985673615576
+          ],
+          "DSP": [
+            2.7403642174284375,
+            2.7403985673615576
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.999990816504578,
+          1.0000091835797593
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 1,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9328.03125,
+          "word": 3503.84375,
+          "DSP": 3513.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.662183614861852,
+            2.6622696705374502
+          ],
+          "DSP": [
+            2.6544186956444413,
+            2.6546930862133364
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9970832518185213,
+          0.9971541136397997
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 1,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9331.0625,
+          "word": 3503.84375,
+          "DSP": 3513.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6630842913585973,
+            2.6631021289119983
+          ],
+          "DSP": [
+            2.6555054560977562,
+            2.655537966240373
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971541136397997,
+          0.9971629818039522
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 1,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9331.0625,
+          "word": 3503.84375,
+          "DSP": 3513.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6622696705374502,
+            2.6631080430245624
+          ],
+          "DSP": [
+            2.654645868165487,
+            2.655537966240373
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971363523175981,
+          0.9971629818039522
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 1,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9330.96875,
+          "word": 3503.8125,
+          "DSP": 3513.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6630605401163,
+            2.6631139572426217
+          ],
+          "DSP": [
+            2.6551570822625536,
+            2.655552689855124
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9970121913264626,
+          0.9971630070346753
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 2,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9331.03125,
+          "word": 3517.84375,
+          "DSP": 3527.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6521708235628507,
+            2.6525184329750378
+          ],
+          "DSP": [
+            2.6446481555289845,
+            2.644981840729914
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.997032903768655,
+          0.997289396757906
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 2,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9337.0625,
+          "word": 3517.8125,
+          "DSP": 3527.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6541826935889348,
+            2.6542418050990495
+          ],
+          "DSP": [
+            2.646635722637565,
+            2.6466945992151722
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971565492377603,
+          0.9971565744251143
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 2,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9333.96875,
+          "word": 3517.84375,
+          "DSP": 3527.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.652491782890646,
+            2.6533623523141157
+          ],
+          "DSP": [
+            2.644949553108751,
+            2.645841084241297
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971565492377603,
+          0.9971654073398234
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 2,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9337.0,
+          "word": 3517.84375,
+          "DSP": 3527.78125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.653852644668473,
+            2.6546504397263924
+          ],
+          "DSP": [
+            2.646676883011046,
+            2.6471255204181063
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971653822304899,
+          0.9972982549384356
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 3,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9334.0625,
+          "word": 3531.875,
+          "DSP": 3541.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6428065829056804,
+            2.6428533507936787
+          ],
+          "DSP": [
+            2.63505156458144,
+            2.6353682315884206
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9970534524891269,
+          0.9971854348459047
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 3,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9343.0,
+          "word": 3531.875,
+          "DSP": 3542.28125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.645337108476376,
+            2.64538705881312
+          ],
+          "DSP": [
+            2.6375658341640715,
+            2.6379004579182808
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9970534524891269,
+          0.9971854348459047
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 3,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9340.03125,
+          "word": 3531.84375,
+          "DSP": 3541.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.643661685203373,
+            2.64538705881312
+          ],
+          "DSP": [
+            2.6361976018846116,
+            2.637964654084721
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9971766117576474,
+          0.9971942084226687
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 3,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9343.03125,
+          "word": 3531.78125,
+          "DSP": 3542.28125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6454016174414696,
+            2.6454193137376345
+          ],
+          "DSP": [
+            2.636676308734302,
+            2.637909281006538
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          0.9967017073514887,
+          0.99716778866939
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 4,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9337.03125,
+          "word": 3568.84375,
+          "DSP": 3565.78125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.612610721999248,
+            2.6162622698177804
+          ],
+          "DSP": [
+            2.6147827913326567,
+            2.6185092677796766
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.000831378863724,
+          1.000858858069322
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 4,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9349.125,
+          "word": 3568.84375,
+          "DSP": 3565.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6156569939760614,
+            2.619650972391268
+          ],
+          "DSP": [
+            2.6179229597997864,
+            2.6218549256399695
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.000831378863724,
+          1.000866308475822
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 4,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9343.03125,
+          "word": 3568.84375,
+          "DSP": 3565.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6134588984199434,
+            2.6179434865984255
+          ],
+          "DSP": [
+            2.6156316729093008,
+            2.620168965698561
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.000831378863724,
+          1.0008500867614323
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 4,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9349.0,
+          "word": 3568.8125,
+          "DSP": 3565.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.6148991775122585,
+            2.619638885483617
+          ],
+          "DSP": [
+            2.618166224719298,
+            2.6218428478782885
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0008313861394804,
+          1.001409387747956
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 7,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9343.03125,
+          "word": 3615.84375,
+          "DSP": 3613.1875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.5839145427675074,
+            2.5871963724786045
+          ],
+          "DSP": [
+            2.58581411842037,
+            2.589661414799352
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0007351542094065,
+          1.0009527851642688
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 7,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9367.09375,
+          "word": 3615.84375,
+          "DSP": 3612.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.590300642072607,
+            2.594147835945546
+          ],
+          "DSP": [
+            2.5925185953987198,
+            2.5960350934931538
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0007275057810727,
+          1.0008562532433836
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 7,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9357.0625,
+          "word": 3615.84375,
+          "DSP": 3612.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.5869790676369417,
+            2.5913697456446294
+          ],
+          "DSP": [
+            2.5891272381281896,
+            2.5935245255562966
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0008219557355207,
+          1.0008315215979073
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 7,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9367.0,
+          "word": 3615.8125,
+          "DSP": 3612.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.5905657442137833,
+            2.594152978034722
+          ],
+          "DSP": [
+            2.5926944667894922,
+            2.5963100909484624
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0008130714205397,
+          1.0008315288003464
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 16,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9361.125,
+          "word": 3805.78125,
+          "DSP": 3764.3125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.446768713039501,
+            2.459711787165907
+          ],
+          "DSP": [
+            2.4739680547067278,
+            2.4868086802038887
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.011016287834764,
+          1.0111247842353466
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 16,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9421.15625,
+          "word": 3805.84375,
+          "DSP": 3763.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.462487849902391,
+            2.4754448340134827
+          ],
+          "DSP": [
+            2.4898210318541825,
+            2.503067841219498
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.011091565289925,
+          1.0112191411611027
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 16,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9393.125,
+          "word": 3807.84375,
+          "DSP": 3763.78125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.453862669703575,
+            2.466783202435762
+          ],
+          "DSP": [
+            2.482123250918397,
+            2.4956617763054108
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0106492756016014,
+          1.0117069768600393
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 16,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9421.0,
+          "word": 3805.84375,
+          "DSP": 3763.78125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.4616100511865984,
+            2.4754037787284355
+          ],
+          "DSP": [
+            2.4884563636513715,
+            2.5030678921629677
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.010548993388307,
+          1.0116449047347686
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 31,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9391.09375,
+          "word": 4119.8125,
+          "DSP": 4038.84375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.279462965069974,
+            2.299001644799755
+          ],
+          "DSP": [
+            2.325178152781969,
+            2.345511734817324
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0200475074085251,
+          1.0204437486922355
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 31,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 9511.125,
+          "word": 4119.84375,
+          "DSP": 4038.78125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.308590283308681,
+            2.327244226946016
+          ],
+          "DSP": [
+            2.354907847294223,
+            2.3752838802825145
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0200631373702047,
+          1.0206422913333593
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 31,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9449.03125,
+          "word": 4119.84375,
+          "DSP": 4038.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.293541168885349,
+            2.3144399666587647
+          ],
+          "DSP": [
+            2.3395568004209157,
+            2.3622562869764754
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0195530077080994,
+          1.0206599959413685
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 31,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 9508.03125,
+          "word": 4119.84375,
+          "DSP": 4038.8125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.3078621003527138,
+            2.327636461002945
+          ],
+          "DSP": [
+            2.3541650547035795,
+            2.3747443842587534
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0200631373702047,
+          1.0202385226580915
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 127,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9584.1875,
+          "word": 6137.46875,
+          "DSP": 5744.46875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5615863624560207,
+            1.6020298894164722
+          ],
+          "DSP": [
+            1.6684201650500754,
+            1.7146794735606221
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0684136370312747,
+          1.070316780534714
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 127,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10087.09375,
+          "word": 6137.5625,
+          "DSP": 5744.46875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6435015936701256,
+            1.6861105307145843
+          ],
+          "DSP": [
+            1.7559663371830512,
+            1.8046717319959968
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0684136370312747,
+          1.070316387402649
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 127,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9852.15625,
+          "word": 6137.46875,
+          "DSP": 5744.40625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.60050916496945,
+            1.6423470906877982
+          ],
+          "DSP": [
+            1.710023827398244,
+            1.7578132862206617
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.068424889295079,
+          1.070305598729747
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 127,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10080.0625,
+          "word": 6137.4375,
+          "DSP": 5744.46875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6423894337009541,
+            1.6856407068643993
+          ],
+          "DSP": [
+            1.7547423336579209,
+            1.804140599229578
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0684081970156074,
+          1.0702996147889725
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 128,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9586.09375,
+          "word": 6019.46875,
+          "DSP": 5613.4375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5512784205841896,
+            1.592514912549384
+          ],
+          "DSP": [
+            1.660369903275219,
+            1.7077047263820075
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0703108508208345,
+          1.0723320158102767
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 128,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10093.09375,
+          "word": 6019.53125,
+          "DSP": 5613.5
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6333289505623432,
+            1.6767242050616482
+          ],
+          "DSP": [
+            1.748181345804105,
+            1.7980036964460675
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0703158829133108,
+          1.0723312104747484
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 128,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9827.09375,
+          "word": 6019.4375,
+          "DSP": 5613.4375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5902813247498016,
+            1.6325601437011348
+          ],
+          "DSP": [
+            1.7021125731389817,
+            1.7506374213661415
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0703216762020233,
+          1.0723264488114457
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 128,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10090.125,
+          "word": 6019.40625,
+          "DSP": 5613.5
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6328466747242634,
+            1.6762658277134892
+          ],
+          "DSP": [
+            1.7476711898717734,
+            1.7974748374454441
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0703216762020233,
+          1.0723089427273538
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 129,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9589.21875,
+          "word": 6264.46875,
+          "DSP": 5868.5
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5307290159731022,
+            1.5708281715520154
+          ],
+          "DSP": [
+            1.6340046434352902,
+            1.6798232888635853
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.067468262758797,
+          1.069387040088465
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 129,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10101.09375,
+          "word": 6264.46875,
+          "DSP": 5868.4375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6123612600703365,
+            1.6547150396994006
+          ],
+          "DSP": [
+            1.7211793962436965,
+            1.7694842697059774
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.067484956600458,
+          1.0693589090889184
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 129,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 9832.09375,
+          "word": 6264.4375,
+          "DSP": 5868.40625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5691773544245073,
+            1.6160662636108138
+          ],
+          "DSP": [
+            1.675082140061452,
+            1.7281655444243718
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.067485315966324,
+          1.0693655225269612
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 129,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10099.0625,
+          "word": 6264.4375,
+          "DSP": 5868.4375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6116520836866837,
+            1.6543907608194859
+          ],
+          "DSP": [
+            1.7203966111261988,
+            1.7691671821710306
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0674739471007664,
+          1.0693768510256256
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 255,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9845.125,
+          "word": 8898.125,
+          "DSP": 8098.96875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.1064269157828195,
+            1.1470446883032717
+          ],
+          "DSP": [
+            1.2155976046425485,
+            1.264793968396711
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0986657303370786,
+          1.1026544835560124
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 255,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10856.78125,
+          "word": 8898.125,
+          "DSP": 8098.9375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2201095736461334,
+            1.2649151295812187
+          ],
+          "DSP": [
+            1.340497283615261,
+            1.3947552251029764
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0986695888381282,
+          1.1026472784500132
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 255,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 10335.1875,
+          "word": 8898.09375,
+          "DSP": 8098.96875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.1615058000484655,
+            1.2036641932876522
+          ],
+          "DSP": [
+            1.2761115419787241,
+            1.3272257194244603
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0986568713320548,
+          1.1026544835560124
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 255,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10853.625,
+          "word": 8898.0625,
+          "DSP": 8099.03125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2197739676474513,
+            1.2649168414307352
+          ],
+          "DSP": [
+            1.3401139796812118,
+            1.3947672691359612
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0986576326644004,
+          1.1026553078053363
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 256,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9847.1875,
+          "word": 8620.09375,
+          "DSP": 7807.90625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.1014709069427646,
+            1.1423527151314334
+          ],
+          "DSP": [
+            1.2115273708736072,
+            1.2611815747659625
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.09991272486803,
+          1.1040211644446936
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 256,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10862.59375,
+          "word": 8620.09375,
+          "DSP": 7808.03125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2150417359936243,
+            1.260147982729306
+          ],
+          "DSP": [
+            1.3364347284485079,
+            1.3912077708449233
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.09990849602842,
+          1.1040034899962778
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 256,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 10337.21875,
+          "word": 8620.09375,
+          "DSP": 7807.9375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.1556022399172265,
+            1.1992002697186444
+          ],
+          "DSP": [
+            1.2710576094980315,
+            1.3239371793127186
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.09990849602842,
+          1.1040167457795353
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 256,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10862.5625,
+          "word": 8620.0625,
+          "DSP": 7808.03125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2147104162078837,
+            1.2601489258343543
+          ],
+          "DSP": [
+            1.3360707735960045,
+            1.3912037685556138
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.09990888014856,
+          1.1039994877069683
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 511,
+        "parameter": 0,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 9847.1875,
+          "word": 8940.15625,
+          "DSP": 8128.0625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.101452720180087,
+            1.1423615139211136
+          ],
+          "DSP": [
+            1.211504894309068,
+            1.2611573820225168
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0999123407331084,
+          1.1039914831283495
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 511,
+        "parameter": 0,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 10862.59375,
+          "word": 8940.15625,
+          "DSP": 8127.90625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2150339933935719,
+            1.260149721764034
+          ],
+          "DSP": [
+            1.3364437472606059,
+            1.3912197777128517
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.0999177220543341,
+          1.104011494574897
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 511,
+        "parameter": 0,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 10353.1875,
+          "word": 8940.09375,
+          "DSP": 8127.96875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.1580625203175303,
+            1.2009287858354722
+          ],
+          "DSP": [
+            1.2737730444645226,
+            1.3258343772637948
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.099917337895769,
+          1.1040074922855874
+        ]
+      },
+      {
+        "family": "LCP_table",
+        "size": 511,
+        "parameter": 0,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 10862.5625,
+          "word": 8940.09375,
+          "DSP": 8128.03125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2150347450399184,
+            1.25982265209794
+          ],
+          "DSP": [
+            1.3364321772261887,
+            1.3911163773778261
+          ]
+        },
+        "DSP_vs_word_speedup": [
+          1.09990888014856,
+          1.1042160379171204
+        ]
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 0,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 60.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6317303740238389,
+            0.6317303740238389
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 1,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 75.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.6945549208185696,
+            0.6945549208185696
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 2,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 90.0390625,
+          "word": 121.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7438843348609049,
+            0.7438843348609049
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 3,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 105.0390625,
+          "word": 134.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.7836451594101533,
+            0.7836451594101533
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 110.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.052613550729602,
+            1.090876819311324
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 120.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9523957106551788,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 130.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.8955528355773154,
+            0.9231000300390507
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0256324677925373,
+            1.1110709378841566
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 115.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0344711506093045,
+            1.052613550729602
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0256324677925373,
+            1.1110709378841566
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 115.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0344711506093045,
+            1.052613550729602
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 4,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 120.0390625,
+          "word": 108.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0256324677925373,
+            1.1110709378841566
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 149.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0784113533105315,
+            1.1073544058290088
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 159.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0377265805374072
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 169.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9537676644543772,
+            0.9763368304293571
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 147.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0576778651179093,
+            1.1224164497104299
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 154.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0644998740236835,
+            1.0784113533105315
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 147.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0576778651179093,
+            1.1224164497104299
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 154.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0644998740236835,
+            1.0784113533105315
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 7,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 165.0390625,
+          "word": 147.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0576778651179093,
+            1.1224164497104299
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 127.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.3332369106161412,
+            1.4171945144825042
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 137.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2244301578024548,
+            1.3137791460007981
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 147.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.161249685059209,
+            1.2244301578024548
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 119.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.353279699336426,
+            1.5124368313972567
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 129.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.3739342991712873,
+            1.4171945144825042
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 119.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.353279699336426,
+            1.5124368313972567
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 129.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.3739342991712873,
+            1.4171945144825042
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 8,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 180.0390625,
+          "word": 119.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.353279699336426,
+            1.5124368313972567
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 183.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.4614460244342078,
+            1.5572580989372145
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 193.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.376740500358477,
+            1.4765874782467927
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 203.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.3255222524977293,
+            1.4038631728808342
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 169.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.515850263824837,
+            1.6862319175486435
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 182.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5404264302301034,
+            1.59204957018807
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 169.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.515850263824837,
+            1.6862319175486435
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 182.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5404264302301034,
+            1.59204957018807
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 15,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 285.0390625,
+          "word": 169.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.515850263824837,
+            1.6862319175486435
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 161.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.6947619257755615,
+            1.8631446174744093
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 171.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5871802289540025,
+            1.7542136756040743
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 181.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.52273898735181,
+            1.657316704785742
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 141.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8179881656804733,
+            2.1273472553038277
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 157.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8631446174744093,
+            1.96053907805401
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 141.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8179881656804733,
+            2.1273472553038277
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 157.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8631446174744093,
+            1.96053907805401
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 16,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 300.0390625,
+          "word": 141.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8179881656804733,
+            2.1273472553038277
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.421875,
+          "word": 251.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8830808858526753,
+            2.092988516478387
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.453125,
+          "word": 261.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8053848012240625,
+            2.012929099452309
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.4453125,
+          "word": 271.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.7570865010319514,
+            1.938633153662122
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.4453125,
+          "word": 213.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.084746288087784,
+            2.466427078367377
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.5390625,
+          "word": 238.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.144332855093257,
+            2.274236634768201
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.4375,
+          "word": 213.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.0847772852670405,
+            2.466390406688914
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.453125,
+          "word": 238.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.144332855093257,
+            2.274270449396409
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 31,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 525.4453125,
+          "word": 213.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.0847772852670405,
+            2.466427078367377
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.453125,
+          "word": 365.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.3755638003782917,
+            2.795462814339219
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.453125,
+          "word": 375.5703125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.3112349610757255,
+            2.7170761134108545
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.453125,
+          "word": 385.5703125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.270101659570771,
+            2.6466070958199097
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.453125,
+          "word": 273.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.853896742336516,
+            3.7373887664883116
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.4453125,
+          "word": 325.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.9879460201280876,
+            3.3019945900851937
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.453125,
+          "word": 273.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.8538530446371997,
+            3.7373887664883116
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.5703125,
+          "word": 325.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.987786189702889,
+            3.3021209899638495
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 64,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1020.5390625,
+          "word": 273.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.8538530446371997,
+            3.7377035108300665
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.2421875,
+          "word": 637.4609375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.588262910798122,
+            3.1080213248360806
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.25,
+          "word": 647.453125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.54836959252374,
+            3.060067089798972
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.25,
+          "word": 657.453125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.5220833209018307,
+            3.0135228271977565
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.234375,
+          "word": 449.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.229560389180378,
+            4.412164865946378
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.2421875,
+          "word": 549.546875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.4074248246580496,
+            3.828849231512516
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.2578125,
+          "word": 449.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.2296152915557705,
+            4.412217060737339
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.25,
+          "word": 549.4609375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.40683521857116,
+            3.828703424119814
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 128,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1981.25,
+          "word": 449.578125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.2290796577365795,
+            4.406909255204532
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 1,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.03125,
+          "word": 2270.2890625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.7828492819944133,
+            3.4110331490001617
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 2,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.0234375,
+          "word": 2280.28125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.7709884826120987,
+            3.396082583014705
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 3,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.53125,
+          "word": 2290.2734375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.763083218580484,
+            3.3814876089440737
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 4,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.5546875,
+          "word": 1505.890625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.6014002528738973,
+            5.14284009670357
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 7,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.03125,
+          "word": 1894.265625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.8293690192427303,
+            4.385320857389343
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 16,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.0234375,
+          "word": 1505.890625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.6014002528738973,
+            5.142487315438331
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 31,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.171875,
+          "word": 1893.859375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.829191502841271,
+            4.38532970557657
+          ]
+        }
+      },
+      {
+        "family": "LZ_copy",
+        "size": 512,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 7744.03125,
+          "word": 1505.90625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            3.6014002528738973,
+            5.142439145863164
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 0,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 65.0390625,
+          "word": 43.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5111635505536396,
+            1.5111635505536396
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 0,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 65.0390625,
+          "word": 43.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5111635505536396,
+            1.5111635505536396
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 0,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 65.0390625,
+          "word": 43.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5111635505536396,
+            1.5111635505536396
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 0,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 65.0390625,
+          "word": 43.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.5111635505536396,
+            1.5111635505536396
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 1,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 81.0390625,
+          "word": 83.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9759149496660081,
+            0.9759149496660081
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 1,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 1,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 1,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 3,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 113.0390625,
+          "word": 115.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9826146010186757,
+            0.9826146010186757
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 3,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 3,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 103.0390625,
+          "word": 111.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9279532822064307,
+            0.9279532822064307
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 3,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 103.0390625,
+          "word": 111.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9279532822064307,
+            0.9279532822064307
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 4,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 129.0390625,
+          "word": 131.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9847373755440291,
+            0.9847373755440291
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 4,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 4,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 127.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9370272430969805,
+            0.9370272430969805
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 4,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 127.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            0.9370272430969805,
+            0.9370272430969805
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 7,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 177.0390625,
+          "word": 145.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2206302181524373,
+            1.291887577675161
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 7,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 7,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2525277435265105,
+            1.3369307712555936
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 7,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 167.0390625,
+          "word": 141.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.184346092062261,
+            1.25556403781784
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 16,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 321.46875,
+          "word": 221.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.4543526667373556,
+            1.6293168391419848
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 16,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 16,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2525277435265105,
+            1.3369307712555936
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 16,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 311.0390625,
+          "word": 217.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.4331017601958174,
+            1.6112752438382776
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 64,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 1089.4765625,
+          "word": 581.453125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8737134872222072,
+            2.362052619104053
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 64,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 64,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2525277435265105,
+            1.3369307712555936
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 64,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 1079.96875,
+          "word": 577.4453125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.8702511094274272,
+            2.362933966940736
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 128,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 2114.3671875,
+          "word": 1061.46875
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.99192598698737,
+            2.5988207388628006
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 128,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 128,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2525277435265105,
+            1.3369307712555936
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 128,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 2104.234375,
+          "word": 1057.828125
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.9892025228578603,
+            2.5992685021665074
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 512,
+        "parameter": 256,
+        "pattern": 0,
+        "aligned_cycles": {
+          "scalar": 8261.5703125,
+          "word": 3943.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.0951939403665816,
+            2.8228071112060222
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 512,
+        "parameter": 256,
+        "pattern": 1,
+        "aligned_cycles": {
+          "scalar": 71.0390625,
+          "word": 71.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 512,
+        "parameter": 256,
+        "pattern": 2,
+        "aligned_cycles": {
+          "scalar": 119.0390625,
+          "word": 95.0390625
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            1.2525277435265105,
+            1.3369307712555936
+          ]
+        }
+      },
+      {
+        "family": "match_length",
+        "size": 512,
+        "parameter": 256,
+        "pattern": 3,
+        "aligned_cycles": {
+          "scalar": 8251.515625,
+          "word": 3939.0234375
+        },
+        "speedup_vs_scalar": {
+          "word": [
+            2.094804213432448,
+            2.8232625774185185
+          ]
+        }
+      }
+    ],
+    "original_file_hashes_preserved": 44,
+    "firmware_unchanged": "122A5FF9",
+    "original_calculator_state_preserved": true,
+    "temporary_files_removed": true,
+    "incomplete_codec_reason": "Fixed 512-byte greedy scratch legitimately rejects the 512-byte BASIC fixture in production and all prototypes; corrected to 3*n+64 and verified on exact native corpus.",
+    "raw_report": "tmp/zx0-prototypes-20261015/hil/report.json",
+    "driver_snapshot": "tmp/zx0-prototypes-20261015/hil_driver_snapshot.py"
+  },
+  "limitations": [
+    "Native codec cases are complete streams on 4..512-byte fragments, not complete APP loading or storage throughput.",
+    "ISA instruction execution is correctness evidence only.",
+    "DSP decoder is not a distinct candidate; only the bounded encoder LCP update differs from word.",
+    "Measured text-symbol sizes are for matched SRAM APPs, not final resident Flash after LTO.",
+    "Initial broad codec run is incomplete due to insufficient benchmark greedy workspace; corrected focused follow-up is complete.",
+    "Range/stream decoders, literal callbacks, CRC, BCJ, and production firmware are unchanged."
+  ],
+  "hardware_followup_manifest": "tmp/zx0-followup-20261015/manifest.json",
+  "initial_sources_sha256": {
+    "tests/experimental/ZX0-PROTOTYPES.md": "518b11c4ae04f08b4ce8cbff8178f251dfcf91d3d6701a48183600febe74afb9",
+    "tests/experimental/build_zx0_prototypes.py": "20859b07d0eb0a48b8a2a7d3b758d807274ed00be4b9e5f223882a97752fd20f",
+    "tests/experimental/prepare_zx0_prototypes.py": "c5932919bd979e5d99e232d2e0011a06b44ef796173175c557aae7efcc40eb8c",
+    "tests/experimental/run_zx0_candidate_arm_tests.py": "66a5d7ead263ce3a740af8f5b12efe0fd75efb118035772a072aa875f6188325",
+    "tests/experimental/run_zx0_candidate_tests.sh": "4eddc4b7193f12b8b8dde943c549969a276342d23adf73e3dec0611cfe3a77f4",
+    "tests/experimental/zx0_candidates.hpp": "653580555662c9173b714863fe4099209cc3eddfb84c6d96aa9d69d48e1fe666",
+    "tests/experimental/zx0_candidates_arm_probe.cpp": "5ac94726d7b25020432f1e3fb8d06bbf1ebbb73370652bc8d3d3be8012f04526",
+    "tests/experimental/zx0_candidates_self_test.cpp": "60673bc430e7375d1b2d38dcff5fefb01e84b46a1c81aabd31677d2ac350dc27",
+    "tests/experimental/zx0_codec_hil.cpp": "b9bbdef8fd73ffd7a6a350fd4d63d1c177d89364f33c9e9a3d6cbb33a737a7ac",
+    "tests/experimental/zx0_hil_transport.hpp": "938b27ecae35521e1efdc074775fb2361654de6e0e98eee2364f6ee5caf7ef48",
+    "tests/experimental/zx0_kernel_hil.cpp": "6ba154ea75084f916ec407c6c273e67b9878df3b346e529653b08497ac8556cc",
+    "tests/experimental/zx0_prototypes.hpp": "5a1e021b96ce1935501c0279baaf20e5ab3676e4883576ea254c380989aa7740",
+    "tests/hil_zx0_prototypes.py": "afbbc5dfa193f88d7a55093dc527f030d78a3867afe207e9dc9c620c521b65e3"
+  },
+  "sources_sha256": {
+    "tests/experimental/ZX0-PROTOTYPES.md": "4319493490601537f2cb889e4544e6e11de462a67b8e4c50501a0e343ef1b101",
+    "tests/experimental/build_zx0_prototypes.py": "e785a206a49fcfaa07a7a8632a2b14158790732a4df205148c39603c38469eff",
+    "tests/experimental/build_zx0_register_prototype.py": "5aa9fd79da0c1e16a1e9784ee1c6fc7a169c37374317c90f7e6cb4bd665c6fee",
+    "tests/experimental/prepare_zx0_prototypes.py": "c5932919bd979e5d99e232d2e0011a06b44ef796173175c557aae7efcc40eb8c",
+    "tests/experimental/run_zx0_candidate_arm_tests.py": "f870678a223236c68d9b87d966fda20f1a62648168a1cddb4718e6cefe419726",
+    "tests/experimental/run_zx0_candidate_tests.sh": "4eddc4b7193f12b8b8dde943c549969a276342d23adf73e3dec0611cfe3a77f4",
+    "tests/experimental/zx0_candidates.hpp": "653580555662c9173b714863fe4099209cc3eddfb84c6d96aa9d69d48e1fe666",
+    "tests/experimental/zx0_candidates_arm_probe.cpp": "9158af836b1f64c5afaca23fd809b3d6067ef0b810f66ca2dbe26d1389a5425a",
+    "tests/experimental/zx0_candidates_self_test.cpp": "60673bc430e7375d1b2d38dcff5fefb01e84b46a1c81aabd31677d2ac350dc27",
+    "tests/experimental/zx0_codec_hil.cpp": "fb9d263c18d07bfb1366a7db4415bad710eda9a8aa32812fbb08f5802e761f92",
+    "tests/experimental/zx0_corpus_self_test.cpp": "2fd7e709c52124f9a46128b40b3b0d33b97baea769a873434594226c8df3d71b",
+    "tests/experimental/zx0_hil_transport.hpp": "938b27ecae35521e1efdc074775fb2361654de6e0e98eee2364f6ee5caf7ef48",
+    "tests/experimental/zx0_kernel_hil.cpp": "6ba154ea75084f916ec407c6c273e67b9878df3b346e529653b08497ac8556cc",
+    "tests/experimental/zx0_prototypes.hpp": "5a1e021b96ce1935501c0279baaf20e5ab3676e4883576ea254c380989aa7740",
+    "tests/experimental/zx0_register_candidate.hpp": "79a36f5b9665a3354fa00525267ba316bd974990cdff75057433be6cf2ee2ccd",
+    "tests/hil_zx0_prototypes.py": "f2866ed89b7a5ae7e45e168a885d10650681209435bd703fdd39306702c88f32"
+  },
+  "initial_source_snapshots": {
+    "tests/experimental/prepare_zx0_prototypes.py": "tmp/zx0-prototypes-20261015/source-snapshot/prepare_zx0_prototypes.py",
+    "tests/experimental/run_zx0_candidate_arm_tests.py": "tmp/zx0-prototypes-20261015/source-snapshot/run_zx0_candidate_arm_tests.py",
+    "tests/experimental/run_zx0_candidate_tests.sh": "tmp/zx0-prototypes-20261015/source-snapshot/run_zx0_candidate_tests.sh",
+    "tests/experimental/zx0_candidates.hpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_candidates.hpp",
+    "tests/experimental/zx0_candidates_arm_probe.cpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_candidates_arm_probe.cpp",
+    "tests/experimental/zx0_candidates_self_test.cpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_candidates_self_test.cpp",
+    "tests/experimental/zx0_codec_hil.cpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_codec_hil.cpp",
+    "tests/experimental/zx0_hil_transport.hpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_hil_transport.hpp",
+    "tests/experimental/zx0_kernel_hil.cpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_kernel_hil.cpp",
+    "tests/experimental/zx0_prototypes.hpp": "tmp/zx0-prototypes-20261015/source-snapshot/zx0_prototypes.hpp",
+    "tests/hil_zx0_prototypes.py": "tmp/zx0-prototypes-20261015/source-snapshot/hil_zx0_prototypes.py"
+  },
+  "followup_apps": {
+    "ZX0REG": {
+      "metadata": {
+        "name": "ZX0REG",
+        "abi": 6,
+        "load_address": 536870912,
+        "relocations": 48,
+        "relocation_bytes": 52,
+        "entry_offset": 0,
+        "image_bytes": 8024,
+        "bss_bytes": 5384,
+        "memory_bytes": 13408,
+        "app_bytes": 5602,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      "cases": 30
+    },
+    "ZX0CODEC": {
+      "metadata": {
+        "name": "ZX0CODEC",
+        "abi": 6,
+        "load_address": 536870912,
+        "relocations": 52,
+        "relocation_bytes": 57,
+        "entry_offset": 0,
+        "image_bytes": 12660,
+        "bss_bytes": 5388,
+        "memory_bytes": 18048,
+        "app_bytes": 6469,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      "cases": 10
+    }
+  },
+  "hardware_followup": {
+    "status": "PASS",
+    "identity": {
+      "public": "AEB505B6E0067623",
+      "short": "E0067623",
+      "usb": "2068336B4731",
+      "volume": "AED647EB",
+      "build": "122A5FF9",
+      "profile": "classic-v3-uc1609"
+    },
+    "jobs": {
+      "ZX0REG": {
+        "runs": 3,
+        "cases_per_run": 30,
+        "measured_rows": 1080,
+        "summary": [
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 0,
+            "aligned_cycles": {
+              "scalar": 1670.15625,
+              "word": 1725.140625,
+              "register_word": 1676.125
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9680828902917282,
+                0.9681275982936174
+              ],
+              "register_word": [
+                0.9964017040634643,
+                0.996438958908196
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0292332789559544,
+              1.0292524680022
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 1,
+            "aligned_cycles": {
+              "scalar": 1894.171875,
+              "word": 1931.171875,
+              "register_word": 1900.140625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9808325579513735,
+                0.9808565210003802
+              ],
+              "register_word": [
+                0.9968259711212709,
+                0.9968587851228117
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.016305956649015,
+              1.0163310281311415
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 1850.15625,
+              "word": 1842.171875,
+              "register_word": 1850.171875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0043342182715713,
+                1.0043597377371773
+              ],
+              "register_word": [
+                0.9999915548386552,
+                1.0000168906079774
+              ]
+            },
+            "register_vs_word_speedup": [
+              0.9956760043577768,
+              0.9956760773914586
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 1850.171875,
+              "word": 1842.140625,
+              "register_word": 1850.140625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0043342182715713,
+                1.0043597377371773
+              ],
+              "register_word": [
+                0.9999915548386552,
+                1.0000168906079774
+              ]
+            },
+            "register_vs_word_speedup": [
+              0.995659187068769,
+              0.9956844861075923
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 1850.171875,
+              "word": 1842.140625,
+              "register_word": 1850.171875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0043257364354234,
+                1.0043597377371773
+              ],
+              "register_word": [
+                0.9999831096773104,
+                1.0
+              ]
+            },
+            "register_vs_word_speedup": [
+              0.995659187068769,
+              0.9956760773914586
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 4,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 1850.171875,
+              "word": 1842.171875,
+              "register_word": 1850.171875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0043342182715713,
+                1.0043427001077194
+              ],
+              "register_word": [
+                1.0,
+                1.0000168906079774
+              ]
+            },
+            "register_vs_word_speedup": [
+              0.9956760773914586,
+              0.9956928949657543
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 0,
+            "aligned_cycles": {
+              "scalar": 2107.171875,
+              "word": 2068.171875,
+              "register_word": 2042.203125
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0188572335169195,
+                1.0248109730612864
+              ],
+              "register_word": [
+                1.0318130695250993,
+                1.0379355196219533
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0127160465489935,
+              1.0128067974540333
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 1,
+            "aligned_cycles": {
+              "scalar": 2393.890625,
+              "word": 2361.90625,
+              "register_word": 2347.65625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0113939425945975,
+                1.017418849280136
+              ],
+              "register_word": [
+                1.0174051053204771,
+                1.0238030004343612
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0056179775280898,
+              1.006274850479468
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 2467.96875,
+              "word": 2444.90625,
+              "register_word": 2432.90625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0094073737961182,
+                1.0143536982448027
+              ],
+              "register_word": [
+                1.014392693829317,
+                1.019467107301456
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0049254431934362,
+              1.005041051327068
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 3151.96875,
+              "word": 3179.984375,
+              "register_word": 3151.984375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9911850548845802,
+                0.9911900550314465
+              ],
+              "register_word": [
+                0.9999900855616034,
+                1.000019829171686
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0088832927669573,
+              1.0089082553799023
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 3151.96875,
+              "word": 3179.953125,
+              "register_word": 3151.96875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9911948820251771,
+                0.9911997523548401
+              ],
+              "register_word": [
+                0.9999950428053755,
+                1.0000049572191982
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.008878335572333,
+              1.0088882940225852
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 3151.96875,
+              "word": 3179.984375,
+              "register_word": 3151.984375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9911850981972199,
+                0.9911900117433753
+              ],
+              "register_word": [
+                0.9999950428053755,
+                1.000014871952489
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0088832927669573,
+              1.0089082995409524
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 0,
+            "aligned_cycles": {
+              "scalar": 2999.9375,
+              "word": 2576.953125,
+              "register_word": 2466.90625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.1641412763377292,
+                1.1919072776146458
+              ],
+              "register_word": [
+                1.2160727632028985,
+                1.24637116667965
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0446092651473886,
+              1.0456947365687725
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 1,
+            "aligned_cycles": {
+              "scalar": 3274.96875,
+              "word": 2942.96875,
+              "register_word": 2844.921875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.1064025211015567,
+                1.1301026047479632
+              ],
+              "register_word": [
+                1.1443000103730476,
+                1.1696568580947226
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0342478093522234,
+              1.0350005859473095
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 3349.0,
+              "word": 3037.984375,
+              "register_word": 2941.96875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.1023715597981782,
+                1.1245979568600497
+              ],
+              "register_word": [
+                1.138337422856718,
+                1.1620528501566854
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0326258988984842,
+              1.0333051408000173
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 7502.4375,
+              "word": 7674.515625,
+              "register_word": 7502.4375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9775778910228089,
+                0.9775819173151236
+              ],
+              "register_word": [
+                0.9999979173391925,
+                1.0000062479824223
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0229321781508054,
+              1.0229405087940353
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 10518.078125,
+              "word": 11037.203125,
+              "register_word": 10578.109375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9526178892162607,
+                0.9533129309600115
+              ],
+              "register_word": [
+                0.994324954689741,
+                0.9943381984747257
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0430344183765563,
+              1.0437846013861234
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 8220.59375,
+              "word": 8479.21875,
+              "register_word": 8232.9375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9694898575935371,
+                0.9694989588516041
+              ],
+              "register_word": [
+                0.9985006870269573,
+                0.998553750379593
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0299141406089867,
+              1.0299764652292742
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 0,
+            "aligned_cycles": {
+              "scalar": 6139.5625,
+              "word": 4180.5,
+              "register_word": 3734.5
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.4686112398522881,
+                1.5627694608396838
+              ],
+              "register_word": [
+                1.6440059580592794,
+                1.76303462139024
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1194269647877895,
+              1.1281476030654918
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 1,
+            "aligned_cycles": {
+              "scalar": 5945.5625,
+              "word": 4413.4375,
+              "register_word": 3979.5
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.3275604616436636,
+                1.4073794623703637
+              ],
+              "register_word": [
+                1.4700364692792682,
+                1.5685689316866456
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1072907652367412,
+              1.1145316338813132
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 6019.5625,
+              "word": 4556.5,
+              "register_word": 4124.4375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.3210934928124658,
+                1.3984347775583692
+              ],
+              "register_word": [
+                1.459486899728751,
+                1.554438347320852
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1047567092482309,
+              1.1115558424790186
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 24473.4375,
+              "word": 25221.0,
+              "register_word": 24473.3125
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9703305199407255,
+                0.9703617795818433
+              ],
+              "register_word": [
+                0.9999948924216306,
+                1.0000127691089715
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0305382110706762,
+              1.030587123630513
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 35432.6875,
+              "word": 37481.25,
+              "register_word": 35666.5625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9453443388360847,
+                0.9462212504589912
+              ],
+              "register_word": [
+                0.9933608548008958,
+                0.993709115384885
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0501868510169883,
+              1.0508792373809503
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 256,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 32797.4375,
+              "word": 34129.125,
+              "register_word": 32856.4375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.960508108503862,
+                0.9610649320682778
+              ],
+              "register_word": [
+                0.9979233858698959,
+                0.9982481268652884
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0386895760695272,
+              1.0389536298910729
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 0,
+            "aligned_cycles": {
+              "scalar": 10068.5,
+              "word": 6058.4375,
+              "register_word": 5164.5
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.6618903193859866,
+                1.8139419666482755
+              ],
+              "register_word": [
+                1.9495480014037976,
+                2.162273166541394
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1730906538549974,
+              1.1920299581230538
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 1,
+            "aligned_cycles": {
+              "scalar": 9359.6875,
+              "word": 6227.5,
+              "register_word": 5345.4375
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.4724106739032112,
+                1.6013897054893367
+              ],
+              "register_word": [
+                1.7096457479478955,
+                1.8859149964749724
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1611201808363683,
+              1.1776739852955989
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 9433.6875,
+              "word": 6434.5625,
+              "register_word": 5554.5625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.4660864666401174,
+                1.5922426338767848
+              ],
+              "register_word": [
+                1.6983673331608025,
+                1.8699346081442585
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.1584283190620324,
+              1.1744030516199346
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 46844.1875,
+              "word": 48360.375,
+              "register_word": 46843.6875
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9686356258141892,
+                0.9686519808985933
+              ],
+              "register_word": [
+                1.0000026684207086,
+                1.000010673796763
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0323652747739513,
+              1.032386838193894
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 63379.3125,
+              "word": 66395.6875,
+              "register_word": 63097.25
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9545324044396375,
+                0.9553162305558905
+              ],
+              "register_word": [
+                1.004470281985348,
+                1.0051313362388108
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.0520179541078098,
+              1.0523709424332721
+            ]
+          },
+          {
+            "family": "ZX0_decode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 60851.9375,
+              "word": 63119.75,
+              "register_word": 60721.5625
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                0.9634100365622572,
+                0.9643308859287608
+              ],
+              "register_word": [
+                1.0019449707070947,
+                1.0024060760369446
+              ]
+            },
+            "register_vs_word_speedup": [
+              1.039483532741475,
+              1.0399984769541553
+            ]
+          }
+        ]
+      },
+      "ZX0CODEC": {
+        "runs": 3,
+        "cases_per_run": 10,
+        "measured_rows": 360,
+        "summary": [
+          {
+            "family": "ZX0_encode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 145215.0,
+              "word": 87021.5,
+              "DSP": 86748.25
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.668713084047712,
+                1.6687322600291883
+              ],
+              "DSP": [
+                1.6739645413779987,
+                1.6739838382441095
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0031412646904558,
+              1.0031528104394338
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 16,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 145220.25,
+              "word": 87020.75,
+              "DSP": 86748.5
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.6687887476083496,
+                1.6688002574098706
+              ],
+              "DSP": [
+                1.6740308245628193,
+                1.6740404733223053
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0031383737517832,
+              1.0031470284788786
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 707520.0,
+              "word": 495705.0,
+              "DSP": 488787.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.4271521508901104,
+                1.4273005113928647
+              ],
+              "DSP": [
+                1.4473474247557323,
+                1.4475016725076566
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0141507503968838,
+              1.0141590784017283
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 64,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 656061.0,
+              "word": 444117.0,
+              "DSP": 437819.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.477204564490998,
+                1.4772499544030857
+              ],
+              "DSP": [
+                1.4984457331320362,
+                1.498481104020392
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0143666675041512,
+              1.0144032451840719
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 3,
+            "aligned_cycles": {
+              "scalar": 10775537.0,
+              "word": 10506454.0,
+              "DSP": 10185018.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0256074101521055,
+                1.0256112100238577
+              ],
+              "DSP": [
+                1.057974543403048,
+                1.0579791807928076
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0315586120278444,
+              1.0315596889470398
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 14356774.0,
+              "word": 14089016.0,
+              "DSP": 13735321.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0189824673545211,
+                1.019004733900508
+              ],
+              "DSP": [
+                1.0452228383986608,
+                1.045244883610656
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0257507633057865,
+              1.0257515435295164
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 0,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 12036373.0,
+              "word": 11766249.0,
+              "DSP": 11434293.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0229575287757382,
+                1.0229710105080778
+              ],
+              "DSP": [
+                1.0526529227942656,
+                1.0526649507017944
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0290263567648728,
+              1.0290316156845027
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 1,
+            "pattern": 2,
+            "aligned_cycles": {
+              "scalar": 23739.0,
+              "word": 18820.0,
+              "DSP": 18820.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.2613708820403826,
+                1.2639744952178533
+              ],
+              "DSP": [
+                1.2613708820403826,
+                1.2639744952178533
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              1.0,
+              1.0
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 1,
+            "pattern": 4,
+            "aligned_cycles": {
+              "scalar": 1689837.0,
+              "word": 1619569.0,
+              "DSP": 1619572.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0428782052350192,
+                1.0433868516870846
+              ],
+              "DSP": [
+                1.0428794924568998,
+                1.0433849189785944
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              0.9999969130314526,
+              1.0000012342974225
+            ]
+          },
+          {
+            "family": "ZX0_encode",
+            "size": 512,
+            "parameter": 1,
+            "pattern": 5,
+            "aligned_cycles": {
+              "scalar": 4159208.0,
+              "word": 3976988.0,
+              "DSP": 3976986.0
+            },
+            "speedup_vs_scalar": {
+              "word": [
+                1.0456940315618828,
+                1.0458185943734304
+              ],
+              "DSP": [
+                1.0456829896583228,
+                1.0458191203086962
+              ]
+            },
+            "DSP_vs_word_speedup": [
+              0.9999894405980845,
+              1.0000082977368803
+            ]
+          }
+        ]
+      }
+    },
+    "max_run_median_spread_percent": {
+      "ZX0REG": 0.11845576753953013,
+      "ZX0CODEC": 0.21439381200605348
+    },
+    "original_file_hashes_preserved": 44,
+    "original_directories_preserved": 4,
+    "firmware_unchanged": true,
+    "original_calculator_state_preserved": true,
+    "alarms_A_B_off": true,
+    "temporary_files_removed": true,
+    "CDC_closed_before_handoff": true,
+    "cleanup_recovery": {
+      "reason": "Original runner stopped after all measurements on an identity echo collision during final reconnect.",
+      "strict_correlated_identity": true,
+      "firmware_changed": false,
+      "cdc_closed": true
+    },
+    "raw_report": "tmp/zx0-followup-20261015/hil/report.json",
+    "raw_report_sha256": "1ff68a4d325c1eda94a21c6317a9c15429bb986fe73f670ac7a388ee35765db1",
+    "driver_snapshot": "tmp/zx0-followup-20261015/hil_driver_snapshot.py",
+    "driver_snapshot_sha256": "58da223293825104c3dcaf7b5cc87308fbfee1b3dbcc7ef217c3baaefbb8b252",
+    "cleanup_script": "tmp/zx0-followup-20261015/recover_cleanup.py",
+    "cleanup_script_sha256": "a8fa8a0b45f5f750cb86149452dfa184c69f5c36e02e661112f887029e5c6e9e",
+    "code_size": {
+      "scope": "Matched SRAM APP GCC -Os/LTO text symbol bytes, excluding alignment padding. Shared helpers counted once per variant. This is not resident firmware Flash size.",
+      "decode": {
+        "scalar": {
+          "text_bytes": 482,
+          "symbols": [
+            {
+              "address": 536874080,
+              "bytes": 334,
+              "name": "zx0_prototypes::decode_scalar(zx0::Input const&, unsigned long, unsigned char*, unsigned long, unsigned long&)"
+            },
+            {
+              "address": 536872764,
+              "bytes": 42,
+              "name": "zx0_private_scalar::(anonymous namespace)::BitInput::bit()"
+            },
+            {
+              "address": 536872720,
+              "bytes": 44,
+              "name": "zx0_private_scalar::(anonymous namespace)::BitInput::byte()"
+            },
+            {
+              "address": 536872806,
+              "bytes": 62,
+              "name": "zx0_private_scalar::(anonymous namespace)::BitInput::gamma(bool, long)"
+            }
+          ]
+        },
+        "word": {
+          "text_bytes": 608,
+          "symbols": [
+            {
+              "address": 536874652,
+              "bytes": 192,
+              "name": "zx0_candidates::copy_word(unsigned char*&, unsigned char const*, unsigned char const*, unsigned long, unsigned long)"
+            },
+            {
+              "address": 536874992,
+              "bytes": 268,
+              "name": "zx0_prototypes::decode_word(zx0::Input const&, unsigned long, unsigned char*, unsigned long, unsigned long&)"
+            },
+            {
+              "address": 536874888,
+              "bytes": 42,
+              "name": "zx0_private_word::(anonymous namespace)::BitInput::bit()"
+            },
+            {
+              "address": 536874844,
+              "bytes": 44,
+              "name": "zx0_private_word::(anonymous namespace)::BitInput::byte()"
+            },
+            {
+              "address": 536874930,
+              "bytes": 62,
+              "name": "zx0_private_word::(anonymous namespace)::BitInput::gamma(bool, long)"
+            }
+          ]
+        },
+        "register_word": {
+          "text_bytes": 660,
+          "symbols": [
+            {
+              "address": 536875568,
+              "bytes": 360,
+              "name": "zx0_prototypes::decode_register(zx0::Input const&, unsigned long, unsigned char*, unsigned long, unsigned long&)"
+            },
+            {
+              "address": 536875456,
+              "bytes": 42,
+              "name": "zx0_private_register::(anonymous namespace)::BitInput::bit()"
+            },
+            {
+              "address": 536875412,
+              "bytes": 44,
+              "name": "zx0_private_register::(anonymous namespace)::BitInput::byte()"
+            },
+            {
+              "address": 536875498,
+              "bytes": 62,
+              "name": "zx0_private_register::(anonymous namespace)::BitInput::gamma(bool, long)"
+            },
+            {
+              "address": 536875260,
+              "bytes": 152,
+              "name": "zx0_register_candidate::expand(unsigned char*, unsigned long, unsigned long)"
+            }
+          ]
+        }
+      },
+      "encode": {
+        "scalar": {
+          "text_bytes": 2422,
+          "symbols": [
+            {
+              "address": 536874800,
+              "bytes": 1212,
+              "name": "zx0_prototypes::encode_scalar(unsigned char const*, unsigned long, unsigned char*, unsigned int, zx0::Output const&, zx0::EncodeResult&)"
+            },
+            {
+              "address": 536874090,
+              "bytes": 58,
+              "name": "zx0_private_scalar::(anonymous namespace)::LayoutWriter::bit(bool)"
+            },
+            {
+              "address": 536874148,
+              "bytes": 74,
+              "name": "zx0_private_scalar::(anonymous namespace)::OutputWriter::bit(bool)"
+            },
+            {
+              "address": 536873176,
+              "bytes": 44,
+              "name": "zx0_private_scalar::(anonymous namespace)::append_token(zx0_private_scalar::(anonymous namespace)::Token*, unsigned int, unsigned short&, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873046,
+              "bytes": 38,
+              "name": "zx0_private_scalar::(anonymous namespace)::match_length(unsigned char const*, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873130,
+              "bytes": 46,
+              "name": "zx0_private_scalar::(anonymous namespace)::new_match_cost(unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873084,
+              "bytes": 46,
+              "name": "zx0_private_scalar::(anonymous namespace)::matching_offset(unsigned char const*, unsigned short, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873220,
+              "bytes": 266,
+              "name": "zx0_private_scalar::(anonymous namespace)::find_match_choice(unsigned char const*, unsigned short, unsigned short, zx0_private_scalar::(anonymous namespace)::Costs const*, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873486,
+              "bytes": 604,
+              "name": "zx0_private_scalar::(anonymous namespace)::build_bounded_optimal_plan(unsigned char const*, unsigned short, unsigned char*, unsigned int, zx0_private_scalar::(anonymous namespace)::Plan&)"
+            },
+            {
+              "address": 536873012,
+              "bytes": 34,
+              "name": "zx0_private_scalar::(anonymous namespace)::add_cost(unsigned short, unsigned long)"
+            }
+          ]
+        },
+        "word": {
+          "text_bytes": 2754,
+          "symbols": [
+            {
+              "address": 536877476,
+              "bytes": 104,
+              "name": "zx0_candidates::match_word(unsigned char const*, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536876204,
+              "bytes": 20,
+              "name": "zx0_candidates::widen_mask_pair(unsigned long)"
+            },
+            {
+              "address": 536878112,
+              "bytes": 236,
+              "name": "unsigned short zx0_candidates::lcp_range<false>(unsigned char const*, unsigned short, unsigned short*, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536878976,
+              "bytes": 1212,
+              "name": "zx0_prototypes::encode_word(unsigned char const*, unsigned long, unsigned char*, unsigned int, zx0::Output const&, zx0::EncodeResult&)"
+            },
+            {
+              "address": 536876416,
+              "bytes": 58,
+              "name": "zx0_private_word::(anonymous namespace)::LayoutWriter::bit(bool)"
+            },
+            {
+              "address": 536876474,
+              "bytes": 74,
+              "name": "zx0_private_word::(anonymous namespace)::OutputWriter::bit(bool)"
+            },
+            {
+              "address": 536876372,
+              "bytes": 44,
+              "name": "zx0_private_word::(anonymous namespace)::append_token(zx0_private_word::(anonymous namespace)::Token*, unsigned int, unsigned short&, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873130,
+              "bytes": 46,
+              "name": "zx0_private_word::(anonymous namespace)::new_match_cost(unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873084,
+              "bytes": 46,
+              "name": "zx0_private_word::(anonymous namespace)::matching_offset(unsigned char const*, unsigned short, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536877846,
+              "bytes": 266,
+              "name": "zx0_private_word::(anonymous namespace)::find_match_choice(unsigned char const*, unsigned short, unsigned short, zx0_private_word::(anonymous namespace)::Costs const*, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536878348,
+              "bytes": 614,
+              "name": "zx0_private_word::(anonymous namespace)::build_bounded_optimal_plan(unsigned char const*, unsigned short, unsigned char*, unsigned int, zx0_private_word::(anonymous namespace)::Plan&)"
+            },
+            {
+              "address": 536873012,
+              "bytes": 34,
+              "name": "zx0_private_word::(anonymous namespace)::add_cost(unsigned short, unsigned long)"
+            }
+          ]
+        },
+        "dsp": {
+          "text_bytes": 2734,
+          "symbols": [
+            {
+              "address": 536877476,
+              "bytes": 104,
+              "name": "zx0_candidates::match_word(unsigned char const*, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536876204,
+              "bytes": 20,
+              "name": "zx0_candidates::widen_mask_pair(unsigned long)"
+            },
+            {
+              "address": 536880188,
+              "bytes": 216,
+              "name": "unsigned short zx0_candidates::lcp_range<true>(unsigned char const*, unsigned short, unsigned short*, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536881024,
+              "bytes": 1212,
+              "name": "zx0_prototypes::encode_dsp(unsigned char const*, unsigned long, unsigned char*, unsigned int, zx0::Output const&, zx0::EncodeResult&)"
+            },
+            {
+              "address": 536877108,
+              "bytes": 58,
+              "name": "zx0_private_dsp::(anonymous namespace)::LayoutWriter::bit(bool)"
+            },
+            {
+              "address": 536877166,
+              "bytes": 74,
+              "name": "zx0_private_dsp::(anonymous namespace)::OutputWriter::bit(bool)"
+            },
+            {
+              "address": 536877064,
+              "bytes": 44,
+              "name": "zx0_private_dsp::(anonymous namespace)::append_token(zx0_private_dsp::(anonymous namespace)::Token*, unsigned int, unsigned short&, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873130,
+              "bytes": 46,
+              "name": "zx0_private_dsp::(anonymous namespace)::new_match_cost(unsigned short, unsigned short)"
+            },
+            {
+              "address": 536873084,
+              "bytes": 46,
+              "name": "zx0_private_dsp::(anonymous namespace)::matching_offset(unsigned char const*, unsigned short, unsigned short, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536877580,
+              "bytes": 266,
+              "name": "zx0_private_dsp::(anonymous namespace)::find_match_choice(unsigned char const*, unsigned short, unsigned short, zx0_private_dsp::(anonymous namespace)::Costs const*, unsigned short, unsigned short)"
+            },
+            {
+              "address": 536880404,
+              "bytes": 614,
+              "name": "zx0_private_dsp::(anonymous namespace)::build_bounded_optimal_plan(unsigned char const*, unsigned short, unsigned char*, unsigned int, zx0_private_dsp::(anonymous namespace)::Plan&)"
+            },
+            {
+              "address": 536873012,
+              "bytes": 34,
+              "name": "zx0_private_dsp::(anonymous namespace)::add_cost(unsigned short, unsigned long)"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "decision": {
+    "preferred_next_candidate": "SIMD32 bounded-optimal LCP update plus word match search; encoded bytes remain identical.",
+    "decode": "Register-cursor copy benefits long matches; near-neutral or slightly worse source/image fragments. Do not infer a complete APP-loader speedup.",
+    "integration": "Prototypes only; production ZX0 is unchanged. Resident-Flash and loader qualification would be a separate next step."
+  },
+  "sources_hash_scope": "Experimental sources recorded at the end of the SRAM phase. Measured driver snapshots are recorded separately; later integration sources may differ.",
+  "record_kind": "Historical SRAM prototype qualification; see zx0_flash_results.json for production integration."
+}
