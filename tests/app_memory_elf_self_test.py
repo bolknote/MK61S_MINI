@@ -58,6 +58,18 @@ class AppMemoryTests(unittest.TestCase):
             gate.check_pool(20480 + 823, 1024, 0, 824)
         gate.check_pool(required + 8, 20480, 8264, 825)
 
+    def test_graphics_heap_is_counted_in_simultaneous_app_budget(self):
+        free = gate.APP_MAX_SIZE + gate.STAGE_INDEX_SIZE + 2048
+        graphics = {'mk61_lazy_basic_graphics_bytes': (2048, 1)}
+        effective, lazy, _, _ = gate.effective_pool(free, graphics)
+        self.assertEqual(lazy, 2048)
+        gate.check_pool(effective, gate.APP_MAX_SIZE)
+        effective, _, _, _ = gate.effective_pool(free - 1, graphics)
+        with self.assertRaisesRegex(AssertionError, 'full stage index'):
+            gate.check_pool(effective, gate.APP_MAX_SIZE)
+        # Images without graphics have no extra retained reservation.
+        self.assertEqual(gate.effective_pool(free, {})[0], free)
+
     def test_bundle_reads_memory_including_bss_and_all_modules(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

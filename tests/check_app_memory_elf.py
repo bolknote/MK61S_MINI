@@ -50,6 +50,23 @@ def check_pool(free, disk_memory, msc_memory=0, fs_memory=0):
         f'{free} < {rounded} + {STAGE_INDEX_SIZE} + {msc_rounded} + {fs_rounded}')
 
 
+def effective_pool(free, symbols):
+    lazy = sum(symbols.get(name, (0, 0))[0] for name in (
+        'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
+        'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes',
+        'mk61_lazy_basic_graphics_bytes'))
+    # Qualify the same simultaneous live state even when its bytes are no
+    # longer permanently in BSS. Idle savings must not weaken the APP gate.
+    scoped = sum(symbols.get(name, (0, 0))[0] for name in (
+        'mk61_m61_runtime_bytes', 'mk61_usb_framebuffer_bytes',
+        'mk61_storage_workspace_bytes'))
+    # Worst case after every retained/foreground buffer has been initialized.
+    # High gaps may need up to 224 bytes before a 256-aligned APP end.
+    placement = symbols.get('mk61_app_placement_slack_bytes', (0, 0))[0]
+    effective = (free - lazy - scoped - placement) & ~(APP_ALIGNMENT - 1)
+    return effective, lazy, scoped, placement
+
+
 def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     data = path.read_bytes()
     h = struct.unpack_from('<16sHHIIIIIHHHHHH', data)
@@ -73,18 +90,7 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     end = value('__mk61_dynamic_end')
     assert end in (0x2000E700, 0x2001BF00), 'stack/guard budget changed'
     free = end - value('__mk61_dynamic_begin')
-    lazy = sum(symbols.get(name, (0, 0))[0] for name in (
-        'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
-        'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes'))
-    # Qualify the same simultaneous live state even when its bytes are no
-    # longer permanently in BSS. Idle savings must not weaken the APP gate.
-    scoped = sum(symbols.get(name, (0, 0))[0] for name in (
-        'mk61_m61_runtime_bytes', 'mk61_usb_framebuffer_bytes',
-        'mk61_storage_workspace_bytes'))
-    # Worst case after every retained/foreground buffer has been initialized.
-    # High gaps may need up to 224 bytes before a 256-aligned APP end.
-    placement = symbols.get('mk61_app_placement_slack_bytes', (0, 0))[0]
-    effective = (free - lazy - scoped - placement) & ~(APP_ALIGNMENT - 1)
+    effective, lazy, scoped, placement = effective_pool(free, symbols)
     assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'
     msc = symbols.get('mk61_session_msc_bytes', (0, 0))[0]
     fs = symbols.get('mk61_fs_temporary_bytes', (0, 0))[0]

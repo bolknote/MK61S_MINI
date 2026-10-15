@@ -38,8 +38,8 @@ RuntimeScreen &main_lcd();
 namespace builtin_font {
 bool copyRows5x8(uint16_t, uint8_t rows[8]);
 }
-void *graphics_test_malloc(size_t);
-void graphics_test_free(void *);
-#define malloc graphics_test_malloc
-#define free graphics_test_free
+#define MK61_SHARED_MEMORY_HPP
+namespace shared_memory {
+void *allocate_retained_buffer(unsigned int);
+}
 #endif

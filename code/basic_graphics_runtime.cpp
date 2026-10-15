@@ -16,8 +16,9 @@ __attribute__((noinline)) int native_text_flow(const char *text, uint16_t length
 #include "builtin_font.hpp"
 #include "cross_hal.h"
 #include "mk_math.hpp"
+#include "native_libc.h"
+#include "shared_memory.hpp"
 #include <new>
-#include <stdlib.h>
 namespace basic_graphics {
 namespace {
 void screen_geometry(void *, uint16_t &width, uint16_t &height) {
@@ -48,13 +49,21 @@ Session *value = nullptr;
 Session *session() {
   if (value)
     return value;
-  // Keep the canvas and nested PRINT state outside unloadable APP/workspace
-  // storage, but reserve RAM only while a BASIC session actually uses them.
-  auto *storage = static_cast<uint8_t *>(malloc(sizeof(Session) + canvas_capacity));
+  // A single retained foreground buffer follows the same guarded allocation
+  // policy as the VM cache. APP/INPUT eviction cannot move or reclaim it.
+#if defined(__arm__) || defined(__thumb__)
+  __asm__ volatile(".global mk61_lazy_basic_graphics_bytes\n"
+                   ".set mk61_lazy_basic_graphics_bytes, %c0" ::
+                   "i" (sizeof(Session) + canvas_capacity +
+                        (MK61_USE_NATIVE_LIBC ? 16 : 32)));
+#endif
+  auto *storage = static_cast<uint8_t *>(
+      shared_memory::allocate_retained_buffer(sizeof(Session) + canvas_capacity));
   if (!storage)
     return nullptr;
+  auto *canvas = storage + sizeof(Session);
   value = new (storage) Session(
-      {storage + sizeof(Session), screen_geometry, screen_begin, screen_end, screen_present, screen_capture,
+      {canvas, screen_geometry, screen_begin, screen_end, screen_present, screen_capture,
        screen_glyph, screen_flow,
        [](void *canvas, size_t size) -> void * { return size <= canvas_capacity ? canvas : nullptr; },
        [](void *, void *) {}});
@@ -111,14 +120,7 @@ Result dispatch(Request &request) {
   auto *current = session();
   if (!current)
     return Result::FULL;
-  const Result result = current->apply(request);
-  if (result == Result::OK &&
-      (request.operation == Operation::RESET || request.operation == Operation::END)) {
-    current->~Session();
-    free(current);
-    value = nullptr;
-  }
-  return result;
+  return current->apply(request);
 }
 } // namespace basic_graphics
 #else
