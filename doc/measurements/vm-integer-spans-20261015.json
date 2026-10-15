@@ -1,0 +1,769 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED_FASTER",
+  "date": "2026-10-15",
+  "scenario": "A/B/A, matched APP sets per wire version; two warm repeats after one cache migration run in each stage",
+  "baseline_commit": "b0c7528a2f567c41e3af8d59ba6ddcc88cf636d5",
+  "implementation_commit": "0b7f804a3bd5ed7bdf90723b23154bc711dfedc8",
+  "source_sha256": {
+    "code/focal_compiler.hpp": "df812a3404f245a4cf38db6935f1195c7aaba9c9f0ba0f96faa4551d226330f2",
+    "code/language_bytecode.cpp": "d9ba199f4576bff304c3760bfc52b375374b9bea9e58d1ea511e778263d10038",
+    "code/language_bytecode.hpp": "46a424a28c14e13f701a992593e8adf0e7f6c9359d583a208819520478d7e63e",
+    "code/language_vm.cpp": "36e414193d6b28c664b1748220d6f922d3e519a1b4899265bdcb1fb1dc32f644",
+    "code/language_vm_abi.hpp": "bbd31766f83826ece84596090b8a9366f1b7b3e70a48514aaad3e029e053fe8e",
+    "tools/build_portable_app.py": "5cced9a71ba1d8230e0c0862f7fa13dcc0d2f05df0e0c184c8892edd6b4431e5",
+    "tools/build-portable-app.ps1": "652f87c2b768c2e37184ac784c68a4d43eec981e18d42c076b73e89ba2467f77"
+  },
+  "implementation": "Compiler-selected INTEGER_SPAN hints; guarded int32 execution with local PC/SP and scalar fallback; original widths and interior PCs preserved",
+  "algorithm_and_program_sources_changed": false,
+  "program_tree": "3fde55bac115ff28ee652ff62fa32b63e05a122e",
+  "wire_version_before_after": [
+    8,
+    9
+  ],
+  "request_ABI": 8,
+  "APP_ABI": 6,
+  "validated_image_and_APP_INFO_magic_updated": true,
+  "old_VMC_rebuilt_never_executed": true,
+  "hot_APP_build_budget_before_after": [
+    15360,
+    18432
+  ],
+  "hot_APP_actual_memory_before_after": [
+    15356,
+    16628
+  ],
+  "loader_APP_limit_unchanged": 20480,
+  "cache_budget_unchanged": 24576,
+  "budget_note": "Only the hot LANGVM soft build-time size ceiling is raised. Physical loader APP maximum and all shared RAM/stack/source/image quotas and their strict gates are unchanged.",
+  "device": "AEB505B6E0067623",
+  "USB_serial": "2068336B4731",
+  "profile": "classic-v3-uc1609",
+  "clock_hz": 96000000,
+  "math_backend": "LIBM",
+  "USB_screen": true,
+  "density": true,
+  "file_cache": true,
+  "mixed_cache": false,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "stages": [
+    {
+      "stage": "baseline",
+      "firmware": {
+        "build": "D6873FBC",
+        "bytes": 360564,
+        "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457"
+      },
+      "seconds": [
+        55.615185249975184,
+        43.820446416997584,
+        43.891960791981546
+      ],
+      "warm_median_seconds": 43.856203604489565,
+      "frames_crc_verified": 1043,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9692,
+      "observed_whole_stage_stack_peak_bytes": 6692,
+      "zx0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 10526,
+          "sha256": "ddedae427b9c45fb40ed242b8607a8c6580f2ae9bcaba071b9a36a66cab2c319"
+        },
+        "LANGIN.APP": {
+          "bytes": 11993,
+          "sha256": "929014ff7269198d75d2b828564ac05cf079bae64e14b8bf301578f9c2356b99"
+        },
+        "BASIC.APP": {
+          "bytes": 13886,
+          "sha256": "db57405406e9c5ebc905d698b287bfbaf277d07dd0d24be9ad98555c5b8673eb"
+        },
+        "FOCAL.APP": {
+          "bytes": 13470,
+          "sha256": "d79200e0482e5da585e4bf536ea7c0f3e5c942b462a1eac15cf31fc508fec833"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7038,
+          "sha256": "05b90afe2e6047b2c0d142e1965fae88208f2d9441fb5259f91a0618a2ec92ce"
+        }
+      },
+      "original_cache_restored": [],
+      "test_cache_removed": []
+    },
+    {
+      "stage": "candidate",
+      "firmware": {
+        "build": "C847F153",
+        "bytes": 360572,
+        "sha256": "457cc49a725fb052399ef9b559b6ac1d5a12e47c87373469511526e001ac90a2"
+      },
+      "seconds": [
+        55.002177499991376,
+        42.91878670800361,
+        43.000059500016505
+      ],
+      "warm_median_seconds": 42.95942310401006,
+      "frames_crc_verified": 1046,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9668,
+      "observed_whole_stage_stack_peak_bytes": 6716,
+      "zx0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 11501,
+          "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+        },
+        "LANGIN.APP": {
+          "bytes": 11992,
+          "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+        },
+        "BASIC.APP": {
+          "bytes": 14244,
+          "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+        },
+        "FOCAL.APP": {
+          "bytes": 13830,
+          "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7008,
+          "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+        }
+      },
+      "original_cache_restored": [
+        "/System/VMCache/VMC-000f.app",
+        "/System/VMCache/VMC-0020.app",
+        "/System/VMCache/VMC-0019.app",
+        "/System/VMCache/VMC-0026.app",
+        "/System/VMCache/VMC-0015.app",
+        "/System/VMCache/VMC-001c.app",
+        "/System/VMCache/VMC-0018.app"
+      ],
+      "test_cache_removed": [
+        "/System/VMCache/VMC-0010.app",
+        "/System/VMCache/VMC-0014.app",
+        "/System/VMCache/VMC-0017.app",
+        "/System/VMCache/VMC-001a.app",
+        "/System/VMCache/VMC-001d.app",
+        "/System/VMCache/VMC-001e.app",
+        "/System/VMCache/VMC-0025.app",
+        "/System/VMCache/VMC-0027.app",
+        "/System/VMCache/VMC-0028.app",
+        "/System/VMCache/VMC-0029.app"
+      ]
+    },
+    {
+      "stage": "control",
+      "firmware": {
+        "build": "D6873FBC",
+        "bytes": 360564,
+        "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457"
+      },
+      "seconds": [
+        55.658462625026004,
+        43.821496375021525,
+        43.9047212919977
+      ],
+      "warm_median_seconds": 43.863108833509614,
+      "frames_crc_verified": 1042,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9692,
+      "observed_whole_stage_stack_peak_bytes": 6692,
+      "zx0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 10526,
+          "sha256": "ddedae427b9c45fb40ed242b8607a8c6580f2ae9bcaba071b9a36a66cab2c319"
+        },
+        "LANGIN.APP": {
+          "bytes": 11993,
+          "sha256": "929014ff7269198d75d2b828564ac05cf079bae64e14b8bf301578f9c2356b99"
+        },
+        "BASIC.APP": {
+          "bytes": 13886,
+          "sha256": "db57405406e9c5ebc905d698b287bfbaf277d07dd0d24be9ad98555c5b8673eb"
+        },
+        "FOCAL.APP": {
+          "bytes": 13470,
+          "sha256": "d79200e0482e5da585e4bf536ea7c0f3e5c942b462a1eac15cf31fc508fec833"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7038,
+          "sha256": "05b90afe2e6047b2c0d142e1965fae88208f2d9441fb5259f91a0618a2ec92ce"
+        }
+      },
+      "original_cache_restored": [
+        "/System/VMCache/VMC-000f.app",
+        "/System/VMCache/VMC-0020.app",
+        "/System/VMCache/VMC-0019.app",
+        "/System/VMCache/VMC-0026.app",
+        "/System/VMCache/VMC-0015.app",
+        "/System/VMCache/VMC-001c.app",
+        "/System/VMCache/VMC-0018.app"
+      ],
+      "test_cache_removed": [
+        "/System/VMCache/VMC-0010.app",
+        "/System/VMCache/VMC-0014.app",
+        "/System/VMCache/VMC-0017.app",
+        "/System/VMCache/VMC-001a.app",
+        "/System/VMCache/VMC-001d.app",
+        "/System/VMCache/VMC-001e.app",
+        "/System/VMCache/VMC-0025.app",
+        "/System/VMCache/VMC-0027.app",
+        "/System/VMCache/VMC-0028.app",
+        "/System/VMCache/VMC-0029.app"
+      ]
+    }
+  ],
+  "time_reduction_vs_baseline_percent": 2.044820177703899,
+  "time_reduction_vs_control_percent": 2.0602409485603546,
+  "time_reduction_vs_mean_controls_percent": 2.0525311700905657,
+  "control_drift_percent": 0.01574515907105667,
+  "seconds_saved_vs_mean_controls": 0.9002331149895326,
+  "first_runs_excluded_from_speed_comparison": true,
+  "cold_note": "All three migration runs have 372 decodes, 627 NOR writes and 15 erases; speed comparison uses only the two warm repeats, with 174 decodes and no NOR writes/erases.",
+  "all_nine_nodes": 420,
+  "all_nine_move": "e2e3",
+  "all_complete_boards_identical": true,
+  "board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "frames_CRC_verified": 3131,
+  "resident_flash_delta_bytes": 8,
+  "resources": {
+    "LIBM": {
+      "flash_bytes": 360572,
+      "static_RAM_bytes": 26880,
+      "max_frame_bytes": 1928,
+      "frame_limit_bytes": 5120,
+      "native_build_log": ".build/vm-expression-execution-20261015/candidate-native.log"
+    },
+    "CORE": {
+      "flash_bytes": 350900,
+      "static_RAM_bytes": 26880,
+      "max_frame_bytes": 1928,
+      "frame_limit_bytes": 5120,
+      "native_build_log": ".build/vm-expression-execution-20261015/candidate-core.log"
+    }
+  },
+  "new_APPs": {
+    "BASIC.APP": {
+      "bytes": 14244,
+      "image_bytes": 19640,
+      "memory_bytes": 19688,
+      "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+    },
+    "CHIP8.APP": {
+      "bytes": 2934,
+      "image_bytes": 3720,
+      "memory_bytes": 3740,
+      "sha256": "e2b170f5ffc7d82c8d9c71be08fa6630f71edeff7aa3915fc8cbfbbb868a110b"
+    },
+    "FOCAL.APP": {
+      "bytes": 13830,
+      "image_bytes": 18620,
+      "memory_bytes": 18652,
+      "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+    },
+    "LANGIN.APP": {
+      "bytes": 11992,
+      "image_bytes": 15708,
+      "memory_bytes": 15728,
+      "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+    },
+    "LANGVM.APP": {
+      "bytes": 11501,
+      "image_bytes": 16608,
+      "memory_bytes": 16628,
+      "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+    },
+    "MARKDOWN.APP": {
+      "bytes": 13482,
+      "image_bytes": 16951,
+      "memory_bytes": 16976,
+      "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+    },
+    "SETUP.APP": {
+      "bytes": 9974,
+      "image_bytes": 13223,
+      "memory_bytes": 13248,
+      "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+    },
+    "USBDISK.APP": {
+      "bytes": 15292,
+      "image_bytes": 20074,
+      "memory_bytes": 20444,
+      "sha256": "d34c9cac9d543cd27266c63f8e132cc210487db12d407ad2ca1b971d6efadded"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7008,
+      "image_bytes": 8662,
+      "memory_bytes": 8676,
+      "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+    }
+  },
+  "local_float": {
+    "memory_bytes": 17324,
+    "limit": 17408,
+    "scalar_fallback": true
+  },
+  "hardware_stack_observed_delta_bytes": 24,
+  "hardware_stack_note": "Whole-stage high-water marks include migration and compilation; observed +24 bytes is not an isolated fixed cost of the integer executor.",
+  "host_tests": {
+    "ASan_UBSan_exact_oracle_cases": 183196,
+    "full_VM_BASIC_FOCAL_INPUT": true,
+    "existing_block_tests": true,
+    "overlay_and_file_cache": true,
+    "mixed_cache": true,
+    "opcode_profile_16_variants": true,
+    "chess_rules_game_keyboard_screen_book": true
+  },
+  "exact_chess_trace": {
+    "status": "PASS",
+    "instructions": 6521439,
+    "bytes": 78257268,
+    "sha256": "292e8a31581df7c59376a90a678ed3660d75a0a140ecbaf4d8b2502b4829f554",
+    "format": "LE sourceCRC:u32, PC|scalarOpcode<<16:u32, logicalStep:u32; exact cmp of every record",
+    "baseline_commit": "b0c7528a2",
+    "same_output_and_screen": true,
+    "algorithm_or_game_changed": false
+  },
+  "F401": {
+    "status": "PASS",
+    "cases": [
+      {
+        "case": "f401-capability-ws-usb-graphics",
+        "binary_bytes": 239864,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-a00",
+        "binary_bytes": 213200,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-ws0010",
+        "binary_bytes": 221248,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-ws-usb",
+        "binary_bytes": 237628,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-a00-usb",
+        "binary_bytes": 231048,
+        "stack_frame": 1936,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-ws-graphics",
+        "binary_bytes": 227684,
+        "stack_frame": 1936,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-mini-v2-a00",
+        "binary_bytes": 213276,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-classic-v2",
+        "binary_bytes": 243188,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-classic-v3",
+        "binary_bytes": 243212,
+        "stack_frame": 1552,
+        "frame_limit": 2048,
+        "status": "ok"
+      }
+    ],
+    "max_frame": 1936,
+    "all_original_limits": true,
+    "physical_device": false
+  },
+  "ARM_APP": {
+    "generation": 16,
+    "profile": "libm",
+    "poisoned_inactive_continuation": true,
+    "native_call_stack_peaks": {
+      "startup": 4096,
+      "verification": 980,
+      "program": 1192,
+      "input": 984,
+      "expression": 736,
+      "finish": 376
+    },
+    "stress_native_call_stack_peaks": {
+      "startup": 3988,
+      "verification": 980,
+      "program": 664,
+      "input": 3196,
+      "expression": 736,
+      "finish": 376
+    },
+    "compiler_workspace_bytes": {
+      "BASIC": 3976,
+      "FOCAL": 1708
+    },
+    "input_image_c_stack_bytes": 0,
+    "input_image_in_value_stack": true,
+    "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+  },
+  "ARM_instruction_gate": {
+    "status": "PASS",
+    "runs": [
+      {
+        "variant": "baseline",
+        "case": "basic_integer",
+        "instructions": 1284371,
+        "value": 31905.0,
+        "image_bytes": 131,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_mixed",
+        "instructions": 389178,
+        "value": 50.00000000000044,
+        "image_bytes": 70,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_branches",
+        "instructions": 328647,
+        "value": 500.0,
+        "image_bytes": 78,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_subroutines",
+        "instructions": 315122,
+        "value": 125250.0,
+        "image_bytes": 84,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_wide",
+        "instructions": 817657,
+        "value": 589822.0,
+        "image_bytes": 117,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_decimals",
+        "instructions": 1434782,
+        "value": 1400.0000000000066,
+        "image_bytes": 94,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "basic_expressions",
+        "instructions": 1299446,
+        "value": 2614911.0,
+        "image_bytes": 108,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "focal_integer",
+        "instructions": 194118,
+        "value": 125250.0,
+        "image_bytes": 84,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "focal_expressions",
+        "instructions": 893861,
+        "value": 41788750.0,
+        "image_bytes": 105,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "focal_mixed",
+        "instructions": 477080,
+        "value": 50.00000000000044,
+        "image_bytes": 95,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "baseline",
+        "case": "focal_subroutines",
+        "instructions": 322736,
+        "value": 125250.0,
+        "image_bytes": 101,
+        "rom_bytes": 21276
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_integer",
+        "instructions": 1189123,
+        "value": 31905.0,
+        "image_bytes": 131,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_mixed",
+        "instructions": 389388,
+        "value": 50.00000000000044,
+        "image_bytes": 70,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_branches",
+        "instructions": 328836,
+        "value": 500.0,
+        "image_bytes": 78,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_subroutines",
+        "instructions": 315390,
+        "value": 125250.0,
+        "image_bytes": 84,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_wide",
+        "instructions": 822536,
+        "value": 589822.0,
+        "image_bytes": 117,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_decimals",
+        "instructions": 1435148,
+        "value": 1400.0000000000066,
+        "image_bytes": 94,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "basic_expressions",
+        "instructions": 1171653,
+        "value": 2614911.0,
+        "image_bytes": 108,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "focal_integer",
+        "instructions": 194336,
+        "value": 125250.0,
+        "image_bytes": 84,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "focal_expressions",
+        "instructions": 841362,
+        "value": 41788750.0,
+        "image_bytes": 105,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "focal_mixed",
+        "instructions": 477331,
+        "value": 50.00000000000044,
+        "image_bytes": 95,
+        "rom_bytes": 22524
+      },
+      {
+        "variant": "candidate",
+        "case": "focal_subroutines",
+        "instructions": 322993,
+        "value": 125250.0,
+        "image_bytes": 101,
+        "rom_bytes": 22524
+      }
+    ],
+    "comparisons": {
+      "basic_integer": {
+        "arm_instruction_ratio": 1.0800993673488781,
+        "instruction_change_percent": -7.415925772226251,
+        "image_delta": 0
+      },
+      "basic_mixed": {
+        "arm_instruction_ratio": 0.9994606921630866,
+        "instruction_change_percent": 0.05395988468002155,
+        "image_delta": 0
+      },
+      "basic_branches": {
+        "arm_instruction_ratio": 0.9994252454110863,
+        "instruction_change_percent": 0.05750851217263264,
+        "image_delta": 0
+      },
+      "basic_subroutines": {
+        "arm_instruction_ratio": 0.9991502584102223,
+        "instruction_change_percent": 0.08504642646340876,
+        "image_delta": 0
+      },
+      "basic_wide": {
+        "arm_instruction_ratio": 0.9940683447289845,
+        "instruction_change_percent": 0.5967049753136111,
+        "image_delta": 0
+      },
+      "basic_decimals": {
+        "arm_instruction_ratio": 0.9997449740375208,
+        "instruction_change_percent": 0.025509101731135964,
+        "image_delta": 0
+      },
+      "basic_expressions": {
+        "arm_instruction_ratio": 1.1090706890179942,
+        "instruction_change_percent": -9.834421745882471,
+        "image_delta": 0
+      },
+      "focal_integer": {
+        "arm_instruction_ratio": 0.9988782315165486,
+        "instruction_change_percent": 0.112302826116073,
+        "image_delta": 0
+      },
+      "focal_expressions": {
+        "arm_instruction_ratio": 1.0623976362136631,
+        "instruction_change_percent": -5.873284548716184,
+        "image_delta": 0
+      },
+      "focal_mixed": {
+        "arm_instruction_ratio": 0.9994741594407235,
+        "instruction_change_percent": 0.05261172130459624,
+        "image_delta": 0
+      },
+      "focal_subroutines": {
+        "arm_instruction_ratio": 0.9992043171214237,
+        "instruction_change_percent": 0.0796316493976601,
+        "image_delta": 0
+      }
+    },
+    "target_cases": [
+      "basic_expressions",
+      "basic_integer",
+      "focal_expressions"
+    ],
+    "minimum_target_improvement_percent": 5.0,
+    "maximum_control_regression_percent": 1.0,
+    "note": "ARM instruction counts incl initial validation, not Cortex cycles/device time; no IO or APP loading in this gate."
+  },
+  "cross_MCU_WS0010_RAM_comparison": "Not repeated for this change; F401 release matrix passed, physical Mini not used.",
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "mini_touched": false,
+    "firmware": {
+      "build": "122A5FF9",
+      "bytes": 360564,
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+    },
+    "CRC_valid": true,
+    "crash_none": true,
+    "alarms_off": true,
+    "process_exit_code": 0,
+    "calculator_verification": "Exact reg/stk/dump/pwd equality; empty program, zero registers/stacks, IP0/root",
+    "file_verification": "Full path/length/SHA256 fingerprint before and after exact firmware restoration",
+    "MSC_enabled_by_test": false,
+    "read_retries": []
+  },
+  "artifacts": ".build/vm-expression-execution-20261015",
+  "raw_report": ".build/vm-expression-execution-20261015/hardware/attempt-1/report.json",
+  "raw_terminal_logs": [
+    ".build/vm-expression-execution-20261015/hardware/attempt-1/chess-baseline/terminal.txt",
+    ".build/vm-expression-execution-20261015/hardware/attempt-1/chess-candidate/terminal.txt",
+    ".build/vm-expression-execution-20261015/hardware/attempt-1/chess-control/terminal.txt"
+  ],
+  "wrapper_log_note": "hardware.log is not authoritative: a duplicate launch was rejected by the output-directory guard before opening the port, but its shell redirection overwrote part of this wrapper log. The original session 87529 completed exit0; per-stage terminal logs and report.json are intact. No second device run occurred."
+}
