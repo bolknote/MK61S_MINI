@@ -12,6 +12,29 @@ static bool c9_read_map(void* context, u32 offset, u8* bytes, usize size) {
       size <= g_geometry.capacity_bytes - address - offset &&
       read_bytes(address + offset, bytes, size);
 }
+// The private fallback frame keeps file operations available even when an
+// unrelated non-evictable client occupies the entire dynamic OVERLAY pool.
+__attribute__((noinline))
+static bool c9_verify_chain_stack(const fat_cluster_chain::Reader& reader, u16 bytes,
+                                 u16 owner, fat_cluster_chain::Plan& plan) {
+  fat_cluster_chain::Workspace workspace;
+  return fat_cluster_chain::verify(reader, bytes, owner,
+      storage_geometry::fat_cluster_capacity(g_geometry), workspace, plan);
+}
+static bool c9_verify_chain(const fat_cluster_chain::Reader& reader, u16 bytes,
+                            u16 owner, fat_cluster_chain::Plan& plan) {
+#if MK61_STORAGE_SHARED_TEMP
+  static_assert(sizeof(fat_cluster_chain::Workspace) <= CATALOG_IO_BYTES,
+                "FAT verifier exceeds catalog I/O lease");
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES)) {
+    auto& workspace = *new(io.data()) fat_cluster_chain::Workspace;
+    return fat_cluster_chain::verify(reader, bytes, owner,
+        storage_geometry::fat_cluster_capacity(g_geometry), workspace, plan);
+  }
+#endif
+  return c9_verify_chain_stack(reader, bytes, owner, plan);
+}
 static bool c9_chain_open(u16 id, const Inode& inode, fat_cluster_chain::Plan& plan) {
   plan = {id, 0, 0};
   if(inode.fat_address == EMPTY_ADDRESS) return true;
@@ -27,15 +50,7 @@ static bool c9_chain_open(u16 id, const Inode& inode, fat_cluster_chain::Plan& p
   if(bytes > fat_cluster_chain::MAX_RECORD_BYTES ||
      inode.fat_address % 4096U + bytes > 4096U) return false;
   C9MapReader input = {inode.fat_address};
-#if MK61_STORAGE_SHARED_TEMP
-  static_assert(sizeof(fat_cluster_chain::Workspace) <= CATALOG_IO_BYTES,
-                "FAT verifier exceeds shared catalog I/O buffer");
-  auto& workspace = *new(g_catalog_io) fat_cluster_chain::Workspace;
-#else
-  fat_cluster_chain::Workspace workspace;
-#endif
-  if(!fat_cluster_chain::verify({&input, c9_read_map}, (u16) bytes, id,
-      storage_geometry::fat_cluster_capacity(g_geometry), workspace, plan)) return false;
+  if(!c9_verify_chain({&input, c9_read_map}, (u16)bytes, id, plan)) return false;
   g_chain_verified_address = inode.fat_address;
   g_chain_verified_id = id;
   g_chain_verified_plan = plan;
@@ -286,14 +301,8 @@ static bool c9_append_chain(u16 owner, u16 count,
     offset = (u16) (offset + size);
   }
   C9MapReader input = {address};
-#if MK61_STORAGE_SHARED_TEMP
-  // Preparation and record allocation are over. Verification only reads raw
-  // NOR bytes, so it can reuse the catalog buffer without a nested phase.
-  auto& workspace = *new(g_catalog_io) fat_cluster_chain::Workspace;
-#endif
   fat_cluster_chain::Plan verified;
-  if(!fat_cluster_chain::verify({&input, c9_read_map}, bytes, owner,
-      storage_geometry::fat_cluster_capacity(g_geometry), workspace, verified)) return false;
+  if(!c9_verify_chain({&input, c9_read_map}, bytes, owner, verified)) return false;
   g_meta.current_offset = (u16) (g_meta.current_offset + bytes);
   return c9_pin(address, owner, true);
 }

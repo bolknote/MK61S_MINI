@@ -9,17 +9,19 @@ static USBD_HandleTypeDef dev;
 static uint32_t tx_size, rx_size, tx_count, rx_count, stalls, address;
 static uint8_t *tx_data, *rx_data;
 static unsigned setup_calls, rx_ready, tx_ready, in_calls, out_calls;
+static unsigned init_calls, deinit_calls, address_calls, clear_calls, event_clock, setup_event, tx_event;
+static uint8_t init_failure, setup_failure, in_halts, out_halts;
 static uint8_t config[67] = {9, 2, 67, 0, 2, 1};
 static uint8_t* configuration(uint16_t* length) { *length=sizeof(config); return config; }
 static uint8_t init(USBD_HandleTypeDef* d, uint8_t n) {
-  (void)n; d->ep_in[1].is_used=d->ep_out[1].is_used=1;
-  d->ep_in[1].maxpacket=d->ep_out[1].maxpacket=64; return USBD_OK;
+  (void)n; ++init_calls; in_halts=out_halts=0; d->ep_in[1].is_used=d->ep_out[1].is_used=1;
+  d->ep_in[1].maxpacket=d->ep_out[1].maxpacket=64; return init_failure ? USBD_FAIL : USBD_OK;
 }
 static uint8_t deinit(USBD_HandleTypeDef* d, uint8_t n) {
-  (void)n; d->ep_in[1].is_used=d->ep_out[1].is_used=0; return USBD_OK;
+  (void)n; ++deinit_calls; d->ep_in[1].is_used=d->ep_out[1].is_used=0; return USBD_OK;
 }
 static uint8_t setup(USBD_HandleTypeDef* d, USBD_SetupReqTypedef* r) {
-  (void)d; (void)r; ++setup_calls; return USBD_OK;
+  (void)d; (void)r; ++setup_calls; setup_event=++event_clock; return setup_failure ? USBD_FAIL : USBD_OK;
 }
 static uint8_t received(USBD_HandleTypeDef* d) { (void)d; ++rx_ready; return 0; }
 static uint8_t sent(USBD_HandleTypeDef* d) { (void)d; ++tx_ready; return 0; }
@@ -34,19 +36,23 @@ USBD_StatusTypeDef USBD_LL_Stop(USBD_HandleTypeDef* d) { (void)d; return 0; }
 USBD_StatusTypeDef USBD_LL_OpenEP(USBD_HandleTypeDef* d,uint8_t ep,uint8_t type,uint16_t size) {
   (void)d;(void)ep;(void)type;(void)size;return 0;
 }
-USBD_StatusTypeDef USBD_LL_StallEP(USBD_HandleTypeDef* d,uint8_t ep) { (void)d;(void)ep;++stalls;return 0; }
-USBD_StatusTypeDef USBD_LL_ClearStallEP(USBD_HandleTypeDef* d,uint8_t ep) { (void)d;(void)ep;return 0; }
-uint8_t USBD_LL_IsStallEP(USBD_HandleTypeDef* d,uint8_t ep) { (void)d;(void)ep;return 0; }
-USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef* d,uint8_t value) { (void)d;address=value;return 0; }
+USBD_StatusTypeDef USBD_LL_StallEP(USBD_HandleTypeDef* d,uint8_t ep) {
+  (void)d;++stalls;if(ep&0x80)in_halts|=1U<<(ep&15);else out_halts|=1U<<(ep&15);return 0;
+}
+USBD_StatusTypeDef USBD_LL_ClearStallEP(USBD_HandleTypeDef* d,uint8_t ep) {
+  (void)d;++clear_calls;if(ep&0x80)in_halts&=~(1U<<(ep&15));else out_halts&=~(1U<<(ep&15));return 0;
+}
+uint8_t USBD_LL_IsStallEP(USBD_HandleTypeDef* d,uint8_t ep) { (void)d;return ((ep&0x80?in_halts:out_halts)>>(ep&15))&1U; }
+USBD_StatusTypeDef USBD_LL_SetUSBAddress(USBD_HandleTypeDef* d,uint8_t value) { (void)d;++address_calls;address=value;return 0; }
 USBD_StatusTypeDef USBD_LL_Transmit(USBD_HandleTypeDef* d,uint8_t ep,uint8_t* b,uint32_t size) {
-  (void)d;(void)ep;tx_data=b;tx_size=size;++tx_count;return 0;
+  (void)d;(void)ep;tx_event=++event_clock;tx_data=b;tx_size=size;++tx_count;return 0;
 }
 USBD_StatusTypeDef USBD_LL_PrepareReceive(USBD_HandleTypeDef* d,uint8_t ep,uint8_t* b,uint32_t size) {
   (void)d;(void)ep;rx_data=b;rx_size=size;++rx_count;return 0;
 }
-static void request(uint8_t bm,uint8_t req,uint16_t value,uint16_t index,uint16_t length) {
+static USBD_StatusTypeDef request(uint8_t bm,uint8_t req,uint16_t value,uint16_t index,uint16_t length) {
   uint8_t raw[]={bm,req,value,value>>8,index,index>>8,length,length>>8};
-  USBD_LL_SetupStage(&dev,raw);
+  return USBD_LL_SetupStage(&dev,raw);
 }
 int test_control(void) {
   CHECK(USBD_Init(&dev,(USBD_DescriptorsTypeDef*)&mk61_usb_descriptors,0)==0);
@@ -153,6 +159,122 @@ int test_queues(void) {
     }
     CHECK(produced-consumed<192);
     if(produced==consumed) CHECK(CDC_ReceiveQueue_Dequeue(&rx)==-1);
+  }
+  return 0;
+}
+
+/* Wire-level expectations from USB 2.0 chapter 9, not a second dispatcher.
+ * Rejected requests cannot ACK a write or change the selected configuration.
+ */
+static int configured(void) {
+  CHECK(USBD_Init(&dev,(USBD_DescriptorsTypeDef*)&mk61_usb_descriptors,0)==USBD_OK);
+  CHECK(USBD_RegisterClass(&dev,&cls)==USBD_OK);
+  CHECK(USBD_LL_Reset(&dev)==USBD_OK);
+  CHECK(request(0,USB_REQ_SET_ADDRESS,7,0,0)==USBD_OK);
+  CHECK(request(0,USB_REQ_SET_CONFIGURATION,1,0,0)==USBD_OK);
+  return 0;
+}
+int test_ep0_requests(void) {
+  CHECK(configured()==0);
+  static const struct {uint8_t bm,request;uint16_t value,index,length;} bad[]={
+    {0x80,5,8,0,0},{0,5,128,0,0},{0,5,8,1,0},{0,5,8,0,1},
+    {0x80,9,0,0,0},{0,9,2,0,0},{0,9,0x101,0,0},{0,9,0,1,0},{0,9,0,0,1},
+    {0,8,0,0,1},{0x80,8,1,0,1},{0x80,8,0,1,1},{0x80,8,0,0,2},
+    {0,0,0,0,2},{0x80,0,1,0,2},{0x80,0,0,1,2},{0x80,0,0,0,1},
+    {0x40,0,0,0,0},{0x20,0,0,0,0},{0xC0,0,0,0,2},{0x60,0,0,0,0},
+    {0,3,1,0,0},{0,1,1,0,0},{0,3,2,0x100,0}, /* unadvertised RW, HS test */
+    {0x80,6,0x101,0,18},{0x80,6,0x100,1,18},{0x80,6,0x201,0,9},
+    {0x80,6,0x200,1,9},{0x80,6,0x306,0x409,64},{0x80,6,0x600,0,10},
+    {0x80,6,0x700,0,9},{0x80,6,0xF00,0,5},{0,6,0x100,0,18},
+    {0x81,0,0,2,2},{0x81,0,0,0x100,2},{0xC1,0,0,0,2},
+    {0x82,0,0,0x82,2},{0x82,0,0,0x101,2},{0x82,0,1,0x81,2},
+    {0x82,0,0,0x81,1},{0x02,3,1,0x81,0},{0x02,1,0,0x81,1},
+    {0x02,3,0,0,0},{0x02,1,0,0x80,0},{0xA2,0,0,0x81,2},
+    {0xC2,0,0,0x81,2},{0x02,3,0,0x82,0},{0x02,1,0,0x82,0}
+  };
+  for(unsigned i=0;i<sizeof(bad)/sizeof(*bad);i++) {
+    unsigned a=address_calls,t=tx_count,c=clear_calls,setup_before=setup_calls,stalls_before=stalls;
+    CHECK(request(bad[i].bm,bad[i].request,bad[i].value,bad[i].index,bad[i].length)==USBD_FAIL);
+    CHECK(stalls>stalls_before && tx_count==t && address_calls==a && clear_calls==c);
+    CHECK(setup_calls==setup_before && dev.dev_state==USBD_STATE_CONFIGURED && dev.dev_config==1);
+  }
+  request(0x80,0,0,0,2);CHECK(tx_size==2 && tx_data[0]==1 && tx_data[1]==0);
+  request(0x80,8,0,0,1);CHECK(tx_size==1 && tx_data[0]==1);
+  unsigned t=tx_count,s=setup_calls;
+  CHECK(request(0x21,0x22,3,0,0)==USBD_OK && setup_calls==s+1 && tx_count==t+1 && tx_size==0);
+  setup_failure=1;t=tx_count;s=stalls;
+  CHECK(request(0x21,0x22,0,0,0)==USBD_FAIL && tx_count==t && stalls>s);
+  setup_failure=0;
+  CHECK(request(0,9,0,0,0)==USBD_OK && dev.dev_state==USBD_STATE_ADDRESSED && dev.dev_config==0);
+  s=setup_calls;t=tx_count;CHECK(request(0x21,0x22,0,0,0)==USBD_FAIL && setup_calls==s && tx_count==t);
+  request(0x80,8,0,0,1);CHECK(tx_size==1 && tx_data[0]==0);
+  request(0x82,0,0,0,2);CHECK(tx_size==2 && tx_data[0]==0 && tx_data[1]==0);
+  s=stalls;CHECK(request(0x82,0,0,0x81,2)==USBD_FAIL && stalls>s);
+  CHECK(request(0,5,0,0,0)==USBD_OK && dev.dev_state==USBD_STATE_DEFAULT);
+  CHECK(request(0,9,1,0,0)==USBD_FAIL && dev.dev_state==USBD_STATE_DEFAULT);
+  return 0;
+}
+int test_ep0_configuration_failure(void) {
+  CHECK(configured()==0);CHECK(init_calls==1);
+  in_halts=2;out_halts=2;
+  CHECK(request(0,9,1,0,0)==USBD_OK && init_calls==2 && deinit_calls>=1);
+  CHECK(in_halts==0 && out_halts==0 && dev.dev_state==USBD_STATE_CONFIGURED);
+  CHECK(request(0,9,0,0,0)==USBD_OK && dev.dev_config==0 && !dev.ep_in[1].is_used);
+  unsigned t=tx_count,deinits=deinit_calls;
+  init_failure=1;
+  CHECK(request(0,9,1,0,0)==USBD_FAIL && tx_count==t && deinit_calls==deinits+1);
+  CHECK(dev.dev_config==0 && dev.dev_state==USBD_STATE_ADDRESSED && !dev.ep_in[1].is_used && !dev.ep_out[1].is_used);
+  init_failure=0;
+  CHECK(request(0,9,1,0,0)==USBD_OK && dev.dev_state==USBD_STATE_CONFIGURED);
+  return 0;
+}
+int test_ep0_halt_recovery(void) {
+  CHECK(configured()==0);
+  for(unsigned mode=1;mode<=2;mode++) {
+    config[4]=mode;
+    for(unsigned dir=0;dir<=0x80;dir+=0x80) {
+      uint16_t ep=dir|1;unsigned before=setup_calls,t=tx_count;
+      CHECK(request(2,3,0,ep,0)==USBD_OK && tx_count==t+1 && tx_size==0);
+      CHECK(request(0x82,0,0,ep,2)==USBD_OK && tx_size==2 && tx_data[0]==1 && tx_data[1]==0);
+      CHECK(request(2,1,0,ep,0)==USBD_OK && tx_size==0);
+      CHECK(setup_calls==before+(mode==1) && (mode!=1 || setup_event<tx_event));
+      CHECK(request(0x82,0,0,ep,2)==USBD_OK && tx_data[0]==0);
+    }
+  }
+  config[4]=1;setup_failure=1;unsigned t=tx_count;
+  CHECK(request(2,1,0,0x81,0)==USBD_FAIL && tx_count==t);
+  return 0;
+}
+int test_ep0_descriptor_lengths(void) {
+  CHECK(configured()==0);
+  static const uint16_t lengths[]={0,1,2,8,9,18,63,64,65,67,255,65535};
+  for(unsigned i=0;i<sizeof(lengths)/sizeof(*lengths);i++) {
+    uint16_t len=lengths[i];
+    CHECK(request(0x80,6,0x200,0,len)==USBD_OK && tx_size==(len<67?len:67));
+    CHECK(config[0]==9 && config[1]==2 && config[2]==67 && config[3]==0);
+    CHECK(request(0x80,6,0x100,0,len)==USBD_OK && tx_size==(len<18?len:18));
+    for(unsigned string=0;string<=5;string++) {
+      CHECK(request(0x80,6,0x300|string,string?0x409:0,len)==USBD_OK);
+      CHECK(tx_size<=len && tx_size<=64);
+      if(tx_size) CHECK(tx_data[1]==3);
+    }
+  }
+  USBD_DescriptorsTypeDef missing=mk61_usb_descriptors;missing.GetProductStrDescriptor=NULL;dev.pDesc=&missing;
+  unsigned t=tx_count;CHECK(request(0x80,6,0x302,0x409,64)==USBD_FAIL && tx_count==t);
+  return 0;
+}
+int test_ep0_indices(void) {
+  CHECK(configured()==0);
+  // Every invalid endpoint wIndex: neither array indexing nor a HALT mutation.
+  for(uint32_t index=0;index<=65535;index++) {
+    if(index==0 || index==0x80 || index==1 || index==0x81) continue;
+    unsigned before=tx_count,c=clear_calls,s=setup_calls;
+    CHECK(request(0x82,0,0,index,2)==USBD_FAIL);
+    CHECK(tx_count==before && clear_calls==c && setup_calls==s);
+  }
+  for(uint32_t index=2;index<=65535;index++) {
+    unsigned before=setup_calls,t=tx_count;
+    CHECK(request(0x21,0x22,0,index,0)==USBD_FAIL && setup_calls==before && tx_count==t);
   }
   return 0;
 }

@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-15",
+  "base_commit": "57835a271d716b6f795174d4f43ccddc469e5bc4",
+  "branch": "feature/stm32-ep0-storage-buffers",
+  "source_date_epoch": 1791969300,
+  "status": "PASS",
+  "scope": "Single-class FS CDC/MSC standard EP0 requests; no protocol checks or RAM/stack limits removed",
+  "tests": {
+    "ARM_EP0_suites_each_profile": 8,
+    "all_65536_interface_and_endpoint_indices": true,
+    "controller_MMIO": "PASS",
+    "MSC_BOT_SCSI_ARM_suites": 22,
+    "SCSI_and_disk_session_ASan_UBSan": "PASS",
+    "owned_source_archive_and_APP_RAM_gates": "PASS"
+  },
+  "boards": {
+    "classic": {
+      "profile": "classic-v3-uc1609",
+      "public_id": "AEB505B6E0067623",
+      "build": "D80CE1D1",
+      "candidate_sha256": "0f8c6eb3a990a4015ef463eada08e370435fb00fe6340de099dd0f102338ecf1",
+      "Flash_before": 359560,
+      "Flash_after": 359200,
+      "Flash_saved": 360,
+      "static_RAM_before": 28072,
+      "static_RAM_after": 28072,
+      "real_EP0_requests": 50,
+      "preservation": {
+        "status": "PASS",
+        "files": 44,
+        "state_preserved": true,
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=433/18 raw(v/t/b)=1492/937/1020 val(mV/dC/mV)=3331/277/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=359200 footer=357488 expected=0xD80CE1D1 build=0xD80CE1D1 actual=0xD80CE1D1 backend=hardware cycles=1058029\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006DB0 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12976 observed_remaining=12976 sram_xn=1\r\n/> "
+        }
+      },
+      "baseline": {
+        "NOR64K_us": 25032.0,
+        "core_cycles": 1712123,
+        "MSC_minimum_stack_remaining": 12600
+      },
+      "ep0": {
+        "NOR64K_us": 25032.0,
+        "core_cycles": 1709889,
+        "MSC_minimum_stack_remaining": 12632
+      },
+      "NOR_delta_percent": 0.0,
+      "core_delta_percent": -0.13048127967441037
+    },
+    "mini": {
+      "profile": "mini-v3-a00",
+      "public_id": "6FF33152484A4488",
+      "build": "A2D2F970",
+      "candidate_sha256": "59ecb86ceb86f136e8c10eb5b68410feaf35e60331cfceab68a4d511010c3edd",
+      "Flash_before": 332000,
+      "Flash_after": 331656,
+      "Flash_saved": 344,
+      "static_RAM_before": 26728,
+      "static_RAM_after": 26728,
+      "real_EP0_requests": 50,
+      "preservation": {
+        "status": "PASS",
+        "files": 10,
+        "state_preserved": true,
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=460/18 raw(v/t/b)=1524/956/1033 val(mV/dC/mV)=3272/290/3302 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=331656 footer=330104 expected=0xA2D2F970 build=0xA2D2F970 actual=0xA2D2F970 backend=hardware cycles=977264\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006870 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+        }
+      },
+      "baseline": {
+        "NOR64K_us": 24805.5,
+        "core_cycles": 1708305,
+        "MSC_minimum_stack_remaining": 12544
+      },
+      "ep0": {
+        "NOR64K_us": 24812.0,
+        "core_cycles": 1711027,
+        "MSC_minimum_stack_remaining": 12544
+      },
+      "NOR_delta_percent": 0.02620386607807834,
+      "core_delta_percent": 0.15933922806523615
+    }
+  },
+  "qualification_notes": [
+    "Initial Classic HIL used wrong OUT endpoint3; baseline correctly STALLed. Host test now parses actual configuration endpoints. Initial report retained.",
+    "A malformed SET_CONFIGURATION0x100 through macOS removed the host configuration instead of testing the expected16-bit wire rejection. Restored configuration1 programmatically, preserved files/state; this case remains ARM-fixture-only. Initial report retained.",
+    "Initial mini baseline attempt stopped before MSC due to late partial CDC echo; private runner now uses existing correlated-echo mode.",
+    "Unmodified mini baseline first MSC import left12064 stack bytes, below unchanged12288 target. Failure stack JSON retained; full raw log was overwritten by retry, traceback remains in tool output. Identical-image retry and candidate both12544; no weakening of firmware or test limits.",
+    "First mini flash guard saw both healthy DFU devices and aborted before erase/write. Private listing now filters exact VID/PID+serial, still validates exactly4alts, geometry and no descriptor errors; selected flash and CRC passed.",
+    "Physical Mac sleep not repeated; ARM reset/suspend/resume coverage passed. Classic temporarily released to the authorized OPEN/VM HIL with exact D80CE1D1 restore image."
+  ]
+}

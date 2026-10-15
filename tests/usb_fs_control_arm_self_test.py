@@ -16,6 +16,7 @@ from check_stm32_vectors import ElfImage
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('compile_commands',type=Path)
+    p.add_argument('--json',type=Path)
     args=p.parse_args()
     root=Path(__file__).resolve().parents[1]
     entries=json.loads(args.compile_commands.read_text())
@@ -27,6 +28,7 @@ def main():
             flags.append(raw[i])
         elif raw[i]=='-include':flags.extend(raw[i:i+2]);i+=1
         i+=1
+    ram_bytes=0x10000 if any(v.startswith('-DSTM32F401') for v in raw) else 0x20000
     sources=['tests/usb_fs_control_fixture.c','code/stm32f4_usbd_core.c',
              'code/stm32f4_usbd_ioreq.c','code/stm32f4_usbd_ctlreq.c',
              'code/stm32f4_usbd_desc.c','code/stm32f4_cdc_queue.c',
@@ -40,7 +42,7 @@ def main():
                 '-c',str(root/source),'-o',str(obj)],check=True)
         linker=folder/'test.ld'
         linker.write_text('MEMORY { FLASH (rx) : ORIGIN = 0x08000000, LENGTH = 1M\n'
-            'RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 128K }\n'
+            f'RAM (rwx) : ORIGIN = 0x20000000, LENGTH = {ram_bytes} }}\n'
             'SECTIONS { .text : { *(.text*) *(.rodata*) } > FLASH\n'
             '.data : { *(.data*) } > RAM AT> FLASH\n'
             '.bss : { *(.bss*) *(COMMON) } > RAM }\n')
@@ -49,22 +51,25 @@ def main():
             '-mfloat-abi=hard','-nostdlib',*objects,'-Wl,-T,'+str(linker),
             '-o',str(elf)],check=True)
         image=ElfImage(elf)
-        for function in ['test_control','test_descriptors','test_queues']:
+        results=[]
+        for function in sorted(name for name in image.symbols if name.startswith('test_')):
             u=Uc(UC_ARCH_ARM,UC_MODE_THUMB|UC_MODE_MCLASS)
             u.ctl_set_cpu_model(UC_CPU_ARM_CORTEX_M4)
-            u.mem_map(0x08000000,0x100000);u.mem_map(0x20000000,0x20000)
+            u.mem_map(0x08000000,0x100000);u.mem_map(0x20000000,ram_bytes)
             u.mem_map(0x1fff7000,0x1000)
             # Matches the Classic CDC identity, including its legacy UID encoding.
             import struct
             u.mem_write(0x1fff7a10,struct.pack('<III',0x1068336b,0x47310000,0x10000000))
-            image.load(u);stop=0x080ff000;sp=0x2001fff0
+            image.load(u);stop=0x080ff000;sp=0x20000000+ram_bytes-16
             u.reg_write(UC_ARM_REG_SP,sp);u.reg_write(UC_ARM_REG_LR,stop|1)
             u.reg_write(UC_ARM_REG_C1_C0_2,0xf00000);u.reg_write(UC_ARM_REG_FPEXC,1<<30)
             u.emu_start(image.symbols[function]|1,stop,count=100000000)
             line=u.reg_read(UC_ARM_REG_R0)
             assert u.reg_read(UC_ARM_REG_PC)==stop and not line,(function,'fixture line',line,hex(u.reg_read(UC_ARM_REG_PC)))
             assert u.reg_read(UC_ARM_REG_SP)==sp
-            print(function,'PASS')
+            results.append(dict(test=function,status='PASS'))
+            print(function,'PASS',flush=True)
+    if args.json: args.json.write_text(json.dumps(results,indent=2)+'\n')
     print('EP0 enumeration/segmentation/ZLP/reset/suspend, bounded descriptors, 50000 queue transitions PASS')
 
 if __name__=='__main__':main()

@@ -4559,7 +4559,61 @@ static void test_shared_storage_batch_survives_file_writes() {
 #endif
 }
 
+static void test_catalog_sector_reference_checks_full_width(void) {
+  for(u32 high : {0x00010000UL, 0x80000000UL, 0xFFFF0000UL}) {
+    fresh(512U * 1024U);
+    assert(program_store::write(ProgramType::TEXT, "KEEP", (const u8*)"value", 5));
+    assert(program_store::test_catalog_checkpoint());
+    const u32 root = program_store::test_catalog_root() * 4096U;
+    const u32 page = program_store::test_catalog_page(0);
+    u8 header[512];assert(flash.readByteArray(root, header, sizeof(header)));
+    put_le32(header, 80, page | high); // A valid low half must not hide bad high bits.
+    const u8 state = header[5];header[5] = 0xFF;
+    put_le32(header, 508, 0);const u32 crc = ~crc32_bytes(header, sizeof(header));
+    header[5] = state;put_le32(header, 508, crc);
+    for(usize i=0;i<sizeof(header);++i) SPIFlash::corrupt(root+i,header[i]);
+    SPIFlash::resetOperationCounts();program_store::init();
+    assert(!program_store::ready());
+    assert(program_store::mount_status()==program_store::MountStatus::REPAIR_REQUIRED);
+    assert(SPIFlash::mutationOperations()==0);
+  }
+  puts("Compact catalog: full-width corrupt sector references cannot alias valid pages PASS");
+}
+static void test_fs_temporaries_with_pinned_usb_app_and_stage(void) {
+#if MK61_STORAGE_SHARED_TEMP
+  using namespace shared_memory;
+  fresh(512U * 1024U);assert(program_store::vfat_stage_release_cache());
+  const usize original = capacity(Arena::OVERLAY);
+  auto* heap = adjust_heap(0);
+  {
+    Lease stage(Arena::OVERLAY,Owner::VFAT_STAGE,STAGE_INDEX_SIZE);
+    Lease app(Arena::APP,Owner::LOADABLE_MODULE,APP_MAX_SIZE);
+    OverlayBuffer usb;assert(stage.ok() && app.ok() && usb.acquire(Owner::USB_TRANSPORT,8264));
+    memset(stage.data(),0x51,stage.size());memset(app.data(),0x83,app.size());memset(usb.data(),0xD7,usb.size());
+    for(unsigned cycle=0;cycle<20;cycle++) {
+      u8 payload[64];memset(payload,(u8)('A'+cycle%26),sizeof(payload));u16 id=program_store::INVALID_ID;
+      const bool written = program_store::write_file(program_store::ROOT_ID,id,ProgramType::TEXT,"TEMP",payload,sizeof(payload),&id);
+      if(!written) fprintf(stderr,"pinned C9 cycle=%u write failure=%u detail=%u\n",cycle,(unsigned)program_store::last_write_failure(),(unsigned)program_store::last_write_failure_detail());
+      assert(written);
+      assert(program_store::test_catalog_checkpoint());
+      u8 result[64];u16 size=0;assert(program_store::read_id(id,result,sizeof(result),&size));
+      assert(size==sizeof(payload) && memcmp(result,payload,size)==0);
+      assert(program_store::remove_id(id));
+      assert(capacity(Arena::OVERLAY)==STAGE_INDEX_SIZE && validate_invariants());
+      for(usize i=0;i<stage.size();i++)assert(stage.data()[i]==0x51);
+      for(usize i=0;i<app.size();i++)assert(app.data()[i]==0x83);
+      for(usize i=0;i<usb.size();i++)assert(usb.data()[i]==0xD7);
+      assert(adjust_heap(0)==heap);
+    }
+  }
+  assert(capacity(Arena::OVERLAY)==original && validate_invariants());
+  puts("C9 temporary buffers: 20 real writes/checkpoints/reads/removes with pinned APP+full stage+MSC PASS");
+#endif
+}
+
 int main(int argc, char** argv) {
+  test_catalog_sector_reference_checks_full_width();
+  test_fs_temporaries_with_pinned_usb_app_and_stage();
   test_shared_storage_excludes_writes_before_mutation();
   test_shared_storage_batch_survives_file_writes();
   if(argc == 2 && strcmp(argv[1], "--stage-max-capacity") == 0) {

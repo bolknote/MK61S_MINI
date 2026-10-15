@@ -83,3 +83,9 @@ MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_READ_CACHE, "store-cache",
 // Stable, foreground-owned transport packet, released after USB is stopped.
 MK61_SHARED_MEMORY_OWNER(USB_TRANSPORT, "usb-transport",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+
+// Short foreground C9 phases may nest inside a pinned MSC transport.
+MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_CATALOG, "store-catalog",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_IO, "store-io",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)

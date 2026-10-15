@@ -229,7 +229,8 @@ static_assert(sizeof(WriteWorkspace) <= storage_workspace::WRITE_BYTES,
 // record is no longer needed; replay only deserializes inode/meta bytes.
 static constexpr usize CATALOG_IO_BYTES = MK61_PROGRAM_STORE_READ_CHUNK > WAL_RECORD_SIZE
     ? MK61_PROGRAM_STORE_READ_CHUNK : WAL_RECORD_SIZE;
-alignas(4) static u8 g_catalog_io[CATALOG_IO_BYTES];
+// Scoped catalog I/O borrows from the existing guarded dynamic pool.
+// It may nest after a pinned MSC transport and checkpoint table.
 #endif
 
 static storage_geometry::Geometry g_geometry;
@@ -239,8 +240,30 @@ static u32 g_format_epoch;
 static u8 g_locator_valid_mask;
 static constexpr u8 ALL_LOCATORS = (1U << storage_geometry::LOCATOR_SECTORS) - 1U;
 struct CatalogPage { u32 sector; u32 crc; };
-static CatalogPage g_catalog_pages[MAX_CATALOG_PAGES];
-static CatalogPage g_catalog_pending[MAX_CATALOG_PAGES];
+// A supported 128-MiB NOR has at most 32768 erase sectors. CRCs retain their
+// natural alignment; only the sector references narrow, never on-disk fields.
+struct CatalogPages {
+  u32 crcs[MAX_CATALOG_PAGES];
+  u16 sectors[MAX_CATALOG_PAGES];
+  u32 sector(u8 page) const { return sectors[page] == 0xFFFFU ? EMPTY_ADDRESS : sectors[page]; }
+  void set(u8 page, const CatalogPage& value) {
+    sectors[page] = (u16)value.sector; crcs[page] = value.crc;
+  }
+};
+static_assert(storage_geometry::MAX_CAPACITY_BYTES / 4096U < 0xFFFFU,
+              "catalog sector references exceed the compact representation");
+static CatalogPages g_catalog_pages;
+#if MK61_STORAGE_SHARED_TEMP
+static CatalogPages* g_catalog_pending;
+static_assert(CATALOG_IO_BYTES + sizeof(CatalogPages) == 824,
+              "update simultaneous filesystem ELF reserve");
+#if defined(ARDUINO_ARCH_STM32)
+__asm__(".global mk61_fs_temporary_bytes\n.set mk61_fs_temporary_bytes, 824");
+#endif
+#else
+static CatalogPages g_catalog_pending_storage;
+static constexpr CatalogPages* g_catalog_pending = &g_catalog_pending_storage;
+#endif
 static u32 g_catalog_root = EMPTY_ADDRESS;
 static u32 g_catalog_wal = EMPTY_ADDRESS;
 static u32 g_catalog_pending_root = EMPTY_ADDRESS;
@@ -523,13 +546,8 @@ static u32 crc32_bytes(const u8* data, usize len, u32 crc = 0xFFFFFFFFUL) {
   return mk61_crc32::extend(crc, data, len);
 }
 
-static bool crc32_flash(mk61_crc32::Context& crc,
-                        u32 address, u32 len) {
-#if MK61_STORAGE_SHARED_TEMP
-  u8* const buffer = g_catalog_io;
-#else
-  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
-#endif
+__attribute__((noinline))
+static bool crc32_flash_buffer(mk61_crc32::Context& crc, u32 address, u32 len, u8* buffer) {
   while(len != 0) {
     const u16 count = len > MK61_PROGRAM_STORE_READ_CHUNK ? MK61_PROGRAM_STORE_READ_CHUNK : (u16) len;
     if(!read_bytes(address, buffer, count) ||
@@ -539,6 +557,19 @@ static bool crc32_flash(mk61_crc32::Context& crc,
   }
   return true;
 }
+__attribute__((noinline))
+static bool crc32_flash_stack(mk61_crc32::Context& crc, u32 address, u32 len) {
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+  return crc32_flash_buffer(crc, address, len, buffer);
+}
+static bool crc32_flash(mk61_crc32::Context& crc, u32 address, u32 len) {
+#if MK61_STORAGE_SHARED_TEMP
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return crc32_flash_buffer(crc, address, len, io.data());
+#endif
+  return crc32_flash_stack(crc, address, len);
+}
 
 static bool crc32_flash(u32 address, u32 len, u32& output) {
   mk61_crc32::Context crc;
@@ -547,13 +578,9 @@ static bool crc32_flash(u32 address, u32 len, u32& output) {
   return true;
 }
 
-static bool crc32_flash_software(u32 address, u32 len, u32& output) {
+__attribute__((noinline))
+static bool crc32_flash_software_buffer(u32 address, u32 len, u32& output, u8* buffer) {
   u32 state = mk61_crc32::INITIAL_STATE;
-#if MK61_STORAGE_SHARED_TEMP
-  u8* const buffer = g_catalog_io;
-#else
-  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
-#endif
   while(len != 0) {
     const u16 count = len > MK61_PROGRAM_STORE_READ_CHUNK ? MK61_PROGRAM_STORE_READ_CHUNK : (u16) len;
     if(!read_bytes(address, buffer, count)) return false;
@@ -563,6 +590,19 @@ static bool crc32_flash_software(u32 address, u32 len, u32& output) {
   }
   output = mk61_crc32::finish(state);
   return true;
+}
+__attribute__((noinline))
+static bool crc32_flash_software_stack(u32 address, u32 len, u32& output) {
+  u8 buffer[MK61_PROGRAM_STORE_READ_CHUNK];
+  return crc32_flash_software_buffer(address, len, output, buffer);
+}
+static bool crc32_flash_software(u32 address, u32 len, u32& output) {
+#if MK61_STORAGE_SHARED_TEMP
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return crc32_flash_software_buffer(address, len, output, io.data());
+#endif
+  return crc32_flash_software_stack(address, len, output);
 }
 
 static void encode_settings_guard(u8* guard, u32 capacity) {
@@ -780,6 +820,12 @@ static bool catalog_sector_in_range(u32 sector) {
            sector - scratch < storage_geometry::import_scratch_sector_count(g_geometry));
 }
 
+static u32 pending_catalog_sector(u8 page) {
+#if MK61_STORAGE_SHARED_TEMP
+  if(g_catalog_pending == nullptr) return EMPTY_ADDRESS;
+#endif
+  return g_catalog_pending->sector(page);
+}
 __attribute__((noinline))
 static bool catalog_sector_busy(u32 sector) {
   for(u8 index = 0; index < g_c9_pin_count; ++index) {
@@ -789,14 +835,17 @@ static bool catalog_sector_busy(u32 sector) {
      sector == g_catalog_pending_root || sector == g_catalog_pending_wal ||
      sector == g_gc_victim) return true;
   for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
-    if(sector == g_catalog_pages[page].sector ||
-       sector == g_catalog_pending[page].sector) return true;
+    if(sector == g_catalog_pages.sector(page) ||
+       sector == pending_catalog_sector(page)) return true;
   }
   return false;
 }
 
 static void clear_pending_catalog(void) {
-  memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
+#if MK61_STORAGE_SHARED_TEMP
+  if(g_catalog_pending)
+#endif
+    memset(g_catalog_pending, 0xFF, sizeof(*g_catalog_pending));
   g_catalog_pending_root = g_catalog_pending_wal = EMPTY_ADDRESS;
 }
 
@@ -843,7 +892,7 @@ static bool read_table_bytes(u32 offset, u8* out, u16 len) {
     if(page >= g_geometry.catalog_table_sectors) return false;
     const u16 in_page = (u16) (offset % storage_geometry::PHYSICAL_SECTOR_SIZE);
     const u16 room = (u16) (storage_geometry::PHYSICAL_SECTOR_SIZE - in_page);
-    if(g_catalog_pages[page].sector == EMPTY_ADDRESS) {
+    if(g_catalog_pages.sector(page) == EMPTY_ADDRESS) {
       const u16 count = len < room ? len : room;
       memset(out, 0xFF, count);
       out += count;
@@ -851,7 +900,7 @@ static bool read_table_bytes(u32 offset, u8* out, u16 len) {
       len = (u16) (len - count);
       continue;
     }
-    const u32 address = sector_address(g_catalog_pages[page].sector) + in_page;
+    const u32 address = sector_address(g_catalog_pages.sector(page)) + in_page;
     const u32 cache_address = address & ~511UL;
 #if !defined(ARDUINO_BLACKPILL_F401CC)
     const u8* cached = g_table_cache;
@@ -1055,17 +1104,14 @@ static bool catalog_page_dirty(u8 page) {
 // Stream a page through 512 bytes of scratch; never put a 4-KiB erase block
 // on F401's stack. Inodes straddling a physical page are patched in both pages.
 __attribute__((noinline))
-static bool write_catalog_page(u8 page, CatalogPage& target,
-                                bool reserve_only) {
-  if(!allocate_catalog_sector(target.sector, reserve_only)) return false;
+static bool write_catalog_page_buffer(u8 page, u32 sector, CatalogPages& target, u8* buffer) {
   mk61_crc32::Context crc;
-  u8 buffer[512];
   u8 disk_inode[storage_geometry::INODE_BYTES];
   const u32 page_begin = (u32) page * storage_geometry::PHYSICAL_SECTOR_SIZE;
-  for(u16 offset = 0; offset < storage_geometry::PHYSICAL_SECTOR_SIZE; offset += sizeof(buffer)) {
+  for(u16 offset = 0; offset < storage_geometry::PHYSICAL_SECTOR_SIZE; offset += 512U) {
     const u32 begin = page_begin + offset;
-    const u32 end = begin + sizeof(buffer);
-    if(!read_table_bytes(begin, buffer, sizeof(buffer))) return false;
+    const u32 end = begin + 512U;
+    if(!read_table_bytes(begin, buffer, 512U)) return false;
     for(u8 i = 0; i < g_overlay_count; ++i) {
       const u32 inode_begin = (u32) g_overlay_ids[i] * storage_geometry::INODE_BYTES;
       const u32 inode_end = inode_begin + storage_geometry::INODE_BYTES;
@@ -1075,17 +1121,34 @@ static bool write_catalog_page(u8 page, CatalogPage& target,
       const u32 high = inode_end < end ? inode_end : end;
       memcpy(buffer + (low - begin), disk_inode + (low - inode_begin), high - low);
     }
-    if(!write_bytes(sector_address(target.sector) + offset, buffer, sizeof(buffer)) ||
-       !crc.update(buffer, sizeof(buffer))) return false;
+    if(!write_bytes(sector_address(sector) + offset, buffer, 512U) ||
+       !crc.update(buffer, 512U)) return false;
   }
-  target.crc = crc.finish();
+  target.crcs[page] = crc.finish();
   return true;
+}
+__attribute__((noinline))
+static bool write_catalog_page_stack(u8 page, u32 sector, CatalogPages& target) {
+  u8 buffer[512];
+  return write_catalog_page_buffer(page, sector, target, buffer);
+}
+static bool write_catalog_page(u8 page, CatalogPages& target, bool reserve_only) {
+  u32 sector = EMPTY_ADDRESS;
+  if(!allocate_catalog_sector(sector, reserve_only)) return false;
+  target.set(page, {sector, EMPTY_ADDRESS});
+#if MK61_STORAGE_SHARED_TEMP
+  // Allocation proofs may themselves need catalog I/O. Pin the raw page only
+  // afterwards; the loop below reads table bytes and programs NOR directly.
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return write_catalog_page_buffer(page, sector, target, io.data());
+#endif
+  return write_catalog_page_stack(page, sector, target);
 }
 
 __attribute__((noinline))
-static bool publish_catalog_root(u32 generation) {
-  u8 header[CATALOG_HEADER_SIZE];
-  memset(header, 0xFF, sizeof(header));
+static bool publish_catalog_root_buffer(u32 generation, u8* header) {
+  memset(header, 0xFF, CATALOG_HEADER_SIZE);
   memcpy(header, "C9CT", 4);
   header[4] = CATALOG_VERSION;
   header[5] = STATE_WRITING;
@@ -1105,38 +1168,60 @@ static bool publish_catalog_root(u32 generation) {
   for(u8 i = 0; i < INLINE_TYPE_COUNT; ++i) put_le16(header, 52 + i * 2, g_meta.type_count[i]);
   put_le16(header, IMAGE1_HEADER_COUNT_OFFSET, g_meta.type_count[6]);
   for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
-    put_le32(header, CATALOG_MAP_OFFSET + page * 8, g_catalog_pending[page].sector);
-    put_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4, g_catalog_pending[page].crc);
+    put_le32(header, CATALOG_MAP_OFFSET + page * 8, g_catalog_pending->sector(page));
+    put_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4, g_catalog_pending->crcs[page]);
   }
   put_le32(header, CATALOG_WAL_OFFSET, g_catalog_pending_wal);
   put_le32(header, CATALOG_CURSOR_OFFSET, g_catalog_cursor);
   put_le32(header, CATALOG_HEADER_CRC_OFFSET,
-           normalized_record_crc(header, sizeof(header), CATALOG_HEADER_CRC_OFFSET, 5));
+           normalized_record_crc(header, CATALOG_HEADER_SIZE, CATALOG_HEADER_CRC_OFFSET, 5));
   const u32 address = sector_address(g_catalog_pending_root);
-  return write_bytes(address, header, sizeof(header)) &&
+  return write_bytes(address, header, CATALOG_HEADER_SIZE) &&
          write_byte(address + 5, STATE_ACTIVE);
 }
 
-static bool checkpoint(bool empty_table, bool reserve_only) {
+__attribute__((noinline))
+static bool publish_catalog_root_stack(u32 generation) {
+  u8 header[CATALOG_HEADER_SIZE];
+  return publish_catalog_root_buffer(generation, header);
+}
+static bool publish_catalog_root(u32 generation) {
+#if MK61_STORAGE_SHARED_TEMP
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return publish_catalog_root_buffer(generation, io.data());
+#endif
+  return publish_catalog_root_stack(generation);
+}
+
+static bool checkpoint_buffer(bool empty_table, bool reserve_only, CatalogPages* pages) {
+#if MK61_STORAGE_SHARED_TEMP
+  struct PendingScope {
+    PendingScope(CatalogPages* data) { g_catalog_pending = data; }
+    ~PendingScope() { clear_pending_catalog(); g_catalog_pending = nullptr; }
+  } pending_scope(pages);
+#else
+  (void)pages;
+#endif
 #if MK61_C9_ALLOCATION_CACHE
   if(empty_table) g_cluster_bitmap_valid = g_live_sector_bitmap_valid = false;
 #endif
   clear_pending_catalog();
-  memcpy(g_catalog_pending, g_catalog_pages, sizeof(g_catalog_pending));
-  if(empty_table) memset(g_catalog_pending, 0xFF, sizeof(g_catalog_pending));
+  *g_catalog_pending = g_catalog_pages;
+  if(empty_table) memset(g_catalog_pending, 0xFF, sizeof(*g_catalog_pending));
   for(u8 page = 0; !empty_table && page < g_geometry.catalog_table_sectors; ++page) {
     const bool borrowed = reserve_only &&
-        g_catalog_pages[page].sector != EMPTY_ADDRESS &&
-        g_catalog_pages[page].sector >= g_geometry.data_first_sector;
+        g_catalog_pages.sector(page) != EMPTY_ADDRESS &&
+        g_catalog_pages.sector(page) >= g_geometry.data_first_sector;
     if((catalog_page_dirty(page) || borrowed) &&
-       !write_catalog_page(page, g_catalog_pending[page], reserve_only)) return false;
+       !write_catalog_page(page, *g_catalog_pending, reserve_only)) return false;
   }
   if(!allocate_catalog_sector(g_catalog_pending_root, reserve_only) ||
      !allocate_catalog_sector(g_catalog_pending_wal, reserve_only)) return false;
   u32 generation = g_catalog_generation + 1;
   if(generation == 0) generation = 1;
   if(!publish_catalog_root(generation)) return false;
-  memcpy(g_catalog_pages, g_catalog_pending, sizeof(g_catalog_pages));
+  g_catalog_pages = *g_catalog_pending;
   g_catalog_root = g_catalog_pending_root;
   g_catalog_wal = g_catalog_pending_wal;
   g_catalog_generation = generation;
@@ -1149,14 +1234,32 @@ static bool checkpoint(bool empty_table, bool reserve_only) {
   return true;
 }
 
+#if MK61_STORAGE_SHARED_TEMP
+__attribute__((noinline))
+static bool checkpoint_stack(bool empty_table, bool reserve_only) {
+  CatalogPages pages;
+  return checkpoint_buffer(empty_table, reserve_only, &pages);
+}
+#endif
+static bool checkpoint(bool empty_table, bool reserve_only) {
+#if MK61_STORAGE_SHARED_TEMP
+  if(g_catalog_pending) return false;
+  shared_memory::OverlayBuffer pending;
+  if(pending.acquire(shared_memory::Owner::PROGRAM_STORE_CATALOG, sizeof(CatalogPages)))
+    return checkpoint_buffer(empty_table, reserve_only, new(pending.data()) CatalogPages);
+  return checkpoint_stack(empty_table, reserve_only);
+#else
+  return checkpoint_buffer(empty_table, reserve_only, g_catalog_pending);
+#endif
+}
+
 // No full-catalog checkpoint for every mutation. The bounded journal still
 // commits up to 16 changed inodes atomically, including an entire APP's extents.
 __attribute__((noinline))
-static bool append_transaction_record(const Transaction& transaction) {
-#if MK61_STORAGE_SHARED_TEMP
-  u8* const record = g_catalog_io;
-#else
-  u8 record[WAL_RECORD_SIZE];
+static bool append_transaction_buffer(const Transaction& transaction, u8* record,
+                                      shared_memory::OverlayBuffer* io) {
+#if !MK61_STORAGE_SHARED_TEMP
+  (void)io;
 #endif
   memset(record, 0xFF, WAL_RECORD_SIZE);
   record[0] = 'W';
@@ -1179,9 +1282,15 @@ static bool append_transaction_record(const Transaction& transaction) {
   if(!write_bytes(address, record, WAL_RECORD_SIZE) ||
      !write_byte(address + 3, STATE_ACTIVE)) {
     g_wal_sealed = true;
+#if MK61_STORAGE_SHARED_TEMP
+    if(io) io->reset();
+#endif
     if(!load_catalog()) g_ready = false;
     return false;
   }
+#if MK61_STORAGE_SHARED_TEMP
+  if(io) io->reset();
+#endif
 #if MK61_C9_ALLOCATION_CACHE
   // Optional cache maintenance happens after durable publication, while the
   // old overlay still identifies removed claims. Any read/shape failure leaves
@@ -1202,6 +1311,20 @@ static bool append_transaction_record(const Transaction& transaction) {
   return true;
 }
 
+__attribute__((noinline))
+static bool append_transaction_stack(const Transaction& transaction) {
+  u8 record[WAL_RECORD_SIZE];
+  return append_transaction_buffer(transaction, record, nullptr);
+}
+static bool append_transaction_record(const Transaction& transaction) {
+#if MK61_STORAGE_SHARED_TEMP
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return append_transaction_buffer(transaction, io.data(), &io);
+#endif
+  return append_transaction_stack(transaction);
+}
+
 static bool append_transaction(const Transaction& transaction) {
   if(transaction.count > WAL_MAX_UPDATES) return false;
   if(g_wal_sealed || g_wal_records >= CATALOG_WAL_RECORDS ||
@@ -1214,15 +1337,10 @@ static bool append_transaction(const Transaction& transaction) {
   return append_transaction_record(transaction);
 }
 
-static bool replay_wal(void) {
+static bool replay_wal_buffer(u8* record) {
   g_wal_records = 0;
   g_wal_sealed = false;
   for(u8 index = 0; index < CATALOG_WAL_RECORDS; ++index) {
-#if MK61_STORAGE_SHARED_TEMP
-    u8* const record = g_catalog_io;
-#else
-    u8 record[WAL_RECORD_SIZE];
-#endif
     if(!read_bytes(wal_record_address(index), record, WAL_RECORD_SIZE)) return false;
     bool erased = true;
     for(u16 i = 0; i < WAL_RECORD_SIZE; ++i) if(record[i] != 0xFF) erased = false;
@@ -1248,6 +1366,20 @@ static bool replay_wal(void) {
   return true;
 }
 
+__attribute__((noinline))
+static bool replay_wal_stack(void) {
+  u8 record[WAL_RECORD_SIZE];
+  return replay_wal_buffer(record);
+}
+static bool replay_wal(void) {
+#if MK61_STORAGE_SHARED_TEMP
+  shared_memory::OverlayBuffer io;
+  if(io.acquire(shared_memory::Owner::PROGRAM_STORE_IO, CATALOG_IO_BYTES))
+    return replay_wal_buffer(io.data());
+#endif
+  return replay_wal_stack();
+}
+
 static bool catalog_header_valid(u8* header) {
   return memcmp(header, "C9CT", 4) == 0 &&
       header[4] == CATALOG_VERSION && header[5] == STATE_ACTIVE &&
@@ -1265,7 +1397,7 @@ static bool load_catalog(void) {
   g_cluster_bitmap_valid = g_live_sector_bitmap_valid = false;
 #endif
   clear_pending_catalog();
-  memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
+  memset(&g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
   g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
   g_overlay_count = 0;
   invalidate_table_cache();
@@ -1293,17 +1425,18 @@ static bool load_catalog(void) {
   if(!catalog_sector_in_range(g_catalog_wal) || g_catalog_wal == g_catalog_root ||
      !catalog_sector_in_range(g_catalog_cursor)) return false;
   for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
-    CatalogPage& entry = g_catalog_pages[page];
-    entry.sector = get_le32(header, CATALOG_MAP_OFFSET + page * 8);
-    entry.crc = get_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4);
+    const CatalogPage entry = {get_le32(header, CATALOG_MAP_OFFSET + page * 8),
+                               get_le32(header, CATALOG_MAP_OFFSET + page * 8 + 4)};
     if(entry.sector == EMPTY_ADDRESS) {
       if(entry.crc != EMPTY_ADDRESS) return false;
       continue;
     }
     if(!catalog_sector_in_range(entry.sector) || entry.sector == g_catalog_root ||
        entry.sector == g_catalog_wal) return false;
+    // Validate the complete on-disk word BEFORE narrowing to a sector ID.
+    g_catalog_pages.set(page, entry);
     for(u8 previous = 0; previous < page; ++previous) {
-      if(g_catalog_pages[previous].sector == entry.sector) return false;
+      if(g_catalog_pages.sector(previous) == entry.sector) return false;
     }
     u32 crc = 0;
     if(!crc32_flash(sector_address(entry.sector), storage_geometry::PHYSICAL_SECTOR_SIZE, crc) ||
@@ -2937,7 +3070,7 @@ static bool format_internal(bool erase_settings) {
   if(g_format_epoch == 0 || g_format_epoch == 0xFFFFFFFFUL) g_format_epoch ^= 0x13579BDFUL;
   g_ready = false;
   g_mount_status = MountStatus::UNAVAILABLE;
-  memset(g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
+  memset(&g_catalog_pages, 0xFF, sizeof(g_catalog_pages));
   clear_pending_catalog();
   g_catalog_root = g_catalog_wal = EMPTY_ADDRESS;
   g_catalog_cursor = storage_geometry::LOCATOR_SECTORS;
@@ -3298,7 +3431,7 @@ static bool select_large_sector(u32& output) {
       bool borrowed = data_sector_in_range(g_catalog_root) ||
                       data_sector_in_range(g_catalog_wal);
       for(u8 page = 0; page < g_geometry.catalog_table_sectors; ++page) {
-        borrowed |= data_sector_in_range(g_catalog_pages[page].sector);
+        borrowed |= data_sector_in_range(g_catalog_pages.sector(page));
       }
       if(borrowed) {
         if(!checkpoint(false, true)) {
@@ -4956,7 +5089,7 @@ StageIndexStats test_stage_index_stats(void) {
 
 u32 test_catalog_root(void) { return g_catalog_root; }
 u32 test_catalog_page(u8 page) {
-  return page < g_geometry.catalog_table_sectors ? g_catalog_pages[page].sector : EMPTY_ADDRESS;
+  return page < g_geometry.catalog_table_sectors ? g_catalog_pages.sector(page) : EMPTY_ADDRESS;
 }
 u32 test_catalog_wal_address(u8 record) {
   return record < CATALOG_WAL_RECORDS ? wal_record_address(record) : EMPTY_ADDRESS;
