@@ -6,25 +6,42 @@ sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
-for variant in physical legacy-usb shared-usb physical-loan; do
+for variant in physical legacy-usb shared-usb physical-loan scoped-usb; do
+scoped=0
 usb=1
 shared_grid=0
 if [[ "$variant" == physical ]]; then usb=0; fi
 if [[ "$variant" == shared-usb ]]; then shared_grid=1; fi
+if [[ "$variant" == scoped-usb ]]; then shared_grid=1; scoped=1; fi
 loan="$shared_grid"
 if [[ "$variant" == physical-loan ]]; then usb=0; loan=1; fi
+test_flags=(
+  -DCONFIG -DARDUINO=100 -DMK61_DISPLAY_UC1609=1
+  -DMK61_PROPORTIONAL_UI_FONTS=1
+  -DMK61_FIXED_CALCULATOR_FACE=1
+  -DMK61_HAS_COMPILED_GRAPHICS=1
+  -DMK61_ENABLE_USB_SCREEN="$usb" -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=1
+  -DMK61_SHARED_SCREEN_GRID="$shared_grid" -DMK61_SCREEN_BUFFER_LOAN="$loan"
+  -DMK61_SCOPED_RESIDENT_BUFFERS="$scoped"
+  -DMK61_DEEP_IDLE_ENABLED=1 -DMK61_ANY_FULLSCREEN_FILE=1
+  -DPIN_GLCD_CD=0 -DPIN_GLCD_RST=1 -DPIN_GLCD_CS=2
+  -DGLCD_UC1609_BIAS=0 -DGLCD_UC1609_ADDRESS_SET=0
+  -include "$root/tests/ui_display_shim/panel.hpp"
+  -I"$root/tests/ui_display_shim" -I"$root/code"
+)
+manager_sources=()
+if [[ "$scoped" == 1 ]]; then
+  # Pixel tests deliberately mock the ownership queries for externally supplied
+  # font/workspace fixtures. Keep those two queries mocked while linking the
+  # real lifetime allocator (whose placement/invariants use its private state).
+  clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
+    "${test_flags[@]}" \
+    -Dcontains=fixture_real_contains -Dactive_owner=fixture_real_active_owner \
+    -c "$root/code/shared_memory.cpp" -o "$out-manager.o"
+  manager_sources+=("$out-manager.o")
+fi
 clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
-  -DCONFIG -DARDUINO=100 -DMK61_DISPLAY_UC1609=1 \
-  -DMK61_PROPORTIONAL_UI_FONTS=1 \
-  -DMK61_FIXED_CALCULATOR_FACE=1 \
-  -DMK61_HAS_COMPILED_GRAPHICS=1 \
-  -DMK61_ENABLE_USB_SCREEN="$usb" -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=1 \
-  -DMK61_SHARED_SCREEN_GRID="$shared_grid" -DMK61_SCREEN_BUFFER_LOAN="$loan" \
-  -DMK61_DEEP_IDLE_ENABLED=1 -DMK61_ANY_FULLSCREEN_FILE=1 \
-  -DPIN_GLCD_CD=0 -DPIN_GLCD_RST=1 -DPIN_GLCD_CS=2 \
-  -DGLCD_UC1609_BIAS=0 -DGLCD_UC1609_ADDRESS_SET=0 \
-  -include "$root/tests/ui_display_shim/panel.hpp" \
-  -I"$root/tests/ui_display_shim" -I"$root/code" \
+  "${test_flags[@]}" "${manager_sources[@]}" \
   "$root/tests/ui_display_self_test.cpp" \
   "$root/code/display.cpp" "$root/code/display_ui.cpp" \
   "$root/code/display_buffer_loan.cpp" \
