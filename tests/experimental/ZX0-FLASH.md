@@ -41,6 +41,11 @@ the private header is present in both snapshots. The initial pair has:
 This is a 304-byte Flash increase with unchanged static RAM. Snapshots and
 sealed BIN/ELF pairs are in `.build/zx0-flash-20261015/firmware/`.
 
+After RAM/MPU integration, a second normal matched build on `7cd70e188`
+measured 374688 bytes (`9468F51D`) versus 374976 (`342D9231`): **288 bytes**
+added, with identical `.data` 1656 and `.bss` 24856. Those snapshots are in
+`integrated-firmware/`; the device timings below belong to the original pair.
+
 One unchanged `ZX0FLASH.APP` selects the resident by its sealed 40-byte footer
 and exact 32-byte prefixes of both functions. Every result reports that CRC.
 Timed intervals call the actual Flash `prepare` and `emit` through their pinned

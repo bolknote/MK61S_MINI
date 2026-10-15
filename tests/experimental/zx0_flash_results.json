@@ -499,7 +499,16 @@
       "sha256": "8179695796cb939e2ee912e3b25a98488ea304e3790b24022dceba112041b6dd"
     },
     "source_relationship": "Physical pair uses base 6781f4a24 plus the same encoder files now in main. A separate normal build on 7cd70e188 + these identical files passes build/Flash/RAM/stack gates.",
-    "physical_device": "Exact original 122A5FF9 + original files restored and Classic handed to Tiny BASIC raw32 qualification."
+    "physical_device": "Exact original 122A5FF9 + original files restored and Classic handed to Tiny BASIC raw32 qualification.",
+    "merged_normal_control": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/zx0-flash-20261015/integrated-firmware/control/build/resident.bin",
+      "bytes": 374688,
+      "footer": 372976,
+      "build": "9468F51D",
+      "sha256": "95d08fd739e497be6e57d11b36d32f877e4d3d342c984095e3bb9931858c6a90"
+    },
+    "merged_normal_flash_delta_bytes": 288,
+    "merged_normal_static_RAM_delta_bytes": 0
   },
   "scope": "Complete bounded fragments, 16/64/512 bytes, from normal resident Flash. Not whole-filesystem, USB or application-loading throughput.",
   "source_snapshots": {
