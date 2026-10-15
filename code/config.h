@@ -583,6 +583,15 @@
 #if MK61_LANGUAGE_VM_CACHE_DENSITY != 0 && MK61_LANGUAGE_VM_CACHE_DENSITY != 1
   #error "MK61_LANGUAGE_VM_CACHE_DENSITY must be 0 or 1"
 #endif
+// Experimental raw/packed entries, still inside the existing cache budget.
+// Workspace is borrowed only before warm VM state setup; cold reserve never
+// touches the compiler's live prefix. No firmware rollout by default.
+#ifndef MK61_LANGUAGE_VM_CACHE_MIXED
+  #define MK61_LANGUAGE_VM_CACHE_MIXED 0
+#endif
+#if MK61_LANGUAGE_VM_CACHE_MIXED != 0 && MK61_LANGUAGE_VM_CACHE_MIXED != 1
+  #error "MK61_LANGUAGE_VM_CACHE_MIXED must be 0 or 1"
+#endif
 #if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
   #error "Choose one language VM placement"
 #endif

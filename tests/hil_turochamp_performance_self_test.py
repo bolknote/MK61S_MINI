@@ -37,6 +37,15 @@ detail=profile('PROF state=stopped clock=96000000\n'
 assert detail['points']['app.entry.vm']['self_seconds']==.5
 assert detail['vm_cache_dropped']==0 and detail['vm_cache']==[
     {'id':12,'bytes':2189,'hits':50,'misses':2,'name':'search'}]
+signature=('PROF state=stopped clock=96000000\nVMCACHE dropped=0\n'
+           'VMCACHE_ORDER count=2 fnv64=10178788028133461333\n'
+           'VMCACHE id=42 bytes=128 hits=1 misses=1 name=test\n')
+assert profile(signature)['vm_cache_order']=={'count':2,'fnv64':10178788028133461333}
+for invalid in (signature.replace('count=2','count=1'), signature.replace('count=2','count=4294967295'),
+                signature+'VMCACHE_ORDER count=2 fnv64=1\n'):
+    try:profile(invalid)
+    except AssertionError:pass
+    else:raise AssertionError('incomplete/saturated/duplicate cache signature accepted')
 frame=bytearray(1536)
 put('ВАШ ХОД',2,10);put('e2-e3',6,10)
 for rank in range(1,7):put(str(rank),rank,0)

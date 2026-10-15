@@ -118,7 +118,7 @@ enum class Point : u8 {
   FILE_SOURCE, FILE_FONT, FILE_OTHER,
   ZX0_APP_BASIC, ZX0_APP_FOCAL, ZX0_APP_VM, ZX0_APP_INPUT, ZX0_APP_OTHER,
   ZX0_SOURCE, ZX0_FONT, ZX0_SWAP, ZX0_OTHER,
-  FONT_ACTIVATE, VM_CACHE_LOOKUP, VM_PREPARE,
+  FONT_ACTIVATE, VM_CACHE_LOOKUP, VM_PREPARE, VM_CACHE_PACK, VM_CACHE_THAW,
   M61_RUNNER, VM_INVOKE,
   M61_OPERAND, M61_OPEN, TERMINAL_LOOKUP,
   M61_READ_LINE, M61_COMMAND,
@@ -223,6 +223,11 @@ struct VmCacheRow {
   u32 hits = 0, misses = 0;
 };
 static constexpr usize VM_CACHE_ROWS = 32;
+// Diagnostic order signature, not an event buffer or a security boundary.
+// FNV-1a hashes each source inode as two little-endian bytes. Count saturation
+// makes the signature unsuitable for replay qualification; reset it first.
+struct VmCacheOrder { u32 count; u64 fingerprint; };
+const VmCacheOrder& vm_cache_order(void);
 void record_vm_cache(u16 id, bool hit, u16 size);
 void record_vm_image(u16 id, u16 size);
 const VmCacheRow& vm_cache_row(usize index);

@@ -4,7 +4,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-vm-file-cache.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 flags=()
-if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
+flags+=("-DMK61_LANGUAGE_VM_CACHE_MIXED=${MK61_VM_CACHE_MIXED_TEST:-0}")
+if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer); fi
 clang++ -std=c++17 -O1 -Wall -Wextra -Werror "${flags[@]}" \
   -I"$root/code" "$root/tests/language_vm_file_cache_self_test.cpp" \
   "$root/code/language_vm_file_cache.cpp" "$root/code/language_bytecode.cpp" \

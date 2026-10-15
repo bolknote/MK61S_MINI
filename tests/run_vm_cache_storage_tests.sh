@@ -9,3 +9,5 @@ clang++ -std=c++17 -O1 -g -Wall -Wextra -Werror \
 "$work/codec"
 python3 "$root/tests/vm_cache_storage_self_test.py"
 python3 "$root/tests/vm_cache_replay_self_test.py"
+python3 "$root/tests/vm_cache_physical_model_self_test.py"
+python3 "$root/tests/vm_cache_trace_qualification_self_test.py"

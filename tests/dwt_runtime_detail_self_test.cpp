@@ -71,6 +71,23 @@ static void runner_and_invoke() {
   assert(scope_top == nullptr);
 }
 
+static void mixed_cache_tree() {
+  reset();
+  {
+    Scope lookup(Point::VM_CACHE_LOOKUP); tick(1);
+    {
+      Scope thaw(Point::VM_CACHE_THAW); tick(2);
+      { Scope pack(Point::VM_CACHE_PACK); tick(3); }
+    }
+  }
+  assert(statistics(Point::VM_CACHE_LOOKUP).total_cycles == 6);
+  assert(statistics(Point::VM_CACHE_LOOKUP).self_cycles == 1);
+  assert(statistics(Point::VM_CACHE_THAW).total_cycles == 5);
+  assert(statistics(Point::VM_CACHE_THAW).self_cycles == 2);
+  assert(statistics(Point::VM_CACHE_PACK).total_cycles == 3);
+  assert(scope_top == nullptr);
+}
+
 static void script_detail_tree() {
   reset();
   {
@@ -146,17 +163,32 @@ static void context_and_cache() {
   }
   assert(decode_point == Point::ZX0_OTHER);
   record_vm_cache(42, false, 0); record_vm_image(42, 128); record_vm_cache(42, true, 128);
+  assert(vm_cache_order().count == 2);
+  assert(vm_cache_order().fingerprint == UINT64_C(10178788028133461333));
   const auto& row = vm_cache_row(0);
   assert(row.id == 42 && row.size == 128 && row.hits == 1 && row.misses == 1);
   for(unsigned i = 0; i < VM_CACHE_ROWS - 1; ++i) record_vm_cache((u16)i, true, 80);
   record_vm_cache(99, false, 0);
   assert(vm_cache_dropped() == 1 && vm_cache_row(VM_CACHE_ROWS).id == 0xFFFF);
   record_vm_cache(0xFFFF, false, 0); assert(vm_cache_dropped() == 1);
+  const auto order = vm_cache_order();
   stop(); record_vm_cache(42, true, 128);
+  assert(vm_cache_order().count == order.count && vm_cache_order().fingerprint == order.fingerprint);
   assert(row.hits == 1);
   { Scope stopped(Point::APP_ENTRY_VM); tick(12); }
   assert(statistics(Point::APP_ENTRY_VM).samples == 0);
   assert(start() && vm_cache_row(0).id == 0xFFFF && vm_cache_dropped() == 0);
+  assert(!vm_cache_order().count && vm_cache_order().fingerprint == UINT64_C(14695981039346656037));
+  record_vm_cache(1, true, 32); record_vm_cache(2, true, 32);
+  const auto forward = vm_cache_order().fingerprint;
+  reset(); record_vm_cache(2, true, 32); record_vm_cache(1, true, 32);
+  assert(vm_cache_order().fingerprint != forward && vm_cache_order().count == 2);
+  auto& saturated = const_cast<VmCacheOrder&>(vm_cache_order());
+  saturated.count = UINT32_MAX;
+  const auto before = saturated.fingerprint;
+  record_vm_cache(3, true, 32);
+  assert(saturated.count == UINT32_MAX && saturated.fingerprint == before);
+  reset();
 }
 
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
@@ -208,10 +240,10 @@ static void opcode_batches() {
 #endif
 
 int main() {
-  static_assert(POINT_COUNT == 49 + (MK61_VM_OPCODE_PROFILE ? 9 : 0) +
+  static_assert(POINT_COUNT == 51 + (MK61_VM_OPCODE_PROFILE ? 9 : 0) +
       (MK61_DWT_IDLE_DETAIL ? 15 : 0));
   initialize(); assert(available() && start());
-  nested_scopes(); runner_and_invoke(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
+  nested_scopes(); runner_and_invoke(); mixed_cache_tree(); script_detail_tree(); wrap_and_long_scope(); reset_while_active(); context_and_cache();
 #if MK61_DWT_IDLE_DETAIL_SUPPORTED
   idle_detail_tree();
 #endif

@@ -21,6 +21,12 @@ int main(int argc,char** argv) {
   size_t n=0;
   if(!vm_cache_lzss::encode(raw.data(),raw.size(),work,packed.data(),packed.size(),n))return 3;
   if(!vm_cache_lzss::decode(packed.data(),n,decoded.data(),decoded.size(),raw.size())||decoded!=raw)return 3;
+  uint32_t packed_crc=~uint32_t(0);
+  for(size_t i=0;i<n;++i) {
+    packed_crc^=packed[i];
+    for(unsigned bit=0;bit<8;++bit)packed_crc=(packed_crc>>1)^(0xEDB88320U&uint32_t(0-int(packed_crc&1)));
+  }
+  packed_crc=~packed_crc;
   const unsigned repeats=30;
   auto begin=Clock::now();
   for(unsigned i=0;i<repeats;++i)
@@ -32,7 +38,7 @@ int main(int argc,char** argv) {
   const auto decode_ns=std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now()-begin).count()/repeats;
   std::cout<<"{\"raw_bytes\":"<<raw.size()<<",\"lzss\":{\"bytes\":"<<n
            <<",\"workspace_bytes\":256,\"group_stack_bytes\":17,\"roundtrip\":true,\"host_encode_ns\":"<<encode_ns
-           <<",\"host_decode_ns\":"<<decode_ns<<"},\"zx0\":[";
+           <<",\"host_decode_ns\":"<<decode_ns<<",\"packed_crc32\":"<<packed_crc<<"},\"zx0\":[";
   bool comma=false;
   for(unsigned size:{1600U,4096U}) {
     std::vector<uint8_t> scratch(size),stream;

@@ -1,4 +1,7 @@
 #include "config.h"
+#ifndef MK61_LANGUAGE_VM_CACHE_MIXED
+#define MK61_LANGUAGE_VM_CACHE_MIXED 0
+#endif
 // Absolute ELF metadata lets every bundle frontend select the executor that
 // was compiled into this resident, including implicit config.h defaults.
 // This symbol occupies no Flash or SRAM and survives LTO/section collection.
@@ -80,7 +83,8 @@ bool busy;
 static_assert(MK61_LANGUAGE_VM_CACHE_DENSITY == 0 || MK61_LANGUAGE_VM_CACHE_DENSITY == 1,
               "cache density must be 0 or 1");
 using ProgramCache = ImageCache<MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES, 16,
-    MK61_LANGUAGE_VM_CACHE_DENSITY ? CachePolicy::REUSE_DENSITY : CachePolicy::LRU>;
+    MK61_LANGUAGE_VM_CACHE_DENSITY ? CachePolicy::REUSE_DENSITY : CachePolicy::LRU,
+    MK61_LANGUAGE_VM_CACHE_MIXED != 0>;
 #if defined(STM32F411xE)
 #define MK61_LAZY_STRING_INNER(x) #x
 #define MK61_LAZY_STRING(x) MK61_LAZY_STRING_INNER(x)
@@ -103,6 +107,9 @@ public:
     return value_ != nullptr;
   }
   ProgramCache::Handle find(ProgramCache::Key key) { return ensure() ? value_->find(key) : ProgramCache::Handle{}; }
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+  ProgramCache::Handle find(ProgramCache::Key key,ProgramCache::Scratch scratch) { return ensure() ? value_->find(key,scratch) : ProgramCache::Handle{}; }
+#endif
   ProgramCache::Handle reserve(ProgramCache::Key key, uint16_t size) { return ensure() ? value_->reserve(key,size) : ProgramCache::Handle{}; }
   void synchronize(uint32_t revision) { if(value_) value_->synchronize(revision); }
   uint8_t* building(ProgramCache::Handle h) { return value_ ? value_->building(h) : nullptr; }
@@ -112,6 +119,7 @@ public:
   bool release(ProgramCache::Handle h) { return value_ && value_->release(h); }
   unsigned used() const { return value_ ? value_->used() : 0; }
   const ProgramCache::Statistics& statistics() const { static const ProgramCache::Statistics empty={}; return value_ ? value_->statistics() : empty; }
+  ProgramCache::PackingStatistics packing_statistics() const { return value_ ? value_->packing_statistics() : ProgramCache::PackingStatistics{}; }
 };
 LazyProgramCache image_cache;
 #else
@@ -378,7 +386,19 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     ProgramCache::Handle cached;
     {
       MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::VM_CACHE_LOOKUP);
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+      // Partition protects all BASIC/FOCAL values. No ExecutionState exists
+      // in this prefix yet; the same lease will become its owner on a hit.
+      auto& prefix=memory.workspace_lease();
+      if(!workspace(prefix)) return RuntimeStatus::BUSY;
+      cached=image_cache.find({revision,source_id,language,0},
+          {prefix.data(),(unsigned)prefix.size()});
+      // A miss enters VMSTORE/the compiler, which must acquire this prefix
+      // under its own owner. Never retain or loan its live source buffer.
+      if(!cached) memory.release_workspace();
+#else
       cached=image_cache.find({revision,source_id,language,0});
+#endif
     }
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
     dwt_profiler::record_vm_cache(source_id, (bool)cached, cached ? image_cache.certificate(cached)->size : 0);
@@ -391,7 +411,11 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
         MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::VM_PREPARE);
         values->selected[language==Language::BASIC?0:1] = source_id;
         auto& state=memory.workspace_lease();
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+        if(!state.ok() && !workspace(state)) return RuntimeStatus::BUSY;
+#else
         if(!workspace(state)) return RuntimeStatus::BUSY;
+#endif
         execution.size=sizeof(execution); execution.version=REQUEST_VERSION;
         execution.image=image_cache.image(cached); execution.image_size=certificate->size;
         execution.variables=values->variables[language==Language::BASIC?0:1];
@@ -599,6 +623,10 @@ bool cache_diagnostics(CacheDiagnostics& out) {
   const auto& s=image_cache.statistics();
   out={MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,ProgramCache::PAYLOAD_CAPACITY,image_cache.used(),
        s.lookups,s.hits,s.misses,s.reservations,s.reservation_failures,s.publications,s.evictions,s.invalidations};
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+  const auto p=image_cache.packing_statistics();
+  out.packs=p.packs;out.thaws=p.thaws;out.packed=p.packed;
+#endif
   return true;
 #else
   return false;

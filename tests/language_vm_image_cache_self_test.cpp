@@ -9,6 +9,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
 
 using namespace language_vm;
 using namespace loadable_module;
@@ -46,6 +47,22 @@ Value* variables;
 const char* program1="10 READ @(0)\n20 @(1)=@(1)+@(0)\n30 DATA 2\n40 END\n";
 const char* program2="10 @(1)=@(1)*3\n20 END\n";
 const char* program(uint32_t id) {
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+  if(id>=100 && id<112) {
+    static const std::vector<std::string> pressure=[] {
+      std::vector<std::string> sources;
+      for(unsigned variant=0;variant<5;++variant) {
+        std::string source="10 @(1)=@(1)+1\n";
+        for(unsigned line=0;line<20+5*variant;++line)
+          source+=std::to_string(20+line*10)+" PRINT 'RESOURCE "+std::to_string(line)+
+              " ABCDEFGHIJKLMNOPQRSTUVWXYZ ABCDEFGHIJKLMNOPQRSTUVWXYZ'\n";
+        sources.push_back(source+"1000 INPUT 'PROMPT',@(0)\n1010 END\n");
+      }
+      return sources;
+    }();
+    return pressure[(id-100)%pressure.size()].c_str();
+  }
+#endif
   if(id==1)return program1;
   if(id==2)return program2;
   if(id==4)return "10 INPUT @(0)\n20 @(1)=@(1)+@(0)\n30 END\n";
@@ -249,6 +266,21 @@ int main() {
   program2=nullptr;++revision;execute(2,1,4);assert(array[1]==retained);
   program2="10 BROKEN STATEMENT\n";++revision;execute(2,1,4);assert(array[1]==retained);
   program2="10 @(1)=9\n";++revision;execute(2);assert(array[1]==9);
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+  const auto pressure=[] {
+    // Mixed sizes leave room to bootstrap a separate compressed output.
+    // Uniform large raw images can legitimately fill RAM before packing fits.
+    ++revision;input_text="2";output.clear();
+    CacheDiagnostics before={};assert(cache_diagnostics(before));
+    for(unsigned pass=0;pass<3;++pass) for(unsigned id=100;id<112;++id) {
+      execute(id);assert(last_prompt=="PROMPT");output.clear();check_usb();
+    }
+    CacheDiagnostics after={};assert(cache_diagnostics(after));
+    assert(after.packs>before.packs && after.thaws>before.thaws);
+    assert(!resource_reads && shared_memory::validate_invariants());
+    cancel_input=true;execute(100,1,2);cancel_input=false;check_usb();
+  };
+#endif
 #if MK61_ENABLE_USB_SCREEN
   {
     shared_memory::Lease session(shared_memory::Arena::OVERLAY,shared_memory::Owner::USB_SCREEN,2793);
@@ -260,8 +292,13 @@ int main() {
     change_revision_on_input=true;execute(6);check_usb();
     assert(compiles==usb_compiles);
     execute(6);assert(compiles==usb_compiles+1);check_usb();
+#if MK61_LANGUAGE_VM_CACHE_MIXED
+    pressure(); // INPUT/cancel with packed images AND live USB canaries.
+#endif
     assert(shared_memory::validate_invariants());usb_session=nullptr;
   }
+#elif MK61_LANGUAGE_VM_CACHE_MIXED
+  pressure();
 #endif
   ImageCache<256,2> small;
   static_assert(sizeof(small)<=256,"cache metadata outside its budget");

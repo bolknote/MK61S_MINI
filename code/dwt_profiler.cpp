@@ -20,6 +20,7 @@ u32 previous_cycle = 0;
 u64 extended_cycles = 0;
 VmCacheRow cache_rows[VM_CACHE_ROWS];
 u32 cache_dropped = 0;
+VmCacheOrder cache_order = {0, UINT64_C(14695981039346656037)};
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
 u32 opcode_integers[VM_OPCODE_GROUPS] = {};
 #if MK61_DWT_VM_OPCODE_DETAIL
@@ -157,12 +158,18 @@ Point app_decode_point(u8 kind) {
 }
 void record_vm_cache(u16 id, bool hit, u16 size) {
   if(!collection_active) return;
+  if(id != 0xFFFF && cache_order.count != UINT32_MAX) {
+    ++cache_order.count;
+    for(unsigned shift=0;shift<16;shift+=8)
+      cache_order.fingerprint = (cache_order.fingerprint ^ (u8)(id >> shift)) * UINT64_C(1099511628211);
+  }
   if(auto* row = cache_row(id)) {
     u32& count = hit ? row->hits : row->misses;
     if(count != 0xFFFFFFFFUL) ++count;
     if(size) row->size = size;
   }
 }
+const VmCacheOrder& vm_cache_order(void) { return cache_order; }
 void record_vm_image(u16 id, u16 size) {
   if(collection_active) if(auto* row = cache_row(id)) row->size = size;
 }
@@ -215,6 +222,7 @@ void reset(void) {
   extended_cycles = 0;
   for(auto& row : cache_rows) row = {};
   cache_dropped = 0;
+  cache_order = {0, UINT64_C(14695981039346656037)};
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
   for(auto& count : opcode_integers) count=0;
 #if MK61_DWT_VM_OPCODE_DETAIL
@@ -272,6 +280,8 @@ const char* point_name(Point point) {
     case Point::FONT_ACTIVATE: return "font.activate";
     case Point::VM_CACHE_LOOKUP: return "vm.cache.lookup";
     case Point::VM_PREPARE: return "vm.prepare";
+    case Point::VM_CACHE_PACK: return "vm.cache.pack";
+    case Point::VM_CACHE_THAW: return "vm.cache.thaw";
     case Point::M61_RUNNER: return "m61.runner";
     case Point::VM_INVOKE: return "vm.invoke";
     case Point::M61_OPERAND: return "m61.operand";

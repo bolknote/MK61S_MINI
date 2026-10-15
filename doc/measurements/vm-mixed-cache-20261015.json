@@ -1,0 +1,761 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "base_sha": "18361c3a4190b626878bac484d530c98a176aa92",
+  "status": "PASS",
+  "default_enabled": false,
+  "production_maximum_poll_latency_qualified": false,
+  "scope": "Experimental mixed-cache implementation and Classic chess A/B/A, no default rollout",
+  "cache": {
+    "bytes": 24576,
+    "metadata_bytes": 688,
+    "payload_bytes": 23888,
+    "slots": 16,
+    "warm_prefix_loan_bytes": 4176,
+    "protected_values_bytes": 4016,
+    "codec_dictionary_bytes": 256,
+    "cold_reserve_external_staging_bytes": 0
+  },
+  "resources": {
+    "flash_delta_bytes": 2248,
+    "static_ram_delta_bytes": 0,
+    "cache_delta_bytes": 0,
+    "observed_stack_peak_delta_bytes": 48,
+    "f411_static_ram_bytes": 27048,
+    "maximum_native_frame_bytes": 1928,
+    "foreground_main_bytes": 80,
+    "foreground_terminal_bytes": 608,
+    "f411_native_frame_limit_bytes": 5120,
+    "default_off_binary_identical_to_clean_main": true,
+    "math1_build": "29334737",
+    "math1_bytes": 353320,
+    "math1_sha256": "d7b5a8d159237e0ea47476b652a65d37658519eae494cbeefc5edae71b32a33e"
+  },
+  "hardware": {
+    "public_id": "AEB505B6E0067623",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "stages": [
+      {
+        "name": "baseline",
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/hardware/attempt-1/images/baseline.bin",
+          "bytes": 360752,
+          "footer": 359040,
+          "build": "83022CA7",
+          "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9",
+          "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/main-baseline/resident.bin"
+        },
+        "runs": [
+          {
+            "index": 0,
+            "wall_seconds": 53.600022958009504,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 340,
+            "flash_read_total_cycles": 792825424,
+            "flash_write_calls": 367,
+            "flash_erase_calls": 11,
+            "cumulative_packing": null,
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          },
+          {
+            "index": 1,
+            "wall_seconds": 44.449626707995776,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 174,
+            "flash_read_total_cycles": 518186600,
+            "flash_write_calls": 0,
+            "flash_erase_calls": 0,
+            "cumulative_packing": null,
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          }
+        ],
+        "warm_seconds": 44.449626707995776,
+        "frames_crc_verified": 713,
+        "stack_watermark_remaining": 10608,
+        "mpu_layout": "ok",
+        "crash": "none"
+      },
+      {
+        "name": "candidate",
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/hardware/attempt-1/images/candidate.bin",
+          "bytes": 363000,
+          "footer": 361288,
+          "build": "C531355D",
+          "sha256": "2e86a680708dd8857b7e47ca7aea152f15bb089a27e73a75f91d990428621979",
+          "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/main-candidate/resident.bin"
+        },
+        "runs": [
+          {
+            "index": 0,
+            "wall_seconds": 39.89089120799326,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 54,
+            "flash_read_total_cycles": 345928798,
+            "flash_write_calls": 0,
+            "flash_erase_calls": 0,
+            "cumulative_packing": {
+              "packs": 206,
+              "thaws": 197,
+              "packed": 5,
+              "budget": 24576,
+              "payload": 23888,
+              "used": 23680
+            },
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          },
+          {
+            "index": 1,
+            "wall_seconds": 39.03223429201171,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 36,
+            "flash_read_total_cycles": 319369913,
+            "flash_write_calls": 0,
+            "flash_erase_calls": 0,
+            "cumulative_packing": {
+              "packs": 413,
+              "thaws": 395,
+              "packed": 5,
+              "budget": 24576,
+              "payload": 23888,
+              "used": 23680
+            },
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          }
+        ],
+        "warm_seconds": 39.03223429201171,
+        "frames_crc_verified": 489,
+        "stack_watermark_remaining": 10560,
+        "mpu_layout": "ok",
+        "crash": "none"
+      },
+      {
+        "name": "control",
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/hardware/attempt-1/images/baseline.bin",
+          "bytes": 360752,
+          "footer": 359040,
+          "build": "83022CA7",
+          "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9",
+          "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/main-baseline/resident.bin"
+        },
+        "runs": [
+          {
+            "index": 0,
+            "wall_seconds": 45.18065008299891,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 189,
+            "flash_read_total_cycles": 540234723,
+            "flash_write_calls": 0,
+            "flash_erase_calls": 0,
+            "cumulative_packing": null,
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          },
+          {
+            "index": 1,
+            "wall_seconds": 44.45577641701675,
+            "move": "e2e3",
+            "nodes": 420,
+            "complete_eight_rank_board": true,
+            "zx0_decodes": 174,
+            "flash_read_total_cycles": 517997080,
+            "flash_write_calls": 0,
+            "flash_erase_calls": 0,
+            "cumulative_packing": null,
+            "keyboard_overflow": 0,
+            "unintended_sleep_entries": 0
+          }
+        ],
+        "warm_seconds": 44.45577641701675,
+        "frames_crc_verified": 675,
+        "stack_watermark_remaining": 10608,
+        "mpu_layout": "ok",
+        "crash": "none"
+      }
+    ],
+    "baseline_control_median_seconds": 44.45270156250626,
+    "mixed_warm_seconds": 39.03223429201171,
+    "saved_seconds": 5.420467270494555,
+    "time_reduction_percent": 12.193785934185964,
+    "speedup": 1.138871560104462,
+    "control_spread_seconds": 0.0061497090209741145,
+    "frames_crc_verified": 1877,
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "measured_warm_searches_per_stage": 1,
+    "confidence_interval_computed": false,
+    "cold_comparison_valid": false,
+    "cold_note": "First A populated NOR file cache; B/control reused it.",
+    "packing_note": "VMPACK is cumulative since boot; differences include the UI prelude.",
+    "same_system_apps": {
+      "LANGVM.APP": {
+        "bytes": 10423,
+        "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+      },
+      "LANGIN.APP": {
+        "bytes": 11778,
+        "sha256": "f0dd70bb63aaf6b7ef17481ae8a6ee5cf6ead91858ae364881c6882bfbf9c52d"
+      },
+      "BASIC.APP": {
+        "bytes": 13762,
+        "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+      },
+      "FOCAL.APP": {
+        "bytes": 13384,
+        "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+      },
+      "VMCache/VMSTORE.APP": {
+        "bytes": 6988,
+        "sha256": "e4307494db8b370410cb35c7fea474ab06a00fc001caf88842f33aa991b24a78"
+      }
+    }
+  },
+  "replay": {
+    "requests": 11303,
+    "qualification_fnv64": "2258983549102710787",
+    "source": "main-native-replay.json",
+    "variants": [
+      {
+        "mixed": false,
+        "budget": 24576,
+        "object_bytes": 24576,
+        "payload": 23888,
+        "metadata": 688,
+        "passes": [
+          {
+            "hits": 11240,
+            "misses": 63,
+            "evictions": 54,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 3,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 22,
+              "10": 1,
+              "11": 1,
+              "12": 1,
+              "13": 2,
+              "14": 1,
+              "15": 2,
+              "16": 1,
+              "17": 1
+            }
+          },
+          {
+            "hits": 11245,
+            "misses": 58,
+            "evictions": 58,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 2,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 21,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 2,
+              "16": 1
+            }
+          },
+          {
+            "hits": 11245,
+            "misses": 58,
+            "evictions": 58,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 2,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 21,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 2,
+              "16": 1
+            }
+          }
+        ]
+      },
+      {
+        "mixed": true,
+        "budget": 24576,
+        "object_bytes": 24576,
+        "payload": 23888,
+        "metadata": 688,
+        "passes": [
+          {
+            "hits": 11285,
+            "misses": 18,
+            "evictions": 8,
+            "fallback": 0,
+            "used": 23680,
+            "packs": 206,
+            "thaws": 197,
+            "packed": 5,
+            "miss_modules": {
+              "1": 1,
+              "2": 2,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 2,
+              "10": 1,
+              "11": 1,
+              "12": 1,
+              "13": 2,
+              "14": 1,
+              "15": 1,
+              "16": 1,
+              "17": 1
+            }
+          },
+          {
+            "hits": 11291,
+            "misses": 12,
+            "evictions": 12,
+            "fallback": 0,
+            "used": 23680,
+            "packs": 207,
+            "thaws": 198,
+            "packed": 5,
+            "miss_modules": {
+              "2": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 1,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 1,
+              "16": 1
+            }
+          },
+          {
+            "hits": 11291,
+            "misses": 12,
+            "evictions": 12,
+            "fallback": 0,
+            "used": 23680,
+            "packs": 207,
+            "thaws": 198,
+            "packed": 5,
+            "miss_modules": {
+              "2": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 1,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 1,
+              "16": 1
+            }
+          }
+        ]
+      }
+    ],
+    "note": "Actual C++ cache/codec, byte-exact full images and guarded values. Not ARM timing."
+  },
+  "restoration": {
+    "original_firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/hardware/attempt-1/images/original.bin",
+      "bytes": 360256,
+      "footer": 358544,
+      "build": "E52F87BE",
+      "sha256": "88055774bbda4b98b1708667472b5e020133f0a131840ef6ef3d14ac00a5c530",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-ep0-storage-buffers-20261015/install-fs/classic.bin"
+    },
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "read_retries": [],
+    "hardware_test_exit_code": 0
+  },
+  "f401": {
+    "status": "PASS",
+    "cases": [
+      {
+        "case": "f401-capability-a00-usb",
+        "profile": "mini-v3-a00",
+        "product": false,
+        "binary": {
+          "bytes": 231212,
+          "flash_free": 30932,
+          "sha256": "a7bd44feb2dfe963ec816ee7ecdc86120dde698c3697d0bba190690089e17611"
+        },
+        "static_ram": 31640,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1936,
+          "max_function": "terminal.cpp:2381:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2403,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-ws-graphics",
+        "profile": "mini-v3-ws0010",
+        "product": false,
+        "binary": {
+          "bytes": 227868,
+          "flash_free": 34276,
+          "sha256": "1d03d03e385f7215d4b87d9afc767394ea8c5c8d67f373de6dd2db1f8857feb7"
+        },
+        "static_ram": 28200,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1936,
+          "max_function": "terminal.cpp:2381:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2392,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-ws-usb",
+        "profile": "mini-v3-ws0010",
+        "product": false,
+        "binary": {
+          "bytes": 237776,
+          "flash_free": 24368,
+          "sha256": "4e4c31559f6531dea30106e7865668d8bc31c5fea32bfd52a10ccb7dcbbd020f"
+        },
+        "static_ram": 31648,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2427,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-capability-ws-usb-graphics",
+        "profile": "mini-v3-ws0010",
+        "product": false,
+        "binary": {
+          "bytes": 240016,
+          "flash_free": 22128,
+          "sha256": "19f5dc990e050d386ab9347b80d08d865805139e584911606e0b84d238dc7a9f"
+        },
+        "static_ram": 31648,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2434,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-a00",
+        "profile": "mini-v3-a00",
+        "product": true,
+        "binary": {
+          "bytes": 213348,
+          "flash_free": 48796,
+          "sha256": "bf74e26fdc8ac214ed7f7655d931d1aa93490843757b1d627fd64e334190465a"
+        },
+        "static_ram": 27784,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2436,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-classic-v2",
+        "profile": "classic-v2",
+        "product": true,
+        "binary": {
+          "bytes": 243344,
+          "flash_free": 18800,
+          "sha256": "de2c704179a43335f45193a94e388983cd162b06d125afa5140fe6b5c514fa06"
+        },
+        "static_ram": 31188,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 4096,
+          "markdown_app_max": 14336,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2557,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-classic-v3",
+        "profile": "classic-v3",
+        "product": true,
+        "binary": {
+          "bytes": 243368,
+          "flash_free": 18776,
+          "sha256": "56aecfd786fabca40158d072f58e2dde6bfa35c3c736506850520a23b77aaa75"
+        },
+        "static_ram": 31196,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 4096,
+          "markdown_app_max": 14336,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2557,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-mini-v2-a00",
+        "profile": "mini-v2-a00",
+        "product": true,
+        "binary": {
+          "bytes": 213432,
+          "flash_free": 48712,
+          "sha256": "5cba79bfce726f8007b7c5e5e7cccf543d8cecb8335761fdfa0bb61806fe3709"
+        },
+        "static_ram": 27776,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2438,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      },
+      {
+        "case": "f401-product-ws0010",
+        "profile": "mini-v3-ws0010",
+        "product": true,
+        "binary": {
+          "bytes": 221392,
+          "flash_free": 40752,
+          "sha256": "586366d33761b576240032757624ef6ecdd5d4cae3dd2533aee6b004da0aabeb"
+        },
+        "static_ram": 27776,
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        },
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2474,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "status": "ok"
+      }
+    ],
+    "cross_mcu_ws0010_ram_comparison": "NOT_RUN",
+    "note": "Existing F401 release profiles have no image cache; all nine opt-in builds passed unchanged budgets."
+  },
+  "log_manifest": {
+    "final-mixed-cache-tests.log": {
+      "bytes": 1010,
+      "sha256": "5d887f517ae56bec901b0bdbb36aea1256404e683e27ac003f35f58d7ca8b5de"
+    },
+    "main-file-cache-mixed-tests.log": {
+      "bytes": 676,
+      "sha256": "bd63298f4893ffcd0e6315ba18e4a47cbebeda96c7ef186de5a55170d7129f4d"
+    },
+    "main-dwt-tests.log": {
+      "bytes": 437,
+      "sha256": "4d69672fef4ebe2da5d41dc78500393b49f2ee007ed155740eb974e2bf1157a3"
+    },
+    "main-raw-cache-tests.log": {
+      "bytes": 720,
+      "sha256": "2304592b6928b36a581ab1281a2b57951a738bdc9a1fff62faf5e139d1a6ea8f"
+    },
+    "main-storage-tests.log": {
+      "bytes": 545,
+      "sha256": "1e30b87c18650ab3bd3a3dec912550f9b611537bdd121aecd7e508c3c4069743"
+    },
+    "main-hil-oracle-tests.log": {
+      "bytes": 85,
+      "sha256": "bebbf27597e43b0c6b21c40e412036b98e997f6c66820d37a0445ca678f7aa41"
+    },
+    "main-native-replay.log": {
+      "bytes": 3155,
+      "sha256": "cddc66d560572d7582baf0c66761172f8f51237f212a6e9c7f3191d8c6f5573e"
+    },
+    "main-memory-gates.log": {
+      "bytes": 1524,
+      "sha256": "cf636961b325e93db617b16ccd8148e65e5e65ee893634da57561eb457afbd3f"
+    },
+    "main-math1-gates.log": {
+      "bytes": 422,
+      "sha256": "6acdf30a77a5ec8ef09de4e43f3056b41cf4380264215391f4be4a01660e05d8"
+    }
+  },
+  "source_manifest_sha256": {
+    "code/config.h": "010f4f1af409c59b6919c3ae2d9c48ebabeda8a4dd28c9cf820779a775553cda",
+    "code/language_vm_cache_codec.hpp": "5192c5cb4b79e5ddf08c17b264ba94d283ffe1007a1e0b6556404a390b1b13f0",
+    "code/language_vm_image_cache.hpp": "751d4f7ba9620e422fdc5b9916cf690b7dc35382231d38443797103753571fe0",
+    "code/language_vm_resident.cpp": "02e87cbe23fe7fbb62a108c6eda9590fdebd0c45b07a6e6b108aebb4ac06399e",
+    "code/language_vm_resident.hpp": "b45b9dc61323b17344913040388db337cb39f83c50364a722db2e82c7b57716e",
+    "code/terminal.cpp": "f0575a7dda2360e6258338c56c874b7d2083d3a9da115677ebe6ea2c924d8cdf",
+    "code/dwt_profiler.cpp": "8883f59c94dcd27e9758f32c3c993bef308e7600b60d6954a6792117068718fe",
+    "code/dwt_profiler.hpp": "b5f9add7a23d5e2620c22169491a39449a04fbfdd7bd982252afeeb99a4b0195",
+    "code/shared_memory.cpp": "ef8337c2f7e3b134b1276fe3dd3d8588033418dad0bc3359d399ad7ab1f84fd4",
+    "code/shared_memory.hpp": "774814e1ee91d77d1b5e7967732e3148cf8be1a20eb5a58e2732d7ed94d55f10"
+  },
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0",
+  "worktree_at_measurement": "/Users/bolk/.codex/worktrees/vm-cache-study/MK61S_MINI",
+  "hardware_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-mixed-cache-20261015.mzrOE0/hardware/attempt-1/report.json"
+}

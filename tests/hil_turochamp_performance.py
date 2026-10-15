@@ -115,6 +115,14 @@ def profile(report):
         result['vm_opcodes']=opcodes
     if dropped:
         result.update(vm_cache=cache,vm_cache_dropped=int(dropped.group(1)))
+    order=re.findall(r'^VMCACHE_ORDER count=(\d+) fnv64=(\d+)\s*$',report,re.M)
+    if order:
+        assert len(order)==1 and dropped, 'duplicate/incomplete VM cache signature'
+        count,fnv64=map(int,order[0])
+        assert count<0xFFFFFFFF and fnv64<1<<64, 'saturated/invalid VM cache signature'
+        if int(dropped.group(1))==0:
+            assert sum(row['hits']+row['misses'] for row in cache)==count
+        result['vm_cache_order']={'count':count,'fnv64':fnv64}
     return result
 
 

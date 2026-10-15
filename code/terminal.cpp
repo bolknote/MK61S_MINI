@@ -60,6 +60,9 @@ extern void release_segment_ws_graphics(void);
 #include "usb_mass_storage.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
+#if MK61_LANGUAGE_VM_CACHE_MIXED && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#include "language_vm_resident.hpp"
+#endif
 #include "classic_timer.hpp"
 #include "crash_dump.hpp"
 #include "independent_watchdog.hpp"
@@ -1764,6 +1767,9 @@ void class_terminal::print_profile_statistics(void) {
 #endif
 #endif
       terminal_output::line(Serial, "VMCACHE dropped=", dwt_profiler::vm_cache_dropped());
+      const auto& order = dwt_profiler::vm_cache_order();
+      terminal_output::field(Serial, "VMCACHE_ORDER count=", order.count);
+      Serial.print(" fnv64="); print_u64(order.fingerprint); Serial.println();
       for(usize index = 0; index < dwt_profiler::VM_CACHE_ROWS; ++index) {
         const auto& row = dwt_profiler::vm_cache_row(index);
         if(row.id == 0xFFFF) continue;
@@ -1773,6 +1779,17 @@ void class_terminal::print_profile_statistics(void) {
         terminal_output::field(Serial, " misses=", row.misses);
         program_store::Entry entry = {};
         terminal_output::line(Serial, " name=", program_store::entry_by_id(row.id, entry) ? entry.name : "?");
+      }
+#endif
+#if MK61_LANGUAGE_VM_CACHE_MIXED && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+      language_vm::CacheDiagnostics cache={};
+      if(language_vm::cache_diagnostics(cache)) {
+        terminal_output::field(Serial,"VMPACK cumulative=1 packs=",cache.packs);
+        terminal_output::field(Serial," thaws=",cache.thaws);
+        terminal_output::field(Serial," packed=",cache.packed);
+        terminal_output::field(Serial," budget=",cache.budget);
+        terminal_output::field(Serial," payload=",cache.payload);
+        terminal_output::line(Serial," used=",cache.used);
       }
 #endif
     }
