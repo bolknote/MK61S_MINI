@@ -328,11 +328,12 @@ try {
             'sdk/portable/system/usbdisk_compat.cpp'))
     }
     $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
-    $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'usbdisk', 'vm-file-cache')
+    $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm',
+        'language-input', 'usbdisk', 'setup', 'markdown-viewer', 'vm-file-cache')
     if ($sharedSystemRuntime) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/runtime.S'))
-        if ($System -notin @('usbdisk', 'vm-file-cache')) {
+        if ($System -in @('focal', 'tinybasic', 'language-vm', 'language-input')) {
             $sources.Add((Join-Path $ProjectRoot `
                 'sdk/portable/system/editor.cpp'))
         }
