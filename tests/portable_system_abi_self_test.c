@@ -101,6 +101,11 @@ _Static_assert(MK61_SERVICE_FLOAT_CONVERT == 32,
                "append-only float-conversion operation");
 _Static_assert(MK61_SERVICE_CAP_FLOAT_CONVERT == (1U << 14),
                "append-only float-conversion capability");
+_Static_assert(MK61_SERVICE_BASIC_GRAPHICS == 40 &&
+               MK61_SERVICE_BASIC_FRONTEND == 41 &&
+               MK61_SERVICE_LANGUAGE_ERROR_TEXT == 42 &&
+               MK61_SERVICE_CAP_BASIC_GRAPHICS == (1U << 20),
+               "append-only BASIC resident protocol");
 _Static_assert(MK61_FLOAT_FROM_DOUBLE == 0 && MK61_DOUBLE_FROM_FLOAT == 1,
                "float-conversion operation wire values");
 _Static_assert(sizeof(mk61_service_float_convert) == 16 &&

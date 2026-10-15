@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "language_bytecode.hpp"
+#include "basic_graphics_protocol.hpp"
 #include "mk_math.hpp"
 #include "language_vm_profile.hpp"
 
@@ -440,7 +441,8 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
         op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::LOAD_REF &&
         op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
-        !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
+        !(op >= Op::CONST_0 && op <= Op::CONST_15) &&
+        !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT)) return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_INDEX && (v.end-pc<6 ||
         (Op)bytes[pc+3]!=Op::LOAD || (Op)bytes[pc+5]!=Op::ADD))return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_COMPARE) {
@@ -453,7 +455,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
          bytes[pc + 1] >= 26) ||
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
          bytes[pc + 1] >= 20) ||
-        (op == Op::FUNCTION && bytes[pc + 1] > (uint8_t)Function::ROWS) ||
+        (op == Op::FUNCTION && bytes[pc + 1] > (uint8_t)Function::GH) ||
         (op == Op::READ_KEY && (v.expression || v.language != Language::BASIC)) ||
         (op == Op::PRINT_SEPARATOR && bytes[pc + 1] > 2) ||
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
@@ -462,6 +464,17 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             ((bytes[pc+2]&0x40) && (bytes[pc+2]&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
+    if(op>=Op::GRAPHICS && (v.language!=Language::BASIC || (v.expression &&
+       !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT))))
+      return Error::INVALID_IMAGE;
+    if(op==Op::GRAPHICS) {
+      const auto operation=(basic_graphics::Operation)bytes[pc+1];
+      if((operation!=basic_graphics::Operation::PSET && operation!=basic_graphics::Operation::POINT &&
+          operation!=basic_graphics::Operation::LINE && operation!=basic_graphics::Operation::BOX &&
+          operation!=basic_graphics::Operation::CIRCLE && operation!=basic_graphics::Operation::SHOW) ||
+         bytes[pc+2]<basic_graphics::minimum(operation) || bytes[pc+2]>basic_graphics::maximum(operation))
+        return Error::INVALID_IMAGE;
+    }
     if (op >= Op::DATA && op < Op::SOURCE_POS && v.language != Language::BASIC)
       return Error::INVALID_IMAGE;
     if((op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) && v.language!=Language::BASIC)
@@ -511,9 +524,33 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   }
   for (uint16_t pc = v.code; pc < v.end; pc = next(v, pc)) {
     const Op op = (Op)bytes[pc];
-    if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) &&
+    if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT ||
+         op==Op::GRAPH_BEGIN || op==Op::GRAPH_NEXT) &&
         !target(word(bytes + pc + 1)))
       return Error::INVALID_IMAGE;
+    if(op==Op::GRAPH_BEGIN) {
+      const uint16_t finish=word(bytes+pc+1);
+      if(finish<=pc+3 || (Op)bytes[finish]!=Op::GRAPH_NEXT || word(bytes+finish+1)!=pc+3)
+        return Error::INVALID_IMAGE;
+      for(uint16_t at=(uint16_t)(pc+3);at<finish;at=next(v,at)) {
+        const auto inner=(Op)bytes[at];
+        const bool allowed=(inner>=Op::CONST_I8 && inner<=Op::LOAD_REF) ||
+            inner==Op::LOAD_ARRAY || (inner>=Op::NEG && inner<=Op::FUNCTION) ||
+            inner==Op::CONST_DEC8 || inner==Op::CONST_DEC16 || inner==Op::CONST_I32 ||
+            inner==Op::FLOOR_DIV || inner==Op::LOAD_ARRAY_FIXED || inner==Op::SOURCE_POS ||
+            inner==Op::LOAD_PARAMETER || inner==Op::BLOCK_INDEX || inner==Op::INTEGER_SPAN ||
+            (inner>=Op::CONST_0 && inner<=Op::CONST_15) ||
+            (inner==Op::GRAPHICS && bytes[at+1]==(uint8_t)basic_graphics::Operation::POINT);
+        if(!allowed || inner==Op::STORE || (inner==Op::FUNCTION &&
+            (bytes[at+1]==(uint8_t)Function::RND || bytes[at+1]==(uint8_t)Function::RND_LIMIT)))
+          return Error::INVALID_IMAGE;
+      }
+    }
+    if(op==Op::GRAPH_NEXT) {
+      const auto body=word(bytes+pc+1);
+      if(body<v.code+3 || (Op)bytes[body-3]!=Op::GRAPH_BEGIN || word(bytes+body-2)!=pc)
+        return Error::INVALID_IMAGE;
+    }
     if(op==Op::COMPARE_FALSE && !target(word(bytes+pc+2))) return Error::INVALID_IMAGE;
     if (op == Op::DO_FOCAL &&
         (!target(word(bytes + pc + 1)) ||
@@ -582,7 +619,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     s.sp = s.call_count = s.loop_count = 0;
     s.data_pc = v.code;
     s.data_index = 0;
-  } else if (s.pc < v.code || s.pc >= v.end || s.sp > data.stack_capacity ||
+    s.graph.active=false;
+  } else if (s.graph.active || s.pc < v.code || s.pc >= v.end || s.sp > data.stack_capacity ||
              s.call_count > (v.language == Language::BASIC ? MAX_CALLS : 8) ||
              s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.end) {
     return {Error::INVALID_IMAGE, 0, 0, 0};
@@ -612,7 +650,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     for (uint8_t i = 0; i < s.call_count; ++i) {
       const auto& f = s.calls[i];
       if (f.resume < v.code || f.resume >= v.end || f.loops > MAX_LOOPS ||
-          (f.mode & 12) || (f.mode & 3) == 2 ||
+          (f.mode & 8) || ((f.mode & 4) && (f.mode & 3)!=3) || (f.mode & 3) == 2 ||
           ((f.mode >> 4) && (f.mode & 3) != 3) || f.print_width > 64 ||
           (!(f.mode >> 4) && f.print_width) ||
           f.arguments>4 || unsigned(f.base)+f.arguments>data.stack_capacity ||
@@ -628,6 +666,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
   }
   Error error = Error::NONE;
+  struct RestoreGraph {
+    Continuation& state;const Bindings& data;
+    ~RestoreGraph(){if(state.graph.active){data.variables['X'-'A']=state.graph.saved_x;state.graph.active=false;}}
+  } restore_graph{s,data};
   uint32_t steps = 0;
   uint16_t instruction = s.pc;
   VM_OPCODE_PROFILE(v);
@@ -675,6 +717,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
   };
   auto restore_print = [&](const CallFrame& frame) {
+    if(frame.mode & 4) {Value unused=0;event(Event::PRINT_POP,nullptr,0,unused);}
     if(frame.mode >> 4) {
       Value width = frame.print_width;
       event(Event::PRECISION, nullptr, frame.mode >> 4, width);
@@ -954,6 +997,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if(error==Error::NONE) {
           auto& f=s.calls[s.call_count-1];f.base=base;f.arguments=count;f.mode=(uint8_t)(1|(p[5]?2:0));
           if(p[5] && host.event) {
+            if(host.isolate_print && v.language==Language::BASIC) {
+              Value unused=0;event(Event::PRINT_PUSH,nullptr,0,unused);
+              if(error==Error::NONE)f.mode|=4;
+            }
             double format = 0;
             if(host.event(host.context,Event::PRINT_STATE,nullptr,0,format) &&
                format >= 1 && format <= 1039 && format == mk_math::trunc(format)) {
@@ -1139,6 +1186,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           case Function::SIZE:
           case Function::COLS:
           case Function::ROWS:
+          case Function::GW:
+          case Function::GH:
             if (!host.value)
               error = Error::IO;
             else
@@ -1339,6 +1388,61 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::PRINT_BEGIN:
         event(Event::PRINT_BEGIN, nullptr, 0, value);
         break;
+      case Op::PRINT_AT: {
+        basic_graphics::Request request={};request.operation=basic_graphics::Operation::TEXT;request.count=2;
+        request.args[1]=pop().number();request.args[0]=pop().number();
+        if(error==Error::NONE)event(Event::PRINT_AT,(const char*)&request,sizeof(request),value);
+        break;
+      }
+      case Op::GRAPHICS: {
+        basic_graphics::Request request={};request.operation=(basic_graphics::Operation)p[0];request.count=p[1];
+        if(request.count>6){error=Error::INVALID_IMAGE;break;}
+        for(unsigned i=request.count;i;--i)request.args[i-1]=pop().number();
+        if(error==Error::NONE)event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+        if(error==Error::NONE && request.operation==basic_graphics::Operation::POINT)push(value);
+        break;
+      }
+      case Op::GRAPH_BEGIN: {
+        auto& graph=s.graph;
+        if(graph.active || s.sp<4 || !host.value){error=Error::INVALID_IMAGE;break;}
+        for(unsigned i=4;i;--i)graph.bounds[i-1]=pop().number();
+        if(!(graph.bounds[0]<graph.bounds[1]) || !(graph.bounds[2]<graph.bounds[3]) ||
+           !mk_math::is_finite(graph.bounds[1]-graph.bounds[0]) ||
+           !mk_math::is_finite(graph.bounds[3]-graph.bounds[2])) {error=Error::GRAPHICS_ARGUMENT;break;}
+        basic_graphics::Request request={};request.operation=basic_graphics::Operation::PSET;
+        request.count=2;request.args[0]=request.args[1]=-1;
+        event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+        if(error!=Error::NONE)break;
+        const double width=host.value(host.context,Function::GW),height=host.value(host.context,Function::GH);
+        if(width<1 || width>192 || height<1 || height>64){error=Error::GRAPHICS_UNAVAILABLE;break;}
+        graph.width=(uint16_t)width;graph.height=(uint16_t)height;
+        graph.next=word(p);graph.body=after;graph.column=0;graph.base=s.sp;
+        graph.saved_x=data.variables['X'-'A'];graph.active=true;graph.skip=false;
+        data.variables['X'-'A']=graph.bounds[0];
+        break;
+      }
+      case Op::GRAPH_NEXT: {
+        auto& graph=s.graph;
+        if(!graph.active || word(p)!=graph.body || instruction!=graph.next){error=Error::INVALID_IMAGE;break;}
+        if(!graph.skip) {
+          value=pop();const double y=value.number();
+          if(error==Error::NONE && y>=graph.bounds[2] && y<=graph.bounds[3]) {
+            basic_graphics::Request request={};request.operation=basic_graphics::Operation::PSET;request.count=2;
+            request.args[0]=graph.column;
+            request.args[1]=(graph.bounds[3]-y)/(graph.bounds[3]-graph.bounds[2])*(graph.height-1);
+            event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+          }
+        }
+        if(error!=Error::NONE)break;
+        if(s.sp!=graph.base){error=Error::STACK;break;}
+        graph.skip=false;
+        if(++graph.column<graph.width) {
+          data.variables['X'-'A']=graph.bounds[0]+(graph.bounds[1]-graph.bounds[0])*
+              ((double)graph.column/(graph.width-1));
+          s.pc=graph.body;
+        } else {data.variables['X'-'A']=graph.saved_x;graph.active=false;}
+        break;
+      }
       case Op::PRINT_TEXT:
         event(Event::TEXT, (const char*)p + 2, word(p), value);
         break;
@@ -1390,6 +1494,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         error = Error::INVALID_IMAGE;
         break;
     }
+    if(s.graph.active && (error==Error::MATH || error==Error::DIV_ZERO)) {
+      error=Error::NONE;s.sp=s.graph.base;s.graph.skip=true;s.pc=s.graph.next;
+    }
   }
   return {error, instruction, source_line(v, instruction), steps};
 }
@@ -1423,7 +1530,7 @@ const char* error_name(Error e) {
                                       "PRINT WIDTH",
                                       "UNKNOWN COMMAND",
                                       "UNCLOSED STRING",
-                                      "EXPECTED )"};
+                                      "EXPECTED )", "NO GRAPHICS", "SCREEN CHANGED", "GRAPHICS ARGUMENT"};
   return (uint8_t)e < sizeof(names) / sizeof(names[0]) ? names[(uint8_t)e] : "UNKNOWN";
 }
 }  // namespace language_vm

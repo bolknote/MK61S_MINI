@@ -1,4 +1,7 @@
 #include "compact_format.hpp"
+#include "basic_graphics.hpp"
+#include "basic_native_io.hpp"
+#include "tinybasic_diagnostic.hpp"
 #include "config.h"
 #include "dwt_profiler.hpp"
 
@@ -209,6 +212,29 @@ static u32 key_call(u32 operation, u32 value) {
 
 static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
   switch(operation) {
+    case MK61_SERVICE_LANGUAGE_ERROR_TEXT:
+      if(a>(u32)language_vm::Error::GRAPHICS_ARGUMENT || b>1 || c || payload)return 0;
+      return (u32)tinybasic_diagnostic::reason((language_vm::Error)a,b!=0);
+    case MK61_SERVICE_BASIC_FRONTEND:
+#if MK61_ENABLE_TINYBASIC
+      if(a || b || c!=sizeof(basic_graphics::NativeRequest) || !payload)return 0;
+      return basic_graphics::process_native(*(basic_graphics::NativeRequest*)payload)?1:2;
+#else
+      return 0;
+#endif
+    case MK61_SERVICE_BASIC_GRAPHICS:
+      if(!b && !c && !payload) {
+        const auto op=(basic_graphics::Operation)a;
+        if(a>(u32)basic_graphics::Operation::SHOW && op!=basic_graphics::Operation::SUSPEND &&
+           op!=basic_graphics::Operation::RESUME && op!=basic_graphics::Operation::ACTIVE)return 0;
+        basic_graphics::Request request={};request.operation=op;
+        const auto result=basic_graphics::dispatch(request);
+        if(op==basic_graphics::Operation::WIDTH || op==basic_graphics::Operation::HEIGHT ||
+           op==basic_graphics::Operation::ACTIVE)return result==basic_graphics::Result::OK?(u32)request.value:0;
+        return (u32)result+1;
+      }
+      if(a || b || c!=sizeof(basic_graphics::Request) || !payload)return 0;
+      return (u32)basic_graphics::dispatch(*(basic_graphics::Request*)payload)+1;
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
     case MK61_SERVICE_VM_PROFILE: {
       if(!payload || !b || c>b)return 0;
@@ -236,6 +262,9 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #endif
     case MK61_SERVICE_CAPABILITIES:
       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES | MK61_SERVICE_CAP_RESOURCES |
+#if MK61_ENABLE_TINYBASIC
+          MK61_SERVICE_CAP_BASIC_GRAPHICS |
+#endif
 #if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE
           MK61_SERVICE_CAP_DEBUG_IO |
 #endif

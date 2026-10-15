@@ -122,6 +122,7 @@ class Surface {
 
     bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
+    bool copyTextBitmap(u8* bitmap, usize size, u8 first_row, u8 count);
     void endFullscreenBitmap(void);
 
     bool showTopRightOverlay(const u32* rows, u8 width, u8 height,

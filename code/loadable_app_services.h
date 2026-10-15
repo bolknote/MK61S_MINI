@@ -36,7 +36,8 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_EXPLORER = 1U << 16,
   MK61_SERVICE_CAP_APP_FLOW = 1U << 17,
   MK61_SERVICE_CAP_RESOURCES = 1U << 18,
-  MK61_SERVICE_CAP_DEBUG_IO = 1U << 19
+  MK61_SERVICE_CAP_DEBUG_IO = 1U << 19,
+  MK61_SERVICE_CAP_BASIC_GRAPHICS = 1U << 20
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -91,7 +92,14 @@ enum mk61_service_operation {
    * With RAW_OPCODE set, a's lower bits contain a wire opcode, or 256 for
    * a fused integer block; sampling ends before the service call.
    * Ordinary residents reject this optional operation without side effects. */
-  MK61_SERVICE_VM_PROFILE
+  MK61_SERVICE_VM_PROFILE,
+  /* Synchronous basic_graphics::Request; c=sizeof(request), result=Result+1.
+   * c=0,payload=NULL: a=control operation; dimensions/ACTIVE return their value. */
+  MK61_SERVICE_BASIC_GRAPHICS,
+  /* Synchronous native BASIC source processor with APP-local callbacks. */
+  MK61_SERVICE_BASIC_FRONTEND,
+  /* a=language_vm::Error, b=Russian flag; resident ROM text pointer, or 0. */
+  MK61_SERVICE_LANGUAGE_ERROR_TEXT
 };
 #define MK61_VM_PROFILE_RAW_OPCODE UINT32_C(0x80000000)
 /* RAW_OPCODE only: payload low word = elapsed cycles, high word = calibrated

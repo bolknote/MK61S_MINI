@@ -81,6 +81,7 @@ static void edit_key(text_editor::Buffer& editor, i32 key, u32 now) {
 }
 }  // namespace portable_system
 #endif
+#include "basic_graphics_client.hpp"
 
 namespace {
 using namespace language_vm;
@@ -93,10 +94,17 @@ struct Runtime {
   uint8_t row, width, output_cursor, precision;
   bool cancelled, normal_stop;
   Error failure;
+  basic_graphics::PrintPosition position;
 };
-static Runtime runtime;
+static Runtime runtime = {};
+bool graphics_result(basic_graphics::Result result) {
+  if(result==basic_graphics::Result::OK)return true;
+  runtime.failure=basic_graphics::error(result);return false;
+}
 
 bool background(void*) {
+  if(runtime.language==Language::BASIC &&
+     !graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)))return false;
   idle_main_process();
   kbd::scan();
   if (kbd::take_immediate_press(KEY_ESC) || kbd::last_key() == KEY_ESC_PRESS) {
@@ -173,6 +181,8 @@ double random(void*) {
   return (double)(entropy_pool::next_u32(domain) >> 8) / 16777216.0;
 }
 double dynamic_value(void*, Function f) {
+  if(f==Function::GW || f==Function::GH)return basic_graphics::dimension(
+      f==Function::GW?basic_graphics::Operation::WIDTH:basic_graphics::Operation::HEIGHT);
   if (f == Function::COLS) return main_lcd().cols();
   if (f == Function::ROWS) return main_lcd().rows();
   return runtime.state.array_count ? (double)((runtime.state.array_count - 1) * 2) : 0;
@@ -194,6 +204,15 @@ void flush(bool empty) {
   const uint8_t rows = main_lcd().rows();
   if (!rows) return;
   if (!runtime.output[0] && !empty) return;
+  if(runtime.position.positioned) {
+    graphics_result(basic_graphics::flush_at(runtime.position,runtime.output,runtime.output_cursor));return;
+  }
+  if(runtime.language==Language::BASIC && basic_graphics::active()) {
+    u8 n=0;graphics_result(basic_graphics::flow(runtime.output,(u16)strlen(runtime.output),runtime.row,
+        (u8)(rows-runtime.row),empty,n));
+    const unsigned next=(unsigned)runtime.row+n;runtime.row=(u8)(next<rows?next:rows-1);
+    runtime.output[0]=0;runtime.output_cursor=0;return;
+  }
   runtime.request->pause_final = 0;
   const uint8_t n =
       main_lcd().printWrappedText(runtime.output, (u16)strlen(runtime.output),
@@ -208,9 +227,16 @@ bool resource_append(void*, const char* text, uint16_t length, bool first) {
 }
 bool io(void*, Event, const char*, uint16_t, double&);
 const Services services = {nullptr,       background, math, random,
-                           dynamic_value, reference,  io};
+                           dynamic_value, reference,  io, false, true};
 
 bool input(const char* prompt, uint16_t length, double& value) {
+  struct RestoreCanvas {
+    bool enabled;
+    RestoreCanvas():enabled(runtime.language==Language::BASIC) {
+      if(enabled)graphics_result(basic_graphics::command(basic_graphics::Operation::SUSPEND));
+    }
+    ~RestoreCanvas(){if(enabled)graphics_result(basic_graphics::command(basic_graphics::Operation::RESUME));}
+  } restore_canvas;
   char text[65] = {};
   text_editor::Buffer editor;
   text_editor::init(editor, text, sizeof(text));
@@ -277,10 +303,26 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   switch (event) {
     case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
+      runtime.position={};
       runtime.width = 0; runtime.precision = basic ? 10 : 8;
       runtime.request->pause_final = 0;
       if(!basic){runtime.row=0;runtime.output[0]=0;runtime.output_cursor=0;}
       return true;
+    case Event::GRAPHICS: {
+      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      auto r=*(const basic_graphics::Request*)text;
+      const auto result=basic_graphics::dispatch(r);value=r.value;
+      if(r.operation!=basic_graphics::Operation::POINT)runtime.request->pause_final=0;
+      return graphics_result(result);
+    }
+    case Event::PRINT_AT:
+      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      return graphics_result(basic_graphics::print_at(runtime.position,runtime.output,runtime.output_cursor,
+          *(const basic_graphics::Request*)text));
+    case Event::PRINT_PUSH:
+      return graphics_result(basic_graphics::push_print(runtime.position,runtime.output,runtime.output_cursor));
+    case Event::PRINT_POP:
+      return graphics_result(basic_graphics::pop_print(runtime.position,runtime.output,runtime.output_cursor));
     case Event::TEXT:
       return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
@@ -321,8 +363,9 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       flush(true);
       return true;
     case Event::PRINT_END:
+      if(runtime.position.positioned)return graphics_result(basic_graphics::flush_at(runtime.position,runtime.output,runtime.output_cursor));
       if(!basic || !length)flush(false);
-      return true;
+      return runtime.failure==Error::NONE;
     case Event::READ_INPUT:
       return input(text, length, value);
     case Event::RESOURCE_INPUT: {
@@ -333,6 +376,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     }
     case Event::WAIT:
     case Event::READ_KEY: {
+      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))return false;
       if (!basic) {
         const char* rows[] = {"ASK", "Press any key"};
         portable_system::text_rows(rows, 2);
@@ -350,6 +394,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return false;
     }
     case Event::CLEAR:
+      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::CLEAR)))return false;
       runtime.request->pause_final = 0;
       main_lcd().clear();
       runtime.row = 0;
@@ -358,7 +403,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     case Event::FINISH:
       flush(false);
-      return true;
+      return runtime.failure==Error::NONE && (!basic || graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)));
     case Event::TARGET_REF:
       return value != 19 ||
              portable_system::call(MK61_SYS_SETTINGS, MK61_SYS_REGISTER_F) != 0;
@@ -381,6 +426,7 @@ uint32_t execute(ExecuteRequest* request) {
   memset(static_cast<void*>(&runtime), 0, sizeof(runtime));
   runtime.request = request;
   runtime.language = view.language;
+  basic_graphics::RunScope graphics_scope(view.language==Language::BASIC);
   runtime.state.variables = request->variables;
   runtime.state.array = request->array;
   runtime.state.array_count = (uint16_t)request->array_count;
@@ -405,6 +451,7 @@ uint32_t execute(ExecuteRequest* request) {
     request->result.error = runtime.failure;
   if (request->result.error != Error::NONE &&
       !(request->mode == 1 && request->result.error == Error::STOPPED)) {
+    if(view.language==Language::BASIC)basic_graphics::command(basic_graphics::Operation::SUSPEND);
     char position[24];
     snprintf(position, sizeof(position), "TinyBASIC %lu:%u", (unsigned long)request->result.line,
              (unsigned)request->error_column);

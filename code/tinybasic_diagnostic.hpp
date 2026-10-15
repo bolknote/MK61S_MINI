@@ -20,6 +20,10 @@ inline Location locate(const char* source, uint16_t offset) {
   return {number, (uint16_t)(source + offset - begin + 1), offset};
 }
 inline const char* reason(Error error, bool russian = false) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+  const auto text=portable_system::call(MK61_SERVICE_LANGUAGE_ERROR_TEXT,(unsigned)error,russian?1:0);
+  return text?reinterpret_cast<const char*>(text):"";
+#else
   switch (error) {
     case Error::DIV_ZERO:
       return russian ? M8("ДЕЛЕНИЕ НА НОЛЬ") : "DIV BY ZERO";
@@ -51,6 +55,12 @@ inline const char* reason(Error error, bool russian = false) {
       return russian ? M8("НЕДОСТУПЕН РЕГИСТР") : "BAD REGISTER";
     case Error::FORMAT:
       return russian ? M8("ШИРИНА PRINT") : "PRINT WIDTH";
+    case Error::GRAPHICS_UNAVAILABLE:
+      return russian ? M8("ГРАФИКА НЕДОСТУПНА") : "NO GRAPHICS";
+    case Error::GRAPHICS_CHANGED:
+      return russian ? M8("ЭКРАН ИЗМЕНЁН") : "SCREEN CHANGED";
+    case Error::GRAPHICS_ARGUMENT:
+      return russian ? M8("ПАРАМЕТР ГРАФИКИ") : "GRAPHICS ARGUMENT";
     case Error::UNKNOWN_COMMAND:
       return russian ? M8("НЕИЗВЕСТНАЯ КОМАНДА") : "UNKNOWN COMMAND";
     case Error::FUNCTION:
@@ -72,6 +82,7 @@ inline const char* reason(Error error, bool russian = false) {
     default:
       return russian ? M8("ОШИБКА СИНТАКСИСА") : "SYNTAX";
   }
+#endif
 }
 }  // namespace tinybasic_diagnostic
 #endif

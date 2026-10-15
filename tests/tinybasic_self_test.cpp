@@ -41,6 +41,71 @@ extern "C" void TinyBasicTestClearData(void);
 extern "C" int TinyBasicTestWaitCount(void);
 extern "C" bool TinyBasicTestStoreEdited(int slot, char* source, const char* name);
 extern "C" void TinyBasicTestSetGeometry(int cols, int rows);
+extern "C" void TinyBasicTestSetGraphics(unsigned,unsigned);
+extern "C" unsigned TinyBasicTestGraphicsPresents();
+extern "C" bool TinyBasicTestGraphicsPixel(unsigned,unsigned);
+
+static void test_graphics_language() {
+  TinyBasicTestReset();
+  assert(TinyBasicTestRunSource("10 A=GW:B=GH\n")==TinyBasicRunStatus::COMPLETED);
+  assert(TinyBasicTestNumber("A")==0 && TinyBasicTestNumber("B")==0);
+  assert(TinyBasicTestRunSource("10 PSET 0,0\n")==TinyBasicRunStatus::RUNTIME_ERROR);
+  assert(TinyBasicTestErrorDetail()==(unsigned)language_vm::Error::GRAPHICS_UNAVAILABLE);
+  for(unsigned width:{80U,192U}) {
+    TinyBasicTestReset();TinyBasicTestSetGraphics(width,width==80?16:64);
+    assert(TinyBasicTestRunSource(
+      "10 A=SIZE:@(0)=123:X=42\n"
+      "20 CLS:PSET 1,1:C=POINT(1,1)\n"
+      "30 PSET 1,1,2:D=POINT(1,1)\n"
+      "40 LINE -100,5,GW+100,5\n"
+      "50 BOX 1,1,4,4,2:BOX 4,4,1,1,2\n"
+      "60 CIRCLE 10,10,2,2:CIRCLE 10,10,2,2\n"
+      "70 B=SIZE:E=@(0):F=POINT(GW-1,5):G=POINT(-1,5)\n"
+      "80 SHOW:PAUSE\n")==TinyBasicRunStatus::COMPLETED);
+    assert(TinyBasicTestNumber("C")==1 && TinyBasicTestNumber("D")==0);
+    assert(TinyBasicTestNumber("F")==1 && TinyBasicTestNumber("G")==0);
+    assert(TinyBasicTestNumber("A")==TinyBasicTestNumber("B") && TinyBasicTestNumber("E")==123);
+    assert(TinyBasicTestGraphicsPixel(width-1,5));
+    assert(TinyBasicTestGraphicsPresents()==1);
+    assert(TinyBasicTestRunSource("10 X=42:GRAPH 1/X,-1,1,-2,2:A=X\n")==TinyBasicRunStatus::COMPLETED);
+    assert(TinyBasicTestNumber("A")==42);
+    assert(TinyBasicTestRunSource("10 X=77:GRAPH 1/0,-1,1,-1,1:A=X\n")==TinyBasicRunStatus::COMPLETED);
+    assert(TinyBasicTestNumber("A")==77);
+    assert(TinyBasicTestRunSource("10 X=66:GRAPH @(9999),-1,1,-1,1\n")==TinyBasicRunStatus::RUNTIME_ERROR);
+    assert(TinyBasicTestNumber("X")==66);
+    assert(TinyBasicTestRunSource(
+      "10 X=42:A=CALL(100,2):END\n"
+      "100 GRAPH ARG(1)*X,-1,1,-2,2\n110 RETURN X\n")==TinyBasicRunStatus::COMPLETED);
+    assert(TinyBasicTestNumber("A")==42 && TinyBasicTestNumber("X")==42);
+  }
+  for(const char* source:{"10 GRAPH INPUT(),-1,1,-1,1\n","10 GRAPH RND(),-1,1,-1,1\n",
+      "10 GRAPH CALL(100),-1,1,-1,1\n","10 PRINT AT 1,2\n","10 PSET 1\n",
+      "10 SHOW 1\n","10 POINT 1,2\n"})assert(!TinyBasicTestCompile(source));
+  TinyBasicTestReset();TinyBasicTestSetGraphics(80,16);
+  assert(TinyBasicTestRunSource(
+    "10 CLS:PRINT AT 2,2; #3,100\n"
+    "20 PRINT AT 2,2; #3,9\n"
+    "30 A=POINT(2,2):B=POINT(14,2)\n"
+    "40 PSET 79,15:PRINT 'HELLO'\n"
+    "50 C=POINT(79,15):INPUT N:D=POINT(79,15)\n"
+    "60 PAUSE\n")==TinyBasicRunStatus::COMPLETED);
+  assert(TinyBasicTestNumber("A")==0 && TinyBasicTestNumber("B")==1);
+  assert(TinyBasicTestNumber("C")==1 && TinyBasicTestNumber("D")==1);
+  assert(TinyBasicTestRunSource(
+    "10 CLS:PRINT AT 2,2;'A';CALL(100):A=POINT(8,2):B=POINT(20,2):END\n"
+    "100 PRINT AT 20,2;'Z':RETURN 7\n")==TinyBasicRunStatus::COMPLETED);
+  assert(TinyBasicTestNumber("A")==1 && TinyBasicTestNumber("B")==1);
+  assert(TinyBasicTestRunSource(
+    "10 CLS:PRINT AT 40,0;CALL(100):PRINT 'AFTER':END\n"
+    "100 PRINT 'INNER':RETURN 7\n")==TinyBasicRunStatus::COMPLETED);
+  assert(strncmp(TinyBasicTestLcdLine(0),"INNER",5)==0);
+  assert(strncmp(TinyBasicTestLcdLine(1),"AFTER",5)==0);
+  TinyBasicTestReset();TinyBasicTestSetGraphics(80,16);
+  const int key[]={keyboard_layout::active().ok};TinyBasicTestSetKeys(key,1);
+  assert(TinyBasicTestAddProgram("10 PSET 1,1:PAUSE:A=POINT(1,1)\n","READPOINT")>=0);
+  assert(RunTinyBasicProgram("READPOINT"));
+  assert(TinyBasicTestNumber("A")==1 && TinyBasicTestWaitCount()==0);
+}
 static constexpr int KEY_K = 37;
 static constexpr int KEY_OK = 29;
 static constexpr int KEY_CX = 0;
@@ -1157,6 +1222,7 @@ static void test_diagnostic_reason_and_location(void) {
   }
 }
 int main(int argc, char** argv) {
+  test_graphics_language();
   test_diagnostic_reason_and_location();
   test_data_read_restore();
   test_else_branches_and_resume();

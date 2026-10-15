@@ -46,6 +46,8 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -I"$root/code" \
   "$root/tests/tinybasic_self_test.cpp" \
   "$root/code/tinybasic.cpp" \
+  "$root/code/basic_graphics.cpp" \
+  "$root/code/basic_native_io.cpp" \
   "${vm_sources[@]}" \
   -o "$out"
 

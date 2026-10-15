@@ -185,11 +185,23 @@ class Machine:
             self.workspace = elf.symbol('17workspace_storageE')
         self.scratch = elf.symbol('15scratch_storageE')
         self.callbacks = {v & ~1: k for k,v in zip(CALLBACKS,self.words(self.api+12,23))}
+        # Only the physical display boundary is modeled for resident BASIC
+        # graphics. Source parsing, APP callbacks, rasterization and fonts run
+        # as real ARM code through the public resident dispatcher.
+        self.basic_display = {}
+        for name in ('screen_geometry','screen_begin','screen_end','screen_present',
+                     'screen_capture','screen_flow','native_text_rows','native_text_flow'):
+            matches=[value for symbol,value in elf.symbols.items()
+                     if 'basic_graphics' in symbol and name in symbol]
+            if matches:
+                assert len(matches)==1,(name,matches)
+                self.basic_display[matches[0]&~1]=name
         if '_ZN13program_store14media_revisionEv' in elf.symbols:
             self.callbacks[elf.symbol('_ZN13program_store14media_revisionEv') & ~1] = 'media_revision'
         self.stop = 0x080FF000
         self.uc.hook_add(UC_HOOK_CODE, self.hook)
         self.graphics = graphics
+        self.graphics_dimensions = (192,64)
         self.files, self.snapshots, self.stamps, self.leases = {}, {}, {}, {}
         self.owner, self.depth = 0, 0
         self.keys, self.frames, self.lines, self.editor_views = [], [], [], []
@@ -260,11 +272,39 @@ class Machine:
                 self.float_return = (uc.reg_read(UC_ARM_REG_LR) & ~1,
                                      b, payload)
                 return
-            if a in (20,24,26,28,29,30) or (a == 37 and b == 2) or (a == 27 and b == 1):
+            if a in (20,24,26,28,29,30,40,41,42) or (a == 37 and b == 2) or (a == 27 and b == 1):
                 self.key_calls += a == 24
                 return  # Execute the real resident font/editor/capability dispatcher.
             self.trace.append((a,b,c,d))
             result = self.system(a,b,c,d,payload)
+        elif address in self.basic_display:
+            name=self.basic_display[address]
+            width,height=self.graphics_dimensions if self.graphics else (0,0)
+            rows=self.legacy_rows if self.graphics else 2
+            result=0
+            if name=='screen_geometry':
+                uc.mem_write(b,struct.pack('<H',width));uc.mem_write(c,struct.pack('<H',height))
+            elif name=='screen_begin':self.begins+=1;result=self.graphics
+            elif name=='screen_end':self.ends+=1
+            elif name=='screen_present':
+                assert c==width*height//8
+                self.frames.append(bytes(uc.mem_read(b,c)));result=1
+            elif name=='screen_capture':result=1
+            elif name=='native_text_rows':result=rows
+            elif name in ('screen_flow','native_text_flow'):
+                if name=='screen_flow':
+                    length,first,maximum,empty=self.words(uc.reg_read(UC_ARM_REG_SP),4)
+                    text=d
+                else:text,length,first,maximum,empty=a,b,c,d,True
+                result=min(maximum,max(1 if empty else 0,(length+15)//16))
+                self.lines.append(bytes(uc.mem_read(text,length)).decode('cp1251'))
+                if name=='screen_flow':
+                    # The real display's glyph/row parity is covered by the
+                    # host display test; here only overwrite the affected rows.
+                    pixels=bytearray(uc.mem_read(b,c))
+                    for y in range(first*height//rows,min(height,(first+result)*height//rows)):
+                        for x in range(width):pixels[y//8*width+x]&=~(1<<(y%8))&255
+                    uc.mem_write(b,bytes(pixels))
         elif address in self.callbacks:
             name = self.callbacks[address]
             self.trace.append((name,a,b,c,d))

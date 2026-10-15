@@ -52,6 +52,8 @@ extern void release_segment_ws_graphics(void);
 #include "terminal_core.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_front_coding.hpp"
+#include "terminal_listing.hpp"
+#include "terminal_mnemonics.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_output.hpp"
 #include "terminal_encoding.hpp"
@@ -235,15 +237,15 @@ static void terminal_print_hex_u32(u32 value) {
 }
 
 
-// Единственная таблица терминала повторяет обозначения советского
-// справочника. Русские буквы уже записаны байтами M8/CP1251, а знаки, которых
-// нет в CP1251, представлены однозначными ASCII-последовательностями.
+// Калькуляторные обозначения для pub и совместимого ввода asm. Английские
+// мнемоники lasm/isa формируются в terminal_mnemonics без второй большой таблицы.
+// Русские буквы записаны байтами M8/CP1251, остальные знаки - ASCII.
 static constexpr char ISA_61[] =
-"0,1,2,3,4,5,6,7,8,9,.,/-/,\302\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,?,\
-\317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,?,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
-X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,?,\
-C/\317,\301/\317,B/O,\317/\317,HO\317,?,?,Fx!=0,FL2,Fx>=0,FL3,FL1,Fx<0,FL0,Fx=0,?,\
-\317->X0,\317->X1,\317->X2,\317->X3,\317->X4,\317->X5,\317->X6,\317->X7,\317->X8,\317->X9,\317->XA,\317->XB,\317->XC,\317->X\xC4,\317->XE,?,\
+"0,1,2,3,4,5,6,7,8,9,.,/-/,\302\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,far,\
+\317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,disp,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
+X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,X->\317F,\
+C/\317,\301/\317,B/O,\317/\317,HO\317,K1,K2,Fx!=0,FL2,Fx>=0,FL3,FL1,Fx<0,FL0,Fx=0,?,\
+\317->X0,\317->X1,\317->X2,\317->X3,\317->X4,\317->X5,\317->X6,\317->X7,\317->X8,\317->X9,\317->XA,\317->XB,\317->XC,\317->X\xC4,\317->XE,\317->XF,\
 Kx!=0 0,Kx!=0 1,Kx!=0 2,Kx!=0 3,Kx!=0 4,Kx!=0 5,Kx!=0 6,Kx!=0 7,Kx!=0 8,Kx!=0 9,Kx!=0 A,Kx!=0 B,Kx!=0 C,Kx!=0 \304,Kx!=0 E,?,\
 K\301\3170,K\301\3171,K\301\3172,K\301\3173,K\301\3174,K\301\3175,K\301\3176,K\301\3177,K\301\3178,K\301\3179,K\301\317A,K\301\317B,K\301\317C,K\301\317\304,K\301\317E,?,\
 Kx>=0 0,Kx>=0 1,Kx>=0 2,Kx>=0 3,Kx>=0 4,Kx>=0 5,Kx>=0 6,Kx>=0 7,Kx>=0 8,Kx>=0 9,Kx>=0 A,Kx>=0 B,Kx>=0 C,Kx>=0 \304,Kx>=0 E,?,\
@@ -344,18 +346,10 @@ class TerminalMnemonicTable {
 static char* terminal_mnemonic_code(const char* table, u8 opcode,
                                     char* text) {
   if(text == nullptr) return nullptr;
-  usize output = 0;
-  if(table != nullptr) {
-    isize remaining = opcode;
-    for(const u8* p = (const u8*) table; *p != 0; p++) {
-      if(*p == ',') {
-        remaining--;
-      } else if(remaining == 0 && output < 8U) {
-        text[output++] = (char) *p;
-      }
-    }
-  }
-  text[output] = 0;
+  if(table == nullptr) return terminal_mnemonics::hex(opcode, text);
+  terminal_mnemonics::csv(table, opcode, text);
+  if(text[0] == 0 || (text[0] == '?' && text[1] == 0))
+    terminal_mnemonics::hex(opcode, text);
   return text;
 }
 
@@ -2286,13 +2280,7 @@ void class_terminal::list_mk61_code_page(void) {
 
       for(int j = 0; j < 16; j++) {
         for(usize i = j; i < program_steps; i += 16) {
-          if(i > 99) {
-            Serial.write('A');
-            Serial.print(i-100);
-          } else {
-            if(i < 10) Serial.write('0');
-            Serial.print(i);
-          }
+          print_address_as_MK61(i);
           Serial.print(". ");
           if(code_page[i] < 16) Serial.write('0');
           Serial.print(code_page[i], HEX);
@@ -3093,13 +3081,8 @@ void class_terminal::Dump1302(void) {
     }
 
 void  class_terminal::print_address_as_MK61(usize addr) {
-      if(addr > 99) {
-        Serial.write('A');
-        Serial.print(addr-100);
-      } else {
-        if(addr < 10) Serial.write('0');
-        Serial.print(addr);
-      }
+      Serial.write(terminal_mnemonics::hex_digit((u8) (addr / 10)));
+      Serial.write((u8) ('0' + addr % 10));
     }
 
 void class_terminal::reset_command_state(void) {
@@ -3179,34 +3162,17 @@ void  class_terminal::echo_mk61_stack(void) {
     }
 
 void  class_terminal::echo_ISA_61(void) {
-      static constexpr isize COLUMN_COUNT = 4;
-      static constexpr usize COLUMN_SIZE  = 10;
-
-      TerminalMnemonicTable table;
-      if(!table.ok()) {
-        Serial.println("Mnemonic workspace busy");
-        return;
-      }
-      const char* const isa = table.data();
-
-      u8 opcode = 0;
-      usize begin = 0;
-      isize column = COLUMN_COUNT;
-      // Вывод в 4 колонки, в формате opcode - инструкция
-      for(usize i = 0;; i++) {
-        if(isa[i] == ',' || isa[i] == 0) { // обнаружен разделитель команд или окончание массива
-          const isize len = i - begin;
-          Serial_write_hex(opcode); Serial.write(' ');
-          terminal_write_m8((const u8*) &isa[begin], (usize) len);
-          if(column-- <= 0) { // завершим вывод строки, все 4 колонки выведены
-            Serial.println();
-            column = COLUMN_COUNT;
-          } else { // завершим вывод колонки и дополним ее выводом пробелов
-            for(usize space_counter = len; space_counter <= COLUMN_SIZE; space_counter++) Serial.write(' ');
-          }
-          begin = i + 1;
-          opcode++;
-          if(isa[i] == 0) break;
+      char op[terminal_mnemonics::MAX_LENGTH + 1];
+      for(usize opcode = 0; opcode < terminal_keys::COUNT; ++opcode) {
+        terminal_mnemonics::english((u8) opcode, op);
+        Serial_write_hex((u8) opcode);
+        Serial.write(' ');
+        Serial.print(op);
+        if(opcode % 4 == 3) {
+          Serial.println();
+        } else {
+          for(usize width = 3 + strlen(op); width < 16; ++width)
+            Serial.write(' ');
         }
       }
     }
@@ -3218,29 +3184,36 @@ void class_terminal::pub_mk61_code_page(void) {
         return;
       }
       char op[MAX_LEN_CLASSIC_MNEMO+1];
-      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+      u8 code_page[core_61::MAX_PROGRAM_STEP + 3] = {};
       core_61::get_code_page(&code_page[0]);
-      isize last_cmd_addr = seek_program_END(&code_page[0]);
-      const isize program_steps = (isize) core_61::program_steps();
-      isize address = 0;
-      for (int i=0; i<30; i++) {
-        if(i > last_cmd_addr) break;
-        for (int ii=0; ii<4; ii++) {
-          address = ii*30 + i;
-          if(address > last_cmd_addr) break;
-          if (address < program_steps) {
-            print_address_as_MK61(address); Serial.print(". ");
+      const usize listing_end = seek_program_END(code_page);
+      const usize program_steps = core_61::program_steps();
+      const bool expanded = core_61::expanded_program_is_on();
+      if(expanded) {
+        const usize next_bank = ((usize) core_61::active_program_bank() + 1) *
+            core_61::MAX_PROGRAM_STEP;
+        for(usize offset = 0; offset < 3; ++offset)
+          (void) core_61::read_absolute_program(
+              (u16) (next_bank + offset), code_page[program_steps + offset]);
+      }
+      const terminal_listing::Layout layout(
+          code_page, program_steps, listing_end, expanded);
+      for(usize i = 0; i < terminal_listing::COLUMN_ROWS && i < layout.end; ++i) {
+        for(usize ii = 0; ii < terminal_listing::COLUMN_COUNT; ++ii) {
+          const usize address = ii * terminal_listing::COLUMN_ROWS + i;
+          if(address >= layout.end) break;
+          print_address_as_MK61(address); Serial.print(". ");
 
-            const u8 code = code_page[address];
-            if(address > 0 && core_61::len_code_command(code_page[address-1]) == 2) {
-              Serial_write_hex(code);
-              for(usize cnt_space=2; cnt_space < MAX_LEN_CLASSIC_MNEMO + 2; cnt_space++) Serial.print(' ');
-            } else {
-              terminal_write_m8(terminal_mnemonic_code(
-                  table.data(), code, &op[0]));
-              for(usize ln=strlen(op); ln < MAX_LEN_CLASSIC_MNEMO; ln++) Serial.write(' ');
-              Serial.print("  ");
-            }
+          const u8 code = code_page[address];
+          if(layout.lengths[address] == 0) {
+            Serial_write_hex(code);
+            for(usize width = 2; width < MAX_LEN_CLASSIC_MNEMO + 2; ++width)
+              Serial.write(' ');
+          } else {
+            terminal_write_m8(terminal_mnemonic_code(table.data(), code, op));
+            for(usize width = strlen(op); width < MAX_LEN_CLASSIC_MNEMO; ++width)
+              Serial.write(' ');
+            Serial.print("  ");
           }
         }
         Serial.println();
@@ -3248,52 +3221,51 @@ void class_terminal::pub_mk61_code_page(void) {
     }
 
 void  class_terminal::lasm_mk61_code_page(void) {
-      TerminalMnemonicTable table;
-      if(!table.ok()) {
-        Serial.println("Mnemonic workspace busy");
-        return;
+      char op[terminal_mnemonics::MAX_LENGTH + 1];
+      u8 code_page[core_61::MAX_PROGRAM_STEP + 3] = {};
+      core_61::get_code_page(code_page);
+      const usize listing_end = seek_program_END(code_page);
+      const usize program_steps = core_61::program_steps();
+      const bool expanded = core_61::expanded_program_is_on();
+      if(expanded) {
+        const usize next_bank = ((usize) core_61::active_program_bank() + 1) *
+            core_61::MAX_PROGRAM_STEP;
+        for(usize offset = 0; offset < 3; ++offset)
+          (void) core_61::read_absolute_program(
+              (u16) (next_bank + offset), code_page[program_steps + offset]);
       }
-      char op[MAX_LEN_CLASSIC_MNEMO+1];
-      u8 code_page[core_61::CODE_PAGE_BUFFER_SIZE] = {};
-
-      core_61::get_code_page(&code_page[0]);
-      isize lastCommand = seek_program_END(&code_page[0]);
-      isize j = 0;
-      for (isize i=0; i<30; i++) {
-        for (isize ii=0; ii<4; ii++) {
-          j = ii*30 + i;
-          if (lastCommand > j) {
-            Serial.print("00");
-            print_address_as_MK61(j);
-            const u8 code = code_page[j];
-            const u8 code2 = code_page[j+1];
-            Serial.write(' '); Serial_write_hex(code); Serial.write(' ');
-            if (j > 0){
-              if (core_61::len_code_command(code_page[j-1]) == 2) {
-                Serial.print("      ");
-              } else {
-                const char* mnemo = terminal_mnemonic_code(
-                    table.data(), code, &op[0]);
-                terminal_write_m8(mnemo);
-                for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
-              }
-            } else {
-              const char* mnemo = terminal_mnemonic_code(
-                  table.data(), code, &op[0]);
-              terminal_write_m8(mnemo);
-              for(usize ln=strlen(op); ln < 6; ln++) Serial.write(' ');
-            }
-            if ( core_61::len_code_command(code) == 2 ) {
-              Serial_write_hex(code2);
-              Serial.print("  ");
-            } else {
-              Serial.print("    ");
-            }
-            Serial.print("  ");
+      const terminal_listing::Layout layout(
+          code_page, program_steps, listing_end, expanded);
+      for(usize row = 0; row < terminal_listing::COLUMN_ROWS && row < layout.end; ++row) {
+        for(usize column = 0; column < terminal_listing::COLUMN_COUNT; ++column) {
+          const usize address = column * terminal_listing::COLUMN_ROWS + row;
+          if(address >= layout.end) break;
+          Serial.print("00");
+          print_address_as_MK61(address);
+          const u8 code = code_page[address];
+          Serial.write(' '); Serial_write_hex(code); Serial.write(' ');
+          const usize length = layout.lengths[address];
+          op[0] = 0;
+          if(length != 0) {
+            terminal_mnemonics::english(code, op);
+            Serial.print(op);
           }
-         }
-         if (i > lastCommand) { break; }
-         Serial.println();
+          for(usize width = strlen(op); width < terminal_mnemonics::MAX_LENGTH; ++width)
+            Serial.write(' ');
+          Serial.write(' ');
+          usize argument_width = 0;
+          for(usize operand = 1; operand < length; ++operand) {
+            if(operand != 1) { Serial.write(' '); ++argument_width; }
+            const usize source = !expanded || (code != 0x1F && code != 0x2F)
+                ? (address + operand) % program_steps : address + operand;
+            Serial_write_hex(code_page[source]);
+            argument_width += 2;
+          }
+          const usize argument_field = terminal_listing::COLUMN_WIDTH - 8 -
+              terminal_mnemonics::MAX_LENGTH - 1;
+          for(; argument_width < argument_field; ++argument_width) Serial.write(' ');
+        }
+        Serial.println();
       }
     }
 
@@ -3431,7 +3403,7 @@ bool class_terminal::Assembler(void) {
         command_args(), AT, table.data(),
         library_mk61::program_memory_mode() == ProgramMemoryMode::CLASSIC_105
             ? core_61::CLASSIC_PROGRAM_STEP :
-              core_61::EXTENDED_ADDRESS_LIMIT);
+              core_61::EXTENDED_ADDRESS_LIMIT, terminal_mnemonics::find);
       if(assembly.error != terminal_core::AssemblyError::NONE) {
         ErrorReaction();
         switch(assembly.error) {

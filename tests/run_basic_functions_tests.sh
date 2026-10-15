@@ -12,6 +12,7 @@ for variant in native vm; do
  extra=(); if [[ $variant == vm ]]; then extra=(-DMK61_LANGUAGE_VM_TEST); fi
  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" "${extra[@]}" -DTINYBASIC_HOST_TEST -DTINYBASIC_SELF_TEST -DMK61_KEYBOARD_$profile \
   -I"$root/code" "$root/tests/basic_functions_self_test.cpp" "$root/code/tinybasic.cpp" \
+  "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" \
   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/$variant"
  "$work/$variant" || failures=$((failures+1))
  done

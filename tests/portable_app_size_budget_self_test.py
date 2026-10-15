@@ -73,7 +73,7 @@ else:
 # The former 15-KiB compactness gate is not the loader's 20-KiB format limit.
 BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": 15361},
                                    False, False, True)
-for local, limit in ((False, 18432), (True, 17408)):
+for local, limit in ((False, 19456), (True, 19968)):
     BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": limit},
                                        local, False, True)
     try:
