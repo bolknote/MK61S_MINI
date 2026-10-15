@@ -1,0 +1,1959 @@
+{
+  "status": "PASS",
+  "baseline_commit": "b0c7528a2f567c41e3af8d59ba6ddcc88cf636d5",
+  "production_commit": "e326c7fb9",
+  "branch": "feature/stm32-resident-compaction",
+  "source_date_epoch": 1791969300,
+  "sizes": {
+    "baseline": {
+      "classic": {
+        "flash": 360564,
+        "static_ram": 26880,
+        "free_pool": 87544,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 46560
+      },
+      "mini": {
+        "flash": 332996,
+        "static_ram": 25536,
+        "free_pool": 88888,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 47904
+      }
+    },
+    "step1": {
+      "classic": {
+        "flash": 360500,
+        "static_ram": 26480,
+        "free_pool": 87944,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 46976
+      },
+      "mini": {
+        "flash": 332932,
+        "static_ram": 25136,
+        "free_pool": 89288,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 48320
+      }
+    },
+    "step2-scoped": {
+      "classic": {
+        "flash": 361176,
+        "static_ram": 22880,
+        "free_pool": 91544,
+        "lazy": 40960,
+        "scoped": 3648,
+        "placement": 0,
+        "effective": 46912
+      },
+      "mini": {
+        "flash": 333608,
+        "static_ram": 21536,
+        "free_pool": 92888,
+        "lazy": 40960,
+        "scoped": 3648,
+        "placement": 0,
+        "effective": 48256
+      }
+    },
+    "step3": {
+      "classic": {
+        "flash": 361304,
+        "static_ram": 21552,
+        "free_pool": 92872,
+        "lazy": 40960,
+        "scoped": 5184,
+        "placement": 0,
+        "effective": 46720
+      },
+      "mini": {
+        "flash": 333688,
+        "static_ram": 20016,
+        "free_pool": 94408,
+        "lazy": 40960,
+        "scoped": 5184,
+        "placement": 0,
+        "effective": 48256
+      }
+    },
+    "active": {
+      "classic": {
+        "flash": 361816,
+        "static_ram": 21552,
+        "free_pool": 92872,
+        "lazy": 40960,
+        "scoped": 5184,
+        "placement": 224,
+        "effective": 46496
+      },
+      "mini": {
+        "flash": 334360,
+        "static_ram": 20016,
+        "free_pool": 94408,
+        "lazy": 40960,
+        "scoped": 5184,
+        "placement": 224,
+        "effective": 48032
+      }
+    },
+    "flash-priority": {
+      "classic": {
+        "flash": 360292,
+        "static_ram": 26480,
+        "free_pool": 87944,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 46976
+      },
+      "mini": {
+        "flash": 332868,
+        "static_ram": 25136,
+        "free_pool": 89288,
+        "lazy": 40960,
+        "scoped": 0,
+        "placement": 0,
+        "effective": 48320
+      }
+    }
+  },
+  "images": [
+    {
+      "label": "control",
+      "board": "classic",
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-control/classic.bin",
+      "bytes": 360564,
+      "footer": 358852,
+      "build": "D6873FBC",
+      "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457"
+    },
+    {
+      "label": "control",
+      "board": "mini",
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-control/mini.bin",
+      "bytes": 332996,
+      "footer": 331444,
+      "build": "5D8A15BA",
+      "sha256": "c582de97dff6163a0cbb4640e4996567f8b06c8de38fbfcffab43f37ed60908b"
+    },
+    {
+      "label": "candidate",
+      "board": "classic",
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-candidate/classic.bin",
+      "bytes": 361816,
+      "footer": 360104,
+      "build": "80056CAE",
+      "sha256": "53e902f120eff4197498fd07f13f3d45f3087fd8dc0a9ee4d033524999a1a856"
+    },
+    {
+      "label": "candidate",
+      "board": "mini",
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-candidate/mini.bin",
+      "bytes": 334360,
+      "footer": 332808,
+      "build": "740B8779",
+      "sha256": "04eda47b991afc99702b45a6ee3257908973c9b01b4df6983bc1e897f104c768"
+    }
+  ],
+  "matrix": {
+    "production_inputs_sha256": "fc5394bebb1954fc5d3bc26dd900456704c73b31c59d05a21a62cbeb260c7c13",
+    "cases": [
+      {
+        "id": "f411-lcd1602-a00",
+        "profile": "mini-v3-a00",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-lcd1602-a00.json",
+        "status": "PASS",
+        "unsealed_bytes": 300500,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-lcd1602-a00/qualification.log"
+      },
+      {
+        "id": "f411-lcd1602-a00-usb-screen",
+        "profile": "mini-v3-a00",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-lcd1602-a00-usb-screen.json",
+        "status": "PASS",
+        "unsealed_bytes": 331656,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-lcd1602-a00-usb-screen/qualification.log"
+      },
+      {
+        "id": "f411-lcd1602-a00-no-lto",
+        "profile": "mini-v3-a00",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-lcd1602-a00-no-lto.json",
+        "status": "PASS",
+        "unsealed_bytes": 317464,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-lcd1602-a00-no-lto/qualification.log"
+      },
+      {
+        "id": "f411-lcd1602-a02",
+        "profile": "mini-v3-a02",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-lcd1602-a02.json",
+        "status": "PASS",
+        "unsealed_bytes": 300376,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-lcd1602-a02/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010.json",
+        "status": "PASS",
+        "unsealed_bytes": 329996,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010-usb-screen",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010-usb-screen.json",
+        "status": "PASS",
+        "unsealed_bytes": 350376,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010-usb-screen/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010-no-graphics",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010-no-graphics.json",
+        "status": "PASS",
+        "unsealed_bytes": 316800,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010-no-graphics/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010-graphics-wbmp",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010-graphics-wbmp.json",
+        "status": "PASS",
+        "unsealed_bytes": 316352,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010-graphics-wbmp/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010-graphics-wbmp-markdown.json",
+        "status": "PASS",
+        "unsealed_bytes": 329996,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010-graphics-wbmp-markdown/qualification.log"
+      },
+      {
+        "id": "f411-oled1602-ws0010-usb-screen-no-graphics",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-oled1602-ws0010-usb-screen-no-graphics.json",
+        "status": "PASS",
+        "unsealed_bytes": 348888,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-oled1602-ws0010-usb-screen-no-graphics/qualification.log"
+      },
+      {
+        "id": "f411-mini-v2-a00",
+        "profile": "mini-v2-a00",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-mini-v2-a00.json",
+        "status": "PASS",
+        "unsealed_bytes": 300540,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-mini-v2-a00/qualification.log"
+      },
+      {
+        "id": "f411-mini-v2-a02",
+        "profile": "mini-v2-a02",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-mini-v2-a02.json",
+        "status": "PASS",
+        "unsealed_bytes": 300416,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-mini-v2-a02/qualification.log"
+      },
+      {
+        "id": "f411-classic-v2",
+        "profile": "classic-v2",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-classic-v2.json",
+        "status": "PASS",
+        "unsealed_bytes": 337040,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-classic-v2/qualification.log"
+      },
+      {
+        "id": "f411-classic-v3",
+        "profile": "classic-v3",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-classic-v3.json",
+        "status": "PASS",
+        "unsealed_bytes": 347220,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-classic-v3/qualification.log"
+      },
+      {
+        "id": "f411-classic-v3-usb-screen",
+        "profile": "classic-v3",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-classic-v3-usb-screen.json",
+        "status": "PASS",
+        "unsealed_bytes": 350236,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-classic-v3-usb-screen/qualification.log"
+      },
+      {
+        "id": "f411-40th",
+        "profile": "40th",
+        "mcu": "f411",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f411-40th.json",
+        "status": "PASS",
+        "unsealed_bytes": 337088,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f411-40th/qualification.log"
+      },
+      {
+        "id": "f401-product-a00",
+        "profile": "mini-v3-a00",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-product-a00.json",
+        "status": "PASS",
+        "unsealed_bytes": 212744,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-product-a00/qualification.log"
+      },
+      {
+        "id": "f401-product-ws0010",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-product-ws0010.json",
+        "status": "PASS",
+        "unsealed_bytes": 220768,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-product-ws0010/qualification.log"
+      },
+      {
+        "id": "f401-product-mini-v2-a00",
+        "profile": "mini-v2-a00",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-product-mini-v2-a00.json",
+        "status": "PASS",
+        "unsealed_bytes": 212816,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-product-mini-v2-a00/qualification.log"
+      },
+      {
+        "id": "f401-product-classic-v2",
+        "profile": "classic-v2",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-product-classic-v2.json",
+        "status": "PASS",
+        "unsealed_bytes": 242776,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-product-classic-v2/qualification.log"
+      },
+      {
+        "id": "f401-product-classic-v3",
+        "profile": "classic-v3",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-product-classic-v3.json",
+        "status": "PASS",
+        "unsealed_bytes": 242804,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-product-classic-v3/qualification.log"
+      },
+      {
+        "id": "f401-capability-a00-usb",
+        "profile": "mini-v3-a00",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-capability-a00-usb.json",
+        "status": "PASS",
+        "unsealed_bytes": 236712,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-capability-a00-usb/qualification.log"
+      },
+      {
+        "id": "f401-capability-ws-usb",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-capability-ws-usb.json",
+        "status": "PASS",
+        "unsealed_bytes": 245508,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-capability-ws-usb/qualification.log"
+      },
+      {
+        "id": "f401-capability-ws-graphics",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-capability-ws-graphics.json",
+        "status": "PASS",
+        "unsealed_bytes": 227244,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-capability-ws-graphics/qualification.log"
+      },
+      {
+        "id": "f401-capability-ws-usb-graphics",
+        "profile": "mini-v3-ws0010",
+        "mcu": "f401",
+        "reference": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/matrix-refs/f401-capability-ws-usb-graphics.json",
+        "status": "PASS",
+        "unsealed_bytes": 247764,
+        "log": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/release-matrix/f401-capability-ws-usb-graphics/qualification.log"
+      }
+    ]
+  },
+  "arm": [
+    {
+      "test": "codec-classic",
+      "status": "PASS",
+      "seconds": 0.36,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/c9_inode_wire_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-codec-classic.json"
+      ]
+    },
+    {
+      "test": "codec-mini",
+      "status": "PASS",
+      "seconds": 0.33,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/c9_inode_wire_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-codec-mini.json"
+      ]
+    },
+    {
+      "test": "runtime-classic",
+      "status": "PASS",
+      "seconds": 0.44,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/stm32f4_runtime_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+        "--mcu",
+        "f411"
+      ]
+    },
+    {
+      "test": "runtime-mini",
+      "status": "PASS",
+      "seconds": 0.42,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/stm32f4_runtime_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf",
+        "--mcu",
+        "f411",
+        "--no-stop"
+      ]
+    },
+    {
+      "test": "controller-classic",
+      "status": "PASS",
+      "seconds": 0.97,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/stm32f4_usb_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf"
+      ]
+    },
+    {
+      "test": "controller-mini",
+      "status": "PASS",
+      "seconds": 0.94,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/stm32f4_usb_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf"
+      ]
+    },
+    {
+      "test": "cdc-classic",
+      "status": "PASS",
+      "seconds": 1.32,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/stm32f4_cdc_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf"
+      ]
+    },
+    {
+      "test": "ep0",
+      "status": "PASS",
+      "seconds": 3.45,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/usb_fs_control_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/compile_commands.json",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-ep0.json"
+      ]
+    },
+    {
+      "test": "bot-scsi",
+      "status": "PASS",
+      "seconds": 6.36,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/msc_bot_scsi_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/compile_commands.json",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-bot-scsi.json"
+      ]
+    },
+    {
+      "test": "msc-bridge",
+      "status": "PASS",
+      "seconds": 1.9,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/msc_session_bridge_arm_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/compile_commands.json",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-msc-bridge.json"
+      ]
+    },
+    {
+      "test": "layout",
+      "status": "PASS",
+      "seconds": 0.77,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/usb_state_layout_compile_self_test.py",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/compile_commands.json",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-usb-layout.json"
+      ]
+    },
+    {
+      "test": "math",
+      "status": "PASS",
+      "seconds": 4.74,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/compact_math_arm_self_test.py",
+        "--resident-elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+        "--resident-elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-math.json"
+      ]
+    },
+    {
+      "test": "eabi",
+      "status": "PASS",
+      "seconds": 35.84,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/native_eabi_arm_self_test.py",
+        "--elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+        "--elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf",
+        "--json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/final-eabi.json"
+      ]
+    },
+    {
+      "test": "strings",
+      "status": "PASS",
+      "seconds": 12.72,
+      "command": [
+        "arch",
+        "-x86_64",
+        "/usr/bin/python3",
+        "/Users/bolk/.codex/worktrees/stm32-resident-compaction/MK61S_MINI/tests/native_strings_arm_self_test.py",
+        "--elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+        "--elf",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf"
+      ]
+    }
+  ],
+  "constraints": {
+    "app_max": 20480,
+    "stage_max": 2560,
+    "msc": 8264,
+    "fs_temporary": 824,
+    "stack": 16384,
+    "lazy": 40960,
+    "scoped": 5184,
+    "nor_max_capacity": 134217728,
+    "physical_bank_slots": 32,
+    "app_placement_slack": 224
+  },
+  "reference_sha256": {
+    "classic": "4bf13dcc632bb3163d804511ee8c801c5b46088ef7ead1748a0e5b58e9475adf",
+    "mini": "4428d4a8ff94ec71889f18c60f86fe005dd8e041a868d20fa69e66aa53ea832d"
+  },
+  "shipping_flags": {
+    "classic": {
+      "baseline": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_BOARD_CLASSIC_V3",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ],
+      "active": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_BOARD_CLASSIC_V3",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ],
+      "flash-priority": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_BOARD_CLASSIC_V3",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SCOPED_RESIDENT_BUFFERS=0",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ]
+    },
+    "mini": {
+      "baseline": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_LCD1602_A00",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ],
+      "active": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_LCD1602_A00",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ],
+      "flash-priority": [
+        "-DARDUINO=10607",
+        "-DARDUINO_ARCH_STM32",
+        "-DARDUINO_BLACKPILL_F411CE",
+        "-DBOARD_NAME=\"BLACKPILL_F411CE\"",
+        "-DF_CPU=96000000UL",
+        "-DHAL_PCD_MODULE_ENABLED",
+        "-DHWSERIAL_NONE",
+        "-DMK61_APP_LOCAL_FLOAT_MATH=0",
+        "-DMK61_CHIP8_AS_APP=0",
+        "-DMK61_ENABLE_CHIP8=1",
+        "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=0",
+        "-DMK61_ENABLE_FOCAL=1",
+        "-DMK61_ENABLE_LOADABLE_MODULES=1",
+        "-DMK61_ENABLE_MARKDOWN_VIEWER=1",
+        "-DMK61_ENABLE_SETUP=1",
+        "-DMK61_ENABLE_TINYBASIC=1",
+        "-DMK61_ENABLE_USB_SCREEN=1",
+        "-DMK61_ENABLE_WBMP_VIEWER=0",
+        "-DMK61_EXPLORER_AS_APP=0",
+        "-DMK61_EXTERNALIZE_USBDISK=0",
+        "-DMK61_F401_PRODUCT_BUILD=0",
+        "-DMK61_FOCAL_AS_APP=1",
+        "-DMK61_LCD1602_A00",
+        "-DMK61_MARKDOWN_VIEWER_AS_APP=0",
+        "-DMK61_MATH_BACKEND=0",
+        "-DMK61_NATIVE_RUNTIME=1",
+        "-DMK61_REQUIRE_F411_SELECTIVE_O3=1",
+        "-DMK61_REQUIRE_RESIDENT_CRC=1",
+        "-DMK61_SCOPED_RESIDENT_BUFFERS=0",
+        "-DMK61_SETUP_AS_APP=0",
+        "-DMK61_TINYBASIC_AS_APP=1",
+        "-DMK61_USER_EXPLORER_SHORTCUT=1",
+        "-DMK61_USE_COMPACT_LIBM=1",
+        "-DMK61_USE_NATIVE_EABI=1",
+        "-DMK61_USE_NATIVE_LIBC=1",
+        "-DMK61_WBMP_VIEWER_AS_APP=0",
+        "-DMK61_WS0010_GRAPHICS_100X16=0",
+        "-DNDEBUG",
+        "-DSTM32F411xE",
+        "-DSTM32F4xx",
+        "-DUSBCON",
+        "-DUSBD_CLASS_USER_STRING_DESC=0",
+        "-DUSBD_MAX_STR_DESC_SIZ=64",
+        "-DUSBD_PID=0x5740",
+        "-DUSBD_USE_CDC",
+        "-DUSBD_VID=0x0483",
+        "-DUSE_FULL_LL_DRIVER",
+        "-DVECT_TAB_OFFSET=0x0",
+        "-Os",
+        "-flto",
+        "-mcpu=cortex-m4",
+        "-mfloat-abi=hard",
+        "-mfpu=fpv4-sp-d16"
+      ]
+    }
+  },
+  "tradeoff": "Default saves idle/static RAM at a cost of Flash; all-active buffers are charged by ELF qualification. Permanent-buffer comparison saves both.",
+  "diagnostic_probes": {
+    "classic-control": {
+      "bytes": 550,
+      "sha256": "5c6742ad194d169d9b42c4d49303d1ff33f923e2433ea11b4969c7f4327e6320",
+      "resident": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-control/classic.bin",
+        "bytes": 360564,
+        "footer": 358852,
+        "build": "D6873FBC",
+        "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457",
+        "probe": {
+          "BUILD": 3599187900,
+          "FOOTER": 134576580,
+          "HEAP": 536882008,
+          "END": 536985344,
+          "ARENAS": 536871228,
+          "HEAD": 0
+        }
+      }
+    },
+    "classic-candidate": {
+      "bytes": 849,
+      "sha256": "45d28feb8e8e2d79512cab8fb1283b7fa14dd29a73a0d180b10d5f5b0a5fa75c",
+      "resident": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-candidate/classic.bin",
+        "bytes": 361816,
+        "footer": 360104,
+        "build": "80056CAE",
+        "sha256": "53e902f120eff4197498fd07f13f3d45f3087fd8dc0a9ee4d033524999a1a856",
+        "probe": {
+          "BUILD": 2147839150,
+          "FOOTER": 134577832,
+          "HEAP": 536879164,
+          "END": 536985344,
+          "ARENAS": 536871228,
+          "HEAD": 536879160
+        }
+      }
+    },
+    "mini-control": {
+      "bytes": 550,
+      "sha256": "9ae6f5ac7c9d5d6b058583281430f4ae3738e989e5bf2f352f8178c380a678f7",
+      "resident": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-control/mini.bin",
+        "bytes": 332996,
+        "footer": 331444,
+        "build": "5D8A15BA",
+        "sha256": "c582de97dff6163a0cbb4640e4996567f8b06c8de38fbfcffab43f37ed60908b",
+        "probe": {
+          "BUILD": 1569330618,
+          "FOOTER": 134549172,
+          "HEAP": 536880664,
+          "END": 536985344,
+          "ARENAS": 536871220,
+          "HEAD": 0
+        }
+      }
+    },
+    "mini-candidate": {
+      "bytes": 843,
+      "sha256": "5784e75980e06adbbc3cdf5abe721484bcfcf84d298647d42389eb1c44ec63cc",
+      "resident": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/install-candidate/mini.bin",
+        "bytes": 334360,
+        "footer": 332808,
+        "build": "740B8779",
+        "sha256": "04eda47b991afc99702b45a6ee3257908973c9b01b4df6983bc1e897f104c768",
+        "probe": {
+          "BUILD": 1946912633,
+          "FOOTER": 134550536,
+          "HEAP": 536877624,
+          "END": 536985344,
+          "ARENAS": 536871220,
+          "HEAD": 536877620
+        }
+      }
+    }
+  },
+  "hardware_protocol": {
+    "order": "Classic before mini",
+    "physical_ep0_requests": 50,
+    "graphics_complete_frames": 100,
+    "ordinary_msc_stack_minimum": 12288,
+    "separate_ram_workload_stack_minimum": 11264,
+    "ram_disk_cycles": 4,
+    "reset_between_ram_cycles": false,
+    "workload_separation": "same warm reset on control and candidate after lifetime test, before graphics; measured coalescence is checked before reset",
+    "performance": {
+      "raw_flash_reads_per_size": 60,
+      "file_warm_reads_per_file": 60,
+      "file_cold_resets_per_file": 3,
+      "core_restored_batches": 5,
+      "core_steps_per_batch": 40
+    },
+    "preservation": "full original file bytes/directories/program/registers/stack/pwd/alarm slots and exact recovery firmware",
+    "cold_loader_per_lifetime_order": true,
+    "lifetime_cache_eviction": "Alternate two separate inodes of one exact read-only probe; both owner orders start with cold APP loader"
+  },
+  "selected_symbol_sizes": {
+    "baseline": [
+      {
+        "bytes": 136,
+        "symbol": "program_store::(anonymous namespace)::serialize_inode(program_store::(anonymous namespace)::Inode const&, unsigned char*)"
+      },
+      {
+        "bytes": 182,
+        "symbol": "program_store::(anonymous namespace)::deserialize_inode(unsigned char const*)"
+      },
+      {
+        "bytes": 112,
+        "symbol": "shared_memory::(anonymous namespace)::refresh_pool()"
+      },
+      {
+        "bytes": 10216,
+        "symbol": "class_terminal::execute(bool, bool)"
+      },
+      {
+        "bytes": 220,
+        "symbol": "mpu_guard::set_app_execution(void const*, unsigned int)"
+      }
+    ],
+    "active": [
+      {
+        "bytes": 66,
+        "symbol": "program_store::(anonymous namespace)::serialize_inode(c9_inode_wire::Inode const&, unsigned char*)"
+      },
+      {
+        "bytes": 72,
+        "symbol": "program_store::(anonymous namespace)::deserialize_inode(unsigned char const*)"
+      },
+      {
+        "bytes": 104,
+        "symbol": "shared_memory::(anonymous namespace)::refresh_pool()"
+      },
+      {
+        "bytes": 272,
+        "symbol": "shared_memory::(anonymous namespace)::high_gap(unsigned int, bool)"
+      },
+      {
+        "bytes": 72,
+        "symbol": "shared_memory::LifetimeBuffer::reset()"
+      },
+      {
+        "bytes": 180,
+        "symbol": "shared_memory::LifetimeBuffer::acquire(shared_memory::Owner, unsigned int)"
+      },
+      {
+        "bytes": 9576,
+        "symbol": "class_terminal::execute(bool, bool)"
+      },
+      {
+        "bytes": 100,
+        "symbol": "storage_workspace::with_buffer(storage_workspace::Owner, unsigned int, bool (*)(void const*, unsigned char*), void const*)"
+      },
+      {
+        "bytes": 40,
+        "symbol": "storage_workspace::(anonymous namespace)::run_with_stack(storage_workspace::(anonymous namespace)::BufferRequest const&)"
+      },
+      {
+        "bytes": 228,
+        "symbol": "mpu_guard::set_app_execution(void const*, unsigned int)"
+      },
+      {
+        "bytes": 6,
+        "symbol": "class_terminal::execute(bool, bool)::ResetInput::~ResetInput() [clone .isra.0]"
+      },
+      {
+        "bytes": 24,
+        "symbol": "storage_workspace::with_buffer<virtual_fat::(anonymous namespace)::discard_known_sidecars()::{lambda(unsigned char*)#1}>(storage_workspace::Owner, unsigned int, virtual_fat::(anonymous namespace)::discard_known_sidecars()::{lambda(unsigned char*)#1} const&)::{lambda(void const*, unsigned char*)#1}::_FUN(void const*, unsigned char*)"
+      },
+      {
+        "bytes": 28,
+        "symbol": "storage_workspace::with_buffer<program_store::create_directory(unsigned short, char const*, unsigned short, unsigned short*)::{lambda(unsigned char*)#1}>(storage_workspace::Owner, unsigned int, program_store::create_directory(unsigned short, char const*, unsigned short, unsigned short*)::{lambda(unsigned char*)#1} const&)::{lambda(void const*, unsigned char*)#1}::_FUN(void const*, unsigned char*)"
+      },
+      {
+        "bytes": 80,
+        "symbol": "storage_workspace::with_buffer<program_store::write_file_from_source(unsigned short, unsigned short, program_store::ProgramType, char const*, unsigned short, program_store::FileSource const&, unsigned short const*, unsigned char, unsigned short*, unsigned char*, unsigned int, unsigned char const*)::{lambda(unsigned char*)#1}>(storage_workspace::Owner, unsigned int, program_store::write_file_from_source(unsigned short, unsigned short, program_store::ProgramType, char const*, unsigned short, program_store::FileSource const&, unsigned short const*, unsigned char, unsigned short*, unsigned char*, unsigned int, unsigned char const*)::{lambda(unsigned char*)#1} const&)::{lambda(void const*, unsigned char*)#1}::_FUN(void const*, unsigned char*)"
+      }
+    ],
+    "flash-priority": [
+      {
+        "bytes": 66,
+        "symbol": "program_store::(anonymous namespace)::serialize_inode(c9_inode_wire::Inode const&, unsigned char*)"
+      },
+      {
+        "bytes": 72,
+        "symbol": "program_store::(anonymous namespace)::deserialize_inode(unsigned char const*)"
+      },
+      {
+        "bytes": 128,
+        "symbol": "shared_memory::(anonymous namespace)::refresh_pool()"
+      },
+      {
+        "bytes": 9576,
+        "symbol": "class_terminal::execute(bool, bool)"
+      },
+      {
+        "bytes": 228,
+        "symbol": "mpu_guard::set_app_execution(void const*, unsigned int)"
+      },
+      {
+        "bytes": 6,
+        "symbol": "class_terminal::execute(bool, bool)::ResetInput::~ResetInput() [clone .isra.0]"
+      }
+    ]
+  },
+  "known_harness_notes": [
+    "First System assertion compared canonical .app/.txt extensions case-sensitively. Strict readback and original paths retained; fixed comparison and fully restored before retry.",
+    "Original control passed lifetime workload, then next graphics fsput returned known stock PUT_BUSY. Added same warm reset after measured coalescence before independent graphics workload; no firmware workaround or threshold change.",
+    "Prepared strict read-only metadata probe additionally checks APP/prefix/other live-buffer overlaps.",
+    "Real candidate graphics load regression: old MPU setter assumed APP ended at guard. Fixed exact lease permissions and 256-aligned APP ends; gate charges 224. Added 260800 host spans,247 production ARM spans/image, cold-loader lifetimeHIL. Old production ELF reproduces rejected displaced span.",
+    "An unchanged APP is intentionally retained as a cache. The lifetime HIL alternates two separate inodes of the same exact bound probe to force actual cache eviction before measuring full idle coalescence. Both owner orders start with a cold APP loader; original assertions and thresholds remain."
+  ],
+  "mpu_host": [
+    {
+      "test": "mpu-policy",
+      "status": "PASS"
+    },
+    {
+      "test": "filesystem",
+      "status": "PASS"
+    },
+    {
+      "test": "vfat",
+      "status": "PASS"
+    },
+    {
+      "test": "m61",
+      "status": "PASS"
+    },
+    {
+      "test": "ui",
+      "status": "PASS"
+    }
+  ],
+  "mpu_arm": {
+    "classic": {
+      "status": "PASS",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-classic/resident.elf",
+      "exact_spans": 247,
+      "invalid_cases": 7,
+      "granules_per_span": 4096,
+      "allocator_spans": 12,
+      "app_regions": 5,
+      "neighbor_sram_xn": true,
+      "null_stack_guards_unchanged": true,
+      "callee_saved_and_sp": true
+    },
+    "mini": {
+      "status": "PASS",
+      "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/active-mini/resident.elf",
+      "exact_spans": 247,
+      "invalid_cases": 7,
+      "granules_per_span": 4096,
+      "allocator_spans": 12,
+      "app_regions": 5,
+      "neighbor_sram_xn": true,
+      "null_stack_guards_unchanged": true,
+      "callee_saved_and_sp": true
+    }
+  },
+  "hardware": {
+    "classic": {
+      "control": {
+        "core_cycles": 1712124,
+        "adc_us": 444.0,
+        "raw_flash_us": {
+          "64": 60.5,
+          "512": 210.0,
+          "4096": 1576.5,
+          "65536": 25003.0
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 35.0,
+          "/C9PACK.TXT": 35.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 1141,
+            "warm": 35
+          },
+          "/C9ZIP.TXT": {
+            "cold": 1296,
+            "warm": 35
+          }
+        },
+        "guaranteed_free": 71160,
+        "msc_stack": 12568,
+        "ram_stack": 12592,
+        "lifetime_samples": [
+          {
+            "label": "idle",
+            "heap": 536914184,
+            "overlay": 70584,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-watch",
+            "heap": 536905992,
+            "overlay": 78776,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-both",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-callback",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-screen-after-esc",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-idle",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-watch",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-both",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-callback",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "watch-after-detach",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-screen-after-esc",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-idle",
+            "heap": 536938760,
+            "overlay": 46008,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          }
+        ],
+        "lifetime_health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 52 used, 972 free, 1024 total\r\nVisible: 48 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1492/944/1018 val(mV/dC/mV)=3331/300/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360564 footer=358852 expected=0xD6873FBC build=0xD6873FBC actual=0xD6873FBC backend=hardware cycles=1062021\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13096 observed_remaining=13096 sram_xn=1\r\n/> "
+        },
+        "frames": 103,
+        "ep0_requests": 50
+      },
+      "candidate": {
+        "core_cycles": 1709638,
+        "adc_us": 440.0,
+        "raw_flash_us": {
+          "64": 61.0,
+          "512": 210.0,
+          "4096": 1576.0,
+          "65536": 25001.0
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 35.0,
+          "/C9PACK.TXT": 35.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 1141,
+            "warm": 35
+          },
+          "/C9ZIP.TXT": {
+            "cold": 1295,
+            "warm": 35
+          }
+        },
+        "guaranteed_free": 76488,
+        "msc_stack": 12536,
+        "ram_stack": 12536,
+        "lifetime_samples": [
+          {
+            "label": "idle",
+            "heap": 536908856,
+            "overlay": 75592,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-watch",
+            "heap": 536900664,
+            "overlay": 81480,
+            "app": 896,
+            "count": 1,
+            "rounded": 2112,
+            "owners": 536870912,
+            "gap": 192
+          },
+          {
+            "label": "0-both",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "0-callback",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "0-screen-after-esc",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 1,
+            "rounded": 1536,
+            "owners": 1073741824,
+            "gap": 2304
+          },
+          {
+            "label": "0-idle",
+            "heap": 536933432,
+            "overlay": 51016,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-watch",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "1-both",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "1-callback",
+            "heap": 536933432,
+            "overlay": 47176,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "watch-after-detach",
+            "heap": 536933432,
+            "overlay": 48264,
+            "app": 896,
+            "count": 1,
+            "rounded": 2112,
+            "owners": 536870912,
+            "gap": 640
+          },
+          {
+            "label": "1-screen-after-esc",
+            "heap": 536933432,
+            "overlay": 46728,
+            "app": 896,
+            "count": 1,
+            "rounded": 1536,
+            "owners": 1073741824,
+            "gap": 2752
+          },
+          {
+            "label": "1-idle",
+            "heap": 536933432,
+            "overlay": 51016,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          }
+        ],
+        "lifetime_health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 52 used, 972 free, 1024 total\r\nVisible: 48 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=448/18 raw(v/t/b)=1492/945/1020 val(mV/dC/mV)=3331/303/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=361816 footer=360104 expected=0x80056CAE build=0x80056CAE actual=0x80056CAE backend=hardware cycles=1066745\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=13016 observed_remaining=13016 sram_xn=1\r\n/> "
+        },
+        "frames": 103,
+        "ep0_requests": 50
+      },
+      "change_percent": {
+        "core_cycles": -0.145,
+        "raw_flash_us": {
+          "64": 0.826,
+          "512": 0.0,
+          "4096": -0.032,
+          "65536": -0.008
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 0.0,
+          "/C9PACK.TXT": 0.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 0.0,
+            "warm": 0.0
+          },
+          "/C9ZIP.TXT": {
+            "cold": -0.077,
+            "warm": 0.0
+          }
+        }
+      },
+      "free_gain": 5328,
+      "restoration": {
+        "status": "PASS",
+        "files": 44,
+        "directories": 4,
+        "recovery": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/recovery/classic.bin",
+          "bytes": 360564,
+          "footer": 358852,
+          "build": "122A5FF9",
+          "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+        },
+        "logical": {
+          "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+          "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+          "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+          "hout": "hout\r\n/> ",
+          "pwd": "pwd\r\n/\r\n/> ",
+          "alarm": "alarm\r\nRTC META valid=1 boot-valid=1 boot=251 reset=0x0 wake=reset power-fail=0 arm-fail=0\r\nRTC ALARM A off\r\nRTC ALARM B off\r\n/> "
+        }
+      }
+    },
+    "mini": {
+      "control": {
+        "core_cycles": 1711027,
+        "adc_us": 438.5,
+        "raw_flash_us": {
+          "64": 58.5,
+          "512": 208.0,
+          "4096": 1564.0,
+          "65536": 24801.5
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 35.0,
+          "/C9PACK.TXT": 35.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 996,
+            "warm": 35
+          },
+          "/C9ZIP.TXT": {
+            "cold": 1156,
+            "warm": 35
+          }
+        },
+        "guaranteed_free": 72504,
+        "msc_stack": 12520,
+        "ram_stack": 12536,
+        "lifetime_samples": [
+          {
+            "label": "idle",
+            "heap": 536912840,
+            "overlay": 71928,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-watch",
+            "heap": 536904648,
+            "overlay": 80120,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-both",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-callback",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-screen-after-esc",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-idle",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-watch",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-both",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-callback",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "watch-after-detach",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-screen-after-esc",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-idle",
+            "heap": 536937416,
+            "overlay": 47352,
+            "app": 576,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          }
+        ],
+        "lifetime_health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 17 used, 8175 free, 8192 total\r\nVisible: 14 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=438/18 raw(v/t/b)=1511/963/1024 val(mV/dC/mV)=3300/339/3301 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=332996 footer=331444 expected=0x5D8A15BA build=0x5D8A15BA actual=0x5D8A15BA backend=hardware cycles=981671\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200063C8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13048 observed_remaining=13048 sram_xn=1\r\n/> "
+        },
+        "frames": 103,
+        "ep0_requests": 50
+      },
+      "candidate": {
+        "core_cycles": 1711103,
+        "adc_us": 443.0,
+        "raw_flash_us": {
+          "64": 59.0,
+          "512": 208.0,
+          "4096": 1564.0,
+          "65536": 24801.5
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 35.0,
+          "/C9PACK.TXT": 35.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 997,
+            "warm": 35
+          },
+          "/C9ZIP.TXT": {
+            "cold": 1157,
+            "warm": 35
+          }
+        },
+        "guaranteed_free": 78024,
+        "msc_stack": 12344,
+        "ram_stack": 12344,
+        "lifetime_samples": [
+          {
+            "label": "idle",
+            "heap": 536907320,
+            "overlay": 77128,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "0-watch",
+            "heap": 536899128,
+            "overlay": 83016,
+            "app": 896,
+            "count": 1,
+            "rounded": 2112,
+            "owners": 536870912,
+            "gap": 192
+          },
+          {
+            "label": "0-both",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "0-callback",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "0-screen-after-esc",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 1,
+            "rounded": 1536,
+            "owners": 1073741824,
+            "gap": 2304
+          },
+          {
+            "label": "0-idle",
+            "heap": 536931896,
+            "overlay": 52552,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          },
+          {
+            "label": "1-watch",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "1-both",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "1-callback",
+            "heap": 536931896,
+            "overlay": 48712,
+            "app": 896,
+            "count": 2,
+            "rounded": 3648,
+            "owners": 1610612736,
+            "gap": 192
+          },
+          {
+            "label": "watch-after-detach",
+            "heap": 536931896,
+            "overlay": 49800,
+            "app": 896,
+            "count": 1,
+            "rounded": 2112,
+            "owners": 536870912,
+            "gap": 640
+          },
+          {
+            "label": "1-screen-after-esc",
+            "heap": 536931896,
+            "overlay": 48264,
+            "app": 896,
+            "count": 1,
+            "rounded": 1536,
+            "owners": 1073741824,
+            "gap": 2752
+          },
+          {
+            "label": "1-idle",
+            "heap": 536931896,
+            "overlay": 52552,
+            "app": 896,
+            "count": 0,
+            "rounded": 0,
+            "owners": 0,
+            "gap": 0
+          }
+        ],
+        "lifetime_health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 17 used, 8175 free, 8192 total\r\nVisible: 14 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=428/18 raw(v/t/b)=1519/970/1013 val(mV/dC/mV)=3283/345/3249 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=334360 footer=332808 expected=0x740B8779 build=0x740B8779 actual=0x740B8779 backend=hardware cycles=985845\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20004E38 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC30 observed_low=0x2001FC30 sampled_remaining=15408 watermark=1 watermark_remaining=13024 observed_remaining=13024 sram_xn=1\r\n/> "
+        },
+        "frames": 104,
+        "ep0_requests": 50
+      },
+      "change_percent": {
+        "core_cycles": 0.004,
+        "raw_flash_us": {
+          "64": 0.855,
+          "512": 0.0,
+          "4096": 0.0,
+          "65536": 0.0
+        },
+        "file_warm_us": {
+          "/C9PERF.BIN": 0.0,
+          "/C9PACK.TXT": 0.0
+        },
+        "file_cold_us": {
+          "/C9COLD.BIN": {
+            "cold": 0.1,
+            "warm": 0.0
+          },
+          "/C9ZIP.TXT": {
+            "cold": 0.087,
+            "warm": 0.0
+          }
+        }
+      },
+      "free_gain": 5520,
+      "restoration": {
+        "status": "PASS",
+        "files": 10,
+        "directories": 3,
+        "recovery": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/recovery/mini.bin",
+          "bytes": 332996,
+          "footer": 331444,
+          "build": "979046B7",
+          "sha256": "1f76bd0e510a1b5913275a6f9a43cfa0bdf9b7b2acc784dad38504297b871a92"
+        },
+        "logical": {
+          "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+          "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+          "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+          "hout": "hout\r\n/> ",
+          "pwd": "pwd\r\n/\r\n/> ",
+          "alarm": "alarm\r\nRTC META valid=1 boot-valid=1 boot=678 reset=0x0 wake=reset power-fail=0 arm-fail=0\r\nRTC ALARM A off\r\nRTC ALARM B off\r\n/> "
+        }
+      }
+    }
+  },
+  "hardware_method": {
+    "order": [
+      "classic",
+      "mini"
+    ],
+    "classic_unchanged_control_reports_reused": true,
+    "mini_fresh_control_candidate": true,
+    "permanent_buffer_alternative_hardware_tested": false,
+    "qualification": {
+      "classic": {
+        "status": "PASS",
+        "device": "classic",
+        "control_candidate": true,
+        "unchanged_control_reused": true,
+        "restored": true
+      },
+      "mini": {
+        "status": "PASS",
+        "device": "mini",
+        "control_candidate": true,
+        "unchanged_control_reused": false,
+        "restored": true
+      }
+    },
+    "classic_restored_before_mini_snapshot": true,
+    "ports_closed_after_qualification": true
+  },
+  "final_freeze": {
+    "production_inputs_sha256": "fc5394bebb1954fc5d3bc26dd900456704c73b31c59d05a21a62cbeb260c7c13",
+    "test_commit": "32712c42156025ce5615fa2dfc6f8c38f5fe3947",
+    "matrix_profiles": 25,
+    "source_matches_qualified_builds": true
+  },
+  "qualified_at_utc": "2026-10-15T14:38:45.321652+00:00"
+}
