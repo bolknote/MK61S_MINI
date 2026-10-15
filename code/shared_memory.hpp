@@ -236,13 +236,14 @@ class [[nodiscard]] Lease {
     friend bool detail_try_reclaim(Arena arena);
 };
 
-// One scoped, non-moving buffer immediately after a live OVERLAY allocation.
+// Scoped, non-moving buffers immediately after a live OVERLAY allocation.
+// Nested buffers release in LIFO order; one buffer per owner can be live.
 // It uses only the existing free linker range, never evicts an APP, and can
 // outlive the earlier lease (USB may exit during INPUT). The manager fences
 // both APP/OVERLAY growth and _sbrk until reset; no frame storage is borrowed.
 class [[nodiscard]] OverlayBuffer {
  public:
-  constexpr OverlayBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE) {}
+  constexpr OverlayBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE), previous_(nullptr) {}
   ~OverlayBuffer();
   OverlayBuffer(const OverlayBuffer&) = delete;
   OverlayBuffer& operator=(const OverlayBuffer&) = delete;
@@ -252,10 +253,12 @@ class [[nodiscard]] OverlayBuffer {
   u8* data() const { return memory_; }
   usize size() const { return size_; }
   Owner owner() const { return owner_; }
+  const OverlayBuffer* previous() const { return previous_; }
  private:
   u8* memory_;
   usize size_;
   Owner owner_;
+  OverlayBuffer* previous_;
 };
 
 usize capacity(Arena arena);

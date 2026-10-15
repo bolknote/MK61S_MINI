@@ -27,6 +27,26 @@ int main() {
     assert((uintptr_t(transport.data())&7U)==0 && transport.size()==8264);
     assert(!second.acquire(Owner::USB_TRANSPORT,1));
     memset(transport.data(),0xD7,transport.size());
+    {
+      OverlayBuffer catalog, io, duplicate, overflow;
+      assert(catalog.acquire(Owner::PROGRAM_STORE_CATALOG,312));
+      assert(io.acquire(Owner::PROGRAM_STORE_IO,512));
+      assert(catalog.data()==transport.data()+8264);
+      assert(io.data()==catalog.data()+312);
+      memset(catalog.data(),0xC4,catalog.size()); memset(io.data(),0xA1,io.size());
+      assert(!duplicate.acquire(Owner::PROGRAM_STORE_IO,1));
+      assert(!overflow.acquire(Owner::USB_SCREEN,total));
+      assert(!overflow.ok() && !evictions && validate_invariants());
+      // Growing a normal OVERLAY lease must stop at the FIRST pinned buffer,
+      // never the newest temporary one. APP/heap see the end of the LAST one.
+      assert(!stage.resize_to(STAGE_INDEX_SIZE+8) && !adjust_heap(8));
+      check(transport.data(),transport.size(),0xD7);check(catalog.data(),catalog.size(),0xC4);
+      check(app.data(),app.size(),0x83);
+      io.reset();assert(validate_invariants());
+      OverlayBuffer reused;assert(reused.acquire(Owner::PROGRAM_STORE_IO,512));
+      assert(reused.data()==catalog.data()+312);reused.reset();catalog.reset();
+      assert(validate_invariants());
+    }
     assert(!adjust_heap(8) && !stage.resize_to(STAGE_INDEX_SIZE+8));
     assert(!stage.acquire(Arena::OVERLAY,Owner::USB_SCREEN,1));
     check(stage.data(),stage.size(),0x51); check(app.data(),app.size(),0x83);

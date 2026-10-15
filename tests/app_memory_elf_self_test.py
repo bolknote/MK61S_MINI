@@ -49,6 +49,15 @@ class AppMemoryTests(unittest.TestCase):
         gate.check_pool(required + 8, 18624, 8265)
         gate.check_pool(21728, 18624, 0) # F401 keeps its small static transport.
 
+    def test_filesystem_temporaries_are_additional_simultaneous_reserve(self):
+        required = 20480 + gate.STAGE_INDEX_SIZE + 8264 + 824
+        gate.check_pool(required, 20480, 8264, 824)
+        with self.assertRaisesRegex(AssertionError, 'filesystem temporaries'):
+            gate.check_pool(required - 1, 20480, 8264, 824)
+        with self.assertRaisesRegex(AssertionError, 'filesystem temporaries'):
+            gate.check_pool(20480 + 823, 1024, 0, 824)
+        gate.check_pool(required + 8, 20480, 8264, 825)
+
     def test_bundle_reads_memory_including_bss_and_all_modules(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

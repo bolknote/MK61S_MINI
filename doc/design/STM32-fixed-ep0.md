@@ -23,8 +23,8 @@ copyright and the repository middleware license are retained.
 
 ## Matched measurements
 
-Both controls and candidates use base main `57835a271`, GNU Arm GCC14.2.1,
-identical source/build paths, feature flags and SOURCE_DATE_EPOCH1791969300.
+Both controls and candidates use base main `57835a271`, GNU Arm GCC 14.2.1,
+identical source/build paths, feature flags and SOURCE_DATE_EPOCH 1791969300.
 Flash includes the sealed footer. Final builds containing the profile assertions
 produce the exact BINs qualified on hardware.
 
@@ -33,34 +33,34 @@ produce the exact BINs qualified on hardware.
 | Classic V3 UC1609 | 359560 → 359200 | 360 | 28072, unchanged |
 | mini V3 LCD1602 A00 | 332000 → 331656 | 344 | 26728, unchanged |
 
-Classic's 60-sample64-KiB NOR median stays25032us; mini changes24805.5→24812us
-(+0.026%). Core-step medians change1712123→1709889cycles(−0.13%) and
-1708305→1711027(+0.16%). These small measurements do not establish a CPU
-speedup. Minimum ordinary MSC stack headroom is12632/12544 bytes, above the
-unchanged12288-byte test target. The16-KiB firmware stack/guard is unchanged.
+Classic's 60-sample 64-KiB NOR median stays 25032 µs; mini changes 24805.5→24812 µs
+(+0.026%). Core-step medians change 1712123→1709889 cycles (−0.13%) and
+1708305→1711027 (+0.16%). These small measurements do not establish a CPU
+speedup. Minimum ordinary MSC stack headroom is 12632/12544 bytes, above the
+unchanged 12288-byte test target. The 16-KiB firmware stack/guard is unchanged.
 
 ## Tests and hardware
 
-The Cortex-M4 fixture runs8 suites per profile: enumeration, segmented
+The Cortex-M4 fixture runs 8 suites per profile: enumeration, segmented
 transfers, ZLP, reset/suspend/resume, all descriptor lengths/strings, failed and
 repeated configuration, endpoint HALT/BOT recovery, invalid requests and every
-16-bit endpoint/interface index. It also checks50000 queue transitions. The
-actual-controller MMIO model,22 BOT/SCSI suites, ASan/UBSan disk/session tests,
+16-bit endpoint/interface index. It also checks 50000 queue transitions. The
+actual-controller MMIO model, 22 BOT/SCSI suites, ASan/UBSan disk/session tests,
 APP RAM and source/archive gates pass.
 
-Classic is qualified before mini. Each candidate passes50 actual libusb EP0
+Classic is qualified before mini. Each candidate passes 50 actual libusb EP0
 requests without claiming/detaching the CDC interface: exact descriptor bytes,
 statuses, interfaces, malformed requests and recovery from STALL. Ordinary MSC
-then imports/exports a4096-byte Unicode-name binary file, ejects twice, restores
-CDC and verifies reset persistence. CDC boundary files cover1,63,64,65,255,256,
-257,4095,4096 bytes;100 CRC-checked NOR reads show no DMA/bus errors. All44
+then imports/exports a 4096-byte Unicode-name binary file, ejects twice, restores
+CDC and verifies reset persistence. CDC boundary files cover 1, 63, 64, 65, 255, 256,
+257, 4095, 4096 bytes; 100 CRC-checked NOR reads show no DMA/bus errors. All 44
 Classic files/four directories and ten mini files/three directories, calculator
 program/registers/stack/IP/current directory and RTC settings are preserved.
-Qualified CRCs areD80CE1D1 andA2D2F970. Physical Mac sleep is not repeated.
+Qualified CRCs are D80CE1D1 and A2D2F970. Physical Mac sleep is not repeated.
 
-An initial control mini MSC attempt measures12064 stack bytes, below the test
+An initial control mini MSC attempt measures 12064 stack bytes, below the test
 target; its failure JSON is retained. The unchanged control retry and candidate
-both pass at12544. No limit was weakened. A late CDC echo is handled using the
+both pass at 12544. No limit was weakened. A late CDC echo is handled using the
 existing correlated-response mode in the private HIL runner. Initial wrong
 endpoint and macOS SET_CONFIGURATION host-test attempts are recorded separately;
 the latter is ARM-only in the final host runner. Its host configuration was

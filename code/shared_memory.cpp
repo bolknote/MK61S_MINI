@@ -246,6 +246,7 @@ static ArenaState arenas[] = {
 static WorkspacePartition* workspace_partition;
 #endif
 static OverlayBuffer* overlay_buffer;
+static OverlayBuffer* first_overlay_buffer;
 
 #undef MK61_ARENA_STATE
 
@@ -257,7 +258,7 @@ static void refresh_pool(void) {
   ArenaState& app = arenas[(usize) Arena::APP];
   prefix.memory = (u8*) pool_begin();
   prefix.capacity = pool_size() - app.capacity;
-  if(overlay_buffer) prefix.capacity = overlay_buffer->data() - prefix.memory;
+  if(first_overlay_buffer) prefix.capacity = first_overlay_buffer->data() - prefix.memory;
   app.memory = app.enabled ? (u8*) (pool_end() - app.capacity) : nullptr;
 }
 
@@ -697,12 +698,19 @@ bool OverlayBuffer::acquire(Owner owner, usize required) {
   if(!required || !owner_allowed(Arena::OVERLAY, owner) ||
      interrupt_context() || transition_in_progress()) return false;
   if(ok()) return owner == owner_ && required <= size_;
-  const usize offset = (prefix.allocated_size + 7U) & ~(usize)7U;
-  if(overlay_buffer || offset > prefix.capacity ||
-     required > prefix.capacity - offset ||
-     ((required + 7U) & ~(usize)7U) > prefix.capacity - offset) return false;
-  memory_ = prefix.memory + offset;
+  if(required > pool_size()) return false;
+  for(const OverlayBuffer* live = overlay_buffer; live; live = live->previous())
+    if(live->owner() == owner) return false;
+  const usize aligned = (required + 7U) & ~(usize)7U;
+  const uintptr_t begin = overlay_buffer
+      ? (uintptr_t)overlay_buffer->data() + ((overlay_buffer->size() + 7U) & ~(usize)7U)
+      : (uintptr_t)prefix.memory + ((prefix.allocated_size + 7U) & ~(usize)7U);
+  const uintptr_t limit = pool_end() - arenas[(usize)Arena::APP].capacity;
+  if(begin > limit || aligned > limit - begin) return false;
+  memory_ = (u8*)begin;
   size_ = required; owner_ = owner;
+  previous_ = overlay_buffer;
+  if(!first_overlay_buffer) first_overlay_buffer = this;
   overlay_buffer = this;
   refresh_pool();
   return true;
@@ -711,7 +719,9 @@ void OverlayBuffer::reset() {
   if(!ok()) return;
   if(overlay_buffer != this || interrupt_context() || transition_in_progress())
     __builtin_trap();
-  overlay_buffer = nullptr;
+  overlay_buffer = previous_;
+  if(!overlay_buffer) first_overlay_buffer = nullptr;
+  previous_ = nullptr;
   memory_ = nullptr; size_ = 0; owner_ = Owner::NONE;
   refresh_pool();
 }
@@ -931,13 +941,23 @@ bool validate_invariants(void) {
   const ArenaState& app = *state(Arena::APP);
   const ArenaState& prefix = *state(Arena::OVERLAY);
   usize prefix_limit = pool_size() - app.capacity;
+  if((overlay_buffer == nullptr) != (first_overlay_buffer == nullptr)) return false;
   if(overlay_buffer) {
-    const uintptr_t buffer_begin = (uintptr_t)overlay_buffer->data();
-    if(!overlay_buffer->ok() || !overlay_buffer->size() ||
-       !owner_allowed(Arena::OVERLAY, overlay_buffer->owner()) ||
-       buffer_begin < pool_begin() || (buffer_begin & 7U) ||
-       lower_reserved_size() > pool_size() - app.capacity) return false;
-    prefix_limit = buffer_begin - pool_begin();
+    uintptr_t next = pool_end() - app.capacity;
+    unsigned count = 0;
+    const OverlayBuffer* first = nullptr;
+    for(const OverlayBuffer* live = overlay_buffer; live; live = live->previous()) {
+      const uintptr_t begin = (uintptr_t)live->data();
+      const usize aligned = (live->size() + 7U) & ~(usize)7U;
+      if(++count >= (unsigned)Owner::COUNT || !live->ok() || !live->size() ||
+         !owner_allowed(Arena::OVERLAY, live->owner()) ||
+         begin < pool_begin() || (begin & 7U) || begin > next || aligned > next - begin)
+        return false;
+      first = live; next = begin;
+    }
+    if(first != first_overlay_buffer || lower_reserved_size() > pool_size() - app.capacity)
+      return false;
+    prefix_limit = next - pool_begin();
   }
   if(prefix.capacity != prefix_limit ||
      (uintptr_t) prefix.memory != pool_begin() ||
