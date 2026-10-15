@@ -375,7 +375,7 @@ void MK61Display::printUiLine(u8 row, const char* text, char marker, u16 trailin
   dirty = true;
 }
 
-void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
+void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count, bool present) {
   const u8 run_width = count * lcd_display::CELL_WIDTH;
   const i16 page_y = page * RENDER_PAGE_HEIGHT;
   const u8 saved_width = render_width;
@@ -391,9 +391,11 @@ void MK61Display::renderUiPage(u8 page, u8 first_col, u8 count) {
   };
   ui_text_renderer::renderPage(
       grid, style, page, first_col, count, render_buffer);
-  drawTopRightOverlay(first_col, count, (u8) page_y);
-  presentPage(page, (u8) (first_col * lcd_display::CELL_WIDTH),
-              run_width, render_buffer);
+  if(present) {
+    drawTopRightOverlay(first_col, count, (u8) page_y);
+    presentPage(page, (u8) (first_col * lcd_display::CELL_WIDTH),
+                run_width, render_buffer);
+  }
   render_width = saved_width;
 }
 #endif

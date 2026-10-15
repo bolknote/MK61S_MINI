@@ -7,6 +7,7 @@
 #include <limits>
 
 #include "language_bytecode.hpp"
+#include "basic_graphics_protocol.hpp"
 #include "mk_math.hpp"
 
 using namespace language_vm;
@@ -591,14 +592,64 @@ void test_parameter_call_yield_and_print_resume() {
   assert(control.call_count==1 && control.calls[0].mode==0x33 && control.calls[0].print_width==8);
   assert(f.values[0]==4);
   f.values[control.sp++]=5;
-  auto invalid=control; invalid.calls[0].mode|=4;
+  auto invalid=control; invalid.calls[0].mode|=8;
   assert(run(f.view,invalid,bindings,host,1000,true).error==Error::INVALID_IMAGE);
   invalid=control;invalid.calls[0].print_width=65;
   assert(run(f.view,invalid,bindings,host,1000,true).error==Error::INVALID_IMAGE);
   assert(run(f.view,control,bindings,host,1000,true).error==Error::NONE && format.printed);
 }
 
+void test_graph_cleanup_and_verification() {
+  Fixture f;
+  f.compile("10 X=99:GRAPH X+0+0+0,-1,1,-1,1:A=X\n");
+  bool marked=false;
+  for(uint16_t at=f.view.code;at<f.view.end;at=instruction_end(f.image,f.view.end,at))
+    marked=marked || (Op)f.image[at]==Op::INTEGER_SPAN;
+  assert(marked); // GRAPH accepts compiler-selected spans and their float fallback.
+  struct Canvas {unsigned samples=0;bool cancel=false;} canvas;
+  Services host=services;host.context=&canvas;
+  host.value=[](void*,Function function){return function==Function::GW?192.:64.;};
+  host.service=[](void* p){auto& c=*(Canvas*)p;return !c.cancel || !c.samples;};
+  host.event=[](void* p,Event event,const char* text,uint16_t,double&) {
+    if(event==Event::GRAPHICS) {
+      const auto& request=*(const basic_graphics::Request*)text;
+      if(request.operation==basic_graphics::Operation::PSET && request.args[0]>=0)
+        ++((Canvas*)p)->samples;
+    }
+    return true;
+  };
+  assert(run(f.view,f.state,host,32).error==Error::LIMIT);
+  assert(canvas.samples && f.vars['X'-'A']==99 && !f.state.graph.active);
+  canvas.samples=0;canvas.cancel=true;
+  assert(run(f.view,f.state,host).error==Error::STOPPED);
+  assert(canvas.samples && f.vars['X'-'A']==99 && !f.state.graph.active);
+  canvas.samples=0;canvas.cancel=false;
+  assert(run(f.view,f.state,host).error==Error::NONE);
+  assert(canvas.samples==192 && f.vars[0]==99);
+  f.state.graph.active=true;f.state.pc=f.view.code;
+  assert(run(f.view,f.state,host,0,true).error==Error::INVALID_IMAGE);
+
+  // A cached/forged GRAPH body cannot mutate a variable or use randomness.
+  f.compile("10 GRAPH SIN(X),-1,1,-1,1\n");
+  uint16_t body=0,finish=0;
+  for(uint16_t at=f.view.code;at+3<f.view.end;++at)
+    if(f.image[at]==(uint8_t)Op::GRAPH_BEGIN) {
+      body=at+3;finish=(uint16_t)(f.image[at+1]|f.image[at+2]<<8);break;
+    }
+  assert(body && finish>body);
+  for(uint16_t at=body;at<finish;++at)if(f.image[at]==(uint8_t)Op::LOAD) {
+    f.image[at]=(uint8_t)Op::STORE;f.crc();View invalid;
+    assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);
+    f.image[at]=(uint8_t)Op::LOAD;break;
+  }
+  for(uint16_t at=body;at<finish;++at)if(f.image[at]==(uint8_t)Op::FUNCTION) {
+    f.image[at+1]=(uint8_t)Function::RND;f.crc();View invalid;
+    assert(inspect(f.image,f.view.size,invalid)==Error::INVALID_IMAGE);break;
+  }
+}
+
 int main() {
+  test_graph_cleanup_and_verification();
   test_literals();
   test_finite_results_and_decimal_cache();
   test_sizing_and_bounds();

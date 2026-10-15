@@ -8,6 +8,7 @@
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
 #include "text_editor.hpp"
+#include "basic_graphics_client.hpp"
 
 namespace {
 using namespace language_vm;
@@ -40,6 +41,7 @@ uint32_t finish(OverlayRequest* p) {
   }
   if (r.result.error != Error::NONE &&
       !(r.mode == 1 && r.result.error == Error::STOPPED)) {
+    if(s.language==Language::BASIC)basic_graphics::command(basic_graphics::Operation::SUSPEND);
     char position[24];
     snprintf(position, sizeof(position), "TinyBASIC %lu:%u", (unsigned long)r.result.line,
              (unsigned)r.error_column);
@@ -72,6 +74,13 @@ uint32_t input(InputRequest* r) {
       (r->language != Language::BASIC && r->language != Language::FOCAL)) return 0;
   for (uint8_t byte : r->reserved) if (byte) return 0;
   r->result = InputResult::NONE; r->image_size = 0;
+  struct RestoreCanvas {
+    bool enabled;
+    explicit RestoreCanvas(bool enable):enabled(enable) {
+      if(enabled)basic_graphics::command(basic_graphics::Operation::SUSPEND);
+    }
+    ~RestoreCanvas(){if(enabled)basic_graphics::command(basic_graphics::Operation::RESUME);}
+  } restore_canvas(r->language==Language::BASIC);
   if (r->invalid) invalid_number();
   char prompt[96];
   const char* prompt_text = r->prompt;

@@ -196,8 +196,53 @@ namespace library_mk61 {
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
 #include "number_format.hpp"
-#if defined(MK61_LANGUAGE_VM_TEST)
 #include "language_bytecode.hpp"
+#include "basic_graphics_client.hpp"
+#include "basic_native_io.hpp"
+
+#if defined(TINYBASIC_HOST_TEST) && MK61_ENABLE_TINYBASIC
+static u16 tb_host_graphics_width=0,tb_host_graphics_height=0;
+static u8 tb_host_graphics_frame[1536];
+static unsigned tb_host_graphics_presents=0;
+static const u8* tb_host_graphics_glyph(u16 cp) {
+  static const u8 ink[8]={31,17,17,17,17,17,31,0},blank[8]={};
+  return cp==' '?blank:ink;
+}
+static bool tb_host_graphics_capture(void*,u8* frame,size_t size,u8 first,u8 count) {
+  const unsigned width=tb_host_graphics_width,height=tb_host_graphics_height;
+  if(!width || size!=(size_t)width*height/8)return false;
+  for(unsigned row=first;row<main_lcd().rows() && row<(unsigned)first+count && row*8<height;++row) {
+    memset(frame+(size_t)row*width,0,width);
+    const char* text=main_lcd().line((u8)row);
+    for(unsigned col=0;text[col] && col*6<width;++col) {
+      const auto* glyph=tb_host_graphics_glyph((u8)text[col]);
+      for(unsigned x=0;x<5 && col*6+x<width;++x)for(unsigned y=0;y<8;++y)
+        if(glyph[y]&(1U<<(4-x)))frame[(size_t)row*width+col*6+x]|=(u8)(1U<<y);
+    }
+  }
+  return true;
+}
+namespace basic_graphics {
+static Session& host_session() {
+  static Session value({nullptr,
+    [](void*,uint16_t& w,uint16_t& h){w=tb_host_graphics_width;h=tb_host_graphics_height;},
+    [](void*){return true;},[](void*){},
+    [](void*,const uint8_t* frame,size_t size){memcpy(tb_host_graphics_frame,frame,size);++tb_host_graphics_presents;return true;},
+    tb_host_graphics_capture,tb_host_graphics_glyph,
+    [](void*,uint8_t* frame,size_t size,const char* text,uint16_t length,uint8_t first,uint8_t maximum,bool empty){
+      const char* end=text+length;unsigned row=first;
+      while(row<main_lcd().rows() && row<(unsigned)first+maximum && (text<end || (row==first && empty))) {
+        main_lcd().setCursor(0,(u8)row);unsigned col=0;
+        while(text<end && col<main_lcd().cols()){main_lcd().write((u8)*text++);++col;}
+        while(col++<main_lcd().cols())main_lcd().write(' ');
+        ++row;
+      }
+      return tb_host_graphics_capture(nullptr,frame,size,first,(u8)(row-first))?(int)(row-first):-1;
+    },[](void*,size_t size)->void* {return malloc(size);},[](void*,void* pointer){free(pointer);}});
+  return value;
+}
+Result dispatch(Request& request){return host_session().apply(request);}
+}
 #endif
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 #include "language_vm_abi.hpp"
@@ -306,7 +351,8 @@ enum class TbCommand : u8 {
   CMD_DATA,
   CMD_READ,
   CMD_RESTORE,
-  CMD_ON
+  CMD_ON,
+  CMD_PSET, CMD_LINE, CMD_BOX, CMD_CIRCLE, CMD_SHOW, CMD_GRAPH
 };
 
 // PATB keeps dispatch information beside the keyword spelling.  The low bits
@@ -340,7 +386,8 @@ enum class TbFunction : u8 {
   MAX,
   KEY_INPUT,
   CALL,
-  ARG
+  ARG,
+  GW, GH, POINT
 };
 
 struct TbLine {
@@ -421,6 +468,7 @@ static TbRunState* tb_active_run = nullptr;
 static const char* tb_running_source = nullptr;
 static TbInvocation* tb_invocation = nullptr;
 static bool tb_function_stopped = false;
+static bool tb_graph_expression=false;
 static bool tb_invoke(unsigned, const double*, u8, bool, double&);
 struct TbNativeScope {
   TbRunState* previous;
@@ -795,6 +843,7 @@ enum class TbError : u8 { WHAT, HOW, SORRY };
 static bool tb_error_code(TbError error) {
   // ESC in INPUT or END inside a function terminates execution without an error screen.
   if(tb_key_cancelled || tb_function_stopped) return false;
+  basic_graphics::command(basic_graphics::Operation::SUSPEND);
   tb_pause_is_final = false;
   const char* en = "SORRY";
   const char* ru = M8("НЕТ МЕСТА");
@@ -843,21 +892,28 @@ static void tb_replace_display_line(u8 row, const char* text) {
 }
 #endif
 
-static void tb_clear_output(void) {
+static bool tb_graphics_result(basic_graphics::Result result);
+static bool tb_clear_output(void) {
   tb_pause_is_final = false;
   main_lcd().clear();
+  const auto result=basic_graphics::command(basic_graphics::Operation::CLEAR);
   tb_pending_print[0] = 0;
   tb_print_cursor = 0;
   tb_print_row = 0;
+  return tb_graphics_result(result);
 }
 
 static bool tb_pause(void) {
+  const auto result=basic_graphics::command(basic_graphics::Operation::SHOW);
+  if(!tb_graphics_result(result))return false;
   const i32 key = kbd::get_key_wait();
   tb_pause_is_final = true;
   return key != KEY_ESC && key != KEY_ESC_PRESS;
 }
 
 static bool tb_read_key(double& value) {
+  const auto result=basic_graphics::command(basic_graphics::Operation::SHOW);
+  if(!tb_graphics_result(result))return false;
   const i32 key = kbd::get_key_wait();
   tb_pause_is_final = true;
   if(key == KEY_ESC || key == KEY_ESC_PRESS) return false;
@@ -1059,6 +1115,12 @@ static const u8 TB_COMMAND_WORDS[] = {(u8)TbCommand::CMD_REM,
                                       0xF2,
                                       'O',
                                       'N',
+                                      (u8)TbCommand::CMD_PSET,0x24,'P','S','E','T',
+                                      (u8)TbCommand::CMD_LINE,0x24,'L','I','N','E',
+                                      (u8)TbCommand::CMD_BOX,0x13,'B','O','X',
+                                      (u8)TbCommand::CMD_CIRCLE,0x26,'C','I','R','C','L','E',
+                                      (u8)TbCommand::CMD_SHOW,0x24,'S','H','O','W',
+                                      (u8)TbCommand::CMD_GRAPH,0x25,'G','R','A','P','H',
                                       0};
 
 static const u8 TB_FUNCTION_WORDS[] = {
@@ -1086,6 +1148,9 @@ static const u8 TB_FUNCTION_WORDS[] = {
   (u8) TbFunction::KEY_INPUT,   0x35, 'I', 'N', 'P', 'U', 'T',
   (u8) TbFunction::CALL,  0x34, 'C', 'A', 'L', 'L',
   (u8) TbFunction::ARG,   0x23, 'A', 'R', 'G',
+  (u8) TbFunction::GW,    0xF2, 'G', 'W',
+  (u8) TbFunction::GH,    0xF2, 'G', 'H',
+  (u8) TbFunction::POINT, 0x35, 'P', 'O', 'I', 'N', 'T',
   0
 };
 
@@ -1702,6 +1767,14 @@ class TbExprParser {
         }
         const TbFunction function_id =
             (TbFunction) tb_lookup_word(function, TB_FUNCTION_WORDS);
+        if(tb_graph_expression && (function_id==TbFunction::KEY_INPUT ||
+           function_id==TbFunction::RND || function_id==TbFunction::CALL)) {
+          fail(language_vm::Error::FUNCTION,function.begin);return 0;
+        }
+        if(function_id==TbFunction::GW || function_id==TbFunction::GH) {
+          return evaluate?basic_graphics::dimension(function_id==TbFunction::GW?
+              basic_graphics::Operation::WIDTH:basic_graphics::Operation::HEIGHT):0;
+        }
         if(function_id == TbFunction::SIZE) {
           return evaluate ? tinybasic_size_value() : 0.0;
         }
@@ -1793,7 +1866,7 @@ class TbExprParser {
           return 0.0;
         }
 
-        if((function_id == TbFunction::MAX) != has_b) {
+        if((function_id == TbFunction::MAX || function_id == TbFunction::POINT) != has_b) {
           fail(language_vm::Error::SYNTAX);
           return 0.0;
         }
@@ -1818,6 +1891,13 @@ class TbExprParser {
           case TbFunction::SGN:
             return (a > 0.0) ? 1.0 : ((a < 0.0) ? -1.0 : 0.0);
           case TbFunction::MAX:   return (a > b) ? a : b;
+          case TbFunction::POINT: {
+            basic_graphics::Request request={};request.operation=basic_graphics::Operation::POINT;
+            request.count=2;request.args[0]=a;request.args[1]=b;
+            const auto result=basic_graphics::dispatch(request);
+            if(result!=basic_graphics::Result::OK)fail(basic_graphics::error(result),function.begin);
+            return request.value;
+          }
           case TbFunction::KEY_INPUT:
           case TbFunction::CALL:
           case TbFunction::ARG:
@@ -1825,6 +1905,8 @@ class TbExprParser {
           case TbFunction::SIZE:
           case TbFunction::COLS:
           case TbFunction::ROWS:
+          case TbFunction::GW:
+          case TbFunction::GH:
           case TbFunction::PI_VALUE:
           case TbFunction::RND:
           case TbFunction::SIN:
@@ -1969,6 +2051,7 @@ static int tb_line_number_from_value(double value) {
   return (int) rounded;
 }
 
+#if defined(MK61_LANGUAGE_VM_TEST)
 static bool tb_append_print_range(const char* begin, const char* end) {
   if(begin != end) tb_pause_is_final = false;
   return tinybasic_text::append(tb_pending_print, sizeof(tb_pending_print), tb_print_cursor, begin,
@@ -1990,6 +2073,8 @@ static bool tb_append_print_separator(char sep) {
   }
   return true;
 }
+
+#endif
 
 #ifdef TINYBASIC_HOST_TEST
 static usize tb_text_length(const char* begin, const char* end) {
@@ -2072,44 +2157,97 @@ static void tb_copy_wrapped_line(char* output, usize capacity,
                                  const TbWrappedLine& line) {
   tb_copy_range(output, capacity, line.begin, line.end);
 }
+namespace basic_graphics {
+uint8_t native_text_rows(){return main_lcd().rows();}
+int native_text_flow(const char* text,uint16_t length,uint8_t first,uint8_t maximum) {
+  MK61DisplayUpdate update(main_lcd());
+  const char* const end=text+length;unsigned row=first;
+  do {
+    if(row>=main_lcd().rows() || row>=(unsigned)first+maximum)break;
+    const TbWrappedLine line=tb_next_wrapped_line(text,end);
+    char output[TB_PRINT_BUFFER_SIZE];tb_copy_wrapped_line(output,sizeof(output),line);
+    tb_replace_display_line((u8)row++,output);text=line.next;
+  } while(text<end);
+  return (int)(row-first);
+}
+}
+
 #endif
 
-static void tb_flush_print(void) {
-  tb_pause_is_final = false;
-#ifdef TINYBASIC_HOST_TEST
-  MK61DisplayUpdate update(main_lcd());
-  const char* cursor = tb_pending_print;
-  const char* const end = cursor + strlen(cursor);
-  if(cursor == end) {
-    tb_replace_display_line(tb_print_row, "");
-    if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
-  } else {
-    while(cursor < end) {
-      const TbWrappedLine line = tb_next_wrapped_line(cursor, end);
-      char text[TB_PRINT_BUFFER_SIZE];
-      tb_copy_wrapped_line(text, sizeof(text), line);
-      tb_replace_display_line(tb_print_row, text);
-      cursor = line.next;
-      if(tb_print_row + 1 < main_lcd().rows()) tb_print_row++;
-      else break;
-    }
-  }
-#else
-  const u8 rows = main_lcd().rows();
-  const u8 available = tb_print_row < rows ? (u8) (rows - tb_print_row) : 0U;
-  const usize bytes = strlen(tb_pending_print);
-  const u8 written = bytes <= 0xFFFFU
-      ? main_lcd().printWrappedText(tb_pending_print, (u16) bytes,
-                                    tb_print_row, available, false, true)
-      : 0U;
-  if(written != 0 && rows != 0) {
-    const u16 next = (u16) tb_print_row + written;
-    tb_print_row = next < rows ? (u8) next : (u8) (rows - 1U);
-  }
-#endif
-  tb_pending_print[0] = 0;
-  tb_print_cursor = 0;
+static bool tb_at_print = false;
+static double tb_at_x = 0, tb_at_y = 0;
+static language_vm::Error tb_graphics_failure = language_vm::Error::NONE;
+static bool tb_graphics_result(basic_graphics::Result result) {
+  if (result == basic_graphics::Result::OK)
+    return true;
+  tb_graphics_failure = basic_graphics::error(result);
+  tb_note_error(tb_graphics_failure);
+  return tb_error(result == basic_graphics::Result::FULL ? "SORRY" : "HOW?");
 }
+static bool tb_runtime_interrupted();
+static bool tb_native_evaluate(basic_graphics::NativeRequest &request, const char *begin,
+                               const char *end, double &value, const char *&after) {
+  const auto detail = tb_detail;
+  const auto location = tb_location;
+  if (tb_eval_expr_range(begin, end, value, &after, request.execute))
+    return true;
+  request.error = tb_detail;
+  if (request.skip_domain &&
+      (tb_detail == language_vm::Error::MATH || tb_detail == language_vm::Error::DIV_ZERO)) {
+    tb_detail = detail;
+    tb_location = location;
+  }
+  return false;
+}
+static void tb_native_format(double value, char *output, u8 precision) {
+  tb_format_number(value, output, 24, precision);
+}
+static bool tb_native_poll(basic_graphics::NativeRequest &request) {
+  if (!tb_runtime_interrupted())
+    return true;
+  tb_key_cancelled = true;
+  request.error = tb_graphics_failure == language_vm::Error::NONE ? language_vm::Error::STOPPED
+                                                                  : tb_graphics_failure;
+  return false;
+}
+static bool tb_native_io(basic_graphics::NativeOperation operation, const char *begin = nullptr,
+                         const char *end = nullptr, bool execute = true,
+                         basic_graphics::Operation primitive = basic_graphics::Operation::SHOW) {
+  static_assert(TB_PRINT_BUFFER_SIZE == 96, "native source service PRINT buffer ABI");
+  basic_graphics::NativeRequest request = {};
+  request.begin = begin;
+  request.end = end;
+  request.output = tb_pending_print;
+  request.cursor = &tb_print_cursor;
+  request.row = &tb_print_row;
+  request.positioned = &tb_at_print;
+  request.at_x = &tb_at_x;
+  request.at_y = &tb_at_y;
+  request.pure = &tb_graph_expression;
+  request.x_variable = &tb_vars['X' - 'A'];
+  request.pause_is_final = &tb_pause_is_final;
+  request.evaluate = tb_native_evaluate;
+  request.format = tb_native_format;
+  request.poll = tb_native_poll;
+  request.operation = operation;
+  request.primitive = primitive;
+  request.execute = execute;
+  if (execute)
+    tb_pause_is_final = false;
+  if (basic_graphics::process_native(request))
+    return true;
+  if (request.error == language_vm::Error::STOPPED)
+    return false;
+  if (request.error == language_vm::Error::NONE)
+    request.error = language_vm::Error::IO;
+  tb_note_error(request.error, request.error_at);
+  return tb_error(request.error == language_vm::Error::FULL ? "SORRY"
+                  : request.error == language_vm::Error::SYNTAX ||
+                          request.error == language_vm::Error::UNTERMINATED_STRING
+                      ? "WHAT?"
+                      : "HOW?");
+}
+static bool tb_flush_print(void) { return tb_native_io(basic_graphics::NativeOperation::FLUSH); }
 
 #ifndef TINYBASIC_HOST_TEST
 static void tb_input_message(const char* prompt, const char* value) {
@@ -2139,6 +2277,10 @@ static void tb_input_message(const char* prompt, const char* value) {
 #endif
 
 static bool tb_read_number_from_keyboard(const char* prompt, double& value) {
+  struct RestoreCanvas {
+    RestoreCanvas(){basic_graphics::command(basic_graphics::Operation::SUSPEND);}
+    ~RestoreCanvas(){tb_graphics_result(basic_graphics::command(basic_graphics::Operation::RESUME));}
+  } restore_canvas;
   tb_pause_is_final = false;
 #ifdef TINYBASIC_HOST_TEST
   tb_copy_text(tb_host_last_prompt, sizeof(tb_host_last_prompt), prompt);
@@ -2236,99 +2378,15 @@ static bool tb_process_assignment(const char* begin, const char* end,
   return true;
 }
 
-static bool tb_process_print(const char* begin, const char* end,
-                             bool execute) {
-  if(execute) tb_pause_is_final = false;
-  const char* p = begin;
-  char trailing_sep = 0;
-  // MK-61 keeps its compact display-friendly default.  PATB's historical
-  // eight-column layout is available explicitly with PRINT #8,... .
-  int field_width = 0;
-  u8 precision = 10;
-  if(tb_skip_spaces(p) >= end) {
-    if(execute) tb_flush_print();
-    return true;
-  }
-
-  while(p < end) {
-    p = tb_skip_spaces(p);
-    if(p >= end) break;
-    if(*p == ',' || *p == ';') {
-      trailing_sep = *p++;
-      if(execute && trailing_sep == ',' && !tb_append_print(" ")) {
-        return tb_error("SORRY");
-      }
-      continue;
-    }
-    bool item_was_format = false;
-    bool item_was_cr = false;
-    TbTextItem text_item;
-    const TbTextItemKind text_kind =
-        tb_parse_text_item(p, end, text_item);
-    if(text_kind == TbTextItemKind::ERROR) return tb_error("WHAT?");
-    if(text_kind == TbTextItemKind::RANGE) {
-      if(execute && !tb_append_print_range(text_item.begin, text_item.end)) {
-        return tb_error("SORRY");
-      }
-    } else if(text_kind == TbTextItemKind::CONTROL) {
-      item_was_cr = text_item.control == '\r';
-      if(execute && !tb_append_print_range(
-          &text_item.control, &text_item.control + 1)) {
-        return tb_error("SORRY");
-      }
-    } else {
-      unsigned width = 0, digits = 0;
-      const char* format_end = tinybasic_syntax::print_precision(p, end, width, digits);
-      if(format_end) {
-        if(width > 63 || !digits || digits > 15) {
-          tb_note_error(language_vm::Error::FORMAT, p); return tb_error("HOW?");
-        }
-        field_width = (int)width; precision = (u8)digits;
-        p = format_end; item_was_format = true;
-      } else {
-        const bool format = *p == '#';
-        item_was_format = format;
-        if(format) p++;
-        double value = 0.0;
-        const char* after_value = NULL;
-        if(!tb_eval_expr_range(p, end, value, &after_value, execute)) {
-          return tb_error("HOW?");
-        }
-        if(execute && format) {
-          const double rounded = mk_math::floor(value + 0.5);
-          if(value < 0.0 || value > 63.0 ||
-             mk_math::fabs(value - rounded) > 0.0000001) {
-            tb_note_error(language_vm::Error::FORMAT);
-            return tb_error("HOW?");
-          }
-          field_width = (int) rounded;
-        } else if(execute) {
-          char number[24];
-          tb_format_number(value, number, sizeof(number), precision);
-          const int number_len = (int) strlen(number);
-          for(int spaces = field_width - number_len; spaces > 0; spaces--) {
-            if(!tb_append_print(" ")) return tb_error("SORRY");
-          }
-          if(!tb_append_print(number)) return tb_error("SORRY");
-        }
-        p = after_value;
-      }
-    }
-
-    p = tb_skip_spaces(p);
-    if(p < end && (*p == ',' || *p == ';')) {
-      trailing_sep = *p++;
-      if (execute && !item_was_format && !item_was_cr && !tb_append_print_separator(trailing_sep))
-        return tb_error("SORRY");
-      continue;
-    }
-    if(p < end) return tb_error("WHAT?");
-    trailing_sep = 0;
-    break;
-  }
-
-  if(execute && trailing_sep == 0) tb_flush_print();
-  return true;
+static bool tb_process_print(const char *begin, const char *end, bool execute) {
+  return tb_native_io(basic_graphics::NativeOperation::PRINT, begin, end, execute);
+}
+static bool tb_process_graphics(const char *begin, const char *end, bool execute,
+                                basic_graphics::Operation op) {
+  return tb_native_io(basic_graphics::NativeOperation::ARGUMENTS, begin, end, execute, op);
+}
+static bool tb_process_graph(const char *begin, const char *end, bool execute) {
+  return tb_native_io(basic_graphics::NativeOperation::GRAPH, begin, end, execute);
 }
 
 static bool tb_process_input(const char* begin, const char* end,
@@ -2926,11 +2984,30 @@ static bool tb_process_one(TbCommandContext& context) {
     }
     case TbCommand::CMD_CLS:
       if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
-      if(execute) tb_clear_output();
+      if(execute && !tb_clear_output())return false;
+      break;
+    case TbCommand::CMD_PSET:
+      if(!tb_process_graphics(cursor,segment_end,execute,basic_graphics::Operation::PSET))return false;
+      break;
+    case TbCommand::CMD_LINE:
+      if(!tb_process_graphics(cursor,segment_end,execute,basic_graphics::Operation::LINE))return false;
+      break;
+    case TbCommand::CMD_BOX:
+      if(!tb_process_graphics(cursor,segment_end,execute,basic_graphics::Operation::BOX))return false;
+      break;
+    case TbCommand::CMD_CIRCLE:
+      if(!tb_process_graphics(cursor,segment_end,execute,basic_graphics::Operation::CIRCLE))return false;
+      break;
+    case TbCommand::CMD_SHOW:
+      if(!tb_process_graphics(cursor,segment_end,execute,basic_graphics::Operation::SHOW))return false;
+      break;
+    case TbCommand::CMD_GRAPH:
+      if(!tb_process_graph(cursor,segment_end,execute))return false;
       break;
     case TbCommand::CMD_PAUSE:
       if(tb_skip_spaces(cursor) < segment_end) return tb_error("WHAT?");
       if(execute && !tb_pause()) {
+        if(tb_graphics_failure!=language_vm::Error::NONE)return false;
         if(tb_runs_inside_m61()) {
           tb_report_interrupted();
           *flow = tb_flow(TbFlowKind::INTERRUPTED, current_pc);
@@ -2996,6 +3073,7 @@ static bool tb_execute_command_list(const char* begin, const char* end,
 }
 
 static bool tb_runtime_interrupted(void) {
+  if(!tb_graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)))return true;
 #ifndef TINYBASIC_HOST_TEST
   idle_main_process();
   kbd::scan();
@@ -3118,6 +3196,8 @@ static TinyBasicRunStatus tb_run_program(
   if(!tb_runs_inside_m61()) main_lcd().endUiText();
   tb_activate_inherited_text_font();
 #endif
+  basic_graphics::command(basic_graphics::Operation::RESET);
+  tb_graphics_failure=language_vm::Error::NONE;tb_at_print=false;
   if(program_index < 0 || program_index >= TB_PROGRAM_COUNT ||
      !tb_program_used(programs[program_index])) {
     tb_error("HOW?");
@@ -3167,6 +3247,7 @@ static TinyBasicRunStatus tb_run_program(
     language_vm::Value* variables;
     language_vm::Value* array;
     unsigned array_count;
+    basic_graphics::PrintPosition position;
   } context = {};
   context.variables=variables; context.array=array; context.array_count=count;
   const language_vm::Services services = {
@@ -3180,6 +3261,8 @@ static TinyBasicRunStatus tb_run_program(
       },
       [](void*) { return tb_next_random(); },
       [](void*, language_vm::Function f) {
+        if(f==language_vm::Function::GW || f==language_vm::Function::GH)
+          return basic_graphics::dimension(f==language_vm::Function::GW?basic_graphics::Operation::WIDTH:basic_graphics::Operation::HEIGHT);
         return f == language_vm::Function::SIZE   ? tinybasic_size_value()
                : f == language_vm::Function::COLS ? (double)main_lcd().cols()
                                                   : (double)main_lcd().rows();
@@ -3198,10 +3281,24 @@ static TinyBasicRunStatus tb_run_program(
         auto& c = *(Context*)raw;
         switch (event) {
           case language_vm::Event::PRINT_BEGIN:
+            c.position.positioned=c.position.owns_context=false;
             c.width = 0;
             c.precision = 10;
             tb_pause_is_final = false;
             return true;
+          case language_vm::Event::PRINT_AT:
+            return tb_graphics_result(basic_graphics::print_at(c.position,tb_pending_print,tb_print_cursor,
+                *(const basic_graphics::Request*)text));
+          case language_vm::Event::PRINT_PUSH:
+            return tb_graphics_result(basic_graphics::push_print(c.position,tb_pending_print,tb_print_cursor));
+          case language_vm::Event::PRINT_POP:
+            return tb_graphics_result(basic_graphics::pop_print(c.position,tb_pending_print,tb_print_cursor));
+          case language_vm::Event::GRAPHICS: {
+            auto request=*(const basic_graphics::Request*)text;
+            const auto result=basic_graphics::dispatch(request);value=request.value;
+            if(request.operation!=basic_graphics::Operation::POINT)tb_pause_is_final=false;
+            return tb_graphics_result(result);
+          }
           case language_vm::Event::RESOURCE_TEXT:
           case language_vm::Event::RESOURCE_INPUT: return false;
           case language_vm::Event::TEXT:
@@ -3234,11 +3331,11 @@ static TinyBasicRunStatus tb_run_program(
                    : length == 1 ? tb_append_print(" ")
                                  : true;
           case language_vm::Event::FLUSH:
-            tb_flush_print();
-            return true;
+            return tb_flush_print();
           case language_vm::Event::PRINT_END:
-            if (!length) tb_flush_print();
-            return true;
+            if(c.position.positioned)
+              return tb_graphics_result(basic_graphics::flush_at(c.position,tb_pending_print,tb_print_cursor));
+            return length || tb_flush_print();
           case language_vm::Event::READ_INPUT: {
             for(unsigned i=0;i<26;++i) tb_vars[i]=c.variables[i].number();
             for(unsigned i=0;i<c.array_count;++i) tinybasic_array_data()[i]=c.array[i].number();
@@ -3259,11 +3356,10 @@ static TinyBasicRunStatus tb_run_program(
             if (tb_runs_inside_m61()) tb_report_interrupted();
             return false;
           case language_vm::Event::CLEAR:
-            tb_clear_output();
-            return true;
+            return tb_clear_output();
           case language_vm::Event::FINISH:
-            if (tb_pending_print[0]) tb_flush_print();
-            return true;
+            if (tb_pending_print[0] && !tb_flush_print())return false;
+            return tb_graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW));
           case language_vm::Event::TARGET_REF:
             if (value == 19 && !mk61_ref::register_available(15)) {
               c.failure = "WHAT?";
@@ -3272,7 +3368,7 @@ static TinyBasicRunStatus tb_run_program(
             return true;
         }
         return false;
-      }};
+      },false,true};
   const auto result = language_vm::run(view, vm, services, 1000000);
   for(unsigned i=0;i<26;++i) tb_vars[i]=variables[i].number();
   for(unsigned i=0;i<count;++i) tinybasic_array_data()[i]=array[i].number();
@@ -3282,6 +3378,7 @@ static TinyBasicRunStatus tb_run_program(
   if (result.error == language_vm::Error::STOPPED) return TinyBasicRunStatus::STOPPED;
   if (result.error == language_vm::Error::NONE) return TinyBasicRunStatus::COMPLETED;
   tb_detail = result.error;
+  if(tb_graphics_failure!=language_vm::Error::NONE)tb_detail=tb_graphics_failure;
   if (result.error == language_vm::Error::IO && context.failure)
     tb_detail = strcmp(context.failure, "WHAT?") == 0 ? language_vm::Error::REGISTER
                                                       : language_vm::Error::FORMAT;
@@ -3356,12 +3453,16 @@ static TinyBasicRunStatus tb_run_program(
       break;
     }
   }
-  if(succeeded && !interrupted && tb_pending_print[0] != 0) tb_flush_print();
+  if(succeeded && !interrupted && tb_pending_print[0] != 0) {
+    if(!tb_flush_print())succeeded=false;
+  }
   else if (!succeeded || interrupted) {
     tb_pending_print[0] = 0;
     tb_print_cursor = 0;
   }
+  if(tb_graphics_failure!=language_vm::Error::NONE)return TinyBasicRunStatus::RUNTIME_ERROR;
   if(interrupted) return TinyBasicRunStatus::STOPPED;
+  if(succeeded && !tb_graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))succeeded=false;
   return succeeded ? TinyBasicRunStatus::COMPLETED
                    : TinyBasicRunStatus::RUNTIME_ERROR;
 }
@@ -3381,6 +3482,7 @@ bool language_vm::frontend_emit(void) {
 #endif
 
 void RunTinyBasic(int program_index) {
+  basic_graphics::RunScope graphics_scope;
   (void) tb_run_program(program_index);
 }
 
@@ -4041,6 +4143,7 @@ bool EditTinyBasicProgramAt(u16 id, u16 line_number, u16 column) {
 }
 
 bool RunTinyBasicProgram(const char* name) {
+  basic_graphics::RunScope graphics_scope;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
@@ -4058,6 +4161,7 @@ bool RunTinyBasicProgram(const char* name) {
 }
 
 bool RunTinyBasicProgram(u16 id) {
+  basic_graphics::RunScope graphics_scope;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return false;
@@ -4074,6 +4178,7 @@ bool RunTinyBasicProgram(u16 id) {
 
 TinyBasicRunStatus RunTinyBasicProgramStatus(u16 id,
                                               TinyBasicRunMode mode) {
+  basic_graphics::RunScope graphics_scope;
 #ifndef TINYBASIC_HOST_TEST
   TinyBasicWorkspaceScope workspace_scope;
   if(!workspace_scope.ok()) return TinyBasicRunStatus::UNAVAILABLE;
@@ -4140,6 +4245,7 @@ bool TinyBASIC_menu_select(void) {
 
 #ifdef TINYBASIC_SELF_TEST
 extern "C" void TinyBasicTestReset(void) {
+  basic_graphics::command(basic_graphics::Operation::RESET);
   InitTinyBasic();
   main_lcd().clear();
 #ifdef TINYBASIC_HOST_TEST
@@ -4150,7 +4256,18 @@ extern "C" void TinyBasicTestReset(void) {
   kbd::host_key_reads = 0;
   main_lcd().setReportedCols(16);
   main_lcd().setRows(8);
+  tb_host_graphics_width=tb_host_graphics_height=0;tb_host_graphics_presents=0;
+  memset(tb_host_graphics_frame,0,sizeof(tb_host_graphics_frame));
 #endif
+}
+
+extern "C" void TinyBasicTestSetGraphics(unsigned width,unsigned height) {
+  tb_host_graphics_width=(u16)width;tb_host_graphics_height=(u16)height;
+}
+extern "C" unsigned TinyBasicTestGraphicsPresents() {return tb_host_graphics_presents;}
+extern "C" bool TinyBasicTestGraphicsPixel(unsigned x,unsigned y) {
+  return x<tb_host_graphics_width && y<tb_host_graphics_height &&
+      (tb_host_graphics_frame[(size_t)(y/8)*tb_host_graphics_width+x]&(1U<<(y%8)))!=0;
 }
 
 extern "C" void TinyBasicTestSetAlphaHeld(bool held) {

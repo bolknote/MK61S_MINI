@@ -17,8 +17,8 @@ from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
 COMPILER_CONTEXT_SIZE = 240
-REQUEST_VERSION = 8
-LANGUAGE_FLOW_MAGIC = 0x35564C46
+REQUEST_VERSION = 9
+LANGUAGE_FLOW_MAGIC = 0x37564C46
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):
@@ -74,7 +74,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
     compiler = "tinybasic" if language == 1 else "focal"
     variables, compile_request, execution, context, step, output = [
         m.input + offset for offset in (128, 512, 640, 768, 1120, 1280)]
-    state, array, bytecode = m.workspace, m.workspace + 4600, m.workspace + 1584
+    state, array, bytecode = m.workspace, m.workspace + 4600, m.workspace + 1664
     m.partitioned = True
     m.uc.mem_write(m.workspace + 4176, b"\x5A" * 4016)
     m.files[42] = (3 if language == 1 else 2, "FLOWTEST", source)
@@ -105,7 +105,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         assert m.call(0x704, 0, 0, compile_request) == 1
         image = bytes(m.uc.mem_read(output, length)); m.uc.mem_write(bytecode, image)
         m.uc.mem_write(variables, bytes(208)); m.uc.mem_write(array, bytes(3080))
-        m.uc.mem_write(state, bytes(1584)); m.uc.mem_write(state + 1570, bytes((language,)))
+        m.uc.mem_write(state, bytes(1664)); m.uc.mem_write(state + 1626, bytes((language,)))
         m.uc.mem_write(execution, bytes(48))
         m.put(execution, 48, REQUEST_VERSION, bytecode, length, variables, array, 385 if language == 1 else 64)
         m.uc.mem_write(execution + 28, bytes((mode, 0, 0, 0)))
@@ -142,7 +142,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
                 assert sum(x and x[0] == "file_read" for x in m.trace) == resource_reads, "runtime read its source"
         elif phase == 0x100:  # Generic reserve fixture, exact measured size.
             length, prefix = m.words(plan, 2)
-            assert 0 < length <= 768 and prefix == 1584
+            assert 0 < length <= 768 and prefix == 1664
             m.put(plan + 8, output)
             m.put(step + 32, 3, 0, 1, 0)
         else:  # Generic commit fixture; tail-transfer directly to cold APP.

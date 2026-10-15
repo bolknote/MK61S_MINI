@@ -351,6 +351,57 @@ void startUi(MK61Display& display, u8 family = 1, u8 size = 14) {
   assert(display.uiTextActive() && display.rows() == expected_rows);
 }
 
+void test_basic_text_bitmap() {
+  u8 letter[8],space[8],question[8],cyrillic[8];
+  assert(builtin_font::copyRows5x8('A',letter));
+  assert(builtin_font::copyRows5x8(' ',space));
+  assert(builtin_font::copyRows5x8('?',question));
+  assert(builtin_font::copyRows5x8(0x0416,cyrillic));
+  assert(std::memcmp(letter,space,8)!=0 && std::memcmp(letter,question,8)!=0);
+  for(u8 value:space)assert(value==0);
+  for(unsigned surface=0;surface<(MK61_ENABLE_USB_SCREEN?2U:1U);++surface) {
+    for(unsigned font=0;font<4;++font) {
+      MK61Display display;
+      ui_display_test::reset();display.begin();
+      if(font){display.setUiFont(font==1?1:font==2?4:5,12);display.beginUiText();}
+#if MK61_ENABLE_USB_SCREEN
+      if(surface)assert(display.enterUsbScreen());
+#endif
+      display.cursorOff();display.clear();
+      display.printWrappedText("ABC 123",7,0,1,false,true);
+      display.printWrappedText(M8("ТЕСТ"),4,1,1,false,true);
+      display.flush();
+      Frame expected=ui_display_test::frame;
+#if MK61_ENABLE_USB_SCREEN
+      if(surface)std::memcpy(expected.data(),display.usbScreenFramebuffer(),expected.size());
+#endif
+      Frame captured{};
+      assert(display.copyTextBitmap(captured.data(),captured.size(),0,display.rows()));
+      assert(captured==expected);
+      const unsigned sends=ui_display_test::transfers;
+      assert(display.beginFullscreenBitmap());
+      captured.fill(0xA5);
+      Frame replacement=expected;
+      assert(display.flowTextBitmap(captured.data(),captured.size(),"Z",1,0,1,true)==1);
+      // Capturing text while BASIC owns the screen must not present a frame.
+      assert(ui_display_test::transfers==sends);
+      assert(display.copyTextBitmap(replacement.data(),replacement.size(),0,1));
+      bool changed=false,preserved=false;
+      for(unsigned i=0;i<captured.size();++i) {
+        changed|=captured[i]!=0xA5;
+        preserved|=captured[i]==0xA5;
+        // Every replaced bit agrees with the normal text renderer.
+        assert(((captured[i]^replacement[i]) & (captured[i]^0xA5))==0);
+      }
+      assert(changed && preserved);
+      display.endFullscreenBitmap();
+#if MK61_ENABLE_USB_SCREEN
+      if(surface)display.leaveUsbScreen();
+#endif
+    }
+  }
+}
+
 void test_profile_and_scope() {
   MK61Display display;
   display.begin();
@@ -2013,6 +2064,7 @@ int main() {
   static_assert(sizeof(text_screen::Grid) <= 1500,
                 "UI must keep one bounded 64x10 grid");
   allocation_forbidden = true;
+  test_basic_text_bitmap();
   test_profile_and_scope();
   test_localized_message_selects_ui_renderer();
   test_preview_of_same_calculator_profile();

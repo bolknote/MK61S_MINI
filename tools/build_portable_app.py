@@ -98,8 +98,8 @@ def enforce_system_size_budget(system: str | None, report: dict,
         # The hot integer-span executor trades APP bytes for fewer dispatches.
         # This is a regression ceiling, not an allocator partition. The loader
         # and strict whole-firmware RAM gate still cap every APP at 20 KiB.
-        # Local FLOAT retains the compact scalar path and its existing budget.
-        budget = {"memory_bytes": 17_408 if local_float_math else 18_432}
+        # BASIC graphics adds raster events, PRINT AT and a pure GRAPH loop.
+        budget = {"memory_bytes": 19_968 if local_float_math else 19_456}
     if budget is None:
         return
     budget = dict(budget)

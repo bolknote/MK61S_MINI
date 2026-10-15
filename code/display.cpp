@@ -1,4 +1,5 @@
 #include "display.hpp"
+#include "builtin_font.hpp"
 #include "display_symbols.hpp"
 #include "exclusive_buffer.hpp"
 #include "mk8_codec.hpp"
@@ -93,7 +94,6 @@ static inline u8 lcdHardwareColumn(u8 shift, u8 visible_column) {
   return lcdLogicalColumn(shift, visible_column);
 }
 
-#if MK61_ENABLE_USB_SCREEN
 static u16 canonicalLcdToken(u8 value) {
 #if defined(MK61_OLED1602_WS0010)
   switch(value) {
@@ -188,6 +188,7 @@ static u16 canonicalLcdToken(u8 value) {
 #endif
 }
 
+#if MK61_ENABLE_USB_SCREEN
 static u8 lcdByteForCanonicalToken(u16 token) {
 #if defined(MK61_OLED1602_WS0010)
   u8 value = 0;
@@ -3696,6 +3697,107 @@ u8 MK61Display::printWrappedText(const char* text, u16 length, u8 first_row,
     written++;
   }
   return written;
+}
+
+bool MK61Display::copyTextBitmap(u8 *bitmap, usize size, u8 first, u8 count) {
+#if MK61_ENABLE_USB_SCREEN
+  if (usb_screen_active)
+    return usb_surface.copyTextBitmap(bitmap, size, first, count);
+#endif
+  const u16 width = fullscreenBitmapWidth(), height = fullscreenBitmapHeight();
+  if (!bitmap || !width || size != (usize)width * height / 8)
+    return false;
+  const unsigned last = (unsigned)first + count;
+#if defined(MK61_DISPLAY_LCD1602)
+  for (u8 row = first; row < rows() && row < last; ++row) {
+    memset(bitmap + (usize)row * width, 0, width);
+    for (u8 col = 0; col < cols(); ++col) {
+      u8 value = ' ';
+      if (!readCell(col, row, value))
+        continue;
+      u8 glyph[8] = {};
+      if (!builtin_font::copyRows5x8(canonicalLcdToken(value), glyph))
+        builtin_font::copyRows5x8('?', glyph);
+      for (u8 x = 0; x < 5 && (u16)col * 5 + x < width; ++x)
+        for (u8 y = 0; y < 8; ++y)
+          if (glyph[y] & (1U << (4 - x)))
+            bitmap[(usize)row * width + col * 5 + x] |= (u8)(1U << y);
+    }
+  }
+#else
+  const auto saved_width = render_width;
+  render_width = lcd_display::PIXEL_WIDTH;
+  for (u8 page = 0; page < height / 8; ++page) {
+    u8 mask = 0;
+    for (u8 row = first; row < grid.rows() && row < last; ++row)
+      for (u8 bit = 0; bit < 8; ++bit)
+        if (page * 8 + bit >= rowTop(row) && page * 8 + bit < rowTop(row) + rowPitch(row))
+          mask |= (u8)(1U << bit);
+    if (!mask)
+      continue;
+    memset(render_buffer, 0, width);
+#if MK61_PROPORTIONAL_UI_FONTS
+    if (uiTextActive())
+      renderUiPage(page, 0, lcd_display::COLS, false);
+    else
+#endif
+    {
+      for (u8 row = first; row < grid.rows() && row < last; ++row) {
+        const i16 y = (i16)rowTop(row) - page * 8;
+        for (u8 col = 0; col < grid.cols(); ++col)
+          drawToken(col * lcd_display::CELL_WIDTH, y, row, grid.cell(col, row),
+                    grid.cellIsCustom(col, row));
+      }
+    }
+    for (u16 x = 0; x < width; ++x) {
+      auto &value = bitmap[(usize)page * width + x];
+      value = (u8)((value & ~mask) | (render_buffer[x] & mask));
+    }
+  }
+  render_width = saved_width;
+#endif
+  return true;
+}
+
+int MK61Display::flowTextBitmap(u8 *bitmap, usize size, const char *text, u16 length, u8 first,
+                                u8 maximum, bool empty) {
+  if (!bitmap || !text || first >= rows())
+    return 0;
+#if defined(MK61_DISPLAY_LCD1602)
+#if MK61_ENABLE_USB_SCREEN
+  if (!usb_screen_active)
+#endif
+  {
+    const u16 width = fullscreenBitmapWidth();
+    if (!width || size != (usize)width * fullscreenBitmapHeight() / 8)
+      return -1;
+    const char *cursor = text;
+    const char *end = text + length;
+    u8 count = 0;
+    while (count < maximum && first + count < rows() && (cursor < end || (!count && empty))) {
+      const auto line = displayNextWrappedLine(*this, cursor, end, cols(), cols(), false);
+      auto *destination = bitmap + (usize)(first + count) * width;
+      memset(destination, 0, width);
+      u16 col = 0;
+      for (const char *p = line.begin; p < line.end && col * 5 < width; ++p, ++col) {
+        u8 glyph[8] = {};
+        if (!builtin_font::copyRows5x8(mk8::codepoint((u8)*p), glyph))
+          builtin_font::copyRows5x8('?', glyph);
+        for (u8 x = 0; x < 5 && col * 5 + x < width; ++x)
+          for (u8 y = 0; y < 8; ++y)
+            if (glyph[y] & (1U << (4 - x)))
+              destination[col * 5 + x] |= (u8)(1U << y);
+      }
+      ++count;
+      cursor = line.next;
+      if (cursor == end)
+        break;
+    }
+    return count;
+  }
+#endif
+  const u8 count = printWrappedText(text, length, first, maximum, false, empty);
+  return copyTextBitmap(bitmap, size, first, count) ? count : -1;
 }
 
 #if MK61_ENABLE_USB_SCREEN
