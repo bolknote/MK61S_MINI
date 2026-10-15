@@ -170,6 +170,30 @@ clang++ "${common[@]}" -DSTM32F401xC -DMK61_BOARD_CLASSIC_V3 \
   -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f401-classic-v3"
 "$out-f401-classic-v3"
 
+# Default budgets must distinguish Classic from other F411 boards, including
+# the legacy UC1609 alias resolved later in config.h. Explicit overrides win.
+cache_cases=(
+  'classic-v2|-DMK61_CONFIG_EXPECT_CLASSIC_V2 -DSTM32F411xE -DMK61_BOARD_CLASSIC_V2|32768'
+  'classic-v3|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3|32768'
+  'classic-legacy|-DMK61_CONFIG_EXPECT_CLASSIC_V2 -DSTM32F411xE -DDISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC|32768'
+  'classic-display-alias|-DMK61_CONFIG_EXPECT_CLASSIC_V2 -DSTM32F411xE -DMK61_DISPLAY_UC1609|32768'
+  'mini-f411|-DMK61_CONFIG_EXPECT_V3 -DSTM32F411xE -DREVISION_V3|24576'
+  'mini-ws0010|-DMK61_CONFIG_EXPECT_V3 -DSTM32F411xE -DREVISION_V3 -DMK61_OLED1602_WS0010|24576'
+  '40th-f411|-DMK61_CONFIG_EXPECT_40TH -DSTM32F411xE -DMK61_BOARD_40TH|24576'
+  'classic-f401|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DSTM32F401xC -DMK61_BOARD_CLASSIC_V3|0'
+  'classic-host|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DMK61_BOARD_CLASSIC_V3|0'
+  'classic-no-overlay|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 -DMK61_OVERLAY_LANGUAGE_VM=0|0'
+  'classic-raw24-override|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576|24576'
+  'classic-no-cache-override|-DMK61_CONFIG_EXPECT_CLASSIC_V3 -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=0|0'
+)
+for entry in "${cache_cases[@]}"; do
+  IFS='|' read -r name flags bytes <<< "$entry"
+  read -r -a case_flags <<< "$flags"
+  clang++ "${common[@]}" "${case_flags[@]}" \
+    -DMK61_CONFIG_EXPECT_VM_CACHE_BYTES="$bytes" -o "$out-cache-$name"
+  "$out-cache-$name"
+done
+
 # Прежняя комбинация флагов остаётся алиасом Classic V2.
 clang++ "${common[@]}" -DMK61_DISPLAY_UC1609 -DMK61_KEYBOARD_CLASSIC \
   -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-classic-legacy"

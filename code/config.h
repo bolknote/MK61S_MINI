@@ -555,26 +555,6 @@
   #error "C9 metadata precheck must be 0 or 1"
 #endif
 
-// F411 can retain the hot working set of repeatedly opened M61 BASIC parts.
-// F401 keeps its existing RAM budget; explicit overrides are qualification-only.
-#ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-  #if MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
-    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 24576
-  #else
-    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 0
-  #endif
-#endif
-#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
-  #error "language image cache must fit in 32 KiB"
-#endif
-// Persistence is useful only when verified images can be pinned in RAM.
-// F401/no-cache profiles retain their existing compile/execute path.
-#ifndef MK61_VM_FILE_CACHE
-  #define MK61_VM_FILE_CACHE (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
-#endif
-#if MK61_VM_FILE_CACHE != 0 && MK61_VM_FILE_CACHE != 1
-  #error "MK61_VM_FILE_CACHE must be 0 or 1"
-#endif
 // Qualified reuse/byte policy is the default for an enabled image cache.
 // Retain the original LRU as an explicit A/B and compatibility override.
 #ifndef MK61_LANGUAGE_VM_CACHE_DENSITY
@@ -891,6 +871,31 @@
   #error "REVISION_V2 cannot be combined with a UC1609 board profile"
 #endif
 
+// Select the cache budget after complete board profiles and legacy aliases.
+// Classic F411 retains 32 KiB raw images; other F411 boards keep 24 KiB.
+// F401/no-overlay profiles keep zero; explicit qualification overrides remain.
+#ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+  #if MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
+    #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+      #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 32768
+    #else
+      #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 24576
+    #endif
+  #else
+    #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES < 0 || MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES > 32768
+  #error "language image cache must fit in 32 KiB"
+#endif
+// Persistence is useful only when verified images can be pinned in RAM.
+// F401/no-cache profiles retain their existing compile/execute path.
+#ifndef MK61_VM_FILE_CACHE
+  #define MK61_VM_FILE_CACHE (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
+#endif
+#if MK61_VM_FILE_CACHE != 0 && MK61_VM_FILE_CACHE != 1
+  #error "MK61_VM_FILE_CACHE must be 0 or 1"
+#endif
 // Production STOP is enabled only on exact F411 hardware combinations that
 // passed physical display, keyboard, RTC and FNB58 qualification. Mini V3
 // WS0010 and Classic V3 UC1609 use different display sleep commands but share

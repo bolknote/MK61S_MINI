@@ -21,7 +21,7 @@ import hil_system_memory as memory_hil
 from hil_c5_stack import read_file
 from hil_c6_system_bootstrap import write_file
 from hil_multi_device_identity import parse_identity
-from hil_rtc_alarm import warm_reset
+from hil_rtc_alarm import canonical_state_reply, warm_reset
 
 PORT = '/dev/cu.usbmodem2068336B47311'
 PUBLIC = 'AEB505B6E0067623'
@@ -158,6 +158,22 @@ def require_common_apps(stages, bundles):
     assert all(bundles[directory] == first for _, _, directory in stages), 'Cache comparison must use byte-identical System APPs'
 
 
+def graphics_measure(target, output):
+    """Run the existing two-page oracle outside the timed chess interval."""
+    import hil_basic_graphics as graphics
+    saved_port, saved_argv = graphics.ScreenPort, sys.argv
+    graphics.ScreenPort = memory_hil.ExclusiveScreenPort
+    sys.argv = ['hil_basic_graphics.py', '--port', PORT, '--public-id', PUBLIC,
+                '--build-id', target['build'], '--output-dir', str(output)]
+    try:
+        graphics.main()
+    finally:
+        graphics.ScreenPort, sys.argv = saved_port, saved_argv
+    result = json.loads((output / 'result.json').read_text())
+    assert result['status'] == 'PASS', result
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--original', type=Path, required=True)
@@ -169,6 +185,8 @@ def main():
     parser.add_argument('--baseline-system', type=Path, required=True)
     parser.add_argument('--candidate-system', type=Path, required=True)
     parser.add_argument('--runs', type=int, default=3, choices=range(2,8))
+    parser.add_argument('--with-graphics', action='store_true',
+                        help='verify both Graphics.tbi pages after every timed chess stage')
     parser.add_argument('--single-candidate',action='store_true',help='Ordinary combined-main qualification only; no matched speedup claim')
     parser.add_argument('--output-dir', type=Path, required=True)
     options = parser.parse_args()
@@ -239,13 +257,17 @@ def main():
                         write_file(port, remote, data)
                         assert read_file(port, remote) == data
             chess = memory_hil.chess_measure(args, target, output / ('chess-' + name))
-            result['stages'].append(dict(name=name, firmware=target, chess=chess,
+            graphics = graphics_measure(target, output / ('graphics-' + name)) if options.with_graphics else None
+            result['stages'].append(dict(name=name, firmware=target, chess=chess, graphics=graphics,
                 original_cache_restored=replaced,test_cache_removed=removed,
                 system_apps={app:dict(bytes=len(data),sha256=hashlib.sha256(data).hexdigest())
                              for app,data in app_images.items()}))
             save(output / 'report.json', result)
         boards = {run['board_frame_sha256'] for stage in result['stages'] for run in stage['chess']['runs']}
         assert len(boards) == 1
+        if options.with_graphics:
+            pages = {tuple(page['sha256'] for page in stage['graphics']['pages']) for stage in result['stages']}
+            assert len(pages) == 1, 'Graphics pages changed between cache variants'
         passed = True
     except BaseException as error:
         result.update(status='FAIL', error=repr(error))
@@ -280,11 +302,12 @@ def main():
                     final = memory_hil.health(port, original['build'])
                     memory_hil.require_empty(final)
                     for key in ('reg', 'stk', 'dump', 'pwd'):
-                        assert final[key] == before[key], key
+                        assert canonical_state_reply(final[key]) == canonical_state_reply(before[key]), key
                     assert storage_hil.fingerprint(port) == files
                     alarms_off(port)
                 result.update(restored=True, files_preserved=True, calculator_preserved=True,
                     serial_closed=True, mini_touched=False, health_after=final,
+                    terminal_state_prompt_space_normalized=True,
                     original_files=len(files['files']), original_directories=len(files['directories']),
                     added_cache_files_removed=len(added), read_retries=read_retries)
                 print('Exact restoration PASS; CDC closed:', original['build'], flush=True)

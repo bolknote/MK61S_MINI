@@ -22,6 +22,7 @@ from hil_multi_device_identity import parse_identity
 from hil_packbits_firmware import fingerprint
 from hil_portable_apps import PROMPT, ScreenPort
 from hil_portable_system_apps import png
+from hil_rtc_alarm import canonical_state_reply
 
 ROOT = Path(__file__).resolve().parents[1]
 REMOTE = '/GFXDEMO.tbi'
@@ -173,7 +174,8 @@ def main():
                 if saved is not None:
                     cwd = saved['pwd'].splitlines()[1].strip()
                     port.command('cd "'+cwd+'"')
-                    assert {c: port.command(c) for c in saved} == saved, 'calculator state changed'
+                    assert {c: canonical_state_reply(port.command(c)) for c in saved} == {
+                        c: canonical_state_reply(reply) for c, reply in saved.items()}, 'calculator state changed'
                     assert [line for line in port.command('alarm').splitlines()
                             if line.startswith('RTC ALARM ')] == result['alarms']
                     result['calculator_state_preserved'] = True

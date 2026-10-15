@@ -6,6 +6,20 @@ import hil_rtc_alarm as rtc
 
 
 class TransportTests(unittest.TestCase):
+    def test_state_comparison_ignores_only_optional_prompt_space(self):
+        original = 'reg\r\nR0=0\r\n/> '
+        self.assertEqual(rtc.canonical_state_reply(original),
+                         rtc.canonical_state_reply(original[:-1]))
+        for changed in ('reg\r\nR0=1\r\n/> ',
+                        'reg\r\nR0=0 \r\n/> ',
+                        'reg\r\nR0=0\r\n/Games> ',
+                        'reg\nR0=0\n/> '):
+            self.assertNotEqual(rtc.canonical_state_reply(original),
+                                rtc.canonical_state_reply(changed))
+        for malformed in ('reg\r\nR0=0', 'reg\r\n/>  ', 'reg\r\n/>\t'):
+            with self.assertRaises(AssertionError):
+                rtc.canonical_state_reply(malformed)
+
     def test_deadline_crossing_never_passes_negative_timeout(self):
         port = rtc.Port.__new__(rtc.Port)
         port.fd = 123

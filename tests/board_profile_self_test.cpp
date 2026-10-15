@@ -4,6 +4,14 @@
 #include "config.h"
 
 int main(void) {
+#if defined(MK61_CONFIG_EXPECT_VM_CACHE_BYTES)
+  static_assert(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES == MK61_CONFIG_EXPECT_VM_CACHE_BYTES,
+                "board cache budget must match its qualified default or explicit override");
+  #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+    static_assert(MK61_LANGUAGE_VM_CACHE_MIXED == 0,
+                  "Classic production cache must retain raw images");
+  #endif
+#endif
 #if defined(MK61_CONFIG_EXPECT_FILE_CACHE_DISABLED)
   static_assert(MK61_VM_FILE_CACHE==0,"explicit/no-RAM cache policy must remain disabled");
 #else

@@ -28,6 +28,16 @@ DATE_MS = re.compile(
 )
 
 
+def canonical_state_reply(reply: str) -> str:
+    """Ignore only the optional final prompt space, retaining all state bytes.
+
+    CDC can split immediately after '>'; read_prompt then returns before the
+    final space arrives. Values, program bytes, cwd and line endings stay exact.
+    """
+    assert re.search(r"(?:^|[\r\n])[^\r\n]*> ?\Z", reply), 'Missing state prompt'
+    return reply[:-1] if reply.endswith('> ') else reply
+
+
 class Port:
     def __init__(self, path: str, require_echo: bool = False):
         self.path = path
