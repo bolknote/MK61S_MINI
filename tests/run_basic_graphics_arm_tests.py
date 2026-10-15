@@ -39,6 +39,10 @@ def main():
                     def perform(source,answers=(),expected=1):
                         machine=OverlayMachine(args.resident_elf,True,address)
                         machine.graphics_dimensions=(width,height)
+                        # A complete GRAPH reparses up to 192 expressions in
+                        # the native APP. Allow for the peripheral model and
+                        # other ARM qualification runners sharing the host.
+                        machine.call_timeout_us=30_000_000
                         if mode=='vm':
                             result=execute(machine,packages,1,source,list(answers))
                             assert result[1]==(0 if expected==1 else expected),(result,machine.lines)
