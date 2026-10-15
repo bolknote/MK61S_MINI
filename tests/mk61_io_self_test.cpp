@@ -1,6 +1,7 @@
 #include "mk61_io.hpp"
 #include <cassert>
 #include <cstdio>
+#include <cstring>
 #include <string>
 #include <limits>
 struct Buffer : mk61_io::Output<Buffer> {
