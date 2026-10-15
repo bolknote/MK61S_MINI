@@ -86,8 +86,8 @@ function Test-ReleaseContract {
             "toolchain.$name`: expected non-empty string"
     }
     $libraries = Get-RequiredProperty $toolchain 'libraries' 'toolchain'
-    Assert-Contract (@($libraries.PSObject.Properties).Count -gt 0) `
-        'toolchain.libraries: expected non-empty object'
+    Assert-Contract ($libraries -is [System.Management.Automation.PSCustomObject]) `
+        'toolchain.libraries: expected object'
     foreach ($library in $libraries.PSObject.Properties) {
         Assert-Contract (
             -not [string]::IsNullOrWhiteSpace($library.Name) -and

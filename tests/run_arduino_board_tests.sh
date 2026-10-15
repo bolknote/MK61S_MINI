@@ -783,4 +783,10 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
   test ! -e "$classic_bundle/System/MARKDOWN.APP"
 fi
 
+# The owned EP0 driver and every core USB translation unit share this ABI.
+for board in mk61_f401_app mk61_f411; do
+  grep -Eq "^${board}\\.build\\.st_extra_flags=.*-DUSBD_CLASS_USER_STRING_DESC=0( |$)" \
+    "$target/boards.txt"
+done
+
 printf 'arduino_board_tests: ok\n'

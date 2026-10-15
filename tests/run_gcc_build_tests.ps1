@@ -65,6 +65,28 @@ foreach ($file in @(
         "direct GCC build file is missing: $file"
 }
 
+# Exercise JSON object validation through the same CLI used by Windows builds.
+$contractTemp = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString() + '.json')
+try {
+    foreach ($case in @(
+        @{ Value = '{}'; ExitCode = 0 },
+        @{ Value = '{"Example":"1.0"}'; ExitCode = 0 },
+        @{ Value = '[]'; ExitCode = 2 },
+        @{ Value = '"invalid"'; ExitCode = 2 },
+        @{ Value = 'null'; ExitCode = 2 }
+    )) {
+        $contract = ConvertFrom-Json ([IO.File]::ReadAllText($releaseManifest))
+        $contract.toolchain.libraries = ConvertFrom-Json $case.Value
+        [IO.File]::WriteAllText($contractTemp, ($contract | ConvertTo-Json -Depth 100))
+        $output = & $pwsh -NoLogo -NoProfile -File $releaseContractPowerShell `
+            -Mode validate -Manifest $contractTemp 2>&1
+        Assert-True ($LASTEXITCODE -eq $case.ExitCode) `
+            "release contract libraries=$($case.Value): $($output -join ' ')"
+    }
+} finally {
+    Remove-Item -LiteralPath $contractTemp -Force -ErrorAction SilentlyContinue
+}
+
 $tokens = $null
 $parseErrors = $null
 [void][Management.Automation.Language.Parser]::ParseFile(
