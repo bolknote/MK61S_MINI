@@ -1,0 +1,616 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "outcome": "CLASSIC_F411_RAW32_DEFAULT",
+  "base_commit": "c6e50657dfc2daef7171b62bd16488d0797bcb87",
+  "source_base": "c6e50657dfc2daef7171b62bd16488d0797bcb87",
+  "source_diff_sha256": "351eda0ae76b9938c357f5df881837e67406a6935b677b75c3a507dc2d0c6038",
+  "algorithm_unchanged": true,
+  "wire_version": 10,
+  "request_ABI": 9,
+  "APP_ABI": 6,
+  "device": "AEB505B6E0067623",
+  "USB_serial": "2068336B4731",
+  "profile": "classic-v3-uc1609",
+  "clock_hz": 96000000,
+  "math_backend": "LIBM",
+  "USB_screen": true,
+  "density": true,
+  "file_cache": true,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "method": "raw24 / raw32 shipping defaults / reverse raw24; one migration and two repeats per stage, original VMC normalized, graphics outside timed search",
+  "first_runs_excluded_from_speed_comparison": true,
+  "no_confidence_interval_claim": true,
+  "cold_note": "Original bytes are restored, not physical C9 allocation/erase history; migration times are not used for speed percentage.",
+  "prompt_space_comparison_unit_tests": "PASS: values/body whitespace/cwd/CRLF changes detected; malformed replies rejected",
+  "price": {
+    "retained_RAM_increase_bytes": 8192,
+    "cache_bytes_before": 24576,
+    "cache_bytes_after": 32768,
+    "static_RAM_increase_bytes": 0,
+    "slots": 16
+  },
+  "native_qualification": {
+    "status": "PASS",
+    "variants": [
+      {
+        "name": "raw24",
+        "cache_bytes": 24576,
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/raw24/resident.bin",
+          "bytes": 374988,
+          "footer": 373276,
+          "build": "2100119A",
+          "sha256": "98b82ae7b7196cfc0b888ce5f26ea4e6abfb45fd21c1dd7a6b42fd34ec794894"
+        },
+        "resource_metrics": {
+          "static_RAM_bytes": 24976,
+          "free_dynamic_before_reserves_bytes": 89448,
+          "lazy_retained_bytes": 40960,
+          "scoped_buffer_worst_case_bytes": 5184,
+          "APP_placement_slack_bytes": 224,
+          "effective_dynamic_pool_bytes": 43072
+        },
+        "stack_usage": {
+          "compiled_units": 155,
+          "dynamic_bounded": 0,
+          "limit": 5120,
+          "max_frame": 1928,
+          "max_function": "terminal.cpp:2370:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2890,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "default_without_cache_overrides": false
+      },
+      {
+        "name": "raw32",
+        "cache_bytes": 32768,
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/raw32/resident.bin",
+          "bytes": 374984,
+          "footer": 373272,
+          "build": "CBF6292C",
+          "sha256": "b79401108ab2c7a147607b0a3a3021292665609ce411ed49aa9b8584eb91863d"
+        },
+        "resource_metrics": {
+          "static_RAM_bytes": 24976,
+          "free_dynamic_before_reserves_bytes": 89448,
+          "lazy_retained_bytes": 49152,
+          "scoped_buffer_worst_case_bytes": 5184,
+          "APP_placement_slack_bytes": 224,
+          "effective_dynamic_pool_bytes": 34880
+        },
+        "stack_usage": {
+          "compiled_units": 155,
+          "dynamic_bounded": 0,
+          "limit": 5120,
+          "max_frame": 1928,
+          "max_function": "terminal.cpp:2370:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2890,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "default_without_cache_overrides": true
+      },
+      {
+        "name": "classic-v2",
+        "cache_bytes": 32768,
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/classic-v2/resident.bin",
+          "bytes": 364976,
+          "footer": 363408,
+          "build": "7B46F2FE",
+          "sha256": "683240f45ff5538de71b8dedb3ec5f0085effbaccbf642da6ecc9807d11d0c85"
+        },
+        "resource_metrics": {
+          "static_RAM_bytes": 24752,
+          "free_dynamic_before_reserves_bytes": 89672,
+          "lazy_retained_bytes": 49152,
+          "scoped_buffer_worst_case_bytes": 5184,
+          "APP_placement_slack_bytes": 224,
+          "effective_dynamic_pool_bytes": 35104
+        },
+        "stack_usage": {
+          "compiled_units": 155,
+          "dynamic_bounded": 0,
+          "limit": 5120,
+          "max_frame": 1928,
+          "max_function": "terminal.cpp:2370:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2856,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "default_without_cache_overrides": false
+      },
+      {
+        "name": "mini-f411",
+        "cache_bytes": 24576,
+        "firmware": {
+          "path": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/mini-f411/resident.bin",
+          "bytes": 366004,
+          "footer": 364300,
+          "build": "05C99FE9",
+          "sha256": "e1c544a06f6e49fdaecebfee40e1271d5592785b8aacb6b7c1fcff3c91ec3ceb"
+        },
+        "resource_metrics": {
+          "static_RAM_bytes": 23624,
+          "free_dynamic_before_reserves_bytes": 90808,
+          "lazy_retained_bytes": 40960,
+          "scoped_buffer_worst_case_bytes": 5184,
+          "APP_placement_slack_bytes": 224,
+          "effective_dynamic_pool_bytes": 44416
+        },
+        "stack_usage": {
+          "compiled_units": 155,
+          "dynamic_bounded": 0,
+          "limit": 5120,
+          "max_frame": 1912,
+          "max_function": "terminal.cpp:2370:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2837,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "default_without_cache_overrides": false
+      }
+    ],
+    "common_system_apps": {
+      "BASIC.APP": {
+        "bytes": 14094,
+        "sha256": "0b20cabc43226df6a5b68be2de717fc10c8f2c26a6545946abbe57f0d47e4e58",
+        "memory_bytes": 19616
+      },
+      "CHIP8.APP": {
+        "bytes": 2934,
+        "sha256": "e2b170f5ffc7d82c8d9c71be08fa6630f71edeff7aa3915fc8cbfbbb868a110b",
+        "memory_bytes": 3740
+      },
+      "FOCAL.APP": {
+        "bytes": 13832,
+        "sha256": "1eb03e8e777f03f1a3079d81015d988a94547c7d99c50b09f98081f6c4a48b21",
+        "memory_bytes": 18652
+      },
+      "LANGIN.APP": {
+        "bytes": 11873,
+        "sha256": "f6898695bf1bc227fc790f4b27ae8d195a64102e5dbbd3a00a95585b747d094f",
+        "memory_bytes": 15624
+      },
+      "LANGVM.APP": {
+        "bytes": 12965,
+        "sha256": "71798daef4b2e8d990fe5cb30218435ca95b80c63da4a2059a45dbe7f4de525a",
+        "memory_bytes": 18948
+      },
+      "MARKDOWN.APP": {
+        "bytes": 13482,
+        "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738",
+        "memory_bytes": 16976
+      },
+      "SETUP.APP": {
+        "bytes": 9974,
+        "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803",
+        "memory_bytes": 13248
+      },
+      "USBDISK.APP": {
+        "bytes": 15301,
+        "sha256": "b93e887be29849ef33707b4bbfbb2ba1d41b46c6d474299153816accbc9b5da9",
+        "memory_bytes": 20460
+      },
+      "VMCache/VMSTORE.APP": {
+        "bytes": 7331,
+        "sha256": "64720b8b22be3f00126ae0534b91f022a9f33ec3495342e8a00d47d1557d9aed",
+        "memory_bytes": 9132
+      }
+    },
+    "common_APPs_byte_identical": true
+  },
+  "ARM_overlay": {
+    "generation": 17,
+    "profile": "libm",
+    "poisoned_inactive_continuation": true,
+    "native_call_stack_peaks": {
+      "startup": 4096,
+      "verification": 980,
+      "program": 1444,
+      "input": 1008,
+      "expression": 1264,
+      "finish": 376
+    },
+    "stress_native_call_stack_peaks": {
+      "startup": 3988,
+      "verification": 980,
+      "program": 1312,
+      "input": 3196,
+      "expression": 1264,
+      "finish": 376
+    },
+    "compiler_workspace_bytes": {
+      "BASIC": 3976,
+      "FOCAL": 1708
+    },
+    "input_image_c_stack_bytes": 0,
+    "input_image_in_value_stack": true,
+    "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+  },
+  "ARM_MPU": {
+    "status": "PASS",
+    "elf": ".build/classic-raw32-default-20261015/raw32/resident.elf",
+    "exact_spans": 247,
+    "invalid_cases": 7,
+    "granules_per_span": 4096,
+    "allocator_spans": 12,
+    "app_regions": 5,
+    "neighbor_sram_xn": true,
+    "null_stack_guards_unchanged": true,
+    "callee_saved_and_sp": true
+  },
+  "stages": [
+    {
+      "stage": "baseline",
+      "variant": "raw24",
+      "firmware": {
+        "build": "2100119A",
+        "bytes": 374988,
+        "sha256": "98b82ae7b7196cfc0b888ce5f26ea4e6abfb45fd21c1dd7a6b42fd34ec794894"
+      },
+      "seconds": [
+        57.455159083008766,
+        44.79186529098661,
+        44.88535029097693
+      ],
+      "warm_median_seconds": 44.83860779098177,
+      "ZX0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        630,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        16,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9740,
+      "observed_whole_stage_stack_peak_bytes": 6644,
+      "keyboard_overflow": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CRC_checked_frames": 1041,
+      "graphics": {
+        "status": "PASS",
+        "pages": [
+          {
+            "name": "primitives",
+            "sha256": "63f42f49acf2de928c54668ba9261553eba3119b1399a33e09ccf5899d45dd10"
+          },
+          {
+            "name": "graph",
+            "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+          }
+        ],
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "2100119A",
+          "profile": "classic-v3-uc1609"
+        },
+        "before": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=2100119A profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14768 observed_remaining=14768 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=450/18 raw(v/t/b)=1493/951/1018 val(mV/dC/mV)=3329/320/3310 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374988 footer=373276 expected=0x2100119A build=0x2100119A actual=0x2100119A backend=hardware cycles=1105891\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=1143 releases=1143 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=69 bytes=34448 wfi=84 fallback=425 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=43/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=23563 entries=0 total_us=0 min_us=0 avg_us=0 max_us=0 last_blockers=0x110\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=3 sound=19942 keyboard=0 classic=0 scheduled=23563 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=439/18 raw(v/t/b)=1492/950/1018 val(mV/dC/mV)=3331/320/3312 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        },
+        "alarms": [
+          "RTC ALARM A off",
+          "RTC ALARM B off"
+        ],
+        "crc_checked_frames": 8,
+        "vm_cache_cleanup": {
+          "removed": 0,
+          "restored": 0
+        },
+        "calculator_state_preserved": true,
+        "files_preserved": 54,
+        "after": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=2100119A profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=13408 observed_remaining=13408 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1492/946/1019 val(mV/dC/mV)=3331/307/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374988 footer=373276 expected=0x2100119A build=0x2100119A actual=0x2100119A backend=hardware cycles=1105529\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=58959 releases=58959 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=3807 bytes=918601 wfi=4101 fallback=24564 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=23/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=52569 entries=6805 total_us=6342137 min_us=9 avg_us=931 max_us=991 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=10 sound=11472 keyboard=0 classic=0 scheduled=45763 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=443/18 raw(v/t/b)=1492/947/1020 val(mV/dC/mV)=3331/310/3319 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        }
+      }
+    },
+    {
+      "stage": "candidate",
+      "variant": "raw32",
+      "firmware": {
+        "build": "CBF6292C",
+        "bytes": 374984,
+        "sha256": "b79401108ab2c7a147607b0a3a3021292665609ce411ed49aa9b8584eb91863d"
+      },
+      "seconds": [
+        51.61340708300122,
+        37.39283008300117,
+        36.29888183402363
+      ],
+      "warm_median_seconds": 36.8458559585124,
+      "ZX0_decode_calls": [
+        258,
+        27,
+        3
+      ],
+      "NOR_write_calls": [
+        629,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        16,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9740,
+      "observed_whole_stage_stack_peak_bytes": 6644,
+      "keyboard_overflow": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CRC_checked_frames": 752,
+      "graphics": {
+        "status": "PASS",
+        "pages": [
+          {
+            "name": "primitives",
+            "sha256": "63f42f49acf2de928c54668ba9261553eba3119b1399a33e09ccf5899d45dd10"
+          },
+          {
+            "name": "graph",
+            "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+          }
+        ],
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "CBF6292C",
+          "profile": "classic-v3-uc1609"
+        },
+        "before": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=CBF6292C profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14768 observed_remaining=14768 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=438/18 raw(v/t/b)=1492/951/1019 val(mV/dC/mV)=3331/323/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374984 footer=373272 expected=0xCBF6292C build=0xCBF6292C actual=0xCBF6292C backend=hardware cycles=1103322\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=1129 releases=1129 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=58 bytes=28816 wfi=68 fallback=429 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=43/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=23572 entries=0 total_us=0 min_us=0 avg_us=0 max_us=0 last_blockers=0x100\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=3 sound=19941 keyboard=0 classic=0 scheduled=23572 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=442/18 raw(v/t/b)=1493/951/1018 val(mV/dC/mV)=3329/320/3310 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        },
+        "alarms": [
+          "RTC ALARM A off",
+          "RTC ALARM B off"
+        ],
+        "crc_checked_frames": 9,
+        "vm_cache_cleanup": {
+          "removed": 0,
+          "restored": 0
+        },
+        "calculator_state_preserved": true,
+        "files_preserved": 54,
+        "after": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=CBF6292C profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=13408 observed_remaining=13408 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1493/948/1019 val(mV/dC/mV)=3329/310/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374984 footer=373272 expected=0xCBF6292C build=0xCBF6292C actual=0xCBF6292C backend=hardware cycles=1105462\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=56681 releases=56681 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=3713 bytes=879689 wfi=4009 fallback=24463 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=23/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=55770 entries=6781 total_us=6312315 min_us=2 avg_us=930 max_us=997 last_blockers=0x0\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=6 sound=11951 keyboard=0 classic=0 scheduled=48989 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1492/949/1019 val(mV/dC/mV)=3331/316/3316 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        }
+      }
+    },
+    {
+      "stage": "control",
+      "variant": "raw24",
+      "firmware": {
+        "build": "2100119A",
+        "bytes": 374988,
+        "sha256": "98b82ae7b7196cfc0b888ce5f26ea4e6abfb45fd21c1dd7a6b42fd34ec794894"
+      },
+      "seconds": [
+        57.443421250005485,
+        44.797511125012534,
+        44.90129087501555
+      ],
+      "warm_median_seconds": 44.84940100001404,
+      "ZX0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        629,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        16,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9740,
+      "observed_whole_stage_stack_peak_bytes": 6644,
+      "keyboard_overflow": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "CRC_checked_frames": 1051,
+      "graphics": {
+        "status": "PASS",
+        "pages": [
+          {
+            "name": "primitives",
+            "sha256": "63f42f49acf2de928c54668ba9261553eba3119b1399a33e09ccf5899d45dd10"
+          },
+          {
+            "name": "graph",
+            "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+          }
+        ],
+        "identity": {
+          "public": "AEB505B6E0067623",
+          "short": "E0067623",
+          "usb": "2068336B4731",
+          "volume": "AED647EB",
+          "build": "2100119A",
+          "profile": "classic-v3-uc1609"
+        },
+        "before": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=2100119A profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14752 observed_remaining=14752 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=445/18 raw(v/t/b)=1492/952/1018 val(mV/dC/mV)=3331/326/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374988 footer=373276 expected=0x2100119A build=0x2100119A actual=0x2100119A backend=hardware cycles=1103345\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=1135 releases=1135 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=64 bytes=31888 wfi=75 fallback=426 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=43/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=23473 entries=0 total_us=0 min_us=0 avg_us=0 max_us=0 last_blockers=0x100\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=1 sound=19941 keyboard=0 classic=0 scheduled=23473 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1492/952/1018 val(mV/dC/mV)=3331/326/3312 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        },
+        "alarms": [
+          "RTC ALARM A off",
+          "RTC ALARM B off"
+        ],
+        "crc_checked_frames": 7,
+        "vm_cache_cleanup": {
+          "removed": 0,
+          "restored": 0
+        },
+        "calculator_state_preserved": true,
+        "files_preserved": 54,
+        "after": {
+          "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=2100119A profile=classic-v3-uc1609\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006198 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=13400 observed_remaining=13400 sram_xn=1\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 58 used, 966 free, 1024 total\r\nVisible: 54 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=445/18 raw(v/t/b)=1493/947/1019 val(mV/dC/mV)=3329/307/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=374988 footer=373276 expected=0x2100119A build=0x2100119A actual=0x2100119A backend=hardware cycles=1105542\r\n/> ",
+          "prof": "prof\r\nPROF state=stopped clock=96000000 overhead=1\r\nCLASSIC backend=TIM9/SysTick period_us=1153846 active=0 ticks=0 steps=0 missed=0 pending=0 max_pending=0\r\nSPI1 backend=polling-arbiter state=idle owner=none acquisitions=56689 releases=56689 failures=0 contentions=0 double=0 inactive=0 wrong=0 invalid=0 latched=0 recoveries=0 last=released fault=none\r\nSPI1 DMA backend=DMA2-S2/S3-C3 threshold=64 transfers=3719 bytes=882761 wfi=3991 fallback=24461 init_errors=0 errors=0 timeouts=0\r\nUSB CDC RX backend=NAK-wrap supported=1 linked=1 throttles=0\r\nUSB POWER backend=STM32-OTGFS-wrap supported=1 linked=1 callbacks=1 stop_preserve=1 state=configured raw=3/1 host_remote=0 endpoints=0 age_ms=0 hw=0/0/0 events=23/1/1/0/0/0 stop=0/0/0/0 blockers=0x0 epblock=0x0\r\nKBD STOP supported=1 captures=0 last=-1 count=0 wake_rows=0x0 captured_rows=0x0\r\nKBD overflow=0\r\nSLEEP backend=WFI enabled=1 attempts=55868 entries=6723 total_us=6255394 min_us=4 avg_us=930 max_us=978 last_blockers=0x10\r\nSLEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=12 sound=12160 keyboard=0 classic=0 scheduled=49142 wake=0 irq=0\r\nDEEP backend=STOP-RTC+KBD enabled=1 state=light wake=none failure=none request=0x0 completed=0 attempts=0 entries=0 wakes=0/0/0/0 failures=0 total_ms=0 last_ms=0 blockers=0x0\r\nDEEP reject foreground=0 calculator=0 msc=0 uscreen=0 terminal=0 sound=0 keyboard=0 classic=0 scheduled=0 spi=0 display=0 rtc=0 watchdog=0 irq=0 usb=0\r\nDEEP AUTO enabled=1 phase=host-awake holdoff=0 requests=0 reentries=0 wait_ms=0\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=432/18 raw(v/t/b)=1492/948/1018 val(mV/dC/mV)=3331/313/3312 bat=unknown/no-detector\r\nPROF core.step n=0 min=0 avg=0 max=0 total=0\r\nPROF core.fetch n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.00-26 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.27-35 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ticks.36-41 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.finish n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1302 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1303 n=0 min=0 avg=0 max=0 total=0\r\nPROF core.ik1306 n=0 min=0 avg=0 max=0 total=0\r\nPROF idle.main n=0 min=0 avg=0 max=0 total=0\r\nPROF display.update n=0 min=0 avg=0 max=0 total=0\r\nPROF usb.service n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.read n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.write n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.verify n=0 min=0 avg=0 max=0 total=0\r\nPROF flash.erase n=0 min=0 avg=0 max=0 total=0\r\nPROF zx0.decode n=0 min=0 avg=0 max=0 total=0\r\n/> "
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "raw24_control_mean_seconds": 44.844004395497905,
+    "raw24_control_drift_percent": 0.024071240308320974,
+    "raw32_seconds": 36.8458559585124,
+    "raw32_reduction_vs_raw24_percent": 17.835491153837445
+  },
+  "full_board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "mini_touched": false,
+    "firmware": {
+      "build": "122A5FF9",
+      "bytes": 360564,
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+    },
+    "process_exit_code": 0,
+    "read_retries": [],
+    "CRC_valid": true,
+    "crash_none": true,
+    "alarms_off": true,
+    "calculator_verification": "Exact reg/stk/dump/pwd contents; optional trailing terminal-prompt space ignored",
+    "file_verification": "Exact full path/bytes/SHA256 fingerprint",
+    "terminal_state_prompt_space_normalized": true
+  },
+  "HIL_sources": {
+    "tests/hil_vm_compiled_blocks.py": {
+      "sha256": "77d483a5a280da85e1b032849f201d9384a6c231815a71bfa7c96a441b2dc67d",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_vm_compiled_blocks.py"
+    },
+    "tests/hil_basic_graphics.py": {
+      "sha256": "d38390561dbdfddb9e7cb4452d130510fa4dc4c96d138f7cfda8b7370afed241",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_basic_graphics.py"
+    },
+    "tests/hil_rtc_alarm.py": {
+      "sha256": "242bc861a5327c687125d0fa27d10cc0a528b0cb06cb8db80b429b1cbbbc42a3",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_rtc_alarm.py"
+    },
+    "tests/hil_system_memory.py": {
+      "sha256": "d68b23b89bf6655ae18a4bbfc6b38d28f717fcad939af74443f67789f116865f",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_system_memory.py"
+    },
+    "tests/hil_turochamp_performance.py": {
+      "sha256": "bc393c8c60c0cd9a0c8dce0d8d19f926a6ac3d97bcadd43ccc50a717c37c8973",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_turochamp_performance.py"
+    },
+    "tests/hil_packbits_firmware.py": {
+      "sha256": "e2792e8d373366ebcfcdf56fb0fba4db69e2acd911ff337d411da7e273e0731d",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_packbits_firmware.py"
+    },
+    "tests/hil_portable_apps.py": {
+      "sha256": "74c70e9bd4673a7c1469f88c9c89674ad87ff2bd6d5857d126ceb1301a5f5386",
+      "copy": "/Users/bolk/Projects/MK61S_MINI/.build/classic-raw32-default-20261015/harness-attempt-1/tests/hil_portable_apps.py"
+    }
+  },
+  "production_main_commit": "5d842637150e30d7a1bc5bb43b68584e65eb0966",
+  "production_patch_SHA256": "70812501f89de675f9c400fcc34f919da1972a72585ae4a1edfc3a85ce39c940",
+  "game_tree_SHA1": "3fde55bac115ff28ee652ff62fa32b63e05a122e",
+  "base_code_tree_SHA1": "e4cdb606ca3fc3429f8663fb5540785fa4d06c8e",
+  "post_compile_main_update": {
+    "commit": "64c9e36db",
+    "compilation_inputs_changed": false,
+    "scope": "Research tests and documentation only; code/tools/sdk/programs unchanged"
+  },
+  "validation_logs": {
+    "all-host-tests.log": {
+      "status": "PASS",
+      "sha256": "ce4a4ea4c58367aec607757766f400278dbecd905d403d0a6e92c3bc8751b807"
+    },
+    "all-host-tests-integration-RAM.log": {
+      "status": "PASS",
+      "sha256": "6860f7618b0fd0671e946eda411f210dabe0905d19f8a01c4addeff76a7e66f0"
+    },
+    "cache-tests-final.log": {
+      "status": "PASS",
+      "sha256": "c8c755ad3082c6652480f2fd8b503885ce52d86851230f910a87cad5172285ca"
+    },
+    "encoder-tests-final.log": {
+      "status": "PASS",
+      "sha256": "6824c7b2c334506f21b43d11bed863e94a49e95a1d4ab1d7126f8e5baf931b68"
+    },
+    "resource-gates-final.log": {
+      "status": "PASS",
+      "sha256": "c680d575c92b5a7005afcad46b2523c1e0db3071f1c6bc0fe63666214ed1e2ea"
+    },
+    "ARM-overlay-libm-final.log": {
+      "status": "PASS",
+      "sha256": "e973f52ce30051facacb9f23f64dc3d32a836353f150ec48d03f970ad3f54879"
+    },
+    "ARM-MPU-final.log": {
+      "status": "PASS",
+      "sha256": "895aa55ec5061c64698c1f384a8075a6cf257a3ec332306a008b54ce2753ec49"
+    },
+    "explicit-mixed32-tests.log": {
+      "status": "PASS",
+      "sha256": "2804db213f3b445c9c6d6b2fdc400c433accbf6724b0f7511bec138de0b9947a"
+    }
+  }
+}
