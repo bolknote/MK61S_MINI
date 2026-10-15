@@ -124,8 +124,20 @@ enum class Op : uint8_t {
   LOAD_PARAMETER,   // one-based position -> current call argument
   RETURN_VALUE,
   DROP,
-  PRINT_PRECISION   // width and significant digit bytes
+  PRINT_PRECISION,  // width and significant digit bytes
+  BLOCK_INDEX,     // CONST_I16 layout; compiler-proven CONST_I16 / LOAD / ADD
+  BLOCK_COMPARE    // LOAD layout; compiler-proven LOAD / CONST_0..15 / COMPARE_FALSE
 };
+// A block mark changes neither the first instruction's width nor its logical
+// identity. Diagnostic/host traces use the original scalar opcode.
+constexpr Op scalar_op(Op op) {
+  return op==Op::BLOCK_INDEX ? Op::CONST_I16 : op==Op::BLOCK_COMPARE ? Op::LOAD : op;
+}
+constexpr bool index_block_shape(Op op,uint16_t pc,Op first,uint16_t first_pc,
+                                 Op second,uint16_t second_pc) {
+  return op==Op::ADD && first==Op::CONST_I16 && second==Op::LOAD &&
+         second_pc==first_pc+3U && pc==second_pc+2U;
+}
 enum class Function : uint8_t {
   SIN,
   COS,
@@ -160,7 +172,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 7;
+static constexpr uint16_t VERSION = 8;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.

@@ -368,6 +368,25 @@ class Compiler {
     ++pc_;
   }
   void emit(Op op) {
+#if !defined(LANGUAGE_VM_TEST_NO_COMPILED_BLOCKS)
+    // Mark the first original instruction; its width and every following PC
+    // stay unchanged. Sizing needs no output buffer or extra metadata. These
+    // marks select a proven block, rather than probing ordinary LOAD/CONST at
+    // every execution. Scalar execution remains valid at every interior PC.
+    uint16_t block_at=0; Op block=Op::HALT;
+    if(index_block_shape(op,pc_,(Op)((previous_[1]>>8)&255),
+                         (uint16_t)(previous_[1]>>16),last_op_,last_at_)) {
+      block_at=(uint16_t)(previous_[1]>>16);block=Op::BLOCK_INDEX;
+    }
+    if(op==Op::COMPARE_FALSE && pc_==last_at_) {
+      const uint16_t lhs=(uint16_t)(previous_[0]>>16),rhs=(uint16_t)(previous_[1]>>16);
+      const Op right=(Op)((previous_[1]>>8)&255);
+      const unsigned width=right>=Op::CONST_0 && right<=Op::CONST_15 ? 1 : 0;
+      if(((previous_[0]>>8)&255)==(unsigned)Op::LOAD && rhs==lhs+2U &&
+         width && pc_==rhs+width) {block_at=lhs;block=Op::BLOCK_COMPARE;}
+    }
+    if(block!=Op::HALT && pass_ && out_)out_[block_at]=(uint8_t)block;
+#endif
     if(op != Op::SOURCE_POS) {
       previous_[0]=previous_[1];
       previous_[1]=((uint32_t)last_at_<<16)|((uint32_t)last_op_<<8)|last_operand_;

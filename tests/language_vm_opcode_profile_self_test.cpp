@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdio>
 #include <cstring>
+#include <initializer_list>
 
 namespace {
 struct Row {uint64_t cycles=0;uint32_t count=0,integers=0;};
@@ -86,5 +87,18 @@ int main() {
   assert(limited.error==Error::LIMIT && variables[0]==0 && !applied && !rows[8].count);
   total=0;for(const auto& row:rows)total+=row.count;
   assert(total==limited.steps);
+  // A marked comparison keeps three logical counts. Floating values deopt
+  // and must never be reported as an integer block by the diagnostic census.
+  for(Value input:{Value(0),Value(.5)}) {
+    const char conditional[]="10 IF I<1 A=3 ELSE A=4\n";
+    const auto c=compile(Language::BASIC,conditional,sizeof(conditional)-1,image,sizeof(image));
+    assert(c.error==Error::NONE && inspect(image,c.size,view)==Error::NONE);
+    reset();variables[0]=0;variables[8]=input;state={};
+    state.variables=variables;state.stack=stack;state.stack_capacity=MAX_STACK;
+    const auto r=run(view,state,Services{});
+    assert(r.error==Error::NONE && variables[0]==3 && !applied);
+    total=0;for(const auto& row:rows)total+=row.count;
+    assert(total==r.steps && rows[8].count==(input.integer()?3U:0U));
+  }
   std::puts("VM opcode profile: active block, logical counts, single elapsed attribution and limit fallback PASS");
 }

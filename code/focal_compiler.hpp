@@ -42,6 +42,8 @@ private:
   Line *lines_;
   uint8_t count_ = 0, pass_ = 0, depth_ = 0, sp_ = 0, maximum_ = 0;
   E error_ = E::NONE;
+  Op before_op_=Op::HALT,previous_op_=Op::HALT;
+  uint16_t before_pc_=0,previous_pc_=0;
   bool rf_, requires_rf_ = false, has_calls_ = false;
   void fail(E error) {
     if (error_ == E::NONE) {
@@ -82,6 +84,17 @@ private:
     emit_word(uint16_t(w >> 16));
   }
   void op(Op instruction, int change = 0) {
+    if constexpr (!Expression) {
+#if !defined(LANGUAGE_VM_TEST_NO_COMPILED_BLOCKS)
+      if(output_ && pass_ && language_vm::index_block_shape(instruction,pc_,
+          before_op_,before_pc_,previous_op_,previous_pc_))
+        output_[before_pc_]=uint8_t(Op::BLOCK_INDEX);
+#endif
+      if(instruction!=Op::SOURCE_POS) {
+        before_op_=previous_op_;before_pc_=previous_pc_;
+        previous_op_=instruction;previous_pc_=pc_;
+      }
+    }
     byte(uint8_t(instruction));
     if (change < 0 && unsigned(-change) > sp_) {
       fail(E::INVALID_IMAGE);

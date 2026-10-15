@@ -16,6 +16,19 @@ namespace language_vm {
 #if MK61_VM_INTEGER_BLOCK != 0 && MK61_VM_INTEGER_BLOCK != 1
 #error "MK61_VM_INTEGER_BLOCK must be 0 or 1"
 #endif
+#ifndef MK61_VM_COMPARE_BLOCK
+#if defined(MK61_APP_LOCAL_FLOAT_MATH) && MK61_APP_LOCAL_FLOAT_MATH
+#define MK61_VM_COMPARE_BLOCK 0
+#else
+#define MK61_VM_COMPARE_BLOCK 1
+#endif
+#endif
+#if MK61_VM_COMPARE_BLOCK != 0 && MK61_VM_COMPARE_BLOCK != 1
+#error "MK61_VM_COMPARE_BLOCK must be 0 or 1"
+#endif
+#if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
+void compare_block_applied(uint16_t);
+#endif
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
 void integer_block_applied(uint16_t, uint8_t);
 #endif
@@ -45,9 +58,9 @@ constexpr uint8_t wire_widths[] = {
   255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
   255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
-  2,7,1,1,1,3 // 97..102
+  2,7,1,1,1,3,3,2 // 97..104
 };
-static_assert(sizeof(wire_widths)==(unsigned)Op::PRINT_PRECISION+1,"opcode width table changed");
+static_assert(sizeof(wire_widths)==(unsigned)Op::BLOCK_COMPARE+1,"opcode width table changed");
 uint16_t next(const View& v, uint16_t pc) {
   if(pc>=v.end) return 0;
   const uint8_t op=v.bytes[pc];
@@ -76,6 +89,7 @@ bool constant_value(const View& v, uint16_t pc, Value& value) {
       value = (int8_t)*p;
       return true;
     case Op::CONST_I16:
+    case Op::BLOCK_INDEX:
       value = (int16_t)word(p);
       return true;
     case Op::CONST_I32:
@@ -148,66 +162,84 @@ Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
   if(!result.finite()) return Error::MATH;
   variables[index]=result;return Error::NONE;
 }
-#if MK61_VM_INTEGER_BLOCK
+#if MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK
+#if MK61_VM_INTEGER_BLOCK || defined(LANGUAGE_VM_TRACE)
 uint16_t block_next(const View& v,uint16_t pc) {
-  // Inspect diagnostic prefixes without committing them: trailing/broken
-  // prefixes still belong to the ordinary loop's exact error/limit path.
   while(pc<v.end && (Op)v.bytes[pc]==Op::SOURCE_POS) {
     if(v.end-pc<3)return 0;
     pc=(uint16_t)(pc+3);
   }
   return pc;
 }
-// One guarded integer block, shared by both languages/arithmetic backends.
-// Recognize CONST_I16, LOAD, ADD, optionally LOAD_ARRAY and STORE. The original
-// bytes/branch targets stay intact. Every guard precedes any observable write;
-// overflow, floats, invalid bounds or a service/limit boundary deopt to run().
-__attribute__((noinline)) uint8_t integer_block(const View& v, Continuation& s,
+#endif
+// Compiler marks retain the original instruction widths and all interior PCs.
+// Share runtime guards and commit code for both block families. No write or
+// trace occurs before every guard passes; boundaries deopt to ordinary run().
+// The cold verifier proves marked shapes. Bounded public-View checks also
+// retain safe scalar fallback for truncated views and invalid local IDs.
+__attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
   const uint16_t first=instruction;
-  if(v.end-first<6 || (Op)v.bytes[first+3]!=Op::LOAD ||
-     (Op)v.bytes[first+5]!=Op::ADD || v.bytes[first+4]>=26 ||
-     data.stack_capacity-s.sp<2) return false;
-  const uint8_t src=v.bytes[first+4];
-  const Value variable=data.variables[src];
-  int32_t sum;
-  if(!variable.integer() || __builtin_add_overflow(
-       (int32_t)(int16_t)word(v.bytes+first+1),variable.integer_value(),&sum)) return false;
-  uint16_t after=(uint16_t)(first+6), last=(uint16_t)(first+5);
-  uint8_t count=3, dst=255;
-  Value value=sum;
-  uint16_t candidate=block_next(v,after);
-  if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::LOAD_ARRAY) {
-    if(!data.array || sum<0 || (uint32_t)sum>=data.array_count ||
-       !data.array[sum].integer()) return false;
-    value=data.array[sum];last=candidate;after=(uint16_t)(candidate+1);++count;
-  }
-  candidate=block_next(v,after);
-  if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::STORE) {
-    if(v.end-candidate<2 || v.bytes[candidate+1]>=26) return false;
-    dst=v.bytes[candidate+1];last=candidate;after=(uint16_t)(candidate+2);++count;
+  if(data.stack_capacity-s.sp<2)return 0;
+  uint16_t after,last;
+  uint8_t count=3,dst=255,delta;
+  Value a,b;
+  const bool compare=(Op)v.bytes[first]==Op::BLOCK_COMPARE;
+  if(compare) {
+#if MK61_VM_COMPARE_BLOCK
+    if(v.end-first<7 || v.bytes[first+1]>=26)return 0;
+    const uint8_t rhs=v.bytes[first+2];
+    if(rhs<(uint8_t)Op::CONST_0 || rhs>(uint8_t)Op::CONST_15 ||
+       (Op)v.bytes[first+3]!=Op::COMPARE_FALSE)return 0;
+    b=(uint8_t)(rhs-(uint8_t)Op::CONST_0);
+    last=(uint16_t)(first+3);after=(uint16_t)(first+7);
+    a=data.variables[v.bytes[first+1]];
+    if(!a.integer())return 0;
+    delta=2;
+#else
+    return 0;
+#endif
+  } else {
+#if MK61_VM_INTEGER_BLOCK
+    if(v.end-first<6 || v.bytes[first+4]>=26)return 0;
+    b=data.variables[v.bytes[first+4]];
+    int32_t sum;
+    if(!b.integer() || __builtin_add_overflow((int32_t)(int16_t)word(v.bytes+first+1),
+                                             b.integer_value(),&sum))return 0;
+    a=sum;after=(uint16_t)(first+6);last=(uint16_t)(first+5);
+    uint16_t candidate=block_next(v,after);
+    if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::LOAD_ARRAY) {
+      if(!data.array || sum<0 || (uint32_t)sum>=data.array_count || !data.array[sum].integer())return 0;
+      a=data.array[sum];last=candidate;after=(uint16_t)(candidate+1);++count;
+    }
+    candidate=block_next(v,after);
+    if(candidate && candidate<v.end && (Op)v.bytes[candidate]==Op::STORE) {
+      if(v.end-candidate<2 || v.bytes[candidate+1]>=26)return 0;
+      dst=v.bytes[candidate+1];last=candidate;after=(uint16_t)(candidate+2);++count;
+    }
+    delta=dst<26?0:1;
+#else
+    return 0;
+#endif
   }
   if(((steps-1)&31U)+count>32 || (limit && count-1U>limit-steps) ||
-     (s.call_count && s.calls[s.call_count-1].end && after>s.calls[s.call_count-1].end))
-    return false;
+     (s.call_count && s.calls[s.call_count-1].end && after>s.calls[s.call_count-1].end))return 0;
 #if defined(LANGUAGE_VM_TRACE)
-  trace_instruction(v,(uint16_t)(first+3),steps+1);
-  trace_instruction(v,(uint16_t)(first+5),steps+2);
-  uint16_t pc=(uint16_t)(first+6);
-  for(uint8_t n=3;n<count;++n) {
-    pc=block_next(v,pc);
-    trace_instruction(v,pc,steps+n);
-    pc=(uint16_t)(pc+((Op)v.bytes[pc]==Op::STORE?2:1));
+  uint16_t pc=first;
+  for(uint8_t n=1;n<count;++n) {
+    pc=block_next(v,next(v,pc));trace_instruction(v,pc,steps+n);
   }
 #endif
-  // Match even unused operand cells, so snapshots/INPUT observe exactly the
-  // ordinary VM state, not only the final numerical answer.
-  data.stack[s.sp+1]=variable;data.stack[s.sp]=value;
-  if(dst<26)data.variables[dst]=value;
-  else ++s.sp;
-  s.pc=after;instruction=last;steps+=count-1;
+  // Match even inactive cells: INPUT, snapshots and scalar fallback retain
+  // the exact same operand bank, not only the final numerical result.
+  data.stack[s.sp]=a;data.stack[s.sp+1]=b;
+  if(dst<26)data.variables[dst]=a;
+  s.sp=(uint8_t)(s.sp+delta);s.pc=after;instruction=last;steps+=count-1;
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
-  integer_block_applied(first,count);
+  if(!compare)integer_block_applied(first,count);
+#endif
+#if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
+  if(compare)compare_block_applied(first);
 #endif
   return count;
 }
@@ -291,11 +323,18 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     // with respect to program variables and control frames. This permits the
     // hot INPUT evaluator to borrow the suspended program's stack safely.
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
-        op != Op::CONST_I16 && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
+        op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
         op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
         op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
-    if (((op == Op::LOAD || op == Op::STORE || op == Op::NEXT_BASIC ||
+    if(op==Op::BLOCK_INDEX && (v.end-pc<6 ||
+        (Op)bytes[pc+3]!=Op::LOAD || (Op)bytes[pc+5]!=Op::ADD))return Error::INVALID_IMAGE;
+    if(op==Op::BLOCK_COMPARE) {
+      const uint16_t rhs=(uint16_t)(pc+2), cmp=next(v,rhs);
+      if(!cmp || v.end-cmp<4 || (Op)bytes[cmp]!=Op::COMPARE_FALSE ||
+         !((Op)bytes[rhs]>=Op::CONST_0 && (Op)bytes[rhs]<=Op::CONST_15))return Error::INVALID_IMAGE;
+    }
+    if (((op == Op::LOAD || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
          bytes[pc + 1] >= 26) ||
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
@@ -576,7 +615,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       break;
     }
     const Op op = (Op)v.bytes[s.pc];
-    VM_OPCODE_SAMPLE(op, s, data);
+    VM_OPCODE_SAMPLE(scalar_op(op), s, data);
 #if defined(LANGUAGE_VM_TRACE)
     trace_instruction(v, s.pc, steps);
 #endif
@@ -612,9 +651,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     Value a = 0, b = 0, value = 0;
     switch (op) {
 #if MK61_VM_INTEGER_BLOCK
-      case Op::CONST_I16:
+      case Op::BLOCK_INDEX:
         {
-          const uint8_t count=integer_block(v,s,data,steps,instruction,limit);
+          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit);
           if(count) {
             VM_OPCODE_FUSED(count);
             break;
@@ -624,8 +663,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #endif
       case Op::CONST_I8:
 #if !MK61_VM_INTEGER_BLOCK
-      case Op::CONST_I16:
+      case Op::BLOCK_INDEX:
 #endif
+      case Op::CONST_I16:
       case Op::CONST_I32:
       case Op::CONST_F64:
         (void)constant_value(v,instruction,value);push(value);
@@ -911,6 +951,17 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         break;
       }
+      case Op::BLOCK_COMPARE:
+#if MK61_VM_COMPARE_BLOCK
+        if(compiled_block(v,s,data,steps,instruction,limit)) {
+          VM_OPCODE_FUSED(3);p=v.bytes+instruction+1;
+        } else
+#endif
+        {
+          if(*p>=26)error=Error::INVALID_IMAGE;else push(data.variables[*p]);
+          break;
+        }
+        [[fallthrough]];
       case Op::COMPARE_FALSE:
         if(s.sp<2) error=Error::STACK;
         else {

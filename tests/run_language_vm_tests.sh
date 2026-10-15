@@ -47,6 +47,8 @@ for backend in 0 1; do
   "$work/reset-$backend"
 done
 
+bash "$root/tests/run_language_vm_compiled_block_tests.sh"
+
 # Arduino compiles every .cpp, including this experimental compiler when both
 # VM placements are off. Its unused APP-only frames must not enter resident
 # stack analysis. Only compiler APPs retain full-program entry points;

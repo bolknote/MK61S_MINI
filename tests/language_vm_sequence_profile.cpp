@@ -49,7 +49,7 @@ void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
   ++trace.instructions;
   if(!trace.previous.empty() && following(v,trace.previous.back().pc)!=pc)
     trace.previous.clear();
-  trace.previous.push_back({pc,(Op)v.bytes[pc]});
+  trace.previous.push_back({pc,scalar_op((Op)v.bytes[pc])});
   if(trace.previous.size()>4)trace.previous.erase(trace.previous.begin());
   for(unsigned n=2;n<=trace.previous.size();++n) {
     std::vector<unsigned> sequence;

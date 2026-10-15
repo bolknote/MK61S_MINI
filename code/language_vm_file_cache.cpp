@@ -134,6 +134,12 @@ bool owned(uint16_t source_id,Language language,const uint8_t* file,uint16_t siz
   Key key={};
   memcpy(&key.compiler_crc,plain+4,4);memcpy(&key.source_crc,plain+8,4);
   key.source_id=source_id;key.source_size=word(plain+14);key.language=language;
-  return matches(key,plain,image_size);
+  // A verified cache from an earlier wire version is ours to rebuild, never
+  // ours to execute. Keep probe/view strict; reject unknown future formats.
+  const uint16_t version=word(plain+18);
+  if(!version || version>VERSION)return false;
+  uint8_t expected[KEY_BYTES];key_bytes(key,image_size,expected);
+  word(expected+18,version);
+  return !memcmp(plain,expected,sizeof(expected));
 }
 }

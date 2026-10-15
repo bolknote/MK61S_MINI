@@ -106,7 +106,7 @@ int main() {
     for(unsigned mask=0;mask<16;++mask)for(unsigned target:{0U,1U,2U}) {
       Fixture f(basic[8],Language::BASIC,input,MAX_STACK,0);
       uint16_t first=f.view.code;
-      while(first<f.view.end && !((Op)f.image[first]==Op::LOAD && f.view.end-first>=7 &&
+      while(first<f.view.end && !(((Op)f.image[first]==Op::LOAD || (Op)f.image[first]==Op::BLOCK_COMPARE) && f.view.end-first>=7 &&
             (Op)f.image[first+2]==Op::CONST_0 && (Op)f.image[first+3]==Op::COMPARE_FALSE)) {
         first=trace_following(f.view,first);assert(first);
       }

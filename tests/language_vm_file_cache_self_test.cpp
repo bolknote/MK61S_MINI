@@ -56,6 +56,20 @@ int main() {
   assert(bytes==result.size && !memcmp(cached,image.data(),bytes));
   loadable_module::Header h;
   assert(loadable_module::decode_header(file.data(),written,h)==loadable_module::HeaderStatus::OK);
+  // Wire upgrades must replace a recognized old cache instead of treating its
+  // filename as a foreign collision and recompiling forever. It is never a hit.
+  for(uint16_t version:{uint16_t(0),uint16_t(VERSION-1),uint16_t(VERSION+1)}) {
+    auto old=file;auto old_header=h;
+    old[key_offset+18]=(uint8_t)version;old[key_offset+19]=(uint8_t)(version>>8);
+    old[key_offset+file_cache::KEY_BYTES+4]=(uint8_t)version;
+    old_header.stored_crc32=loadable_module::crc32(old.data()+64,old.size()-64);
+    old_header.image_crc32=loadable_module::crc32(old.data()+key_offset,old_header.image_size);
+    assert(loadable_module::encode_header(old_header,(uint16_t)old.size(),old.data()));
+    const uint8_t* span=nullptr;uint16_t length=0;
+    assert(!file_cache::view(key,old.data(),(uint16_t)old.size(),span,length));
+    assert(!file_cache::probe(key,old.data(),file_cache::PROBE_BYTES,(uint16_t)old.size(),length));
+    assert(file_cache::owned(key.source_id,key.language,old.data(),(uint16_t)old.size())==(version==VERSION-1));
+  }
   const loadable_module::Reader reader={&file,read};
   assert(loadable_module::decode_image(h,reader,decoded.data(),0x20004000));
   assert(!memcmp(decoded.data()+file_cache::KEY_BYTES,image.data(),bytes));

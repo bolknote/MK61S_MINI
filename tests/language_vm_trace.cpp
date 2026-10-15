@@ -60,7 +60,7 @@ void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
   auto& module=trace.modules[crc];module.language=(unsigned)v.language;module.bytes=v.size;
   if(steps==1) {++module.runs;trace.previous.clear();trace.run_order.push_back(crc);}
   ++module.instructions;++module.pcs[pc];
-  const unsigned op=v.bytes[pc];++trace.ops[op];
+  const unsigned op=(unsigned)scalar_op((Op)v.bytes[pc]);++trace.ops[op];
   trace.previous.push_back(op);
   if(trace.previous.size()>4)trace.previous.erase(trace.previous.begin());
   for(unsigned n=2;n<=trace.previous.size();++n)
