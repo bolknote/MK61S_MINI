@@ -802,6 +802,43 @@ static void check_pending_far_context() {
   std::printf("PASS pending far conditions survive context save/restore and scalar/native replay\n");
 }
 
+static void check_banked_program_capacity() {
+  scenario = "bank mapping: full capacity, sparse last bank and reset";
+  initialize(true);
+  core_61::clear_extended_program_banks();
+  u8 empty[core_61::CODE_PAGE_BUFFER_SIZE] = {};
+  core_61::set_code_page(empty);
+  // Active bank zero consumes a backing slot on the first far write. The
+  // remaining 31 slots include a sparse bank at the end of the 10000-byte API.
+  for(unsigned bank = 1; bank <= 30; ++bank)
+    require(core_61::write_absolute_program(bank * core_61::MAX_PROGRAM_STEP,
+        (u8)(bank + 0x40)), "cannot allocate all original bank slots");
+  require(core_61::write_absolute_program(9999, 0x7B), "last bank/address failed");
+  require(!core_61::write_absolute_program(31 * core_61::MAX_PROGRAM_STEP, 0x55),
+          "a 33rd backing slot was accepted");
+  for(unsigned bank = 1; bank <= 30; ++bank) {
+    u8 opcode = 0;
+    require(core_61::read_absolute_program(bank * core_61::MAX_PROGRAM_STEP, opcode)
+        && opcode == bank + 0x40, "bank map aliased another backing slot");
+    require(core_61::read_absolute_program(bank * core_61::MAX_PROGRAM_STEP + 1, opcode)
+        && opcode == 0, "unwritten byte did not remain zero");
+  }
+  u8 opcode = 0;
+  require(core_61::read_absolute_program(9999, opcode) && opcode == 0x7B,
+          "last bank content was lost after exhaustion");
+  require(core_61::read_absolute_program(31 * core_61::MAX_PROGRAM_STEP, opcode)
+        && opcode == 0, "failed allocation exposed stale data");
+  require(!core_61::read_absolute_program(10000, opcode), "read escaped address limit");
+  core_61::clear_extended_program_banks();
+  require(core_61::read_absolute_program(9999, opcode) && opcode == 0,
+          "cleared bank map retained a backing slot");
+  require(core_61::write_absolute_program(9999, 0x29), "slots were not reusable after reset");
+  require(core_61::read_absolute_program(9999, opcode) && opcode == 0x29,
+          "reallocated last bank differs");
+  core_61::clear_extended_program_banks();
+  std::printf("PASS 32 backing slots, sparse final bank, exhaustion and reset reuse\n");
+}
+
 static void check_far_bank_zero_branch() {
   scenario = "far entry at bank zero followed by native branches";
   for(u8 transfer : {0x51, 0x53}) {
@@ -864,6 +901,7 @@ int main() {
   require(yields != 0, "program yield events not covered");
   check_pending_far_context();
   check_far_bank_zero_branch();
+  check_banked_program_capacity();
   std::printf("PASS native verification: %llu body cases, %llu steps, %llu frames; "
       "9 defect types detected in both ring modes\n", body_cases, compared_steps, compared_frames);
 #if MK61_CORE_PREDECODED_ROM
