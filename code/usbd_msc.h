@@ -32,7 +32,11 @@ extern "C" {
 #include  "usbd_msc_scsi.h"
 #include  "usbd_ioreq.h"
 #if defined(STM32F411xE)
+#define MK61_MSC_SESSION_BUFFER 1
+// Foreground only. Keep the prepared buffer pinned across bus reset and
+// configuration retries. Release only after the class has been deinitialized.
 uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size);
+uint8_t MK61_MSC_ReleasePreparedHandle(void* memory);
 #endif
 
 /** @addtogroup USBD_MSC_BOT

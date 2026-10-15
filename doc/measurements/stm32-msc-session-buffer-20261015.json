@@ -1,0 +1,701 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "stage": 8,
+  "name": "MSC transport buffer scoped to a session",
+  "baseline_commit": "252df65c316df770c9f3d40551445058cd56f04d",
+  "branch": "feature/stm32-msc-specialization",
+  "source_epoch": 1791969300,
+  "status": "PASS",
+  "comparison": "Same feature switches, pinned compiler, source epoch and source path. Qualified images use native resident arithmetic/libc with the existing LIBM qualification switch. Flash includes sealed image. Idle savings apply after the first MSC use; live session memory stays allocated.",
+  "source_code_sha256": {
+    "code/shared_memory.cpp": "e4571fb4976cffd882fc0ab9cc8a4f705b0bed60d59c64a02b45835fd9079366",
+    "code/shared_memory.hpp": "296ea4b22651e067ef760025dbd35c49cea523a56c21253d95484a5100aee124",
+    "code/shared_memory_owner_catalog.inc": "8ac71779ce1dca10237de1d2cd234a1e8f78af8668e8fe09aee5e4d997e03c9b",
+    "code/usb_mass_storage.cpp": "6d39b506a408dd5f6b44d1b7cc9950c5c5723d72676266ed0474b25901683a6c",
+    "code/usbd_msc.c": "f203c571e78b8cf4b24ea4723a9a53dcf8c2a87a560f09033b78afa799f6fa77",
+    "code/usbd_msc.h": "475ae9192c9cd48c0e89cfd56b94a546f4e69cd2af1a975e7727cb9c3c410c37"
+  },
+  "devices": {
+    "classic": {
+      "profile": "classic-v3-uc1609",
+      "public_id": "AEB505B6E0067623",
+      "baseline_image": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/recovery/classic.bin",
+        "bytes": 359028,
+        "footer": 357316,
+        "build": "4E665E6B",
+        "sha256": "660f8280fee09e57865ed54f5a9141537dce767d78bf3f2ebc901a43420f89af"
+      },
+      "qualified_image": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/install/classic.bin",
+        "bytes": 359352,
+        "footer": 357640,
+        "build": "B8E3A516",
+        "sha256": "e5287a3bcbacfe3377ebb933bda7a6d4369394f382507634f42d6968994edb62"
+      },
+      "flash_before": 359028,
+      "flash_after": 359352,
+      "flash_delta": 324,
+      "static_RAM_before": 28056,
+      "static_RAM_after": 28072,
+      "static_RAM_delta": 16,
+      "MSC_retained_before": 8264,
+      "MSC_retained_after": 0,
+      "MSC_live_session_before": 8264,
+      "MSC_live_session_after": 8264,
+      "net_idle_RAM_returned_after_MSC": 8248,
+      "peak_RAM_delta": 16,
+      "RAM_before_first_MSC": 69984,
+      "RAM_after_control_MSC": 61720,
+      "RAM_after_candidate_MSC": 69968,
+      "control_sessions_without_reset": 6,
+      "candidate_sessions_without_reset": 6,
+      "additional_coalescence_sessions": 2,
+      "actual_APP_OVERLAY_capacities_coalesce": "PASS",
+      "candidate_prepared_pointer_after_close": 0,
+      "RAM_probe_minimum_stack_required": 11264,
+      "RAM_probe_minimum_stack_before": 12632,
+      "RAM_probe_minimum_stack_after": 12600,
+      "ordinary_MSC_minimum_stack_required": 12288,
+      "ordinary_MSC_minimum_stack_remaining": 12632,
+      "physical_MSC": "PASS: binary4096 import/export, Unicode name, two safe ejects/CDC returns, reset and exact cleanup",
+      "CDC_boundary_bytes": [
+        1,
+        63,
+        64,
+        65,
+        255,
+        256,
+        257,
+        4095,
+        4096
+      ],
+      "CRC_checked_NOR_64KiB_reads": 100,
+      "SPI_DMA": "PASS no errors/timeouts",
+      "NOR_read_medians_us_before": {
+        "64": 60.0,
+        "512": 210.0,
+        "4096": 1576.0,
+        "65536": 25001.0
+      },
+      "NOR_read_medians_us_after": {
+        "64": 60.0,
+        "512": 210.0,
+        "4096": 1578.0,
+        "65536": 25033.5
+      },
+      "NOR_64KiB_time_delta_percent": 0.1299948002079887,
+      "core_cycles_per_step_before": 1709517,
+      "core_cycles_per_step_after": 1712125,
+      "core_time_delta_percent": 0.15255771074520474,
+      "original_files_preserved": 44,
+      "program_registers_stack_IP_pwd_preserved": true,
+      "hardware_CRC": "PASS",
+      "crash": "none",
+      "RTC_settings": "untouched; mini correction remains 0 ppm",
+      "BIN_matches_final_sealed_build": true,
+      "RAM_measurement_reports": {
+        "control": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/baseline-session-v2/report.json",
+        "candidate": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/candidate-session/report.json",
+        "coalescence": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/candidate-coalescence-v2/report.json"
+      },
+      "fresh_reset_repeat": {
+        "NOR_64KiB_us": 25033.0,
+        "core_cycles": 1712124,
+        "preservation": "PASS"
+      }
+    },
+    "mini": {
+      "profile": "mini-v3-a00",
+      "public_id": "6FF33152484A4488",
+      "baseline_image": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/recovery/mini.bin",
+        "bytes": 331476,
+        "footer": 329924,
+        "build": "56F2CDFB",
+        "sha256": "5b4647752f80e3f3e40c6d6e2a9e509ea5bc670de85082f387168c84704067cf"
+      },
+      "qualified_image": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/install/mini.bin",
+        "bytes": 331824,
+        "footer": 330272,
+        "build": "FA8F1A9C",
+        "sha256": "b9df3c434ec8e5366ba43acc3090b31ecd9b961291dd716144d63b42b445abd1"
+      },
+      "flash_before": 331476,
+      "flash_after": 331824,
+      "flash_delta": 348,
+      "static_RAM_before": 26728,
+      "static_RAM_after": 26728,
+      "static_RAM_delta": 0,
+      "MSC_retained_before": 8264,
+      "MSC_retained_after": 0,
+      "MSC_live_session_before": 8264,
+      "MSC_live_session_after": 8264,
+      "net_idle_RAM_returned_after_MSC": 8264,
+      "peak_RAM_delta": 0,
+      "RAM_before_first_MSC": 71312,
+      "RAM_after_control_MSC": 63048,
+      "RAM_after_candidate_MSC": 71312,
+      "control_sessions_without_reset": 6,
+      "candidate_sessions_without_reset": 6,
+      "additional_coalescence_sessions": 0,
+      "actual_APP_OVERLAY_capacities_coalesce": "PASS",
+      "candidate_prepared_pointer_after_close": 0,
+      "RAM_probe_minimum_stack_required": 11264,
+      "RAM_probe_minimum_stack_before": 12544,
+      "RAM_probe_minimum_stack_after": 12544,
+      "ordinary_MSC_minimum_stack_required": 12288,
+      "ordinary_MSC_minimum_stack_remaining": 12544,
+      "physical_MSC": "PASS: binary4096 import/export, Unicode name, two safe ejects/CDC returns, reset and exact cleanup",
+      "CDC_boundary_bytes": [
+        1,
+        63,
+        64,
+        65,
+        255,
+        256,
+        257,
+        4095,
+        4096
+      ],
+      "CRC_checked_NOR_64KiB_reads": 100,
+      "SPI_DMA": "PASS no errors/timeouts",
+      "NOR_read_medians_us_before": {
+        "64": 59.0,
+        "512": 208.0,
+        "4096": 1566.0,
+        "65536": 24813.0
+      },
+      "NOR_read_medians_us_after": {
+        "64": 59.0,
+        "512": 208.0,
+        "4096": 1566.0,
+        "65536": 24809.0
+      },
+      "NOR_64KiB_time_delta_percent": -0.016120581953005253,
+      "core_cycles_per_step_before": 1707908,
+      "core_cycles_per_step_after": 1708303,
+      "core_time_delta_percent": 0.02312770945507303,
+      "original_files_preserved": 10,
+      "program_registers_stack_IP_pwd_preserved": true,
+      "hardware_CRC": "PASS",
+      "crash": "none",
+      "RTC_settings": "untouched; mini correction remains 0 ppm",
+      "BIN_matches_final_sealed_build": true,
+      "RAM_measurement_reports": {
+        "control": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/mini/baseline-session/report.json",
+        "candidate": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/mini/candidate-session/report.json",
+        "coalescence": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/mini/candidate-session/report.json"
+      }
+    }
+  },
+  "tests": {
+    "F411_variants": 16,
+    "F401_variants": 9,
+    "source_archive_gates": 27,
+    "cross_MCU_WS0010_RAM_comparisons": 4,
+    "ARM_protocol_suites": 22,
+    "random_CDBs_per_MCU": 4000,
+    "ARM_foreground_lifecycle_suites": 5,
+    "successful_foreground_lifecycle_cycles": 50,
+    "ASan_UBSan_allocator": "PASS: 100 pinned APP/full-stage/transport OOM/release/reuse cycles plus existing manager suite",
+    "MSC_packet_bytes_F411": 8192,
+    "MSC_state_bytes_F411": 8264,
+    "F401_packet_bytes": 512,
+    "F401_state_bytes": 584,
+    "controller_ARM_models": [
+      "Classic",
+      "mini",
+      "F401"
+    ],
+    "EP0_queue_ARM_models": [
+      "Classic",
+      "mini",
+      "F401"
+    ]
+  },
+  "artifacts_root": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015",
+  "matrix_comparison": [
+    {
+      "case": "f411-lcd1602-a00",
+      "before": {
+        "Flash": 297356,
+        "static_RAM": 24376,
+        "dynamic_free": 90048
+      },
+      "after": {
+        "Flash": 297928,
+        "static_RAM": 24392,
+        "dynamic_free": 90032
+      },
+      "delta": {
+        "Flash": 572,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-lcd1602-a00-usb-screen",
+      "before": {
+        "Flash": 328756,
+        "static_RAM": 26728,
+        "dynamic_free": 87696
+      },
+      "after": {
+        "Flash": 329120,
+        "static_RAM": 26728,
+        "dynamic_free": 87696
+      },
+      "delta": {
+        "Flash": 364,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f411-lcd1602-a00-no-lto",
+      "before": {
+        "Flash": 314588,
+        "static_RAM": 24356,
+        "dynamic_free": 90072
+      },
+      "after": {
+        "Flash": 315312,
+        "static_RAM": 24364,
+        "dynamic_free": 90064
+      },
+      "delta": {
+        "Flash": 724,
+        "static_RAM": 8,
+        "dynamic_free": -8
+      }
+    },
+    {
+      "case": "f411-lcd1602-a02",
+      "before": {
+        "Flash": 297256,
+        "static_RAM": 24376,
+        "dynamic_free": 90048
+      },
+      "after": {
+        "Flash": 297828,
+        "static_RAM": 24392,
+        "dynamic_free": 90032
+      },
+      "delta": {
+        "Flash": 572,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010",
+      "before": {
+        "Flash": 326888,
+        "static_RAM": 24576,
+        "dynamic_free": 89856
+      },
+      "after": {
+        "Flash": 327460,
+        "static_RAM": 24592,
+        "dynamic_free": 89840
+      },
+      "delta": {
+        "Flash": 572,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen",
+      "before": {
+        "Flash": 347532,
+        "static_RAM": 26904,
+        "dynamic_free": 87520
+      },
+      "after": {
+        "Flash": 347896,
+        "static_RAM": 26920,
+        "dynamic_free": 87504
+      },
+      "delta": {
+        "Flash": 364,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010-no-graphics",
+      "before": {
+        "Flash": 313720,
+        "static_RAM": 24568,
+        "dynamic_free": 89856
+      },
+      "after": {
+        "Flash": 314276,
+        "static_RAM": 24568,
+        "dynamic_free": 89856
+      },
+      "delta": {
+        "Flash": 556,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp",
+      "before": {
+        "Flash": 313236,
+        "static_RAM": 24576,
+        "dynamic_free": 89856
+      },
+      "after": {
+        "Flash": 313824,
+        "static_RAM": 24592,
+        "dynamic_free": 89840
+      },
+      "delta": {
+        "Flash": 588,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+      "before": {
+        "Flash": 326888,
+        "static_RAM": 24576,
+        "dynamic_free": 89856
+      },
+      "after": {
+        "Flash": 327460,
+        "static_RAM": 24592,
+        "dynamic_free": 89840
+      },
+      "delta": {
+        "Flash": 572,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-oled1602-ws0010-usb-screen-no-graphics",
+      "before": {
+        "Flash": 346072,
+        "static_RAM": 26904,
+        "dynamic_free": 87520
+      },
+      "after": {
+        "Flash": 346420,
+        "static_RAM": 26904,
+        "dynamic_free": 87520
+      },
+      "delta": {
+        "Flash": 348,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f411-mini-v2-a00",
+      "before": {
+        "Flash": 297412,
+        "static_RAM": 24384,
+        "dynamic_free": 90048
+      },
+      "after": {
+        "Flash": 297968,
+        "static_RAM": 24400,
+        "dynamic_free": 90032
+      },
+      "delta": {
+        "Flash": 556,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-mini-v2-a02",
+      "before": {
+        "Flash": 297296,
+        "static_RAM": 24384,
+        "dynamic_free": 90048
+      },
+      "after": {
+        "Flash": 297868,
+        "static_RAM": 24400,
+        "dynamic_free": 90032
+      },
+      "delta": {
+        "Flash": 572,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-classic-v2",
+      "before": {
+        "Flash": 334044,
+        "static_RAM": 26224,
+        "dynamic_free": 88208
+      },
+      "after": {
+        "Flash": 334584,
+        "static_RAM": 26240,
+        "dynamic_free": 88192
+      },
+      "delta": {
+        "Flash": 540,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-classic-v3",
+      "before": {
+        "Flash": 344256,
+        "static_RAM": 26448,
+        "dynamic_free": 87984
+      },
+      "after": {
+        "Flash": 344796,
+        "static_RAM": 26464,
+        "dynamic_free": 87968
+      },
+      "delta": {
+        "Flash": 540,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-classic-v3-usb-screen",
+      "before": {
+        "Flash": 347432,
+        "static_RAM": 28056,
+        "dynamic_free": 86368
+      },
+      "after": {
+        "Flash": 347764,
+        "static_RAM": 28072,
+        "dynamic_free": 86352
+      },
+      "delta": {
+        "Flash": 332,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f411-40th",
+      "before": {
+        "Flash": 334108,
+        "static_RAM": 26224,
+        "dynamic_free": 88208
+      },
+      "after": {
+        "Flash": 334640,
+        "static_RAM": 26240,
+        "dynamic_free": 88192
+      },
+      "delta": {
+        "Flash": 532,
+        "static_RAM": 16,
+        "dynamic_free": -16
+      }
+    },
+    {
+      "case": "f401-capability-a00-usb",
+      "before": {
+        "Flash": 230588,
+        "static_RAM": 31848,
+        "dynamic_free": 27288
+      },
+      "after": {
+        "Flash": 230720,
+        "static_RAM": 31848,
+        "dynamic_free": 27288
+      },
+      "delta": {
+        "Flash": 132,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-capability-ws-graphics",
+      "before": {
+        "Flash": 227136,
+        "static_RAM": 28424,
+        "dynamic_free": 30712
+      },
+      "after": {
+        "Flash": 227292,
+        "static_RAM": 28424,
+        "dynamic_free": 30712
+      },
+      "delta": {
+        "Flash": 156,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-capability-ws-usb",
+      "before": {
+        "Flash": 237056,
+        "static_RAM": 31856,
+        "dynamic_free": 27272
+      },
+      "after": {
+        "Flash": 237204,
+        "static_RAM": 31856,
+        "dynamic_free": 27272
+      },
+      "delta": {
+        "Flash": 148,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-capability-ws-usb-graphics",
+      "before": {
+        "Flash": 239296,
+        "static_RAM": 31856,
+        "dynamic_free": 27272
+      },
+      "after": {
+        "Flash": 239452,
+        "static_RAM": 31856,
+        "dynamic_free": 27272
+      },
+      "delta": {
+        "Flash": 156,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-product-a00",
+      "before": {
+        "Flash": 212508,
+        "static_RAM": 27992,
+        "dynamic_free": 31136
+      },
+      "after": {
+        "Flash": 212676,
+        "static_RAM": 27992,
+        "dynamic_free": 31136
+      },
+      "delta": {
+        "Flash": 168,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-product-classic-v2",
+      "before": {
+        "Flash": 242628,
+        "static_RAM": 31412,
+        "dynamic_free": 27712
+      },
+      "after": {
+        "Flash": 242764,
+        "static_RAM": 31412,
+        "dynamic_free": 27712
+      },
+      "delta": {
+        "Flash": 136,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-product-classic-v3",
+      "before": {
+        "Flash": 242668,
+        "static_RAM": 31404,
+        "dynamic_free": 27728
+      },
+      "after": {
+        "Flash": 242804,
+        "static_RAM": 31404,
+        "dynamic_free": 27728
+      },
+      "delta": {
+        "Flash": 136,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-product-mini-v2-a00",
+      "before": {
+        "Flash": 212608,
+        "static_RAM": 28000,
+        "dynamic_free": 31136
+      },
+      "after": {
+        "Flash": 212768,
+        "static_RAM": 28000,
+        "dynamic_free": 31136
+      },
+      "delta": {
+        "Flash": 160,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    },
+    {
+      "case": "f401-product-ws0010",
+      "before": {
+        "Flash": 220656,
+        "static_RAM": 28000,
+        "dynamic_free": 31136
+      },
+      "after": {
+        "Flash": 220824,
+        "static_RAM": 28000,
+        "dynamic_free": 31136
+      },
+      "delta": {
+        "Flash": 168,
+        "static_RAM": 0,
+        "dynamic_free": 0
+      }
+    }
+  ],
+  "observations": [
+    {
+      "kind": "qualification_stack",
+      "details": "The initial unmodified Classic control with the APP/file-service probe measured 12152 bytes remaining, below the ordinary MSC 12288 test target. Its incomplete attempt and successful cleanup are retained. The additional qualification APP uses an explicit 11264-byte test threshold on both images; firmware stack/guard budgets are unchanged. Ordinary physical MSC still uses 12288 and passes both boards.",
+      "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/baseline-session.log"
+    },
+    {
+      "kind": "host_transport",
+      "details": "A read-only Classic fresh-reset timing attempt rejected a late identity echo before measurement. The extra coalescence runner first timed out waiting for a correlated echo after reset, removed its own APP and verified all original files/state. A streaming empty-line handshake corrected the HIL runner; no firmware change or reflash was needed.",
+      "artifacts": [
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/candidate-coalescence/report.json",
+        "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/classic/candidate-coalescence-v2/report.json"
+      ]
+    },
+    {
+      "kind": "mini_preflight",
+      "details": "Before the first mini test or flash, the current X was 0 rather than -1 in an earlier snapshot. All original file fingerprints and other checked state matched. A fresh full snapshot was taken immediately before testing; the earlier snapshot remains archived. No earlier state was written back.",
+      "artifact": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-msc-session-buffer-20261015/hardware/mini/preflight-state-change.json"
+    },
+    {
+      "kind": "hardware_handoff",
+      "details": "After all Classic qualification and preservation checks, it was released to the authorized Byte-code task for separate numeric-IF A/B/A work, with immutable exact restore image B8E3A516 and fresh state snapshot. It may temporarily run that task's firmware. Mini remains with the qualified FA8F1A9C image."
+    }
+  ],
+  "scope": {
+    "peak_MSC_RAM": "Transport packet/state is unchanged during a live session; only the retained lifetime is removed. Before first use the old lazy allocation was absent too.",
+    "speed": "Measured differences are reported, not assumed zero: Classic NOR +0.13%, core +0.15%; mini NOR -0.02%, core +0.02%. No packet or cache size was reduced. These are NOR/core timings, not a USB throughput benchmark.",
+    "sleep": "No sleep diagnostic is armed. Physical Mac suspend is not newly qualified by this RAM-only stage."
+  }
+}

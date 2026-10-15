@@ -41,22 +41,30 @@ _Static_assert(MSC_EPIN_ADDR == 0x81U && MSC_EPOUT_ADDR == 0x01U,
                "fixed MSC endpoint layout changed");
 _Static_assert(MSC_MEDIA_PACKET % MK61_MSC_SECTOR_SIZE == 0U,
                "BOT buffer must contain whole FAT sectors");
+/* SET_CONFIGURATION runs in USB IRQ context. Foreground owns the backing
+ * buffer for the entire disk session, including USB bus resets. */
+static USBD_HandleTypeDef *owner;
 #if defined(STM32F411xE)
 _Static_assert(sizeof(USBD_MSC_BOT_HandleTypeDef) == 8264U,
-               "update lazy MSC ELF reserve for changed transport layout");
-#if MK61_USE_NATIVE_LIBC
-__asm__(".global mk61_lazy_msc_bytes\n.set mk61_lazy_msc_bytes, 8264");
-#else
-__asm__(".global mk61_lazy_msc_bytes\n.set mk61_lazy_msc_bytes, 8296");
-#endif
+               "update session MSC ELF reserve for changed transport layout");
+__asm__(".global mk61_session_msc_bytes\n.set mk61_session_msc_bytes, 8264");
 static USBD_MSC_BOT_HandleTypeDef *prepared_handle;
 #define transport (*prepared_handle)
 uint8_t MK61_MSC_SetPreparedHandle(void *memory, uint32_t size)
 {
-  if (memory == NULL || ((uintptr_t)memory & 3U) != 0U ||
+  if (__get_IPSR() != 0U || owner != NULL || memory == NULL ||
+      ((uintptr_t)memory & 3U) != 0U ||
       size != sizeof(USBD_MSC_BOT_HandleTypeDef) ||
       (prepared_handle != NULL && prepared_handle != memory)) return 0U;
   prepared_handle = memory;
+  return 1U;
+}
+uint8_t MK61_MSC_ReleasePreparedHandle(void *memory)
+{
+  /* DeInit may run in IRQ, but only foreground may unpin/reuse RAM. */
+  if (__get_IPSR() != 0U || owner != NULL || memory == NULL ||
+      prepared_handle != memory) return 0U;
+  prepared_handle = NULL;
   return 1U;
 }
 #else
@@ -65,10 +73,6 @@ _Static_assert(MSC_MEDIA_PACKET == 512U &&
                "F401 transport must fit the guarded RAM layout");
 static USBD_MSC_BOT_HandleTypeDef transport;
 #endif
-/* SET_CONFIGURATION runs in USB IRQ context: foreground prepare() provides
- * F411's retained buffer. F401's small buffer is static. Never grow the heap
- * or invoke USBDISK.APP here. */
-static USBD_HandleTypeDef *owner;
 
 __ALIGN_BEGIN static const uint8_t USBD_MSC_CfgDesc[USB_MSC_CONFIG_DESC_SIZ]  __ALIGN_END =
 {

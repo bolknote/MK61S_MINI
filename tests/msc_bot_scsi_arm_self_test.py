@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_THUMB, UC_MODE_MCLASS
 from unicorn.arm_const import (UC_ARM_REG_SP, UC_ARM_REG_LR, UC_ARM_REG_PC,
-    UC_ARM_REG_R0, UC_ARM_REG_C1_C0_2, UC_ARM_REG_FPEXC, UC_CPU_ARM_CORTEX_M4)
+    UC_ARM_REG_R0, UC_ARM_REG_IPSR, UC_ARM_REG_C1_C0_2, UC_ARM_REG_FPEXC, UC_CPU_ARM_CORTEX_M4)
 from check_stm32_vectors import ElfImage
 
 
@@ -59,6 +59,11 @@ def main():
                 stop=0x080ff000;sp=0x20000000+ram_bytes-16
                 u.reg_write(UC_ARM_REG_SP,sp);u.reg_write(UC_ARM_REG_LR,stop|1)
                 u.reg_write(UC_ARM_REG_C1_C0_2,0xf00000);u.reg_write(UC_ARM_REG_FPEXC,1<<30)
+                if name == 'test_msc_session_in_irq':
+                    u.emu_start(image.symbols['msc_prepare_irq_test']|1,stop,count=100000000)
+                    assert u.reg_read(UC_ARM_REG_R0)==0
+                    u.reg_write(UC_ARM_REG_LR,stop|1)
+                    u.reg_write(UC_ARM_REG_IPSR,16)
                 u.emu_start(image.symbols[name]|1,stop,count=100000000)
                 line=u.reg_read(UC_ARM_REG_R0)
                 assert u.reg_read(UC_ARM_REG_PC)==stop and not line,(target,name,'fixture line',line,hex(u.reg_read(UC_ARM_REG_PC)))

@@ -95,6 +95,9 @@ void USBD_CtlError(USBD_HandleTypeDef *d,USBD_SetupReqTypedef *r) { (void)d;(voi
 
 static int begin(void) {
   (void)USBD_MSC.DeInit(&dev,0);
+#ifdef MK61_MSC_SESSION_BUFFER
+  (void)MK61_MSC_ReleasePreparedHandle(&guarded.h);
+#endif
   memset(&dev,0,sizeof(dev));memset(&guarded,0xa5,sizeof(guarded));
   dev.dev_state=USBD_STATE_CONFIGURED;dev.dev_speed=USBD_SPEED_FULL;
   dev.pClass[0]=(USBD_ClassTypeDef*)&USBD_MSC;
@@ -372,6 +375,54 @@ int test_msc_lifetime(void) {
   dev.classId=1;CHECK(USBD_MSC.Init(&dev,0)==USBD_FAIL && USBD_MSC.DataIn(&dev,1)==USBD_FAIL);dev.classId=0;
   CHECK(!wire_error);return 0;
 }
+#ifdef MK61_MSC_SESSION_BUFFER
+int test_msc_session_buffer(void) {
+  BEGIN();
+  CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h)); // Still owned by USB.
+  CHECK(!MK61_MSC_SetPreparedHandle(&guarded.h,sizeof(guarded.h)));
+  CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
+  CHECK(!MK61_MSC_ReleasePreparedHandle(NULL));
+  CHECK(!MK61_MSC_ReleasePreparedHandle(guarded.left));
+  // Configuration retries and bus resets reuse the prepared packet. IRQ
+  // DeInit never frees it; foreground explicitly ends the disk session.
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK);
+  CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
+  CHECK(MK61_MSC_ReleasePreparedHandle(&guarded.h));
+  CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h));
+  memset(&guarded.h,0x6d,sizeof(guarded.h));
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_FAIL);
+  CHECK(USBD_MSC.DataIn(&dev,1)==USBD_FAIL);
+  CHECK(USBD_MSC.DataOut(&dev,1)==USBD_FAIL);
+  CHECK(SCSI_ContinueRead(&dev)<0 && SCSI_ContinueWrite(&dev)<0 && SCSI_CompleteSync(&dev,1)<0);
+  CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
+  for(unsigned i=0;i<sizeof(guarded.h);++i)CHECK(((uint8_t*)&guarded.h)[i]==0x6d);
+  // A subsequent session may be allocated at a different address while the
+  // previous packet already contains another client's data.
+  static USBD_MSC_BOT_HandleTypeDef next;
+  CHECK(MK61_MSC_SetPreparedHandle(&next,sizeof(next)));
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && dev.pClassData==&next);
+  CHECK(!MK61_MSC_ReleasePreparedHandle(&next));
+  CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
+  CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h));
+  CHECK(MK61_MSC_ReleasePreparedHandle(&next));
+  for(unsigned i=0;i<sizeof(guarded.h);++i)CHECK(((uint8_t*)&guarded.h)[i]==0x6d);
+  CHECK(!wire_error);return 0;
+}
+int msc_prepare_irq_test(void) {
+  BEGIN();
+  CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
+  return 0;
+}
+int test_msc_session_in_irq(void) {
+  CHECK(__get_IPSR()!=0);
+  CHECK(!MK61_MSC_SetPreparedHandle(&guarded.h,sizeof(guarded.h)));
+  CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h));
+  // Reinitialization is allowed in IRQ and proves the failed release kept
+  // the prepared pointer intact. It performs no allocation.
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && dev.pClassData==&guarded.h);
+  return 0;
+}
+#endif
 int test_msc_sense(void) {
   BEGIN();
   for(unsigned i=1;i<=10;i++)SCSI_SenseCode(&dev,i,0x50+i);

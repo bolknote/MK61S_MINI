@@ -79,3 +79,7 @@ MK61_SHARED_MEMORY_OWNER(PROGRAM_STORE_READ_CACHE, "store-cache",
                          (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)), 0,
                          (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)),
                          (arena_mask(Arena::OVERLAY) | arena_mask(Arena::APP)), 0)
+
+// Stable, foreground-owned transport packet, released after USB is stopped.
+MK61_SHARED_MEMORY_OWNER(USB_TRANSPORT, "usb-transport",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)

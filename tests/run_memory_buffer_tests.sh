@@ -70,6 +70,12 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "$root/code/shared_memory.cpp" -o "$overlay_out"
 "$overlay_out"
 
+msc_out="${TMPDIR:-/tmp}/mk61_msc_session_buffer_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
+  "${sanitizer_flags[@]}" "$root/tests/msc_session_buffer_self_test.cpp" \
+  "$root/code/shared_memory.cpp" -o "$msc_out"
+"$msc_out"
+
 python3 "$root/tests/app_memory_elf_self_test.py"
 
 qualified_out="${TMPDIR:-/tmp}/mk61_qualified_app_memory_self_test"

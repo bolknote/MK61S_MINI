@@ -1,5 +1,9 @@
 # Fixed-disk MSC/BOT/SCSI
 
+These measurements describe stage 7 (`252df65c3`). The follow-up
+[session buffer change](STM32-msc-session-buffer.md) returns F411 transport RAM
+after close; the live transport state remains 8264 bytes.
+
 The transport is specialized for the calculator's virtual FAT disk: one LUN,
 interface 0, bulk endpoints 0x81/0x01, Full Speed and 512-byte sectors. Disk
 capacity still comes from the active virtual volume; it is not fixed to a
