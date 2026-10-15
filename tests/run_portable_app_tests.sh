@@ -3,6 +3,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 "$root/tests/app_relocations_self_test.py"
 python3 "$root/tests/app_relocations_dotnet_self_test.py"
+python3 "$root/tests/app_packer_dotnet_self_test.py"
 python3 "$root/tests/portable_app_size_budget_self_test.py"
 python3 "$root/tests/system_app_catalog_self_test.py"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-portable-tests.XXXXXX")"

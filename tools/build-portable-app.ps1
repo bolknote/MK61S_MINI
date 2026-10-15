@@ -246,7 +246,9 @@ function Assert-SizeBudget {
         $memoryLimit = if ($FocalTrace) { 19200 } else { 18688 }
     }
     if ($SplitLanguageVm) {
-        $memoryLimit = if ($LocalFloatMath) { 17408 } else { 18432 }
+        # Match build_portable_app.py's current graphics/integer-span VM contract.
+        # The loader's 20-KiB arena remains the hard upper bound.
+        $memoryLimit = if ($LocalFloatMath) { 19968 } else { 19456 }
     }
     $failures = @()
     if ($null -ne $appLimit -and $Report.app_bytes -gt $appLimit) {
@@ -487,7 +489,7 @@ try {
         memory_bytes = $memorySize
         app_bytes = $packed.AppBytes
         compression = if ($packed.UsesBcj) { 'ZX0+BCJ' } else { 'ZX0' }
-        zx0_parser = 'greedy-dotnet'
+        zx0_parser = 'optimal-dotnet'
         resident_imports = 0
         compiler = $compilerVersion
     }

@@ -1,3 +1,28 @@
+/*
+ * (c) Copyright 2021 by Einar Saukas. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * The name of its author may not be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 // Dependency-free .NET helper loaded by PowerShell's built-in Add-Type.
 // Keep syntax compatible with Windows PowerShell 5.1 / .NET Framework.
 using System;
@@ -163,65 +188,113 @@ namespace Mk61.Build {
       return state ^ 0xffffffffU;
     }
 
-    private static int MatchLength(byte[] data, int position, int candidate) {
-      int limit = data.Length - position;
-      int length = 2;
-      while(length < limit && data[position + length] == data[candidate + length]) ++length;
-      return length;
+    // The same ZX0 v2 optimal parse as third_party/zx0/optimize.c. The pool is
+    // local to one parse, so concurrent bundle builds never share block state.
+    private sealed class ParseBlock {
+      internal ParseBlock Chain, FreeNext;
+      internal int Bits, Index, Offset, References;
     }
 
-    private static void BestMatch(byte[] data, int position, int lastOffset,
-                                  out int bestLength, out int bestOffset) {
-      bestLength = 0;
-      bestOffset = 0;
-      if(position + 1 >= data.Length) return;
-      int window = Math.Max(0, position - MaxOffset);
-      int remaining = data.Length - position;
-      for(int candidate = position - 2; candidate >= window; --candidate) {
-        if(data[candidate] != data[position] || data[candidate + 1] != data[position + 1]) continue;
-        int offset = position - candidate;
-        int length = MatchLength(data, position, candidate);
-        if(length > bestLength ||
-           (length == bestLength &&
-            (offset == lastOffset || (bestOffset != lastOffset && offset < bestOffset)))) {
-          bestLength = length;
-          bestOffset = offset;
-          if(length == remaining) break;
+    private sealed class ParsePool {
+      private ParseBlock free;
+      internal ParseBlock Allocate(int bits, int index, int offset, ParseBlock chain) {
+        ParseBlock block;
+        if(free != null) {
+          block = free;
+          free = block.FreeNext;
+          if(block.Chain != null && --block.Chain.References == 0) {
+            block.Chain.FreeNext = free;
+            free = block.Chain;
+          }
+        } else block = new ParseBlock();
+        block.Bits = bits;
+        block.Index = index;
+        block.Offset = offset;
+        if(chain != null) ++chain.References;
+        block.Chain = chain;
+        block.References = 0;
+        block.FreeNext = null;
+        return block;
+      }
+      internal void Assign(ref ParseBlock target, ParseBlock block) {
+        ++block.References;
+        if(target != null && --target.References == 0) {
+          target.FreeNext = free;
+          free = target;
         }
+        target = block;
       }
     }
 
-    private static List<Token> GreedyTokens(byte[] data) {
+    private static int GammaBits(int value) {
+      int bits = 1;
+      while((value >>= 1) != 0) bits += 2;
+      return bits;
+    }
+
+    private static List<Token> OptimalTokens(byte[] data) {
       if(data.Length == 0) throw new InvalidDataException("ZX0 input is empty");
-      List<Token> tokens = new List<Token>();
-      int literalStart = 0;
-      int position = 1;
-      int lastOffset = 1;
-      while(position + 1 < data.Length) {
-        int length, offset;
-        BestMatch(data, position, lastOffset, out length, out offset);
-        if(length < 2 || (length == 2 && offset != lastOffset)) {
-          ++position;
-          continue;
-        }
-        if(position + 2 < data.Length) {
-          int nextLength, nextOffset;
-          BestMatch(data, position + 1, lastOffset, out nextLength, out nextOffset);
-          if(nextLength > length + 1) {
-            ++position;
-            continue;
+      int maxOffset = Math.Max(1, Math.Min(data.Length - 1, MaxOffset));
+      ParseBlock[] lastLiteral = new ParseBlock[maxOffset + 1];
+      ParseBlock[] lastMatch = new ParseBlock[maxOffset + 1];
+      ParseBlock[] optimal = new ParseBlock[data.Length];
+      int[] matchLength = new int[maxOffset + 1];
+      int[] bestLength = new int[Math.Max(3, data.Length)];
+      bestLength[2] = 2;
+      ParsePool pool = new ParsePool();
+      pool.Assign(ref lastMatch[1], pool.Allocate(-1, -1, 1, null));
+      for(int index = 0; index < data.Length; ++index) {
+        int bestLengthSize = 2;
+        int ceiling = Math.Max(1, Math.Min(index, MaxOffset));
+        for(int offset = 1; offset <= ceiling; ++offset) {
+          int length, bits;
+          if(index != 0 && index >= offset && data[index] == data[index - offset]) {
+            if(lastLiteral[offset] != null) {
+              length = index - lastLiteral[offset].Index;
+              bits = lastLiteral[offset].Bits + 1 + GammaBits(length);
+              pool.Assign(ref lastMatch[offset],
+                pool.Allocate(bits, index, offset, lastLiteral[offset]));
+              if(optimal[index] == null || optimal[index].Bits > bits)
+                pool.Assign(ref optimal[index], lastMatch[offset]);
+            }
+            if(++matchLength[offset] > 1) {
+              if(bestLengthSize < matchLength[offset]) {
+                bits = optimal[index - bestLength[bestLengthSize]].Bits +
+                  GammaBits(bestLength[bestLengthSize] - 1);
+                do {
+                  ++bestLengthSize;
+                  int bits2 = optimal[index - bestLengthSize].Bits + GammaBits(bestLengthSize - 1);
+                  if(bits2 <= bits) { bestLength[bestLengthSize] = bestLengthSize; bits = bits2; }
+                  else bestLength[bestLengthSize] = bestLength[bestLengthSize - 1];
+                } while(bestLengthSize < matchLength[offset]);
+              }
+              length = bestLength[matchLength[offset]];
+              bits = optimal[index - length].Bits + 8 +
+                GammaBits((offset - 1) / 128 + 1) + GammaBits(length - 1);
+              if(lastMatch[offset] == null || lastMatch[offset].Index != index || lastMatch[offset].Bits > bits) {
+                pool.Assign(ref lastMatch[offset],
+                  pool.Allocate(bits, index, offset, optimal[index - length]));
+                if(optimal[index] == null || optimal[index].Bits > bits)
+                  pool.Assign(ref optimal[index], lastMatch[offset]);
+              }
+            }
+          } else {
+            matchLength[offset] = 0;
+            if(lastMatch[offset] != null) {
+              length = index - lastMatch[offset].Index;
+              bits = lastMatch[offset].Bits + 1 + GammaBits(length) + length * 8;
+              pool.Assign(ref lastLiteral[offset],
+                pool.Allocate(bits, index, 0, lastMatch[offset]));
+              if(optimal[index] == null || optimal[index].Bits > bits)
+                pool.Assign(ref optimal[index], lastLiteral[offset]);
+            }
           }
         }
-        tokens.Add(new Token(position - literalStart, 0));
-        tokens.Add(new Token(length, offset));
-        lastOffset = offset;
-        literalStart = position + length;
-        if(literalStart >= data.Length) break;
-        position = literalStart + 1;
       }
-      if(literalStart < data.Length) tokens.Add(new Token(data.Length - literalStart, 0));
-      if(tokens.Count == 0 || tokens[0].Offset != 0)
-        throw new InvalidDataException("invalid ZX0 token plan");
+      List<Token> tokens = new List<Token>();
+      for(ParseBlock block = optimal[data.Length - 1]; block.Chain != null; block = block.Chain)
+        tokens.Add(new Token(block.Index - block.Chain.Index, block.Offset));
+      tokens.Reverse();
       return tokens;
     }
 
@@ -229,7 +302,7 @@ namespace Mk61.Build {
       BitWriter writer = new BitWriter();
       int position = 0;
       int lastOffset = 1;
-      foreach(Token token in GreedyTokens(data)) {
+      foreach(Token token in OptimalTokens(data)) {
         if(token.Length <= 0 || position + token.Length > data.Length)
           throw new InvalidDataException("invalid ZX0 token");
         if(token.Offset == 0) {

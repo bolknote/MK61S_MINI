@@ -72,6 +72,25 @@ foreach ($powerShellFile in @(
         (@($parseErrors | ForEach-Object { $_.Message }) -join '; '))
 }
 
+# Exercise the shipping PowerShell gate without compiling a module.
+$budgetAst = [Management.Automation.Language.Parser]::ParseFile(
+    $powerShellAppBuilder, [ref]$tokens, [ref]$parseErrors)
+$budgetFunction = $budgetAst.Find({ param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Assert-SizeBudget'
+}, $true)
+. ([scriptblock]::Create($budgetFunction.Extent.Text))
+foreach ($LocalFloatMath in @($false, $true)) {
+    $System = 'language-vm'; $SplitLanguageVm = $true
+    $LanguageVmCompiler = $false; $FocalTrace = $false
+    $limit = if ($LocalFloatMath) { 19968 } else { 19456 }
+    Assert-SizeBudget @{ app_bytes = 14000; memory_bytes = $limit }
+    $rejected = $false
+    try { Assert-SizeBudget @{ app_bytes = 14000; memory_bytes = $limit + 1 } }
+    catch { $rejected = $_.Exception.Message -match "memory_bytes=.* > $limit" }
+    Assert-True $rejected 'PowerShell accepted an oversized split language VM'
+}
+
 $wrapperText = [IO.File]::ReadAllText($wrapper)
 $commonText = [IO.File]::ReadAllText($commonBuilder)
 $appText = [IO.File]::ReadAllText($appBuilder)
