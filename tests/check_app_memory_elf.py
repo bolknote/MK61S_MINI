@@ -82,7 +82,9 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
         'mk61_m61_runtime_bytes', 'mk61_usb_framebuffer_bytes',
         'mk61_storage_workspace_bytes'))
     # Worst case after every retained/foreground buffer has been initialized.
-    effective = (free - lazy - scoped) & ~(APP_ALIGNMENT - 1)
+    # High gaps may need up to 224 bytes before a 256-aligned APP end.
+    placement = symbols.get('mk61_app_placement_slack_bytes', (0, 0))[0]
+    effective = (free - lazy - scoped - placement) & ~(APP_ALIGNMENT - 1)
     assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'
     msc = symbols.get('mk61_session_msc_bytes', (0, 0))[0]
     fs = symbols.get('mk61_fs_temporary_bytes', (0, 0))[0]
@@ -91,7 +93,7 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     # implementations. If present, it must be our strong override, not Core's.
     assert '_sbrk' not in symbols or symbols['_sbrk'][1] == 1, 'weak Core _sbrk can overlap APP'
     print(f'APP RAM: {path}: reserve=0 free={free} system_max={module_memory} '
-          f'lazy={lazy} scoped={scoped} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} '
+          f'lazy={lazy} scoped={scoped} placement={placement} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} '
           f'msc_session={msc} fs_temporary={fs} top={end:#x} heap=guarded PASS')
 
 

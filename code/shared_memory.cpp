@@ -3,14 +3,12 @@
 #endif
 #include "shared_memory.hpp"
 #include "native_libc.h"
+#include "mpu_guard_policy.hpp"
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(ARDUINO_ARCH_STM32)
-#include "mpu_guard_policy.hpp"
-#endif
 
 namespace shared_memory {
 namespace {
@@ -249,6 +247,10 @@ static OverlayBuffer* overlay_buffer;
 static OverlayBuffer* first_overlay_buffer;
 #if MK61_SCOPED_RESIDENT_BUFFERS
 static LifetimeBuffer* lifetime_buffers;
+#if defined(ARDUINO_ARCH_STM32)
+static_assert(mpu_guard_policy::APP_END_ALIGNMENT == 256, "update APP placement reserve");
+__asm__(".global mk61_app_placement_slack_bytes\n.set mk61_app_placement_slack_bytes, 224");
+#endif
 #endif
 
 
@@ -285,7 +287,7 @@ static usize lower_reserved_size(void) {
 }
 
 #if MK61_SCOPED_RESIDENT_BUFFERS
-static uintptr_t high_gap(usize size, bool include_app) {
+static uintptr_t high_gap(usize size, bool for_app) {
   const uintptr_t floor = pool_begin() + lower_reserved_size();
   uintptr_t ceiling = pool_end();
   for(;;) {
@@ -296,11 +298,17 @@ static uintptr_t high_gap(usize size, bool include_app) {
       }
     };
     const ArenaState& app = arenas[(usize)Arena::APP];
-    if(include_app && app.capacity) consider((uintptr_t)app.memory, app.capacity);
+    if(!for_app && app.capacity) consider((uintptr_t)app.memory, app.capacity);
     for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
       consider((uintptr_t)live->data(), (live->size() + 31U) & ~(usize)31U);
-    if(ceiling >= floor && size <= ceiling - floor) {
-      const uintptr_t candidate = (ceiling - size) & ~(uintptr_t)31U;
+    // Five MPU regions suffice for every <=20-KiB APP with this end
+    // alignment. Measure relative to pool_end so host SRAM models preserve
+    // the same geometry even when their virtual address is not 256-aligned.
+    constexpr uintptr_t mask = mpu_guard_policy::APP_END_ALIGNMENT - 1U;
+    const uintptr_t available_end = for_app
+        ? pool_end() - ((pool_end() - ceiling + mask) & ~mask) : ceiling;
+    if(available_end >= floor && size <= available_end - floor) {
+      const uintptr_t candidate = (available_end - size) & ~(uintptr_t)31U;
       if(candidate >= block_end && candidate >= floor) return candidate;
     }
     if(!block_begin) return 0;
@@ -594,7 +602,7 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     const usize aligned = (required + alignment - 1U) & ~(alignment - 1U);
     if(next_arena == Arena::APP) {
 #if MK61_SCOPED_RESIDENT_BUFFERS
-      const uintptr_t address = high_gap(aligned, false);
+      const uintptr_t address = high_gap(aligned, true);
 #else
       const uintptr_t address = aligned <= pool_size() - lower_reserved_size()
           ? pool_end() - aligned : 0;
@@ -778,7 +786,7 @@ bool LifetimeBuffer::acquire(Owner owner, usize required) {
   if(ok()) return owner == owner_ && required <= size_;
   for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
     if(live->owner() == owner) return false;
-  const uintptr_t address = high_gap((required + 31U) & ~(usize)31U, true);
+  const uintptr_t address = high_gap((required + 31U) & ~(usize)31U, false);
   if(!address) return false;
   memory_ = (u8*)address; size_ = required; owner_ = owner;
   next_ = lifetime_buffers; lifetime_buffers = this;
@@ -1052,6 +1060,10 @@ bool validate_invariants(void) {
 #if !MK61_SCOPED_RESIDENT_BUFFERS
   // The legacy allocator always anchors APP at the exact top, as before.
   if(app.enabled && (uintptr_t)app.memory != pool_end() - app.capacity) return false;
+#endif
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  if(app.capacity && ((pool_end() - ((uintptr_t)app.memory + app.capacity)) &
+      (mpu_guard_policy::APP_END_ALIGNMENT - 1U))) return false;
 #endif
   if(app.enabled && ((uintptr_t)app.memory < pool_begin() + lower_reserved_size() ||
      (uintptr_t)app.memory > pool_end() || (uintptr_t)app.memory & 31U ||

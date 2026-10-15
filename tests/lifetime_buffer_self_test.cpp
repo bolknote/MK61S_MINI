@@ -1,4 +1,5 @@
 #include "../code/shared_memory.hpp"
+#include "../code/mpu_guard_policy.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -13,10 +14,14 @@ static void bytes(const u8* p, usize n, u8 value) {
 }
 static uintptr_t oracle(uintptr_t floor, uintptr_t end, usize count,
                         const LifetimeBuffer* buffers, unsigned number,
-                        const Lease& app) {
+                        const Lease& app, bool for_app=false) {
   const usize size = rounded(count);
   if(size > end - floor) return 0;
   for(uintptr_t at = (end-size)&~uintptr_t(31); at >= floor;) {
+    if(for_app && ((end-at-size)&255U)) {
+      if(at < floor+32) break;
+      at -= 32;continue;
+    }
     bool overlaps = app.ok() && at < (uintptr_t)app.data()+rounded(app.size()) &&
         (uintptr_t)app.data() < at+size;
     for(unsigned i=0; i<number; ++i) if(buffers[i].ok())
@@ -77,7 +82,7 @@ int main() {
       else {
         const usize wanted=32+((rng>>2)%(APP_MAX_SIZE-32));
         Lease absent;
-        const uintptr_t expected=oracle(floor,end,wanted,buffers,3,absent);
+        const uintptr_t expected=oracle(floor,end,wanted,buffers,3,absent,true);
         assert(app.acquire(Arena::APP,Owner::LOADABLE_MODULE,wanted)==(expected!=0));
         if(app.ok()) {assert((uintptr_t)app.data()==expected);memset(app.data(),0xAD,app.size());}
       }
@@ -91,6 +96,15 @@ int main() {
     for(unsigned i=0;i<3;++i) if(buffers[i].ok()) bytes(buffers[i].data(),buffers[i].size(),0x60+i);
     if(app.ok()) bytes(app.data(),app.size(),0xAD);
     bytes(stage.data(),stage.size(),0x7A);
+    if(app.ok()) {
+      const u32 native_end=0x2001BF00U-(u32)(end-(uintptr_t)app.data()-rounded(app.size()));
+      u32 cursor=native_end-(u32)rounded(app.size());unsigned regions=0;
+      while(cursor<native_end) {
+        const auto region=mpu_guard_policy::next_app_region(cursor,native_end);
+        assert(region.size && ++regions<=mpu_guard_policy::APP_REGION_COUNT);
+        cursor=region.end;
+      }
+    }
     assert(validate_invariants());
   }
   app.reset();for(auto& b:buffers)b.reset();stage.reset();

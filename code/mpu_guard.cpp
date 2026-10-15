@@ -149,11 +149,12 @@ bool initialize(void) {
 bool set_app_execution(const void* address, usize size) {
 #if MK61_MPU_APP_REGION
   const u32 begin = (u32) (usize) address;
-  const u32 end = active_layout.guard_base;
+  const u32 limit = active_layout.guard_base;
   if(size != 0 && (!hardware_enabled || !active_layout.valid ||
-     begin < active_layout.static_end || begin > end ||
-     size != end - begin || size > loadable_module::APP_MAX_MEMORY_SIZE ||
+     begin < active_layout.static_end || begin > limit ||
+     size > limit - begin || size > loadable_module::APP_MAX_MEMORY_SIZE ||
      ((begin | size) & 31U) != 0)) return false;
+  const u32 end = begin + size;
   // Validate the complete plan before changing the live MPU.
   u8 count = 0;
   for(u32 cursor = begin; size != 0 && cursor < end; ++count) {
