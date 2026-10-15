@@ -1,0 +1,1206 @@
+{
+  "date": "2026-10-15",
+  "recorded_at_utc": "2026-10-15T09:49:44.947951+00:00",
+  "status": "PASS",
+  "branch": "feature/stm32-usb-compact-state",
+  "base_commit": "18361c3a4190b626878bac484d530c98a176aa92",
+  "source_date_epoch": 1791969300,
+  "compiler": "GNU Arm GCC 14.2.1",
+  "comparison": "Identical profile flags, source/build paths and build epoch. Flash includes the sealed footer. Base is immutable18361, not concurrent main.",
+  "production_diff_sha256": "c3923c424fabf4f4a9c1fe845af532c1a2db6c6be6cba1781764fce343aca75d",
+  "production_file_sha256": {
+    "code/stm32f4_cdc_if.c": "c20d4fe0f3f4637081afff7521ac62511fab7c204abe21142743cb84874a1354",
+    "code/stm32f4_usbd_cdc.c": "66f2b46364cc829b2cb73a9d940225fa405d85144cd56d4475e8f2628c2774a6",
+    "code/stm32f4_usbd_cdc.h": "5d51472f2aad08ea1f6c02ae6ff2ab0a1e57470d8e6a647335b32f12bb22875e",
+    "code/stm32f4_usbd_core.c": "8f8efcb9db03320c5cee55b194e6bc9b2332f71250250a580e1b002f09e517a7",
+    "code/stm32f4_usbd_def.h": "9fdc869cf65ade9370ca317b747c1be7cccaddecfa06bf29f9af0a803d37aa4a",
+    "code/stm32f4_usbd_ioreq.c": "2b06d293e4c1009f3179fbc94acbb1929a6a35be5f4c41600181d408d6e8d9d3",
+    "code/usb_power.cpp": "9bfd3d628ea44893641af0a1fb87b0d54832b6b87cdf3b86109dfe8eda07cd0e",
+    "code/usbd_msc.c": "42d7de22bac7f99b10d2ea00bc37f74aa53d2166083b1f3911aed9139109e21a"
+  },
+  "unchanged_NOR_file_sha256": {
+    "code/spi_nor_flash.cpp": "23c0bdb7a858c59d2a60b078ce2ca8b93729a87fbc59043aeec242e657f10e2d",
+    "code/spi_nor_flash.hpp": "7754088718df6bde846f1b5479a4c4bd30150f1dff3aee917ccaaea640d71ee7",
+    "code/spi1_transport.cpp": "4731920fcf8ca22f72380da0ea9b2ee033010269ab708256cf79ec4d35a25085",
+    "code/spi1_transport.hpp": "88f9ad37dfb1e6c0f3b1639dbad168020444f353f875c57c7f501bde09477fc6",
+    "code/flash_capacity_probe.hpp": "605d6f062890d7ebec6ced27f7348cf05dcd414d3010dcb170a814a1cf4fee2f",
+    "code/storage_geometry.cpp": "ea72cc19153d72a076078fb12332873118c9bd0f414ab4403ea0a1192d2cdba5",
+    "code/storage_geometry.hpp": "251cb4c5a8b545f4e3e2fcc629d0901f402b09939c62bcca369b48c78b620c2d"
+  },
+  "layouts": {
+    "device_handle": {
+      "before": 252,
+      "after": 96
+    },
+    "CDC_handle": {
+      "before": 36,
+      "after": 28
+    },
+    "endpoint_record": {
+      "before": 20,
+      "after": 4
+    },
+    "EP0_counter_pairs_after_bytes": 16,
+    "class_callback_table_each": {
+      "before": 56,
+      "after": 36
+    },
+    "hardware_endpoint_table": {
+      "before": 128,
+      "after": 128
+    },
+    "endpoint_directions": 8,
+    "transfer_counter_bits": 32,
+    "layout_version": 1,
+    "packed_structures": false,
+    "legacy_Arduino_ABI_retained": true,
+    "note": "Handles save164 bytes; linker alignment makes the final static saving168. Hardware endpoint counts/counters, queues, MSC packets, caches and all RAM/stack/APP limits stay unchanged."
+  },
+  "tests": {
+    "release_matrix": {
+      "status": "PASS",
+      "count": 25,
+      "F411": 16,
+      "F401": 9,
+      "cases": [
+        {
+          "id": "f411-lcd1602-a00",
+          "profile": "mini-v3-a00",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 299172
+        },
+        {
+          "id": "f411-lcd1602-a00-usb-screen",
+          "profile": "mini-v3-a00",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 330260
+        },
+        {
+          "id": "f411-lcd1602-a00-no-lto",
+          "profile": "mini-v3-a00",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 316448
+        },
+        {
+          "id": "f411-lcd1602-a02",
+          "profile": "mini-v3-a02",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 299048
+        },
+        {
+          "id": "f411-oled1602-ws0010",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 328696
+        },
+        {
+          "id": "f411-oled1602-ws0010-usb-screen",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 349044
+        },
+        {
+          "id": "f411-oled1602-ws0010-no-graphics",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 315504
+        },
+        {
+          "id": "f411-oled1602-ws0010-graphics-wbmp",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 315052
+        },
+        {
+          "id": "f411-oled1602-ws0010-graphics-wbmp-markdown",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 328696
+        },
+        {
+          "id": "f411-oled1602-ws0010-usb-screen-no-graphics",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 347560
+        },
+        {
+          "id": "f411-mini-v2-a00",
+          "profile": "mini-v2-a00",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 299212
+        },
+        {
+          "id": "f411-mini-v2-a02",
+          "profile": "mini-v2-a02",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 299088
+        },
+        {
+          "id": "f411-classic-v2",
+          "profile": "classic-v2",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 335924
+        },
+        {
+          "id": "f411-classic-v3",
+          "profile": "classic-v3",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 346088
+        },
+        {
+          "id": "f411-classic-v3-usb-screen",
+          "profile": "classic-v3",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 348976
+        },
+        {
+          "id": "f411-40th",
+          "profile": "40th",
+          "mcu": "f411",
+          "status": "PASS",
+          "unsealed_bytes": 335964
+        },
+        {
+          "id": "f401-product-a00",
+          "profile": "mini-v3-a00",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 213192
+        },
+        {
+          "id": "f401-product-ws0010",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 221236
+        },
+        {
+          "id": "f401-product-mini-v2-a00",
+          "profile": "mini-v2-a00",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 213268
+        },
+        {
+          "id": "f401-product-classic-v2",
+          "profile": "classic-v2",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 243180
+        },
+        {
+          "id": "f401-product-classic-v3",
+          "profile": "classic-v3",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 243204
+        },
+        {
+          "id": "f401-capability-a00-usb",
+          "profile": "mini-v3-a00",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 236988
+        },
+        {
+          "id": "f401-capability-ws-usb",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 246000
+        },
+        {
+          "id": "f401-capability-ws-graphics",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 227676
+        },
+        {
+          "id": "f401-capability-ws-usb-graphics",
+          "profile": "mini-v3-ws0010",
+          "mcu": "f401",
+          "status": "PASS",
+          "unsealed_bytes": 248244
+        }
+      ]
+    },
+    "cross_MCU_WS0010_RAM": {
+      "status": "PASS",
+      "comparisons": 4,
+      "log": "cross-mcu-ram.log"
+    },
+    "C_CPP_layout_probes": 8,
+    "rejected_unsupported_native_configs": 2,
+    "EP0_ARM_suites_each_MCU": 9,
+    "all_65536_interface_endpoint_indices": true,
+    "randomized_queue_transitions": 50000,
+    "BOT_SCSI_ARM_suites": 22,
+    "actual_foreground_MSC_bridge_suites_each_board": 5,
+    "actual_controller_ARM_images": [
+      "classic shipping",
+      "mini shipping"
+    ],
+    "actual_CDC_ARM_images": [
+      "classic shipping",
+      "mini no-LTO release variant"
+    ],
+    "CDC_TX_lengths": [
+      0,
+      1,
+      63,
+      64,
+      65,
+      128,
+      65535,
+      65536,
+      65600
+    ],
+    "rejected_CDC_RX_lengths": [
+      65,
+      65535,
+      65536,
+      4294967295
+    ],
+    "allocation_ASan_UBSan": "PASS; 100 prepare/OOM/release/reuse cycles and APP bounds",
+    "SPI_NOR_SFDP_ASan_UBSan": "PASS; supported models/address modes retained",
+    "STOP_wakeup_and_power_policy": "PASS",
+    "suspend_ELF": [
+      "Classic enabled PASS",
+      "mini safely disabled PASS"
+    ]
+  },
+  "hardware_order": [
+    "classic candidate",
+    "mini candidate"
+  ],
+  "physical_Mac_sleep_repeated": false,
+  "hardware_ports_closed": true,
+  "boards": {
+    "classic": {
+      "control": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-control/classic.bin",
+        "bytes": 360752,
+        "footer": 359040,
+        "build": "83022CA7",
+        "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9"
+      },
+      "candidate": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin",
+        "bytes": 360564,
+        "footer": 358852,
+        "build": "122A5FF9",
+        "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+      },
+      "candidate_ELF_sha256": "1fec29bc2d5da5aefc21a4a8826c05cfa41679a5951a620f3a2ef5d04b9d2948",
+      "Flash": {
+        "before": 360752,
+        "after": 360564,
+        "delta": -188,
+        "delta_percent": -0.052113363196877635
+      },
+      "static_RAM": {
+        "before": 27048,
+        "after": 26880,
+        "delta": -168,
+        "delta_percent": -0.6211180124223602
+      },
+      "real_EP0_requests": 50,
+      "preservation": {
+        "status": "PASS",
+        "files": 44,
+        "state_preserved": true,
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=433/18 raw(v/t/b)=1492/936/1017 val(mV/dC/mV)=3331/274/3309 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360564 footer=358852 expected=0x122A5FF9 build=0x122A5FF9 actual=0x122A5FF9 backend=hardware cycles=1062019\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12836 observed_remaining=12836 sram_xn=1\r\n/> "
+        }
+      },
+      "original_files": 44,
+      "original_directories": 4,
+      "snapshot_sha256": "9624f418afc14aa3d005d02404f6c9539b5286a868f0a2e603bd394246c5e5fc",
+      "qualified_at_utc": "2026-10-15T09:31:58.418747+00:00",
+      "four_session_RAM": {
+        "control": {
+          "status": "PASS",
+          "fixture": {
+            "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-control/classic.bin",
+            "bytes": 360752,
+            "footer": 359040,
+            "build": "83022CA7",
+            "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9",
+            "probe": {
+              "BUILD": 2197957799,
+              "FOOTER": 134576768,
+              "HEAP": 536882008,
+              "END": 536985344,
+              "PREPARED": 536880920,
+              "SESSION": 8264,
+              "ARENAS": 536871228,
+              "STRIDE": 92
+            },
+            "report_words": 9
+          },
+          "app_sha256": "d4293f7b2d2a0079d029316373888eb256d8cb10c51970ad7bbb3f83c0df31fd",
+          "app_bytes": 539,
+          "before": {
+            "heap": 536914352,
+            "pool_end": 536985344,
+            "free_above_heap": 70992,
+            "guaranteed_free": 70992,
+            "workspace": 536897968,
+            "bulk": 536906160,
+            "prepared": 0,
+            "msc_session": 8264,
+            "overlay_capacity": 70416,
+            "app_capacity": 576
+          },
+          "cycles": [
+            {
+              "heap": 536914352,
+              "pool_end": 536985344,
+              "free_above_heap": 70992,
+              "guaranteed_free": 70992,
+              "workspace": 536897968,
+              "bulk": 536906160,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70416,
+              "app_capacity": 576,
+              "cycle": 0,
+              "stack_remaining": 12632,
+              "payload_sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34"
+            },
+            {
+              "heap": 536914352,
+              "pool_end": 536985344,
+              "free_above_heap": 70992,
+              "guaranteed_free": 70992,
+              "workspace": 536897968,
+              "bulk": 536906160,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70416,
+              "app_capacity": 576,
+              "cycle": 1,
+              "stack_remaining": 12568,
+              "payload_sha256": "f965b526538d757ca2d6114af6517c57cbcb3650b71d8cfb92046a04ef2f566b"
+            },
+            {
+              "heap": 536914352,
+              "pool_end": 536985344,
+              "free_above_heap": 70992,
+              "guaranteed_free": 70992,
+              "workspace": 536897968,
+              "bulk": 536906160,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70416,
+              "app_capacity": 576,
+              "cycle": 2,
+              "stack_remaining": 12568,
+              "payload_sha256": "29170fce388174ee8722f308fab3480d7c762d84d12054714c18412ef27a3aee"
+            },
+            {
+              "heap": 536914352,
+              "pool_end": 536985344,
+              "free_above_heap": 70992,
+              "guaranteed_free": 70992,
+              "workspace": 536897968,
+              "bulk": 536906160,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70416,
+              "app_capacity": 576,
+              "cycle": 3,
+              "stack_remaining": 12568,
+              "payload_sha256": "084ea52aaba6eb759529cbb3adca8b915e1a23fc8dd32eb35fe5a3b6dfd74a84"
+            }
+          ],
+          "minimum_stack_required": 11264,
+          "files_preserved": 44,
+          "reset_between_cycles": false
+        },
+        "candidate": {
+          "status": "PASS",
+          "fixture": {
+            "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin",
+            "bytes": 360564,
+            "footer": 358852,
+            "build": "122A5FF9",
+            "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+            "probe": {
+              "BUILD": 304766969,
+              "FOOTER": 134576580,
+              "HEAP": 536882008,
+              "END": 536985344,
+              "PREPARED": 536880920,
+              "SESSION": 8264,
+              "ARENAS": 536871228,
+              "STRIDE": 92
+            },
+            "report_words": 9
+          },
+          "app_sha256": "a531622f61ccd0ec647f40c1bbf598800d134385ef769c23016dd462bbbb9973",
+          "app_bytes": 541,
+          "before": {
+            "heap": 536914184,
+            "pool_end": 536985344,
+            "free_above_heap": 71160,
+            "guaranteed_free": 71160,
+            "workspace": 536897800,
+            "bulk": 536905992,
+            "prepared": 0,
+            "msc_session": 8264,
+            "overlay_capacity": 70584,
+            "app_capacity": 576
+          },
+          "cycles": [
+            {
+              "heap": 536914184,
+              "pool_end": 536985344,
+              "free_above_heap": 71160,
+              "guaranteed_free": 71160,
+              "workspace": 536897800,
+              "bulk": 536905992,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70584,
+              "app_capacity": 576,
+              "cycle": 0,
+              "stack_remaining": 12552,
+              "payload_sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34"
+            },
+            {
+              "heap": 536914184,
+              "pool_end": 536985344,
+              "free_above_heap": 71160,
+              "guaranteed_free": 71160,
+              "workspace": 536897800,
+              "bulk": 536905992,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70584,
+              "app_capacity": 576,
+              "cycle": 1,
+              "stack_remaining": 12552,
+              "payload_sha256": "f965b526538d757ca2d6114af6517c57cbcb3650b71d8cfb92046a04ef2f566b"
+            },
+            {
+              "heap": 536914184,
+              "pool_end": 536985344,
+              "free_above_heap": 71160,
+              "guaranteed_free": 71160,
+              "workspace": 536897800,
+              "bulk": 536905992,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70584,
+              "app_capacity": 576,
+              "cycle": 2,
+              "stack_remaining": 12552,
+              "payload_sha256": "29170fce388174ee8722f308fab3480d7c762d84d12054714c18412ef27a3aee"
+            },
+            {
+              "heap": 536914184,
+              "pool_end": 536985344,
+              "free_above_heap": 71160,
+              "guaranteed_free": 71160,
+              "workspace": 536897800,
+              "bulk": 536905992,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 70584,
+              "app_capacity": 576,
+              "cycle": 3,
+              "stack_remaining": 12544,
+              "payload_sha256": "084ea52aaba6eb759529cbb3adca8b915e1a23fc8dd32eb35fe5a3b6dfd74a84"
+            }
+          ],
+          "minimum_stack_required": 11264,
+          "files_preserved": 44,
+          "reset_between_cycles": false
+        }
+      },
+      "graphics": {
+        "control": {
+          "frames": 103,
+          "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+          "preservation": "Original files/program/registers/stack/pwd exact",
+          "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200069B0 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13028 observed_remaining=13028 sram_xn=1\r\n/> "
+        },
+        "candidate": {
+          "frames": 103,
+          "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+          "preservation": "Original files/program/registers/stack/pwd exact",
+          "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13012 observed_remaining=13012 sram_xn=1\r\n/> "
+        }
+      },
+      "ordinary_MSC_stack": {
+        "control": {
+          "status": "PASS",
+          "minimum_required": 12288,
+          "minimum_remaining": 12624
+        },
+        "candidate": {
+          "status": "PASS",
+          "minimum_required": 12288,
+          "minimum_remaining": 12632
+        }
+      },
+      "raw_NOR": {
+        "64": {
+          "timing_us": {
+            "before": 60.0,
+            "after": 60.0,
+            "delta": 0.0,
+            "delta_percent": 0.0
+          },
+          "control_range_us": [
+            46,
+            74
+          ],
+          "candidate_range_us": [
+            46,
+            67
+          ],
+          "samples_each": 60
+        },
+        "512": {
+          "timing_us": {
+            "before": 210.0,
+            "after": 210.0,
+            "delta": 0.0,
+            "delta_percent": 0.0
+          },
+          "control_range_us": [
+            195,
+            222
+          ],
+          "candidate_range_us": [
+            195,
+            215
+          ],
+          "samples_each": 60
+        },
+        "4096": {
+          "timing_us": {
+            "before": 1577.0,
+            "after": 1576.0,
+            "delta": -1.0,
+            "delta_percent": -0.06341154090044387
+          },
+          "control_range_us": [
+            1560,
+            1583
+          ],
+          "candidate_range_us": [
+            1561,
+            1590
+          ],
+          "samples_each": 60
+        },
+        "65536": {
+          "timing_us": {
+            "before": 25003.5,
+            "after": 25003.0,
+            "delta": -0.5,
+            "delta_percent": -0.0019997200391945126
+          },
+          "control_range_us": [
+            24986,
+            25020
+          ],
+          "candidate_range_us": [
+            24985,
+            25018
+          ],
+          "samples_each": 60
+        }
+      },
+      "idle_pool_free_bytes": {
+        "before": 70992,
+        "after": 71160,
+        "delta": 168,
+        "delta_percent": 0.23664638269100743
+      },
+      "core_cycles": {
+        "before": 1709891,
+        "after": 1712123,
+        "delta": 2232,
+        "delta_percent": 0.13053463641834478
+      },
+      "analog_median_us": {
+        "before": 437.5,
+        "after": 441.0,
+        "delta": 3.5,
+        "delta_percent": 0.8
+      },
+      "CRC_checked_NOR_reads": 100,
+      "DMA_bus_errors": 0,
+      "CDC_boundary_files": [
+        1,
+        63,
+        64,
+        65,
+        255,
+        256,
+        257,
+        4095,
+        4096
+      ],
+      "storage_boundaries": {
+        "1": {
+          "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "bytes": 1
+        },
+        "63": {
+          "sha256": "aa898f20870893d7cb93ed16553d5e2d69de84616df4b93b78df351bbb20aa67",
+          "bytes": 63
+        },
+        "64": {
+          "sha256": "e9c106929af948af02fbf3e843cdb4113c176153e88104914e17972278fdddbe",
+          "bytes": 64
+        },
+        "65": {
+          "sha256": "620c6dd83e298f34e786ed3095133c03179fea2ca6cb577fb1a835e8622c7ea6",
+          "bytes": 65
+        },
+        "255": {
+          "sha256": "e7e8784d5f7917fbb1e5507c9e8c40b96e81a9c7732e1893253370ec7390eb72",
+          "bytes": 255
+        },
+        "256": {
+          "sha256": "8d3c9f4e238168b85890b3276d0cc840676a8f0e053da8300161035487bce0ab",
+          "bytes": 256
+        },
+        "257": {
+          "sha256": "eb1861fbdeb513b657f7b34bb831d9dd7cffd320fbd126971b04336eb9d32787",
+          "bytes": 257
+        },
+        "4095": {
+          "sha256": "b25fecbcc381876e4b745b8ba40e8cedfd3ad943a5dddcc44979ad7d7dd53b0e",
+          "bytes": 4095
+        },
+        "4096": {
+          "sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34",
+          "bytes": 4096
+        },
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=457/18 raw(v/t/b)=1492/937/1018 val(mV/dC/mV)=3331/277/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360564 footer=358852 expected=0x122A5FF9 build=0x122A5FF9 actual=0x122A5FF9 backend=hardware cycles=1062084\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=13256 observed_remaining=13256 sram_xn=1\r\n/> "
+        }
+      }
+    },
+    "mini": {
+      "control": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-control/mini.bin",
+        "bytes": 333200,
+        "footer": 331648,
+        "build": "B48603AE",
+        "sha256": "3c3d66cce782d9b148044b6dbd749ed5324f9d548658d0431ed5b86d38a83a98"
+      },
+      "candidate": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/mini.bin",
+        "bytes": 332996,
+        "footer": 331444,
+        "build": "979046B7",
+        "sha256": "1f76bd0e510a1b5913275a6f9a43cfa0bdf9b7b2acc784dad38504297b871a92"
+      },
+      "candidate_ELF_sha256": "725ada197fb1a0a2d6f551504f40f688613789f0fc6d5808523cfbf9d9b9fd60",
+      "Flash": {
+        "before": 333200,
+        "after": 332996,
+        "delta": -204,
+        "delta_percent": -0.061224489795918366
+      },
+      "static_RAM": {
+        "before": 25704,
+        "after": 25536,
+        "delta": -168,
+        "delta_percent": -0.6535947712418301
+      },
+      "real_EP0_requests": 50,
+      "preservation": {
+        "status": "PASS",
+        "files": 10,
+        "state_preserved": true,
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=429/18 raw(v/t/b)=1525/955/1008 val(mV/dC/mV)=3270/284/3220 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=332996 footer=331444 expected=0x979046B7 build=0x979046B7 actual=0x979046B7 backend=hardware cycles=982215\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200063C8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13120 observed_remaining=13120 sram_xn=1\r\n/> "
+        }
+      },
+      "original_files": 10,
+      "original_directories": 3,
+      "snapshot_sha256": "d430a9bdb0f340c8c55895500a3858b5161deb7c337a7ea3e19cd6940c9e3f94",
+      "qualified_at_utc": "2026-10-15T09:42:14.864234+00:00",
+      "four_session_RAM": {
+        "control": {
+          "status": "PASS",
+          "fixture": {
+            "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-control/mini.bin",
+            "bytes": 333200,
+            "footer": 331648,
+            "build": "B48603AE",
+            "sha256": "3c3d66cce782d9b148044b6dbd749ed5324f9d548658d0431ed5b86d38a83a98",
+            "probe": {
+              "BUILD": 3028681646,
+              "FOOTER": 134549376,
+              "HEAP": 536880664,
+              "END": 536985344,
+              "PREPARED": 536879580,
+              "SESSION": 8264,
+              "ARENAS": 536871220,
+              "STRIDE": 92
+            },
+            "report_words": 9
+          },
+          "app_sha256": "a577e951f7747700a2a5151830c4f8961523b3a9a3530aa359d8e0a01fb12204",
+          "app_bytes": 539,
+          "before": {
+            "heap": 536913008,
+            "pool_end": 536985344,
+            "free_above_heap": 72336,
+            "guaranteed_free": 72336,
+            "workspace": 536896624,
+            "bulk": 536904816,
+            "prepared": 0,
+            "msc_session": 8264,
+            "overlay_capacity": 71760,
+            "app_capacity": 576
+          },
+          "cycles": [
+            {
+              "heap": 536913008,
+              "pool_end": 536985344,
+              "free_above_heap": 72336,
+              "guaranteed_free": 72336,
+              "workspace": 536896624,
+              "bulk": 536904816,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71760,
+              "app_capacity": 576,
+              "cycle": 0,
+              "stack_remaining": 12544,
+              "payload_sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34"
+            },
+            {
+              "heap": 536913008,
+              "pool_end": 536985344,
+              "free_above_heap": 72336,
+              "guaranteed_free": 72336,
+              "workspace": 536896624,
+              "bulk": 536904816,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71760,
+              "app_capacity": 576,
+              "cycle": 1,
+              "stack_remaining": 12544,
+              "payload_sha256": "f965b526538d757ca2d6114af6517c57cbcb3650b71d8cfb92046a04ef2f566b"
+            },
+            {
+              "heap": 536913008,
+              "pool_end": 536985344,
+              "free_above_heap": 72336,
+              "guaranteed_free": 72336,
+              "workspace": 536896624,
+              "bulk": 536904816,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71760,
+              "app_capacity": 576,
+              "cycle": 2,
+              "stack_remaining": 12544,
+              "payload_sha256": "29170fce388174ee8722f308fab3480d7c762d84d12054714c18412ef27a3aee"
+            },
+            {
+              "heap": 536913008,
+              "pool_end": 536985344,
+              "free_above_heap": 72336,
+              "guaranteed_free": 72336,
+              "workspace": 536896624,
+              "bulk": 536904816,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71760,
+              "app_capacity": 576,
+              "cycle": 3,
+              "stack_remaining": 12544,
+              "payload_sha256": "084ea52aaba6eb759529cbb3adca8b915e1a23fc8dd32eb35fe5a3b6dfd74a84"
+            }
+          ],
+          "minimum_stack_required": 11264,
+          "files_preserved": 10,
+          "reset_between_cycles": false
+        },
+        "candidate": {
+          "status": "PASS",
+          "fixture": {
+            "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/mini.bin",
+            "bytes": 332996,
+            "footer": 331444,
+            "build": "979046B7",
+            "sha256": "1f76bd0e510a1b5913275a6f9a43cfa0bdf9b7b2acc784dad38504297b871a92",
+            "probe": {
+              "BUILD": 2542814903,
+              "FOOTER": 134549172,
+              "HEAP": 536880664,
+              "END": 536985344,
+              "PREPARED": 536879580,
+              "SESSION": 8264,
+              "ARENAS": 536871220,
+              "STRIDE": 92
+            },
+            "report_words": 9
+          },
+          "app_sha256": "529c47a28daee0202d47694d0f24028ee36d3159fdbbafd5b5eab9fa9f7d0618",
+          "app_bytes": 539,
+          "before": {
+            "heap": 536912840,
+            "pool_end": 536985344,
+            "free_above_heap": 72504,
+            "guaranteed_free": 72504,
+            "workspace": 536896456,
+            "bulk": 536904648,
+            "prepared": 0,
+            "msc_session": 8264,
+            "overlay_capacity": 71928,
+            "app_capacity": 576
+          },
+          "cycles": [
+            {
+              "heap": 536912840,
+              "pool_end": 536985344,
+              "free_above_heap": 72504,
+              "guaranteed_free": 72504,
+              "workspace": 536896456,
+              "bulk": 536904648,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71928,
+              "app_capacity": 576,
+              "cycle": 0,
+              "stack_remaining": 12544,
+              "payload_sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34"
+            },
+            {
+              "heap": 536912840,
+              "pool_end": 536985344,
+              "free_above_heap": 72504,
+              "guaranteed_free": 72504,
+              "workspace": 536896456,
+              "bulk": 536904648,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71928,
+              "app_capacity": 576,
+              "cycle": 1,
+              "stack_remaining": 12544,
+              "payload_sha256": "f965b526538d757ca2d6114af6517c57cbcb3650b71d8cfb92046a04ef2f566b"
+            },
+            {
+              "heap": 536912840,
+              "pool_end": 536985344,
+              "free_above_heap": 72504,
+              "guaranteed_free": 72504,
+              "workspace": 536896456,
+              "bulk": 536904648,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71928,
+              "app_capacity": 576,
+              "cycle": 2,
+              "stack_remaining": 12544,
+              "payload_sha256": "29170fce388174ee8722f308fab3480d7c762d84d12054714c18412ef27a3aee"
+            },
+            {
+              "heap": 536912840,
+              "pool_end": 536985344,
+              "free_above_heap": 72504,
+              "guaranteed_free": 72504,
+              "workspace": 536896456,
+              "bulk": 536904648,
+              "prepared": 0,
+              "msc_session": 8264,
+              "overlay_capacity": 71928,
+              "app_capacity": 576,
+              "cycle": 3,
+              "stack_remaining": 12544,
+              "payload_sha256": "084ea52aaba6eb759529cbb3adca8b915e1a23fc8dd32eb35fe5a3b6dfd74a84"
+            }
+          ],
+          "minimum_stack_required": 11264,
+          "files_preserved": 10,
+          "reset_between_cycles": false
+        }
+      },
+      "graphics": {
+        "control": {
+          "frames": 103,
+          "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+          "preservation": "Original files/program/registers/stack/pwd exact",
+          "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006470 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13056 observed_remaining=13056 sram_xn=1\r\n/> "
+        },
+        "candidate": {
+          "frames": 103,
+          "frame_sha256": "1cb9045d032102673613d953c5f220af998bf46730a41ca296cce54f8ebb2a7e",
+          "preservation": "Original files/program/registers/stack/pwd exact",
+          "workload_mpu": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200063C8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13056 observed_remaining=13056 sram_xn=1\r\n/> "
+        }
+      },
+      "ordinary_MSC_stack": {
+        "control": {
+          "status": "PASS",
+          "minimum_required": 12288,
+          "minimum_remaining": 12544
+        },
+        "candidate": {
+          "status": "PASS",
+          "minimum_required": 12288,
+          "minimum_remaining": 12544
+        }
+      },
+      "raw_NOR": {
+        "64": {
+          "timing_us": {
+            "before": 59.0,
+            "after": 59.0,
+            "delta": 0.0,
+            "delta_percent": 0.0
+          },
+          "control_range_us": [
+            44,
+            71
+          ],
+          "candidate_range_us": [
+            44,
+            71
+          ],
+          "samples_each": 60
+        },
+        "512": {
+          "timing_us": {
+            "before": 208.0,
+            "after": 208.0,
+            "delta": 0.0,
+            "delta_percent": 0.0
+          },
+          "control_range_us": [
+            194,
+            221
+          ],
+          "candidate_range_us": [
+            194,
+            223
+          ],
+          "samples_each": 60
+        },
+        "4096": {
+          "timing_us": {
+            "before": 1562.0,
+            "after": 1564.0,
+            "delta": 2.0,
+            "delta_percent": 0.12804097311139565
+          },
+          "control_range_us": [
+            1546,
+            1574
+          ],
+          "candidate_range_us": [
+            1545,
+            1572
+          ],
+          "samples_each": 60
+        },
+        "65536": {
+          "timing_us": {
+            "before": 24763.5,
+            "after": 24802.0,
+            "delta": 38.5,
+            "delta_percent": 0.1554707533264684
+          },
+          "control_range_us": [
+            24741,
+            24773
+          ],
+          "candidate_range_us": [
+            24778,
+            24831
+          ],
+          "samples_each": 60
+        }
+      },
+      "idle_pool_free_bytes": {
+        "before": 72336,
+        "after": 72504,
+        "delta": 168,
+        "delta_percent": 0.23224950232249503
+      },
+      "core_cycles": {
+        "before": 1708390,
+        "after": 1711026,
+        "delta": 2636,
+        "delta_percent": 0.15429732086935652
+      },
+      "analog_median_us": {
+        "before": 440.5,
+        "after": 438.5,
+        "delta": -2.0,
+        "delta_percent": -0.4540295119182747
+      },
+      "CRC_checked_NOR_reads": 100,
+      "DMA_bus_errors": 0,
+      "CDC_boundary_files": [
+        1,
+        63,
+        64,
+        65,
+        255,
+        256,
+        257,
+        4095,
+        4096
+      ],
+      "storage_boundaries": {
+        "1": {
+          "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "bytes": 1
+        },
+        "63": {
+          "sha256": "aa898f20870893d7cb93ed16553d5e2d69de84616df4b93b78df351bbb20aa67",
+          "bytes": 63
+        },
+        "64": {
+          "sha256": "e9c106929af948af02fbf3e843cdb4113c176153e88104914e17972278fdddbe",
+          "bytes": 64
+        },
+        "65": {
+          "sha256": "620c6dd83e298f34e786ed3095133c03179fea2ca6cb577fb1a835e8622c7ea6",
+          "bytes": 65
+        },
+        "255": {
+          "sha256": "e7e8784d5f7917fbb1e5507c9e8c40b96e81a9c7732e1893253370ec7390eb72",
+          "bytes": 255
+        },
+        "256": {
+          "sha256": "8d3c9f4e238168b85890b3276d0cc840676a8f0e053da8300161035487bce0ab",
+          "bytes": 256
+        },
+        "257": {
+          "sha256": "eb1861fbdeb513b657f7b34bb831d9dd7cffd320fbd126971b04336eb9d32787",
+          "bytes": 257
+        },
+        "4095": {
+          "sha256": "b25fecbcc381876e4b745b8ba40e8cedfd3ad943a5dddcc44979ad7d7dd53b0e",
+          "bytes": 4095
+        },
+        "4096": {
+          "sha256": "62ace5a43203357c40b885b9fdf6d2718909ba3cbdf569e152859e112834fd34",
+          "bytes": 4096
+        },
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 16777216 bytes\r\nNodes: 13 used, 8179 free, 8192 total\r\nVisible: 10 files, 3 directories\r\nFAT12 cluster: 4096 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF4018 SFDP=1 probe=16777216 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/60\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1512/954/1009 val(mV/dC/mV)=3298/306/3250 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=332996 footer=331444 expected=0x979046B7 build=0x979046B7 actual=0x979046B7 backend=hardware cycles=982029\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x200063C8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBD0 observed_low=0x2001FBD0 sampled_remaining=15312 watermark=1 watermark_remaining=13216 observed_remaining=13216 sram_xn=1\r\n/> "
+        }
+      }
+    }
+  },
+  "raw_artifact_root": ".build/stm32-usb-compact-state-20261015",
+  "qualification_notes": [
+    "All native USB users compile against the same forced headers. A single class-data slot uses typed accessors; no union aliasing. Legacy C/C++ shapes are compiled independently, not inferred from marker values.",
+    "The shipping mini LTO build inlines CDC_init, so the direct CDC entrypoint model uses its actual no-LTO release variant. Exact shipping mini still passes the controller model and full physical qualification. No production flag was changed to retain test symbols.",
+    "The CDC model now passes the declared ReceiveQueue pointer instead of relying on Classic LTO constant propagation; its object-size and RX-buffer observations follow ELF metadata and the real setter. Old hard-coded sizes/offsets were removed.",
+    "Classic MSC lifecycle fixture required a display hardware stub; production service code and its resource checks remain real. Earlier missing-fixture-field/UI-stub failures are retained locally.",
+    "First Classic candidate MSC completed data/eject/reset/cleanup but its final separate-port MPU read timed out. Reopen without reset immediately returned identity/valid CRC/MPU/no crash. Twenty df+MPU pairs across40 open/close sessions passed. Failed/raw reports are retained. The strict repeat batches command+MPU in one identity-checked DTR session; no check/threshold was removed. Root cause is not established and no firmware workaround was introduced.",
+    "Four-session APP/file-service RAM workload retains its separate11264-byte target on control/candidate. Ordinary binary MSC retains12288. Firmware F411 stack16384/guard256 and F401 budgets are unchanged.",
+    "Graphics uses the existing reset-after-cleanup workaround only after its zero/empty calculator precondition passes. Screen-session cleanup itself is outside this change.",
+    "Mini was explicitly made available by the user for initial control measurements while Classic was occupied. Candidate installation and complete qualification still proceeded Classic before mini.",
+    "Classic was released after PASS and all own ports closed to the human-authorized Tiny BASIC/VM-blocks task, with immutable recovery122A5FF9. Later activity by that task is outside these measurements.",
+    "Physical Mac sleep was not repeated. Native ARM reset/suspend/resume and linked enabled/disabled suspend gates passed."
+  ],
+  "Classic_first_read_failure": {
+    "report": {
+      "status": "FAIL",
+      "minimum_required": 12288,
+      "minimum_remaining": 12624,
+      "samples": [
+        {
+          "after_command": "ls /",
+          "remaining": 12624,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12624 observed_remaining=12624 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "fsget \"/Проверка-7623.bin\"",
+          "remaining": 12624,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12624 observed_remaining=12624 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "vlog",
+          "remaining": 12624,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12624 observed_remaining=12624 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "mpu status",
+          "remaining": 12624,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12624 observed_remaining=12624 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "ls /",
+          "remaining": 14768,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=14768 observed_remaining=14768 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "fsget \"/Проверка-7623.bin\"",
+          "remaining": 14120,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=14120 observed_remaining=14120 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "rm \"/Проверка-7623.bin\"",
+          "remaining": 12976,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12976 observed_remaining=12976 sram_xn=1\r\n/> "
+        },
+        {
+          "after_command": "ls /",
+          "remaining": 12976,
+          "report": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12976 observed_remaining=12976 sram_xn=1\r\n/> "
+        }
+      ]
+    },
+    "recovery_without_reset": {
+      "console_locked": false,
+      "port_exists": true,
+      "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=122A5FF9 profile=classic-v3-uc1609\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006908 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FBF8 observed_low=0x2001FBF8 sampled_remaining=15352 watermark=1 watermark_remaining=12976 observed_remaining=12976 sram_xn=1\r\n/> ",
+      "usb": "usb\r\nUnknown command: usb\r\n/> ",
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 48 used, 976 free, 1024 total\r\nVisible: 44 files, 4 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=434/18 raw(v/t/b)=1492/934/1019 val(mV/dC/mV)=3331/267/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=360564 footer=358852 expected=0x122A5FF9 build=0x122A5FF9 actual=0x122A5FF9 backend=hardware cycles=1062207\r\n/> ",
+      "status": "PASS"
+    },
+    "repeated_open_close": {
+      "status": "PASS",
+      "pairs": 20,
+      "opens": 40
+    },
+    "qualified_repeat": "PASS"
+  }
+}

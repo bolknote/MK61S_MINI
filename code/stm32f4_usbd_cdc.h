@@ -106,6 +106,25 @@ typedef struct _USBD_CDC_Itf {
 } USBD_CDC_ItfTypeDef;
 
 
+#if MK61_USB_COMPACT_STATE
+typedef struct {
+  uint32_t data[2U];      /* aligned persistent EP0 reply and ACM payload */
+  uint8_t *RxBuffer;
+  uint8_t *TxBuffer;
+  uint32_t RxLength;
+  uint32_t TxLength;
+  uint8_t CmdOpCode;
+  uint8_t CmdLength;
+  __IO uint8_t TxState;   /* idle, data, or the one required trailing ZLP */
+} USBD_CDC_HandleTypeDef;
+#if defined(__arm__)
+#ifdef __cplusplus
+static_assert(sizeof(USBD_CDC_HandleTypeDef) == 28, "qualified compact CDC layout");
+#else
+_Static_assert(sizeof(USBD_CDC_HandleTypeDef) == 28, "qualified compact CDC layout");
+#endif
+#endif
+#else
 typedef struct {
   uint32_t data[2U];      /* Force 32-bit alignment */
   uint8_t  CmdOpCode;
@@ -118,7 +137,7 @@ typedef struct {
   __IO uint32_t TxState;
   __IO uint32_t RxState;
 } USBD_CDC_HandleTypeDef;
-
+#endif /* MK61_USB_COMPACT_STATE */
 
 
 /** @defgroup USBD_CORE_Exported_Macros

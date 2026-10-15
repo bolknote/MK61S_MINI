@@ -34,6 +34,12 @@ extern "C" {
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_conf.h"
 
+#if defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#define MK61_USB_COMPACT_STATE 1
+#else
+#define MK61_USB_COMPACT_STATE 0
+#endif
+
 /** @addtogroup STM32_USBD_DEVICE_LIBRARY
   * @{
   */
@@ -261,13 +267,18 @@ typedef struct _Device_cb
   uint8_t (*DataIn)(struct _USBD_HandleTypeDef *pdev, uint8_t epnum);
   uint8_t (*DataOut)(struct _USBD_HandleTypeDef *pdev, uint8_t epnum);
   uint8_t (*SOF)(struct _USBD_HandleTypeDef *pdev);
+#if !MK61_USB_COMPACT_STATE
   uint8_t (*IsoINIncomplete)(struct _USBD_HandleTypeDef *pdev, uint8_t epnum);
   uint8_t (*IsoOUTIncomplete)(struct _USBD_HandleTypeDef *pdev, uint8_t epnum);
 
   uint8_t  *(*GetHSConfigDescriptor)(uint16_t *length);
+
+#endif
   uint8_t  *(*GetFSConfigDescriptor)(uint16_t *length);
+#if !MK61_USB_COMPACT_STATE
   uint8_t  *(*GetOtherSpeedConfigDescriptor)(uint16_t *length);
   uint8_t  *(*GetDeviceQualifierDescriptor)(uint16_t *length);
+#endif
 #if (USBD_SUPPORT_USER_STRING_DESC == 1U)
   uint8_t  *(*GetUsrStrDescriptor)(struct _USBD_HandleTypeDef *pdev, uint8_t index,  uint16_t *length);
 #endif /* USBD_SUPPORT_USER_STRING_DESC  */
@@ -309,7 +320,21 @@ typedef struct
 #endif /* (USBD_LPM_ENABLED == 1U) || (USBD_CLASS_BOS_ENABLED == 1) */
 } USBD_DescriptorsTypeDef;
 
-/* USB Device handle structure */
+/* Native FS endpoint records keep only per-endpoint state. Transfer counters
+ * belong to EP0's two directions, rather than all eight logical endpoints.
+ * All counters and pointers retain their natural alignment; no packed ABI. */
+#if MK61_USB_COMPACT_STATE
+typedef struct {
+  uint16_t status;             /* persistent two-byte GET_STATUS reply */
+  uint8_t maxpacket;           /* qualified Full Speed packet: at most 64 */
+  uint8_t is_used;
+} USBD_EndpointTypeDef;
+typedef struct {
+  uint32_t total_length;
+  uint32_t rem_length;
+} MK61_USBD_ControlTransfer;
+#else
+/* Legacy Arduino middleware retains its original public layout. */
 typedef struct
 {
   uint32_t status;
@@ -319,6 +344,7 @@ typedef struct
   uint16_t is_used;
   uint16_t bInterval;
 } USBD_EndpointTypeDef;
+#endif
 
 #ifdef USE_USBD_COMPOSITE
 typedef enum
@@ -364,6 +390,46 @@ typedef struct
 #endif /* USE_USBD_COMPOSITE */
 
 /* USB Device handle structure */
+#if MK61_USB_COMPACT_STATE
+#if USBD_MAX_SUPPORTED_CLASS != 1U || defined(USE_USBD_COMPOSITE)
+#error "compact USB state requires the qualified single-class device"
+#endif
+typedef struct _USBD_HandleTypeDef {
+  USBD_DescriptorsTypeDef *pDesc;
+  USBD_ClassTypeDef *pClass[1];
+  /* One class-data slot, shared by IRQ and foreground. The native layout
+   * does not keep the legacy scalar duplicate or use union type punning. */
+  void *pClassDataCmsit[1];
+  void *pUserData[1];
+  void *pData;
+  void *pConfDesc;
+  USBD_EndpointTypeDef ep_in[MK61_USBD_ENDPOINTS];
+  USBD_EndpointTypeDef ep_out[MK61_USBD_ENDPOINTS];
+  MK61_USBD_ControlTransfer control_in, control_out;
+  USBD_SetupReqTypedef request;
+  uint32_t ep0_data_len;
+  uint16_t dev_config_status;
+  uint8_t dev_config;
+  uint8_t dev_speed;
+  __IO uint8_t ep0_state;
+  __IO uint8_t dev_state;
+  uint8_t dev_old_state;
+  uint8_t dev_address;
+  uint8_t dev_test_mode;
+  uint8_t dev_remote_wakeup;
+  uint8_t classId;
+  uint8_t id;
+} USBD_HandleTypeDef;
+#if defined(__arm__)
+#ifdef __cplusplus
+static_assert(sizeof(USBD_HandleTypeDef) == 96 && sizeof(USBD_EndpointTypeDef) == 4 &&
+              sizeof(USBD_ClassTypeDef) == 36, "qualified compact USB layout");
+#else
+_Static_assert(sizeof(USBD_HandleTypeDef) == 96 && sizeof(USBD_EndpointTypeDef) == 4 &&
+               sizeof(USBD_ClassTypeDef) == 36, "qualified compact USB layout");
+#endif
+#endif
+#else
 typedef struct _USBD_HandleTypeDef
 {
   uint8_t                 id;
@@ -401,6 +467,23 @@ typedef struct _USBD_HandleTypeDef
   void (* DevStateCallback)(uint8_t dev_state, uint8_t cfgidx);                    /*!< User Notification callback      */
 #endif /* USBD_USER_REGISTER_CALLBACK */
 } USBD_HandleTypeDef;
+#endif /* MK61_USB_COMPACT_STATE */
+
+static inline void MK61_USBD_SetClassData(USBD_HandleTypeDef *d, void *data)
+{
+  d->pClassDataCmsit[0] = data;
+#if !MK61_USB_COMPACT_STATE
+  d->pClassData = data;
+#endif
+}
+static inline void *MK61_USBD_ClassData(USBD_HandleTypeDef *d)
+{
+#if MK61_USB_COMPACT_STATE
+  return d->pClassDataCmsit[0];
+#else
+  return d->pClassData;
+#endif
+}
 
 #if (USBD_USER_REGISTER_CALLBACK == 1U)
 typedef void (*USBD_DevStateCallbackTypeDef)(uint8_t dev_state, uint8_t cfgidx);   /*!< pointer to User callback function  */

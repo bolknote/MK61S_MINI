@@ -27,8 +27,9 @@ static uint8_t received(USBD_HandleTypeDef* d) { (void)d; ++rx_ready; return 0; 
 static uint8_t sent(USBD_HandleTypeDef* d) { (void)d; ++tx_ready; return 0; }
 static uint8_t data_in(USBD_HandleTypeDef* d, uint8_t ep) { (void)d; (void)ep; ++in_calls; return 0; }
 static uint8_t data_out(USBD_HandleTypeDef* d, uint8_t ep) { (void)d; (void)ep; ++out_calls; return 0; }
-static USBD_ClassTypeDef cls={init,deinit,setup,sent,received,data_in,data_out,
-                            0,0,0,0,configuration,0,0};
+static USBD_ClassTypeDef cls={.Init=init,.DeInit=deinit,.Setup=setup,
+  .EP0_TxSent=sent,.EP0_RxReady=received,.DataIn=data_in,.DataOut=data_out,
+  .GetFSConfigDescriptor=configuration};
 USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef* d) { (void)d; return 0; }
 USBD_StatusTypeDef USBD_LL_DeInit(USBD_HandleTypeDef* d) { (void)d; return 0; }
 USBD_StatusTypeDef USBD_LL_Start(USBD_HandleTypeDef* d) { (void)d; return 0; }
@@ -92,6 +93,40 @@ int test_control(void) {
   USBD_Stop(&dev);USBD_DeInit(&dev);CHECK(dev.pDesc==0 && dev.pConfDesc==0);
   return 0;
 }
+int test_compact_state_boundaries(void) {
+#if MK61_USB_COMPACT_STATE
+  struct {
+    uint8_t left[8];
+    USBD_HandleTypeDef device;
+    uint8_t right[8];
+  } guarded;
+  memset(&guarded,0xA5,sizeof(guarded));
+  USBD_HandleTypeDef *d=&guarded.device;
+  CHECK(USBD_Init(d,(USBD_DescriptorsTypeDef*)&mk61_usb_descriptors,0)==USBD_OK);
+  CHECK(USBD_RegisterClass(d,&cls)==USBD_OK && USBD_LL_Reset(d)==USBD_OK);
+  /* Independent persistent counters must retain more than 16 bits. */
+  CHECK(USBD_CtlSendData(d,config,0x10040U)==USBD_OK);
+  CHECK(d->control_in.total_length==0x10040U && d->control_in.rem_length==0x10040U);
+  CHECK(USBD_CtlPrepareRx(d,config,0x20080U)==USBD_OK);
+  CHECK(d->control_out.total_length==0x20080U && d->control_out.rem_length==0x20080U);
+  CHECK(d->control_in.total_length==0x10040U && d->control_in.rem_length==0x10040U);
+  MK61_USBD_SetClassData(d,config);CHECK(d->pClassDataCmsit[0]==config && MK61_USBD_ClassData(d)==config);
+  MK61_USBD_SetClassData(d,NULL);CHECK(d->pClassDataCmsit[0]==NULL && MK61_USBD_ClassData(d)==NULL);
+  d->dev_config=1;d->dev_state=USBD_STATE_CONFIGURED;
+  USBD_SetupReqTypedef r={0x80,USB_REQ_GET_STATUS,0,0,2};
+  CHECK(USBD_StdDevReq(d,&r)==USBD_OK && tx_size==2);
+  CHECK(tx_data==(uint8_t*)&d->dev_config_status && tx_data[0]==1 && tx_data[1]==0);
+  CHECK(d->dev_config==1 && d->dev_speed==USBD_SPEED_FULL && d->dev_state==USBD_STATE_CONFIGURED);
+  d->ep_in[1].status=0xFFFF;d->ep_in[1].maxpacket=64;d->ep_in[1].is_used=1;
+  r.bmRequest=0x82;r.wIndex=0x81;
+  CHECK(USBD_StdEPReq(d,&r)==USBD_OK && tx_size==2);
+  CHECK(tx_data==(uint8_t*)&d->ep_in[1].status && tx_data[0]==0 && tx_data[1]==0);
+  CHECK(d->ep_in[1].maxpacket==64 && d->ep_in[1].is_used==1);
+  for(unsigned i=0;i<8;i++) CHECK(guarded.left[i]==0xA5 && guarded.right[i]==0xA5);
+#endif
+  return 0;
+}
+
 int test_descriptors(void) {
   uint16_t length;uint8_t* b;
   const USBD_DescriptorsTypeDef* d=&mk61_usb_descriptors;

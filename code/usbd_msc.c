@@ -122,8 +122,7 @@ __ALIGN_BEGIN static const uint8_t USBD_MSC_CfgDesc[USB_MSC_CONFIG_DESC_SIZ]  __
 static void release_handle(USBD_HandleTypeDef *pdev)
 {
   if (owner != pdev) return;
-  pdev->pClassDataCmsit[0] = NULL;
-  pdev->pClassData = NULL;
+  MK61_USBD_SetClassData(pdev, NULL);
   owner = NULL;
   (void)USBD_memset(&transport, 0, sizeof(transport));
 }
@@ -138,7 +137,7 @@ uint8_t USBD_MSC_Init(USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 #endif
   (void)USBD_memset(&transport, 0, sizeof(transport));
   owner = pdev;
-  pdev->pClassData = pdev->pClassDataCmsit[0] = &transport;
+  MK61_USBD_SetClassData(pdev, &transport);
   if (USBD_LL_OpenEP(pdev, MSC_EPOUT_ADDR, USBD_EP_TYPE_BULK, 64U) != USBD_OK)
     goto fail;
   pdev->ep_out[1].is_used = 1U;
@@ -224,7 +223,7 @@ const USBD_ClassTypeDef USBD_MSC
 USBD_ClassTypeDef USBD_MSC
 #endif
 = {
-  USBD_MSC_Init, USBD_MSC_DeInit, USBD_MSC_Setup,
-  NULL, NULL, USBD_MSC_DataIn, USBD_MSC_DataOut, NULL, NULL, NULL,
-  NULL, USBD_MSC_GetFSCfgDesc, NULL, NULL
+  .Init=USBD_MSC_Init, .DeInit=USBD_MSC_DeInit, .Setup=USBD_MSC_Setup,
+  .DataIn=USBD_MSC_DataIn, .DataOut=USBD_MSC_DataOut,
+  .GetFSConfigDescriptor=USBD_MSC_GetFSCfgDesc
 };
