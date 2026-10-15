@@ -7,6 +7,7 @@ flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+flags+=("-DMK61_LANGUAGE_VM_CACHE_MIXED=${MK61_VM_CACHE_MIXED_TEST:-0}")
 policies=(0 1)
 if [[ -n "${MK61_VM_CACHE_DENSITY_TEST+x}" ]]; then
   policies=("$MK61_VM_CACHE_DENSITY_TEST")
