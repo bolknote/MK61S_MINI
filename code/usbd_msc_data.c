@@ -64,6 +64,15 @@ EndBSPDependencies */
   * @{
   */
 
+/* The only advertised logical unit, unchanged from the calculator's disk. */
+const uint8_t MK61_MSC_Inquiry[36] = {
+  0x00, 0x80, 0x02, 0x02, 31, 0, 0, 0,
+  'M', 'K', '6', '1', 'S', ' ', ' ', ' ',
+  'P', 'r', 'o', 'g', 'r', 'a', 'm', 's',
+  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
+  '0', '.', '0', '1'
+};
+
 /* USB Mass storage Page 0 Inquiry Data */
 const uint8_t MSC_Page00_Inquiry_Data[LENGTH_INQUIRY_PAGE00] =
 {

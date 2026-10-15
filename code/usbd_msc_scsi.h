@@ -121,19 +121,11 @@ extern "C" {
   * @{
   */
 
+/* Our disk reports ASC only; every supported ASCQ is zero on the wire. */
 typedef struct _SENSE_ITEM
 {
   uint8_t Skey;
-  union
-  {
-    struct _ASCs
-    {
-      uint8_t ASC;
-      uint8_t ASCQ;
-    } b;
-    uint8_t ASC;
-    uint8_t *pData;
-  } w;
+  uint8_t ASC;
 } USBD_SCSI_SenseTypeDef;
 /**
   * @}
@@ -157,12 +149,12 @@ typedef struct _SENSE_ITEM
 /** @defgroup USBD_SCSI_Exported_FunctionsPrototype
   * @{
   */
-int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t *cmd);
+int8_t SCSI_ProcessCmd(USBD_HandleTypeDef *pdev);
 int8_t SCSI_ContinueRead(USBD_HandleTypeDef *pdev);
 int8_t SCSI_ContinueWrite(USBD_HandleTypeDef *pdev);
 int8_t SCSI_CompleteSync(USBD_HandleTypeDef *pdev, uint8_t success);
 
-void SCSI_SenseCode(USBD_HandleTypeDef *pdev, uint8_t lun, uint8_t sKey,
+void SCSI_SenseCode(USBD_HandleTypeDef *pdev, uint8_t sKey,
                     uint8_t ASC);
 
 /**

@@ -236,7 +236,6 @@ class [[nodiscard]] Lease {
     friend bool detail_try_reclaim(Arena arena);
 };
 
-#if MK61_OVERLAY_LANGUAGE_VM && MK61_ENABLE_USB_SCREEN
 // One scoped, non-moving buffer immediately after a live OVERLAY allocation.
 // It uses only the existing free linker range, never evicts an APP, and can
 // outlive the earlier lease (USB may exit during INPUT). The manager fences
@@ -258,7 +257,6 @@ class [[nodiscard]] OverlayBuffer {
   usize size_;
   Owner owner_;
 };
-#endif
 
 usize capacity(Arena arena);
 bool enabled(Arena arena);

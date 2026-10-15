@@ -37,15 +37,16 @@ def system_memory_sizes(directory):
     return max(sizes.values()), sizes[disk.name]
 
 
-def check_pool(free, disk_memory):
+def check_pool(free, disk_memory, msc_memory=0):
     # APP_MAX_SIZE is a format ceiling, not a reserved allocation. Qualify the
     # actual USB module against the full (512-KiB-volume) staging index.
     # Other APPs may release an unlocked stage cache, never a live index.
     assert free >= APP_MAX_SIZE, f'maximum standalone APP cannot fit: {free} < {APP_MAX_SIZE}'
     rounded = (disk_memory + APP_ALIGNMENT - 1) & ~(APP_ALIGNMENT - 1)
-    assert free >= rounded + STAGE_INDEX_SIZE, (
-        f'USBDISK APP and full stage index cannot coexist: '
-        f'{free} < {rounded} + {STAGE_INDEX_SIZE}')
+    msc_rounded = (msc_memory + 7) & ~7
+    assert free >= rounded + STAGE_INDEX_SIZE + msc_rounded, (
+        f'USBDISK APP, full stage index and MSC session buffer cannot coexist: '
+        f'{free} < {rounded} + {STAGE_INDEX_SIZE} + {msc_rounded}')
 
 
 def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
@@ -77,12 +78,14 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     # Worst case after every retained foreground buffer has been initialized.
     effective = (free - lazy) & ~(APP_ALIGNMENT - 1)
     assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'
-    check_pool(effective, disk_memory)
+    msc = symbols.get('mk61_session_msc_bytes', (0, 0))[0]
+    check_pool(effective, disk_memory, msc)
     # Some builds never call malloc, so section GC may remove both _sbrk
     # implementations. If present, it must be our strong override, not Core's.
     assert '_sbrk' not in symbols or symbols['_sbrk'][1] == 1, 'weak Core _sbrk can overlap APP'
     print(f'APP RAM: {path}: reserve=0 free={free} system_max={module_memory} '
-          f'lazy={lazy} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} top={end:#x} heap=guarded PASS')
+          f'lazy={lazy} effective={effective} usbdisk={disk_memory} stage={STAGE_INDEX_SIZE} '
+          f'msc_session={msc} top={end:#x} heap=guarded PASS')
 
 
 if __name__ == '__main__':

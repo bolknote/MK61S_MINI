@@ -3,7 +3,9 @@
 #include "rust_types.h"
 #include "device_identity.hpp"
 #include "exclusive_buffer.hpp"
+#include "shared_memory.hpp"
 #include "msc_scsi_safety.h"
+#include "msc_disk.h"
 #include "power_monitor.hpp"
 #include "usb_disk_session.hpp"
 #include "virtual_fat.hpp"
@@ -214,11 +216,14 @@ static void set_deferred_state(DeferredWriteState state) {
   __atomic_store_n(&deferred_write.state, state, __ATOMIC_RELEASE);
 }
 
+// Repeated reset must preserve cancellation until the foreground processor
+// observes it and returns. A second reset is not proof that its packet is free.
 static void reset_deferred_write(void) {
   DeferredWriteState expected = DeferredWriteState::PROCESSING;
   if(__atomic_compare_exchange_n(&deferred_write.state, &expected,
                                  DeferredWriteState::CANCELLED, false,
-                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE) ||
+     expected == DeferredWriteState::CANCELLED) return;
   deferred_write.block_addr = 0;
   deferred_write.block_len = 0;
   deferred_write.buffer = NULL;
@@ -237,7 +242,8 @@ static void reset_deferred_read(void) {
   DeferredReadState expected = DeferredReadState::PROCESSING;
   if(__atomic_compare_exchange_n(&deferred_read.state, &expected,
                                  DeferredReadState::CANCELLED, false,
-                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) return;
+                                 __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE) ||
+     expected == DeferredReadState::CANCELLED) return;
   deferred_read.block_addr = 0;
   deferred_read.block_len = 0;
   deferred_read.buffer = NULL;
@@ -252,13 +258,20 @@ static void set_deferred_sync(DeferredSyncState state) {
   __atomic_store_n(&deferred_sync_state, state, __ATOMIC_RELEASE);
 }
 
+static bool deferred_io_cancelled(void) {
+  return deferred_state() == DeferredWriteState::CANCELLED ||
+         deferred_read_state() == DeferredReadState::CANCELLED ||
+         deferred_sync() == DeferredSyncState::CANCELLED;
+}
+
 static void reset_deferred_io(void) {
   reset_deferred_write();
   reset_deferred_read();
   DeferredSyncState expected = DeferredSyncState::PROCESSING;
   if(!__atomic_compare_exchange_n(&deferred_sync_state, &expected,
                                   DeferredSyncState::CANCELLED, false,
-                                  __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+                                  __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE) &&
+     expected != DeferredSyncState::CANCELLED) {
     set_deferred_sync(DeferredSyncState::EMPTY);
   }
 }
@@ -355,33 +368,29 @@ static const USBD_DescriptorsTypeDef descriptors = {
 #endif
 };
 
-static int8_t storage_init(uint8_t lun) {
-  if(lun != 0) return USBD_MSC_STORAGE_ERROR;
+extern "C" int8_t MK61_MSC_DiskInit(void) {
   reset_deferred_io();
   return USBD_MSC_STORAGE_OK;
 }
 
-static int8_t storage_capacity(uint8_t lun, uint32_t* block_num, uint16_t* block_size) {
-  if(lun != 0 || block_num == NULL || block_size == NULL) return USBD_MSC_STORAGE_ERROR;
-  const u32 sectors = virtual_fat::sector_count();
-  *block_num = sectors;
-  *block_size = virtual_fat::SECTOR_SIZE;
-  return 0;
+extern "C" uint32_t MK61_MSC_DiskBlocks(void) {
+  static_assert(virtual_fat::SECTOR_SIZE == MK61_MSC_SECTOR_SIZE,
+                "MSC wire sector must match virtual FAT");
+  return virtual_fat::sector_count();
 }
 
-static int8_t storage_ready(uint8_t lun) {
-  if(lun != 0) return USBD_MSC_STORAGE_ERROR;
-  return is_initialized() ? 0 : -1;
+extern "C" int8_t MK61_MSC_DiskReady(void) {
+  return is_initialized() && !deferred_io_cancelled() ? 0 : -1;
 }
 
-static int8_t storage_write_protected(uint8_t lun) {
-  if(lun != 0) return 1;
+extern "C" int8_t MK61_MSC_DiskWriteProtected(void) {
   return power_monitor::writes_allowed() ? 0 : 1;
 }
 
-static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
+extern "C" int8_t MK61_MSC_DiskRead(uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
+  if(deferred_io_cancelled()) return USBD_MSC_STORAGE_ERROR;
   u32 data_len = 0;
-  if(lun != 0 || buf == NULL || block_len == 0 ||
+  if(buf == NULL || block_len == 0 ||
      !msc_scsi_transfer_bytes(block_len, virtual_fat::SECTOR_SIZE, &data_len) ||
      data_len > MSC_MEDIA_PACKET ||
      !msc_scsi_range_is_valid(virtual_fat::sector_count(), block_addr, block_len)) {
@@ -410,9 +419,10 @@ static int8_t storage_read(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint1
   return USBD_MSC_STORAGE_BUSY;
 }
 
-static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
+extern "C" int8_t MK61_MSC_DiskWrite(uint8_t* buf, uint32_t block_addr, uint16_t block_len) {
+  if(deferred_io_cancelled()) return USBD_MSC_STORAGE_ERROR;
   u32 data_len = 0;
-  if(lun != 0 || buf == NULL || block_len == 0 ||
+  if(buf == NULL || block_len == 0 ||
      !msc_scsi_transfer_bytes(block_len, virtual_fat::SECTOR_SIZE, &data_len) ||
      data_len > MSC_MEDIA_PACKET ||
      !msc_scsi_range_is_valid(virtual_fat::sector_count(), block_addr, block_len)) {
@@ -442,7 +452,7 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
 
   // The F401 proxy deliberately returns false here: USBDISK.APP must never run
   // in USB/IRQ context, even when its RAM cache has enough free slots. The BOT
-  // packet remains owned by STM32duino while BUSY is returned, and service()
+  // packet remains owned by MSC while BUSY is returned, and service()
   // hands it to the pinned APP from the main loop. F411 and host tests use the
   // full in-process implementation and may exercise the fast cache path.
   if(!checkpoint_pressure() &&
@@ -463,40 +473,47 @@ static int8_t storage_write(uint8_t lun, uint8_t* buf, uint32_t block_addr, uint
   return USBD_MSC_STORAGE_BUSY;
 }
 
-static int8_t storage_max_lun(void) {
-  return 0;
+#if defined(STM32F411xE)
+static shared_memory::OverlayBuffer transport_buffer;
+#endif
+
+static bool acquire_transport_buffer(void) {
+#if defined(STM32F411xE)
+  if(transport_buffer.ok()) return false; // A failed prior release remains pinned.
+  if(!transport_buffer.acquire(shared_memory::Owner::USB_TRANSPORT,
+                               sizeof(USBD_MSC_BOT_HandleTypeDef))) return false;
+  if(!MK61_MSC_SetPreparedHandle(transport_buffer.data(), transport_buffer.size())) {
+    transport_buffer.reset();
+    return false;
+  }
+#endif
+  return true;
 }
 
-static const int8_t inquiry_data[] = {
-  0x00,
-  -128,
-  0x02,
-  0x02,
-  STANDARD_INQUIRY_DATA_LEN - 5,
-  0x00,
-  0x00,
-  0x00,
-  'M', 'K', '6', '1', 'S', ' ', ' ', ' ',
-  'P', 'r', 'o', 'g', 'r', 'a', 'm', 's',
-  ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-  '0', '.', '0', '1'
-};
+static bool release_transport_buffer(void) {
+#if defined(STM32F411xE)
+  if(!transport_buffer.ok()) return true;
+  // A failed shutdown must keep RAM pinned, never give an active IRQ or
+  // deferred operation a pointer to a subsequent APP's storage.
+  if(deferred_state() != DeferredWriteState::EMPTY ||
+     deferred_read_state() != DeferredReadState::EMPTY ||
+     deferred_sync() != DeferredSyncState::EMPTY ||
+     !MK61_MSC_ReleasePreparedHandle(transport_buffer.data())) {
+    virtual_fat::report_startup_failure(20, "msc-release");
+    return false;
+  }
+  transport_buffer.reset();
+#endif
+  return true;
+}
 
-static const USBD_StorageTypeDef storage = {
-  storage_init,
-  storage_capacity,
-  storage_ready,
-  storage_write_protected,
-  storage_read,
-  storage_write,
-  storage_max_lun,
-  const_cast<int8_t*>(inquiry_data)
-};
-
-static void release_session_resources(void) {
+static bool release_session_resources(void) {
   release_usb_device();
+  reset_deferred_io();
+  const bool released = release_transport_buffer();
   if(session_is_open()) virtual_fat::end_session();
   release_cache_buffer();
+  return released;
 }
 
 static void abort_session(void) {
@@ -549,7 +566,7 @@ static virtual_fat::CommitResult finalize_session(void) {
   }
   const virtual_fat::CommitResult result =
       virtual_fat::finalize_pending_result();
-  release_session_resources();
+  const bool released = release_session_resources();
   if(!apply_session_event(finalize_event(result)).accepted) {
     const u32 failed_state = (u32) current_session_state();
     (void) apply_session_event(usb_disk_session::Event::DISCONNECT);
@@ -564,7 +581,7 @@ static virtual_fat::CommitResult finalize_session(void) {
         result == virtual_fat::CommitResult::REJECTED ? 26U : 27U,
         "finalize-app");
   }
-  return result;
+  return released ? result : virtual_fat::CommitResult::IO_FAILED;
 }
 
 class PreparingScope {
@@ -581,16 +598,14 @@ bool prepare(void) {
   if(is_initialized() ||
      (session_is_open() && !device_configured)) return true;
   if(preparing) return false;
-#if defined(STM32F411xE)
-  static USBD_MSC_BOT_HandleTypeDef* prepared_handle;
-  if(!prepared_handle) prepared_handle = (USBD_MSC_BOT_HandleTypeDef*)
-      shared_memory::allocate_retained_buffer(sizeof(USBD_MSC_BOT_HandleTypeDef));
-  if(!prepared_handle || !MK61_MSC_SetPreparedHandle(prepared_handle, sizeof(*prepared_handle))) return false;
-#endif
   PreparingScope scope;
   startup_tracking = true;
   mark_startup_stage(1);
   mark_startup_stage(2);
+  if(!shared_memory::prepare_retained_buffers()) {
+    virtual_fat::report_startup_failure(19, "msc-resident");
+    return false;
+  }
   if(!acquire_cache_buffer()) {
     virtual_fat::report_startup_failure(10, "cache-acquire");
     return false;
@@ -627,9 +642,19 @@ bool prepare(void) {
     release_cache_buffer();
     return false;
   }
+  // The full stage index and (on proxy builds) USBDISK.APP now have their
+  // final addresses. Place the packet in the remaining gap without moving or
+  // evicting either. IRQ configuration performs no allocation.
+  if(!acquire_transport_buffer()) {
+    virtual_fat::report_startup_failure(19, "msc-memory");
+    virtual_fat::end_session();
+    release_cache_buffer();
+    return false;
+  }
   mark_startup_stage(6);
   if(!apply_session_event(usb_disk_session::Event::OPEN).accepted) {
     virtual_fat::report_startup_failure(14, "state-open");
+    (void) release_transport_buffer();
     virtual_fat::end_session();
     release_cache_buffer();
     return false;
@@ -664,12 +689,6 @@ bool init(void) {
     return false;
   }
   mark_startup_stage(9);
-  if(USBD_MSC_RegisterStorage(
-       usb_device(), const_cast<USBD_StorageTypeDef*>(&storage)) != USBD_OK) {
-    virtual_fat::report_startup_failure(17, "usb-storage");
-    abort_session();
-    return false;
-  }
 
   set_initialized(true);
   mark_startup_stage(10);
@@ -691,8 +710,7 @@ bool deinit(void) {
   const bool clean_host_eject = host_ejected();
   if(!is_initialized()) {
     if(!session_is_open()) {
-      release_cache_buffer();
-      return true;
+      return release_session_resources();
     }
     const bool ok = finalize_session() == virtual_fat::CommitResult::OK;
     if(ok && clean_host_eject) clear_startup_diagnostic();
@@ -896,7 +914,7 @@ void note_startup_stage(unsigned stage) {
 }
 
 extern "C" u8 MK61_VirtualFatSync(void) {
-  if(!is_initialized()) return 1U;
+  if(!is_initialized() || deferred_io_cancelled()) return 1U;
   if(!power_monitor::allow(power_monitor::Operation::MSC_WRITE)) return 1U;
   DeferredSyncState expected = DeferredSyncState::EMPTY;
   if(__atomic_compare_exchange_n(&deferred_sync_state, &expected,
@@ -929,6 +947,13 @@ StartupDiagnostic startup_diagnostic(void) { return {false, 0}; }
 void clear_startup_diagnostic(void) {}
 void note_startup_stage(unsigned) {}
 }
+
+extern "C" int8_t MK61_MSC_DiskInit(void) { return USBD_MSC_STORAGE_ERROR; }
+extern "C" uint32_t MK61_MSC_DiskBlocks(void) { return 0; }
+extern "C" int8_t MK61_MSC_DiskReady(void) { return USBD_MSC_STORAGE_ERROR; }
+extern "C" int8_t MK61_MSC_DiskWriteProtected(void) { return 1; }
+extern "C" int8_t MK61_MSC_DiskRead(uint8_t*, uint32_t, uint16_t) { return USBD_MSC_STORAGE_ERROR; }
+extern "C" int8_t MK61_MSC_DiskWrite(uint8_t*, uint32_t, uint16_t) { return USBD_MSC_STORAGE_ERROR; }
 
 extern "C" u8 MK61_VirtualFatSync(void) { return 1U; }
 

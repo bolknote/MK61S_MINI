@@ -46,6 +46,7 @@ extern "C" {
 #define USBD_BOT_LAST_DATA_IN              3U       /* Last Data In Last */
 #define USBD_BOT_SEND_DATA                 4U       /* Send Immediate data */
 #define USBD_BOT_NO_DATA                   5U       /* No data Stage */
+#define USBD_BOT_WAIT_CLEAR                7U       /* CSW after IN halt clears */
 #define USBD_BOT_DEFERRED                  6U       /* Waiting for main-loop storage */
 
 #define USBD_BOT_CBW_SIGNATURE             0x43425355U
@@ -61,8 +62,8 @@ extern "C" {
 
 /* BOT Status */
 #define USBD_BOT_STATUS_NORMAL             0U
-#define USBD_BOT_STATUS_RECOVERY           1U
-#define USBD_BOT_STATUS_ERROR              2U
+#define USBD_BOT_STATUS_RECOVERY           3U /* IN/OUT clear-halt bits */
+#define USBD_BOT_STATUS_ERROR              4U
 
 
 #define USBD_DIR_IN                        0U
@@ -114,6 +115,9 @@ typedef struct
 /** @defgroup USBD_CORE_Exported_FunctionsPrototypes
   * @{
   */
+void MSC_BOT_Complete(USBD_HandleTypeDef *pdev);
+void MSC_BOT_Fail(USBD_HandleTypeDef *pdev);
+
 uint8_t MSC_BOT_Init(USBD_HandleTypeDef  *pdev);
 void MSC_BOT_Reset(USBD_HandleTypeDef  *pdev);
 void MSC_BOT_DeInit(USBD_HandleTypeDef  *pdev);

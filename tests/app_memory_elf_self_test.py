@@ -37,6 +37,18 @@ class AppMemoryTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'full stage index'):
             gate.check_pool(23039, gate.APP_MAX_SIZE)
 
+    def test_session_buffer_must_coexist_without_reducing_idle_app_limit(self):
+        required = 18624 + gate.STAGE_INDEX_SIZE + 8264
+        gate.check_pool(required, 18624, 8264)
+        with self.assertRaisesRegex(AssertionError, 'MSC session buffer'):
+            gate.check_pool(required - 1, 18624, 8264)
+        # The buffer is an additional live allocation, not a replacement for
+        # the APP or stage reserve. Round even a future odd-sized packet up.
+        with self.assertRaisesRegex(AssertionError, 'MSC session buffer'):
+            gate.check_pool(required, 18624, 8265)
+        gate.check_pool(required + 8, 18624, 8265)
+        gate.check_pool(21728, 18624, 0) # F401 keeps its small static transport.
+
     def test_bundle_reads_memory_including_bss_and_all_modules(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
