@@ -17,6 +17,7 @@ struct Raster {
 };
 
 const u8* rows5x8(u16 codepoint);
+bool copyRows5x8(u16 codepoint, u8 rows[8]);
 FaceId closest(u8 width, u8 height);
 bool decode(FaceId face, u16 codepoint, Raster& out);
 // Nearest-neighbour 2x enlargement used by the Classic 10x16 UI.  Keeping it

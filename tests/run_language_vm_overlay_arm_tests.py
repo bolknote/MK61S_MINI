@@ -15,10 +15,10 @@ from run_language_vm_arm_tests import package
 from run_portable_system_arm_tests import Machine, Elf, ROOT, run
 from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_R0, UC_ARM_REG_LR
 
-STATE_SIZE = 1584
+STATE_SIZE = 1664
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 15
+GENERATION = 17
 STATE_POISON = None
 
 
@@ -44,7 +44,8 @@ class OverlayMachine(Machine):
 
     def hook(self, uc, address, size, ctx):
         if address == self.debug_capability_return:
-            uc.reg_write(UC_ARM_REG_R0,uc.reg_read(UC_ARM_REG_R0) | (1 << 19))
+            capabilities=(uc.reg_read(UC_ARM_REG_R0) | (1 << 19)) & getattr(self,'service_capabilities_mask',0xFFFFFFFF)
+            uc.reg_write(UC_ARM_REG_R0,capabilities)
             self.debug_capability_return=None
         if address == (self.syscall & ~1) and uc.reg_read(UC_ARM_REG_R0)==26:
             # Execute the real capabilities dispatcher, then advertise the
@@ -104,6 +105,7 @@ class OverlayMachine(Machine):
 
 
 def execute(m, packages, language, source, answers, cancelled=False, mode=1, edit_after_error=False):
+    v17 = GENERATION >= 17
     v14 = GENERATION >= 14
     v13 = GENERATION >= 13
     v12 = GENERATION >= 12
@@ -111,9 +113,9 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v10 = GENERATION >= 10
     v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 8 if v14 else 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
-    state_size = 1584 if v14 else 1520 if v8 else 1504
-    control_size = 688 if v14 else 624 if v8 else 616
+    version = 9 if v17 else 8 if v14 else 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
+    state_size = 1664 if v17 else 1584 if v14 else 1520 if v8 else 1504
+    control_size = 744 if v17 else 688 if v14 else 624 if v8 else 616
     stack_offset = control_size
     output_offset = stack_offset+768
     input_value_offset = output_offset+96
@@ -125,7 +127,9 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
-    vm_magic, input_magic = ((0x3C564D4C, 0x3C494D4C) if GENERATION >= 15 else
+    vm_magic, input_magic = ((0x3E564D4C, 0x3E494D4C) if v17 else
+                             (0x3D564D4C, 0x3D494D4C) if GENERATION >= 16 else
+                             (0x3C564D4C, 0x3C494D4C) if GENERATION >= 15 else
                              (0x3B564D4C, 0x3B494D4C) if v13 else
                              (0x3A564D4C, 0x3A494D4C) if v12 else
                              (0x39564D4C, 0x39494D4C) if v11 else
@@ -193,7 +197,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
             # cursor tail. Prove the real cold ARM helper leaves stale scratch
             # in place before the hot APP runs; the value bank is also dead.
             assert GENERATION >= 14
-            assert bytes(m.uc.mem_read(state, control_size-16)) == bytes((STATE_POISON,))*(control_size-16)
+            inactive_size = 672 if v14 else control_size-16
+            assert bytes(m.uc.mem_read(state, inactive_size)) == bytes((STATE_POISON,))*inactive_size
             assert bytes(m.uc.mem_read(state+stack_offset, 768)) == bytes((STATE_POISON,))*768
     inputs = evaluations = retries = 0
     for _ in range(20):
@@ -296,7 +301,7 @@ def main():
     p.add_argument("--poison-state", action="store_true",
                    help="v14: leave inactive continuation slots poisoned through cold validation")
     p.add_argument("--focal-trace",action="store_true")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15), default=15)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15,16,17), default=17)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
@@ -346,6 +351,20 @@ def main():
                 assert execute(m,packages,1,b"10 A=1/0\n",[],mode=0,edit_after_error=True)[1] == 16
                 assert m.uc.mem_read(m.input+640+34,1)[0] == 1
                 assert any("DIV BY ZERO" in line for line in m.lines), m.lines
+            if GENERATION >= 16:
+                for program,answers,expected in (
+                    (b'10 I=3;J=5;FOR K=1 TO 40;A=(I+3)*(J-2);NEXT K\n',[],18),
+                    (b'10 I=2147483647;J=1;A=(I+3)*(J-2)\n',[],-2147483650),
+                    (b'10 I=-2147483648;J=-1;A=I/J+I MOD J\n',[],2147483648),
+                    (b'10 I=.5;J=4;A=(I+3)*(J-2)\n',[],7),
+                    (b'10 I=1;J=2;@(1)=.5;A=@(I)+I*J-J\n',[],.5),
+                    (b'10 I=3;J=4;INPUT B\n20 A=(I+B)*(J-2)\n',["7.5"],21)):
+                    m=OverlayMachine(args.resident_elf,True,address)
+                    assert execute(m,packages,1,program,answers)[:2]==(expected,0)
+                    record(m)
+                m=OverlayMachine(args.resident_elf,True,address)
+                assert execute(m,packages,2,b'1.10 S I=3;S J=5;S A=(I+3)*(J-2)\n',[])[:2]==(18,0)
+                record(m)
             if GENERATION >= 15:
                 for program, answers, expected in (
                     (b'10 I=0;FOR J=1 TO 40;IF J<15 I=I+1 ELSE I=I-1\n20 NEXT J;A=I\n', [], -12),

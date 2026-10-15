@@ -8,14 +8,21 @@
 #include "keyboard_layout.hpp"
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
+#include "basic_graphics_client.hpp"
 
 namespace {
 using namespace language_vm;
 OverlayRequest* active;
 ExecutionState& state() { return *active->state; }
 ExecuteRequest& request() { return *active->execution; }
+bool graphics_result(basic_graphics::Result result) {
+  if(result==basic_graphics::Result::OK)return true;
+  state().failure=basic_graphics::error(result);return false;
+}
 
 bool background(void*) {
+  if(state().language==Language::BASIC &&
+     !graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)))return false;
   idle_main_process();
   kbd::scan();
   if (!kbd::take_immediate_press(KEY_ESC) && kbd::last_key() != KEY_ESC_PRESS)
@@ -54,6 +61,8 @@ double random(void*) {
   return (double)(entropy_pool::next_u32(domain) >> 8) / 16777216.0;
 }
 double dynamic_value(void*, Function f) {
+  if(f==Function::GW || f==Function::GH)return basic_graphics::dimension(
+      f==Function::GW?basic_graphics::Operation::WIDTH:basic_graphics::Operation::HEIGHT);
   if (f == Function::COLS) return main_lcd().cols();
   if (f == Function::ROWS) return main_lcd().rows();
   return state().array_count ? (double)((state().array_count - 1) * 2) : 0;
@@ -75,6 +84,14 @@ void flush(bool empty) {
   auto& s = state();
   const uint8_t rows = main_lcd().rows();
   if (!rows || (!s.output[0] && !empty)) return;
+  if(s.position.positioned) {
+    graphics_result(basic_graphics::flush_at(s.position,s.output,s.output_cursor));return;
+  }
+  if(s.language==Language::BASIC && basic_graphics::active()) {
+    u8 n=0;graphics_result(basic_graphics::flow(s.output,(u16)strlen(s.output),s.row,(u8)(rows-s.row),empty,n));
+    const unsigned next=(unsigned)s.row+n;s.row=(u8)(next<rows?next:rows-1);
+    s.output[0]=0;s.output_cursor=0;return;
+  }
   request().pause_final = 0;
   const uint8_t n = main_lcd().printWrappedText(
       s.output, (u16)strlen(s.output), s.row, (u8)(rows - s.row), false, empty);
@@ -92,10 +109,26 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   switch (event) {
     case Event::TRACE:focal_trace_execution(text,length,value);return true;
     case Event::PRINT_BEGIN:
+      s.position={};
       s.width = 0;s.precision=basic ? 10 : 8;
       request().pause_final = 0;
       if(!basic){s.row=0;s.output[0]=0;s.output_cursor=0;}
       return true;
+    case Event::GRAPHICS: {
+      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      auto r=*(const basic_graphics::Request*)text;
+      const auto result=basic_graphics::dispatch(r);value=r.value;
+      if(r.operation!=basic_graphics::Operation::POINT)request().pause_final=0;
+      return graphics_result(result);
+    }
+    case Event::PRINT_AT:
+      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      return graphics_result(basic_graphics::print_at(s.position,s.output,s.output_cursor,
+          *(const basic_graphics::Request*)text));
+    case Event::PRINT_PUSH:
+      return graphics_result(basic_graphics::push_print(s.position,s.output,s.output_cursor));
+    case Event::PRINT_POP:
+      return graphics_result(basic_graphics::pop_print(s.position,s.output,s.output_cursor));
     case Event::TEXT: return append(text,length,!basic);
     case Event::RESOURCE_TEXT:
       return portable_system::resource_print(request().image, (const uint8_t*)text,
@@ -128,13 +161,17 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     }
     case Event::FLUSH: flush(true); return true;
-    case Event::PRINT_END: if(!basic || !length)flush(false);return true;
+    case Event::PRINT_END:
+      if(s.position.positioned)return graphics_result(basic_graphics::flush_at(s.position,s.output,s.output_cursor));
+      if(!basic || !length)flush(false);
+      return s.failure==Error::NONE;
     // The kernel yields before dispatching this event. No parser/editor is
     // linked into the hot image, and no callback survives an APP replacement.
     case Event::READ_INPUT:
     case Event::RESOURCE_INPUT: return false;
     case Event::WAIT:
     case Event::READ_KEY: {
+      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))return false;
       if (!basic) {
         const char* rows[] = {"ASK", "Press any key"};
         portable_system::text_rows(rows, 2);
@@ -152,13 +189,16 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return false;
     }
     case Event::CLEAR:
+      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::CLEAR)))return false;
       request().pause_final = 0;
       main_lcd().clear();
       s.row = 0;
       s.output[0] = 0;
       s.output_cursor = 0;
       return true;
-    case Event::FINISH: flush(false); return true;
+    case Event::FINISH:
+      flush(false);
+      return s.failure==Error::NONE && (!basic || graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)));
     case Event::TARGET_REF:
       return value != 19 ||
              portable_system::call(MK61_SYS_SETTINGS, MK61_SYS_REGISTER_F) != 0;
@@ -166,7 +206,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
   return false;
 }
 const Services services = {nullptr, background, math, random,
-                           dynamic_value, reference, io, true};
+                           dynamic_value, reference, io, true, true};
 
 __attribute__((noinline)) void evaluate_expression(const View& view) {
   const Bindings bindings = {request().variables, request().array, state().array_count,

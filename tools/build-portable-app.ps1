@@ -246,7 +246,7 @@ function Assert-SizeBudget {
         $memoryLimit = if ($FocalTrace) { 19200 } else { 18688 }
     }
     if ($SplitLanguageVm) {
-        $memoryLimit = if ($LocalFloatMath) { 17408 } else { 15360 }
+        $memoryLimit = if ($LocalFloatMath) { 17408 } else { 18432 }
     }
     $failures = @()
     if ($null -ne $appLimit -and $Report.app_bytes -gt $appLimit) {

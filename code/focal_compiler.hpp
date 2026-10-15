@@ -964,6 +964,7 @@ public:
         put32(r, lines_[i].number);
         put16(r + 4, lines_[i].pc);
       }
+      if constexpr (!Expression)language_vm::mark_integer_spans(output_,code,code_end);
       put32(output_ + 20,
             language_vm::checksum(output_ + language_vm::HEADER_SIZE,
                                   pc_ - language_vm::HEADER_SIZE));

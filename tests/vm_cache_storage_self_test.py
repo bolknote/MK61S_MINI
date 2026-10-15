@@ -70,7 +70,10 @@ with tempfile.TemporaryDirectory(prefix='mk61-vm-storage-test-') as temp:
     path.write_bytes(image(b'\x03\0ABC'))
     loaded=load_images(Path(temp))[(1,0x12345678)]
     assert (loaded['code'],loaded['pool'],loaded['resources'])==(38,5,1)
-    for data in (image(version=8), image(b'\xFF\xFFABC')):
+    for version in (8,9,10):
+        path.write_bytes(image(b'\x03\0ABC',version=version))
+        assert load_images(Path(temp))[(1,0x12345678)]['version']==version
+    for data in (image(version=11), image(b'\xFF\xFFABC')):
         path.write_bytes(data)
         try: load_images(Path(temp))
         except ValueError: pass

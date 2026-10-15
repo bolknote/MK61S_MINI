@@ -1,0 +1,930 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "outcome": "COMPARISON_ONLY_DEFAULTS_UNCHANGED",
+  "base_commit": "05638655da3dbd29bcc776dcc5f9e266b4932efd",
+  "harness_commit": "7ea3ebf0b3af36cd96214cf8643f7fbbf1e6e138",
+  "source_and_game_tree": {
+    "code": "9b64cd1417df40903b754f74df1501ba76ce7d16",
+    "programs/games/Turochamp": "3fde55bac115ff28ee652ff62fa32b63e05a122e",
+    "tools/turochamp": "d0facf0a595709753faf03553549719824889b61"
+  },
+  "production_source_and_game_unchanged": true,
+  "wire_version": 9,
+  "request_ABI": 8,
+  "APP_ABI": 6,
+  "device": "AEB505B6E0067623",
+  "USB_serial": "2068336B4731",
+  "profile": "classic-v3-uc1609",
+  "clock_hz": 96000000,
+  "math_backend": "LIBM",
+  "USB_screen": true,
+  "density": true,
+  "file_cache": true,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "method": "raw24 / mixed24 / raw32 / reverse raw24, common System APPs and per-stage original VMC restoration; one migration plus two warm searches per stage",
+  "first_runs_excluded_from_speed_comparison": true,
+  "no_confidence_interval_claim": true,
+  "warm_cache_settling_note": "Both post-migration repeats are included. raw32 has27 then3 ZX0 decodes and35.981369/34.964396s; its median35.472883s includes the remaining cache warmup instead of selecting only the fastest/steady point. The host replay is a request/counter model, not hardware time.",
+  "cold_note": "Migration runs are retained but excluded from speed percentages; their NOR write/erase counts vary. Original file bytes are normalized, not the physical C9 allocation/erase history.",
+  "HIL_driver_SHA256": "299b0ec4793173bee37621e2637e276b97d31c65d3521685e21e552ce28cb151",
+  "stages": [
+    {
+      "stage": "baseline",
+      "variant": "raw24",
+      "firmware": {
+        "build": "8C62F8DC",
+        "bytes": 360576,
+        "sha256": "dcb956e4353aaccc2b3681792c89730366c9fa04292743c0da77b407d1847aac"
+      },
+      "seconds": [
+        55.019059250014834,
+        42.912191041978076,
+        42.994622458005324
+      ],
+      "warm_median_seconds": 42.9534067499917,
+      "ZX0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        630,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        16,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9668,
+      "observed_whole_stage_stack_peak_bytes": 6716,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "frames_CRC_verified": 1042,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 11501,
+          "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+        },
+        "LANGIN.APP": {
+          "bytes": 11992,
+          "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+        },
+        "BASIC.APP": {
+          "bytes": 14244,
+          "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+        },
+        "FOCAL.APP": {
+          "bytes": 13830,
+          "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7008,
+          "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+        }
+      }
+    },
+    {
+      "stage": "candidate",
+      "variant": "mixed24",
+      "firmware": {
+        "build": "DC7C54E3",
+        "bytes": 362804,
+        "sha256": "e4100f8aab5f36b57a8abf5bda0eb30784ceed9cea1f964bea93e1c4901d8580"
+      },
+      "seconds": [
+        50.22290212500957,
+        37.33094879199052,
+        37.30265083402628
+      ],
+      "warm_median_seconds": 37.3167998130084,
+      "ZX0_decode_calls": [
+        258,
+        39,
+        36
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9620,
+      "observed_whole_stage_stack_peak_bytes": 6764,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "frames_CRC_verified": 773,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 11501,
+          "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+        },
+        "LANGIN.APP": {
+          "bytes": 11992,
+          "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+        },
+        "BASIC.APP": {
+          "bytes": 14244,
+          "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+        },
+        "FOCAL.APP": {
+          "bytes": 13830,
+          "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7008,
+          "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+        }
+      }
+    },
+    {
+      "stage": "raw32",
+      "variant": "raw32",
+      "firmware": {
+        "build": "641685C3",
+        "bytes": 360576,
+        "sha256": "4319d1f8ac2e76056697acab7223420e6cc500bf43c660be3b86307468b8f80d"
+      },
+      "seconds": [
+        49.54786887500086,
+        35.98136933299247,
+        34.96439570799703
+      ],
+      "warm_median_seconds": 35.47288252049475,
+      "ZX0_decode_calls": [
+        258,
+        27,
+        3
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9668,
+      "observed_whole_stage_stack_peak_bytes": 6716,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "frames_CRC_verified": 754,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 11501,
+          "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+        },
+        "LANGIN.APP": {
+          "bytes": 11992,
+          "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+        },
+        "BASIC.APP": {
+          "bytes": 14244,
+          "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+        },
+        "FOCAL.APP": {
+          "bytes": 13830,
+          "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7008,
+          "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+        }
+      }
+    },
+    {
+      "stage": "control",
+      "variant": "raw24",
+      "firmware": {
+        "build": "8C62F8DC",
+        "bytes": 360576,
+        "sha256": "dcb956e4353aaccc2b3681792c89730366c9fa04292743c0da77b407d1847aac"
+      },
+      "seconds": [
+        54.90267449998646,
+        42.89799191697966,
+        42.9926619999751
+      ],
+      "warm_median_seconds": 42.94532695847738,
+      "ZX0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "NOR_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "NOR_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9668,
+      "observed_whole_stage_stack_peak_bytes": 6716,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "frames_CRC_verified": 1038,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 11501,
+          "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+        },
+        "LANGIN.APP": {
+          "bytes": 11992,
+          "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+        },
+        "BASIC.APP": {
+          "bytes": 14244,
+          "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+        },
+        "FOCAL.APP": {
+          "bytes": 13830,
+          "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7008,
+          "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "raw24_control_mean_seconds": 42.94936685423454,
+    "raw24_control_drift_percent": -0.01881059530701723,
+    "mixed24_seconds": 37.3167998130084,
+    "raw32_seconds": 35.47288252049475,
+    "mixed24_reduction_vs_raw24_percent": 13.114435563957105,
+    "raw32_reduction_vs_raw24_percent": 17.407670662792686,
+    "raw32_reduction_vs_mixed24_percent": 4.941252470076152,
+    "fastest_variant": "raw32"
+  },
+  "all_twelve_nodes": 420,
+  "all_twelve_move": "e2e3",
+  "all_complete_boards_identical": true,
+  "board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "frames_CRC_verified": 3607,
+  "resources": [
+    {
+      "name": "raw24",
+      "cache_bytes": 24576,
+      "mixed": false,
+      "file": ".build/vm-cache-three-way-20261015/raw24/resident.bin",
+      "bytes": 360576,
+      "sha256": "dcb956e4353aaccc2b3681792c89730366c9fa04292743c0da77b407d1847aac",
+      "static_RAM_bytes": 26880,
+      "max_frame_bytes": 1928,
+      "effective_dynamic_pool_bytes": 46560,
+      "build": "8C62F8DC"
+    },
+    {
+      "name": "mixed24",
+      "cache_bytes": 24576,
+      "mixed": true,
+      "file": ".build/vm-cache-three-way-20261015/mixed24/resident.bin",
+      "bytes": 362804,
+      "sha256": "e4100f8aab5f36b57a8abf5bda0eb30784ceed9cea1f964bea93e1c4901d8580",
+      "static_RAM_bytes": 26880,
+      "max_frame_bytes": 1928,
+      "effective_dynamic_pool_bytes": 46560,
+      "build": "DC7C54E3"
+    },
+    {
+      "name": "raw32",
+      "cache_bytes": 32768,
+      "mixed": false,
+      "file": ".build/vm-cache-three-way-20261015/raw32/resident.bin",
+      "bytes": 360576,
+      "sha256": "4319d1f8ac2e76056697acab7223420e6cc500bf43c660be3b86307468b8f80d",
+      "static_RAM_bytes": 26880,
+      "max_frame_bytes": 1928,
+      "effective_dynamic_pool_bytes": 38368,
+      "build": "641685C3"
+    }
+  ],
+  "common_system_apps": {
+    "BASIC.APP": {
+      "bytes": 14244,
+      "memory_bytes": 19688,
+      "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+    },
+    "CHIP8.APP": {
+      "bytes": 2934,
+      "memory_bytes": 3740,
+      "sha256": "e2b170f5ffc7d82c8d9c71be08fa6630f71edeff7aa3915fc8cbfbbb868a110b"
+    },
+    "FOCAL.APP": {
+      "bytes": 13830,
+      "memory_bytes": 18652,
+      "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+    },
+    "LANGIN.APP": {
+      "bytes": 11992,
+      "memory_bytes": 15728,
+      "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+    },
+    "LANGVM.APP": {
+      "bytes": 11501,
+      "memory_bytes": 16628,
+      "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+    },
+    "MARKDOWN.APP": {
+      "bytes": 13482,
+      "memory_bytes": 16976,
+      "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+    },
+    "SETUP.APP": {
+      "bytes": 9974,
+      "memory_bytes": 13248,
+      "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+    },
+    "USBDISK.APP": {
+      "bytes": 15292,
+      "memory_bytes": 20444,
+      "sha256": "d34c9cac9d543cd27266c63f8e132cc210487db12d407ad2ca1b971d6efadded"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7008,
+      "memory_bytes": 8676,
+      "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+    }
+  },
+  "local_tests": [
+    "host-tests.log",
+    "storage-tests-final.log",
+    "resource-gates-final.log",
+    "matching-System-RAM.log"
+  ],
+  "tool_compatibility_commit": "30c84b7d6",
+  "integration_with_new_main": {
+    "main_commit": "a6d45ecb068818a383833ab7f7efe4c77b2720a6",
+    "experiment_patch_commit": "250f73246",
+    "temporary_reader_support": 10,
+    "future_version_rejected": 11,
+    "measured_firmware_base_unchanged": "05638655d",
+    "status": "PASS",
+    "cache_suite_log": "integration-tests-final.log",
+    "storage_suite_log": "integration-storage-tests.log",
+    "HIL_self_test_log": "integration-HIL-self-test.log",
+    "measured_firmware_rebuilt": false
+  },
+  "preflight_note": "Attempt1 was denied opening CDC by the filesystem sandbox before device access. Attempt2 is the complete four-stage comparison; the first log and exit record are retained.",
+  "reused_byte_identical_APP_ARM_generation_16_qualification": "doc/measurements/vm-integer-spans-20261015.json",
+  "host_counter_replay": {
+    "status": "PASS",
+    "variants": [
+      {
+        "mixed": false,
+        "budget": 24576,
+        "object_bytes": 24576,
+        "payload": 23888,
+        "metadata": 688,
+        "passes": [
+          {
+            "hits": 11240,
+            "misses": 63,
+            "evictions": 54,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 3,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 22,
+              "10": 1,
+              "11": 1,
+              "12": 1,
+              "13": 2,
+              "14": 1,
+              "15": 2,
+              "16": 1,
+              "17": 1
+            }
+          },
+          {
+            "hits": 11245,
+            "misses": 58,
+            "evictions": 58,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 2,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 21,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 2,
+              "16": 1
+            }
+          },
+          {
+            "hits": 11245,
+            "misses": 58,
+            "evictions": 58,
+            "fallback": 0,
+            "used": 22624,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 21,
+              "2": 2,
+              "5": 2,
+              "6": 1,
+              "7": 2,
+              "8": 2,
+              "9": 21,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 2,
+              "16": 1
+            }
+          }
+        ]
+      },
+      {
+        "mixed": true,
+        "budget": 24576,
+        "object_bytes": 24576,
+        "payload": 23888,
+        "metadata": 688,
+        "passes": [
+          {
+            "hits": 11285,
+            "misses": 18,
+            "evictions": 9,
+            "fallback": 0,
+            "used": 23104,
+            "packs": 201,
+            "thaws": 194,
+            "packed": 2,
+            "miss_modules": {
+              "1": 1,
+              "2": 2,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 2,
+              "10": 1,
+              "11": 1,
+              "12": 1,
+              "13": 2,
+              "14": 1,
+              "15": 1,
+              "16": 1,
+              "17": 1
+            }
+          },
+          {
+            "hits": 11291,
+            "misses": 12,
+            "evictions": 13,
+            "fallback": 0,
+            "used": 23104,
+            "packs": 201,
+            "thaws": 194,
+            "packed": 2,
+            "miss_modules": {
+              "2": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 1,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 1,
+              "16": 1
+            }
+          },
+          {
+            "hits": 11291,
+            "misses": 12,
+            "evictions": 13,
+            "fallback": 0,
+            "used": 23104,
+            "packs": 201,
+            "thaws": 194,
+            "packed": 2,
+            "miss_modules": {
+              "2": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 1,
+              "10": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 1,
+              "16": 1
+            }
+          }
+        ]
+      },
+      {
+        "mixed": false,
+        "budget": 32768,
+        "object_bytes": 32768,
+        "payload": 32080,
+        "metadata": 688,
+        "passes": [
+          {
+            "hits": 11288,
+            "misses": 15,
+            "evictions": 1,
+            "fallback": 0,
+            "used": 31448,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "1": 1,
+              "2": 1,
+              "5": 1,
+              "6": 1,
+              "7": 1,
+              "8": 1,
+              "9": 1,
+              "10": 1,
+              "11": 1,
+              "12": 1,
+              "13": 1,
+              "14": 1,
+              "15": 1,
+              "16": 1,
+              "17": 1
+            }
+          },
+          {
+            "hits": 11302,
+            "misses": 1,
+            "evictions": 1,
+            "fallback": 0,
+            "used": 31448,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "12": 1
+            }
+          },
+          {
+            "hits": 11302,
+            "misses": 1,
+            "evictions": 1,
+            "fallback": 0,
+            "used": 31448,
+            "packs": 0,
+            "thaws": 0,
+            "packed": 0,
+            "miss_modules": {
+              "12": 1
+            }
+          }
+        ]
+      }
+    ],
+    "requests": 11303,
+    "host_requests": 11305,
+    "modules": [
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-search-owned.bvm",
+        "name": "turochamp-search-owned.bvm",
+        "raw": 2189,
+        "code": 2189,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 807446886,
+        "id": 1,
+        "runs": 124
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-game-owned.bvm",
+        "name": "turochamp-game-owned.bvm",
+        "raw": 2117,
+        "code": 2117,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 986269282,
+        "id": 2,
+        "runs": 7
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-init-owned.bvm",
+        "name": "turochamp-init-owned.bvm",
+        "raw": 801,
+        "code": 765,
+        "pool": 36,
+        "recipes": null,
+        "resources": 2,
+        "version": 9,
+        "language": 1,
+        "crc": 1221834762,
+        "id": 3,
+        "runs": 1
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-menu-owned.bvm",
+        "name": "turochamp-menu-owned.bvm",
+        "raw": 2020,
+        "code": 1664,
+        "pool": 356,
+        "recipes": null,
+        "resources": 25,
+        "version": 9,
+        "language": 1,
+        "crc": 1307982540,
+        "id": 4,
+        "runs": 1
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-castle-owned.bvm",
+        "name": "turochamp-castle-owned.bvm",
+        "raw": 1509,
+        "code": 1509,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 1346753620,
+        "id": 5,
+        "runs": 126
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-threat-owned.bvm",
+        "name": "turochamp-threat-owned.bvm",
+        "raw": 2344,
+        "code": 2344,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 1373531051,
+        "id": 6,
+        "runs": 972
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-unmake-owned.bvm",
+        "name": "turochamp-unmake-owned.bvm",
+        "raw": 848,
+        "code": 848,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 1932831262,
+        "id": 7,
+        "runs": 420
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-mobility-owned.bvm",
+        "name": "turochamp-mobility-owned.bvm",
+        "raw": 427,
+        "code": 427,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 2189751792,
+        "id": 8,
+        "runs": 548
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-board-owned.bvm",
+        "name": "turochamp-board-owned.bvm",
+        "raw": 3621,
+        "code": 3120,
+        "pool": 501,
+        "recipes": null,
+        "resources": 96,
+        "version": 9,
+        "language": 1,
+        "crc": 2286716871,
+        "id": 9,
+        "runs": 22
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-turn-owned.bvm",
+        "name": "turochamp-turn-owned.bvm",
+        "raw": 607,
+        "code": 607,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3339201245,
+        "id": 10,
+        "runs": 4
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-legal-owned.bvm",
+        "name": "turochamp-legal-owned.bvm",
+        "raw": 3231,
+        "code": 3231,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3416346109,
+        "id": 11,
+        "runs": 3162
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-history-owned.bvm",
+        "name": "turochamp-history-owned.bvm",
+        "raw": 2193,
+        "code": 2193,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3453393056,
+        "id": 12,
+        "runs": 1
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-status-owned.bvm",
+        "name": "turochamp-status-owned.bvm",
+        "raw": 2019,
+        "code": 2019,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3457531658,
+        "id": 13,
+        "runs": 844
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-node-owned.bvm",
+        "name": "turochamp-node-owned.bvm",
+        "raw": 2871,
+        "code": 2871,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3558757468,
+        "id": 14,
+        "runs": 1680
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-eval-owned.bvm",
+        "name": "turochamp-eval-owned.bvm",
+        "raw": 1831,
+        "code": 1831,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3572257213,
+        "id": 15,
+        "runs": 231
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-make-owned.bvm",
+        "name": "turochamp-make-owned.bvm",
+        "raw": 1320,
+        "code": 1320,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 3581479234,
+        "id": 16,
+        "runs": 886
+      },
+      {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-three-way-20261015/corpus/turochamp-pseudo-owned.bvm",
+        "name": "turochamp-pseudo-owned.bvm",
+        "raw": 2258,
+        "code": 2258,
+        "pool": 0,
+        "recipes": null,
+        "resources": 0,
+        "version": 9,
+        "language": 1,
+        "crc": 4224860689,
+        "id": 17,
+        "runs": 2276
+      }
+    ],
+    "sanitizers": true,
+    "qualification": "Actual C++ cache, bounded one-pass codec, CRC and byte/tail guards. No device cycles, cold FS invalidations, INPUT execution or firmware rollout."
+  },
+  "stack_note": "Observed whole-stage watermarks include migration/compilation and different miss workloads; not an isolated helper cost or a live-heap maximum.",
+  "resource_note": "raw32 adds8192 retained RAM bytes; all variants retain original APP maximum20480, staging2560, MSC8264, FS824 and stack16384 budgets. Static RAM26880; native max frame1928/5120.",
+  "physical_Mini_touched": false,
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "mini_touched": false,
+    "firmware": {
+      "build": "122A5FF9",
+      "bytes": 360564,
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+    },
+    "process_exit_code": 0,
+    "CRC_valid": true,
+    "crash_none": true,
+    "alarms_off": true,
+    "read_retries": [],
+    "calculator_verification": "Exact reg/stk/dump/pwd equality; empty calculator, IP0/root",
+    "file_verification": "Full path/length/SHA256 fingerprint before and after exact restoration"
+  },
+  "artifacts": ".build/vm-cache-three-way-20261015",
+  "raw_report": ".build/vm-cache-three-way-20261015/hardware/attempt-2/report.json",
+  "terminal_logs": [
+    ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-baseline/terminal.txt",
+    ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-candidate/terminal.txt",
+    ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-raw32/terminal.txt",
+    ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-control/terminal.txt"
+  ],
+  "post_merge_host_validation": {
+    "status": "PASS",
+    "main_commit": "6781f4a248ecfcc683f70a75269cbb21052f34d7",
+    "merge_commit": "54474fb5816feea1023d0860967fe627d115f468",
+    "production_code_tree": "583e449d48368080ba2d7d1c5dca5edfa8c6358e",
+    "tests": [
+      "merged-cache-tests.log",
+      "merged-storage-tests.log"
+    ],
+    "scope": "Host tools/cache/INPUT/ESC/USB/CRC compatibility on wire10/request9; the device comparison remains frozen056/wire9. No new device performance claim."
+  }
+}

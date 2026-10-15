@@ -651,6 +651,68 @@ bool Surface::resolveToken(u16 value, bool custom,
   return value != '?' && builtin_font::decode(fallback, '?', raster);
 }
 
+bool Surface::copyTextBitmap(u8 *bitmap, usize size, u8 first, u8 count) {
+  if (!bitmap || size != FRAME_BYTES)
+    return false;
+  auto *saved = framebuffer_;
+  framebuffer_ = bitmap;
+  const unsigned end = (unsigned)first + count;
+#if MK61_PROPORTIONAL_UI_FONTS
+  if (ui_text_active_) {
+    const ui_text_renderer::Style style = {ui_font_enabled_,
+                                           ui_classic_10x16_,
+                                           ui_compact_3x5_,
+                                           ui_face_,
+                                           font_,
+                                           custom_glyphs_,
+                                           custom_valid_,
+                                           ui_row_gutters_,
+                                           ui_row_tails_,
+                                           grid_.cursorX(),
+                                           grid_.cursorY(),
+                                           cursor_underline_,
+                                           cursor_blink_ && cursor_blink_phase_};
+    for (u8 page = 0; page < PAGE_COUNT; ++page) {
+      u8 mask = 0;
+      for (u8 row = first; row < grid_.rows() && row < end; ++row)
+        for (u8 bit = 0; bit < 8; ++bit)
+          if (page * 8 + bit >= rowTop(row) && page * 8 + bit < rowTop(row) + rowPitch(row))
+            mask |= (u8)(1U << bit);
+      if (!mask)
+        continue;
+      u8 pixels[WIDTH];
+      ui_text_renderer::renderPage(grid_, style, page, 0, 16, pixels);
+      for (u16 x = 0; x < WIDTH; ++x) {
+        auto &value = bitmap[(usize)page * WIDTH + x];
+        value = (u8)((value & ~mask) | (pixels[x] & mask));
+      }
+    }
+    framebuffer_ = saved;
+    return true;
+  }
+#endif
+  const bool wide = grid_.cols() > COLS;
+  u8 cell_width = wide ? (font_ && font_->metrics().monospaced ? font_->metrics().default_advance
+                                                               : (u8)(WIDTH / grid_.cols()))
+                       : CELL_WIDTH;
+  if (!cell_width)
+    cell_width = 1;
+  for (u8 row = first; row < grid_.rows() && row < end; ++row) {
+    fillRect(0, rowTop(row), WIDTH, rowPitch(row), false);
+    for (u8 col = 0; col < grid_.cols(); ++col) {
+      builtin_font::Raster raster;
+      if (resolveToken(grid_.cell(col, row), grid_.cellIsCustom(col, row), raster)) {
+        const u16 left = (wide ? 2U : 0U) + (u16)col * cell_width;
+        if (left >= WIDTH)
+          break;
+        drawGlyph((u8)left, cell_width, row, raster);
+      }
+    }
+  }
+  framebuffer_ = saved;
+  return true;
+}
+
 void Surface::drawGlyph(u8 cell_x, u8 cell_width, u8 row,
                         const builtin_font::Raster& raster) {
   const u8 height = glyphHeight(row);

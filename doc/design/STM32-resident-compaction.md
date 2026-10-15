@@ -202,6 +202,30 @@ immutable original images `122A5FF9` and `979046B7`. Each qualification closes
 its CDC port after restoration. Recovery images and snapshots stay outside the
 managed worktree.
 
+## Integration with current main
+
+The paired A/B above deliberately remains based on `b0c7528a2`. Before merging,
+feature `09060ce2d` was combined with main `119c92761`, which already includes
+independent BASIC graphics, integer VM spans and terminal changes. Those
+features increase absolute resource use compared with the older frozen base.
+
+| Merged default image | Flash | Static RAM | Conservative effective pool |
+|---|---:|---:|---:|
+| classic | 374688 | 24976 | 43072 |
+| mini | 346512 | 23424 | 44608 |
+
+All 13 integration groups pass: both native builds with matching complete
+System bundles and APP/frame/driver/source/archive/suspend gates, actual ARM
+MPU/C9, plus host memory, terminal/assembler, UI, BASIC graphics, M61,
+filesystem, VFAT, MPU policy, C9, integer-span and raw24/raw32/mixed-cache
+regressions. Sanitizers are enabled for the host suites that support them.
+Existing wire10/request9 and the 5184+224 RAM charges remain.
+
+This integration qualification is local; the physical checks above refer to
+the exact frozen control/candidate images. Neither result replaces the other.
+Merged-source hashes, absolute sizes and checks are recorded separately in
+`doc/measurements/stm32-resident-compaction-main-20261015.json`.
+
 Representative commands:
 
 ```sh

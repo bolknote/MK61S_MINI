@@ -2,7 +2,7 @@
 """Matched generic VM ARM instruction gate; no physical latency/heap claim."""
 import argparse,json,struct,subprocess
 from pathlib import Path
-from elftools.elf.elffile import ELFFile
+from run_portable_system_arm_tests import Elf
 from unicorn import Uc,UC_ARCH_ARM,UC_MODE_THUMB,UC_MODE_MCLASS,UC_HOOK_CODE
 from unicorn.arm_const import (UC_ARM_REG_C1_C0_2,UC_ARM_REG_FPEXC,UC_ARM_REG_SP,
                               UC_ARM_REG_LR,UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_PC)
@@ -16,6 +16,7 @@ CASES={
  'basic_decimals':('basic','10 A=0;FOR I=1 TO 500;A=A+.1+.2+.3+.4+.5+.6+.7;NEXT I\n'),
  'basic_expressions':('basic','10 A=0;FOR I=1 TO 500;B=(I+3)*(I-2);C=INT(B/16);A=A+C-B MOD 17;NEXT I\n'),
  'focal_integer':('focal','1.10 S A=0\n1.20 F I=1,500;S A=A+I\n1.30 E\n'),
+ 'focal_expressions':('focal','1.10 S A=0\n1.20 F I=1,500;S B=(I+3)*(I-2);S A=A+B-I\n1.30 E\n'),
  'focal_mixed':('focal','1.10 S A=0\n1.20 F I=1,500;S A=A+.1\n1.30 E\n'),
  'focal_subroutines':('focal','1.10 S A=0\n1.20 F I=1,500;D 2\n1.30 E\n2.10 S A=A+I\n')
 }
@@ -29,7 +30,15 @@ def main():
  ap.add_argument('--candidate-source',type=Path,default=ROOT)
  ap.add_argument('--arm-toolchain-bin',type=Path,required=True)
  ap.add_argument('--output-dir',type=Path,required=True)
+ ap.add_argument('--target-case',action='append',choices=CASES,
+                 help='require improvement for these cases; omitted means every case')
+ ap.add_argument('--minimum-target-improvement-percent',type=float,default=0)
+ ap.add_argument('--maximum-control-regression-percent',type=float,default=0)
  args=ap.parse_args();out=args.output_dir.resolve();out.mkdir(parents=True,exist_ok=True)
+ assert 0<=args.minimum_target_improvement_percent<100
+ assert 0<=args.maximum_control_regression_percent<100
+ targets=set(args.target_case or CASES)
+
  rows=[]
  for variant,root in (('baseline',args.baseline_source.resolve()),('candidate',args.candidate_source.resolve())):
   work=out/variant;work.mkdir(exist_ok=True);target=work/'vm.elf';probe=work/'probe'
@@ -40,11 +49,11 @@ def main():
        '-Wl,--start-group','-lc','-lgcc','-Wl,--end-group','-o',target])
   run(['clang++','-std=c++17','-O2','-I'+str(root/'code'),ROOT/'tools/language_vm_probe.cpp',
        root/'code/language_vm.cpp',root/'code/language_bytecode.cpp',root/'code/zx0_encode.cpp','-o',probe])
-  with target.open('rb') as stream:
-   elf=ELFFile(stream)
-   segments=[(s['p_vaddr'],s.data()) for s in elf.iter_segments() if s['p_type']=='PT_LOAD']
-   symbols={s.name:s['st_value'] for s in elf.get_section_by_name('.symtab').iter_symbols()}
-   rom=sum(s['sh_size'] for s in elf.iter_sections() if s['sh_flags']&2 and not s['sh_flags']&1)
+  elf=Elf(target)
+  segments=[(sec[3],bytes(sec[5]) if sec[1]==8 else elf.data[sec[4]:sec[4]+sec[5]])
+            for sec in elf.sections if sec[2]&2 and sec[5]]
+  symbols=elf.symbols
+  rom=sum(sec[5] for sec in elf.sections if sec[2]&2 and not sec[2]&1)
   for name,(language,source) in CASES.items():
    text=work/(name+'.txt');image=work/(name+'.lbv');text.write_text(source)
    run([probe,language,text,image]);data=image.read_bytes()
@@ -65,11 +74,18 @@ def main():
  for name in CASES:
   old,new=[next(r for r in rows if r['variant']==v and r['case']==name) for v in ('baseline','candidate')]
   assert old['value']==new['value'],(name,old,new)
-  assert new['instructions']<old['instructions'],(name,old,new)
+  reduction=100*(1-new['instructions']/old['instructions'])
+  if name in targets:
+   assert reduction>args.minimum_target_improvement_percent,(name,old,new,reduction)
+  else:
+   assert -reduction<=args.maximum_control_regression_percent,(name,old,new,reduction)
+
   comparisons[name]={'arm_instruction_ratio':old['instructions']/new['instructions'],
                      'instruction_change_percent':100*(new['instructions']/old['instructions']-1),
                      'image_delta':new['image_bytes']-old['image_bytes']}
- result={'status':'PASS','runs':rows,'comparisons':comparisons,
+ result={'status':'PASS','runs':rows,'comparisons':comparisons,'target_cases':sorted(targets),
+         'minimum_target_improvement_percent':args.minimum_target_improvement_percent,
+         'maximum_control_regression_percent':args.maximum_control_regression_percent,
          'note':'ARM instruction counts incl initial validation, not Cortex cycles/device time; no IO or APP loading in this gate.'}
  (out/'report.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(comparisons,indent=2))
 if __name__=='__main__':main()

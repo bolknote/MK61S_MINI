@@ -1,5 +1,12 @@
 # Самодостаточные модули и RAM-кеш VM
 
+Расширение wire v9 и обоснование потолка hot APP описаны в разделе
+[«Целочисленные выражения»](#целочисленные-выражения-и-потолок-langvm--2026-10-15).
+Начальные разделы сохраняют исторический контракт реализации 2026-10-08.
+
+Сравнение raw24/mixed24/raw32 на зафиксированной базе wire9:
+[аппаратные результаты и цена RAM](../../doc/measurements/vm-cache-comparison-20261015.md).
+
 Реализация 2026-10-08. Это кеш байткода BASIC/FOCAL, а не кеш нативных APP.
 Compiler APP, cold `LANGIN.APP` и hot `LANGVM.APP` по-прежнему загружаются
 общим APP runtime. RAM-кеш не пишет файлы и не меняет C6/C8.
@@ -2314,3 +2321,105 @@ CRC valid, crash none, alarms off, read retries=0, CDC закрыт, process exi
 Classic передан следующей согласованной задаче; Mini не использовалась.
 Полный отчёт: `.build/vm-compiled-blocks-20261015/hardware/combined-1/report.json`;
 компактная квалификация включена в общий JSON выше.
+
+
+## Целочисленные выражения и потолок LANGVM — 2026-10-15
+
+Полные компиляторы BASIC и FOCAL помечают LOAD в начале прямолинейного
+участка из не менее пяти поддержанных инструкций как INTEGER_SPAN (105).
+Операнд, длина LOAD и все внутренние PC остаются прежними. Подсказка не
+содержит объявления типа: hot VM проверяет фактический int32 на входе.
+Короткие команды сохраняют обычный dispatch. Таблица длин и ограниченный
+декодер общие для компилятора и verifier; PRINT, DATA и пул ресурсов никогда
+не просматриваются как инструкции. Interior LOAD старого BLOCK_INDEX не
+переписывается, сохраняя прежнее доказательство формы.
+
+Hot executor удерживает PC и SP локально в пределах участка, исполняет
+целые загрузки, константы, арифметику, сравнения и сохранения. Все обычные
+ячейки, включая неактивный хвост operand stack, сохраняются. Дроби,
+переполнения, отрицательный ноль, недопустимые индексы и неподдержанные
+операции передаются прежнему обработчику до изменения состояния этой
+операции. Счётчик полезных инструкций, точки INPUT, ошибки и source column
+точные. Участок заканчивается у следующей границы service (32 инструкции),
+LIMIT или конца вызова. Ни один указатель/типовой кеш не переживает RUN.
+
+Wire version 8 → 9: новый opcode требует согласованных compiler, LANGIN,
+LANGVM и resident. Compiler/VM/input/validated magics обновлены. Request ABI
+остаётся 8, внешний APP ABI — 6, размеры запросов и продолжения прежние.
+VMC старых версий распознаются только для безопасного пересоздания и не
+исполняются. Shared source/stack/image quotas и алгоритм игр не менялись.
+
+15360 байт было отдельным build-time потолком компактности LANGVM,
+выбранным после разделения hot/cold VM. Это не раздел RAM и не предел
+загрузчика: общий APP format/runtime по-прежнему допускает 20480 байт.
+Для обычного hot APP новый потолок — 18432 байта в Python и PowerShell;
+фактический loaded размер 16628 вместо 15356 (+1272). RAM арендуется по
+размеру заголовка APP, без нового постоянного резерва. Строгий whole-firmware
+RAM gate продолжает проверять максимальный APP 20480, staging 2560, MSC 8264
+и временный буфер ФС 824 байта. Кеш остаётся 24576, mixed-cache выключен.
+
+Cold INPUT сохраняет scalar fallback (15728/16000). Local FLOAT также
+сохраняет scalar fallback (17324/17408); его прежний потолок не расширен.
+BASIC compiler 19688/20480, FOCAL compiler 18652/18688.
+
+Локальная квалификация: 183196 точных сравнений со скалярным исполнением
+под ASan/UBSan для обеих арифметик, включая полный int32, NaN/Inf/−0,
+продвижение в double, полные/перекрывающиеся банки, INPUT/ESC, LIMIT,
+resume и окончания вызовов. Полный поиск шахмат побайтно совпадает со
+старой VM b0c7528a2: 6521439 записей упорядоченной трассы
+`source CRC / PC / scalar opcode / logical step`, тот же вывод и экран.
+Real APP ARM generation 16 пройден на трёх адресах с отравлением старых
+APP/continuation; полная release-матрица F401 — 9/9, max frame 1936/2048.
+Физический Mini не использовался. LIBM/CORE F411 проходят прежние проверки
+RAM, Flash, foreground stack, библиотек и native drivers.
+
+Отдельный ARM instruction gate, не время устройства: BASIC integer −7,416%,
+BASIC expressions −9,834%, FOCAL expressions −5,873%. Контрольные короткие,
+дробные и wide сценарии меняются на +0,026…+0,597% инструкций с учётом
+первичной верификации. Target gate требует более 5% улучшения, controls —
+не более 1% регрессии; прежний режим теста без выбора targets остаётся
+строгим для всех случаев.
+
+Воспроизводимые локальные проверки:
+
+```sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_integer_span_tests.sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_tests.sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_overlay_tests.sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_file_cache_tests.sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_mixed_cache_tests.sh
+MK61_TEST_SANITIZERS=1 bash tests/run_language_vm_opcode_profile_tests.sh
+```
+
+`VM_TRACE_STREAM_FILE` в host-only trace сохраняет точную бинарную трассу
+(12 little-endian байт на инструкцию). Это не firmware instrumentation.
+ARM gate: `tests/run_language_vm_speed_arm_tests.py` с targets
+`basic_integer`, `basic_expressions`, `focal_expressions`,
+`--minimum-target-improvement-percent 5 --maximum-control-regression-percent 1`.
+Артефакты: `.build/vm-expression-execution-20261015`.
+
+Аппаратный A/B/A на Classic F411/96 MHz, LIBM, USB Screen on, RAW24KiB,
+book off, level 2/depth 8: тёплые медианы **43,856 → 42,959 → 43,863 с**.
+Выигрыш относительно среднего двух контролей **2,053% (0,900 с)**,
+дрейф контролей 0,016%. Во всех девяти поисках e2-e3/420, одинаковые полные
+доски, 3131 CRC-кадр без ошибок, KBD overflow=0, crash none/MPU layout ok.
+У всех серий decode 372/174/174, NOR write 627/0/0, erase 15/0/0; процент
+вычислен по двум повторным поискам после миграции кеша.
+
+Исходная и контрольная прошивка D6873FBC — 360564 байта; кандидат C847F153 —
+360572 (+8), static RAM прежние 26880. Остаток аппаратного стека
+9692 → 9668 → 9692 из 16384, наблюдаемый общий пик +24 байта. Этот watermark
+включает миграцию/компиляцию и не измеряет изолированную стоимость helper.
+CORE — 350900 байт. Общий APP maximum, RAM/Flash/stack gates не ослаблены.
+
+После теста точно восстановлены 122A5FF9, исходные APP/VMC, 44 файла/
+4 каталога и reg/stk/dump/pwd; временные VMC удалены. CRC valid, crash none,
+alarms off, read retries=0, CDC закрыт, process exit=0. Classic передан
+следующему согласованному чату, Mini не использовалась.
+
+Компактная квалификация: [vm-integer-spans-20261015.json](../../doc/measurements/vm-integer-spans-20261015.json).
+Полный отчёт: `.build/vm-expression-execution-20261015/hardware/attempt-1/report.json`;
+точные журналы — `chess-baseline/terminal.txt`, `chess-candidate/terminal.txt`
+и `chess-control/terminal.txt` в том же каталоге. Сводный wrapper-log содержит
+след от повторного запуска, отклонённого до открытия порта; источниками
+результата служат завершившаяся исходная сессия, per-stage журналы и JSON.

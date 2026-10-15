@@ -11,6 +11,7 @@
 #include "language_bytecode.hpp"
 #include "language_source_scan.hpp"
 #include "tinybasic_syntax.hpp"
+#include "basic_graphics_protocol.hpp"
 #include "focal_compiler.hpp"
 
 #include <string.h>
@@ -18,6 +19,31 @@
 #include "mk_math.hpp"
 
 namespace language_vm {
+void mark_integer_spans(uint8_t* bytes,uint16_t code,uint16_t end) {
+  uint16_t first=0;unsigned count=0;
+  auto finish=[&]() {
+    if(first && count>=5)bytes[first]=(uint8_t)Op::INTEGER_SPAN;
+    first=0;count=0;
+  };
+  for(uint16_t pc=code;pc<end;) {
+    const Op op=(Op)bytes[pc];
+    const uint16_t after=instruction_end(bytes,end,pc);
+    if(!after)break;
+    if(op==Op::SOURCE_POS) {pc=after;continue;}
+    // The existing index mark proves its first three scalar instructions;
+    // never replace the interior LOAD with another hint.
+    if(op==Op::BLOCK_INDEX) {finish();pc=(uint16_t)(pc+6);continue;}
+    const bool supported=op==Op::LOAD || op==Op::LOAD_ARRAY_FIXED ||
+        op==Op::LOAD_ARRAY || op==Op::STORE || op==Op::STORE_ARRAY ||
+        op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
+        (op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::NEG || op==Op::NOT ||
+        (op>=Op::ADD && op<=Op::XOR && op!=Op::POW) || op==Op::FLOOR_DIV;
+    if(!supported)finish();
+    else {if(!first && op==Op::LOAD)first=pc;if(first)++count;}
+    pc=after;
+  }
+  finish();
+}
 namespace {
 void put_word(uint8_t* p, uint16_t v) {
   p[0] = (uint8_t)v;
@@ -45,6 +71,7 @@ struct Keyword {
 // INPUT() is I/O, lowered to a dedicated opcode rather than a math callback.
 static constexpr uint8_t KEY_INPUT_FUNCTION = 254;
 static constexpr uint8_t CALL_FUNCTION = 253, ARG_FUNCTION = 252;
+static constexpr uint8_t POINT_FUNCTION = 251;
 enum Command : uint8_t {
   ASSIGN,
   REM,
@@ -64,7 +91,7 @@ enum Command : uint8_t {
   DATA_CMD,
   READ_DATA_CMD,
   RESTORE_CMD,
-  ON_CMD
+  ON_CMD, PSET_CMD, LINE_CMD, BOX_CMD, CIRCLE_CMD, SHOW_CMD, GRAPH_CMD
 };
 // Expression-only INPUT/VM placements do not emit the BASIC statement lexer.
 [[maybe_unused]] const Keyword basic_commands[] = {{"REM", 3, REM},
@@ -86,6 +113,12 @@ enum Command : uint8_t {
                                   {"READ", 3, READ_DATA_CMD},
                                   {"RESTORE", 4, RESTORE_CMD},
                                   {"ON", 15, ON_CMD},
+                                  {"PSET", 2, PSET_CMD},
+                                  {"LINE", 2, LINE_CMD},
+                                  {"BOX", 1, BOX_CMD},
+                                  {"CIRCLE", 2, CIRCLE_CMD},
+                                  {"SHOW", 2, SHOW_CMD},
+                                  {"GRAPH", 2, GRAPH_CMD},
                                   {nullptr, 0, 0}};
 const Keyword functions[] = {
     {"SIZE", 1, (uint8_t)Function::SIZE},   {"COLS", 15, (uint8_t)Function::COLS},
@@ -100,7 +133,8 @@ const Keyword functions[] = {
     {"ROUND", 2, (uint8_t)Function::ROUND}, {"SGN", 2, (uint8_t)Function::SGN},
     {"MAX", 1, (uint8_t)Function::MAX},
     {"INPUT", 3, KEY_INPUT_FUNCTION}, {"CALL", 3, CALL_FUNCTION},
-    {"ARG", 2, ARG_FUNCTION}, {nullptr, 0, 0}};
+    {"ARG", 2, ARG_FUNCTION}, {"GW",15,(uint8_t)Function::GW},
+    {"GH",15,(uint8_t)Function::GH}, {"POINT",3,POINT_FUNCTION}, {nullptr, 0, 0}};
 struct ResourceWorkspace {
   uint8_t* first;
   uint8_t* second;
@@ -202,6 +236,7 @@ class Compiler {
           put_dword(record, lines_[i].number);
         put_word(record + stride() - 2, lines_[i].pc);
       }
+      mark_integer_spans(out_,code,code_end);
       put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
     uint16_t offset =
@@ -256,7 +291,7 @@ class Compiler {
   uint16_t line_;
   uint8_t pass_;
   uint16_t image_end_;
-  bool rf_available_, rf_required_, expression_only_, parameter_calls_;
+  bool rf_available_, rf_required_, expression_only_, parameter_calls_, graph_expression_;
   const ResourceSource* resources_;
   uint16_t resource_size_;
   ResourceWorkspace resource_data_;
@@ -866,6 +901,15 @@ class Compiler {
         return;
       }
       const Function f = (Function)fn;
+      if(graph_expression_ && (fn==CALL_FUNCTION || fn==KEY_INPUT_FUNCTION || f==Function::RND)) {
+        fail(Error::FUNCTION);return;
+      }
+      if(fn==POINT_FUNCTION) {
+        if(!basic() || !match('(')){fail(Error::FUNCTION);return;}
+        expression();if(!match(','))fail(Error::FUNCTION);expression();
+        if(!match(')'))fail(Error::EXPECTED_PAREN);
+        operation(Op::GRAPHICS,-1);byte((uint8_t)basic_graphics::Operation::POINT);byte(2);return;
+      }
       if (fn == CALL_FUNCTION || fn == ARG_FUNCTION) {
         if (!basic() || expression_only_ || !match('(')) { fail(Error::FUNCTION); return; }
         if (fn == CALL_FUNCTION) basic_call(true);
@@ -1086,6 +1130,13 @@ class Compiler {
   }
   void print() {
     emit(Op::PRINT_BEGIN);
+    const bool positioned=basic() && keyword("AT",2);
+    if(positioned) {
+      expression();if(!match(','))fail(Error::SYNTAX);expression();
+      if(!match(';'))fail(Error::SYNTAX);
+      operation(Op::PRINT_AT,-2);
+      skip();if(p_==end_)fail(Error::SYNTAX);
+    }
     uint8_t separator = 0;
     skip();
     if (!basic() && p_ == end_) fail(Error::SYNTAX);
@@ -1127,7 +1178,70 @@ class Compiler {
       break;
     }
     emit(Op::PRINT_END);
-    byte(separator ? 1 : 0);
+    byte(!positioned && separator ? 1 : 0);
+  }
+  void graphics(basic_graphics::Operation op) {
+    uint8_t count = 0;
+    skip();
+    if (p_ < end_)
+      do {
+        if (count == basic_graphics::maximum(op)) {
+          fail(Error::SYNTAX);
+          break;
+        }
+        expression();
+        ++count;
+        skip();
+        if (p_ == end_)
+          break;
+        if (!match(',')) {
+          fail(Error::SYNTAX);
+          break;
+        }
+      } while (error_ == Error::NONE);
+    if (count < basic_graphics::minimum(op))
+      fail(Error::SYNTAX);
+    operation(Op::GRAPHICS, -count);
+    byte((uint8_t)op);
+    byte(count);
+  }
+  void graph() {
+    const char *expression_start = p_;
+    const char *comma = tinybasic_syntax::parameter_separator(p_, end_);
+    if (comma == end_) {
+      fail(Error::SYNTAX);
+      return;
+    }
+    const char *full_end = end_;
+    p_ = comma + 1;
+    for (unsigned i = 0; i < 4; ++i) {
+      expression();
+      if (i < 3 && !match(','))
+        fail(Error::SYNTAX);
+    }
+    skip();
+    if (p_ != full_end) {
+      fail(Error::SYNTAX);
+      return;
+    }
+    operation(Op::GRAPH_BEGIN, -4);
+    const uint16_t next_at = pc_;
+    u16(0);
+    const uint16_t body = pc_;
+    p_ = expression_start;
+    end_ = comma;
+    graph_expression_ = true;
+    expression();
+    graph_expression_ = false;
+    skip();
+    if (p_ != end_)
+      fail(Error::SYNTAX);
+    const uint16_t next = pc_;
+    operation(Op::GRAPH_NEXT, -1);
+    u16(body);
+    patch(next_at, next);
+    end_ = full_end;
+    p_ = full_end;
   }
   void input() {
     skip();
@@ -1452,6 +1566,12 @@ class Compiler {
         case CLS:
           emit(Op::CLEAR);
           break;
+        case PSET_CMD:graphics(basic_graphics::Operation::PSET);break;
+        case LINE_CMD:graphics(basic_graphics::Operation::LINE);break;
+        case BOX_CMD:graphics(basic_graphics::Operation::BOX);break;
+        case CIRCLE_CMD:graphics(basic_graphics::Operation::CIRCLE);break;
+        case SHOW_CMD:graphics(basic_graphics::Operation::SHOW);break;
+        case GRAPH_CMD:graph();break;
         case PAUSE:
           emit(Op::WAIT);
           break;

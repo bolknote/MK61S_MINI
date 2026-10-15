@@ -30,6 +30,9 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "shared_memory.hpp"
 #include "native_libc.h"
 #include "workspace_swap.hpp"
+#if !defined(LANGUAGE_VM_HOST_TEST)
+#include "basic_graphics.hpp"
+#endif
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
 #include "language_vm_image_cache.hpp"
 #if !defined(LANGUAGE_VM_HOST_TEST)
@@ -338,6 +341,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   result = 0;
   if(busy || (language != Language::BASIC && language != Language::FOCAL)) return RuntimeStatus::BUSY;
   struct BusyScope { BusyScope(){ busy=true; } ~BusyScope(){ busy=false; } } busy_scope;
+#if !defined(LANGUAGE_VM_HOST_TEST)
+  basic_graphics::RunScope graphics_scope(language==Language::BASIC);
+#endif
   static uint16_t error_id = 0xFFFF, error_line = 0, error_column = 0;
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   static uint32_t error_revision=0;
@@ -492,6 +498,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     BusyScope() { busy = true; }
     ~BusyScope() { busy = false; }
   } scope;
+#if !defined(LANGUAGE_VM_HOST_TEST)
+  basic_graphics::RunScope graphics_scope(language==Language::BASIC);
+#endif
   static uint16_t basic_error_id = 0xFFFF, basic_error_line = 0, basic_error_column = 0;
   if (language == Language::BASIC && command == Command::TINYBASIC_EDIT_ID && a == basic_error_id) {
     if (!b) b = ((uint32_t)basic_error_line << 16) | basic_error_column;

@@ -1,11 +1,12 @@
 #ifndef MK61_LANGUAGE_VM_ABI_HPP
 #define MK61_LANGUAGE_VM_ABI_HPP
 #include "language_bytecode.hpp"
+#include "basic_graphics_protocol.hpp"
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 8;
-static constexpr uint32_t COMPILER_MAGIC = 0x3B4D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 9;
+static constexpr uint32_t COMPILER_MAGIC = 0x3D4D5643UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
@@ -35,9 +36,9 @@ struct ExecuteRequest {
   uint8_t edit_requested, reserved2;
   RunResult result;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x3C564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x3C494D4CUL;
-static constexpr uint32_t VALIDATED_MAGIC = 0x3B49424CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x3E564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x3E494D4CUL;
+static constexpr uint32_t VALIDATED_MAGIC = 0x3D49424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.
@@ -66,6 +67,7 @@ struct ExecutionState {
   uint8_t row, width, output_cursor, precision;
   bool cancelled, normal_stop;
   Error failure;
+  basic_graphics::PrintPosition position;
 };
 inline void reset_execution_state(ExecutionState& state) {
 #if defined(LANGUAGE_VM_TEST_STATE_RESETS)
@@ -82,7 +84,7 @@ inline void reset_execution_state(ExecutionState& state) {
   // bounded by its emitted image size. Do not clear those dead scratch banks.
   // Keep every live cursor and the whole I/O/scalar tail at their old zero
   // representation, including input_value, flags, padding and the output NUL.
-  // In-place ranges also avoid a 1584-byte aggregate stack temporary.
+  // In-place ranges also avoid a full ExecutionState stack temporary.
   memset(reinterpret_cast<uint8_t*>(&state.control) + offsetof(Continuation, pc),
          0, sizeof(Continuation) - offsetof(Continuation, pc));
   memset(reinterpret_cast<uint8_t*>(&state) + offsetof(ExecutionState, output),
@@ -200,7 +202,7 @@ static_assert(sizeof(ExecuteRequest) == 48, "execution request ARM ABI changed")
 static_assert(sizeof(OverlayRequest) == 24, "overlay request ARM ABI changed");
 static_assert(sizeof(ValidatedImage) == 16, "validated descriptor ARM ABI changed");
 static_assert(sizeof(InputRequest) == 40, "input request ARM ABI changed");
-static_assert(sizeof(ExecutionState) == 1584, "continuation layout changed; update measurements");
+static_assert(sizeof(ExecutionState) == 1664, "continuation layout changed; update measurements");
 #endif
 }  // namespace language_vm
 #endif

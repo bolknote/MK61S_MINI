@@ -386,6 +386,11 @@ class MK61Display : public MK61DisplayOutput {
     }
     bool beginFullscreenBitmap(void);
     bool showFullscreenBitmap(const u8* bitmap, usize size);
+    // Copy logical text rows into a caller-owned page bitmap without showing
+    // it or touching unrelated rows. Used by the shared BASIC canvas.
+    bool copyTextBitmap(u8* bitmap, usize size, u8 first_row, u8 count);
+    int flowTextBitmap(u8* bitmap, usize size, const char* text, u16 length,
+                       u8 first_row, u8 max_rows, bool empty_line);
     void endFullscreenBitmap(void);
     bool beginCellAnimation(void);
     bool writeCellAnimationPaletteFrame(const u8 glyphs[8][8],
@@ -658,7 +663,7 @@ class MK61Display : public MK61DisplayOutput {
     builtin_font::FaceId fallbackFont(void) const;
     bool resolveToken(u16 value, bool custom, builtin_font::Raster& raster) const;
 #if MK61_PROPORTIONAL_UI_FONTS
-    void renderUiPage(u8 page, u8 first_col, u8 count);
+    void renderUiPage(u8 page, u8 first_col, u8 count, bool present = true);
     u8 uiAdvance(u16 codepoint, bool custom) const;
     u8 uiRows(void) const;
     u8 uiCols(void) const;

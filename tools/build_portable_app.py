@@ -95,11 +95,11 @@ def enforce_system_size_budget(system: str | None, report: dict,
     if language_vm_compiler:
         budget = COMPILER_SIZE_BUDGETS.get(system, budget)
     if system == "language-vm" and split_language_vm:
-        # Includes FLOW_STEP, resource delivery and continuation policy.
-        # Six FOCAL v5 operations add parameter frames, sparse array access
-        # and precision events. The measured split kernel uses 14,452 bytes;
-        # these ceilings do not enlarge the common 20-KiB APP arena.
-        budget = {"memory_bytes": 17_408 if local_float_math else 15_360}
+        # The hot integer-span executor trades APP bytes for fewer dispatches.
+        # This is a regression ceiling, not an allocator partition. The loader
+        # and strict whole-firmware RAM gate still cap every APP at 20 KiB.
+        # BASIC graphics adds raster events, PRINT AT and a pure GRAPH loop.
+        budget = {"memory_bytes": 19_968 if local_float_math else 19_456}
     if budget is None:
         return
     budget = dict(budget)

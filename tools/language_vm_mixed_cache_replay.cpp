@@ -9,16 +9,16 @@
 #include <cstring>
 using namespace language_vm;
 struct Module {Language language;std::vector<uint8_t> bytes;ValidatedImage certificate;};
-template<bool Mixed>
+template<unsigned Budget,bool Mixed>
 int replay(const std::map<unsigned,Module>& modules,const std::vector<unsigned>& order,
            unsigned repeats,unsigned start,unsigned end) {
-  using Cache=ImageCache<24576,16,CachePolicy::REUSE_DENSITY,Mixed>;
+  using Cache=ImageCache<Budget,16,CachePolicy::REUSE_DENSITY,Mixed>;
   struct GuardedCache {uint64_t before=0x61CAFE;Cache value;uint64_t after=0xCAFEB0;};
   GuardedCache guarded;auto& cache=guarded.value;
   struct Loan {uint64_t before=0x123456;alignas(8) uint8_t prefix[COMPILER_WORKSPACE_SIZE];
     uint8_t values[VALUES_SIZE];uint64_t after=0x654321;} loan;
   memset(loan.values,0xB7,sizeof(loan.values));
-  std::cout<<"{\"mixed\":"<<(Mixed?"true":"false")<<",\"budget\":24576,\"object_bytes\":"<<sizeof(Cache)
+  std::cout<<"{\"mixed\":"<<(Mixed?"true":"false")<<",\"budget\":"<<Budget<<",\"object_bytes\":"<<sizeof(Cache)
            <<",\"payload\":"<<Cache::PAYLOAD_CAPACITY<<",\"metadata\":"<<Cache::metadata_bytes()<<",\"passes\":[";
   for(unsigned pass=0;pass<repeats;++pass) {
     typename Cache::Statistics before={};typename Cache::PackingStatistics packed_before={};
@@ -73,7 +73,8 @@ int main() {
   std::vector<unsigned> order;
   for(unsigned i=0;i<requests;++i) {unsigned id;if(!(std::cin>>id) || !modules.count(id))return 2;order.push_back(id);}
   std::cout<<"{\"status\":\"PASS\",\"variants\":[";
-  int status=replay<false>(modules,order,repeats,start,end);if(status)return status;
-  std::cout<<',';status=replay<true>(modules,order,repeats,start,end);if(status)return status;
+  int status=replay<24576,false>(modules,order,repeats,start,end);if(status)return status;
+  std::cout<<',';status=replay<24576,true>(modules,order,repeats,start,end);if(status)return status;
+  std::cout<<',';status=replay<32768,false>(modules,order,repeats,start,end);if(status)return status;
   std::cout<<"]}\n";
 }

@@ -1,8 +1,10 @@
 #include "builtin_font.hpp"
 
 #include "config.h"
+#define MK61_BUILTIN_RASTER_ENABLED (MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP || \
+    (MK61_ENABLE_TINYBASIC && MK61_HAS_FULLSCREEN_BITMAP))
 #include "display_symbols.hpp"
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+#if MK61_BUILTIN_RASTER_ENABLED
   #include "ERM19264_graphics_font.h"
 #endif
 
@@ -17,7 +19,7 @@ struct Glyph5x8 {
   u8 rows[8];
 };
 
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+#if MK61_BUILTIN_RASTER_ENABLED
   #define MK61_BUILTIN_FULL_CYRILLIC 1
 #else
   #define MK61_BUILTIN_FULL_CYRILLIC 0
@@ -264,7 +266,7 @@ static const Glyph5x8 SPECIAL_5X8[] = {
 };
 
 static u16 aliasedCodepoint(u16 codepoint) {
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+#if MK61_BUILTIN_RASTER_ENABLED
   return display_symbol::uc1609::builtinCodepoint(codepoint);
 #else
   (void) codepoint;
@@ -279,7 +281,7 @@ static const u8* specialRows5x8(u16 codepoint) {
   return NULL;
 }
 
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP
+#if MK61_BUILTIN_RASTER_ENABLED
 static void setPixel(Raster& raster, u8 x, u8 y) {
   const usize stride = (raster.width + 7) / 8;
   raster.data[(usize) y * stride + x / 8] |= (u8) (0x80 >> (x & 7));
@@ -346,7 +348,7 @@ FaceId closest(u8 width, u8 height) {
 }
 
 bool decode(FaceId face, u16 codepoint, Raster& out) {
-#if !MK61_HAS_COMPILED_GRAPHICS && !MK61_MARKDOWN_USES_WBMP
+#if !MK61_BUILTIN_RASTER_ENABLED
   (void) face;
   (void) codepoint;
   (void) out;
@@ -383,6 +385,13 @@ bool decode(FaceId face, u16 codepoint, Raster& out) {
   }
   return true;
 #endif
+}
+
+bool copyRows5x8(u16 codepoint,u8 rows[8]) {
+  Raster raster;
+  if(!rows || !decode(FaceId::FONT_5X8,codepoint,raster))return false;
+  for(u8 y=0;y<8;++y)rows[y]=(u8)(raster.data[y]>>3);
+  return true;
 }
 
 bool scale2x(const Raster& source, Raster& out) {

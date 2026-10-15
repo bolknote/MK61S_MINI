@@ -466,7 +466,7 @@
 
 #define MK61_ANY_FULLSCREEN_FILE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED || MK61_ENABLE_CHIP8 || \
-   MK61_MARKDOWN_USES_WBMP || MK61_ANY_LOADABLE_MODULE)
+   MK61_MARKDOWN_USES_WBMP || MK61_ANY_LOADABLE_MODULE || MK61_ENABLE_TINYBASIC)
 
 // Расширенная ручная настройка строк, высоты, ширины и межстрочного интервала
 // графического шрифта. По умолчанию в меню остается только выбор пресета шрифта.

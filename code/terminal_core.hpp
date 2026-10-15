@@ -284,7 +284,47 @@ inline bool token_is_decimal_address(const char* begin, const char* end) {
   return true;
 }
 
-inline Assembly parse_assembly(const char* args, isize current_address, const char* isa, usize max_steps) {
+using MnemonicLookup = isize (*)(const char* token, usize length);
+
+// Calculator aliases such as "Kx!=0 0" are one mnemonic even though their
+// spelling contains whitespace. Choose the longest whole mnemonic, allowing
+// normal spaces/tabs between its parts and preserving token boundaries.
+inline isize match_mnemonic(const char* isa, const char* input, usize& consumed) {
+  isize result = -1;
+  consumed = 0;
+  if(isa == nullptr || input == nullptr) return result;
+  usize opcode = 0;
+  for(const char* item = isa;; ++opcode) {
+    const char* end = item;
+    while(*end != 0 && *end != ',') ++end;
+    const char* spelling = item;
+    const char* cursor = input;
+    while(spelling < end) {
+      if(is_space(*spelling)) {
+        if(!is_space(*cursor)) break;
+        cursor = skip_spaces(cursor);
+        do { ++spelling; } while(spelling < end && is_space(*spelling));
+      } else {
+        if(*cursor != *spelling) break;
+        ++cursor;
+        ++spelling;
+      }
+    }
+    const usize length = (usize) (cursor - input);
+    if(spelling == end && length > consumed &&
+       (is_space(*cursor) || is_end(*cursor)) &&
+       !(end - item == 1 && *item == '?')) {
+      result = (isize) opcode;
+      consumed = length;
+    }
+    if(*end == 0) break;
+    item = end + 1;
+  }
+  return result;
+}
+
+inline Assembly parse_assembly(const char* args, isize current_address, const char* isa,
+                               usize max_steps, MnemonicLookup lookup = nullptr) {
   Assembly result = {};
   result.error = AssemblyError::NONE;
   const char* p = skip_spaces(args);
@@ -320,8 +360,14 @@ inline Assembly parse_assembly(const char* args, isize current_address, const ch
     p = skip_spaces(p);
     if(is_end(*p)) break;
     const char* token = p;
-    while(!is_space(*p) && !is_end(*p)) p++;
-    isize opcode = find_mnemonic(isa, token, (usize) (p - token));
+    usize consumed = 0;
+    isize opcode = match_mnemonic(isa, token, consumed);
+    if(opcode >= 0) {
+      p += consumed;
+    } else {
+      while(!is_space(*p) && !is_end(*p)) p++;
+      if(lookup != nullptr) opcode = lookup(token, (usize) (p - token));
+    }
     if(opcode < 0 && p - token == 2) {
       const int high = digit_value(token[0], 16);
       const int low = digit_value(token[1], 16);

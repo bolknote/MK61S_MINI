@@ -7,6 +7,7 @@ flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi
+flags+=("-DMK61_LANGUAGE_VM_CACHE_MIXED=${MK61_VM_CACHE_MIXED_TEST:-0}")
 policies=(0 1)
 if [[ -n "${MK61_VM_CACHE_DENSITY_TEST+x}" ]]; then
   policies=("$MK61_VM_CACHE_DENSITY_TEST")
@@ -19,7 +20,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
   -DLANGUAGE_VM_TEST_STATE_RESETS \
   -DMK61_ENABLE_USB_SCREEN="$usb" \
   -DMK61_LANGUAGE_VM_CACHE_DENSITY="$density" \
-  -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES=24576 -I"$root/code" \
+  -DMK61_LANGUAGE_VM_IMAGE_CACHE_BYTES="${MK61_VM_CACHE_BYTES_TEST:-24576}" -I"$root/code" \
   "$root/tests/language_vm_image_cache_self_test.cpp" \
   "$root/code/language_vm_resident.cpp" "$root/code/language_vm.cpp" \
   "$root/code/language_vm_validation.cpp" "$root/code/language_bytecode.cpp" \

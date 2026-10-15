@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "language_bytecode.hpp"
+#include "basic_graphics_protocol.hpp"
 #include "mk_math.hpp"
 #include "language_vm_profile.hpp"
 
@@ -26,11 +27,25 @@ namespace language_vm {
 #if MK61_VM_COMPARE_BLOCK != 0 && MK61_VM_COMPARE_BLOCK != 1
 #error "MK61_VM_COMPARE_BLOCK must be 0 or 1"
 #endif
+// The cold INPUT APP has no long-running instruction stream.
+#ifndef MK61_VM_INTEGER_SPAN
+#if (defined(MK61_APP_LOCAL_FLOAT_MATH) && MK61_APP_LOCAL_FLOAT_MATH) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+#define MK61_VM_INTEGER_SPAN 0
+#else
+#define MK61_VM_INTEGER_SPAN 1
+#endif
+#endif
+#if MK61_VM_INTEGER_SPAN != 0 && MK61_VM_INTEGER_SPAN != 1
+#error "MK61_VM_INTEGER_SPAN must be 0 or 1"
+#endif
 #if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
 void compare_block_applied(uint16_t);
 #endif
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
 void integer_block_applied(uint16_t, uint8_t);
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
+void integer_span_applied(uint16_t, uint8_t);
 #endif
 #if defined(LANGUAGE_VM_TRACE)
 // Host-only instrumentation. No callback, counters or ABI fields are shipped.
@@ -51,32 +66,7 @@ uint32_t record_number(const View& v, uint16_t i) {
 }
 // Total wire widths: zero denotes an invalid opcode, 255 a bounded variable
 // record. A single indexed read replaces a second opcode switch in the hot loop.
-constexpr uint8_t wire_widths[] = {
-  1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1, // 0..15
-  1,1,1,1,1,1,1,1,1,1,1,1,2,0,3,3, // 16..31 (29: retired CHECK)
-  1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
-  255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
-  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
-  2,7,1,1,1,3,3,2 // 97..104
-};
-static_assert(sizeof(wire_widths)==(unsigned)Op::BLOCK_COMPARE+1,"opcode width table changed");
-uint16_t next(const View& v, uint16_t pc) {
-  if(pc>=v.end) return 0;
-  const uint8_t op=v.bytes[pc];
-  if(op>=sizeof(wire_widths)) return 0;
-  const uint8_t width=wire_widths[op];
-  const uint16_t remaining=(uint16_t)(v.end-pc);
-  if(width!=255) return width && width<=remaining ? (uint16_t)(pc+width) : 0;
-  if(remaining<3) return 0;
-  const uint16_t count=word(v.bytes+pc+1);
-  if((Op)op==Op::ON_GOTO || (Op)op==Op::ON_GOSUB) {
-    if(!count || count>(remaining-3)/2) return 0;
-    return (uint16_t)(pc+3+count*2);
-  }
-  if((Op)op==Op::DATA && !count) return 0;
-  return count<=remaining-3 ? (uint16_t)(pc+3+count) : 0;
-}
+uint16_t next(const View& v, uint16_t pc) {return instruction_end(v.bytes,v.end,pc);}
 bool constant_value(const View& v, uint16_t pc, Value& value) {
   const Op op = (Op)v.bytes[pc];
   const uint8_t* p = v.bytes + pc + 1;
@@ -244,6 +234,131 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
   return count;
 }
 #endif
+#if MK61_VM_INTEGER_SPAN
+// Execute the existing stream while its values are int32. PC/SP stay local;
+// all stack cells survive, including inactive ones. A rejected operation is
+// left untouched for the ordinary evaluator. Its first step is already polled,
+// counted and traced. No span crosses the next service/limit/call boundary.
+__attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
+  uint32_t budget=32U-((steps-1U)&31U);
+  if(limit && budget>limit-steps+1U)budget=limit-steps+1U;
+  if(budget<2)return 0;
+  uint16_t end=v.end;
+  if(s.call_count && s.calls[s.call_count-1].end && s.calls[s.call_count-1].end<end)
+    end=s.calls[s.call_count-1].end;
+  uint16_t pc=instruction,last=pc;
+  unsigned sp=s.sp;
+  uint8_t count=0;
+#if defined(LANGUAGE_VM_TRACE)
+#define SPAN_TRACE() do {if(count)trace_instruction(v,pc,steps+count);} while(false)
+#else
+#define SPAN_TRACE() ((void)0)
+#endif
+  while(count<budget && pc<end) {
+    const Op op=(Op)v.bytes[pc];
+    const unsigned width=(unsigned)op<sizeof(wire_widths)?wire_widths[(unsigned)op]:0;
+    if(!width || width==255 || width>(unsigned)(end-pc))break;
+    const auto* p=v.bytes+pc+1;
+    Value result;
+    int32_t x,y,z;
+    if(op>=Op::CONST_0 && op<=Op::CONST_15) {
+      if(sp>=data.stack_capacity)break;
+      result=(uint8_t)op-(uint8_t)Op::CONST_0;
+      SPAN_TRACE();data.stack[sp++]=result;
+    } else switch(op) {
+      case Op::CONST_I8: case Op::CONST_I16: case Op::CONST_I32:
+        if(sp>=data.stack_capacity)goto done;
+        result=op==Op::CONST_I8?(int32_t)(int8_t)*p:
+            op==Op::CONST_I16?(int32_t)(int16_t)word(p):(int32_t)dword(p);
+        SPAN_TRACE();data.stack[sp++]=result;break;
+      case Op::LOAD: case Op::INTEGER_SPAN: case Op::LOAD_ARRAY_FIXED:
+        if(sp>=data.stack_capacity)goto done;
+        if(op!=Op::LOAD_ARRAY_FIXED) {
+          if(*p>=26)goto done;
+          result=data.variables[*p];
+        } else {
+          const uint16_t index=word(p);
+          if(!data.array || index>=data.array_count)goto done;
+          result=data.array[index];
+        }
+        if(!result.integer())goto done;
+        SPAN_TRACE();data.stack[sp++]=result;break;
+      case Op::LOAD_ARRAY:
+        if(!sp || !data.array || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-1].integer_value();
+        if(x<0 || (uint32_t)x>=data.array_count)goto done;
+        result=data.array[x];if(!result.integer())goto done;
+        SPAN_TRACE();data.stack[sp-1]=result;break;
+      case Op::STORE:
+        if(!sp || *p>=26)goto done;
+        SPAN_TRACE();data.variables[*p]=data.stack[--sp];break;
+      case Op::STORE_ARRAY:
+        if(sp<2 || !data.array || !data.stack[sp-2].integer())goto done;
+        x=data.stack[sp-2].integer_value();
+        if(x<0 || (uint32_t)x>=data.array_count)goto done;
+        SPAN_TRACE();data.array[x]=data.stack[sp-1];sp-=2;break;
+      case Op::NEG: case Op::NOT:
+        if(!sp || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-1].integer_value();
+        if(op==Op::NEG) {
+          if(!x || __builtin_sub_overflow(0,x,&z))goto done;
+        } else z=!x;
+        SPAN_TRACE();data.stack[sp-1]=z;break;
+      case Op::ADD: case Op::SUB: case Op::MUL: case Op::DIV:
+      case Op::FLOOR_DIV: case Op::MOD:
+      case Op::EQ: case Op::NE: case Op::LT: case Op::LE: case Op::GT: case Op::GE:
+      case Op::AND: case Op::OR: case Op::XOR:
+        if(sp<2 || !data.stack[sp-2].integer() || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-2].integer_value();y=data.stack[sp-1].integer_value();
+        switch(op) {
+          case Op::ADD:if(__builtin_add_overflow(x,y,&z))goto done;break;
+          case Op::SUB:if(__builtin_sub_overflow(x,y,&z))goto done;break;
+          case Op::MUL:
+            if((!x && y<0) || (!y && x<0) || __builtin_mul_overflow(x,y,&z))goto done;
+            break;
+          case Op::DIV:
+            if(!y || (x==INT32_MIN && y==-1) || (!x && y<0) || x%y)goto done;
+            z=x/y;break;
+          case Op::FLOOR_DIV:
+            if(!y || (x==INT32_MIN && y==-1))goto done;
+            z=x/y;if(x%y && ((x<0)!=(y<0)))--z;break;
+          case Op::MOD:
+            if(!y)goto done;
+            if(x==INT32_MIN && y==-1)z=0;
+            else {z=x%y;if(z && ((z<0)!=(y<0)))z+=y;}
+            break;
+          case Op::EQ:z=x==y;break;case Op::NE:z=x!=y;break;
+          case Op::LT:z=x<y;break;case Op::LE:z=x<=y;break;
+          case Op::GT:z=x>y;break;case Op::GE:z=x>=y;break;
+          case Op::AND:z=x && y;break;case Op::OR:z=x || y;break;
+          default:z=(x!=0)!=(y!=0);break;
+        }
+        SPAN_TRACE();data.stack[sp-2]=z;--sp;break;
+      default:goto done;
+    }
+    last=pc;pc=(uint16_t)(pc+width);++count;
+    uint16_t following=pc;
+    while(end-following>=3 && (Op)v.bytes[following]==Op::SOURCE_POS)
+      following=(uint16_t)(following+3);
+    if(following>=end || (Op)v.bytes[following]==Op::SOURCE_POS)break;
+    if(count<budget) {
+      const Op next_op=(Op)v.bytes[following];
+      if(next_op==Op::LINE || next_op==Op::HALT)break;
+      pc=following;
+    }
+  }
+done:
+  if(count) {
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
+    integer_span_applied(instruction,count);
+#endif
+    s.sp=(uint8_t)sp;s.pc=pc;instruction=last;steps+=count-1U;
+  }
+#undef SPAN_TRACE
+  return count;
+}
+#endif
 }  // namespace
 #if defined(LANGUAGE_VM_TRACE)
 uint16_t trace_following(const View& v,uint16_t pc) {return next(v,pc);}
@@ -324,9 +439,10 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     // hot INPUT evaluator to borrow the suspended program's stack safely.
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
-        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
+        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::LOAD_REF &&
         op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
-        !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
+        !(op >= Op::CONST_0 && op <= Op::CONST_15) &&
+        !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT)) return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_INDEX && (v.end-pc<6 ||
         (Op)bytes[pc+3]!=Op::LOAD || (Op)bytes[pc+5]!=Op::ADD))return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_COMPARE) {
@@ -334,12 +450,12 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       if(!cmp || v.end-cmp<4 || (Op)bytes[cmp]!=Op::COMPARE_FALSE ||
          !((Op)bytes[rhs]>=Op::CONST_0 && (Op)bytes[rhs]<=Op::CONST_15))return Error::INVALID_IMAGE;
     }
-    if (((op == Op::LOAD || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
+    if (((op == Op::LOAD || op == Op::INTEGER_SPAN || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
          bytes[pc + 1] >= 26) ||
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
          bytes[pc + 1] >= 20) ||
-        (op == Op::FUNCTION && bytes[pc + 1] > (uint8_t)Function::ROWS) ||
+        (op == Op::FUNCTION && bytes[pc + 1] > (uint8_t)Function::GH) ||
         (op == Op::READ_KEY && (v.expression || v.language != Language::BASIC)) ||
         (op == Op::PRINT_SEPARATOR && bytes[pc + 1] > 2) ||
         (op == Op::PRINT_END && bytes[pc + 1] > 1) ||
@@ -348,6 +464,17 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             ((bytes[pc+2]&0x40) && (bytes[pc+2]&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
+    if(op>=Op::GRAPHICS && (v.language!=Language::BASIC || (v.expression &&
+       !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT))))
+      return Error::INVALID_IMAGE;
+    if(op==Op::GRAPHICS) {
+      const auto operation=(basic_graphics::Operation)bytes[pc+1];
+      if((operation!=basic_graphics::Operation::PSET && operation!=basic_graphics::Operation::POINT &&
+          operation!=basic_graphics::Operation::LINE && operation!=basic_graphics::Operation::BOX &&
+          operation!=basic_graphics::Operation::CIRCLE && operation!=basic_graphics::Operation::SHOW) ||
+         bytes[pc+2]<basic_graphics::minimum(operation) || bytes[pc+2]>basic_graphics::maximum(operation))
+        return Error::INVALID_IMAGE;
+    }
     if (op >= Op::DATA && op < Op::SOURCE_POS && v.language != Language::BASIC)
       return Error::INVALID_IMAGE;
     if((op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) && v.language!=Language::BASIC)
@@ -397,9 +524,33 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
   }
   for (uint16_t pc = v.code; pc < v.end; pc = next(v, pc)) {
     const Op op = (Op)bytes[pc];
-    if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT) &&
+    if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT ||
+         op==Op::GRAPH_BEGIN || op==Op::GRAPH_NEXT) &&
         !target(word(bytes + pc + 1)))
       return Error::INVALID_IMAGE;
+    if(op==Op::GRAPH_BEGIN) {
+      const uint16_t finish=word(bytes+pc+1);
+      if(finish<=pc+3 || (Op)bytes[finish]!=Op::GRAPH_NEXT || word(bytes+finish+1)!=pc+3)
+        return Error::INVALID_IMAGE;
+      for(uint16_t at=(uint16_t)(pc+3);at<finish;at=next(v,at)) {
+        const auto inner=(Op)bytes[at];
+        const bool allowed=(inner>=Op::CONST_I8 && inner<=Op::LOAD_REF) ||
+            inner==Op::LOAD_ARRAY || (inner>=Op::NEG && inner<=Op::FUNCTION) ||
+            inner==Op::CONST_DEC8 || inner==Op::CONST_DEC16 || inner==Op::CONST_I32 ||
+            inner==Op::FLOOR_DIV || inner==Op::LOAD_ARRAY_FIXED || inner==Op::SOURCE_POS ||
+            inner==Op::LOAD_PARAMETER || inner==Op::BLOCK_INDEX || inner==Op::INTEGER_SPAN ||
+            (inner>=Op::CONST_0 && inner<=Op::CONST_15) ||
+            (inner==Op::GRAPHICS && bytes[at+1]==(uint8_t)basic_graphics::Operation::POINT);
+        if(!allowed || inner==Op::STORE || (inner==Op::FUNCTION &&
+            (bytes[at+1]==(uint8_t)Function::RND || bytes[at+1]==(uint8_t)Function::RND_LIMIT)))
+          return Error::INVALID_IMAGE;
+      }
+    }
+    if(op==Op::GRAPH_NEXT) {
+      const auto body=word(bytes+pc+1);
+      if(body<v.code+3 || (Op)bytes[body-3]!=Op::GRAPH_BEGIN || word(bytes+body-2)!=pc)
+        return Error::INVALID_IMAGE;
+    }
     if(op==Op::COMPARE_FALSE && !target(word(bytes+pc+2))) return Error::INVALID_IMAGE;
     if (op == Op::DO_FOCAL &&
         (!target(word(bytes + pc + 1)) ||
@@ -468,7 +619,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     s.sp = s.call_count = s.loop_count = 0;
     s.data_pc = v.code;
     s.data_index = 0;
-  } else if (s.pc < v.code || s.pc >= v.end || s.sp > data.stack_capacity ||
+    s.graph.active=false;
+  } else if (s.graph.active || s.pc < v.code || s.pc >= v.end || s.sp > data.stack_capacity ||
              s.call_count > (v.language == Language::BASIC ? MAX_CALLS : 8) ||
              s.loop_count > MAX_LOOPS || s.data_pc < v.code || s.data_pc > v.end) {
     return {Error::INVALID_IMAGE, 0, 0, 0};
@@ -498,7 +650,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     for (uint8_t i = 0; i < s.call_count; ++i) {
       const auto& f = s.calls[i];
       if (f.resume < v.code || f.resume >= v.end || f.loops > MAX_LOOPS ||
-          (f.mode & 12) || (f.mode & 3) == 2 ||
+          (f.mode & 8) || ((f.mode & 4) && (f.mode & 3)!=3) || (f.mode & 3) == 2 ||
           ((f.mode >> 4) && (f.mode & 3) != 3) || f.print_width > 64 ||
           (!(f.mode >> 4) && f.print_width) ||
           f.arguments>4 || unsigned(f.base)+f.arguments>data.stack_capacity ||
@@ -514,6 +666,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
   }
   Error error = Error::NONE;
+  struct RestoreGraph {
+    Continuation& state;const Bindings& data;
+    ~RestoreGraph(){if(state.graph.active){data.variables['X'-'A']=state.graph.saved_x;state.graph.active=false;}}
+  } restore_graph{s,data};
   uint32_t steps = 0;
   uint16_t instruction = s.pc;
   VM_OPCODE_PROFILE(v);
@@ -561,6 +717,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     }
   };
   auto restore_print = [&](const CallFrame& frame) {
+    if(frame.mode & 4) {Value unused=0;event(Event::PRINT_POP,nullptr,0,unused);}
     if(frame.mode >> 4) {
       Value width = frame.print_width;
       event(Event::PRECISION, nullptr, frame.mode >> 4, width);
@@ -754,6 +911,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           jump(to);
         break;
       }
+      case Op::INTEGER_SPAN:
+#if MK61_VM_INTEGER_SPAN
+        if(*p<26 && data.variables[*p].integer()) {
+          const uint8_t count=integer_span(v,s,data,steps,instruction,limit);
+          if(count) {VM_OPCODE_FUSED(count);break;}
+        }
+#endif
+        [[fallthrough]];
       case Op::LOAD:
         if (*p >= 26)
           error = Error::INVALID_IMAGE;
@@ -832,6 +997,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if(error==Error::NONE) {
           auto& f=s.calls[s.call_count-1];f.base=base;f.arguments=count;f.mode=(uint8_t)(1|(p[5]?2:0));
           if(p[5] && host.event) {
+            if(host.isolate_print && v.language==Language::BASIC) {
+              Value unused=0;event(Event::PRINT_PUSH,nullptr,0,unused);
+              if(error==Error::NONE)f.mode|=4;
+            }
             double format = 0;
             if(host.event(host.context,Event::PRINT_STATE,nullptr,0,format) &&
                format >= 1 && format <= 1039 && format == mk_math::trunc(format)) {
@@ -1017,6 +1186,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           case Function::SIZE:
           case Function::COLS:
           case Function::ROWS:
+          case Function::GW:
+          case Function::GH:
             if (!host.value)
               error = Error::IO;
             else
@@ -1217,6 +1388,61 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       case Op::PRINT_BEGIN:
         event(Event::PRINT_BEGIN, nullptr, 0, value);
         break;
+      case Op::PRINT_AT: {
+        basic_graphics::Request request={};request.operation=basic_graphics::Operation::TEXT;request.count=2;
+        request.args[1]=pop().number();request.args[0]=pop().number();
+        if(error==Error::NONE)event(Event::PRINT_AT,(const char*)&request,sizeof(request),value);
+        break;
+      }
+      case Op::GRAPHICS: {
+        basic_graphics::Request request={};request.operation=(basic_graphics::Operation)p[0];request.count=p[1];
+        if(request.count>6){error=Error::INVALID_IMAGE;break;}
+        for(unsigned i=request.count;i;--i)request.args[i-1]=pop().number();
+        if(error==Error::NONE)event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+        if(error==Error::NONE && request.operation==basic_graphics::Operation::POINT)push(value);
+        break;
+      }
+      case Op::GRAPH_BEGIN: {
+        auto& graph=s.graph;
+        if(graph.active || s.sp<4 || !host.value){error=Error::INVALID_IMAGE;break;}
+        for(unsigned i=4;i;--i)graph.bounds[i-1]=pop().number();
+        if(!(graph.bounds[0]<graph.bounds[1]) || !(graph.bounds[2]<graph.bounds[3]) ||
+           !mk_math::is_finite(graph.bounds[1]-graph.bounds[0]) ||
+           !mk_math::is_finite(graph.bounds[3]-graph.bounds[2])) {error=Error::GRAPHICS_ARGUMENT;break;}
+        basic_graphics::Request request={};request.operation=basic_graphics::Operation::PSET;
+        request.count=2;request.args[0]=request.args[1]=-1;
+        event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+        if(error!=Error::NONE)break;
+        const double width=host.value(host.context,Function::GW),height=host.value(host.context,Function::GH);
+        if(width<1 || width>192 || height<1 || height>64){error=Error::GRAPHICS_UNAVAILABLE;break;}
+        graph.width=(uint16_t)width;graph.height=(uint16_t)height;
+        graph.next=word(p);graph.body=after;graph.column=0;graph.base=s.sp;
+        graph.saved_x=data.variables['X'-'A'];graph.active=true;graph.skip=false;
+        data.variables['X'-'A']=graph.bounds[0];
+        break;
+      }
+      case Op::GRAPH_NEXT: {
+        auto& graph=s.graph;
+        if(!graph.active || word(p)!=graph.body || instruction!=graph.next){error=Error::INVALID_IMAGE;break;}
+        if(!graph.skip) {
+          value=pop();const double y=value.number();
+          if(error==Error::NONE && y>=graph.bounds[2] && y<=graph.bounds[3]) {
+            basic_graphics::Request request={};request.operation=basic_graphics::Operation::PSET;request.count=2;
+            request.args[0]=graph.column;
+            request.args[1]=(graph.bounds[3]-y)/(graph.bounds[3]-graph.bounds[2])*(graph.height-1);
+            event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
+          }
+        }
+        if(error!=Error::NONE)break;
+        if(s.sp!=graph.base){error=Error::STACK;break;}
+        graph.skip=false;
+        if(++graph.column<graph.width) {
+          data.variables['X'-'A']=graph.bounds[0]+(graph.bounds[1]-graph.bounds[0])*
+              ((double)graph.column/(graph.width-1));
+          s.pc=graph.body;
+        } else {data.variables['X'-'A']=graph.saved_x;graph.active=false;}
+        break;
+      }
       case Op::PRINT_TEXT:
         event(Event::TEXT, (const char*)p + 2, word(p), value);
         break;
@@ -1268,6 +1494,9 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         error = Error::INVALID_IMAGE;
         break;
     }
+    if(s.graph.active && (error==Error::MATH || error==Error::DIV_ZERO)) {
+      error=Error::NONE;s.sp=s.graph.base;s.graph.skip=true;s.pc=s.graph.next;
+    }
   }
   return {error, instruction, source_line(v, instruction), steps};
 }
@@ -1301,7 +1530,7 @@ const char* error_name(Error e) {
                                       "PRINT WIDTH",
                                       "UNKNOWN COMMAND",
                                       "UNCLOSED STRING",
-                                      "EXPECTED )"};
+                                      "EXPECTED )", "NO GRAPHICS", "SCREEN CHANGED", "GRAPHICS ARGUMENT"};
   return (uint8_t)e < sizeof(names) / sizeof(names[0]) ? names[(uint8_t)e] : "UNKNOWN";
 }
 }  // namespace language_vm

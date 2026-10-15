@@ -73,12 +73,13 @@ for ui_fonts in 0 1; do
   "$setup_stream_out-app-$ui_fonts" "$root/programs/Fonts/DejaVu-14.FMK"
 done
 
+for markdown in 0 1; do
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
   -DMK61_OLED1602_WS0010 \
   -DMK61_WS0010_GRAPHICS_100X16=1 \
-  -DMK61_ENABLE_MARKDOWN_VIEWER=1 \
+  -DMK61_ENABLE_MARKDOWN_VIEWER="$markdown" -DMK61_ENABLE_TINYBASIC=1 \
   -I"$root/code" \
   -I"$root/tests/mk_math_shim" \
   "$root/tests/ws0010_markdown_font_self_test.cpp" \
@@ -87,6 +88,7 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   -o "$ws0010_out"
 
 "$ws0010_out"
+done
 
 for profile in a00 a00-usb-screen a02 ws0010; do
   profile_flags=()
