@@ -15,5 +15,6 @@ TerminalCommand at(usize index); // index < count(); view into the Flash text po
 u8 lookup(const u8* line); // NUL-terminated command line; no leading spaces.
 // Same catalog spelling as lookup(); no leading spaces or token prefixes.
 const char* conditional_arguments(const char* line);
+const char* open_arguments(const char* line);
 }
 #endif

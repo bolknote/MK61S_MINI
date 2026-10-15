@@ -106,14 +106,14 @@ constexpr bool terminal_names_are_unique(void) {
 }
 static_assert(terminal_names_are_unique(), "terminal command name is duplicated");
 
-constexpr TerminalCommand conditional_command() {
+constexpr TerminalCommand command_with_id(u8 id) {
   for(usize i = 0; i < TERMINAL_COMMAND_COUNT; ++i) {
     const auto command = entry(i);
-    if(command.id == CMD_IF) return command;
+    if(command.id == id) return command;
   }
   return {nullptr, CMD_UNKNOWN, nullptr};
 }
-static constexpr auto conditional = conditional_command();
+static constexpr auto conditional = command_with_id(CMD_IF);
 static_assert(conditional.id == CMD_IF, "IF must be in the shared catalog");
 static_assert(conditional.name[0] != 0, "IF word must not be empty");
 static_assert(conditional.name[1] != 0, "IF word must have two bytes");
@@ -122,6 +122,16 @@ static_assert(conditional.name[2] == 0, "IF word must have only two bytes");
 const char* conditional_arguments(const char* line) {
   return line && line[0]==conditional.name[0] && line[1]==conditional.name[1] &&
       terminal_core::is_space(line[2]) ? line+2 : nullptr;
+}
+
+static constexpr auto open = command_with_id(CMD_OPEN);
+static_assert(open.id == CMD_OPEN && open.name[0] && open.name[1] &&
+              open.name[2] && open.name[3] && !open.name[4],
+              "OPEN must have four bytes in the shared catalog");
+const char* open_arguments(const char* line) {
+  return line && line[0]==open.name[0] && line[1]==open.name[1] &&
+      line[2]==open.name[2] && line[3]==open.name[3] &&
+      terminal_core::is_space(line[4]) ? line+4 : nullptr;
 }
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.

@@ -19,6 +19,7 @@ STATE_SIZE = 1584
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
 GENERATION = 14
+STATE_POISON = None
 
 
 def decode_number(data):
@@ -171,7 +172,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
         m.uc.mem_write(bytecode,image)
     m.uc.mem_write(variables, bytes(208))
     m.uc.mem_write(array, bytes(512 if language==2 and v14 else 3080))
-    m.uc.mem_write(state, bytes(state_size))
+    initial_state = bytes(state_size) if STATE_POISON is None else bytes((STATE_POISON,))*state_size
+    m.uc.mem_write(state, initial_state)
     m.uc.mem_write(state+language_offset, bytes((language,)))
     m.uc.mem_write(execution, bytes(execution_size))
     m.put(execution, execution_size, version, bytecode, length, variables, array, 385 if language == 1 else 64 if v14 else 0)
@@ -185,6 +187,13 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
         m.load(packages["language-input"])
         assert m.call(VM_INFO) == input_magic
         assert m.call(VALIDATE, overlay) == 1 and m.uc.mem_read(execution+result_offset, 1)[0] == 0
+        if STATE_POISON is not None:
+            # v14 has 672 bytes of inactive call/loop slots before its 16-byte
+            # cursor tail. Prove the real cold ARM helper leaves stale scratch
+            # in place before the hot APP runs; the value bank is also dead.
+            assert GENERATION == 14
+            assert bytes(m.uc.mem_read(state, control_size-16)) == bytes((STATE_POISON,))*(control_size-16)
+            assert bytes(m.uc.mem_read(state+stack_offset, 768)) == bytes((STATE_POISON,))*768
     inputs = evaluations = retries = 0
     for _ in range(20):
         m.stage = "program"
@@ -278,17 +287,22 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
 
 
 def main():
-    global GENERATION
+    global GENERATION, STATE_POISON
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
     p.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
+    p.add_argument("--poison-state", action="store_true",
+                   help="v14: leave inactive continuation slots poisoned through cold validation")
     p.add_argument("--focal-trace",action="store_true")
     p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14), default=14)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
     GENERATION = args.generation
+    if args.poison_state and GENERATION != 14:
+        p.error("--poison-state requires generation 14")
+    STATE_POISON = 0xA5 if args.poison_state else None
     peaks = {}
     stress_peaks = {}
     layouts = {}
@@ -405,7 +419,9 @@ def main():
             assert error == 0 and math.isclose(actual,2.1,rel_tol=1e-14), (actual,error)
             for stage, size in m.stage_peaks.items():
                 stress_peaks[stage] = max(stress_peaks.get(stage,0),size)
-        result = {"generation":GENERATION,"profile":args.vm_profile,"native_call_stack_peaks":peaks,
+        result = {"generation":GENERATION,"profile":args.vm_profile,
+                  "poisoned_inactive_continuation":STATE_POISON is not None,
+                  "native_call_stack_peaks":peaks,
                   "stress_native_call_stack_peaks":stress_peaks,
                   "compiler_workspace_bytes":layouts,
                   "input_image_c_stack_bytes":0 if GENERATION >= 6 else 256 if GENERATION >= 4 else 768,

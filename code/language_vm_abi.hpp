@@ -74,10 +74,19 @@ inline void reset_execution_state(ExecutionState& state) {
 #endif
   static_assert(std::is_trivially_copyable<ExecutionState>::value,
                 "continuation must support in-place byte initialization");
-  // Zero bits represent a valid double zero in Value. Unused number slots
-  // are overwritten before reading; persistent variables have tagged zeros.
-  // Aggregate assignment can instead create a 1584-byte stack temporary.
-  memset(static_cast<void*>(&state), 0, sizeof(state));
+  static_assert(std::is_standard_layout<ExecutionState>::value &&
+                std::is_standard_layout<Continuation>::value,
+                "reset ranges require standard-layout continuation fields");
+  // Counts hide inactive call/loop frames and the operand stack. Each slot is
+  // completely written before its count grows; INPUT bytecode is likewise
+  // bounded by its emitted image size. Do not clear those dead scratch banks.
+  // Keep every live cursor and the whole I/O/scalar tail at their old zero
+  // representation, including input_value, flags, padding and the output NUL.
+  // In-place ranges also avoid a 1584-byte aggregate stack temporary.
+  memset(reinterpret_cast<uint8_t*>(&state.control) + offsetof(Continuation, pc),
+         0, sizeof(Continuation) - offsetof(Continuation, pc));
+  memset(reinterpret_cast<uint8_t*>(&state) + offsetof(ExecutionState, output),
+         0, sizeof(ExecutionState) - offsetof(ExecutionState, output));
 }
 inline uint8_t* input_image_storage(ExecutionState& state) {
   return reinterpret_cast<uint8_t*>(state.stack + INPUT_STACK_CAPACITY);

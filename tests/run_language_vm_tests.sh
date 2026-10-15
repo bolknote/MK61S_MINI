@@ -36,6 +36,17 @@ for variant in compact f64; do
   "$work/input-$variant"
 done
 
+# New launches must not read inactive call/loop/value slots left by a prior
+# module. Compare poisoned scratch with the historical all-zero continuation.
+for backend in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+    -DMK61_MATH_BACKEND="$backend" \
+    -I"$root/code" "$root/tests/language_vm_reset_self_test.cpp" \
+    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" \
+    "$root/code/language_vm_validation.cpp" -o "$work/reset-$backend"
+  "$work/reset-$backend"
+done
+
 # Arduino compiles every .cpp, including this experimental compiler when both
 # VM placements are off. Its unused APP-only frames must not enter resident
 # stack analysis. Only compiler APPs retain full-program entry points;

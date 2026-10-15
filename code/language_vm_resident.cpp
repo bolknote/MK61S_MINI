@@ -356,10 +356,11 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   const uint32_t revision = image_revision();
   const uint16_t source_id=cacheable?cached_source(language,command,a,*values):0xFFFF;
 #endif
-  CompilerContext context = {};
-  context.compile.magic=FLOW_CONTEXT_MAGIC; context.compile.original_command=(uint32_t)command;
-  context.compile.values=values; context.compile.command=(uint32_t)command;
-  context.compile.argument0=a; context.compile.argument1=b; context.language=language;
+  // Initialize only the union member used by this launch. A RAM hit never
+  // enters the compiler stage; clearing both stages repeats 184 bytes per RUN.
+  CompilerContext context;
+  context.execution={}; context.source_id=0; context.language=language;
+  context.clear_requested=0; context.prepared=false; context.cache_target=false;
   context.cache_driver=0xFFFF;
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   context.source_id=source_id;
@@ -414,6 +415,12 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     }
   }
 #endif
+  if(!context.prepared) {
+    context.compile={};
+    context.compile.magic=FLOW_CONTEXT_MAGIC; context.compile.original_command=(uint32_t)command;
+    context.compile.values=values; context.compile.command=(uint32_t)command;
+    context.compile.argument0=a; context.compile.argument1=b;
+  }
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   const uint16_t driver=!context.prepared && cacheable && source_id!=0xFFFF?file_cache_driver():0xFFFF;
   context.cache_driver=driver;

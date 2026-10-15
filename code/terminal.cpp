@@ -4910,7 +4910,7 @@ terminal_protocol::Result class_terminal::execute_script_line(
      (!trap_mode || terminal_command_allowed_in_trap(CMD_IF))) {
     // False conditions neither mutate the shared interactive buffer nor
     // enter the full terminal dispatcher. True nested IFs consume prefixes
-    // iteratively; OPEN/other actions still use the normal permission path.
+    // iteratively; final actions retain their normal permission policy.
     while(const char* args=terminal_catalog::conditional_arguments(line)) {
 #if defined(MK61_OLED1602_WS0010)
       idle_signal_reset();
@@ -4929,6 +4929,23 @@ terminal_protocol::Result class_terminal::execute_script_line(
     }
   }
   len=(usize)(end-line);
+
+  // OPEN only returns a synchronous action to M61; it does not execute here.
+  // Borrow the original arguments instead of copying the interactive buffer
+  // and scanning the entire command catalog. Keep denied/empty/other forms on
+  // the ordinary dispatcher, including its diagnostics and side effects.
+  if(terminal_command_allowed_in_script(CMD_OPEN) &&
+     (!trap_mode || terminal_command_allowed_in_trap(CMD_OPEN))) {
+    const char* args=terminal_catalog::open_arguments(line);
+    if(args && !terminal_core::at_end(args)) {
+#if defined(MK61_OLED1602_WS0010)
+      idle_signal_reset();
+#endif
+      cancel_file_upload();
+      return script_action(terminal_protocol::ResultKind::OPEN_FILE,
+                           terminal_core::skip_spaces(args));
+    }
+  }
 
   // input_buffer один на прошивку: пока скрипт исполняется между итерациями
   // loop(), в буфере может лежать недонабранная строка интерактивного

@@ -79,6 +79,15 @@ int main() {
     assert(terminal_catalog::lookup((const u8*) line) == CMD_IF);
     assert(terminal_catalog::conditional_arguments(line) == line + 2);
   }
+  assert(terminal_catalog::open_arguments(nullptr) == nullptr);
+  for(const char* line : {"", "o", "op", "ope", "open", "open? x", "openx x",
+                          "OPEN x", " open x", "open\rx", "open\nx"}) {
+    assert(terminal_catalog::open_arguments(line) == nullptr);
+  }
+  for(const char* line : {"open ", "open\t", "open x", "open\t\"some file.tbi\""}) {
+    assert(terminal_catalog::lookup((const u8*) line) == CMD_OPEN);
+    assert(terminal_catalog::open_arguments(line) == line + 4);
+  }
 #if MK61_TERMINAL_HELP_IS_EXTERNAL
   assert(std::strlen(terminal_catalog::help_signature()) == 9);
 #endif

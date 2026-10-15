@@ -1,0 +1,363 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "scenario": "Ordinary A/B/A; 3 searches per stage, compare 2 warm searches per stage",
+  "baseline_commit": "10f5138f2ea2e8a569082ba1bf153e476b8cd7cd",
+  "branch": "feature/vm-module-launch",
+  "source_sha256": {
+    "code/language_vm_abi.hpp": "0a96742662f5672b17b5719b1ec110494a200d7c0dbd92a91f15b57d6c20e38a",
+    "code/language_vm_resident.cpp": "3085da374aa0414b62e1c7a49d8b1e6d602e723a19d9df81609703e58b145e75",
+    "code/terminal.cpp": "e66b431c074aee337e2fbee6792025f801255c589a2d7fbf282b5bfcbf6ca39f",
+    "code/terminal_catalog.cpp": "e45488d06d486cc7cc7352a172ff53f96ec8e00c3a6bfb77a825053d0dfaf64c",
+    "code/terminal_catalog.hpp": "1d6348477da2559f659cb24ae056ea218d713f0af989682c5bca2852fe741aec"
+  },
+  "device": "AEB505B6E0067623",
+  "profile": "classic-v3-uc1609",
+  "clock_hz": 96000000,
+  "math_backend": "LIBM",
+  "usb_screen": true,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "RAM_VM_cache_bytes": 24576,
+  "density": true,
+  "file_cache": true,
+  "stages": [
+    {
+      "stage": "baseline",
+      "firmware": {
+        "build": "2B243A96",
+        "bytes": 359960,
+        "sha256": "bd918a70cf571430c8dc8fd5e4487110473a1f94473f21b463ca0511ffd089fc"
+      },
+      "seconds": [
+        54.08592504201806,
+        44.92464441599441,
+        44.996932250011014
+      ],
+      "warm_median_seconds": 44.96078833300271,
+      "frames_crc_verified": 1043,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 10608,
+      "zx0_decode_calls": [
+        340,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        367,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        11,
+        0,
+        0
+      ]
+    },
+    {
+      "stage": "candidate",
+      "firmware": {
+        "build": "56B3329F",
+        "bytes": 360072,
+        "sha256": "e5d56c43e12ffbbc0049cf4d5a8750de3782cff0da29339622134bde37dbee03"
+      },
+      "seconds": [
+        45.13175066601252,
+        44.38446424997528,
+        44.46923379099462
+      ],
+      "warm_median_seconds": 44.42684902048495,
+      "frames_crc_verified": 1000,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 10600,
+      "zx0_decode_calls": [
+        189,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        0,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "stage": "control",
+      "firmware": {
+        "build": "2B243A96",
+        "bytes": 359960,
+        "sha256": "bd918a70cf571430c8dc8fd5e4487110473a1f94473f21b463ca0511ffd089fc"
+      },
+      "seconds": [
+        45.67690295900684,
+        44.943827165989205,
+        45.01443529201788
+      ],
+      "warm_median_seconds": 44.97913122900354,
+      "frames_crc_verified": 1017,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 10608,
+      "zx0_decode_calls": [
+        189,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        0,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "time_reduction_vs_baseline_percent": 1.1875666159657405,
+  "time_reduction_vs_control_percent": 1.2278632188486238,
+  "control_drift_percent": 0.04079754088157639,
+  "speedup_vs_mean_controls": 1.0122248318864062,
+  "first_runs_are_matched_cold": false,
+  "cold_note": "First A creates absent file-cache images. All stages reset RAM; use only warm repeats for the speedup.",
+  "nodes_each": 420,
+  "move_each": "e2e3",
+  "all_complete_boards_identical": true,
+  "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "frames_crc_verified": 3060,
+  "resident_flash_delta_bytes": 112,
+  "static_RAM_bytes_each": 28072,
+  "native_max_frame_bytes_each": 1928,
+  "retained_main_terminal_frames_each": [
+    80,
+    608
+  ],
+  "hardware_peak_stack_delta_bytes": 8,
+  "hardware_stack_note": "Candidate uses 8 more bytes than both controls; this is not zero stack growth. Budget remains 16384.",
+  "same_system_APP_bytes_for_all_stages": {
+    "LANGVM.APP": {
+      "bytes": 10423,
+      "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+    },
+    "LANGIN.APP": {
+      "bytes": 11778,
+      "sha256": "f0dd70bb63aaf6b7ef17481ae8a6ee5cf6ead91858ae364881c6882bfbf9c52d"
+    },
+    "BASIC.APP": {
+      "bytes": 13762,
+      "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+    },
+    "FOCAL.APP": {
+      "bytes": 13384,
+      "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 6988,
+      "sha256": "e4307494db8b370410cb35c7fea474ab06a00fc001caf88842f33aa991b24a78"
+    }
+  },
+  "APP_note": "Matched hardware run uses the existing identical APP set. Newly built cold LANGIN/VMSTORE are separately qualified by host/ARM/resource gates.",
+  "ABI_bytecode_game_or_limits_changed": false,
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "mini_touched": false,
+    "firmware": {
+      "build": "D80CE1D1",
+      "bytes": 359200,
+      "sha256": "0f8c6eb3a990a4015ef463eada08e370435fb00fe6340de099dd0f102338ecf1"
+    },
+    "crc_valid": true,
+    "crash_none": true,
+    "alarms_off": true,
+    "calculator_state": "exact reg/stk/dump/pwd equality; empty/zero/IP0/root",
+    "file_verification": "full fingerprint before and after restoring original firmware",
+    "process_exit_code": 0,
+    "msc_enabled_by_test": false
+  },
+  "raw_report": ".build/vm-open-20261015.cslGRi/hardware/attempt-1/report.json",
+  "raw_log": ".build/vm-open-20261015.cslGRi/hardware.log",
+  "local_qualification": ".build/vm-module-launch-20261015/qualification.json",
+  "outcome": "ACCEPTED_FASTER",
+  "implementation": {
+    "OPEN": "Recognize permitted nonempty OPEN using the shared command catalog and return its synchronous action directly, preserving sequential IF, argument positions and fallback diagnostics.",
+    "VM_reset": "Clear only live cursor and complete I/O/scalar ranges: 144 instead of 1584 bytes; inactive call, loop and operand slots are written before being read.",
+    "VM_prepare": "Initialize only the active CompilerContext union member; RAM cache hits no longer clear a compiler stage before constructing the VM stage.",
+    "path_resolution": "Existing storage_path lookup hints, collision/name validation and invalidation remain unchanged."
+  },
+  "build_and_test_qualification": {
+    "base_revision": "10f5138f2ea2e8a569082ba1bf153e476b8cd7cd",
+    "branch": "feature/vm-module-launch",
+    "SOURCE_DATE_EPOCH": 1791969300,
+    "source_sha256": {
+      "code/language_vm_abi.hpp": "0a96742662f5672b17b5719b1ec110494a200d7c0dbd92a91f15b57d6c20e38a",
+      "code/language_vm_resident.cpp": "3085da374aa0414b62e1c7a49d8b1e6d602e723a19d9df81609703e58b145e75",
+      "code/terminal.cpp": "e66b431c074aee337e2fbee6792025f801255c589a2d7fbf282b5bfcbf6ca39f",
+      "code/terminal_catalog.cpp": "e45488d06d486cc7cc7352a172ff53f96ec8e00c3a6bfb77a825053d0dfaf64c",
+      "code/terminal_catalog.hpp": "1d6348477da2559f659cb24ae056ea218d713f0af989682c5bca2852fe741aec"
+    },
+    "resident": {
+      "baseline": {
+        "crc": "2B243A96",
+        "bytes": 359960,
+        "sha256": "bd918a70cf571430c8dc8fd5e4487110473a1f94473f21b463ca0511ffd089fc",
+        "ELF_source_runtime_resource_stack_gates": "PASS",
+        "static_RAM_bytes": 28072,
+        "max_native_frame_bytes": 1928,
+        "retained_main_terminal_frames": [
+          80,
+          608
+        ]
+      },
+      "candidate": {
+        "crc": "56B3329F",
+        "bytes": 360072,
+        "sha256": "e5d56c43e12ffbbc0049cf4d5a8750de3782cff0da29339622134bde37dbee03",
+        "ELF_source_runtime_resource_stack_gates": "PASS",
+        "static_RAM_bytes": 28072,
+        "max_native_frame_bytes": 1928,
+        "retained_main_terminal_frames": [
+          80,
+          608
+        ]
+      },
+      "candidate-core": {
+        "crc": "C1AD8ED6",
+        "bytes": 350416,
+        "sha256": "e0f1ebc7466ffed698cdae98c885f18a80f1b7d4bff42c7913bbc699382b6b76",
+        "ELF_source_runtime_resource_stack_gates": "PASS",
+        "static_RAM_bytes": 28072,
+        "max_native_frame_bytes": 1928,
+        "retained_main_terminal_frames": [
+          80,
+          608
+        ]
+      }
+    },
+    "new_system_apps": {
+      "BASIC.APP": {
+        "file_bytes": 13762,
+        "image_memory_bytes": [
+          19068,
+          19120
+        ],
+        "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+      },
+      "FOCAL.APP": {
+        "file_bytes": 13384,
+        "image_memory_bytes": [
+          18064,
+          18092
+        ],
+        "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+      },
+      "LANGIN.APP": {
+        "file_bytes": 11790,
+        "image_memory_bytes": [
+          15480,
+          15496
+        ],
+        "sha256": "20eba87e19a50753a19d2bb87cf8396039d664cab59ee60068ae3dfc9822ec75"
+      },
+      "LANGVM.APP": {
+        "file_bytes": 10423,
+        "image_memory_bytes": [
+          15224,
+          15244
+        ],
+        "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+      },
+      "VMCache/VMSTORE.APP": {
+        "file_bytes": 6970,
+        "image_memory_bytes": [
+          8619,
+          8636
+        ],
+        "sha256": "950510b2e5e5bb934bc28daf8a15dd37b9978085ca2ad1e33e4235c1970fcf77"
+      }
+    },
+    "host_tests": {
+      "ASan_UBSan": true,
+      "terminal_cases": 773264,
+      "poisoned_reset_cases": 312,
+      "cache_LRU_density_USB": 4,
+      "file_cache_flow_variants": 4,
+      "overlay_variants": 4,
+      "VM_BASIC_FOCAL_and_INPUT": "PASS",
+      "workspace_partition": "PASS"
+    },
+    "no_ABI_or_limit_changes": true,
+    "APP_RAM_pool_gate": "PASS: maximum 20480-byte APP plus 2560-byte stage plus 8264-byte MSC, effective45376 bytes; every actual new APP header/CRC/capacity validated",
+    "F401_release_cases_passed": 9,
+    "F401_report": ".build/vm-module-launch-20261015/f401-matrix/firmware/F401_RESOURCE_REPORT.json",
+    "cross_MCU_WS0010_RAM_comparison": "NOT_RUN: no paired F411 release-matrix root",
+    "ARM_overlay_new_APPs": {
+      "generation": 14,
+      "profile": "libm",
+      "poisoned_inactive_continuation": true,
+      "native_call_stack_peaks": {
+        "startup": 4072,
+        "verification": 980,
+        "program": 1192,
+        "input": 916,
+        "expression": 656,
+        "finish": 376
+      },
+      "stress_native_call_stack_peaks": {
+        "startup": 3964,
+        "verification": 980,
+        "program": 664,
+        "input": 3196,
+        "expression": 736,
+        "finish": 376
+      },
+      "compiler_workspace_bytes": {
+        "BASIC": 3976,
+        "FOCAL": 1708
+      },
+      "input_image_c_stack_bytes": 0,
+      "input_image_in_value_stack": true,
+      "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+    },
+    "ARM_environment": {
+      "result": "PASS",
+      "python": "/usr/bin/python3 x86_64 3.9.6 via Rosetta",
+      "unicorn": "2.1.4 x86_64 from /private/tmp/mk61-hardware-core-20261013/unicorn-x86",
+      "initial_native_arm64_attempt": "host SIGILL exit132 in Unicorn; not a firmware test PASS; restarted unchanged binaries in x86 environment"
+    },
+    "F401_max_frame_bytes": 1936,
+    "F401_frame_limit_bytes": 2048,
+    "artifacts": ".build/vm-module-launch-20261015/"
+  },
+  "hardware_measurement_scope": "Ordinary complete chess search, not per-OPEN timing or a diagnostic profile. Algorithm, depth, node order, scoring and book setting are unchanged."
+}
