@@ -32,9 +32,11 @@ static constexpr Profile F401_PROFILE = {
 static constexpr Profile F411_PROFILE = {
     0x20000000UL, 128UL * 1024UL, 16UL * 1024UL, 256UL, true};
 
-// At most five regions cover every 32-byte-aligned APP of up to 20 KiB
-// immediately below F411's guard. No executable padding outside its lease.
+// Five regions cover any <=20-KiB APP with a 32-byte-aligned start and
+// 256-byte-aligned end. Scoped buffers can live above it; executable padding
+// outside the APP lease is never granted.
 static constexpr u8 APP_REGION_COUNT = 5;
+static constexpr u32 APP_END_ALIGNMENT = 256;
 
 constexpr Layout with_app_execution(Layout layout, u8 available_regions) {
   if(layout.sram_execute_never) {

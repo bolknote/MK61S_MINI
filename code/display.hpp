@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "rust_types.h"
+#include "shared_memory.hpp"
 #include <Arduino.h>
 #include <Print.h>
 
@@ -571,7 +572,7 @@ class MK61Display : public MK61DisplayOutput {
                   "display height must contain whole UC1609 pages");
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_WIDTH = 32;
     static constexpr u8 TOP_RIGHT_OVERLAY_MAX_HEIGHT = 16;
-#if MK61_ENABLE_USB_SCREEN
+#if MK61_ENABLE_USB_SCREEN && !MK61_SCOPED_RESIDENT_BUFFERS
     // В обычном режиме UC1609 отрисовщику нужна только первая страница на 192 байта.
     // USB-экран повторно использует этот блок как полный кадровый буфер 192x64.
     uint8_t render_buffer[usb_screen::FRAME_BYTES];
@@ -674,8 +675,15 @@ class MK61Display : public MK61DisplayOutput {
 #if MK61_ENABLE_USB_SCREEN
 #if defined(MK61_DISPLAY_LCD1602)
     // Графическую ОЗУ LCD1602 нельзя прочитать, поэтому нужен отдельный буфер.
+#if !MK61_SCOPED_RESIDENT_BUFFERS
     u8 usb_framebuffer[usb_screen::FRAME_BYTES];
+#endif
     lcd_display::TextProfile usb_text_profile;
+#endif
+#if MK61_SCOPED_RESIDENT_BUFFERS
+    shared_memory::LifetimeBuffer usb_framebuffer_storage;
+    bool prepareUsbFramebuffer();
+    void releaseUsbFramebuffer();
 #endif
     usb_screen::Surface usb_surface;
     bool usb_screen_active;

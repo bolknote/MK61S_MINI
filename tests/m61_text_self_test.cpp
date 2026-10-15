@@ -4,6 +4,7 @@
 #include "program_load.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
+#include "shared_memory.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -1669,6 +1670,41 @@ static void test_binary_load_uses_script_directory_and_reports_failure() {
   assert(reinit_count==1 && std::memcmp(loaded_program,expected,sizeof(expected))==0);
 }
 
+#if MK61_SCOPED_RESIDENT_BUFFERS
+static void test_scoped_runtime_lifetime_and_oom() {
+  using namespace shared_memory;
+  reset_host();
+  const usize total=capacity(Arena::OVERLAY);
+  add_script("WATCH", "bind OK run :help\nret\n:help\nret\n");
+  for(unsigned order=0;order<2;++order) {
+    Lease app;
+    if(order==0) assert(app.acquire(Arena::APP,Owner::LOADABLE_MODULE,APP_MAX_SIZE));
+    assert(m61_text::load_program("WATCH") && m61_text::active());
+    if(order==1) assert(app.acquire(Arena::APP,Owner::LOADABLE_MODULE,APP_MAX_SIZE));
+    auto* const address=app.data();
+    std::memset(address,0x9A,app.size());
+    const usize active_capacity=capacity(Arena::OVERLAY);
+    assert(m61_text::handle_ok_key());m61_text::service();
+    assert(m61_text::active() && capacity(Arena::OVERLAY)==active_capacity);
+    assert(m61_text::clear_bindings_and_traps());
+    assert(!m61_text::active() && app.ok() && app.data()==address);
+    for(usize i=0;i<app.size();++i) assert(address[i]==0x9A);
+    assert(validate_invariants());app.reset();
+    assert(capacity(Arena::OVERLAY)==total);
+  }
+  Lease full;
+  assert(full.acquire(Arena::OVERLAY,Owner::VFAT_STAGE,total));
+  std::memset(full.data(),0x65,total);
+  assert(!m61_text::load_program("WATCH") && !m61_text::active());
+  const auto error=require_error();
+  assert(std::strcmp(error.message,"not enough RAM for script runtime")==0);
+  for(usize i=0;i<total;++i) assert(full.data()[i]==0x65);
+  assert(validate_invariants());full.reset();
+  assert(m61_text::load_program("WATCH"));m61_text::cancel();
+  assert(capacity(Arena::OVERLAY)==total && validate_invariants());
+}
+#endif
+
 int main(void) {
   test_binary_load_uses_script_directory_and_reports_failure();
   test_nested_open_preserves_program_and_root_still_clears();
@@ -1716,6 +1752,9 @@ int main(void) {
   test_manual_clear_preserves_running_script();
   test_manual_clear_inside_trap_restores_context();
   test_ret_returns_from_nested_script_and_ends_root();
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  test_scoped_runtime_lifetime_and_oom();
+#endif
   std::printf("m61_text_self_test: ok\n");
   return 0;
 }

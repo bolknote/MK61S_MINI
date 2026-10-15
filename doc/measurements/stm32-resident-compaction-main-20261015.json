@@ -1,0 +1,129 @@
+{
+  "status": "PASS",
+  "main_before": "119c92761240a6d613bf0d94f8df1398fc78eb62",
+  "feature_before": "09060ce2d66e505be710adc663ea5f40e53a9a9c",
+  "production_inputs_sha256": "c6a6a9e9d5126d650825b24eccb23133569231e7ce2e1e58965e141bca746aa6",
+  "source_date_epoch": 1791969300,
+  "qualified_at_utc": "2026-10-15T14:49:18.235539+00:00",
+  "checks": [
+    {
+      "test": "memory",
+      "status": "PASS"
+    },
+    {
+      "test": "terminal",
+      "status": "PASS"
+    },
+    {
+      "test": "ui",
+      "status": "PASS"
+    },
+    {
+      "test": "basic-graphics",
+      "status": "PASS"
+    },
+    {
+      "test": "m61",
+      "status": "PASS"
+    },
+    {
+      "test": "build-system-gates-arm-mini",
+      "status": "PASS",
+      "flash": 346512
+    },
+    {
+      "test": "build-system-gates-arm-classic",
+      "status": "PASS",
+      "flash": 374688
+    },
+    {
+      "test": "mpu-policy",
+      "status": "PASS"
+    },
+    {
+      "test": "c9",
+      "status": "PASS"
+    },
+    {
+      "test": "vm-integer",
+      "status": "PASS"
+    },
+    {
+      "test": "vfat",
+      "status": "PASS"
+    },
+    {
+      "test": "filesystem",
+      "status": "PASS"
+    },
+    {
+      "test": "vm-cache",
+      "status": "PASS"
+    }
+  ],
+  "images": {
+    "classic": {
+      "flash": 374688,
+      "static_ram": 24976,
+      "free_pool": 89448,
+      "lazy": 40960,
+      "scoped": 5184,
+      "placement": 224,
+      "effective": 43072,
+      "bin_sha256": "fbcf6d71a813f80b7e7a52e61d2639d2da2022f6940e871e831ad8d613eb1660",
+      "elf_sha256": "32fef1fbe82b3b3b5facb578a370cbe32fa8f1544281b372e452b38383155949",
+      "mpu_arm": {
+        "status": "PASS",
+        "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/merge-main/classic/resident.elf",
+        "exact_spans": 247,
+        "invalid_cases": 7,
+        "granules_per_span": 4096,
+        "allocator_spans": 12,
+        "app_regions": 5,
+        "neighbor_sram_xn": true,
+        "null_stack_guards_unchanged": true,
+        "callee_saved_and_sp": true
+      },
+      "codec_arm": {
+        "status": "PASS",
+        "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/merge-main/classic/resident.elf",
+        "calls": 1600,
+        "alignments": 8,
+        "exact_memory_bounds": true,
+        "callee_saved_and_SP": true
+      }
+    },
+    "mini": {
+      "flash": 346512,
+      "static_ram": 23424,
+      "free_pool": 91000,
+      "lazy": 40960,
+      "scoped": 5184,
+      "placement": 224,
+      "effective": 44608,
+      "bin_sha256": "b4a47a1eded5b4d1d986b508c82f896a582ecc46d6ec04ed1d3eb9b0cbb61b82",
+      "elf_sha256": "d6d66b09db1f46ba36713f695fc6767394dc6db7915d9d65bc71c4a624e11b5d",
+      "mpu_arm": {
+        "status": "PASS",
+        "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/merge-main/mini/resident.elf",
+        "exact_spans": 247,
+        "invalid_cases": 7,
+        "granules_per_span": 4096,
+        "allocator_spans": 12,
+        "app_regions": 5,
+        "neighbor_sram_xn": true,
+        "null_stack_guards_unchanged": true,
+        "callee_saved_and_sp": true
+      },
+      "codec_arm": {
+        "status": "PASS",
+        "elf": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-resident-compaction-20261015/merge-main/mini/resident.elf",
+        "calls": 1600,
+        "alignments": 8,
+        "exact_memory_bounds": true,
+        "callee_saved_and_SP": true
+      }
+    }
+  },
+  "hardware_scope": "The physical A/B belongs to the frozen b0c7528a2 comparison in stm32-resident-compaction-20261015.json; this merged-main integration qualification is local."
+}

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+bash "$root/tests/run_c9_inode_wire_tests.sh"
 build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-program-store.XXXXXX")"
 out="$build_dir/program_store_self_test"
 python3 "$root/tests/app_memory_surface.py" "$build_dir/app_memory_acquire.inc"
@@ -12,6 +13,15 @@ fi
 shared_flags=()
 if [[ "${MK61_TEST_STORAGE_SHARED_TEMP:-0}" == 1 ]]; then
   shared_flags=(-DMK61_STORAGE_SHARED_TEMP=1)
+fi
+if [[ "${MK61_TEST_SCOPED_RESIDENT_BUFFERS:-0}" == 1 ]]; then
+  shared_flags+=(-DMK61_SCOPED_RESIDENT_BUFFERS=1)
+  if [[ "${MK61_TEST_STORAGE_SHARED_TEMP:-0}" == 1 ]]; then
+    # The old 1536-byte payload lived outside simulated_ram. Credit its move
+    # into that pool while charging 64 bytes for the new host handle/manager.
+    # All APP/stage/MSC sizes and existing assertions remain unchanged.
+    shared_flags+=(-DMK61_TEST_RAM_SIZE=34240)
+  fi
 fi
 sanitizer_flags=()
 if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then

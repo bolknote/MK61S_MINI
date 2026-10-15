@@ -52,6 +52,9 @@ class Surface {
     explicit Surface(u8* framebuffer);
 #endif
 
+    // The caller owns the backing storage. Rebinding is allowed only while
+    // inactive, so an attached frame remains stable for the whole session.
+    bool setFramebuffer(u8* pixels);
     void begin(TextProfile profile = profile5x8(), bool preserve_text = false,
                u8 cols = COLS);
     void end(void);

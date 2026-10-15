@@ -1798,7 +1798,11 @@ void test_screen_buffer_loan() {
   DisplayBufferLoan loan, other;
   assert(!loan.acquire(display,0) && !loan.acquire(display,1345));
   assert(loan.acquire(display,1344));
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  assert(loan.data() && display.usbScreenFramebuffer()==nullptr);
+#else
   assert(loan.data()==display.usbScreenFramebuffer()+192);
+#endif
   std::memset(loan.data(),0xA5,1344);
   assert(!other.acquire(display,1));
   const u32 revision=display.displayModeRevision();
@@ -1840,6 +1844,51 @@ void test_disk_usb_display_integration() {
   ui_display_test::now = 0;
 }
 
+#if MK61_SCOPED_RESIDENT_BUFFERS
+void test_scoped_frame_coexists_and_releases() {
+  using namespace shared_memory;
+  MK61Display display; startUi(display);
+  const usize total=capacity(Arena::OVERLAY);
+  assert(display.usbScreenFramebuffer()==nullptr);
+  display.printUiLine(0,"Allocation failure");
+  const Frame physical=ui_display_test::frame;
+  const u32 revision=display.displayModeRevision();
+  {
+    Lease full(Arena::OVERLAY,Owner::VFAT_STAGE,total);
+    assert(full.ok()); std::memset(full.data(),0x91,full.size());
+    assert(!display.enterUsbScreen() && !display.usbScreenActive());
+    assert(display.usbScreenFramebuffer()==nullptr && display.displayModeRevision()==revision);
+    expectFrame(physical);
+    for(usize i=0;i<full.size();++i) assert(full.data()[i]==0x91);
+    assert(validate_invariants());
+  }
+  for(unsigned order=0;order<2;++order) {
+    Lease app(Arena::APP,Owner::LOADABLE_MODULE,APP_MAX_SIZE);
+    LifetimeBuffer m61;
+    assert(app.ok() && m61.acquire(Owner::M61_RUNTIME,2100));
+    auto* const address=app.data();std::memset(address,0x42,app.size());
+    assert(display.enterUsbScreen() && display.usbScreenFramebuffer());
+    Frame before;std::memcpy(before.data(),display.usbScreenFramebuffer(),before.size());
+    if(order==0)m61.reset();else app.reset();
+    assert(std::memcmp(before.data(),display.usbScreenFramebuffer(),before.size())==0);
+    assert(validate_invariants());display.leaveUsbScreen();
+    assert(display.usbScreenFramebuffer()==nullptr);
+    if(app.ok()) {
+      assert(app.data()==address);
+      for(usize i=0;i<app.size();++i)assert(address[i]==0x42);
+      app.reset();
+    }
+    m61.reset();assert(capacity(Arena::OVERLAY)==total && validate_invariants());
+  }
+  for(unsigned cycle=0;cycle<100;++cycle) {
+    assert(display.enterUsbScreen() && display.usbScreenFramebuffer());
+    display.leaveUsbScreen();
+    assert(display.usbScreenFramebuffer()==nullptr);
+    assert(capacity(Arena::OVERLAY)==total && validate_invariants());
+  }
+}
+#endif
+
 void test_usb_waits_for_physical_display_ack() {
   MK61Display display;
   startUi(display);
@@ -1849,10 +1898,17 @@ void test_usb_waits_for_physical_display_ack() {
   ui_display_test::sleep_failures_remaining = 1;
   display.printUiLine(0,"Failed attach keeps text");
   const Frame before_attach=ui_display_test::frame;
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  const usize before_free=shared_memory::capacity(shared_memory::Arena::OVERLAY);
+#endif
   const u8 before_cols=display.cols(), before_rows=display.rows();
   const u8 before_x=display.cursorX(), before_y=display.cursorY();
   assert(!display.enterUsbScreen());
   assert(!display.usbScreenActive());
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  assert(display.usbScreenFramebuffer()==nullptr);
+  assert(shared_memory::capacity(shared_memory::Arena::OVERLAY)==before_free);
+#endif
   assert(!ui_display_test::sleeping);
   assert(ui_display_test::sleep_calls == 1);
   assert(display.deepIdleReady());
@@ -2103,6 +2159,9 @@ int main() {
   test_screen_buffer_loan();
 #endif
   test_disk_usb_display_integration();
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  test_scoped_frame_coexists_and_releases();
+#endif
   test_usb_waits_for_physical_display_ack();
   test_usb_return_to_ui_geometry();
   test_repeated_usb_handoff_with_wide_ui_redraw();
