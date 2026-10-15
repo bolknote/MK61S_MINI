@@ -1,0 +1,285 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "date": "2026-10-15",
+  "outcome": "ACCEPTED_FASTER",
+  "baseline_commit": "1fa3c4e9e",
+  "branch": "feature/vm-if-numeric-operands",
+  "implementation": "Shared canonical numeric word reader for IF and mk61_ref, preserving their separate legacy fallbacks",
+  "production_changed_files": [
+    "code/mk61_ref.hpp",
+    "code/terminal.cpp"
+  ],
+  "bytecode_numeric_ABI_or_game_changed": false,
+  "limits_weakened": false,
+  "transfer_patch_sha256": "8ec4dab8a65c812925f19fd3e4286ad5f8985b5df43e0d78372900d9d67d6ef1",
+  "frozen_production_SHA256": {
+    "code/mk61_ref.hpp": "fed23c849e82d51e68bc3a31ae77ecf6eb1937c18e57fc98de6b3071f4f4581a",
+    "code/terminal.cpp": "c9a77a4df3797e5bdb13c43bdc55eb64796df42487361ea91a9c3cb1b8be4011"
+  },
+  "decoder": {
+    "canonical": "8 BCD digits 0..9; signs 0/9; order digits 0..9; negative stored order 00 falls back",
+    "exact_scaling": "Convert full integer mantissa M to binary64, then multiply/divide by pow10_int(abs(E-7)); same operation order as old strtod; exact integer shortcut for E=0..7",
+    "signed_zero_preserved": true,
+    "noncanonical_IF_and_Ref_fallbacks_separate": true,
+    "invalid_fast_output_untouched": true,
+    "physical_registers_unchanged": true,
+    "host_and_portable_Ref_paths_unchanged": true,
+    "non_binary64_uses_legacy_fallback": true
+  },
+  "hardware": {
+    "device": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM",
+    "usb_screen": true,
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "runs_per_stage": 3,
+    "ram_VM_cache_bytes": 24576,
+    "density": true,
+    "file_cache": true,
+    "resident_builds": [
+      "9CCDFDFB",
+      "EF5CFF29",
+      "9CCDFDFB"
+    ],
+    "resident_SHA256": [
+      "5134a1905218e9d557cc42fce2636cc5f6be04a35dc6afe3dcb4e4094d153cac",
+      "07203b927323eb04ddd5f69d67a94c90053d9db990b8b5319288c7b4c7901dd3",
+      "5134a1905218e9d557cc42fce2636cc5f6be04a35dc6afe3dcb4e4094d153cac"
+    ],
+    "baseline_seconds": [
+      55.16639654201572,
+      46.15341616698424,
+      46.22249495901633
+    ],
+    "candidate_seconds": [
+      45.6623986659979,
+      44.90919937498984,
+      44.98628383298637
+    ],
+    "control_seconds": [
+      46.890631666989066,
+      46.15416879099212,
+      46.240253167023184
+    ],
+    "warm_medians_seconds": [
+      46.18795556300029,
+      44.947741603988106,
+      46.19721097900765
+    ],
+    "time_reduction_vs_baseline_percent": 2.685145821881052,
+    "time_reduction_vs_control_percent": 2.7046424416991566,
+    "control_drift_percent": 0.020038592084326012,
+    "speedup_vs_mean_of_controls": 1.0276953106561735,
+    "first_runs_are_matched_cold": false,
+    "cold_note": "Each stage resets RAM. First baseline also creates missing file-cache images; compare only warm repeats, not 55.166 to 45.662.",
+    "nodes_each": 420,
+    "move_each": "e2e3",
+    "all_complete_boards_identical": true,
+    "board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_CRC_verified": 3055,
+    "all_keyboard_overflow_counters": 0,
+    "warm_ZX0_decode_calls_each": 174,
+    "warm_NOR_write_calls_each": 0,
+    "warm_NOR_erase_calls_each": 0,
+    "system_apps": {
+      "LANGVM.APP": {
+        "bytes": 10423,
+        "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+      },
+      "LANGIN.APP": {
+        "bytes": 11778,
+        "sha256": "f0dd70bb63aaf6b7ef17481ae8a6ee5cf6ead91858ae364881c6882bfbf9c52d"
+      },
+      "BASIC.APP": {
+        "bytes": 13762,
+        "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+      },
+      "FOCAL.APP": {
+        "bytes": 13384,
+        "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+      },
+      "VMCache/VMSTORE.APP": {
+        "bytes": 6988,
+        "sha256": "e4307494db8b370410cb35c7fea474ab06a00fc001caf88842f33aa991b24a78"
+      }
+    }
+  },
+  "resources": {
+    "baseline_flash_bytes": 360328,
+    "candidate_flash_bytes": 360728,
+    "flash_delta_bytes": 400,
+    "static_RAM_bytes_each": 28056,
+    "new_static_cache_or_heap_allocations": false,
+    "max_native_frame_bytes_each": 1928,
+    "native_frame_limit_bytes": 5120,
+    "foreground_main_frame_each": 80,
+    "foreground_terminal_frame_each": 608,
+    "hardware_stack_budget_bytes": 16384,
+    "hardware_stack_remaining_baseline_candidate_control": [
+      10616,
+      10608,
+      10608
+    ],
+    "stack_note": "Candidate matches reverse control; initial control differs by 8 bytes. Record the observed watermarks, not a fixed 8-byte growth or an absolute zero-growth promise.",
+    "CORE_candidate": {
+      "build": "EC9DD68D",
+      "flash_bytes": 351068,
+      "SHA256": "6ac6eb58d3914585bebff9170833b45645e3d8d652d485f9f7af70b2a71b6b85",
+      "hardware_benchmarked": false
+    }
+  },
+  "tests": {
+    "ASan_UBSan_fail_fast": true,
+    "physical_cases_each_backend": 8895936,
+    "physical_total_cases": 17791872,
+    "actual_production_IF_operand_cases_each_backend": 806200,
+    "actual_IF_operand_total_cases": 1612400,
+    "backends": [
+      "LIBM",
+      "CORE"
+    ],
+    "bit_exact_success_error_pointer_and_ring": true,
+    "terminal_dispatch_cases": 545168,
+    "suites": "PASS: numeric physical and extracted production operand, terminal/script/catalog, M61 controls/manuals, Ref and portable Ref",
+    "F411_LIBM_CORE_native_ELF_and_owned_source_runtime_gates": "PASS",
+    "F401_cases_passed": 9,
+    "F401_max_frame_bytes": 1936,
+    "F401_frame_limit_bytes": 2048,
+    "cross_MCU_WS0010_RAM_comparison": "NOT_RUN: no paired F411 release-matrix root; no stale-artifact substitution",
+    "initial_fixture_issue": "An early fixture cast out-of-representation-range values to an unfixed stack enum; UBSan rejected the test itself. Fixed fixture tests slots 5..7 and fails fast. Early numeric-tests.log is preserved and is not a sanitizer PASS."
+  },
+  "recovery": {
+    "status": "PASS",
+    "original_firmware_build": "B8E3A516",
+    "original_firmware_SHA256": "e5287a3bcbacfe3377ebb933bda7a6d4369394f382507634f42d6968994edb62",
+    "original_firmware_bytes": 359352,
+    "files_preserved": 44,
+    "directories_preserved": 4,
+    "original_APP_and_VMC_bytes_restored": true,
+    "calculator_program_registers_stack_IP_cwd_preserved": true,
+    "only_test_created_cache_files_removed": 10,
+    "hardware_CRC": "valid",
+    "crash": "none",
+    "alarms": "off",
+    "serial_closed": true,
+    "mini_touched": false,
+    "MSC_not_activated": true
+  },
+  "combined_main_note": "Isolated matched speedup uses 1fa3c4e9e; separate ordinary qualification of numeric reader plus MSC main 57835a271 passed on source commit31be1dea8. Later main7d16bb94d changes only an unrelated library game and test.",
+  "artifacts": ".build/vm-number-20261015.YS4Fks/",
+  "full_report": ".build/vm-number-20261015.YS4Fks/hardware/attempt-1/report.json",
+  "combined_main_qualification": {
+    "schema_version": 1,
+    "result": "PASS",
+    "scenario": "Ordinary qualification; not matched A/B/A",
+    "source_commit": "31be1dea8",
+    "source_note": "Numeric reader rebased onto MSC main 57835a271. This confirms compatibility; isolated A/B/A remains the evidence for the numeric-reader speedup.",
+    "device": "AEB505B6E0067623",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "firmware": {
+      "build": "2B243A96",
+      "bytes": 359960,
+      "sha256": "bd918a70cf571430c8dc8fd5e4487110473a1f94473f21b463ca0511ffd089fc",
+      "math_backend": "LIBM"
+    },
+    "chess": {
+      "opening_book": false,
+      "level": 2,
+      "maximum_depth": 8,
+      "runs_seconds": [
+        54.0311184169841,
+        44.94330212500063,
+        45.03262362501118
+      ],
+      "temperature": [
+        "cold with cache creation",
+        "warm",
+        "warm"
+      ],
+      "warm_median_seconds": 44.987962875005906,
+      "all_three_nodes": 420,
+      "all_three_move": "e2e3",
+      "complete_eight_rank_board": true,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "frames_crc_verified": 1040,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "keyboard_observation_scope": "before searches and after each search",
+      "zx0_decode_calls": [
+        340,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        364,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        10,
+        0,
+        0
+      ]
+    },
+    "stack": {
+      "budget_bytes": 16384,
+      "watermark_remaining_bytes": 10616,
+      "scope": "single high-water mark covering all three searches"
+    },
+    "recovery": {
+      "result": "PASS",
+      "process_exit_code": 0,
+      "restored": true,
+      "build": "B8E3A516",
+      "bytes": 359352,
+      "sha256": "e5287a3bcbacfe3377ebb933bda7a6d4369394f382507634f42d6968994edb62",
+      "crc_valid": true,
+      "crash_none": true,
+      "files_preserved": true,
+      "original_files": 44,
+      "original_directories": 4,
+      "added_cache_files_removed": 10,
+      "file_verification": "full path/length/SHA256 fingerprint before and after restoring original firmware",
+      "calculator_preserved": true,
+      "calculator_verification": "exact reg/stk/dump/pwd equality; empty program, zero registers and stacks, IP=0, pwd=/",
+      "alarms_off": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "msc_enabled_by_test": false,
+      "hardware_released_to_ep0_owner": true
+    },
+    "raw_report": ".build/vm-number-20261015.YS4Fks/hardware/combined-1/report.json",
+    "raw_log": ".build/vm-number-20261015.YS4Fks/combined-hardware.log"
+  },
+  "combined_main_build_validation": {
+    "source_commit": "31be1dea8079604981d8442545a74a6af61da993",
+    "source_main_base": "57835a271",
+    "additional_main_commit_before_merge": "7d16bb94d: only programs/library/8 Queens.m61 and its test; resident firmware sources unchanged",
+    "F411_LIBM_CORE_ELF_and_resource_gates": "PASS",
+    "static_RAM_bytes": 28072,
+    "LIBM_flash_bytes": 359960,
+    "CORE_flash_bytes": 350304,
+    "CORE_build": "F07B6AF0",
+    "max_native_frame_bytes": 1928,
+    "foreground_main_terminal_frames": [
+      80,
+      608
+    ],
+    "ASan_UBSan_physical_and_production_operand_cases": 19404272,
+    "numeric_integration_repeat": "PASS",
+    "F401_release_cases_passed": 9,
+    "F401_resource_report": ".build/vm-if-operands-20261015/combined-f401/firmware/F401_RESOURCE_REPORT.json",
+    "cross_MCU_WS0010_RAM_comparison": "NOT_RUN: no paired F411 release-matrix root",
+    "artifacts": ".build/vm-if-operands-20261015/"
+  }
+}
