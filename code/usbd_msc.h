@@ -48,11 +48,7 @@ uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size);
 /** @defgroup USBD_BOT_Exported_Defines
   * @{
   */
-/* Storage callbacks may defer a write until the firmware main loop can run it
- * outside the USB interrupt. Negative remains failure; zero is completed. */
-#define USBD_MSC_STORAGE_ERROR       (-1)
-#define USBD_MSC_STORAGE_OK          0
-#define USBD_MSC_STORAGE_BUSY        1
+#include "msc_disk.h"
 
 #define MSC_MAX_FS_PACKET            0x40U
 #define MSC_MAX_HS_PACKET            0x200U
@@ -76,42 +72,21 @@ uint8_t MK61_MSC_SetPreparedHandle(void* memory, uint32_t size);
 /** @defgroup USB_CORE_Exported_Types
   * @{
   */
-typedef struct _USBD_STORAGE
-{
-  int8_t (* Init)(uint8_t lun);
-  int8_t (* GetCapacity)(uint8_t lun, uint32_t *block_num, uint16_t *block_size);
-  int8_t (* IsReady)(uint8_t lun);
-  int8_t (* IsWriteProtected)(uint8_t lun);
-  int8_t (* Read)(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len);
-  int8_t (* Write)(uint8_t lun, uint8_t *buf, uint32_t blk_addr, uint16_t blk_len);
-  int8_t (* GetMaxLun)(void);
-  int8_t *pInquiry;
-
-} USBD_StorageTypeDef;
-
-
 typedef struct
 {
-  uint32_t                 max_lun;
-  uint32_t                 interface;
-  uint8_t                  bot_state;
-  uint8_t                  bot_status;
-  uint32_t                 bot_data_length;
-  uint8_t                  bot_data[MSC_MEDIA_PACKET];
-  USBD_MSC_BOT_CBWTypeDef  cbw;
-  USBD_MSC_BOT_CSWTypeDef  csw;
-
-  USBD_SCSI_SenseTypeDef   scsi_sense [SENSE_LIST_DEEPTH];
-  uint8_t                  scsi_sense_head;
-  uint8_t                  scsi_sense_tail;
-  uint8_t                  scsi_medium_state;
-  uint8_t                  host_eject_latched;
-
-  uint16_t                 scsi_blk_size;
-  uint32_t                 scsi_blk_nbr;
-
-  uint32_t                 scsi_blk_addr;
-  uint32_t                 scsi_blk_len;
+  uint8_t bot_data[MSC_MEDIA_PACKET];
+  USBD_MSC_BOT_CBWTypeDef cbw;
+  USBD_MSC_BOT_CSWTypeDef csw;
+  uint32_t scsi_blk_addr;
+  uint32_t scsi_blk_len;
+  uint16_t bot_data_length;
+  uint8_t bot_state;
+  uint8_t bot_status;
+  USBD_SCSI_SenseTypeDef scsi_sense[SENSE_LIST_DEEPTH];
+  uint8_t scsi_sense_head;
+  uint8_t scsi_sense_tail;
+  uint8_t scsi_medium_state;
+  uint8_t host_eject_latched;
 } USBD_MSC_BOT_HandleTypeDef;
 
 /* Structure for MSC process */
@@ -122,8 +97,17 @@ extern USBD_ClassTypeDef USBD_MSC;
 #endif
 #define USBD_MSC_CLASS    &USBD_MSC
 
-uint8_t  USBD_MSC_RegisterStorage(USBD_HandleTypeDef   *pdev,
-                                  USBD_StorageTypeDef *fops);
+/* The calculator switches CDC and MSC in the single class slot. Validate
+ * public/deferred entry points once, rather than indexing generic instances
+ * in every command handler. USB IRQ teardown clears this pointer first. */
+static inline USBD_MSC_BOT_HandleTypeDef *MK61_MSC_Handle(USBD_HandleTypeDef *pdev)
+{
+  return pdev != NULL && pdev->classId == 0U && pdev->pClass[0] == &USBD_MSC
+      ? (USBD_MSC_BOT_HandleTypeDef *)pdev->pClassDataCmsit[0] : NULL;
+}
+
+
+
 /**
   * @}
   */

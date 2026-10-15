@@ -68,6 +68,7 @@ extern "C" {
 /** @defgroup USBD_INFO_Exported_Variables
   * @{
   */
+extern const uint8_t MK61_MSC_Inquiry[36];
 extern const uint8_t MSC_Page00_Inquiry_Data[LENGTH_INQUIRY_PAGE00];
 extern const uint8_t MSC_Page80_Inquiry_Data[LENGTH_INQUIRY_PAGE80];
 
