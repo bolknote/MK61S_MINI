@@ -77,9 +77,29 @@ for begin,size in ((0x200136E0,0x1240),(guard-32,64),(static-32,32),
                    (guard-64,33),(guard-63,32),(guard-32768,32768),(0xFFFFFFE0,64)):
     before=[tuple(x) for x in banks];assert call(set_app,begin,size)==0,(begin,size)
     assert before==[tuple(x) for x in banks],'invalid span changed MPU'
+# Couple the actual shipping gap allocator to the actual MPU setter. Owner
+# metadata models cold M61/framebuffer/FS buffers at the top of free SRAM.
+integrated=0
+head='_ZN13shared_memory12_GLOBAL__N_1L16lifetime_buffersE'
+gap='_ZN13shared_memory12_GLOBAL__N_1L8high_gapEjb'
+if head in e.symbols:
+    assert e.sizes[head]==4 and gap in e.symbols
+    metadata=0x2001E000
+    for lengths in ((1536,),(2112,1536),(2112,1536,1536)):
+        end=guard
+        for i,length in enumerate(lengths):
+            end-=length;next_=metadata+16*(i+1) if i+1<len(lengths) else 0
+            u.mem_write(metadata+16*i,struct.pack('<4I',end,length,29+i,next_))
+        u.mem_write(e.symbols[head],struct.pack('<I',metadata))
+        for size in (32,864,1952,20480):
+            begin=call(e.symbols[gap],size,1)
+            assert begin==((end&~255)-size),(lengths,size,hex(begin))
+            assert call(set_app,begin,size)==1,(lengths,size,hex(begin))
+            permissions(begin,begin+size);integrated+=1
+    u.mem_write(e.symbols[head],bytes(4))
 assert call(set_app,0,0)==1;permissions(0,0)
 report=dict(status='PASS',elf=str(a.elf),exact_spans=len(cases),invalid_cases=7,
-            granules_per_span=4096,app_regions=5,neighbor_sram_xn=True,
+            granules_per_span=4096,allocator_spans=integrated,app_regions=5,neighbor_sram_xn=True,
             null_stack_guards_unchanged=True,callee_saved_and_sp=True)
 if a.json:a.json.write_text(json.dumps(report,indent=2)+'\n')
-print('Production MPU APP ARM:',len(cases),'spans, all4096RAMgranules, five slots, exact XN/guards/ABI PASS',flush=True)
+print('Production MPU APP ARM:',len(cases),'spans +',integrated,'allocator/MPU integrations, all4096RAMgranules, five slots, exact XN/guards/ABI PASS',flush=True)
