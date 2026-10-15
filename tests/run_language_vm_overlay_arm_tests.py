@@ -18,7 +18,7 @@ from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_R0, UC_ARM_REG_LR
 STATE_SIZE = 1584
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 15
+GENERATION = 16
 STATE_POISON = None
 
 
@@ -125,7 +125,8 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v4 = GENERATION >= 4
     v5 = GENERATION >= 5
     v6 = GENERATION >= 6
-    vm_magic, input_magic = ((0x3C564D4C, 0x3C494D4C) if GENERATION >= 15 else
+    vm_magic, input_magic = ((0x3D564D4C, 0x3D494D4C) if GENERATION >= 16 else
+                             (0x3C564D4C, 0x3C494D4C) if GENERATION >= 15 else
                              (0x3B564D4C, 0x3B494D4C) if v13 else
                              (0x3A564D4C, 0x3A494D4C) if v12 else
                              (0x39564D4C, 0x39494D4C) if v11 else
@@ -296,7 +297,7 @@ def main():
     p.add_argument("--poison-state", action="store_true",
                    help="v14: leave inactive continuation slots poisoned through cold validation")
     p.add_argument("--focal-trace",action="store_true")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15), default=15)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15,16), default=16)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()
@@ -346,6 +347,20 @@ def main():
                 assert execute(m,packages,1,b"10 A=1/0\n",[],mode=0,edit_after_error=True)[1] == 16
                 assert m.uc.mem_read(m.input+640+34,1)[0] == 1
                 assert any("DIV BY ZERO" in line for line in m.lines), m.lines
+            if GENERATION >= 16:
+                for program,answers,expected in (
+                    (b'10 I=3;J=5;FOR K=1 TO 40;A=(I+3)*(J-2);NEXT K\n',[],18),
+                    (b'10 I=2147483647;J=1;A=(I+3)*(J-2)\n',[],-2147483650),
+                    (b'10 I=-2147483648;J=-1;A=I/J+I MOD J\n',[],2147483648),
+                    (b'10 I=.5;J=4;A=(I+3)*(J-2)\n',[],7),
+                    (b'10 I=1;J=2;@(1)=.5;A=@(I)+I*J-J\n',[],.5),
+                    (b'10 I=3;J=4;INPUT B\n20 A=(I+B)*(J-2)\n',["7.5"],21)):
+                    m=OverlayMachine(args.resident_elf,True,address)
+                    assert execute(m,packages,1,program,answers)[:2]==(expected,0)
+                    record(m)
+                m=OverlayMachine(args.resident_elf,True,address)
+                assert execute(m,packages,2,b'1.10 S I=3;S J=5;S A=(I+3)*(J-2)\n',[])[:2]==(18,0)
+                record(m)
             if GENERATION >= 15:
                 for program, answers, expected in (
                     (b'10 I=0;FOR J=1 TO 40;IF J<15 I=I+1 ELSE I=I-1\n20 NEXT J;A=I\n', [], -12),

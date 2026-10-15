@@ -410,9 +410,9 @@ void test_fused_operations() {
   // Keep original grouping, dynamic/I/O order and diagnostic prefixes.
   Fixture f;f.compile("10 A=1e16;B=-1e16;C=1;A=A+B+C\n");
   assert(run(f.view,f.state,services).error==Error::NONE && f.vars[0]==1);
-  f.compile("10 A=A+64\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
-  f.compile("10 A=A+-0\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
-  f.compile("10 A=A+INPUT()\n");assert((Op)f.image[f.view.code+3]==Op::LOAD);
+  f.compile("10 A=A+64\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
+  f.compile("10 A=A+-0\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
+  f.compile("10 A=A+INPUT()\n");assert(scalar_op((Op)f.image[f.view.code+3])==Op::LOAD);
   f.compile("10 A=@(128)\n");
   const uint16_t fixed=(uint16_t)(f.view.code+6);
   assert((Op)f.image[fixed]==Op::LOAD_ARRAY_FIXED);

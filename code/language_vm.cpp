@@ -26,11 +26,25 @@ namespace language_vm {
 #if MK61_VM_COMPARE_BLOCK != 0 && MK61_VM_COMPARE_BLOCK != 1
 #error "MK61_VM_COMPARE_BLOCK must be 0 or 1"
 #endif
+// The cold INPUT APP has no long-running instruction stream.
+#ifndef MK61_VM_INTEGER_SPAN
+#if (defined(MK61_APP_LOCAL_FLOAT_MATH) && MK61_APP_LOCAL_FLOAT_MATH) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+#define MK61_VM_INTEGER_SPAN 0
+#else
+#define MK61_VM_INTEGER_SPAN 1
+#endif
+#endif
+#if MK61_VM_INTEGER_SPAN != 0 && MK61_VM_INTEGER_SPAN != 1
+#error "MK61_VM_INTEGER_SPAN must be 0 or 1"
+#endif
 #if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
 void compare_block_applied(uint16_t);
 #endif
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
 void integer_block_applied(uint16_t, uint8_t);
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
+void integer_span_applied(uint16_t, uint8_t);
 #endif
 #if defined(LANGUAGE_VM_TRACE)
 // Host-only instrumentation. No callback, counters or ABI fields are shipped.
@@ -51,32 +65,7 @@ uint32_t record_number(const View& v, uint16_t i) {
 }
 // Total wire widths: zero denotes an invalid opcode, 255 a bounded variable
 // record. A single indexed read replaces a second opcode switch in the hot loop.
-constexpr uint8_t wire_widths[] = {
-  1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1, // 0..15
-  1,1,1,1,1,1,1,1,1,1,1,1,2,0,3,3, // 16..31 (29: retired CHECK)
-  1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
-  255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
-  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
-  2,7,1,1,1,3,3,2 // 97..104
-};
-static_assert(sizeof(wire_widths)==(unsigned)Op::BLOCK_COMPARE+1,"opcode width table changed");
-uint16_t next(const View& v, uint16_t pc) {
-  if(pc>=v.end) return 0;
-  const uint8_t op=v.bytes[pc];
-  if(op>=sizeof(wire_widths)) return 0;
-  const uint8_t width=wire_widths[op];
-  const uint16_t remaining=(uint16_t)(v.end-pc);
-  if(width!=255) return width && width<=remaining ? (uint16_t)(pc+width) : 0;
-  if(remaining<3) return 0;
-  const uint16_t count=word(v.bytes+pc+1);
-  if((Op)op==Op::ON_GOTO || (Op)op==Op::ON_GOSUB) {
-    if(!count || count>(remaining-3)/2) return 0;
-    return (uint16_t)(pc+3+count*2);
-  }
-  if((Op)op==Op::DATA && !count) return 0;
-  return count<=remaining-3 ? (uint16_t)(pc+3+count) : 0;
-}
+uint16_t next(const View& v, uint16_t pc) {return instruction_end(v.bytes,v.end,pc);}
 bool constant_value(const View& v, uint16_t pc, Value& value) {
   const Op op = (Op)v.bytes[pc];
   const uint8_t* p = v.bytes + pc + 1;
@@ -244,6 +233,131 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
   return count;
 }
 #endif
+#if MK61_VM_INTEGER_SPAN
+// Execute the existing stream while its values are int32. PC/SP stay local;
+// all stack cells survive, including inactive ones. A rejected operation is
+// left untouched for the ordinary evaluator. Its first step is already polled,
+// counted and traced. No span crosses the next service/limit/call boundary.
+__attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
+  uint32_t budget=32U-((steps-1U)&31U);
+  if(limit && budget>limit-steps+1U)budget=limit-steps+1U;
+  if(budget<2)return 0;
+  uint16_t end=v.end;
+  if(s.call_count && s.calls[s.call_count-1].end && s.calls[s.call_count-1].end<end)
+    end=s.calls[s.call_count-1].end;
+  uint16_t pc=instruction,last=pc;
+  unsigned sp=s.sp;
+  uint8_t count=0;
+#if defined(LANGUAGE_VM_TRACE)
+#define SPAN_TRACE() do {if(count)trace_instruction(v,pc,steps+count);} while(false)
+#else
+#define SPAN_TRACE() ((void)0)
+#endif
+  while(count<budget && pc<end) {
+    const Op op=(Op)v.bytes[pc];
+    const unsigned width=(unsigned)op<sizeof(wire_widths)?wire_widths[(unsigned)op]:0;
+    if(!width || width==255 || width>(unsigned)(end-pc))break;
+    const auto* p=v.bytes+pc+1;
+    Value result;
+    int32_t x,y,z;
+    if(op>=Op::CONST_0 && op<=Op::CONST_15) {
+      if(sp>=data.stack_capacity)break;
+      result=(uint8_t)op-(uint8_t)Op::CONST_0;
+      SPAN_TRACE();data.stack[sp++]=result;
+    } else switch(op) {
+      case Op::CONST_I8: case Op::CONST_I16: case Op::CONST_I32:
+        if(sp>=data.stack_capacity)goto done;
+        result=op==Op::CONST_I8?(int32_t)(int8_t)*p:
+            op==Op::CONST_I16?(int32_t)(int16_t)word(p):(int32_t)dword(p);
+        SPAN_TRACE();data.stack[sp++]=result;break;
+      case Op::LOAD: case Op::INTEGER_SPAN: case Op::LOAD_ARRAY_FIXED:
+        if(sp>=data.stack_capacity)goto done;
+        if(op!=Op::LOAD_ARRAY_FIXED) {
+          if(*p>=26)goto done;
+          result=data.variables[*p];
+        } else {
+          const uint16_t index=word(p);
+          if(!data.array || index>=data.array_count)goto done;
+          result=data.array[index];
+        }
+        if(!result.integer())goto done;
+        SPAN_TRACE();data.stack[sp++]=result;break;
+      case Op::LOAD_ARRAY:
+        if(!sp || !data.array || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-1].integer_value();
+        if(x<0 || (uint32_t)x>=data.array_count)goto done;
+        result=data.array[x];if(!result.integer())goto done;
+        SPAN_TRACE();data.stack[sp-1]=result;break;
+      case Op::STORE:
+        if(!sp || *p>=26)goto done;
+        SPAN_TRACE();data.variables[*p]=data.stack[--sp];break;
+      case Op::STORE_ARRAY:
+        if(sp<2 || !data.array || !data.stack[sp-2].integer())goto done;
+        x=data.stack[sp-2].integer_value();
+        if(x<0 || (uint32_t)x>=data.array_count)goto done;
+        SPAN_TRACE();data.array[x]=data.stack[sp-1];sp-=2;break;
+      case Op::NEG: case Op::NOT:
+        if(!sp || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-1].integer_value();
+        if(op==Op::NEG) {
+          if(!x || __builtin_sub_overflow(0,x,&z))goto done;
+        } else z=!x;
+        SPAN_TRACE();data.stack[sp-1]=z;break;
+      case Op::ADD: case Op::SUB: case Op::MUL: case Op::DIV:
+      case Op::FLOOR_DIV: case Op::MOD:
+      case Op::EQ: case Op::NE: case Op::LT: case Op::LE: case Op::GT: case Op::GE:
+      case Op::AND: case Op::OR: case Op::XOR:
+        if(sp<2 || !data.stack[sp-2].integer() || !data.stack[sp-1].integer())goto done;
+        x=data.stack[sp-2].integer_value();y=data.stack[sp-1].integer_value();
+        switch(op) {
+          case Op::ADD:if(__builtin_add_overflow(x,y,&z))goto done;break;
+          case Op::SUB:if(__builtin_sub_overflow(x,y,&z))goto done;break;
+          case Op::MUL:
+            if((!x && y<0) || (!y && x<0) || __builtin_mul_overflow(x,y,&z))goto done;
+            break;
+          case Op::DIV:
+            if(!y || (x==INT32_MIN && y==-1) || (!x && y<0) || x%y)goto done;
+            z=x/y;break;
+          case Op::FLOOR_DIV:
+            if(!y || (x==INT32_MIN && y==-1))goto done;
+            z=x/y;if(x%y && ((x<0)!=(y<0)))--z;break;
+          case Op::MOD:
+            if(!y)goto done;
+            if(x==INT32_MIN && y==-1)z=0;
+            else {z=x%y;if(z && ((z<0)!=(y<0)))z+=y;}
+            break;
+          case Op::EQ:z=x==y;break;case Op::NE:z=x!=y;break;
+          case Op::LT:z=x<y;break;case Op::LE:z=x<=y;break;
+          case Op::GT:z=x>y;break;case Op::GE:z=x>=y;break;
+          case Op::AND:z=x && y;break;case Op::OR:z=x || y;break;
+          default:z=(x!=0)!=(y!=0);break;
+        }
+        SPAN_TRACE();data.stack[sp-2]=z;--sp;break;
+      default:goto done;
+    }
+    last=pc;pc=(uint16_t)(pc+width);++count;
+    uint16_t following=pc;
+    while(end-following>=3 && (Op)v.bytes[following]==Op::SOURCE_POS)
+      following=(uint16_t)(following+3);
+    if(following>=end || (Op)v.bytes[following]==Op::SOURCE_POS)break;
+    if(count<budget) {
+      const Op next_op=(Op)v.bytes[following];
+      if(next_op==Op::LINE || next_op==Op::HALT)break;
+      pc=following;
+    }
+  }
+done:
+  if(count) {
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
+    integer_span_applied(instruction,count);
+#endif
+    s.sp=(uint8_t)sp;s.pc=pc;instruction=last;steps+=count-1U;
+  }
+#undef SPAN_TRACE
+  return count;
+}
+#endif
 }  // namespace
 #if defined(LANGUAGE_VM_TRACE)
 uint16_t trace_following(const View& v,uint16_t pc) {return next(v,pc);}
@@ -324,7 +438,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     // hot INPUT evaluator to borrow the suspended program's stack safely.
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
-        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::LOAD_REF &&
+        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::LOAD_REF &&
         op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15)) return Error::INVALID_IMAGE;
     if(op==Op::BLOCK_INDEX && (v.end-pc<6 ||
@@ -334,7 +448,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       if(!cmp || v.end-cmp<4 || (Op)bytes[cmp]!=Op::COMPARE_FALSE ||
          !((Op)bytes[rhs]>=Op::CONST_0 && (Op)bytes[rhs]<=Op::CONST_15))return Error::INVALID_IMAGE;
     }
-    if (((op == Op::LOAD || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
+    if (((op == Op::LOAD || op == Op::INTEGER_SPAN || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
          bytes[pc + 1] >= 26) ||
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
@@ -754,6 +868,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           jump(to);
         break;
       }
+      case Op::INTEGER_SPAN:
+#if MK61_VM_INTEGER_SPAN
+        if(*p<26 && data.variables[*p].integer()) {
+          const uint8_t count=integer_span(v,s,data,steps,instruction,limit);
+          if(count) {VM_OPCODE_FUSED(count);break;}
+        }
+#endif
+        [[fallthrough]];
       case Op::LOAD:
         if (*p >= 26)
           error = Error::INVALID_IMAGE;

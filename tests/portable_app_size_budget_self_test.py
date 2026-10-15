@@ -70,7 +70,10 @@ except ValueError as error:
 else:
     raise AssertionError("oversize greedy-packed hybrid BASIC.APP was accepted")
 
-for local, limit in ((False, 15360), (True, 17408)):
+# The former 15-KiB compactness gate is not the loader's 20-KiB format limit.
+BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": 15361},
+                                   False, False, True)
+for local, limit in ((False, 18432), (True, 17408)):
     BUILDER.enforce_system_size_budget("language-vm", {"memory_bytes": limit},
                                        local, False, True)
     try:

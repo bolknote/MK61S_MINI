@@ -14,6 +14,11 @@ struct Module {
   std::map<unsigned,uint64_t> pcs;
 };
 struct Trace {
+  std::ofstream stream;
+  Trace() {
+    if(const char* path=std::getenv("VM_TRACE_STREAM_FILE"))
+      stream.open(path,std::ios::binary);
+  }
   std::map<unsigned,uint64_t> ops;
   std::map<std::vector<unsigned>,uint64_t> sequences;
   std::map<uint32_t,Module> modules;
@@ -61,6 +66,15 @@ void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
   if(steps==1) {++module.runs;trace.previous.clear();trace.run_order.push_back(crc);}
   ++module.instructions;++module.pcs[pc];
   const unsigned op=(unsigned)scalar_op((Op)v.bytes[pc]);++trace.ops[op];
+  if(trace.stream) {
+    // Exact ordered trace, independent of image version and hint encoding:
+    // LE source CRC, LE (PC | scalar opcode << 16), LE logical step.
+    const uint32_t words[]={crc,uint32_t(pc)|(uint32_t(op)<<16),steps};
+    char record[12];
+    for(unsigned n=0;n<3;++n)for(unsigned i=0;i<4;++i)
+      record[n*4+i]=char(words[n]>>(8*i));
+    trace.stream.write(record,sizeof(record));
+  }
   trace.previous.push_back(op);
   if(trace.previous.size()>4)trace.previous.erase(trace.previous.begin());
   for(unsigned n=2;n<=trace.previous.size();++n)

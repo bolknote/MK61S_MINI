@@ -126,12 +126,13 @@ enum class Op : uint8_t {
   DROP,
   PRINT_PRECISION,  // width and significant digit bytes
   BLOCK_INDEX,     // CONST_I16 layout; compiler-proven CONST_I16 / LOAD / ADD
-  BLOCK_COMPARE    // LOAD layout; compiler-proven LOAD / CONST_0..15 / COMPARE_FALSE
+  BLOCK_COMPARE,   // LOAD layout; compiler-proven LOAD / CONST_0..15 / COMPARE_FALSE
+  INTEGER_SPAN     // LOAD layout; start of a compiler-selected integer expression
 };
 // A block mark changes neither the first instruction's width nor its logical
 // identity. Diagnostic/host traces use the original scalar opcode.
 constexpr Op scalar_op(Op op) {
-  return op==Op::BLOCK_INDEX ? Op::CONST_I16 : op==Op::BLOCK_COMPARE ? Op::LOAD : op;
+  return op==Op::BLOCK_INDEX ? Op::CONST_I16 : op==Op::BLOCK_COMPARE || op==Op::INTEGER_SPAN ? Op::LOAD : op;
 }
 constexpr bool index_block_shape(Op op,uint16_t pc,Op first,uint16_t first_pc,
                                  Op second,uint16_t second_pc) {
@@ -162,6 +163,35 @@ enum class Function : uint8_t {
   COLS,
   ROWS
 };
+inline constexpr uint8_t wire_widths[] = {
+  1,1,2,3,9,2,2,2,2,1,1,1,1,1,1,1, // 0..15
+  1,1,1,1,1,1,1,1,1,1,1,1,2,0,3,3, // 16..31 (29: retired CHECK)
+  1,1,1,2,2,5,5,1,7,1,255,1,1,2,1,2, // 32..47
+  255,1,1,2,1,3,4,1,0,0,0,0,0,0,0,0, // 48..63
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
+  255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
+  2,7,1,1,1,3,3,2,2 // 97..105
+};
+static_assert(sizeof(wire_widths)==(unsigned)Op::INTEGER_SPAN+1,"opcode width table changed");
+inline uint16_t instruction_end(const uint8_t* bytes, uint16_t end, uint16_t pc) {
+  if(pc>=end) return 0;
+  const uint8_t op=bytes[pc];
+  if(op>=sizeof(wire_widths)) return 0;
+  const uint8_t width=wire_widths[op];
+  const uint16_t remaining=(uint16_t)(end-pc);
+  if(width!=255) return width && width<=remaining ? (uint16_t)(pc+width) : 0;
+  if(remaining<3) return 0;
+  const uint16_t count=(uint16_t)(bytes[pc+1] | ((uint16_t)bytes[pc+2]<<8));
+  if((Op)op==Op::ON_GOTO || (Op)op==Op::ON_GOSUB) {
+    if(!count || count>(remaining-3)/2) return 0;
+    return (uint16_t)(pc+3+count*2);
+  }
+  if((Op)op==Op::DATA && !count) return 0;
+  return count<=remaining-3 ? (uint16_t)(pc+3+count) : 0;
+}
+// Full-program compilers add same-width execution hints after layout.
+void mark_integer_spans(uint8_t*, uint16_t code, uint16_t end);
+
 // Bits select less/equal/greater/unordered results of a numeric comparison.
 constexpr uint8_t comparison_mask(Op op) {
   // Packed nibbles: EQ NE LT LE GT GE. Called only for that bounded range.
@@ -172,7 +202,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 8;
+static constexpr uint16_t VERSION = 9;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.

@@ -18,6 +18,31 @@
 #include "mk_math.hpp"
 
 namespace language_vm {
+void mark_integer_spans(uint8_t* bytes,uint16_t code,uint16_t end) {
+  uint16_t first=0;unsigned count=0;
+  auto finish=[&]() {
+    if(first && count>=5)bytes[first]=(uint8_t)Op::INTEGER_SPAN;
+    first=0;count=0;
+  };
+  for(uint16_t pc=code;pc<end;) {
+    const Op op=(Op)bytes[pc];
+    const uint16_t after=instruction_end(bytes,end,pc);
+    if(!after)break;
+    if(op==Op::SOURCE_POS) {pc=after;continue;}
+    // The existing index mark proves its first three scalar instructions;
+    // never replace the interior LOAD with another hint.
+    if(op==Op::BLOCK_INDEX) {finish();pc=(uint16_t)(pc+6);continue;}
+    const bool supported=op==Op::LOAD || op==Op::LOAD_ARRAY_FIXED ||
+        op==Op::LOAD_ARRAY || op==Op::STORE || op==Op::STORE_ARRAY ||
+        op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
+        (op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::NEG || op==Op::NOT ||
+        (op>=Op::ADD && op<=Op::XOR && op!=Op::POW) || op==Op::FLOOR_DIV;
+    if(!supported)finish();
+    else {if(!first && op==Op::LOAD)first=pc;if(first)++count;}
+    pc=after;
+  }
+  finish();
+}
 namespace {
 void put_word(uint8_t* p, uint16_t v) {
   p[0] = (uint8_t)v;
@@ -202,6 +227,7 @@ class Compiler {
           put_dword(record, lines_[i].number);
         put_word(record + stride() - 2, lines_[i].pc);
       }
+      mark_integer_spans(out_,code,code_end);
       put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
     uint16_t offset =
