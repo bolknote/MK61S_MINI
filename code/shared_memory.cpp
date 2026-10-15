@@ -1049,6 +1049,10 @@ bool validate_invariants(void) {
     }
   }
 #endif
+#if !MK61_SCOPED_RESIDENT_BUFFERS
+  // The legacy allocator always anchors APP at the exact top, as before.
+  if(app.enabled && (uintptr_t)app.memory != pool_end() - app.capacity) return false;
+#endif
   if(app.enabled && ((uintptr_t)app.memory < pool_begin() + lower_reserved_size() ||
      (uintptr_t)app.memory > pool_end() || (uintptr_t)app.memory & 31U ||
      app.capacity > pool_end() - (uintptr_t)app.memory)) return false;

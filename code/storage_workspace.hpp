@@ -30,6 +30,22 @@ class [[nodiscard]] Lease {
  private:
   Owner owner_;
 };
+#if MK61_SCOPED_RESIDENT_BUFFERS
+using BufferOperation = bool (*)(const void*, u8*);
+bool with_buffer(Owner owner, usize required, BufferOperation operation,
+                 const void* context);
+#endif
+template<class Operation>
+bool with_buffer(Owner owner, usize required, const Operation& operation) {
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  return with_buffer(owner, required, [](const void* context, u8* memory) {
+    return (*static_cast<const Operation*>(context))(memory);
+  }, &operation);
+#else
+  Lease memory(owner, required);
+  return memory.ok() && operation(memory.data());
+#endif
+}
 #endif
 }
 #endif

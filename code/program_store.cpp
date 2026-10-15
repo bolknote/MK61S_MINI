@@ -1,5 +1,6 @@
 #include "program_store.hpp"
 #include "fat_cluster_chain.hpp"
+#include "c9_inode_wire.hpp"
 
 #include "bounded_string.hpp"
 #include "crc32.hpp"
@@ -165,23 +166,14 @@ static bool compute_geometry(u32 capacity,
   return storage_geometry::compute(capacity, geometry);
 }
 
-struct Inode {
-  u32 address;
-  u16 data_len;
-  u16 record_len;
-  u16 parent_id;
-  u16 first_child;
-  u16 next_sibling;
-  u16 prev_sibling;
-  u16 name_hash;
-  u8 kind_type;
-  u8 flags;
-  u16 exported_size;
-  u32 fat_address;
-};
-
-static_assert(sizeof(Inode) == 28 && storage_geometry::INODE_BYTES == 26,
-              "C9 inode has two RAM alignment bytes, not stored on disk");
+#if MK61_SCOPED_RESIDENT_BUFFERS && defined(__GNUC__) && !defined(__clang__)
+#define C9_WRITE_IMPL __attribute__((noinline))
+#else
+#define C9_WRITE_IMPL
+#endif
+using Inode = c9_inode_wire::Inode;
+static_assert(storage_geometry::INODE_BYTES == c9_inode_wire::SIZE,
+              "C9 physical inode format must remain 26 bytes");
 
 struct LargeDescriptor {
   u32 sectors[LARGE_BLOCK_COUNT];
@@ -791,36 +783,12 @@ static void serialize_inode(const Inode& inode, u8* out) {
     memset(out, 0xFF, storage_geometry::INODE_BYTES);
     return;
   }
-  put_le32(out, 0, inode.address);
-  put_le16(out, 4, inode.data_len);
-  put_le16(out, 6, inode.record_len);
-  put_le16(out, 8, inode.parent_id);
-  put_le16(out, 10, inode.first_child);
-  put_le16(out, 12, inode.next_sibling);
-  put_le16(out, 14, inode.prev_sibling);
-  put_le16(out, 16, inode.name_hash);
-  out[18] = inode.kind_type;
-  out[19] = inode.flags;
-  put_le16(out, 20, inode.exported_size);
-  put_le32(out, 22, inode.fat_address);
+  c9_inode_wire::encode(inode, out);
 }
 
 static Inode deserialize_inode(const u8* data) {
   if(get_le32(data, 0) == EMPTY_ADDRESS) return empty_inode();
-  Inode inode;
-  inode.address = get_le32(data, 0);
-  inode.data_len = get_le16(data, 4);
-  inode.record_len = get_le16(data, 6);
-  inode.parent_id = get_le16(data, 8);
-  inode.first_child = get_le16(data, 10);
-  inode.next_sibling = get_le16(data, 12);
-  inode.prev_sibling = get_le16(data, 14);
-  inode.name_hash = get_le16(data, 16);
-  inode.kind_type = data[18];
-  inode.flags = data[19];
-  inode.exported_size = get_le16(data, 20);
-  inode.fat_address = get_le32(data, 22);
-  return inode;
+  return c9_inode_wire::decode(data);
 }
 
 static bool catalog_sector_in_range(u32 sector) {
@@ -3666,12 +3634,10 @@ static bool prepare_local_catalog_mutation(void) {
   return g_stage_locked || vfat_stage_discard_all();
 }
 
-bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
-                      u16* out_id) {
-#if MK61_STORAGE_SHARED_TEMP
-  storage_workspace::Lease transaction_lease(storage_workspace::Owner::FILE_WRITE,
-                                             sizeof(Transaction));
-  if(!transaction_lease.ok()) return false;
+C9_WRITE_IMPL static bool create_directory_impl(u16 parent_id, const char* name, u16 preferred_id,
+                      u16* out_id, u8* temporary) {
+#if !MK61_STORAGE_SHARED_TEMP
+  (void)temporary;
 #endif
   C9Pins pins;
   DiskActivity activity;
@@ -3730,7 +3696,7 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
   inode.flags = 0;
 
 #if MK61_STORAGE_SHARED_TEMP
-  Transaction& transaction = *new(transaction_lease.data()) Transaction;
+  Transaction& transaction = *new(temporary) Transaction;
 #else
   Transaction transaction;
 #endif
@@ -3744,18 +3710,28 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
   return true;
 }
 
-bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
+bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
+                      u16* out_id) {
+#if MK61_STORAGE_SHARED_TEMP
+  return storage_workspace::with_buffer(storage_workspace::Owner::FILE_WRITE,
+      sizeof(Transaction), [&](u8* temporary) {
+        return create_directory_impl(parent_id, name, preferred_id, out_id, temporary);
+      });
+#else
+  return create_directory_impl(parent_id, name, preferred_id, out_id, nullptr);
+#endif
+}
+
+C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
                             const u16* fat_extents, u8 fat_extent_count,
                             u16* out_id,
                             u8* compression_buffer,
                             usize compression_buffer_size,
-                            const u8* contiguous_data) {
-#if MK61_STORAGE_SHARED_TEMP
-  storage_workspace::Lease workspace_lease(storage_workspace::Owner::FILE_WRITE,
-                                           sizeof(WriteWorkspace));
-  if(!workspace_lease.ok()) return false;
+                            const u8* contiguous_data, u8* temporary) {
+#if !MK61_STORAGE_SHARED_TEMP
+  (void)temporary;
 #endif
 #if !defined(PROGRAM_STORE_HOST_TEST)
   struct ImportProgressScope {
@@ -3774,7 +3750,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   LargeWriteGuard large_guard;
   // The compression plan is consumed before the catalog transaction starts.
 #if MK61_STORAGE_SHARED_TEMP
-  WriteWorkspace& write_workspace = *new(workspace_lease.data()) WriteWorkspace;
+  WriteWorkspace& write_workspace = *new(temporary) WriteWorkspace;
 #else
   WriteWorkspace write_workspace;
 #endif
@@ -3971,12 +3947,28 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
   return true;
 }
 
-#if MK61_C9_BULK_IMPORT
-bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
+bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
+                            const char* name, u16 data_len,
+                            const FileSource& source,
+                            const u16* fat_extents, u8 fat_extent_count,
+                            u16* out_id,
+                            u8* compression_buffer,
+                            usize compression_buffer_size,
+                            const u8* contiguous_data) {
 #if MK61_STORAGE_SHARED_TEMP
-  storage_workspace::Lease workspace_lease(storage_workspace::Owner::FILE_WRITE,
-                                           sizeof(Transaction));
-  if(!workspace_lease.ok()) return false;
+  return storage_workspace::with_buffer(storage_workspace::Owner::FILE_WRITE,
+      sizeof(WriteWorkspace), [&](u8* temporary) {
+        return write_file_from_source_impl(parent_id, preferred_id, type, name, data_len, source, fat_extents, fat_extent_count, out_id, compression_buffer, compression_buffer_size, contiguous_data, temporary);
+      });
+#else
+  return write_file_from_source_impl(parent_id, preferred_id, type, name, data_len, source, fat_extents, fat_extent_count, out_id, compression_buffer, compression_buffer_size, contiguous_data, nullptr);
+#endif
+}
+
+#if MK61_C9_BULK_IMPORT
+C9_WRITE_IMPL static bool write_import_batch_impl(u16 parent, const ImportFile* files, u8 count, u8* temporary) {
+#if !MK61_STORAGE_SHARED_TEMP
+  (void)temporary;
 #endif
   DiskActivity activity;
   if(!g_ready || !g_import_applying || !g_stage_locked || files == nullptr ||
@@ -4034,7 +4026,7 @@ bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
   const u32 sector = beginning / 4096U;
   g_large_write_sectors[g_large_write_sector_count++] = sector;
 #if MK61_STORAGE_SHARED_TEMP
-  Transaction& transaction = *new(workspace_lease.data()) Transaction;
+  Transaction& transaction = *new(temporary) Transaction;
 #else
   Transaction transaction;
 #endif
@@ -4068,6 +4060,17 @@ bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
   }
   transaction.meta.current_offset = g_meta.current_offset;
   return append_transaction(transaction);
+}
+
+bool write_import_batch(u16 parent, const ImportFile* files, u8 count) {
+#if MK61_STORAGE_SHARED_TEMP
+  return storage_workspace::with_buffer(storage_workspace::Owner::FILE_WRITE,
+      sizeof(Transaction), [&](u8* temporary) {
+        return write_import_batch_impl(parent, files, count, temporary);
+      });
+#else
+  return write_import_batch_impl(parent, files, count, nullptr);
+#endif
 }
 #endif
 

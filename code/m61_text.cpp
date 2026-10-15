@@ -37,6 +37,7 @@ i32 program_store_text_font_end(void);
 
 void lcd_std_display_redraw(void);
 
+#include <new>
 #include <stdio.h>
 #include <string.h>
 
@@ -132,13 +133,13 @@ struct RuntimeBuffers {
 #if MK61_SCOPED_RESIDENT_BUFFERS
 static shared_memory::LifetimeBuffer runtime_storage;
 static RuntimeBuffers& runtime_buffers() {
-  return *reinterpret_cast<RuntimeBuffers*>(runtime_storage.data());
+  return *std::launder(reinterpret_cast<RuntimeBuffers*>(runtime_storage.data()));
 }
 static bool prepare_runtime() {
   if(runtime_storage.ok()) return true;
   if(!runtime_storage.acquire(shared_memory::Owner::M61_RUNTIME,
                               sizeof(RuntimeBuffers))) return false;
-  memset(runtime_storage.data(), 0, sizeof(RuntimeBuffers));
+  new(runtime_storage.data()) RuntimeBuffers{};
   return true;
 }
 static void release_runtime() { runtime_storage.reset(); }

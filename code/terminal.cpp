@@ -98,6 +98,7 @@ extern  void idle_signal_reset(void);
 
 
 #include "terminal_catalog.hpp"
+
 static const char* terminal_skip_spaces(const char* p) {
   while(p != NULL && (*p == ' ' || *p == '\t')) p++;
   return p;
@@ -3866,6 +3867,12 @@ __attribute__((optimize("no-inline")))
 terminal_protocol::Result class_terminal::execute(bool script_mode,
                                       bool trap_mode) {
         if(recive_pos == 0 || recive_pos > MAX_INPUT_CHAR) return terminal_protocol::Result::error();
+        // One exit path clears input after the returned action has been built.
+        // Direct aggregate returns avoid copying each handler's Result twice.
+        struct ResetInput {
+          usize& length;
+          ~ResetInput() { length = 0; }
+        } reset_input{recive_pos};
 #if defined(MK61_OLED1602_WS0010)
         idle_signal_reset();
 #endif
@@ -3911,7 +3918,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             pending_save_name[0] = 0;
             pending_save_parent_id = program_store::ROOT_ID;
             nSlot = -1;
-            recive_pos = 0;
             return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
           }
           if(terminal_core::exact_confirmation((const char*) input_buffer, 'n')) {
@@ -3933,13 +3939,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
         if(script_mode && !terminal_command_allowed_in_script(command_id)) {
           Serial.print("Command is not allowed in M61 scripts: ");
           terminal_println_m8((const char*) input_buffer);
-          recive_pos = 0;
           return terminal_protocol::Result::error();
         }
         if(trap_mode && !terminal_command_allowed_in_trap(command_id)) {
           Serial.print("Command is not allowed in an M61 trap handler: ");
           terminal_println_m8((const char*) input_buffer);
-          recive_pos = 0;
           return terminal_protocol::Result::error();
         }
         // Незавершённая загрузка не должна переживать переход к другой
@@ -3950,7 +3954,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             command_id == CMD_ASM || command_id == CMD_INS ||
             command_id == CMD_KBD || command_id == CMD_CMD)) {
           Serial.println(program_load::error());
-          recive_pos = 0;
           return terminal_protocol::Result::error();
         }
         switch (command_id) {
@@ -3958,27 +3961,19 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               output_version();
             break;
           case CMD_IDENTITY: {
-              const terminal_protocol::Result result = exec_identity();
-              recive_pos = 0;
-              return result;
+              return exec_identity();
             }
 #if MK61_ENABLE_READ_BENCHMARKS
           case CMD_BENCHMARK: {
-              const terminal_protocol::Result result = exec_benchmark();
-              recive_pos = 0;
-              return result;
+              return exec_benchmark();
             }
 #endif
           case  CMD_DATE: {
-              const terminal_protocol::Result result = exec_date();
-              recive_pos = 0;
-              return result;
+              return exec_date();
             }
 #if MK61_ENABLE_RTC_ALARM_TERMINAL
           case CMD_ALARM: {
-              const terminal_protocol::Result result = exec_alarm();
-              recive_pos = 0;
-              return result;
+              return exec_alarm();
             }
 #endif
           case  CMD_ISA:
@@ -4000,7 +3995,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                    strcmp(action, "now") != 0 ||
                    !terminal_core::at_end(cursor)) {
                   Serial.println("Usage: rst [now]");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 // An explicit one-line token is intended for unattended HIL.
@@ -4015,7 +4009,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case CMD_REINIT:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: reinit");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(script_mode) {
@@ -4039,7 +4032,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                    strcmp(action, "status") != 0 ||
                    !terminal_core::at_end(cursor)) {
                   Serial.println("Usage: dfu [status]");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 const early_dfu::Diagnostic diagnostic =
@@ -4050,13 +4042,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 Serial.print(early_dfu::diagnostic_stage_name(
                     diagnostic.stage));
                 terminal_output::line(Serial, " sources=0x", diagnostic.sources, HEX);
-                recive_pos = 0;
                 return terminal_protocol::Result::ok();
               }
           case CMD_USB_DISK:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: usbdisk");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               // The acknowledgement must leave the CDC endpoint before the
@@ -4079,7 +4069,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   if(usb_terminal_generation() == terminal_generation) {
                     Serial.println("USB Disk is unavailable; see vlog.");
                   }
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               }
@@ -4088,48 +4077,36 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case  CMD_USB_SCREEN:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: uscreen");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(!usb_screen::start()) {
                 Serial.println("USB Screen is unavailable.");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               Serial.println("USB Screen starting.");
             break;
 #endif
           case CMD_DISPLAY: {
-              const terminal_protocol::Result result = exec_display();
-              recive_pos = 0;
-              return result;
+              return exec_display();
             }
 #if MK61_DWT_PROFILER_SUPPORTED
           case CMD_PROFILE: {
-              const terminal_protocol::Result result = exec_profile();
-              recive_pos = 0;
-              return result;
+              return exec_profile();
           }
 #endif
 #if MK61_CRASH_DUMP_SUPPORTED
           case CMD_CRASH: {
-              const terminal_protocol::Result result = exec_crash();
-              recive_pos = 0;
-              return result;
+              return exec_crash();
             }
 #endif
 #if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
           case CMD_WATCHDOG: {
-              const terminal_protocol::Result result = exec_watchdog();
-              recive_pos = 0;
-              return result;
+              return exec_watchdog();
             }
 #endif
 #if MK61_MPU_GUARD_SUPPORTED
           case CMD_MPU: {
-              const terminal_protocol::Result result = exec_mpu();
-              recive_pos = 0;
-              return result;
+              return exec_mpu();
             }
 #endif
           case  CMD_REG_DUMP:
@@ -4142,12 +4119,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               const isize reg_limit = core_61::expanded_program_is_on() ? 15 : 14;
               if(reg < 0 || reg > reg_limit) {
                 Serial.println("Use R0..RE; expanded RF.");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(!write_register_value((u8) reg, command_args())) {
                 Serial.println("Usage: R<0..F>= <number|random|raw 12-hex-tetrads>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4162,30 +4137,24 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case  CMD_FORMAT_STORAGE:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: format");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               pending_confirmation_cmd = command_id;
               Serial.println("Format? Y/y.");
             break;
           case  CMD_CMD: {
-              const terminal_protocol::Result result = command_to_kbd(script_mode);
-              recive_pos = 0;
-              return result;
+              return command_to_kbd(script_mode);
             }
           case  CMD_KBD: {
               i32 scancode = -1;
               if(!scancode_to_kbd(scancode)) {
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               // В скрипте клавиша нажимается сразу на ядре, интерактивно —
               // скан-код уходит в буфер клавиатуры через loop().
               if(script_mode) {
-                recive_pos = 0;
                 return hidden_press_scan_code(scancode) ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
               }
-              recive_pos = 0;
               return terminal_protocol::Result::keyboard(scancode);
             }
           case  CMD_DISASM:  // включить/выключить режим верхней строки с дизассемблером МК61
@@ -4206,7 +4175,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 if(status != storage_path::Status::OK) {
                   terminal_path_error("save", status);
                   Serial.println("Usage: save <number|path[.m61]>");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 nSlot = -1;
@@ -4224,7 +4192,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 if(script_mode) return script_action(terminal_protocol::ResultKind::LOAD_BINARY, args);
                 const bool ok = load_binary_program(current_directory, args);
                 if(!ok) Serial.println(program_load::error());
-                recive_pos = 0;
                 return ok ? terminal_protocol::Result::ok() : terminal_protocol::Result::error();
               }
               usize number = 0;
@@ -4234,7 +4201,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 if(script_mode) return script_action(terminal_protocol::ResultKind::LOAD_SLOT, args);
                 if(!Load(number)) {
                   Serial.println("Failed load attempt!");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               } else {
@@ -4246,12 +4212,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 if(status != storage_path::Status::OK) {
                   terminal_path_error("load", status);
                   Serial.println("Usage: load <number|path[.m61]>");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 if(!LoadProgram(entry.id)) {
                   Serial.println("Failed load attempt!");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               }
@@ -4300,7 +4264,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                  !terminal_core::parse_unsigned(args, 16, 0xFF, opcode) ||
                  !terminal_core::at_end(args)) {
                 Serial.println("Usage: ins <step> <00..FF>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               insert_cmd_in_program(into_step, opcode);
@@ -4314,7 +4277,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             break;
           case  CMD_VFAT_LOG: {
               if(!terminal_vfat_log(command_args())) {
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4322,7 +4284,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case CMD_FS_PWD: {
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: pwd");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               char path[MAX_INPUT_CHAR];
@@ -4330,7 +4291,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   current_directory, path, sizeof(path));
               if(status != storage_path::Status::OK) {
                 terminal_path_error("pwd", status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               terminal_println_m8(path);
@@ -4346,7 +4306,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               }
               if(status != storage_path::Status::OK) {
                 terminal_path_error("cd", status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               current_directory = directory;
@@ -4367,7 +4326,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     break;
                   }
                   terminal_path_error("ls", status);
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               }
@@ -4376,7 +4334,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 program_store::Entry entry;
                 if(!program_store::child(directory, index, entry)) {
                   Serial.println("ls: storage error");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 terminal_print_fs_entry(entry);
@@ -4390,7 +4347,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               char path[MAX_INPUT_CHAR];
               if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
                 Serial.println("Usage: mkdir [-p] <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               bool parents = false;
@@ -4398,13 +4354,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 parents = true;
                 if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
                   Serial.println("Usage: mkdir [-p] <path>");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               }
               if(!terminal_core::at_end(cursor)) {
                 Serial.println("Usage: mkdir [-p] <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               u16 created = program_store::INVALID_ID;
@@ -4412,7 +4366,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   current_directory, path, parents, created);
               if(status != storage_path::Status::OK) {
                 terminal_path_error("mkdir", status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4422,7 +4375,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               char path[MAX_INPUT_CHAR];
               if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
                 Serial.println("Usage: mv <source> <destination>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               program_store::Entry source;
@@ -4436,7 +4388,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 } else {
                   Serial.println("Usage: mv <source> <destination>");
                 }
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               u16 parent = program_store::INVALID_ID;
@@ -4448,7 +4399,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                  !program_store::move_rename(source.id, parent, name)) {
                 terminal_path_error("mv", status == storage_path::Status::OK
                     ? storage_path::Status::IO_ERROR : status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4458,7 +4408,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               char path[MAX_INPUT_CHAR];
               if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
                 Serial.println("Usage: rm [-r] <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               bool recursive = false;
@@ -4466,13 +4415,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 recursive = true;
                 if(!terminal_core::parse_token(cursor, path, sizeof(path))) {
                   Serial.println("Usage: rm [-r] <path>");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
               }
               if(!terminal_core::at_end(cursor)) {
                 Serial.println("Usage: rm [-r] <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               program_store::Entry entry;
@@ -4480,19 +4427,16 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   current_directory, path, entry);
               if(status != storage_path::Status::OK) {
                 terminal_path_error("rm", status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(entry.kind == program_store::NodeKind::DIRECTORY &&
                  !recursive) {
                 Serial.println("rm: is a directory; use rm -r or rmdir");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               u16 removed = 0;
               if(!program_store::remove_tree(entry.id, &removed)) {
                 Serial.println("rm: storage error");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               Serial.print("Removed ");
@@ -4504,7 +4448,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               char path[MAX_INPUT_CHAR];
               if(!terminal_single_token(command_args(), path, sizeof(path))) {
                 Serial.println("Usage: rmdir <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               u16 directory = program_store::ROOT_ID;
@@ -4516,13 +4459,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     directory == program_store::ROOT_ID &&
                     status == storage_path::Status::OK
                         ? storage_path::Status::ROOT : status);
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(program_store::child_count(directory) != 0 ||
                  !program_store::remove_id(directory)) {
                 Serial.println("rmdir: directory not empty or storage error");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4530,7 +4471,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case CMD_FS_STAT: {
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: df");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(!program_store::ready()) {
@@ -4642,14 +4582,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
             }
             break;
           case CMD_FS_GET: {
-              const terminal_protocol::Result result = exec_fs_get();
-              recive_pos = 0;
-              return result;
+              return exec_fs_get();
             }
           case CMD_FS_PUT: {
-              const terminal_protocol::Result result = exec_fs_put();
-              recive_pos = 0;
-              return result;
+              return exec_fs_put();
             }
           case  CMD_FS_CLEAN: {
               const u16 purged = program_store::purge_empty();
@@ -4664,12 +4600,10 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               if(*args == ':') { // run :метка - переход внутри m61-скрипта
                 if(script_mode) return script_action(terminal_protocol::ResultKind::GOTO_LABEL, args + 1);
                 Serial.println("Labels work in m61 scripts only!");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(trap_mode) {
                 Serial.println("Only run :label is allowed in an M61 trap handler!");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               u8 address = 0;
@@ -4677,31 +4611,26 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                   terminal_core::parse_run_address(args, core_61::program_steps(), address);
               if(address_parse == terminal_core::RunAddressParse::INVALID) {
                 Serial.println("Run address is outside current program memory!");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(*args != 0 && address_parse == terminal_core::RunAddressParse::NOT_ADDRESS) {
                 if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
                 if(!OpenStoredFile(current_directory, args)) {
                   Serial.println("Open failed!");
-                  recive_pos = 0;
                   return terminal_protocol::Result::error();
                 }
                 break;
               }
               if(program_load::blocked()) {
                 Serial.println(program_load::error());
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(script_mode) {
-                recive_pos = 0;
                 return terminal_protocol::Result::run_program(address);
               }
               if(address_parse == terminal_core::RunAddressParse::VALID) {
                 hidden_start_loaded_program(address);
                 if(core_61::is_RUN()) mk61_program_started();
-                recive_pos = 0;
                 return terminal_protocol::Result::ok();
               }
               kbd::push((i8) sw::F);   // F
@@ -4714,13 +4643,11 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               const char* args = command_args();
               if(terminal_core::at_end(args)) {
                 Serial.println("Usage: open <path>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(script_mode) return script_action(terminal_protocol::ResultKind::OPEN_FILE, args);
               if(!OpenStoredFile(current_directory, args)) {
                 Serial.println("Open failed!");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             }
@@ -4728,20 +4655,17 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case  CMD_POKE:
               if(!write_stack_value(command_args())) {
                 Serial.println("Usage: poke <X|Y|Z|T> <finite number with exponent -99..99>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
           case  CMD_HIN:
           case  CMD_SET_CODE:
               if(!GetHexString(command_id == CMD_SET_CODE ? (const char*) &input_buffer[4] : command_args())) {
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
           case  CMD_ASM:
               if(!Assembler()) {
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
@@ -4751,14 +4675,12 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
           case  CMD_LED:
               if(!exec_led()) {
                 Serial.println("Usage: led <0|1>[,<ms>,<0|1>,...]");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
           case  CMD_BEEP:
               if(!exec_beep()) {
                 Serial.println("Usage: beep <Hz>,<ms>[,<Hz>,<ms>,...]");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
@@ -4766,7 +4688,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
               return exec_if(script_mode, trap_mode);
           case CMD_PRINT:
               if(!exec_print(script_mode)) {
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
             break;
@@ -4777,16 +4698,13 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                      command_args(), 10, 60000, milliseconds) ||
                  milliseconds == 0) {
                 Serial.println("Usage in M61: wait <1..60000>");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
-              recive_pos = 0;
               return terminal_protocol::Result::wait((i32) milliseconds);
             }
           case CMD_RET:
               if(!terminal_core::at_end(command_args())) {
                 Serial.println("Usage: ret");
-                recive_pos = 0;
                 return terminal_protocol::Result::error();
               }
               if(script_mode) {
@@ -4794,7 +4712,6 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                     terminal_protocol::ResultKind::RETURN_SCRIPT, "");
               }
               Serial.println("ret works in M61 scripts only!");
-              recive_pos = 0;
               return terminal_protocol::Result::error();
           case  CMD_HISTORY:
               history_print();
@@ -4804,11 +4721,9 @@ terminal_protocol::Result class_terminal::execute(bool script_mode,
                 Serial.print("Unknown command: ");
                 terminal_println_m8((const char*) input_buffer);
               }
-              recive_pos = 0;
               return terminal_protocol::Result::error();
         }
 
-      recive_pos = 0;
       return terminal_protocol::Result::ok();
     }
 

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
+bash "$root/tests/run_c9_inode_wire_tests.sh"
 build_dir="$(mktemp -d "${TMPDIR:-/tmp}/mk61-program-store.XXXXXX")"
 out="$build_dir/program_store_self_test"
 python3 "$root/tests/app_memory_surface.py" "$build_dir/app_memory_acquire.inc"

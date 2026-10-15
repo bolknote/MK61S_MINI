@@ -93,3 +93,5 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
   "${sanitizer_flags[@]}" "$root/tests/lifetime_buffer_self_test.cpp" \
   "$root/code/shared_memory.cpp" -o "$lifetime_out"
 "$lifetime_out"
+
+bash "$root/tests/run_storage_workspace_tests.sh"
