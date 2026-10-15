@@ -247,19 +247,35 @@ static WorkspacePartition* workspace_partition;
 #endif
 static OverlayBuffer* overlay_buffer;
 static OverlayBuffer* first_overlay_buffer;
+#if MK61_SCOPED_RESIDENT_BUFFERS
+static LifetimeBuffer* lifetime_buffers;
+#endif
+
 
 #undef MK61_ARENA_STATE
 
 static_assert(sizeof(arenas) / sizeof(arenas[0]) == (usize) Arena::COUNT,
               "shared-memory arena table is incomplete");
 
+static uintptr_t allocation_limit(void) {
+  const ArenaState& app = arenas[(usize) Arena::APP];
+  uintptr_t limit = app.capacity ? (uintptr_t)app.memory : pool_end();
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
+    if((uintptr_t)live->data() < limit) limit = (uintptr_t)live->data();
+#endif
+  return limit;
+}
+
 static void refresh_pool(void) {
   ArenaState& prefix = arenas[(usize) Arena::OVERLAY];
   ArenaState& app = arenas[(usize) Arena::APP];
   prefix.memory = (u8*) pool_begin();
-  prefix.capacity = pool_size() - app.capacity;
+  prefix.capacity = allocation_limit() - pool_begin();
   if(first_overlay_buffer) prefix.capacity = first_overlay_buffer->data() - prefix.memory;
-  app.memory = app.enabled ? (u8*) (pool_end() - app.capacity) : nullptr;
+  // An active APP may sit above or below an independently owned buffer.
+  // Preserve its exact load address across every unrelated allocation/release.
+  if(!app.capacity) app.memory = app.enabled ? (u8*)pool_end() : nullptr;
 }
 
 static usize lower_reserved_size(void) {
@@ -267,6 +283,31 @@ static usize lower_reserved_size(void) {
       ((overlay_buffer->size() + 7U) & ~(usize)7U);
   return (arenas[(usize)Arena::OVERLAY].allocated_size + 7U) & ~(usize)7U;
 }
+
+#if MK61_SCOPED_RESIDENT_BUFFERS
+static uintptr_t high_gap(usize size, bool include_app) {
+  const uintptr_t floor = pool_begin() + lower_reserved_size();
+  uintptr_t ceiling = pool_end();
+  for(;;) {
+    uintptr_t block_begin = 0, block_end = floor;
+    const auto consider = [&](uintptr_t begin, usize bytes) {
+      if(begin < ceiling && begin + bytes > floor && begin > block_begin) {
+        block_begin = begin; block_end = begin + bytes;
+      }
+    };
+    const ArenaState& app = arenas[(usize)Arena::APP];
+    if(include_app && app.capacity) consider((uintptr_t)app.memory, app.capacity);
+    for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
+      consider((uintptr_t)live->data(), (live->size() + 31U) & ~(usize)31U);
+    if(ceiling >= floor && size <= ceiling - floor) {
+      const uintptr_t candidate = (ceiling - size) & ~(uintptr_t)31U;
+      if(candidate >= block_end && candidate >= floor) return candidate;
+    }
+    if(!block_begin) return 0;
+    ceiling = block_begin;
+  }
+}
+#endif
 
 // Eviction is a global one-way transition, not merely a lock on one arena.
 // Scanning the arena states costs no RAM and prevents a callback from
@@ -335,7 +376,6 @@ static void clear_resident(ArenaState& arena) {
 
 void* adjust_heap(i32 increment) {
   ArenaState& prefix = *state(Arena::OVERLAY);
-  const ArenaState& app = *state(Arena::APP);
   if(interrupt_context() || transition_in_progress() ||
      (increment != 0 && overlay_buffer) ||
      (increment != 0 && prefix.allocated_size != 0)) return nullptr;
@@ -346,7 +386,7 @@ void* adjust_heap(i32 increment) {
     if(magnitude > previous - region_begin()) return nullptr;
     heap_cursor -= magnitude;
   } else {
-    if(magnitude > pool_end() - app.capacity - previous) return nullptr;
+    if(previous > allocation_limit() || magnitude > allocation_limit() - previous) return nullptr;
     heap_cursor += magnitude;
   }
   refresh_pool();
@@ -547,28 +587,30 @@ bool Lease::acquire_impl(Arena next_arena, Owner next_owner,
     return false;
   }
 
-  // APP occupies the top; normal OVERLAY clients retain a stable bottom.
+  // APP uses the highest contiguous gap; OVERLAY retains its stable prefix.
   if(arena->active == Owner::NONE &&
      (next_arena == Arena::APP || next_arena == Arena::OVERLAY)) {
-    const Arena peer_id = next_arena == Arena::APP ? Arena::OVERLAY : Arena::APP;
-    ArenaState& peer = *state(peer_id);
     const usize alignment = next_arena == Arena::APP ? APP_ALIGNMENT : 8U;
     const usize aligned = (required + alignment - 1U) & ~(alignment - 1U);
-    const usize peer_size = peer_id == Arena::APP ? peer.capacity :
-        lower_reserved_size();
-    if(aligned > pool_size() - peer_size) {
-      // Loading a movable APP never discards a live lower buffer, even an
-      // evictable cache. Its existing address and contents remain stable.
-      if(
-         next_arena == Arena::APP ||
-         !detail_try_reclaim(peer_id)) {
+    if(next_arena == Arena::APP) {
+#if MK61_SCOPED_RESIDENT_BUFFERS
+      const uintptr_t address = high_gap(aligned, false);
+#else
+      const uintptr_t address = aligned <= pool_size() - lower_reserved_size()
+          ? pool_end() - aligned : 0;
+#endif
+      if(!address) {
         increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
         return false;
       }
-    }
-    if(next_arena == Arena::APP) {
+      arena->memory = (u8*)address;
       arena->capacity = aligned;
       refresh_pool();
+    } else if(aligned > arena->capacity) {
+      if(!detail_try_reclaim(Arena::APP) || aligned > arena->capacity) {
+        increment(opportunistic ? arena->cache_deferrals : arena->busy_failures);
+        return false;
+      }
     }
   }
 
@@ -705,7 +747,7 @@ bool OverlayBuffer::acquire(Owner owner, usize required) {
   const uintptr_t begin = overlay_buffer
       ? (uintptr_t)overlay_buffer->data() + ((overlay_buffer->size() + 7U) & ~(usize)7U)
       : (uintptr_t)prefix.memory + ((prefix.allocated_size + 7U) & ~(usize)7U);
-  const uintptr_t limit = pool_end() - arenas[(usize)Arena::APP].capacity;
+  const uintptr_t limit = allocation_limit();
   if(begin > limit || aligned > limit - begin) return false;
   memory_ = (u8*)begin;
   size_ = required; owner_ = owner;
@@ -726,6 +768,35 @@ void OverlayBuffer::reset() {
   refresh_pool();
 }
 OverlayBuffer::~OverlayBuffer() { reset(); }
+
+#if MK61_SCOPED_RESIDENT_BUFFERS
+bool LifetimeBuffer::acquire(Owner owner, usize required) {
+  (void)state(Arena::OVERLAY);
+  if(!required || required > pool_size() ||
+     !owner_allowed(Arena::OVERLAY, owner) || interrupt_context() ||
+     transition_in_progress()) return false;
+  if(ok()) return owner == owner_ && required <= size_;
+  for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next())
+    if(live->owner() == owner) return false;
+  const uintptr_t address = high_gap((required + 31U) & ~(usize)31U, true);
+  if(!address) return false;
+  memory_ = (u8*)address; size_ = required; owner_ = owner;
+  next_ = lifetime_buffers; lifetime_buffers = this;
+  refresh_pool();
+  return true;
+}
+void LifetimeBuffer::reset() {
+  if(!ok()) return;
+  if(interrupt_context() || transition_in_progress()) __builtin_trap();
+  LifetimeBuffer** link = &lifetime_buffers;
+  while(*link && *link != this) link = &(*link)->next_;
+  if(!*link) __builtin_trap();
+  *link = next_;
+  memory_ = nullptr; size_ = 0; owner_ = Owner::NONE; next_ = nullptr;
+  refresh_pool();
+}
+LifetimeBuffer::~LifetimeBuffer() { reset(); }
+#endif
 
 bool Lease::set_evictable(EvictionPrepare prepare) {
   if(memory_ == nullptr || nested_ || prepare == nullptr ||
@@ -940,10 +1011,10 @@ bool validate_invariants(void) {
   }
   const ArenaState& app = *state(Arena::APP);
   const ArenaState& prefix = *state(Arena::OVERLAY);
-  usize prefix_limit = pool_size() - app.capacity;
+  usize prefix_limit = allocation_limit() - pool_begin();
   if((overlay_buffer == nullptr) != (first_overlay_buffer == nullptr)) return false;
   if(overlay_buffer) {
-    uintptr_t next = pool_end() - app.capacity;
+    uintptr_t next = allocation_limit();
     unsigned count = 0;
     const OverlayBuffer* first = nullptr;
     for(const OverlayBuffer* live = overlay_buffer; live; live = live->previous()) {
@@ -955,13 +1026,35 @@ bool validate_invariants(void) {
         return false;
       first = live; next = begin;
     }
-    if(first != first_overlay_buffer || lower_reserved_size() > pool_size() - app.capacity)
+    if(first != first_overlay_buffer || lower_reserved_size() > allocation_limit() - pool_begin())
       return false;
     prefix_limit = next - pool_begin();
   }
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  unsigned lifetime_count = 0;
+  for(const LifetimeBuffer* live = lifetime_buffers; live; live = live->next()) {
+    const uintptr_t begin = (uintptr_t)live->data();
+    const usize bytes = (live->size() + 31U) & ~(usize)31U;
+    if(++lifetime_count >= (unsigned)Owner::COUNT || !live->ok() || !live->size() ||
+       !owner_allowed(Arena::OVERLAY, live->owner()) || (begin & 31U) ||
+       begin < pool_begin() + lower_reserved_size() || begin > pool_end() ||
+       bytes > pool_end() - begin) return false;
+    if(app.capacity && begin < (uintptr_t)app.memory + app.capacity &&
+       (uintptr_t)app.memory < begin + bytes) return false;
+    for(const LifetimeBuffer* other = live->next(); other; other = other->next()) {
+      const uintptr_t second = (uintptr_t)other->data();
+      const usize length = (other->size() + 31U) & ~(usize)31U;
+      if(other->owner() == live->owner() ||
+         (begin < second + length && second < begin + bytes)) return false;
+    }
+  }
+#endif
+  if(app.enabled && ((uintptr_t)app.memory < pool_begin() + lower_reserved_size() ||
+     (uintptr_t)app.memory > pool_end() || (uintptr_t)app.memory & 31U ||
+     app.capacity > pool_end() - (uintptr_t)app.memory)) return false;
   if(prefix.capacity != prefix_limit ||
      (uintptr_t) prefix.memory != pool_begin() ||
-     (app.enabled && (uintptr_t) app.memory != pool_end() - app.capacity)) return false;
+     (app.enabled && !app.capacity && (uintptr_t)app.memory != pool_end())) return false;
   return reclaiming_count <= 1;
 }
 

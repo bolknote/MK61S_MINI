@@ -4,6 +4,14 @@
 #include "rust_types.h"
 #include "portable_app_config.h"
 
+#ifndef MK61_SCOPED_RESIDENT_BUFFERS
+#if defined(STM32F411xE) && defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#define MK61_SCOPED_RESIDENT_BUFFERS 1
+#else
+#define MK61_SCOPED_RESIDENT_BUFFERS 0
+#endif
+#endif
+
 // Один диспетчер управляет рабочими аренами прошивки. WORKSPACE/SCRATCH/BULK
 // остаются раздельными, поскольку используются одновременно. В ABI 6 APP и
 // OVERLAY разделяют свободную RAM с системной кучей. Общими являются правила
@@ -260,6 +268,31 @@ class [[nodiscard]] OverlayBuffer {
   Owner owner_;
   OverlayBuffer* previous_;
 };
+
+#if MK61_SCOPED_RESIDENT_BUFFERS
+// Stable foreground storage allocated from the high free gaps. Unlike short
+// OverlayBuffer phases, these owners may finish in any order (M61, USB Screen,
+// APP). Live APPs and buffers never move; a released gap becomes reusable.
+class [[nodiscard]] LifetimeBuffer {
+ public:
+  constexpr LifetimeBuffer() : memory_(nullptr), size_(0), owner_(Owner::NONE), next_(nullptr) {}
+  ~LifetimeBuffer();
+  LifetimeBuffer(const LifetimeBuffer&) = delete;
+  LifetimeBuffer& operator=(const LifetimeBuffer&) = delete;
+  bool acquire(Owner owner, usize required);
+  void reset();
+  bool ok() const { return memory_ != nullptr; }
+  u8* data() const { return memory_; }
+  usize size() const { return size_; }
+  Owner owner() const { return owner_; }
+  const LifetimeBuffer* next() const { return next_; }
+ private:
+  u8* memory_;
+  usize size_;
+  Owner owner_;
+  LifetimeBuffer* next_;
+};
+#endif
 
 usize capacity(Arena arena);
 bool enabled(Arena arena);

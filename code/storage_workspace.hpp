@@ -1,6 +1,7 @@
 #ifndef MK61_STORAGE_WORKSPACE_HPP
 #define MK61_STORAGE_WORKSPACE_HPP
 #include "rust_types.h"
+#include "shared_memory.hpp"
 
 #ifndef MK61_STORAGE_SHARED_TEMP
 #if defined(ARDUINO_ARCH_STM32) && defined(STM32F411xE) && !defined(MK61_BUILD_USBDISK_MODULE)
