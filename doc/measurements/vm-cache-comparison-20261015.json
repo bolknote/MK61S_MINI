@@ -915,5 +915,16 @@
     ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-candidate/terminal.txt",
     ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-raw32/terminal.txt",
     ".build/vm-cache-three-way-20261015/hardware/attempt-2/chess-control/terminal.txt"
-  ]
+  ],
+  "post_merge_host_validation": {
+    "status": "PASS",
+    "main_commit": "6781f4a248ecfcc683f70a75269cbb21052f34d7",
+    "merge_commit": "54474fb5816feea1023d0860967fe627d115f468",
+    "production_code_tree": "583e449d48368080ba2d7d1c5dca5edfa8c6358e",
+    "tests": [
+      "merged-cache-tests.log",
+      "merged-storage-tests.log"
+    ],
+    "scope": "Host tools/cache/INPUT/ESC/USB/CRC compatibility on wire10/request9; the device comparison remains frozen056/wire9. No new device performance claim."
+  }
 }
