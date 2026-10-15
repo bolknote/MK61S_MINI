@@ -13,7 +13,7 @@ from hil_portable_apps import ScreenPort
 from hil_multi_device_identity import parse_identity
 from hil_packbits_firmware import fingerprint
 from hil_c5_stack import read_file,write_file
-APP='/LIFERAM.APP';REPORT='/LIFERPT.txt';SCRIPT='/RAMWATCH.m61'
+APP='/LIFERAM.APP';ALT='/LIFEALT.APP';REPORT='/LIFERPT.txt';SCRIPT='/RAMWATCH.m61'
 def zero_calculator(p):
     logical={c:p.command(c,20) for c in ('reg','stk','dump','hout','pwd')}
     values=re.findall(r'(?m)^(?:R[0-9A-E]|X1|[TZYX])\s+=\s+(-?\d\.\d+)\s+(-?\d+)\r?$',logical['reg']+logical['stk'])
@@ -45,9 +45,12 @@ def main():
         identity=parse_identity(p.command('identity',15))
         assert identity.public==args.public_id.upper() and identity.build==fixture['build']
         logical=zero_calculator(p);files=fingerprint(p)
-        assert not {n.casefold() for n in (APP,REPORT,SCRIPT)}&{n.casefold() for n in files['files']}
+        assert not {n.casefold() for n in (APP,ALT,REPORT,SCRIPT)}&{n.casefold() for n in files['files']}
         def measure(label,count,bytes_):
-            reply=p.command(f'open "{APP}"',30);assert 'Open failed!' not in reply,reply
+            # Different inode ids force real cache eviction/reallocation.
+            # Reopening one unchanged APP intentionally preserves its lease.
+            selected=ALT if len(rows)&1 else APP
+            reply=p.command(f'open "{selected}"',30);assert 'Open failed!' not in reply,reply
             raw=read_file(p,REPORT).decode('ascii');assert raw.startswith('LIFERAM1 ') and raw.endswith('\n'),raw
             words=raw[9:-1].split();assert len(words)==8 and all(re.fullmatch('[0-9A-F]{8}',v) for v in words),raw
             build,heap,end,overlay,app,live,rounded,owners=(int(v,16) for v in words)
@@ -63,6 +66,7 @@ def main():
             print(label,'live',live,'bytes',rounded,flush=True)
         try:
             write_file(p,APP,args.app.read_bytes());created.append(APP)
+            write_file(p,ALT,args.app.read_bytes());created.append(ALT)
             write_file(p,SCRIPT,b'bind OK run :help\nret\n:help\nprint "RAM LIFETIME CALLBACK"\nret\n');created.append(SCRIPT)
             measure('idle',0,0)
             for order in (0,1):
