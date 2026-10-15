@@ -57,6 +57,13 @@ def connect(path, build=None, wait=45):
         except TimeoutError:
             if time.monotonic() >= deadline:
                 raise
+        except AssertionError as error:
+            # A reset banner can precede the first ASCII identity response.
+            # Retry a fresh, fully checked identity; never accept a malformed
+            # response or relax the required Classic UID/profile/build.
+            if ('not a canonical MK61 identity response:' not in str(error) or
+                    'MK61s-Classic-V3 ver.' not in str(error) or time.monotonic() >= deadline):
+                raise
         time.sleep(.3)
 
 

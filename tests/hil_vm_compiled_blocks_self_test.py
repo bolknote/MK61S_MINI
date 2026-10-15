@@ -56,6 +56,17 @@ def main():
  try:h.stage_plan(a,b,common,other,raw32=c,single=True)
  except AssertionError:pass
  else:raise AssertionError('single raw32 accepted')
+ expected=object()
+ banner=AssertionError('not a canonical MK61 identity response: MK61s-Classic-V3 ver. boot banner')
+ with patch.object(h,'original_connect',side_effect=[banner,expected]) as connect,patch.object(h.time,'sleep'):
+  assert h.connect('/unused','GOOD',wait=2) is expected
+  assert connect.call_count==2
+ for error in (AssertionError('wrong UID/profile/build'),AssertionError('not a canonical MK61 identity response: other data')):
+  with patch.object(h,'original_connect',side_effect=error) as connect,patch.object(h.time,'sleep'):
+   try:h.connect('/unused','GOOD',wait=2)
+   except AssertionError as caught:assert caught is error
+   else:raise AssertionError('unverified identity accepted')
+   assert connect.call_count==1
  assert h.is_vm_cache('/system/vmcache/vmc-abcd.APP')
  print('Versioned VM HIL: cache-only restoration, original SHA checks, foreign-file rejection and no-op PASS')
 if __name__=='__main__':main()
