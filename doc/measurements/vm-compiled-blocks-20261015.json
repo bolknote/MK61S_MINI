@@ -1,0 +1,513 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED_FASTER",
+  "date": "2026-10-15",
+  "scenario": "Ordinary A/B/A; per-stage VM v7/v8 APP sets and original VMC snapshot; compare two warm repeats per stage",
+  "baseline_commit": "31ce1b6500ff6535f3e8bc8bcf16eeb1f0af7f7e",
+  "implementation_commit": "e9e34be8c0da6eaa6a6db7c720c960e9b19224a2",
+  "source_sha256": {
+    "code/focal_compiler.hpp": "b30f32c0e3eeb1406f43bfe494a5a512fdc56deb9b1487d31353b12b75139521",
+    "code/language_bytecode.cpp": "00d9277747e8915f4bbfb3fddf4b1b3f28aabb003aefdec4b2030086bca1d827",
+    "code/language_bytecode.hpp": "14e46ff37e8bda7dfef965a6b4618577f6910217ad779ec33cf8a1928df1e735",
+    "code/language_vm.cpp": "594b504d122eb60c3306cea6eae3c74da3be9cb9ecdc4b6ea2727a2664e4ed7d",
+    "code/language_vm_abi.hpp": "a8b080877e2f9b598bd5b997f53580fdb99e718879fc64fda3b3fef3c5bcc6fe",
+    "code/language_vm_file_cache.cpp": "04abeaac2e8e910430276d3d6342bb2d6bc240828126b940f13601b0a5bedf98"
+  },
+  "implementation": "Compiler-marked compact comparison blocks; ahead-of-time marking of existing index blocks; shared dynamic guards and scalar fallback; unchanged original widths and interior PCs",
+  "algorithm_and_program_sources_changed": false,
+  "program_tree": "3fde55bac115ff28ee652ff62fa32b63e05a122e",
+  "limits_weakened": false,
+  "wire_version_before_after": [
+    7,
+    8
+  ],
+  "request_ABI": 8,
+  "APP_ABI": 6,
+  "validated_image_and_APP_INFO_magic_updated": true,
+  "old_VMC_rebuilt_never_executed": true,
+  "device": "AEB505B6E0067623",
+  "USB_serial": "2068336B4731",
+  "profile": "classic-v3-uc1609",
+  "clock_hz": 96000000,
+  "math_backend": "LIBM",
+  "USB_screen": true,
+  "RAM_VM_cache_bytes": 24576,
+  "density": true,
+  "file_cache": true,
+  "mixed_cache": false,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "stages": [
+    {
+      "stage": "baseline",
+      "firmware": {
+        "build": "83022CA7",
+        "bytes": 360752,
+        "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9"
+      },
+      "seconds": [
+        53.61822387500433,
+        44.44047812500503,
+        44.520949958008714
+      ],
+      "warm_median_seconds": 44.48071404150687,
+      "frames_crc_verified": 1043,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 10608,
+      "zx0_decode_calls": [
+        340,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        367,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        11,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 10423,
+          "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+        },
+        "LANGIN.APP": {
+          "bytes": 11790,
+          "sha256": "20eba87e19a50753a19d2bb87cf8396039d664cab59ee60068ae3dfc9822ec75"
+        },
+        "BASIC.APP": {
+          "bytes": 13762,
+          "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+        },
+        "FOCAL.APP": {
+          "bytes": 13384,
+          "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 6970,
+          "sha256": "950510b2e5e5bb934bc28daf8a15dd37b9978085ca2ad1e33e4235c1970fcf77"
+        }
+      },
+      "original_cache_restored": [],
+      "test_cache_removed": []
+    },
+    {
+      "stage": "candidate",
+      "firmware": {
+        "build": "38B9EA56",
+        "bytes": 360752,
+        "sha256": "02f3225e96ff0c0cbd1d3e137a319fcfd08c3b3beeda7bb42a8c2b137e9a8572"
+      },
+      "seconds": [
+        55.551019290986005,
+        43.74012320797192,
+        43.810186541988514
+      ],
+      "warm_median_seconds": 43.77515487498022,
+      "frames_crc_verified": 1047,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 9692,
+      "zx0_decode_calls": [
+        372,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        627,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        15,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 10526,
+          "sha256": "ddedae427b9c45fb40ed242b8607a8c6580f2ae9bcaba071b9a36a66cab2c319"
+        },
+        "LANGIN.APP": {
+          "bytes": 11993,
+          "sha256": "929014ff7269198d75d2b828564ac05cf079bae64e14b8bf301578f9c2356b99"
+        },
+        "BASIC.APP": {
+          "bytes": 13886,
+          "sha256": "db57405406e9c5ebc905d698b287bfbaf277d07dd0d24be9ad98555c5b8673eb"
+        },
+        "FOCAL.APP": {
+          "bytes": 13470,
+          "sha256": "d79200e0482e5da585e4bf536ea7c0f3e5c942b462a1eac15cf31fc508fec833"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7038,
+          "sha256": "05b90afe2e6047b2c0d142e1965fae88208f2d9441fb5259f91a0618a2ec92ce"
+        }
+      },
+      "original_cache_restored": [],
+      "test_cache_removed": [
+        "/System/VMCache/VMC-0010.app",
+        "/System/VMCache/VMC-0014.app",
+        "/System/VMCache/VMC-0017.app",
+        "/System/VMCache/VMC-001a.app",
+        "/System/VMCache/VMC-001d.app",
+        "/System/VMCache/VMC-001e.app",
+        "/System/VMCache/VMC-0025.app",
+        "/System/VMCache/VMC-0027.app",
+        "/System/VMCache/VMC-0028.app",
+        "/System/VMCache/VMC-0029.app"
+      ]
+    },
+    {
+      "stage": "control",
+      "firmware": {
+        "build": "83022CA7",
+        "bytes": 360752,
+        "sha256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9"
+      },
+      "seconds": [
+        53.573267208994366,
+        44.44748366600834,
+        44.538778000016464
+      ],
+      "warm_median_seconds": 44.4931308330124,
+      "frames_crc_verified": 1046,
+      "keyboard_overflow_observations": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "stack_budget_bytes": 16384,
+      "stack_watermark_remaining_bytes": 10608,
+      "zx0_decode_calls": [
+        340,
+        174,
+        174
+      ],
+      "nor_write_calls": [
+        364,
+        0,
+        0
+      ],
+      "nor_erase_calls": [
+        10,
+        0,
+        0
+      ],
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 10423,
+          "sha256": "9e8b1a69866305858480dd576fd2cc158fcedfd6e2a2dfa97bf6c8e6cfea03a7"
+        },
+        "LANGIN.APP": {
+          "bytes": 11790,
+          "sha256": "20eba87e19a50753a19d2bb87cf8396039d664cab59ee60068ae3dfc9822ec75"
+        },
+        "BASIC.APP": {
+          "bytes": 13762,
+          "sha256": "07fb0ade88a9ce62e1011dab20ac156217bd3ce19fbef58b4116363b6c77917a"
+        },
+        "FOCAL.APP": {
+          "bytes": 13384,
+          "sha256": "541fa9ab6012bdd15dcb56ab83d3eb2f78db2543e018986737af264b0bbc1a50"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 6970,
+          "sha256": "950510b2e5e5bb934bc28daf8a15dd37b9978085ca2ad1e33e4235c1970fcf77"
+        }
+      },
+      "original_cache_restored": [
+        "/System/VMCache/VMC-000f.app",
+        "/System/VMCache/VMC-0020.app",
+        "/System/VMCache/VMC-0019.app",
+        "/System/VMCache/VMC-0026.app",
+        "/System/VMCache/VMC-0015.app",
+        "/System/VMCache/VMC-001c.app",
+        "/System/VMCache/VMC-0018.app"
+      ],
+      "test_cache_removed": [
+        "/System/VMCache/VMC-0010.app",
+        "/System/VMCache/VMC-0014.app",
+        "/System/VMCache/VMC-0017.app",
+        "/System/VMCache/VMC-001a.app",
+        "/System/VMCache/VMC-001d.app",
+        "/System/VMCache/VMC-001e.app",
+        "/System/VMCache/VMC-0025.app",
+        "/System/VMCache/VMC-0027.app",
+        "/System/VMCache/VMC-0028.app",
+        "/System/VMCache/VMC-0029.app"
+      ]
+    }
+  ],
+  "time_reduction_vs_baseline_percent": 1.5862136697451956,
+  "time_reduction_vs_control_percent": 1.6136782118723603,
+  "control_drift_percent": 0.027915000406575352,
+  "speedup_vs_mean_controls": 1.0162596240792796,
+  "first_runs_are_matched_cold": false,
+  "cold_note": "Each stage restores seven original VMC. Candidate v8 recompiles these too; baseline v7 may use them. First runs and their whole-stage stack peaks are not matched cold workload.",
+  "all_nine_nodes": 420,
+  "all_nine_move": "e2e3",
+  "all_complete_boards_identical": true,
+  "board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "frames_CRC_verified": 3136,
+  "resident_flash_delta_bytes": 0,
+  "resources": {
+    "baseline-main": {
+      "flash_bytes": 360752,
+      "static_RAM_bytes": 27048,
+      "max_frame": 1928,
+      "SHA256": "d774157a1e52ceb68429f360e23e2e2ad9c2843abab1f4f9741ca66db8cd06b9",
+      "gates": "PASS"
+    },
+    "candidate": {
+      "flash_bytes": 360752,
+      "static_RAM_bytes": 27048,
+      "max_frame": 1928,
+      "SHA256": "02f3225e96ff0c0cbd1d3e137a319fcfd08c3b3beeda7bb42a8c2b137e9a8572",
+      "gates": "PASS"
+    },
+    "candidate-core": {
+      "flash_bytes": 351092,
+      "static_RAM_bytes": 27048,
+      "max_frame": 1928,
+      "SHA256": "58357c837152a608ad61653967c8dccce28ab4bddf374f5012a87a302f094282",
+      "gates": "PASS"
+    }
+  },
+  "new_APPs": {
+    "BASIC.APP": {
+      "bytes": 13886,
+      "image_memory_bytes": [
+        19180,
+        19232
+      ],
+      "SHA256": "db57405406e9c5ebc905d698b287bfbaf277d07dd0d24be9ad98555c5b8673eb"
+    },
+    "FOCAL.APP": {
+      "bytes": 13470,
+      "image_memory_bytes": [
+        18160,
+        18188
+      ],
+      "SHA256": "d79200e0482e5da585e4bf536ea7c0f3e5c942b462a1eac15cf31fc508fec833"
+    },
+    "LANGIN.APP": {
+      "bytes": 11993,
+      "image_memory_bytes": [
+        15740,
+        15760
+      ],
+      "SHA256": "929014ff7269198d75d2b828564ac05cf079bae64e14b8bf301578f9c2356b99"
+    },
+    "LANGVM.APP": {
+      "bytes": 10526,
+      "image_memory_bytes": [
+        15336,
+        15356
+      ],
+      "SHA256": "ddedae427b9c45fb40ed242b8607a8c6580f2ae9bcaba071b9a36a66cab2c319"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7038,
+      "image_memory_bytes": [
+        8701,
+        8716
+      ],
+      "SHA256": "05b90afe2e6047b2c0d142e1965fae88208f2d9441fb5259f91a0618a2ec92ce"
+    }
+  },
+  "local_float": {
+    "memory_bytes": 17316,
+    "limit": 17408,
+    "both_block_accelerators": false,
+    "semantics": "scalar fallback"
+  },
+  "hardware_stack_note": "Whole-stage high-water marks include the first migration run. Candidate compiles more sources than baseline/control (372 vs340 cold decodes). Record the observed 916-byte difference, not zero growth or an isolated fixed block-stack cost.",
+  "hardware_stack_observed_delta_bytes": 916,
+  "host_tests": {
+    "ASan_UBSan": true,
+    "compiled_block_scalar_oracle_cases": 368232,
+    "integer_block_differential_cases": 32726,
+    "VM_BASIC_FOCAL_INPUT_calls_errors_LIMIT_ESC": true,
+    "RAM_file_cache_overlay_pins_generations": true,
+    "mixed_cache_both_arithmetic_and_USB_variants": true,
+    "opcode_timing_and_census_variants": 16,
+    "HIL_cache_restoration_offline": true
+  },
+  "chess_logical_trace": {
+    "source_base": "18361c3a4",
+    "identical_after_normalizing_only_marker_opcodes": true,
+    "instructions": 6518041,
+    "module_calls": 11305,
+    "nodes": 420,
+    "screen_and_output_byte_identical": true
+  },
+  "F401": {
+    "cases": 9,
+    "status": "PASS",
+    "max_frame": 1936,
+    "frame_limit": 2048,
+    "physical_device": false
+  },
+  "cross_MCU_WS0010_RAM_comparison": "NOT_RUN: no paired F411 release matrix",
+  "ARM": {
+    "generation": 15,
+    "profile": "libm",
+    "poisoned_inactive_continuation": true,
+    "native_call_stack_peaks": {
+      "startup": 4080,
+      "verification": 980,
+      "program": 1192,
+      "input": 984,
+      "expression": 736,
+      "finish": 376
+    },
+    "stress_native_call_stack_peaks": {
+      "startup": 3964,
+      "verification": 980,
+      "program": 664,
+      "input": 3196,
+      "expression": 736,
+      "finish": 376
+    },
+    "compiler_workspace_bytes": {
+      "BASIC": 3976,
+      "FOCAL": 1708
+    },
+    "input_image_c_stack_bytes": 0,
+    "input_image_in_value_stack": true,
+    "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+  },
+  "ARM_environment": "Python3.9.6 x86_64 via Rosetta; Unicorn2.1.4 x86_64",
+  "rebased_firmware_and_APP_byte_identity": true,
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "original_files": 44,
+    "original_directories": 4,
+    "added_cache_files_removed": 10,
+    "mini_touched": false,
+    "firmware": {
+      "build": "122A5FF9",
+      "bytes": 360564,
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+    },
+    "crc_valid": true,
+    "crash_none": true,
+    "alarms_off": true,
+    "process_exit_code": 0,
+    "calculator_verification": "Exact reg/stk/dump/pwd equality; empty program, zero registers and stacks, IP0/root",
+    "file_verification": "Full path/length/SHA256 fingerprint before and after exact firmware restoration",
+    "MSC_enabled_by_test": false,
+    "read_retries": []
+  },
+  "artifacts": ".build/vm-compiled-blocks-20261015",
+  "raw_report": ".build/vm-compiled-blocks-20261015/hardware/attempt-1/report.json",
+  "raw_log": ".build/vm-compiled-blocks-20261015/hardware.log",
+  "combined_main_qualification": {
+    "status": "PASS",
+    "method": "Three ordinary searches; not a new matched speedup comparison",
+    "source_commit": "37dc6a138",
+    "main_USB_base": "96505feff",
+    "implementation_source_files_unchanged": true,
+    "firmware": {
+      "build": "D6873FBC",
+      "bytes": 360564,
+      "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457"
+    },
+    "same_five_APP_bytes_as_isolated_candidate": true,
+    "seconds": [
+      55.71248462499352,
+      43.81656799998018,
+      43.8909749580198
+    ],
+    "warm_median_seconds": 43.85377147899999,
+    "all_three_nodes": 420,
+    "all_three_move": "e2e3",
+    "complete_boards_identical": true,
+    "board_SHA256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_CRC_verified": 1039,
+    "keyboard_overflow_observations": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "stack_budget_bytes": 16384,
+    "stack_watermark_remaining_bytes": 9692,
+    "zx0_decode_calls": [
+      372,
+      174,
+      174
+    ],
+    "NOR_write_calls": [
+      629,
+      0,
+      0
+    ],
+    "NOR_erase_calls": [
+      16,
+      0,
+      0
+    ],
+    "resources": {
+      "combined": {
+        "flash_bytes": 360564,
+        "static_RAM_bytes": 26880,
+        "max_native_frame_bytes": 1928,
+        "SHA256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457",
+        "ELF_source_runtime_resource_APP_RAM_stack_gates": "PASS"
+      },
+      "combined-core": {
+        "flash_bytes": 350892,
+        "static_RAM_bytes": 26880,
+        "max_native_frame_bytes": 1928,
+        "SHA256": "7148635d70a1361487b6f9bab58c11f163885a53bd02548ce20d3e8e4abb1d26",
+        "ELF_source_runtime_resource_APP_RAM_stack_gates": "PASS"
+      }
+    },
+    "recovery": {
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "original_files": 44,
+      "original_directories": 4,
+      "added_cache_files_removed": 10,
+      "mini_touched": false,
+      "firmware": {
+        "build": "122A5FF9",
+        "bytes": 360564,
+        "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+      },
+      "CRC_valid": true,
+      "crash_none": true,
+      "alarms_off": true,
+      "read_retries": [],
+      "process_exit_code": 0
+    },
+    "raw_report": ".build/vm-compiled-blocks-20261015/hardware/combined-1/report.json",
+    "raw_log": ".build/vm-compiled-blocks-20261015/combined-hardware.log",
+    "production_SHA256_matches_isolated_candidate": true
+  }
+}

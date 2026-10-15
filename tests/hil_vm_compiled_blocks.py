@@ -142,6 +142,7 @@ def main():
     parser.add_argument('--baseline-system', type=Path, required=True)
     parser.add_argument('--candidate-system', type=Path, required=True)
     parser.add_argument('--runs', type=int, default=3, choices=range(2,8))
+    parser.add_argument('--single-candidate',action='store_true',help='Ordinary combined-main qualification only; no matched speedup claim')
     parser.add_argument('--output-dir', type=Path, required=True)
     options = parser.parse_args()
     output = options.output_dir.resolve()
@@ -156,6 +157,7 @@ def main():
     stages = [('baseline', baseline, options.baseline_system),
               ('candidate', candidate, options.candidate_system),
               ('control', baseline, options.baseline_system)]
+    if options.single_candidate:stages=[('qualification',candidate,options.candidate_system)]
     bundles = {}
     for _, _, directory in stages:
         if directory not in bundles:
@@ -175,7 +177,7 @@ def main():
         save(output / 'snapshot.json', dict(identity=asdict(parse_identity(port.command('identity'))),
              health=before, files=files, alarms=alarms, firmware=original))
     print('Snapshot complete:', len(files['files']), 'files,', len(files['directories']), 'directories', flush=True)
-    scenario = 'A/B/A, per-stage System APP and original VMC snapshot'
+    scenario = 'Ordinary combined-main qualification; not matched A/B/A' if options.single_candidate else 'A/B/A, per-stage System APP and original VMC snapshot'
     result = dict(status='RUNNING', scenario=scenario, original=original, stages=[], restored=False,
         runs_per_stage=options.runs, vm_cache_normalized_before_each_stage=True)
     save(output / 'report.json', result)
