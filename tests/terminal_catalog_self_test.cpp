@@ -70,6 +70,15 @@ int main() {
   assert(terminal_catalog::lookup((const u8*) "sdel") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "sera") == CMD_UNKNOWN);
   assert(terminal_catalog::lookup((const u8*) "measure") == CMD_UNKNOWN);
+  assert(terminal_catalog::conditional_arguments(nullptr) == nullptr);
+  for(const char* line : {"", "i", "if", "ifx 0==0 ret", "IF 0==0 ret",
+                          " if 0==0 ret", "if\r0==0 ret", "if\n0==0 ret"}) {
+    assert(terminal_catalog::conditional_arguments(line) == nullptr);
+  }
+  for(const char* line : {"if ", "if\t", "if 0==0 ret", "if\t0==0 ret"}) {
+    assert(terminal_catalog::lookup((const u8*) line) == CMD_IF);
+    assert(terminal_catalog::conditional_arguments(line) == line + 2);
+  }
 #if MK61_TERMINAL_HELP_IS_EXTERNAL
   assert(std::strlen(terminal_catalog::help_signature()) == 9);
 #endif

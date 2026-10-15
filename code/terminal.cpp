@@ -3772,8 +3772,9 @@ bool class_terminal::exec_print(bool script_mode) {
       return false;
     }
 
-terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mode) {
-      const char* p = command_args();
+// Shared by interactive IF and the read-only script prefix path. Keep one
+// parser and IEEE comparison implementation, including malformed-tail rules.
+bool class_terminal::parse_if_condition(const char*& p, bool& condition) {
       double lhs = 0.0;
       double rhs = 0.0;
       bool parsed = parse_if_operand(p, lhs);
@@ -3791,18 +3792,25 @@ terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mo
       }
       if(parsed) parsed = parse_if_operand(p, rhs);
 
-      const char* tail = terminal_core::skip_spaces(p);
-      if(!parsed || *tail == 0) {
-        recive_pos = 0;
-        Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
-        return terminal_protocol::Result::error();
-      }
+      p = terminal_core::skip_spaces(p);
+      if(!parsed || *p == 0) return false;
 
-      bool condition = false;
+      condition = false;
       if(op0 == '>') condition = op1 ? (lhs >= rhs) : (lhs > rhs);
       if(op0 == '<') condition = op1 ? (lhs <= rhs) : (lhs < rhs);
       if(op0 == '=') condition = (lhs == rhs);
       if(op0 == '!') condition = (lhs != rhs);
+      return true;
+    }
+
+terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mode) {
+      const char* tail = command_args();
+      bool condition = false;
+      if(!parse_if_condition(tail, condition)) {
+        recive_pos = 0;
+        Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
+        return terminal_protocol::Result::error();
+      }
 
       if(!condition) {
         recive_pos = 0;
@@ -4879,6 +4887,41 @@ terminal_protocol::Result class_terminal::execute_script_line(
     const char* line, bool trap_mode) {
   if(line == NULL) return terminal_protocol::Result::error();
 
+  // Validate the original line before accepting even a false IF; its skipped
+  // tail must not turn an overlong command into a successful one.
+  usize len=0;
+  while(line[len]!=0) {
+    if(!terminal_core::input_can_append(len)) {
+      recive_pos=0;return terminal_protocol::Result::error();
+    }
+    ++len;
+  }
+  const char* const end=line+len;
+  trap_mode=trap_mode || m61_text::calculator_suspended();
+  if(terminal_command_allowed_in_script(CMD_IF) &&
+     (!trap_mode || terminal_command_allowed_in_trap(CMD_IF))) {
+    // False conditions neither mutate the shared interactive buffer nor
+    // enter the full terminal dispatcher. True nested IFs consume prefixes
+    // iteratively; OPEN/other actions still use the normal permission path.
+    while(const char* args=terminal_catalog::conditional_arguments(line)) {
+#if defined(MK61_OLED1602_WS0010)
+      idle_signal_reset();
+#endif
+      // IF has the same transfer-cancellation side effect as normal dispatch,
+      // even when its condition is false or malformed.
+      cancel_file_upload();
+      bool condition=false;
+      recive_pos=0;
+      if(!parse_if_condition(args,condition)) {
+        Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
+        return terminal_protocol::Result::error();
+      }
+      if(!condition)return terminal_protocol::Result::ok();
+      line=args;
+    }
+  }
+  len=(usize)(end-line);
+
   // input_buffer один на прошивку: пока скрипт исполняется между итерациями
   // loop(), в буфере может лежать недонабранная строка интерактивного
   // терминала. Сохраняем её на стеке и возвращаем после выполнения строки.
@@ -4886,24 +4929,10 @@ terminal_protocol::Result class_terminal::execute_script_line(
   memcpy(interactive_line, input_buffer, MAX_INPUT_CHAR);
 
   terminal_protocol::Result result = terminal_protocol::Result::error();
-  usize len = 0;
-  bool too_long = false;
-  while(line[len] != 0) {
-    if(!terminal_core::input_can_append(len)) {
-      too_long = true;
-      break;
-    }
-    input_buffer[len] = (u8) line[len];
-    len++;
-  }
-
-  if(too_long) {
-    recive_pos = 0;
-  } else {
-    input_buffer[len] = CR;
-    recive_pos = len + 1;
-    result = execute(true, trap_mode);
-  }
+  memmove(input_buffer,line,len);
+  input_buffer[len] = CR;
+  recive_pos = len + 1;
+  result = execute(true, trap_mode);
 
   // Действия с аргументом возвращают указатель внутрь временного input_buffer.
   // Исходная строка вызывающего живёт до обработки Result, поэтому сохраняем

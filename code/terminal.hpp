@@ -346,6 +346,7 @@ class class_terminal {
     // Операнд условия if: x,y,z,t,x1 (стек), r0..re (rf в расширенном режиме)
     // или числовой литерал (1.25e-2, -5, ...).
     static bool parse_if_operand(const char*& p, double& out);
+    static bool parse_if_condition(const char*& p, bool& condition);
 
     // if <операнд><op><операнд> <команда> - команда выполняется при истинном
     // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.

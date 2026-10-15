@@ -119,6 +119,11 @@ static_assert(conditional.name[0] != 0, "IF word must not be empty");
 static_assert(conditional.name[1] != 0, "IF word must have two bytes");
 static_assert(conditional.name[2] == 0, "IF word must have only two bytes");
 
+const char* conditional_arguments(const char* line) {
+  return line && line[0]==conditional.name[0] && line[1]==conditional.name[1] &&
+      terminal_core::is_space(line[2]) ? line+2 : nullptr;
+}
+
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 u8 lookup(const u8* line) {
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::TERMINAL_LOOKUP);

@@ -11,7 +11,7 @@ for backend in 0 1; do
 for block in 0 1; do
   clang++ -std=c++17 -O1 -Wall -Wextra -Werror "${flags[@]}" \
     -DMK61_VM_INTEGER_BLOCK="$block" -DMK61_MATH_BACKEND="$backend" \
-    -DLANGUAGE_VM_TEST_INTEGER_BLOCK \
+    -DLANGUAGE_VM_TEST_INTEGER_BLOCK -DLANGUAGE_VM_TRACE \
     -I"$root/code" "$root/tests/language_vm_integer_block_self_test.cpp" \
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/block-$block"
   "$work/block-$block" > "$work/block-$block.txt"
