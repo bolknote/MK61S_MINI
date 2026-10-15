@@ -96,6 +96,7 @@ python3 "$root/tests/m8_codec_self_test.py"
 bash "$root/tests/run_math_helpers_tests.sh"
 "$root/tests/run_mk_math_tests.sh"
 "$root/tests/run_mk61_ref_tests.sh"
+"$root/tests/run_mk61_number_tests.sh"
 "$root/tests/run_program_memory_policy_tests.sh"
 # MKC promises compatibility with stock macOS Bash 3.2.  Homebrew Bash may
 # appear earlier in PATH, so exercise the manager with the system interpreter

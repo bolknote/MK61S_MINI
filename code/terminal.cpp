@@ -3612,6 +3612,10 @@ bool class_terminal::parse_if_operand(const char*& p, double& out) {
         const isize reg = HexdecimalDigit(p[1]);
         if(reg >= 0 && operand_delimiter(p[2])) {
           if(reg == 15 && !core_61::expanded_program_is_on()) return false;
+          if(mk61_ref::try_read_register_number((int) reg, out)) {
+            p += 2;
+            return true;
+          }
           char value[15];
           value[14] = 0;
           MK61Emu_ReadRegister((int) reg, value, terminal_symbols);
@@ -3631,6 +3635,10 @@ bool class_terminal::parse_if_operand(const char*& p, double& out) {
         else reg = stack::T;
         if(!operand_delimiter(p[advance])) return false;
 
+        if(mk61_ref::try_read_stack_number(reg, out)) {
+          p += advance;
+          return true;
+        }
         char value[15];
         value[14] = 0;
         read_stack_register(reg, value, terminal_symbols);

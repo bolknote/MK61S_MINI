@@ -41,6 +41,12 @@ void idle_signal_reset(){++idle_resets;}
 int HexdecimalDigit(char c){if(c>='0'&&c<='9')return c-'0';if((c|32)>='a'&&(c|32)<='f')return (c|32)-'a'+10;return -1;}
 void MK61Emu_ReadRegister(int,char* out,const char*){++reads;std::memcpy(out,regtext,15);}
 const char* read_stack_register(stack,char* out,const char*){++reads;std::memcpy(out,regtext,15);return out;}
+// This suite compares script/interactive dispatch and the exact legacy fallback.
+// The physical numeric fast path is covered by mk61_number_self_test instead.
+namespace mk61_ref {
+ bool try_read_register_number(int,double&){return false;}
+ bool try_read_stack_number(stack,double&){return false;}
+}
 struct {std::string text;void println(const char* s){text+=s;text+='\n';}} Serial;
 class class_terminal {
  public:

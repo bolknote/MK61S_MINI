@@ -258,6 +258,81 @@ inline bool write_raw_register(u8 reg, const u8 raw[12]) {
 #endif
 }
 
+#if !defined(MK61_REF_HOST_TEST) && !defined(MK61_BUILD_PORTABLE_SYSTEM)
+namespace detail {
+
+// Physical R/stack words share this layout from their least significant digit.
+// Noncanonical words must use the caller's own formatter/parser: IF rejects
+// some strings that the historical general reference reader parses partially.
+inline bool try_read_decimal_word(const u8* word, double& out) {
+#if DBL_MANT_DIG != 53 || DBL_MAX_EXP != 1024
+  (void) word;
+  (void) out;
+  return false;
+#else
+  const u8 sign = word[24];
+  const u8 exponent_sign = word[33];
+  const u8 low = word[27];
+  const u8 high = word[30];
+  if((sign != 0 && sign != 9) ||
+     (exponent_sign != 0 && exponent_sign != 9) || low > 9 || high > 9)
+    return false;
+  int exponent = high * 10 + low;
+  if(exponent_sign == 9) {
+    // Stored -00 formats as -100 in a two-digit exponent field. Do not
+    // silently turn this malformed legacy representation into numeric zero.
+    if(exponent == 0) return false;
+    exponent -= 100;
+  }
+
+  u32 mantissa = 0;
+  for(int offset = 21; offset >= 0; offset -= 3) {
+    const u8 digit = word[offset];
+    if(digit > 9) return false;
+    mantissa = mantissa * 10U + digit;
+  }
+
+  double value;
+  if(mantissa == 0) {
+    value = 0.0;
+  } else {
+    // A representable integer needs no soft-double scaling. All intermediate
+    // values are <1e8, hence the final u32->binary64 conversion is exact.
+    u32 divisor = 1;
+    if(exponent >= 0 && exponent <= 7) {
+      for(int places = exponent; places < 7; ++places) divisor *= 10U;
+    }
+    if(exponent >= 0 && exponent <= 7 && mantissa % divisor == 0) {
+      value = (double) (mantissa / divisor);
+    } else {
+      // Match mk_math::strtod's operation order bit-for-bit, not
+      // (mantissa/1e7)*10^exponent, which can round differently.
+      value = (double) mantissa;
+      const int scale = exponent - 7;
+      if(scale > 0) value *= mk_math::pow10_int(scale);
+      else if(scale < 0) value /= mk_math::pow10_int(-scale);
+    }
+  }
+  out = sign == 9 ? -value : value;
+  return true;
+#endif
+}
+
+} // namespace detail
+
+// Fast-only: false leaves out untouched, so callers retain their original
+// fallback and invalid-word semantics. X1 is supported without changing Ref ABI.
+inline bool try_read_register_number(int reg, double& out) {
+  if(reg < 0 || reg > 15 || !register_available((u8) reg)) return false;
+  return detail::try_read_decimal_word(ringM + (usize) reg * 42, out);
+}
+
+inline bool try_read_stack_number(stack reg, double& out) {
+  if((int) reg < (int) stack::X1 || (int) reg > (int) stack::T) return false;
+  return detail::try_read_decimal_word(ringM + core_61::stack_address(reg) + 1, out);
+}
+#endif
+
 inline bool read(const Ref& ref, double& value) {
   if(ref.kind == Kind::R && !register_available(ref.reg)) return false;
 #ifdef MK61_REF_HOST_TEST
@@ -267,6 +342,9 @@ inline bool read(const Ref& ref, double& value) {
 #elif defined(MK61_BUILD_PORTABLE_SYSTEM)
   return portable_system::call(MK61_SYS_REF_READ, (u32) ref.kind, ref.reg, 0, &value);
 #else
+  if(ref.kind == Kind::R ? try_read_register_number(ref.reg, value)
+                         : try_read_stack_number(stack_from_ref(ref.kind), value))
+    return true;
   char text[15];
   text[14] = 0;
   if(ref.kind == Kind::R) {
