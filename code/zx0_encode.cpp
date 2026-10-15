@@ -7,6 +7,7 @@
  */
 
 #include "zx0.hpp"
+#include "zx0_encode_kernels.hpp"
 
 #include <stdint.h>
 
@@ -19,6 +20,12 @@ static constexpr u16 MAX_OFFSET = 256;
 static constexpr u32 MAX_INPUT_SIZE = 8192;
 static constexpr u16 INFINITE_COST = 0xFFFFU;
 static constexpr u16 END_COST = 18;
+#if MK61_ZX0_WORD_KERNELS
+static_assert(MAX_OFFSET == zx0_encode_kernels::MAX_OFFSET,
+              "packed LCP ranges require the 256-byte window");
+static_assert(MAX_INPUT_SIZE <= zx0_encode_kernels::MAX_INPUT_SIZE,
+              "packed counters rely on the 8192-byte input bound");
+#endif
 
 struct Costs {
   u16 literal;
@@ -56,6 +63,9 @@ static u16 add_cost(u16 left, u32 right) {
 
 static u16 match_length(const u8* input, u16 size,
                         u16 position, u16 offset) {
+#if MK61_ZX0_WORD_KERNELS
+  return zx0_encode_kernels::match_length(input, size, position, offset);
+#else
   const u8* current = input + position;
   const u8* source = current - offset;
   const u8* const begin = current;
@@ -65,6 +75,7 @@ static u16 match_length(const u8* input, u16 size,
     source++;
   }
   return (u16) (current - begin);
+#endif
 }
 
 static bool matching_offset(const u8* input, u16 size, u16 position,
@@ -163,11 +174,15 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
 
   for(u32 cursor = size; cursor-- != 0;) {
     const u16 position = (u16) cursor;
-    const u16 maximum_offset =
-      position < MAX_OFFSET ? position : MAX_OFFSET;
     u16 near_length = 0;
     u16 far_length = 0;
 
+#if MK61_ZX0_WORD_KERNELS
+    zx0_encode_kernels::lcp_blocks(input, position, lcp,
+                                   near_length, far_length);
+#else
+    const u16 maximum_offset =
+      position < MAX_OFFSET ? position : MAX_OFFSET;
     for(u16 offset = 1; offset <= MAX_OFFSET; offset++) {
       if(offset <= maximum_offset &&
          input[position] == input[position - offset]) {
@@ -181,6 +196,7 @@ static bool build_bounded_optimal_plan(const u8* input, u16 size,
         far_length = lcp[offset];
       }
     }
+#endif
 
     u16 best_match = INFINITE_COST;
     u16 match_cost = 10;
