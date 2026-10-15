@@ -26,6 +26,10 @@
 #include <usbd_desc.h>
 #define mk61_usb_descriptors USBD_Desc
 #endif
+#if MK61_USB_COMPACT_STATE
+/* Absolute ELF marker selects the exact ABI in the release symbol gate. */
+__asm__(".global mk61_usb_compact_layout\n.set mk61_usb_compact_layout, 1");
+#endif
 USBD_HandleTypeDef hUSBD_Device_CDC;
 CDC_TransmitQueue_TypeDef TransmitQueue;
 CDC_ReceiveQueue_TypeDef ReceiveQueue;
@@ -106,7 +110,7 @@ bool CDC_connected(void) {
 void CDC_continue_transmit(void) {
   // Reset/disconnect can clear class data between a foreground check and this call.
   const uint32_t saved=cdc_if_lock();
-  USBD_CDC_HandleTypeDef* h=(USBD_CDC_HandleTypeDef*)hUSBD_Device_CDC.pClassData;
+  USBD_CDC_HandleTypeDef* h=(USBD_CDC_HandleTypeDef*)MK61_USBD_ClassData(&hUSBD_Device_CDC);
   if(initialized && h && !h->TxState && CDC_connected()) {
     uint16_t size;uint8_t* bytes=CDC_TransmitQueue_ReadBlock(&TransmitQueue,&size);
     if(size) {
@@ -119,7 +123,7 @@ void CDC_continue_transmit(void) {
 }
 bool CDC_resume_receive(void) {
   const uint32_t saved=cdc_if_lock();bool resumed=false;
-  if(initialized && hUSBD_Device_CDC.pClassData && !receivePended) {
+  if(initialized && MK61_USBD_ClassData(&hUSBD_Device_CDC) && !receivePended) {
     uint8_t* bytes=CDC_ReceiveQueue_ReserveBlock(&ReceiveQueue);
     if(bytes) {
       receivePended=true;

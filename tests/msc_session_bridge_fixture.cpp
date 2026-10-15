@@ -1,6 +1,21 @@
-// Compile the production foreground bridge and RAM manager. Only the USB
-// controller and disk media are mocked; all prepare/unwind decisions are real.
+// Compile the production foreground bridge and RAM manager. USB controller,
+// disk media and display UI are mocked; prepare/unwind decisions remain real.
+#include "../code/display.hpp"
+#if defined(MK61_DISPLAY_UC1609)
+#include "../code/menu.hpp"
+// Include the real UI declaration before substituting its hardware-facing
+// accessor, so the Classic close/eject path executes without a physical LCD.
+struct FixtureDiskDisplay {
+  void beginDiskSaving(bool) {}
+  void endDiskSaving() {}
+};
+static FixtureDiskDisplay fixture_display;
+static FixtureDiskDisplay& msc_fixture_display() { return fixture_display; }
+namespace library_mk61 { bool language_is_ru() { return false; } }
+#define main_lcd msc_fixture_display
+#endif
 #include "../code/usb_mass_storage.cpp"
+#undef main_lcd
 #include <stddef.h>
 #define CHECK(x) do { if(!(x)) return __LINE__; } while(0)
 static unsigned failure, ended, starts, stops;
@@ -92,7 +107,7 @@ extern "C" int test_msc_bridge_cycles() {
     CHECK(prepare() && transport_buffer.ok() && media_open);
     CHECK(prepare()); // Idempotent before USB starts.
     CHECK(init() && active() && init());
-    CHECK(hUSBD_Device_CDC.pClassData==transport_buffer.data());
+    CHECK(MK61_USBD_ClassData(&hUSBD_Device_CDC)==transport_buffer.data());
     CHECK(deinit() && deinit());
     if(int line=clean()) return line;
     CHECK(adjust_heap(0)==heap && capacity(Arena::OVERLAY)==available);
@@ -137,7 +152,7 @@ extern "C" int test_msc_bridge_pending_cancel() {
   CHECK(prepare_retained_buffers());const auto available=capacity(Arena::OVERLAY);
   for(unsigned request=0;request<3;++request) {
     CHECK(init());
-    auto* handle=(USBD_MSC_BOT_HandleTypeDef*)hUSBD_Device_CDC.pClassData;
+    auto* handle=(USBD_MSC_BOT_HandleTypeDef*)MK61_USBD_ClassData(&hUSBD_Device_CDC);
     if(request==0)CHECK(MK61_MSC_DiskRead(handle->bot_data,0,1)==USBD_MSC_STORAGE_BUSY);
     else if(request==1)CHECK(MK61_MSC_DiskWrite(handle->bot_data,0,1)==USBD_MSC_STORAGE_BUSY);
     else CHECK(MK61_VirtualFatSync()==2);
@@ -163,7 +178,7 @@ extern "C" int test_msc_bridge_pending_cancel() {
 extern "C" int test_msc_bridge_reset_during_io() {
   using namespace usb_mass_storage;
   for(unsigned request=0;request<2;++request) {
-    CHECK(init());auto* h=(USBD_MSC_BOT_HandleTypeDef*)hUSBD_Device_CDC.pClassData;
+    CHECK(init());auto* h=(USBD_MSC_BOT_HandleTypeDef*)MK61_USBD_ClassData(&hUSBD_Device_CDC);
     if(request==0)CHECK(MK61_MSC_DiskRead(h->bot_data,0,1)==USBD_MSC_STORAGE_BUSY);
     else CHECK(MK61_MSC_DiskWrite(h->bot_data,0,1)==USBD_MSC_STORAGE_BUSY);
     cancel_on_io=true;service();cancel_on_io=false;

@@ -357,12 +357,12 @@ int test_msc_lifetime(void) {
   CHECK(USBD_MSC.Setup(&dev,&reset)==0 && init_calls==3);CHECK(SCSI_ContinueWrite(&dev)<0 && writes==1);
   clear(0x81);clear(1);cbw(0x35,0,0);sync_result=2;submit();CHECK(h->bot_state==USBD_BOT_DEFERRED);
   CHECK(USBD_MSC.Setup(&dev,&reset)==0 && init_calls==4);CHECK(SCSI_CompleteSync(&dev,1)<0);
-  CHECK(USBD_MSC.DeInit(&dev,0)==0 && !dev.pClassDataCmsit[0] && !dev.pClassData);
+  CHECK(USBD_MSC.DeInit(&dev,0)==0 && !dev.pClassDataCmsit[0] && !MK61_USBD_ClassData(&dev));
   CHECK(SCSI_ContinueRead(&dev)<0 && SCSI_ContinueWrite(&dev)<0 && SCSI_CompleteSync(&dev,1)<0);
   CHECK(!dev.ep_in[1].is_used && !dev.ep_out[1].is_used);
   for(unsigned fail=1;fail<3;fail++) {
     fail_open=fail;CHECK(USBD_MSC.Init(&dev,0)==USBD_FAIL);
-    CHECK(!dev.pClassDataCmsit[0] && !dev.pClassData && !dev.ep_out[1].is_used && !dev.ep_in[1].is_used);
+    CHECK(!dev.pClassDataCmsit[0] && !MK61_USBD_ClassData(&dev) && !dev.ep_out[1].is_used && !dev.ep_in[1].is_used);
   }
   CHECK(USBD_MSC.Init(&dev,0)==0);
 #if defined(STM32F411xE)
@@ -400,7 +400,7 @@ int test_msc_session_buffer(void) {
   // previous packet already contains another client's data.
   static USBD_MSC_BOT_HandleTypeDef next;
   CHECK(MK61_MSC_SetPreparedHandle(&next,sizeof(next)));
-  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && dev.pClassData==&next);
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && MK61_USBD_ClassData(&dev)==&next);
   CHECK(!MK61_MSC_ReleasePreparedHandle(&next));
   CHECK(USBD_MSC.DeInit(&dev,0)==USBD_OK);
   CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h));
@@ -419,7 +419,7 @@ int test_msc_session_in_irq(void) {
   CHECK(!MK61_MSC_ReleasePreparedHandle(&guarded.h));
   // Reinitialization is allowed in IRQ and proves the failed release kept
   // the prepared pointer intact. It performs no allocation.
-  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && dev.pClassData==&guarded.h);
+  CHECK(USBD_MSC.Init(&dev,0)==USBD_OK && MK61_USBD_ClassData(&dev)==&guarded.h);
   return 0;
 }
 #endif

@@ -7,6 +7,8 @@
 #include <usbd_core.h>
 #include <usbd_ctlreq.h>
 #include <usbd_ioreq.h>
+_Static_assert(USB_MAX_EP0_SIZE == 64U && MK61_USBD_ENDPOINTS == 4U,
+               "qualified fixed Full Speed control packets and endpoint slots");
 static USBD_ClassTypeDef* active(USBD_HandleTypeDef* d) {return d->pClass[0];}
 static USBD_StatusTypeDef deinit_class(USBD_HandleTypeDef* d) {
   d->classId=0;
@@ -15,7 +17,7 @@ static USBD_StatusTypeDef deinit_class(USBD_HandleTypeDef* d) {
 USBD_StatusTypeDef USBD_Init(USBD_HandleTypeDef* d,USBD_DescriptorsTypeDef* desc,uint8_t id) {
   if(!d||!desc)return USBD_FAIL;
   d->pClass[0]=NULL;d->pUserData[0]=NULL;d->pConfDesc=NULL;d->pDesc=desc;
-  d->NumClasses=0;d->classId=0;d->id=id;d->dev_speed=USBD_SPEED_FULL;
+  d->classId=0;d->id=id;d->dev_speed=USBD_SPEED_FULL;
   d->dev_state=USBD_STATE_DEFAULT;d->dev_config=0;d->dev_address=0;
   return USBD_LL_Init(d);
 }
@@ -28,7 +30,7 @@ USBD_StatusTypeDef USBD_DeInit(USBD_HandleTypeDef* d) {
 USBD_StatusTypeDef USBD_RegisterClass(USBD_HandleTypeDef* d,USBD_ClassTypeDef* cls) {
   if(!d||!cls||!cls->GetFSConfigDescriptor)return USBD_FAIL;
   uint16_t length=0;d->pClass[0]=cls;d->classId=0;
-  d->pConfDesc=cls->GetFSConfigDescriptor(&length);d->NumClasses=1;
+  d->pConfDesc=cls->GetFSConfigDescriptor(&length);
   return d->pConfDesc&&length>=USB_LEN_CFG_DESC?USBD_OK:USBD_FAIL;
 }
 USBD_StatusTypeDef USBD_Start(USBD_HandleTypeDef* d) {return USBD_LL_Start(d);}
@@ -59,11 +61,11 @@ USBD_StatusTypeDef USBD_LL_SetupStage(USBD_HandleTypeDef* d,uint8_t* setup) {
 USBD_StatusTypeDef USBD_LL_DataOutStage(USBD_HandleTypeDef* d,uint8_t n,uint8_t* data) {
   if(n>=MK61_USBD_ENDPOINTS)return USBD_FAIL;
   if(!n) {
-    USBD_EndpointTypeDef* ep=&d->ep_out[0];
+    MK61_USBD_ControlTransfer* ep=&d->control_out;
     if(d->ep0_state==USBD_EP0_DATA_OUT) {
-      if(ep->rem_length>ep->maxpacket) {
-        ep->rem_length-=ep->maxpacket;
-        return USBD_CtlContinueRx(d,data,MIN(ep->rem_length,ep->maxpacket));
+      if(ep->rem_length>USB_MAX_EP0_SIZE) {
+        ep->rem_length-=USB_MAX_EP0_SIZE;
+        return USBD_CtlContinueRx(d,data,MIN(ep->rem_length,USB_MAX_EP0_SIZE));
       }
       if(d->dev_state==USBD_STATE_CONFIGURED && active(d) && active(d)->EP0_RxReady) {
         d->classId=0;active(d)->EP0_RxReady(d);
@@ -78,12 +80,12 @@ USBD_StatusTypeDef USBD_LL_DataOutStage(USBD_HandleTypeDef* d,uint8_t n,uint8_t*
 USBD_StatusTypeDef USBD_LL_DataInStage(USBD_HandleTypeDef* d,uint8_t n,uint8_t* data) {
   if(n>=MK61_USBD_ENDPOINTS)return USBD_FAIL;
   if(!n) {
-    USBD_EndpointTypeDef* ep=&d->ep_in[0];
+    MK61_USBD_ControlTransfer* ep=&d->control_in;
     if(d->ep0_state==USBD_EP0_DATA_IN) {
-      if(ep->rem_length>ep->maxpacket) {
-        ep->rem_length-=ep->maxpacket;(void)USBD_CtlContinueSendData(d,data,ep->rem_length);
+      if(ep->rem_length>USB_MAX_EP0_SIZE) {
+        ep->rem_length-=USB_MAX_EP0_SIZE;(void)USBD_CtlContinueSendData(d,data,ep->rem_length);
         (void)USBD_LL_PrepareReceive(d,0,NULL,0);
-      } else if(ep->maxpacket==ep->rem_length && ep->total_length>=ep->maxpacket && ep->total_length<d->ep0_data_len) {
+      } else if(USB_MAX_EP0_SIZE==ep->rem_length && ep->total_length>=USB_MAX_EP0_SIZE && ep->total_length<d->ep0_data_len) {
         (void)USBD_CtlContinueSendData(d,NULL,0);d->ep0_data_len=0;(void)USBD_LL_PrepareReceive(d,0,NULL,0);
       } else {
         if(d->dev_state==USBD_STATE_CONFIGURED && active(d)&&active(d)->EP0_TxSent) {

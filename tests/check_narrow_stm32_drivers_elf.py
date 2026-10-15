@@ -16,7 +16,11 @@ def check_symbols(text, native_panel=False):
     symbols = []
     usb_handle_size = None
     cdc_handle_size = None
+    compact_layout = None
     for line in text.splitlines():
+        marker = line.split()
+        if len(marker) >= 3 and marker[-2:] == ["A", "mk61_usb_compact_layout"]:
+            compact_layout = int(marker[0], 16)
         fields = line.split(None, 3)
         if len(fields) == 4:
             symbols.append((fields[2], fields[3]))
@@ -30,9 +34,12 @@ def check_symbols(text, native_panel=False):
                       "ERM19264_UC1609::drawPixel" in name]
     if offenders:
         raise ValueError("removed STM32 hardware adapter remains: " + ", ".join(offenders))
-    if usb_handle_size is not None and usb_handle_size != 252:
-        raise ValueError("USB middleware ABI is not the qualified four-endpoint layout: " + str(usb_handle_size))
-    if cdc_handle_size is not None and cdc_handle_size != 36:
+    if compact_layout not in (None, 1):
+        raise ValueError("unknown compact USB layout version: " + str(compact_layout))
+    expected_usb, expected_cdc = (96, 28) if compact_layout == 1 else (252, 36)
+    if usb_handle_size is not None and usb_handle_size != expected_usb:
+        raise ValueError("USB middleware ABI is not the qualified layout: " + str(usb_handle_size))
+    if cdc_handle_size is not None and cdc_handle_size != expected_cdc:
         raise ValueError("CDC control state is not the bounded ACM layout: " + str(cdc_handle_size))
     for irq in ("RTC_Alarm_IRQHandler", "RTC_WKUP_IRQHandler"):
         if not any(kind in ("T", "t") and name == irq for kind, name in symbols):
