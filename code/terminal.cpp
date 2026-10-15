@@ -62,7 +62,7 @@ extern void release_segment_ws_graphics(void);
 #include "usb_mass_storage.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
-#if MK61_LANGUAGE_VM_CACHE_MIXED && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && (MK61_LANGUAGE_VM_CACHE_MIXED || MK61_DWT_SERVICE_GAPS)
 #include "language_vm_resident.hpp"
 #endif
 #include "classic_timer.hpp"
@@ -1744,6 +1744,20 @@ void class_terminal::print_profile_statistics(void) {
 #endif
         Serial.println();
       }
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+      for(usize index=0;index<dwt_profiler::SERVICE_COUNT;++index) {
+        const auto service=(dwt_profiler::Service)index;
+        const auto& gap=dwt_profiler::service_gap(service);
+        terminal_output::field(Serial,"GAP ",dwt_profiler::service_name(service));
+        terminal_output::field(Serial," n=",gap.samples);
+        terminal_output::field(Serial," max=",gap.maximum_cycles);
+        Serial.print(" total=");print_u64(gap.total_cycles);
+        terminal_output::field(Serial," over1=",gap.over_1ms);
+        terminal_output::field(Serial," over5=",gap.over_5ms);
+        terminal_output::field(Serial," over10=",gap.over_10ms);
+        terminal_output::line(Serial," over30=",gap.over_30ms);
+      }
+#endif
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 #if MK61_DWT_VM_OPCODE_PROFILE_SUPPORTED
       for(usize group=0;group<dwt_profiler::VM_OPCODE_GROUPS;++group) {
@@ -1785,6 +1799,17 @@ void class_terminal::print_profile_statistics(void) {
         terminal_output::field(Serial," budget=",cache.budget);
         terminal_output::field(Serial," payload=",cache.payload);
         terminal_output::line(Serial," used=",cache.used);
+      }
+#endif
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+      language_vm::CacheDiagnostics totals={};
+      if(language_vm::cache_diagnostics(totals)) {
+        terminal_output::field(Serial,"VMCACHE_TOTAL cumulative=1 lookups=",totals.lookups);
+        terminal_output::field(Serial," hits=",totals.hits);
+        terminal_output::field(Serial," misses=",totals.misses);
+        terminal_output::field(Serial," evictions=",totals.evictions);
+        terminal_output::field(Serial," failures=",totals.reservation_failures);
+        terminal_output::line(Serial," used=",totals.used);
       }
 #endif
     }

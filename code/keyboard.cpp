@@ -6,6 +6,7 @@
 #include "entropy_pool.hpp"
 #include "tools.hpp"
 #include "debug.h"
+#include "dwt_profiler.hpp"
 
 // Описание геометрии и конфигурации клавиатуры
 static constexpr usize KEY_IN_ROW             =   keyboard_core::ROW_COUNT;
@@ -531,12 +532,14 @@ void  test(void) {
 }
 
 isize scan(void) {
+  MK61_SERVICE_GAP(KEYBOARD_POLL);
   if((u32) (micros() - scan_line_started_us) < TIME_SCAN_SETTLE_US) {
     check_hold_key();
     return -1;
   }
 
   const u8 row = scan_line;
+  MK61_KEYBOARD_ROW_GAP(row);
   const u8 sample = (u8) bus_in();
   const u8 rising =
     (u8) (sample & (u8) ~RowArray[row].candidate_mask());

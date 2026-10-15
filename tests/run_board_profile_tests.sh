@@ -80,6 +80,11 @@ clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
 "$out-f411-no-image-cache"
 
 clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
+  -DMK61_LANGUAGE_VM_CACHE_MIXED=0 -DMK61_CONFIG_EXPECT_MIXED_DISABLED \
+  -DMK61_CONFIG_EXPECT_V3 -o "$out-f411-raw-cache-control"
+"$out-f411-raw-cache-control"
+
+clang++ "${common[@]}" -DREVISION_V3 -DSTM32F411xE \
   -DMK61_ENABLE_FOCAL=0 -DMK61_TINYBASIC_AS_APP=0 \
   -DMK61_MARKDOWN_VIEWER_AS_APP=1 -DMK61_SETUP_AS_APP=1 \
   -DMK61_EXPLORER_AS_APP=1 \
@@ -165,6 +170,15 @@ clang++ "${common[@]}" -DMK61_BOARD_CLASSIC_V3 \
 clang++ "${common[@]}" -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 \
   -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f411-classic-v3"
 "$out-f411-classic-v3"
+
+clang++ "${common[@]}" -DSTM32F411xE -DMK61_BOARD_CLASSIC_V3 \
+  -DMK61_LANGUAGE_VM_CACHE_MIXED=1 -DMK61_CONFIG_EXPECT_MIXED_ENABLED \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f411-classic-mixed-control"
+"$out-f411-classic-mixed-control"
+
+clang++ "${common[@]}" -DSTM32F411xE -DDISPLAY_UC1609 \
+  -DMK61_CONFIG_EXPECT_CLASSIC_V2 -o "$out-f411-classic-legacy-raw"
+"$out-f411-classic-legacy-raw"
 
 clang++ "${common[@]}" -DSTM32F401xC -DMK61_BOARD_CLASSIC_V3 \
   -DMK61_CONFIG_EXPECT_CLASSIC_V3 -o "$out-f401-classic-v3"

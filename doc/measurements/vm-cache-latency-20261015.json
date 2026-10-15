@@ -1,0 +1,60 @@
+{
+  "historical_stage": true,
+  "current_qualification": "vm-cache-joint-20261015.json",
+  "date": "2026-10-15",
+  "source_base": "b0c7528a2f567c41e3af8d59ba6ddcc88cf636d5",
+  "qualification": "NOT_QUALIFIED_FOR_DEFAULT",
+  "mixed_default": 0,
+  "reason": "Matched A/B/A stopped at a PONG timeout >1s during mixed prime. Single-candidate repetition passed, but the failure is unexplained and reverse control was not run.",
+  "device": {"public": "AEB505B6E0067623", "profile": "classic-v3-uc1609", "mcu": "F411", "clock_hz": 96000000, "mini_touched": false},
+  "diagnostic_flags": {"MK61_DWT_SERVICE_GAPS": 1, "MK61_DWT_RUNTIME_DETAIL": 1, "MK61_MATH_BACKEND": 0},
+  "cache": {"budget_bytes": 24576, "metadata_bytes": 688, "payload_bytes": 23888, "slots": 16, "mixed_warm_used_bytes": 23296},
+  "corpus": {"basic_programs": 8, "focal_programs": 8, "prime_requests": 32, "warm_requests": 128, "basic_source_max": 3366, "basic_source_limit": 3584, "focal_source_max": 1435, "focal_source_limit": 1536, "m61_source_limit": 1536, "auxiliary_cases": ["BASIC INPUT", "BASIC ESC in running loop", "FOCAL INPUT", "FOCAL ESC in running loop"], "manifest_sha256": "de34fc2fdd780db61d3b6d1e800268210e435cda80887b0a8a59e745733d9027"},
+  "artifacts_root": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT",
+  "attempts": [
+    {"id": 1, "status": "FAIL", "classification": "fixture exceeded existing M61 text cap", "restored": true},
+    {"id": 2, "status": "FAIL", "classification": "controlled interrupt to correct FOCAL finish-key protocol before measurements", "restored": true},
+    {"id": 3, "status": "FAIL", "classification": "PONG timeout >1s in mixed prime", "completed_stages": ["baseline"], "reverse_control": "NOT_RUN", "restored": true, "report_sha256": "2dad822b8df37d28ebe39b7de1917c1dfe6cf846a054e2d6a4e4f2024f9373bc"},
+    {"id": 4, "status": "PASS", "classification": "single-candidate diagnostic repetition, not A/B/A", "completed_stages": ["candidate"], "restored": true, "report_sha256": "2c63d079be66b47101952442565a4c700c1b1556f2ce72d5b39ce4749223e819"}
+  ],
+  "phases": [
+    {"attempt": 3, "variant": "raw", "phase": "prime", "seconds": 22.57782758300891, "hits": 0, "misses": 32, "matrix_row_max_ms": 907.3826979166666, "usb_service_gap_max_ms": 817.98809375, "ping_max_ms": 814.3782499828376, "ping_p95_ms": 633.5632919799536, "ping_count": 206, "crc_frames": 85},
+    {"attempt": 3, "variant": "raw", "phase": "warm-0", "seconds": 90.45189916700474, "hits": 0, "misses": 128, "matrix_row_max_ms": 915.5830729166667, "usb_service_gap_max_ms": 817.7762916666667, "ping_max_ms": 817.0924579899292, "ping_p95_ms": 632.864042010624, "ping_count": 849, "crc_frames": 330},
+    {"attempt": 3, "variant": "raw", "phase": "warm-1", "seconds": 90.41154841598473, "hits": 0, "misses": 128, "matrix_row_max_ms": 908.5885625, "usb_service_gap_max_ms": 817.8299166666666, "ping_max_ms": 816.3811669801362, "ping_p95_ms": 634.8171660210937, "ping_count": 841, "crc_frames": 333},
+    {"attempt": 4, "variant": "mixed", "phase": "prime", "seconds": 17.305660917016212, "hits": 10, "misses": 22, "matrix_row_max_ms": 910.99771875, "usb_service_gap_max_ms": 821.37625, "ping_max_ms": 817.7295829809736, "ping_p95_ms": 406.42408301937394, "ping_count": 212, "crc_frames": 78},
+    {"attempt": 4, "variant": "mixed", "phase": "warm-0", "seconds": 25.666826583008515, "hits": 128, "misses": 0, "matrix_row_max_ms": 158.96071875, "usb_service_gap_max_ms": 116.36766666666666, "ping_max_ms": 95.54599999682978, "ping_p95_ms": 55.354165990138426, "ping_count": 836, "crc_frames": 291},
+    {"attempt": 4, "variant": "mixed", "phase": "warm-1", "seconds": 25.64428041697829, "hits": 128, "misses": 0, "matrix_row_max_ms": 158.87558333333334, "usb_service_gap_max_ms": 115.52241666666667, "ping_max_ms": 94.84983299626037, "ping_p95_ms": 54.0965830150526, "ping_count": 832, "crc_frames": 291}
+  ],
+  "codec_warm_max_us": {"lookup_including_thaw": 5282.447916666667, "pack": 2407.21875, "thaw_including_nested_pack": 5232.677083333333},
+  "interactive": {
+    "raw": [
+      {"case": "BASIC INPUT", "status": "PASS", "key_to_prompt_ms": 297.9633329960052},
+      {"case": "BASIC ESC", "status": "PASS", "key_to_prompt_ms": 122.05229201936163},
+      {"case": "FOCAL INPUT", "status": "PASS", "key_to_prompt_ms": 371.6427499894053},
+      {"case": "FOCAL ESC", "status": "PASS", "key_to_prompt_ms": 420.5124170111958}
+    ],
+    "mixed": [
+      {"case": "BASIC INPUT", "status": "PASS", "key_to_prompt_ms": 298.08341700118035},
+      {"case": "BASIC ESC", "status": "PASS", "key_to_prompt_ms": 121.40949998865835},
+      {"case": "FOCAL INPUT", "status": "PASS", "key_to_prompt_ms": 370.8970000152476},
+      {"case": "FOCAL ESC", "status": "PASS", "key_to_prompt_ms": 420.7182500103954}
+    ],
+    "timing_caveat": "Virtual-key-to-terminal completion, including 120ms host key helper per key and FOCAL finish acknowledgement; not physical key-edge latency. Numeric source/output oracles were checked on host, not read from device variables."
+  },
+  "all_completed_phases": {"keyboard_overflows": 0, "unexpected_screen_detaches": 0, "nor_program_operations": 0, "nor_erase_operations": 0, "mpu_layout": "ok", "crash": "none"},
+  "builds": [
+    {"variant": "ordinary raw math0", "build": "D6873FBC", "flash_bytes": 360564, "static_ram_bytes": 26880, "native_frame_max": 1928, "sha256": "f26b78be2d008e41c5c6ce07e4531d9eff5d8d91bf2d4044720e2ece54cfb457", "byte_identical_to_base_main": true},
+    {"variant": "ordinary mixed math0", "build": "66D24A08", "flash_bytes": 362796, "static_ram_bytes": 26880, "native_frame_max": 1928, "sha256": "0cf30276fa1c80dab4495f80078aa526ffb898fc18cf80fce50c8f1e7bbff7b5"},
+    {"variant": "ordinary mixed math1", "build": "86CD0279", "flash_bytes": 353136, "static_ram_bytes": 26880, "native_frame_max": 1928, "sha256": "8daf56c5870aaea034926c4e172f835aceda0583452fecf918e361f9388fbd77"},
+    {"variant": "diagnostic raw math0", "build": "2C19EA80", "flash_bytes": 364240, "static_ram_bytes": 28824, "sha256": "10b3e40373f47bd4e63ee80c8f3ca9f41de4f509bf30e5d55f99399d7fcb82a0"},
+    {"variant": "diagnostic mixed math0", "build": "D29FA240", "flash_bytes": 366528, "static_ram_bytes": 28824, "sha256": "64bd80304f6793f777d85eaba7fdcb66f46029c0a933d3f825ac6c3157c5fbaf"}
+  ],
+  "limits_changed": false,
+  "ordinary_mixed_delta": {"flash_bytes": 2232, "static_ram_bytes": 0, "cache_budget_bytes": 0},
+  "diagnostic_watermark_remaining": {"raw": 9480, "mixed": 9400, "stack_reserve_unchanged": 16384, "caveat": "Observed after these diagnostic scenarios, not a proven worst-case or ordinary-firmware peak."},
+  "ordinary_probes_disabled_delta": {"flash_bytes": 0, "ram_bytes": 0, "evidence": "Complete ordinary raw BIN byte-identical to qualified b0c7528a2 main BIN."},
+  "host_resource_pressure": {"basic_source_bytes": 3552, "focal_source_bytes": 1504, "math_backends": [0, 1], "actual_cpp_cache_replay": "PASS", "mixed_warm_hits": 0, "mixed_warm_misses": 128, "mixed_warm_packs": 72, "fallbacks": 0, "hardware": "NOT_RUN"},
+  "fresh_f401_matrix": "NOT_RUN; default unchanged, no firmware budget files changed",
+  "hardware_chess": "NOT_RUN; synthetic workload times are not chess speedup",
+  "restore": {"firmware_build": "122A5FF9", "bytes": 360564, "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da", "firmware_crc": "valid", "original_files": 44, "original_directories": 4, "files_preserved": true, "calculator_preserved": true, "alarms": "off", "serial_closed": true, "read_retries": [], "mini_touched": false, "device_released": true}
+}

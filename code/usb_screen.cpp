@@ -494,6 +494,7 @@ void cancel(void) {
 
 void service(void) {
   if(session == nullptr) return;
+  MK61_SERVICE_GAP(USB_SCREEN);
   const t_time_ms now = millis();
   serviceVirtualKeys();
   MK61_PROFILE_SCOPE(dwt_profiler::Point::USB_SCREEN_SERVICE);

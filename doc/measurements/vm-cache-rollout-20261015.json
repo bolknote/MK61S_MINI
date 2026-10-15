@@ -1,0 +1,1789 @@
+{
+  "historical_stage": true,
+  "current_qualification": "vm-cache-joint-20261015.json",
+  "format": 1,
+  "status": "PASS",
+  "default_enabled": true,
+  "integration": {"local_worktree_only":true,"committed":false,"merged_into_main":false,"hardware_base":"05638655da3dbd29bcc776dcc5f9e266b4932efd","later_main_reported":"a6d45ecb0 wire10/request9 graphics","later_main_qualified_by_this_ABA":false},
+  "host_full_suite": {"status":"PASS","exit_code":0,"script":"tests/run_all_tests.sh","log":"/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/wire9-default-all-tests-verified.log","log_sha256":"db58e0e7c7d2bd6c01e908fe57660818b8493abb247a7863f93ba4aaef7a6bd4","isolated_TMPDIR":"/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/full-suite.9HFNor","mixed_suite_included":true,"preexisting_test_syncs":["exact whitelist for seven already tracked tools","require repository-owned startup and forbid SDK startup","current integer-span System APP catalog keys"],"resource_budget_checks_weakened":false},
+  "base_sha": "05638655da3dbd29bcc776dcc5f9e266b4932efd",
+  "wire_version": 9,
+  "APP_ABI": 6,
+  "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/hardware/attempt-6/report.json",
+  "raw_report_sha256": "d6c4e6c368048ddeab7d2072ac2cf08c36046336162069b842844be17fcf6b5e",
+  "driver_sha256": "cfac933f4c07ad4ee96512f8963f5b42dbe0f035dcd0e8297695d62984d1697c",
+  "resident_source_patch_sha256": "a18a16a9f4173d06ac50ed66a10b47ba4071027684e84f95a12b1b40d9d37d4d",
+  "system_apps": {
+    "LANGVM.APP": {
+      "bytes": 11501,
+      "sha256": "f22c8838463ed1814ffb1000a1c98401b5d2bf2d09dd14b98b14a09bbead6010"
+    },
+    "LANGIN.APP": {
+      "bytes": 11992,
+      "sha256": "05475ea84c3fb0d3bf6c0c3eb4432ebbf1aa776b913a300636b087e0b5957837"
+    },
+    "BASIC.APP": {
+      "bytes": 14244,
+      "sha256": "44deca6e0322ea9f7f78e7068ee69abde7c2f6be789c1f6e6c36403cb7d592f0"
+    },
+    "FOCAL.APP": {
+      "bytes": 13830,
+      "sha256": "c1dde27dd07df9a5b6f855e0b754afccf16869098cf7adb3561933338b08d367"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7008,
+      "sha256": "42337aec0c9ff477b2f7605b74d0a340199b9242a755abc9ed85c0e5933fcf5c"
+    }
+  },
+  "protocol_negative_control": {
+    "status": "EXPECTED_ORPHAN_REPRODUCED",
+    "expected_timeout": true,
+    "response_payloads": [
+      "6100"
+    ],
+    "device_usb_gap_max_us": 1021.75,
+    "not_a_latency_pass": true
+  },
+  "stages": [
+    {
+      "name": "baseline",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/hardware/attempt-6/images/baseline.bin",
+        "bytes": 364220,
+        "footer": 362100,
+        "build": "4B9B3053",
+        "sha256": "60dbf72cd5e6aa148c0e424fce790c2769bf9c4b5728b71a15b46ce74093ab30",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/wire9-diag-raw/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": {
+            "seconds": 22.629249458026607,
+            "hits": 0,
+            "misses": 32,
+            "keyboard_row_max_ms": 928.051875,
+            "usb_gap_max_ms": 830.333125,
+            "pong_max_ms": 812.854709016392,
+            "measured_ping_pong": 201,
+            "host_poll_max_ms": 9.505291993264109,
+            "frames_crc_verified": 84,
+            "pack": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "thaw": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.00024365625,
+              "max_ms": 0.008666666666666666
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 90.42978545901133,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 927.6422916666667,
+              "usb_gap_max_ms": 830.1847916666667,
+              "pong_max_ms": 829.6965829795226,
+              "measured_ping_pong": 792,
+              "host_poll_max_ms": 13.358165975660086,
+              "frames_crc_verified": 326,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0010281666666666666,
+                "max_ms": 0.008375
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 90.35959562499193,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 927.7583125,
+              "usb_gap_max_ms": 830.1855416666666,
+              "pong_max_ms": 829.674165986944,
+              "measured_ping_pong": 781,
+              "host_poll_max_ms": 54.27620801492594,
+              "frames_crc_verified": 319,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0010435520833333334,
+                "max_ms": 0.022677083333333334
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.30413029101327993,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 894.6718020833333,
+              "usb_gap_max_ms": 885.6433333333333,
+              "pong_max_ms": 865.009375003865,
+              "measured_ping_pong": 19,
+              "host_poll_max_ms": 6.366624991642311,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007979166666666666,
+                "max_ms": 0.007979166666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12076995900133625,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 901.7459166666666,
+              "usb_gap_max_ms": 880.428375,
+              "pong_max_ms": 855.5162500124425,
+              "measured_ping_pong": 6,
+              "host_poll_max_ms": 6.288540986133739,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000778125,
+                "max_ms": 0.00778125
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.38129304099129513,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 452.388875,
+              "usb_gap_max_ms": 443.4693125,
+              "pong_max_ms": 422.40904198843054,
+              "measured_ping_pong": 14,
+              "host_poll_max_ms": 6.369916984112933,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007541666666666667,
+                "max_ms": 0.007541666666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.4175992080126889,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 475.2499479166667,
+              "usb_gap_max_ms": 454.898125,
+              "pong_max_ms": 434.1356660006568,
+              "measured_ping_pong": 18,
+              "host_poll_max_ms": 6.314625003142282,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007541666666666667,
+                "max_ms": 0.007541666666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 9472,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        },
+        "resource": {
+          "prime": {
+            "seconds": 16.48612858299748,
+            "hits": 0,
+            "misses": 32,
+            "keyboard_row_max_ms": 611.7880208333333,
+            "usb_gap_max_ms": 513.93175,
+            "pong_max_ms": 509.9977499921806,
+            "measured_ping_pong": 87,
+            "host_poll_max_ms": 18.65295899915509,
+            "frames_crc_verified": 59,
+            "pack": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "thaw": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.00023069791666666668,
+              "max_ms": 0.007583333333333333
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 65.7035825829953,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 611.8817395833333,
+              "usb_gap_max_ms": 518.4816875,
+              "pong_max_ms": 512.3457910085563,
+              "measured_ping_pong": 323,
+              "host_poll_max_ms": 15.371207991847768,
+              "frames_crc_verified": 226,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0009573854166666667,
+                "max_ms": 0.008052083333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 65.7046014580119,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 611.7975833333334,
+              "usb_gap_max_ms": 518.547125,
+              "pong_max_ms": 514.2813749844208,
+              "measured_ping_pong": 328,
+              "host_poll_max_ms": 15.467666002223268,
+              "frames_crc_verified": 231,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0009553333333333333,
+                "max_ms": 0.007583333333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.30878954101353884,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 894.80578125,
+              "usb_gap_max_ms": 886.6694166666666,
+              "pong_max_ms": 886.9324580009561,
+              "measured_ping_pong": 19,
+              "host_poll_max_ms": 10.895832994719967,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007583333333333333,
+                "max_ms": 0.007583333333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12064795900369063,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 900.88453125,
+              "usb_gap_max_ms": 880.1663541666667,
+              "pong_max_ms": 858.0286249925848,
+              "measured_ping_pong": 6,
+              "host_poll_max_ms": 7.847125001717359,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007385416666666666,
+                "max_ms": 0.007385416666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.3793918329756707,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 452.2178229166667,
+              "usb_gap_max_ms": 444.279625,
+              "pong_max_ms": 444.54162498004735,
+              "measured_ping_pong": 15,
+              "host_poll_max_ms": 7.936917012557387,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000734375,
+                "max_ms": 0.00734375
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.41530383299686946,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 475.4066458333333,
+              "usb_gap_max_ms": 454.71345833333334,
+              "pong_max_ms": 433.0900839995593,
+              "measured_ping_pong": 17,
+              "host_poll_max_ms": 6.305082992184907,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000734375,
+                "max_ms": 0.00734375
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 6608,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        }
+      }
+    },
+    {
+      "name": "candidate",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/hardware/attempt-6/images/candidate.bin",
+        "bytes": 366508,
+        "footer": 364388,
+        "build": "B38C45DB",
+        "sha256": "b44006b45ec447cfd3fc2559bae4110848c1847a922ff3163d02639137586d17",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/wire9-diag-mixed/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": {
+            "seconds": 17.207179999997607,
+            "hits": 10,
+            "misses": 22,
+            "keyboard_row_max_ms": 922.38815625,
+            "usb_gap_max_ms": 833.245125,
+            "pong_max_ms": 829.4922500208486,
+            "measured_ping_pong": 193,
+            "host_poll_max_ms": 16.338541987352073,
+            "frames_crc_verified": 74,
+            "pack": {
+              "calls": 46,
+              "seconds": 0.048984875,
+              "max_ms": 2.39175
+            },
+            "thaw": {
+              "calls": 10,
+              "seconds": 0.026397052083333334,
+              "max_ms": 5.03321875
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.027959385416666666,
+              "max_ms": 5.0815729166666666
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 24.770718375017168,
+              "hits": 128,
+              "misses": 0,
+              "keyboard_row_max_ms": 161.67677083333334,
+              "usb_gap_max_ms": 118.32885416666667,
+              "pong_max_ms": 96.74608299974352,
+              "measured_ping_pong": 773,
+              "host_poll_max_ms": 12.34608399681747,
+              "frames_crc_verified": 279,
+              "pack": {
+                "calls": 128,
+                "seconds": 0.17723839583333334,
+                "max_ms": 2.40675
+              },
+              "thaw": {
+                "calls": 128,
+                "seconds": 0.3151525520833333,
+                "max_ms": 5.233489583333333
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.3213306979166667,
+                "max_ms": 5.283260416666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 24.671975208999356,
+              "hits": 128,
+              "misses": 0,
+              "keyboard_row_max_ms": 162.79160416666664,
+              "usb_gap_max_ms": 118.35714583333333,
+              "pong_max_ms": 96.81458299746737,
+              "measured_ping_pong": 774,
+              "host_poll_max_ms": 14.202582999132574,
+              "frames_crc_verified": 273,
+              "pack": {
+                "calls": 128,
+                "seconds": 0.17724064583333332,
+                "max_ms": 2.391125
+              },
+              "thaw": {
+                "calls": 128,
+                "seconds": 0.31528882291666666,
+                "max_ms": 5.23346875
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.3214505208333333,
+                "max_ms": 5.283239583333334
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.3043545000255108,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 898.5653333333333,
+              "usb_gap_max_ms": 890.9192708333334,
+              "pong_max_ms": 869.4120830041356,
+              "measured_ping_pong": 20,
+              "host_poll_max_ms": 6.297249987255782,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 2,
+                "seconds": 0.002855604166666667,
+                "max_ms": 1.90675
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00005045833333333333,
+                "max_ms": 0.050458333333333334
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12245670901029371,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 911.6623125,
+              "usb_gap_max_ms": 891.6777291666666,
+              "pong_max_ms": 870.1700000092387,
+              "measured_ping_pong": 6,
+              "host_poll_max_ms": 7.434625003952533,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 8,
+                "seconds": 0.00917953125,
+                "max_ms": 2.0676875
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00005041666666666667,
+                "max_ms": 0.050416666666666665
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.3794255829998292,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 458.4800104166667,
+              "usb_gap_max_ms": 449.559125,
+              "pong_max_ms": 428.1112090102397,
+              "measured_ping_pong": 15,
+              "host_poll_max_ms": 7.103624986484647,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 4,
+                "seconds": 0.0017595833333333333,
+                "max_ms": 1.00478125
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00005022916666666666,
+                "max_ms": 0.050229166666666665
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.42113312499714084,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 480.20732291666667,
+              "usb_gap_max_ms": 460.23629166666666,
+              "pong_max_ms": 439.2430840234738,
+              "measured_ping_pong": 17,
+              "host_poll_max_ms": 7.186957984231412,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 3,
+                "seconds": 0.00297775,
+                "max_ms": 1.75178125
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000050041666666666666,
+                "max_ms": 0.050041666666666665
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 9376,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        },
+        "resource": {
+          "prime": {
+            "seconds": 16.87979037500918,
+            "hits": 0,
+            "misses": 32,
+            "keyboard_row_max_ms": 641.2116145833334,
+            "usb_gap_max_ms": 545.8629583333334,
+            "pong_max_ms": 544.4022090232465,
+            "measured_ping_pong": 86,
+            "host_poll_max_ms": 17.984499980229884,
+            "frames_crc_verified": 61,
+            "pack": {
+              "calls": 154,
+              "seconds": 0.3780583125,
+              "max_ms": 3.7071875
+            },
+            "thaw": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.0015578541666666666,
+              "max_ms": 0.0495625
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 67.72441850000178,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 643.72403125,
+              "usb_gap_max_ms": 548.3930208333334,
+              "pong_max_ms": 544.4440830033273,
+              "measured_ping_pong": 331,
+              "host_poll_max_ms": 26.733375008916482,
+              "frames_crc_verified": 229,
+              "pack": {
+                "calls": 760,
+                "seconds": 1.8428161145833333,
+                "max_ms": 3.7071875
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.006296208333333333,
+                "max_ms": 0.06372916666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 67.69076945801498,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 641.3785104166666,
+              "usb_gap_max_ms": 548.4250833333334,
+              "pong_max_ms": 544.1155000007711,
+              "measured_ping_pong": 329,
+              "host_poll_max_ms": 41.59224999602884,
+              "frames_crc_verified": 238,
+              "pack": {
+                "calls": 760,
+                "seconds": 1.842816125,
+                "max_ms": 3.7066666666666666
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0062991666666666665,
+                "max_ms": 0.06376041666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.3044669170049019,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 924.1057395833334,
+              "usb_gap_max_ms": 916.6419166666666,
+              "pong_max_ms": 894.3196670152247,
+              "measured_ping_pong": 19,
+              "host_poll_max_ms": 7.588207983644679,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 12,
+                "seconds": 0.028432385416666667,
+                "max_ms": 3.7066458333333334
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00004902083333333333,
+                "max_ms": 0.04902083333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12435929098865017,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 902.18509375,
+              "usb_gap_max_ms": 880.32209375,
+              "pong_max_ms": 857.5835829833522,
+              "measured_ping_pong": 6,
+              "host_poll_max_ms": 7.563708000816405,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000049010416666666664,
+                "max_ms": 0.04901041666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.38068716699490324,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 453.76226041666666,
+              "usb_gap_max_ms": 445.3399375,
+              "pong_max_ms": 423.0532080109697,
+              "measured_ping_pong": 14,
+              "host_poll_max_ms": 7.56279198685661,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00004897916666666667,
+                "max_ms": 0.048979166666666664
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.4167509159888141,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 476.6512604166667,
+              "usb_gap_max_ms": 455.36104166666667,
+              "pong_max_ms": 433.1224580237176,
+              "measured_ping_pong": 17,
+              "host_poll_max_ms": 7.552542025223374,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00004902083333333333,
+                "max_ms": 0.04902083333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 6520,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        }
+      }
+    },
+    {
+      "name": "control",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/hardware/attempt-6/images/baseline.bin",
+        "bytes": 364220,
+        "footer": 362100,
+        "build": "4B9B3053",
+        "sha256": "60dbf72cd5e6aa148c0e424fce790c2769bf9c4b5728b71a15b46ce74093ab30",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/wire9-diag-raw/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": {
+            "seconds": 22.595585749979364,
+            "hits": 0,
+            "misses": 32,
+            "keyboard_row_max_ms": 919.51203125,
+            "usb_gap_max_ms": 830.4623333333334,
+            "pong_max_ms": 828.3666250063106,
+            "measured_ping_pong": 190,
+            "host_poll_max_ms": 7.6036670070607215,
+            "frames_crc_verified": 82,
+            "pack": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "thaw": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.00024296875,
+              "max_ms": 0.008375
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 90.34979587499402,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 927.8478020833334,
+              "usb_gap_max_ms": 830.3155,
+              "pong_max_ms": 828.9550420013256,
+              "measured_ping_pong": 763,
+              "host_poll_max_ms": 8.618874999228865,
+              "frames_crc_verified": 321,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.00103303125,
+                "max_ms": 0.008885416666666666
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 90.31962454199675,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 928.83759375,
+              "usb_gap_max_ms": 830.3187291666666,
+              "pong_max_ms": 828.7345000135247,
+              "measured_ping_pong": 762,
+              "host_poll_max_ms": 8.76933301333338,
+              "frames_crc_verified": 326,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0010302604166666667,
+                "max_ms": 0.008885416666666666
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.30682545801391825,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 894.2596041666666,
+              "usb_gap_max_ms": 887.1082291666667,
+              "pong_max_ms": 864.5375829946715,
+              "measured_ping_pong": 19,
+              "host_poll_max_ms": 7.623750017955899,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007979166666666666,
+                "max_ms": 0.007979166666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12283500001649372,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 902.3466979166666,
+              "usb_gap_max_ms": 880.48234375,
+              "pong_max_ms": 859.7320829867385,
+              "measured_ping_pong": 5,
+              "host_poll_max_ms": 7.585666986415163,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000778125,
+                "max_ms": 0.00778125
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.3772733750229236,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 452.6817291666667,
+              "usb_gap_max_ms": 444.8615416666667,
+              "pong_max_ms": 422.65674998634495,
+              "measured_ping_pong": 14,
+              "host_poll_max_ms": 7.619791984325275,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007541666666666667,
+                "max_ms": 0.007541666666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.42116349999560043,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 475.14869791666666,
+              "usb_gap_max_ms": 455.0133333333333,
+              "pong_max_ms": 432.7738340070937,
+              "measured_ping_pong": 18,
+              "host_poll_max_ms": 7.688166981097311,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007541666666666667,
+                "max_ms": 0.007541666666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 9464,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        },
+        "resource": {
+          "prime": {
+            "seconds": 16.442878290981753,
+            "hits": 0,
+            "misses": 32,
+            "keyboard_row_max_ms": 604.3051041666666,
+            "usb_gap_max_ms": 513.9835208333333,
+            "pong_max_ms": 511.5471669996623,
+            "measured_ping_pong": 77,
+            "host_poll_max_ms": 8.994457981316373,
+            "frames_crc_verified": 60,
+            "pack": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "thaw": {
+              "calls": 0,
+              "seconds": 0,
+              "max_ms": 0
+            },
+            "lookup": {
+              "calls": 32,
+              "seconds": 0.0002313125,
+              "max_ms": 0.007760416666666666
+            },
+            "nor_write_erase_calls": 0,
+            "keyboard_overflow": 0
+          },
+          "warm": [
+            {
+              "seconds": 65.76859541700105,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 612.7217395833334,
+              "usb_gap_max_ms": 518.6060416666667,
+              "pong_max_ms": 519.0811670036055,
+              "measured_ping_pong": 331,
+              "host_poll_max_ms": 8.726333995582536,
+              "frames_crc_verified": 237,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0009553333333333333,
+                "max_ms": 0.007583333333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "seconds": 65.76390625000931,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_max_ms": 612.6868958333333,
+              "usb_gap_max_ms": 518.6537083333333,
+              "pong_max_ms": 513.734166015638,
+              "measured_ping_pong": 332,
+              "host_poll_max_ms": 7.606375002069399,
+              "frames_crc_verified": 232,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 128,
+                "seconds": 0.0009553333333333333,
+                "max_ms": 0.007583333333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "keys": [
+            {
+              "filename": "INPUTB.tbi",
+              "kind": "INPUT",
+              "seconds": 0.3086231659981422,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 895.29578125,
+              "usb_gap_max_ms": 886.9475208333333,
+              "pong_max_ms": 864.655874989694,
+              "measured_ping_pong": 19,
+              "host_poll_max_ms": 7.547957997303456,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007583333333333333,
+                "max_ms": 0.007583333333333333
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCB.tbi",
+              "kind": "ESC",
+              "seconds": 0.12244970799656585,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 901.69159375,
+              "usb_gap_max_ms": 880.3514583333334,
+              "pong_max_ms": 857.7238339930773,
+              "measured_ping_pong": 6,
+              "host_poll_max_ms": 7.52595899393782,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.000007385416666666666,
+                "max_ms": 0.007385416666666667
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "INPUTF.foc",
+              "kind": "INPUT",
+              "seconds": 0.3817731669987552,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 453.4908125,
+              "usb_gap_max_ms": 444.5372083333333,
+              "pong_max_ms": 421.13891697954386,
+              "measured_ping_pong": 14,
+              "host_poll_max_ms": 7.525666995206848,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000734375,
+                "max_ms": 0.00734375
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            },
+            {
+              "filename": "ESCF.foc",
+              "kind": "ESC",
+              "seconds": 0.4160298749920912,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_max_ms": 476.5245625,
+              "usb_gap_max_ms": 454.8755208333333,
+              "pong_max_ms": 432.6302499976009,
+              "measured_ping_pong": 16,
+              "host_poll_max_ms": 7.528332993388176,
+              "frames_crc_verified": null,
+              "pack": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "seconds": 0,
+                "max_ms": 0
+              },
+              "lookup": {
+                "calls": 1,
+                "seconds": 0.00000734375,
+                "max_ms": 0.00734375
+              },
+              "nor_write_erase_calls": 0,
+              "keyboard_overflow": 0
+            }
+          ],
+          "stack_remaining": 6608,
+          "crash_none": true,
+          "mpu_layout_ok": true
+        }
+      }
+    }
+  ],
+  "comparison": {
+    "normal": {
+      "A": 90.39469054200163,
+      "B": 24.721346792008262,
+      "reverse_A": 90.33471020849538,
+      "mean_controls": 90.3647003752485,
+      "delta_vs_controls_percent": -72.64269489153354,
+      "control_drift_percent": -0.06635382360026254
+    },
+    "resource": {
+      "A": 65.7040920205036,
+      "B": 67.70759397900838,
+      "reverse_A": 65.76625083350518,
+      "mean_controls": 65.73517142700439,
+      "delta_vs_controls_percent": 3.000558923306773,
+      "control_drift_percent": 0.09460417318025716
+    }
+  },
+  "totals": {
+    "profile_windows": 42,
+    "module_requests": 1728,
+    "input_esc_checks": 24,
+    "measured_ping_pong": 7792,
+    "batch_frames_crc_verified": 3657,
+    "host_poll_max_ms": 54.27620801492594,
+    "pong_max_ms": 894.3196670152247
+  },
+  "builds": [
+    {
+      "name": "wire9-ordinary-raw",
+      "math": 0,
+      "mixed": false,
+      "bytes": 360564,
+      "sha256": "7492961f5db50b81b6091a3a4a1639cfc035e121c7526b2eeee33f4fbbfa2f31",
+      "static_ram": 26880,
+      "native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    {
+      "name": "wire9-default-math0",
+      "math": 0,
+      "mixed": true,
+      "bytes": 362796,
+      "sha256": "cf55a8585b1fd409499cdbd65c6fddfdf01d060454b0d4f52851fbdff99baa69",
+      "static_ram": 26880,
+      "native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    {
+      "name": "wire9-default-math1",
+      "math": 1,
+      "mixed": true,
+      "bytes": 353136,
+      "sha256": "c564419c2216669acfbaa46fa8a502f065cd8bfc9dc7d5c692f5f660536a4a49",
+      "static_ram": 26880,
+      "native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    {
+      "name": "wire9-diag-raw",
+      "math": 0,
+      "mixed": false,
+      "bytes": 364220,
+      "sha256": "60dbf72cd5e6aa148c0e424fce790c2769bf9c4b5728b71a15b46ce74093ab30",
+      "static_ram": 28824,
+      "native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    {
+      "name": "wire9-diag-mixed",
+      "math": 0,
+      "mixed": true,
+      "bytes": 366508,
+      "sha256": "b44006b45ec447cfd3fc2559bae4110848c1847a922ff3163d02639137586d17",
+      "static_ram": 28824,
+      "native_frame": 1928,
+      "native_frame_limit": 5120
+    }
+  ],
+  "budgets_unchanged": true,
+  "cache_bytes": 24576,
+  "cache_metadata": 688,
+  "cache_payload": 23888,
+  "static_ram_delta": 0,
+  "flash_delta_math0": 2232,
+  "foreground_frames": {
+    "main": 80,
+    "terminal": 608
+  },
+  "F401": {
+    "matrix": "PASS9/9",
+    "cases": [
+      {
+        "case": "f401-capability-a00-usb",
+        "binary": {
+          "bytes": 231048,
+          "flash_free": 31096,
+          "sha256": "7c2f4005850d2b55b7eb15023f3379970e96e28c20e3add51355a460ed3de8d0"
+        },
+        "static_ram": 31480,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1936,
+          "max_function": "terminal.cpp:2406:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2406,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-capability-ws-graphics",
+        "binary": {
+          "bytes": 227676,
+          "flash_free": 34468,
+          "sha256": "18100eef1e075059506249a36419d6c290532d01816dbe3583d736813411963e"
+        },
+        "static_ram": 28040,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1936,
+          "max_function": "terminal.cpp:2406:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+          "records": 2395,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-capability-ws-usb",
+        "binary": {
+          "bytes": 237620,
+          "flash_free": 24524,
+          "sha256": "b340e332c22e1dd914d16df4e8be04ba9c4ab56011b815efe98d77a49520c1e4"
+        },
+        "static_ram": 31488,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2430,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-capability-ws-usb-graphics",
+        "binary": {
+          "bytes": 239856,
+          "flash_free": 22288,
+          "sha256": "711c425fe26df5e90555b790edb4bd07fe6978e36b6689d099046d095398b41c"
+        },
+        "static_ram": 31488,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2437,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 512,
+          "ram_capacity": 65536,
+          "ram_limit": 65536,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-product-a00",
+        "binary": {
+          "bytes": 213192,
+          "flash_free": 48952,
+          "sha256": "2b5bdeb398e5d333e8c94486f2f1d69d31214f6de6b49b22dd3b16b60ade6343"
+        },
+        "static_ram": 27624,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2443,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-product-classic-v2",
+        "binary": {
+          "bytes": 243180,
+          "flash_free": 18964,
+          "sha256": "830a68fcec9cf6ec96af464661270ec1ea349fbe4616ea895b1bed52a925d1a9"
+        },
+        "static_ram": 31028,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2564,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 4096,
+          "markdown_app_max": 14336,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-product-classic-v3",
+        "binary": {
+          "bytes": 243204,
+          "flash_free": 18940,
+          "sha256": "36dd929845c5887720e8de91abfd58ef132214b9ed5aef114ef6a2846733120a"
+        },
+        "static_ram": 31036,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2564,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 4096,
+          "markdown_app_max": 14336,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-product-mini-v2-a00",
+        "binary": {
+          "bytes": 213268,
+          "flash_free": 48876,
+          "sha256": "25ab2610febfaeeb5b09390583422f44b1b344dd4cfd301db1cab326d1f641c5"
+        },
+        "static_ram": 27616,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2445,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      },
+      {
+        "case": "f401-product-ws0010",
+        "binary": {
+          "bytes": 221236,
+          "flash_free": 40908,
+          "sha256": "6a28c3d43b1c4469ad3372248aab9b968116ff868da4cc9a59f2ec6dfe039689"
+        },
+        "static_ram": 27616,
+        "stack": {
+          "compiled_units": 152,
+          "dynamic_bounded": 0,
+          "limit": 2048,
+          "max_frame": 1552,
+          "max_function": "program_store.cpp:3736:6:bool program_store::write_file_from_source(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u8, u16*, u8*, usize, const u8*)",
+          "records": 2481,
+          "schema": 1,
+          "status": "ok",
+          "unbounded": 0
+        },
+        "budgets": {
+          "flash_capacity": 262144,
+          "flash_min_headroom": 8192,
+          "markdown_app_max": 7168,
+          "ram_capacity": 65536,
+          "ram_limit": 52428,
+          "stack_frame_limit": 2048
+        }
+      }
+    ],
+    "default_preprocessor": "PASS9/9 image_cache=0 mixed=0 file_cache=0",
+    "cross_MCU_WS0010_RAM": "NOT_RUN"
+  },
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "read_retries": []
+  },
+  "original": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-latency-20261015.pJhBtT/hardware/attempt-6/images/original.bin",
+    "bytes": 360564,
+    "footer": 358852,
+    "build": "122A5FF9",
+    "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+    "source": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin"
+  },
+  "original_files": 44,
+  "original_directories": 4,
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": 0,
+    "USB_screen": true
+  },
+  "scope": {
+    "hardware": "Diagnostic raw/mixed with service-gap and runtime-detail probes, not ordinary production timing or chess timing",
+    "host_arithmetic_backends": [
+      0,
+      1
+    ],
+    "corpora_independent_cold_start": true,
+    "workload_churn": "16 saved modules plus INPUT/ESC replacements inside each corpus",
+    "hot_LANGVM_main_budget": 18432,
+    "hot_LANGVM_actual_memory": 16628,
+    "hot_budget_change_by_this_task": 0,
+    "original_attempt3_cause": "No packet/failure profile was captured then; exact historical attribution remains unproven. Driver race and firmware response-slot overwrite are now reproduced separately."
+  },
+  "latency": {
+    "baseline": {
+      "keyboard_row_max_ms": 928.051875,
+      "USB_service_max_ms": 886.6694166666666,
+      "PONG_max_ms": 886.9324580009561
+    },
+    "candidate": {
+      "keyboard_row_max_ms": 924.1057395833334,
+      "USB_service_max_ms": 916.6419166666666,
+      "PONG_max_ms": 894.3196670152247
+    },
+    "control": {
+      "keyboard_row_max_ms": 928.83759375,
+      "USB_service_max_ms": 887.1082291666667,
+      "PONG_max_ms": 864.655874989694
+    },
+    "mixed_USB_worst_increase_ms": 29.533687499999928
+  },
+  "decision": {
+    "default": "Enable only overlay VM with nonzero existing image-cache budget; explicit MIXED=0 retained; F401/no-cache stay off",
+    "strict_PONG_deadline_seconds": 1,
+    "tradeoff": "About 3% slower for low-compressibility/no-hit corpus; cold auxiliary USB service worst +29.5 ms. Not a zero-latency-regression claim.",
+    "resource_limits_weakened": false
+  },
+  "host_tests": [
+    "wire9-pong-tests.log",
+    "wire9-default-profile-tests.log",
+    "wire9-mixed-tests.log",
+    "wire9-raw-cache-tests.log",
+    "wire9-file-cache-tests.log",
+    "wire9-cache-storage-tests.log",
+    "wire9-dwt-tests.log",
+    "wire9-keyboard-tests.log",
+    "wire9-usb-protocol-tests.log",
+    "wire9-usb-keys-tests.log",
+    "wire9-usb-surface-tests.log",
+    "wire9-terminal-tests.log",
+    "wire9-corpus-native.json",
+    "wire9-resource-native.json"
+  ]
+}

@@ -563,15 +563,6 @@
 #if MK61_LANGUAGE_VM_CACHE_DENSITY != 0 && MK61_LANGUAGE_VM_CACHE_DENSITY != 1
   #error "MK61_LANGUAGE_VM_CACHE_DENSITY must be 0 or 1"
 #endif
-// Experimental raw/packed entries, still inside the existing cache budget.
-// Workspace is borrowed only before warm VM state setup; cold reserve never
-// touches the compiler's live prefix. No firmware rollout by default.
-#ifndef MK61_LANGUAGE_VM_CACHE_MIXED
-  #define MK61_LANGUAGE_VM_CACHE_MIXED 0
-#endif
-#if MK61_LANGUAGE_VM_CACHE_MIXED != 0 && MK61_LANGUAGE_VM_CACHE_MIXED != 1
-  #error "MK61_LANGUAGE_VM_CACHE_MIXED must be 0 or 1"
-#endif
 #if MK61_RESIDENT_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
   #error "Choose one language VM placement"
 #endif
@@ -896,6 +887,23 @@
 #if MK61_VM_FILE_CACHE != 0 && MK61_VM_FILE_CACHE != 1
   #error "MK61_VM_FILE_CACHE must be 0 or 1"
 #endif
+
+// Qualified raw/packed entries, still inside the existing cache budget.
+// Resolve this after full/legacy board aliases: Classic keeps its separately
+// selected raw policy. Explicit 0/1 controls remain available on every board.
+// Workspace is borrowed only before warm VM state setup; cold reserve never
+// touches the compiler's live prefix. No-cache profiles retain their old path.
+#ifndef MK61_LANGUAGE_VM_CACHE_MIXED
+  #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+    #define MK61_LANGUAGE_VM_CACHE_MIXED 0
+  #else
+    #define MK61_LANGUAGE_VM_CACHE_MIXED (MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES != 0)
+  #endif
+#endif
+#if MK61_LANGUAGE_VM_CACHE_MIXED != 0 && MK61_LANGUAGE_VM_CACHE_MIXED != 1
+  #error "MK61_LANGUAGE_VM_CACHE_MIXED must be 0 or 1"
+#endif
+
 // Production STOP is enabled only on exact F411 hardware combinations that
 // passed physical display, keyboard, RTC and FNB58 qualification. Mini V3
 // WS0010 and Classic V3 UC1609 use different display sleep commands but share

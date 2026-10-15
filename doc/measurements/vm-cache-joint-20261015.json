@@ -1,0 +1,2157 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "base_sha": "5d842637150e30d7a1bc5bb43b68584e65eb0966",
+  "wire_version": 10,
+  "request_version": 9,
+  "APP_ABI": 6,
+  "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/hardware/attempt-3/report.json",
+  "raw_report_sha256": "7eb090c0832a04aa1855da1f974d04ca8ffac446312adfa976350f9751eb7788",
+  "driver_sha256": "c41b1859a01c09327ff915df769f04b823d0c5cc11caaa8ed9fa0ec0fd61149f",
+  "resident_source_patch_sha256": "9c62fdd9804eac9ef6f7c3978506ea0ab813053e2522cbc80898c98af90add3f",
+  "system_apps": {
+    "LANGVM.APP": {
+      "bytes": 12965,
+      "sha256": "71798daef4b2e8d990fe5cb30218435ca95b80c63da4a2059a45dbe7f4de525a"
+    },
+    "LANGIN.APP": {
+      "bytes": 11873,
+      "sha256": "f6898695bf1bc227fc790f4b27ae8d195a64102e5dbbd3a00a95585b747d094f"
+    },
+    "BASIC.APP": {
+      "bytes": 14094,
+      "sha256": "0b20cabc43226df6a5b68be2de717fc10c8f2c26a6545946abbe57f0d47e4e58"
+    },
+    "FOCAL.APP": {
+      "bytes": 13832,
+      "sha256": "1eb03e8e777f03f1a3079d81015d988a94547c7d99c50b09f98081f6c4a48b21"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7331,
+      "sha256": "64720b8b22be3f00126ae0534b91f022a9f33ec3495342e8a00d47d1557d9aed"
+    }
+  },
+  "graphics_source_sha256": "b75062cab913531b8175d1337c8cb27bfc76629cda90f335d19d7b24bc9fc0b3",
+  "workloads": [
+    {
+      "directory": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/corpus",
+      "manifest_sha256": "211713c2a33088976ba0f284d79a10259e9e6924f6d44eed3f24b6b92866890a"
+    },
+    {
+      "directory": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/resource-corpus",
+      "manifest_sha256": "71b09a27cd47fb4a8f8349850af54410fe1c47d047cb4af6483777a2f7c70b23"
+    }
+  ],
+  "protocol_negative_control": {
+    "status": "EXPECTED_ORPHAN_REPRODUCED",
+    "expected_timeout": true,
+    "response_payloads": [
+      "6100"
+    ],
+    "device_usb_gap_max_us": 1021.7916666666666,
+    "not_a_latency_pass": true
+  },
+  "stages": [
+    {
+      "name": "baseline",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/hardware/attempt-3/images/baseline.bin",
+        "bytes": 378656,
+        "footer": 376536,
+        "build": "5911CF17",
+        "sha256": "bc7ee86aca51fe853cf200e7d00326c1f4b8023d698228f62a007fc1b055fba5",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/diag-raw/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": [
+            {
+              "seconds": 23.17605787498178,
+              "hits": 0,
+              "misses": 32,
+              "keyboard_row_ms": 942.5144583333333,
+              "usb_ms": 845.1395,
+              "pong_ms": 831.0140829999,
+              "measured_pings": 201,
+              "host_poll_ms": 32.099958043545485,
+              "frames": 84,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 92.64360308396863,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 942.3534375,
+              "usb_ms": 844.9827916666666,
+              "pong_ms": 843.2483329670504,
+              "measured_pings": 804,
+              "host_poll_ms": 11.33774995105341,
+              "frames": 337,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 92.55759812501492,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 942.12865625,
+              "usb_ms": 844.9519166666666,
+              "pong_ms": 844.2730829701759,
+              "measured_pings": 794,
+              "host_poll_ms": 10.543374984990805,
+              "frames": 324,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.31888862495543435,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 902.9422395833334,
+              "usb_ms": 893.9738958333334,
+              "pong_ms": 871.7864589998499,
+              "measured_pings": 20,
+              "host_poll_ms": 7.5768749811686575,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.12241070903837681,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 914.5072916666667,
+              "usb_ms": 893.1626041666666,
+              "pong_ms": 870.3107080073096,
+              "measured_pings": 6,
+              "host_poll_ms": 7.5916670029982924,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.3929822499630973,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 457.46696875,
+              "usb_ms": 450.69114583333334,
+              "pong_ms": 428.45420801313594,
+              "measured_pings": 14,
+              "host_poll_ms": 7.575916999485344,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.4157572909607552,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 480.40064583333333,
+              "usb_ms": 458.743125,
+              "pong_ms": 436.5256250021048,
+              "measured_pings": 17,
+              "host_poll_ms": 7.592209032736719,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 546.45853125,
+              "usb_ms": 443.5095,
+              "pong_ms": 421.89695802517235,
+              "measured_pings": 32,
+              "host_poll_ms": 12.540958006866276,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 162.92221875,
+              "usb_ms": 76.483,
+              "pong_ms": 54.583749966695905,
+              "measured_pings": 30,
+              "host_poll_ms": 10.543541982769966,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        },
+        "resource": {
+          "prime": [
+            {
+              "seconds": 16.832567124976777,
+              "hits": 0,
+              "misses": 32,
+              "keyboard_row_ms": 622.40765625,
+              "usb_ms": 524.9983541666667,
+              "pong_ms": 524.2023749742657,
+              "measured_pings": 85,
+              "host_poll_ms": 8.684458036441356,
+              "frames": 60,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 67.24505291698733,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 623.1017291666666,
+              "usb_ms": 526.3987291666666,
+              "pong_ms": 524.3995409691706,
+              "measured_pings": 339,
+              "host_poll_ms": 9.066958969924599,
+              "frames": 229,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 67.21828595804982,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 623.4036145833334,
+              "usb_ms": 524.9788333333333,
+              "pong_ms": 523.9529589889571,
+              "measured_pings": 334,
+              "host_poll_ms": 12.797375035006553,
+              "frames": 239,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.32233075000112876,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 903.79575,
+              "usb_ms": 894.7614166666666,
+              "pong_ms": 874.4010420050472,
+              "measured_pings": 20,
+              "host_poll_ms": 8.344542002305388,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.12312687502708286,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 976.2484166666666,
+              "usb_ms": 892.7253333333334,
+              "pong_ms": 871.6447500046343,
+              "measured_pings": 5,
+              "host_poll_ms": 7.867791980970651,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.3961624159710482,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 459.8807083333333,
+              "usb_ms": 451.4650208333333,
+              "pong_ms": 430.0018749781884,
+              "measured_pings": 15,
+              "host_poll_ms": 7.656625006347895,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.41661516699241474,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 544.9488125,
+              "usb_ms": 458.2619375,
+              "pong_ms": 435.13729196274653,
+              "measured_pings": 17,
+              "host_poll_ms": 7.728249998763204,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 544.6636666666666,
+              "usb_ms": 443.5534375,
+              "pong_ms": 421.3820830336772,
+              "measured_pings": 31,
+              "host_poll_ms": 9.297250013332814,
+              "frames": 7,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 164.17719791666667,
+              "usb_ms": 76.49975,
+              "pong_ms": 52.254042006097734,
+              "measured_pings": 31,
+              "host_poll_ms": 7.5501250103116035,
+              "frames": 7,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stack_watermark_remaining_bytes": {
+        "normal": 9536,
+        "resource": 6680
+      }
+    },
+    {
+      "name": "candidate",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/hardware/attempt-3/images/candidate.bin",
+        "bytes": 380944,
+        "footer": 378824,
+        "build": "56EE1EA9",
+        "sha256": "88ced0ed52d282452889778303e61b39548d5f671809b31f1689a00dd4b05527",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/diag-mixed/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": [
+            {
+              "seconds": 17.693854583019856,
+              "hits": 10,
+              "misses": 22,
+              "keyboard_row_ms": 937.2494270833333,
+              "usb_ms": 848.0631666666666,
+              "pong_ms": 842.6800410379656,
+              "measured_pings": 198,
+              "host_poll_ms": 7.638457987923175,
+              "frames": 79,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 46,
+                "total_cycles": 4703736,
+                "total_seconds": 0.04899725,
+                "maximum_cycles": 229585,
+                "self_cycles": 4703736,
+                "self_seconds": 0.04899725
+              },
+              "thaw": {
+                "calls": 10,
+                "total_cycles": 2515473,
+                "total_seconds": 0.02620284375,
+                "maximum_cycles": 482311,
+                "self_cycles": 1032170,
+                "self_seconds": 0.010751770833333334
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 25.974626417038962,
+              "hits": 128,
+              "misses": 0,
+              "keyboard_row_ms": 167.84702083333335,
+              "usb_ms": 119.784375,
+              "pong_ms": 98.65891694789752,
+              "measured_pings": 796,
+              "host_poll_ms": 8.978458005003631,
+              "frames": 283,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 128,
+                "total_cycles": 17004089,
+                "total_seconds": 0.17712592708333333,
+                "maximum_cycles": 229594,
+                "self_cycles": 17004089,
+                "self_seconds": 0.17712592708333333
+              },
+              "thaw": {
+                "calls": 128,
+                "total_cycles": 30049666,
+                "total_seconds": 0.31301735416666665,
+                "maximum_cycles": 499739,
+                "self_cycles": 13045577,
+                "self_seconds": 0.13589142708333332
+              }
+            },
+            {
+              "seconds": 26.032222541980445,
+              "hits": 128,
+              "misses": 0,
+              "keyboard_row_ms": 169.55142708333335,
+              "usb_ms": 119.8264375,
+              "pong_ms": 98.49362500244752,
+              "measured_pings": 798,
+              "host_poll_ms": 8.58149997657165,
+              "frames": 284,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 128,
+                "total_cycles": 17007394,
+                "total_seconds": 0.17716035416666667,
+                "maximum_cycles": 231099,
+                "self_cycles": 17007394,
+                "self_seconds": 0.17716035416666667
+              },
+              "thaw": {
+                "calls": 128,
+                "total_cycles": 30056118,
+                "total_seconds": 0.3130845625,
+                "maximum_cycles": 499766,
+                "self_cycles": 13048724,
+                "self_seconds": 0.13592420833333332
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.3221220420091413,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 907.1447708333334,
+              "usb_ms": 899.0019895833334,
+              "pong_ms": 877.0252920221537,
+              "measured_pings": 20,
+              "host_poll_ms": 7.5887920102104545,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 2,
+                "total_cycles": 274138,
+                "total_seconds": 0.002855604166666667,
+                "maximum_cycles": 183044,
+                "self_cycles": 274138,
+                "self_seconds": 0.002855604166666667
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.12188145803520456,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 925.8740729166666,
+              "usb_ms": 904.1810520833334,
+              "pong_ms": 881.8972910521552,
+              "measured_pings": 6,
+              "host_poll_ms": 7.585750019643456,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 8,
+                "total_cycles": 881129,
+                "total_seconds": 0.009178427083333333,
+                "maximum_cycles": 198522,
+                "self_cycles": 881129,
+                "self_seconds": 0.009178427083333333
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.3948165000183508,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 465.5970208333333,
+              "usb_ms": 456.4935,
+              "pong_ms": 433.5997080197558,
+              "measured_pings": 14,
+              "host_poll_ms": 7.580583041999489,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 4,
+                "total_cycles": 168758,
+                "total_seconds": 0.0017578958333333333,
+                "maximum_cycles": 96411,
+                "self_cycles": 168758,
+                "self_seconds": 0.0017578958333333333
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.4218827090226114,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 483.82775,
+              "usb_ms": 463.4630208333333,
+              "pong_ms": 463.88275001663715,
+              "measured_pings": 18,
+              "host_poll_ms": 8.287709031719714,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 3,
+                "total_cycles": 285933,
+                "total_seconds": 0.00297846875,
+                "maximum_cycles": 168246,
+                "self_cycles": 285933,
+                "self_seconds": 0.00297846875
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 546.59040625,
+              "usb_ms": 444.852375,
+              "pong_ms": 421.70629202155396,
+              "measured_pings": 30,
+              "host_poll_ms": 9.186375013086945,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 164.74489583333335,
+              "usb_ms": 76.586,
+              "pong_ms": 54.633332998491824,
+              "measured_pings": 31,
+              "host_poll_ms": 10.49608300672844,
+              "frames": 5,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        },
+        "resource": {
+          "prime": [
+            {
+              "seconds": 17.229178375040647,
+              "hits": 0,
+              "misses": 32,
+              "keyboard_row_ms": 655.08009375,
+              "usb_ms": 557.3894791666667,
+              "pong_ms": 554.1866249986924,
+              "measured_pings": 85,
+              "host_poll_ms": 7.754000020213425,
+              "frames": 60,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 154,
+                "total_cycles": 36296930,
+                "total_seconds": 0.37809302083333335,
+                "maximum_cycles": 355885,
+                "self_cycles": 36296930,
+                "self_seconds": 0.37809302083333335
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 69.23757499997737,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 655.2669166666666,
+              "usb_ms": 557.447875,
+              "pong_ms": 556.6423329873942,
+              "measured_pings": 336,
+              "host_poll_ms": 10.398041980806738,
+              "frames": 239,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 760,
+                "total_cycles": 176927110,
+                "total_seconds": 1.8429907291666667,
+                "maximum_cycles": 355941,
+                "self_cycles": 176927110,
+                "self_seconds": 1.8429907291666667
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 69.2045390830026,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 652.9942708333334,
+              "usb_ms": 557.4590208333334,
+              "pong_ms": 556.2723750481382,
+              "measured_pings": 338,
+              "host_poll_ms": 8.3289589965716,
+              "frames": 239,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 760,
+                "total_cycles": 176927134,
+                "total_seconds": 1.8429909791666668,
+                "maximum_cycles": 355944,
+                "self_cycles": 176927134,
+                "self_seconds": 1.8429909791666668
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.3238913330133073,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 932.7748541666666,
+              "usb_ms": 925.0280416666666,
+              "pong_ms": 902.9347080504522,
+              "measured_pings": 20,
+              "host_poll_ms": 7.650124956853688,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 12,
+                "total_cycles": 2730002,
+                "total_seconds": 0.028437520833333334,
+                "maximum_cycles": 355889,
+                "self_cycles": 2730002,
+                "self_seconds": 0.028437520833333334
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.1217354160035029,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 975.6880625,
+              "usb_ms": 893.1507083333333,
+              "pong_ms": 893.7977089663036,
+              "measured_pings": 4,
+              "host_poll_ms": 7.561667007394135,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.39776070800144225,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 459.62421875,
+              "usb_ms": 452.3555833333333,
+              "pong_ms": 430.11412501800805,
+              "measured_pings": 14,
+              "host_poll_ms": 7.722624985035509,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.42239424999570474,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 480.65098958333334,
+              "usb_ms": 458.9465208333333,
+              "pong_ms": 436.6144170053303,
+              "measured_pings": 18,
+              "host_poll_ms": 7.593750022351742,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 546.4403541666667,
+              "usb_ms": 443.7394375,
+              "pong_ms": 421.4630830101669,
+              "measured_pings": 32,
+              "host_poll_ms": 7.563874998595566,
+              "frames": 5,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 164.89145833333333,
+              "usb_ms": 76.49172916666667,
+              "pong_ms": 55.793542007450014,
+              "measured_pings": 30,
+              "host_poll_ms": 9.57704201573506,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stack_watermark_remaining_bytes": {
+        "normal": 9456,
+        "resource": 6592
+      }
+    },
+    {
+      "name": "control",
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/hardware/attempt-3/images/baseline.bin",
+        "bytes": 378656,
+        "footer": 376536,
+        "build": "5911CF17",
+        "sha256": "bc7ee86aca51fe853cf200e7d00326c1f4b8023d698228f62a007fc1b055fba5",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/diag-raw/resident.bin"
+      },
+      "corpora": {
+        "normal": {
+          "prime": [
+            {
+              "seconds": 23.158816417038906,
+              "hits": 0,
+              "misses": 32,
+              "keyboard_row_ms": 934.4825625,
+              "usb_ms": 845.4520416666667,
+              "pong_ms": 843.6865840340033,
+              "measured_pings": 200,
+              "host_poll_ms": 7.7531670103780925,
+              "frames": 82,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 92.57136349997018,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 942.152125,
+              "usb_ms": 845.3929166666667,
+              "pong_ms": 843.2698340038769,
+              "measured_pings": 804,
+              "host_poll_ms": 18.120458000339568,
+              "frames": 328,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 92.62754100002348,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 942.3352083333334,
+              "usb_ms": 845.2582291666666,
+              "pong_ms": 844.6422080160119,
+              "measured_pings": 798,
+              "host_poll_ms": 8.312791993375868,
+              "frames": 330,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.3222992919618264,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 904.5224375,
+              "usb_ms": 895.5709791666666,
+              "pong_ms": 873.2761249993928,
+              "measured_pings": 20,
+              "host_poll_ms": 7.585500017739832,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.12381429102970287,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 914.88553125,
+              "usb_ms": 893.4373541666666,
+              "pong_ms": 870.0184170156717,
+              "measured_pings": 6,
+              "host_poll_ms": 8.572874998208135,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.3923429159913212,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 460.9485208333333,
+              "usb_ms": 452.3626458333333,
+              "pong_ms": 430.19904097309336,
+              "measured_pings": 14,
+              "host_poll_ms": 7.625583035405725,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.41809191601350904,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 480.3611875,
+              "usb_ms": 458.90904166666667,
+              "pong_ms": 437.62883299496025,
+              "measured_pings": 18,
+              "host_poll_ms": 7.662500021979213,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 546.9076979166666,
+              "usb_ms": 443.8231875,
+              "pong_ms": 422.19258297700435,
+              "measured_pings": 30,
+              "host_poll_ms": 10.200083954259753,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 163.36379166666666,
+              "usb_ms": 76.5283125,
+              "pong_ms": 56.71087501104921,
+              "measured_pings": 31,
+              "host_poll_ms": 9.382374992128462,
+              "frames": 6,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        },
+        "resource": {
+          "prime": [
+            {
+              "seconds": 16.856108749983832,
+              "hits": 0,
+              "misses": 32,
+              "keyboard_row_ms": 615.5330833333334,
+              "usb_ms": 525.5324270833333,
+              "pong_ms": 524.5952500263229,
+              "measured_pings": 84,
+              "host_poll_ms": 8.199165982659906,
+              "frames": 64,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "warm": [
+            {
+              "seconds": 67.26713370799553,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 623.7332395833333,
+              "usb_ms": 525.5140729166666,
+              "pong_ms": 525.2953339950182,
+              "measured_pings": 339,
+              "host_poll_ms": 8.694207994267344,
+              "frames": 229,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 67.27254154195543,
+              "hits": 0,
+              "misses": 128,
+              "keyboard_row_ms": 623.755625,
+              "usb_ms": 525.5157916666666,
+              "pong_ms": 525.1792910275981,
+              "measured_pings": 335,
+              "host_poll_ms": 16.018166963476688,
+              "frames": 235,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "keys": [
+            {
+              "seconds": 0.32266945799347013,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 904.0816875,
+              "usb_ms": 895.3170729166666,
+              "pong_ms": 871.8583750305697,
+              "measured_pings": 20,
+              "host_poll_ms": 7.8112090122886,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.12193808302981779,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 976.9435104166666,
+              "usb_ms": 893.29475,
+              "pong_ms": 871.6212079743855,
+              "measured_pings": 5,
+              "host_poll_ms": 8.700666949152946,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.3985462919808924,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 461.05353125,
+              "usb_ms": 452.0186458333333,
+              "pong_ms": 429.7937089577317,
+              "measured_pings": 14,
+              "host_poll_ms": 7.591917004901916,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            },
+            {
+              "seconds": 0.4181193750118837,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 480.68634375,
+              "usb_ms": 458.8382708333333,
+              "pong_ms": 437.5487499637529,
+              "measured_pings": 17,
+              "host_poll_ms": 7.5706669595092535,
+              "frames": null,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              }
+            }
+          ],
+          "graphics": [
+            {
+              "seconds": null,
+              "hits": 0,
+              "misses": 1,
+              "keyboard_row_ms": 545.6696770833333,
+              "usb_ms": 444.0952708333333,
+              "pong_ms": 422.178583976347,
+              "measured_pings": 30,
+              "host_poll_ms": 10.881584021262825,
+              "frames": 7,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            },
+            {
+              "seconds": null,
+              "hits": 1,
+              "misses": 0,
+              "keyboard_row_ms": 164.99129166666665,
+              "usb_ms": 76.58445833333333,
+              "pong_ms": 50.88470800546929,
+              "measured_pings": 30,
+              "host_poll_ms": 7.538874982856214,
+              "frames": 7,
+              "nor_write_erase_calls": 0,
+              "pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "pages": [
+                {
+                  "name": "primitives",
+                  "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+                },
+                {
+                  "name": "graph",
+                  "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "stack_watermark_remaining_bytes": {
+        "normal": 9544,
+        "resource": 6680
+      }
+    }
+  ],
+  "comparisons": {
+    "normal": {
+      "stage_means_seconds": [
+        92.60060060449177,
+        26.003424479509704,
+        92.59945224999683
+      ],
+      "mean_control_seconds": 92.6000264272443,
+      "candidate_time_change_percent": -71.91855609248606,
+      "control_drift_percent": -0.0012401156012420422
+    },
+    "resource": {
+      "stage_means_seconds": [
+        67.23166943751858,
+        69.22105704148998,
+        67.26983762497548
+      ],
+      "mean_control_seconds": 67.25075353124703,
+      "candidate_time_change_percent": 2.929786518046207,
+      "control_drift_percent": 0.056771143385603295
+    }
+  },
+  "totals": {
+    "profile_windows": 54,
+    "measured_ping_pong": 8378,
+    "maximum_pong_ms": 902.9347080504522,
+    "maximum_usb_ms": 925.0280416666666,
+    "maximum_keyboard_row_ms": 976.9435104166666,
+    "maximum_host_poll_ms": 32.099958043545485,
+    "nor_write_erase_calls": 0,
+    "selected_full_graphics_frames_compared": 24,
+    "batch_and_graphics_crc_verified_frames": 3799
+  },
+  "exact_restoration": {
+    "firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/hardware/attempt-3/images/original.bin",
+      "bytes": 360564,
+      "footer": 358852,
+      "build": "122A5FF9",
+      "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+      "source": "/Users/bolk/Projects/MK61S_MINI/.build/stm32-usb-compact-state-20261015/install-candidate/classic.bin"
+    },
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_file_count": 44,
+    "original_directory_count": 4,
+    "read_retries": []
+  },
+  "qualification": "PASS",
+  "date": "2026-10-15",
+  "artifacts_root": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "mcu": "F411",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000
+  },
+  "policy": {
+    "classic_f411": {
+      "bytes": 32768,
+      "mixed": 0,
+      "changed_by_this_patch": false
+    },
+    "other_cached_overlay_f411": {
+      "bytes": 24576,
+      "mixed": 1
+    },
+    "f401_no_cache": {
+      "bytes": 0,
+      "mixed": 0
+    },
+    "explicit_mixed_0_1_preserved": true
+  },
+  "resources": {
+    "production_builds": [
+      {
+        "variant": "mini-raw",
+        "math_backend": 0,
+        "mixed": 0,
+        "diagnostic": false,
+        "flash_bytes": 346816,
+        "globals_bytes": 23424,
+        "native_frame_max_bytes": 1960,
+        "sha256": "6900a7d867439e89adff61fde73e2dc570cd16557f0f2c4145740a1d1eaaf02e"
+      },
+      {
+        "variant": "mini-default-0",
+        "math_backend": 0,
+        "mixed": 1,
+        "diagnostic": false,
+        "flash_bytes": 349048,
+        "globals_bytes": 23424,
+        "native_frame_max_bytes": 1960,
+        "sha256": "81d2044730c18a83c8c78aaba7bc3cfeb50a70b07bec43924280eb714033f60e"
+      },
+      {
+        "variant": "mini-default-1",
+        "math_backend": 1,
+        "mixed": 1,
+        "diagnostic": false,
+        "flash_bytes": 339368,
+        "globals_bytes": 23424,
+        "native_frame_max_bytes": 1960,
+        "sha256": "12e248122750fbb9dcea663fa950d650c21d695f3860a848bd073973985fa90a"
+      },
+      {
+        "variant": "diag-raw",
+        "math_backend": 0,
+        "mixed": 0,
+        "diagnostic": true,
+        "flash_bytes": 378656,
+        "globals_bytes": 26904,
+        "native_frame_max_bytes": 1928,
+        "sha256": "bc7ee86aca51fe853cf200e7d00326c1f4b8023d698228f62a007fc1b055fba5"
+      },
+      {
+        "variant": "diag-mixed",
+        "math_backend": 0,
+        "mixed": 1,
+        "diagnostic": true,
+        "flash_bytes": 380944,
+        "globals_bytes": 26904,
+        "native_frame_max_bytes": 1928,
+        "sha256": "88ced0ed52d282452889778303e61b39548d5f671809b31f1689a00dd4b05527"
+      }
+    ],
+    "diagnostic_config": {
+      "status": "PASS",
+      "variants": [
+        {
+          "variant": "raw",
+          "mixed": 0,
+          "compiler_cache_bytes": 24576,
+          "elf_cache_bytes": 24576,
+          "bin_sha256": "bc7ee86aca51fe853cf200e7d00326c1f4b8023d698228f62a007fc1b055fba5",
+          "elf_sha256": "1dc7e7e28192fb9a6f93a9ba930005c29245bb85e1a3400eda8818ed3f3f27f2",
+          "compile_commands_sha256": "b4ffadbba0bd92e952d85c97df2764980d4713fa070d87f43a5dbe549370b708",
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "variant": "mixed",
+          "mixed": 1,
+          "compiler_cache_bytes": 24576,
+          "elf_cache_bytes": 24576,
+          "bin_sha256": "88ced0ed52d282452889778303e61b39548d5f671809b31f1689a00dd4b05527",
+          "elf_sha256": "c3a73049a60444c2914c475dbccf516deb2feb3cea6f153254cc31e1afd20eac",
+          "compile_commands_sha256": "df8a857ae89b43148f1d46a160d87487912771abdfe5426e79545907ad198e84",
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        }
+      ]
+    },
+    "logs": {
+      "all-tests.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/all-tests.log",
+        "sha256": "7a49d8cce86add0e7332a48380b89c18fa64ff57254b8c7236262e98a9b88e85"
+      },
+      "f401-matrix.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/f401-matrix.log",
+        "sha256": "5d91ac7e443a871095fd73a5f15f8adfa227424904d062f111084364d51e69e7"
+      },
+      "production-gates.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/production-gates.log",
+        "sha256": "042e1ee06a4fa06e8790597ccd6ca06cb681ccb8f657f742cf11c9e7d39fb816"
+      },
+      "arm-graphics.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/arm-graphics.log",
+        "sha256": "8eee6b9a091d0ddb035c6737d83111f7d95d2bc21ba65c94c9436458bf4a018f"
+      },
+      "arm-overlay.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/arm-overlay.log",
+        "sha256": "e973f52ce30051facacb9f23f64dc3d32a836353f150ec48d03f970ad3f54879"
+      },
+      "arm-flow.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/arm-flow.log",
+        "sha256": "495e7316942efbe8bd476c81b4a4938cc509cfa99d147085bf7f989a019ae86c"
+      },
+      "arm-flow-core.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/arm-flow-core.log",
+        "sha256": "495e7316942efbe8bd476c81b4a4938cc509cfa99d147085bf7f989a019ae86c"
+      },
+      "mini-default-identity.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/mini-default-identity.log",
+        "sha256": "835d23b8386b3e48a7a7806133209deb9766e72819f5819faeca977e5ec228f6"
+      },
+      "board-final-tests.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/board-final-tests.log",
+        "sha256": "8d217358f83729fb8396e2e1e527bf925e82a96f064038faaa8c4a4eef30a31d"
+      },
+      "build-pairs-post-raw32.log": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/build-pairs-post-raw32.log",
+        "sha256": "a1426ec959d78d7e70eb2a5cdbff05dc9b71fd707b0e15b2f66d591433537d23"
+      }
+    },
+    "cache": {
+      "total_bytes": 24576,
+      "metadata_bytes": 688,
+      "payload_bytes": 23888,
+      "borrowed_prefix_bytes": 4176,
+      "workspace_bytes": 8192,
+      "persistent_tail_bytes": 4016
+    },
+    "limits_changed": false,
+    "native_frame_limit_bytes": 5120,
+    "stack_reserve_bytes": 16384,
+    "guard_bytes": 256,
+    "app_ceiling_bytes": 20480,
+    "wire_code_maps_limit_bytes": 6144,
+    "owned_image_limit_bytes": 9728,
+    "source_limits_bytes": {
+      "basic": 3584,
+      "focal": 1536,
+      "m61": 1536
+    },
+    "foreground_frame_limits_bytes": {
+      "main": 128,
+      "terminal": 768
+    },
+    "f401_final_defaults": {
+      "status": "PASS",
+      "production_defaults": true,
+      "cases": [
+        {
+          "case": "f401-capability-a00-usb",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-capability-ws-graphics",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-capability-ws-usb",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-capability-ws-usb-graphics",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-product-a00",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-product-classic-v2",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-product-classic-v3",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-product-mini-v2-a00",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        },
+        {
+          "case": "f401-product-ws0010",
+          "image_cache": 0,
+          "mixed": 0,
+          "file_cache": 0,
+          "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c"
+        }
+      ]
+    }
+  },
+  "source_integration": {
+    "status": "PASS",
+    "fresh_main": "4dff03de52c3cd510e703007f780ea224678730c",
+    "resident_patch_sha256": "9c62fdd9804eac9ef6f7c3978506ea0ab813053e2522cbc80898c98af90add3f",
+    "config_sha256": "a73ad047a72ae02917243dbc80720d580cebaecf736c5e5002838b588e0c0e9c",
+    "resident_patch_identical_to_hardware_snapshot": true
+  },
+  "local_tests": {
+    "final_suite": {
+      "status": "PASS",
+      "exit_code": 0,
+      "log": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/final-all-tests-2.log",
+      "sha256": "15b0b63923333391693b3ab9789a4ec3ec6079b0ddd87c82d52c35dd88f7fa44",
+      "powershell_tests_ran": true
+    },
+    "arm_graphics": "PASS native/VM, 80x16 and 192x64, GRAPH, nested PRINT AT, INPUT eviction",
+    "arm_flow_LIBM": "PASS",
+    "arm_flow_CORE": "PASS",
+    "arm_overlay_lifetime": "PASS",
+    "both_arithmetic_exact_host_executions": 72,
+    "native_guarded_cache_replay": "PASS raw24/mixed24/raw32",
+    "F401_release_cases_passed": 9,
+    "F401_cross_mcu_ws0010_ram_comparison": "NOT_RUN"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "status": "FAIL",
+      "reason": "Graphics oracle accepted two phases of the transient disk overlay",
+      "restored": true,
+      "not_a_complete_ABA": true
+    },
+    {
+      "attempt": 2,
+      "status": "BLOCKED_BEFORE_DEVICE_OPEN",
+      "reason": "Sandbox denied serial port open",
+      "device_touched": false
+    },
+    {
+      "attempt": 3,
+      "status": "PASS",
+      "complete_ABA": true,
+      "exit_code": 0,
+      "restored": true,
+      "serial_closed": true
+    }
+  ],
+  "host_suite_attempts": [
+    {
+      "log": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/final-all-tests.log",
+      "status": "STOPPED_SANDBOX_PERMISSION_ERROR",
+      "exit_code": 143
+    },
+    {
+      "log": "/Users/bolk/Projects/MK61S_MINI/.build/vm-cache-joint-20261015.WZ16dJ/final-all-tests-2.log",
+      "status": "PASS",
+      "exit_code": 0,
+      "sha256": "15b0b63923333391693b3ab9789a4ec3ec6079b0ddd87c82d52c35dd88f7fa44"
+    }
+  ],
+  "caveats": [
+    "Synthetic diagnostic workload, not a new chess benchmark or ordinary firmware timing",
+    "Worst incompressible-resource case is 2.93% slower; worst cold USB gap is 29.46 ms longer than the raw maximum",
+    "No increase in static RAM, but observed extra mixed C-stack peak is 80..88 bytes, not a proven worst case",
+    "DWT GAP is service start-to-start in CPU cycles, not physical keyboard edge latency; host virtual-key timings include pacing",
+    "Only one outstanding PING is valid; intentional negative control timeout is not a latency pass",
+    "Warm reset between corpus fixture installations is outside timing and identical in every stage; 16-module churn and INPUT/ESC run within measured workloads"
+  ]
+}

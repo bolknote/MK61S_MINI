@@ -15,6 +15,29 @@ Statistics point_statistics[POINT_COUNT];
 bool dwt_available = false;
 u32 core_clock_hz = 0;
 u32 read_overhead_cycles = 0;
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+ServiceGap service_gaps[SERVICE_COUNT];
+u32 service_previous[SERVICE_COUNT];
+u8 service_primed;
+static_assert(SERVICE_COUNT==8,"service gap mask must remain bounded");
+void note_service_at(Service service,u32 now) {
+  const usize index=(usize)service;
+  if(!collection_active || index>=SERVICE_COUNT) return;
+  const u8 bit=(u8)(1U<<index);
+  const u32 elapsed=now-service_previous[index];
+  service_previous[index]=now;
+  if(!(service_primed&bit)) {service_primed|=bit;return;}
+  auto& row=service_gaps[index];
+  if(row.samples==UINT32_MAX) return;
+  ++row.samples;row.total_cycles+=elapsed;
+  if(elapsed>row.maximum_cycles) row.maximum_cycles=elapsed;
+  const u32 millisecond=core_clock_hz/1000;
+  row.over_1ms+=elapsed>millisecond;
+  row.over_5ms+=elapsed>5*millisecond;
+  row.over_10ms+=elapsed>10*millisecond;
+  row.over_30ms+=elapsed>30*millisecond;
+}
+#endif
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 u32 previous_cycle = 0;
 u64 extended_cycles = 0;
@@ -67,6 +90,35 @@ static u32 measure_read_overhead(void) {
 } // namespace
 
 bool collection_active = false;
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+void note_service(Service service) {
+  if(collection_active) note_service_at(service,DWT->CYCCNT);
+}
+void note_keyboard_row(u8 row) {
+  if(!collection_active || row>=5) return;
+  const u32 now=DWT->CYCCNT;
+  note_service_at(Service::KEYBOARD_SAMPLE,now);
+  note_service_at((Service)((u8)Service::KEYBOARD_ROW0+row),now);
+}
+const ServiceGap& service_gap(Service service) {
+  const usize index=(usize)service;
+  static const ServiceGap empty={};
+  return index<SERVICE_COUNT ? service_gaps[index] : empty;
+}
+const char* service_name(Service service) {
+  switch(service) {
+    case Service::KEYBOARD_POLL:return "keyboard.poll";
+    case Service::KEYBOARD_SAMPLE:return "keyboard.sample";
+    case Service::KEYBOARD_ROW0:return "keyboard.row0";
+    case Service::KEYBOARD_ROW1:return "keyboard.row1";
+    case Service::KEYBOARD_ROW2:return "keyboard.row2";
+    case Service::KEYBOARD_ROW3:return "keyboard.row3";
+    case Service::KEYBOARD_ROW4:return "keyboard.row4";
+    case Service::USB_SCREEN:return "usb.service";
+    default:return "unknown";
+  }
+}
+#endif
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 Scope* scope_top = nullptr;
 u32 scope_generation = 0;
@@ -214,6 +266,10 @@ void reset(void) {
   for(usize index = 0; index < POINT_COUNT; index++) {
     point_statistics[index].reset();
   }
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+  for(auto& row:service_gaps) row={};
+  service_primed=0;
+#endif
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
   ++scope_generation;
   scope_top = nullptr;

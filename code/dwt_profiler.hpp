@@ -44,6 +44,15 @@
   #error "MK61_DWT_IDLE_DETAIL requires MK61_DWT_RUNTIME_DETAIL"
 #endif
 
+// Diagnostic start-to-start gaps, not function-body durations. Entirely
+// absent from ordinary residents and APPs, including its mutable storage.
+#ifndef MK61_DWT_SERVICE_GAPS
+  #define MK61_DWT_SERVICE_GAPS 0
+#endif
+#if MK61_DWT_SERVICE_GAPS != 0 && MK61_DWT_SERVICE_GAPS != 1
+  #error "MK61_DWT_SERVICE_GAPS must be 0 or 1"
+#endif
+
 // APP исполняется из динамически выделенного блока SRAM и не должен тянуть в
 // образ resident-состояние профилировщика или дополнительные импорты.
 #if defined(MK61_BUILD_FOCAL_MODULE) || \
@@ -72,6 +81,8 @@
   (MK61_DWT_RUNTIME_DETAIL && MK61_DWT_PROFILER_SUPPORTED)
 #define MK61_DWT_IDLE_DETAIL_SUPPORTED \
   (MK61_DWT_IDLE_DETAIL && MK61_DWT_RUNTIME_DETAIL_SUPPORTED)
+#define MK61_DWT_SERVICE_GAPS_SUPPORTED \
+  (MK61_DWT_SERVICE_GAPS && MK61_DWT_PROFILER_SUPPORTED)
 #ifndef MK61_VM_OPCODE_PROFILE
 #define MK61_VM_OPCODE_PROFILE 0
 #endif
@@ -207,6 +218,23 @@ u32 overhead_cycles(void);
 const char* point_name(Point point);
 const Statistics& statistics(Point point);
 void record_sample(Point point, u32 elapsed_cycles);
+
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+enum class Service : u8 {
+  KEYBOARD_POLL, KEYBOARD_SAMPLE,
+  KEYBOARD_ROW0, KEYBOARD_ROW1, KEYBOARD_ROW2, KEYBOARD_ROW3, KEYBOARD_ROW4,
+  USB_SCREEN, COUNT
+};
+static constexpr usize SERVICE_COUNT=(usize)Service::COUNT;
+struct ServiceGap {
+  u64 total_cycles=0;
+  u32 samples=0,maximum_cycles=0,over_1ms=0,over_5ms=0,over_10ms=0,over_30ms=0;
+};
+void note_service(Service);
+void note_keyboard_row(u8 row);
+const ServiceGap& service_gap(Service);
+const char* service_name(Service);
+#endif
 
 #if MK61_DWT_RUNTIME_DETAIL_SUPPORTED
 class Scope;
@@ -404,6 +432,15 @@ class AccumulatingScope {
 
 #define MK61_DWT_JOIN_INNER(left, right) left##right
 #define MK61_DWT_JOIN(left, right) MK61_DWT_JOIN_INNER(left, right)
+
+#if MK61_DWT_SERVICE_GAPS_SUPPORTED
+  #define MK61_SERVICE_GAP(service) \
+    dwt_profiler::note_service(dwt_profiler::Service::service)
+  #define MK61_KEYBOARD_ROW_GAP(row) dwt_profiler::note_keyboard_row(row)
+#else
+  #define MK61_SERVICE_GAP(service) ((void)0)
+  #define MK61_KEYBOARD_ROW_GAP(row) ((void)0)
+#endif
 
 #if MK61_DWT_PROFILER_SUPPORTED
   #define MK61_PROFILE_SCOPE(point) \

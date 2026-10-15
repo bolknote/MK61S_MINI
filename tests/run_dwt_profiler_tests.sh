@@ -31,3 +31,5 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/dwt_runtime_detail_self_test.cpp" "$root/code/dwt_profiler.cpp" \
   -o "$out-detail"
 "$out-detail"
+
+bash "$root/tests/run_dwt_service_gaps_tests.sh"

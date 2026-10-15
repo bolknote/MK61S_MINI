@@ -7,10 +7,21 @@ int main(void) {
 #if defined(MK61_CONFIG_EXPECT_VM_CACHE_BYTES)
   static_assert(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES == MK61_CONFIG_EXPECT_VM_CACHE_BYTES,
                 "board cache budget must match its qualified default or explicit override");
-  #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+  #if (defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)) && \
+      !defined(MK61_CONFIG_EXPECT_MIXED_ENABLED)
     static_assert(MK61_LANGUAGE_VM_CACHE_MIXED == 0,
                   "Classic production cache must retain raw images");
   #endif
+#endif
+#if defined(MK61_CONFIG_EXPECT_MIXED_DISABLED)
+  static_assert(MK61_LANGUAGE_VM_CACHE_MIXED==0,"explicit raw control must remain available");
+#elif defined(MK61_CONFIG_EXPECT_MIXED_ENABLED)
+  static_assert(MK61_LANGUAGE_VM_CACHE_MIXED==1,"explicit mixed control must remain available");
+#elif defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+  static_assert(MK61_LANGUAGE_VM_CACHE_MIXED==0,"Classic must retain its separately selected raw policy");
+#else
+  static_assert(MK61_LANGUAGE_VM_CACHE_MIXED==(MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES!=0),
+                "mixed cache must track the compiled VM/RAM policy");
 #endif
 #if defined(MK61_CONFIG_EXPECT_FILE_CACHE_DISABLED)
   static_assert(MK61_VM_FILE_CACHE==0,"explicit/no-RAM cache policy must remain disabled");

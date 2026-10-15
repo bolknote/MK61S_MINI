@@ -23,6 +23,7 @@ if command -v pwsh >/dev/null 2>&1; then
 fi
 "$root/tests/run_debug_tests.sh"
 "$root/tests/run_dwt_profiler_tests.sh"
+python3 "$root/tests/hil_vm_cache_latency_self_test.py"
 bash "$root/tests/run_language_vm_opcode_profile_tests.sh"
 "$root/tests/run_core_packed_amk_tests.sh"
 bash "$root/tests/run_core_native_tests.sh"
@@ -124,8 +125,12 @@ python3 "$root/tests/terminal_help_self_test.py"
 "$root/tests/run_text_editor_tests.sh"
 "$root/tests/run_tinybasic_tests.sh"
 bash "$root/tests/run_language_vm_image_cache_tests.sh"
+bash "$root/tests/run_language_vm_mixed_cache_tests.sh"
 bash "$root/tests/run_language_vm_integer_block_tests.sh"
 bash "$root/tests/run_language_vm_file_cache_tests.sh"
+# The shipping mixed policy must also preserve VMSTORE's borrowed workspace.
+MK61_TEST_SANITIZERS=1 MK61_VM_CACHE_MIXED_TEST=1 \
+  bash "$root/tests/run_language_vm_file_cache_tests.sh"
 bash "$root/tests/run_language_workspace_vm_default_tests.sh"
 "$root/tests/run_high_noon_equivalence_tests.sh"
 python3 "$root/tests/turochamp_package_self_test.py"
