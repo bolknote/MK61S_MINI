@@ -55,11 +55,9 @@ LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
     "tinybasic": {"app_bytes": 12_000, "memory_bytes": 17_500},
 }
-# The dependency-free Windows packer deliberately uses a bounded greedy ZX0
-# parser: Arduino IDE users must not need MSVC/MinGW just to build APP files.
-# It produces the same decoded image but a somewhat larger C6 file than the
-# desktop optimal parser.  Keep separate measured ceilings for that storage
-# representation while retaining the same memory_bytes limits above.
+# The optional Python packer uses a bounded greedy ZX0 parser. POSIX callers
+# can select it explicitly with --packer. Windows builds use PowerShell/.NET.
+# Keep separate measured storage ceilings, with the same memory_bytes limits.
 GREEDY_APP_SIZE_BUDGETS = {
     (False, "focal"): 13_500,
     (True, "focal"): 15_100,
@@ -119,6 +117,12 @@ def enforce_system_size_budget(system: str | None, report: dict,
 
 
 def build(args: argparse.Namespace) -> dict:
+    if sys.platform == "win32":
+        raise ValueError(
+            "Windows APP builds use tools/build-portable-app.ps1 "
+            "(PowerShell/.NET). Close Arduino IDE, reinstall its board "
+            "with tools/mk61-arduino-board.cmd from the updated project, "
+            "then restart Arduino IDE.")
     # FOCAL is now a VM frontend, never a self-contained native interpreter.
     if args.system == "focal":
         args.language_vm_compiler = True
@@ -332,22 +336,13 @@ def build(args: argparse.Namespace) -> dict:
     run([tool("objcopy"), "-O", "binary", "-j", ".module_image", elf, image])
     packer = args.packer
     python_packer = (ROOT / "tools/.mk61-app/mk61_module_pack.py").resolve()
-    greedy_packer = False
-    if packer is None and os.name == "nt":
-        # Arduino's ARM GCC cannot produce a host Windows executable and the
-        # IDE does not install MSVC/LLVM.  Use the dependency-free Python
-        # packer instead of requiring a second C++ toolchain from end users.
-        command = [sys.executable, python_packer]
-        greedy_packer = True
-    else:
-        if packer is None:
-            configured = os.environ.get("MK61_MODULE_PACK_BIN")
-            packer = (Path(configured).expanduser() if configured else
-                      ROOT / (".build/tools/mk61_module_pack" + suffix))
-            run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
-        elif packer.resolve() == python_packer:
-            greedy_packer = True
-        command = [packer]
+    if packer is None:
+        configured = os.environ.get("MK61_MODULE_PACK_BIN")
+        packer = (Path(configured).expanduser() if configured else
+                  ROOT / (".build/tools/mk61_module_pack" + suffix))
+        run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
+    greedy_packer = packer.resolve() == python_packer
+    command = [packer]
     command += ["--portable", "--kind", "app" if args.system == "vm-file-cache" else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
