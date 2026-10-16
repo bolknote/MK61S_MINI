@@ -4,6 +4,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 . (Join-Path $PSScriptRoot 'fixtures/arduino_bundle.ps1')
 . (Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/tools/mk61-system-bundle.ps1')
+# The Arduino-launched 5.1 process can lack this optional module function.
+function Get-FileHash { throw 'Get-FileHash is deliberately unavailable' }
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 bundle check ' + [guid]::NewGuid().ToString('N'))
 $bundle = 'mk61s-M-mini-v2-lcd1602-a00-f411'
 $stage = Join-Path (Join-Path $work 'mk61-system-apps') $bundle

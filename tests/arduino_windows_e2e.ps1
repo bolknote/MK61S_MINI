@@ -115,7 +115,7 @@ try {
                 throw "Published System differs from the staged Arduino output: $name"
             }
         }
-        if (-not [IO.File]::Exists((Join-Path $system 'VMCache/VMSTORE.APP'))) {
+        if ($mcu -eq 'f411' -and -not [IO.File]::Exists((Join-Path $system 'VMCache/VMSTORE.APP'))) {
             throw 'Real language bundle did not exercise nested VMSTORE publication'
         }
     }

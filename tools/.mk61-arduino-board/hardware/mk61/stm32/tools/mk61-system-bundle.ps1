@@ -55,7 +55,17 @@ function Get-Mk61ResidentIdentity {
 
 function Get-Mk61FileSha256 {
     param([string]$Path)
-    return (Get-FileHash -Algorithm SHA256 -LiteralPath $Path -ErrorAction Stop).Hash
+    # Arduino may inherit PowerShell 7's PSModulePath when starting 5.1.
+    # Get-FileHash is then unavailable even though .NET is present.
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = $null
+    try {
+        $stream = [IO.File]::OpenRead($Path)
+        return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '')
+    } finally {
+        if ($null -ne $stream) { $stream.Dispose() }
+        $algorithm.Dispose()
+    }
 }
 
 function Get-Mk61SystemInventory {
