@@ -136,7 +136,10 @@ try {
         if (-not [IO.File]::Exists((Join-Path $Stm32ToolsDirectory 'win/busybox.exe'))) { throw 'Missing real STM32Tools BusyBox' }
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType ConsoleApplication `
             -OutputAssembly (Join-Path $bin 'STM32_Programmer_CLI.exe')
-        [void][Reflection.Assembly]::LoadFrom((Join-Path $bin 'STM32_Programmer_CLI.exe'))
+        # Load bytes: 5.1 Add-Type rejects EXE paths, and LoadFrom would lock
+        # the temporary executable until this PowerShell process exits.
+        [void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes(
+            (Join-Path $bin 'STM32_Programmer_CLI.exe')))
         foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
             Copy-Item "$env:WINDIR/System32/where.exe" (Join-Path $bin $name)
         }
@@ -254,6 +257,10 @@ try {
         }
     }
     Write-Host "arduino_windows_e2e: $mcu OK (18 scenarios and recovery; physical USB boundary simulated)"
+} catch {
+    # Preserve the actual upload failure even if Windows cleanup also fails.
+    [Console]::Error.WriteLine(($_ | Out-String))
+    throw
 } finally {
     Set-Location $currentLocation
     foreach ($path in $backups.Keys) { [IO.File]::WriteAllBytes($path, $backups[$path]) }
