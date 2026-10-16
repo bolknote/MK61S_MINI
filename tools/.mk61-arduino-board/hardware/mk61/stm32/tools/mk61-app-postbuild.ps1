@@ -144,6 +144,7 @@ function Check-Mk61Profile {
 }
 
 function Build-Mk61Bundle {
+    . (Join-Path $PSScriptRoot 'mk61-system-bundle.ps1')
     $requestedCompiler = $Compiler
     $Compiler = Resolve-Mk61Executable $requestedCompiler
     if ([string]::IsNullOrWhiteSpace($Compiler)) {
@@ -278,6 +279,7 @@ function Build-Mk61Bundle {
     } elseif ([IO.File]::Exists($stagedUsbDisk)) {
         Stop-Mk61Build 'resident USB-disk bundle unexpectedly contains USBDISK.APP'
     }
+    Write-Mk61SystemManifest $script:Stage $Bundle $Mcu
 
     # Older builders put a same-named BIN directly in binary/.  It is not the
     # result of this compile and is easily mistaken for the fresh bundle.
@@ -295,17 +297,7 @@ function Build-Mk61Bundle {
         -Destination (Join-Path $output "$Bundle.bin") -Force
     Copy-Item -LiteralPath (Join-Path $script:Stage "$Bundle.elf") `
         -Destination (Join-Path $output "$Bundle.elf") -Force
-    foreach ($canonical in @('FOCAL.APP', 'BASIC.APP', 'WBMP.APP',
-            'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP',
-            'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP')) {
-        $source = Join-Path (Join-Path $script:Stage 'System') $canonical
-        $target = Join-Path $outputSystem $canonical
-        if ([IO.File]::Exists($source)) {
-            Copy-Item -LiteralPath $source -Destination $target -Force
-        } elseif ([IO.File]::Exists($target)) {
-            Remove-Item -LiteralPath $target -Force
-        }
-    }
+    Sync-Mk61PublishedSystem (Join-Path $script:Stage 'System') $outputSystem
     $publishedUsbDisk = Join-Path $outputSystem 'USBDISK.APP'
     if ($UsbDisk -eq '1') {
         Test-RequiredFile $publishedUsbDisk 'published USBDISK.APP'

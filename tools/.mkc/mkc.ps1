@@ -57,13 +57,16 @@ $script:AllowDevicePrompt = $false
 $script:DetectedDeviceId = ''
 $script:DetectedUsbSerial = ''
 $script:DetectedProfile = ''
+$script:DetectedBuildId = ''
 $script:LocalPath = (Get-Location).Path
 $script:RemotePath = '/'
 $script:MockRoot = ''
 $script:ClassifyOnly = ''
 $script:ListPortsOnly = $false
 $script:InstallSystemDir = ''
+$script:CheckSystemDir = ''
 $script:ExpectedProfile = ''
+$script:ExpectedBuildId = ''
 $script:ResidentUsbDisk = $false
 $script:ReadyWaitSeconds = 0
 $script:StatusText = ''
@@ -122,7 +125,7 @@ Usage:
   tools\mkc.cmd [--port COMx] [--device ID] [--local DIRECTORY]
   tools\mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools\mkc.cmd --classify FILE
-  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID] [--resident-usbdisk] [--wait-ready SECONDS]
+  tools\mkc.cmd --install-system DIRECTORY [--port COMx] [--expect-profile ID] [--expect-build HEX] [--resident-usbdisk] [--wait-ready SECONDS]
 
 Keys:
   Tab       switch panel        Enter     open directory
@@ -171,9 +174,20 @@ function Parse-Arguments {
                 if (++$i -ge $Arguments.Count) { throw '--install-system requires a directory' }
                 $script:InstallSystemDir = [string]$Arguments[$i]
             }
+            '--check-system' {
+                if (++$i -ge $Arguments.Count) { throw '--check-system requires a directory' }
+                $script:CheckSystemDir = [string]$Arguments[$i]
+            }
             '--expect-profile' {
                 if (++$i -ge $Arguments.Count) { throw '--expect-profile requires an ID' }
                 $script:ExpectedProfile = [string]$Arguments[$i]
+            }
+            '--expect-build' {
+                if (++$i -ge $Arguments.Count -or
+                    [string]$Arguments[$i] -notmatch '^[0-9A-Fa-f]{8}$') {
+                    throw '--expect-build requires eight hexadecimal digits'
+                }
+                $script:ExpectedBuildId = ([string]$Arguments[$i]).ToUpperInvariant()
             }
             '--wait-ready' {
                 if (++$i -ge $Arguments.Count) { throw '--wait-ready requires seconds' }
@@ -407,7 +421,8 @@ function Get-DirectSerialMk61Identity {
         [object]$Serial,
         [int]$TimeoutMilliseconds = 1800,
         [int]$MaximumLines = 24,
-        [int]$RetryMilliseconds = 750
+        [int]$RetryMilliseconds = 750,
+        [switch]$RequireStructured
     )
     if ($null -eq $Serial -or $TimeoutMilliseconds -le 0 -or
         $MaximumLines -le 0 -or $RetryMilliseconds -le 0) {
@@ -432,7 +447,10 @@ function Get-DirectSerialMk61Identity {
                 $line = [string]$Serial.ReadLine()
                 $linesRead++
                 $identity = ConvertFrom-Mk61IdentityLine $line
-                if ($null -ne $identity) { return $identity }
+                if ($null -ne $identity -and
+                    (-not $RequireStructured -or $identity.Kind -eq 'identity')) {
+                    return $identity
+                }
             } catch [TimeoutException] {
                 continue
             } catch {
@@ -593,7 +611,8 @@ function Start-DirectSerial {
                         $probeMilliseconds, $remaining)
                 }
                 $identity = Get-DirectSerialMk61Identity `
-                    $serial $probeMilliseconds 24
+                    $serial $probeMilliseconds 24 -RequireStructured:(
+                        -not [string]::IsNullOrEmpty($script:InstallSystemDir))
                 if ($null -ne $identity) { break }
                 $lastFailure = 'нет ответа identity'
             } catch {
@@ -628,11 +647,21 @@ function Start-DirectSerial {
         $serial = New-ConfiguredSerialPort $chosen.Port
         $serial.Open()
         Start-Sleep -Milliseconds 150
+        if ($chosen.Identity.Kind -eq 'identity') {
+            $connected = Get-DirectSerialMk61Identity $serial -RequireStructured
+            if ($null -eq $connected -or
+                $connected.PublicId -cne $chosen.Identity.PublicId -or
+                $connected.UsbSerial -cne $chosen.Identity.UsbSerial) {
+                throw 'MK61s identity changed while reopening the CDC port'
+            }
+            $chosen.Identity = $connected
+        }
         $script:DirectSerial = $serial
         $script:Port = $chosen.Port
         $script:DetectedDeviceId = [string]$chosen.Identity.PublicId
         $script:DetectedUsbSerial = [string]$chosen.Identity.UsbSerial
         $script:DetectedProfile = [string]$chosen.Identity.Profile
+        $script:DetectedBuildId = [string]$chosen.Identity.BuildId
         if (-not $script:DeviceSelectorExplicit) {
             $script:DeviceSelector = $script:DetectedDeviceId
         }
@@ -1330,11 +1359,15 @@ function Receive-RemoteFile {
     return $true
 }
 
-function Install-SystemBundle {
-    param([string]$Directory)
-    $canonical = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP', 'LANGVM.APP', 'LANGIN.APP',
+function Get-SystemBundleFiles {
+    return @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP', 'LANGVM.APP', 'LANGIN.APP',
         'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'EXPLORER.APP',
         'HELP0.TXT', 'HELP1.TXT', 'VMCache/VMSTORE.APP')
+}
+
+function Get-ValidatedSystemBundle {
+    param([string]$Directory)
+    $canonical = @(Get-SystemBundleFiles)
     if (-not (Test-Path -LiteralPath $Directory -PathType Container)) {
         throw "нет каталога System: $Directory"
     }
@@ -1356,10 +1389,37 @@ function Install-SystemBundle {
         (Test-Path -LiteralPath (Join-Path $system 'USBDISK.APP') -PathType Leaf)) {
         throw "resident USB-диск не должен содержать USBDISK.APP: $system"
     }
+    # Validate the complete source before creating directories or removing
+    # disabled modules. A partial/bad bundle must leave /System untouched.
+    foreach ($name in $canonical) {
+        $source = Join-Path $system $name
+        if (-not (Test-Path -LiteralPath $source)) { continue }
+        $kind = Get-LocalItemKind (Get-Item -LiteralPath $source -Force)
+        if ($kind -ne 'f') { throw "неверный файл $name" }
+        $reason = Get-UnsupportedReason $source $kind
+        if (-not [string]::IsNullOrEmpty($reason)) { throw "${name}: $reason" }
+        [void](Get-M8UploadBytes $source "/System/$name")
+    }
+    if ((Test-Path -LiteralPath (Join-Path $system 'LANGVM.APP')) -ne
+        (Test-Path -LiteralPath (Join-Path $system 'LANGIN.APP'))) {
+        throw 'System requires both LANGVM.APP and LANGIN.APP'
+    }
+    return $system
+}
+
+function Install-SystemBundle {
+    param([string]$Directory)
+    $canonical = @(Get-SystemBundleFiles)
+    $system = Get-ValidatedSystemBundle $Directory
     if (-not [string]::IsNullOrEmpty($script:ExpectedProfile) -and
         [string]::IsNullOrEmpty($script:MockRoot) -and
         $script:DetectedProfile -cne $script:ExpectedProfile) {
         throw "прошивка $($script:DetectedProfile) не соответствует пакету $($script:ExpectedProfile)"
+    }
+    if (-not [string]::IsNullOrEmpty($script:ExpectedBuildId) -and
+        [string]::IsNullOrEmpty($script:MockRoot) -and
+        $script:DetectedBuildId -cne $script:ExpectedBuildId) {
+        throw "firmware build $($script:DetectedBuildId) does not match bundle $($script:ExpectedBuildId)"
     }
     if (-not (New-RemoteDirectory '/System')) {
         throw "не удалось создать /System: $($script:StatusText)"
@@ -3383,6 +3443,11 @@ function Invoke-MkcApplication {
     param([object[]]$Arguments)
     Load-Config
     if (-not (Parse-Arguments $Arguments)) { return 0 }
+    if (-not [string]::IsNullOrEmpty($script:CheckSystemDir)) {
+        [void](Get-ValidatedSystemBundle $script:CheckSystemDir)
+        [Console]::WriteLine('System bundle preflight: OK')
+        return 0
+    }
     # Explicit --port is itself a user selector. Do not let an ID remembered
     # from another session reject a deliberately selected legacy firmware.
     if ($script:PortExplicit -and -not $script:DeviceSelectorExplicit) {

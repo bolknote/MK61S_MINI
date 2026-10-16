@@ -8,6 +8,8 @@ $powerShell = (Get-Process -Id $PID).Path
 $work = Join-Path ([IO.Path]::GetTempPath()) ('mk61 upload profiles ' + [guid]::NewGuid().ToString('N'))
 $oldTool = $env:MK61_TEST_MKC_TOOL
 $oldProfile = $env:MK61_TEST_DEVICE_PROFILE
+$oldBuild = $env:MK61_TEST_DEVICE_BUILD
+. (Join-Path $PSScriptRoot 'fixtures/arduino_bundle.ps1')
 
 # Supply a device identity, then use the real MKC profile guard and file
 # installation. Enable the filesystem transport only after that guard runs;
@@ -18,9 +20,14 @@ $env:MKC_POWERSHELL_IMPORT_ONLY = '1'
 . $env:MK61_TEST_MKC_TOOL
 try {
     [void](Parse-Arguments $uploadArguments)
+    if (-not [string]::IsNullOrEmpty($script:CheckSystemDir)) {
+        [void](Get-ValidatedSystemBundle $script:CheckSystemDir)
+        exit 0
+    }
     $script:TestDeviceRoot = $script:MockRoot
     $script:MockRoot = ''
     $script:DetectedProfile = $env:MK61_TEST_DEVICE_PROFILE
+    $script:DetectedBuildId = $env:MK61_TEST_DEVICE_BUILD
     $script:SessionDir = Join-Path $PSScriptRoot 'session'
     [void][IO.Directory]::CreateDirectory($script:SessionDir)
     $script:CreateRemoteDirectory = (Get-Command New-RemoteDirectory).ScriptBlock
@@ -66,6 +73,8 @@ try {
                 [IO.File]::WriteAllBytes((Join-Path $system 'USBDISK.APP'), [byte[]]::new(64))
             }
             [IO.File]::WriteAllText((Join-Path $stage 'mk61-system-installer.ps1'), $installer)
+            $identity = New-Mk61TestArduinoBundle $build $bundle $mcu -ResidentUsbDisk:($requiresUsbDisk -eq '0')
+            $env:MK61_TEST_DEVICE_BUILD = $identity.build_id
             $arguments = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
                 '-File', $uploader, '-BuildPath', $build, '-Project', 'code.ino',
                 '-Bundle', $bundle, '-Profile', $profile, '-Mcu', $mcu,
@@ -85,7 +94,6 @@ try {
     $build = Join-Path $work "$profile-f411"
     $device = Join-Path $build 'wrong-device'
     [void][IO.Directory]::CreateDirectory($device)
-    [IO.File]::WriteAllText((Join-Path $build 'code.ino.bin'), 'resident')
     $stm32Script = Join-Path $work 'stm32CubeProg.sh'
     [IO.File]::WriteAllText($stm32Script, '    -f | --file)')
     if ($env:OS -eq 'Windows_NT') {
@@ -120,5 +128,6 @@ try {
 } finally {
     $env:MK61_TEST_MKC_TOOL = $oldTool
     $env:MK61_TEST_DEVICE_PROFILE = $oldProfile
+    $env:MK61_TEST_DEVICE_BUILD = $oldBuild
     if ([IO.Directory]::Exists($work)) { Remove-Item -LiteralPath $work -Recurse -Force }
 }

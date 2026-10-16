@@ -120,6 +120,18 @@ try {
         "Помощь`n".Length) `
         'System bootstrap did not convert HELP0.TXT to M8'
     $bootstrapText = $bootstrap.Output -join "`n"
+    $preflight = Invoke-MkcTool @('--check-system', $systemBundle)
+    Assert-True ($preflight.ExitCode -eq 0) 'System preflight required a device'
+    $badSystem = Join-Path $tempRoot 'bad-system'
+    [void](New-Item -ItemType Directory -Path $badSystem)
+    [IO.File]::WriteAllBytes((Join-Path $badSystem 'USBDISK.APP'), [byte[]]::new(64))
+    [IO.File]::WriteAllBytes((Join-Path $badSystem 'BASIC.APP'), [byte[]](1))
+    [IO.File]::WriteAllBytes((Join-Path $device 'System/CHIP8.APP'), [byte[]]::new(64))
+    $badInstall = Invoke-MkcTool @('--mock', $device, '--install-system', $badSystem)
+    Assert-True ($badInstall.ExitCode -ne 0 -and
+        [IO.File]::Exists((Join-Path $device 'System/CHIP8.APP'))) `
+        'System installation changed files before validating all source APPs'
+    Remove-Item -LiteralPath (Join-Path $device 'System/CHIP8.APP')
     Assert-True ($bootstrapText.IndexOf('Removed disabled /System/CHIP8.APP') -lt
         $bootstrapText.IndexOf('Installed and verified /System/USBDISK.APP')) `
         'System bootstrap did not free stale APP space before USBDISK.APP'

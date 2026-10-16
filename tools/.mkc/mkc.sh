@@ -35,16 +35,19 @@ DEVICE_SELECTOR_EXPLICIT=0
 DETECTED_DEVICE_ID=
 DETECTED_USB_SERIAL=
 DETECTED_PROFILE=
+DETECTED_BUILD_ID=
 SELECT_ERROR=
 CANDIDATE_COUNT=0
 DEVICE_CHOICE_INDEX=-1
 PROBE_SEQUENCE=0
+PROBE_BUILD=
 LOCAL_PATH=$(pwd -P)
 REMOTE_PATH=/
 MOCK_ROOT=
 CLASSIFY_ONLY=
 INSTALL_SYSTEM_DIR=
 EXPECTED_PROFILE=
+EXPECTED_BUILD_ID=
 RESIDENT_USBDISK=0
 READY_WAIT_SECONDS=0
 SESSION_DIR=
@@ -189,7 +192,7 @@ Usage:
   tools/mkc.cmd [--port PORT] [--device ID] [--local DIRECTORY]
   tools/mkc.cmd --mock DIRECTORY [--local DIRECTORY]
   tools/mkc.cmd --classify FILE
-  tools/mkc.cmd --install-system DIRECTORY [--expect-profile PROFILE]
+  tools/mkc.cmd --install-system DIRECTORY [--expect-profile PROFILE] [--expect-build HEX]
                 [--resident-usbdisk] [--wait-ready SECONDS] [--port PORT]
 
 System installation uses CDC, not USB Disk. Close other serial clients.
@@ -499,6 +502,7 @@ parse_identity_line() {
   PROBE_SHORT=
   PROBE_USB=
   PROBE_PROFILE=
+  PROBE_BUILD=
   case "$line" in
     'MK61 ID v=1 '*)
       public=$(identity_token_value "$line" public) || return 1
@@ -520,6 +524,7 @@ parse_identity_line() {
       PROBE_SHORT=$short
       PROBE_USB=$usb
       PROBE_PROFILE=$profile
+      PROBE_BUILD=$build
       return 0
       ;;
     MK61s*' ver. '*)
@@ -538,6 +543,7 @@ probe_port() {
   PROBE_SHORT=
   PROBE_USB=
   PROBE_PROFILE=
+  PROBE_BUILD=
   PROBE_SEQUENCE=$((PROBE_SEQUENCE + 1))
   probe_dir="$SESSION_DIR/probe.$PROBE_SEQUENCE"
   mkdir -p "$probe_dir" || return 1
@@ -556,6 +562,9 @@ probe_port() {
       if IFS= read -r -t 1 line <&6; then
         line=${line%$'\r'}
         if parse_identity_line "$line"; then
+          if [ -n "$INSTALL_SYSTEM_DIR" ] && [ "$PROBE_KIND" != identity ]; then
+            continue
+          fi
           result=0
           break
         fi
@@ -620,7 +629,7 @@ select_mk61_port() {
   local candidate duplicate found_count=0 match_count=0
   local candidate_count=0 candidate_index=0 existing_index=0 selected_index=-1
   local candidates=() found_ports=() found_public=() found_short=()
-  local found_usb=() found_profile=() found_kind=() device_labels=()
+  local found_usb=() found_profile=() found_build=() found_kind=() device_labels=()
   SELECT_ERROR=
   CANDIDATE_COUNT=0
   PROBE_SEQUENCE=0
@@ -661,6 +670,7 @@ select_mk61_port() {
       found_short[$found_count]=$PROBE_SHORT
       found_usb[$found_count]=$PROBE_USB
       found_profile[$found_count]=$PROBE_PROFILE
+      found_build[$found_count]=$PROBE_BUILD
       found_kind[$found_count]=$PROBE_KIND
       found_count=$((found_count + 1))
     fi
@@ -706,6 +716,7 @@ select_mk61_port() {
   DETECTED_DEVICE_ID=${found_public[$selected_index]}
   DETECTED_USB_SERIAL=${found_usb[$selected_index]}
   DETECTED_PROFILE=${found_profile[$selected_index]}
+  DETECTED_BUILD_ID=${found_build[$selected_index]}
   if [ "$DEVICE_SELECTOR_EXPLICIT" -eq 0 ]; then
     DEVICE_SELECTOR=$DETECTED_DEVICE_ID
   fi
@@ -3550,6 +3561,11 @@ install_system_unattended() {
       STATUS_TEXT="прошивка $DETECTED_PROFILE не соответствует пакету $EXPECTED_PROFILE"
       return 1
     fi
+    if [ -n "$EXPECTED_BUILD_ID" ] &&
+       [ "$(uppercase "$DETECTED_BUILD_ID")" != "$EXPECTED_BUILD_ID" ]; then
+      STATUS_TEXT="firmware build $DETECTED_BUILD_ID does not match bundle $EXPECTED_BUILD_ID"
+      return 1
+    fi
   fi
   start_monitor || { STATUS_TEXT="не удалось открыть ${PORT:-устройство}"; return 1; }
   remote_mkdir /System || return 1
@@ -3606,6 +3622,7 @@ parse_args() {
     case "$1" in
       --install-system) [ "$#" -ge 2 ] || die 'после --install-system нужен каталог'; INSTALL_SYSTEM_DIR=$2; shift 2 ;;
       --expect-profile) [ "$#" -ge 2 ] || die 'после --expect-profile нужен профиль'; EXPECTED_PROFILE=$2; shift 2 ;;
+      --expect-build) [ "$#" -ge 2 ] && valid_hex_id "$2" 8 || die '--expect-build requires eight hexadecimal digits'; EXPECTED_BUILD_ID=$(uppercase "$2"); shift 2 ;;
       --resident-usbdisk) RESIDENT_USBDISK=1; shift ;;
       --wait-ready)
         [ "$#" -ge 2 ] || die 'после --wait-ready нужны секунды'

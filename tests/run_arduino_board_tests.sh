@@ -41,8 +41,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.2' "$work/install.txt"
-grep -Fq 'installed 1.2.2; project 1.2.2' "$work/check.txt"
+grep -Fq 'MK61s board package version: 1.2.3' "$work/install.txt"
+grep -Fq 'installed 1.2.3; project 1.2.3' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -51,6 +51,8 @@ cmp "$platform/tools/mk61-app-postbuild.ps1" \
     "$target/tools/mk61-app-postbuild.ps1"
 cmp "$platform/tools/mk61-app-upload.ps1" \
     "$target/tools/mk61-app-upload.ps1"
+cmp "$platform/tools/mk61-system-bundle.ps1" \
+    "$target/tools/mk61-system-bundle.ps1"
 cmp "$root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
     "$target/tools/mk61_firmware_seal.cpp"
 cmp "$root/code/resident_firmware_format.hpp" \
@@ -99,12 +101,12 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.2)' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.3)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.2)' "$target/boards.txt"
-grep -Fxq 'version=1.2.2' "$target/platform.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.3)' "$target/boards.txt"
+grep -Fxq 'version=1.2.3' "$target/platform.txt"
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -264,10 +266,6 @@ grep -q 'build_system_app_bundle.py' "$hook"
 grep -q 'build-system-app-bundle.ps1' \
   "$platform/tools/mk61-app-postbuild.ps1"
 grep -Fq 'SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT' "$hook"
-grep -Fq "'SETUP.APP', 'USBDISK.APP'," \
-  "$platform/tools/mk61-app-postbuild.ps1"
-grep -Fq "'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT'" \
-  "$platform/tools/mk61-app-postbuild.ps1"
 grep -Fq "printf 'format 1\\nabi 6\\n'" "$hook"
 grep -Fq "'abi 6' + [Environment]::NewLine" \
   "$platform/tools/mk61-app-postbuild.ps1"
@@ -302,6 +300,8 @@ if command -v pwsh >/dev/null 2>&1; then
   }
   run_windows_powershell -NoLogo -NoProfile -File \
     "$root/tests/arduino_upload_profile_self_test.ps1"
+  run_windows_powershell -NoLogo -NoProfile -File \
+    "$root/tests/arduino_system_bundle_self_test.ps1"
 
   ps_sketchbook="$work/powershell-sketchbook"
   run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
@@ -329,7 +329,7 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.2; project 1.2.2' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 1.2.3; project 1.2.3' "$work/stale-check-ps.txt"
   if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
@@ -439,6 +439,11 @@ EOF
   mkdir -p "$mock_system" "$mock_device"
   printf 'mock APP' > "$mock_system/USBDISK.APP"
   cp "$root/tools/.mkc/mkc.ps1" "$mock_stage/mk61-system-installer.ps1"
+  MK61_TEST_BUILD="$mock_build" MK61_TEST_ROOT="$root" \
+    run_windows_powershell -NoLogo -NoProfile -Command '
+      . (Join-Path $env:MK61_TEST_ROOT "tests/fixtures/arduino_bundle.ps1")
+      $null = New-Mk61TestArduinoBundle $env:MK61_TEST_BUILD mk61s-M-classic-v2-uc1609-f401
+    '
   run_windows_powershell -NoLogo -NoProfile -File \
     "$configured_platform/tools/mk61-app-upload.ps1" \
     -BuildPath "$mock_build" -Project code.ino \
@@ -461,7 +466,6 @@ EOF
     'printf "%s\\n" "$*" > "$MK61_TEST_DFU_LOG"' \
     'exit 0' > "$mock_stm32_tools/win/busybox.exe"
   chmod +x "$mock_stm32_tools/win/busybox.exe"
-  printf 'resident firmware\n' > "$mock_build/code.ino.bin"
   # Tool discovery and argv mapping only. Windows CI additionally executes
   # the real wrappers from STM32Tools 2.4 and 2.5 with native BusyBox.
   for binary_option in f b; do
@@ -554,6 +558,11 @@ EOF
   printf 'resident help\n' > "$mock_f411_system/HELP0.TXT"
   cp "$root/tools/.mkc/mkc.ps1" \
     "$mock_f411_stage/mk61-system-installer.ps1"
+  MK61_TEST_BUILD="$mock_build" MK61_TEST_ROOT="$root" \
+    run_windows_powershell -NoLogo -NoProfile -Command '
+      . (Join-Path $env:MK61_TEST_ROOT "tests/fixtures/arduino_bundle.ps1")
+      $null = New-Mk61TestArduinoBundle $env:MK61_TEST_BUILD mk61s-M-mini-v2-lcd1602-a00-f411 f411 -ResidentUsbDisk
+    '
   printf 'stale APP' > "$mock_device/System/USBDISK.APP"
   run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-upload.ps1" \

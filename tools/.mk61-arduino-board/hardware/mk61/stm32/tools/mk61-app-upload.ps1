@@ -140,21 +140,31 @@ function Find-Mk61Stm32DfuTools {
         'Install STM32 MCU based boards 2.12.0 in Boards Manager')
 }
 
+function Get-Mk61UploadSerialPorts {
+    return @([IO.Ports.SerialPort]::GetPortNames())
+}
+
+function New-Mk61UploadProbeSerialPort {
+    param([string]$PortName)
+    $serial = New-Object System.IO.Ports.SerialPort
+    $serial.PortName = $PortName
+    $serial.BaudRate = 115200
+    $serial.DtrEnable = $false
+    $serial.RtsEnable = $false
+    return $serial
+}
+
 function Wait-Mk61SerialPortAccess {
     param([string]$PortName, [int]$TimeoutSeconds = 45)
     $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
     $reportedBusy = $false
     $seenPort = $false
     do {
-        if (@([IO.Ports.SerialPort]::GetPortNames()) -contains $PortName) {
+        if (@(Get-Mk61UploadSerialPorts) -contains $PortName) {
             $seenPort = $true
             $probe = $null
             try {
-                $probe = New-Object System.IO.Ports.SerialPort
-                $probe.PortName = $PortName
-                $probe.BaudRate = 115200
-                $probe.DtrEnable = $false
-                $probe.RtsEnable = $false
+                $probe = New-Mk61UploadProbeSerialPort $PortName
                 $probe.Open()
                 return
             } catch [UnauthorizedAccessException] {
@@ -202,9 +212,6 @@ try {
     if ($Bundle -cne $expectedBundle) {
         Stop-Mk61Upload "bundle $Bundle does not match profile $Profile"
     }
-    # Bundle names include the display family; the firmware's CDC identity
-    # uses mini-v2-a00, mini-v3-a02 or mini-v3-ws0010 instead.
-    $firmwareProfile = $Profile -creplace '^(mini-v[23])-(?:lcd1602|oled1602)-', '$1-'
     $system = Join-Path (Join-Path (Join-Path $BuildPath 'mk61-system-apps') `
         $Bundle) 'System'
     $usbDisk = Join-Path $system 'USBDISK.APP'
@@ -224,6 +231,22 @@ try {
             'Recompile with the current MK61s board package')
     }
     $resident = Join-Path $BuildPath "$Project.bin"
+    if (-not [string]::IsNullOrWhiteSpace($Port) -and
+        $Port -notmatch '^\{.*\}$' -and $Port -notmatch '^COM[0-9]+$') {
+        Stop-Mk61Upload "selected port is not a Windows COM port: $Port"
+    }
+    . (Join-Path $PSScriptRoot 'mk61-system-bundle.ps1')
+    $manifest = Get-VerifiedMk61SystemManifest $stage $Bundle $Mcu $resident
+    $firmwareProfile = $manifest.profile
+    $firmwareBuild = $manifest.build_id
+    $hostPowerShell = (Get-Process -Id $PID).Path
+    $checkArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
+        '-File', $mkc, '--check-system', $system)
+    if ($RequireUsbDisk -eq '0') { $checkArgs += '--resident-usbdisk' }
+    & $hostPowerShell @checkArgs
+    if ($LASTEXITCODE -ne 0) {
+        Stop-Mk61Upload "System bundle preflight failed with exit code $LASTEXITCODE"
+    }
     if ([string]::IsNullOrEmpty($TestMockDevice) -or $TestMockDfu) {
         if (-not [IO.File]::Exists($resident)) {
             Stop-Mk61Upload "resident image not found: $resident"
@@ -260,9 +283,6 @@ try {
     if ([string]::IsNullOrEmpty($TestMockDevice)) {
         if (-not [string]::IsNullOrWhiteSpace($Port) -and
             $Port -notmatch '^\{.*\}$') {
-            if ($Port -notmatch '^COM[0-9]+$') {
-                Stop-Mk61Upload "selected port is not a Windows COM port: $Port"
-            }
             Wait-Mk61SerialPortAccess $Port 45
         } else {
             $Port = ''
@@ -270,10 +290,10 @@ try {
             Start-Sleep -Seconds 4
         }
     }
-    $hostPowerShell = (Get-Process -Id $PID).Path
     $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
         '-File', $mkc,
         '--install-system', $system, '--expect-profile', $firmwareProfile,
+        '--expect-build', $firmwareBuild,
         '--wait-ready', '45')
     if ($RequireUsbDisk -eq '0') {
         $installerArgs += '--resident-usbdisk'
@@ -298,7 +318,7 @@ try {
             ' --resident-usbdisk'
         } else { '' }
         [Console]::Error.WriteLine(
-            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $firmwareProfile$residentUsbDisk --wait-ready 45 --port COMx")
+            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $firmwareProfile --expect-build $firmwareBuild$residentUsbDisk --wait-ready 45 --port COMx")
     } elseif (-not [string]::IsNullOrEmpty($system) -and
         [IO.Directory]::Exists($system)) {
         [Console]::Error.WriteLine(

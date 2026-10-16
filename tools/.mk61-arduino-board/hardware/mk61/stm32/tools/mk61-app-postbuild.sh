@@ -204,8 +204,9 @@ build_bundle() {
   cp "$stage/$bundle.elf" "$output/$bundle.elf"
   for canonical in FOCAL.APP BASIC.APP WBMP.APP MARKDOWN.APP CHIP8.APP \
                    SETUP.APP USBDISK.APP EXPLORER.APP HELP0.TXT HELP1.TXT \
-                   LANGVM.APP LANGIN.APP; do
+                   LANGVM.APP LANGIN.APP VMCache/VMSTORE.APP; do
     if [ -f "$stage/System/$canonical" ]; then
+      mkdir -p "$(dirname "$output/System/$canonical")"
       cp "$stage/System/$canonical" "$output/System/$canonical"
     else
       rm -f "$output/System/$canonical"

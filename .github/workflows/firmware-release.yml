@@ -403,6 +403,13 @@ jobs:
             -File ./tests/arduino_upload_profile_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Verify complete Arduino build manifests on Windows PowerShell
+        shell: powershell
+        run: |
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/arduino_system_bundle_self_test.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify STM32Tools 2.4 and 2.5 DFU parsers on Windows PowerShell
         shell: powershell
         run: |
@@ -655,6 +662,42 @@ jobs:
             if (-not $flags.Contains($required)) {
               throw "F411 Arduino IDE bundle is missing build flag: $required"
             }
+          }
+
+      # Use the actual outputs of both builds and the actual installed upload
+      # recipe. Only the programmer/SerialPort boundary is simulated; MKC
+      # sends every C6 payload and verifies its readback, without --mock.
+      - name: Upload both actual Arduino builds through DFU and CDC on PowerShell 5.1
+        shell: powershell
+        run: |
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $safeCache = (& arduino-cli --config-file $ideConfig `
+            config get build_cache.path | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $sketchbook = (& arduino-cli --config-file $ideConfig `
+            config get directories.user | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $arduinoData = (& arduino-cli --config-file $ideConfig `
+            config get directories.data | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $tools = Join-Path $sketchbook 'hardware/mk61/stm32/tools'
+          $stm32 = Join-Path $arduinoData `
+            'packages/STMicroelectronics/tools/STM32Tools/2.4.0'
+          foreach ($mcu in @('f401', 'f411')) {
+            $fqbn = if ($mcu -eq 'f401') {
+              'mk61:stm32:mk61_f401_app:mk61_platform=mini_v2,mk61_display=lcd_a00,mk61_focal=enabled,mk61_basic=enabled,mk61_documents=markdown,mk61_chip8=disabled,mk61_setup=app,mk61_explorer_module=app,mk61_usb_screen=disabled,mk61_explorer=enabled,mk61_math=core'
+            } else {
+              'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00'
+            }
+            & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+              -File ./tests/arduino_windows_e2e.ps1 `
+              -BuildPath (Join-Path $safeCache "arduino-ide-$mcu-mini-v2") `
+              -Fqbn $fqbn -ConfigFile $ideConfig `
+              -PlatformToolsDirectory $tools -Stm32ToolsDirectory $stm32 `
+              -PublishedSystem (Join-Path $env:GITHUB_WORKSPACE `
+                "binary/mk61s-M-mini-v2-lcd1602-a00-$mcu/System")
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
       # Python is allowed for artifact analysis, not in either IDE build

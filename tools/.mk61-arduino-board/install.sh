@@ -109,6 +109,7 @@ platform_installed() {
     [ -f "$target/tools/mk61-app-postbuild.sh" ] &&
     [ -f "$target/tools/mk61-app-postbuild.ps1" ] &&
     [ -f "$target/tools/mk61-app-upload.ps1" ] &&
+    [ -f "$target/tools/mk61-system-bundle.ps1" ] &&
     [ -f "$target/tools/mk61-safe-tool.ps1" ] &&
     [ -f "$target/tools/mk61_firmware_seal.cpp" ] &&
     [ -f "$target/tools/resident_firmware_format.hpp" ] &&
@@ -130,6 +131,8 @@ platform_current() {
       "$target/tools/mk61-app-postbuild.ps1" &&
     cmp -s "$source_platform/tools/mk61-app-upload.ps1" \
       "$target/tools/mk61-app-upload.ps1" &&
+    cmp -s "$source_platform/tools/mk61-system-bundle.ps1" \
+      "$target/tools/mk61-system-bundle.ps1" &&
     cmp -s "$source_platform/tools/mk61-safe-tool.ps1" \
       "$target/tools/mk61-safe-tool.ps1" &&
     cmp -s "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \
@@ -188,6 +191,8 @@ cp "$source_platform/tools/mk61-app-postbuild.ps1" \
    "$target/tools/mk61-app-postbuild.ps1"
 cp "$source_platform/tools/mk61-app-upload.ps1" \
    "$target/tools/mk61-app-upload.ps1"
+cp "$source_platform/tools/mk61-system-bundle.ps1" \
+   "$target/tools/mk61-system-bundle.ps1"
 cp "$source_platform/tools/mk61-safe-tool.ps1" \
    "$target/tools/mk61-safe-tool.ps1"
 cp "$project_root/tools/.mk61-firmware-seal/mk61_firmware_seal.cpp" \

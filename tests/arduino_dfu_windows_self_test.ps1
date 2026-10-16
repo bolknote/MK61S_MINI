@@ -18,6 +18,7 @@ $oldPath = $env:PATH
 $oldData = $env:MK61_ARDUINO_DATA_DIR
 $oldLog = $env:MK61_TEST_CUBE_LOG
 $oldExit = $env:MK61_TEST_CUBE_EXIT
+. (Join-Path $PSScriptRoot 'fixtures/arduino_bundle.ps1')
 
 try {
     [IO.Directory]::CreateDirectory((Join-Path $fakeTools 'win')) | Out-Null
@@ -69,6 +70,7 @@ public static class FakeProgrammer {
         [IO.File]::WriteAllText($resident, 'resident')
         Copy-Item -LiteralPath (Join-Path $root 'tools/.mkc/mkc.ps1') `
             -Destination (Join-Path $stage 'mk61-system-installer.ps1')
+        [void](New-Mk61TestArduinoBundle $build $bundle)
         $arguments = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
             '-File', $uploader, '-BuildPath', $build, '-Project', 'code.ino',
             '-Bundle', $bundle, '-Profile', 'classic-v2-uc1609',

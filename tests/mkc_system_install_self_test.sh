@@ -55,6 +55,18 @@ rm "$LOCAL_PATH/BASIC.APP"
   test ! -e "$work/unexpected-monitor"
 )
 
+# Matching profile is insufficient when the resident is from another build.
+(
+  MOCK_ROOT=
+  EXPECTED_PROFILE=mini-v2-a00
+  EXPECTED_BUILD_ID=12345678
+  select_mk61_port() { DETECTED_PROFILE=$EXPECTED_PROFILE; DETECTED_BUILD_ID=87654321; return 0; }
+  start_monitor() { touch "$work/unexpected-monitor"; return 0; }
+  ! install_system_unattended
+  [[ "$STATUS_TEXT" == *'does not match bundle'* ]]
+  test ! -e "$work/unexpected-monitor"
+)
+
 # A calculator may enumerate only after the DFU leave request.
 (
   MOCK_ROOT=
