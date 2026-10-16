@@ -21,8 +21,7 @@ bool graphics_result(basic_graphics::Result result) {
 }
 
 bool background(void*) {
-  if(state().language==Language::BASIC &&
-     !graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)))return false;
+  if(!graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)))return false;
   idle_main_process();
   kbd::scan();
   if (!kbd::take_immediate_press(KEY_ESC) && kbd::last_key() != KEY_ESC_PRESS)
@@ -85,9 +84,10 @@ void flush(bool empty) {
   const uint8_t rows = main_lcd().rows();
   if (!rows || (!s.output[0] && !empty)) return;
   if(s.position.positioned) {
-    graphics_result(basic_graphics::flush_at(s.position,s.output,s.output_cursor));return;
+    graphics_result(basic_graphics::flush_at(s.position,s.output,s.output_cursor,
+        state().language!=Language::FOCAL));return;
   }
-  if(s.language==Language::BASIC && basic_graphics::active()) {
+  if(basic_graphics::active()) {
     u8 n=0;graphics_result(basic_graphics::flow(s.output,(u16)strlen(s.output),s.row,(u8)(rows-s.row),empty,n));
     const unsigned next=(unsigned)s.row+n;s.row=(u8)(next<rows?next:rows-1);
     s.output[0]=0;s.output_cursor=0;return;
@@ -115,14 +115,14 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       if(!basic){s.row=0;s.output[0]=0;s.output_cursor=0;}
       return true;
     case Event::GRAPHICS: {
-      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      if(length!=sizeof(basic_graphics::Request) || !text)return false;
       auto r=*(const basic_graphics::Request*)text;
       const auto result=basic_graphics::dispatch(r);value=r.value;
       if(r.operation!=basic_graphics::Operation::POINT)request().pause_final=0;
       return graphics_result(result);
     }
     case Event::PRINT_AT:
-      if(!basic || length!=sizeof(basic_graphics::Request) || !text)return false;
+      if(length!=sizeof(basic_graphics::Request) || !text)return false;
       return graphics_result(basic_graphics::print_at(s.position,s.output,s.output_cursor,
           *(const basic_graphics::Request*)text));
     case Event::PRINT_PUSH:
@@ -171,13 +171,13 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     case Event::RESOURCE_INPUT: return false;
     case Event::WAIT:
     case Event::READ_KEY: {
-      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))return false;
-      if (!basic) {
+      if(!graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))return false;
+      if (!basic && !basic_graphics::active()) {
         const char* rows[] = {"ASK", "Press any key"};
         portable_system::text_rows(rows, 2);
       }
       const i32 key = kbd::get_key_wait();
-      request().pause_final = basic;
+      request().pause_final = basic || basic_graphics::active();
       if (key != KEY_ESC && key != KEY_ESC_PRESS) {
         if(event == Event::READ_KEY)
           value = keyboard_layout::logical_key(keyboard_layout::active(), key);
@@ -189,7 +189,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return false;
     }
     case Event::CLEAR:
-      if(basic && !graphics_result(basic_graphics::command(basic_graphics::Operation::CLEAR)))return false;
+      if(!graphics_result(basic_graphics::command(basic_graphics::Operation::CLEAR)))return false;
       request().pause_final = 0;
       main_lcd().clear();
       s.row = 0;
@@ -198,7 +198,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return true;
     case Event::FINISH:
       flush(false);
-      return s.failure==Error::NONE && (!basic || graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)));
+      return s.failure==Error::NONE && graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW));
     case Event::TARGET_REF:
       return value != 19 ||
              portable_system::call(MK61_SYS_SETTINGS, MK61_SYS_REGISTER_F) != 0;

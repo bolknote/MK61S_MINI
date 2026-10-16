@@ -5,8 +5,8 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 9;
-static constexpr uint32_t COMPILER_MAGIC = 0x3D4D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 10;
+static constexpr uint32_t COMPILER_MAGIC = 0x3E4D5643UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
 // Resident-owned, synchronous request. Output survives compiler eviction;
@@ -36,9 +36,9 @@ struct ExecuteRequest {
   uint8_t edit_requested, reserved2;
   RunResult result;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x3E564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x3E494D4CUL;
-static constexpr uint32_t VALIDATED_MAGIC = 0x3D49424CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x3F564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x3F494D4CUL;
+static constexpr uint32_t VALIDATED_MAGIC = 0x3E49424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.

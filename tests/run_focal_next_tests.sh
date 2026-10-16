@@ -9,8 +9,13 @@ if [[ ${MK61_VM_DSP_SCAN_TEST:-0} == 1 ]]; then flags+=(-DLANGUAGE_VM_TEST_DSP_S
 for profile in MINI CLASSIC 40TH; do
  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" -DFOCAL_HOST_TEST -DMK61_KEYBOARD_$profile \
   -I"$root/code" "$root/tests/focal_next_self_test.cpp" "$root/code/focal.cpp" \
-  "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/focal-$profile"
+  "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/basic_graphics.cpp" -o "$work/focal-$profile"
  "$work/focal-$profile"
+ clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" -DFOCAL_HOST_TEST -DMK61_KEYBOARD_$profile \
+  -I"$root/code" "$root/tests/focal_graphics_self_test.cpp" \
+  "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/basic_graphics.cpp" \
+  -o "$work/graphics-$profile"
+ "$work/graphics-$profile"
 done
 clang++ -std=c++17 -Wall -Wextra -Werror -DFOCAL_HOST_TEST -DMK61_ENABLE_FOCAL=0 -I"$root/code" \
  -c "$root/code/focal.cpp" -o "$work/disabled.o"

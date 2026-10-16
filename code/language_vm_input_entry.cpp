@@ -41,7 +41,7 @@ uint32_t finish(OverlayRequest* p) {
   }
   if (r.result.error != Error::NONE &&
       !(r.mode == 1 && r.result.error == Error::STOPPED)) {
-    if(s.language==Language::BASIC)basic_graphics::command(basic_graphics::Operation::SUSPEND);
+    basic_graphics::command(basic_graphics::Operation::SUSPEND);
     char position[24];
     snprintf(position, sizeof(position), "TinyBASIC %lu:%u", (unsigned long)r.result.line,
              (unsigned)r.error_column);
@@ -52,7 +52,7 @@ uint32_t finish(OverlayRequest* p) {
             : "FOCAL"};
     portable_system::text_rows(rows, 2);
   }
-  if (r.mode == 0 && (s.language == Language::FOCAL || !r.pause_final)) {
+  if (r.mode == 0 && !r.pause_final) {
     for (;;) {
       idle_main_process();
       const auto event = kbd::poll_event();
@@ -80,7 +80,7 @@ uint32_t input(InputRequest* r) {
       if(enabled)basic_graphics::command(basic_graphics::Operation::SUSPEND);
     }
     ~RestoreCanvas(){if(enabled)basic_graphics::command(basic_graphics::Operation::RESUME);}
-  } restore_canvas(r->language==Language::BASIC);
+  } restore_canvas(true);
   if (r->invalid) invalid_number();
   char prompt[96];
   const char* prompt_text = r->prompt;

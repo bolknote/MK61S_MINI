@@ -243,7 +243,7 @@ function Assert-SizeBudget {
     }
     if ($LanguageVmCompiler -and $System -eq 'focal') {
         $appLimit = 15360
-        $memoryLimit = if ($FocalTrace) { 19200 } else { 18688 }
+        $memoryLimit = if ($FocalTrace) { 19840 } else { 19648 }
     }
     if ($SplitLanguageVm) {
         # Match build_portable_app.py's current graphics/integer-span VM contract.

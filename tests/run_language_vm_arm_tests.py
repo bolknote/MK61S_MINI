@@ -25,11 +25,11 @@ class LanguageMachine(Machine):
         assert self.call(0,self.api,self.crc,kind)==0, (self.kind,self.trace[-12:])
 
 
-def package(reader, path, elf, work, kind):
+def package(reader, path, elf, work, kind, fixture_bytes=2048):
     packed = path.read_bytes()
     image_size, memory_size, entry = struct.unpack_from("<III", packed, 28)
     crc = struct.unpack_from("<I", packed, 52)[0]
-    low = (elf.fixture_buffer_begin() + 2048 + 31) & ~31
+    low = (elf.fixture_buffer_begin() + fixture_bytes + 31) & ~31
     high = elf.symbol("__mk61_dynamic_end") - ((memory_size + 31) & ~31)
     if low > high:
         raise RuntimeError(f"{path}: APP does not fit fixture's dynamic RAM")

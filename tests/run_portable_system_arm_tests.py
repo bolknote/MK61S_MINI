@@ -50,7 +50,8 @@ class Elf:
         # area, including buffers whose first allocation happens later.
         retained = sum(self.symbols.get(name, 0) for name in (
             'mk61_lazy_workspace_bytes', 'mk61_lazy_bulk_bytes',
-            'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes'))
+            'mk61_lazy_vm_cache_bytes', 'mk61_lazy_msc_bytes',
+            'mk61_lazy_basic_graphics_bytes'))
         return (self.symbol('__mk61_dynamic_begin') + retained + 7) & ~7
 
     def require_libm_math(self, path):
@@ -371,7 +372,8 @@ class Machine:
             if a == 2: self.lines.append(chr(b))
             if a == 10: self.viewport_ends += 1
             if a == 15: self.ui_ends += 1; self.ui_text = False
-            return {6:1,11:self.graphics,12:192 if self.graphics else 0,13:64 if self.graphics else 0,14:self.graphics}.get(a,0)
+            width,height = self.graphics_dimensions if self.graphics else (0,0)
+            return {6:1,11:self.graphics,12:width,13:height,14:self.graphics}.get(a,0)
         if op == 2:
             if a in (0,1,2):
                 assert self.keys, ('keyboard underflow', self.kind, a)

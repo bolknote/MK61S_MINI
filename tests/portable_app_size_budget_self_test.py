@@ -105,7 +105,7 @@ for report in ({"memory_bytes": 15536, "app_bytes": 13313},
     else:
         raise AssertionError("greedy cold flow APP size regression was accepted")
 
-for greedy, limit in ((False, 13880), (True, 15360)):
+for greedy, limit in ((False, 14560), (True, 15360)):
     BUILDER.enforce_system_size_budget("focal", {"memory_bytes": 17000, "app_bytes": limit},
                                        False, greedy, False, True)
     try:
@@ -117,11 +117,11 @@ for greedy, limit in ((False, 13880), (True, 15360)):
         raise AssertionError("compiler flow APP size regression was accepted")
 
 BUILDER.enforce_system_size_budget(
-    "focal", {"memory_bytes": 18688, "app_bytes": 13847},
+    "focal", {"memory_bytes": 19648, "app_bytes": 14238},
     language_vm_compiler=True)
 try:
     BUILDER.enforce_system_size_budget(
-        "focal", {"memory_bytes": 18689, "app_bytes": 13847},
+        "focal", {"memory_bytes": 19649, "app_bytes": 14238},
         language_vm_compiler=True)
 except ValueError:
     pass
@@ -130,9 +130,9 @@ else:
 
 print("portable APP size budget tests: OK")
 
-BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19200,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19840,"app_bytes":13799,"focal_trace":True},False,False,False,True)
 try:
-    BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19201,"app_bytes":13799,"focal_trace":True},False,False,False,True)
+    BUILDER.enforce_system_size_budget("focal",{"memory_bytes":19841,"app_bytes":13799,"focal_trace":True},False,False,False,True)
 except ValueError:
     pass
 else:

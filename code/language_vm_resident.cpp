@@ -342,7 +342,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if(busy || (language != Language::BASIC && language != Language::FOCAL)) return RuntimeStatus::BUSY;
   struct BusyScope { BusyScope(){ busy=true; } ~BusyScope(){ busy=false; } } busy_scope;
 #if !defined(LANGUAGE_VM_HOST_TEST)
-  basic_graphics::RunScope graphics_scope(language==Language::BASIC);
+  basic_graphics::RunScope graphics_scope;
 #endif
   static uint16_t error_id = 0xFFFF, error_line = 0, error_column = 0;
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
@@ -499,7 +499,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     ~BusyScope() { busy = false; }
   } scope;
 #if !defined(LANGUAGE_VM_HOST_TEST)
-  basic_graphics::RunScope graphics_scope(language==Language::BASIC);
+  basic_graphics::RunScope graphics_scope;
 #endif
   static uint16_t basic_error_id = 0xFFFF, basic_error_line = 0, basic_error_column = 0;
   if (language == Language::BASIC && command == Command::TINYBASIC_EDIT_ID && a == basic_error_id) {

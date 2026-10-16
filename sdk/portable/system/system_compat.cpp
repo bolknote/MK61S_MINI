@@ -28,9 +28,9 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
 #endif
 #if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
   u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
-#if defined(MK61_BUILD_TINYBASIC_MODULE)
-  // The resident owns BASIC PRINT/GRAPH parsing as well as the raster buffer.
-  // This protocol is required even for a text program on a character LCD.
+#if defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_FOCAL_MODULE)
+  // Both languages use the resident graphics protocol. BASIC also delegates
+  // PRINT/GRAPH parsing to it, including text programs on a character LCD.
   required_services |= MK61_SERVICE_CAP_BASIC_GRAPHICS;
 #endif
 #if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)

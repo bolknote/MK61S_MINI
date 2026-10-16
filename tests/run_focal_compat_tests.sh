@@ -12,7 +12,7 @@ for profile in MINI CLASSIC 40TH; do
   extra=();if [[ $trace == 1 ]]; then extra=(-DMK61_FOCAL_TRACE=1); fi
   clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" "${extra[@]}" -DFOCAL_HOST_TEST -DMK61_KEYBOARD_$profile \
    -I"$root/code" "$root/tests/focal_compat_self_test.cpp" \
-   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/compat-$profile-$trace"
+   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/basic_graphics.cpp" -o "$work/compat-$profile-$trace"
   "$work/compat-$profile-$trace" || failures=$((failures+1))
  done
 done

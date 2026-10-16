@@ -70,9 +70,9 @@ GREEDY_APP_SIZE_BUDGETS = {
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
-    # Keep the original ceilings with overlap-safe editor splices by retaining
-    # the compact SDK strcmp alongside the shared resident runtime.
-    "focal": {"app_bytes": 13_880, "memory_bytes": 18_688},
+    # The FOCAL frontend now emits the shared graphics instructions as well.
+    # The measured 19,404-byte image still fits the unchanged 20-KiB arena.
+    "focal": {"app_bytes": 14_560, "memory_bytes": 19_648},
 }
 DEFAULT_LOCAL_FLOAT_MASK = 0x3C0  # ln, log10, exp, sqrt
 
@@ -104,7 +104,7 @@ def enforce_system_size_budget(system: str | None, report: dict,
         return
     budget = dict(budget)
     if system == "focal" and language_vm_compiler and report.get("focal_trace"):
-        budget["memory_bytes"] = 19_200
+        budget["memory_bytes"] = 19_840
     if greedy_packer:
         greedy_limit = GREEDY_APP_SIZE_BUDGETS.get((local_float_math, system))
         if language_vm_compiler and system == "focal":

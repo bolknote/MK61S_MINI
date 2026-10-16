@@ -11,7 +11,7 @@ __attribute__((noinline)) int native_text_flow(const char *text, uint16_t length
 }
 } // namespace basic_graphics
 #endif
-#if MK61_ENABLE_TINYBASIC && MK61_HAS_FULLSCREEN_BITMAP
+#if (MK61_ENABLE_TINYBASIC || MK61_ENABLE_FOCAL) && MK61_HAS_FULLSCREEN_BITMAP
 #include "display.hpp"
 #include "builtin_font.hpp"
 #include "cross_hal.h"
@@ -21,7 +21,7 @@ __attribute__((noinline)) int native_text_flow(const char *text, uint16_t length
 #include <new>
 namespace basic_graphics {
 namespace {
-void screen_geometry(void *, uint16_t &width, uint16_t &height) {
+__attribute__((noinline)) void screen_geometry(void *, uint16_t &width, uint16_t &height) {
   auto &lcd = main_lcd();
   width = lcd.supportsFullscreenBitmap() ? lcd.fullscreenBitmapWidth() : 0;
   height = width ? lcd.fullscreenBitmapHeight() : 0;

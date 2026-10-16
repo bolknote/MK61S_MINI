@@ -1,6 +1,7 @@
 #ifndef MK61_COMPACT_FOCAL_COMPILER_HPP
 #define MK61_COMPACT_FOCAL_COMPILER_HPP
 #include "focal_syntax.hpp"
+#include "basic_graphics_protocol.hpp"
 #include "language_bytecode.hpp"
 #include "language_source_scan.hpp"
 namespace focal_next {
@@ -44,7 +45,7 @@ private:
   E error_ = E::NONE;
   Op before_op_=Op::HALT,previous_op_=Op::HALT;
   uint16_t before_pc_=0,previous_pc_=0;
-  bool rf_, requires_rf_ = false, has_calls_ = false;
+  bool rf_, requires_rf_ = false, has_calls_ = false, graph_expression_ = false;
   void fail(E error) {
     if (error_ == E::NONE) {
       error_ = error;
@@ -284,6 +285,16 @@ private:
         return;
       }
       Function fn = Function(id);
+      if (fn == Function::GW || fn == Function::GH) {
+        op(Op::FUNCTION, 1);
+        byte(uint8_t(fn == Function::GW ? language_vm::Function::GW
+                                       : language_vm::Function::GH));
+        return;
+      }
+      if (graph_expression_ && (fn == Function::CALL || fn == Function::RND)) {
+        fail(E::FUNCTION);
+        return;
+      }
       if (fn == Function::PI_VALUE) {
         op(Op::FUNCTION, 1);
         byte(uint8_t(language_vm::Function::PI_VALUE));
@@ -313,6 +324,16 @@ private:
         expect(')');
         op(Op::FUNCTION, 1);
         byte(uint8_t(language_vm::Function::RND));
+        return;
+      }
+      if (fn == Function::POINT) {
+        expression();
+        expect(',');
+        expression();
+        expect(')');
+        op(Op::GRAPHICS, -1);
+        byte(uint8_t(basic_graphics::Operation::POINT));
+        byte(2);
         return;
       }
       expression();
@@ -526,8 +547,23 @@ private:
       op(input ? Op::WAIT : Op::PRINT_FLUSH);
       return;
     }
-    if (!input)
+    if (!input) {
       op(Op::PRINT_BEGIN);
+      const char *after = p_;
+      while (after < end_ && alpha(*after))
+        ++after;
+      if (equal(p_, after, "AT")) {
+        p_ = after;
+        expression();
+        expect(',');
+        expression();
+        expect(',');
+        op(Op::PRINT_AT, -2);
+        skip_space();
+        if (p_ == end_)
+          fail(E::SYNTAX);
+      }
+    }
     const char *prompt = nullptr;
     unsigned prompt_len = 0;
     bool target_seen = false;
@@ -620,6 +656,69 @@ private:
       op(Op::PRINT_END);
       byte(0);
     }
+  }
+  void graphics(basic_graphics::Operation operation) {
+    uint8_t count = 0;
+    skip_space();
+    while (p_ < end_ && error_ == E::NONE) {
+      if (count == basic_graphics::maximum(operation)) {
+        fail(E::SYNTAX);
+        return;
+      }
+      expression();
+      ++count;
+      skip_space();
+      if (p_ == end_)
+        break;
+      expect(',');
+      skip_space();
+      if (p_ == end_)
+        fail(E::SYNTAX);
+    }
+    if (count < basic_graphics::minimum(operation))
+      fail(E::SYNTAX);
+    op(Op::GRAPHICS, -count);
+    byte(uint8_t(operation));
+    byte(count);
+  }
+  void graph() {
+    const char *begin = p_, *comma = delimiter(p_, end_, ',');
+    if (comma == end_) {
+      fail(E::SYNTAX);
+      return;
+    }
+    const char *end = end_;
+    p_ = comma + 1;
+    for (unsigned i = 0; i < 4; ++i) {
+      expression();
+      if (i < 3)
+        expect(',');
+    }
+    skip_space();
+    if (p_ != end_) {
+      fail(E::SYNTAX);
+      return;
+    }
+    op(Op::GRAPH_BEGIN, -4);
+    const uint16_t patch = pc_;
+    emit_word(0);
+    const uint16_t body = pc_;
+    p_ = begin;
+    end_ = comma;
+    graph_expression_ = true;
+    expression();
+    graph_expression_ = false;
+    skip_space();
+    if (p_ != end_)
+      fail(E::SYNTAX);
+    const uint16_t next = pc_;
+    op(Op::GRAPH_NEXT, -1);
+    emit_word(body);
+    if (pass_ && output_ && patch + 1 < capacity_) {
+      output_[patch] = uint8_t(next);
+      output_[patch + 1] = uint8_t(next >> 8);
+    }
+    p_ = end_ = end;
   }
   void branch() {
     expect('(');
@@ -751,6 +850,12 @@ private:
     case Command::CLS:
       op(Op::CLEAR);
       break;
+    case Command::PSET: graphics(basic_graphics::Operation::PSET); break;
+    case Command::LINE: graphics(basic_graphics::Operation::LINE); break;
+    case Command::BOX: graphics(basic_graphics::Operation::BOX); break;
+    case Command::CIRCLE: graphics(basic_graphics::Operation::CIRCLE); break;
+    case Command::SHOW: graphics(basic_graphics::Operation::SHOW); break;
+    case Command::GRAPH: graph(); break;
     case Command::EXEC:
       expression();
       op(Op::DROP, -1);

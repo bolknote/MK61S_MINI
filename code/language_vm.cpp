@@ -464,8 +464,8 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             ((bytes[pc+2]&0x40) && (bytes[pc+2]&0x3F)>=26))) ||
         (op == Op::FOR_FOCAL && bytes[pc + 4] > 1))
       return Error::INVALID_IMAGE;
-    if(op>=Op::GRAPHICS && (v.language!=Language::BASIC || (v.expression &&
-       !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT))))
+    if(op>=Op::GRAPHICS && v.expression &&
+       !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT))
       return Error::INVALID_IMAGE;
     if(op==Op::GRAPHICS) {
       const auto operation=(basic_graphics::Operation)bytes[pc+1];
@@ -997,7 +997,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if(error==Error::NONE) {
           auto& f=s.calls[s.call_count-1];f.base=base;f.arguments=count;f.mode=(uint8_t)(1|(p[5]?2:0));
           if(p[5] && host.event) {
-            if(host.isolate_print && v.language==Language::BASIC) {
+            if(host.isolate_print) {
               Value unused=0;event(Event::PRINT_PUSH,nullptr,0,unused);
               if(error==Error::NONE)f.mode|=4;
             }

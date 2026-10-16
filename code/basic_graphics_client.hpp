@@ -94,7 +94,8 @@ inline Result print_at(PrintPosition &position, char *output, uint8_t &cursor,
   cursor = 0;
   return Result::OK;
 }
-inline Result flush_at(PrintPosition &position, char *output, uint8_t &cursor) {
+inline Result flush_at(PrintPosition &position, char *output, uint8_t &cursor,
+                       bool finish = true) {
   Request r = {};
   r.operation = Operation::TEXT;
   r.count = 2;
@@ -104,9 +105,13 @@ inline Result flush_at(PrintPosition &position, char *output, uint8_t &cursor) {
   r.length = (uint16_t)strlen(output);
   const bool owns = position.owns_context;
   auto result = dispatch(r);
-  position.positioned = position.owns_context = false;
   output[0] = 0;
   cursor = 0;
+  if (!finish) {
+    position.y += 8;
+    return result;
+  }
+  position.positioned = position.owns_context = false;
   if (result == Result::OK && owns)
     result = pop_print(position, output, cursor);
   return result;

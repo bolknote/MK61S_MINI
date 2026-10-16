@@ -33,7 +33,13 @@ enum class Command : uint8_t {
   RETURN,
   SET,
   EXEC,
-  CLS
+  CLS,
+  PSET,
+  LINE,
+  BOX,
+  CIRCLE,
+  SHOW,
+  GRAPH
 };
 enum class Function : uint8_t {
   SIN,
@@ -57,7 +63,10 @@ enum class Function : uint8_t {
   RND,
   PI_VALUE,
   CALL,
-  ARG
+  ARG,
+  GW,
+  GH,
+  POINT
 };
 struct Word {
   const char *name;
@@ -68,14 +77,17 @@ static const Word commands[] = {
     {"ASK", 1, 'A'},  {"IF", 2, 'B'},    {"COMMENT", 3, 'C'},
     {"DO", 4, 'D'},   {"EXIT", 5, 'E'},  {"FOR", 6, 'F'},
     {"GOTO", 7, 'G'}, {"PRINT", 8, 'P'}, {"RETURN", 9, 'R'},
-    {"SET", 10, 'S'}, {"EXEC", 11, 'X'}, {"CLS", 12, 0}};
+    {"SET", 10, 'S'}, {"EXEC", 11, 'X'}, {"CLS", 12, 0},
+    {"PSET", 13, 0}, {"LINE", 14, 0}, {"BOX", 15, 0},
+    {"CIRCLE", 16, 0}, {"SHOW", 17, 0}, {"GRAPH", 18, 0}};
 static const Word functions[] = {
     {"SIN", 0, 0},   {"COS", 1, 0},    {"TG", 2, 0},   {"ASIN", 3, 0},
     {"ACOS", 4, 0},  {"ATG", 5, 0},    {"LN", 6, 0},   {"LG", 7, 0},
     {"EXP", 8, 0},   {"SQRT", 9, 0},   {"ABS", 10, 0}, {"INT", 11, 0},
     {"FRAC", 12, 0}, {"ROUND", 13, 0}, {"SGN", 14, 0}, {"MAX", 15, 0},
     {"MIN", 16, 0},  {"MOD", 17, 0},   {"RND", 18, 0}, {"PI", 19, 0},
-    {"CALL", 20, 0}, {"ARG", 21, 0}};
+    {"CALL", 20, 0}, {"ARG", 21, 0}, {"GW", 22, 0},
+    {"GH", 23, 0}, {"POINT", 24, 0}};
 inline char upper(char c) {
   return c >= 'a' && c <= 'z' ? char(c - 'a' + 'A') : c;
 }

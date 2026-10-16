@@ -262,7 +262,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #endif
     case MK61_SERVICE_CAPABILITIES:
       return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_FILES | MK61_SERVICE_CAP_RESOURCES |
-#if MK61_ENABLE_TINYBASIC
+#if MK61_ENABLE_TINYBASIC || MK61_ENABLE_FOCAL
           MK61_SERVICE_CAP_BASIC_GRAPHICS |
 #endif
 #if defined(MK61_FOCAL_TRACE) && MK61_FOCAL_TRACE

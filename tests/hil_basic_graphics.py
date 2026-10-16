@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture both Graphics.tbi pages from a matched Classic USB Screen.
+"""Capture the BASIC or FOCAL Graphics example on a matched Classic USB Screen.
 
 Firmware/System installation is separate. Reserves one unused temporary file,
 then removes it and verifies all files and calculator state. A warm reset after
@@ -25,7 +25,6 @@ from hil_portable_system_apps import png
 from hil_rtc_alarm import canonical_state_reply
 
 ROOT = Path(__file__).resolve().parents[1]
-REMOTE = '/GFXDEMO.tbi'
 
 
 def cache_entry(path):
@@ -68,6 +67,7 @@ def wait_page(port, first_frame, predicate, timeout=20):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--language', choices=('basic', 'focal'), default='basic')
     parser.add_argument('--port', required=True)
     parser.add_argument('--public-id', required=True)
     parser.add_argument('--build-id', required=True)
@@ -75,7 +75,10 @@ def main():
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result = {'status': 'RUNNING', 'pages': []}
-    source = (ROOT/'programs/examples/Graphics.tbi').read_bytes()
+    extension = 'foc' if args.language == 'focal' else 'tbi'
+    remote = '/GFXDEMO.' + extension
+    result['language'] = args.language
+    source = (ROOT/('programs/examples/Graphics.'+extension)).read_bytes()
     port = None
     written = screen_started = False
     before = saved = None
@@ -101,18 +104,18 @@ def main():
         result['identity'] = asdict(identity)
         result['before'] = health(port)
         before = fingerprint(port)
-        assert REMOTE.casefold() not in {n.casefold() for n in before['files']}, REMOTE
+        assert remote.casefold() not in {n.casefold() for n in before['files']}, remote
         cache_saved = {path: read_file(port, path) for path in before['files'] if cache_entry(path)}
         saved = {c: port.command(c) for c in ('reg', 'stk', 'dump', 'pwd')}
         result['alarms'] = [line for line in port.command('alarm').splitlines()
                             if line.startswith('RTC ALARM ')]
-        write_file(port, REMOTE, source)
+        write_file(port, remote, source)
         written = True
-        assert read_file(port, REMOTE) == source
+        assert read_file(port, remote) == source
         port.attach()
         screen_started = True
         first = len(port.frames)
-        port.open(REMOTE)
+        port.open(remote)
         frame = wait_page(port, first, lambda f:
             pixel(f, 0, 30) and pixel(f, 69, 21) and not pixel(f, 90, 30)
             and pixel(f, 160, 27) and pixel(f, 50, 12))
@@ -120,7 +123,7 @@ def main():
         (args.output_dir/'primitives.bin').write_bytes(frame)
         result['pages'].append({'name': 'primitives', 'sha256': hashlib.sha256(frame).hexdigest()})
         first = len(port.frames)
-        port.pump(.2)  # Let SHOW return and PAUSE enter its key wait.
+        port.pump(.2)  # Let SHOW return and PAUSE/ASK enter its key wait.
         port.key(37)
         frame = wait_page(port, first, lambda f:
             pixel(f, 48, 42) and pixel(f, 144, 42) and pixel(f, 96, 20)
@@ -133,7 +136,7 @@ def main():
         deadline = time.monotonic()+5
         while not PROMPT.search(port.text[port.open_text_start:]) and time.monotonic() < deadline:
             port.pump(.1)
-        assert PROMPT.search(port.text[port.open_text_start:]), 'example did not exit after its second PAUSE'
+        assert PROMPT.search(port.text[port.open_text_start:]), 'example did not exit after its second wait'
         result['crc_checked_frames'] = len(port.frames)
         result['status'] = 'PASS'
     except BaseException as error:
@@ -167,8 +170,8 @@ def main():
                                 raise
                             time.sleep(.2)
                 if written:
-                    assert read_file(port, REMOTE) == source
-                    assert 'Removed 1 entry.' in port.command('rm "'+REMOTE+'"')
+                    assert read_file(port, remote) == source
+                    assert 'Removed 1 entry.' in port.command('rm "'+remote+'"')
                 if before is not None:
                     result['vm_cache_cleanup'] = restore_cache(port, cache_saved)
                 if saved is not None:

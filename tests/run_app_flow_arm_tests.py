@@ -17,8 +17,8 @@ from run_portable_system_arm_tests import Elf, ROOT, run
 
 FLOW_INFO, FLOW_STEP, FLOW_MAGIC = 3, 4, 0x31574C46
 COMPILER_CONTEXT_SIZE = 240
-REQUEST_VERSION = 9
-LANGUAGE_FLOW_MAGIC = 0x37564C46
+REQUEST_VERSION = 10
+LANGUAGE_FLOW_MAGIC = 0x38564C46
 
 class FlowMachine(OverlayMachine):
     def load(self, packed):
@@ -100,7 +100,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
         assert m.call(command, 42, mode if language == 1 else 0, compile_request) == (1 if language == 1 else 0)
         wire = bytes(m.uc.mem_read(compile_request, 40))
         assert wire[16] == 0 and wire[30] == 1
-        length = struct.unpack_from("<H", wire, 18)[0]; assert length <= 768
+        length = struct.unpack_from("<H", wire, 18)[0]; assert length <= getattr(m, "compiler_image_capacity", 768)
         m.put(compile_request + 8, output, length)
         assert m.call(0x704, 0, 0, compile_request) == 1
         image = bytes(m.uc.mem_read(output, length)); m.uc.mem_write(bytecode, image)
@@ -142,7 +142,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
                 assert sum(x and x[0] == "file_read" for x in m.trace) == resource_reads, "runtime read its source"
         elif phase == 0x100:  # Generic reserve fixture, exact measured size.
             length, prefix = m.words(plan, 2)
-            assert 0 < length <= 768 and prefix == 1664
+            assert 0 < length <= getattr(m, "compiler_image_capacity", 768) and prefix == 1664
             m.put(plan + 8, output)
             m.put(step + 32, 3, 0, 1, 0)
         else:  # Generic commit fixture; tail-transfer directly to cold APP.

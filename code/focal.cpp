@@ -211,6 +211,10 @@ bool language_is_ru(void) { return focal_host_fixture::russian; }
 #include "focal_text.hpp"
 #include "focal_trace.hpp"
 #include "language_bytecode.hpp"
+#include "basic_graphics_client.hpp"
+#ifdef FOCAL_HOST_TEST
+#include "../tests/focal_graphics_host.hpp"
+#endif
 #include "mk61_ref.hpp"
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 #include "language_vm_abi.hpp"
@@ -416,6 +420,11 @@ static const char *focal_error_name(language_vm::Error error) {
     return "MATH?";
   case E::STOPPED:
     return "STOP";
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
+  case E::GRAPHICS_UNAVAILABLE: return "NO GRAPHICS";
+  case E::GRAPHICS_CHANGED: return "SCREEN CHANGED";
+  case E::GRAPHICS_ARGUMENT: return "GRAPHICS ARGUMENT";
+#endif
   default:
     return "SYNTAX?";
   }
@@ -466,6 +475,27 @@ static void focal_finish_wait() {
 }
 
 #if !defined(MK61_LANGUAGE_VM_COMPILER)
+static language_vm::Error focal_graphics_failure = language_vm::Error::NONE;
+static bool focal_graphics_result(basic_graphics::Result result) {
+  if (result == basic_graphics::Result::OK)
+    return true;
+  focal_graphics_failure = basic_graphics::error(result);
+  return false;
+}
+static bool next_graphics(void *, language_vm::Event event, const char *text,
+                          uint16_t length, double &value) {
+  if (event != language_vm::Event::GRAPHICS || !text ||
+      length != sizeof(basic_graphics::Request)) return false;
+  auto request = *(const basic_graphics::Request *)text;
+  const auto result = basic_graphics::dispatch(request);
+  value = request.value;
+  return focal_graphics_result(result);
+}
+static double next_dynamic(void *, language_vm::Function function) {
+  return basic_graphics::dimension(function == language_vm::Function::GW
+                                     ? basic_graphics::Operation::WIDTH
+                                     : basic_graphics::Operation::HEIGHT);
+}
 static bool tb_runtime_interrupted() {
 #ifndef FOCAL_HOST_TEST
   idle_main_process();
@@ -591,13 +621,18 @@ static double next_random(void *) {
          16777216.0;
 #endif
 }
-static bool next_service(void *) { return !tb_runtime_interrupted(); }
+static bool next_service(void *) {
+  return focal_graphics_result(basic_graphics::command(basic_graphics::Operation::CHECK)) &&
+         !tb_runtime_interrupted();
+}
 static void next_clear(void *) {
   main_lcd().clear();
   tb_pending_print[0] = 0;
   tb_print_row = 0;
 }
 static bool next_wait(void *) {
+  if (!focal_graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW)))
+    return false;
   tb_pause_is_final = true;
   return kbd::get_key_wait() != KEY_ESC;
 }
@@ -607,6 +642,10 @@ static unsigned host_input_count = 0, host_input_index = 0;
 static char host_prompt[96];
 #endif
 static bool next_input(void *, const char *prompt, double &value) {
+  struct RestoreCanvas {
+    RestoreCanvas() { basic_graphics::command(basic_graphics::Operation::SUSPEND); }
+    ~RestoreCanvas() { focal_graphics_result(basic_graphics::command(basic_graphics::Operation::RESUME)); }
+  } restore_canvas;
   tb_pause_is_final = false;
 #ifdef FOCAL_HOST_TEST
   tb_copy_text(host_prompt, sizeof(host_prompt), prompt);
@@ -654,7 +693,7 @@ static bool next_input(void *, const char *prompt, double &value) {
           state.stack_capacity = language_vm::MAX_STACK;
           const language_vm::Services services = {
               nullptr, nullptr,        next_math, next_random,
-              nullptr, next_reference, nullptr};
+              next_dynamic, next_reference, next_graphics};
           auto run = language_vm::run(view, state, services);
           if (run.error == language_vm::Error::NONE) {
             value = stack[0].number();
@@ -752,6 +791,8 @@ static FocalRunStatus tb_run_program(int slot) {
       language_vm::inspect(image, result.size, view) !=
           language_vm::Error::NONE)
     return FocalRunStatus::COMPILE_ERROR;
+  basic_graphics::RunScope graphics_scope;
+  focal_graphics_failure = language_vm::Error::NONE;
   next_clear(nullptr);
   language_vm::State state = {};
   language_vm::Value stack[language_vm::MAX_STACK];
@@ -763,22 +804,55 @@ static FocalRunStatus tb_run_program(int slot) {
   struct Context {
     unsigned width = 0, precision = 8;
     bool cancelled = false;
+    uint8_t cursor = 0;
+    basic_graphics::PrintPosition position = {};
   } context;
   language_vm::Services services = {
       &context,
       next_service,
       next_math,
       next_random,
-      nullptr,
+      next_dynamic,
       next_reference,
       [](void *ptr, language_vm::Event event, const char *text, uint16_t length,
          double &value) {
         auto &c = *(Context *)ptr;
+        auto flush = [&](bool finish) {
+          c.cursor = uint8_t(strlen(tb_pending_print));
+          if (c.position.positioned)
+            return focal_graphics_result(basic_graphics::flush_at(
+                c.position, tb_pending_print, c.cursor, finish));
+          if (basic_graphics::active()) {
+            uint8_t written = 0;
+            const auto result = basic_graphics::flow(tb_pending_print,
+                uint16_t(strlen(tb_pending_print)), tb_print_row,
+                uint8_t(main_lcd().rows() - tb_print_row), !finish, written);
+            const unsigned row = unsigned(tb_print_row) + written;
+            tb_print_row = uint8_t(row < main_lcd().rows() ? row : main_lcd().rows() - 1);
+            tb_pending_print[0] = 0;
+            return focal_graphics_result(result);
+          }
+          return next_newline(nullptr);
+        };
         switch (event) {
+        case language_vm::Event::GRAPHICS:
+          return next_graphics(nullptr, event, text, length, value);
+        case language_vm::Event::PRINT_AT:
+          if (!text || length != sizeof(basic_graphics::Request)) return false;
+          c.cursor = uint8_t(strlen(tb_pending_print));
+          return focal_graphics_result(basic_graphics::print_at(c.position,
+              tb_pending_print, c.cursor, *(const basic_graphics::Request *)text));
+        case language_vm::Event::PRINT_PUSH:
+          c.cursor = uint8_t(strlen(tb_pending_print));
+          return focal_graphics_result(basic_graphics::push_print(c.position, tb_pending_print, c.cursor));
+        case language_vm::Event::PRINT_POP:
+          return focal_graphics_result(basic_graphics::pop_print(c.position, tb_pending_print, c.cursor));
         case language_vm::Event::TRACE:
           focal_trace_execution(text, length, value);
           return true;
         case language_vm::Event::PRINT_BEGIN:
+          c.position = {};
+          c.cursor = 0;
           tb_pending_print[0] = 0;
           tb_print_row = 0;
           c.width = 0;
@@ -800,9 +874,9 @@ static FocalRunStatus tb_run_program(int slot) {
           value = c.width * 16 + c.precision;
           return true;
         case language_vm::Event::FLUSH:
-          return next_newline(nullptr);
+          return flush(false);
         case language_vm::Event::PRINT_END:
-          return !tb_pending_print[0] || next_newline(nullptr);
+          return (!c.position.positioned && !tb_pending_print[0]) || flush(true);
         case language_vm::Event::READ_INPUT: {
           char prompt[96];
           if (length >= sizeof(prompt))
@@ -811,26 +885,28 @@ static FocalRunStatus tb_run_program(int slot) {
           prompt[length] = 0;
           if (next_input(nullptr, prompt, value))
             return true;
-          c.cancelled = true;
+          c.cancelled = focal_graphics_failure == language_vm::Error::NONE;
           return false;
         }
         case language_vm::Event::WAIT:
           if (next_wait(nullptr))
             return true;
-          c.cancelled = true;
+          c.cancelled = focal_graphics_failure == language_vm::Error::NONE;
           return false;
         case language_vm::Event::CLEAR:
+          if (!focal_graphics_result(basic_graphics::command(basic_graphics::Operation::CLEAR))) return false;
           next_clear(nullptr);
           return true;
         case language_vm::Event::FINISH:
-          if (tb_pending_print[0])
-            return next_newline(nullptr);
-          return true;
+          if ((c.position.positioned || tb_pending_print[0]) && !flush(true)) return false;
+          return focal_graphics_result(basic_graphics::command(basic_graphics::Operation::SHOW));
         default:
           return true;
         }
-      }};
+      }, false, true};
   auto run = language_vm::run(view, state, services);
+  if (focal_graphics_failure != language_vm::Error::NONE)
+    run.error = focal_graphics_failure;
   if (run.error == language_vm::Error::STOPPED || context.cancelled)
     return FocalRunStatus::STOPPED;
   if (run.error != language_vm::Error::NONE) {
@@ -1725,6 +1801,11 @@ bool FOCAL_menu_select(void) {
 
 #ifdef FOCAL_HOST_TEST
 extern "C" void FocalNextReset() {
+  basic_graphics::command(basic_graphics::Operation::RESET);
+  focal_host_graphics::width = focal_host_graphics::height = 0;
+  focal_host_graphics::presents = 0;
+  main_lcd().setRows(8);
+  memset(focal_host_graphics::frame, 0, sizeof(focal_host_graphics::frame));
   focal_host_fixture::reset();
   InitFocal();
   focal_host_angle_unit = RADIAN;
@@ -1763,6 +1844,16 @@ extern "C" bool FocalTestExpandOperators(const char *input, char *output,
 extern "C" void FocalNextAngleMode(int unit) {
   focal_host_angle_unit = (AngleUnit)unit;
 }
+extern "C" void FocalNextGraphics(unsigned width, unsigned height) {
+  focal_host_graphics::width = uint16_t(width);
+  focal_host_graphics::height = uint16_t(height);
+  main_lcd().setRows(uint8_t(height / 8));
+}
+extern "C" bool FocalNextPixel(unsigned x, unsigned y) {
+  return x < focal_host_graphics::width && y < focal_host_graphics::height &&
+      (focal_host_graphics::frame[y / 8 * focal_host_graphics::width + x] & (1U << (y % 8)));
+}
+extern "C" unsigned FocalNextPresents() { return focal_host_graphics::presents; }
 extern "C" unsigned FocalNextRuntimeSize() { return sizeof(FocalRuntime); }
 extern "C" void FocalNextEdit(const int *keys, int n, char *buffer, int size) {
   text_editor::Buffer editor = {buffer,
