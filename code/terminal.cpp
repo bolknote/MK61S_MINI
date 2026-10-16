@@ -3618,49 +3618,61 @@ bool class_terminal::operand_delimiter(char c) {
       return terminal_core::is_end(c) || terminal_core::is_space(c) || c == '<' || c == '>' || c == '=' || c == '!';
     }
 
-bool class_terminal::parse_if_operand(const char*& p, double& out) {
-      MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPERAND);
+u8 class_terminal::parse_if_reference(const char*& p) {
       p = terminal_core::skip_spaces(p);
       const char c = (*p >= 'A' && *p <= 'Z') ? (char) (*p - 'A' + 'a') : *p;
-
       if(c == 'r') {
         const isize reg = HexdecimalDigit(p[1]);
         if(reg >= 0 && operand_delimiter(p[2])) {
-          if(reg == 15 && !core_61::expanded_program_is_on()) return false;
-          if(mk61_ref::try_read_register_number((int) reg, out)) {
-            p += 2;
-            return true;
-          }
-          char value[15];
-          value[14] = 0;
-          MK61Emu_ReadRegister((int) reg, value, terminal_symbols);
           p += 2;
-          return parse_mk_display_value(value, out);
+          return (u8)(reg + 1);
         }
-        return false;
+        return 0;
       }
-
       if(c == 'x' || c == 'y' || c == 'z' || c == 't') {
-        stack reg = stack::X;
+        u8 reference = 18; // X1=17, X=18, Y=19, Z=20, T=21
         usize advance = 1;
-        if(c == 'x' && p[1] == '1') { reg = stack::X1; advance = 2; }
-        else if(c == 'x') reg = stack::X;
-        else if(c == 'y') reg = stack::Y;
-        else if(c == 'z') reg = stack::Z;
-        else reg = stack::T;
-        if(!operand_delimiter(p[advance])) return false;
-
-        if(mk61_ref::try_read_stack_number(reg, out)) {
-          p += advance;
-          return true;
-        }
-        char value[15];
-        value[14] = 0;
-        read_stack_register(reg, value, terminal_symbols);
+        if(c == 'x' && p[1] == '1') { reference = 17; advance = 2; }
+        else if(c == 'y') reference = 19;
+        else if(c == 'z') reference = 20;
+        else if(c == 't') reference = 21;
+        if(!operand_delimiter(p[advance])) return 0;
         p += advance;
-        return parse_mk_display_value(value, out);
+        return reference;
       }
+      return 0;
+    }
 
+bool class_terminal::read_if_reference(u8 reference, double& out) {
+      char value[15];
+      value[14] = 0;
+      if(reference <= 16) {
+        const int reg = reference - 1;
+        if(reg == 15 && !core_61::expanded_program_is_on()) return false;
+        if(mk61_ref::try_read_register_number(reg, out)) return true;
+        MK61Emu_ReadRegister(reg, value, terminal_symbols);
+      } else {
+        const stack reg = reference == 17 ? stack::X1 :
+            reference == 18 ? stack::X : reference == 19 ? stack::Y :
+            reference == 20 ? stack::Z : stack::T;
+        if(mk61_ref::try_read_stack_number(reg, out)) return true;
+        read_stack_register(reg, value, terminal_symbols);
+      }
+      return parse_mk_display_value(value, out);
+    }
+
+bool class_terminal::parse_if_operand(const char*& p, double& out) {
+      MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPERAND);
+      const u8 reference = parse_if_reference(p);
+      if(reference) {
+        // RF is syntactically valid in prepared code, but its legacy reader
+        // must leave the operand unconsumed when expanded mode is disabled.
+        if(reference == 16 && !core_61::expanded_program_is_on()) {
+          p -= 2;
+          return false;
+        }
+        return read_if_reference(reference, out);
+      }
       return terminal_core::parse_decimal(p, out);
     }
 
@@ -3797,33 +3809,82 @@ bool class_terminal::exec_print(bool script_mode) {
 
 // Shared by interactive IF and the read-only script prefix path. Keep one
 // parser and IEEE comparison implementation, including malformed-tail rules.
-bool class_terminal::parse_if_condition(const char*& p, bool& condition) {
-      double lhs = 0.0;
-      double rhs = 0.0;
-      bool parsed = parse_if_operand(p, lhs);
-
-      char op0 = 0;
-      char op1 = 0;
-      if(parsed) {
+u8 class_terminal::parse_if_operator(const char*& p) {
         p = terminal_core::skip_spaces(p);
-        op0 = p[0];
+        const char op0 = p[0];
+        bool equal = false;
         if(op0 == '>' || op0 == '<' || op0 == '=' || op0 == '!') {
           p++;
-          if(*p == '=') { op1 = '='; p++; }
+          if(*p == '=') { equal = true; p++; }
         }
-        parsed = (op0 == '>' || op0 == '<') || ((op0 == '=' || op0 == '!') && op1 == '=');
+        if(op0 == '>') return equal ? 2 : 1;
+        if(op0 == '<') return equal ? 4 : 3;
+        if(op0 == '=' && equal) return 5;
+        if(op0 == '!' && equal) return 6;
+        return 0;
+    }
+
+bool class_terminal::compare_if(u8 operation, double lhs, double rhs) {
+      switch(operation) {
+        case 1: return lhs > rhs;
+        case 2: return lhs >= rhs;
+        case 3: return lhs < rhs;
+        case 4: return lhs <= rhs;
+        case 5: return lhs == rhs;
+        case 6: return lhs != rhs;
+        default: return false;
       }
-      if(parsed) parsed = parse_if_operand(p, rhs);
+    }
 
+bool class_terminal::parse_if_condition(const char*& p, bool& condition) {
+      double lhs = 0.0, rhs = 0.0;
+      if(!parse_if_operand(p, lhs)) return false;
+      const u8 operation = parse_if_operator(p);
+      if(!operation || !parse_if_operand(p, rhs)) return false;
       p = terminal_core::skip_spaces(p);
-      if(!parsed || *p == 0) return false;
-
-      condition = false;
-      if(op0 == '>') condition = op1 ? (lhs >= rhs) : (lhs > rhs);
-      if(op0 == '<') condition = op1 ? (lhs <= rhs) : (lhs < rhs);
-      if(op0 == '=') condition = (lhs == rhs);
-      if(op0 == '!') condition = (lhs != rhs);
+      if(*p == 0) return false;
+      condition = compare_if(operation, lhs, rhs);
       return true;
+    }
+
+bool class_terminal::prepare_script_if(const char* line,
+    terminal_script::PreparedIf& out, u8& tail_offset) {
+      const char* p = terminal_catalog::conditional_arguments(line);
+      if(!p || strlen(line) > terminal_core::MAX_INPUT_TEXT) return false;
+      const u8 reference = parse_if_reference(p);
+      if(!reference) return false;
+      const u8 operation = parse_if_operator(p);
+      double literal = 0.0;
+      if(!operation || !terminal_core::parse_decimal(p, literal) ||
+         !(literal >= -32768.0 && literal <= 32767.0)) return false;
+      const i16 integer = (i16)literal;
+      if((double)integer != literal) return false;
+      p = terminal_core::skip_spaces(p);
+      if(!*p) return false;
+      tail_offset = (u8)(p - line);
+      out = {integer, reference, operation};
+      return true;
+    }
+
+terminal_script::IfResult class_terminal::evaluate_script_if(
+    const terminal_script::PreparedIf& condition, bool trap_mode) {
+      using terminal_script::IfResult;
+      trap_mode = trap_mode || m61_text::calculator_suspended();
+      if(!terminal_command_allowed_in_script(CMD_IF) ||
+         (trap_mode && !terminal_command_allowed_in_trap(CMD_IF)))
+        return IfResult::FALLBACK;
+#if defined(MK61_OLED1602_WS0010)
+      idle_signal_reset();
+#endif
+      cancel_file_upload();
+      recive_pos = 0;
+      double lhs = 0.0;
+      if(!read_if_reference(condition.reference, lhs)) {
+        Serial.println("Usage: if <x|y|z|t|x1|r0..re> <op> <value> <command>");
+        return IfResult::ERROR;
+      }
+      return compare_if(condition.operation, lhs, (double)condition.literal)
+          ? IfResult::TRUE : IfResult::FALSE;
     }
 
 terminal_protocol::Result class_terminal::exec_if(bool script_mode, bool trap_mode) {

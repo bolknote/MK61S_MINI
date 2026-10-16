@@ -23,6 +23,7 @@ prelude=r'''
 #include "terminal_core.hpp"
 #include "terminal_protocol.hpp"
 #include "terminal_catalog.hpp"
+#include "terminal_script.hpp"
 #include "dwt_profiler.hpp"
 #include <cassert>
 #include <cstring>
@@ -56,6 +57,10 @@ class class_terminal {
   static u8 input_buffer[MAX_INPUT_CHAR];usize recive_pos=0;bool legacy=false;u16 current_directory=0;
   static bool operand_delimiter(char);static bool parse_if_operand(const char*&,double&);
   static bool parse_if_condition(const char*&,bool&);static bool parse_mk_display_value(const char*,double&);
+  static u8 parse_if_reference(const char*&);static bool read_if_reference(u8,double&);
+  static u8 parse_if_operator(const char*&);static bool compare_if(u8,double,double);
+  static bool prepare_script_if(const char*,terminal_script::PreparedIf&,u8&);
+  terminal_script::IfResult evaluate_script_if(const terminal_script::PreparedIf&,bool);
   const char* command_args();Result exec_if(bool,bool);Result execute_script_line(const char*,bool);
   Result legacy_if(bool,bool);Result legacy_script(const char*,bool);Result execute(bool,bool);
   Result script_action(ResultKind,const char*);
@@ -114,13 +119,25 @@ Result class_terminal::execute(bool script,bool trap){
 }
 struct Snapshot{ResultKind kind;int key,offset;std::string arg,text,buffer;usize position;unsigned reads,cancellations,idle_resets,dispatches;std::vector<std::string> opens;};
 static unsigned cases=0;
-static Snapshot run(std::string line,bool legacy,bool script,bool trap,bool alias){
+static Snapshot run(std::string line,bool legacy,bool script,bool trap,bool alias,bool prepared=false){
  class_terminal t;t.legacy=legacy;t.recive_pos=7;
  for(unsigned i=0;i<MAX_INPUT_CHAR;++i)t.input_buffer[i]=(u8)(0x80+i%97);
  const char* input=line.c_str();
  if(alias){assert(line.size()<MAX_INPUT_CHAR);std::memcpy(t.input_buffer,input,line.size()+1);input=(const char*)t.input_buffer;}
  Serial.text.clear();reads=0;cancellations=0;idle_resets=0;dispatches=0;opens.clear();Result result;
- if(script)result=legacy?t.legacy_script(input,trap):t.execute_script_line(input,trap);
+ if(script){
+  terminal_script::PreparedIf condition={};u8 tail=0;
+  if(prepared&&t.prepare_script_if(input,condition,tail)){
+   // Preparation is read-only, including a false IF or an unavailable RF.
+   assert(reads==0&&cancellations==0&&idle_resets==0&&t.recive_pos==7);
+   switch(t.evaluate_script_if(condition,trap)){
+    case terminal_script::IfResult::TRUE:result=t.execute_script_line(input+tail,trap);break;
+    case terminal_script::IfResult::FALSE:result=Result::ok();break;
+    case terminal_script::IfResult::ERROR:result=Result::error();break;
+    case terminal_script::IfResult::FALLBACK:result=t.execute_script_line(input,trap);break;
+   }
+  }else result=legacy?t.legacy_script(input,trap):t.execute_script_line(input,trap);
+ }
  else{assert(line.size()<MAX_INPUT_CHAR);std::memcpy(t.input_buffer,input,line.size());t.input_buffer[line.size()]=CR;t.recive_pos=line.size()+1;result=t.execute(false,trap);}
  const uintptr_t a=(uintptr_t)result.args,b=(uintptr_t)input;
  return {result.kind,result.key,a>=b&&a<=b+line.size()?(int)(a-b):-1,std::string(result.args),Serial.text,
@@ -129,10 +146,13 @@ static Snapshot run(std::string line,bool legacy,bool script,bool trap,bool alia
 static void check(const std::string& line){
  for(bool script:{false,true})for(bool trap:{false,true})for(bool suspended:{false,true})for(bool alias:{false,true}){
   if((!script||alias)&&line.size()>=MAX_INPUT_CHAR)continue;
-  m61_text::suspended=suspended;auto a=run(line,true,script,trap,alias),b=run(line,false,script,trap,alias);
+  m61_text::suspended=suspended;auto a=run(line,true,script,trap,alias);
+  for(bool prepared:{false,true}){
+  auto b=run(line,false,script,trap,alias,prepared);
   if(!(a.kind==b.kind&&a.key==b.key&&a.offset==b.offset&&a.arg==b.arg&&a.text==b.text&&a.buffer==b.buffer&&a.position==b.position&&a.reads==b.reads&&a.cancellations==b.cancellations&&a.idle_resets==b.idle_resets&&a.opens==b.opens)){
-   std::fprintf(stderr,"IF mismatch [%s] script=%d trap=%d suspended=%d alias=%d\n",line.c_str(),script,trap,suspended,alias);assert(false);
+   std::fprintf(stderr,"IF mismatch [%s] script=%d trap=%d suspended=%d alias=%d prepared=%d\n",line.c_str(),script,trap,suspended,alias,prepared);assert(false);
   }++cases;
+  }
  }
 }
 int main(){
@@ -141,14 +161,14 @@ int main(){
   for(bool expanded:{false,true}){core_61::expanded=expanded;
    for(const char* lhs:{"re","rf","r0","x","x1","y","z","t","0","-0","1.25"})
    for(const char* op:{"==","!=","<","<=",">",">=","=","!","<>","===",""})
-   for(const char* rhs:{"0","1","-0","1.25","re"}){
+   for(const char* rhs:{"0","1","-0","1.25","re","32767","-32768","32768","-32769","1e2","1e99"}){
     check(std::string("if ")+lhs+op+rhs+" open \"some file.tbi\"");
    }
   }
  }
  regtext=" 0.0000000  00";
  for(const char* line:{"","if","if ","if 0==0","if 0==1 bad command","if 0==0 bad command","if 0==0 if 1<2 run :next","if 0==0 if 1>2 bad","if 0==0 open x","if 0==0 dfu","if\t0==0\tprint hi","IF 0==0 open x"," if 0==0 open x","ifx 0==0 open x","if 0==0\r\nopen x","if 0==0 ret"})check(line);
- for(unsigned n:{238U,239U,240U,241U,1000U})for(const char* prefix:{"if 0==0 open ","if 0==1 open ","open "}){std::string line=prefix;line.resize(n,'a');check(line);}
+ for(unsigned n:{238U,239U,240U,241U,1000U})for(const char* prefix:{"if 0==0 open ","if 0==1 open ","if re==0 open ","if re==1 open ","open "}){std::string line=prefix;line.resize(n,'a');check(line);}
  std::string nested="open x";for(unsigned n=0;n<24;++n){check(nested);nested="if 0==0 "+nested;}
  for(bool succeeds:{false,true}){open_succeeds=succeeds;
   for(const char* word:{"o","op","ope","open","OPEN","Open","openx","open?","open/"," open","\topen"})
@@ -170,7 +190,8 @@ int main(){
 '''
 
 production=''.join(method(name) for name in ('command_args','script_action','operand_delimiter','parse_mk_display_value',
-    'parse_if_operand','parse_if_condition','exec_if','execute_script_line'))
+    'parse_if_reference','read_if_reference','parse_if_operand','parse_if_operator','compare_if',
+    'parse_if_condition','prepare_script_if','evaluate_script_if','exec_if','execute_script_line'))
 # Unlike unrelated action adapters, OPEN uses its actual dispatcher case too.
 # This checks missing-path diagnostics and the interactive/file-open boundary,
 # not a second implementation that could accidentally mirror the shortcut.

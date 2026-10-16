@@ -1,0 +1,263 @@
+{
+  "status": "PASS",
+  "date": "2026-10-16",
+  "base_revision": "2e0cbf50b164847098b7066c840fddeca48b39da",
+  "feature": "Generic prepared M61 IF and revision-checked OPEN targets in existing read-window slack",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM"
+  },
+  "workload": "Unchanged installed Turochamp; book off, level 2, max depth 8, e2e3, 420 nodes",
+  "stages": {
+    "baseline": {
+      "build": "091D20DE",
+      "all_seconds": [
+        52.336114041972905,
+        37.375361583021004,
+        36.17662466701586,
+        36.099900542001706
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_median_seconds": 36.13826260450878,
+      "steady_NOR_read_calls": [
+        73133,
+        73133
+      ],
+      "cold_seconds": 52.336114041972905,
+      "stack_watermark_remaining": 9740
+    },
+    "candidate": {
+      "build": "AA504E22",
+      "all_seconds": [
+        46.27780979202362,
+        31.51243445801083,
+        30.331180915993173,
+        30.25080987502588
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_median_seconds": 30.290995395509526,
+      "steady_NOR_read_calls": [
+        1408,
+        1408
+      ],
+      "cold_seconds": 46.27780979202362,
+      "stack_watermark_remaining": 9772
+    },
+    "control": {
+      "build": "091D20DE",
+      "all_seconds": [
+        52.391117292048875,
+        37.379103459010366,
+        36.178759291011374,
+        36.11409112502588
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_median_seconds": 36.14642520801863,
+      "steady_NOR_read_calls": [
+        73133,
+        73133
+      ],
+      "cold_seconds": 52.391117292048875,
+      "stack_watermark_remaining": 9740
+    }
+  },
+  "ordinary_reference_seconds": 36.142343906263704,
+  "candidate_seconds": 30.290995395509526,
+  "elapsed_reduction_percent": 16.189731706194355,
+  "speedup": 1.193171219180919,
+  "before_after_drift_percent": 0.022587149800679107,
+  "steady_filter": "Non-first search, exactly 3 decodes, zero NOR writes/erases. All other samples retained above.",
+  "detailed_runtime_idle_opcode_probes_enabled": false,
+  "basic_counters_identical_on_both_builds": true,
+  "common_system_apps": {
+    "LANGVM.APP": {
+      "bytes": 12970,
+      "sha256": "d384c2e4e45f0e854b3558d781ff16c828c619a264ebae2e1c7a3d6e5aed7336"
+    },
+    "LANGIN.APP": {
+      "bytes": 11941,
+      "sha256": "9bbbf1d0aff69bcc7cf59b3290275623eba742acdedc4e5112f5392cfdf94d0e"
+    },
+    "BASIC.APP": {
+      "bytes": 14095,
+      "sha256": "3b5fcf0d6ab3879b0b6bdb2af74c92c83506a3a119d2f934df8557f669090074"
+    },
+    "FOCAL.APP": {
+      "bytes": 14238,
+      "sha256": "279d2feedd8dd6c7654bfdfd1fef33ace10aad64056230d477ad71b031910d00"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7328,
+      "sha256": "3d749e69d0efd59b856490ef3cebc373d5d00fe280e411b8cfc865f0d36ed7c7"
+    }
+  },
+  "resources": {
+    "F411_LIBM": {
+      "baseline_flash_bytes": 375152,
+      "candidate_flash_bytes": 376308,
+      "delta_flash_bytes": 1156,
+      "candidate_flash_headroom": 147980,
+      "minimum_flash_headroom": 131072,
+      "baseline_global_RAM": 21584,
+      "candidate_global_RAM": 21584,
+      "delta_global_RAM": 0,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F411_CORE": {
+      "baseline_flash_bytes": 365476,
+      "candidate_flash_bytes": 366628,
+      "delta_flash_bytes": 1152,
+      "candidate_flash_headroom": 157660,
+      "minimum_flash_headroom": 131072,
+      "baseline_global_RAM": 21584,
+      "candidate_global_RAM": 21584,
+      "delta_global_RAM": 0,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F401_Classic_CORE": {
+      "baseline_flash_bytes": 255484,
+      "candidate_flash_bytes": 255484,
+      "delta_flash_bytes": 0,
+      "candidate_flash_headroom": 6660,
+      "minimum_flash_headroom": 4096,
+      "baseline_global_RAM": 30644,
+      "candidate_global_RAM": 30644,
+      "delta_global_RAM": 0,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    },
+    "F401_WS_CORE": {
+      "baseline_flash_bytes": 227040,
+      "candidate_flash_bytes": 227040,
+      "delta_flash_bytes": 0,
+      "candidate_flash_headroom": 35104,
+      "minimum_flash_headroom": 8192,
+      "baseline_global_RAM": 27236,
+      "candidate_global_RAM": 27236,
+      "delta_global_RAM": 0,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    }
+  },
+  "RAM_note": "No added global allocation, no larger M61 read window or runtime reserve; descriptors borrow verified-source window slack.",
+  "implementation": {
+    "prepared_IF": "Live register/stack reference compared to an exact int16 literal; other forms use the existing parser",
+    "prepared_OPEN": "Only positively resolved simple neighbours of the caller; complex paths, failed/cwd-coerced/root fallback results use ordinary resolution",
+    "storage": "4-byte header and 12-byte records in unused tail of the existing verified full-source M61 read window",
+    "invalidation": "Filesystem media revision, window refill and frame/lifecycle changes",
+    "policy": "Default enabled for read windows >=256 bytes (standard F411=1024), disabled for standard F401=64; MK61_M61_PREPARED_CACHE=0 opts out",
+    "cooperative_boundary": "Unchanged 8 script lines per service call; IF cancellation, WS idle reset, permissions, errors and lazy tails preserved"
+  },
+  "runtime_reserves": {
+    "read_window_bytes": 1024,
+    "m61_runtime_bytes": 2112,
+    "VM_cache_bytes": 32768,
+    "hardware_stack_bytes": 16384,
+    "APP_image_max": 20480,
+    "BASIC_source_max": 3584,
+    "FOCAL_source_max": 1536
+  },
+  "validation": {
+    "searches": 12,
+    "comparison_sequence": "Previous verified A control / final B / fresh A control; each stage restores original VMC before cold launch",
+    "A_before_reused_from": "/Users/bolk/Projects/MK61S_MINI/.build/m61-prepared-20261016.PY3lDA/hardware-guard/report.json",
+    "all_nodes": 420,
+    "all_move": "e2e3",
+    "all_complete_boards_identical": true,
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_crc_verified": 2925,
+    "keyboard_overflow_counters": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "SPI_DMA_errors_and_timeouts": 0,
+    "minimum_stack_watermark_remaining": 9740
+  },
+  "local_tests": {
+    "M61_ASan_UBSan": "10 configurations: scoped/static, cache 64/256/1023/1024, enabled/disabled; live values, revisions, id reuse, relative precedence, endings, capacity, nested cancellation",
+    "terminal_IF_ASan_UBSan_comparisons": 2848224,
+    "numeric_IF_ASan_UBSan_cases": 1612400,
+    "numeric_reader_cases": 17791872,
+    "terminal_suite": "PASS ASan/UBSan",
+    "storage_suite": "PASS software/STM32 CRC",
+    "F411_WS_native_release_case": "f411-stop-ws0010 PASS, no physical Mini access"
+  },
+  "limits_weakened": false,
+  "recovery": {
+    "status": "PASS",
+    "firmware": "122A5FF9",
+    "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da",
+    "files": 116,
+    "directories": 24,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false
+  },
+  "preliminary_attempt": {
+    "used_for_performance": false,
+    "status": "FAIL",
+    "reason": "Interrupted during baseline to include the legacy RF early-failure pointer guard in final firmware.",
+    "restored": true
+  },
+  "changed_file_sha256": {
+    "code/m61_text.cpp": "8c8f4b683a36205eba08c0b3d058fc11159d9a4597b63681d471c4fd0fb96069",
+    "code/terminal.cpp": "8a770c9c8534f07498b7515ef7f6f1a52f6b1910e3161ecd0df02ed8e8477e8d",
+    "code/terminal.hpp": "db9eb4f0973c400a28045ea08c9d8e5f6abdbf3160e466523c1d4d8547b79d61",
+    "code/terminal_script.cpp": "ec2fa405b22ef7a435ec80c33ad386ba07a1aa4153b961a439bb97e62ecbac06",
+    "code/terminal_script.hpp": "20d063afe7cf6a6d6b543f0b0f8bdd86711733bc79553a6178ff872d2f283f50",
+    "tests/m61_text_self_test.cpp": "65791bae7b7627362236e0ccbc4f04462ca9f2b79c28bb59b225766364eb97e3",
+    "tests/run_m61_text_tests.sh": "ae95089b02b1880f5d51fd37029afc602f12d65fc8b342c1ee199bf42d27655d",
+    "tests/terminal_if_number_self_test.py": "3136fad483828ae88b2045b48b5578269eb43441d9cd489c0e3bc35deca674e3",
+    "tests/terminal_if_self_test.py": "e44fba3865dc282ca98fd2b09b9eb88ca9e3c71fb4fe41d7194693354095950f"
+  },
+  "patch_sha256": "001ceacebc42bde165049a689d816a11ed144cbf2bf8ab0ada248810e5d874fa",
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/m61-prepared-20261016.PY3lDA",
+  "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/m61-prepared-20261016.PY3lDA/hardware-release/report.json"
+}

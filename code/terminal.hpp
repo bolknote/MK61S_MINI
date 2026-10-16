@@ -13,6 +13,7 @@
 #include "terminal_command_ids.hpp"
 #include "terminal_line_editor.hpp"
 #include "terminal_protocol.hpp"
+#include "terminal_script.hpp"
 #include "power_monitor.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
@@ -347,6 +348,14 @@ class class_terminal {
     // или числовой литерал (1.25e-2, -5, ...).
     static bool parse_if_operand(const char*& p, double& out);
     static bool parse_if_condition(const char*& p, bool& condition);
+    static u8 parse_if_reference(const char*& p);
+    static bool read_if_reference(u8 reference, double& out);
+    static u8 parse_if_operator(const char*& p);
+    static bool compare_if(u8 operation, double lhs, double rhs);
+    static bool prepare_script_if(const char* line,
+        terminal_script::PreparedIf& out, u8& tail_offset);
+    terminal_script::IfResult evaluate_script_if(
+        const terminal_script::PreparedIf& condition, bool trap_mode);
 
     // if <операнд><op><операнд> <команда> - команда выполняется при истинном
     // условии. В m61-скриптах вместе с "run :метка" даёт условные переходы.

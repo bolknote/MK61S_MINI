@@ -73,12 +73,24 @@ static int manual_open_count = 0;
 static u16 manual_directory = program_store::INVALID_ID;
 static bool manual_paused = false;
 static bool manual_available = true;
+static int open_resolutions = 0, entry_reads = 0;
+static int prepared_attempts = 0, condition_reads = 0;
+static i16 condition_value = 0;
+static std::vector<u16> basic_targets;
+static void (*nested_open_hook)(u16) = nullptr;
+static u16 failed_entry = program_store::INVALID_ID;
+static int failed_entry_reads = 0, failed_relative_lookups = 0;
+static int coerced_directory_reads = 0;
+struct HostPath { u16 directory; std::string path; u16 target; };
+static std::vector<HostPath> host_paths;
 
 namespace program_store {
 
 u32 media_revision() { return media_revision_value; }
 
 bool entry_by_id(u16 id, Entry& out) {
+  ++entry_reads;
+  if(id == failed_entry && failed_entry_reads) { --failed_entry_reads; return false; }
   if(id>=scripts.size()) return false;
   out={}; out.type=scripts[id].type;
   std::strncpy(out.name,scripts[id].name.c_str(),NAME_SIZE-1);
@@ -321,6 +333,54 @@ u8 m61_text_host_open_file(const char* name, u16 directory) {
   return OpenStoredFile(name) ? 0 : 2;
 }
 
+bool m61_text_host_resolve_file(u16 directory, const char* name,
+                               program_store::Entry& out) {
+  ++open_resolutions;
+  if(directory != program_store::ROOT_ID && failed_relative_lookups) {
+    --failed_relative_lookups;
+    return false;
+  }
+  if(directory != program_store::ROOT_ID && coerced_directory_reads) {
+    --coerced_directory_reads;
+    // storage_path's legacy invalid-cwd recovery can succeed at root after
+    // a failed directory-inode read. Its positive result is not a neighbour.
+    directory = program_store::ROOT_ID;
+  }
+  for(const auto& rule : host_paths) {
+    if(rule.directory == directory && rule.path == name)
+      return program_store::entry_by_id(rule.target, out);
+  }
+  for(usize i = 0; i < scripts.size(); ++i) {
+    if(scripts[i].parent_id == directory && scripts[i].name == name)
+      return program_store::entry_by_id((u16)i, out);
+  }
+  // Legacy nested-M61 fixtures intentionally use an abstract global namespace
+  // (their parent ids exist only to exercise binary/font directory context).
+  for(usize i = 0; i < scripts.size(); ++i) {
+    if(scripts[i].type == program_store::ProgramType::MK61 && scripts[i].name == name)
+      return program_store::entry_by_id((u16)i, out);
+  }
+  if(std::strcmp(name, "manual.md") && std::strcmp(name, "STOPPED") &&
+     std::strcmp(name, "UNAVAILABLE")) return false;
+  out = {};
+  out.id = program_store::INVALID_ID;
+  out.parent_id = directory;
+  out.type = program_store::ProgramType::MARKDOWN;
+  std::strncpy(out.name, name, program_store::NAME_SIZE - 1);
+  return true;
+}
+
+u8 m61_text_host_open_entry(const program_store::Entry& entry) {
+  if(entry.type == program_store::ProgramType::TINYBASIC) {
+    basic_targets.push_back(entry.id);
+    if(nested_open_hook) nested_open_hook(entry.id);
+    return 0;
+  }
+  if(entry.id != program_store::INVALID_ID)
+    return m61_text::open_program(entry.id) ? 0 : 2;
+  return m61_text_host_open_file(entry.name, entry.parent_id);
+}
+
 void lcd_std_display_redraw(void) {
   calculator_redraw_count++;
 }
@@ -329,10 +389,33 @@ namespace terminal_script {
 
 void reset(void) {}
 
+// The terminal suite exercises the actual grammar and side effects. This
+// seam supplies a tiny deterministic condition language to test M61's cache,
+// line positions, storage revisions and nested-runtime lifetimes separately.
+bool prepare_if(const char* line, PreparedIf& out, u8& tail) {
+  ++prepared_attempts;
+  int value = 0, offset = 0;
+  if(std::sscanf(line, "if re==%d %n", &value, &offset) != 1 ||
+     !offset || !line[offset] || value < -32768 || value > 32767) return false;
+  out = {(i16)value, 15, 5}; tail = (u8)offset;
+  return true;
+}
+
+IfResult evaluate_if(const PreparedIf& condition, bool) {
+  ++condition_reads;
+  return condition_value == condition.literal ? IfResult::TRUE : IfResult::FALSE;
+}
+
 terminal_protocol::Result execute(const char* line, bool trap_mode) {
   executed_commands++;
   executed_lines.emplace_back(line);
   executed_in_trap.push_back(trap_mode);
+  if(std::strncmp(line, "if ", 3) == 0) {
+    PreparedIf condition = {}; u8 tail = 0;
+    if(!prepare_if(line, condition, tail)) return terminal_protocol::Result::error();
+    return evaluate_if(condition, trap_mode) == IfResult::TRUE
+        ? execute(line + tail, trap_mode) : terminal_protocol::Result::ok();
+  }
   if(std::strcmp(line, "print on") == 0) {
     m61_text::release_display();
     return terminal_protocol::Result::ok();
@@ -419,6 +502,14 @@ static void reset_host(void) {
   manual_directory = program_store::INVALID_ID;
   manual_paused = false;
   manual_available = true;
+  open_resolutions = entry_reads = prepared_attempts = condition_reads = 0;
+  condition_value = 0;
+  basic_targets.clear();
+  nested_open_hook = nullptr;
+  failed_entry = program_store::INVALID_ID;
+  failed_entry_reads = failed_relative_lookups = 0;
+  coerced_directory_reads = 0;
+  host_paths.clear();
   m_IK1302.comma = 0;
 }
 
@@ -712,6 +803,195 @@ static void test_read_window_survives_goto_but_observes_writes(void) {
   for(int i=0;i<4 && m61_text::active();++i)m61_text::service();
   assert(!m61_text::active());
   const auto error=require_error();assert(error.line==302);
+}
+
+static void test_prepared_if_is_live_budgeted_and_lazy(void) {
+  reset_host();
+  add_script("CACHE", ":loop\r\n \tif re==1 open piece.tbi\r\n"
+                      "  if re==2 bad\r\nrun :loop\r\n");
+  scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                     program_store::ProgramType::TINYBASIC});
+  assert(m61_text::load_program("CACHE"));
+  for(int i = 0; i < 32; ++i) {
+    const int before = condition_reads;
+    m61_text::service();
+    assert(condition_reads - before <= 8);
+  }
+  assert(basic_targets.empty() && open_resolutions == 0);
+  condition_value = 1;
+  m61_text::service();
+  assert(!basic_targets.empty());
+  const int before = open_resolutions, metadata_before = entry_reads;
+  for(int i = 0; i < 32; ++i) m61_text::service();
+  assert(basic_targets.size() > 32);
+  for(u16 id : basic_targets) assert(id == 1);
+#if MK61_M61_PREPARED_CACHE
+  assert(open_resolutions == before && entry_reads == metadata_before);
+#else
+  (void)before; (void)metadata_before;
+#endif
+  condition_value = 2;
+  for(int i = 0; i < 4 && m61_text::active(); ++i) m61_text::service();
+  assert(!m61_text::active());
+  assert(require_error().line == 3);
+}
+
+static void test_prepared_open_observes_rename_id_reuse_parent_and_source(void) {
+  reset_host();
+  add_script("CACHE", ":loop\nif re==1 open piece.tbi\nrun :loop\n");
+  scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                     program_store::ProgramType::TINYBASIC});
+  condition_value = 1;
+  assert(m61_text::load_program("CACHE"));
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  assert(!basic_targets.empty() && basic_targets.back() == 1);
+  // The old id can now name a completely different file. Never reuse it.
+  scripts[1].name = "other.tbi";
+  scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                     program_store::ProgramType::TINYBASIC});
+  ++media_revision_value;
+  basic_targets.clear();
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  assert(!basic_targets.empty());
+  for(u16 id : basic_targets) assert(id == 2);
+  // A same-named neighbour takes precedence after moving the caller.
+  scripts[0].parent_id = 100;
+  scripts.push_back({"piece.tbi", "", 100, program_store::ProgramType::TINYBASIC});
+  ++media_revision_value;
+  basic_targets.clear();
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  assert(!basic_targets.empty());
+  for(u16 id : basic_targets) assert(id == 3);
+  scripts[0].parent_id = 200; // no local target: retain the root fallback
+  ++media_revision_value;
+  basic_targets.clear();
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  for(u16 id : basic_targets) assert(id == 2);
+  assert(!basic_targets.empty());
+  scripts[0].source.replace(scripts[0].source.find("==1"), 3, "==9");
+  ++media_revision_value;
+  basic_targets.clear();
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  assert(basic_targets.empty());
+  condition_value = 9;
+  m61_text::service();
+  assert(!basic_targets.empty());
+  // Deletion/type change invalidates a successful OPEN, too; do not cache
+  // negative resolutions and accidentally conceal a mandatory missing file.
+  scripts[2].name = "deleted.tbi";
+  ++media_revision_value;
+  for(int i = 0; i < 8 && m61_text::active(); ++i) m61_text::service();
+  assert(!m61_text::active());
+  assert(require_error().line == 2);
+}
+
+static void test_prepared_line_endings_capacity_and_nested_runtime(void) {
+  for(const std::string& ending : {std::string("\n"), std::string("\r"),
+       std::string("\r\n"), std::string("\0", 1), std::string()}) {
+    reset_host();
+    add_script("END", ":loop\nif re==1 run :loop" + ending);
+    condition_value = 1;
+    assert(m61_text::load_program("END"));
+    for(int i = 0; i < 16; ++i) m61_text::service();
+    condition_value = 0;
+    for(int i = 0; i < 4 && m61_text::active(); ++i) m61_text::service();
+    assert(!m61_text::active());
+    m61_text::Error error = {}; assert(!m61_text::last_error(error));
+  }
+  reset_host();
+  std::string source = ":loop\n";
+  for(int i = 1; i <= 50; ++i) source += "if re==" + std::to_string(i) + " bad\n";
+  source += "if re==99 ret\nrun :loop\n";
+  add_script("FULL", source); // fits a window, not its complete prepared table
+  assert(m61_text::load_program("FULL"));
+  for(int i = 0; i < 128; ++i) m61_text::service();
+  condition_value = 99;
+  for(int i = 0; i < 16 && m61_text::active(); ++i) m61_text::service();
+  assert(!m61_text::active());
+  m61_text::Error error = {}; assert(!m61_text::last_error(error));
+
+  reset_host();
+  add_script("PARENT", ":loop\nif re==1 open CHILD\nrun :loop\n");
+  add_script("CHILD", "wait 500\nret\n");
+  condition_value = 1;
+  assert(m61_text::load_program("PARENT"));
+  for(int i = 0; i < 128; ++i) { fake_millis += 500; m61_text::service(); }
+  assert(m61_text::active() && !m61_text::last_error(error));
+  m61_text::cancel();
+}
+
+static void cancel_during_open(u16) { m61_text::cancel(); }
+
+static void rewrite_during_open(u16) {
+  nested_open_hook = nullptr;
+  scripts[0].source.replace(scripts[0].source.find("==1"), 3, "==2");
+  ++media_revision_value;
+}
+
+static void test_prepared_open_does_not_reuse_runtime_after_call(void) {
+  for(bool cancel : {false, true}) {
+    reset_host();
+    add_script("CALL", ":loop\nif re==1 open piece.tbi\nrun :loop\n");
+    scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                       program_store::ProgramType::TINYBASIC});
+    condition_value = 1;
+    assert(m61_text::load_program("CALL"));
+    for(int i = 0; i < 8; ++i) m61_text::service();
+    const usize count = basic_targets.size();
+    nested_open_hook = cancel ? cancel_during_open : rewrite_during_open;
+    for(int i = 0; i < 16; ++i) m61_text::service();
+    assert(basic_targets.size() == count + 1);
+    assert(m61_text::active() != cancel);
+    m61_text::Error error = {}; assert(!m61_text::last_error(error));
+    m61_text::cancel();
+  }
+}
+
+static void test_prepared_open_does_not_cache_failed_directory_or_lookup(void) {
+  for(int failure = 0; failure < 3; ++failure) {
+    reset_host();
+    add_script("FAULT", ":loop\nif re==1 open piece.tbi\nrun :loop\n", 100);
+    scripts.push_back({"piece.tbi", "", 100, program_store::ProgramType::TINYBASIC});
+    scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                       program_store::ProgramType::TINYBASIC});
+    assert(m61_text::load_program("FAULT"));
+    for(int i = 0; i < 8; ++i) m61_text::service();
+    assert(basic_targets.empty());
+    if(failure == 0) { failed_entry = 0; failed_entry_reads = 1; }
+    else if(failure == 1) failed_relative_lookups = 1;
+    else coerced_directory_reads = 1;
+    condition_value = 1;
+    for(int i = 0; i < 16; ++i) m61_text::service();
+    // The existing permissive lookup can use root for this single failed
+    // read. Without a filesystem mutation, the next call must prefer local.
+    assert(basic_targets.size() > 16 && basic_targets.front() == 2);
+    for(usize i = 1; i < basic_targets.size(); ++i) assert(basic_targets[i] == 1);
+    assert(failed_entry_reads == 0 && failed_relative_lookups == 0 && coerced_directory_reads == 0);
+    m61_text::cancel();
+  }
+}
+
+static void test_prepared_open_keeps_complex_relative_paths_uncached(void) {
+  reset_host();
+  add_script("PATH", ":loop\nif re==1 open folder/piece.tbi\nrun :loop\n", 100);
+  scripts.push_back({"piece.tbi", "", 200, program_store::ProgramType::TINYBASIC});
+  scripts.push_back({"piece.tbi", "", 100, program_store::ProgramType::TINYBASIC});
+  // Relative lookup from /folder normally reaches /folder/folder/piece.
+  // A transient invalid-cwd recovery can instead reach /folder/piece: its
+  // parent even equals the caller's directory, so that check alone is unsafe.
+  host_paths = {{100, "folder/piece.tbi", 1},
+                {program_store::ROOT_ID, "folder/piece.tbi", 2}};
+  assert(m61_text::load_program("PATH"));
+  for(int i = 0; i < 8; ++i) m61_text::service();
+  coerced_directory_reads = 1;
+  condition_value = 1;
+  for(int i = 0; i < 16; ++i) m61_text::service();
+  assert(basic_targets.size() > 16 && basic_targets.front() == 2);
+  for(usize i = 1; i < basic_targets.size(); ++i) assert(basic_targets[i] == 1);
+  const int before = open_resolutions;
+  m61_text::service();
+  assert(open_resolutions > before);
+  m61_text::cancel();
 }
 
 static void test_label_reference_rejects_trailing_tokens(void) {
@@ -1720,6 +2000,12 @@ int main(void) {
   test_line_reader_handles_window_edges_and_mixed_endings();
   test_indexed_loop_is_budgeted_and_uses_block_reads();
   test_read_window_survives_goto_but_observes_writes();
+  test_prepared_if_is_live_budgeted_and_lazy();
+  test_prepared_open_observes_rename_id_reuse_parent_and_source();
+  test_prepared_line_endings_capacity_and_nested_runtime();
+  test_prepared_open_does_not_reuse_runtime_after_call();
+  test_prepared_open_does_not_cache_failed_directory_or_lookup();
+  test_prepared_open_keeps_complex_relative_paths_uncached();
   test_label_reference_rejects_trailing_tokens();
   test_run_waits_and_reports_later_failure();
   test_run_address_waits_and_preserves_default_start();

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compare the real IF operand reader with its frozen string-only predecessor.
 
-The three terminal methods and hexadecimal-digit reader are extracted from
+The terminal operand methods and hexadecimal-digit reader are extracted from
 production. The real core, formatters, numeric fast reader and ring are compiled
 unchanged; only the unrelated terminal class surface is omitted.
 """
@@ -27,6 +27,7 @@ def function(source, marker):
 terminal = (ROOT / 'code/terminal.cpp').read_text()
 production = ''.join(function(terminal, 'class_terminal::' + name + '(')
                      for name in ('operand_delimiter', 'parse_mk_display_value',
+                                  'parse_if_reference', 'read_if_reference',
                                   'parse_if_operand'))
 hexadecimal = function((ROOT / 'code/tools.hpp').read_text(),
                        'isize HexdecimalDigit(')
@@ -49,6 +50,8 @@ class class_terminal {
 public:
  static bool operand_delimiter(char);
  static bool parse_mk_display_value(const char*,double&);
+ static u8 parse_if_reference(const char*&);
+ static bool read_if_reference(u8,double&);
  static bool parse_if_operand(const char*&,double&);
 };
 '''

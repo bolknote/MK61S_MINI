@@ -8,6 +8,7 @@
 #include "stm32_sram_bit_band.hpp"
 #include "terminal_core.hpp"
 #include "terminal_script.hpp"
+#include "terminal_catalog.hpp"
 #include "shared_memory.hpp"
 
 #ifndef M61_TEXT_HOST_TEST
@@ -23,6 +24,9 @@ bool OpenStoredFile(const char* args);
 // Test seam for all three outcomes of a synchronous nested file launch:
 // 0 = opened, 1 = stopped by ESC, 2 = failed.
 u8 m61_text_host_open_file(const char* args, u16 directory);
+bool m61_text_host_resolve_file(u16 directory, const char* path,
+                               program_store::Entry& out);
+u8 m61_text_host_open_entry(const program_store::Entry& entry);
 void hidden_start_loaded_program(u8 address);
 void MK61Emu_ClearCodePage(void);
 void reinit_mk61_calculator_state(void);
@@ -62,6 +66,11 @@ static constexpr u8 SCRIPT_LINE_BUDGET = 8;
 #endif
 static constexpr u16 READ_CACHE_SIZE = MK61_M61_READ_CACHE_BYTES;
 static_assert(READ_CACHE_SIZE > 0 && READ_CACHE_SIZE <= 4096, "M61 read cache size is invalid");
+// Small-window targets keep the original path and do not link this optional
+// accelerator. The cache borrows slack, never reduces the source read window.
+#ifndef MK61_M61_PREPARED_CACHE
+#define MK61_M61_PREPARED_CACHE (MK61_M61_READ_CACHE_BYTES >= 256)
+#endif
 static constexpr u8 MAX_LABELS = 64;
 static constexpr u8 MAX_LABEL_SIZE = 31;
 static constexpr u8 TRAP_ADDRESS_COUNT = (u8) core_61::MAX_PROGRAM_STEP;
@@ -163,6 +172,23 @@ static void release_runtime() {}
 static auto& read_cache() { return runtime_buffers().cache_bytes; }
 static auto& labels() { return runtime_buffers().label_entries; }
 static auto& return_stack() { return runtime_buffers().frames; }
+
+struct PreparedLine {
+  u16 start, next, target;
+  terminal_script::PreparedIf condition;
+  u8 tail_offset, flags;
+};
+static_assert(sizeof(PreparedLine) == 12, "M61 prepared cache entry changed");
+#if MK61_M61_PREPARED_CACHE
+struct PreparedHeader { u16 count, directory; };
+static constexpr u16 PREPARED_END = READ_CACHE_SIZE & ~1U;
+static constexpr u16 DIRECTORY_READY = 0x8000;
+static constexpr u8 LINE_TERMINATED = 0x10;
+// The low nibble is the resolved file type. No hash is used as identity: an
+// entry belongs to an exact source position in a revision-checked window.
+static_assert((u8)program_store::ProgramType::SHEET < LINE_TERMINATED,
+              "prepared OPEN type no longer fits");
+#endif
 
 static RunnerState runner_state = RunnerState::IDLE;
 static ScriptSource script_source = ScriptSource::NONE;
@@ -644,6 +670,41 @@ static void fail_script(const char* message, u16 line) {
 #endif
 }
 
+#if MK61_M61_PREPARED_CACHE
+static bool prepared_space_available() {
+  return read_cache_len && !read_cache_start && read_cache_len == script_len &&
+      read_cache_len + sizeof(PreparedHeader) + sizeof(PreparedLine) <= PREPARED_END;
+}
+
+static PreparedHeader* prepared_header() {
+  if(!prepared_space_available() ||
+     read_cache_revision != program_store::media_revision()) return nullptr;
+  return std::launder(reinterpret_cast<PreparedHeader*>(
+      read_cache() + PREPARED_END - sizeof(PreparedHeader)));
+}
+
+static u8* prepared_slot_storage(u16 index) {
+  return read_cache() + PREPARED_END - sizeof(PreparedHeader) -
+      (index + 1U) * sizeof(PreparedLine);
+}
+
+static PreparedLine* prepared_slot(u16 index) {
+  return std::launder(reinterpret_cast<PreparedLine*>(prepared_slot_storage(index)));
+}
+
+static PreparedLine* find_prepared_line() {
+  const PreparedHeader* header = prepared_header();
+  if(header) {
+    const u16 count = header->count & ~DIRECTORY_READY;
+    for(u16 i = 0; i < count; ++i) {
+      PreparedLine* entry = prepared_slot(i);
+      if(entry->start == script_pos) return entry;
+    }
+  }
+  return nullptr;
+}
+#endif
+
 // Caller checks EOF before asking for a verified window.
 static bool prepare_read_window(void) {
   if(script_source == ScriptSource::STORE) {
@@ -661,6 +722,10 @@ static bool prepare_read_window(void) {
       }
       read_cache_len = got;
       read_cache_revision = revision;
+#if MK61_M61_PREPARED_CACHE
+      if(prepared_space_available())
+        new(read_cache() + PREPARED_END - sizeof(PreparedHeader)) PreparedHeader{};
+#endif
     }
     return true;
   }
@@ -705,6 +770,44 @@ static bool read_next_line(char* line, u16 capacity) {
   line[line_len] = 0;
   return line_len > 0;
 }
+
+#if MK61_M61_PREPARED_CACHE
+static PreparedLine* remember_prepared_line(const char* line, u16 start,
+                                           bool terminated) {
+  PreparedHeader* header = prepared_header();
+  if(!header) return nullptr;
+  const u16 count = header->count & ~DIRECTORY_READY;
+  if(sizeof(PreparedHeader) + (count + 1U) * sizeof(PreparedLine) >
+     (usize)(PREPARED_END - read_cache_len)) return nullptr;
+  PreparedLine prepared = {};
+  const char* command = skip_spaces(line);
+  if(terminal_script::prepare_if(command, prepared.condition, prepared.tail_offset)) {
+    prepared.tail_offset += (u8)(command - line);
+  } else {
+    const char* args = terminal_catalog::open_arguments(command);
+    if(!args || terminal_core::at_end(args)) return nullptr;
+  }
+  prepared.start = start;
+  prepared.next = script_pos;
+  prepared.target = program_store::INVALID_ID;
+  prepared.flags = terminated ? LINE_TERMINATED : 0;
+  PreparedLine* slot = new(prepared_slot_storage(count)) PreparedLine(prepared);
+  ++header->count;
+  return slot;
+}
+
+static void copy_prepared_line(const PreparedLine& entry, u8 offset, char* line) {
+  u16 len = entry.next - entry.start;
+  const u8* source = read_cache() + entry.start;
+  if(entry.flags & LINE_TERMINATED) {
+    --len;
+    if(source[len] == '\n' && len && source[len - 1] == '\r') --len;
+  }
+  len -= offset;
+  memcpy(line, source + offset, len);
+  line[len] = 0;
+}
+#endif
 
 static u32 label_hash(const char* name, usize len) {
   u32 hash = 2166136261UL;
@@ -1389,9 +1492,9 @@ enum class ReferencedOpenResult : u8 {
   FAILED = 2
 };
 
-#ifndef M61_TEXT_HOST_TEST
 static ReferencedOpenResult open_referenced_entry(
     const program_store::Entry& entry) {
+#ifndef M61_TEXT_HOST_TEST
   if(entry.type == program_store::ProgramType::TINYBASIC) {
     const TinyBasicRunStatus status = RunTinyBasicProgramStatus(
         entry.id, TinyBasicRunMode::M61_SCENARIO);
@@ -1422,39 +1525,99 @@ static ReferencedOpenResult open_referenced_entry(
   }
   return OpenStoredEntry(entry) ? ReferencedOpenResult::OPENED
                                 : ReferencedOpenResult::FAILED;
-}
+#else
+  return (ReferencedOpenResult)m61_text_host_open_entry(entry);
 #endif
-
-static u16 current_script_directory(void) {
-  program_store::Entry entry;
-  return script_id != program_store::INVALID_ID &&
-      program_store::entry_by_id(script_id, entry)
-      ? entry.parent_id : program_store::ROOT_ID;
 }
 
-static ReferencedOpenResult open_referenced_file(const char* path) {
+static u16 current_script_directory(bool* resolved = nullptr) {
+#if MK61_M61_PREPARED_CACHE
+  PreparedHeader* header = prepared_header();
+  if(header && (header->count & DIRECTORY_READY)) {
+    if(resolved) *resolved = true;
+    return header->directory;
+  }
+#endif
+  program_store::Entry entry;
+  const bool found = script_id != program_store::INVALID_ID &&
+      program_store::entry_by_id(script_id, entry);
+  if(resolved) *resolved = found;
+  const u16 directory = found ? entry.parent_id : program_store::ROOT_ID;
+#if MK61_M61_PREPARED_CACHE
+  if(header && found) {
+    header->directory = directory;
+    header->count |= DIRECTORY_READY;
+  }
+#endif
+  return directory;
+}
+
+static bool resolve_referenced_file(u16 cwd, const char* path,
+                                    program_store::Entry& entry) {
+#ifndef M61_TEXT_HOST_TEST
+  return storage_path::resolve_file(cwd, path, entry) == storage_path::Status::OK;
+#else
+  return m61_text_host_resolve_file(cwd, path, entry);
+#endif
+}
+
+static ReferencedOpenResult open_referenced_file(const char* path,
+                                               PreparedLine* prepared = nullptr) {
 #ifndef M61_TEXT_HOST_TEST
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPEN);
-  const u16 cwd = current_script_directory();
+#endif
   program_store::Entry entry;
-  if(storage_path::resolve_file(cwd, path, entry) ==
-     storage_path::Status::OK) {
-    return open_referenced_entry(entry);
+#if MK61_M61_PREPARED_CACHE
+  if(prepared && !prepared_header()) prepared = nullptr;
+  if(prepared && prepared->target != program_store::INVALID_ID) {
+    // BASIC consumes only id/type. Other viewers may need the full Entry.
+    entry = {};
+    entry.id = prepared->target;
+    entry.type = (program_store::ProgramType)(prepared->flags & 0x0F);
+    if(entry.type == program_store::ProgramType::TINYBASIC ||
+       program_store::entry_by_id(entry.id, entry))
+      return open_referenced_entry(entry);
   }
+#else
+  (void)prepared;
+#endif
+#if MK61_M61_PREPARED_CACHE
+  bool directory_resolved = false;
+  const u16 cwd = current_script_directory(&directory_resolved);
+#else
+  const u16 cwd = current_script_directory();
+#endif
+#if MK61_M61_PREPARED_CACHE
+  const bool simple = strchr(path, '/') == NULL && strchr(path, '\\') == NULL;
+#endif
+  const bool direct = resolve_referenced_file(cwd, path, entry);
   // Совместимость со старыми сценариями без каталогов: простое имя, которого
   // нет рядом с вызывающим сценарием, всё ещё может обозначать файл в корне.
   // Для явно относительных путей переход к несвязанному объекту запрещён.
-  if(cwd != program_store::ROOT_ID && strchr(path, '/') == NULL &&
-     strchr(path, '\\') == NULL &&
-     storage_path::resolve_file(program_store::ROOT_ID, path, entry) ==
-         storage_path::Status::OK) {
-    return open_referenced_entry(entry);
-  }
-  return ReferencedOpenResult::FAILED;
+  if(!direct &&
+     !(cwd != program_store::ROOT_ID &&
+#if MK61_M61_PREPARED_CACHE
+     simple &&
 #else
-  return (ReferencedOpenResult) m61_text_host_open_file(
-      path, current_script_directory());
+     strchr(path, '/') == NULL && strchr(path, '\\') == NULL &&
 #endif
+     resolve_referenced_file(program_store::ROOT_ID, path, entry))) {
+    return ReferencedOpenResult::FAILED;
+  }
+#if MK61_M61_PREPARED_CACHE
+  // Cache only a positively identified neighbour. The path resolver also has
+  // an invalid-cwd recovery at root: a transient directory read failure can
+  // therefore produce OK for a different base, even without our fallback.
+  // Complex paths and every uncertain/root-fallback result keep ordinary
+  // resolution; never turn a single failed read into a persistent wrong file.
+  if(prepared && directory_resolved && direct && simple && entry.parent_id == cwd) {
+    prepared->target = entry.id;
+    prepared->flags = (prepared->flags & LINE_TERMINATED) | (u8)entry.type;
+  }
+#endif
+  // Do not touch the borrowed cache after launching: a nested script or an
+  // interpreter can replace its window, mutate the FS, or cancel this runner.
+  return open_referenced_entry(entry);
 }
 
 // `open?` is the optional counterpart of the strict `open` command.  It is
@@ -1586,7 +1749,11 @@ bool clear_bindings_and_traps(void) {
 // Вся грамматика команд разбирается терминалом (единый диспетчер интерактивного
 // и скриптового режимов). Сценарию терминал возвращает только действия,
 // влияющие на поток выполнения: run, open, load, переходы по меткам и reinit.
-static bool execute_script_line(const char* raw_line) {
+static bool execute_script_result(const terminal_protocol::Result& result,
+                                  PreparedLine* prepared);
+
+static bool execute_script_line(const char* raw_line,
+                               PreparedLine* prepared = nullptr) {
 #ifndef M61_TEXT_HOST_TEST
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_COMMAND);
 #endif
@@ -1652,6 +1819,11 @@ static bool execute_script_line(const char* raw_line) {
 
   const terminal_protocol::Result result =
       terminal_script::execute(line, trap_context_valid());
+  return execute_script_result(result, prepared);
+}
+
+static bool execute_script_result(const terminal_protocol::Result& result,
+                                  PreparedLine* prepared) {
   switch(result.kind) {
     case terminal_protocol::ResultKind::OK:
       return true;
@@ -1673,7 +1845,7 @@ static bool execute_script_line(const char* raw_line) {
       return false;
     }
     case terminal_protocol::ResultKind::OPEN_FILE:
-      switch(open_referenced_file(result.args)) {
+      switch(open_referenced_file(result.args, prepared)) {
         case ReferencedOpenResult::OPENED:
           return true;
         case ReferencedOpenResult::STOPPED:
@@ -1734,6 +1906,35 @@ static bool execute_script_line(const char* raw_line) {
   }
   return false;
 }
+
+#if MK61_M61_PREPARED_CACHE
+static bool execute_prepared_line(PreparedLine* cached, char* line) {
+#ifndef M61_TEXT_HOST_TEST
+  MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_COMMAND);
+#endif
+  // A returned action can release this runtime. Keep command metadata local,
+  // and never access cached after dispatching the synchronous action.
+  const PreparedLine entry = *cached;
+  script_pos = entry.next;
+  if(entry.flags & LINE_TERMINATED) ++script_line;
+  line_error_message = nullptr;
+  u8 offset = 0;
+  if(entry.condition.operation) {
+    switch(terminal_script::evaluate_if(entry.condition, trap_context_valid())) {
+      case terminal_script::IfResult::FALSE: return true;
+      case terminal_script::IfResult::ERROR:
+        return execute_script_result(terminal_protocol::Result::error(), cached);
+      case terminal_script::IfResult::TRUE: offset = entry.tail_offset; break;
+      case terminal_script::IfResult::FALLBACK:
+        copy_prepared_line(entry, 0, line);
+        return execute_script_line(line, cached);
+    }
+  }
+  copy_prepared_line(entry, offset, line);
+  return execute_script_result(terminal_script::execute(
+      skip_spaces(line), trap_context_valid()), cached);
+}
+#endif
 
 void service(void) {
 #ifndef M61_TEXT_HOST_TEST
@@ -1797,11 +1998,36 @@ void service(void) {
 
     const u16 line_number = script_line;
     char line[MAX_LINE_SIZE + 1];
-    if(!read_next_line(line, sizeof(line))) {
-      fail_script("cannot read script or line is too long", line_number);
-      return;
+    bool executed = false;
+#if MK61_M61_PREPARED_CACHE
+    PreparedLine* cached = nullptr;
+    // A larger source cannot have a prepared table. Keep its ordinary single
+    // window check instead of adding a second refill/revision check per line.
+    if(script_len + sizeof(PreparedHeader) + sizeof(PreparedLine) <= PREPARED_END) {
+      if(!prepare_read_window()) {
+        fail_script("cannot read script or line is too long", line_number);
+        return;
+      }
+      cached = find_prepared_line();
     }
-    if(!execute_script_line(line)) {
+    if(cached) {
+      executed = execute_prepared_line(cached, line);
+    } else {
+      const u16 start = script_pos;
+#endif
+      if(!read_next_line(line, sizeof(line))) {
+        fail_script("cannot read script or line is too long", line_number);
+        return;
+      }
+      PreparedLine* prepared = nullptr;
+#if MK61_M61_PREPARED_CACHE
+      prepared = remember_prepared_line(line, start, script_line != line_number);
+#endif
+      executed = execute_script_line(line, prepared);
+#if MK61_M61_PREPARED_CACHE
+    }
+#endif
+    if(!executed) {
       // A nested call/ret may already have reported the original failure and
       // cleared its frame. Keep that script name, line and diagnostic intact.
       if(!has_error)
