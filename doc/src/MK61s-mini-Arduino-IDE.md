@@ -38,8 +38,13 @@ binary/mk61s-M-mini-v3-lcd1602-a00-f401/
 
 Отдельный `arduino-cli` не требуется. На Windows не нужны Python, нативный
 C++-компилятор, Bash и отдельный `dfu-util`: сборка использует Windows
-PowerShell 5.1, .NET и ARM-инструменты STM32 Core. Для Upload через DFU STM32
-Core использует собственный STM32CubeProgrammer recipe.
+PowerShell 5.1, .NET и ARM-инструменты STM32 Core. Для Upload через DFU отдельно
+установите [STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html)
+с его USB DFU-драйвером. Рецепт STM32 Core вызывает `STM32_Programmer_CLI.exe`:
+он ищется в `PATH` или в стандартном каталоге установки
+`C:\Program Files\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin`.
+Boards Manager устанавливает обёртку STM32Tools, а сам программатор нужен
+отдельно; это описано и в [инструкции STM32duino](https://github.com/stm32duino/Arduino_Core_STM32/wiki/Upload-methods#stm32cubeprogrammer).
 
 ## Установка платы
 
@@ -248,8 +253,9 @@ Windows-сборка кладёт `mk61-system-installer.ps1` рядом с вр
 комплект и копируется вместе с языковыми модулями.
 Arduino IDE 1 также может не раскрыть у вручную установленной платы пути
 `busybox` и `STM32Tools`, унаследованные от STM32 Core. Загрузчик в этом случае
-сам находит установленный Boards Manager пакет в `Arduino15`; устанавливать
-отдельный CubeProgrammer для этого не требуется.
+сам находит установленный Boards Manager пакет в `Arduino15`. Это поиск
+BusyBox и shell-обёртки; сам STM32CubeProgrammer должен быть установлен,
+как описано в разделе зависимостей.
 После обновления исходников повторно установите плату командой
 `tools\mk61-arduino-board.cmd` и перезапустите IDE: старая копия `platform.txt`
 в sketchbook сама не обновится. Команда с `-Check` не ограничивается наличием
