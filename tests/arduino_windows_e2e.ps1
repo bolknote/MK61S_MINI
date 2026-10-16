@@ -31,7 +31,10 @@ function Invoke-TestCommand {
     param([string]$Executable, [string[]]$Arguments, [string]$Log)
     $ErrorActionPreference = 'Continue'
     try {
-        & $Executable @Arguments *> $Log
+        # Out-File's implicit formatter wraps native ErrorRecords on 5.1.
+        # Preserve each original stdout/stderr line for recovery assertions.
+        & $Executable @Arguments 2>&1 | ForEach-Object { $_.ToString() } |
+            Set-Content -LiteralPath $Log -Encoding UTF8
         return $LASTEXITCODE
     } finally { $ErrorActionPreference = 'Stop' }
 }
@@ -236,7 +239,7 @@ try {
                     if ($output -notmatch 'STM32 DFU failed with exit code 7' -or $output -match 'Recovery without reflashing' -or
                         [IO.File]::Exists((Join-Path $env:MK61_E2E_ROOT 'commands.log'))) { throw "CDC continued after failed DFU: $output" }
                 } else {
-                    if ($output -notmatch 'Recovery without reflashing:.*--expect-build' -or
+                    if ($output -notmatch '(?s)Recovery without reflashing:.*--expect-build' -or
                         -not [IO.File]::Exists((Join-Path $env:MK61_E2E_ROOT 'firmware.bin'))) { throw "Fault $case did not reach the intended CDC failure: $output" }
                     $commands = Join-Path $env:MK61_E2E_ROOT 'commands.log'
                     if ($case -in @('wrong-profile', 'wrong-build', 'identity-switch', 'multiple') -and
