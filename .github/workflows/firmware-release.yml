@@ -484,6 +484,27 @@ jobs:
             -File ./tests/firmware_seal_powershell_self_test.ps1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Verify Windows upload test harness before full compilation
+        shell: powershell
+        run: |
+          $ideConfig = Join-Path `
+            (Join-Path $env:USERPROFILE '.arduinoIDE') 'arduino-cli.yaml'
+          $sketchbook = (& arduino-cli --config-file $ideConfig `
+            config get directories.user | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $arduinoData = (& arduino-cli --config-file $ideConfig `
+            config get directories.data | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/arduino_windows_e2e.ps1 -Fixture -FixtureMcu f411 `
+            -Fqbn 'mk61:stm32:mk61_f411:mk61_platform=mini_v2,mk61_display=lcd_a00' `
+            -ConfigFile $ideConfig `
+            -PlatformToolsDirectory (Join-Path $sketchbook `
+              'hardware/mk61/stm32/tools') `
+            -Stm32ToolsDirectory (Join-Path $arduinoData `
+              'packages/STMicroelectronics/tools/STM32Tools/2.4.0')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       # Arduino IDE 2.x and arduino-cli execute the same boards.txt/platform.txt
       # recipes. Deliberately poison Python and MK61_HOST_CXX: this proves that
       # a normal Windows IDE installation needs neither Python nor

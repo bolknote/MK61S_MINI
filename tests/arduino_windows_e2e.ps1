@@ -82,11 +82,15 @@ try {
         $text = 'M8 ' + [char]0x0416 + ' ' + [char]0x2192 + "`n"
         [IO.File]::WriteAllText((Join-Path $system 'HELP0.TXT'), $text, [Text.UTF8Encoding]::new($false))
         $null = New-Mk61TestArduinoBundle $BuildPath $bundle $FixtureMcu -ResidentUsbDisk:($FixtureMcu -eq 'f411')
-        $PlatformToolsDirectory = Join-Path $work 'installed board/tools'
-        [void][IO.Directory]::CreateDirectory($PlatformToolsDirectory)
-        Copy-Item -Path (Join-Path $sourceTools '*.ps1') $PlatformToolsDirectory
-    } elseif (-not $windowsHost -or [string]::IsNullOrEmpty($Fqbn) -or
-        [string]::IsNullOrEmpty($ConfigFile) -or [string]::IsNullOrEmpty($PlatformToolsDirectory)) {
+        if ([string]::IsNullOrEmpty($Fqbn)) {
+            $PlatformToolsDirectory = Join-Path $work 'installed board/tools'
+            [void][IO.Directory]::CreateDirectory($PlatformToolsDirectory)
+            Copy-Item -Path (Join-Path $sourceTools '*.ps1') $PlatformToolsDirectory
+        }
+    }
+    if ((-not $Fixture -or -not [string]::IsNullOrEmpty($Fqbn)) -and
+        (-not $windowsHost -or [string]::IsNullOrEmpty($Fqbn) -or
+        [string]::IsNullOrEmpty($ConfigFile) -or [string]::IsNullOrEmpty($PlatformToolsDirectory))) {
         throw 'Real-build mode requires Windows, the installed board tools, FQBN and IDE config'
     }
     $stages = @(Get-ChildItem -LiteralPath (Join-Path $BuildPath 'mk61-system-apps') -Directory)
@@ -132,7 +136,7 @@ try {
         if (-not [IO.File]::Exists((Join-Path $Stm32ToolsDirectory 'win/busybox.exe'))) { throw 'Missing real STM32Tools BusyBox' }
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType ConsoleApplication `
             -OutputAssembly (Join-Path $bin 'STM32_Programmer_CLI.exe')
-        Add-Type -Path (Join-Path $bin 'STM32_Programmer_CLI.exe')
+        [void][Reflection.Assembly]::LoadFrom((Join-Path $bin 'STM32_Programmer_CLI.exe'))
         foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
             Copy-Item "$env:WINDIR/System32/where.exe" (Join-Path $bin $name)
         }
@@ -152,6 +156,13 @@ try {
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE
     }
     $env:PATH = "$bin$([IO.Path]::PathSeparator)$($env:PATH)"
+    if ($windowsHost) {
+        $resolved = (& $busybox sh -c 'command -v STM32_Programmer_CLI.exe' | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $resolved.Replace('\', '/') -ine
+            (Join-Path $bin 'STM32_Programmer_CLI.exe').Replace('\', '/')) {
+            throw "Refusing to use a non-test programmer: $resolved"
+        }
+    }
     $env:MK61_HOST_CXX = Join-Path $work 'missing-host-cxx.exe'
     $unicodeTemp = Join-Path $work ('Temp ' + [char]0x420 + [char]0x43E + [char]0x43C + [char]0x430 + [char]0x43D)
     [void][IO.Directory]::CreateDirectory($unicodeTemp)
@@ -184,7 +195,7 @@ try {
         try {
             $port = if ($case -in @('multiple', 'normal-auto-port')) { '' } elseif ($case -eq 'invalid-port') { '/dev/wrong' } else { 'COM71' }
             $log = Join-Path $env:MK61_E2E_ROOT 'upload.log'
-            if ($Fixture) {
+            if ([string]::IsNullOrEmpty($Fqbn)) {
                 $argv = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $uploader,
                     '-BuildPath', $BuildPath, '-Project', 'code.ino', '-Bundle', $bundle, '-Profile', $label,
                     '-Mcu', $mcu, '-RequireUsbDisk', $(if ($mcu -eq 'f401') { '1' } else { '0' }),
