@@ -205,6 +205,7 @@ function Get-Mk61Stm32BinaryOption {
 $system = ''
 $residentUploaded = $false
 try {
+    if ($Port -eq 'auto') { $Port = '' }
     if ($Mcu -eq 'f401' -and $RequireUsbDisk -ne '1') {
         Stop-Mk61Upload 'F401 requires System/USBDISK.APP'
     }

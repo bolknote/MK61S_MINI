@@ -206,6 +206,7 @@ try {
                     '-Mcu', $mcu, '-RequireUsbDisk', $(if ($mcu -eq 'f401') { '1' } else { '0' }),
                     '-Busybox', $busybox, '-Stm32Script', $wrapper)
                 if ($port) { $argv += @('-Port', $port) }
+                else { $argv += @('-Port', 'auto') }
                 $code = Invoke-TestCommand $powerShell $argv $log
             } else {
                 $argv = @('--config-file', $ConfigFile, 'upload', '--fqbn', $Fqbn, '--build-path', $BuildPath,

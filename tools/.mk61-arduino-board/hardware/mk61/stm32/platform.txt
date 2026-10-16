@@ -3,8 +3,9 @@ version=1.2.3
 
 # DFU has no serial port before the resident starts. Keep this property
 # defined so Arduino CLI can launch the compound uploader without --port.
+# PowerShell 5.1 drops empty native arguments, so use an explicit sentinel.
 # A port selected in IDE/CLI overrides this default as usual.
-serial.port=
+serial.port=auto
 
 # The rest of platform.txt is inherited from the referenced
 # STMicroelectronics:arduino core. These hooks add MK61s F401/F411 profile
