@@ -72,10 +72,11 @@ require_text "$f401_bundle" 'f401) maximum_flash=262144; product_build=1; requir
 require_text "$f401_bundle" 'seal-firmware.sh" seal --max-size "$maximum_flash"'
 require_text "$f401_bundle" 'seal-firmware-elf.py'
 require_text "$f401_bundle" 'analyze_stack_usage.py'
-require_text "$f401_bundle" 'opt=oslto'
+require_text "$f401_bundle" 'build-standalone.py'
+require_text "$gcc_cmake" 'target_compile_options(user_settings INTERFACE -flto)'
 require_text "$f401_bundle" 'MK61_ENABLE_LOADABLE_MODULES=1'
-require_text "$f401_bundle" 'MK61_EXTERNALIZE_USBDISK=1'
-require_text "$f401_bundle" 'portable-layout.py'
+require_text "$f401_bundle" 'MK61_EXTERNALIZE_USBDISK=$external_usbdisk'
+require_text "$gcc_cmake" 'standalone/resident.ld'
 require_text "$f401_bundle" 'build_system_app_bundle.py'
 if grep -Fq -- '--export-dynamic-symbol-list=' "$f401_bundle" ||
    grep -Fq -- 'system-app-exports.list' "$f401_bundle"; then
@@ -84,14 +85,11 @@ fi
 require_order "$f401_bundle" 'seal-firmware.sh" seal' 'build_system_app_bundle.py'
 
 require_text "$firmware_sh" "RESIDENT_RELEASE_FLAGS='-DMK61_REQUIRE_RESIDENT_CRC=1'"
-require_text "$firmware_sh" 'seal-firmware.sh" seal --max-size 524288'
-require_text "$firmware_sh" 'seal-firmware-elf.py'
+require_text "$firmware_sh" 'tools/build-gcc.cmd'
+require_text "$gcc_ps" 'seal-firmware-elf.ps1'
+require_text "$firmware_ps" 'Invoke-F401GccBundleBuild'
 require_text "$firmware_ps" "ResidentReleaseFlags = '-DMK61_REQUIRE_RESIDENT_CRC=1'"
-require_text "$firmware_ps" "'tools/seal-firmware.ps1'"
-require_text "$firmware_ps" "'-InputFile', \$sourceArtifact, '-MaxSize', '524288'"
 require_text "$firmware_ps" "'tools/build-system-app-bundle.ps1'"
-require_text "$firmware_ps" "'tools/.mk61-gcc/portable-layout.ps1'"
-require_text "$firmware_ps" "'tools/seal-firmware-elf.ps1'"
 
 require_text "$gcc_cmake" 'MK61_REQUIRE_RESIDENT_CRC=${MK61_REQUIRE_RESIDENT_CRC}'
 require_text "$gcc_cmake" 'MK61_REQUIRE_F401_SELECTIVE_O3=1'

@@ -268,26 +268,33 @@ F401, A00/A02, mini V2, Classic V2 и 40th продолжают использо
 на Linux. Если ничего не найдено, меню просит полный путь и сохраняет его в том же
 конфиге.
 
-Для воспроизводимой сборки нужен STM32 Arduino Core `2.12.0`.
-F401/F411 используют собственные драйверы АЦП, SPI1/DMA, LCD и RTC;
-LiquidCrystal и STM32duino RTC для этих сборок не требуются. Для F411 нужен
-`arduino-cli`. Каноническая сборка F401 на Windows и macOS/Linux выполняется
-напрямую через CMake, Ninja и GNU Arm GCC; `arduino-cli` для неё не
-запускается. На macOS/Linux дополнительно нужен `pwsh`, на Windows достаточно
-встроенного Windows PowerShell 5.1.
+Для воспроизводимой сборки F401/F411 используются CMake 3.21+, Ninja и
+GNU Arm GCC `14.2.1-1.1`. Установленный пакет STM32duino, Arduino IDE и
+`arduino-cli` для сборки не нужны. Нужные заголовки CMSIS Core, ST device/LL
+и USB сохранены с лицензиями и SHA256 в `third_party/stm32f4`; все
+компилируемые реализации запуска, драйверов и runtime принадлежат проекту.
 
-Состояние зависимостей видно в пункте «Проверить зависимости». Пункт
-«Установить Arduino-зависимости» использует установленный `arduino-cli` только
-как установщик Core. На Windows для DFU-загрузки пока требуются
-`arduino-cli` и STM32CubeProgrammer; на macOS/Linux загрузка выполняется
-напрямую через `dfu-util`.
+Закреплённый компилятор устанавливается без системных прав в
+`.build/toolchains`:
 
-Оба порта `mk61-firmware` вызывают один F401-бэкенд `tools/build-gcc.cmd`.
-На macOS/Linux нативный host-компилятор C++17 нужен для ZX0-упаковки штатных
-APP; Windows использует встроенный PowerShell/.NET-паковщик, поэтому Python
-для сборки прошивки не требуется. Bash дополнительно требуется только
-при заданном `MK61_APP_MANIFESTS`: этот совместимый путь использует
-`tools/build_f401_bundle.sh` для пользовательских APP.
+```powershell
+pwsh -NoProfile -File tools/install_gcc_dependencies.ps1
+```
+
+На Windows вместо `pwsh` можно использовать встроенный `powershell.exe`.
+На macOS/Linux дополнительно нужны `pwsh`, Python 3 и host-компилятор C++17
+для упаковки APP; обычная Windows-сборка использует PowerShell/.NET и не
+требует Python или host C++. Проверка зависимостей и пункт меню
+«Установить GNU Arm GCC» используют тот же независимый SDK и компилятор.
+
+Оба порта `mk61-firmware` вызывают `tools/build-gcc.cmd` для обоих MCU.
+Путь с `MK61_APP_MANIFESTS` также собирает resident обычным GCC; для
+пользовательских APP ему дополнительно нужны Bash, Python 3 и host C++17.
+
+Загрузка — отдельная операция: Windows DFU пока использует `arduino-cli`,
+recipe установленного STM32 Core и STM32CubeProgrammer; macOS/Linux —
+`dfu-util`. Это не зависимости команды `--build`. Сборка через Arduino IDE
+сохраняется как отдельный совместимый путь и требует её пакета плат.
 
 Есть и неинтерактивный режим:
 
@@ -469,24 +476,34 @@ Python также не нужен.
 Подробная инструкция и диагностика находятся в
 [`MK61s-mini-Arduino-IDE.md`](doc/src/MK61s-mini-Arduino-IDE.md).
 
-#### Канонический F401-бэкенд: GCC без Arduino IDE и arduino-cli
+#### Канонический GCC-бэкенд без установленного STM32duino
 
-Для F401 resident-прошивку и согласованные с ней System APP можно собрать
-обычным GNU Arm GCC:
+Resident-прошивка и согласованные System APP для обоих MCU собираются
+независимым GNU Arm GCC:
 
-```bat
-tools\build-gcc.cmd -Profile mini-v3-a00
+```powershell
+./tools/build-gcc.cmd -Mcu f401 -Profile mini-v3-a00
+./tools/build-gcc.cmd -Mcu f411 -Profile classic-v3
 ```
 
-И `mk61-firmware`, и release CI используют этот скрипт для обычной F401-сборки.
-Сам скрипт не запускает Arduino IDE или `arduino-cli`. Он вызывает CMake и Ninja,
-а те напрямую запускают `arm-none-eabi-gcc/g++` из установленного пакета STM32
-Core. От Arduino-инсталляции используются только файлы STM32 Core `2.12.0`,
-его GNU Arm toolchain и CMSIS. В `PATH` дополнительно нужны CMake 3.21 или новее и
-Ninja. На macOS/Linux для ZX0-паковщика нужен нативный C++17-компилятор
-(`c++`, `clang++` или `g++`; путь задаётся в `MK61_HOST_CXX`) и `pwsh`.
-На Windows хватает встроенного Windows PowerShell 5.1.
+`mk61-firmware` и release CI используют этот же бэкенд. Он вызывает CMake
+и Ninja и проверяет SHA256 заголовков собственного SDK. Установщик
+`tools/install_gcc_dependencies.ps1` скачивает официальный xPack-архив
+из закреплённого lock-файла, проверяет SHA256 до распаковки и версию GCC
+после неё. Офлайн-установка: `-ArchivePath <архив>`.
 
+Для существующего компилятора задайте `MK61_GCC_TOOLCHAIN` или
+`-ToolchainPath` (корень либо `bin`). Без явного пути поиск идёт в
+`.build/toolchains`, затем в `PATH`. Каталоги Arduino не просматриваются.
+[Устройство SDK и результаты проверок](doc/design/STM32-independent-sdk.md).
+Альтернативная проверенная копия заголовков выбирается через
+`MK61_GCC_SDK` или `-SdkPath`.
+
+В `PATH` нужны CMake 3.21+ и Ninja. На macOS/Linux для ZX0-паковщика нужен
+host C++17-компилятор (`c++`, `clang++` или `g++`; путь задаётся в
+`MK61_HOST_CXX`) и `pwsh`. На Windows хватает Windows PowerShell 5.1.
+
+Следующие примеры относятся к F401 (значение `-Mcu` по умолчанию).
 По умолчанию создаются `FOCAL.APP`, `BASIC.APP` и `MARKDOWN.APP`. Например,
 комплект для mini V3 с Markdown, WBMP и CHIP-8 через USB собирается так:
 
@@ -518,7 +535,8 @@ Release CI ограничивает размер такого APP четырьм
 `tools\build-gcc.cmd -Help`; LTO включён по умолчанию и при необходимости
 отключается ключом `-Lto 0`, а `-Clean` пересоздаёт рабочий каталог профиля.
 
-Промежуточный `BuildPath` находится в `.build\gcc\<profile>` и содержит
+Промежуточный `BuildPath` находится в `.build\gcc\<profile>` для F401
+и `.build\gcc-f411\<profile>` для F411 и содержит
 `resident.elf`, `resident.bin`, `resident.hex`, `resident.map` и
 `compile_commands.json` одной сборки. Готовый комплект публикуется в
 `binary\<имя-профиля>\`: resident `.bin`, запечатанный `.elf` и включённые

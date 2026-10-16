@@ -137,7 +137,7 @@ Usage:
   tools/mk61-firmware.cmd --mcu MCU --profile ID --upload
   tools/mk61-firmware.cmd --mcu MCU --profile ID --install-apps
   tools/mk61-firmware.cmd --detect                detect MK61s/STM32 DFU
-  tools/mk61-firmware.cmd --setup                 install pinned Arduino dependencies
+  tools/mk61-firmware.cmd --setup                 install standalone GNU Arm build dependencies
   tools/mk61-firmware.cmd --list-profiles         print supported profiles
   tools/mk61-firmware.cmd --show-config           print saved selection and flags
 
@@ -1853,8 +1853,12 @@ system_apps_enabled() {
 
 f401_gcc_arguments() {
   local requested_profile=${1:-$PROFILE}
+  local product_build=0
+  [ "$MCU" != f401 ] || product_build=1
   printf '%s\n' \
+    -Mcu "$MCU" \
     -Profile "$requested_profile" \
+    -ExternalizeUsbDisk "$(externalize_usbdisk_value)" \
     -Focal "$ENABLE_FOCAL" \
     -Basic "$ENABLE_TINYBASIC" \
     -Wbmp "$ENABLE_WBMP_VIEWER" \
@@ -1873,7 +1877,7 @@ f401_gcc_arguments() {
     -UserExplorer "$ENABLE_USER_EXPLORER" \
     -MathBackend "$MATH_BACKEND" \
     -LocalFloatMath "$APP_LOCAL_FLOAT" \
-    -ProductBuild 1
+    -ProductBuild "$product_build"
 }
 
 f401_gcc_preflight() {
@@ -1884,101 +1888,47 @@ f401_gcc_preflight() {
 }
 
 f401_host_tools_ready() {
-  [ "$MCU" != f401 ] || {
-    if [ -n "${MK61_APP_MANIFESTS:-}" ]; then
-      [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ] &&
-        command_available c++
-    else
-      [ -x "$PROJECT_ROOT/tools/build-gcc.cmd" ] &&
-        command_available pwsh &&
-        f401_gcc_preflight >/dev/null 2>&1
-    fi
-  }
+  [ -x "$PROJECT_ROOT/tools/build-gcc.cmd" ] &&
+    command_available pwsh && f401_gcc_preflight >/dev/null 2>&1 || return 1
+  if [ -n "${MK61_APP_MANIFESTS:-}" ]; then
+    [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ] &&
+      command_available python3 && command_available c++ || return 1
+  fi
 }
 
 build_dependencies_ready() {
-  if [ "$MCU" = f401 ] && [ -z "${MK61_APP_MANIFESTS:-}" ]; then
-    f401_host_tools_ready
-    return
-  fi
-  arduino_core_ready && arduino_libraries_ready && f401_host_tools_ready && \
-    { [ "$MCU" != f411 ] || { command_available python3 && command_available c++; }; }
+  f401_host_tools_ready
 }
 
 dependency_report() {
-  if [ "$MCU" = f401 ] && [ -z "${MK61_APP_MANIFESTS:-}" ]; then
-    if f401_gcc_preflight 2>&1; then
-      printf 'arduino-cli: для сборки F401 не нужен\n'
-    else
-      printf 'F401 direct GCC backend: НЕ ГОТОВ\n'
-    fi
+  if f401_gcc_preflight 2>&1; then
+    printf 'Arduino IDE, CLI и STM32duino: для native-сборки не нужны\n'
   else
-    if command_available "$ARDUINO_CLI"; then
-      printf 'arduino-cli: %s\n' \
-        "$("$ARDUINO_CLI" version 2>/dev/null | head -n 1)"
-    else
-      printf 'arduino-cli: НЕ НАЙДЕН\n'
-    fi
-    if arduino_core_ready; then
-      printf 'STM32 Arduino Core: %s\n' "$STM32_CORE_VERSION"
-    else
-      printf 'STM32 Arduino Core: нужен %s\n' "$STM32_CORE_VERSION"
-    fi
-    if arduino_libraries_ready; then
-      printf 'LiquidCrystal: 1.0.7\nSTM32duino RTC: 1.9.0\n'
-    else
-      printf 'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0\n'
-    fi
-    if [ "$MCU" = f411 ]; then
-      if command_available python3; then
-        printf 'Python 3 (APP builder): %s\n' "$(command -v python3)"
-      else
-        printf 'Python 3 (APP builder): НЕ НАЙДЕН\n'
-      fi
-      if command_available c++; then
-        printf 'Host C++17 compiler: %s\n' "$(command -v c++)"
-      else
-        printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)\n'
-      fi
-    fi
-    if [ "$MCU" = f401 ]; then
-      if [ -x "$PROJECT_ROOT/tools/build_f401_bundle.sh" ]; then
-        printf 'F401 custom APP/ZX0 builder: найден\n'
-      else
-        printf 'F401 custom APP/ZX0 builder: НЕ НАЙДЕН\n'
-      fi
-      if command_available c++; then
-        printf 'Host C++17 compiler: %s\n' \
-          "$(command -v c++ 2>/dev/null || printf '%s' c++)"
-      else
-        printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для custom APP/ZX0)\n'
-      fi
-    fi
+    printf 'Native GCC backend: НЕ ГОТОВ\n'
+  fi
+  if [ -n "${MK61_APP_MANIFESTS:-}" ]; then
+    command_available python3 || printf 'Python 3: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)\n'
+    command_available c++ || printf 'Host C++17 compiler: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)\n'
   fi
   if locate_dfu_util; then
     printf 'DFU uploader: %s\n' "${DFU_CMD[0]}"
   else
-    printf 'DFU uploader: не найден (появится вместе с STM32 Core)\n'
+    printf 'DFU uploader: не найден; установите dfu-util отдельно\n'
   fi
 }
 
 install_dependencies_worker() {
-  "$ARDUINO_CLI" core update-index --additional-urls "$STM32_PACKAGE_URL" || return 1
-  "$ARDUINO_CLI" core install "STMicroelectronics:stm32@$STM32_CORE_VERSION" \
-    --additional-urls "$STM32_PACKAGE_URL" || return 1
-  "$ARDUINO_CLI" lib update-index || return 1
-  "$ARDUINO_CLI" lib install 'LiquidCrystal@1.0.7' || return 1
-  "$ARDUINO_CLI" lib install 'STM32duino RTC@1.9.0'
+  pwsh -NoLogo -NoProfile -File "$PROJECT_ROOT/tools/install_gcc_dependencies.ps1"
 }
 
 install_dependencies() {
-  if ! command_available "$ARDUINO_CLI"; then
-    ui_msg 'Зависимости' 'arduino-cli не найден. Сначала установите Arduino CLI, затем снова запустите это меню.'
+  if ! command_available pwsh; then
+    ui_msg 'Зависимости' 'PowerShell не найден. Установите pwsh для настройки GNU Arm GCC.'
     return 1
   fi
-  if run_with_progress 'Зависимости' 'Устанавливаю Arduino Core и библиотеки' \
+  if run_with_progress 'Зависимости' 'Устанавливаю GNU Arm GCC' \
       "$LAST_LOG" indeterminate install_dependencies_worker; then
-    ui_msg 'Зависимости' 'STM32 Core 2.12.0 и библиотеки установлены.'
+    ui_msg 'Зависимости' 'GNU Arm GCC установлен; SDK включён в проект.'
     return 0
   fi
   ui_log 'Ошибка установки' "$LAST_LOG"
@@ -2275,80 +2225,6 @@ build_system_app_bundle() {
     --catalog-dir "$OUTPUT_DIR/apps/abi6"
 }
 
-prepare_and_compile_f411_worker() {
-  local profile=$1
-  local sketch_dir="$BUILD_ROOT/sketch/$profile/mk61s-M"
-  local build_dir flags signature artifact elf_artifact bundle source_artifact resident_link_flags
-  flags=$(all_compile_flags "$profile") || return 1
-  signature=$(printf '%s\n' "$flags" | cksum | awk '{print $1}')
-  build_dir="$BUILD_ROOT/build/$profile-$signature"
-  bundle=$(profile_bundle_dir "$profile") || return 1
-  artifact="$bundle/$(profile_artifact_name "$profile" f411)"
-  elf_artifact="${artifact%.bin}.elf"
-
-  rm -rf "$BUILD_ROOT/sketch/$profile"
-  mkdir -p "$sketch_dir" "$build_dir" "$OUTPUT_DIR" || return 1
-  cp -R "$PROJECT_ROOT/code/." "$sketch_dir/" || return 1
-
-  resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-  local layout_properties variant_path ld_name portable_linker
-    layout_properties=$("$ARDUINO_CLI" compile \
-      --fqbn "$FQBN_F411" \
-      --build-path "$build_dir/properties-layout" \
-      --show-properties=expanded \
-      "$sketch_dir") || return 1
-    variant_path=$(printf '%s\n' "$layout_properties" | \
-      sed -n 's/^build\.variant\.path=//p' | tr -d '\r')
-    ld_name=$(printf '%s\n' "$layout_properties" | \
-      sed -n 's/^build\.ldscript=//p' | tr -d '\r')
-    [ -n "$variant_path" ] && [ -n "$ld_name" ] && \
-      [ -f "$variant_path/$ld_name" ] || {
-        printf 'Cannot resolve the STM32F411 linker script from Arduino build properties.\n' >&2
-        return 1
-      }
-    # arduino-cli may clean --build-path before the real compile.  Keep the
-    # generated linker script outside that directory so the following link
-    # step cannot delete its own input.
-    mkdir -p "$BUILD_ROOT/linker" || return 1
-    portable_linker="$BUILD_ROOT/linker/$profile-$signature.ld"
-    python3 "$PROJECT_ROOT/tools/.mk61-gcc/portable-layout.py" \
-      "$variant_path/$ld_name" "$portable_linker" || return 1
-  resident_link_flags="$resident_link_flags -Wl,--default-script=$portable_linker"
-
-  "$ARDUINO_CLI" compile \
-    --fqbn "$FQBN_F411" \
-    --build-path "$build_dir" \
-    --build-property "compiler.cpp.extra_flags=$flags" \
-    --build-property "compiler.c.extra_flags=$PLATFORM_RAM_FLAGS" \
-    --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
-    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$PROJECT_ROOT/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
-    --build-property "recipe.hooks.linking.prelink.30.pattern=python3 \"$PROJECT_ROOT/tools/.mk61-gcc/protect-core-lto.py\" \"{build.path}\" \"{build.source.path}\" \"{compiler.path}{compiler.cpp.cmd}\" {compiler.cpp.flags} {build.info.flags} {compiler.cpp.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
-    "$sketch_dir" || return 1
-
-  source_artifact="$build_dir/mk61s-M.ino.bin"
-  [ -s "$source_artifact" ] || {
-    printf 'Build succeeded but %s was not created.\n' "$source_artifact" >&2
-    return 1
-  }
-  "$PROJECT_ROOT/tools/seal-firmware.sh" seal --max-size 524288 \
-    "$source_artifact" || return 1
-  "$PROJECT_ROOT/tools/seal-firmware.sh" check --max-size 524288 \
-    "$source_artifact" || return 1
-  python3 "$PROJECT_ROOT/tools/seal-firmware-elf.py" \
-    --bin "$source_artifact" --elf "$build_dir/mk61s-M.ino.elf" \
-    --compile-commands "$build_dir/compile_commands.json" || return 1
-  build_system_app_bundle "$profile" "$build_dir" "$bundle" || return 1
-  mkdir -p "$bundle" || return 1
-  cp "$source_artifact" "$artifact.tmp" || return 1
-  mv "$artifact.tmp" "$artifact" || return 1
-  cp "$build_dir/mk61s-M.ino.elf" "$elf_artifact.tmp" || return 1
-  mv "$elf_artifact.tmp" "$elf_artifact" || return 1
-  printf '%s\n' "$flags" > "$bundle/build.flags.tmp" || return 1
-  mv "$bundle/build.flags.tmp" "$bundle/build.flags" || return 1
-  printf 'format 1\nabi 6\n' > "$bundle/build.apps.tmp" || return 1
-  mv "$bundle/build.apps.tmp" "$bundle/build.apps"
-}
-
 prepare_and_compile_f401_worker() {
   local profile=$1
   if [ -z "${MK61_APP_MANIFESTS:-}" ]; then
@@ -2356,13 +2232,14 @@ prepare_and_compile_f401_worker() {
     while IFS= read -r argument; do arguments+=("$argument"); done \
       < <(f401_gcc_arguments "$profile")
     "$PROJECT_ROOT/tools/build-gcc.cmd" "${arguments[@]}" \
-      -BuildRoot "$BUILD_ROOT/f401-gcc" \
+      -BuildRoot "$BUILD_ROOT/$MCU-gcc" \
       -OutputDirectory "$OUTPUT_DIR"
     return
   fi
 
   env \
-    MK61_ARDUINO_CLI="$ARDUINO_CLI" \
+    MK61_TARGET_MCU="$MCU" \
+    MK61_EXTERNALIZE_USBDISK="$(externalize_usbdisk_value)" \
     MK61_ENABLE_FOCAL="$ENABLE_FOCAL" \
     MK61_ENABLE_TINYBASIC="$ENABLE_TINYBASIC" \
     MK61_ENABLE_WBMP_VIEWER="$ENABLE_WBMP_VIEWER" \
@@ -2384,16 +2261,12 @@ prepare_and_compile_f401_worker() {
     "$PROJECT_ROOT/tools/build_f401_bundle.sh" \
       --profile "$profile" \
       --output-dir "$OUTPUT_DIR" \
-      --build-root "$BUILD_ROOT/f401-custom/$profile"
+      --build-root "$BUILD_ROOT/$MCU-custom/$profile"
 }
 
 prepare_and_compile_worker() {
   remove_legacy_flat_artifacts "$1" || return 1
-  if [ "$MCU" = f401 ]; then
-    prepare_and_compile_f401_worker "$1"
-  else
-    prepare_and_compile_f411_worker "$1"
-  fi
+  prepare_and_compile_f401_worker "$1"
 }
 
 expected_system_app_names() {
@@ -2705,7 +2578,7 @@ interactive_main() {
       options  '☑ Ключи компиляции'
       detect   '⌕ Найти устройство'
       deps     '✓ Проверить зависимости'
-      setup    '↓ Установить Arduino-зависимости'
+      setup    '↓ Установить GNU Arm GCC'
       log      '≡ Последний журнал'
       quit     '× Выход'
     )
@@ -2835,11 +2708,11 @@ case "$ACTION" in
   setup)
     INTERACTIVE=0
     select_ui
-    if ! command_available "$ARDUINO_CLI"; then
-      printf 'Error: arduino-cli is not installed.\n' >&2
+    if ! command_available pwsh; then
+      printf 'Error: PowerShell (pwsh) is not installed.\n' >&2
       exit 1
     fi
-    if run_with_progress 'Dependencies' 'Installing Arduino dependencies' "$LAST_LOG" \
+    if run_with_progress 'Dependencies' 'Installing GNU Arm GCC' "$LAST_LOG" \
         indeterminate install_dependencies_worker; then
       dependency_report
     else

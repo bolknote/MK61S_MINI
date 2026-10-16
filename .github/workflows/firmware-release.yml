@@ -27,6 +27,39 @@ jobs:
       - name: Run CI-strict host test suite
         run: tests/run_ci_strict.sh
 
+  native-f411:
+    name: F411 without STM32duino (${{ matrix.profile }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [classic-v3, mini-v3-a00]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Install standalone GNU Arm GCC
+        uses: ./.github/actions/setup-native-gcc
+      - name: Build native firmware
+        run: |
+          python3 tools/.mk61-gcc/build-standalone.py \
+            --profile "${{ matrix.profile }}" --mcu f411 \
+            --build-path ".build/no-arduino/${{ matrix.profile }}"
+          python3 tests/check_standalone_sdk_build.py \
+            ".build/no-arduino/${{ matrix.profile }}/compile_commands.json"
+          python3 tests/check_stm32_standalone_build.py \
+            ".build/no-arduino/${{ matrix.profile }}/compile_commands.json"
+          python3 tests/check_native_runtime_libraries.py \
+            ".build/no-arduino/${{ matrix.profile }}/resident.map" --without-libc
+      - name: Build matching portable System APPs
+        run: |
+          python3 tools/build_system_app_bundle.py \
+            --resident-elf ".build/no-arduino/${{ matrix.profile }}/resident.elf" \
+            --compile-commands ".build/no-arduino/${{ matrix.profile }}/compile_commands.json" \
+            --output-dir ".build/no-arduino/${{ matrix.profile }}/System"
+          python3 tests/check_app_memory_elf.py \
+            --system-dir ".build/no-arduino/${{ matrix.profile }}/System" \
+            ".build/no-arduino/${{ matrix.profile }}/resident.elf"
+
   f401-gcc-platforms:
     name: F401 direct GCC (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -51,12 +84,8 @@ jobs:
           python3 tests/flash_budget_self_test.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Setup Arduino CLI for dependency installation
-        uses: ./.github/actions/setup-arduino-cli
-
-      - name: Install pinned STM32 packages
-        shell: pwsh
-        run: tools/install_arduino_dependencies.ps1
+      - name: Install standalone GNU Arm GCC
+        uses: ./.github/actions/setup-native-gcc
 
       - name: Write full F401 build configuration
         shell: pwsh
@@ -195,6 +224,23 @@ jobs:
           if (Test-Path -LiteralPath (
               Join-Path $bundle 'System/WBMP.APP')) {
             throw 'WBMP.APP must be folded into MARKDOWN.APP'
+          }
+
+      - name: Build F411 through native PowerShell without Python or host C++
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          $env:PATH = "$pythonTrap;$env:PATH"
+          $env:MK61_HOST_CXX = Join-Path $env:RUNNER_TEMP 'missing-host-cxx.exe'
+          & ./tools/build-gcc.cmd -Mcu f411 -Profile classic-v3 `
+            -BuildRoot (Join-Path $env:RUNNER_TEMP 'f411-native') `
+            -OutputDirectory (Join-Path $env:RUNNER_TEMP 'f411-output')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $database = Join-Path $env:RUNNER_TEMP 'f411-native/classic-v3/compile_commands.json'
+          $text = [IO.File]::ReadAllText($database)
+          if ($text -match '(?i)[/\\]Arduino15[/\\]|[/\\]cores[/\\]arduino[/\\]') {
+            throw 'Installed Arduino package entered the F411 native build'
           }
 
   arduino-ide-windows:
@@ -631,37 +677,17 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-  build-release:
-    name: Build firmware
-    needs:
-      - host-tests
-      - f401-gcc-platforms
-      - arduino-ide-windows
+  arduino-compat-linux:
+    name: Optional Arduino recipe compatibility
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Setup Arduino CLI
+      - name: Setup Arduino CLI for compatibility tests
         uses: ./.github/actions/setup-arduino-cli
-
-      - name: Install pinned STM32 packages
+      - name: Install compatibility board package
         shell: pwsh
         run: tools/install_arduino_dependencies.ps1
-
-      # This is the same entry point developers run locally. It compiles all
-      # F411 release/check matrix with warnings-as-errors, checks the
-      # warning allowlist and rejects project-owned pre-setup constructors.
-      - name: Build strict STM32F411 release matrix
-        run: |
-          MK61_F411_BUILD_ROOT="$RUNNER_TEMP/f411-release" \
-          MK61_FIRMWARE_OUTPUT_DIR="$GITHUB_WORKSPACE/firmware" \
-          MK61_FIRMWARE_TAG="${GITHUB_SHA::7}" \
-            tests/run_f411_release_matrix.sh
-
       - name: Verify STM32F411 mixed O3 compatibility
         run: |
           MK61_F411_O3_BUILD_ROOT="$RUNNER_TEMP/f411-o3" \
@@ -677,6 +703,34 @@ jobs:
           MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \
             tests/run_f401_uc1609_compile_check.sh
 
+
+  build-release:
+    name: Build firmware
+    needs:
+      - host-tests
+      - f401-gcc-platforms
+      - native-f411
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install standalone GNU Arm GCC
+        uses: ./.github/actions/setup-native-gcc
+
+      # This is the same entry point developers run locally. It compiles all
+      # F411 release/check matrix with warnings-as-errors, checks the
+      # warning allowlist and rejects project-owned pre-setup constructors.
+      - name: Build strict STM32F411 release matrix
+        run: |
+          MK61_F411_BUILD_ROOT="$RUNNER_TEMP/f411-release" \
+          MK61_FIRMWARE_OUTPUT_DIR="$GITHUB_WORKSPACE/firmware" \
+          MK61_FIRMWARE_TAG="${GITHUB_SHA::7}" \
+            tests/run_f411_release_matrix.sh
+
       - name: Build, verify and package contract-driven F401 matrix
         env:
           MK61_F401_MATRIX_ROOT: ${{ runner.temp }}/f401-release
@@ -690,7 +744,6 @@ jobs:
           test -s firmware/UI_FONT_LICENSES.zip
           python3 tools/release_contract.py aggregate-reports \
             --reports-below "$RUNNER_TEMP/f411-release" \
-            --reports-below "$RUNNER_TEMP/f401-arduino-uc1609" \
             --reports-below "$RUNNER_TEMP/f401-release" \
             --output-prefix firmware/RESOURCE_REPORT
           cd firmware

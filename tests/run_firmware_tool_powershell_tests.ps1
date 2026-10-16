@@ -574,12 +574,12 @@ try {
 
     function Test-CommandAvailable { return $false }
     $missingCliReport = Get-DependencyReport
+    Assert-True ($missingCliReport -notmatch
+        'STM32 Arduino Core: нужен|Библиотеки: нужны') `
+        'native build incorrectly requires an installed board package'
     Assert-True ($missingCliReport -match
-        'STM32 Arduino Core: не проверен \(нужен arduino-cli\)') `
-        'missing Arduino CLI is misreported as a missing STM32 Core'
-    Assert-True ($missingCliReport -match
-        'Библиотеки: не проверены \(нужен arduino-cli\)') `
-        'missing Arduino CLI is misreported as missing Arduino libraries'
+        'APP/ZX0 packer: PowerShell/\.NET') `
+        'native dependency report omits the independent Windows APP packer'
     Assert-True ($missingCliReport -match
         'DFU uploader: .*arduino-cli') `
         'missing Arduino CLI is hidden by an installed CubeProgrammer'

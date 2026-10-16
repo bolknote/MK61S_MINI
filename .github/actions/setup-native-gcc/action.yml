@@ -1,0 +1,10 @@
+name: Setup native GNU Arm GCC
+description: Install pinned GNU Arm GCC without Arduino CLI or STM32duino
+runs:
+  using: composite
+  steps:
+    - name: Install verified GNU Arm toolchain
+      shell: pwsh
+      run: |
+        & ./tools/install_gcc_dependencies.ps1
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

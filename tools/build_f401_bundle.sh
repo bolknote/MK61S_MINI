@@ -6,7 +6,6 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-arduino_cli=${MK61_ARDUINO_CLI:-arduino-cli}
 build_root=${MK61_F401_BUILD_ROOT:-"$root/.build/mk61-f401"}
 output_root=${MK61_OUTPUT_DIR:-"$root/binary"}
 profile=mini-v3-a00
@@ -26,6 +25,7 @@ enable_setup=${MK61_ENABLE_SETUP:-1}
 setup_as_app=${MK61_SETUP_AS_APP:-1}
 explorer_as_app=${MK61_EXPLORER_AS_APP:-1}
 enable_usb_screen=${MK61_ENABLE_USB_SCREEN:-0}
+external_usbdisk=${MK61_EXTERNALIZE_USBDISK:-1}
 enable_extended_font=${MK61_ENABLE_EXTENDED_FONT_SETTINGS:-0}
 enable_user_explorer=${MK61_USER_EXPLORER_SHORTCUT:-1}
 default_math_backend=0
@@ -49,7 +49,6 @@ custom_app_files=()
 custom_app_magics=()
 custom_app_manifest_paths=()
 
-fqbn_resident='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
 
 usage() {
@@ -89,7 +88,7 @@ APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCA
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
 Other overrides:
-  MK61_ARDUINO_CLI, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
+  MK61_GCC_TOOLCHAIN, MK61_GCC_SDK, MK61_F401_BUILD_ROOT, MK61_OUTPUT_DIR,
   MK61_TARGET_MCU=f401 (default) or f411 for an isolated comparison build,
   MK61_APP_MANIFESTS (colon-separated manifest paths)
 
@@ -420,7 +419,6 @@ firmware_name=$(artifact_name "$profile")
 case "$target_mcu" in
   f401) maximum_flash=262144; product_build=1; required_f401_o3=1 ;;
   f411)
-    fqbn_resident=${fqbn_resident/BLACKPILL_F401CC/BLACKPILL_F411CE}
     firmware_name=${firmware_name/-f401./-f411.}
     maximum_flash=524288; product_build=0; required_f401_o3=0
     ;;
@@ -444,7 +442,7 @@ for value in "$enable_focal" "$enable_tinybasic" "$enable_wbmp" \
              "$markdown_as_app" "$chip8_as_app" "$enable_setup" \
              "$setup_as_app" "$explorer_as_app" \
              "$enable_usb_screen" "$enable_extended_font" \
-             "$enable_user_explorer" "$app_local_float" "$resident_language_vm" "$overlay_language_vm" \
+             "$enable_user_explorer" "$external_usbdisk" "$app_local_float" "$resident_language_vm" "$overlay_language_vm" \
              "$cache_density" \
              "$shared_screen_grid" "$screen_buffer_loan"; do
   boolean_valid "$value" || {
@@ -481,12 +479,6 @@ if [ "$compiled_graphics" -eq 0 ] &&
   printf 'Error: WBMP/CHIP-8 requires UC1609 or MK61_ENABLE_USB_SCREEN=1.\n' >&2
   exit 2
 fi
-resident_link_flags='-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-
-command -v "$arduino_cli" >/dev/null 2>&1 || {
-  printf 'Error: arduino-cli is not installed.\n' >&2
-  exit 1
-}
 command -v python3 >/dev/null 2>&1 || {
   printf 'Error: python3 is required for the stack-usage release gate.\n' >&2
   exit 1
@@ -511,7 +503,7 @@ compile_flags="$compile_flags -DMK61_ENABLE_SETUP=$enable_setup"
 compile_flags="$compile_flags -DMK61_SETUP_AS_APP=$setup_as_app"
 compile_flags="$compile_flags -DMK61_EXPLORER_AS_APP=$explorer_as_app"
 compile_flags="$compile_flags -DMK61_ENABLE_USB_SCREEN=$enable_usb_screen"
-compile_flags="$compile_flags -DMK61_EXTERNALIZE_USBDISK=1"
+compile_flags="$compile_flags -DMK61_EXTERNALIZE_USBDISK=$external_usbdisk"
 compile_flags="$compile_flags -DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$enable_extended_font"
 compile_flags="$compile_flags -DMK61_USER_EXPLORER_SHORTCUT=$enable_user_explorer"
 compile_flags="$compile_flags -DMK61_MATH_BACKEND=$math_backend"
@@ -545,65 +537,38 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-sketch_dir="$work/sketch/mk61s-M"
 resident_build="$work/resident"
 bundle_stage="$work/bundle"
-mkdir -p "$sketch_dir" "$resident_build" "$bundle_stage"
-cp -R "$root/code/." "$sketch_dir/"
-
-"$arduino_cli" compile --fqbn "$fqbn_resident" \
-  --build-path "$work/properties-layout" --show-properties=expanded \
-  "$sketch_dir" > "$work/layout.properties"
-variant_path=$(sed -n 's/^build\.variant\.path=//p' "$work/layout.properties" | tr -d '\r')
-ld_name=$(sed -n 's/^build\.ldscript=//p' "$work/layout.properties" | tr -d '\r')
-python3 "$root/tools/.mk61-gcc/portable-layout.py" \
-  "$variant_path/$ld_name" "$resident_build/mk61-portable.ld"
-resident_link_flags="$resident_link_flags -Wl,--default-script=$resident_build/mk61-portable.ld"
-
-printf 'Building F401 resident firmware (%s)…\n' "$profile"
-"$arduino_cli" compile \
-  --fqbn "$fqbn_resident" \
-  --build-path "$resident_build" \
-  --build-property "compiler.cpp.extra_flags=$compile_flags" \
-  --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-  --build-property "compiler.c.elf.extra_flags=$resident_link_flags" \
-  --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
-  "$sketch_dir"
-
+mkdir -p "$resident_build" "$bundle_stage"
+native_args=(--profile "$profile" --mcu "$target_mcu"
+             --build-path "$resident_build" --jobs "${MK61_BUILD_JOBS:-4}")
+for definition in $compile_flags; do
+  case "$definition" in
+    -DMK61_*=*) native_args+=(--define "${definition#-D}") ;;
+  esac
+done
+printf 'Building native %s resident firmware (%s)…\n' "$target_mcu" "$profile"
+python3 "$root/tools/.mk61-gcc/build-standalone.py" "${native_args[@]}"
+python3 "$root/tests/check_standalone_sdk_build.py" "$resident_build/compile_commands.json"
 python3 "$root/tests/analyze_stack_usage.py" \
   --compile-commands "$resident_build/compile_commands.json" \
-  --source-root "$resident_build/sketch" --top 3
+  --source-root "$root/code" --top 3
 
-resident_elf="$resident_build/mk61s-M.ino.elf"
-resident_bin="$resident_build/mk61s-M.ino.bin"
-if [ ! -s "$resident_elf" ] || [ ! -s "$resident_bin" ]; then
-  printf 'Error: Arduino build did not create resident ELF and BIN files.\n' >&2
-  exit 1
-fi
+resident_elf="$resident_build/resident.elf"
+resident_bin="$resident_build/resident.bin"
 "$root/tools/seal-firmware.sh" seal --max-size "$maximum_flash" "$resident_bin"
 "$root/tools/seal-firmware.sh" check --max-size "$maximum_flash" "$resident_bin"
-
-compiler=
-compiler_path=$(sed -n 's/^compiler\.path=//p' "$work/layout.properties" | head -n 1)
-compiler_cpp=$(sed -n 's/^compiler\.cpp\.cmd=//p' "$work/layout.properties" | head -n 1)
-compiler_path=${compiler_path%$'\r'}
-compiler_cpp=${compiler_cpp%$'\r'}
-if [ -z "$compiler_path" ] || [ -z "$compiler_cpp" ]; then
-  printf 'Error: cannot resolve the STM32 ARM compiler from Arduino properties.\n' >&2
-  exit 1
-fi
-compiler=$(normalize_host_path "$compiler_path$compiler_cpp")
-[ -x "$compiler" ] || {
-  printf 'Error: required STM32 compiler is missing: %s\n' "$compiler" >&2
-  exit 1
-}
+compiler=$(python3 - "$resident_build/compile_commands.json" "$root/tools" <<'PYCOMPILER'
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[2])
+from build_system_app_bundle import compiler_from_database
+print(compiler_from_database(Path(sys.argv[1])))
+PYCOMPILER
+)
 objcopy="$(dirname "$compiler")/arm-none-eabi-objcopy"
 python3 "$root/tests/check_usb_cdc_rx_elf.py" "$resident_elf" \
-  --objdump "$(dirname "$compiler")/arm-none-eabi-objdump"
-[ -x "$objcopy" ] || {
-  printf 'Error: required STM32 objcopy is missing: %s\n' "$objcopy" >&2
-  exit 1
-}
+  --compile-commands "$resident_build/compile_commands.json"
 python3 "$root/tools/seal-firmware-elf.py" \
   --bin "$resident_bin" --elf "$resident_elf" --objcopy "$objcopy"
 
@@ -640,7 +605,7 @@ python3 "$root/tools/build_system_app_bundle.py" \
   --markdown "$((enable_markdown * markdown_as_app))" \
   --chip8 "$((enable_chip8 * chip8_as_app))" \
   --setup "$((enable_setup * setup_as_app))" \
-  --usbdisk 1 \
+  --usbdisk "$external_usbdisk" \
   --explorer "$explorer_as_app" \
   --local-float-math "$app_local_float" \
   --focal-trace "$focal_trace" \

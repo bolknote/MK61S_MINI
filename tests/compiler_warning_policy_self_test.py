@@ -44,6 +44,13 @@ class CompilerWarningPolicyTest(unittest.TestCase):
         self.assertEqual(unexpected_warnings(lto, self.commands()), [])
         self.assertEqual(unexpected_warnings(lto, self.commands(('-Os',))), [lto])
 
+    def test_cmake_command_form_preserves_warning_policy(self):
+        lto = 'lto-wrapper: warning: using serial compilation of 12 LTRANS jobs'
+        commands = [{'file': '/project/terminal.cpp',
+                     'command': 'arm-none-eabi-g++ -Os -flto -c terminal.cpp'}]
+        self.assertEqual(unexpected_warnings(lto, commands), [])
+        self.assertEqual(unexpected_warnings(EXPECTED, commands), [EXPECTED])
+
     def test_release_gate_rejects_unfamiliar_tone_notice(self):
         with tempfile.TemporaryDirectory(prefix='mk61-warning-policy-') as temporary:
             root = Path(temporary)

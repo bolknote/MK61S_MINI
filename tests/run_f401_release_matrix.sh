@@ -49,6 +49,7 @@ build_group() {
     MK61_COLOR=never "$root/tools/build-gcc.cmd" \
       -ReleaseCase "$case_id" \
       -Profile "$profile" \
+      -Jobs "${MK61_BUILD_JOBS:-4}" \
       -Focal "$focal" \
       -Basic "$basic" \
       -Wbmp "$wbmp" \
@@ -72,8 +73,22 @@ build_group() {
       -OutputDirectory "$case_output"
 
     local build_path="$case_root/$profile"
+    # ELF gates use the same independent binutils as the actual native build.
+    local tool_bin
+    tool_bin="$(python3 - "$build_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[2])
+from release_contract import discover_binutils
+print(discover_binutils(Path(sys.argv[1]))[1].parent)
+PYTOOLS
+)"
+    export PATH="$tool_bin:$PATH"
     local elf="$build_path/resident.elf"
     [[ -s "$elf" ]] || fail "missing ELF for $case_id"
+    python3 "$root/tests/check_standalone_sdk_build.py" "$build_path/compile_commands.json"
+    python3 "$root/tests/check_stm32_standalone_build.py" "$build_path/compile_commands.json"
+    python3 "$root/tests/check_native_runtime_libraries.py" "$build_path/resident.map" --without-libc
     python3 "$root/tests/check_narrow_stm32_drivers_elf.py" "$elf"
     "$root/tests/check_global_constructors.sh" "$elf"
     if [[ "$product" == 1 ]]; then

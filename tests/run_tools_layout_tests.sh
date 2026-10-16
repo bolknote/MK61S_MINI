@@ -27,6 +27,7 @@ expected="$(
     generate_highnoon_font.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
+    install_gcc_dependencies.ps1 \
     language_vm_cache_replay.cpp \
     language_vm_cache_codec_probe.cpp \
     language_vm_mixed_cache_replay.cpp \

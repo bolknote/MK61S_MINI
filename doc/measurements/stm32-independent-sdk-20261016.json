@@ -1,0 +1,251 @@
+{
+  "schema": 1,
+  "date": "2026-10-16",
+  "branch": "feature/stm32-independent-sdk",
+  "base_commit": "7f3bf6f5856d9abacc9a5dfeedd9b3d6d6a09ec8",
+  "comparison": "Matched native GCC builds before/after SDK relocation; unchanged compiler/features/epoch",
+  "source_date_epoch": 1791969300,
+  "firmware_sources_changed": false,
+  "sdk": {
+    "headers": 46,
+    "licenses": 5,
+    "files": 51,
+    "bytes": 4172672,
+    "manifest_sha256": "56b76fc74d72b2a5b1a791e76934a1a000b0125cdbbf33dc67bacb91d84e4606",
+    "components": {
+      "cmsis": {
+        "upstream": "https://github.com/ARM-software/CMSIS_6",
+        "revision": "6.2.0",
+        "headers": 6
+      },
+      "device": {
+        "upstream": "https://github.com/STMicroelectronics/cmsis_device_f4",
+        "revision": "snapshot from STM32duino 2.12.0",
+        "headers": 5
+      },
+      "hal": {
+        "upstream": "https://github.com/STMicroelectronics/stm32f4xx_hal_driver",
+        "revision": "snapshot from STM32duino 2.12.0",
+        "headers": 25
+      },
+      "usb": {
+        "upstream": "https://github.com/STMicroelectronics/stm32-mw-usb-device",
+        "revision": "snapshot from STM32duino 2.12.0",
+        "headers": 4
+      },
+      "usb-interface": {
+        "upstream": "https://github.com/stm32duino/Arduino_Core_STM32/tree/2.12.0/libraries/USBDevice/inc",
+        "revision": "2.12.0",
+        "headers": 6
+      }
+    }
+  },
+  "toolchain": {
+    "version": "14.2.1-1.1",
+    "archive_sha256": "f52ea3760c53b25d726a7345be60a210736293db85f92daa39d1d22d34e2c995",
+    "platform": "darwin-arm64"
+  },
+  "isolation": {
+    "platform": "macOS arm64",
+    "denied_read_roots": [
+      "~/Library/Arduino15",
+      "~/.arduino15",
+      "~/Library/Arduino"
+    ],
+    "missing_arduino_cli": true,
+    "poisoned_core_override": true,
+    "compile_database_and_ninja_header_dependencies": "PASS"
+  },
+  "binary_equivalence": {
+    "classic": {
+      "bytes": 375144,
+      "sha256": "2814258bef5fab91bb1cc4fc63cd888e4fbb96da40d2e5576adbd546c5c95c25",
+      "byte_identical": true,
+      "ram_sections": {
+        ".data": 1656,
+        ".bss": 19632,
+        ".noinit": 296
+      },
+      "flash_delta": 0,
+      "ram_delta": 0,
+      "features": {
+        "MK61_ENABLE_FOCAL": "1",
+        "MK61_ENABLE_TINYBASIC": "1",
+        "MK61_ENABLE_WBMP_VIEWER": "0",
+        "MK61_ENABLE_MARKDOWN_VIEWER": "1",
+        "MK61_ENABLE_CHIP8": "1",
+        "MK61_ENABLE_SETUP": "1",
+        "MK61_FOCAL_AS_APP": "1",
+        "MK61_TINYBASIC_AS_APP": "1",
+        "MK61_WBMP_VIEWER_AS_APP": "0",
+        "MK61_MARKDOWN_VIEWER_AS_APP": "0",
+        "MK61_CHIP8_AS_APP": "0",
+        "MK61_SETUP_AS_APP": "0",
+        "MK61_EXPLORER_AS_APP": "0",
+        "MK61_ENABLE_USB_SCREEN": "1",
+        "MK61_EXTERNALIZE_USBDISK": "0",
+        "MK61_WS0010_GRAPHICS_100X16": "0",
+        "MK61_ENABLE_EXTENDED_FONT_SETTINGS": "0",
+        "MK61_USER_EXPLORER_SHORTCUT": "1",
+        "MK61_MATH_BACKEND": "0",
+        "MK61_APP_LOCAL_FLOAT_MATH": "0",
+        "MK61_F401_PRODUCT_BUILD": "0",
+        "MK61_USE_COMPACT_LIBM": "1",
+        "MK61_USE_NATIVE_EABI": "1",
+        "MK61_USE_NATIVE_LIBC": "1",
+        "MK61_REQUIRE_RESIDENT_CRC": "1",
+        "MK61_ENABLE_LTO": "1"
+      },
+      "static_ram_bytes": 21584,
+      "sealed_sha256": "1fdf9a79073de2d8e572ad3c50478fd4e75f0e03533f1b0648a923620230ba55",
+      "sealed_byte_identical": true,
+      "public_frontend_bin_identical": true
+    },
+    "mini": {
+      "bytes": 349216,
+      "sha256": "118dabe67a908ae99d9beb1e5330af8debd49d40f00b5d7013ae9c552bccaacb",
+      "byte_identical": true,
+      "ram_sections": {
+        ".data": 1496,
+        ".bss": 18240,
+        ".noinit": 296
+      },
+      "flash_delta": 0,
+      "ram_delta": 0,
+      "features": {
+        "MK61_ENABLE_FOCAL": "1",
+        "MK61_ENABLE_TINYBASIC": "1",
+        "MK61_ENABLE_WBMP_VIEWER": "0",
+        "MK61_ENABLE_MARKDOWN_VIEWER": "1",
+        "MK61_ENABLE_CHIP8": "1",
+        "MK61_ENABLE_SETUP": "1",
+        "MK61_FOCAL_AS_APP": "1",
+        "MK61_TINYBASIC_AS_APP": "1",
+        "MK61_WBMP_VIEWER_AS_APP": "0",
+        "MK61_MARKDOWN_VIEWER_AS_APP": "0",
+        "MK61_CHIP8_AS_APP": "0",
+        "MK61_SETUP_AS_APP": "0",
+        "MK61_EXPLORER_AS_APP": "0",
+        "MK61_ENABLE_USB_SCREEN": "1",
+        "MK61_EXTERNALIZE_USBDISK": "0",
+        "MK61_WS0010_GRAPHICS_100X16": "0",
+        "MK61_ENABLE_EXTENDED_FONT_SETTINGS": "0",
+        "MK61_USER_EXPLORER_SHORTCUT": "1",
+        "MK61_MATH_BACKEND": "0",
+        "MK61_APP_LOCAL_FLOAT_MATH": "0",
+        "MK61_F401_PRODUCT_BUILD": "0",
+        "MK61_USE_COMPACT_LIBM": "1",
+        "MK61_USE_NATIVE_EABI": "1",
+        "MK61_USE_NATIVE_LIBC": "1",
+        "MK61_REQUIRE_RESIDENT_CRC": "1",
+        "MK61_ENABLE_LTO": "1"
+      },
+      "static_ram_bytes": 20032,
+      "sealed_sha256": "1d641d3073938788c60612bc45bd12e261b9711d0cb65c28d6bf51624ff352cb",
+      "sealed_byte_identical": true
+    },
+    "f401": {
+      "bytes": 235004,
+      "sha256": "2089e4aac7d254ca92c1acd55c7d055fd8c5b00dc14b3aa7a9a08f87e37533ad",
+      "byte_identical": true,
+      "system": {
+        "System/BASIC.APP": {
+          "bytes": 14094,
+          "sha256": "0b20cabc43226df6a5b68be2de717fc10c8f2c26a6545946abbe57f0d47e4e58",
+          "byte_identical": true
+        },
+        "System/EXPLORER.APP": {
+          "bytes": 5738,
+          "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae",
+          "byte_identical": true
+        },
+        "System/FOCAL.APP": {
+          "bytes": 13832,
+          "sha256": "1eb03e8e777f03f1a3079d81015d988a94547c7d99c50b09f98081f6c4a48b21",
+          "byte_identical": true
+        },
+        "System/HELP0.TXT": {
+          "bytes": 2388,
+          "sha256": "2635fb1d12936be95a8f0c56b4cc28f67cf2d2b95e2798c6d2a4e9bdd7496eff",
+          "byte_identical": true
+        },
+        "System/HELP1.TXT": {
+          "bytes": 1836,
+          "sha256": "87b736f758c328c27d43d8270c705026cbbc76a2115109cf295f1caf1fd99bf5",
+          "byte_identical": true
+        },
+        "System/LANGIN.APP": {
+          "bytes": 11873,
+          "sha256": "f6898695bf1bc227fc790f4b27ae8d195a64102e5dbbd3a00a95585b747d094f",
+          "byte_identical": true
+        },
+        "System/LANGVM.APP": {
+          "bytes": 12965,
+          "sha256": "71798daef4b2e8d990fe5cb30218435ca95b80c63da4a2059a45dbe7f4de525a",
+          "byte_identical": true
+        },
+        "System/MARKDOWN.APP": {
+          "bytes": 6565,
+          "sha256": "172030d531a40939dece23387f1f4ca0ef8b4b418a6e33fbc740133c849ee7fa",
+          "byte_identical": true
+        },
+        "System/SETUP.APP": {
+          "bytes": 8063,
+          "sha256": "34cdbe378bbb1198aa30b7b8e410de297d75be5e7b85d077a4eb9f53c5a85cd7",
+          "byte_identical": true
+        },
+        "System/USBDISK.APP": {
+          "bytes": 15301,
+          "sha256": "b93e887be29849ef33707b4bbfbb2ba1d41b46c6d474299153816accbc9b5da9",
+          "byte_identical": true
+        }
+      },
+      "ram_sections": {
+        ".data": 1304,
+        ".bss": 26052,
+        ".noinit": 296
+      },
+      "flash_delta": 0,
+      "ram_delta": 0,
+      "static_ram_bytes": 27652
+    }
+  },
+  "tests": {
+    "native_f411_release": {
+      "status": "PASS",
+      "cases": 16
+    },
+    "native_f411_stop": {
+      "status": "PASS",
+      "cases": 2
+    },
+    "native_f401_product_and_capability": {
+      "status": "PASS",
+      "cases": 9
+    },
+    "custom_hello_app_f401": "PASS",
+    "custom_hello_app_f411": "PASS",
+    "cross_mcu_ws0010_ram": "PASS",
+    "sdk_corruption_paths_toolchain_installer": "PASS",
+    "public_shell_and_powershell_frontends": "PASS",
+    "workflow_yaml": "PASS",
+    "host_ci_strict": {
+      "status": "PASS",
+      "passes": [
+        "Clang 18.1.8 portability",
+        "Apple Clang 21.0.0 ASan + UBSan"
+      ]
+    },
+    "sdk_git_autocrlf_checkout": "PASS",
+    "native_release_case_validation": "PASS",
+    "f401_header_source_archive_gates": {
+      "status": "PASS",
+      "cases": 9
+    }
+  },
+  "qualification_scope": {
+    "local_host": "macOS arm64",
+    "windows_linux_ci_added": true,
+    "hardware_reflash_required_for_sdk_only_change": false
+  }
+}

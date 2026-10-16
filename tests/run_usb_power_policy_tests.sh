@@ -25,10 +25,6 @@ wrappers=(
 )
 builders=(
   "$root/tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt"
-  "$root/tools/.mk61-firmware/mk61-firmware.sh"
-  "$root/tools/.mk61-firmware/mk61-firmware.ps1"
-  "$root/tools/build_f401_bundle.sh"
-  "$root/tests/run_f411_release_matrix.sh"
   "$root/tests/run_f401_uc1609_compile_check.sh"
 )
 for wrapper in "${wrappers[@]}"; do

@@ -3,9 +3,13 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-service-gaps.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
+sanitizer_flags=()
+if [[ "${MK61_TEST_SANITIZERS:-1}" == 1 ]]; then
+  sanitizer_flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+fi
 for detail in 0 1; do
-  clang++ -std=c++17 -Wall -Wextra -Werror -fsanitize=address,undefined \
-    -fno-omit-frame-pointer -DARDUINO_ARCH_STM32 -DMK61_DWT_SERVICE_GAPS=1 \
+  clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
+    -DARDUINO_ARCH_STM32 -DMK61_DWT_SERVICE_GAPS=1 \
     -DMK61_DWT_RUNTIME_DETAIL="$detail" -I"$root/tests/stubs/dwt" -I"$root/code" \
     "$root/tests/dwt_service_gaps_self_test.cpp" "$root/code/dwt_profiler.cpp" \
     -o "$work/probe-$detail"

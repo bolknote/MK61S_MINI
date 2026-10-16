@@ -197,7 +197,7 @@ def validate_contract(raw: Any) -> None:
         require(len(names) == len(set(names)),
                 f"{where}: compiler definition is overridden twice")
 
-        if case["builder"] == "arduino":
+        if case["builder"] == "arduino" or case["mcu"] == "f411":
             require(case.get("optimization") in ("osstd", "oslto"),
                     f"{where}.optimization: expected osstd or oslto")
             if case["mcu"] == "f411" and case["product"]:
@@ -212,7 +212,7 @@ def validate_contract(raw: Any) -> None:
                     or type(expect["ws0010_graphics"]) is bool,
                     f"{where}.expect.ws0010_graphics: expected boolean/null")
             require("features" not in case,
-                    f"{where}: Arduino case must use defines, not features")
+                    f"{where}: define-driven case must use defines, not features")
         else:
             require("optimization" not in case,
                     f"{where}: GCC optimization is controlled by lto feature")
