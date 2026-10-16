@@ -59,18 +59,21 @@ grep -Fq 'usb=CDCgen,opt=oslto' \
 grep -Fq 'usb=CDCgen,opt=oslto' \
   "$root/tools/.mk61-firmware/mk61-firmware.ps1"
 # Every direct Generic STM32 recipe must install the owned USB bridge too.
-for script in "$matrix" "$usb_build" "$o3_build" "$stock_linker_build" \
+for script in "$o3_build" "$stock_linker_build" \
     "$root/tests/run_f401_uc1609_compile_check.sh"; do
   grep -Fq 'protect-usb-lto.py' "$script"
 done
 for script in "$matrix" "$usb_build"; do
-  grep -Fq 'usb=CDCgen,opt=oslto' "$script"
+  grep -Fq 'build-standalone.py' "$script"
   grep -Fq 'check_usb_cdc_rx_elf.py' "$script"
+  grep -Fq 'check_standalone_sdk_build.py' "$script"
 done
 for script in "$matrix" "$usb_build" "$o3_build" \
     "$root/tests/run_f401_uc1609_compile_check.sh"; do
   grep -Fq 'check_compiler_warnings.py' "$script"
-  grep -Fq -- '-Werror -Wno-error=cpp' "$script"
+  if [[ "$script" != "$matrix" && "$script" != "$usb_build" ]]; then
+    grep -Fq -- '-Werror -Wno-error=cpp' "$script"
+  fi
 done
 require_equal f411_comparison_optimization \
   "$(python3 "$contract" case --id f411-lcd1602-a00-no-lto --format tsv | cut -f3)" \
@@ -109,7 +112,7 @@ grep -Fq 'MK61_CORE_HOT_O3 __attribute__((noinline, aligned(16)))' \
   "$hot_core"
 grep -Fq '#ifndef MK61_F401_PRODUCT_BUILD' "$mixed_policy"
 grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$matrix"
-grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$usb_build"
+grep -Fq 'MK61_REQUIRE_F411_SELECTIVE_O3=1' "$root/tools/.mk61-gcc/CMakeLists.txt"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
   "$root/tests/run_f401_uc1609_compile_check.sh"
 grep -Fq 'MK61_REQUIRE_F401_SELECTIVE_O3=1' \
@@ -125,7 +128,7 @@ grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$f401_matrix"
 grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$matrix"
 grep -Fq 'check_no_resident_fmk_decoder_elf.sh' "$o3_build"
 grep -Fq 'portable-layout.py' "$o3_build"
-grep -Fq 'portable-layout.py' "$usb_build"
+grep -Fq 'standalone/resident.ld' "$root/tools/.mk61-gcc/CMakeLists.txt"
 
 # Production STOP is selected by expected behavior in the manifest, not by a
 # second board-definition ladder in shell.

@@ -1,6 +1,8 @@
 # Самостоятельный runtime STM32F401/F411
 
-Работа выполняется тремя измеряемыми этапами при сохранении функций прошивки.
+Ниже зафиксированы три измеряемых этапа переноса runtime.
+Текущая F401/F411-сборка также независима от установленного SDK STM32duino:
+[заголовки, toolchain и проверки](STM32-independent-sdk.md).
 
 ## 1. USB и вывод — выполнено
 
@@ -27,8 +29,8 @@ qualifier исключены. Общий device protocol ST, BOT/SCSI и ран�
 
 CMake собирает собственные SystemInit/SystemClock_Config, SysTick,
 millis/micros/delay, NVIC/PVD и STOP. Arduino Core, variant и реализации HAL
-исключены из объектов. Из установленного SDK остаются startup CMSIS,
-определения устройства, LL USB и пять нужных USB/LL исходников. Заголовки HAL
+исключены из объектов. CMSIS даёт определения ядра и устройства; собственные USB/LL-реализации
+и startup находятся в проекте, а закреплённые заголовки — в native SDK. Заголовки HAL
 дают определения типов и регистров; функции с совместимыми именами HAL
 реализованы в нашем runtime.
 
@@ -40,10 +42,10 @@ python3 tools/.mk61-gcc/build-standalone.py \
 ```
 
 `--define NAME=VALUE` меняет поддерживаемые функции. `--sdk` и `--toolchain`
-задают пути установленного SDK и GNU Arm. Перед установкой resident.bin нужно
+задают пути manifest SDK и независимого GNU Arm. Перед установкой resident.bin нужно
 подписать tools/seal-firmware.sh; ELF и System APP готовятся существующими
-инструментами. Старые Arduino frontend оставлены для совместимости;
-самостоятельный путь F401 использует tools/build-gcc.cmd.
+инструментами. Обычные frontend обоих MCU используют tools/build-gcc.cmd;
+Arduino IDE сохранена как отдельный совместимый путь.
 
 Для сравнения `--reference compile_commands.json` разрешает фактические
 значения config.h исходным препроцессором, включая неявные флаги. Нативный

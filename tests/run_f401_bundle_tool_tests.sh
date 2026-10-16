@@ -118,10 +118,16 @@ test "$status" -eq 2
 grep -Fq 'MK61_LANGUAGE_VM_CACHE_DENSITY:-1' "$tool"
 grep -Fq 'MK61_LANGUAGE_VM_CACHE_DENSITY=$cache_density' "$tool"
 
+if grep -Eq 'arduino_cli|fqbn_resident|layout.properties' "$tool"; then
+  echo 'custom APP builder still depends on an installed board package' >&2
+  exit 1
+fi
+grep -Fq 'build-standalone.py' "$tool"
+
 # Полная ARM-сборка проходит в release matrix. Здесь фиксируем политику
 # общего ABI и независимое размещение SETUP/Explorer.
 grep -Fq 'MK61_ENABLE_LOADABLE_MODULES=1' "$tool"
-grep -Fq 'MK61_EXTERNALIZE_USBDISK=1' "$tool"
+grep -Fq 'MK61_EXTERNALIZE_USBDISK=$external_usbdisk' "$tool"
 grep -Fq 'MK61_ENABLE_SETUP' "$tool"
 grep -Fq 'MK61_SETUP_AS_APP' "$tool"
 grep -Fq 'MK61_EXPLORER_AS_APP' "$tool"

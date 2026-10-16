@@ -3,7 +3,10 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-mixed-cache.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
-flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+flags=()
+if [[ "${MK61_TEST_SANITIZERS:-1}" == 1 ]]; then
+  flags=(-fsanitize=address,undefined -fno-omit-frame-pointer)
+fi
 clang++ -std=c++17 -O1 -g -Wall -Wextra -Werror "${flags[@]}" -I"$root/code" \
   "$root/tests/language_vm_mixed_cache_self_test.cpp" -o "$work/handles"
 "$work/handles"

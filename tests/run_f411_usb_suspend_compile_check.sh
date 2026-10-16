@@ -2,7 +2,6 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-arduino_cli="${MK61_ARDUINO_CLI:-arduino-cli}"
 contract="$root/tools/release_contract.py"
 
 fail() {
@@ -29,26 +28,6 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-sketch="$build_root/mk61s-M"
-mkdir -p "$sketch"
-cp -R "$root/code/." "$sketch/"
-
-fqbn='STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F411CE,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=oslto'
-platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-strict_optimization_flags='-DMK61_REQUIRE_F411_SELECTIVE_O3=1'
-layout_properties="$build_root/layout.properties"
-"$arduino_cli" compile --fqbn "$fqbn" \
-  --build-path "$build_root/properties-layout" \
-  --show-properties=expanded "$sketch" > "$layout_properties"
-variant_path="$(sed -n 's/^build\.variant\.path=//p' "$layout_properties" | tr -d '\r')"
-ld_name="$(sed -n 's/^build\.ldscript=//p' "$layout_properties" | tr -d '\r')"
-[[ -n "$variant_path" && -n "$ld_name" && -f "$variant_path/$ld_name" ]] ||
-  fail 'cannot resolve the STM32F411 linker script'
-portable_linker="$build_root/mk61-portable.ld"
-python3 "$root/tools/.mk61-gcc/portable-layout.py" \
-  "$variant_path/$ld_name" "$portable_linker"
-wrap_flags="-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected -Wl,--default-script=$portable_linker"
-
 compile_profile() {
   local case_id="$1"
   local profile="$2"
@@ -59,64 +38,39 @@ compile_profile() {
   local ram_limit="$7"
   local stack_frame_limit="$8"
   local optimization="$9"
-  local variant_fqbn="${fqbn%opt=*}opt=$optimization"
   local name="${case_id#f411-stop-}"
   local compile_path="$build_root/build-$name"
   local compile_log="$compile_path/compile.log"
   local stack_summary="$compile_path/stack-usage.json"
-  local strict_flags="$board_flags -DMK61_REQUIRE_RESIDENT_CRC=1 $strict_optimization_flags $platform_ram_flags -Werror -Wno-error=cpp"
   mkdir -p "$compile_path"
-
-  printf '\nF411 USB suspend production profile: %s\n' "$name"
-  # Deliberately pass no STOP feature override: both builds must obtain deep
-  # idle, USB preservation and automatic re-entry from production defaults.
-  set +e
-  "$arduino_cli" compile \
-    --warnings all \
-    --fqbn "$variant_fqbn" \
-    --build-path "$compile_path" \
-    --build-property "compiler.cpp.extra_flags=$strict_flags" \
-    --build-property "compiler.c.extra_flags=$platform_ram_flags" \
-    --build-property "compiler.c.elf.extra_flags=$wrap_flags" \
-    --build-property "recipe.hooks.linking.prelink.20.pattern=python3 \"$root/tools/.mk61-gcc/protect-usb-lto.py\" \"{build.path}\" \"{build.core.path}/../../libraries/USBDevice\" \"{compiler.path}{compiler.c.cmd}\" {compiler.c.flags} {build.info.flags} {compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} {build.extra_flags} {compiler.arm.cmsis.c.flags} \"-I{build.core.path}\" \"-I{build.variant.path}\"" \
-    "$sketch" 2>&1 | tee "$compile_log"
-  local pipeline_status=("${PIPESTATUS[@]}")
-  local compile_status=${pipeline_status[0]}
-  local tee_status=${pipeline_status[1]}
-  set -e
-
-  [[ "$compile_status" -eq 0 ]] ||
-    fail "$name compile failed (status $compile_status)"
-  [[ "$tee_status" -eq 0 ]] || fail "$name compile log could not be recorded"
-
+  printf '\nNative F411 USB suspend production profile: %s\n' "$name"
+  # No STOP override: production defaults select deep idle and USB preservation.
+  python3 "$root/tools/.mk61-gcc/build-standalone.py" \
+    --release-case "$case_id" --build-path "$compile_path" \
+    --jobs "${MK61_BUILD_JOBS:-4}" 2>&1 | tee "$compile_log"
+  cp "$compile_path/resident.elf" "$compile_path/mk61s-M.ino.elf"
+  cp "$compile_path/resident.bin" "$compile_path/mk61s-M.ino.bin"
+  local tool_bin
+  tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[2])
+from release_contract import discover_binutils
+print(discover_binutils(Path(sys.argv[1]))[1].parent)
+PYTOOLS
+)"
+  export PATH="$tool_bin:$PATH"
+  python3 "$root/tests/check_standalone_sdk_build.py" "$compile_path/compile_commands.json"
+  python3 "$root/tests/check_stm32_standalone_build.py" "$compile_path/compile_commands.json"
+  python3 "$root/tests/check_native_runtime_libraries.py" "$compile_path/resident.map" --without-libc
   python3 "$root/tests/check_compiler_warnings.py" \
     --log "$compile_log" \
     --compile-commands "$compile_path/compile_commands.json"
 
   python3 "$root/tests/analyze_stack_usage.py" \
     --compile-commands "$compile_path/compile_commands.json" \
-    --source-root "$compile_path/sketch" --top 3 \
+    --source-root "$root/code" --top 3 \
     --max-frame "$stack_frame_limit" --summary-json "$stack_summary"
-
-  local flash_line ram_line flash_used flash_max ram_used ram_max
-  flash_line="$(grep -E '^Sketch uses [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
-    "$compile_log" | tail -n 1)"
-  ram_line="$(grep -E '^Global variables use [0-9]+ bytes .*Maximum is [0-9]+ bytes\.$' \
-    "$compile_log" | tail -n 1)"
-  [[ -n "$flash_line" ]] || fail "$name Flash usage is missing"
-  [[ -n "$ram_line" ]] || fail "$name global RAM usage is missing"
-  flash_used="$(sed -E 's/^Sketch uses ([0-9]+) bytes .*$/\1/' <<<"$flash_line")"
-  flash_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$flash_line")"
-  ram_used="$(sed -E 's/^Global variables use ([0-9]+) bytes .*$/\1/' <<<"$ram_line")"
-  ram_max="$(sed -E 's/^.*Maximum is ([0-9]+) bytes\.$/\1/' <<<"$ram_line")"
-  ((flash_max == flash_capacity)) ||
-    fail "$name Flash capacity differs from contract: $flash_max != $flash_capacity"
-  ((ram_max == ram_capacity)) ||
-    fail "$name RAM capacity differs from contract: $ram_max != $ram_capacity"
-  ((ram_used <= ram_limit)) ||
-    fail "$name static RAM exceeds $ram_limit bytes: $ram_used"
-  printf 'F411 USB suspend %s budgets: Flash %d/%d, RAM %d/%d bytes\n' \
-    "$name" "$flash_used" "$flash_max" "$ram_used" "$ram_max"
 
   local elf="$compile_path/mk61s-M.ino.elf"
   local bin="$compile_path/mk61s-M.ino.bin"

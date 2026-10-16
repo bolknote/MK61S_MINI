@@ -1,19 +1,7 @@
 cmake_minimum_required(VERSION 3.21)
 
-foreach(_mk61_path_variable
-    MK61_PROJECT_ROOT
-    MK61_STM32_CORE
-    MK61_CMSIS_ROOT
-    MK61_CMSIS_DSP_ROOT)
-  if(NOT DEFINED ${_mk61_path_variable} OR
-     NOT IS_DIRECTORY "${${_mk61_path_variable}}")
-    message(FATAL_ERROR
-      "${_mk61_path_variable} must point to an existing directory")
-  endif()
-endforeach()
-
-if(NOT DEFINED MK61_CORE_VERSION OR MK61_CORE_VERSION STREQUAL "")
-  message(FATAL_ERROR "MK61_CORE_VERSION is required")
+if(NOT DEFINED MK61_PROJECT_ROOT OR NOT IS_DIRECTORY "${MK61_PROJECT_ROOT}")
+  message(FATAL_ERROR "MK61_PROJECT_ROOT must point to the project directory")
 endif()
 
 project(mk61s_stm32_gcc LANGUAGES C CXX ASM)
@@ -45,25 +33,7 @@ set(MK61_GLOBAL_RAM_LIMIT "52428" CACHE STRING
 set(MK61_STACK_FRAME_LIMIT "5120" CACHE STRING
   "Maximum project-owned static or bounded-dynamic stack frame")
 file(REAL_PATH "${MK61_PROJECT_ROOT}" MK61_PROJECT_ROOT)
-file(REAL_PATH "${MK61_STM32_CORE}" CORE_PATH)
-file(REAL_PATH "${CORE_PATH}/cores/arduino" BUILD_CORE_PATH)
-file(REAL_PATH "${CORE_PATH}/system" BUILD_SYSTEM_PATH)
-file(REAL_PATH "${CORE_PATH}/libraries" BUILD_LIB_PATH)
-file(REAL_PATH "${MK61_CMSIS_ROOT}" CMSIS6_PATH)
-file(REAL_PATH "${MK61_CMSIS_DSP_ROOT}" CMSIS_DSP_PATH)
-
-if(NOT EXISTS "${CORE_PATH}/platform.txt" OR
-   NOT EXISTS "${CORE_PATH}/cmake/boards_db.cmake")
-  message(FATAL_ERROR
-    "MK61_STM32_CORE is not an STM32 Arduino Core installation")
-endif()
-
-file(READ "${CORE_PATH}/platform.txt" _mk61_platform_text)
-string(REPLACE "." "\\." _mk61_core_version_regex "${MK61_CORE_VERSION}")
-if(NOT _mk61_platform_text MATCHES
-   "(^|\n)version=${_mk61_core_version_regex}(\r?\n|$)")
-  message(FATAL_ERROR "STM32 Arduino Core ${MK61_CORE_VERSION} is required")
-endif()
+include("${CMAKE_CURRENT_SOURCE_DIR}/native-sdk.cmake")
 
 if(NOT DEFINED MK61_USE_COMPACT_LIBM)
   set(MK61_USE_COMPACT_LIBM 1)
@@ -131,8 +101,8 @@ else()
   endif()
 endif()
 
-# The installed package supplies CMSIS device definitions, LL USB and ST USB
-# protocol sources only. No Core, variant, HAL or Arduino library target is built.
+# The pinned project SDK supplies headers only. Every compiled implementation
+# belongs to this project; no external Core, HAL or Arduino library is built.
 set(MK61_TARGET_MCU "f401" CACHE STRING "Qualified STM32 target: f401 or f411")
 if(MK61_TARGET_MCU STREQUAL "f411")
   set(_mk61_device STM32F411xE)
@@ -163,12 +133,15 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/standalone/resident.ld"
 add_library(user_settings INTERFACE)
 target_compile_options(user_settings INTERFACE
   -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+  -Wa,--noexecstack
   ${_mk61_size_option} -ffunction-sections -fdata-sections
   "$<$<COMPILE_LANGUAGE:CXX>:-fno-rtti;-fno-exceptions;-fno-use-cxa-atexit;-fno-threadsafe-statics>"
   "$<$<COMPILE_LANGUAGE:CXX>:--param=max-inline-insns-single=500>")
 target_link_options(user_settings INTERFACE
   -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=hard
   ${_mk61_size_option} -nostartfiles --specs=nano.specs --specs=nosys.specs
+  # GCC LTO assembler outputs must declare a non-executable GNU stack too.
+  -Wa,--noexecstack
   "LINKER:--gc-sections"
   "LINKER:--default-script=${_mk61_portable_ld}"
   "LINKER:--defsym=LD_FLASH_OFFSET=0"
@@ -196,14 +169,12 @@ target_compile_definitions(user_settings INTERFACE
 target_include_directories(user_settings INTERFACE
   "${CMAKE_CURRENT_SOURCE_DIR}/standalone"
   "${MK61_PROJECT_ROOT}/code"
-  "${BUILD_SYSTEM_PATH}/Drivers/STM32F4xx_HAL_Driver/Inc"
-  "${BUILD_SYSTEM_PATH}/Drivers/CMSIS/Device/ST/STM32F4xx/Include"
-  "${CMSIS6_PATH}/CMSIS/Core/Include"
-  "${CMSIS_DSP_PATH}/Include"
-  "${CMSIS_DSP_PATH}/PrivateInclude"
-  "${BUILD_LIB_PATH}/USBDevice/inc"
-  "${BUILD_SYSTEM_PATH}/Middlewares/ST/STM32_USB_Device_Library/Core/Inc"
-  "${BUILD_SYSTEM_PATH}/Middlewares/ST/STM32_USB_Device_Library/Core/Src")
+  "${MK61_SDK_ROOT}/hal/include"
+  "${MK61_SDK_ROOT}/device/include"
+  "${MK61_SDK_ROOT}/cmsis/include"
+  "${MK61_SDK_ROOT}/usb-interface/include"
+  "${MK61_SDK_ROOT}/usb/include")
+
 target_compile_options(user_settings INTERFACE
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_def.h\">"
   "$<$<COMPILE_LANGUAGE:C,CXX>:SHELL:-include \"${MK61_PROJECT_ROOT}/code/stm32f4_usbd_cdc.h\">")

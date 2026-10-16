@@ -1366,7 +1366,9 @@ function Get-F401GccOptionArguments {
         $Profile = 'mini-v3-a00'
     }
     return [string[]]@(
+        '-Mcu', $script:State.Mcu,
         '-Profile', $Profile,
+        '-ExternalizeUsbDisk', [string](Get-ExternalizeUsbDiskValue),
         '-Focal', [string]$script:State.EnableFocal,
         '-Basic', [string]$script:State.EnableTinyBasic,
         '-Wbmp', [string]$script:State.EnableWbmp,
@@ -1385,7 +1387,7 @@ function Get-F401GccOptionArguments {
         '-UserExplorer', [string]$script:State.EnableExplorer,
         '-MathBackend', [string]$script:State.MathBackend,
         '-LocalFloatMath', [string]$script:State.AppLocalFloat,
-        '-ProductBuild', '1')
+        '-ProductBuild', $(if ($script:State.Mcu -eq 'f401') { '1' } else { '0' }))
 }
 
 function Get-F401GccPowerShellArguments {
@@ -1424,129 +1426,45 @@ function Invoke-F401GccPreflight {
 }
 
 function Test-F401HostToolsReady {
-    if ($script:State.Mcu -ne 'f401') { return $true }
+    if (-not (Test-Path -LiteralPath (Get-F401GccBuilderPath) -PathType Leaf) -or
+        (Invoke-F401GccPreflight).ExitCode -ne 0) { return $false }
     if (Test-CustomAppsRequested) {
-        if (-not (Test-Path -LiteralPath (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh') -PathType Leaf)) {
-            return $false
-        }
         $bash = Find-BashExecutable
         if ([string]::IsNullOrEmpty($bash)) { return $false }
-        $result = Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')
+        $result = Invoke-NativeCapture $bash @('-lc',
+            'command -v c++ >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1')
         return $result.ExitCode -eq 0
     }
-    if (-not (Test-Path -LiteralPath (Get-F401GccBuilderPath) `
-            -PathType Leaf)) {
-        return $false
-    }
-    return (Invoke-F401GccPreflight).ExitCode -eq 0
+    return $true
 }
 
 function Test-BuildDependenciesReady {
-    if ($script:State.Mcu -eq 'f401' -and
-        -not (Test-CustomAppsRequested)) {
-        return Test-F401HostToolsReady
-    }
-    $pythonReady = $script:State.Mcu -ne 'f411' -or
-        $script:IsWindowsHost -or $null -ne (Get-Python3Command)
-    $hostCompilerReady = $script:State.Mcu -ne 'f411' -or
-        $script:IsWindowsHost -or
-        (Test-CommandAvailable 'c++')
-    return (Test-ArduinoCoreReady) -and (Test-ArduinoLibrariesReady) -and
-        (Test-F401HostToolsReady) -and $pythonReady -and $hostCompilerReady
+    return Test-F401HostToolsReady
 }
 
 function Get-DependencyReport {
     $lines = New-Object 'System.Collections.Generic.List[string]'
-    $directF401 = $script:State.Mcu -eq 'f401' -and
-        -not (Test-CustomAppsRequested)
-    if ($directF401) {
-        $preflight = Invoke-F401GccPreflight
-        if ($preflight.ExitCode -eq 0) {
-            foreach ($line in @($preflight.Output -split "\r?\n")) {
-                if (-not [string]::IsNullOrWhiteSpace($line)) {
-                    $lines.Add($line.TrimEnd())
-                }
-            }
-            $lines.Add('arduino-cli: для сборки F401 не нужен')
-        } else {
-            $lines.Add('F401 direct GCC backend: НЕ ГОТОВ')
-            foreach ($line in @($preflight.Output -split "\r?\n")) {
-                if (-not [string]::IsNullOrWhiteSpace($line)) {
-                    $lines.Add($line.TrimEnd())
-                }
+    $preflight = Invoke-F401GccPreflight
+    if ($preflight.ExitCode -eq 0) {
+        foreach ($line in @($preflight.Output -split "\r?\n")) {
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                $lines.Add($line.TrimEnd())
             }
         }
+        $lines.Add('Arduino IDE, CLI и STM32duino: для native-сборки не нужны')
     } else {
-        $arduinoCliReady = Test-CommandAvailable $script:ArduinoCli
-        if ($arduinoCliReady) {
-            $version = Invoke-NativeCapture $script:ArduinoCli @('version')
-            $firstLine = @($version.Output -split "\r?\n")[0]
-            $lines.Add("arduino-cli: $firstLine")
-        } else {
-            $lines.Add('arduino-cli: НЕ НАЙДЕН')
-        }
-        if (-not $arduinoCliReady) {
-            $lines.Add('STM32 Arduino Core: не проверен (нужен arduino-cli)')
-            $lines.Add('Библиотеки: не проверены (нужен arduino-cli)')
-        } else {
-            if (Test-ArduinoCoreReady) {
-                $lines.Add("STM32 Arduino Core: $($script:Stm32CoreVersion)")
-            } else {
-                $lines.Add(
-                    "STM32 Arduino Core: нужен $($script:Stm32CoreVersion)")
-            }
-            if (Test-ArduinoLibrariesReady) {
-                $lines.Add('LiquidCrystal: 1.0.7')
-                $lines.Add('STM32duino RTC: 1.9.0')
-            } else {
-                $lines.Add(
-                    'Библиотеки: нужны LiquidCrystal 1.0.7 и STM32duino RTC 1.9.0')
+        $lines.Add('Native GCC backend: НЕ ГОТОВ')
+        foreach ($line in @($preflight.Output -split "\r?\n")) {
+            if (-not [string]::IsNullOrWhiteSpace($line)) {
+                $lines.Add($line.TrimEnd())
             }
         }
-        if ($script:State.Mcu -eq 'f411') {
-            if ($script:IsWindowsHost) {
-                $lines.Add(
-                    'APP/ZX0 packer: PowerShell/.NET ' +
-                    '(Python и host C++ не нужны)')
-            } elseif (Test-CommandAvailable 'c++') {
-                $python = Get-Python3Command
-                if ($null -ne $python) {
-                    $lines.Add("Python 3 (APP builder): $($python.Executable)")
-                } else {
-                    $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
-                }
-                $lines.Add('Host C++17 compiler: найден')
-            } else {
-                $python = Get-Python3Command
-                if ($null -ne $python) {
-                    $lines.Add("Python 3 (APP builder): $($python.Executable)")
-                } else {
-                    $lines.Add('Python 3 (APP builder): НЕ НАЙДЕН')
-                }
-                $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для APP/ZX0)')
-            }
-        }
-        if ($script:State.Mcu -eq 'f401' -and
-            (Test-CustomAppsRequested)) {
-            $builder = Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh'
-            if (Test-Path -LiteralPath $builder -PathType Leaf) {
-                $lines.Add('F401 custom APP/ZX0 builder: найден')
-            } else {
-                $lines.Add('F401 custom APP/ZX0 builder: НЕ НАЙДЕН')
-            }
-            $bash = Find-BashExecutable
-            if ([string]::IsNullOrEmpty($bash)) {
-                $lines.Add('Bash: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)')
-            } else {
-                $lines.Add("Bash: $bash")
-            }
-            if (-not [string]::IsNullOrEmpty($bash) -and
-                (Invoke-NativeCapture $bash @('-lc', 'command -v c++ >/dev/null 2>&1')).ExitCode -eq 0) {
-                $lines.Add('Host C++17 compiler: найден')
-            } else {
-                $lines.Add('Host C++17 compiler: НЕ НАЙДЕН (нужен для MK61_APP_MANIFESTS)')
-            }
-        }
+    }
+    if ($script:IsWindowsHost -and -not (Test-CustomAppsRequested)) {
+        $lines.Add('APP/ZX0 packer: PowerShell/.NET (Python и host C++ не нужны)')
+    }
+    if (Test-CustomAppsRequested) {
+        $lines.Add('Custom APP: native GCC; дополнительно нужны Bash, Python 3 и host C++17')
     }
     if ($script:IsWindowsHost) {
         $arduinoCliReady = Test-CommandAvailable $script:ArduinoCli
@@ -1569,35 +1487,18 @@ function Get-DependencyReport {
 }
 
 function Install-ArduinoDependencies {
-    if (-not (Test-CommandAvailable $script:ArduinoCli)) {
-        if ($script:State.Interactive) {
-            Show-Message 'Зависимости' 'arduino-cli не найден. Сначала установите Arduino CLI, затем снова запустите это меню.'
-        } else { [Console]::Error.WriteLine('Error: arduino-cli is not installed.') }
+    $powerShell = Get-CurrentPowerShellExecutable
+    if ([string]::IsNullOrWhiteSpace($powerShell)) {
+        [Console]::Error.WriteLine('PowerShell 5.1 or newer is required.')
         return $false
     }
-    $logParent = Split-Path -Parent $script:LastLog
-    if (-not [string]::IsNullOrEmpty($logParent)) {
-        [void](New-Item -ItemType Directory -Force -Path $logParent)
+    $arguments = @('-NoLogo','-NoProfile','-File',
+        (Join-Path $script:ProjectRoot 'tools/install_gcc_dependencies.ps1'))
+    $ok = Invoke-ExternalWithProgress 'Зависимости' 'Устанавливаю GNU Arm GCC' $script:LastLog 'indeterminate' $powerShell $arguments
+    if ($ok -and $script:State.Interactive) {
+        Show-Message 'Зависимости' 'GNU Arm GCC установлен; SDK включён в проект.'
     }
-    $steps = @(
-        [pscustomobject]@{ Message = 'Обновляю индекс STM32 Core'; Args = @('core','update-index','--additional-urls',$script:Stm32PackageUrl) }
-        [pscustomobject]@{ Message = 'Устанавливаю STM32 Arduino Core'; Args = @('core','install',"STMicroelectronics:stm32@$($script:Stm32CoreVersion)",'--additional-urls',$script:Stm32PackageUrl) }
-        [pscustomobject]@{ Message = 'Обновляю индекс библиотек'; Args = @('lib','update-index') }
-        [pscustomobject]@{ Message = 'Устанавливаю LiquidCrystal 1.0.7'; Args = @('lib','install','LiquidCrystal@1.0.7') }
-        [pscustomobject]@{ Message = 'Устанавливаю STM32duino RTC 1.9.0'; Args = @('lib','install','STM32duino RTC@1.9.0') }
-    )
-    [IO.File]::WriteAllText($script:LastLog, '', $script:Utf8NoBom)
-    foreach ($step in $steps) {
-        if (-not (Invoke-ExternalWithProgress 'Зависимости' $step.Message $script:LastLog 'indeterminate' `
-            $script:ArduinoCli $step.Args -Append)) {
-            if ($script:State.Interactive) { Show-Log 'Ошибка установки' $script:LastLog }
-            return $false
-        }
-    }
-    if ($script:State.Interactive) {
-        Show-Message 'Зависимости' 'STM32 Core 2.12.0 и библиотеки установлены.'
-    }
-    return $true
+    return $ok
 }
 
 $script:DfuExecutable = ''
@@ -2269,15 +2170,10 @@ function Invoke-F401CustomBundleBuild {
     }
     $builder = Convert-ToBashPath $bash (Join-Path $script:ProjectRoot 'tools/build_f401_bundle.sh')
     $output = Convert-ToBashPath $bash $script:OutputDir
-    $build = Convert-ToBashPath $bash (Join-Path $script:BuildRoot "f401/$Profile")
-    $arduinoForBash = $script:ArduinoCli
-    $resolvedArduino = Resolve-Executable $script:ArduinoCli
-    if (-not [string]::IsNullOrEmpty($resolvedArduino)) {
-        $arduinoForBash = Convert-ToBashPath $bash $resolvedArduino
-    }
-
+    $build = Convert-ToBashPath $bash (Join-Path $script:BuildRoot "$($script:State.Mcu)-custom/$Profile")
     $values = [ordered]@{
-        MK61_ARDUINO_CLI = $arduinoForBash
+        MK61_TARGET_MCU = $script:State.Mcu
+        MK61_EXTERNALIZE_USBDISK = [string](Get-ExternalizeUsbDiskValue)
         MK61_ENABLE_FOCAL = [string]$script:State.EnableFocal
         MK61_ENABLE_TINYBASIC = [string]$script:State.EnableTinyBasic
         MK61_ENABLE_WBMP_VIEWER = [string]$script:State.EnableWbmp
@@ -2332,14 +2228,14 @@ function Invoke-F401GccBundleBuild {
         $builderArguments.Add([string]$argument)
     }
     foreach ($argument in @(
-        '-BuildRoot', (Join-Path $script:BuildRoot 'f401-gcc'),
+        '-BuildRoot', (Join-Path $script:BuildRoot "$($script:State.Mcu)-gcc"),
         '-OutputDirectory', $script:OutputDir
     )) {
         $builderArguments.Add([string]$argument)
     }
     $arguments = Get-F401GccPowerShellArguments `
         $builderArguments.ToArray()
-    return Invoke-ExternalWithProgress 'Прямая GCC-сборка F401' `
+    return Invoke-ExternalWithProgress 'Прямая GCC-сборка' `
         "Собираю GCC resident и System APP: $(Get-ProfileLabel $Profile)" `
         $script:LastLog 'indeterminate' $powerShell $arguments
 }
@@ -2434,263 +2330,39 @@ function Build-Selected {
 
     $profile = $script:State.Profile
     Remove-LegacyFlatArtifacts $profile
-    if ($script:State.Mcu -eq 'f401') {
-        if (-not (Invoke-F401BundleBuild $profile)) {
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $artifact = Get-ProfileArtifactPath $profile
-        if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
-            (Get-Item -LiteralPath $artifact).Length -eq 0) {
-            Write-LastLog "Build succeeded but $artifact was not created." -Append
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-        $bundle = Get-ProfileBundleDir $profile
-        $size = (Get-Item -LiteralPath $artifact).Length
-        $apps = @(Get-ExpectedSystemAppNames)
-        if ($script:State.Interactive) {
-            if ($apps.Count -gt 0) {
-                $appText = $apps -join [Environment]::NewLine
-                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
-            } else {
-                Show-Message 'Комплект F401 собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C6 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
-            }
-        } else {
-            [Console]::WriteLine("Built F401 bundle: $bundle")
-            [Console]::WriteLine("Resident: $artifact ($size bytes)")
-            if ($apps.Count -gt 0) {
-                [Console]::WriteLine('System APP:')
-                foreach ($app in $apps) { [Console]::WriteLine($app) }
-                [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
-            } else {
-                [Console]::WriteLine('All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.')
-            }
-        }
-        return $true
+    if (-not (Invoke-F401BundleBuild $profile)) {
+        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
+        else { Show-LastLogTail }
+        return $false
     }
-
-    $flags = Get-AllCompileFlags $profile
-    $signature = Get-FlagsSignature $flags
-    $sketchProfileRoot = Join-Path $script:BuildRoot "sketch/$profile"
-    $sketchDir = Join-Path $sketchProfileRoot 'mk61s-M'
-    $buildDir = Join-Path $script:BuildRoot "build/$profile-$signature"
     $artifact = Get-ProfileArtifactPath $profile
-    try {
-        if (Test-Path -LiteralPath $sketchProfileRoot) { Remove-Item -LiteralPath $sketchProfileRoot -Recurse -Force }
-        [void](New-Item -ItemType Directory -Force -Path $sketchDir)
-        [void](New-Item -ItemType Directory -Force -Path $buildDir)
-        [void](New-Item -ItemType Directory -Force -Path $script:OutputDir)
-        [void](New-Item -ItemType Directory -Force -Path (
-            Get-ProfileBundleDir $profile))
-        Copy-Item -Path (Join-Path $script:ProjectRoot 'code/*') -Destination $sketchDir -Recurse -Force
-    } catch {
-        Write-LastLog $_.Exception.Message
+    if (-not (Test-Path -LiteralPath $artifact -PathType Leaf) -or
+        (Get-Item -LiteralPath $artifact).Length -eq 0) {
+        Write-LastLog "Build succeeded but $artifact was not created." -Append
         if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
         else { Show-LastLogTail }
         return $false
     }
-
-    $residentLinkFlags = '-Wl,--wrap=USBD_CDC_ClearBuffer,--wrap=USBD_LL_SetupStage,--wrap=USBD_LL_Reset,--wrap=USBD_LL_Suspend,--wrap=USBD_LL_Resume,--wrap=USBD_LL_DevConnected,--wrap=USBD_LL_DevDisconnected'
-    $python = $null
-    if (-not $script:IsWindowsHost) {
-        $python = Get-Python3Command
-        if ($null -eq $python) {
-            Write-LastLog 'Python 3 is required to prepare the F411 APP linker script.'
-            if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-            else { Show-LastLogTail }
-            return $false
-        }
-    }
-    $propertiesBuild = Join-Path $buildDir 'properties-layout'
-    [void](New-Item -ItemType Directory -Force -Path $propertiesBuild)
-    $properties = Invoke-NativeCapture $script:ArduinoCli @(
-        'compile', '--fqbn', $script:FqbnF411,
-        '--build-path', $propertiesBuild,
-        '--show-properties=expanded', $sketchDir)
-    if ($properties.ExitCode -ne 0) {
-        Write-LastLog $properties.Output
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-    $variantMatch = [regex]::Match(
-        $properties.Output, '(?m)^build\.variant\.path=(.+?)\r?$')
-    $linkerMatch = [regex]::Match(
-        $properties.Output, '(?m)^build\.ldscript=(.+?)\r?$')
-    if (-not $variantMatch.Success -or -not $linkerMatch.Success) {
-        Write-LastLog 'Cannot resolve the STM32F411 linker script from Arduino build properties.'
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-    $sourceLinker = Join-Path $variantMatch.Groups[1].Value.Trim() `
-        $linkerMatch.Groups[1].Value.Trim()
-    if (-not (Test-Path -LiteralPath $sourceLinker -PathType Leaf)) {
-        Write-LastLog "STM32F411 linker script was not found: $sourceLinker"
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-    $portableLinker = Join-Path $buildDir 'mk61-portable.ld'
-    if ($script:IsWindowsHost) {
-        $powerShell = Get-CurrentPowerShellExecutable
-        $layout = Invoke-NativeCapture $powerShell @(
-            '-NoLogo', '-NoProfile', '-File',
-            (Join-Path $script:ProjectRoot `
-                'tools/.mk61-gcc/portable-layout.ps1'),
-            '-InputFile', $sourceLinker,
-            '-OutputFile', $portableLinker)
-    } else {
-        $pythonArguments = [string[]](
-            @($python.PrefixArguments) +
-            @((Join-Path $script:ProjectRoot `
-                'tools/.mk61-gcc/portable-layout.py'),
-              $sourceLinker, $portableLinker))
-        $layout = Invoke-NativeCapture $python.Executable $pythonArguments
-    }
-    if ($layout.ExitCode -ne 0 -or
-        -not (Test-Path -LiteralPath $portableLinker -PathType Leaf)) {
-        Write-LastLog $layout.Output
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-    $linkerFlagPath = $portableLinker.Replace('\', '/')
-    $residentLinkFlags += " -Wl,--default-script=$linkerFlagPath"
-
-    $usbGuard = Join-Path $script:ProjectRoot 'tools/.mk61-gcc/protect-usb-lto.ps1'
-    $usbGuardRecipe = '"' + (Get-CurrentPowerShellExecutable) + '" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "' +
-        $usbGuard + '" "{build.path}" "{build.core.path}/../../libraries/USBDevice" ' +
-        '"{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {build.info.flags} ' +
-        '{compiler.c.st_extra_flags} {compiler.c.extra_flags} {build.st_extra_flags} ' +
-        '{build.extra_flags} {compiler.arm.cmsis.c.flags} "-I{build.core.path}" "-I{build.variant.path}"'
-
-    $coreGuardRecipe = $usbGuardRecipe.Replace('protect-usb-lto.ps1', 'protect-core-lto.ps1').Replace(
-        '{build.core.path}/../../libraries/USBDevice', '{build.source.path}').Replace(
-        '{compiler.c.cmd}', '{compiler.cpp.cmd}').Replace('{compiler.c.flags}', '{compiler.cpp.flags}').Replace(
-        '{compiler.c.st_extra_flags} ', '').Replace('{compiler.c.extra_flags}', '{compiler.cpp.extra_flags}')
-
-    $arguments = @(
-        'compile', '--fqbn', $script:FqbnF411,
-        '--build-path', $buildDir,
-        '--build-property', "compiler.cpp.extra_flags=$flags",
-        '--build-property', "compiler.c.extra_flags=$script:PlatformRamFlags",
-        '--build-property', "compiler.c.elf.extra_flags=$residentLinkFlags",
-        '--build-property', "recipe.hooks.linking.prelink.20.pattern=$usbGuardRecipe",
-        '--build-property', "recipe.hooks.linking.prelink.30.pattern=$coreGuardRecipe",
-        $sketchDir)
-    if (-not (Invoke-ExternalWithProgress 'Сборка прошивки' "Собираю $(Get-ProfileLabel $profile)" `
-        $script:LastLog 'indeterminate' $script:ArduinoCli $arguments)) {
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-
-    $sourceArtifact = Join-Path $buildDir 'mk61s-M.ino.bin'
-    if (-not (Test-Path -LiteralPath $sourceArtifact -PathType Leaf) -or (Get-Item -LiteralPath $sourceArtifact).Length -eq 0) {
-        Write-LastLog "Build succeeded but $sourceArtifact was not created." -Append
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-
-    $powerShell = Get-CurrentPowerShellExecutable
-    $sealer = Join-Path $script:ProjectRoot 'tools/seal-firmware.ps1'
-    $sealArguments = @(
-        '-NoLogo', '-NoProfile', '-File', $sealer, 'seal',
-        '-InputFile', $sourceArtifact, '-MaxSize', '524288')
-    if (-not (Invoke-ExternalWithProgress 'CRC прошивки' 'Запечатываю resident' `
-        $script:LastLog 'indeterminate' $powerShell $sealArguments -Append)) {
-        if ($script:State.Interactive) { Show-Log 'Ошибка CRC прошивки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-    $checkArguments = @(
-        '-NoLogo', '-NoProfile', '-File', $sealer, 'check',
-        '-InputFile', $sourceArtifact, '-MaxSize', '524288')
-    if (-not (Invoke-ExternalWithProgress 'CRC прошивки' 'Проверяю resident' `
-        $script:LastLog 'indeterminate' $powerShell $checkArguments -Append)) {
-        if ($script:State.Interactive) { Show-Log 'Ошибка CRC прошивки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-
-    $residentElf = Join-Path $buildDir 'mk61s-M.ino.elf'
-    if ($script:IsWindowsHost) {
-        try {
-            $toolchain = Get-ArmToolchainFromDatabase (
-                Join-Path $buildDir 'compile_commands.json')
-            $objcopy = Join-Path $toolchain 'arm-none-eabi-objcopy.exe'
-            if (-not (Test-Path -LiteralPath $objcopy -PathType Leaf)) {
-                throw "ARM objcopy not found: $objcopy"
-            }
-        } catch {
-            Write-LastLog $_.Exception.Message -Append
-            return $false
-        }
-        $elfSealerExecutable = $powerShell
-        $elfSealer = Join-Path $script:ProjectRoot `
-            'tools/seal-firmware-elf.ps1'
-        $elfSealerArguments = @(
-            '-NoLogo', '-NoProfile', '-File', $elfSealer,
-            '-InputFile', $sourceArtifact, '-ElfFile', $residentElf,
-            '-Objcopy', $objcopy, '-MaxSize', '524288')
-    } else {
-        $elfSealerExecutable = $python.Executable
-        $elfSealerArguments = [string[]](
-            @($python.PrefixArguments) + @(
-                (Join-Path $script:ProjectRoot 'tools/seal-firmware-elf.py'),
-                '--bin', $sourceArtifact, '--elf', $residentElf,
-                '--compile-commands',
-                (Join-Path $buildDir 'compile_commands.json')))
-    }
-    if (-not (Invoke-ExternalWithProgress 'ELF прошивки' `
-        'Запечатываю адресный ELF' $script:LastLog 'indeterminate' `
-        $elfSealerExecutable $elfSealerArguments -Append)) {
-        if ($script:State.Interactive) {
-            Show-Log 'Ошибка ELF прошивки' $script:LastLog
-        } else { Show-LastLogTail }
-        return $false
-    }
-
     $bundle = Get-ProfileBundleDir $profile
-    if (-not (Invoke-SystemAppBundleBuild $profile $buildDir $bundle)) {
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки System APP' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-
-    try {
-        Copy-Item -LiteralPath $sourceArtifact -Destination "$artifact.tmp" -Force
-        Move-Item -LiteralPath "$artifact.tmp" -Destination $artifact -Force
-        $elfArtifact = [IO.Path]::ChangeExtension($artifact, '.elf')
-        Copy-Item -LiteralPath $residentElf `
-            -Destination "$elfArtifact.tmp" -Force
-        Move-Item -LiteralPath "$elfArtifact.tmp" `
-            -Destination $elfArtifact -Force
-        $flagsPath = Join-Path $bundle 'build.flags'
-        $appsPath = Join-Path $bundle 'build.apps'
-        [IO.File]::WriteAllText("$flagsPath.tmp", $flags + [Environment]::NewLine, $script:Utf8NoBom)
-        Move-Item -LiteralPath "$flagsPath.tmp" -Destination $flagsPath -Force
-        [IO.File]::WriteAllText("$appsPath.tmp", "format 1`nabi 6`n", $script:Utf8NoBom)
-        Move-Item -LiteralPath "$appsPath.tmp" -Destination $appsPath -Force
-    } catch {
-        Write-LastLog $_.Exception.Message -Append
-        if ($script:State.Interactive) { Show-Log 'Ошибка сборки' $script:LastLog }
-        else { Show-LastLogTail }
-        return $false
-    }
-
     $size = (Get-Item -LiteralPath $artifact).Length
+    $apps = @(Get-ExpectedSystemAppNames)
     if ($script:State.Interactive) {
-        Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
+        if ($apps.Count -gt 0) {
+            $appText = $apps -join [Environment]::NewLine
+            Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`nSystem APP:`n$appText`n`n«Собрать и прошить» установит System автоматически. Для повтора: «Установить System APP»."
+        } else {
+            Show-Message 'Комплект собран' "Профиль: $(Get-ProfileLabel $profile)`n`n$(Get-CompileOptionsDetails)`n`nКомплект: $bundle`nResident: $artifact`nРазмер resident: $size байт`n`nВсе System APP выключены. На чистом C6 второй шаг не требуется; если там остались прежние системные APP, второй шаг удалит только их."
+        }
     } else {
         [Console]::WriteLine("Built $($script:State.Mcu.ToUpperInvariant()) bundle: $bundle")
         [Console]::WriteLine("Resident: $artifact ($size bytes)")
-        [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
+        if ($apps.Count -gt 0) {
+            [Console]::WriteLine('System APP:')
+            foreach ($app in $apps) { [Console]::WriteLine($app) }
+            [Console]::WriteLine('After firmware upload, run --install-apps to synchronize System through CDC.')
+        } else {
+            [Console]::WriteLine('All System APP are disabled; step 2 is only needed to remove previously installed canonical System APP.')
+        }
     }
     return $true
 }
@@ -2793,7 +2465,7 @@ function Wait-ForDfu {
 
 function Ensure-DfuReady {
     if ($script:IsWindowsHost -and -not (Test-CommandAvailable $script:ArduinoCli)) {
-        $message = 'На Windows для сборки и DFU-загрузки нужен arduino-cli.exe.'
+        $message = 'На Windows для DFU-загрузки нужен arduino-cli.exe.'
         Write-LastLog $message
         if ($script:State.Interactive) { Show-Message 'Arduino CLI' $message }
         else { [Console]::Error.WriteLine($message) }
@@ -2938,7 +2610,7 @@ function Get-MainMenuItems {
         [pscustomobject]@{ Tag = 'options'; Label = "$($script:Glyphs.MenuOptions) Ключи компиляции" }
         [pscustomobject]@{ Tag = 'detect'; Label = "$($script:Glyphs.MenuDetect) Найти устройство" }
         [pscustomobject]@{ Tag = 'deps'; Label = "$($script:Glyphs.MenuCheck) Проверить зависимости" }
-        [pscustomobject]@{ Tag = 'setup'; Label = "$($script:Glyphs.MenuInstall) Установить Arduino-зависимости" }
+        [pscustomobject]@{ Tag = 'setup'; Label = "$($script:Glyphs.MenuInstall) Установить GNU Arm GCC" }
         [pscustomobject]@{ Tag = 'log'; Label = "$($script:Glyphs.MenuLog) Последний журнал" }
         [pscustomobject]@{ Tag = 'quit'; Label = "$($script:Glyphs.MenuQuit) Выход" }
     )

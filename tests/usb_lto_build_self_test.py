@@ -96,14 +96,21 @@ class CoreLtoBuildTest(unittest.TestCase):
         self.exercise(powershell=True, fail=True)
         self.exercise(powershell=True, missing=True)
 
-    def test_all_f411_frontends_install_core_hook(self):
-        for name in ('tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt',
-                     'tools/.mk61-firmware/mk61-firmware.sh',
-                     'tools/.mk61-firmware/mk61-firmware.ps1',
-                     'tests/run_f411_release_matrix.sh'):
-            text = (ROOT / name).read_text()
-            self.assertIn('recipe.hooks.linking.prelink.30.pattern', text, name)
-            self.assertIn('protect-core-lto.', text, name)
+    def test_arduino_compatibility_installs_core_hook(self):
+        text = (ROOT / 'tools/.mk61-arduino-board/hardware/mk61/stm32/platform.txt').read_text()
+        self.assertTrue('recipe.hooks.linking.prelink.30.pattern' in text)
+        self.assertTrue('protect-core-lto.' in text)
+
+    def test_native_frontends_use_shared_cmake_barriers(self):
+        cmake = (ROOT / 'tools/.mk61-gcc/CMakeLists.txt').read_text()
+        self.assertRegex(cmake, r'(?s)if\(MK61_TARGET_MCU STREQUAL "f411"\).*?code/mk61emu_core\.cpp.*?COMPILE_OPTIONS "-fno-lto"')
+        for source in ('stm32f4_usbd_core.c', 'stm32f4_usbd_cdc.c'):
+            self.assertRegex(cmake, r'(?s)code/' + source.replace('.', r'\.') + r'.*?COMPILE_OPTIONS "-fno-lto"')
+        for name, destination in (
+                ('tools/.mk61-firmware/mk61-firmware.sh', 'tools/build-gcc.cmd'),
+                ('tools/.mk61-firmware/mk61-firmware.ps1', 'Invoke-F401GccBundleBuild'),
+                ('tests/run_f411_release_matrix.sh', 'build-standalone.py')):
+            self.assertTrue(destination in (ROOT / name).read_text(), name)
 
 
 class UsbLtoBuildTest(unittest.TestCase):

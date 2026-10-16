@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import sys
+from analyze_stack_usage import entry_arguments
 
 
 RTC_WARNING = re.compile(
@@ -21,7 +22,7 @@ def unexpected_warnings(log: str, commands: list[dict]) -> list[str]:
     tone_sources = set()
     lto = False
     for command in commands:
-        arguments = command.get('arguments', [])
+        arguments = entry_arguments(command) if command.get('arguments') or command.get('command') else []
         lto |= any(arg == '-flto' or arg.startswith('-flto=') for arg in arguments)
         source = command.get('file', '').replace('\\', '/')
         if source.endswith(PINNED_TONE_SOURCE) and any(

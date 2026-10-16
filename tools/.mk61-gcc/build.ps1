@@ -2,6 +2,9 @@
 
 [CmdletBinding()]
 param(
+    [ValidateSet('f401', 'f411')]
+    [string]$Mcu = 'f401',
+
     [string]$Profile = 'mini-v3-a00',
 
     [ValidatePattern('^[a-z0-9][a-z0-9-]*$')]
@@ -70,7 +73,10 @@ param(
     [ValidateSet('0', '1')]
     [string]$ProductBuild = '0',
 
+    [string]$SdkPath,
     [string]$CorePath,
+    [ValidateSet('auto', '0', '1')]
+    [string]$ExternalizeUsbDisk = 'auto',
     [string]$ToolchainPath,
     [string]$LibrariesPath,
     [string]$BuildRoot,
@@ -92,14 +98,11 @@ $script:ProjectRoot = [IO.Path]::GetFullPath(
     (Join-Path $script:BackendRoot '../..'))
 $script:Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $script:ReleaseManifest = $null
-$script:CoreVersion = $null
 $script:ToolchainVersion = $null
-$script:CmsisVersion = $null
-$script:CmsisDspVersion = $null
 
 function Show-Usage {
     @'
-Build matched STM32F401 resident firmware and System APP with GNU Arm GCC.
+Build matched STM32F401/F411 firmware and System APP with GNU Arm GCC.
 Arduino IDE and arduino-cli are not invoked.
 
 Usage:
@@ -132,10 +135,12 @@ Firmware options:
   -ProductBuild 0|1 omit qualification-only resident diagnostics; default 0
 
 Paths:
-  -CorePath DIR       pinned STM32 Arduino Core
+  -Mcu f401|f411     default f401
+  -SdkPath DIR        pinned project header SDK (default third_party/stm32f4)
   -ToolchainPath DIR  pinned xPack GNU Arm directory or its bin directory
-  -LibrariesPath DIR  Arduino libraries directory
-  -BuildRoot DIR      default .build\gcc
+  -ExternalizeUsbDisk auto|0|1 (default: 1 on F401, 0 on F411)
+  -CorePath/-LibrariesPath are deprecated, accepted but unused
+  -BuildRoot DIR      default .build\gcc (F401), .build\gcc-f411 (F411)
   -OutputDirectory DIR default binary
 
 Other:
@@ -150,7 +155,7 @@ repository's PowerShell/.NET APP packer and needs neither Python nor host C++.
 Required versions are read from tools/release-contract.json.
 
 Environment overrides:
-  MK61_GCC_CORE, MK61_GCC_TOOLCHAIN, MK61_ARDUINO_LIBRARY_ROOT,
+  MK61_GCC_SDK, MK61_GCC_TOOLCHAIN,
   MK61_GCC_BUILD_ROOT, MK61_OUTPUT_DIR, MK61_HOST_CXX
 '@ | Write-Host
 }
@@ -218,54 +223,6 @@ function Get-FirstExistingDirectory {
     return $null
 }
 
-function Get-DefaultCorePath {
-    $relative = "packages/STMicroelectronics/hardware/stm32/$script:CoreVersion"
-    $candidates = New-Object 'System.Collections.Generic.List[string]'
-    if (-not [string]::IsNullOrWhiteSpace($env:MK61_GCC_CORE)) {
-        $candidates.Add($env:MK61_GCC_CORE)
-    }
-    if (-not [string]::IsNullOrWhiteSpace($env:LOCALAPPDATA)) {
-        $candidates.Add((Join-Path (
-            Join-Path $env:LOCALAPPDATA 'Arduino15') $relative))
-    }
-    if (-not [string]::IsNullOrWhiteSpace($HOME)) {
-        $candidates.Add((Join-Path (
-            Join-Path $HOME 'Library/Arduino15') $relative))
-        $candidates.Add((Join-Path (
-            Join-Path $HOME '.arduino15') $relative))
-    }
-    return Get-FirstExistingDirectory $candidates.ToArray()
-}
-
-function Get-DefaultLibrariesPath {
-    $candidates = New-Object 'System.Collections.Generic.List[string]'
-    if (-not [string]::IsNullOrWhiteSpace(
-            $env:MK61_ARDUINO_LIBRARY_ROOT)) {
-        $candidates.Add($env:MK61_ARDUINO_LIBRARY_ROOT)
-    }
-    $documents = [Environment]::GetFolderPath('MyDocuments')
-    if (-not [string]::IsNullOrWhiteSpace($documents)) {
-        $candidates.Add((Join-Path $documents 'Arduino/libraries'))
-    }
-    if (-not [string]::IsNullOrWhiteSpace($HOME)) {
-        $candidates.Add((Join-Path $HOME 'Documents/Arduino/libraries'))
-        $candidates.Add((Join-Path $HOME 'Arduino/libraries'))
-    }
-    return Get-FirstExistingDirectory $candidates.ToArray()
-}
-
-function Get-LibraryVersion {
-    param([string]$Directory)
-    $properties = Join-Path $Directory 'library.properties'
-    Test-RequiredFile $properties 'Arduino library.properties'
-    foreach ($line in [IO.File]::ReadAllLines($properties)) {
-        if ($line -match '^\s*version\s*=\s*(\S+)\s*$') {
-            return $Matches[1]
-        }
-    }
-    Stop-GccBuild "library version is missing in $properties"
-}
-
 function Get-ProfileInfo {
     param([string]$Id)
     $matches = @($script:ReleaseManifest.profiles | Where-Object {
@@ -276,7 +233,7 @@ function Get-ProfileInfo {
     }
     $selected = $matches[0]
     return @{
-        Bundle = [string]$selected.artifacts.f401
+        Bundle = [string]$selected.artifacts.PSObject.Properties[$Mcu].Value
         Flags = @($selected.defines | ForEach-Object { "-D$_" })
         Definitions = @($selected.defines | ForEach-Object { [string]$_ })
         Graphics = [bool]$selected.graphics
@@ -296,8 +253,11 @@ function Get-ReleaseCase {
         Stop-GccBuild "unknown release case: $Id"
     }
     $selected = $matches[0]
-    if ($selected.mcu -ne 'f401' -or $selected.builder -ne 'gcc') {
-        Stop-GccBuild "release case is not an F401 GCC case: $Id"
+    if ($Mcu -eq 'f411') {
+        Stop-GccBuild 'F411 release cases use build-standalone.py --release-case; this frontend accepts F411 direct profiles'
+    }
+    if ($selected.mcu -ne $Mcu -or $selected.builder -ne 'gcc') {
+        Stop-GccBuild "release case does not target $($Mcu): $Id"
     }
     if ($selected.profile -ne $Profile) {
         Stop-GccBuild (
@@ -399,11 +359,24 @@ try {
     }
     $script:ReleaseManifest = ConvertFrom-Json -InputObject (
         [IO.File]::ReadAllText($manifestPath))
-    $script:CoreVersion = [string]$script:ReleaseManifest.toolchain.stm32_core
     $script:ToolchainVersion = [string]$script:ReleaseManifest.toolchain.gnu_arm
-    $script:CmsisVersion = [string]$script:ReleaseManifest.toolchain.cmsis
-    $script:CmsisDspVersion = [string]$script:ReleaseManifest.toolchain.cmsis_dsp
 
+    if ($Mcu -eq 'f411') {
+        foreach ($entry in @{
+            Chip8='1'; UsbScreen='1'; MarkdownAsApp='0'; Chip8AsApp='0';
+            SetupAsApp='0'; ExplorerAsApp='0'
+        }.GetEnumerator()) {
+            if (-not $PSBoundParameters.ContainsKey($entry.Key)) {
+                Set-Variable -Name $entry.Key -Value $entry.Value
+            }
+        }
+    }
+    if ($ExternalizeUsbDisk -eq 'auto') {
+        $ExternalizeUsbDisk = if ($Mcu -eq 'f401') { '1' } else { '0' }
+    }
+    if ($Mcu -eq 'f401' -and $ExternalizeUsbDisk -ne '1') {
+        Stop-GccBuild 'F401 requires external USBDISK.APP'
+    }
     $profileInfo = Get-ProfileInfo $Profile
     $ws0010Bitmap = $Profile -eq 'mini-v3-ws0010' -and
         $Ws0010Graphics -eq '1'
@@ -483,67 +456,25 @@ try {
         $stackFrameLimit = [string](
             $releaseCaseInfo.budgets.stack_frame_limit)
     } else {
-        $flashCapacity = '262144'
+        $flashCapacity = if ($Mcu -eq 'f411') { '524288' } else { '262144' }
         $flashHeadroom = '512'
-        $ramLimit = if ($Lto -eq '1' -and $UsbScreen -ne '1') {
+        $ramLimit = if ($Mcu -eq 'f411') { '104857' } elseif ($Lto -eq '1' -and $UsbScreen -ne '1') {
             '52428'
         } else {
             '65536'
         }
-        $stackFrameLimit = '5120'
+        $stackFrameLimit = if ($Mcu -eq 'f411') { '3072' } else { '5120' }
     }
 
-    if ([string]::IsNullOrWhiteSpace($CorePath)) {
-        $CorePath = Get-DefaultCorePath
-    } else {
-        $CorePath = Get-FullPath $CorePath (Get-Location).Path
-    }
-    Test-RequiredDirectory $CorePath `
-        "STM32 Arduino Core $script:CoreVersion"
-    $platformText = Join-Path $CorePath 'platform.txt'
-    Test-RequiredFile $platformText 'STM32 Core platform.txt'
-    if (-not ([IO.File]::ReadAllText($platformText) -match
-            "(?m)^version=$([regex]::Escape($script:CoreVersion))\s*$")) {
-        Stop-GccBuild "STM32 Arduino Core $script:CoreVersion is required"
-    }
-
-    $stm32Hardware = [IO.Directory]::GetParent($CorePath).FullName
-    $hardware = [IO.Directory]::GetParent($stm32Hardware).FullName
-    $vendorRoot = [IO.Directory]::GetParent($hardware).FullName
+    . (Join-Path $script:BackendRoot 'sdk.ps1')
+    $sdkRoot = Get-NativeSdkPath $script:ProjectRoot $SdkPath
+    $toolchainBin = Get-NativeGnuArmBin $script:ProjectRoot $script:ToolchainVersion $ToolchainPath
+    Assert-NativeGnuArmVersion $toolchainBin $script:ToolchainVersion
     $toolSuffix = if ($env:OS -eq 'Windows_NT') { '.exe' } else { '' }
-
-    if ([string]::IsNullOrWhiteSpace($ToolchainPath)) {
-        if (-not [string]::IsNullOrWhiteSpace(
-                $env:MK61_GCC_TOOLCHAIN)) {
-            $ToolchainPath = $env:MK61_GCC_TOOLCHAIN
-        } else {
-            $ToolchainPath = Join-Path $vendorRoot (
-                "tools/xpack-arm-none-eabi-gcc/" +
-                $script:ToolchainVersion)
-        }
-    } else {
-        $ToolchainPath = Get-FullPath $ToolchainPath (Get-Location).Path
+    if (-not [string]::IsNullOrWhiteSpace($CorePath) -or
+        -not [string]::IsNullOrWhiteSpace($LibrariesPath)) {
+        Write-Warning '-CorePath and -LibrariesPath are unused; use -SdkPath for the native SDK'
     }
-    if ([IO.File]::Exists((Join-Path $ToolchainPath (
-            "arm-none-eabi-g++$toolSuffix")))) {
-        $toolchainBin = [IO.Path]::GetFullPath($ToolchainPath)
-    } else {
-        $toolchainBin = Join-Path $ToolchainPath 'bin'
-    }
-    Test-RequiredFile (Join-Path $toolchainBin (
-        "arm-none-eabi-g++$toolSuffix")) `
-        "GNU Arm C++ compiler $script:ToolchainVersion"
-
-    $cmsisRoot = Join-Path $vendorRoot (
-        "tools/CMSIS/$script:CmsisVersion")
-    $cmsisDspRoot = Join-Path $vendorRoot (
-        "tools/CMSIS_DSP/$script:CmsisDspVersion")
-    Test-RequiredDirectory $cmsisRoot "CMSIS $script:CmsisVersion"
-    Test-RequiredDirectory $cmsisDspRoot `
-        "CMSIS DSP $script:CmsisDspVersion"
-
-    # F401/F411 own their ADC, SPI, character LCD and RTC drivers.
-    # Keep -LibrariesPath accepted for older invocations; it is no dependency.
 
     $cmake = Get-CommandPath 'cmake' 'CMake 3.21 or newer'
     $ninja = Get-CommandPath 'ninja' 'Ninja'
@@ -565,10 +496,8 @@ try {
 
     if ($Check) {
         [Console]::WriteLine('MK61s direct GCC dependencies: ready')
-        [Console]::WriteLine("  STM32 Core: $CorePath")
+        [Console]::WriteLine("  Native SDK: $sdkRoot")
         [Console]::WriteLine("  GNU Arm: $toolchainBin")
-        [Console]::WriteLine("  CMSIS: $cmsisRoot")
-        [Console]::WriteLine("  CMSIS DSP: $cmsisDspRoot")
         [Console]::WriteLine("  CMake: $cmakeVersion")
         [Console]::WriteLine("  Ninja: $ninja")
         exit 0
@@ -579,7 +508,8 @@ try {
                 $env:MK61_GCC_BUILD_ROOT)) {
             $env:MK61_GCC_BUILD_ROOT
         } else {
-            Join-Path $script:ProjectRoot '.build/gcc'
+            $defaultRoot = if ($Mcu -eq 'f411') { '.build/gcc-f411' } else { '.build/gcc' }
+            Join-Path $script:ProjectRoot $defaultRoot
         }
     }
     $BuildRoot = Get-FullPath $BuildRoot
@@ -610,10 +540,8 @@ try {
         "-DCMAKE_TOOLCHAIN_FILE=$toolchainFile",
         "-DMK61_ARM_TOOLCHAIN_BIN=$toolchainBin",
         "-DMK61_PROJECT_ROOT=$script:ProjectRoot",
-        "-DMK61_CORE_VERSION=$script:CoreVersion",
-        "-DMK61_STM32_CORE=$CorePath",
-        "-DMK61_CMSIS_ROOT=$cmsisRoot",
-        "-DMK61_CMSIS_DSP_ROOT=$cmsisDspRoot",
+        "-DMK61_SDK_ROOT=$sdkRoot",
+        "-DMK61_TARGET_MCU=$Mcu",
         "-DMK61_PROFILE=$Profile",
         "-DMK61_ENABLE_FOCAL=$Focal",
         "-DMK61_ENABLE_TINYBASIC=$Basic",
@@ -629,7 +557,7 @@ try {
         "-DMK61_SETUP_AS_APP=$SetupAsApp",
         "-DMK61_EXPLORER_AS_APP=$ExplorerAsApp",
         "-DMK61_ENABLE_USB_SCREEN=$UsbScreen",
-        '-DMK61_EXTERNALIZE_USBDISK=1',
+        "-DMK61_EXTERNALIZE_USBDISK=$ExternalizeUsbDisk",
         "-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics",
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings",
         "-DMK61_USER_EXPLORER_SHORTCUT=$UserExplorer",
@@ -801,7 +729,7 @@ try {
     $flagValues.Add("-DMK61_SETUP_AS_APP=$SetupAsApp")
     $flagValues.Add("-DMK61_EXPLORER_AS_APP=$ExplorerAsApp")
     $flagValues.Add("-DMK61_ENABLE_USB_SCREEN=$UsbScreen")
-    $flagValues.Add('-DMK61_EXTERNALIZE_USBDISK=1')
+    $flagValues.Add("-DMK61_EXTERNALIZE_USBDISK=$ExternalizeUsbDisk")
     $flagValues.Add("-DMK61_WS0010_GRAPHICS_100X16=$Ws0010Graphics")
     $flagValues.Add(
         "-DMK61_ENABLE_EXTENDED_FONT_SETTINGS=$ExtendedFontSettings")
@@ -812,7 +740,7 @@ try {
     $flagValues.Add('-DMK61_ENABLE_LOADABLE_MODULES=1')
     $flagValues.Add("-DMK61_PORTABLE_UI_FONTS=$uiFonts")
     $flagValues.Add('-DMK61_REQUIRE_RESIDENT_CRC=1')
-    $flagValues.Add('-DMK61_REQUIRE_F401_SELECTIVE_O3=1')
+    $flagValues.Add("-DMK61_REQUIRE_$($Mcu.ToUpperInvariant())_SELECTIVE_O3=1")
     $flagValues.Add("-DMK61_ENABLE_LTO=$Lto")
     foreach ($definition in $caseDefinitions) {
         $flagValues.Add("-D$definition")

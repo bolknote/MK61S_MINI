@@ -193,7 +193,7 @@ function Test-ReleaseContract {
             $defineNames[$name] = $true
         }
 
-        if ($builder -eq 'arduino') {
+        if ($builder -eq 'arduino' -or $mcu -eq 'f411') {
             $optimization = [string](Get-RequiredProperty $item `
                 'optimization' $where)
             Assert-Contract ($optimization -in @('osstd', 'oslto')) `

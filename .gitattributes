@@ -1,1 +1,4 @@
 *.pdf binary
+
+# SDK manifest hashes cover exact upstream header/license bytes on every host.
+third_party/stm32f4/** -text -whitespace

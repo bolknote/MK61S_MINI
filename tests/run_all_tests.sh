@@ -5,6 +5,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 
 "$root/tests/run_firmware_tool_tests.sh"
 "$root/tests/run_tools_layout_tests.sh"
+python3 "$root/tests/native_sdk_self_test.py"
 python3 "$root/tests/ui_font_license_packaging_self_test.py"
 "$root/tests/run_f401_bundle_tool_tests.sh"
 python3 "$root/tests/release_contract_self_test.py"
@@ -129,7 +130,7 @@ bash "$root/tests/run_language_vm_mixed_cache_tests.sh"
 bash "$root/tests/run_language_vm_integer_block_tests.sh"
 bash "$root/tests/run_language_vm_file_cache_tests.sh"
 # The shipping mixed policy must also preserve VMSTORE's borrowed workspace.
-MK61_TEST_SANITIZERS=1 MK61_VM_CACHE_MIXED_TEST=1 \
+MK61_TEST_SANITIZERS="${MK61_TEST_SANITIZERS:-1}" MK61_VM_CACHE_MIXED_TEST=1 \
   bash "$root/tests/run_language_vm_file_cache_tests.sh"
 bash "$root/tests/run_language_workspace_vm_default_tests.sh"
 "$root/tests/run_high_noon_equivalence_tests.sh"

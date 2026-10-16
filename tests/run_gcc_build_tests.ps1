@@ -264,9 +264,11 @@ Assert-True ($cmakeText -notmatch '--export-dynamic-symbol-list') `
 Assert-True (-not (Test-Path -LiteralPath (
     Join-Path $root 'tools/.mk61-gcc/system-app-exports.list'))) `
     'obsolete resident symbol export list is still present'
-Assert-True ($cmakeText -match
-    'STM32 Arduino Core \$\{MK61_CORE_VERSION\} is required') `
-    'CMake build does not consume the selected STM32 Core version'
+Assert-True ($cmakeText -match 'native-sdk\.cmake') `
+    'CMake does not verify the pinned project SDK'
+Assert-True ($cmakeText -notmatch 'MK61_STM32_CORE|BUILD_CORE_PATH|BUILD_LIB_PATH|MK61_CMSIS_DSP_ROOT') `
+    'CMake still consumes an installed STM32duino layout'
+
 Assert-True ($toolchainText -match 'arm-none-eabi-gcc') `
     'CMake toolchain does not use GNU Arm GCC'
 Assert-True ($firmwareMainText -match '#include "mk61s-M\.ino"') `
@@ -275,25 +277,26 @@ Assert-True ($firmwarePowerShellText -match
     'Invoke-F401GccBundleBuild') `
     'PowerShell firmware frontend does not use the direct GCC backend'
 Assert-True ($firmwarePowerShellText -match
-    "'-ProductBuild', '1'") `
+    "'-ProductBuild',") `
     'PowerShell firmware frontend does not request the F401 product policy'
 Assert-True ($firmwarePowerShellText -match
     'MK61_ENABLE_LOADABLE_MODULES=1') `
     'PowerShell firmware frontend does not enable the unified APP runtime'
-Assert-True ($firmwarePowerShellText -match
-    'portable-layout\.py[\s\S]+--default-script=') `
-    'PowerShell F411 frontend does not prepare the portable APP linker'
+Assert-True ($cmakeText -match
+    'standalone/resident\.ld[\s\S]+COPYONLY') `
+    'native build does not use the owned portable APP linker'
+Assert-True ($firmwarePowerShellText -notmatch '--show-properties=expanded') `
+    'PowerShell native frontend still resolves an Arduino board recipe'
 Assert-True ($firmwareShellText -match
     'tools/build-gcc\.cmd[\s\S]+-BuildRoot') `
     'macOS/Linux firmware frontend does not use the direct GCC backend'
-Assert-True ($firmwareShellText -match '-ProductBuild 1') `
+Assert-True ($firmwareShellText -match '-ProductBuild "\$product_build"') `
     'macOS/Linux firmware frontend does not request the F401 product policy'
 Assert-True ($firmwareShellText -match
     'MK61_ENABLE_LOADABLE_MODULES=1') `
     'macOS/Linux firmware frontend does not enable the unified APP runtime'
-Assert-True ($firmwareShellText -match
-    'portable-layout\.py[\s\S]+--default-script=') `
-    'macOS/Linux F411 frontend does not prepare the portable APP linker'
+Assert-True ($firmwareShellText -notmatch '--show-properties=expanded') `
+    'macOS/Linux native frontend still resolves an Arduino board recipe'
 Assert-True ($releaseWorkflowText -match
     'tests/run_f401_release_matrix\.sh') `
     'release workflow does not use the repository-owned F401 matrix'
@@ -374,8 +377,8 @@ Assert-True ($allWorkflowText -notmatch
     'a workflow still uses upload-artifact before its Node.js 24 release'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 3) `
-    'release workflow does not consistently use the local Arduino CLI setup'
+    'uses:\s+\./\.github/actions/setup-arduino-cli')).Count -eq 2) `
+    'legacy Arduino compatibility jobs must remain explicit and separate'
 Assert-True ($releaseWorkflowText -notmatch 'ARDUINO_CLI_VERSION') `
     'release workflow duplicates the Arduino CLI contract version'
 Assert-True ($arduinoSetupActionText -match
@@ -392,8 +395,10 @@ Assert-True ($arduinoSetupScriptText -match
     'local Arduino CLI setup does not verify its downloaded archive'
 Assert-True (([regex]::Matches(
     $releaseWorkflowText,
-    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 3) `
-    'release jobs do not share the repository-owned dependency installer'
+    'run:\s+tools/install_arduino_dependencies\.ps1')).Count -eq 2) `
+    'legacy compatibility jobs lost their explicit Arduino dependency installer'
+Assert-True (([regex]::Matches($releaseWorkflowText, 'uses:\s+\./\.github/actions/setup-native-gcc')).Count -eq 3) `
+    'native F401/F411 jobs do not share the independent GNU Arm installer'
 Assert-True ($dependencyInstallerText -match
     'release-contract\.json[\s\S]+toolchain\.libraries') `
     'dependency installer has a second hard-coded library list'

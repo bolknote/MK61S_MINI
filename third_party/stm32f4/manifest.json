@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "description": "Pinned, header-only dependency closure for GNU Arm F401/F411. No Core or vendor implementation is compiled.",
+  "components": {
+    "cmsis": {
+      "upstream": "https://github.com/ARM-software/CMSIS_6",
+      "revision": "6.2.0",
+      "headers": 6
+    },
+    "device": {
+      "upstream": "https://github.com/STMicroelectronics/cmsis_device_f4",
+      "revision": "snapshot from STM32duino 2.12.0",
+      "headers": 5
+    },
+    "hal": {
+      "upstream": "https://github.com/STMicroelectronics/stm32f4xx_hal_driver",
+      "revision": "snapshot from STM32duino 2.12.0",
+      "headers": 25
+    },
+    "usb": {
+      "upstream": "https://github.com/STMicroelectronics/stm32-mw-usb-device",
+      "revision": "snapshot from STM32duino 2.12.0",
+      "headers": 4
+    },
+    "usb-interface": {
+      "upstream": "https://github.com/stm32duino/Arduino_Core_STM32/tree/2.12.0/libraries/USBDevice/inc",
+      "revision": "2.12.0",
+      "headers": 6
+    }
+  },
+  "files": {
+    "cmsis/include/cmsis_compiler.h": "8932e7ac5c9a13b199c64f25b3dc67ebf0a877b33dbcf434d4e1b78e625f57c5",
+    "cmsis/include/cmsis_gcc.h": "8fd513058bc3d10f1b3929c648023964dd32f375d5be39ad31a13e2038763405",
+    "cmsis/include/cmsis_version.h": "3b9195c5373a2a4dbfd968b083b3d7f5f446f9ec2e126f75928ac1ff4356b91e",
+    "cmsis/include/core_cm4.h": "5d6f71c32258821ebf371045a5670fe74a1cab49318f8df75344adfe4813de04",
+    "cmsis/include/m-profile/armv7m_mpu.h": "44294dc3e331deb8daae269793e579cc10920a9b88d133bbaf3a7af65d29f9e4",
+    "cmsis/include/m-profile/cmsis_gcc_m.h": "83162eb508727a5e4b35abe9d65e76849ac9b48ad4fcb3957bf409bb0e1dcec2",
+    "device/include/stm32f401xc.h": "95973f02f75e1332038aab85ca92c112b28170c7e16a1adfc2ec53c2da81ddd7",
+    "device/include/stm32f401xe.h": "9db8f3e317c6029ebdd1538f827885cf538850a20b17ac8491247e783134098c",
+    "device/include/stm32f411xe.h": "37eb4283db7ea17197e6e2b4a855e87fb639c9ca8eaf4777aa389a096235013d",
+    "device/include/stm32f4xx.h": "a19edea6b2f4df2ab3c567782c4d313a52319c4303bd56ad7dd1d0e077014657",
+    "device/include/system_stm32f4xx.h": "02c067d5a135f540c03215dc834b1e60a97bbd4e55bfd3994b0c82a15ea3012a",
+    "hal/include/Legacy/stm32_hal_legacy.h": "34e55ca410d5546f13d1274e31475fccca2e9074c02b56f5939ea11454d98f7a",
+    "hal/include/stm32f4xx_hal.h": "3331aadec4dbcf52dce5d9ca59b2735854bc52e466b04e0da2cf587d5968ffea",
+    "hal/include/stm32f4xx_hal_cortex.h": "5e37a13bcadd2e7a1a281ac5e5177bea71a7a4a88a9e971ba8834e00fa80c3d2",
+    "hal/include/stm32f4xx_hal_def.h": "6fa3516e4a19c9f963d64aa882f5c378ef0385dbb06d805058d02f8fbec468d5",
+    "hal/include/stm32f4xx_hal_dma.h": "5d2fdcb39c2c0a2258e2c564f0143bc7e0cd514980ef50ba317a0559cbb5c194",
+    "hal/include/stm32f4xx_hal_dma_ex.h": "20a684226f7320d54931431d1a2d1c7c8a0c1ee558ae7a750ae090dfa61aa516",
+    "hal/include/stm32f4xx_hal_flash.h": "10be06c6e06fcf4eb11e236641948aed861898fea235c606ae221fa72bc46638",
+    "hal/include/stm32f4xx_hal_flash_ex.h": "5a4c4e98ca797de7cecce8eeec9eed6f358d7bccc3b9cb6912a505950838db8b",
+    "hal/include/stm32f4xx_hal_flash_ramfunc.h": "f18a6eabc99f56483566f9231ca33c780afa98bc93929e60bb419b5e544eee2a",
+    "hal/include/stm32f4xx_hal_gpio.h": "68bdac9b06c55a8b8f3f82137406732990956e303cc5ac24096081bd1bd0f94f",
+    "hal/include/stm32f4xx_hal_gpio_ex.h": "52a6a1b5adf9789c30b408c09b6d468c08c25a7a10250c951a7b98acf8154418",
+    "hal/include/stm32f4xx_hal_pcd.h": "6694ecb5f99106582053b1080ea192b9685131a789c37e14cd75e0952c6d6026",
+    "hal/include/stm32f4xx_hal_pcd_ex.h": "3dcb909d0aafba72741ab372c038ee0086e4b21dec0d876da48fc2646e17d209",
+    "hal/include/stm32f4xx_hal_pwr.h": "c848fa61a489289391fa3c13753ebfa49fd9e601b64db8c7f27235d93c3ca7c0",
+    "hal/include/stm32f4xx_hal_pwr_ex.h": "888b1ab8d5e4d3d468d9da23fc92d8c8897a6969abd8f0101c18666ad0995146",
+    "hal/include/stm32f4xx_hal_rcc.h": "eb6911d964b1cf8a83993b19c8feb9845e8793d7c0e5d643390b53207c8b078e",
+    "hal/include/stm32f4xx_hal_rcc_ex.h": "ab0f8dd968311be549cbea3085245f6c902608bba5e119537a09ac817508d33c",
+    "hal/include/stm32f4xx_hal_rtc.h": "8ee9c9c9f1f511ddd25d181a7167a5b493c518c9af38c59ec62a31d567739036",
+    "hal/include/stm32f4xx_hal_rtc_ex.h": "7beb87fff3de8e121925528c3a3ec97d3e66cd2f140e001c42c3b78a65822dcc",
+    "hal/include/stm32f4xx_hal_tim.h": "63f00354e2a5e8d3a8d211fc736517273e12b99a1eb782aa7a2670cb1264a16d",
+    "hal/include/stm32f4xx_hal_tim_ex.h": "aa6695d64677e8a7b46d719da3d81049290f42383c17e76271605bc68143fd1e",
+    "hal/include/stm32f4xx_ll_adc.h": "fabfc9706709a9997e96d87aee25356b3ca84021668a915ad816ba42e1babadc",
+    "hal/include/stm32f4xx_ll_rtc.h": "c4d24c2b7b8d799b8583eaf29db4ead644c4b772b116a6976912031c6c1d8903",
+    "hal/include/stm32f4xx_ll_tim.h": "0d7eb3fd74100ee33cf592c6edb2e340d85ac320364702a6cc1d0e9d22da66d2",
+    "hal/include/stm32f4xx_ll_usb.h": "b9b9f9da33abf806bf1a79018138ef6cab3e4e657316c299740809d86f239758",
+    "usb/include/usbd_core.h": "a6c2dfc99fabefe4db7c4c145b4ab87d6b992e3fbd15cc65ecc1c7f9d2086f78",
+    "usb/include/usbd_ctlreq.h": "f8897c9b47f97b6ca78c72b857d20fb2a2b0d85091a2362799165cdfa863e3cc",
+    "usb/include/usbd_def.h": "137b6e33174a789dab6a29798a32545e14593818756267b81783cb905589a904",
+    "usb/include/usbd_ioreq.h": "8a2d44f0cc1c34c21eb75e01cec568b45b901678fba9ca2dc3b0c9a9f0364e7c",
+    "usb-interface/include/cdc_queue.h": "28110f222bcb2cb5fd065c8771dc9b4e54770d35b1f9fd9ef5d40638a6283a2f",
+    "usb-interface/include/usbd_cdc.h": "9503107e9814b862d437a50527e140cc87255b26425d82233dc10082ae77023b",
+    "usb-interface/include/usbd_cdc_if.h": "10b5a1deab4037a265cf9d8841fd517e00b3500737cb093dda42b1d36058fe95",
+    "usb-interface/include/usbd_conf.h": "1f160763693df3377e65453e9e44db2c838d529820691e723a72a8748eda4958",
+    "usb-interface/include/usbd_ep_conf.h": "ac57617c4017a3430ea1f538ebbcc65fb72df72b1bb2568cc83428465addd68d",
+    "usb-interface/include/usbd_if.h": "e0a267626861cfcd43fd3c8f34c19fa062b67e6fc5bfffde3e3effb037e6cd88",
+    "cmsis/LICENSE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "device/LICENSE": "dadb755f51d36614173b28c5790cb4a991e8f4cc822e5b634fd66a4f4145824d",
+    "hal/LICENSE": "376c82bcef0be563bf59b93d05cfdd4b6295e4660b55b31dd8a883bf1d6637f7",
+    "usb/LICENSE": "6b6a3968253466c776a660e916c67c7207c42fcd5bf02895e50215f923dae29d",
+    "usb-interface/LICENSE": "36d165776a356822f2613e5357b60bf0d195f2684baab663dfeb6baa45590e6a"
+  }
+}

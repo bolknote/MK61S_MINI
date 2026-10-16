@@ -25,6 +25,7 @@ MK61_FIRMWARE_OUTPUT_DIR="$firmware_output" \
 MK61_FIRMWARE_TAG=preflight \
   "$root/tests/run_f411_release_matrix.sh"
 
+if [[ "${MK61_ARDUINO_COMPAT:-0}" == 1 ]]; then
 printf '\n=== F411 mixed O3 compatibility ===\n'
 MK61_F411_O3_BUILD_ROOT="$preflight_root/f411-o3" \
   "$root/tests/run_f411_o3_compile_check.sh"
@@ -32,6 +33,8 @@ MK61_F411_O3_BUILD_ROOT="$preflight_root/f411-o3" \
 printf '\n=== Generic STM32F4 stock linker + LTO ===\n'
 MK61_STOCK_LINKER_BUILD_ROOT="$preflight_root/stock-linker" \
   "$root/tests/run_stock_linker_compile_check.sh"
+
+fi
 
 printf '\n=== F411 USB-preserving STOP production images ===\n'
 MK61_F411_USB_SUSPEND_BUILD_ROOT="$preflight_root/f411-usb-suspend" \
@@ -56,9 +59,12 @@ while IFS=$'\t' read -r \
   }
 done < <(python3 "$contract" cases --group f411-release --format tsv)
 
+if [[ "${MK61_ARDUINO_COMPAT:-0}" == 1 ]]; then
 printf '\n=== Arduino F401 Classic V3 UC1609 ===\n'
 MK61_F401_UC1609_BUILD_ROOT="$preflight_root/f401-arduino-uc1609" \
   "$root/tests/run_f401_uc1609_compile_check.sh"
+
+fi
 
 printf '\n=== Contract-driven F401 product and capability matrix ===\n'
 MK61_F401_MATRIX_ROOT="$preflight_root/f401-matrix" \
