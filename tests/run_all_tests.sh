@@ -13,6 +13,7 @@ python3 "$root/tests/standalone_reference_self_test.py"
 python3 "$root/tests/no_resident_fmk_decoder_elf_self_test.py"
 python3 "$root/tests/flash_budget_self_test.py"
 "$root/tests/run_arduino_board_tests.sh"
+"$root/tests/run_arduino_build_dependencies_tests.sh"
 if command -v pwsh >/dev/null 2>&1; then
   pwsh -NoLogo -NoProfile -File "$root/tests/run_firmware_tool_powershell_tests.ps1"
   pwsh -NoLogo -NoProfile -File "$root/tests/run_gcc_build_tests.ps1"

@@ -10,7 +10,7 @@ fail() {
   exit 2
 }
 
-"$root/tests/run_f411_release_matrix.sh" --check-dependencies
+"$root/tests/check_arduino_build_dependencies.sh"
 command -v python3 >/dev/null 2>&1 ||
   fail 'python3 is required for the stack-usage release gate'
 

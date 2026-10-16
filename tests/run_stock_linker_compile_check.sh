@@ -9,7 +9,7 @@ fail() {
   exit 2
 }
 
-"$root/tests/run_f411_release_matrix.sh" --check-dependencies
+"$root/tests/check_arduino_build_dependencies.sh"
 
 temporary_root=0
 if [[ -n "${MK61_STOCK_LINKER_BUILD_ROOT:-}" ]]; then
