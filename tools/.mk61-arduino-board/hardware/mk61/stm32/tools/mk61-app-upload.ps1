@@ -202,6 +202,9 @@ try {
     if ($Bundle -cne $expectedBundle) {
         Stop-Mk61Upload "bundle $Bundle does not match profile $Profile"
     }
+    # Bundle names include the display family; the firmware's CDC identity
+    # uses mini-v2-a00, mini-v3-a02 or mini-v3-ws0010 instead.
+    $firmwareProfile = $Profile -creplace '^(mini-v[23])-(?:lcd1602|oled1602)-', '$1-'
     $system = Join-Path (Join-Path (Join-Path $BuildPath 'mk61-system-apps') `
         $Bundle) 'System'
     $usbDisk = Join-Path $system 'USBDISK.APP'
@@ -270,7 +273,7 @@ try {
     $hostPowerShell = (Get-Process -Id $PID).Path
     $installerArgs = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass',
         '-File', $mkc,
-        '--install-system', $system, '--expect-profile', $Profile,
+        '--install-system', $system, '--expect-profile', $firmwareProfile,
         '--wait-ready', '45')
     if ($RequireUsbDisk -eq '0') {
         $installerArgs += '--resident-usbdisk'
@@ -295,7 +298,7 @@ try {
             ' --resident-usbdisk'
         } else { '' }
         [Console]::Error.WriteLine(
-            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $Profile$residentUsbDisk --wait-ready 45 --port COMx")
+            "Recovery without reflashing: tools\mkc.cmd --install-system `"$system`" --expect-profile $firmwareProfile$residentUsbDisk --wait-ready 45 --port COMx")
     } elseif (-not [string]::IsNullOrEmpty($system) -and
         [IO.Directory]::Exists($system)) {
         [Console]::Error.WriteLine(

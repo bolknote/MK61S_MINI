@@ -396,6 +396,13 @@ jobs:
             throw 'F411 Arduino board does not use its resident-aware compound uploader'
           }
 
+      - name: Verify Arduino upload profiles on Windows PowerShell
+        shell: powershell
+        run: |
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tests/arduino_upload_profile_self_test.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify STM32Tools 2.4 and 2.5 DFU parsers on Windows PowerShell
         shell: powershell
         run: |
