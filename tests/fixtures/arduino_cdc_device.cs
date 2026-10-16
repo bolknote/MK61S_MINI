@@ -45,6 +45,9 @@ namespace Mk61.ArduinoE2E {
                 bool same = true;
                 for (int j = 0; j < magic.Length; j++) if (data[i+j] != magic[j]) same = false;
                 if (!same) continue;
+                if (BitConverter.ToUInt16(data, i+8) != 1 ||
+                    BitConverter.ToUInt16(data, i+10) != 40 ||
+                    BitConverter.ToUInt32(data, i+12) != 0x08000000) continue;
                 if (found >= 0 || i % 4 != 0) throw new Exception("Invalid firmware footer");
                 found = i;
             }

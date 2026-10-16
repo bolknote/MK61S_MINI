@@ -15,6 +15,9 @@ function New-Mk61TestArduinoBundle {
     }
     $label = $Bundle.Substring(8, $Bundle.Length - 8 - $Mcu.Length - 1)
     [byte[]]$bytes = [byte[]]::new(56)
+    # A real firmware contains this byte sequence in its integrity checker
+    # as well as in its footer. The first occurrence is not a format header.
+    [Array]::Copy([Text.Encoding]::ASCII.GetBytes('MK61FWC'), 0, $bytes, 0, 7)
     [Array]::Copy([Text.Encoding]::ASCII.GetBytes('MK61FWC'), 0, $bytes, 16, 7)
     foreach ($field in @(
         @(24, [BitConverter]::GetBytes([uint16]1)),

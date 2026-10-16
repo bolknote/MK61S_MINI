@@ -24,6 +24,17 @@ try {
         throw 'Manifest differs from the sealed firmware identity'
     }
     [byte[]]$original = [IO.File]::ReadAllBytes($resident)
+    # Ignore the non-header magic in executable code, but still reject two
+    # genuine format headers before trusting any metadata.
+    [byte[]]$duplicate = [byte[]]::new($original.Length + 40)
+    [Array]::Copy($original, $duplicate, $original.Length)
+    [Array]::Copy($original, 16, $duplicate, $original.Length, 40)
+    [IO.File]::WriteAllBytes($resident, $duplicate)
+    $duplicateRejected = $false
+    try { [void](Get-Mk61ResidentIdentity $resident) }
+    catch { $duplicateRejected = $_.Exception.Message -match 'multiple firmware footers' }
+    if (-not $duplicateRejected) { throw 'Two real footer headers were accepted' }
+    [IO.File]::WriteAllBytes($resident, $original)
     [byte[]]$changed = $original.Clone()
     $changed[0] = $changed[0] -bxor 1
     [IO.File]::WriteAllBytes($resident, $changed)

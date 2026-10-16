@@ -23,16 +23,25 @@ function Get-Mk61ResidentIdentity {
     [byte[]]$bytes = [IO.File]::ReadAllBytes($Path)
     $text = [Text.Encoding]::ASCII.GetString($bytes)
     $magic = 'MK61FWC' + [char]0
-    $footer = $text.IndexOf($magic, [StringComparison]::Ordinal)
-    if ($footer -lt 0 -or $footer % 4 -ne 0 -or $footer + 40 -gt $bytes.Length -or
-        $text.IndexOf($magic, $footer + 1, [StringComparison]::Ordinal) -ge 0) {
+    $footer = -1
+    $offset = -1
+    while ($true) {
+        $offset = $text.IndexOf($magic, $offset + 1, [StringComparison]::Ordinal)
+        if ($offset -lt 0) { break }
+        # The runtime integrity checker also embeds the magic in code.
+        # Match the format header just as the firmware sealer does.
+        if ($offset + 40 -gt $bytes.Length -or
+            [BitConverter]::ToUInt16($bytes, $offset + 8) -ne 1 -or
+            [BitConverter]::ToUInt16($bytes, $offset + 10) -ne 40 -or
+            [BitConverter]::ToUInt32($bytes, $offset + 12) -ne 134217728) { continue }
+        if ($footer -ge 0) { throw 'current resident has multiple firmware footers' }
+        $footer = $offset
+    }
+    if ($footer -lt 0 -or $footer % 4 -ne 0) {
         throw 'current resident has no unique aligned firmware footer'
     }
     $build = [BitConverter]::ToUInt32($bytes, $footer + 24)
-    if ([BitConverter]::ToUInt16($bytes, $footer + 8) -ne 1 -or
-        [BitConverter]::ToUInt16($bytes, $footer + 10) -ne 40 -or
-        [BitConverter]::ToUInt32($bytes, $footer + 12) -ne 134217728 -or
-        [BitConverter]::ToUInt32($bytes, $footer + 16) -ne $bytes.Length -or
+    if ([BitConverter]::ToUInt32($bytes, $footer + 16) -ne $bytes.Length -or
         $build -eq 0 -or $build -ne [BitConverter]::ToUInt32($bytes, $footer + 20) -or
         [BitConverter]::ToUInt32($bytes, $footer + 32) -ne 1 -or
         [BitConverter]::ToUInt32($bytes, $footer + 36) -ne 0) {
