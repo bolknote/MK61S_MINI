@@ -412,6 +412,12 @@ def resolve_vm_file_cache(args: argparse.Namespace, toolchain: Path,
 
 
 def build(args: argparse.Namespace) -> dict:
+    if sys.platform == "win32":
+        raise ValueError(
+            "Windows System APP builds use tools/build-system-app-bundle.ps1 "
+            "(PowerShell/.NET). Close Arduino IDE, reinstall its board "
+            "with tools/mk61-arduino-board.cmd from the updated project, "
+            "then restart Arduino IDE.")
     resident = args.resident_elf.resolve()
     if not resident.is_file():
         raise ValueError(f"resident ELF not found: {resident}")
