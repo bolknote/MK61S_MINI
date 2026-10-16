@@ -159,7 +159,7 @@ try {
     $ideDirectory = Join-Path $work 'Program Files/Arduino IDE'
     [void][IO.Directory]::CreateDirectory($ideDirectory)
     Set-Location $ideDirectory
-    $cases = @('normal', 'legacy-first', 'busy-once', 'delayed-port',
+    $cases = @('normal', 'normal-auto-port', 'legacy-first', 'busy-once', 'delayed-port',
         'wrong-profile', 'wrong-build', 'identity-switch', 'multiple',
         'dfu-failure', 'wrong-ack', 'disconnect', 'corrupt-readback',
         'changed-resident', 'changed-system', 'missing-system', 'missing-manifest', 'invalid-port')
@@ -182,7 +182,7 @@ try {
             else { $bad = [byte[]]$original.Clone(); $bad[0] = $bad[0] -bxor 1; [IO.File]::WriteAllBytes($changed, $bad) }
         }
         try {
-            $port = if ($case -eq 'multiple') { '' } elseif ($case -eq 'invalid-port') { '/dev/wrong' } else { 'COM71' }
+            $port = if ($case -in @('multiple', 'normal-auto-port')) { '' } elseif ($case -eq 'invalid-port') { '/dev/wrong' } else { 'COM71' }
             $log = Join-Path $env:MK61_E2E_ROOT 'upload.log'
             if ($Fixture) {
                 $argv = @('-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $uploader,
@@ -199,7 +199,7 @@ try {
                 $code = Invoke-TestCommand 'arduino-cli' $argv $log
             }
             $output = [IO.File]::ReadAllText($log)
-            if ($case -in @('normal', 'legacy-first', 'busy-once', 'delayed-port')) {
+            if ($case -in @('normal', 'normal-auto-port', 'legacy-first', 'busy-once', 'delayed-port')) {
                 if ($code -ne 0 -or $output -notmatch 'Resident and System APP upload complete') { throw "$case failed ($code): $output" }
                 Assert-DeviceContents
                 $actualIdentity = [Mk61.ArduinoE2E.Device]::FirmwareIdentity((Join-Path $env:MK61_E2E_ROOT 'firmware.bin'))
@@ -242,7 +242,7 @@ try {
             if ($null -ne $changed) { [IO.File]::WriteAllBytes($changed, $original) }
         }
     }
-    Write-Host "arduino_windows_e2e: $mcu OK (17 scenarios and recovery; physical USB boundary simulated)"
+    Write-Host "arduino_windows_e2e: $mcu OK (18 scenarios and recovery; physical USB boundary simulated)"
 } finally {
     Set-Location $currentLocation
     foreach ($path in $backups.Keys) { [IO.File]::WriteAllBytes($path, $backups[$path]) }
