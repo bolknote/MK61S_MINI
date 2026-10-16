@@ -1,6 +1,6 @@
 # MK61s F401/F411 + APP в Arduino IDE
 
-Версия документа: 30.09.2026
+Версия документа: 16.10.2026
 
 Эта инструкция собирает через обычные кнопки Arduino IDE согласованный
 комплект для STM32F401CC или STM32F411CE. Устанавливаются две отдельные
@@ -96,7 +96,7 @@ tools\mk61-arduino-board.cmd -Check
 IDE, после неё запустите IDE заново.
 
 Версия пакета видна прямо в названии платы, например
-`MK61s F401 + APP (1.2.0)` или `MK61s F411 + APP (1.2.0)`.
+`MK61s F401 + APP (1.2.1)` или `MK61s F411 + APP (1.2.1)`.
 Это версия интеграции с Arduino IDE, а не прошивки или формата APP.
 `-Check` показывает установленную версию и версию в текущем проекте и сравнивает
 скопированные файлы. Одного скачивания нового проекта недостаточно: IDE
@@ -109,6 +109,23 @@ IDE, после неё запустите IDE заново.
 Если Arduino останавливается ещё раньше с `Неверный FQBN`,
 переустановите пакет той же командой: проверка параметров FQBN происходит
 раньше, чем запускаются наши проверки сборки.
+
+Сообщения `System APP build: python.exe failed with exit code 1` и
+`MK61s Arduino board: py.exe failed with exit code 1` приходят из прежней
+Windows-обёртки, которая запускала `build_system_app_bundle.py`. В актуальном
+Windows-пути весь комплект собирается через `build-system-app-bundle.ps1`,
+включая упаковку APP, а загрузку выполняет PowerShell-установщик.
+После обновления ZIP нужно заменить и установленный пакет платы:
+
+```powershell
+.\tools\mk61-arduino-board.cmd
+.\tools\mk61-arduino-board.cmd -Check
+```
+
+Запускайте команды из новой папки проекта при закрытой Arduino IDE.
+Версия `1.2.1` также удаляет из Windows-установки старый
+`seal-firmware-elf.py`; проверка `-Check` отклоняет установку с этим файлом.
+После открытия IDE в названии выбранной платы должна быть версия `1.2.1`.
 
 `MK61s F401 + APP` и `MK61s F411 + APP` — вручную установленные платы,
 поэтому их не будет в Boards Manager. В Boards Manager должен быть виден
@@ -328,7 +345,7 @@ SETUP содержит экраны платы, RTC и шрифта. Справ�
 | `WBMP/CHIP-8 requires UC1609 or USB Screen` | Включить USB-экран для mini либо выключить графические APP. |
 | `exceeds the 20 KiB APP image limit` | Выбранный APP вырос сверх лимита одного образа; это не постоянный резерв SRAM и не ошибка DFU. |
 | `app/firmware mismatch` | Старый ABI 2/3/4 нужно пересобрать; для ABI 6 проверьте версию публичных сервисов. |
-| `python3.exe failed with exit code 9009` | Установлена старая версия платы. Обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE: свежая Windows-сборка Python не запускает. |
+| `python.exe`, `python3.exe` или `py.exe failed with exit code ...` | Arduino запускает старую установленную копию пакета платы. Закройте IDE, обновите `main`, из новой папки выполните `tools\mk61-arduino-board.cmd`, затем `tools\mk61-arduino-board.cmd -Check` и перезапустите IDE. Актуальная Windows-сборка и Upload используют PowerShell/.NET. |
 | `C++17 compiler not found` | Установлен старый пакет платы или старые скрипты репозитория. В свежей Windows-сборке APP пакуются PowerShell/.NET-кодом и Visual Studio/LLVM не требуются; обновите `main`, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. |
 | `lto1.exe ... sketch\objs.a failed` | Путь сборочного кэша IDE содержит символы, потерянные Windows-версией GNU Arm LTO. Закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Установщик создаст отдельный ASCII-кэш, сохранив LTO. |
 | `STM32 DFU tools not found` | Обновите `main`, закройте IDE, повторно выполните `tools\mk61-arduino-board.cmd` и перезапустите IDE. Свежий uploader находит STM32Tools в `Arduino15` даже при нераскрытых свойствах Arduino IDE 1 и при настоящем отсутствии пакета печатает проверенные пути. Выбранный COM-порт к этой ошибке отношения не имеет. |

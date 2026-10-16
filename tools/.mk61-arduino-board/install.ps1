@@ -351,6 +351,11 @@ function Test-InstalledPlatformCurrent {
         [string]$Target
     )
 
+    if ($env:OS -eq 'Windows_NT' -and [IO.File]::Exists(
+            (Join-Path $Target 'tools\seal-firmware-elf.py'))) {
+        return $false
+    }
+
     $files = @(
         @((Join-Path $SourcePlatform 'boards.txt'),
           (Join-Path $Target 'boards.txt')),
@@ -527,6 +532,15 @@ try {
         'tools/seal-firmware-elf.ps1') `
         -Destination (Join-Path $targetTools 'seal-firmware-elf.ps1') -Force
 
+    if ($env:OS -eq 'Windows_NT') {
+        # Older board packages copied the Python ELF sealer into sketchbook.
+        # Windows now has a single PowerShell/.NET build and upload path.
+        $obsoleteSealer = Join-Path $targetTools 'seal-firmware-elf.py'
+        if ([IO.File]::Exists($obsoleteSealer)) {
+            Remove-Item -LiteralPath $obsoleteSealer -Force
+        }
+    }
+
     if ($installFontSettingsCompatibility) {
         Install-Mk61FontSettingsCompatibility `
             $fontSettingsCompatibilitySource $fontSettingsCompatibilityTarget
@@ -541,6 +555,9 @@ try {
     Write-Host 'MK61s F401/F411 boards installed in:'
     Write-Host "  $target"
     Write-Host "MK61s board package version: $sourceVersion"
+    if ($env:OS -eq 'Windows_NT') {
+        Write-Host 'Windows build/upload tools: PowerShell/.NET (no Python).'
+    }
     Write-Host 'Verified uploader: mk61Upload (DFU + automatic /System install).'
     if ($installFontSettingsCompatibility) {
         Write-Host ('Accepted obsolete Arduino IDE font options saved by ' +
