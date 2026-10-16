@@ -41,7 +41,7 @@ function Set-Mk61E2eSerialAdapter {
     $loader = @'
 function Initialize-Mk61E2eDevice {
     if ($null -eq ('Mk61.ArduinoE2E.Device' -as [type])) {
-        Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE
+        [void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes($env:MK61_E2E_ASSEMBLY))
     }
 }
 function New-Mk61E2eSerial {

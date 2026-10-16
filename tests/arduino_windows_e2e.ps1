@@ -19,7 +19,7 @@ $sourceTools = Join-Path $root 'tools/.mk61-arduino-board/hardware/mk61/stm32/to
 $powerShell = (Get-Process -Id $PID).Path
 $windowsHost = $env:OS -eq 'Windows_NT'
 $savedEnvironment = @{}
-foreach ($name in @('PATH', 'MK61_E2E_ROOT', 'MK61_E2E_DEVICE_SOURCE', 'MK61_E2E_POWERSHELL', 'MK61_HOST_CXX', 'TEMP', 'TMP')) {
+foreach ($name in @('PATH', 'MK61_E2E_ROOT', 'MK61_E2E_DEVICE_SOURCE', 'MK61_E2E_ASSEMBLY', 'MK61_E2E_POWERSHELL', 'MK61_HOST_CXX', 'TEMP', 'TMP')) {
     $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name)
 }
 $backups = @{}
@@ -136,10 +136,7 @@ try {
         if (-not [IO.File]::Exists((Join-Path $Stm32ToolsDirectory 'win/busybox.exe'))) { throw 'Missing real STM32Tools BusyBox' }
         Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType ConsoleApplication `
             -OutputAssembly (Join-Path $bin 'STM32_Programmer_CLI.exe')
-        # Load bytes: 5.1 Add-Type rejects EXE paths, and LoadFrom would lock
-        # the temporary executable until this PowerShell process exits.
-        [void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes(
-            (Join-Path $bin 'STM32_Programmer_CLI.exe')))
+        $env:MK61_E2E_ASSEMBLY = Join-Path $bin 'STM32_Programmer_CLI.exe'
         foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
             Copy-Item "$env:WINDIR/System32/where.exe" (Join-Path $bin $name)
         }
@@ -150,14 +147,19 @@ try {
         $busybox = Join-Path $bin 'busybox'
         $wrapper = Join-Path $bin 'stm32CubeProg.sh'
         $programmer = Join-Path $bin 'programmer.ps1'
-        [IO.File]::WriteAllText($programmer, 'Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE; exit [Mk61.ArduinoE2E.Device]::Main($args)')
+        [IO.File]::WriteAllText($programmer, '[void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes($env:MK61_E2E_ASSEMBLY)); exit [Mk61.ArduinoE2E.Device]::Main($args)')
         $shell = '#!/bin/bash' + "`n" + 'exec "$MK61_E2E_POWERSHELL" -NoLogo -NoProfile -File "' + $programmer + '" --download "${4:2}" 0x8000000 --start 0x8000000' + "`n"
         [IO.File]::WriteAllText($busybox, $shell, [Text.UTF8Encoding]::new($false))
         & chmod +x $busybox
         $env:MK61_E2E_POWERSHELL = $powerShell
         [IO.File]::WriteAllText($wrapper, "-b | --bin )`n")
-        Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE
+        $env:MK61_E2E_ASSEMBLY = Join-Path $bin 'device.dll'
+        Add-Type -Path $env:MK61_E2E_DEVICE_SOURCE -OutputType Library `
+            -OutputAssembly $env:MK61_E2E_ASSEMBLY
     }
+    # Compile the physical-boundary simulator once, before changing TEMP.
+    # Child processes load bytes, with no test compiler or locked DLL/EXE.
+    [void][Reflection.Assembly]::Load([IO.File]::ReadAllBytes($env:MK61_E2E_ASSEMBLY))
     $env:PATH = "$bin$([IO.Path]::PathSeparator)$($env:PATH)"
     if ($windowsHost) {
         $resolved = (& $busybox sh -c 'command -v STM32_Programmer_CLI.exe' | Out-String).Trim()
@@ -214,7 +216,14 @@ try {
             }
             $output = [IO.File]::ReadAllText($log)
             if ($case -in @('normal', 'normal-auto-port', 'legacy-first', 'busy-once', 'delayed-port')) {
-                if ($code -ne 0 -or $output -notmatch 'Resident and System APP upload complete') { throw "$case failed ($code): $output" }
+                if ($code -ne 0 -or $output -notmatch 'Resident and System APP upload complete') {
+                    $trace = foreach ($name in @('programmer.args', 'opens', 'discoveries', 'identities', 'commands.log')) {
+                        $path = Join-Path $env:MK61_E2E_ROOT $name
+                        if ([IO.File]::Exists($path)) { $name + ': ' + [IO.File]::ReadAllText($path) }
+                        else { $name + ': <not reached>' }
+                    }
+                    throw "$case failed ($code): $output`nDevice trace:`n$($trace -join "`n")"
+                }
                 Assert-DeviceContents
                 $actualIdentity = [Mk61.ArduinoE2E.Device]::FirmwareIdentity((Join-Path $env:MK61_E2E_ROOT 'firmware.bin'))
                 if ($actualIdentity[0] -cne $metadata.profile -or $actualIdentity[1] -cne $metadata.build_id) { throw 'Firmware identity differs from actual build' }
