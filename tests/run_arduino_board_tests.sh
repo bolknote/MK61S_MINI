@@ -40,8 +40,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.0' "$work/install.txt"
-grep -Fq 'installed 1.2.0; project 1.2.0' "$work/check.txt"
+grep -Fq 'MK61s board package version: 1.2.1' "$work/install.txt"
+grep -Fq 'installed 1.2.1; project 1.2.1' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -98,12 +98,12 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.0)' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.1)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.0)' "$target/boards.txt"
-grep -Fxq 'version=1.2.0' "$target/platform.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.1)' "$target/boards.txt"
+grep -Fxq 'version=1.2.1' "$target/platform.txt"
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -284,15 +284,31 @@ done
 grep -q 'mk61_arduino_sketch_anchor' "$root/code/code.ino"
 
 if command -v pwsh >/dev/null 2>&1; then
+  # Exercise every Windows installer/build/upload helper with unavailable
+  # Python launchers, including the executable names used by older packages.
+  launcher_dir="$work/python-launcher"
+  launcher_log="$work/python-launcher.log"
+  mkdir -p "$launcher_dir"
+  for alias in python python3 py python.exe python3.exe py.exe; do
+    printf '%s\n' \
+      '#!/usr/bin/env bash' \
+      'printf "%s\\n" "$*" >> "$MK61_TEST_PY_LOG"' \
+      'exit 73' > "$launcher_dir/$alias"
+    chmod +x "$launcher_dir/$alias"
+  done
+  run_windows_powershell() {
+    MK61_TEST_PY_LOG="$launcher_log" PATH="$launcher_dir:$PATH" pwsh "$@"
+  }
+
   ps_sketchbook="$work/powershell-sketchbook"
-  pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+  run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
     -Sketchbook "$ps_sketchbook" > "$work/install-ps.txt"
   test ! -e "$ps_sketchbook/hardware/mk61/stm32/boards.local.txt"
-  pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+  run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
     -Check -Sketchbook "$ps_sketchbook" > "$work/check-ps.txt"
   if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     ARDUINO_DIRECTORIES_USER="$ps_sketchbook" \
-      pwsh -NoLogo -NoProfile -File \
+      run_windows_powershell -NoLogo -NoProfile -File \
         "$root/tests/arduino_legacy_fqbn_self_test.ps1" \
         -Sketchbook "$ps_sketchbook"
   fi
@@ -303,15 +319,15 @@ if command -v pwsh >/dev/null 2>&1; then
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-upload.ps1"
   printf '\n# stale test copy\n' >> \
     "$ps_sketchbook/hardware/mk61/stm32/platform.txt"
-  if pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+  if run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
       -Check -Sketchbook "$ps_sketchbook" \
       > "$work/stale-check-ps.txt" 2>&1; then
     echo 'PowerShell board check accepted a stale installed platform' >&2
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.0; project 1.2.0' "$work/stale-check-ps.txt"
-  if pwsh -NoLogo -NoProfile -File \
+  grep -Fq 'installed 1.2.1; project 1.2.1' "$work/stale-check-ps.txt"
+  if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
       > "$work/stale-prebuild-ps.txt" 2>&1; then
@@ -320,7 +336,7 @@ if command -v pwsh >/dev/null 2>&1; then
   fi
   grep -q 'installed but stale' "$work/stale-prebuild-ps.txt"
   grep -Fq 'mk61-arduino-board.cmd' "$work/stale-prebuild-ps.txt"
-  pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+  run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
     -Sketchbook "$ps_sketchbook" > "$work/reinstall-ps.txt"
   cmp "$platform/platform.txt" \
       "$ps_sketchbook/hardware/mk61/stm32/platform.txt"
@@ -334,7 +350,7 @@ if command -v pwsh >/dev/null 2>&1; then
     "$work/reinstall-ps.txt"
   if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then
     ARDUINO_DIRECTORIES_USER="$ps_sketchbook" \
-      pwsh -NoLogo -NoProfile -File \
+      run_windows_powershell -NoLogo -NoProfile -File \
         "$root/tests/arduino_legacy_fqbn_self_test.ps1" \
         -Sketchbook "$ps_sketchbook"
   fi
@@ -361,7 +377,7 @@ locale: en
 EOF
   OS=Windows_NT PUBLIC="$ps_public" \
     MK61_ARDUINO_CONFIG_FILE="$ps_config" \
-    pwsh -NoLogo -NoProfile -File "$package/install.ps1" \
+    run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
       > "$work/install-configured-ps.txt"
   cmp "$platform/boards.txt" \
       "$ps_config_sketchbook/hardware/mk61/stm32/boards.txt"
@@ -382,6 +398,37 @@ EOF
     -type d -name 'build-cache-*' | grep -q .
   grep -Fq 'Do not search for this manually installed board in Boards Manager' \
       "$work/install-configured-ps.txt"
+
+  # Upgrade the package Arduino kept outside the checkout. Updating the ZIP
+  # alone leaves this legacy Python hook and its copied ELF sealer intact.
+  configured_platform="$ps_config_sketchbook/hardware/mk61/stm32"
+  printf 'obsolete ELF sealer\n' > \
+    "$configured_platform/tools/seal-firmware-elf.py"
+  if OS=Windows_NT PUBLIC="$ps_public" \
+      MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+      run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" -Check \
+      > "$work/legacy-python-check.txt" 2>&1; then
+    echo 'Windows board check accepted the legacy Python package' >&2
+    exit 1
+  fi
+  grep -q 'installed but stale' "$work/legacy-python-check.txt"
+  test -s "$configured_platform/tools/seal-firmware-elf.py"
+  printf '& py.exe -3 build_system_app_bundle.py\n' > \
+    "$configured_platform/tools/mk61-app-postbuild.ps1"
+  OS=Windows_NT PUBLIC="$ps_public" \
+    MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+    run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" \
+      > "$work/legacy-python-upgrade.txt"
+  cmp "$platform/tools/mk61-app-postbuild.ps1" \
+    "$configured_platform/tools/mk61-app-postbuild.ps1"
+  test ! -e "$configured_platform/tools/seal-firmware-elf.py"
+  grep -Fq 'Windows build/upload tools: PowerShell/.NET (no Python).' \
+    "$work/legacy-python-upgrade.txt"
+  OS=Windows_NT PUBLIC="$ps_public" \
+    MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+    run_windows_powershell -NoLogo -NoProfile -File "$package/install.ps1" -Check \
+      > "$work/upgraded-python-check.txt"
+
   mock_build="$work/mock-build"
   mock_stage="$mock_build/mk61-system-apps/mk61s-M-classic-v2-uc1609-f401"
   mock_system="$mock_stage/System"
@@ -389,8 +436,8 @@ EOF
   mkdir -p "$mock_system" "$mock_device"
   printf 'mock APP' > "$mock_system/USBDISK.APP"
   cp "$root/tools/.mkc/mkc.ps1" "$mock_stage/mk61-system-installer.ps1"
-  pwsh -NoLogo -NoProfile -File \
-    "$platform/tools/mk61-app-upload.ps1" \
+  run_windows_powershell -NoLogo -NoProfile -File \
+    "$configured_platform/tools/mk61-app-upload.ps1" \
     -BuildPath "$mock_build" -Project code.ino \
     -Bundle mk61s-M-classic-v2-uc1609-f401 \
     -Profile classic-v2-uc1609 \
@@ -422,7 +469,7 @@ EOF
     fi
     MK61_ARDUINO_DATA_DIR="$mock_arduino_data" \
       MK61_TEST_DFU_LOG="$mock_dfu_log" \
-      pwsh -NoLogo -NoProfile -File \
+      run_windows_powershell -NoLogo -NoProfile -File \
         "$platform/tools/mk61-app-upload.ps1" \
         -BuildPath "$mock_build" -Project code.ino \
         -Bundle mk61s-M-classic-v2-uc1609-f401 \
@@ -441,7 +488,7 @@ EOF
   mkdir -p "$missing_arduino_data"
   if MK61_ARDUINO_DATA_DIR="$missing_arduino_data" \
       LOCALAPPDATA="$work/missing-local-data" USERPROFILE="$work/missing-profile" \
-      pwsh -NoLogo -NoProfile -File \
+      run_windows_powershell -NoLogo -NoProfile -File \
         "$platform/tools/mk61-app-upload.ps1" \
         -BuildPath "$mock_build" -Project code.ino \
         -Bundle mk61s-M-classic-v2-uc1609-f401 \
@@ -479,7 +526,7 @@ EOF
     exit 1
   fi
   mv "$mock_system/USBDISK.APP" "$work/missing-usbdisk.app"
-  if pwsh -NoLogo -NoProfile -File \
+  if run_windows_powershell -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
@@ -489,7 +536,7 @@ EOF
     exit 1
   fi
   mv "$work/missing-usbdisk.app" "$mock_system/USBDISK.APP"
-  if pwsh -NoLogo -NoProfile -File \
+  if run_windows_powershell -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-upload.ps1" \
       -BuildPath "$mock_build" -Project code.ino \
       -Bundle mk61s-M-classic-v2-uc1609-f401 \
@@ -505,7 +552,7 @@ EOF
   cp "$root/tools/.mkc/mkc.ps1" \
     "$mock_f411_stage/mk61-system-installer.ps1"
   printf 'stale APP' > "$mock_device/System/USBDISK.APP"
-  pwsh -NoLogo -NoProfile -File \
+  run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-upload.ps1" \
     -BuildPath "$mock_build" -Project code.ino \
     -Bundle mk61s-M-mini-v2-lcd1602-a00-f411 \
@@ -515,17 +562,17 @@ EOF
   test -s "$mock_device/System/HELP0.TXT"
   grep -q 'Resident and System APP upload complete' \
     "$work/mock-upload-f411.txt"
-  pwsh -NoLogo -NoProfile -File \
+  run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code"
-  pwsh -NoLogo -NoProfile -File \
+  run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v3 -Display oled1602-ws0010 -Sketch "$root/code"
-  pwsh -NoLogo -NoProfile -File \
+  run_windows_powershell -NoLogo -NoProfile -File \
     "$platform/tools/mk61-app-postbuild.ps1" check-profile \
     -Platform mini-v2 -Display lcd1602-a00 -UsbScreen 1 -Chip8 1 \
     -Sketch "$root/code"
-  if pwsh -NoLogo -NoProfile -File \
+  if run_windows_powershell -NoLogo -NoProfile -File \
       "$platform/tools/mk61-app-postbuild.ps1" check-profile \
       -Platform mini-v2 -Display lcd1602-a00 -UsbScreen 0 -Chip8 1 \
       -Sketch "$root/code" > "$work/chip8-without-graphics-ps.txt" 2>&1; then
@@ -535,30 +582,20 @@ EOF
   grep -q 'CHIP-8 выбран без графического экрана' \
     "$work/chip8-without-graphics-ps.txt"
 
-  # Keep broken Python launchers ahead of the host tools.  The Windows hook
-  # must still prepare the portable linker script without invoking any of
-  # them: Arduino IDE builds now use only PowerShell/.NET host helpers.
-  launcher_dir="$work/python-launcher"
-  launcher_log="$work/python-launcher.log"
+  # The upgraded Windows hook must prepare the portable linker script without
+  # invoking the blocked launchers, just like installation and Upload above.
   launcher_build="$work/python-launcher-build"
-  mkdir -p "$launcher_dir" "$launcher_build"
-  for alias in python python3 py; do
-    printf '%s\n' \
-      '#!/usr/bin/env bash' \
-      'printf "%s\\n" "$*" >> "$MK61_TEST_PY_LOG"' \
-      'exit 73' > "$launcher_dir/$alias"
-    chmod +x "$launcher_dir/$alias"
-  done
+  mkdir -p "$launcher_build"
   printf '%s\n' \
     'SECTIONS' \
     '{' \
     '  PROVIDE ( _end = . );' \
     '    *(.bss)' \
     '}' > "$work/variant.ld"
-  MK61_TEST_PY_LOG="$launcher_log" \
-  PATH="$launcher_dir:$PATH" \
-    pwsh -NoLogo -NoProfile -File \
-      "$platform/tools/mk61-app-postbuild.ps1" check-profile \
+  OS=Windows_NT PUBLIC="$ps_public" \
+    MK61_ARDUINO_CONFIG_FILE="$ps_config" \
+    run_windows_powershell -NoLogo -NoProfile -File \
+      "$configured_platform/tools/mk61-app-postbuild.ps1" check-profile \
       -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \
       -BuildPath "$launcher_build" -VariantLd "$work/variant.ld"
   test -s "$launcher_build/mk61-portable.ld"
@@ -572,7 +609,7 @@ EOF
   MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
   MK61_TEST_SKETCH="$root/code" \
   MK61_TEST_COMPILER="${compiler_stub%.exe}" \
-    pwsh -NoLogo -NoProfile -Command '
+    run_windows_powershell -NoLogo -NoProfile -Command '
       . $env:MK61_TEST_HOOK check-profile `
           -Platform mini-v3 -Display lcd1602-a00 `
           -Sketch $env:MK61_TEST_SKETCH
@@ -592,7 +629,7 @@ EOF
   MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
   MK61_TEST_SKETCH="$root/code" \
   MK61_TEST_BUNDLE="$license_bundle" \
-    pwsh -NoLogo -NoProfile -Command '
+    run_windows_powershell -NoLogo -NoProfile -Command '
       . $env:MK61_TEST_HOOK check-profile `
           -Platform mini-v3 -Display lcd1602-a00 `
           -Sketch $env:MK61_TEST_SKETCH
@@ -603,13 +640,14 @@ EOF
   MK61_TEST_HOOK="$platform/tools/mk61-app-postbuild.ps1" \
   MK61_TEST_SKETCH="$root/code" \
   MK61_TEST_BUNDLE="$license_bundle" \
-    pwsh -NoLogo -NoProfile -Command '
+    run_windows_powershell -NoLogo -NoProfile -Command '
       . $env:MK61_TEST_HOOK check-profile `
           -Platform mini-v3 -Display lcd1602-a00 `
           -Sketch $env:MK61_TEST_SKETCH
       Remove-Mk61BundledUiFontLicenses -Output $env:MK61_TEST_BUNDLE
     '
   test -d "$license_bundle/licenses"
+  test ! -e "$launcher_log"
 fi
 
 if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ]; then

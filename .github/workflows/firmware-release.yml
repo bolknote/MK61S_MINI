@@ -210,6 +210,13 @@ jobs:
       - name: Install MK61 Arduino board
         shell: pwsh
         run: |
+          $pythonTrap = Join-Path $env:RUNNER_TEMP 'mk61-no-python'
+          [IO.Directory]::CreateDirectory($pythonTrap) | Out-Null
+          foreach ($name in @('python.exe', 'python3.exe', 'py.exe')) {
+            Copy-Item "$env:WINDIR\System32\where.exe" `
+              (Join-Path $pythonTrap $name) -Force
+          }
+          $env:PATH = "$pythonTrap;$env:PATH"
           $originalSketchbook = (& arduino-cli config get directories.user |
             Out-String).Trim()
           if ($LASTEXITCODE -ne 0 -or
@@ -282,7 +289,22 @@ jobs:
           & ./tests/arduino_legacy_fqbn_self_test.ps1 `
             -ConfigFile $ideConfig -Sketchbook $configuredSketchbook
 
-          & ./tools/mk61-arduino-board.cmd
+          # A ZIP update leaves the old installed Python hook outside the
+          # checkout. Upgrade that copy with stock Windows PowerShell 5.1.
+          $installedTools = Join-Path $configuredSketchbook `
+            'hardware/mk61/stm32/tools'
+          $obsoleteSealer = Join-Path $installedTools 'seal-firmware-elf.py'
+          [IO.File]::WriteAllText($obsoleteSealer, '# obsolete Python sealer')
+          [IO.File]::WriteAllText(
+            (Join-Path $installedTools 'mk61-app-postbuild.ps1'),
+            '& py.exe -3 build_system_app_bundle.py')
+          & powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass `
+            -File ./tools/.mk61-arduino-board/install.ps1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (Test-Path -LiteralPath $obsoleteSealer) {
+            throw 'Windows upgrade retained the obsolete Python ELF sealer'
+          }
+          & ./tools/mk61-arduino-board.cmd -Check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & ./tests/arduino_legacy_fqbn_self_test.ps1 `
             -ConfigFile $ideConfig -Sketchbook $configuredSketchbook
