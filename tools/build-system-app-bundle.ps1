@@ -285,8 +285,11 @@ function Get-SourceKey {
 
 function Get-AppBuildKey {
     param([string]$SourceKey, [object]$Module)
+    # CI must not reuse an ordinary build that skipped regression ceilings.
+    $sizeBudgets = ([string]$env:CI).Trim() -in @('true', '1')
     $identity = $SourceKey + [char]0 + $Module.Name + [char]0 +
-        $Module.System + [char]0 + (Get-AppVariant $Module.System)
+        $Module.System + [char]0 + (Get-AppVariant $Module.System) +
+        [char]0 + "ci-size-budgets=$([int]$sizeBudgets)"
     return Get-HexHash ([Text.Encoding]::UTF8.GetBytes($identity))
 }
 

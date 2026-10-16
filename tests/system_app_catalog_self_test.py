@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import multiprocessing
+import os
 from pathlib import Path
 import struct
 import sys
@@ -83,6 +84,33 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
         self.assertNotEqual(plain["focal"],bundle.app_build_key("sources","focal.APP","focal",args))
         self.assertNotEqual(plain["language-vm"],bundle.app_build_key("sources","language-vm.APP","language-vm",args))
         self.assertEqual(plain["tinybasic"],bundle.app_build_key("sources","tinybasic.APP","tinybasic",args))
+
+    def test_ci_does_not_reuse_an_unchecked_ordinary_app(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = arguments(root / "catalog")
+            args.language_vm_compiler = True
+            source = root / "FOCAL.APP"
+            source.write_bytes(app_payload(42))
+            with patch.dict(os.environ, CI="false"):
+                local_key = bundle.app_build_key("sources", "FOCAL.APP", "focal", args)
+                bundle.publish_catalog(source, "FOCAL.APP", "focal", local_key, args)
+                self.assertEqual(bundle.cached_catalog_payload(
+                    "FOCAL.APP", "focal", local_key, args), source.read_bytes())
+            for ci in ("true", "TRUE", "1", " true "):
+                with self.subTest(ci=ci), patch.dict(os.environ, CI=ci):
+                    ci_key = bundle.app_build_key("sources", "FOCAL.APP", "focal", args)
+                    self.assertNotEqual(local_key, ci_key)
+                    self.assertIsNone(bundle.cached_catalog_payload(
+                        "FOCAL.APP", "focal", ci_key, args))
+            for ci in (None, "", "0"):
+                with self.subTest(ci=ci), patch.dict(os.environ):
+                    if ci is None:
+                        os.environ.pop("CI", None)
+                    else:
+                        os.environ["CI"] = ci
+                    self.assertEqual(local_key, bundle.app_build_key(
+                        "sources", "FOCAL.APP", "focal", args))
 
     def test_file_cache_policy_is_read_from_the_resident(self) -> None:
         for enabled in (0, 1):

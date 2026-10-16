@@ -39,9 +39,10 @@ SYSTEM_MODULES = {
         "language_vm_flow.cpp", "language_compiler_flow.cpp"], None),
 }
 
-# These ceilings protect intentionally compact system interpreters from silent
-# code-size regressions.  memory_bytes is the complete loaded image plus BSS;
-# the editor/runtime workspace leased by the firmware is accounted separately.
+# CI-only regression ceilings for intentionally compact system interpreters.
+# Ordinary builds rely on the linker's and packer's hard APP format limits.
+# memory_bytes is the complete loaded image plus BSS; the editor/runtime
+# workspace leased by the firmware is accounted separately.
 SYSTEM_SIZE_BUDGETS = {
     # SETUP owns all FMK validation and compilation.  Keep enough headroom in
     # the 20-KiB APP arena for that decoder plus its full 8-KiB source buffer.
@@ -90,6 +91,8 @@ def enforce_system_size_budget(system: str | None, report: dict,
                                greedy_packer: bool = False,
                                split_language_vm: bool = False,
                                language_vm_compiler: bool = False) -> None:
+    if os.environ.get("CI", "").strip().lower() not in ("true", "1"):
+        return
     budgets = LOCAL_FLOAT_SIZE_BUDGETS if local_float_math else SYSTEM_SIZE_BUDGETS
     budget = budgets.get(system)
     if language_vm_compiler:

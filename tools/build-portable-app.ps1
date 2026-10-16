@@ -230,6 +230,9 @@ function Get-Symbols {
 
 function Assert-SizeBudget {
     param([hashtable]$Report)
+    # Compactness regressions belong to CI. The linker and packer always
+    # enforce the hard APP image and container limits before this check.
+    if (([string]$env:CI).Trim() -notin @('true', '1')) { return }
     $appLimit = $null
     $memoryLimit = $null
     if ($LocalFloatMath) {

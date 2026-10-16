@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# Enforce System APP compactness regressions in every CI build path,
+# including Windows Arduino IDE hooks and direct GCC builds.
+env:
+  CI: "true"
+
 jobs:
   host-tests:
     name: Host tests

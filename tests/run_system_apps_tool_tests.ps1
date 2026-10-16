@@ -80,16 +80,67 @@ $budgetFunction = $budgetAst.Find({ param($node)
         $node.Name -eq 'Assert-SizeBudget'
 }, $true)
 . ([scriptblock]::Create($budgetFunction.Extent.Text))
-foreach ($LocalFloatMath in @($false, $true)) {
-    $System = 'language-vm'; $SplitLanguageVm = $true
-    $LanguageVmCompiler = $false; $FocalTrace = $false
-    $limit = if ($LocalFloatMath) { 19968 } else { 19456 }
-    Assert-SizeBudget @{ app_bytes = 14000; memory_bytes = $limit }
-    $rejected = $false
-    try { Assert-SizeBudget @{ app_bytes = 14000; memory_bytes = $limit + 1 } }
-    catch { $rejected = $_.Exception.Message -match "memory_bytes=.* > $limit" }
-    Assert-True $rejected 'PowerShell accepted an oversized split language VM'
-}
+$budgetCases = @(
+    @{ System = 'setup'; app_bytes = 10000; memory_bytes = 20480 },
+    @{ System = 'focal'; app_bytes = 13500; memory_bytes = 17000 },
+    @{ System = 'explorer'; app_bytes = 8000; memory_bytes = 10000 },
+    @{ System = 'language-input'; app_bytes = 13312; memory_bytes = 16000 },
+    @{ System = 'focal'; LocalFloatMath = $true;
+        app_bytes = 15100; memory_bytes = 20000 },
+    @{ System = 'tinybasic'; LocalFloatMath = $true;
+        app_bytes = 13000; memory_bytes = 17500 },
+    @{ System = 'focal'; LanguageVmCompiler = $true;
+        app_bytes = 15360; memory_bytes = 19648 },
+    @{ System = 'focal'; LanguageVmCompiler = $true; FocalTrace = $true;
+        app_bytes = 15360; memory_bytes = 19840 },
+    @{ System = 'language-vm'; SplitLanguageVm = $true; memory_bytes = 19456 },
+    @{ System = 'language-vm'; SplitLanguageVm = $true; LocalFloatMath = $true;
+        memory_bytes = 19968 }
+)
+$originalCi = [Environment]::GetEnvironmentVariable('CI', 'Process')
+try {
+    foreach ($case in $budgetCases) {
+        $System = $case.System
+        $LocalFloatMath = [bool]$case['LocalFloatMath']
+        $LanguageVmCompiler = [bool]$case['LanguageVmCompiler']
+        $SplitLanguageVm = [bool]$case['SplitLanguageVm']
+        $FocalTrace = [bool]$case['FocalTrace']
+        foreach ($ci in @($null, '', 'false', '0')) {
+            $env:CI = $ci
+            Assert-SizeBudget @{ app_bytes = 20000; memory_bytes = 20480 }
+            if ($System -eq 'focal' -and $LanguageVmCompiler) {
+                Assert-SizeBudget @{ app_bytes = 15631; memory_bytes = 19404 }
+                Assert-SizeBudget @{ app_bytes = 14238; memory_bytes = 20000 }
+            }
+        }
+        foreach ($ci in @('true', 'TRUE', '1', ' true ')) {
+            $env:CI = $ci
+            $report = @{ app_bytes = 1; memory_bytes = $case.memory_bytes }
+            if ($case.ContainsKey('app_bytes')) {
+                $report.app_bytes = $case.app_bytes
+            }
+            Assert-SizeBudget $report
+            foreach ($field in @('app_bytes', 'memory_bytes')) {
+                if (-not $case.ContainsKey($field)) { continue }
+                $oversized = $report.Clone()
+                $oversized[$field]++
+                $rejected = $false
+                try { Assert-SizeBudget $oversized }
+                catch {
+                    $rejected = $_.Exception.Message -match
+                        "$field=$($oversized[$field]) > $($case[$field])"
+                }
+                Assert-True $rejected "CI accepted oversized $System $field"
+            }
+            if ($System -eq 'focal' -and $LanguageVmCompiler) {
+                $rejected = $false
+                try { Assert-SizeBudget @{ app_bytes = 15631; memory_bytes = 19404 } }
+                catch { $rejected = $_.Exception.Message -match 'app_bytes=15631 > 15360' }
+                Assert-True $rejected 'CI accepted the reported 15631-byte FOCAL'
+            }
+        }
+    }
+} finally { $env:CI = $originalCi }
 
 $wrapperText = [IO.File]::ReadAllText($wrapper)
 $commonText = [IO.File]::ReadAllText($commonBuilder)

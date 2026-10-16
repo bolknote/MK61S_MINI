@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Exercise the actual packer and production reader, including damaged files."""
 import argparse
+import os
+import random
 import re
 import struct
 import subprocess
@@ -81,6 +83,40 @@ def relocation_checks(args, work):
         struct.pack_into('<I', large, offset, base + 20488)
         assert memory.read_bytes() == large
     print('APP relocation: shifted addresses, Thumb pointers, BSS, constants and forged-CRC failures PASS')
+
+
+def size_limit_checks(args, work):
+    image, app, memory, table = (work / name for name in (
+        "limits.bin", "limits.APP", "limits-memory.bin", "limits.rel"))
+    table.write_bytes(b"")
+    for ci in ("false", "true"):
+        environment = {**os.environ, "CI": ci}
+        command = packer_command(
+            args, '--portable', '--kind', 'app', '--image', image,
+            '--memory-size', 20480, '--entry-offset', 0,
+            '--relocations', table, '--output', app)
+        image.write_bytes(bytes(32))
+        subprocess.run([str(x) for x in command], env=environment,
+                       capture_output=True, text=True, check=True)
+        run([args.reader, app, memory])
+        assert memory.read_bytes() == bytes(20480)
+        for image_size, memory_size in ((32, 20481), (20481, 20481), (33, 32)):
+            image.write_bytes(bytes(image_size))
+            oversized = list(command)
+            oversized[oversized.index('--memory-size') + 1] = memory_size
+            result = subprocess.run([str(x) for x in oversized], env=environment,
+                                    capture_output=True, text=True)
+            assert result.returncode != 0, (ci, image_size, memory_size)
+            assert '20 KiB APP image limit' in result.stdout + result.stderr
+        # Incompressible payload fits loaded memory, but its ZX0 container
+        # exceeds the independent 20544-byte file limit (header included).
+        image.write_bytes(random.Random(0).randbytes(20480))
+        result = subprocess.run([str(x) for x in command], env=environment,
+                                capture_output=True, text=True)
+        assert result.returncode != 0, 'packer accepted an oversized APP container'
+        message = result.stdout + result.stderr
+        assert 'container limit' in message or 'slot limit is 20544' in message, message
+    print('APP hard limits: 20-KiB memory and 20544-byte container enforced with and without CI PASS')
 
 
 def main():
@@ -165,6 +201,7 @@ def main():
         struct.pack_into("<I", trailing, 60, zlib.crc32(trailing[:60]))
         reject(trailing)
         relocation_checks(args, work)
+        size_limit_checks(args, work)
     print("APP ABI 6 packages: BCJ/plain/tie, BSS, relocation and corruption PASS")
 
 

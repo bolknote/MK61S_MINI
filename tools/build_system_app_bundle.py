@@ -218,8 +218,11 @@ def catalog_source_key(args: argparse.Namespace, toolchain: Path) -> str:
 
 def app_build_key(source_key: str, filename: str, system: str,
                   args: argparse.Namespace) -> str:
+    # CI must not reuse an ordinary build that skipped regression ceilings.
+    size_budgets = os.environ.get("CI", "").strip().lower() in ("true", "1")
     identity = "\0".join((source_key, filename, system,
-                           app_variant(system, args)))
+                           app_variant(system, args),
+                           f"ci-size-budgets={int(size_budgets)}"))
     return hashlib.sha256(identity.encode("utf-8")).hexdigest()
 
 

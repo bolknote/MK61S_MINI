@@ -70,6 +70,32 @@ Publish-Catalog '$($source.Replace("'", "''"))' `$module 'build-$index'
             "TEST$index.APP cached the wrong payload"
     }
 
+    # A local APP can exceed CI compactness ceilings. Never treat it as
+    # already checked when the same catalog is consumed by CI.
+    $originalCi = [Environment]::GetEnvironmentVariable('CI', 'Process')
+    try {
+        $module = [pscustomobject]@{ Name = 'FOCAL.APP'; System = 'focal' }
+        $source = Join-Path $temporary 'FOCAL.APP'
+        [IO.File]::WriteAllBytes($source, (New-AppPayload 42))
+        $env:CI = 'false'
+        $localKey = Get-AppBuildKey 'sources' $module
+        Publish-Catalog $source $module $localKey | Out-Null
+        Assert-Test ($null -ne (Get-CachedPayload $module $localKey)) `
+            'ordinary build did not reuse its own APP'
+        foreach ($ci in @('true', 'TRUE', '1', ' true ')) {
+            $env:CI = $ci
+            $ciKey = Get-AppBuildKey 'sources' $module
+            Assert-Test ($ciKey -ne $localKey) 'CI reused an unchecked build key'
+            Assert-Test ($null -eq (Get-CachedPayload $module $ciKey)) `
+                'CI reused an unchecked ordinary APP'
+        }
+        foreach ($ci in @($null, '', '0')) {
+            $env:CI = $ci
+            Assert-Test ((Get-AppBuildKey 'sources' $module) -eq $localKey) `
+                'ordinary build used a CI build key'
+        }
+    } finally { $env:CI = $originalCi }
+
     [IO.File]::WriteAllText((Join-Path $catalog 'catalog.json'), 'not json')
     $missing = Get-CachedPayload ([pscustomobject]@{
         Name = 'BROKEN.APP'; System = 'broken'
