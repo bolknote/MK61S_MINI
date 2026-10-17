@@ -29,6 +29,11 @@ bool pack(const Key&,const uint8_t* image,uint16_t size,
 // complete key. The subsequent single full read must still pass view/verifier.
 bool probe(const Key&,const uint8_t* prefix,uint16_t prefix_size,
            uint16_t file_size,uint16_t& image_size);
+// Negative prefilter before reading source bytes. Checks every key field
+// except source_crc and returns that untrusted value separately. The caller
+// must calculate/compare the source CRC before reserving, then use view().
+bool probe_candidate(const Key&,const uint8_t* prefix,uint16_t prefix_size,
+                     uint16_t file_size,uint32_t& source_crc,uint16_t& image_size);
 // Full C6 CRCs, key, canonical literal-only recipe and non-executable entry
 // are checked. The returned span still needs the ordinary VM verifier.
 bool view(const Key&,const uint8_t* file,uint16_t size,

@@ -1,0 +1,211 @@
+{
+  "status": "PASS",
+  "date": "2026-10-17",
+  "source_base_commit": "94a8bac7158d74e26f77f9fdafae5876fe3192e6",
+  "build_scope": "Clean archived main plus VMSTORE changes only; parallel PicoCalc/terminal/display edits excluded.",
+  "device": {
+    "public_id": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411CE",
+    "firmware_build": "2539ED52"
+  },
+  "implementation": {
+    "prefilter": "Find a cache candidate, validate C6 header/canonical literal prefix, compiler identity, language, source ID/size and bytecode version before any source-content read.",
+    "source_crc": "One verified full read into the existing 4176-byte compiler-prefix lease when the source fits; otherwise unchanged 256-byte pages. Calculate and compare the source CRC before reserving any image.",
+    "trust": "The prefix is a negative filter, not a certificate. Full container CRCs, exact file length, source/compiler key, immutable epoch and ordinary VM verifier remain mandatory after reservation.",
+    "format_unchanged": true,
+    "new_permanent_buffers": 0
+  },
+  "measurement": {
+    "method": "Same firmware; identical BASIC.APP and merged Turochamp package in all stages; only VMSTORE varies. Original VMC snapshot restored, then reboot, before each stage. Four searches per stage; USB full-eight-rank board wall clock.",
+    "cold_definition": "First search with compilation/RAM fill, not reboot with an already-current chess file cache.",
+    "app_variants": {
+      "/System/BASIC.app": {
+        "baseline": {
+          "bytes": 14420,
+          "sha256": "cb1aff8b108bde4c6b04f15ea29545c87c06a5e44141c1454c7655267b4fc63d"
+        },
+        "candidate": {
+          "bytes": 14420,
+          "sha256": "cb1aff8b108bde4c6b04f15ea29545c87c06a5e44141c1454c7655267b4fc63d"
+        }
+      },
+      "/System/VMCache/VMSTORE.app": {
+        "baseline": {
+          "bytes": 7361,
+          "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+        },
+        "candidate": {
+          "bytes": 7392,
+          "sha256": "8d24c83764fc409cda8d3b1f24052dce2664c9072b1c4717fb9fe1bba0c06a3b"
+        }
+      }
+    },
+    "stages": [
+      {
+        "name": "baseline",
+        "seconds": [
+          65.94177033298183,
+          26.402812834014185,
+          25.23055337497499,
+          25.17848258302547
+        ],
+        "steady_seconds": 25.20451797900023,
+        "cold_phase_seconds": {
+          "until_21_nodes": 33.92245254199952,
+          "from_21_to_420": 23.6068069160101,
+          "after_420_until_full_board": 8.412510874972213
+        },
+        "stack_watermark_remaining": 9216,
+        "frames_crc_checked": 967
+      },
+      {
+        "name": "candidate",
+        "seconds": [
+          64.802719875006,
+          26.231868375034537,
+          25.191930791013874,
+          25.13382254197495
+        ],
+        "steady_seconds": 25.162876666494412,
+        "cold_phase_seconds": {
+          "until_21_nodes": 33.04725125001278,
+          "from_21_to_420": 23.56059325003298,
+          "after_420_until_full_board": 8.194875374960247
+        },
+        "stack_watermark_remaining": 9168,
+        "frames_crc_checked": 964
+      },
+      {
+        "name": "control",
+        "seconds": [
+          65.91804466600297,
+          26.399810999981128,
+          25.232214167015627,
+          25.175301791983657
+        ],
+        "steady_seconds": 25.203757979499642,
+        "cold_phase_seconds": {
+          "until_21_nodes": 33.89479987497907,
+          "from_21_to_420": 23.61017158301547,
+          "after_420_until_full_board": 8.413073208008427
+        },
+        "stack_watermark_remaining": 9216,
+        "frames_crc_checked": 969
+      }
+    ],
+    "cold": {
+      "baseline_seconds": 65.94177033298183,
+      "candidate_seconds": 64.802719875006,
+      "control_seconds": 65.91804466600297,
+      "reference_seconds": 65.9299074994924,
+      "speedup": 1.017394140657376,
+      "elapsed_reduction_percent": 1.7096757256865214,
+      "control_drift_percent": -0.03597972401871985,
+      "state": "Reboot, original VMC snapshot; first compile and RAM fill",
+      "seconds_saved": 1.127187624486396
+    },
+    "warm": {
+      "reference_seconds": 25.204137979249936,
+      "candidate_seconds": 25.162876666494412,
+      "elapsed_reduction_percent": 0.16370848623941114
+    },
+    "searches": {
+      "count": 12,
+      "move": "e2e3",
+      "nodes": 420,
+      "book": "off",
+      "level": 2,
+      "max_depth": 8,
+      "full_eight_rank_board": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  },
+  "limits": {
+    "weakened": false,
+    "hard_app_memory": 20480,
+    "workspace": 8192,
+    "compiler_prefix": 4176,
+    "retained_numeric_values": 4016,
+    "vm_image_cache": 32768,
+    "vm_bytecode": 6144,
+    "vm_module": 9728,
+    "source_maximum": 65534,
+    "source_page": 256,
+    "file_cache_files": 32,
+    "file_cache_bytes": 65536,
+    "native_stack": 16384,
+    "vmstore": {
+      "packed_before": 7361,
+      "packed_after": 7392,
+      "packed_delta": 31,
+      "memory_before": 9180,
+      "memory_after": 9220,
+      "memory_delta": 40,
+      "bss_before": 17,
+      "bss_after": 17,
+      "baseline_sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8",
+      "candidate_sha256": "8d24c83764fc409cda8d3b1f24052dce2664c9072b1c4717fb9fe1bba0c06a3b"
+    },
+    "resident": {
+      "flash_before_after": [
+        343168,
+        343168
+      ],
+      "text_before_after": [
+        341524,
+        341524
+      ],
+      "data_before_after": [
+        1632,
+        1632
+      ],
+      "bss_before_after": [
+        22648,
+        22648
+      ],
+      "static_end": "0x200058D8",
+      "foreground_frames": {
+        "main": 80,
+        "terminal_dispatch": 520
+      },
+      "whole_ram_gate": "PASS: effective free 33696, maximum standalone APP 20480, full stage index 2560, MSC 8264, filesystem temporaries 824"
+    }
+  },
+  "verification": {
+    "host": "ASan/UBSan: math backends 0/1 x USB 0/1 x mixed-cache 0/1 PASS",
+    "metadata": "Missing/short/corrupt/incompatible compiler/header/key/version/size rejects before source validation; source-CRC mismatch rejects before reserve; full payload CRC/VM verification remain mandatory PASS",
+    "boundaries": "4175/4176 => one source-validation read; 4177/65534 => 256-byte paging. Source-size mismatches do not read the source. I/O, short/late reads and epoch changes reject the hit PASS",
+    "flows": "Existing cold/store, warm/load, old owned formats, collision preservation, corrupt payload, post-reserve length/race, quota/OOM, INPUT/retry/ESC, FOCAL and active-USB canaries PASS",
+    "arm": {
+      "status": "PASS",
+      "cases": 38,
+      "load_addresses": 3,
+      "languages": [
+        "BASIC",
+        "FOCAL"
+      ],
+      "maximum_fixture_stack": 1368,
+      "source_lengths": [
+        3072,
+        4176,
+        4177
+      ],
+      "checks": "Real VMSTORE ARM: early misses without source reads, bulk/paged CRC, claimed-CRC mismatch, I/O/epoch rejection, full-load CRC, unchanged output on bad payload, preserved values. Storage/allocator are fixtures, not hardware timings."
+    },
+    "turochamp_budgets": "Both math backends: 24 modules, largest 5609/6144 bytes; source/line/call/value/loop ceilings unchanged PASS",
+    "native": "Classic Flash, RAM, stack-frame, whole live RAM, CDC receive and retained foreground-stack gates PASS"
+  },
+  "restoration": {
+    "exact": true,
+    "original_files": 22,
+    "original_directories": 2,
+    "firmware_writes": 0,
+    "system_app_writes": 4,
+    "files_and_calculator_preserved": true,
+    "usb_session_released_by_reset": true,
+    "mini_touched": false
+  },
+  "raw_artifacts": "/private/tmp/mk61-vmstore-cold.KLKkwr"
+}

@@ -23,5 +23,7 @@
 #define MK61_APP_RELOCATABLE_FLAG 4U
 #define MK61_PORTABLE_APP_FLAG 1U
 #define MK61_APP_ARM_THUMB_BCJ_FLAG 2U
+/* ABI 6 payloads are CPU specific. Untagged APP retain the STM32/M4 target. */
+#define MK61_APP_ARMV6M_FLAG 8U
 
 #endif

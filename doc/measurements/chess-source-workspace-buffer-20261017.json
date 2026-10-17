@@ -1,0 +1,239 @@
+{
+  "status": "PASS",
+  "date": "2026-10-17",
+  "source_base_commit": "c693f28595e7cdc4835ac49ecd515692b2e0a9e0",
+  "build_scope": "Clean archived main plus only source Reader and compiler changes; parallel PicoCalc/display edits excluded.",
+  "device": {
+    "public_id": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411CE"
+  },
+  "measurement": {
+    "method": "Same-firmware compiler-APP A/B/A; identical merged Turochamp bytes and original VMC snapshot before each stage; reboot, four searches per stage; USB complete-eight-rank board wall clock.",
+    "cold_definition": "First compilation and fill of RAM after reboot; this is NOT a reboot with an already-current chess file cache.",
+    "firmware_build": "2539ED52",
+    "firmware_bytes": 343168,
+    "profiling": false,
+    "firmware_writes": 0,
+    "system_app_writes": 2,
+    "only_changed_app_on_hardware": "BASIC.APP",
+    "runs": [
+      {
+        "name": "baseline",
+        "search_seconds": [
+          100.44629779201932,
+          26.454564917017706,
+          25.234386541997083,
+          25.17906904197298
+        ],
+        "steady_seconds": 25.20672779198503,
+        "cold_phases_seconds": {
+          "until_first_21_nodes": 63.791312458051834,
+          "from_21_to_420": 23.610112166963518,
+          "after_420_until_complete_board": 13.04487316700397
+        },
+        "stack_watermark_remaining": 7400,
+        "frames_crc_checked": 969
+      },
+      {
+        "name": "candidate",
+        "search_seconds": [
+          65.95735529100057,
+          26.424353707989212,
+          25.23142620798899,
+          25.181988500000443
+        ],
+        "steady_seconds": 25.206707353994716,
+        "cold_phases_seconds": {
+          "until_first_21_nodes": 33.94130000000587,
+          "from_21_to_420": 23.6083372500143,
+          "after_420_until_complete_board": 8.407718040980399
+        },
+        "stack_watermark_remaining": 9100,
+        "frames_crc_checked": 965
+      },
+      {
+        "name": "control",
+        "search_seconds": [
+          100.44216687500011,
+          26.410352208011318,
+          25.230226834013592,
+          25.178104207967408
+        ],
+        "steady_seconds": 25.2041655209905,
+        "cold_phases_seconds": {
+          "until_first_21_nodes": 63.78510662500048,
+          "from_21_to_420": 23.60717462497996,
+          "after_420_until_complete_board": 13.04988562501967
+        },
+        "stack_watermark_remaining": 7400,
+        "frames_crc_checked": 971
+      }
+    ],
+    "cold": {
+      "baseline_seconds": 100.44629779201932,
+      "candidate_seconds": 65.95735529100057,
+      "control_seconds": 100.44216687500011,
+      "reference_seconds": 100.44423233350972,
+      "speedup": 1.5228662806498952,
+      "elapsed_reduction_percent": 34.33435274610965,
+      "control_drift_percent": -0.004112562742497605,
+      "state": "Reboot, original VMC snapshot; first compile and RAM fill"
+    },
+    "warm": {
+      "reference_seconds": 25.205446656487766,
+      "candidate_seconds": 25.206707353994716,
+      "elapsed_reduction_percent": -0.005001686834327224
+    },
+    "all_searches": {
+      "count": 12,
+      "move": "e2e3",
+      "nodes": 420,
+      "book": "off",
+      "level": 2,
+      "max_depth": 8,
+      "complete_eight_rank_board": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  },
+  "implementation": {
+    "source_loan": "Unused suffix of the already allocated compiler workspace, held under the language lease; no heap allocation, permanent source cache or added source-sized C-stack array.",
+    "compiler_prefix_bytes": 4176,
+    "protected_vm_values_bytes": 4016,
+    "basic_runtime_bytes": 392,
+    "basic_loan_bytes": 3784,
+    "focal_runtime_bytes": 172,
+    "focal_loan_bytes": 4004,
+    "verified_full_reads": "One per Reader/frontend invocation; sizing and EMIT each construct a reader, therefore two total for an ordinary small-source compilation. Embedded-resource retries share that reader.",
+    "large_source_fallback": "Existing 256-byte page reader. Missing loan also falls back; CRC/I/O/revision failures fail closed, never retry through paging.",
+    "small_chess_modules": 23,
+    "paged_chess_modules": [
+      {
+        "name": "legal.tbi",
+        "bytes": 4647
+      }
+    ],
+    "source_maximum_bytes": 65534
+  },
+  "limits": {
+    "weakened": false,
+    "system_app_packed_storage_delta_bytes": 32,
+    "system_app_loaded_memory_delta_bytes": -48,
+    "native_stack_bytes": 16384,
+    "hard_app_bytes": 20480,
+    "workspace_bytes": 8192,
+    "vm_image_cache_bytes": 32768,
+    "vm_bytecode_bytes": 6144,
+    "vm_module_bytes": 9728,
+    "source_page_bytes": 256,
+    "resident_before_after": {
+      "flash_image_bytes": [
+        343168,
+        343168
+      ],
+      "text_bytes": [
+        341524,
+        341524
+      ],
+      "data_bytes": [
+        1632,
+        1632
+      ],
+      "bss_bytes": [
+        22648,
+        22648
+      ],
+      "static_end": [
+        "0x200058D8",
+        "0x200058D8"
+      ]
+    },
+    "app_max_individual_stack_frame_bytes": 3384,
+    "app_stack_frame_limit_bytes": 5120,
+    "foreground_retained_frames": {
+      "main": 80,
+      "terminal_dispatch": 520
+    },
+    "whole_ram_gate": {
+      "status": "PASS",
+      "effective_bytes": 33696,
+      "maximum_standalone_app_bytes": 20480,
+      "filesystem_temporaries": 824,
+      "msc_session": 8264,
+      "stage_index": 2560
+    },
+    "apps": [
+      {
+        "name": "BASIC.APP",
+        "memory_before": 20468,
+        "memory_after": 20468,
+        "packed_before": 14398,
+        "packed_after": 14420,
+        "sha256": "cb1aff8b108bde4c6b04f15ea29545c87c06a5e44141c1454c7655267b4fc63d"
+      },
+      {
+        "name": "FOCAL.APP",
+        "memory_before": 16544,
+        "memory_after": 16496,
+        "packed_before": 11907,
+        "packed_after": 11907,
+        "sha256": "bb6918aa6492c464c76fea090d72517babc82791b9e83cb3ea05b4d3bd2cd0f1"
+      },
+      {
+        "name": "LANGVM.APP",
+        "memory_before": 19460,
+        "memory_after": 19460,
+        "packed_before": 13256,
+        "packed_after": 13256,
+        "sha256": "0db97fb97bf12686a3cc978f6f8ccf0acc3c0b3926232ab6c2d5f9609f144f47"
+      },
+      {
+        "name": "LANGIN.APP",
+        "memory_before": 16836,
+        "memory_after": 16836,
+        "packed_before": 12563,
+        "packed_after": 12567,
+        "sha256": "4d96ad5e16968d69d542f915dcf2b7301184cd8db72009116e5a4107f566c989"
+      },
+      {
+        "name": "SRCEDIT.APP",
+        "memory_before": 18220,
+        "memory_after": 18220,
+        "packed_before": 13527,
+        "packed_after": 13533,
+        "sha256": "be5fcf5c95830199003065e5213d0bdd6209ecf177405ed6ee4e0e61ebe27fa6"
+      }
+    ]
+  },
+  "verification": {
+    "host_source_stream": "ASan/UBSan, math backends 0/1, both languages, exact bytecode/resources, 64-KiB source, loan boundary/null loan/repeated lifetime/partial I/O PASS",
+    "source_scan": "scalar and DSP-emulated CR/LF compiler/diagnostics PASS",
+    "file_cache": "ASan/UBSan mixed cache, math backends 0/1 and USB 0/1, CRC/revision/OOM/INPUT/ESC PASS",
+    "compiler_flow": "Host generic + BASIC/FOCAL specialization PASS",
+    "arm_source_buffer": "3 load addresses, both languages: 3072 bytes => 2 full reads; 4177 bytes => 101 BASIC / 97 FOCAL paged reads; protected 4016-byte tail PASS",
+    "arm_flow": {
+      "status": "PASS",
+      "runs": 36,
+      "maximum_fixture_stack": 4620,
+      "input_retry_cancel": true,
+      "bytecode_unchanged": true
+    },
+    "arm_local_float": "PASS: matched CORE resident with local-float VM, freshly rebuilt LANGIN, 39 flow runs at three load addresses, INPUT/retry/ESC and SQRT; identical compiler APPs",
+    "arm_source_editor": "34-KiB Save/Cancel/I/O and 3 load addresses; 64-KiB compile/execute both languages PASS; freshly rebuilt SRCEDIT also saved both languages with protected values PASS",
+    "cold_usb_buffers": "Real resident allocator: cold/warm USB-first, font/VM buffers, IRQ/OOM refusal and stable live blocks PASS",
+    "turochamp": "Rules/perft/promotions/castling/en-passant/undo/repetition/adjudication/evaluation/search/keyboard/screen/book in interpreter and VM PASS",
+    "vm_budgets": "Both math backends: 24 modules, largest bytecode 5609/6144, line/value/call/loop budgets unchanged PASS",
+    "native_build": "Classic LIBM and CORE/local-float: Flash/RAM/frame gates, whole live RAM, CDC and foreground retained-stack checks PASS"
+  },
+  "restoration": {
+    "confirmed": true,
+    "original_files": 22,
+    "original_directories": 2,
+    "exact_files_and_calculator_preserved": true,
+    "firmware_unchanged": true,
+    "usb_session_released_by_reset": true,
+    "mini_touched": false
+  },
+  "raw_artifacts": "/private/tmp/mk61-source-prefetch.xHmUdQ"
+}

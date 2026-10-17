@@ -52,6 +52,12 @@ constexpr bool terminal_command_allowed_in_script(u8 id) {
     case CMD_WAIT:
     case CMD_RET:
     case CMD_REINIT:
+#if defined(MK61_CORE_STANDALONE)
+    // PicoCalc uses the shared M61 command path for USB RTC synchronization.
+    // Hardware time changes remain excluded from trap handlers and STM32 M61.
+    case CMD_DATE:
+    case CMD_ALARM:
+#endif
       return true;
     default:
       return false;

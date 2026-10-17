@@ -1,11 +1,15 @@
 #include "terminal_catalog.hpp"
+#if !defined(MK61_CORE_STANDALONE)
 #include "config.h"
+#endif
 #include "terminal_core.hpp"
+#if !defined(MK61_CORE_STANDALONE)
 #include "dwt_profiler.hpp"
 #include "deep_idle.hpp"
 #include "crash_dump.hpp"
 #include "independent_watchdog.hpp"
 #include "mpu_guard.hpp"
+#endif
 #include "mk8_literal.hpp"
 #include <cstring>
 
@@ -136,7 +140,9 @@ const char* open_arguments(const char* line) {
 
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 u8 lookup(const u8* line) {
+#if !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::TERMINAL_LOOKUP);
+#endif
   usize len = 0;
   while(line[len] != 0 && !terminal_core::is_space((char) line[len])) len++;
   if(len == 0) return CMD_UNKNOWN;

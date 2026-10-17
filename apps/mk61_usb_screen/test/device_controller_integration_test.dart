@@ -134,6 +134,7 @@ List<int> _capabilities({
   bool heartbeat = true,
   bool terminalMux = true,
   bool terminalKeyboard = true,
+  bool clockSync = false,
 }) => [
   192,
   0,
@@ -143,6 +144,7 @@ List<int> _capabilities({
       (keyEvents ? MkCapability.keyEvents : 0) |
       (heartbeat ? MkCapability.heartbeat : 0) |
       MkCapability.atomicFrames |
+      (clockSync ? MkCapability.clockSync : 0) |
       (terminalMux ? MkCapability.terminalMux : 0) |
       (terminalMux && terminalKeyboard ? MkCapability.terminalKeyboard : 0),
   0,
@@ -218,6 +220,59 @@ void _attach(
 }
 
 void main() {
+  test(
+    'PicoCalc discovery activates with a frame and syncs only an unset RTC',
+    () async {
+      const pico = DeviceSerialPort(
+        name: _FakeSerialTransport.portName,
+        vendorId: 0xcafe,
+        productId: 0x4003,
+        productName: 'MK61S PicoCalc',
+      );
+      const other = DeviceSerialPort(
+        name: '/dev/cu.other',
+        vendorId: 0xcafe,
+        productId: 0x4003,
+        productName: 'Another TinyUSB device',
+      );
+      expect(other.isAutomaticCandidate, isFalse);
+      final transport = _FakeSerialTransport(ports: [pico]);
+      final controller = DeviceController(serialTransport: transport);
+      addTearDown(controller.dispose);
+      await controller.refreshPorts();
+      final connection = transport.connection;
+      expect(connection.hostTerminalBytes, isEmpty);
+      expect(connection.hostPackets.single.type, MkMessage.activate);
+      connection.sendDevicePacket(
+        MkMessage.offer,
+        _capabilities(includeProfile: false, clockSync: true),
+      );
+      final before = DateTime.now();
+      connection.sendDevicePacket(
+        MkMessage.caps,
+        _capabilities(includeProfile: true, clockSync: true),
+      );
+      expect(controller.attached, isTrue);
+      final request = connection.hostPackets
+          .singleWhere((p) => p.type == MkMessage.clockSync)
+          .payload;
+      expect(request.length, 8);
+      expect(
+        request[0],
+        1,
+      ); // An existing device clock must not be overwritten.
+      final date = DateTime(
+        MkProtocol.readU16(request, 1),
+        request[3],
+        request[4],
+        request[5],
+        request[6],
+        request[7],
+      );
+      expect(date.difference(before).inSeconds.abs(), lessThanOrEqualTo(1));
+      expect(connection.hostTerminalBytes, isEmpty);
+    },
+  );
   test(
     'runs handshake, atomic frame, virtual keys, and clean detach',
     () async {

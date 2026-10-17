@@ -5,7 +5,7 @@ ENTRY(mk61_module_entry)
 
 MEMORY
 {
-  MODULE (rwx) : ORIGIN = MK61_MODULE_ORIGIN, LENGTH = 20K
+  MODULE (rwx) : ORIGIN = MK61_MODULE_ORIGIN, LENGTH = DEFINED(MK61_MODULE_BYTES) ? MK61_MODULE_BYTES : 20K
 }
 
 SECTIONS
@@ -51,6 +51,6 @@ SECTIONS
 }
 
 ASSERT(__module_memory_end <= ORIGIN(MODULE) + LENGTH(MODULE),
-       "MK61 APP exceeds the 20 KiB image limit")
+       "MK61 APP exceeds the target image limit")
 ASSERT(__module_initializers_start == __module_initializers_end,
        "MK61 module has unsupported global constructors/destructors")

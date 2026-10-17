@@ -16,16 +16,18 @@ static void test_language_flash_compiler_on_c9() {
     u16 id=program_store::INVALID_ID;
     const program_store::ProgramType type=language==Language::BASIC?ProgramType::TINYBASIC:ProgramType::FOCAL;
     assert(program_store::write_file(program_store::ROOT_ID,id,type,"large",(const u8*)text.data(),u16(text.size()),&id));
-    struct Source {u16 id;u32 stamp;} backing={id,0};assert(program_store::content_stamp(id,backing.stamp));
+    struct Source {u16 id;u32 stamp;u16 maximum=0;} backing={id,0};assert(program_store::content_stamp(id,backing.stamp));
+    alignas(8) uint8_t workspace[8192];memset(workspace,0xA5,sizeof(workspace));
     source::Reader input({&backing,[](void* raw,u16 at,u8* out,u16 n){
       auto& source=*(Source*)raw;u16 read=0;u32 current;
+      if(n>source.maximum)source.maximum=n;
       return program_store::content_stamp(source.id,current) && current==source.stamp &&
         program_store::read_source_range_id(source.id,at,out,n,&read) && read==n &&
         program_store::content_stamp(source.id,current) && current==source.stamp;
-    },u16(text.size())});
-    alignas(8) uint8_t workspace[8192];memset(workspace,0xA5,sizeof(workspace));
+    },u16(text.size())},workspace+flash::SOURCE_WINDOW_OFFSET,flash::SOURCE_WINDOW_BYTES);
     flash::Store store(&id,9876,nullptr,workspace+FLASH_COMPILER_WORKSPACE_SIZE);auto io=store.io();
     const auto compiled=compile_flash_source(language,input,io,true,workspace+FLASH_FRONTEND_BYTES);
+    assert(backing.maximum==flash::SOURCE_WINDOW_BYTES);
     for(unsigned i=0;i<FLASH_FRONTEND_BYTES;++i)assert(workspace[i]==0xA5);
     for(unsigned i=COMPILER_WORKSPACE_SIZE;i<sizeof(workspace);++i)assert(workspace[i]==0xA5);
     // Acquiring WORKSPACE for the VM clears the old compiler prefix. The

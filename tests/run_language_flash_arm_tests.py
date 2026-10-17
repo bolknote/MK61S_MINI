@@ -27,6 +27,7 @@ LANGUAGE=1956
 INPUT_VALUE=1840
 EXEC_SIZE=68
 RESULT=36
+MAX_SOURCE_WINDOW=3152-512-1024 # compiler prefix minus frontend and Writer payload
 
 class FlashMachine(OverlayMachine):
     def __init__(self,resident,address_index=0):
@@ -34,7 +35,7 @@ class FlashMachine(OverlayMachine):
         self.current_request=None
         self.pages=[bytearray() for _ in range(4)]
         self.counts={"read":0,"write":0,"lookup":0}
-        self.max_read=self.max_write=0
+        self.max_read=self.max_write=self.max_source_read=0
         self.call_instruction_limit=500_000_000
         self.call_timeout_us=180_000_000
         self.flash_callbacks={0x080F1000+i*4:name for i,name in enumerate(("read","write","truncate","poll","input","lookup"))}
@@ -89,7 +90,8 @@ class FlashMachine(OverlayMachine):
                 if inode not in self.files or revision!=binascii.crc32(self.files[inode][2]):return 0
                 data=self.files[inode][2][offset:offset+n]
                 if len(data)!=n:return 0
-                assert n<=256;self.uc.mem_write(out,data);return 1
+                assert n<=MAX_SOURCE_WINDOW;self.max_source_read=max(self.max_source_read,n)
+                self.uc.mem_write(out,data);return 1
         return super().system(op,a,b,c,p)
     def io(self,elf):
         address=self.input+16
@@ -103,7 +105,9 @@ def compile_program(machine,packages,elf,language):
     text='1 GOTO 30000\n' if basic else '1.0 G 9.0\n'
     for i in range(4400):
         text+=f'{i+2} A=1\n' if basic else f'{2+i//1000}.{i%1000} S A=1\n'
-    text+=('30000 S=0;FOR I=1 TO 2;GOSUB 31000;NEXT I;.RA=S;END\n31000 INPUT "value?",B;S=S+B;RETURN\n'
+    text+=('30000 S=0;FOR I=1 TO 2;GOSUB 31000;NEXT I;ON 9 GOSUB '+','.join(['32000']*9)+'\n'
+           '30010 ON 9 GOTO '+','.join(['32010']*9)+'\n31000 INPUT "value?",B;S=S+B;RETURN\n'
+           '32000 S=S+1;RETURN\n32010 S=S-1;.RA=S;END\n'
            if basic else '9.0 S S=0;F I=1,2;D 10\n9.1 B (-1)9.2,99.99,99.99\n9.2 B (0)99.99,9.3,99.99\n9.3 B (1)99.99,99.99,9.4\n9.4 S .RA=S;E\n10.0 A "value?",B;S S=S+B;R\n')
     machine.files[42]=(3 if basic else 2,'VMTEST',text.encode())
     machine.partitioned=True;machine.load(packages['tinybasic' if basic else 'focal'])
@@ -120,6 +124,7 @@ def compile_program(machine,packages,elf,language):
     assert result==(1 if basic else 0) and wire[16]==0 and wire[36]==1, (result,wire.hex(),machine.trace[-10:])
     size=struct.unpack_from('<I',wire,20)[0]
     assert size>65536 and machine.pages[2][:4]==b'LBV2'
+    assert 256<machine.max_source_read<=MAX_SOURCE_WINDOW
     return bytes(machine.pages[2][:size]),io,input_callback
 
 def execute(machine,packages,image,io,input_callback,language):
@@ -179,6 +184,6 @@ def main():
             for address in range(3):
                 machine.address_index=address;print('ARM run',language,address,flush=True);execute(machine,packages,image,io,input_callback,language)
             assert machine.max_write==1024 and machine.max_read<=1024
-            print(json.dumps(dict(language=language,lines=struct.unpack_from('<H',image,18)[0],image_bytes=len(image),addresses=3,counts=machine.counts)))
+            print(json.dumps(dict(language=language,lines=struct.unpack_from('<H',image,18)[0],image_bytes=len(image),addresses=3,source_window=machine.max_source_read,counts=machine.counts)))
     print('Flash ARM: real frontends + resident index service, >64-KB images, 3 APP addresses, INPUT eviction/resume PASS')
 if __name__=='__main__':main()

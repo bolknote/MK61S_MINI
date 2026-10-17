@@ -10,6 +10,7 @@ OLD = '/System/VMCache/VMC-000f.app'
 NEW = '/System/VMCache/VMC-0030.app'
 USER = '/System/BASIC.app'
 GAME = '/TCMERGE/legal.tbi'
+STORE = h.VMSTORE
 
 
 def fingerprint(files):
@@ -31,15 +32,18 @@ class Port:
 
 
 def main():
-    original = {OLD: b'original cache', USER: b'original APP'}
+    original = {OLD: b'original cache', USER: b'original APP', STORE:b'original VMSTORE'}
     snapshot = fingerprint(original)
     with tempfile.TemporaryDirectory(prefix='mk61-chess-merge-self-') as directory:
         backup = Path(directory)
         old = backup/OLD.lstrip('/')
         old.parent.mkdir(parents=True)
         old.write_bytes(original[OLD])
+        app = backup/USER.lstrip('/')
+        app.write_bytes(original[USER])
+        (backup/STORE.lstrip('/')).write_bytes(original[STORE])
 
-        def exercise(files, fail=False):
+        def exercise(files, fail=False, replace_basic=False, replace_vmstore=False, targets=None):
             port = Port(files)
             def write(port, remote, data):
                 port.operations.append(('write', remote))
@@ -48,7 +52,8 @@ def main():
                  patch.object(h, 'write_file', write), \
                  patch.object(h, 'read_file', lambda port, remote: port.files[remote]):
                 try:
-                    removed = h.restore_vm_cache(port, snapshot, backup)
+                    removed = h.restore_vm_cache(port, snapshot, backup, replace_basic,
+                        replace_vmstore, targets)
                 except AssertionError:
                     assert fail and not port.operations
                     return port
@@ -57,11 +62,35 @@ def main():
 
         port, removed = exercise({**original, OLD: b'changed', NEW: b'new cache', GAME: b'game'})
         assert removed == [NEW] and port.files == {**original, GAME: b'game'}
-        port, removed = exercise({USER: original[USER], GAME: b'game'})
+        port, removed = exercise({USER: original[USER], STORE:original[STORE], GAME: b'game'})
         assert removed == [] and port.files == {**original, GAME: b'game'}
         for remote in ('/user.txt', '/TCMERGE-other/file.tbi', '/System/VMCache/VMC-user.app'):
             exercise({**original, NEW: b'new', remote: b'foreign'}, fail=True)
         exercise({**original, NEW: b'new', USER: b'foreign change'}, fail=True)
+        port, _ = exercise({**original, USER:b'candidate'}, replace_basic=True)
+        assert port.files == original and port.operations == [('write',USER)]
+        exercise({**original, STORE:b'candidate'}, fail=True)
+        port, _ = exercise({**original, STORE:b'candidate'}, replace_vmstore=True)
+        assert port.files == original and port.operations == [('write',STORE)]
+        targets = {USER:b'common BASIC', STORE:b'candidate VMSTORE'}
+        port, _ = exercise(dict(original), replace_basic=True, replace_vmstore=True, targets=targets)
+        assert port.files == {**original, **targets}
+        port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True, targets=targets)
+        assert not port.operations  # No common-BASIC rewrite between measured stages.
+        baseline={USER:b'explicit baseline BASIC', STORE:b'common VMSTORE'}
+        candidate={USER:b'window BASIC', STORE:b'common VMSTORE'}
+        port, _ = exercise(dict(original), replace_basic=True, replace_vmstore=True, targets=baseline)
+        assert port.files=={**original,**baseline}
+        for target in (candidate,baseline):
+            port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True, targets=target)
+            assert port.files=={**original,**target} and port.operations==[('write',USER)]
+        port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True)
+        assert port.files==original and set(port.operations)=={('write',USER),('write',STORE)}
+        exercise(dict(original), fail=True, targets=targets)
+        exercise(dict(original), fail=True, replace_basic=True, targets={STORE:b'not allowed'})
+        exercise(dict(original), fail=True, replace_basic=True, targets={'/user.txt':b'not allowed'})
+        app.write_bytes(b'corrupt APP backup')
+        exercise({**original, NEW:b'new', USER:b'candidate'}, fail=True, replace_basic=True)
         old.write_bytes(b'corrupt backup')
         exercise({**original, OLD: b'changed', NEW: b'new'}, fail=True)
     print('Turochamp merge HIL: owned paths, original hashes and pre-mutation rejection PASS')

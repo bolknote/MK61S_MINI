@@ -512,6 +512,22 @@ void test_yield_resume() {
              100, true).error == Error::INVALID_IMAGE);
 }
 void test_extension_image_validation_and_resume() {
+  // Variable-length ON tables must be read from the image, including entries
+  // beyond the VM's fixed operand scratch and its exact 13-byte boundary.
+  for(bool sub:{false,true})for(unsigned count:{1U,5U,6U,9U}) {
+    std::string source="10 S=0;ON A "+std::string(sub?"GOSUB ":"GOTO ");
+    for(unsigned i=0;i<count;++i)source+=(i?",":"")+std::to_string(100+i);
+    source+="\n20 END\n";
+    for(unsigned i=0;i<count;++i)
+      source+=std::to_string(100+i)+" S="+std::to_string(i+1)+(sub?";RETURN\n":";GOTO 999\n");
+    source+="999 END\n";
+    Fixture on;on.compile(source.c_str());
+    for(unsigned selected=0;selected<=count+1;++selected) {
+      on.vars[0]=selected;
+      assert(run(on.view,on.state,services).error==Error::NONE);
+      assert(on.vars['S'-'A']==(selected<=count?selected:0));
+    }
+  }
   Fixture f;
   f.compile("10 DATA -.1,2\n20 READ A;INPUT B;READ C\n");
   Services yielding=services;

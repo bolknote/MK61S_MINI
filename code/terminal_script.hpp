@@ -19,6 +19,10 @@ void reset(void);
 terminal_protocol::Result execute(const char* line, bool trap_mode = false);
 bool prepare_if(const char* line, PreparedIf& out, u8& tail_offset);
 IfResult evaluate_if(const PreparedIf& condition, bool trap_mode = false);
+// Assembly shares parsing and writes; a board lends its mnemonic view only
+// for this call (front-coded SRAM lease on F401, immutable Flash on Pico).
+bool assemble(const char* arguments, isize& next_address, const char* mnemonics);
+bool command_supported(u8 id);
 
 } // пространство имён terminal_script
 

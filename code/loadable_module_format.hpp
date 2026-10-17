@@ -9,8 +9,16 @@ namespace loadable_module {
 // Container/image limit, not a reserved SRAM window. The current ABI receives
 // a block at the top of free RAM; fixed-address formats are not executable.
 static constexpr u32 SRAM_FIRST_ADDRESS = 0x20000000UL;
+#if defined(MK61_CORE_STANDALONE)
+static constexpr u32 SRAM_LAST_ADDRESS = 0x20038000UL; // Pico: exclude the reserved stack.
+#else
 static constexpr u32 SRAM_LAST_ADDRESS = 0x20020000UL;
+#endif
+#if defined(MK61_CORE_STANDALONE)
+static constexpr u32 APP_MAX_MEMORY_SIZE = 48U * 1024U;
+#else
 static constexpr u32 APP_MAX_MEMORY_SIZE = 20U * 1024U;
+#endif
 static constexpr u16 HEADER_SIZE = 64;
 static constexpr u32 MAX_CONTAINER_SIZE = APP_MAX_MEMORY_SIZE + HEADER_SIZE;
 static constexpr u16 FORMAT_VERSION = 1;

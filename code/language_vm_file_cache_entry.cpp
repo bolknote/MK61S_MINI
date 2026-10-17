@@ -172,9 +172,24 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
        source.type!=(c.language==Language::BASIC?MK61_SERVICE_FILE_BASIC:MK61_SERVICE_FILE_FOCAL)) {
       miss(flow,c);return 1;
     }
+    // Absent, incompatible or malformed cache records must not trigger a
+    // source scan. This prefix is only a negative prefilter, never a verified
+    // image or permission to execute. Keep its claimed CRC outside the loan.
+    stage.file_key={0,0,c.source_id,(uint16_t)source.size,c.language};
+    uint32_t expected_crc=0;uint16_t bytes=0;
+    if(!resolve(file_cache::DRIVER_PATH,driver) || !find((uint16_t)driver.parent,filename,cache) ||
+       cache.size>buffer.lease.size || cache.size<file_cache::PROBE_BYTES ||
+       !compiler(c.language,buffer.lease.data,stage.file_key.compiler_crc) ||
+       mk61_api->file_read(cache.id,0,buffer.lease.data,file_cache::PROBE_BYTES)!=file_cache::PROBE_BYTES ||
+       !file_cache::probe_candidate(stage.file_key,buffer.lease.data,file_cache::PROBE_BYTES,
+           (uint16_t)cache.size,expected_crc,bytes) ||
+       call(MK61_SERVICE_RESOURCE_READ)!=revision) {miss(flow,c);return 1;}
     uint32_t source_crc=0xFFFFFFFFU;
+    // The prefix is consumed. Reuse the same lease for one verified source
+    // decode when it fits, retaining 256-byte paging for larger sources.
+    const unsigned chunk=source.size<=buffer.lease.size?source.size:256;
     for(unsigned at=0;at<source.size;) {
-      const unsigned n=source.size-at<256?source.size-at:256;
+      const unsigned n=source.size-at<chunk?source.size-at:chunk;
       const mk61_service_resource span={revision,(uint16_t)source.id,(uint16_t)at,
           buffer.lease.data,(uint16_t)n,0};
       if(!call(MK61_SERVICE_RESOURCE_READ,5,0,0,(void*)&span)) {miss(flow,c);return 1;}
@@ -184,18 +199,9 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
       }
       at+=n;
     }
-    if(call(MK61_SERVICE_RESOURCE_READ)!=revision) {miss(flow,c);return 1;}
-    stage.file_key={0,~source_crc,c.source_id,
-        (uint16_t)source.size,c.language};
-    if(!compiler(c.language,buffer.lease.data,stage.file_key.compiler_crc) ||
-       !resolve(file_cache::DRIVER_PATH,driver) || !find((uint16_t)driver.parent,filename,cache) ||
-       cache.size>buffer.lease.size || cache.size<file_cache::PROBE_BYTES ||
-       mk61_api->file_read(cache.id,0,buffer.lease.data,file_cache::PROBE_BYTES)!=file_cache::PROBE_BYTES) {
-      miss(flow,c);return 1;
-    }
-    uint16_t bytes=0;
-    if(!file_cache::probe(stage.file_key,buffer.lease.data,file_cache::PROBE_BYTES,(uint16_t)cache.size,bytes) ||
+    if(~source_crc!=expected_crc ||
        call(MK61_SERVICE_RESOURCE_READ)!=revision){miss(flow,c);return 1;}
+    stage.file_key.source_crc=~source_crc;
     stage.request={};stage.request.size=sizeof(Request);stage.request.version=REQUEST_VERSION;
     stage.request.source_id=c.source_id;stage.request.source_revision=revision;
     stage.request.resources=ResourceMode::EMBEDDED;stage.request.language=(uint8_t)c.language;

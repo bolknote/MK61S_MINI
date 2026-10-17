@@ -5,9 +5,11 @@
 * @details <https://github.com/gavinlyonsrepo/ERM19264_UC1609>
 */
 
+#if !defined(MK61_CORE_STANDALONE)
 #include "config.h"
+#endif
 
-#if MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP || \
+#if defined(MK61_CORE_STANDALONE) || MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP || \
     (MK61_ENABLE_TINYBASIC && MK61_HAS_FULLSCREEN_BITMAP)
 
 #include "ERM19264_graphics_font.h"

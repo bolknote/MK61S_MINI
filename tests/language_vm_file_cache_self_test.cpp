@@ -26,10 +26,18 @@ int main() {
   // Probe owns only this prefix, never the tail that will be read after reserve.
   std::vector<uint8_t> prefix(file.begin(),file.begin()+file_cache::PROBE_BYTES);
   uint16_t reserved=0;
+  uint32_t claimed_crc=0;
+  auto unknown_crc=key;unknown_crc.source_crc^=1;
+  assert(file_cache::probe_candidate(unknown_crc,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved));
+  assert(claimed_crc==key.source_crc && reserved==bytes);
+  assert(!file_cache::probe(unknown_crc,prefix.data(),(uint16_t)prefix.size(),written,reserved));
   assert(file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved) && reserved==bytes);
   assert(!file_cache::probe(key,nullptr,(uint16_t)prefix.size(),written,reserved));
-  for(unsigned n=0;n<prefix.size();++n)
+  assert(!file_cache::probe_candidate(key,nullptr,(uint16_t)prefix.size(),written,claimed_crc,reserved) && !claimed_crc && !reserved);
+  for(unsigned n=0;n<prefix.size();++n) {
     assert(!file_cache::probe(key,prefix.data(),(uint16_t)n,written,reserved) && !reserved);
+    assert(!file_cache::probe_candidate(key,prefix.data(),(uint16_t)n,written,claimed_crc,reserved) && !claimed_crc && !reserved);
+  }
   for(unsigned n=0;n<written;++n)
     assert(!file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),(uint16_t)n,reserved));
   assert(!file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),(uint16_t)(written+1),reserved));
@@ -37,17 +45,23 @@ int main() {
   for(unsigned at=0;at<64;++at) {
     prefix[at]^=1;
     assert(!file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved));
+    assert(!file_cache::probe_candidate(key,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved) && !claimed_crc && !reserved);
     prefix[at]^=1;
   }
   for(unsigned at=key_offset;at<key_offset+file_cache::KEY_BYTES;++at) {
     prefix[at]^=1;
     assert(!file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved) && !reserved);
+    const bool only_source_crc=at>=key_offset+8 && at<key_offset+12;
+    assert(file_cache::probe_candidate(key,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved)==only_source_crc);
+    if(only_source_crc)assert(claimed_crc!=key.source_crc && reserved==bytes);
+    else assert(!claimed_crc && !reserved);
     prefix[at]^=1;
   }
   // A prefix is deliberately not an executable certificate: corrupt payload
   // can grant only a bounded reservation and must fail the full CRC check.
   file.back()^=1;
   assert(file_cache::probe(key,prefix.data(),(uint16_t)prefix.size(),written,reserved));
+  assert(file_cache::probe_candidate(key,prefix.data(),(uint16_t)prefix.size(),written,claimed_crc,reserved));
   assert(!file_cache::view(key,file.data(),written,cached,bytes));file.back()^=1;
   assert(file_cache::view(key,file.data(),written,cached,bytes));
   assert(file_cache::owned(key.source_id,key.language,file.data(),written));
@@ -68,6 +82,7 @@ int main() {
     const uint8_t* span=nullptr;uint16_t length=0;
     assert(!file_cache::view(key,old.data(),(uint16_t)old.size(),span,length));
     assert(!file_cache::probe(key,old.data(),file_cache::PROBE_BYTES,(uint16_t)old.size(),length));
+    assert(!file_cache::probe_candidate(key,old.data(),file_cache::PROBE_BYTES,(uint16_t)old.size(),claimed_crc,length) && !claimed_crc && !length);
     assert(file_cache::owned(key.source_id,key.language,old.data(),(uint16_t)old.size())==(version==VERSION-1));
   }
   const loadable_module::Reader reader={&file,read};

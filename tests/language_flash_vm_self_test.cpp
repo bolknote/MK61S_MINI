@@ -112,6 +112,22 @@ static void focal_if_paths() {
     }
   }
 }
+static void on_tables() {
+  for(bool sub:{false,true})for(unsigned count:{1U,5U,6U,9U}) {
+    std::string tail="30000 S=0;ON A "+std::string(sub?"GOSUB ":"GOTO ");
+    for(unsigned i=0;i<count;++i)tail+=(i?",":"")+std::to_string(31000+i*10);
+    tail+="\n30010 GOTO 32000\n";
+    for(unsigned i=0;i<count;++i)
+      tail+=std::to_string(31000+i*10)+" S="+std::to_string(i+1)+(sub?";RETURN\n":";GOTO 32000\n");
+    tail+="32000 .RA=S;END\n";
+    Fixture f;f.compile(Language::BASIC,large(Language::BASIC,tail.c_str()));
+    for(unsigned selected=0;selected<=count+1;++selected) {
+      f.variables[0]=selected;
+      const auto result=f.run();
+      assert(result.pc>65536 && f.refs[14]==(selected<=count?selected:0));
+    }
+  }
+}
 static void input_resume() {
   for(auto language:{Language::BASIC,Language::FOCAL}) {
     Fixture f;
@@ -205,4 +221,4 @@ static void strings_data_and_failures() {
   Fixture duplicate;source::Reader source("2 A=1\n1 END\n2 END\n",18);
   assert(compile_flash_source(Language::BASIC,source,duplicate.disk.io()).error==Error::LINE);
 }
-int main(){storage_descriptor();controls();focal_if_paths();input_resume();arithmetic_hints();wide_compare_layout();strings_data_and_failures();puts("Flash VM: >64-KB calls/FOR/IF/parameters, external sorting, INPUT APP replacement, DATA, long text and lost pages PASS");}
+int main(){storage_descriptor();controls();focal_if_paths();on_tables();input_resume();arithmetic_hints();wide_compare_layout();strings_data_and_failures();puts("Flash VM: >64-KB calls/FOR/IF/parameters, external sorting, INPUT APP replacement, DATA, long text and lost pages PASS");}

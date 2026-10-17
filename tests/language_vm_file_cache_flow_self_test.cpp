@@ -19,6 +19,8 @@ std::map<uint16_t,File> files;
 std::unique_ptr<language_workspace::Lease> buffer;
 uint16_t next_id=1000;
 unsigned writes,cache_reads,cache_prefix_reads,cache_full_reads,cache_reserved_reads,source_reads;
+unsigned compiler_reads;
+bool fail_source_read,partial_source_read,change_on_source_read;
 bool driver_present=true,fail_buffer,fail_read,fail_write,change_on_cache_read;
 unsigned corrupt_cache_read;
 bool change_before_store;
@@ -65,7 +67,15 @@ uint32_t read(uint32_t id,uint32_t offset,uint8_t* output,uint32_t length) {
     }
     if(corrupt_cache_read && --corrupt_cache_read==0 && length)output[length-1]^=1;
     if(change_on_cache_read){++revision;change_on_cache_read=false;}
-  } else if(id<=7 || id==201)++source_reads;
+  } else if(id<=7 || id==201) {
+    ++source_reads;
+    if(change_on_source_read){++revision;change_on_source_read=false;}
+    if(fail_source_read || partial_source_read) {
+      const bool partial=partial_source_read;
+      fail_source_read=partial_source_read=false;
+      return partial && length?length-1:0;
+    }
+  } else if(id==BASIC || id==FOCAL)++compiler_reads;
   return length;
 }
 uint32_t size(uint32_t id) {File e;return file((uint16_t)id,e)?(uint32_t)e.bytes.size():0;}
@@ -76,9 +86,11 @@ uint32_t service(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
       if(!a)return revision;
       assert(a==5);
       const auto& span=*(mk61_service_resource*)payload;
-      assert(span.length<=256 && !span.reserved);
+      File source;assert(file(span.id,source) && !span.reserved);
+      const unsigned chunk=source.bytes.size()<=COMPILER_WORKSPACE_SIZE?source.bytes.size():256;
+      assert(span.length<=chunk && span.length<=COMPILER_WORKSPACE_SIZE);
       return span.revision==revision &&
-          read(span.id,span.offset,span.output,span.length)==span.length;
+          read(span.id,span.offset,span.output,span.length)==span.length && span.revision==revision;
     }
     case MK61_SERVICE_FILE_COUNT: {
       assert(a==MK61_SERVICE_FILE_APP);return (uint32_t)files.size();
@@ -187,6 +199,7 @@ int main() {
   files[DRIVER]={DRIVER,DIRECTORY,MK61_SERVICE_FILE_APP,"VMSTORE",{1}};
   assert(prepare_image_cache());
   execute(1);assert(compiles==1 && writes==1 && array[1]==2);
+  assert(!source_reads && compiler_reads==1); // No source scan/header read for an absent VMC.
   const auto initial_resets=state_resets;
   const auto initial_evictions=evictions;
   const auto initial_prefix_reads=cache_prefix_reads,initial_full_reads=cache_full_reads;
@@ -229,11 +242,12 @@ int main() {
       compiler_header)==loadable_module::HeaderStatus::OK);
   ++compiler_header.image_crc32;
   assert(loadable_module::encode_header(compiler_header,(uint32_t)compiler_bytes.size(),compiler_bytes.data()));
-  const unsigned old_compiles=compiles,old_writes=writes;
+  const unsigned old_compiles=compiles,old_writes=writes,old_source_reads=source_reads;
   invalidate();execute(1);
   if(compiles!=old_compiles+1 || writes!=old_writes+1)
     fprintf(stderr,"compiler replacement: compiles %u -> %u, writes %u -> %u\n",old_compiles,compiles,old_writes,writes);
   assert(compiles==old_compiles+1 && writes==old_writes+1);
+  assert(source_reads==old_source_reads); // Incompatible compiler rejected before source CRC.
   invalidate();execute(1);assert(compiles==old_compiles+1 && writes==old_writes+1);
   // A read fault after reservation must roll back BUILDING before compiling.
   const unsigned before_reserved_fault=compiles;
@@ -250,12 +264,13 @@ int main() {
   const auto key_at=std::search(record.begin()+64,record.end(),std::begin(key_magic),std::end(key_magic));
   assert(key_at!=record.end());
   const unsigned key_offset=(unsigned)(key_at-record.begin());
-  for(const unsigned at:{60U,key_offset+4,(unsigned)record.size()-1}) {
+  for(const unsigned at:{60U,key_offset+4,key_offset+8,(unsigned)record.size()-1}) {
     record[at]^=1;
-    const unsigned before=compiles,full=cache_reserved_reads,written=writes;
+    const unsigned before=compiles,full=cache_reserved_reads,written=writes,reads=source_reads;
     invalidate();execute(1);
     assert(compiles==before+1 && writes==written &&
         cache_reserved_reads==full+(at==valid_record.size()-1?1U:0U));
+    assert(source_reads==reads+((at==key_offset+8 || at==valid_record.size()-1)?1U:0U));
     record=valid_record;
   }
   // Check exact size again after host reserve even if a broken storage backend
@@ -299,6 +314,31 @@ int main() {
   const unsigned before_raced_write=writes;
   change_before_store=true;invalidate();execute(6);
   assert(!change_before_store && writes==before_raced_write && cache_file(6)==0xFFFF);
+  // The already-owned prefix is the only source/codec buffer. A source that
+  // fits gets one read; one byte over the bound keeps 256-byte paging. Check
+  // the full 16-bit source range without changing VM/APP/workspace budgets.
+  const char* saved_program=program1;
+  for(const unsigned length:{4175U,4176U,4177U,65534U}) {
+    const std::string head="10 REM ",tail="\n20 END\n";
+    const std::string source=head+std::string(length-head.size()-tail.size(),'x')+tail;
+    program1=source.c_str();
+    const auto before=compiles,reads=source_reads;
+    invalidate();execute(1);
+    assert(compiles==before+1 && source_reads==reads); // Source-size mismatch is also a prefilter.
+    const auto loaded=source_reads;
+    invalidate();execute(1);
+    assert(compiles==before+1 && source_reads==loaded+(length<=COMPILER_WORKSPACE_SIZE?1U:(length+255)/256));
+    if(length==4176) {
+      for(unsigned fault=0;fault<3;++fault) {
+        fail_source_read=fault==0;partial_source_read=fault==1;change_on_source_read=fault==2;
+        const auto compiled=compiles,started=cached_starts;
+        invalidate();execute(1);
+        assert(compiles==compiled+1 && cached_starts==started);
+        assert(!fail_source_read && !partial_source_read && !change_on_source_read);
+      }
+    }
+  }
+  program1=saved_program;invalidate();
 #if MK61_ENABLE_USB_SCREEN
   {
     shared_memory::Lease session(shared_memory::Arena::OVERLAY,shared_memory::Owner::USB_SCREEN,2793);

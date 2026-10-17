@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-17T11:38:29.676353+00:00",
+  "source_revision": "bbaa1a405e46d34b6b0936224aef75e17cc948bd",
+  "source_has_uncommitted_port_changes": true,
+  "build": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.1.0",
+    "mcu": "RP2040",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + Pico SDK float/double helpers",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 95276,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 35764,
+    "uf2_bytes": 190976,
+    "bin_sha256": "809d7bc4fd09a1d798f9499388fe7c23941ad356f9ca6ade865206fce6879d33",
+    "uf2_sha256": "708101cda639667f75f367ccab3d2a5d04c964278bb27538ba476f876dadb07a",
+    "hardware_verified": false
+  },
+  "hardware": {
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "flash_uid": "E6657CD423721C35",
+    "flash_write_verified_with_official_picotool": true,
+    "lcd_backlight_ack": 240,
+    "keyboard_backlight_ack": 40,
+    "palette": "RGB565 white FFFF on black 0000",
+    "transfer": "one CS transaction for RAMWR and complete changed frame",
+    "screen_and_physical_7_confirmed_by_user_on_first_prototype": true,
+    "full_frame_transfer_removed_bands_confirmed_by_user": true,
+    "max_brightness_visual_acceptance": "User confirmed stable brightness after native ST7365P initialization",
+    "math_smoke": {
+      "cases": 12,
+      "failures": 0
+    },
+    "calculator_cases": [
+      {
+        "case": "12 ENTER 34 +",
+        "result": 46.0,
+        "passed": true
+      },
+      {
+        "case": "sqrt(9)",
+        "result": 3.0,
+        "passed": true
+      },
+      {
+        "case": "sin(90 DEG)",
+        "result": 1.0,
+        "passed": true
+      }
+    ],
+    "keyboard_online": true,
+    "panel_initialized": true,
+    "transcript": "binary/picocalc-pico-h/hardware-st7365p-smoke.json",
+    "original_flash_backup": {
+      "path": "binary/picocalc-pico-h/pico-h-before-mk61s.uf2",
+      "uf2_bytes": 4194304,
+      "flash_bytes": 2097152,
+      "sha256": "e0ccf9926e6bc1a26bbdfcb863c525a8afde45ae490896cd274a7e8515182cf6"
+    },
+    "display_trials": [
+      {
+        "uf2_sha256": "7573e1830f5af31e06454a8aa2bfa4491b37021bc0395a4e336bd12c3b4067ca",
+        "initializer": "ILI9488-compatible reference, RGB666",
+        "lcd_backlight": 240,
+        "initial_static_image": "User confirmed bright and uniform",
+        "repeated_digit_input": "User subsequently reported alternating brightness on successive 1 key presses"
+      }
+    ],
+    "display_initializer": "ST7365P native, preserve reset/NVM analog settings",
+    "spi_requested_hz": 10000000,
+    "spi_actual_hz": 8928571,
+    "adaptive_brightness": "explicitly disabled (55h=00h)",
+    "brightness_stability_acceptance": "Passed: user confirmed constant brightness during repeated physical 1 key presses"
+  },
+  "host_checks": {
+    "picocalc_core_keys_program_math_screen_asan_ubsan": "passed",
+    "uf2_transport_tests": {
+      "cases": 4,
+      "failures": 0
+    },
+    "existing_core_differential_suites_hot_tables_0_and_2": "passed",
+    "existing_compact_math_suites_default_and_compact": {
+      "cases_per_variant": 2443149,
+      "failures": 0
+    }
+  },
+  "stm32": {
+    "f411_classic_v3": {
+      "build": "passed",
+      "flash_bytes": 380012,
+      "static_ram_bytes": 21760
+    },
+    "f401_product_a00": {
+      "link": "passed",
+      "stack_check": "failed in existing program_store::write_file_from_source_impl",
+      "max_frame_bytes": 2304,
+      "limit_bytes": 2048,
+      "port_changes_preprocessed_identical_to_original": true
+    },
+    "shared_source_isolation": {
+      "normalization": "DWT local variable identifiers derived from __LINE__; frozen build timestamp",
+      "profiles": {
+        "f401": {
+          "mk61emu_core.cpp": {
+            "normalized_preprocessed_identical_to_before_port": true,
+            "sha256": "d6326722ee426ec82e8a85f7ebe5d8abd086b31fc0ca639809c1682d8a63fcda"
+          },
+          "ERM19264_graphics_font.cpp": {
+            "normalized_preprocessed_identical_to_before_port": true,
+            "sha256": "591fd582c6ae2c6dd7b19117cd29e7adff540643a045966087536456279380a8"
+          }
+        },
+        "f411": {
+          "mk61emu_core.cpp": {
+            "normalized_preprocessed_identical_to_before_port": true,
+            "sha256": "3975017c60ccbc713f42e0a3fd485cd74cc8e681c973f0cadd5b416d8efca4a5"
+          },
+          "ERM19264_graphics_font.cpp": {
+            "normalized_preprocessed_identical_to_before_port": true,
+            "sha256": "7045cfcfde20a52006777e413b40f438c3224a42c4b3fa9b400c59cdf4dff81e"
+          }
+        }
+      }
+    }
+  }
+}

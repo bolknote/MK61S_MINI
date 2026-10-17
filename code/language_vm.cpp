@@ -61,6 +61,11 @@ uint16_t word(const uint8_t* p) { return (uint16_t)(p[0] | ((uint16_t)p[1] << 8)
 uint32_t dword(const uint8_t* p) {
   return (uint32_t)word(p) | ((uint32_t)word(p + 2) << 16);
 }
+// Keep the variable ON-table fetch outside the hot dispatch frame. Only the
+// selected two-byte line number is read, regardless of table/image length.
+__attribute__((noinline)) uint16_t image_word(const View& v,uint32_t at) {
+  return word(v.at(at));
+}
 uint8_t stride(const View& v) { return v.wide_code()?8:v.language == Language::BASIC ? 4 : 6; }
 uint32_t record_pc(const View& v, uint16_t i) {
   return v.address(v.at(HEADER_SIZE + uint32_t(i) * stride(v) + stride(v) - v.address_bytes()));
@@ -1090,7 +1095,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         const uint16_t count = word(p);
         if (a == 0 || a > count) break;
-        const uint32_t to = line_pc(v, word(p + 2 + ((uint16_t)a.number() - 1) * 2));
+        const uint32_t to = line_pc(v, image_word(v, instruction + 3 + ((uint16_t)a.number() - 1) * 2));
         if (to == v.missing())
           error = Error::MISSING_LINE;
         else if (op == Op::ON_GOSUB)

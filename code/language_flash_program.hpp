@@ -1,6 +1,6 @@
 #ifndef MK61_LANGUAGE_FLASH_PROGRAM_HPP
 #define MK61_LANGUAGE_FLASH_PROGRAM_HPP
-#include "language_bytecode.hpp"
+#include "language_vm_abi.hpp"
 #include "focal_syntax.hpp"
 #include "language_integer_spans.hpp"
 
@@ -140,5 +140,13 @@ public:
     return error_==Error::NONE;
   }
 };
+// Runtime, Program and resident page have fixed, disjoint homes. Lend only
+// the unused gap after Program to the source reader, including large files.
+static constexpr uint16_t SOURCE_WINDOW_OFFSET =
+    uint16_t((FLASH_FRONTEND_BYTES+sizeof(Program)+7U)&~size_t(7U));
+static_assert(SOURCE_WINDOW_OFFSET < FLASH_COMPILER_WORKSPACE_SIZE,
+              "Flash compiler must leave a bounded source window");
+static constexpr uint16_t SOURCE_WINDOW_BYTES =
+    FLASH_COMPILER_WORKSPACE_SIZE-SOURCE_WINDOW_OFFSET;
 }}
 #endif

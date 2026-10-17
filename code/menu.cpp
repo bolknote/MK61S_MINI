@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "config.h"
 #include "menu.hpp"
+#include "menu_model.hpp"
 #include "cross_hal.h"
 #include "lcd_ru.hpp"
 #include "mk8_literal.hpp"
@@ -184,12 +185,11 @@ bool  InfoData(void) {
 
 bool HardwareInfo(void) { return setup_ui::hardware(); }
 
-const t_punct DFU_mode_punct      = {.size = 15, .action = (menu_action) &DFU_enable,           .text = "DFU mode enable"};
-const t_punct USB_DISK_punct      = {.size = 8,  .action = (menu_action) &UsbDiskMode,          .text = "USB Disk"};
-const t_punct SETTINGS_punct      = {.size = 8,  .action = &settings_select,                    .text = "Settings"};
-const t_punct EXPLORER_punct      = {.size = 8,  .action = &program_store_explorer_select,      .text = "Explorer"};
-const t_punct DEVELOPMENT_punct   = {.size = 11, .action = &development_select,                 .text = "Development"};
-const t_punct SYSTEM_punct        = {.size = 6,  .action = &system_select,                      .text = "System"};
+#define MK61_MAIN_ITEM(id, en_object, ru_object, callback, width, en, ru) \
+const t_punct en_object = {.size = width, .action = (menu_action)&callback, .text = en}; \
+static constexpr auto ru_object = M8_PUNCT(15, &callback, ru);
+#include "main_menu_items.inc"
+#undef MK61_MAIN_ITEM
 const t_punct RESET_punct         = {.size = 7,  .action = &ResetDevice,                        .text = "Restart"};
 const t_punct FORMAT_punct        = {.size = 11, .action = &FormatDisk,                         .text = "Format disk"};
 const t_punct ERASE_punct         = {.size = 10, .action = &EraseFlash,                         .text = "Full reset"};
@@ -223,12 +223,6 @@ static constexpr auto RU_OLED_TIMEOUT_15M_punct = M8_PUNCT(15, &TurnOledProtecti
 static constexpr auto RU_OLED_TIMEOUT_30M_punct = M8_PUNCT(15, &TurnOledProtection, "OLED сон 30мин");
 #endif
 
-static constexpr auto RU_DFU_mode_punct = M8_PUNCT(15, &DFU_enable, "DFU прошивка");
-static constexpr auto RU_USB_DISK_punct = M8_PUNCT(15, &UsbDiskMode, "USB-диск");
-static constexpr auto RU_SETTINGS_punct = M8_PUNCT(15, &settings_select, "Настройки");
-static constexpr auto RU_EXPLORER_punct = M8_PUNCT(15, &program_store_explorer_select, "Проводник");
-static constexpr auto RU_DEVELOPMENT_punct = M8_PUNCT(15, &development_select, "Разработка");
-static constexpr auto RU_SYSTEM_punct = M8_PUNCT(15, &system_select, "Система");
 static constexpr auto RU_RESET_punct = M8_PUNCT(15, &ResetDevice, "Перезагрузка");
 static constexpr auto RU_FORMAT_punct = M8_PUNCT(15, &FormatDisk, "Формат диска");
 static constexpr auto RU_ERASE_punct = M8_PUNCT(15, &EraseFlash, "Полный сброс");
@@ -1276,10 +1270,7 @@ void class_menu::draw(void) {
   main_lcd().beginUiText();
   const int size_menu_window = main_lcd().rows();
   const int visible_count = (MENU_PUNCT_COUNT < size_menu_window) ? MENU_PUNCT_COUNT : size_menu_window;
-  const int max_up = MENU_PUNCT_COUNT - visible_count;
-  const int delta = (active_punct + 1) - visible_count;
-  int up = (delta <= 0)? 0 : delta;
-  if(up > max_up) up = max_up;
+  const int up = menu_model::firstVisible(active_punct, MENU_PUNCT_COUNT, size_menu_window);
 
 #if defined(MK61_DISPLAY_UC1609)
   if(main_lcd().uiTextActive()) {
@@ -1370,10 +1361,10 @@ bool class_menu::select(void) {
     if(handle_settings_adjustment(last_key_code)) continue;
     switch(last_key_code) {
       case KEY_RIGHT_PRESS:
-              if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
+              active_punct = menu_model::step(active_punct, MENU_PUNCT_COUNT, 1);
         break;
       case KEY_LEFT_PRESS:
-              if(active_punct > 0) active_punct--;
+              active_punct = menu_model::step(active_punct, MENU_PUNCT_COUNT, -1);
         break;
       case KEY_OK_PRESS:
             kbd::handoff(kbd::Event(last_key_code));
@@ -1407,10 +1398,10 @@ i32 class_menu::select(i32 key) {
 
   switch(key) {
       case KEY_RIGHT_PRESS:
-              if(active_punct < (MENU_PUNCT_COUNT-1)) active_punct++;
+              active_punct = menu_model::step(active_punct, MENU_PUNCT_COUNT, 1);
         break;
       case KEY_LEFT_PRESS:
-              if(active_punct > 0) active_punct--;
+              active_punct = menu_model::step(active_punct, MENU_PUNCT_COUNT, -1);
         break;
       case KEY_OK_PRESS:
             kbd::handoff(kbd::Event(key));

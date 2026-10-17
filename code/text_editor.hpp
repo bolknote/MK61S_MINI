@@ -4,7 +4,7 @@
 #include "keyboard_layout.hpp"
 #include "rust_types.h"
 
-#ifndef TEXT_EDITOR_HOST_TEST
+#if !defined(TEXT_EDITOR_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
 #include "lcd_gui.hpp"
 #endif
 
@@ -375,6 +375,7 @@ inline bool move_cursor_line(const char* source, u16 len, u16& cursor, int delta
   return true;
 }
 
+#if !defined(MK61_CORE_STANDALONE)
 inline u8 visible_rows(MK61Display& display) {
   const u8 rows = display.rows();
   return rows < 2 ? 2 : rows;
@@ -517,6 +518,8 @@ inline void draw(MK61Display& display, const char* source, u16 len, u16 cursor, 
   else display.write(sms_cursor ? SMS_CURSOR_ASCII : CURSOR_ASCII);
 #endif
 }
+
+#endif // Display adapters; buffer editing is shared with the PicoCalc port.
 
 inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity,
                           u16 start, u16 end, const char* replacement);

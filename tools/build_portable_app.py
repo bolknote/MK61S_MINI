@@ -208,8 +208,13 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "sdk/portable/shared_runtime.c", ROOT / "sdk/portable/system/runtime.S"]
     if len(set(sources)) != len(sources):
         raise ValueError("duplicate source")
-    flags = ["-mcpu=cortex-m4", "-mthumb", "-mfpu=fpv4-sp-d16",
-             "-mfloat-abi=hard", "-Oz" if system else "-Os", "-flto", "-fipa-pta",
+    pico_target = getattr(args,"target","stm32") == "picocalc-pico-h"
+    if pico_target and (args.system or args.shared_runtime):
+        raise ValueError("PicoCalc builds use the resident system services; --system/--shared-runtime require STM32")
+    cpu_flags = (["-mcpu=cortex-m0plus","-mthumb","-mfloat-abi=soft"] if pico_target else
+                 ["-mcpu=cortex-m4","-mthumb","-mfpu=fpv4-sp-d16","-mfloat-abi=hard"])
+    rust_target = "thumbv6m-none-eabi" if pico_target else "thumbv7em-none-eabihf"
+    flags = [*cpu_flags, "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
     if getattr(args,"focal_trace",False):
@@ -258,7 +263,7 @@ def build(args: argparse.Namespace) -> dict:
                 if not rust_compiler.is_file():
                     raise ValueError(f"Rust compiler is missing: {rust_compiler}")
             command = [rust_compiler, "--edition", "2021",
-                       "--target", "thumbv7em-none-eabihf",
+                       "--target", rust_target,
                        "--crate-type", "lib", "--emit", "obj",
                        "--crate-name", f"mk61_app_{index}",
                        "-C", "opt-level=s", "-C", "panic=abort",
@@ -272,8 +277,8 @@ def build(args: argparse.Namespace) -> dict:
             except ValueError as exc:
                 if "can't find crate for `core`" in str(exc):
                     raise ValueError(
-                        "Rust target thumbv7em-none-eabihf is missing; run "
-                        "rustup target add thumbv7em-none-eabihf"
+                        f"Rust target {rust_target} is missing; run "
+                        f"rustup target add {rust_target}"
                     ) from exc
                 raise
             compile_commands.append({"directory": str(ROOT), "file": str(source),
@@ -325,6 +330,7 @@ def build(args: argparse.Namespace) -> dict:
         print(run(stack_command), end="")
     elf = out / (args.name + ".elf")
     run([tool("g++"), *flags, "-nostdlib", "-nostartfiles",
+         *(["-Wl,--defsym=MK61_MODULE_BYTES=49152"] if pico_target else []),
          "-Wl,--gc-sections,--emit-relocs", "-Wl,--defsym=MK61_MODULE_ORIGIN=0x20000000",
          "-Wl,-T," + str(ROOT / "tools/.mk61-app/mk61_module.ld"),
          "-Wl,-Map," + str(out / (args.name + ".map")),
@@ -350,6 +356,8 @@ def build(args: argparse.Namespace) -> dict:
     run([tool("objcopy"), "-O", "binary", "-j", ".module_image", elf, image])
     packer = args.packer
     python_packer = (ROOT / "tools/.mk61-app/mk61_module_pack.py").resolve()
+    if pico_target and packer is None:
+        packer = python_packer
     if packer is None:
         configured = os.environ.get("MK61_MODULE_PACK_BIN")
         packer = (Path(configured).expanduser() if configured else
@@ -357,6 +365,8 @@ def build(args: argparse.Namespace) -> dict:
         run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
     greedy_packer = packer.resolve() == python_packer
     command = [packer]
+    if pico_target and greedy_packer:
+        command += ["--target", "picocalc-pico-h"]
     command += ["--portable", "--kind", "app" if args.system in ("vm-file-cache", "source-editor") else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
@@ -368,8 +378,14 @@ def build(args: argparse.Namespace) -> dict:
     if handled_magic:
         command += ["--handled-magic", handled_magic]
     print(run(command), end="")
+    if pico_target:
+        import zlib
+        container = bytearray(app.read_bytes())
+        struct.pack_into("<I",container,16,struct.unpack_from("<I",container,16)[0] | 8)
+        struct.pack_into("<I",container,60,zlib.crc32(container[:60]) & 0xffffffff)
+        app.write_bytes(container)
     image_flags = struct.unpack_from("<I", app.read_bytes(), 16)[0]
-    report = {"name": args.name, "abi": 6, "load_address": base,
+    report = {"name": args.name, "target": getattr(args,"target","stm32"), "abi": 6, "load_address": base,
               "relocations": len(offsets),
               "relocation_bytes": len(table),
               "entry_offset": entry_offset, "image_bytes": image.stat().st_size,
@@ -408,6 +424,7 @@ def build(args: argparse.Namespace) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--target", choices=("stm32","picocalc-pico-h"), default="stm32")
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])
     parser.add_argument("--system", choices=SYSTEM_MODULES)

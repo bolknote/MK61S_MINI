@@ -1,7 +1,9 @@
 #include "calculator_control.hpp"
 
 #include "cross_hal.h"
+#if !defined(MK61_CORE_STANDALONE)
 #include "keyboard.h"
+#endif
 #include "mk61emu_core.h"
 
 static constexpr usize HIDDEN_KEY_HOLD_STEPS = 4;

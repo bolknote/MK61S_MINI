@@ -1,0 +1,224 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-17T16:43:32.521050+00:00",
+  "source_revision": "5c0c9962f298ab40dc60a2b0f29ad9b5dbd74299",
+  "source_has_uncommitted_port_changes": true,
+  "build": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.4.1",
+    "mcu": "RP2040",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + Pico SDK float/double helpers",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 506072,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 143416,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 1012224,
+    "bin_sha256": "c92a0abcfe6759743c0adebe92a355770f726878567bed2d676a8365237c9fe9",
+    "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+    "hardware_verified": false
+  },
+  "hardware": {
+    "pico_uid": "E6657CD423721C35",
+    "verified_uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+    "checks": {
+      "runtime": {
+        "firmware_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "directory": "/MK61S-RUNTIME-20261017-184023",
+        "cases": [
+          "USB Screen v2 attach, PackBits, atomic CRC frames",
+          "USB Screen MINI virtual key and release",
+          "native ARMv6-M execution, relocation, fresh .data/.bss on repeat launch, graphics",
+          "native API math, number I/O, memory leases, fonts, registers, ticking RTC",
+          "STM32/M4 APP rejected before execution",
+          "CHIP-8 SD ROM, Fx0A virtual key, display, Escape exit",
+          "unmodified ELIZA and SHEET sources rebuilt for Pico H and run on device",
+          "M61 opens native APP and resumes the shared scenario",
+          "USB Screen heartbeat timeout returns control",
+          "sleep blanks LCD/keyboard and wake restores settings and RAM"
+        ],
+        "initial": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=1\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1372 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939240\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-01-01T00:00:32 RTC_SET=0 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "asleep": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 1,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 1.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=83\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=72 DIRTY=0 PATH=[/MK61S-RUNTIME-20261017-184023/PROBE.APP] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939240\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T20:30:07 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[PICO APP M61 RETURN             ]\r\n",
+        "final": "POWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T20:30:09 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[PICO APP M61 RETURN             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\nMK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 1,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 1.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=85\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=72 DIRTY=0 PATH=[/MK61S-RUNTIME-20261017-184023/PROBE.APP] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939240\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T20:30:09 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[PICO APP M61 RETURN             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "record": "binary/picocalc-pico-h/runtime-hil-0.4.1/result.json"
+      },
+      "m61": {
+        "passed": true,
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "directory": "/MK61S-M61-20261017-185043",
+        "cases": [
+          "Nested M61/BASIC, persistent variables/array, FMK geometry, RUN and TRAP/context return",
+          "BIND consumes physical calculator opcode without entering the digit",
+          "OK opens Markdown; viewer Esc returns to scenario; next Esc cancels and restores font",
+          "Unsaved root source survives nested interpreters and cancellation, returns to editor, explicit discard",
+          "Unmodified Turochamp: autoexec -> side menu -> board -> RUN game menu -> Esc",
+          "Unmodified Bumblebee: optional manual, real program traps, OK help and cancel"
+        ],
+        "final_status": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 27,          ] IP=05 RUN=0 BUSY=0\r\nX_RAW=[ 2.7000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=145\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=582 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Bumblebee/manual.md] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1083437\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T20:30:53 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\nMK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 27,          ] IP=05 RUN=0 BUSY=0\r\nX_RAW=[ 2.7000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=145\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=582 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Bumblebee/manual.md] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1083437\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T20:30:53 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "record": "binary/picocalc-pico-h/hardware-m61-0.4.1-smoke.json"
+      },
+      "clock_alarm": {
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "source": "date 2026-10-17 19:31:00\nalarm a in 10\nret\n",
+        "asleep": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=05 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=161\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=43 DIRTY=0 PATH=[/CLOCK-TEST-193059.m61] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1083437\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T19:31:06 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n",
+        "final": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=05 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=162\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=43 DIRTY=0 PATH=[/CLOCK-TEST-193059.m61] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1083437\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:17 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "cases": [
+          "M61 date sets local RTC",
+          "M61 alarm A in 10 seconds",
+          "unsaved editor discarded without SD write",
+          "alarm wakes display and both backlights from sleep"
+        ],
+        "record": "binary/picocalc-pico-h/clock-hil-0.4.1/result.json"
+      },
+      "power_usb": {
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "passed": true,
+        "cases": [
+          "CRC-framed RTC read/set; automatic sync preserves an already configured RTC and X=42",
+          "framed PicoCalc USB Screen activation, advertised clock capability and atomic keyframe",
+          "three real sleep/wake cycles: PLL_SYS off, USB alive at 48 MHz, full 125 MHz restoration, RAM/backlight/keypad preserved",
+          "RTC continuity from XOSC through repeated PLL changes"
+        ],
+        "initial": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=1\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1300 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:24 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "cycles": [
+          {
+            "asleep": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=6\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T19:31:32 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n",
+            "awake": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=7\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:34 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\nMK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=7\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:34 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n"
+          },
+          {
+            "asleep": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=9\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T19:31:35 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n",
+            "awake": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=10\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:37 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\nMK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=10\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:37 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n"
+          },
+          {
+            "asleep": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=12\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T19:31:39 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n",
+            "awake": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=13\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:41 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\nMK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=13\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:41 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_R"
+          }
+        ],
+        "final": "MK61S PICOCALC PICO-H 0.4.1 RP2040 48 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=16\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=4 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-17T19:31:43 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\n",
+        "rtc_elapsed_seconds": 14.0,
+        "wall_elapsed_seconds": 13.446418583043851,
+        "record": "binary/picocalc-pico-h/power-hil/result.json"
+      },
+      "warm_reset": {
+        "passed": true,
+        "rtc_delta_seconds": 4.0,
+        "before": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=05 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=162\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=43 DIRTY=0 PATH=[/CLOCK-TEST-193059.m61] RESULT=[]\r\nSTACK_USED=8132 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1083437\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=32 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:18 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "after": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=1\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1300 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:31:22 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "record": "binary/picocalc-pico-h/warm-reset-0.4.1.json"
+      },
+      "physical_wake": {
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "user_confirmation": "42 сохранилось. но батарей нет пока, питание только от usb",
+        "battery_power_tested": false,
+        "battery_entries": 0,
+        "passed": true,
+        "final": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=17\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1624 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=4 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:33:06 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "record": "binary/picocalc-pico-h/power-physical-wake.json"
+      },
+      "desktop_ui": {
+        "uf2_sha256": "cab1956d27e1639a10df135d1918faf6cfa93995312ddf70cf9b483a29f51c94",
+        "app_zip_sha256": "851ba0b12cf78f418491d78f01e9cb65f4541339e7338b856f2ca87cd08cac2f",
+        "observations": [
+          "Release macOS arm64 app automatically connected to /dev/cu.usbmodem1401",
+          "UI showed USB Screen connected and live X=42 without entering uscreen",
+          "Virtual key click updated the frame",
+          "Connection was closed through Disconnect; X restored to 42"
+        ],
+        "passed": true,
+        "final": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\r\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=23\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=1844 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=939225\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=4 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=6 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:38:16 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+        "record": "binary/picocalc-pico-h/desktop-ui-0.4.1.json"
+      }
+    },
+    "final_status": "MK61S PICOCALC PICO-H 0.4.1 RP2040 125 MHz\nCORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=OK failures=0\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\nLCD_BKL=240 KBD_BKL=40\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=23\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\nSTACK_USED=1844 STACK_BYTES=32768\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\nUSB_MAX_GAP_US=939225\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=4 BATTERY_SLEEPS=0\nRUNTIME=NONE USB_SCREEN=OFFER SCREEN_FRAMES=6 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T19:38:16 RTC_SET=1 RTC_PPM=0\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\n",
+    "actual_battery_operation_verified": false,
+    "battery_note": "User has no batteries. Powered from USB; BATTERY_SLEEPS=0. The 12 MHz/no-PLL branch is implemented but not physically qualified."
+  },
+  "stm32": {
+    "f401": {
+      "build": "PASS",
+      "stack": {
+        "compiled_units": 157,
+        "dynamic_bounded": 0,
+        "limit": 2048,
+        "max_frame": 1280,
+        "max_function": "program_store.cpp:3725:27:bool program_store::write_file_from_source_impl(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u16, u16*, u8*, usize, const u8*, u8*)",
+        "records": 2563,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      },
+      "bin_bytes": 222532,
+      "bin_sha256": "6ec5a2399b1734f1fd588af24504b6028245b5c71e9849cd33e8a6b5854a1c85",
+      "log": ".build/picocalc-power-stm32-f401.log",
+      "hardware_flashed": false
+    },
+    "f411": {
+      "build": "PASS",
+      "stack": {
+        "compiled_units": 157,
+        "dynamic_bounded": 0,
+        "limit": 5120,
+        "max_frame": 1928,
+        "max_function": "terminal.cpp:2385:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+        "records": 2971,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      },
+      "bin_bytes": 382252,
+      "bin_sha256": "e97ffd6685ca328dcd8642dcf38b1626999d6e0792e35cb29e3193b7369c9607",
+      "log": ".build/picocalc-power-stm32-f411.log",
+      "hardware_flashed": false
+    }
+  },
+  "host_tests": {
+    "picocalc_ASan_UBSan": {
+      "status": "PASS",
+      "log": ".build/picocalc-power-host-tests.log"
+    },
+    "program_store_ASan_UBSan": {
+      "status": "PASS",
+      "log": ".build/picocalc-power-program-store-tests.log"
+    },
+    "USB_Screen_Flutter": {
+      "status": "PASS",
+      "log": ".build/picocalc-power-flutter-tests.log"
+    },
+    "shared_USB_protocol": {
+      "status": "PASS",
+      "log": ".build/picocalc-power-usb-protocol-tests.log"
+    }
+  },
+  "desktop_release": {
+    "file": "binary/picocalc-pico-h/mk61-usb-screen-macos-arm64.zip",
+    "cpu": "arm64",
+    "minimum_macos": "12.0",
+    "codesign_deep_strict_verify": "PASS",
+    "sha256": "851ba0b12cf78f418491d78f01e9cb65f4541339e7338b856f2ca87cd08cac2f"
+  },
+  "installed_apps": "/MK61S-PicoCalc-0.4",
+  "changes": [
+    "F401: separate bounded frame for the existing 1 KiB write workspace; storage ordering, total scratch size and frame limit unchanged.",
+    "SLEEP: PLL_SYS off; 48 MHz with USB, XOSC 12 MHz with both PLLs off without VBUS; minimal SLEEP_EN masks; RTC remains on XOSC/256.",
+    "Stock keyboard polled at about 80 ms while idle; USB insertion/removal restores/reselects clocks; full 125 MHz and bus timings restored on wake.",
+    "Optional CRC-framed clock sync without taking the display; automatic mode preserves an already configured RTC.",
+    "Desktop client discovers PicoCalc and activates by packet; unsupported STM32 kbd shell capability is not advertised by Pico.",
+    "Unconfigured RTC placeholder no longer becomes configured after a software reset."
+  ],
+  "limits": [
+    "No independent battery-backed RTC exists on this Pico H board; complete power loss stops time. Desktop sync helps when a computer is available.",
+    "True DORMANT with keyboard wake and time continuity is not supported by the stock board/BIOS profile: keyboard events require I2C polling and there is no independent RTC clock. It needs an additional wake/time mechanism; a Pico H UF2 update alone cannot provide these signals.",
+    "Native M4/hard-float APP still require a Cortex-M0+/soft-float build; the existing CPU guard is intentional.",
+    "No battery discharge or whole-board current measurement was performed."
+  ]
+}

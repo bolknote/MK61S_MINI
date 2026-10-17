@@ -1,0 +1,167 @@
+{
+  "status": "PASS",
+  "date": "2026-10-17",
+  "source_base_commit": "679e0b301193473063df147ec8724eb8a7fdb208",
+  "build_scope": "Clean archived main plus language_source.hpp only; parallel PicoCalc and FLASH-language branch changes excluded.",
+  "device": {
+    "public_id": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411CE"
+  },
+  "implementation": {
+    "source_window": "Reuse the already-borrowed compiler suffix for oversized sources. Window starts stay on the old 256-byte grid, preventing repeated backwards parser probes from causing per-byte decodes.",
+    "small_sources": "One verified full read per frontend invocation when the source fits; sizing and EMIT remain separate invocations.",
+    "fallback": "Missing or too-small loan retains the 256-byte stack page. I/O, partial/late reads and failed verification are sticky failures, never a paging retry.",
+    "span_consumers": "Byte access, CR/LF scan, NUL scan and source CRC consume bounded spans synchronously. This removes intermediate 64-byte copies without publishing or retaining a cache pointer.",
+    "basic_window_bytes": 3784,
+    "focal_window_bytes": 4004,
+    "reader_object_growth_bytes": 0,
+    "additional_permanent_buffers": 0,
+    "additional_source_allocations": 0,
+    "format_and_crc_unchanged": true
+  },
+  "measurement": {
+    "method": "Same resident, byte-identical merged Turochamp package, FOCAL, LANGVM, LANGIN and VMSTORE throughout A/B/A. Only BASIC varies. Original VMC snapshot restored, then reboot, before each stage; four searches per stage; complete USB eight-rank board wall clock.",
+    "cold_definition": "First search with compilation and RAM fill; not reboot with an already-current chess file cache.",
+    "common_firmware": {
+      "build": "55B4DB1E",
+      "bytes": 343168,
+      "sha256": "ea0c399501c55e558ae44a75110b9a1257d8735d66db80431a4480d72cfa5b36"
+    },
+    "basic": {
+      "baseline_sha256": "cb1aff8b108bde4c6b04f15ea29545c87c06a5e44141c1454c7655267b4fc63d",
+      "candidate_sha256": "b70dc652213e62a0482711b902a75bed48368c26d3887070b1bd1876751a26ac"
+    },
+    "common_vmstore_sha256": "8d24c83764fc409cda8d3b1f24052dce2664c9072b1c4717fb9fe1bba0c06a3b",
+    "stages": [
+      {
+        "name": "baseline",
+        "seconds": [63.40614008298144, 26.292429541994352, 25.19498037500307, 25.14081295800861],
+        "steady_seconds": 25.16789666650584,
+        "cold_phases_seconds": {
+          "until_21_nodes": 32.02478787500877,
+          "from_21_to_420": 23.5626782909967,
+          "after_420_until_full_board": 7.818673916975968
+        },
+        "stack_watermark_remaining": 9044,
+        "frames_crc_checked": 970
+      },
+      {
+        "name": "candidate",
+        "seconds": [50.76907654199749, 26.239021459012292, 25.190436500008218, 25.1323137920117],
+        "steady_seconds": 25.16137514600996,
+        "cold_phases_seconds": {
+          "until_21_nodes": 22.194909167010337,
+          "from_21_to_420": 23.5686505829799,
+          "after_420_until_full_board": 5.005516792007256
+        },
+        "stack_watermark_remaining": 9292,
+        "frames_crc_checked": 964
+      },
+      {
+        "name": "control",
+        "seconds": [63.20797483401839, 26.240281749982387, 25.188325124967378, 25.13350354199065],
+        "steady_seconds": 25.160914333479013,
+        "cold_phases_seconds": {
+          "until_21_nodes": 32.00516483403044,
+          "from_21_to_420": 23.56492770795012,
+          "after_420_until_full_board": 7.63788229203783
+        },
+        "stack_watermark_remaining": 9196,
+        "frames_crc_checked": 965
+      }
+    ],
+    "cold": {
+      "reference_seconds": 63.30705745849991,
+      "candidate_seconds": 50.76907654199749,
+      "seconds_saved": 12.53798091650242,
+      "elapsed_reduction_percent": 19.80502872799217,
+      "speedup": 1.246960980393856,
+      "control_drift_percent": -0.31253321634735487
+    },
+    "warm": {
+      "reference_seconds": 25.164405499992426,
+      "candidate_seconds": 25.16137514600996,
+      "elapsed_reduction_percent": 0.012042223618069503
+    },
+    "all_searches": {
+      "count": 12,
+      "move": "e2e3",
+      "nodes": 420,
+      "book": "off",
+      "level": 2,
+      "max_depth": 8,
+      "full_eight_rank_board": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+    }
+  },
+  "limits": {
+    "weakened": false,
+    "hard_app_memory": 20480,
+    "workspace": 8192,
+    "compiler_prefix": 4176,
+    "retained_numeric_values": 4016,
+    "vm_image_cache": 32768,
+    "vm_bytecode": 6144,
+    "vm_module": 9728,
+    "vm_lines": 192,
+    "vm_values": 96,
+    "vm_calls": 16,
+    "vm_loops": 16,
+    "source_maximum": 65534,
+    "fallback_page": 256,
+    "file_cache_files": 32,
+    "file_cache_bytes": 65536,
+    "native_stack": 16384,
+    "app_packed_before_after": {"BASIC": [14420, 14433], "FOCAL": [11907, 11886], "LANGIN": [12567, 12533]},
+    "app_memory_before_after": {"BASIC": [20468, 20468], "FOCAL": [16496, 16432], "LANGIN": [16836, 16804]},
+    "matched_native_build": {
+      "candidate_not_installed_in_ABA": true,
+      "flash_before_after": [343168, 343104],
+      "data_before_after": [1632, 1632],
+      "bss_before_after": [22648, 22648],
+      "largest_frame": 1928,
+      "frame_limit": 5120,
+      "main_frame": 80,
+      "terminal_frame": 520,
+      "whole_ram_gate": "PASS: effective free 33696, standalone APP 20480, full stage index 2560, MSC 8264, filesystem temporaries 824"
+    }
+  },
+  "verification": {
+    "source_stream": "ASan/UBSan, math backends 0/1, BASIC/FOCAL: 64-KiB source, byte-exact images/resources, loan/window/page boundaries, backwards seeks, NUL/CRC, sticky early/late I/O and protected adjacent canaries PASS",
+    "reader_layout": "Previous Reader layout size unchanged on host and ARM cross-compiler PASS",
+    "source_scan": "Scalar/DSP-emulated CR/LF compiler, byte lanes, M8, alignments, exact tails and diagnostics PASS",
+    "compiler_flow": "Generic and BASIC/FOCAL-specialized sizing/reserve/emit, wrong-language guards and one-time state preparation PASS",
+    "file_cache": "ASan/UBSan, both arithmetic backends, USB 0/1, mixed-cache 0/1: CRC/key/epoch, quota/OOM, INPUT/retry/ESC, FOCAL and USB canaries PASS",
+    "arm": {
+      "libm": "PASS: 39 flow runs and 18 full-loan/window checks, both languages at three load addresses",
+      "core_local_float": "PASS: same compiler APPs, matched CORE resident/local-float VM, 39 flow runs and 18 source checks",
+      "largest_flow_stack": 4564,
+      "largest_basic_source_stack": 4036,
+      "largest_focal_source_stack": 4064,
+      "source_lengths_include": [3072, 3784, 3785, 4004, 4005, 4177, 65534],
+      "checks": "Real ARM policy/relocation, exact source-loan bounds, source-independent runtime, INPUT/retry/ESC and protected value banks; allocator/storage remain fixtures, not hardware timings."
+    },
+    "turochamp": "All 24 actual UTF-8-to-M8 modules compile byte-exact through a 3784-byte window in both arithmetic backends; largest bytecode 5609/6144; all quotas unchanged PASS",
+    "legal_compile_read_count": {"source_bytes": 4647, "page_reader": 675, "window_reader": 10, "scope": "One emitting compile_source invocation; not total chess I/O or timing"},
+    "math_core": "Real CORE CPU, Flash/evictable-SRAM tables, context and native-path differentials PASS",
+    "native": "Flash, RAM, largest frame, foreground stack and CDC RX ELF gates PASS",
+    "hardware_inner": "All A/B/A searches, CRC-checked USB frames, MPU/stack/crash health and inner filesystem/calculator restoration PASS"
+  },
+  "restoration": {
+    "exact": true,
+    "original_firmware": "1D714411",
+    "original_firmware_sha256": "ffc4df72cc4af368c39d6ddc951a5f0a98e1860e91ab040443553e5a641091f3",
+    "original_files": 24,
+    "original_directories": 2,
+    "firmware_writes": 2,
+    "files_and_calculator_preserved": true,
+    "port_closed": true,
+    "state": "Original resident hardware CRC verified; all 24 files/two directories, registers, stack, 105-byte program and cwd restored exactly. CRASH none, MPU layout=ok. Classic released to the coordinated FLASH-language task.",
+    "mini_touched": false
+  },
+  "raw_artifacts": "/private/tmp/mk61-source-window.kYuEJ2",
+  "hardware_reports": ["hil-main/report.json", "resident-hil/report.json"],
+  "candidate_screenshot": "/private/tmp/mk61-source-window.kYuEJ2/hil-main/candidate/run-0/move-e2-e3.png"
+}

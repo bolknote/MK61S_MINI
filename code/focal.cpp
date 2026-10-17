@@ -289,14 +289,14 @@ public:
   explicit FocalWorkspaceScope(usize requested = sizeof(FocalRuntime))
       : lease(language_workspace::Owner::FOCAL,
 #if defined(MK61_LANGUAGE_VM_COMPILER)
-              requested
+              // Writer and source window share this compiler prefix; the
+              // resident page and retained values remain outside the lease.
+              language_vm::FLASH_COMPILER_WORKSPACE_SIZE
 #else
               language_workspace::SIZE
 #endif
         ) {
-#if !defined(MK61_LANGUAGE_VM_COMPILER)
     (void)requested;
-#endif
     if (lease.ok() && lease.fresh()) {
       auto *r = new (lease.data()) FocalRuntime;
       focal_reset_runtime(*r);
@@ -757,11 +757,14 @@ static FocalRunStatus tb_run_program(int slot) {
   auto &request = *language_vm::frontend_request;
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[slot].store_id,programs[slot].source_len,programs[slot].source_revision};
-  language_vm::source::Reader input(file.input());
   if(request.storage) {
     request.source_id=file.id;
-    request.compiled=file.pin()?language_vm::compile_flash_source(language_vm::Language::FOCAL,input,*request.storage,mk61_ref::register_available(15),(u8*)language_workspace::data(language_workspace::Owner::FOCAL)+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
-
+    auto* workspace=(u8*)language_workspace::data(language_workspace::Owner::FOCAL);
+    const bool pinned=file.pin();
+    language_vm::source::Reader input(file.input(),
+        workspace+language_vm::flash::SOURCE_WINDOW_OFFSET,
+        language_vm::flash::SOURCE_WINDOW_BYTES);
+    request.compiled=pinned?language_vm::compile_flash_source(language_vm::Language::FOCAL,input,*request.storage,mk61_ref::register_available(15),workspace+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
   } else request.compiled={language_vm::Error::IO,0,0,0,0};
 #else
   language_vm::ResourceSource resource = {programs[slot].store_id,

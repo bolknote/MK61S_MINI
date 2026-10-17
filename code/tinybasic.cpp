@@ -246,6 +246,7 @@ Result dispatch(Request& request){return host_session().apply(request);}
 #endif
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 #include "language_vm_abi.hpp"
+#include "language_flash_program.hpp"
 #include "language_compiler_workspace.hpp"
 #endif
 
@@ -592,7 +593,8 @@ static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC r
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 static_assert(sizeof(TinyBasicRuntime) <= language_vm::FLASH_FRONTEND_BYTES,
               "compiler-only BASIC overlaps retained VM values");
-static constexpr usize TB_WORKSPACE_REQUEST = sizeof(TinyBasicRuntime);
+// Keep the resident page and retained values outside the compiler lease.
+static constexpr usize TB_WORKSPACE_REQUEST = language_vm::FLASH_COMPILER_WORKSPACE_SIZE;
 #else
 static constexpr usize TB_WORKSPACE_REQUEST = language_workspace::SIZE;
 #endif
@@ -612,7 +614,9 @@ class TinyBasicWorkspaceScope {
     TinyBasicWorkspaceScope(usize requested = TB_WORKSPACE_REQUEST)
       : lease(language_workspace::Owner::TINYBASIC, requested) {
       if(!lease.ok() || !lease.fresh()) return;
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
       memset(lease.data(), 0, lease.size());
+#endif
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
       tinybasic_reset_runtime(*runtime);
     }
@@ -3196,11 +3200,14 @@ static TinyBasicRunStatus tb_run_program(
   auto& request = *language_vm::frontend_request;
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[program_index].store_id,programs[program_index].source_len,programs[program_index].source_revision};
-  language_vm::source::Reader input(file.input());
   if(request.storage) {
     request.source_id=file.id;
-    request.compiled=file.pin()?language_vm::compile_flash_source(language_vm::Language::BASIC,input,*request.storage,true,(u8*)language_workspace::data(language_workspace::Owner::TINYBASIC)+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
-
+    auto* workspace=(u8*)language_workspace::data(language_workspace::Owner::TINYBASIC);
+    const bool pinned=file.pin();
+    language_vm::source::Reader input(file.input(),
+        workspace+language_vm::flash::SOURCE_WINDOW_OFFSET,
+        language_vm::flash::SOURCE_WINDOW_BYTES);
+    request.compiled=pinned?language_vm::compile_flash_source(language_vm::Language::BASIC,input,*request.storage,true,workspace+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
   } else request.compiled={language_vm::Error::IO,0,0,0,0};
 #else
   language_vm::ResourceSource resources = {

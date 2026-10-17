@@ -8,11 +8,14 @@ abstract final class MkMessage {
   static const ping = 0x14;
   static const pong = 0x15;
   static const requestKeyframe = 0x16;
+  static const activate = 0x17;
   static const frameBegin = 0x20;
   static const rect = 0x21;
   static const frameEnd = 0x22;
   static const keyEvent = 0x30;
   static const releaseAllKeys = 0x31;
+  static const clockSync = 0x40;
+  static const clockState = 0x41;
 }
 
 abstract final class MkCodec {
@@ -28,6 +31,7 @@ abstract final class MkCapability {
   static const atomicFrames = 1 << 4;
   static const terminalMux = 1 << 5;
   static const terminalKeyboard = 1 << 6;
+  static const clockSync = 1 << 7;
 }
 
 abstract final class MkGeometry {
