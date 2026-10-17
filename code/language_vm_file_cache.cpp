@@ -110,14 +110,25 @@ bool container(const uint8_t* file,uint16_t size,
   plain=data;return true;
 }
 }
-bool probe(const Key& key,const uint8_t* prefix,uint16_t prefix_size,
-           uint16_t size,uint16_t& image_size) {
-  image_size=0;loadable_module::Header h;
+bool probe_candidate(const Key& key,const uint8_t* prefix,uint16_t prefix_size,
+                     uint16_t size,uint32_t& source_crc,uint16_t& image_size) {
+  source_crc=0;image_size=0;loadable_module::Header h;
   if(prefix_size<PROBE_BYTES || !header(prefix,size,h))return false;
   Reader r={prefix+64,PROBE_BYTES-64};const uint8_t* plain;
-  if(!literal(r,h,plain,image_size) || !matches(key,plain,image_size)) {
+  if(!literal(r,h,plain,image_size)) {image_size=0;return false;}
+  Key candidate=key;
+  memcpy(&candidate.source_crc,plain+8,4);
+  if(!matches(candidate,plain,image_size)) {
     image_size=0;return false;
   }
+  source_crc=candidate.source_crc;
+  return true;
+}
+bool probe(const Key& key,const uint8_t* prefix,uint16_t prefix_size,
+           uint16_t size,uint16_t& image_size) {
+  uint32_t source_crc=0;
+  if(!probe_candidate(key,prefix,prefix_size,size,source_crc,image_size) ||
+     source_crc!=key.source_crc) {image_size=0;return false;}
   return true;
 }
 bool view(const Key& key,const uint8_t* file,uint16_t size,

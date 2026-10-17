@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Same-firmware Classic A/B/A for frozen Turochamp source packages.
 
-Only /TCMERGE and VM-generated VMC files may change; --candidate-basic also
-permits a temporary BASIC.APP replacement. No flashing, formatting or budget
+Only /TCMERGE and VM-generated VMC files may change; explicit APP options also
+permit temporary BASIC.APP/VMSTORE.APP replacements. No flashing, formatting or budget
 changes. Byte-exact filesystem/calculator
 restoration is required even after a failed stage.
 """
@@ -29,6 +29,7 @@ from m8_codec import encode
 
 REMOTE = '/TCMERGE'
 BASIC = '/System/BASIC.app'
+VMSTORE = '/System/VMCache/VMSTORE.app'
 
 
 def save(path, data):
@@ -43,17 +44,24 @@ def package(directory):
     return files
 
 
-def restore_vm_cache(port, original, backup, replace_basic=False):
+def restore_vm_cache(port, original, backup, replace_basic=False, replace_vmstore=False,
+                     app_targets=None, app_writes=None):
     # Unlike the firmware-variant helper, this fixture also owns /TCMERGE.
     current = storage_hil.fingerprint(port)
     added = sorted(set(current['files'])-set(original['files']))
     assert all(is_vm_cache(remote) or remote.startswith(REMOTE+'/') for remote in added), added
+    allowed = ({BASIC} if replace_basic else set()) | ({VMSTORE} if replace_vmstore else set())
+    app_targets = app_targets or {}
+    assert set(app_targets) <= allowed & set(original['files']), 'Unapproved APP target'
     replacements = {}
     for remote, detail in original['files'].items():
+        target = app_targets.get(remote)
+        if target is not None:
+            detail = dict(bytes=len(target), sha256=hashlib.sha256(target).hexdigest())
         if current['files'].get(remote) == detail:
             continue
-        assert is_vm_cache(remote) or (replace_basic and remote == BASIC), ('Unexpected original file change', remote)
-        data = (backup/remote.lstrip('/')).read_bytes()
+        assert is_vm_cache(remote) or remote in allowed, ('Unexpected original file change', remote)
+        data = target if target is not None else (backup/remote.lstrip('/')).read_bytes()
         assert hashlib.sha256(data).hexdigest() == detail['sha256']
         replacements[remote] = data
     removed = []
@@ -64,6 +72,7 @@ def restore_vm_cache(port, original, backup, replace_basic=False):
     for remote, data in replacements.items():
         write_file(port, remote, data)
         assert read_file(port, remote) == data
+        if remote in allowed and app_writes is not None: app_writes.append(remote)
     return removed
 
 
@@ -77,17 +86,30 @@ def main():
     ap.add_argument('--no-profile', action='store_true')
     ap.add_argument('--candidate-basic', type=Path,
                     help='A/B/A compiler-only comparison; game packages must be identical')
+    ap.add_argument('--common-basic', type=Path,
+                    help='Use the same BASIC compiler in every stage, restoring the original afterwards')
+    ap.add_argument('--baseline-vmstore', type=Path)
+    ap.add_argument('--candidate-vmstore', type=Path)
     ap.add_argument('--output-dir', type=Path, required=True)
     args = ap.parse_args()
     output = args.output_dir.resolve()
     assert not output.exists(), 'Keep previous attempts and restoration evidence'
     baseline, candidate = package(args.baseline_game), package(args.candidate_game)
     assert baseline['Turochamp.FMK'] == candidate['Turochamp.FMK']
-    basic = args.candidate_basic.read_bytes() if args.candidate_basic else None
-    if basic is not None:
+    assert not (args.candidate_basic and args.common_basic)
+    assert bool(args.baseline_vmstore) == bool(args.candidate_vmstore)
+    assert not (args.candidate_basic and args.candidate_vmstore), 'Vary only one APP'
+    def checked_app(path, kind):
         from check_app_memory_elf import app_memory_size
-        app_memory_size(args.candidate_basic)  # Header/payload CRCs and the unchanged 20-KiB cap.
-        assert basic[14] == 2, 'Candidate must be a BASIC compiler APP'
+        app_memory_size(path)  # Header/payload CRCs and the unchanged 20-KiB cap.
+        data = path.read_bytes()
+        assert data[14] == kind, 'Incorrect APP kind'
+        return data
+    basic = checked_app(args.candidate_basic, 2) if args.candidate_basic else None
+    common = checked_app(args.common_basic, 2) if args.common_basic else None
+    stores = ((checked_app(args.baseline_vmstore, 4), checked_app(args.candidate_vmstore, 4))
+              if args.candidate_vmstore else None)
+    if basic is not None or common is not None or stores:
         assert baseline == candidate, 'Do not confound compiler and game changes'
     output.mkdir(parents=True)
     backup = output/'original-files'
@@ -98,7 +120,8 @@ def main():
         memory_hil.require_empty(before)
         alarms_off(port)
         original = snapshot_files(port, backup)
-        if basic is not None: assert BASIC in original['files']
+        if basic is not None or common is not None: assert BASIC in original['files']
+        if stores: assert VMSTORE in original['files']
         assert REMOTE not in original['directories']
         assert not any(path.startswith(REMOTE+'/') for path in original['files'])
     save(output/'snapshot.json', dict(identity=identity.__dict__, health=before, files=original))
@@ -111,6 +134,13 @@ def main():
     if basic is not None:
         result['compiler'] = dict(original=original['files'][BASIC],
             candidate=dict(bytes=len(basic), sha256=hashlib.sha256(basic).hexdigest()))
+    variants = {}
+    if basic is not None: variants[BASIC] = ((backup/BASIC.lstrip('/')).read_bytes(), basic)
+    if common is not None: variants[BASIC] = (common, common)
+    if stores: variants[VMSTORE] = stores
+    result['app_variants'] = {remote: {stage:dict(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())
+        for stage, data in zip(('baseline','candidate'), pair)} for remote, pair in variants.items()}
+    app_writes = []
     save(output/'report.json', result)
     touched = False
     passed = False
@@ -123,13 +153,10 @@ def main():
                 if not touched:
                     touched = True
                     port.command(f'mkdir "{REMOTE}"', 15)
-                removed = restore_vm_cache(port, original, backup, basic is not None)
-                if stage == 'control' and basic is not None:
-                    result['System_APP_writes'] += 1
-                if stage == 'candidate' and basic is not None:
-                    write_file(port, BASIC, basic)
-                    assert read_file(port, BASIC) == basic
-                    result['System_APP_writes'] += 1
+                targets = {remote: pair[stage == 'candidate'] for remote, pair in variants.items()}
+                removed = restore_vm_cache(port, original, backup, BASIC in variants,
+                    VMSTORE in variants, targets, app_writes)
+                result['System_APP_writes'] = len(app_writes)
                 for name, data in files.items():
                     remote = REMOTE+'/'+name
                     if installed.get(name) != data:
@@ -198,7 +225,9 @@ def main():
                 with connect(PORT, build) as port:
                     port.command('fsput cancel')
                     port.command('reinit')
-                    restore_vm_cache(port, original, backup, basic is not None)
+                    restore_vm_cache(port, original, backup, BASIC in variants,
+                        VMSTORE in variants, app_writes=app_writes)
+                    result['System_APP_writes'] = len(app_writes)
                     current = storage_hil.fingerprint(port)
                     for remote in sorted(set(current['files'])-set(original['files'])):
                         assert remote.startswith(REMOTE+'/'), remote
