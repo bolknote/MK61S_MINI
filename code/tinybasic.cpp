@@ -592,7 +592,9 @@ static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC r
 #if defined(MK61_LANGUAGE_VM_COMPILER)
 static_assert(sizeof(TinyBasicRuntime) <= language_vm::COMPILER_WORKSPACE_SIZE,
               "compiler-only BASIC overlaps retained VM values");
-static constexpr usize TB_WORKSPACE_REQUEST = sizeof(TinyBasicRuntime);
+// Only this prefix is leased: the upper 4016 bytes retain VM values. Its
+// unused suffix is a scoped source loan, never another allocation/snapshot.
+static constexpr usize TB_WORKSPACE_REQUEST = language_vm::COMPILER_WORKSPACE_SIZE;
 #else
 static constexpr usize TB_WORKSPACE_REQUEST = language_workspace::SIZE;
 #endif
@@ -612,7 +614,9 @@ class TinyBasicWorkspaceScope {
     TinyBasicWorkspaceScope(usize requested = TB_WORKSPACE_REQUEST)
       : lease(language_workspace::Owner::TINYBASIC, requested) {
       if(!lease.ok() || !lease.fresh()) return;
+#if !defined(MK61_LANGUAGE_VM_COMPILER)
       memset(lease.data(), 0, lease.size());
+#endif
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
       tinybasic_reset_runtime(*runtime);
     }
@@ -3192,11 +3196,13 @@ static TinyBasicRunStatus tb_run_program(
       programs[program_index].store_id, programs[program_index].source_revision, request.resources};
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[program_index].store_id,programs[program_index].source_len,programs[program_index].source_revision};
-  language_vm::source::Reader input(file.input());
-  request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,request.output,(u16)request.capacity,true,&resources);
-  if(!request.output && request.compiled.error==language_vm::Error::FULL && request.resources==language_vm::ResourceMode::EMBEDDED) {
+  language_vm::source::Reader input(file.input(), &tinybasic_runtime()+1,
+      language_vm::COMPILER_WORKSPACE_SIZE-sizeof(TinyBasicRuntime));
+  for(;;) {
+    request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,request.output,(u16)request.capacity,true,&resources);
+    if(request.output || request.compiled.error!=language_vm::Error::FULL ||
+       request.resources!=language_vm::ResourceMode::EMBEDDED)break;
     request.resources=resources.mode=language_vm::ResourceMode::SOURCE;request.capacity=language_vm::MAX_IMAGE;
-    request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,nullptr,language_vm::MAX_IMAGE,true,&resources);
   }
 #else
   request.compiled = language_vm::compile(

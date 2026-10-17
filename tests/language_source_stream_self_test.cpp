@@ -77,7 +77,50 @@ static void distant_equal_spans() {
   assert(!source::equal(source::Cursor(failed,32760),source::Cursor(failed,40000),4096));
   assert(!failed.good());
 }
+static void borrowed_source() {
+  // Guard the retained runtime/value banks on either side of the loan.
+  uint8_t storage[1026];memset(storage,0x5A,sizeof(storage));
+  for(auto lang:{Language::BASIC,Language::FOCAL}) {
+    const std::string head=lang==Language::BASIC?"10 REM ":"1.01 COMMENT ";
+    const std::string tail=lang==Language::BASIC?"\n20 A=42\n30 END\n":"\n1.02 SET A=42;EXIT\n";
+    for(unsigned length:{1023U,1024U,1025U}) {
+      File file{head+std::string(length-head.size()-tail.size(),'x')+tail};
+      source::Reader input(file.input(),storage+1,1024);
+      std::vector<uint8_t> actual(MAX_MODULE),expected(MAX_MODULE);
+      const auto size=compile_source(lang,input,nullptr,MAX_MODULE);
+      const auto made=compile_source(lang,input,actual.data(),MAX_MODULE);
+      const auto old=compile(lang,file.text.data(),uint16_t(length),expected.data(),MAX_MODULE);
+      assert(size.error==Error::NONE && made.error==Error::NONE && old.error==Error::NONE);
+      assert(size.size==made.size && made.size==old.size);
+      assert(!memcmp(actual.data(),expected.data(),made.size));
+      if(length<=1024)assert(file.calls==1 && file.largest==length);
+      else assert(file.calls>1 && file.largest<=source::PAGE_SIZE);
+      assert(storage[0]==0x5A && storage[1025]==0x5A);
+    }
+    File failed{head+tail};failed.fail=0;
+    source::Reader bad(failed.input(),storage+1,1024);
+    assert(!bad.good() && failed.calls==1);
+    assert(compile_source(lang,bad,nullptr,MAX_MODULE).error==Error::IO);
+    assert(failed.calls==1); // Failed CRC/I/O must not retry via paging.
+    File unloaned{head+tail};source::Reader paged(unloaned.input(),nullptr,1024);
+    assert(compile_source(lang,paged,nullptr,MAX_MODULE).error==Error::NONE);
+    assert(unloaned.calls && unloaned.largest<=source::PAGE_SIZE);
+    // A second reader must revalidate the source; the loan is not a cache
+    // that can survive a different revision, APP lifetime or workspace owner.
+    File changed{head+tail};
+    {source::Reader first(changed.input(),storage+1,1024);assert(first.good());}
+    changed.fail=0;
+    {source::Reader second(changed.input(),storage+1,1024);assert(!second.good());}
+    assert(changed.calls==2);
+    source::Input partial={nullptr,[](void*,uint16_t,uint8_t* out,uint16_t n){
+      memset(out,'x',n);return false;},64};
+    source::Reader late_failure(partial,storage+1,1024);
+    assert(!late_failure.good());
+    assert(compile_source(lang,late_failure,nullptr,MAX_MODULE).error==Error::IO);
+  }
+}
 int main() {
+  borrowed_source();
   distant_equal_spans();
   compact_source();
   // Keyword matching must not wrap at 256 letters after lifting the file cap.

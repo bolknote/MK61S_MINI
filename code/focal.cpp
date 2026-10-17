@@ -288,14 +288,14 @@ public:
   explicit FocalWorkspaceScope(usize requested = sizeof(FocalRuntime))
       : lease(language_workspace::Owner::FOCAL,
 #if defined(MK61_LANGUAGE_VM_COMPILER)
-              requested
+              // Lend the unused prefix suffix to the scoped source reader;
+              // the retained VM value banks are outside this lease.
+              language_vm::COMPILER_WORKSPACE_SIZE
 #else
               language_workspace::SIZE
 #endif
         ) {
-#if !defined(MK61_LANGUAGE_VM_COMPILER)
     (void)requested;
-#endif
     if (lease.ok() && lease.fresh()) {
       auto *r = new (lease.data()) FocalRuntime;
       focal_reset_runtime(*r);
@@ -759,11 +759,13 @@ static FocalRunStatus tb_run_program(int slot) {
                                           request.resources};
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[slot].store_id,programs[slot].source_len,programs[slot].source_revision};
-  language_vm::source::Reader input(file.input());
-  request.compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,request.output,(u16)request.capacity,mk61_ref::register_available(15),&resource);
-  if(!request.output && request.compiled.error==language_vm::Error::FULL && resource.mode==language_vm::ResourceMode::EMBEDDED) {
+  language_vm::source::Reader input(file.input(), &focal_runtime()+1,
+      language_vm::COMPILER_WORKSPACE_SIZE-sizeof(FocalRuntime));
+  for(;;) {
+    request.compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,request.output,(u16)request.capacity,mk61_ref::register_available(15),&resource);
+    if(request.output || request.compiled.error!=language_vm::Error::FULL ||
+       resource.mode!=language_vm::ResourceMode::EMBEDDED)break;
     request.resources=resource.mode=language_vm::ResourceMode::SOURCE;request.capacity=language_vm::MAX_IMAGE;
-    request.compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,nullptr,language_vm::MAX_IMAGE,mk61_ref::register_available(15),&resource);
   }
 #else
   request.compiled = language_vm::compile(

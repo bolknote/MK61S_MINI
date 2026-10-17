@@ -176,6 +176,33 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
     raise AssertionError("endless flow")
 
 
+def source_buffer_checks(elf, packages, address):
+    for language in (1, 2):
+        for length in (3072, 4177):
+            head = b'10 REM ' if language == 1 else b'1.01 C '
+            tail = b'\n20 A=42;END\n' if language == 1 else b'\n1.02 S A=42;E\n'
+            source = head + b'x'*(length-len(head)-len(tail)) + tail
+            machine = OverlayMachine(elf, True, address)
+            # Page-mode parses intentionally revisit a multi-KiB file. Allow
+            # enough emulated work; all device RAM/APP/stack limits stay put.
+            machine.call_instruction_limit = 100_000_000
+            machine.call_timeout_us = 60_000_000
+            value, error, *_ = execute(machine, packages, language, source, [])
+            assert value == 42 and not error
+            reads = [x for x in machine.trace if x[0] == 'source_read' and x[1] == 42]
+            assert reads
+            if length == 3072:
+                # Exactly one verified decode per frontend call (size + emit),
+                # not one decode per page or compiler pass.
+                assert len(reads) == 2 and all(x[2] == 0 and x[4] == length for x in reads), reads
+                assert all(machine.workspace <= x[3] and x[3]+x[4] <= machine.workspace+4176 for x in reads)
+            else:
+                assert len(reads) > 2 and all(x[4] <= 256 for x in reads)
+            assert all(size <= 4176 for _, size in machine.workspace_requests)
+            print('ARM source loan', address, language, length,
+                  'reads', len(reads), 'stack', max(machine.stage_peaks.values()), flush=True)
+
+
 def main():
     global COMPILER_CONTEXT_SIZE
     parser = argparse.ArgumentParser(description=__doc__)
@@ -204,6 +231,7 @@ def main():
         legacy = package(reader, args.legacy_app, elf, work, "application") if args.legacy_app else None
         traces = []
         for address in range(3):
+            source_buffer_checks(args.resident_elf, packages, address)
             if args.specialized:
                 reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["tinybasic"], 2, 2)
                 reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["focal"], 1, 1)

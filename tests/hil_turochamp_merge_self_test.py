@@ -38,8 +38,10 @@ def main():
         old = backup/OLD.lstrip('/')
         old.parent.mkdir(parents=True)
         old.write_bytes(original[OLD])
+        app = backup/USER.lstrip('/')
+        app.write_bytes(original[USER])
 
-        def exercise(files, fail=False):
+        def exercise(files, fail=False, replace_basic=False):
             port = Port(files)
             def write(port, remote, data):
                 port.operations.append(('write', remote))
@@ -48,7 +50,7 @@ def main():
                  patch.object(h, 'write_file', write), \
                  patch.object(h, 'read_file', lambda port, remote: port.files[remote]):
                 try:
-                    removed = h.restore_vm_cache(port, snapshot, backup)
+                    removed = h.restore_vm_cache(port, snapshot, backup, replace_basic)
                 except AssertionError:
                     assert fail and not port.operations
                     return port
@@ -62,6 +64,10 @@ def main():
         for remote in ('/user.txt', '/TCMERGE-other/file.tbi', '/System/VMCache/VMC-user.app'):
             exercise({**original, NEW: b'new', remote: b'foreign'}, fail=True)
         exercise({**original, NEW: b'new', USER: b'foreign change'}, fail=True)
+        port, _ = exercise({**original, USER:b'candidate'}, replace_basic=True)
+        assert port.files == original and port.operations == [('write',USER)]
+        app.write_bytes(b'corrupt APP backup')
+        exercise({**original, NEW:b'new', USER:b'candidate'}, fail=True, replace_basic=True)
         old.write_bytes(b'corrupt backup')
         exercise({**original, OLD: b'changed', NEW: b'new'}, fail=True)
     print('Turochamp merge HIL: owned paths, original hashes and pre-mutation rejection PASS')

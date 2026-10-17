@@ -26,16 +26,21 @@ public:
   Reader(const char* memory, uint16_t size) : input_{nullptr,nullptr,size}, memory_(memory) {
     good_ = memory != nullptr && size <= MAX_SIZE;
   }
-  explicit Reader(Input input) : input_(input) {
-    good_ = input.read != nullptr && input.size <= MAX_SIZE;
+  explicit Reader(Input input, void* buffer = nullptr, size_t capacity = 0) : input_(input) {
+    // The caller lends otherwise-unused workspace for this reader's lifetime.
+    // A full read verifies/decompresses the source only once. Oversized files
+    // (or an unavailable loan) keep the bounded page path; I/O errors do not.
+    if(input.size <= capacity) memory_ = static_cast<const char*>(buffer);
+    good_ = input.read != nullptr && input.size <= MAX_SIZE &&
+        (!memory_ || input.read(input.context,0,static_cast<uint8_t*>(buffer),input.size));
   }
   uint16_t size() const { return input_.size; }
   bool good() const { return good_; }
   bool read(uint16_t at, void* output, size_t count) const {
     if(!good_ || at > size() || count > unsigned(size()-at) || (!output && count)) return false;
+    if(memory_) { if(count) memcpy(output,memory_+at,count); return true; }
     auto* bytes = static_cast<uint8_t*>(output);
     while(count) {
-      if(memory_) { memcpy(bytes,memory_+at,count); return true; }
       if(at < begin_ || unsigned(at-begin_) >= count_) {
         begin_ = uint16_t(at / PAGE_SIZE * PAGE_SIZE);
         count_ = uint16_t(size()-begin_);
