@@ -19,21 +19,24 @@ bool bind(const mk61_app_api* base, u32 crc, u32 app_kind) {
   if(!sys || !sys->keyboard_mapping || !sys->math || !sys->format ||
       (base->capabilities & required) != required) return false;
   api = sys; app = base; image_crc = crc; kind = app_kind;
-#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_USBDISK_MODULE) || defined(MK61_BUILD_SETUP_MODULE) || defined(MK61_BUILD_MARKDOWN_MODULE) || defined(MK61_BUILD_VM_FILE_CACHE_MODULE)
+#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_USBDISK_MODULE) || defined(MK61_BUILD_SETUP_MODULE) || defined(MK61_BUILD_MARKDOWN_MODULE) || defined(MK61_BUILD_VM_FILE_CACHE_MODULE) || defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
   // These System APPs share the resident's bounded memory/string primitives
   // instead of spending their fixed 20-KiB arena on duplicate implementations.
   if(!sys->runtime) return false;
   for(u32 i = 0; i < MK61_RUNTIME_COUNT; ++i) if(!sys->runtime[i]) return false;
   mk61_system_runtime = sys->runtime;
 #endif
-#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+#if defined(MK61_BUILD_FOCAL_MODULE) || defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
   u32 required_services = MK61_SERVICE_CAP_NUMBER_IO;
+#if defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
+  required_services |= MK61_SERVICE_CAP_USBDISK;
+#endif
 #if defined(MK61_BUILD_TINYBASIC_MODULE) || defined(MK61_BUILD_FOCAL_MODULE)
   // Both languages use the resident graphics protocol. BASIC also delegates
   // PRINT/GRAPH parsing to it, including text programs on a character LCD.
   required_services |= MK61_SERVICE_CAP_BASIC_GRAPHICS;
 #endif
-#if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+#if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
   required_services |= MK61_SERVICE_CAP_RESOURCES;
 #endif
 #if MK61_APP_LOCAL_FLOAT_MATH_MASK
@@ -223,6 +226,20 @@ bool write_file(u16 parent, u16 preferred, ProgramType type, const char* name, c
   if(id) *id = (u16) request.id;
   return ok;
 }
+#if !defined(MK61_BUILD_USBDISK_MODULE) && !defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
+bool write_file_from_source(u16 parent,u16 preferred,ProgramType type,const char* name,u16 size,
+    const FileSource& source,const u16* extents,u16 extent_count,u16* id,u8* compression_buffer,
+    usize compression_buffer_size,const u8* contiguous_data) {
+  mk61_system_usbdisk_source request={parent,preferred,(u32)type,size,INVALID_ID,extent_count,
+      name,(void*)&source,[](void* raw,u32 offset,u8* out,u32 bytes)->int {
+        const auto& source=*(const FileSource*)raw;return source.read(source.context,offset,out,bytes);
+      },extents,compression_buffer,(u32)compression_buffer_size,contiguous_data};
+  const bool ok=call(MK61_SYS_USBDISK,MK61_USBDISK_C9_WRITE_FILE_SOURCE,0,0,&request);
+  if(id)*id=u16(request.out_id);
+  return ok;
+}
+#endif
+
 }
 namespace storage_path {
 Status resolve_file(u16 cwd, const char* path, program_store::ProgramType type, program_store::Entry& out) {

@@ -220,8 +220,8 @@ static bool c9_occupied_clusters(u16 except, u8* bits) {
   }
   return true;
 }
-static bool c9_choose_file_chain(u16 owner, const Inode& old, u8 wanted,
-                                const u16* requested, u8 count, u16* output) {
+static bool c9_choose_file_chain(u16 owner, const Inode& old, u16 wanted,
+                                const u16* requested, u16 count, u16* output) {
   if(wanted > MAX_FAT_EXTENTS_PER_FILE + 1U ||
      (requested != nullptr && count != wanted) ||
      (requested == nullptr && count != 0)) return false;
@@ -233,7 +233,7 @@ static bool c9_choose_file_chain(u16 owner, const Inode& old, u8 wanted,
   C9MapReader old_reader = {old.fat_address};
   u16 cursor = 2;
   const u16 limit = (u16) (storage_geometry::fat_cluster_capacity(g_geometry) + 2U);
-  for(u8 index = 0; index < wanted; ++index) {
+  for(u16 index = 0; index < wanted; ++index) {
     u16 cluster = 0;
     if(requested != nullptr) cluster = requested[index];
     else if(index < old_plan.count) {
@@ -658,7 +658,7 @@ bool fat_first_cluster(u16 id, u16& cluster) {
   fat_cluster_chain::Plan plan;
   if(!g_ready || !get_inode(id, inode) || !visible_inode(inode) ||
      !c9_chain_open(id, inode, plan)) return false;
-  if(plan.count == 0) return inode_kind(inode) == NodeKind::FILE && inode.exported_size == 0;
+  if(plan.count == 0) return inode_kind(inode) == NodeKind::FILE && inode_exported_size(inode) == 0;
   return c9_chain_cluster(id, inode, 0, cluster);
 }
 bool fat_chain_count(u16 id, u16& count) {

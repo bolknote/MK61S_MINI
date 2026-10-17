@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
     "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
-    "LANGVM.APP", "LANGIN.APP", "VMCache/VMSTORE.APP",
+    "LANGVM.APP", "LANGIN.APP", "SRCEDIT.APP", "VMCache/VMSTORE.APP",
 )
 MODULES = (
     ("setup", "SETUP.APP", "setup"),
@@ -37,6 +37,7 @@ MODULES = (
     ("explorer", "EXPLORER.APP", "explorer"),
     ("language-vm", "LANGVM.APP", "language-vm"),
     ("language-input", "LANGIN.APP", "language-input"),
+    ("source-editor", "SRCEDIT.APP", "source-editor"),
     ("vm-file-cache", "VMCache/VMSTORE.APP", "vm-file-cache"),
 )
 CATALOG_LOCK_TIMEOUT_SECONDS = 120.0
@@ -133,12 +134,12 @@ def app_variant(system: str, args: argparse.Namespace) -> str:
     if system == "markdown-viewer":
         parts.append("graphics" if args.graphics else "text")
     if system in ("focal", "tinybasic"):
-        parts.append("vm-compiler-v12-short" if getattr(args,"language_vm_compiler",False)
+        parts.append("vm-compiler-v13-stream" if getattr(args,"language_vm_compiler",False)
                      else "float" if args.local_float_math else "core")
     if system == "language-vm":
-        parts += ["split-v12-short", "float" if args.local_float_math else "core"]
+        parts += ["split-v13-stream", "float" if args.local_float_math else "core"]
     if system == "language-input":
-        parts.append("cold-v12-short")
+        parts.append("cold-v13-stream")
     if getattr(args,"focal_trace",False) and system in ("focal","language-vm"):parts.append("trace")
     return "+".join(parts)
 
@@ -450,6 +451,7 @@ def build(args: argparse.Namespace) -> dict:
         "explorer": args.explorer,
         "language-vm": overlay_vm and (args.basic or args.focal),
         "language-input": overlay_vm and (args.basic or args.focal),
+        "source-editor": args.language_vm_compiler and (args.basic or args.focal),
         "vm-file-cache": args.vm_file_cache and (args.basic or args.focal),
     }
     built: list[str] = []

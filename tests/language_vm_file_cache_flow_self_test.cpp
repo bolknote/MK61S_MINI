@@ -72,7 +72,14 @@ uint32_t size(uint32_t id) {File e;return file((uint16_t)id,e)?(uint32_t)e.bytes
 uint32_t service(uint32_t op,uint32_t a,uint32_t b,uint32_t c,void* payload) {
   switch(op) {
     case MK61_SERVICE_CAPABILITIES:return MK61_SERVICE_CAP_FILES|MK61_SERVICE_CAP_MEMORY;
-    case MK61_SERVICE_RESOURCE_READ:return revision;
+    case MK61_SERVICE_RESOURCE_READ: {
+      if(!a)return revision;
+      assert(a==5);
+      const auto& span=*(mk61_service_resource*)payload;
+      assert(span.length<=256 && !span.reserved);
+      return span.revision==revision &&
+          read(span.id,span.offset,span.output,span.length)==span.length;
+    }
     case MK61_SERVICE_FILE_COUNT: {
       assert(a==MK61_SERVICE_FILE_APP);return (uint32_t)files.size();
     }

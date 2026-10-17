@@ -112,9 +112,9 @@ static bool c9_resolve_node(u16 parent, ParsedNode& parsed, WalkPass pass) {
                          parsed.cluster, parsed.id, parsed.name, true);
   }
   if(!parsed.directory) {
-    FileChain chain = {};
+    FileChain chain;
     if(!collect_file_chain(parsed, false, chain)) return false;
-    for(u8 index = 1; index < chain.cluster_count; ++index) {
+    for(u16 index = 1; index < chain.cluster_count; ++index) {
       if(!program_store::import_plan_put(chain.clusters[index], 0,
                                          parsed.id, parsed.source_id)) return false;
     }

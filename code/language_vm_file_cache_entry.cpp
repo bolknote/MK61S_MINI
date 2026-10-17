@@ -168,12 +168,24 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
     const uint32_t revision=call(MK61_SERVICE_RESOURCE_READ);
     stage.file_validated={};
     if(!buffer || c.source_id==0xFFFF || !entry(c.source_id,source) || source.kind || !source.size ||
-       source.size>(c.language==Language::BASIC?3584U:1536U) ||
-       source.type!=(c.language==Language::BASIC?MK61_SERVICE_FILE_BASIC:MK61_SERVICE_FILE_FOCAL) ||
-       mk61_api->file_read(source.id,0,buffer.lease.data,source.size)!=source.size) {
+       source.size>source::MAX_SIZE ||
+       source.type!=(c.language==Language::BASIC?MK61_SERVICE_FILE_BASIC:MK61_SERVICE_FILE_FOCAL)) {
       miss(flow,c);return 1;
     }
-    stage.file_key={0,loadable_module::crc32(buffer.lease.data,source.size),c.source_id,
+    uint32_t source_crc=0xFFFFFFFFU;
+    for(unsigned at=0;at<source.size;) {
+      const unsigned n=source.size-at<256?source.size-at:256;
+      const mk61_service_resource span={revision,(uint16_t)source.id,(uint16_t)at,
+          buffer.lease.data,(uint16_t)n,0};
+      if(!call(MK61_SERVICE_RESOURCE_READ,5,0,0,(void*)&span)) {miss(flow,c);return 1;}
+      for(unsigned i=0;i<n;++i) {
+        source_crc^=buffer.lease.data[i];
+        for(unsigned bit=0;bit<8;++bit)source_crc=(source_crc>>1)^(0xEDB88320U & (0U-(source_crc&1U)));
+      }
+      at+=n;
+    }
+    if(call(MK61_SERVICE_RESOURCE_READ)!=revision) {miss(flow,c);return 1;}
+    stage.file_key={0,~source_crc,c.source_id,
         (uint16_t)source.size,c.language};
     if(!compiler(c.language,buffer.lease.data,stage.file_key.compiler_crc) ||
        !resolve(file_cache::DRIVER_PATH,driver) || !find((uint16_t)driver.parent,filename,cache) ||

@@ -3,12 +3,13 @@
 #include "focal_syntax.hpp"
 #include "basic_graphics_protocol.hpp"
 #include "language_bytecode.hpp"
-#include "language_source_scan.hpp"
+#include "language_source.hpp"
 namespace focal_next {
 // Two sizing/emission passes, like the BASIC compiler. Only the sorted line
 // map is retained. Emitted literals belong to the image, never to an APP.
 template <bool Expression> class Compiler {
 public:
+  using Text = language_vm::source::Cursor;
   using Op = language_vm::Op;
   using E = language_vm::Error;
   struct Line {
@@ -20,7 +21,8 @@ public:
   };
 
 private:
-  const char *source_, *p_, *end_;
+  Text source_, p_, end_;
+  const language_vm::source::Reader* input_;
   const language_vm::ResourceSource *resources_;
 
 public:
@@ -164,7 +166,7 @@ private:
     skip_space();
     t = {0, 0};
     if (take('.')) {
-      const char *b = p_;
+      Text b = p_;
       while (p_ < end_ && (alpha(*p_) || digit(*p_)))
         ++p_;
       t.kind = 1;
@@ -264,7 +266,7 @@ private:
       return;
     }
     if (p_ < end_ && alpha(*p_)) {
-      const char *b = p_;
+      Text b = p_;
       while (p_ < end_ && alpha(*p_))
         ++p_;
       if (p_ - b == 1) {
@@ -361,7 +363,7 @@ private:
       op(Op::FUNCTION, binary ? -1 : 0);
       byte(uint8_t(fn));
     } else {
-      const char *start = p_;
+      Text start = p_;
       while (p_ < end_ && digit(*p_))
         ++p_;
       if (p_ < end_ && *p_ == '.') {
@@ -377,7 +379,7 @@ private:
         ++p_;
         if (p_ < end_ && (*p_ == '+' || *p_ == '-'))
           ++p_;
-        const char *exponent = p_;
+        Text exponent = p_;
         while (p_ < end_ && digit(*p_))
           ++p_;
         if (p_ == exponent) {
@@ -391,7 +393,7 @@ private:
         fail(E::FULL);
         return;
       }
-      memcpy(number, start, n);
+      start.copy(number,n);
       number[n] = 0;
       const char *after = nullptr;
       double value = mk_math::strtod(number, &after);
@@ -461,7 +463,7 @@ private:
     }
     --depth_;
   }
-  void literal(const char *&b, unsigned &n) {
+  void literal(Text &b, unsigned &n) {
     char quote = *p_++;
     b = p_;
     while (p_ < end_ && *p_ != quote)
@@ -475,7 +477,9 @@ private:
   uint8_t resource_byte(const Resource &r, unsigned i) const {
     return i < r.length ? uint8_t(source_[r.begin + i]) : uint8_t(':');
   }
-  uint16_t intern(const char *b, unsigned n, bool colon) {
+  uint16_t intern(Text b, unsigned n, bool colon) {
+    if(owned() && (n+colon>language_vm::MAX_MODULE-2U ||
+        resource_bytes_>language_vm::MAX_MODULE-2U-n-colon)) {fail(E::FULL);return 0;}
     Resource r = {uint16_t(b - source_), uint16_t(n), resource_bytes_, colon};
     for (unsigned i = 0; i < resource_count_; ++i) {
       const auto &candidate = resources_table_[i];
@@ -499,11 +503,14 @@ private:
         uint16_t(resource_bytes_ + (owned() ? 2 + n + colon : 3 + parts * 3));
     return r.offset;
   }
-  void text(Op code, const char *b, unsigned n, bool colon = false) {
+  void text(Op code, Text b, unsigned n, bool colon = false) {
     if (resources_) {
-      const auto resource = intern(b, n, colon);
-      op(code == Op::READ_INPUT ? Op::INPUT_RESOURCE : Op::PRINT_RESOURCE);
-      emit_word(resource);
+      do {
+        const unsigned count=n>4096?4096:n;
+        const auto resource = intern(b,count,colon && count==n);
+        op(code == Op::READ_INPUT ? Op::INPUT_RESOURCE : Op::PRINT_RESOURCE);
+        emit_word(resource);b+=count;n-=count;
+      } while(n && error_==E::NONE);
       return;
     }
     op(code);
@@ -534,8 +541,8 @@ private:
           left -= n;
         }
         if (r.colon) {
-          emit_word(0x8000 | ':');
-          byte(1);
+          emit_word(':');
+          byte(0);
         }
       }
     }
@@ -549,7 +556,7 @@ private:
     }
     if (!input) {
       op(Op::PRINT_BEGIN);
-      const char *after = p_;
+      Text after = p_;
       while (after < end_ && alpha(*after))
         ++after;
       if (equal(p_, after, "AT")) {
@@ -564,12 +571,12 @@ private:
           fail(E::SYNTAX);
       }
     }
-    const char *prompt = nullptr;
+    Text prompt = nullptr;
     unsigned prompt_len = 0;
     bool target_seen = false;
     while (p_ < end_ && error_ == E::NONE) {
       if (*p_ == '"' || *p_ == '\'') {
-        const char *b;
+        Text b;
         unsigned n;
         literal(b, n);
         if (input) {
@@ -613,7 +620,7 @@ private:
           continue;
       } else if (input) {
         Target t;
-        const char *b = p_;
+        Text b = p_;
         target(t);
         target_seen = true;
         if (t.kind == 1) {
@@ -682,12 +689,12 @@ private:
     byte(count);
   }
   void graph() {
-    const char *begin = p_, *comma = delimiter(p_, end_, ',');
+    Text begin = p_, comma = delimiter(p_, end_, ',');
     if (comma == end_) {
       fail(E::SYNTAX);
       return;
     }
-    const char *end = end_;
+    Text end = end_;
     p_ = comma + 1;
     for (unsigned i = 0; i < 4; ++i) {
       expression();
@@ -749,7 +756,7 @@ private:
 #if !defined(LANGUAGE_VM_TEST_NO_FUSION)
     if (t.kind)
       return false;
-    const char *saved = p_;
+    Text saved = p_;
     skip_space();
     if (p_ == end_ || upper(*p_) != char('A' + t.index)) {
       p_ = saved;
@@ -874,14 +881,14 @@ private:
       skip_space();
       if (p_ == end_)
         break;
-      const char *at = p_;
+      Text at = p_;
       Command c = command(p_, end_);
       skip_space();
       if (c == Command::NONE) {
         fail(E::UNKNOWN_COMMAND);
         return;
       }
-      const char *line = at;
+      Text line = at;
       while (line > source_ && line[-1] != '\r' && line[-1] != '\n')
         --line;
       op(Op::SOURCE_POS);
@@ -921,7 +928,7 @@ private:
         }
         return;
       }
-      const char *saved = end_;
+      Text saved = end_;
       end_ = c == Command::COMMENT ? saved : delimiter(p_, saved, ';');
       statement(c);
       skip_space();
@@ -936,11 +943,10 @@ private:
     }
   }
   bool index_lines() {
-    const char *e = source_ + length_;
+    Text e = source_ + length_;
     p_ = source_;
     while (p_ < e && error_ == E::NONE) {
-      const char *line_end = p_ + language_vm::source_scan::line_end(
-                                      (const uint8_t *)p_, size_t(e - p_));
+      Text line_end = p_ + p_.line_end(e);
       end_ = line_end;
       skip_space();
       if (p_ < end_) {
@@ -986,10 +992,10 @@ private:
   }
 
 public:
-  Compiler(const char *s, uint16_t n, uint8_t *out, uint16_t cap, bool rf,
+  Compiler(const language_vm::source::Reader& input, uint16_t n, uint8_t *out, uint16_t cap, bool rf,
            const language_vm::ResourceSource *resources, Line *lines,
            Resource *table)
-      : source_(s), p_(s), end_(s), resources_(resources), output_(out),
+      : source_(input), p_(input), end_(input), input_(&input), resources_(resources), output_(out),
         length_(n), capacity_(cap), pc_(0), lines_(lines), rf_(rf) {
     resources_table_ = table;
   }
@@ -1004,9 +1010,9 @@ public:
     return error_ == E::NONE && p_ == end_ && sp_ == 1;
   }
   language_vm::CompileResult compile() {
-    if (!source_ || !length_ || length_ > (Expression ? 64 : 1536) ||
-        memchr(source_, 0, length_))
-      return {E::SYNTAX, 0, 0, 0, 0};
+    if (!source_ || !length_ || length_ > (Expression ? 64 : language_vm::source::MAX_SIZE) ||
+        input_->contains_nul())
+      return {length_>language_vm::source::MAX_SIZE?E::FULL:!input_->good()?E::IO:E::SYNTAX, 0, 0, 0, 0};
     if (!Expression)
       index_lines();
     const uint16_t code = uint16_t(language_vm::HEADER_SIZE + count_ * 6);
@@ -1063,7 +1069,7 @@ public:
       put16(output_ + 12, count_);
       put16(output_ + 14, length_);
       put32(output_ + 16,
-            language_vm::checksum((const uint8_t *)source_, length_));
+            input_->checksum());
       for (unsigned i = 0; i < count_; ++i) {
         auto *r = output_ + language_vm::HEADER_SIZE + i * 6;
         put32(r, lines_[i].number);
@@ -1074,6 +1080,7 @@ public:
             language_vm::checksum(output_ + language_vm::HEADER_SIZE,
                                   pc_ - language_vm::HEADER_SIZE));
     }
+    if(!input_->good()) error_=E::IO;
     return {error_, error_ == E::NONE ? pc_ : uint16_t(0), 0, offset_,
             uint8_t(has_calls_ ? language_vm::MAX_STACK
                     : maximum_ ? maximum_
@@ -1081,9 +1088,10 @@ public:
   }
 };
 inline language_vm::CompileResult
-compile_program(const char *source, uint16_t length, uint8_t *output,
+compile_program(const language_vm::source::Reader& source, uint16_t length, uint8_t *output,
                 uint16_t capacity, bool rf,
                 const language_vm::ResourceSource *resources = nullptr) {
+  language_vm::source::CursorScope cursor_scope(source);
   Compiler<false>::Line lines[80];
   Compiler<false>::Resource table[256];
   Compiler<false> compiler(source, length, output, capacity, rf, resources,
@@ -1094,12 +1102,16 @@ inline language_vm::CompileResult compile_expression(const char *source,
                                                      uint16_t length,
                                                      uint8_t *output,
                                                      uint16_t capacity) {
-  Compiler<true> compiler(source, length, output, capacity, true, nullptr,
+  language_vm::source::Reader input(source,length);
+  language_vm::source::CursorScope cursor_scope(input);
+  Compiler<true> compiler(input, length, output, capacity, true, nullptr,
                           nullptr, nullptr);
   return compiler.compile();
 }
 inline bool valid_fragment(const char *source, uint16_t length, bool rf) {
-  Compiler<false> compiler(source, length, nullptr, language_vm::MAX_IMAGE, rf,
+  language_vm::source::Reader input(source,length);
+  language_vm::source::CursorScope cursor_scope(input);
+  Compiler<false> compiler(input, length, nullptr, language_vm::MAX_IMAGE, rf,
                            nullptr, nullptr, nullptr);
   return compiler.valid_fragment();
 }

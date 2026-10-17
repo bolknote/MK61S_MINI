@@ -5,7 +5,7 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('setup', 'focal', 'tinybasic', 'wbmp-viewer',
                  'markdown-viewer', 'chip8', 'usbdisk', 'explorer',
-                 'language-vm', 'language-input', 'vm-file-cache')]
+                 'language-vm', 'language-input', 'vm-file-cache', 'source-editor')]
     [string]$System,
     [Parameter(Mandatory = $true)]
     [string]$ArmToolchainBin,
@@ -27,6 +27,10 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $DefaultLocalFloatMask = 0x3C0
 
 $Systems = @{
+    'source-editor' = @{
+        Name = 'SRCEDIT'; Macro = 'SOURCE_EDITOR'; Magic = $null
+        Sources = @('language_source_editor_entry.cpp', 'language_bytecode.cpp')
+    }
     'vm-file-cache' = @{
         Name = 'VMSTORE'; Macro = 'VM_FILE_CACHE'; Magic = $null
         Sources = @('language_vm_file_cache_entry.cpp', 'language_vm_file_cache.cpp',
@@ -242,7 +246,8 @@ function Assert-SizeBudget {
         if ($System -eq 'setup') { $appLimit = 10000; $memoryLimit = 20480 }
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
         elseif ($System -eq 'explorer') { $appLimit = 8000; $memoryLimit = 10000 }
-        elseif ($System -eq 'language-input') { $appLimit = 13312; $memoryLimit = 16000 }
+        elseif ($System -eq 'language-input') { $appLimit = 14144; $memoryLimit = 17152 }
+        elseif ($System -eq 'source-editor') { $appLimit = 14848; $memoryLimit = 18176 }
     }
     if ($LanguageVmCompiler -and $System -eq 'focal') {
         $appLimit = 15360
@@ -251,7 +256,7 @@ function Assert-SizeBudget {
     if ($SplitLanguageVm) {
         # Match build_portable_app.py's current graphics/integer-span VM contract.
         # The loader's 20-KiB arena remains the hard upper bound.
-        $memoryLimit = if ($LocalFloatMath) { 19968 } else { 19456 }
+        $memoryLimit = if ($LocalFloatMath) { 19968 } else { 19520 }
     }
     $failures = @()
     if ($null -ne $appLimit -and $Report.app_bytes -gt $appLimit) {
@@ -326,17 +331,17 @@ try {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/setup_compat.cpp'))
     }
-    if ($System -eq 'usbdisk') {
+    if ($System -in @('usbdisk', 'source-editor')) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/usbdisk_compat.cpp'))
     }
     $sources.Add((Join-Path $ProjectRoot 'sdk/portable/memory.c'))
     $sharedSystemRuntime = $System -in @('focal', 'tinybasic', 'language-vm',
-        'language-input', 'usbdisk', 'setup', 'markdown-viewer', 'vm-file-cache')
+        'language-input', 'usbdisk', 'setup', 'markdown-viewer', 'vm-file-cache', 'source-editor')
     if ($sharedSystemRuntime) {
         $sources.Add((Join-Path $ProjectRoot `
             'sdk/portable/system/runtime.S'))
-        if ($System -in @('focal', 'tinybasic', 'language-vm', 'language-input')) {
+        if ($System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'source-editor')) {
             $sources.Add((Join-Path $ProjectRoot `
                 'sdk/portable/system/editor.cpp'))
         }
@@ -469,7 +474,7 @@ try {
     $imageSize = [int](Get-Item -LiteralPath $image).Length
     $relocationCount = [Mk61.Build.AppPacker]::ExtractRelocations(
         $elf, $base, $imageSize, $memorySize, $relocations)
-    $kind = if ($System -eq 'vm-file-cache') { 'app' } else { $System }
+    $kind = if ($System -in @('vm-file-cache', 'source-editor')) { 'app' } else { $System }
     $packed = [Mk61.Build.AppPacker]::PackFile(
         $kind, $image, $relocations, $memorySize, $entryOffset,
         $base, $definition.Magic, $app)

@@ -67,11 +67,11 @@ constexpr u8 arena_mask(Arena arena) {
 
 namespace snapshot_schema {
 #if defined(MK61_OVERLAY_LANGUAGE_VM) && MK61_OVERLAY_LANGUAGE_VM
-static constexpr u8 FOCAL_RUNTIME = 10;
-static constexpr u8 TINYBASIC_RUNTIME = 8;
+static constexpr u8 FOCAL_RUNTIME = 11;
+static constexpr u8 TINYBASIC_RUNTIME = 10;
 static constexpr u8 LANGUAGE_VM = 9;
 #else
-static constexpr u8 FOCAL_RUNTIME = 10;
+static constexpr u8 FOCAL_RUNTIME = 11;
 static constexpr u8 TINYBASIC_RUNTIME = 9;
 static constexpr u8 LANGUAGE_VM = 9;
 #endif

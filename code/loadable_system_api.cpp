@@ -23,7 +23,7 @@
 #include "builtin_font.hpp"
 #include "mk_math.hpp"
 #include "mk8_codec.hpp"
-#if MK61_USBDISK_IS_LOADABLE
+#if MK61_USBDISK_IS_LOADABLE || MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
   #include "usbdisk_backend.hpp"
 #endif
 #include "usb_mass_storage.hpp"
@@ -278,7 +278,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_EXPLORER_IS_LOADABLE
           | MK61_SERVICE_CAP_EXPLORER
 #endif
-#if MK61_USBDISK_IS_LOADABLE
+#if MK61_USBDISK_IS_LOADABLE || MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
           | MK61_SERVICE_CAP_USBDISK
 #endif
 #if MK61_APP_LOCAL_FLOAT_MATH
@@ -323,7 +323,7 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
 #if MK61_ENABLE_SETUP
     case MK61_SYS_SETUP: return setup_ui::service(a, b, c, payload);
 #endif
-#if MK61_USBDISK_IS_LOADABLE
+#if MK61_USBDISK_IS_LOADABLE || MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM
     case MK61_SYS_USBDISK: return usbdisk_backend::call(a, b, c, 0, payload);
 #endif
     case MK61_SYS_DISPLAY: return display_call(a, b, c, payload);
@@ -391,6 +391,16 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
     case MK61_SYS_RESOURCE_READ: {
       const u32 revision = program_store::media_revision();
       if(a == 0) return revision;
+      if(a == 4) return program_store::catalog_revision();
+      if(a == 5 && payload) {
+        const auto& r=*(const mk61_service_resource*)payload;
+        const auto current=[&](){return r.reserved?program_store::catalog_revision():program_store::media_revision();};
+        u16 copied=0;
+        return r.reserved<=1 && r.output && r.revision==current() &&
+            program_store::read_source_range_id(r.id,r.offset,r.output,r.length,&copied) &&
+            copied==r.length && r.revision==current();
+      }
+
       if(a == 3) {
         if(!payload) return 1;
         const auto& r = *(const mk61_service_resource_bytes*)payload;

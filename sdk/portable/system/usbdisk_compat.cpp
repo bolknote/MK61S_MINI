@@ -1,4 +1,4 @@
-#if defined(MK61_BUILD_USBDISK_MODULE)
+#if defined(MK61_BUILD_USBDISK_MODULE) || defined(MK61_BUILD_SOURCE_EDITOR_MODULE)
 
 #include "system_compat.hpp"
 
@@ -291,7 +291,7 @@ void vfat_stage_forget(u32 start, u16 count) {
 }
 bool vfat_stage_discard_all() { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_DISCARD_ALL) != 0; }
 void vfat_stage_clear() { (void) call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_CLEAR); }
-bool vfat_stage_lock() { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_LOCK) != 0; }
+bool vfat_stage_lock(bool exclusive) { return call(MK61_SYS_USBDISK, MK61_USBDISK_STAGE_LOCK,exclusive) != 0; }
 bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context) {
   FilterBridge bridge = {include, context};
   mk61_system_usbdisk_stage_filter request = {&bridge, include_key, nullptr, 0};
@@ -315,7 +315,7 @@ void vfat_stage_unlock() {
 bool write_file_from_source(u16 parent, u16 preferred, ProgramType type,
                             const char* name, u16 size,
                             const FileSource& source, const u16* extents,
-                            u8 extent_count, u16* id,
+                            u16 extent_count, u16* id,
                             u8* compression_buffer,
                             usize compression_buffer_size,
                             const u8* contiguous_data) {

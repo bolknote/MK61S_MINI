@@ -334,7 +334,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       program_store::vfat_stage_clear();
       return 1;
     case MK61_USBDISK_STAGE_LOCK:
-      return program_store::vfat_stage_lock();
+      return program_store::vfat_stage_lock(a!=0);
     case MK61_USBDISK_STAGE_NARROW_MATCHING: {
       if(payload == nullptr) return 0;
       auto& request = *(mk61_system_usbdisk_stage_filter*) payload;
@@ -355,7 +355,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
       auto& request = *(mk61_system_usbdisk_source*) payload;
       if(request.parent > 0xFFFFU || request.preferred > 0xFFFFU ||
          request.type > 0xFFU || request.size > 0xFFFFU ||
-         request.extent_count > 0xFFU || request.read == nullptr) return 0;
+         request.extent_count > program_store::MAX_FAT_EXTENTS_PER_FILE+1U || request.read == nullptr) return 0;
       SourceBridge bridge = {&request};
       const program_store::FileSource source = {&bridge, read_source};
       u16 id = program_store::INVALID_ID;
@@ -363,7 +363,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
           (u16) request.parent, (u16) request.preferred,
           (program_store::ProgramType) request.type, request.name,
           (u16) request.size, source, request.extents,
-          (u8) request.extent_count, &id, request.compression_buffer,
+          (u16) request.extent_count, &id, request.compression_buffer,
           request.compression_buffer_size, request.contiguous_data);
       if(ok) independent_watchdog::completed_storage_unit();
       request.out_id = ok
@@ -382,6 +382,7 @@ u32 call(u32 operation, u32 a, u32 b, u32 c, void* payload) {
     case MK61_USBDISK_MAX_FILE_SIZE:
       switch((program_store::ProgramType) a) {
         case program_store::ProgramType::TINYBASIC:
+        case program_store::ProgramType::FOCAL:
           return program_store::MAX_TINYBASIC_TEXT_SIZE;
         case program_store::ProgramType::FONT:
           return program_store::MAX_FONT_SIZE;

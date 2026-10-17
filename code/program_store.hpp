@@ -10,11 +10,11 @@ namespace program_store {
 static constexpr usize NAME_SIZE = 32;
 // Логический размер файла, предоставляемый хранилищем и виртуальной FAT.
 static constexpr u16 MAX_MK61_TEXT_SIZE = 1536;
-// TinyBASIC shares one 4-KiB C9 data sector with its record header and name.
-// 3584 bytes leave enough room for that metadata while more than doubling the
-// original editor quota.  FOCAL and ordinary text files keep their established
-// 1536-byte limit so their scratch-buffer contracts do not change.
-static constexpr u16 MAX_TINYBASIC_TEXT_SIZE = 3584;
+// Language source positions and C9 inode lengths use unsigned 16-bit offsets.
+// Files are streamed through bounded windows; 65535 is reserved as invalid.
+static constexpr u16 MAX_LANGUAGE_SOURCE_SIZE = 65534;
+static constexpr u16 MAX_TINYBASIC_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE;
+static constexpr u16 MAX_FOCAL_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE;
 // F401 keeps the established compact limit. F411 already owns an 8 KiB
 // exclusive BULK arena, so the prepared runtime font may use it without
 // adding another persistent RAM allocation.
@@ -37,15 +37,14 @@ static constexpr u16 MAX_SHEET_SIZE = 2048;
 // Контейнер APP: 64-байтовый заголовок и не более 20 КиБ образа SRAM.
 // Хранилище читает его блоками и не требует такого же буфера в ОЗУ.
 static constexpr u16 MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
-// Верхняя граница служебных продолжений FAT у одного максимального APP
-// вычисляется для минимального допустимого 2-КиБ кластера. На штатной W25Q128
-// с кластером 4 КиБ реально используются только пять. Это не лимит количества
-// APP: файлов может быть столько, сколько помещается в C9 и каталогах.
+// A maximal language source can expand to three UTF-8 bytes per M8 byte.
+// Bound the independent FAT cluster chain at the smallest supported cluster;
+// physical C9 data blocks and native APP image limits remain separate.
 static constexpr u16 MIN_FAT_CLUSTER_SIZE =
     (u16) storage_geometry::MIN_SECTORS_PER_CLUSTER *
     storage_geometry::LOGICAL_SECTOR_SIZE;
-static constexpr u8 MAX_FAT_EXTENTS_PER_FILE =
-    (u8) ((MAX_APP_FILE_SIZE + MIN_FAT_CLUSTER_SIZE - 1U) /
+static constexpr u16 MAX_FAT_EXTENTS_PER_FILE =
+    (u16) (((u32) MAX_LANGUAGE_SOURCE_SIZE * 3U + MIN_FAT_CLUSTER_SIZE - 1U) /
           MIN_FAT_CLUSTER_SIZE - 1U);
 
 enum class ProgramType : u8 {
@@ -269,7 +268,7 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
                             const u16* fat_extents = nullptr,
-                            u8 fat_extent_count = 0,
+                            u16 fat_extent_count = 0,
                             u16* out_id = nullptr,
                             u8* compression_buffer = nullptr,
                             usize compression_buffer_size = 0,
@@ -292,6 +291,8 @@ WriteFailure last_write_failure(void);
 WriteFailureDetail last_write_failure_detail(void);
 bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
+// Language readers never materialize a complete file in the optional cache.
+bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len);
 // Exact USB-visible byte length, persisted in the CRC-protected catalog.
 bool exported_size_id(u16 id, u32& size);
 #if MK61_PROGRAM_STORE_READ_CACHE_BYTES
@@ -328,7 +329,7 @@ void vfat_stage_clear(void);
 // USB-сеанс
 // блокирует её от вытеснения; терминальный upload перед проверкой APP сужает
 // индекс до собственного малого буфера и освобождает окно декодеру модуля.
-bool vfat_stage_lock(void);
+bool vfat_stage_lock(bool exclusive = false);
 using VfatStageKeyFilter = bool (*)(void* context, u32 key);
 bool vfat_stage_narrow(u32 start_block, u16 blocks,
                        u32* index_storage, u16 index_capacity);

@@ -89,3 +89,5 @@ done
 MK61_LANGUAGE_VM_TEST=1 bash "$root/tests/run_tinybasic_tests.sh"
 MK61_LANGUAGE_VM_TEST=1 bash "$root/tests/run_focal_tests.sh"
 bash "$root/tests/run_basic_functions_tests.sh"
+
+bash "$root/tests/run_language_source_stream_tests.sh"

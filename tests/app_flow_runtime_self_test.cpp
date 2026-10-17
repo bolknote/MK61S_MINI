@@ -34,6 +34,9 @@ static u32 entry(u32 command, u32 a, u32 b, u32 c, u32 d) {
   return 55;
 }
 static auto g_active_entry = entry;
+// Exercise the resident lifetime adapter with profiling disabled, as in an
+// ordinary firmware build; its DWT implementation has a separate fixture.
+#define MK61_RUNTIME_PROFILE_SCOPE(...) ((void)0)
 #include "app_flow_runtime.inc"
 
 static RuntimeStatus host(void*, u32 operation, u32& result) {

@@ -18,7 +18,7 @@ from unicorn.arm_const import UC_ARM_REG_SP, UC_ARM_REG_R0, UC_ARM_REG_LR
 STATE_SIZE = 1664
 VM_INFO, VM_RUN, INPUT = 0x702, 0x700, 0x703
 VALIDATE, FINISH = 0x705, 0x706
-GENERATION = 18
+GENERATION = 19
 STATE_POISON = None
 
 
@@ -113,7 +113,7 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     v10 = GENERATION >= 10
     v9 = GENERATION >= 9
     v8 = GENERATION >= 8
-    version = 10 if GENERATION >= 18 else 9 if v17 else 8 if v14 else 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
+    version = 11 if GENERATION >= 19 else 10 if GENERATION >= 18 else 9 if v17 else 8 if v14 else 7 if v13 else 6 if v12 else 5 if v11 else 4 if v10 else 3 if v9 else 2 if v8 else 1
     state_size = 1664 if v17 else 1584 if v14 else 1520 if v8 else 1504
     control_size = 744 if v17 else 688 if v14 else 624 if v8 else 616
     stack_offset = control_size
@@ -165,9 +165,12 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, edi
     length = struct.unpack_from("<H", wire, 18)[0]
     assert length <= 8192-values_size-state_size
     m.put(compile_request+8, output, length)
-    reads = sum(x[0] == "file_read" for x in m.trace)
+    reads = sum(x[0] in ("file_read","source_read") for x in m.trace)
     assert m.call(0x704, 0, 0, compile_request) == 1
-    assert sum(x[0] == "file_read" for x in m.trace) == reads
+    if GENERATION>=19:
+        assert sum(x[0] in ("file_read","source_read") for x in m.trace)>reads
+        assert all(x[4]<=256 for x in m.trace if x[0] in ("file_read","source_read") and x[1]==42)
+    else: assert sum(x[0] == "file_read" for x in m.trace) == reads
     emitted = bytes(m.uc.mem_read(compile_request, request_size))
     assert emitted[16] == 0 and struct.unpack_from("<H", emitted, 18)[0] == length
     image = bytes(m.uc.mem_read(output, length))
@@ -302,7 +305,7 @@ def main():
     p.add_argument("--poison-state", action="store_true",
                    help="v14: leave inactive continuation slots poisoned through cold validation")
     p.add_argument("--focal-trace",action="store_true")
-    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18), default=18)
+    p.add_argument("--generation", type=int, choices=(3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19), default=19)
     p.add_argument("--system", type=Path, help="canonical System directory instead of historical experiment layout")
     p.add_argument("--report-file", type=Path)
     args = p.parse_args()

@@ -104,7 +104,7 @@ static constexpr u16 STAGE_REF_CAPACITY = 640;
 static constexpr u8 STAGE_REF_BITS = 10;
 static constexpr u16 STAGE_REF_MASK = (1U << STAGE_REF_BITS) - 1U;
 static constexpr u32 STAGE_KEY_MAX = VFAT_STAGE_KEY_MAX;
-// A 512-KiB C9 volume can lend unused data erase sectors to USB staging.
+// Small C9 volumes can lend unused data erase sectors to USB/editor staging.
 // The fixed stage remains the fallback and its last sector remains the COW
 // compaction reserve. All borrowed sectors are identified by their C9S0
 // headers after a reset, so the catalog allocator must never erase them.
@@ -118,7 +118,7 @@ static constexpr t_time_ms DISK_LED_OFF_MS = 35;
 static constexpr u8 INODE_FLAG_LARGE_FILE = 0x01;
 static constexpr u8 INODE_FLAG_ZX0 = 0x02;
 static constexpr u8 INODE_FILE_FLAGS =
-    INODE_FLAG_LARGE_FILE | INODE_FLAG_ZX0 | 0x04U;
+    INODE_FLAG_LARGE_FILE | INODE_FLAG_ZX0 | 0x04U | 0x30U;
 static constexpr u16 ZX0_MIN_SAVING = 64;
 static constexpr u8 ZX0_MIN_SAVING_PERCENT = 10;
 static constexpr usize ZX0_FALLBACK_WORKSPACE_SIZE = 1024;
@@ -126,7 +126,7 @@ static constexpr u16 LARGE_BLOCK_HEADER_SIZE = 32;
 static constexpr u16 LARGE_BLOCK_DATA_SIZE =
     storage_geometry::PHYSICAL_SECTOR_SIZE - LARGE_BLOCK_HEADER_SIZE;
 static constexpr u8 LARGE_BLOCK_COUNT =
-    (MAX_APP_FILE_SIZE + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE;
+    (MAX_LANGUAGE_SOURCE_SIZE + LARGE_BLOCK_DATA_SIZE - 1U) / LARGE_BLOCK_DATA_SIZE;
 static constexpr u16 LARGE_DESCRIPTOR_HEADER_SIZE = 20;
 static constexpr u16 LARGE_DESCRIPTOR_SIZE =
     LARGE_DESCRIPTOR_HEADER_SIZE + (u16) LARGE_BLOCK_COUNT * sizeof(u32);
@@ -145,18 +145,11 @@ static_assert(IMAGE1_WAL_COUNT_OFFSET + sizeof(u16) <= WAL_CRC_OFFSET,
 static_assert(IMAGE1_HEADER_COUNT_OFFSET + sizeof(u16) <=
                   CATALOG_HEADER_CRC_OFFSET,
               "image counter overlaps the catalog-header CRC");
-static_assert(LARGE_BLOCK_COUNT == 6,
-              "maximum APP should occupy exactly six C9 large blocks");
 static_assert(LARGE_DESCRIPTOR_SIZE < 128,
               "large-file descriptor must remain a small C9 record");
 static_assert((usize) MAX_MK61_TEXT_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C9 records must fit one erase sector");
-static_assert((usize) MAX_TINYBASIC_TEXT_SIZE + NAME_SIZE +
-                  RECORD_HEADER_SIZE <=
-                  storage_geometry::PHYSICAL_SECTOR_SIZE -
-                      DATA_SECTOR_HEADER_SIZE,
-              "maximum TinyBASIC source must fit one C9 data sector");
 static_assert((usize) MAX_IMAGE1_SIZE + NAME_SIZE + RECORD_HEADER_SIZE <=
                   storage_geometry::PHYSICAL_SECTOR_SIZE / 2,
               "two maximum C9 image records must fit one erase sector");
@@ -684,6 +677,7 @@ static bool supported_type(ProgramType type) {
 
 static u16 maximum_data_len(ProgramType type) {
   if(type == ProgramType::TINYBASIC) return MAX_TINYBASIC_TEXT_SIZE;
+  if(type == ProgramType::FOCAL) return MAX_FOCAL_TEXT_SIZE;
   if(type == ProgramType::FONT) return MAX_FONT_SIZE;
   if(type == ProgramType::IMAGE1) return MAX_IMAGE1_SIZE;
   if(type == ProgramType::CHIP8) return MAX_CHIP8_SIZE;
@@ -765,6 +759,12 @@ static bool large_file_inode(const Inode& inode) {
 static bool zx0_file_inode(const Inode& inode) {
   return inode_kind(inode) == NodeKind::FILE &&
          (inode.flags & INODE_FLAG_ZX0) != 0;
+}
+
+// C9 keeps its 26-byte inode: the two high UTF-8 size bits occupy previously
+// reserved flag bits 4/5. Existing <=65535-byte projections are byte-exact.
+static u32 inode_exported_size(const Inode& inode) {
+  return (u32)inode.exported_size | ((u32)(inode.flags & 0x30U)<<12);
 }
 
 static bool inode_flags_valid(const Inode& inode) {
@@ -1634,7 +1634,7 @@ static bool data_sector_in_range(u32 sector) {
 
 static bool borrowed_stage_sector(u32 sector) {
   if(!data_sector_in_range(sector) ||
-     g_geometry.physical_sectors > 128) return false;
+     g_geometry.physical_sectors >= storage_geometry::STAGE_TARGET_MIN_PHYSICAL_SECTORS) return false;
   u8 header[STAGE_SECTOR_HEADER_SIZE];
   // A failed read must not turn an unknown sector into an erase candidate.
   if(!read_bytes(sector_address(sector), header, sizeof(header))) return true;
@@ -2557,7 +2557,7 @@ static bool decode_large_descriptor(const u8* input, u16 size,
   descriptor.stored_len = get_le16(input, 10);
   descriptor.generation = get_le32(input, 12);
   descriptor.data_crc = get_le32(input, 16);
-  if(descriptor.data_len == 0 || descriptor.data_len > MAX_APP_FILE_SIZE ||
+  if(descriptor.data_len == 0 || descriptor.data_len > MAX_LANGUAGE_SOURCE_SIZE ||
      descriptor.stored_len == 0 ||
      descriptor.stored_len > descriptor.data_len ||
      descriptor.block_count == 0 ||
@@ -3725,7 +3725,7 @@ bool create_directory(u16 parent_id, const char* name, u16 preferred_id,
 C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
-                            const u16* fat_extents, u8 fat_extent_count,
+                            const u16* fat_extents, u16 fat_extent_count,
                             u16* out_id,
                             u8* compression_buffer,
                             usize compression_buffer_size,
@@ -3763,12 +3763,11 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
      !source_valid(source, data_len)) return false;
   g_last_write_failure = WriteFailure::VISIBLE_SIZE;
   u32 fat_visible_size = 0;
-  if(!visible_file_size(type, source, data_len, fat_visible_size) ||
-     fat_visible_size > 0xFFFFU) return false;
+  if(!visible_file_size(type, source, data_len, fat_visible_size)) return false;
   g_last_write_failure = WriteFailure::EXTENT_SHAPE;
   const u32 cluster_bytes =
       (u32) g_geometry.sectors_per_cluster * VFAT_STAGE_BLOCK_SIZE;
-  const u8 required_clusters = fat_visible_size == 0 ? 0 : (u8) (
+  const u16 required_clusters = fat_visible_size == 0 ? 0 : (u16) (
       (fat_visible_size + cluster_bytes - 1U) / cluster_bytes);
   if(required_clusters > MAX_FAT_EXTENTS_PER_FILE + 1U ||
      (fat_extents == NULL && fat_extent_count != 0) ||
@@ -3821,7 +3820,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   }
 
   g_last_write_failure = WriteFailure::EXTENT_SELECTION;
-  u16 clusters[MAX_FAT_EXTENTS_PER_FILE + 1U] = {};
+  u16 clusters[MAX_FAT_EXTENTS_PER_FILE + 1U];
   if(!c9_pin(old_inode.fat_address, id, true) ||
      !c9_choose_file_chain(id, old_inode, required_clusters, fat_extents,
                           fat_extent_count, clusters)) return false;
@@ -3852,6 +3851,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   const u16 stored_len = zx0 ? compression_plan.stored_len : data_len;
   const bool large =
       (type == ProgramType::APP || type == ProgramType::CHIP8 ||
+       type == ProgramType::TINYBASIC || type == ProgramType::FOCAL ||
        type == ProgramType::MK61_BINARY ||
        (MAX_FONT_SIZE > MAX_IMAGE1_SIZE && type == ProgramType::FONT)) &&
       stored_len > MAX_IMAGE1_SIZE;
@@ -3902,7 +3902,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   inode.name_hash = hash_name(name);
   inode.kind_type = make_kind_type(NodeKind::FILE, type);
   inode.flags = (large ? INODE_FLAG_LARGE_FILE : 0) |
-                (zx0 ? INODE_FLAG_ZX0 : 0);
+                (zx0 ? INODE_FLAG_ZX0 : 0) | (u8)((fat_visible_size>>12)&0x30U);
   inode.first_child = NONE;
   if(!replacing) {
     inode.next_sibling = NONE;
@@ -3950,7 +3950,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
 bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
-                            const u16* fat_extents, u8 fat_extent_count,
+                            const u16* fat_extents, u16 fat_extent_count,
                             u16* out_id,
                             u8* compression_buffer,
                             usize compression_buffer_size,
@@ -4222,7 +4222,11 @@ static u8 ensure_decoded_cache(u16 id, const Inode& inode) {
 #endif
 
 static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
-                            u16* out_len, const zx0::Output* sink) {
+                            u16* out_len, const zx0::Output* sink,bool use_cache=true) {
+#if !MK61_PROGRAM_STORE_READ_CACHE_BYTES
+  (void)use_cache;
+#endif
+
   DiskActivity activity;
   if(!g_ready || data == NULL) return false;
   Inode inode;
@@ -4241,7 +4245,7 @@ static bool read_file_range(u16 id, u16 offset, u8* data, u16 len,
   const u16 copied = available < len ? available : len;
   char name[NAME_SIZE];
 #if MK61_PROGRAM_STORE_READ_CACHE_BYTES
-  if(sink == nullptr && copied != 0 &&
+  if(use_cache && sink == nullptr && copied != 0 &&
      inode.data_len <= MK61_PROGRAM_STORE_READ_CACHE_BYTES) {
     const u8 cache = ensure_decoded_cache(id, inode);
     if(cache == 2) return false;
@@ -4263,7 +4267,7 @@ bool exported_size_id(u16 id, u32& size) {
   if(!g_ready || !get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE) {
     return false;
   }
-  size = inode.exported_size;
+  size = inode_exported_size(inode);
   return text_content(inode_type(inode))
       ? size >= inode.data_len && size <= 3U * inode.data_len
       : size == inode.data_len;
@@ -4271,6 +4275,10 @@ bool exported_size_id(u16 id, u32& size) {
 
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
   return read_file_range(id, offset, data, len, out_len, nullptr);
+}
+
+bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len) {
+  return read_file_range(id,offset,data,len,out_len,nullptr,false);
 }
 
 bool stream_file_id(u16 id, const FileSink& sink) {
@@ -4286,9 +4294,9 @@ bool read_utf8_range_id(u16 id, u32 offset, u8* data, u16 capacity, u16& copied)
   if(data == nullptr && capacity) return false;
   Inode inode;
   if(!g_ready || !get_inode(id, inode) || inode_kind(inode) != NodeKind::FILE ||
-     !text_content(inode_type(inode)) || inode.exported_size < inode.data_len ||
-     inode.exported_size > 3U * inode.data_len) return false;
-  if(offset >= inode.exported_size || !capacity) return true;
+     !text_content(inode_type(inode)) || inode_exported_size(inode) < inode.data_len ||
+     inode_exported_size(inode) > 3U * inode.data_len) return false;
+  if(offset >= inode_exported_size(inode) || !capacity) return true;
   const u8 cache = ensure_decoded_cache(id, inode);
   if(cache == 2) return false;
   if(cache == 0) {
@@ -4552,7 +4560,7 @@ static shared_memory::EvictionDecision prepare_stage_index_eviction(void) {
 static u16 stage_ref_limit(void) {
   // 64 ordinary segments hold 448 records. Keep seven records spare in
   // addition to the dedicated compaction segment so a full index can update.
-  return g_geometry.physical_sectors == 128 ? STAGE_REF_CAPACITY : 441;
+  return g_geometry.physical_sectors < storage_geometry::STAGE_TARGET_MIN_PHYSICAL_SECTORS ? STAGE_REF_CAPACITY : 441;
 }
 
 static bool bind_full_stage_index(void) {
@@ -4862,7 +4870,9 @@ static bool compact_stage(u16& out_sector, u8& out_slot) {
   return true;
 }
 
-static void mark_stage_borrow_occupied(u32 (&bits)[4], u32 physical) {
+static constexpr usize STAGE_BORROW_WORDS =
+    (storage_geometry::STAGE_TARGET_MIN_PHYSICAL_SECTORS+31U)/32U;
+static void mark_stage_borrow_occupied(u32 (&bits)[STAGE_BORROW_WORDS], u32 physical) {
   if(!data_sector_in_range(physical)) return;
   const u32 relative = physical - g_geometry.data_first_sector;
   bits[relative >> 5] |= 1UL << (relative & 31U);
@@ -4877,11 +4887,11 @@ static u32 g_stage_borrow_diagnostic;
 
 static bool borrow_stage_slot(u16& out_sector, u8& out_slot) {
   C9_BORROW_TRACE(1U);
-  if(g_geometry.physical_sectors != 128 ||
-     g_geometry.data_sector_count > 128 ||
+  if(g_geometry.physical_sectors >= storage_geometry::STAGE_TARGET_MIN_PHYSICAL_SECTORS ||
+     g_geometry.data_sector_count > STAGE_BORROW_WORDS*32U ||
      g_stage_slot_count >= STAGE_MAX_SLOTS) return false;
   for(;;) {
-    u32 occupied[4] = {};
+    u32 occupied[STAGE_BORROW_WORDS] = {};
     mark_stage_borrow_occupied(occupied, g_meta.current_sector);
     mark_stage_borrow_occupied(occupied, g_meta.reserve_sector);
     for(u8 index = 0; index < g_large_write_sector_count; index++) {
@@ -5006,7 +5016,7 @@ void vfat_stage_clear(void) {
   for(u16 slot = 0; slot < g_stage_slot_count; slot++) {
     g_stage_physical[slot] = g_geometry.stage_first_sector + slot;
   }
-  if(g_geometry.physical_sectors == 128) {
+  if(g_geometry.physical_sectors < storage_geometry::STAGE_TARGET_MIN_PHYSICAL_SECTORS) {
     const u32 end = g_geometry.data_first_sector +
                     g_geometry.data_sector_count;
     for(u32 physical = g_geometry.data_first_sector; physical < end;
@@ -5256,7 +5266,8 @@ bool vfat_stage_discard_all(void) {
   return true;
 }
 
-bool vfat_stage_lock(void) {
+bool vfat_stage_lock(bool exclusive) {
+  if(exclusive && g_stage_locked)return false;
   if(g_stage_locked) return g_stage_index != nullptr;
   if(g_stage_external || !ensure_stage_index()) return false;
   g_stage_locked = true;

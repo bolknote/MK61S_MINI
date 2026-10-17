@@ -36,8 +36,11 @@ printf '\000\001\177\200\377' > "$work/local/binary.wbmp"
 printf '\000\000\010\002\017\360' > "$work/local/preview.wbmp"
 printf '\000\340\240\000' > "$work/local/game.ch8"
 awk 'BEGIN { for(i = 0; i < 1537; i++) printf "x" }' > "$work/local/large.tbi"
-awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }' > "$work/local/huge.tbi"
-awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }' > "$work/preflight-bad/large.tbi"
+awk 'BEGIN { for(i = 0; i < 65535; i++) printf "x" }' > "$work/local/huge.tbi"
+cp "$work/local/huge.tbi" "$work/local/huge.foc"
+head -c 65534 "$work/local/huge.tbi" > "$work/local/maximum.foc"
+cp "$work/local/maximum.foc" "$work/local/maximum.tbi"
+awk 'BEGIN { for(i = 0; i < 65535; i++) printf "x" }' > "$work/preflight-bad/large.tbi"
 awk 'BEGIN { for(i = 0; i < 100; i++) printf "x" }' > "$work/local/chunked.m61"
 dd if=/dev/zero of="$work/local/FOCAL.APP" bs=1 count=64 2>/dev/null
 dd if=/dev/zero of="$work/local/DEMO.APP" bs=1 count=64 2>/dev/null
@@ -89,9 +92,15 @@ case "$("$root/tools/mkc.cmd" --classify "$work/app-limits/HUGE.APP" || true)" i
   *) echo 'mkc: oversized APP was accepted' >&2; exit 1 ;;
 esac
 test "$("$root/tools/mkc.cmd" --classify "$work/local/large.tbi")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/maximum.tbi")" = supported
+test "$("$root/tools/mkc.cmd" --classify "$work/local/maximum.foc")" = supported
 case "$("$root/tools/mkc.cmd" --classify "$work/local/huge.tbi" || true)" in
   'unsupported: слишком большой:'*) ;;
   *) echo 'mkc: oversized TinyBASIC file was accepted' >&2; exit 1 ;;
+esac
+case "$("$root/tools/mkc.cmd" --classify "$work/local/huge.foc" || true)" in
+  'unsupported: слишком большой:'*) ;;
+  *) echo 'mkc: oversized FOCAL file was accepted' >&2; exit 1 ;;
 esac
 case "$("$root/tools/mkc.cmd" --classify "$work/chip8-limits/EMPTY.CH8" || true)" in
   'unsupported: слишком маленький:'*) ;;
@@ -399,12 +408,12 @@ EDITOR_NAME=edit.tbi
 EDITOR_REMOTE_TARGET=/edit.tbi
 editor_save
 test "$(wc -c < "$work/device/edit.tbi" | tr -d '[:space:]')" -gt 1536
-EDITOR_LINES=("$(awk 'BEGIN { for(i = 0; i < 3585; i++) printf "x" }')")
+EDITOR_LINES=("$(awk 'BEGIN { for(i = 0; i < 65535; i++) printf "x" }')")
 if editor_save; then
-  echo 'mkc: TinyBASIC editor uploaded more than 3584 bytes' >&2
+  echo 'mkc: TinyBASIC editor uploaded more than 65534 bytes' >&2
   exit 1
 fi
-case "$EDITOR_ERROR" in *'максимум MK61s — 3584'*) ;;
+case "$EDITOR_ERROR" in *'максимум MK61s — 65534'*) ;;
   *) echo "mkc: unclear TinyBASIC editor size error: $EDITOR_ERROR" >&2; exit 1 ;;
 esac
 
@@ -632,13 +641,14 @@ test "${#PLAN_KINDS[@]}" -eq 1
 test "$PLAN_TOTAL" -eq 64
 
 plan_reset
+dd if=/dev/zero of="$work/local/System/SRCEDIT.APP" bs=1 count=64 2>/dev/null
 plan_local_tree "$work/local/System" /System
-test "${#PLAN_KINDS[@]}" -eq 3
+test "${#PLAN_KINDS[@]}" -eq 4
 test "${PLAN_DESTINATIONS[1]}" = /System/USBDISK.APP
 rm "$work/local/System/USBDISK.APP"
 plan_reset
 plan_local_tree "$work/local/System" /System
-test "${#PLAN_KINDS[@]}" -eq 2
+test "${#PLAN_KINDS[@]}" -eq 3
 test "${PLAN_DESTINATIONS[1]}" = /System/BASIC.APP
 test -z "$PLAN_ERROR"
 

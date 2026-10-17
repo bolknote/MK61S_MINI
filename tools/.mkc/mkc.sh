@@ -299,12 +299,16 @@ unsupported_reason() {
         minimum=5 # CRC32 plus a nonempty ZX0 stream; program_load::load.
         ;;
       *.state.txt) base=${name:0:$(( ${#name} - 10 ))} ;;
-      *.m61|*.foc|*.txt|*.fmk)
+      *.foc)
+        base=${name:0:$(( ${#name} - 4 ))}
+        limit=65534
+        ;;
+      *.m61|*.txt|*.fmk)
         base=${name:0:$(( ${#name} - 4 ))}
         ;;
       *.tbi)
         base=${name:0:$(( ${#name} - 4 ))}
-        limit=3584
+        limit=65534
         ;;
       *.md)
         base=${name:0:$(( ${#name} - 3 ))}
@@ -2798,7 +2802,7 @@ editor_save() {
         ;;
     esac
     case "$(lowercase "$EDITOR_NAME")" in
-      *.tbi) limit=3584 ;;
+      *.tbi|*.foc) limit=65534 ;;
     esac
     if [ "$size" -gt "$limit" ]; then
       EDITOR_ERROR="Файл занимает $size байт; максимум MK61s — $limit"
@@ -3531,7 +3535,7 @@ main_loop() {
 
 install_system_unattended() {
   local source=$LOCAL_PATH name kind size remote_name deadline reason
-  local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP WBMP.APP MARKDOWN.APP
+  local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP SRCEDIT.APP WBMP.APP MARKDOWN.APP
     CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT VMCache/VMSTORE.APP)
   if [ "$RESIDENT_USBDISK" -eq 0 ] && [ ! -s "$source/USBDISK.APP" ]; then
     STATUS_TEXT='нет обязательного USBDISK.APP'; return 1

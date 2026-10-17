@@ -32,7 +32,7 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $Canonical = @(
     'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
     'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
-    'LANGVM.APP', 'LANGIN.APP', 'VMCache/VMSTORE.APP')
+    'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP')
 $Modules = @(
     [pscustomobject]@{ Key = 'setup'; Name = 'SETUP.APP'; System = 'setup' },
     [pscustomobject]@{ Key = 'focal'; Name = 'FOCAL.APP'; System = 'focal' },
@@ -44,6 +44,7 @@ $Modules = @(
     [pscustomobject]@{ Key = 'explorer'; Name = 'EXPLORER.APP'; System = 'explorer' },
     [pscustomobject]@{ Key = 'language-vm'; Name = 'LANGVM.APP'; System = 'language-vm' },
     [pscustomobject]@{ Key = 'language-input'; Name = 'LANGIN.APP'; System = 'language-input' },
+    [pscustomobject]@{ Key = 'source-editor'; Name = 'SRCEDIT.APP'; System = 'source-editor' },
     [pscustomobject]@{ Key = 'vm-file-cache'; Name = 'VMCache/VMSTORE.APP'; System = 'vm-file-cache' })
 $Enabled = @{
     setup = $Setup -eq '1'; focal = $Focal -eq '1'; basic = $Basic -eq '1'
@@ -175,14 +176,14 @@ function Get-AppVariant {
         $parts.Add($(if ($Graphics -eq '1') { 'graphics' } else { 'text' }))
     }
     if ($SystemName -in @('focal', 'tinybasic')) {
-        $parts.Add($(if ($LanguageVmCompiler -eq '1') { 'vm-compiler-v12-short' }
+        $parts.Add($(if ($LanguageVmCompiler -eq '1') { 'vm-compiler-v13-stream' }
             elseif ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
     }
     if ($SystemName -eq 'language-vm') {
-        $parts.Add('split-v12-short')
+        $parts.Add('split-v13-stream')
         $parts.Add($(if ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
     }
-    if ($SystemName -eq 'language-input') { $parts.Add('cold-v12-short') }
+    if ($SystemName -eq 'language-input') { $parts.Add('cold-v13-stream') }
     if ($FocalTrace -eq '1' -and $SystemName -in @('focal', 'language-vm')) {
         $parts.Add('trace')
     }
@@ -218,6 +219,7 @@ function Set-LanguageVmPlacement {
     $Enabled['language-vm'] = $OverlayLanguageVm -eq '1' -and
         ($Focal -eq '1' -or $Basic -eq '1')
     $Enabled['language-input'] = $Enabled['language-vm']
+    $Enabled['source-editor'] = $LanguageVmCompiler -eq '1' -and ($Focal -eq '1' -or $Basic -eq '1')
 }
 
 function Set-VmFileCachePolicy {

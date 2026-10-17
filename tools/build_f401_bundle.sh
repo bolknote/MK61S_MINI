@@ -626,7 +626,7 @@ rm -f "$bundle_dir/System/FOCAL.APP" \
       "$bundle_dir/System/MARKDOWN.APP" \
       "$bundle_dir/System/CHIP8.APP" "$bundle_dir/System/SETUP.APP" \
       "$bundle_dir/System/USBDISK.APP" "$bundle_dir/System/EXPLORER.APP" \
-      "$bundle_dir/System/LANGVM.APP" "$bundle_dir/System/LANGIN.APP" \
+      "$bundle_dir/System/LANGVM.APP" "$bundle_dir/System/LANGIN.APP" "$bundle_dir/System/SRCEDIT.APP" \
       "$bundle_dir/System/VMCache/VMSTORE.APP" \
       "$bundle_dir/System/HELP0.TXT" "$bundle_dir/System/HELP1.TXT" \
       "$bundle_dir/$firmware_name" "$bundle_dir/$firmware_elf_name" \

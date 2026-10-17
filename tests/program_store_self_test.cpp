@@ -4611,7 +4611,80 @@ static void test_fs_temporaries_with_pinned_usb_app_and_stage(void) {
 #endif
 }
 
+static void test_streamed_language_sources() {
+  struct Generated {
+    u32 salt=17;
+    static bool read(void* raw,u32 offset,u8* out,usize size) {
+      const auto& source=*(Generated*)raw;
+      for(usize i=0;i<size;++i) {
+        u32 n=(offset+(u32)i+source.salt)*2654435761U;
+        n^=n>>13;n*=2246822519U;n^=n>>16;
+        out[i]=(u8)(' '+n%95);
+      }
+      return true;
+    }
+  } generated;
+  const program_store::FileSource source={&generated,Generated::read};
+  for(auto type:{ProgramType::TINYBASIC,ProgramType::FOCAL}) {
+    fresh(512U*1024U);
+    u16 id=program_store::INVALID_ID;
+    for(u16 size:{(u16)16384,program_store::MAX_LANGUAGE_SOURCE_SIZE}) {
+      assert(program_store::write_file_from_source(program_store::ROOT_ID,id,type,"STREAM",size,source,nullptr,0,&id));
+      program_store::init();
+      Entry entry={};assert(program_store::entry_by_id(id,entry) && entry.data_len==size);
+      u8 actual[511],expected[511];
+      for(u32 at=0;at<size;at+=sizeof(actual)) {
+        const u16 n=(u16)std::min((u32)sizeof(actual),(u32)size-at);u16 copied=0;
+        assert(program_store::read_range_id(id,(u16)at,actual,n,&copied) && copied==n);
+        assert(Generated::read(&generated,at,expected,n) && !memcmp(actual,expected,n));
+      }
+      assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"STREAM",65535,source));
+    }
+    // A 64-KiB M8 source may project to 192 KiB UTF-8 on a 512-byte
+    // FAT volume: cluster indexes/counts must not wrap at 255.
+    const program_store::FileSource unicode={nullptr,[](void*,u32,u8* out,usize n){memset(out,0x0E,n);return true;}};
+    u16 unicode_id=program_store::INVALID_ID;
+    assert(program_store::write_file_from_source(program_store::ROOT_ID,unicode_id,type,"UNICODE",65534,unicode,nullptr,0,&unicode_id));
+    u16 clusters=0;assert(program_store::fat_chain_count(unicode_id,clusters));
+    const u32 cluster_size=(u32)program_store::geometry().sectors_per_cluster*512U;
+    assert(clusters==(65534U*3U+cluster_size-1)/cluster_size);
+    u32 visible=0;assert(program_store::exported_size_id(unicode_id,visible) && visible==65534U*3U);
+    assert(program_store::remove_id(unicode_id));
+    // A partial replacement must retain the old inode and complete source.
+    generated.salt=23;SPIFlash::tearAfterOperations(4,SPIFlash::Tear::Prefix);
+    assert(!program_store::write_file_from_source(program_store::ROOT_ID,id,type,"STREAM",65534,source));
+    SPIFlash::clearFailure();program_store::init();generated.salt=17;
+    u8 actual[128],expected[128];u16 copied=0;
+    assert(program_store::read_range_id(id,65000,actual,sizeof(actual),&copied) && copied==sizeof(actual));
+    assert(Generated::read(&generated,65000,expected,sizeof(expected)) && !memcmp(actual,expected,sizeof(actual)));
+  }
+  puts("Streamed source storage: BASIC/FOCAL 16/64 KiB, ranges, remount, limit and torn replacement PASS");
+}
+
+static void test_source_draft_banks_on_small_flash() {
+  for(u32 capacity:{512U*1024U,1024U*1024U}) {
+    fresh(capacity);u8 page[512];
+    assert(program_store::vfat_stage_lock(true));
+    assert(!program_store::vfat_stage_lock(true));
+    for(unsigned i=0;i<256;++i) {
+      memset(page,(u8)i,sizeof(page));
+      assert(program_store::vfat_stage_write(0x007FF000U+i,page));
+    }
+    program_store::vfat_stage_unlock();
+    program_store::init();assert(program_store::ready());
+    assert(program_store::vfat_stage_count()==256 && borrowed_stage_sector_count());
+    for(unsigned i=0;i<256;++i) {
+      assert(program_store::vfat_stage_read(0x007FF000U+i,page));
+      for(auto byte:page)assert(byte==(u8)i);
+    }
+    program_store::vfat_stage_forget(0x007FF000U,256);
+    assert(program_store::vfat_stage_count()==0);
+  }
+  puts("Source draft banks: 256 pages on 512-KiB/1-MiB NOR, exclusive lock and reboot PASS");
+}
 int main(int argc, char** argv) {
+  test_streamed_language_sources();
+  test_source_draft_banks_on_small_flash();
   test_catalog_sector_reference_checks_full_width();
   test_fs_temporaries_with_pinned_usb_app_and_stage();
   test_shared_storage_excludes_writes_before_mutation();

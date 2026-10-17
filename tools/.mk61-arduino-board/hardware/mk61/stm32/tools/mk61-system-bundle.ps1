@@ -1,7 +1,7 @@
 #requires -Version 5.1
 
 $script:Mk61SystemFiles = @('USBDISK.APP', 'SETUP.APP', 'FOCAL.APP', 'BASIC.APP',
-    'LANGVM.APP', 'LANGIN.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
+    'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
     'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'VMCache/VMSTORE.APP')
 
 function Get-Mk61FirmwareProfile {

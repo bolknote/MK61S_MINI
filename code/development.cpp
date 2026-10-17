@@ -27,6 +27,7 @@
 #include "tools.hpp"
 #include "ui_font_catalog.hpp"
 #include "m8_view.hpp"
+#include "language_source.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -835,6 +836,56 @@ static bool apply_font_entry(const program_store::Entry& entry) {
 #endif
 }
 
+static bool view_language_source(const program_store::Entry& entry) {
+  struct Source {u16 id;u32 revision;} source={entry.id,program_store::catalog_revision()};
+  language_vm::source::Reader input({&source,[](void* raw,uint16_t at,uint8_t* out,uint16_t n){
+    const auto& source=*(Source*)raw;u16 copied=0;
+    return program_store::catalog_revision()==source.revision &&
+        program_store::read_source_range_id(source.id,at,out,n,&copied) && copied==n &&
+        program_store::catalog_revision()==source.revision;
+  },entry.data_len});
+  const auto advance=[&](u16 at) {
+    unsigned used=0;
+    while(at<input.size() && used<lcd_display::COLS && !is_line_break((u8)input.at(at))) {++at;++used;}
+    if(at<input.size() && is_line_break((u8)input.at(at))) {
+      const char first=input.at(at++);
+      if(first=='\r' && at<input.size() && input.at(at)=='\n')++at;
+    }
+    return at;
+  };
+  MK61DisplayTextScope text_scope(main_lcd(),false);
+  u16 top=0;
+  for(;;) {
+    const u8 rows=main_lcd().rows()>1?(u8)(main_lcd().rows()-1):1;
+    u16 after=top;
+    {
+      MK61DisplayUpdate update(main_lcd());main_lcd().clear();
+      char header[24];snprintf(header,sizeof(header),"%s %u %.14s",type_label(entry.type),(unsigned)entry.data_len,entry.name);
+      print_line(0,header);
+      char lines[lcd_display::RUNTIME_MAX_ROWS][lcd_display::COLS+1];
+      lcd_ru::font_map_t map={};
+      for(u8 row=0;row<rows;++row) {
+        unsigned n=0;u16 at=after;
+        while(at<input.size() && n<lcd_display::COLS && !is_line_break((u8)input.at(at)))lines[row][n++]=input.at(at++);
+        lines[row][n]=0;lcd_ru::scan_text(map,lines[row],lcd_display::COLS);after=advance(after);
+      }
+      lcd_ru::load_custom_font(map);
+      for(u8 row=0;row<rows;++row) {main_lcd().setCursor(0,(u8)(row+1));lcd_ru::write_text(map,lines[row],lcd_display::COLS);}
+    }
+    if(!input.good() || source.revision!=program_store::catalog_revision()) {
+      show_message("Read error",M8("Ошибка чтения"),entry.name,entry.name);(void)wait_explorer_key(false);return false;
+    }
+    const i32 key=wait_explorer_key(false);
+    if(key==EXPLORER_KEY_ESC || key==EXPLORER_KEY_OK)return true;
+    if(key==EXPLORER_KEY_DOWN && after<input.size())top=after;
+    if(key==EXPLORER_KEY_UP && top) {
+      u16 previous=0,at=0;
+      while(at<top) {previous=at;for(u8 row=0;row<rows && at<top;++row)at=advance(at);}
+      top=previous;
+    }
+  }
+}
+
 static bool reject_unavailable_chip8(const program_store::Entry& entry) {
   if(entry.kind != program_store::NodeKind::FILE ||
      entry.type != program_store::ProgramType::CHIP8 ||
@@ -883,6 +934,9 @@ static bool view_entry(const program_store::Entry& entry) {
     return false;
   }
 
+  if(entry.type==program_store::ProgramType::TINYBASIC || entry.type==program_store::ProgramType::FOCAL)
+    return view_language_source(entry);
+
   // The generic explorer preview intentionally lives in the compact SCRATCH
   // arena. F411 UI packages may be much larger and are previewed safely by
   // the Fonts settings screen, which streams them into the shared BULK arena.
@@ -897,18 +951,10 @@ static bool view_entry(const program_store::Entry& entry) {
   }
 
   shared_scratch::Lease scratch;
-  language_workspace::Lease workspace;
   u8* data = NULL;
   usize capacity = 0;
-  if(entry.type == program_store::ProgramType::TINYBASIC &&
-     entry.data_len > shared_scratch::SIZE) {
-    if(workspace.acquire(language_workspace::Owner::APPLICATION,
-                         program_store::MAX_TINYBASIC_TEXT_SIZE)) {
-      data = (u8*) workspace.data();
-      capacity = workspace.size();
-    }
-  } else if(scratch.acquire(shared_scratch::Owner::EXPLORER_VIEW,
-                            program_store::MAX_MK61_TEXT_SIZE)) {
+  if(scratch.acquire(shared_scratch::Owner::EXPLORER_VIEW,
+                      program_store::MAX_MK61_TEXT_SIZE)) {
     data = scratch.data();
     capacity = scratch.size();
   }

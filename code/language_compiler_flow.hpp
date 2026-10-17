@@ -50,7 +50,7 @@ static_assert(sizeof(CompilerStage) == 128 && offsetof(CompilerStage, request) =
               offsetof(CompilerContext, source_id) == 232,
               "compiler flow wire layout changed");
 #endif
-enum CompilerPhase : uint32_t { FLOW_COMPILE_SOURCE = 0x100, FLOW_EMIT_SOURCE };
+enum CompilerPhase : uint32_t { FLOW_COMPILE_SOURCE = 0x100, FLOW_EMIT_SOURCE, FLOW_EDIT_SOURCE };
 using CompileFrontend = uint32_t (*)(loadable_module::Command, uint32_t, uint32_t,
                                      Request*, uint32_t& result);
 uint32_t flow_compile(mk61_app_flow*, CompileFrontend);

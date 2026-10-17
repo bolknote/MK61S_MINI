@@ -104,17 +104,17 @@ struct ParsedNode {
   u16 source_id;
   u16 cluster;
   u16 empty_index;
-  u16 data_len;
+  u32 data_len;
   u8 attributes;
 };
 
-static constexpr u8 MAX_FILE_FAT_CLUSTERS =
+static constexpr u16 MAX_FILE_FAT_CLUSTERS =
     program_store::MAX_FAT_EXTENTS_PER_FILE + 1U;
 
 struct FileChain {
   u16 clusters[MAX_FILE_FAT_CLUSTERS];
-  u16 size;
-  u8 cluster_count;
+  u32 size;
+  u16 cluster_count;
 };
 
 enum CacheState : u8 {
@@ -554,7 +554,8 @@ static u32 maximum_file_size(program_store::ProgramType type) {
       MK61_SYS_USBDISK, MK61_USBDISK_MAX_FILE_SIZE, (u32) type);
   return program_store::text_content(type) ? internal * 3U : internal;
 #else
-  if(type == program_store::ProgramType::TINYBASIC) {
+  if(type == program_store::ProgramType::TINYBASIC ||
+     type == program_store::ProgramType::FOCAL) {
     return (u32) program_store::MAX_TINYBASIC_TEXT_SIZE * 3U;
   }
   if(type == program_store::ProgramType::FONT) {
@@ -1251,7 +1252,6 @@ static void mark_existing_node(u16 id) {
 
 static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
                                FileChain& chain) {
-  memset(&chain, 0, sizeof(chain));
   chain.size = parsed.data_len;
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
@@ -1261,14 +1261,14 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
     return g_error.fail(ErrorCode::CLUSTER_LIMIT, Phase::CHAIN,
                         required, MAX_FILE_FAT_CLUSTERS, parsed.name);
   }
-  chain.cluster_count = (u8) required;
+  chain.cluster_count = (u16) required;
   u16 cluster = parsed.cluster;
-  for(u8 index = 0; index < chain.cluster_count; index++) {
+  for(unsigned index = 0; index < chain.cluster_count; index++) {
     if(!valid_cluster(cluster)) {
       return g_error.fail(ErrorCode::FILE_CLUSTER, Phase::CHAIN,
                           cluster, cluster_limit(), parsed.name);
     }
-    for(u8 previous = 0; previous < index; previous++) {
+    for(unsigned previous = 0; previous < index; previous++) {
       if(chain.clusters[previous] == cluster) {
         return g_error.fail(ErrorCode::FILE_CHAIN, Phase::CHAIN,
                             cluster, index, parsed.name);
@@ -1304,7 +1304,7 @@ static bool collect_file_chain(const ParsedNode& parsed, bool reserve_extents,
 static bool file_chain_matches(const FileChain& chain, u16 file_id) {
   u16 count = 0;
   if(!program_store::fat_chain_count(file_id, count) || count != chain.cluster_count) return false;
-  for(u8 index = 0; index < chain.cluster_count; ++index) {
+  for(u16 index = 0; index < chain.cluster_count; ++index) {
     u16 cluster = 0;
     if(!program_store::fat_chain_cluster(file_id, index, cluster) ||
        cluster != chain.clusters[index]) return false;
@@ -1459,7 +1459,7 @@ static ParseStatus parse_short_item(const u8* item, const LfnState& lfn,
   bounded_string::copy(parsed.name, name);
   parsed.id = parsed.source_id = program_store::INVALID_ID;
   parsed.cluster = cluster;
-  parsed.data_len = (u16) size;
+  parsed.data_len = size;
   return ParseStatus::VALID;
 }
 
@@ -1648,7 +1648,7 @@ static bool read_file_chain_source(void* context, u32 offset,
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
   while(size != 0) {
-    const u8 cluster_index = (u8) (offset / cluster_bytes);
+    const u16 cluster_index = (u16) (offset / cluster_bytes);
     const u32 in_cluster = offset % cluster_bytes;
     if(cluster_index >= chain.cluster_count) return false;
     const u8 sector = (u8) (in_cluster / SECTOR_SIZE);
@@ -1799,7 +1799,7 @@ static bool file_chain_complete(const FileChain& chain,
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
   u32 remaining = chain.size;
-  for(u8 index = 0; index < chain.cluster_count && remaining != 0; index++) {
+  for(u16 index = 0; index < chain.cluster_count && remaining != 0; index++) {
     const u32 in_cluster = remaining < cluster_bytes
         ? remaining : cluster_bytes;
     const u8 sectors =
@@ -1839,7 +1839,7 @@ static bool app_chain_contains_stage_key(void* context, u32 key) {
   const u32 cluster_bytes =
       (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
   u32 remaining = chain.size;
-  for(u8 index = 0; index < chain.cluster_count && remaining != 0; index++) {
+  for(u16 index = 0; index < chain.cluster_count && remaining != 0; index++) {
     const u32 in_cluster =
         remaining < cluster_bytes ? remaining : cluster_bytes;
     const u16 sectors =
@@ -1917,7 +1917,7 @@ static bool flush_import_batch() {
 #endif
 
 static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
-  FileChain chain = {};
+  FileChain chain;
   if(!collect_file_chain(parsed, false, chain)) return false;
   program_store::Entry current;
   const bool exists = program_store::entry_by_id(parsed.source_id, current) &&
@@ -1976,7 +1976,8 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
   ImportedTextSource text_source = {&chain, 0, 0, 0};
   program_store::FileSource source = {&chain, read_file_chain_source};
   if(program_store::text_content(parsed.type)) {
-    const u16 limit = parsed.type == program_store::ProgramType::TINYBASIC
+    const u16 limit = (parsed.type == program_store::ProgramType::TINYBASIC ||
+            parsed.type == program_store::ProgramType::FOCAL)
         ? program_store::MAX_TINYBASIC_TEXT_SIZE
         : program_store::MAX_MK61_TEXT_SIZE;
     if(!validate_text_chain(chain, limit, internal_size)) {
@@ -1986,8 +1987,7 @@ static bool apply_file(u16 parent_id, const ParsedNode& parsed) {
     text_source.size = internal_size;
     source = {&text_source, read_imported_text};
   }
-  u16 extents[program_store::MAX_FAT_EXTENTS_PER_FILE + 1U] = {};
-  for(u8 index = 0; index < chain.cluster_count; index++) extents[index] = chain.clusters[index];
+  const u16* extents=chain.clusters;
   if(internal_size != 0 &&
      program_store::transparent_compression_enabled(parsed.type)) {
     const u8 source_slots = (u8) (
@@ -2088,13 +2088,13 @@ static bool equivalent_native_node(u16 parent_id, const ParsedNode& parsed) {
     }
   } else {
     u32 size = 0;
-    FileChain chain = {};
+    FileChain chain;
     if(!exported_file_size(current, size) || size != parsed.data_len ||
        (size == 0 && parsed.cluster != 0) || !collect_file_chain(parsed, false, chain) ||
        !file_chain_matches(chain, parsed.id)) return false;
     const u32 cluster_bytes = (u32) geometry().sectors_per_cluster * SECTOR_SIZE;
     u32 remaining = size;
-    for(u8 index = 0; index < chain.cluster_count; ++index) {
+    for(u16 index = 0; index < chain.cluster_count; ++index) {
       const u32 bytes = remaining < cluster_bytes ? remaining : cluster_bytes;
       for(u8 sector = 0; (u32) sector * SECTOR_SIZE < bytes; ++sector)
         if(program_store::vfat_stage_exists(cluster_lba(chain.clusters[index], sector))) return false;
@@ -2121,7 +2121,7 @@ static bool process_node(u16 parent_id, ParsedNode& parsed, u8 depth, WalkPass p
                            parsed.cluster, 0, parsed.name);
     }
     if(!parsed.directory) {
-      FileChain chain = {};
+      FileChain chain;
       return collect_file_chain(parsed, true, chain);
     }
     next = {parsed.id == program_store::INVALID_ID ? UNRESOLVED_PARENT : parsed.id, parsed.cluster, true};
@@ -2188,7 +2188,7 @@ static bool process_node(u16 parent_id, ParsedNode& parsed, u8 depth, WalkPass p
     if(dirents == 0) return false;
     g_validated_directory_slots[depth] += dirents;
     if(!parsed.directory) {
-      FileChain chain = {};
+      FileChain chain;
       if(!collect_file_chain(parsed, false, chain)) {
         return g_error.fail(ErrorCode::FILE_CHAIN, Phase::VALIDATE,
                             parsed.cluster, parsed.data_len, parsed.name);
@@ -2220,7 +2220,8 @@ static bool process_node(u16 parent_id, ParsedNode& parsed, u8 depth, WalkPass p
           file_chain_matches(chain, parsed.source_id);
       if(content_unchanged) return true;
       if(program_store::text_content(parsed.type)) {
-        const u16 limit = parsed.type == program_store::ProgramType::TINYBASIC
+        const u16 limit = (parsed.type == program_store::ProgramType::TINYBASIC ||
+            parsed.type == program_store::ProgramType::FOCAL)
             ? program_store::MAX_TINYBASIC_TEXT_SIZE
             : program_store::MAX_MK61_TEXT_SIZE;
         u16 internal_size = 0;

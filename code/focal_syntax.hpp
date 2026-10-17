@@ -97,21 +97,24 @@ inline bool alpha(char c) {
 }
 inline bool digit(char c) { return c >= '0' && c <= '9'; }
 inline bool space(char c) { return c == ' ' || c == '\t' || c == '\r'; }
-inline const char *skip(const char *p, const char *e) {
+template <typename Cursor>
+inline Cursor skip(Cursor p, Cursor e) {
   while (p < e && space(*p))
     ++p;
   return p;
 }
-inline bool equal(const char *p, const char *e, const char *word) {
+template <typename Cursor>
+inline bool equal(Cursor p, Cursor e, const char *word) {
   while (p < e && *word && upper(*p) == *word) {
     ++p;
     ++word;
   }
   return p == e && !*word;
 }
-inline Command command(const char *&p, const char *e) {
+template <typename Cursor>
+inline Command command(Cursor &p, Cursor e) {
   p = skip(p, e);
-  const char *b = p;
+  Cursor b = p;
   while (p < e && alpha(*p))
     ++p;
   for (const auto &w : commands)
@@ -123,7 +126,8 @@ inline const char *command_name(Command c) {
   return c == Command::NONE ? "" : commands[unsigned(c) - 1].name;
 }
 // Top-level delimiters, never delimiters inside a literal or an expression.
-inline const char *delimiter(const char *p, const char *e, char c) {
+template <typename Cursor>
+inline Cursor delimiter(Cursor p, Cursor e, char c) {
   unsigned depth = 0;
   char quote = 0;
   for (; p < e; ++p) {
@@ -150,7 +154,8 @@ struct Address {
   bool exact;
 };
 inline uint32_t key(Address a) { return uint32_t(a.major) * 1000 + a.minor; }
-inline bool address(const char *&p, const char *e, Address &a) {
+template <typename Cursor>
+inline bool address(Cursor &p, Cursor e, Address &a) {
   p = skip(p, e);
   a = {0, 0, false};
   if (p == e || !digit(*p))

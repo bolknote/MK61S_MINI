@@ -7,6 +7,7 @@
 #if !defined(ARDUINO_ARCH_STM32) || MK61_RESIDENT_LANGUAGE_VM || \
     MK61_OVERLAY_LANGUAGE_VM || defined(MK61_LANGUAGE_VM_COMPILER) || \
     defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE) || \
+    defined(MK61_BUILD_SOURCE_EDITOR_MODULE) || \
     defined(MK61_BUILD_FOCAL_MODULE) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
 #include "language_bytecode.hpp"
 #include "language_source_scan.hpp"
@@ -171,23 +172,25 @@ struct Target {
 
 template <Language Lang>
 class Compiler {
+  using Text = source::Cursor;
+  const source::Reader* input_;
  public:
-  __attribute__((noinline)) Compiler(const char* source, uint16_t length, uint8_t* out, uint16_t capacity,
+  __attribute__((noinline)) Compiler(const source::Reader& input, uint16_t length, uint8_t* out, uint16_t capacity,
            Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {}) {
     // All fields are scalar pointers, integers or POD workspace descriptors.
     // A shared cold initializer avoids duplicating dozens of zero stores for
     // every bounded resource-workspace specialization in the compiler APP.
     static_assert((unsigned)Error::NONE==0 && (unsigned)Op::HALT==0,"zero compiler state changed");
     memset(static_cast<void*>(this),0,sizeof(*this));
-    source_=p_=end_=source;length_=length;out_=out;capacity_=capacity;
+    input_=&input;source_=p_=end_=Text(input);length_=length;out_=out;capacity_=capacity;
     lines_=lines;rf_available_=rf_available;resources_=resources;resource_data_=workspace;
   }
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
-    const uint16_t quota = basic() ? 3584 : 1536;
-    if (length_ == 0 || length_ > quota || memchr(source_, 0, length_))
-      return {length_ > quota ? Error::FULL : Error::SYNTAX, 0, 0, 0, 0};
+    const uint16_t quota = source::MAX_SIZE;
+    if (length_ == 0 || length_ > quota || input_->contains_nul())
+      return {length_ > quota ? Error::FULL : !input_->good() ? Error::IO : Error::SYNTAX, 0, 0, 0, 0};
     index_lines();
     if (!count_ && error_ == Error::NONE) fail(Error::LINE);
     const uint16_t code = (uint16_t)(HEADER_SIZE + count_ * stride());
@@ -243,7 +246,7 @@ class Compiler {
       put_word(out_ + 10, code);
       put_word(out_ + 12, count_);
       put_word(out_ + 14, length_);
-      put_dword(out_ + 16, checksum((const uint8_t*)source_, length_));
+      put_dword(out_ + 16, input_->checksum());
       for (uint16_t i = 0; i < count_; ++i) {
         uint8_t* record = out_ + HEADER_SIZE + i * stride();
         if (basic())
@@ -255,6 +258,7 @@ class Compiler {
       mark_integer_spans(out_,code,code_end);
       put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
+    if(!input_->good()) error_=Error::IO;
     uint16_t offset =
         p_ >= source_ && p_ <= source_ + length_ ? (uint16_t)(p_ - source_) : 0;
     return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, line_, offset,
@@ -264,7 +268,7 @@ class Compiler {
   CompileResult expression_only() {
     expression_only_ = true;
     if (!source_ || !length_ || length_ > (basic() ? 64 : 111) ||
-        memchr(source_, 0, length_))
+        input_->contains_nul())
       return {Error::SYNTAX, 0, 0, 0, 0};
     for (pass_ = 0; pass_ < 2 && error_ == Error::NONE; ++pass_) {
       p_ = source_;
@@ -286,7 +290,7 @@ class Compiler {
       put_word(out_ + 8, pc_);
       put_word(out_ + 10, HEADER_SIZE);
       put_word(out_ + 14, length_);
-      put_dword(out_ + 16, checksum((const uint8_t*)source_, length_));
+      put_dword(out_ + 16, input_->checksum());
       put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
     }
     return {error_, error_ == Error::NONE ? pc_ : (uint16_t)0, 0,
@@ -294,12 +298,12 @@ class Compiler {
   }
 
  private:
-  const char* source_;
+  Text source_;
   uint16_t length_;
   uint8_t* out_;
   uint16_t capacity_;
-  const char* p_;
-  const char* end_;
+  Text p_;
+  Text end_;
   Error error_;
   Line* lines_;
   uint16_t count_, pc_;
@@ -319,8 +323,9 @@ class Compiler {
   uint8_t last_operand_;
   bool owned_resources() const { return resources_ && resources_->mode == ResourceMode::EMBEDDED; }
   bool resource_literals() const { return resources_ && (owned_resources() || resources_->id != 0xFFFF); }
-  uint16_t intern_resource(const char* text, uint16_t length) {
+  uint16_t intern_resource(Text text, uint16_t length) {
     if(owned_resources()) {
+      if(length > MAX_MODULE-2U || resource_size_ > MAX_MODULE-2U-length) {fail(Error::FULL);return 0;}
       if(!resource_data_.first) {
         resource_size_ += (uint16_t)(2 + length); return 0;
       }
@@ -341,8 +346,7 @@ class Compiler {
     if(!resource_data_.first) {
       // Sizing mode needs only an upper bound. Raw literal bytes are already
       // contiguous; synthesized prompts can need at most one span per byte.
-      const uintptr_t begin = (uintptr_t)source_, at = (uintptr_t)text;
-      const bool raw = at >= begin && at - begin <= length_;
+      const bool raw = text.from(*input_);
       const uint16_t parts = raw ? (uint16_t)((length + 254) / 255) : length;
       resource_size_ += (uint16_t)(3 + parts * 3);
       return 0;
@@ -358,10 +362,10 @@ class Compiler {
         const uint16_t offset = (uint16_t)(part[0] | ((uint16_t)part[1] << 8));
         const uint8_t n = part[2];
         if (same) {
-          if (offset & 0x8000) same = (uint8_t)text[decoded] == (uint8_t)offset;
-          else same = !memcmp(text + decoded, source_ + offset, n);
+          if (!n) same = (uint8_t)text[decoded] == (uint8_t)offset;
+          else same = source::equal(text + decoded, source_ + offset, n);
         }
-        decoded += n;
+        decoded += n ? n : 1;
       }
       if (same) return at;
       at += (uint16_t)(3 + r[2] * 3);
@@ -375,19 +379,21 @@ class Compiler {
       uint16_t best = 0;
       uint8_t n = 0;
       const uint16_t wanted = length < 255 ? length : 255;
-      for (uint16_t pos = 0; pos < length_; ++pos) {
+      if(text.from(*input_)) {best=(uint16_t)(text-source_);n=(uint8_t)wanted;}
+      else for (uint16_t pos = 0; pos < length_; ++pos) {
         uint16_t match = 0;
         while (match < wanted && pos + match < length_ &&
                source_[pos + match] == text[match]) ++match;
         if (match > n) { best = pos; n = (uint8_t)match; }
         if (match == wanted) break;
       }
-      if (!n) { best = (uint16_t)(0x8000 | (uint8_t)*text); n = 1; }
+      const bool literal = !n;
+      if (literal) { best = (uint8_t)*text; n = 1; }
       if (resource_size_ > resource_data_.half * 2 - 3 || *resource_data_.at((uint16_t)(at + 2)) == 255) {
         fail(Error::FULL); break;
       }
       put_word(resource_data_.at(resource_size_), best);
-      *resource_data_.at((uint16_t)(resource_size_ + 2)) = n;
+      *resource_data_.at((uint16_t)(resource_size_ + 2)) = literal ? 0 : n;
       resource_size_ += 3; ++*resource_data_.at((uint16_t)(at + 2));
       text += n; length -= n;
     }
@@ -465,8 +471,8 @@ class Compiler {
     emit(op);
     stack(effect);
   }
-  void constant(double value, const char* literal = nullptr,
-                const char* finish = nullptr) {
+  void constant(double value, Text literal = nullptr,
+                Text finish = nullptr) {
     if (value >= 0 && value <= 15 && value == (int)value) {
       emit((Op)((uint8_t)Op::CONST_0 + (uint8_t)value));
     } else if (value >= -128 && value <= 127 && value == (int)value) {
@@ -491,7 +497,7 @@ class Compiler {
     }
     stack(1);
   }
-  bool decimal(double value, const char* begin, const char* end) {
+  bool decimal(double value, Text begin, Text end) {
 #if defined(LANGUAGE_VM_TEST_NO_DECIMAL_RECIPE)
     (void)value; (void)begin; (void)end;
     return false;
@@ -499,7 +505,7 @@ class Compiler {
     uint32_t mantissa = 0;
     int exponent = 0;
     bool fraction = false;
-    const char* q = begin;
+    Text q = begin;
     while (q < end && (digit(*q) || *q == '.')) {
       if (*q == '.')
         fraction = true;
@@ -537,8 +543,8 @@ class Compiler {
   }
   bool keyword(const char* word, uint8_t minimum) {
     skip();
-    const char* saved = p_;
-    uint8_t n = 0;
+    Text saved = p_;
+    unsigned n = 0;
     while (p_ < end_ && alpha(*p_)) {
       ++p_;
       ++n;
@@ -547,7 +553,7 @@ class Compiler {
     if (dotted) ++p_;
     const size_t length = strlen(word);
     bool ok = n != 0 && (dotted ? n >= minimum && n <= length : n == length);
-    for (uint8_t i = 0; ok && i < n; ++i) ok = upper(saved[i]) == word[i];
+    for (unsigned i = 0; ok && i < n; ++i) ok = upper(saved[i]) == word[i];
     if (!ok) p_ = saved;
     return ok;
   }
@@ -578,13 +584,12 @@ class Compiler {
     return major * 1000 + minor;
   }
   void index_lines() {
-    const char* cursor = source_;
+    Text cursor = source_;
     while (cursor < source_ + length_ && error_ == Error::NONE) {
       while (cursor < source_ + length_ && (*cursor == '\r' || *cursor == '\n'))
         ++cursor;
-      const char* begin = cursor;
-      cursor += source_scan::line_end((const uint8_t*)cursor,
-                                      (size_t)(source_ + length_ - cursor));
+      Text begin = cursor;
+      cursor += cursor.line_end(source_ + length_);
       p_ = begin;
       end_ = cursor;
       skip();
@@ -643,7 +648,7 @@ class Compiler {
   }
   bool direct_basic_branch(bool sub) {
     skip();
-    const char* q=p_;
+    Text q=p_;
     uint32_t number=0;
     if(q==end_ || !digit(*q)) return false;
     while(q<end_ && digit(*q)) {
@@ -659,7 +664,7 @@ class Compiler {
   }
   void basic_call(bool result) {
     unsigned number = 0;
-    const char* after = tinybasic_syntax::integer(p_, end_, number);
+    Text after = tinybasic_syntax::integer(p_, end_, number);
     if (!after || !number || number > 32767) { fail(Error::LINE_NUMBER); return; }
     p_ = after;
     unsigned arguments = 0;
@@ -678,7 +683,7 @@ class Compiler {
 #else
     // A bare unsigned integer has no numeric/I/O side effects. Out-of-range
     // indices still compile and fail at the original array access at runtime.
-    const char* q=p_;
+    Text q=p_;
     while(q<end_ && space(*q)) ++q;
     if(q==end_ || !digit(*q)) return false;
     uint32_t number=0;
@@ -729,7 +734,7 @@ class Compiler {
   Target target() {
     skip();
     Target t = {0, 0};
-    const char* target_start = p_;
+    Text target_start = p_;
     if (p_ == end_) {
       fail(Error::VARIABLE);
       return t;
@@ -775,7 +780,7 @@ class Compiler {
     while (error_ == Error::NONE) {
       skip();
       Op op = Op::HALT;
-      const char* saved = p_;
+      Text saved = p_;
       if (level == 0 && basic()) {
         if (match('<'))
           op = match('=') ? Op::LE : match('>') ? Op::NE : Op::LT;
@@ -850,7 +855,7 @@ class Compiler {
   }
   void primary() {
     skip();
-    const char* primary_start = p_;
+    Text primary_start = p_;
     if (p_ == end_) {
       fail(Error::SYNTAX);
       return;
@@ -882,27 +887,20 @@ class Compiler {
       return;
     }
     if (digit(*p_) || *p_ == '.') {
-      const char* after = nullptr;
+      Text after = nullptr;
       double value = 0;
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-      if (!portable_system::parse_number(p_, value, after)) {
-        fail(Error::SYNTAX);
-        return;
-      }
-#else
-      value = mk_math::strtod(p_, &after);
-#endif
+if (!number(value, after)) { fail(Error::SYNTAX); return; }
       if (after == p_ || after > end_) {
         fail(Error::SYNTAX);
         return;
       }
-      const char* literal = p_;
+      Text literal = p_;
       p_ = after;
       constant(value, literal, after);
       return;
     }
     if (alpha(*p_)) {
-      const char* start = p_;
+      Text start = p_;
       const uint8_t fn = lookup(functions, 255);
       if (fn == 255) {
         p_ = start;
@@ -984,11 +982,11 @@ class Compiler {
     }
     fail(Error::SYNTAX);
   }
-  const char* command_end(const char* begin, bool print) {
+  Text command_end(Text begin, bool print) {
     char quote = 0;
     int nesting = 0;
-    const char* alternate = tinybasic_syntax::else_at(begin, end_);
-    for (const char* q = begin; q < end_; ++q) {
+    Text alternate = tinybasic_syntax::else_at(begin, end_);
+    for (Text q = begin; q < end_; ++q) {
       if (quote) {
         if (*q == quote) quote = 0;
         continue;
@@ -1005,13 +1003,13 @@ class Compiler {
       if (q == alternate) return q;
       if (print && *q == '#') {
         unsigned width, digits;
-        const char* format = tinybasic_syntax::print_precision(q, end_, width, digits);
+        Text format = tinybasic_syntax::print_precision(q, end_, width, digits);
         if (format) { q = format - 1; continue; }
       }
       if (*q == ':') return q;
       if (*q == ';') {
         if (!print) return q;
-        const char* saved = p_;
+        Text saved = p_;
         p_ = q + 1;
         const uint8_t cmd = lookup(basic_commands, 255);
         skip();
@@ -1057,15 +1055,17 @@ class Compiler {
     if (p_ == end_) return false;
     if (*p_ == '"' || (basic() && *p_ == '\'')) {
       const char quote = *p_++;
-      const char* start = p_;
+      Text start = p_;
       while (p_ < end_ && *p_ != quote) ++p_;
       if (p_ == end_) {
         fail(Error::UNTERMINATED_STRING);
         return true;
       }
       if (resource_literals()) {
-        emit(Op::PRINT_RESOURCE);
-        u16(intern_resource(start, (uint16_t)(p_ - start)));
+        do {
+          const uint16_t n=(uint16_t)(p_-start>4096?4096:p_-start);
+          emit(Op::PRINT_RESOURCE);u16(intern_resource(start,n));start+=n;
+        } while(start<p_ && error_==Error::NONE);
       } else {
         byte(opcode);
         u16((uint16_t)(p_ - start));
@@ -1106,7 +1106,7 @@ class Compiler {
         store(t);
       skip();
       if (!basic() || !match(',')) break;
-      const char* saved = p_;
+      Text saved = p_;
       const uint16_t save_pc = pc_;
       const uint8_t save_sp = sp_;
       const Error save_error = error_;
@@ -1167,7 +1167,7 @@ class Compiler {
       }
       bool format = false;
       unsigned width = 0, digits = 0;
-      const char* precision = basic() ? tinybasic_syntax::print_precision(p_, end_, width, digits) : nullptr;
+      Text precision = basic() ? tinybasic_syntax::print_precision(p_, end_, width, digits) : nullptr;
       const bool carriage =
           basic() && (*p_ == '_' || (p_ + 1 < end_ && *p_ == '^' && upper(p_[1]) == 'M'));
       if (precision) {
@@ -1222,13 +1222,13 @@ class Compiler {
     byte(count);
   }
   void graph() {
-    const char *expression_start = p_;
-    const char *comma = tinybasic_syntax::parameter_separator(p_, end_);
+    Text expression_start = p_;
+    Text comma = tinybasic_syntax::parameter_separator(p_, end_);
     if (comma == end_) {
       fail(Error::SYNTAX);
       return;
     }
-    const char *full_end = end_;
+    Text full_end = end_;
     p_ = comma + 1;
     for (unsigned i = 0; i < 4; ++i) {
       expression();
@@ -1307,11 +1307,11 @@ class Compiler {
         skip();
         if (p_ < end_ && (*p_ == ',' || *p_ == ';')) ++p_;
       }
-      const char* name = p_;
+      Text name = p_;
       Target t = target();
       if (!custom) {
         while (name < p_ && space(*name)) ++name;
-        const char* finish = p_;
+        Text finish = p_;
         while (finish > name && space(finish[-1])) --finish;
         while (name < finish && used < 94) {
           prompt[used++] = *name++;
@@ -1337,12 +1337,32 @@ class Compiler {
     }
     if (!any && basic()) fail(Error::VARIABLE);
   }
-  void source_position(const char* at) {
+  void source_position(Text at) {
     if (!count_) return;  // INPUT expressions have no statement/source map.
-    const char* line = at;
+    Text line = at;
     while (line > source_ && line[-1] != '\n' && line[-1] != '\r') --line;
     emit(Op::SOURCE_POS);
     u16((uint16_t)(at - line + 1));
+  }
+  bool number(double& value, Text& after) {
+    char token[64]; unsigned n=0;
+    Text q=p_;
+    while(q<end_ && n+1<sizeof(token)) {
+      const char c=*q;
+      if(!digit(c) && c!='.' && c!='e' && c!='E' && c!='+' && c!='-')break;
+      token[n++]=c;++q;
+    }
+    token[n]=0;
+    const char* parsed=nullptr;
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+    if(!portable_system::parse_number(token,value,parsed))return false;
+#else
+    value=mk_math::strtod(token,&parsed);
+#endif
+    after=p_+(parsed-token);
+    // strtod may end before the speculative + / - suffix.
+    return parsed!=token && (unsigned(parsed-token)<n || q==end_ ||
+        (!digit(*q) && *q!='.' && *q!='e' && *q!='E'));
   }
   bool data_literal(double& value) {
     skip();
@@ -1353,15 +1373,8 @@ class Compiler {
       fail(Error::SYNTAX);
       return false;
     }
-    const char* after = nullptr;
-#if defined(MK61_BUILD_PORTABLE_SYSTEM)
-    if (!portable_system::parse_number(p_, value, after)) {
-      fail(Error::SYNTAX);
-      return false;
-    }
-#else
-    value = mk_math::strtod(p_, &after);
-#endif
+    Text after = nullptr;
+if (!number(value, after)) { fail(Error::SYNTAX); return false; }
     if (after == p_ || after > end_ || !mk_math::is_finite(value)) {
       fail(Error::SYNTAX);
       return false;
@@ -1376,7 +1389,7 @@ class Compiler {
     u16(0);
     uint16_t count = 0;
     do {
-      const char* literal=p_;
+      Text literal=p_;
       while(literal<end_ && space(*literal)) ++literal;
       const bool negative=literal<end_ && *literal=='-';
       if(literal<end_ && (*literal=='+' || *literal=='-')) ++literal;
@@ -1450,14 +1463,14 @@ class Compiler {
     while (p_ < end_ && error_ == Error::NONE) {
       skip();
       if (p_ == end_) break;
-      const char* const command_start = p_;
+      Text const command_start = p_;
       const uint8_t cmd = lookup(basic_commands, ASSIGN);
       if (cmd == REM) {
         p_ = end_;
         break;
       }
       if (cmd == ASSIGN && !tinybasic_syntax::word(command_start, end_, "LET", 1)) {
-        const char* word = command_start;
+        Text word = command_start;
         while (word < end_ && alpha(*word)) ++word;
         if (word - command_start > 1) {
           fail(Error::UNKNOWN_COMMAND);
@@ -1481,9 +1494,9 @@ class Compiler {
         u16(0);
         skip();
         if (p_ == end_) fail(Error::SYNTAX);
-        const char* full_end = end_;
-        const char* after_else = nullptr;
-        const char* alternate = tinybasic_syntax::else_at(p_, end_, &after_else);
+        Text full_end = end_;
+        Text after_else = nullptr;
+        Text alternate = tinybasic_syntax::else_at(p_, end_, &after_else);
         end_ = alternate;
         skip();
         if (p_ == end_) fail(Error::SYNTAX);
@@ -1505,8 +1518,8 @@ class Compiler {
         p_ = full_end;
         break;
       }
-      const char* const full_end = end_;
-      const char* const segment = command_end(p_, cmd == PRINT || cmd == READ_INPUT);
+      Text const full_end = end_;
+      Text const segment = command_end(p_, cmd == PRINT || cmd == READ_INPUT);
       end_ = segment;
       switch (cmd) {
         case ASSIGN:
@@ -1614,7 +1627,7 @@ class Compiler {
       return;
     }
     skip();
-    const char* begin = p_;
+    Text begin = p_;
     while (p_ < end_ && alpha(*p_)) ++p_;
     const size_t n = (size_t)(p_ - begin);
     skip();
@@ -1661,10 +1674,10 @@ class Compiler {
         break;
       }
       case 5: {
-        const char* start = p_;
+        Text start = p_;
         const uint32_t number = address(true);
         bool group = true;
-        for (const char* q = start; q < p_; ++q)
+        for (Text q = start; q < p_; ++q)
           if (*q == '.') group = false;
         emit(Op::DO_FOCAL);
         u16(target_pc(number, group));
@@ -1705,7 +1718,7 @@ class Compiler {
         bool three = false;
         int nesting_count = 0;
         uint8_t commas = 0;
-        for (const char* q = begin; q < p_; ++q) {
+        for (Text q = begin; q < p_; ++q) {
           if (*q == '(')
             ++nesting_count;
           else if (*q == ')')
@@ -1740,7 +1753,7 @@ class Compiler {
 };
 template<Language Lang, uint16_t Half>
 __attribute__((noinline)) CompileResult compile_resource_second(
-    const char* source, uint16_t length, uint8_t* output, uint16_t capacity,
+    const source::Reader& source, uint16_t length, uint8_t* output, uint16_t capacity,
     Line* lines, bool rf, const ResourceSource* resources, uint8_t* first) {
   uint8_t second[Half];
   Compiler<Lang> compiler(source, length, output, capacity, lines, rf, resources, {first, second, Half});
@@ -1748,13 +1761,13 @@ __attribute__((noinline)) CompileResult compile_resource_second(
 }
 template<Language Lang, uint16_t Half>
 __attribute__((noinline)) CompileResult compile_resource_first(
-    const char* source, uint16_t length, uint8_t* output, uint16_t capacity,
+    const source::Reader& source, uint16_t length, uint8_t* output, uint16_t capacity,
     Line* lines, bool rf, const ResourceSource* resources) {
   uint8_t first[Half];
   return compile_resource_second<Lang, Half>(source, length, output, capacity, lines, rf, resources, first);
 }
 template<Language Lang>
-CompileResult compile_resources(const char* source, uint16_t length, uint8_t* output,
+CompileResult compile_resources(const source::Reader& source, uint16_t length, uint8_t* output,
     uint16_t capacity, Line* lines, bool rf, const ResourceSource* resources, uint16_t needed) {
   if(needed <= 192) return compile_resource_first<Lang,96>(source,length,output,capacity,lines,rf,resources);
   if(needed <= 768) return compile_resource_first<Lang,384>(source,length,output,capacity,lines,rf,resources);
@@ -1778,9 +1791,10 @@ uint32_t checksum(const uint8_t* p, size_t length) {
 // than relying on LTO to discard their workspace frames.
 #if !defined(ARDUINO_ARCH_STM32) || defined(MK61_LANGUAGE_VM_COMPILER) || \
     defined(MK61_LANGUAGE_VM_TEST) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
-CompileResult compile_basic(const char* source, uint16_t length, uint8_t* output,
+CompileResult compile_basic_source(const source::Reader& source, uint16_t length, uint8_t* output,
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
+  source::CursorScope cursor_scope(source);
   Line lines[192];
   Compiler<Language::BASIC> compiler(source, length, output, capacity, lines,
                                      rf_available, resources);
@@ -1789,26 +1803,45 @@ CompileResult compile_basic(const char* source, uint16_t length, uint8_t* output
   return compile_resources<Language::BASIC>(source,length,output,capacity,lines,rf_available,
                                              resources,compiler.resource_reservation());
 }
-CompileResult compile_focal(const char* source, uint16_t length, uint8_t* output,
+CompileResult compile_focal_source(const source::Reader& source, uint16_t length, uint8_t* output,
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   return focal_next::compile_program(source,length,output,capacity,rf_available,resources);
 }
+CompileResult compile_source(Language language, const source::Reader& source,
+                             uint8_t* output, uint16_t capacity, bool rf,
+                             const ResourceSource* resources) {
+  if(language==Language::BASIC) return compile_basic_source(source,source.size(),output,capacity,rf,resources);
+  if(language==Language::FOCAL) return compile_focal_source(source,source.size(),output,capacity,rf,resources);
+  return {Error::SYNTAX,0,0,0,0};
+}
+CompileResult compile_basic(const char* text,uint16_t n,uint8_t* out,uint16_t cap,bool rf,const ResourceSource* resources) {
+  if(!text)return {Error::SYNTAX,0,0,0,0};
+  source::Reader source(text,n);return compile_source(Language::BASIC,source,out,cap,rf,resources);
+}
+CompileResult compile_focal(const char* text,uint16_t n,uint8_t* out,uint16_t cap,bool rf,const ResourceSource* resources) {
+  if(!text)return {Error::SYNTAX,0,0,0,0};
+  source::Reader source(text,n);return compile_source(Language::FOCAL,source,out,cap,rf,resources);
+}
+
 #endif
 bool validate_focal_expression(const char* source,uint16_t length,bool rf_available) {
-  return focal_next::valid_fragment(source,length,rf_available);
+  return source && focal_next::valid_fragment(source,length,rf_available);
 }
 CompileResult compile_expression(Language language, const char* source, uint16_t length,
                                  uint8_t* output, uint16_t capacity) {
+  if(!source)return {Error::SYNTAX,0,0,0,0};
   if(language==Language::FOCAL)
     return focal_next::compile_expression(source,length,output,capacity);
 
+  source::Reader input(source,length);
+  source::CursorScope cursor_scope(input);
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};
   if (language == Language::BASIC) {
-    Compiler<Language::BASIC> compiler(source, length, output, capacity, nullptr);
+    Compiler<Language::BASIC> compiler(input, length, output, capacity, nullptr);
     return compiler.expression_only();
   }
   if (language == Language::FOCAL) {
-    Compiler<Language::FOCAL> compiler(source, length, output, capacity, nullptr);
+    Compiler<Language::FOCAL> compiler(input, length, output, capacity, nullptr);
     return compiler.expression_only();
   }
   return {Error::SYNTAX, 0, 0, 0, 0};

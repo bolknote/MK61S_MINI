@@ -292,6 +292,13 @@ static void tb_activate_inherited_text_font(void) {
 }
 #endif
 
+#if defined(MK61_LANGUAGE_VM_COMPILER) && !defined(TINYBASIC_HOST_TEST)
+#define MK61_PAGED_LANGUAGE_SOURCE 1
+#include "language_source_file.hpp"
+static_assert(program_store::MAX_LANGUAGE_SOURCE_SIZE==language_vm::source::MAX_SIZE,"source storage and compiler bounds must match");
+#else
+#define MK61_PAGED_LANGUAGE_SOURCE 0
+#endif
 #ifdef TINYBASIC_HOST_TEST
 static constexpr int TB_PROGRAM_COUNT = 8;
 #else
@@ -302,8 +309,8 @@ static_assert(TB_PROGRAM_COUNT > 0 && TB_PROGRAM_COUNT <= 127,
 static constexpr int TB_SOURCE_SIZE = 3585;
 static constexpr int TB_NAME_SIZE = 32;
 #ifndef TINYBASIC_HOST_TEST
-static_assert(TB_SOURCE_SIZE == program_store::MAX_TINYBASIC_TEXT_SIZE + 1,
-              "Tiny BASIC editor quota must match the filesystem quota");
+static_assert(TB_SOURCE_SIZE <= program_store::MAX_TINYBASIC_TEXT_SIZE + 1,
+              "legacy BASIC buffer must fit the filesystem quota");
 static_assert(TB_NAME_SIZE == program_store::NAME_SIZE,
               "Tiny BASIC names must match the filesystem quota");
 #endif
@@ -413,7 +420,11 @@ struct TbProgram {
   u16 store_id;
   u16 parent_id;
   char name[TB_NAME_SIZE];
+#if MK61_PAGED_LANGUAGE_SOURCE
+  char source[1]; // retained selection only; stored text is read through a page
+#else
   char source[TB_SOURCE_SIZE];
+#endif
   u16 source_len;
 };
 
@@ -591,8 +602,8 @@ static_assert(tinybasic_array_offset() + 128U * sizeof(double) <=
 
 class TinyBasicWorkspaceScope {
   public:
-    TinyBasicWorkspaceScope(void)
-      : lease(language_workspace::Owner::TINYBASIC, TB_WORKSPACE_REQUEST) {
+    TinyBasicWorkspaceScope(usize requested = TB_WORKSPACE_REQUEST)
+      : lease(language_workspace::Owner::TINYBASIC, requested) {
       if(!lease.ok() || !lease.fresh()) return;
       memset(lease.data(), 0, lease.size());
       TinyBasicRuntime* runtime = (TinyBasicRuntime*) lease.data();
@@ -1965,8 +1976,8 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
   tb_reset_diagnostic(source);
 #if defined(MK61_LANGUAGE_VM_COMPILER) || defined(MK61_LANGUAGE_VM_TEST)
   if (!source) return tb_error("WHAT?");
-  const usize length = text_editor::bounded_length(source, TB_SOURCE_SIZE);
-  if (length >= TB_SOURCE_SIZE) return tb_error("SORRY");
+  const usize length = text_editor::bounded_length(source, MK61_PAGED_LANGUAGE_SOURCE ? language_vm::source::MAX_SIZE+1U : TB_SOURCE_SIZE);
+  if (length >= (MK61_PAGED_LANGUAGE_SOURCE ? language_vm::source::MAX_SIZE+1U : TB_SOURCE_SIZE)) return tb_error("SORRY");
   const auto result =
       language_vm::compile(language_vm::Language::BASIC, source, (u16)length, nullptr,
                            language_vm::MAX_IMAGE);
@@ -3168,6 +3179,15 @@ static TinyBasicRunStatus tb_run_program(
   auto& request = *language_vm::frontend_request;
   language_vm::ResourceSource resources = {
       programs[program_index].store_id, programs[program_index].source_revision, request.resources};
+#if MK61_PAGED_LANGUAGE_SOURCE
+  language_vm::source::File file={programs[program_index].store_id,programs[program_index].source_len,programs[program_index].source_revision};
+  language_vm::source::Reader input(file.input());
+  request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,request.output,(u16)request.capacity,true,&resources);
+  if(!request.output && request.compiled.error==language_vm::Error::FULL && request.resources==language_vm::ResourceMode::EMBEDDED) {
+    request.resources=resources.mode=language_vm::ResourceMode::SOURCE;request.capacity=language_vm::MAX_IMAGE;
+    request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,nullptr,language_vm::MAX_IMAGE,true,&resources);
+  }
+#else
   request.compiled = language_vm::compile(
       language_vm::Language::BASIC, programs[program_index].source,
       programs[program_index].source_len, request.output, (u16)request.capacity, true, &resources);
@@ -3179,6 +3199,7 @@ static TinyBasicRunStatus tb_run_program(
         programs[program_index].source, programs[program_index].source_len,
         nullptr, language_vm::MAX_IMAGE, true, &resources);
   }
+#endif
   request.source_id = programs[program_index].store_id;
   request.source_revision = programs[program_index].source_revision;
   request.language = (u8)language_vm::Language::BASIC;
@@ -3524,6 +3545,16 @@ static int load_tinybasic_program_from_store(const program_store::Entry& entry) 
      !tb_store_name_is_valid(entry.name)) return -1;
   const int slot = tb_alloc_program_slot(entry.name);
   TbProgram& program = programs[slot];
+  u16 len = entry.data_len;
+#if MK61_PAGED_LANGUAGE_SOURCE
+  if(len > language_vm::source::MAX_SIZE)return -1;
+  program.source_revision=portable_system::call(MK61_SYS_RESOURCE_READ);
+  program_store::Entry checked;
+  if(!program_store::entry_by_id(entry.id,checked) || checked.data_len!=entry.data_len ||
+     checked.type!=entry.type || checked.kind!=entry.kind ||
+     program.source_revision!=portable_system::call(MK61_SYS_RESOURCE_READ))return -1;
+  program.source[0]=0;
+#else
   u16 len = 0;
 #if defined(MK61_LANGUAGE_VM_COMPILER)
   program.source_revision = portable_system::call(MK61_SYS_RESOURCE_READ);
@@ -3534,6 +3565,7 @@ static int load_tinybasic_program_from_store(const program_store::Entry& entry) 
   if(program.source_revision != portable_system::call(MK61_SYS_RESOURCE_READ)) return -1;
 #endif
   program.source[len] = 0;
+#endif
   program.source_len = len;
   tb_copy_text(program.name, sizeof(program.name), entry.name);
   program.store_id = entry.id;
@@ -3687,11 +3719,11 @@ bool TinyBASIC_library_select(void) {
   return true;
 }
 
-static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
+[[maybe_unused]] static void draw_tinybasic_editor(const char* source, u16 len, u16 cursor, u16 view_top, bool sms_cursor = false) {
   text_editor::draw(main_lcd(), source, len, cursor, view_top, sms_cursor);
 }
 
-static bool tb_confirm_save(void) {
+[[maybe_unused]] static bool tb_confirm_save(void) {
   tb_message_i18n("Save TinyBASIC?", M8("Сохранить?"),
                   "OK=yes ESC=no", M8("OK=да ESC=нет"));
   while(true) {
@@ -3853,7 +3885,7 @@ static void tb_draw_name_editor(const char* name, u16 cursor, bool sms_cursor) {
   }
 }
 
-static bool store_edited_program(int slot, char* source, const char* store_name,
+[[maybe_unused]] static bool store_edited_program(int slot, char* source, const char* store_name,
                                  u16 target_parent = TB_ROOT_STORE_ID) {
   if(slot < 0 || slot > TB_PROGRAM_COUNT) return tb_error("SORRY");
   if(!tb_compile_source(source, tb_ast)) return false;
@@ -3915,6 +3947,17 @@ static bool store_edited_program(int slot, char* source, const char* store_name,
 
 static void EditTinyBasicSlot(int slot,
                               u16 new_parent = TB_ROOT_STORE_ID) {
+#if MK61_PAGED_LANGUAGE_SOURCE
+  if(slot<0 || slot>TB_PROGRAM_COUNT || !language_vm::compatible(language_vm::frontend_request))return;
+  auto& request=*language_vm::frontend_request;
+  const bool fresh=slot==TB_PROGRAM_COUNT;
+  request.edit_requested=1;
+  request.source_id=fresh?TB_INVALID_STORE_ID:programs[slot].store_id;
+  request.compiled.line=fresh?new_parent:programs[slot].parent_id;
+  request.compiled.source_offset=(tb_error_slot==slot?tb_location.offset:0);
+
+#else
+
   if(slot < 0 || slot > TB_PROGRAM_COUNT) return;
   const bool new_program = slot == TB_PROGRAM_COUNT;
   if(new_program) {
@@ -4052,6 +4095,8 @@ static void EditTinyBasicSlot(int slot,
       dirty = true;
     }
   }
+
+#endif
 }
 
 static void tb_edit_last_error() {
@@ -4121,6 +4166,26 @@ bool EditTinyBasicProgramAt(u16 id, u16 line_number, u16 column) {
     EditTinyBasicSlot(slot);
     return true;
   }
+#if MK61_PAGED_LANGUAGE_SOURCE
+  language_vm::source::File file={programs[slot].store_id,programs[slot].source_len,programs[slot].source_revision};
+  language_vm::source::Reader source(file.input());
+  for(unsigned at=0;at<source.size();) {
+    const unsigned end=at+source.line_end(at,source.size());
+    unsigned p=at,number=0;
+    while(p<end && (source.at(u16(p))==' ' || source.at(u16(p))=='\t'))++p;
+    while(p<end && source.at(u16(p))>='0' && source.at(u16(p))<='9') {
+      number=number*10+unsigned(source.at(u16(p++))-'0');
+      if(number>32767)break;
+    }
+    if(number==line_number) {
+      const unsigned offset=column?column-1U:0;
+      tb_location={line_number,column,u16(at+(offset<end-at?offset:end-at))};
+      tb_error_slot=i8(slot);tb_detail=language_vm::Error::SYNTAX;break;
+    }
+    at=end;
+    while(at<source.size() && (source.at(u16(at))=='\r'||source.at(u16(at))=='\n'))++at;
+  }
+#else
   const char* source = programs[slot].source;
   const char* p = source;
   while (*p) {
@@ -4138,6 +4203,7 @@ bool EditTinyBasicProgramAt(u16 id, u16 line_number, u16 column) {
     }
     while (*p == '\r' || *p == '\n') ++p;
   }
+#endif
   EditTinyBasicSlot(slot);
   return true;
 }

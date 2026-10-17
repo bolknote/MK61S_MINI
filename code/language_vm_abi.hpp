@@ -5,7 +5,7 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 10;
+static constexpr uint32_t REQUEST_VERSION = 11;
 static constexpr uint32_t COMPILER_MAGIC = 0x3E4D5643UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
@@ -20,7 +20,7 @@ struct Request {
   uint8_t language, mode, run_requested, clear_requested;
   ResourceMode resources;
   uint8_t retained_source;
-  uint8_t reserved[2];
+  uint8_t edit_requested, reserved;
   uint32_t source_revision;
 };
 struct ExecuteRequest {
@@ -128,7 +128,7 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
   if (m.magic != VALIDATED_MAGIC || m.size != r.image_size ||
       m.language != p.state->language || m.flags > 15 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
       m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.end || m.end > MAX_IMAGE || m.end > m.size ||
-      (uint16_t)(m.source_size - 1) >= (basic ? 3584 : 1536) ||
+      (uint16_t)(m.source_size - 1) >= source::MAX_SIZE ||
       m.lines > (basic ? 192 : 80) ||
       ((m.flags & 1) ? m.lines || m.source_size > (basic ? 64 : 111) : !m.lines))
     return false;
@@ -139,13 +139,10 @@ inline bool validated_view(const OverlayRequest& p, View& v) {
 inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,
                                        ExecutionState& s) {
   reset_execution_state(s); s.language = image.language; s.array_count = (uint16_t)r.array_count;
-  if(image.language == Language::BASIC) {
-    const uint16_t limit = (uint16_t)((3584 - image.source_size) / 2 + 1);
-    if(s.array_count > limit) s.array_count = limit;
-  }
+
 }
 // Cold module owns full decoding/CRC/branch checks. A valid START also resets
-// continuation and derives the original BASIC array quota; no UI here.
+// continuation; array storage is independent of source-file size. No UI here.
 uint32_t validate_execution(OverlayRequest*);
 // Requires a verified expression-only View. Such images cannot mutate
 // control frames or variables, so only the scalar cursor fields need
@@ -186,7 +183,7 @@ struct InputRequest {
 inline bool compatible(const Request* r) {
   return r && r->size == sizeof(*r) && r->version == REQUEST_VERSION &&
          r->capacity >= HEADER_SIZE && r->capacity <= MAX_MODULE &&
-         r->resources <= ResourceMode::EMBEDDED && r->retained_source <= 1 && !r->reserved[0] && !r->reserved[1];
+         r->resources <= ResourceMode::EMBEDDED && r->retained_source <= 1 && r->edit_requested <= 1 && !r->reserved;
 }
 // Bound by each compiler APP command, reset before returning to the resident.
 extern Request* frontend_request;

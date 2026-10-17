@@ -1,35 +1,65 @@
 #ifndef MK61_COMPACT_FOCAL_EDITOR_HPP
 #define MK61_COMPACT_FOCAL_EDITOR_HPP
 #include "focal_syntax.hpp"
+#include "focal_text.hpp"
 #include "language_bytecode.hpp"
 #include "text_editor.hpp"
 #include <stdio.h>
 namespace focal_editor {
 using namespace text_editor;
-inline bool operator_field(const char *s, u16 cursor) {
+struct Context {focal_text::InitialLine initial;bool field;bool macro_blocked=false;};
+template<class Text>
+inline bool operator_field(Text s, u16 cursor) {
   unsigned start = cursor;
-  while (start && s[start - 1] != '\n')
+  while (start && s[start-1]!='\n' && s[start-1]!='\r')
     --start;
-  const char *p = s + start;
-  const char *e = s + cursor;
+  Text p = s + start;
+  Text e = s + cursor;
   focal_next::Address a;
   if (focal_next::address(p, e, a))
     p = focal_next::skip(p, e);
   else
     p = s + start;
   while (p < e) {
-    const char *token = p;
+    Text token = p;
     if (focal_next::command(token, e) == focal_next::Command::COMMENT)
       return false;
-    const char *next = focal_next::delimiter(p, e, ';');
+    auto next = focal_next::delimiter(p, e, ';');
     if (next == e)
       break;
     p = next + 1;
   }
   return focal_next::skip(p, e) == e;
 }
+inline bool context_field(const char* source,u16 cursor,const focal_text::InitialLine& initial) {
+  const char* end=source+cursor;
+  if(!initial.fragment || memchr(source,'\n',cursor) || memchr(source,'\r',cursor))return operator_field(source,cursor);
+  bool statement=false;
+  const char* p=focal_text::resume(source,end,initial,&statement);
+  if(!statement)return false;
+  while(p<end) {
+    const char* token=p;
+    if(focal_next::command(token,end)==focal_next::Command::COMMENT)return false;
+    const char* next=focal_next::delimiter(p,end,';');if(next==end)break;
+    p=next+1;
+  }
+  return focal_next::skip(p,end)==end;
+}
+inline bool context_literal(const char* source,u16 cursor,const focal_text::InitialLine& initial) {
+  bool comment=initial.comment;
+  char quote=initial.quote;
+  for(unsigned i=0;i<cursor;++i) {
+    const char ch=source[i];
+    if(ch=='\n'||ch=='\r') {comment=false;quote=0;}
+    else if(!comment) {
+      if(quote) {if(ch==quote)quote=0;}
+      else if(ch=='\"'||ch=='\'')quote=ch;
+    }
+  }
+  return comment || quote;
+}
 inline const char *insert(Shift shift, i32 code, const char *source, u16 cursor,
-                          void *) {
+                          void *context) {
   const auto &k = keyboard_layout::active();
   // The shared punctuation map takes priority over K+operator shortcuts.
   if (shift == Shift::NONE && code == k.dot) {
@@ -48,7 +78,7 @@ inline const char *insert(Shift shift, i32 code, const char *source, u16 cursor,
       return punctuation;
   }
   if (shift == Shift::K ||
-      (shift == Shift::NONE && operator_field(source, cursor))) {
+      (shift == Shift::NONE && (context?((Context*)context)->field:operator_field(source, cursor)))) {
     if (code == k.dot)
       return "ASK ";
     if (code == k.neg)
@@ -77,47 +107,20 @@ inline const char *insert(Shift shift, i32 code, const char *source, u16 cursor,
 struct Token {
   u16 begin, end;
 };
-inline bool token_at(const char *s, u16 len, u16 pos, Token &token) {
-  const char *p = s;
-  const char *e = s + len;
-  while (p < e) {
-    const char *line_end = p;
-    while (line_end < e && *line_end != '\n')
-      ++line_end;
-    const char *b = p;
-    focal_next::Address a;
-    if (focal_next::address(b, line_end, a) && a.exact) {
-      while (b < line_end) {
-        b = focal_next::skip(b, line_end);
-        const char *word = b;
-        auto c = focal_next::command(b, line_end);
-        if (c == focal_next::Command::NONE)
-          break;
-        const char *token_end = b;
-        while (token_end < line_end && focal_next::space(*token_end))
-          ++token_end;
-        if (pos >= unsigned(word - s) && pos <= unsigned(token_end - s)) {
-          const char *tail = b;
-          while (tail < line_end && focal_next::space(*tail))
-            ++tail;
-          token = {u16(word - s), u16(tail - s)};
-          return true;
-        }
-        if (c == focal_next::Command::COMMENT)
-          break;
-        b = focal_next::delimiter(b, line_end, ';');
-        if (b < line_end)
-          ++b;
-      }
-    }
-    p = line_end + (line_end < e);
-  }
-  return false;
+inline bool token_at(const char *s,u16 len,u16 pos,Token& token,const Context* context=nullptr) {
+  bool found=false;
+  focal_text::visit(s,len,[&](focal_text::Token word){
+    unsigned end=word.end;
+    while(end<len && focal_next::space(s[end]) && s[end]!='\r' && s[end]!='\n')++end;
+    if(pos>=word.begin && pos<=end) {token={u16(word.begin),u16(end)};found=true;return false;}
+    return true;
+  },context?&context->initial:nullptr);
+  return found;
 }
 inline bool move(const char *source, u16 length, u16 &cursor, int delta,
-                 void *) {
+                 void *context) {
   Token token;
-  if (token_at(source, length, cursor, token)) {
+  if (token_at(source, length, cursor, token,(Context*)context)) {
     if (delta < 0 && cursor > token.begin && cursor <= token.end) {
       cursor = token.begin;
       return true;
@@ -131,9 +134,9 @@ inline bool move(const char *source, u16 length, u16 &cursor, int delta,
                    : move_cursor_right(source, length, cursor);
 }
 inline bool erase(char *source, u16 &length, u16 &cursor, u16 capacity,
-                  void *) {
+                  void *context) {
   Token token;
-  if (token_at(source, length, cursor, token) && cursor > token.begin &&
+  if (token_at(source, length, cursor, token,(Context*)context) && cursor > token.begin &&
       cursor <= token.end)
     return replace_range(source, length, cursor, capacity, token.begin,
                          token.end, "");
@@ -142,7 +145,8 @@ inline bool erase(char *source, u16 &length, u16 &cursor, u16 capacity,
 // A macro wraps the complete current expression item before the cursor.
 // Commas inside calls and the IF condition do not split that expression.
 inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
-                  void *) {
+                  void *context) {
+  if(context && ((Context*)context)->macro_blocked)return false;
   const auto &k = keyboard_layout::active();
   int digit = keyboard_layout::digit_from_key(k, code);
   const char *name = nullptr;
@@ -176,7 +180,7 @@ inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
     p = focal_next::skip(after_address, e);
   bool after_statement = false;
   while (p < e) {
-    const char *next = focal_next::delimiter(p, e, ';');
+    auto next = focal_next::delimiter(p, e, ';');
     if (next == e)
       break;
     p = next + 1;
@@ -261,7 +265,7 @@ inline bool macro(char *s, u16 &len, u16 &cursor, u16 capacity, i32 code,
   return replace_range(s, len, cursor, capacity, u16(atom), u16(end),
                        replacement);
 }
-inline KeyResult handle(Buffer &editor, const char *enter, i32 code, u32 now) {
+inline KeyResult handle(Buffer &editor, const char *enter, i32 code, u32 now,Context* context=nullptr) {
   const auto &k = keyboard_layout::active();
   if ((code == k.left) && editor.shift == Shift::ALPHA) {
     editor.shift = Shift::NONE;
@@ -270,10 +274,10 @@ inline KeyResult handle(Buffer &editor, const char *enter, i32 code, u32 now) {
   }
   // Insert missing separator after a manually typed line number before a word.
   if (editor.shift != Shift::ALPHA &&
-      operator_field(editor.source, editor.cursor) && editor.cursor &&
+      (context?context->field:operator_field(editor.source, editor.cursor)) && editor.cursor &&
       focal_next::digit(editor.source[editor.cursor - 1])) {
     const char *text =
-        insert(editor.shift, code, editor.source, editor.cursor, nullptr);
+        insert(editor.shift, code, editor.source, editor.cursor, context);
     if (text && focal_next::alpha(*text) &&
         !insert_text(editor.source, editor.len, editor.cursor, editor.capacity,
                      " "))
@@ -282,7 +286,7 @@ inline KeyResult handle(Buffer &editor, const char *enter, i32 code, u32 now) {
   const KeyMap keys = {k.left, k.left,  k.right, k.right,    k.ok,
                        k.ok,   k.esc,   k.esc,   k.shg_left, k.shg_right,
                        k.k,    k.alpha, k.pp};
-  const Hooks hooks = {insert, macro, move, erase, nullptr};
+  const Hooks hooks = {insert, macro, move, erase, context};
   const Options options = {enter, true, true, true, true, k.cx};
   return handle_key(editor, keys, hooks, options, code, now);
 }

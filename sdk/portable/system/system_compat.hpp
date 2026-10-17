@@ -219,13 +219,14 @@ AngleUnit read_grade_switch();
 
 namespace program_store {
 static constexpr usize NAME_SIZE = 32;
-static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_TINYBASIC_TEXT_SIZE = 3584,
+static constexpr u16 MAX_MK61_TEXT_SIZE = 1536, MAX_LANGUAGE_SOURCE_SIZE = 65534,
+    MAX_TINYBASIC_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE, MAX_FOCAL_TEXT_SIZE = MAX_LANGUAGE_SOURCE_SIZE,
                      MAX_FONT_SIZE = 8192, MAX_IMAGE1_SIZE = 1600,
                      MAX_CHIP8_SIZE = 3584,
                      MAX_MK61_BINARY_SIZE = 4096,
                      MAX_SHEET_SIZE = 2048,
                      MAX_APP_FILE_SIZE = 20U * 1024U + 64U;
-static constexpr u8 MAX_FAT_EXTENTS_PER_FILE = 40;
+static constexpr u16 MAX_FAT_EXTENTS_PER_FILE = 383;
 static constexpr u8 MAX_DIRECTORY_DEPTH = 32;
 static constexpr u16 ROOT_ID = 0xFFFF, INVALID_ID = 0xFFFF;
 enum class ProgramType : u8 { MK61 = 0, FOCAL = 2, TINYBASIC = 3, TEXT = 4,
@@ -312,7 +313,7 @@ bool write_file_from_source(u16 parent, u16 preferred, ProgramType type,
                             const char* name, u16 size,
                             const FileSource& source,
                             const u16* extents = nullptr,
-                            u8 extent_count = 0, u16* id = nullptr,
+                            u16 extent_count = 0, u16* id = nullptr,
                             u8* compression_buffer = nullptr,
                             usize compression_buffer_size = 0,
                             const u8* contiguous_data = nullptr);
@@ -326,7 +327,7 @@ u16 vfat_stage_count();
 void vfat_stage_forget(u32 start_block, u16 blocks);
 bool vfat_stage_discard_all();
 void vfat_stage_clear();
-bool vfat_stage_lock();
+bool vfat_stage_lock(bool exclusive = false);
 using VfatStageKeyFilter = bool (*)(void*, u32);
 bool vfat_stage_discard_unmatched(VfatStageKeyFilter include, void* context);
 bool vfat_stage_narrow_matching(VfatStageKeyFilter include, void* context,

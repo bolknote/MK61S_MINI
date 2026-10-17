@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "language_value.hpp"
+#include "language_source.hpp"
 
 // Experimental, relocatable bytecode. The compiler, VM and host probes share
 // this wire format; no native pointers or C++ layouts are serialized.
@@ -214,7 +215,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 12;
+static constexpr uint16_t VERSION = 13;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -328,6 +329,8 @@ struct ResourceSource {
   uint32_t revision;
   ResourceMode mode = ResourceMode::SOURCE;
 };
+CompileResult compile_source(Language, const source::Reader&, uint8_t*, uint16_t, bool = true,
+                             const ResourceSource* = nullptr);
 CompileResult compile_basic(const char*, uint16_t, uint8_t*, uint16_t, bool,
                             const ResourceSource* = nullptr);
 CompileResult compile_focal(const char*, uint16_t, uint8_t*, uint16_t, bool,

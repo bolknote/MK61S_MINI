@@ -30,7 +30,7 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_NUMBER_IO = 1U << 12,
   MK61_SERVICE_CAP_TEXT_FONT = 1U << 13,
   MK61_SERVICE_CAP_FLOAT_CONVERT = 1U << 14,
-  /* Private storage primitives used only by the canonical USBDISK.APP. */
+  /* Storage primitives for canonical USBDISK.APP and SRCEDIT.APP. */
   MK61_SERVICE_CAP_USBDISK = 1U << 15,
   /* Directory traversal and handoff policy used by EXPLORER.APP. */
   MK61_SERVICE_CAP_EXPLORER = 1U << 16,
@@ -109,7 +109,10 @@ enum mk61_service_operation {
 
 /* Immutable resource spans. Operation 0 returns the current media revision;
  * operation 1 reads exactly length bytes only while that revision matches.
- * A suspended APP can pass this data again after relocation. */
+ * A suspended APP can pass this data again after relocation.
+ * Operation 4 returns the catalog revision (staging writes do not change it).
+ * Operation 5 reads without materializing the whole file in the read cache;
+ * reserved=0 checks media revision, reserved=1 checks catalog revision. */
 typedef struct mk61_service_resource {
   uint32_t revision;
   uint16_t id, offset;

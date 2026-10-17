@@ -442,7 +442,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
            : !v.lines) ||
       v.lines > (v.language == Language::BASIC ? 192 : 80) ||
       v.code != HEADER_SIZE + v.lines * stride(v) || v.code >= v.end ||
-      !v.source_size || v.source_size > (v.language == Language::BASIC ? 3584 : 1536) ||
+      !v.source_size || v.source_size > source::MAX_SIZE ||
       checksum(bytes + HEADER_SIZE, length - HEADER_SIZE) != dword(bytes + 20))
     return Error::INVALID_IMAGE;
   uint8_t boundaries[(MAX_IMAGE + 7) / 8] = {};
@@ -459,10 +459,9 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     for (uint8_t i = 0; i < bytes[at + 2]; ++i) {
       const auto* p = bytes + at + 3 + i * 3;
       const uint16_t offset = word(p); const uint8_t n = p[2];
-      if (!n || ((offset & 0x8000) ? (offset & 0x7F00) || n != 1 :
-                       offset > v.source_size || n > v.source_size - offset))
+      if (n ? offset > v.source_size || n > v.source_size-offset : offset > 255)
         return Error::INVALID_IMAGE;
-      total += n;
+      total += n ? n : 1;
     }
     if (total != word(bytes + at)) return Error::INVALID_IMAGE;
     at += (uint16_t)(3 + bytes[at + 2] * 3);

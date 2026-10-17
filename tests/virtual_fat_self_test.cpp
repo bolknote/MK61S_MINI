@@ -212,9 +212,9 @@ static u16 fat12_value(u16 cluster) {
                              : (u16) (packed >> 4);
 }
 
-static void set_fat12_value(u8* fat, u16 cluster, u16 value) {
+static void set_fat12_value(u8* fat, u16 cluster, u16 value,usize capacity=512) {
   const u16 offset = (u16) (cluster + cluster / 2);
-  assert(offset + 1 < 512);
+  assert(offset + 1 < capacity);
   value &= 0x0FFF;
   if((cluster & 1) == 0) {
     fat[offset] = (u8) value;
@@ -1649,7 +1649,9 @@ static void test_optional_display_cache_span(void) {
 
 static void test_metadata_only_recovery_does_not_redecode_unchanged_text(void) {
   fresh();
-  static u8 source[program_store::MAX_TINYBASIC_TEXT_SIZE];
+  // Keep the existing I/O regression budget on its original 3.5-KiB fixture.
+  // Maximum-sized sources and long FAT chains have a separate streaming test.
+  static u8 source[3584];
   for(u16 index = 0; index < sizeof(source); index++) {
     source[index] = (u8) (index % 41U == 40U ? '\n' : 'A' + index % 7U);
   }
@@ -1677,7 +1679,7 @@ static void test_metadata_only_recovery_does_not_redecode_unchanged_text(void) {
   printf("C9 metadata-only recovery: %u reads, no text decode\n", SPIFlash::readOperations());
   assert(SPIFlash::readOperations() <= 1024U);
   assert(program_store::vfat_stage_count() == 0);
-  static u8 restored[program_store::MAX_TINYBASIC_TEXT_SIZE];
+  static u8 restored[sizeof(source)];
   u16 restored_size = 0;
   assert(program_store::read_id(id, restored, sizeof(restored),
                                 &restored_size));
@@ -1726,7 +1728,7 @@ static void test_streaming_utf8_export_and_size_invalidation(void) {
                     program_store::ProgramType::MK61}) {
     fresh();
     const u16 size = type == program_store::ProgramType::TINYBASIC
-        ? program_store::MAX_TINYBASIC_TEXT_SIZE : 1500;
+        ? 3584 : 1500;
     std::vector<u8> text(size, 'A');
     u16 id;
     assert(program_store::write_file(program_store::ROOT_ID, 80, type,
@@ -1810,7 +1812,7 @@ static void test_text_import_uses_sector_cache(void) {
       fresh(512U * 1024U);
       const Layout fs = layout();
       const u16 first_cluster = 120;
-      const u16 size = wide ? program_store::MAX_TINYBASIC_TEXT_SIZE : 1500;
+      const u16 size = wide ? 3584 : 1500;
       std::vector<u8> expected(size);
       std::vector<u8> encoded;
       bool crosses_sector = false;
@@ -2769,7 +2771,7 @@ static void run_app_import_across_fat_chain(u32 capacity,
   assert(fs.sectors_per_cluster == expected_cluster_sectors);
   const u16 first_cluster = 20;
   const u32 size = program_store::MAX_APP_FILE_SIZE;
-  const u8 cluster_count = (u8) (
+  const u16 cluster_count = (u16) (
       (size + (u32) fs.sectors_per_cluster * 512U - 1U) /
       ((u32) fs.sectors_per_cluster * 512U));
   assert(cluster_count == expected_cluster_count);
@@ -3886,6 +3888,47 @@ static void test_equivalent_native_view_close_power_cuts() {
 
 #include "fat12_namespace_cases.hpp"
 
+static void test_streamed_language_utf8_import() {
+  for(bool focal:{false,true}) {
+    fresh(512U*1024U);const Layout fs=layout();assert(fs.sectors_per_cluster==1);
+    const u16 length=program_store::MAX_LANGUAGE_SOURCE_SIZE,first=20;
+    const auto symbol=mk8::utf8(mk8::BYTE_LEFT_ARROW);assert(symbol.size==3);
+    std::vector<u8> encoded((usize)length*3U);
+    for(usize i=0;i<encoded.size();++i)encoded[i]=symbol.data[i%3];
+    const u16 count=(u16)((encoded.size()+511)/512);assert(count>255);
+    std::vector<u8> fat((usize)fs.fat_sectors*512);
+    for(u16 i=0;i<fs.fat_sectors;++i)assert(virtual_fat::read_sector(1+i,fat.data()+(usize)i*512));
+    for(u16 i=0;i<count;++i)set_fat12_value(fat.data(),u16(first+i),i+1U<count?u16(first+i+1):0xFFF,fat.size());
+    u8 root[512];assert(virtual_fat::read_sector(fs.root_start,root));
+    const u8 next=append_ascii_entry(root,(u8)first_free_slot(root),focal?"wide.foc":"wide.tbi",focal?"WIDE    FOC":"WIDE    TBI",false,first,(u32)encoded.size());
+    root[(u16)next*32]=0;
+    for(u32 at=0;at<encoded.size();at+=512) {
+      u8 page[512]={};memcpy(page,encoded.data()+at,std::min(size_t(512),encoded.size()-at));
+      assert(virtual_fat::write_sector(cluster_lba(fs,first)+at/512,page));
+    }
+    for(u16 i=0;i<fs.fat_sectors;++i)assert(virtual_fat::write_sector(1+i,fat.data()+(usize)i*512));
+    assert(virtual_fat::write_sector(fs.root_start,root));expect_flush();
+    const u16 id=owner_for_cluster(first);program_store::Entry entry={};
+    assert(program_store::entry_by_id(id,entry) && entry.data_len==length);
+    u32 visible=0;assert(program_store::exported_size_id(id,visible) && visible==encoded.size());
+    u16 clusters=0;assert(program_store::fat_chain_count(id,clusters) && clusters==count);
+    u8 page[256];u16 n=0;assert(program_store::read_source_range_id(id,65000,page,sizeof(page),&n) && n==sizeof(page));
+    for(auto byte:page)assert(byte==mk8::BYTE_LEFT_ARROW);
+    virtual_fat::end_session();program_store::init();assert(program_store::ready());
+    assert(program_store::exported_size_id(id,visible) && visible==encoded.size());
+    // A power loss in the editor leaves private pages, never published data.
+    // Ordinary USB recovery must retire those pages and keep the original.
+    memset(page,0x5A,sizeof(page));u8 abandoned[512];memset(abandoned,0x5A,sizeof(abandoned));
+    assert(program_store::vfat_stage_write(0x007FF000U,abandoned));
+    assert(program_store::vfat_stage_write(0x007FF080U,abandoned));
+    program_store::init();assert(program_store::ready());
+    assert(virtual_fat::reset_session() && program_store::vfat_stage_count()==0);
+    assert(program_store::read_source_range_id(id,65000,page,sizeof(page),&n) && n==sizeof(page));
+    for(auto byte:page)assert(byte==mk8::BYTE_LEFT_ARROW);
+  }
+  puts("BASIC/FOCAL USB sources: 64 KiB M8 / 192 KiB UTF-8, >255 clusters, import and remount PASS");
+}
+
 int main(void) {
   if(getenv("MK61_C9_EQUIVALENCE") != nullptr) { test_native_subdirectory_timestamp_close(); test_ignored_host_directory_with_native_view(); test_sidecar_scan_waits_for_stage_headroom(); test_equivalent_native_view_close_power_cuts(); return 0; }
   if(getenv("MK61_C9_TIMESTAMP_SYNC") != nullptr) { test_fresh_native_timestamp_close(); test_new_dirent_after_sync_invalidates_applied_view(); test_timestamp_sync_retries_io_failure(); test_timestamp_sync_keeps_committed_host_view(); return 0; }
@@ -3901,6 +3944,7 @@ int main(void) {
     benchmark_stage_index();
     return 0;
   }
+  test_streamed_language_utf8_import();
   test_pending_sidecar_roles_accept_reused_cluster();
   test_sidecar_metadata_writes_do_not_rescan_whole_tree();
   test_lfn_checksum_update_invalidates_sidecar_role();

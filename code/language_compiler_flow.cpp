@@ -1,5 +1,8 @@
 #include "language_compiler_flow.hpp"
 #include <string.h>
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+#include "loadable_system_api.h"
+#endif
 
 namespace language_vm {
 uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
@@ -50,6 +53,19 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
       for(auto& value : stage.values->variables[index]) value=Value(0);
       if(basic){for(auto& value:stage.values->array)value=Value(0);}
       else {for(auto& value:stage.values->focal_array)value=Value(0);}
+    }
+    if(request.edit_requested) {
+#if defined(MK61_BUILD_PORTABLE_SYSTEM)
+      mk61_system_file editor={};
+      if(portable_system::call(MK61_SYS_FILE_RESOLVE,0xFFFF,MK61_SERVICE_FILE_APP,
+          (uint32_t)(uintptr_t)"/System/SRCEDIT.APP",&editor)!=0) {
+        mk61_app_flow_exit(flow,0,MK61_FLOW_UNAVAILABLE);return 1;
+      }
+      mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_KIND_APPLICATION,(uint16_t)editor.id,FLOW_EDIT_SOURCE));
+      return 1;
+#else
+      mk61_app_flow_exit(flow,0,MK61_FLOW_UNAVAILABLE);return 1;
+#endif
     }
     if(!request.run_requested) {
       mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1;

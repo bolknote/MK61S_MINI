@@ -430,11 +430,7 @@ uint32_t execute(ExecuteRequest* request) {
   runtime.state.variables = request->variables;
   runtime.state.array = request->array;
   runtime.state.array_count = (uint16_t)request->array_count;
-  if (view.language == Language::BASIC && !view.expression) {
-    const uint16_t source_limit = (uint16_t)((3584 - view.source_size) / 2 + 1);
-    if (runtime.state.array_count > source_limit)
-      runtime.state.array_count = source_limit;
-  }
+
   runtime.state.stack = runtime.stack;
   runtime.state.stack_capacity = MAX_STACK;
   const bool shared_screen = view.language == Language::BASIC && request->mode == 1;

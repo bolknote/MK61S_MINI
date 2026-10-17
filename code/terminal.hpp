@@ -51,12 +51,12 @@ class class_terminal {
     static u8 input_buffer[MAX_INPUT_CHAR];
 
     static constexpr u16 FILE_UPLOAD_STAGE_BLOCKS =
-        (program_store::MAX_APP_FILE_SIZE +
+        (program_store::MAX_LANGUAGE_SOURCE_SIZE +
          program_store::VFAT_STAGE_BLOCK_SIZE - 1U) /
         program_store::VFAT_STAGE_BLOCK_SIZE;
     // Диапазон терминального C6-upload отделён от USB LBA.
     static constexpr u32 FILE_UPLOAD_STAGE_FIRST_KEY =
-        program_store::VFAT_STAGE_KEY_MAX - 127U;
+        program_store::VFAT_STAGE_KEY_MAX - 128U;
     static constexpr usize FILE_UPLOAD_WORKSPACE_SIZE =
         program_store::VFAT_STAGE_BLOCK_SIZE +
         (usize) FILE_UPLOAD_STAGE_BLOCKS * sizeof(u32);

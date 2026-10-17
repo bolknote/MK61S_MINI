@@ -75,7 +75,11 @@ $navigation = Join-Path $tempRoot 'navigation'
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/EMPTY.CH8'), [byte[]]::new(0))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'chip8-limits/HUGE.CH8'), [byte[]]::new(3585))
 [IO.File]::WriteAllText((Join-Path $local 'large.tbi'), ('x' * 1537), [Text.UTF8Encoding]::new($false))
-[IO.File]::WriteAllText((Join-Path $local 'huge.tbi'), ('x' * 3585), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'huge.tbi'), ('x' * 65535), [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText((Join-Path $local 'huge.foc'), ('x' * 65535), [Text.UTF8Encoding]::new($false))
+foreach ($extension in @('foc','tbi')) {
+    [IO.File]::WriteAllText((Join-Path $local "maximum.$extension"), ('x' * 65534), [Text.UTF8Encoding]::new($false))
+}
 [IO.File]::WriteAllText((Join-Path $tempRoot 'editor/local.txt'), "alpha`r`nbeta`r`n",
     [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllBytes((Join-Path $tempRoot 'editor/bom.txt'),
@@ -94,6 +98,12 @@ try {
     Assert-True ($markdown.ExitCode -eq 0 -and ($markdown.Output -join '') -eq 'supported') 'PowerShell classifier rejected .md'
     $systemApp = Invoke-MkcTool @('--classify', (Join-Path $local 'FOCAL.APP'))
     Assert-True ($systemApp.ExitCode -eq 0 -and ($systemApp.Output -join '') -eq 'supported') 'PowerShell classifier rejected FOCAL.APP'
+    foreach ($extension in @('foc','tbi')) {
+        $maximum = Invoke-MkcTool @('--classify', (Join-Path $local "maximum.$extension"))
+        Assert-True ($maximum.ExitCode -eq 0 -and ($maximum.Output -join '') -eq 'supported') 'PowerShell classifier rejected a maximum-sized language source'
+    }
+    $hugeFocal = Invoke-MkcTool @('--classify', (Join-Path $local 'huge.foc'))
+    Assert-True (($hugeFocal.Output -join '') -like 'unsupported: слишком большой:*') 'PowerShell classifier accepted oversized FOCAL'
     $systemBundle = Join-Path $tempRoot 'system-bundle'
     [void](New-Item -ItemType Directory -Path $systemBundle)
     [IO.File]::WriteAllBytes((Join-Path $systemBundle 'USBDISK.APP'), [byte[]]::new(64))
@@ -645,9 +655,9 @@ try {
     Assert-True (Save-Editor) 'PowerShell editor rejected expanded TinyBASIC source'
     Assert-True ((Get-Item (Join-Path $device 'edit.tbi')).Length -gt 1536) 'PowerShell editor truncated expanded TinyBASIC source'
     $script:EditorLines = [Collections.Generic.List[string]]::new()
-    $script:EditorLines.Add(('x' * 3585))
-    Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 3584 TinyBASIC bytes'
-    Assert-True ($script:EditorError -match 'максимум MK61s — 3584') 'PowerShell TinyBASIC editor size error is unclear'
+    $script:EditorLines.Add(('x' * 65535))
+    Assert-True (-not (Save-Editor)) 'PowerShell editor uploaded more than 65534 TinyBASIC bytes'
+    Assert-True ($script:EditorError -match 'максимум MK61s — 65534') 'PowerShell TinyBASIC editor size error is unclear'
     Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/control.txt') 'control.txt')) 'PowerShell editor accepted terminal control bytes'
     Assert-True (-not (Initialize-EditorFromFile (Join-Path $tempRoot 'editor/printable.bin') 'printable.bin')) 'PowerShell editor accepted a BIN with printable bytes'
     Assert-True ($script:EditorError -eq 'Двоичные файлы доступны только для просмотра') 'PowerShell BIN editor error differs'
@@ -693,16 +703,17 @@ try {
     [void](New-Item -ItemType Directory -Path $manualSystem)
     [IO.File]::WriteAllBytes((Join-Path $manualSystem 'BASIC.APP'), [byte[]]::new(64))
     [IO.File]::WriteAllBytes((Join-Path $manualSystem 'USBDISK.APP'), [byte[]]::new(64))
+    [IO.File]::WriteAllBytes((Join-Path $manualSystem 'SRCEDIT.APP'), [byte[]]::new(64))
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan $manualSystem '/System') 'complete System directory was rejected'
-    Assert-True ($script:CopyPlan.Count -eq 3 -and
+    Assert-True ($script:CopyPlan.Count -eq 4 -and
         $script:CopyPlan[1].Destination -eq '/System/USBDISK.APP') `
         'manual System copy does not install USBDISK.APP first'
     Remove-Item -LiteralPath (Join-Path $manualSystem 'USBDISK.APP')
     Reset-CopyPlan
     Assert-True (Add-LocalTreeToPlan $manualSystem '/System') `
         'resident-USB F411 System directory was rejected'
-    Assert-True ($script:CopyPlan.Count -eq 2 -and
+    Assert-True ($script:CopyPlan.Count -eq 3 -and
         $script:CopyPlan[1].Destination -eq '/System/BASIC.APP') `
         'resident-USB F411 System copy plan differs'
     Assert-True ([string]::IsNullOrEmpty($script:PlanError)) `

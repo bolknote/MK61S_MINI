@@ -512,6 +512,7 @@ class Machine:
                 return 1
         if op == 37:
             if a == 0: return self.resource_revision
+            if a == 4: return getattr(self,"catalog_revision",self.resource_revision)
             if a == 3:
                 if not p: return int(self.binary_stream_supported)
                 if not self.binary_stream_supported: return 0
@@ -530,7 +531,10 @@ class Machine:
                 return None
             revision, inode, offset, output, length, reserved = struct.unpack(
                 '<IHHIHH', self.uc.mem_read(p, 16))
-            if revision != self.resource_revision or reserved or inode not in self.files: return 0
+            current=getattr(self,"catalog_revision",self.resource_revision) if a==5 and reserved else self.resource_revision
+            if revision != current or (reserved and (a!=5 or reserved!=1)) or inode not in self.files: return 0
+            if a==5:
+                self.trace.append(("source_read",inode,offset,output,length))
             data = self.files[inode][2][offset:offset+length]
             if len(data) != length: return 0
             self.uc.mem_write(output, data); return 1

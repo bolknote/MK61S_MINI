@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
 from app_relocations import extract
 SYSTEM_MODULES = {
+    "source-editor": ("SRCEDIT", "SOURCE_EDITOR", ["language_source_editor_entry.cpp", "language_bytecode.cpp"], None),
     "vm-file-cache": ("VMSTORE", "VM_FILE_CACHE", ["language_vm_file_cache_entry.cpp",
         "language_vm_file_cache.cpp", "language_compiler_flow.cpp", "language_vm.cpp",
         "language_bytecode.cpp"], None),
@@ -50,7 +51,9 @@ SYSTEM_SIZE_BUDGETS = {
     "focal": {"app_bytes": 12_000, "memory_bytes": 17_000},
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.
-    "language-input": {"app_bytes": 12_000, "memory_bytes": 16_000},
+    # Shared expression parsing now includes the bounded source cursor.
+    "language-input": {"app_bytes": 12_800, "memory_bytes": 17_152},
+    "source-editor": {"app_bytes": 13_568, "memory_bytes": 18_176},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},
@@ -63,7 +66,8 @@ GREEDY_APP_SIZE_BUDGETS = {
     (False, "focal"): 13_500,
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
-    (False, "language-input"): 13_312,
+    (False, "language-input"): 14_144,
+    (False, "source-editor"): 14_848,
 }
 # Compiler FLOW_STEP owns source selection, translation and literal interning.
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
@@ -100,7 +104,7 @@ def enforce_system_size_budget(system: str | None, report: dict,
         # This is a regression ceiling, not an allocator partition. The loader
         # and strict whole-firmware RAM gate still cap every APP at 20 KiB.
         # BASIC graphics adds raster events, PRINT AT and a pure GRAPH loop.
-        budget = {"memory_bytes": 19_968 if local_float_math else 19_456}
+        budget = {"memory_bytes": 19_968 if local_float_math else 19_520}
     if budget is None:
         return
     budget = dict(budget)
@@ -187,14 +191,14 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "code/loadable_module_format.cpp", ROOT / "code/zx0.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
-    if args.system == "usbdisk":
+    if args.system in ("usbdisk", "source-editor"):
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
     sources += [ROOT / "sdk/portable/memory.c"]
     shared_system_runtime = args.system in (
-        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer", "vm-file-cache")
+        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer", "vm-file-cache", "source-editor")
     if shared_system_runtime:
         sources += [ROOT / "sdk/portable/system/runtime.S"]
-    if args.system in ("focal", "tinybasic", "language-vm", "language-input"):
+    if args.system in ("focal", "tinybasic", "language-vm", "language-input", "source-editor"):
         sources += [ROOT / "sdk/portable/system/editor.cpp"]
     if args.shared_runtime:
         sources += [ROOT / "sdk/portable/shared_runtime.c", ROOT / "sdk/portable/system/runtime.S"]
@@ -346,7 +350,7 @@ def build(args: argparse.Namespace) -> dict:
         run(["bash", ROOT / "tools/build_mk61_module_pack.sh", "--help"])
     greedy_packer = packer.resolve() == python_packer
     command = [packer]
-    command += ["--portable", "--kind", "app" if args.system == "vm-file-cache" else args.system or "app", "--image", image,
+    command += ["--portable", "--kind", "app" if args.system in ("vm-file-cache", "source-editor") else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
     offsets, table = extract(elf, base, image.stat().st_size, memory_size)
