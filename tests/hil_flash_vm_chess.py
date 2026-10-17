@@ -167,7 +167,9 @@ def main():
         original=original,current=target,device=asdict(identity),stages=[],restored=False,
         firmware_writes=0,profiling=False,limits_weakened=False,
         timing='USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes',
-        filesystem='Compiler may create derived LBV2 pages; all original bytes and directories restored',
+        filesystem=('Candidate and owned chess/derived-page fixtures retained; original snapshot saved'
+                    if ARGS.keep_installed else
+                    'Compiler may create derived LBV2 pages; restore original bytes and directories on exit'),
         apps={apps[a]:dict(bytes=len(b),sha256=hashlib.sha256(b).hexdigest()) for a,b in payloads.items()},
         package={n:dict(bytes=len(b),sha256=hashlib.sha256(b).hexdigest()) for n,b in game.items()})
     save(OUT/'report.json',report)
