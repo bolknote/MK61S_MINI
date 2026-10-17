@@ -252,6 +252,10 @@ const char *file_path(u16 id) {
          : id < node_count            ? nodes[id].path
                                       : nullptr;
 }
+bool normalize_path(const char* base,const char* name,char out[files::PATH_SIZE]) {
+  return base && name && normalize(base,name,out);
+}
+program_store::ProgramType file_type(const char* path) { return type_of(path); }
 bool register_file(const char *path, program_store::Entry &out) {
   char normalized[files::PATH_SIZE];
   return normalize("/", path, normalized) &&

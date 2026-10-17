@@ -54,6 +54,12 @@ bool exists(const char* path) {
     return f_stat(path, &info) == FR_OK;
 }
 u32 revision() { return generation; }
+bool space(u64& total,u64& free) {
+    if(!available()) return false;
+    DWORD clusters;FATFS* fs;
+    if(!fail(f_getfree("",&clusters,&fs))) return false;
+    total=(u64)(fs->n_fatent-2)*fs->csize*512;free=(u64)clusters*fs->csize*512;return true;
+}
 bool stat(const char* path, Entry& out) {
     if(!available()) return false;
     FILINFO info;

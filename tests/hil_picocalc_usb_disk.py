@@ -64,6 +64,7 @@ def main():
 
     try:
         tty.setraw(fd)
+        os.write(fd, b'\x1e')
         read_for(.2)
         status = query()
         if 'MK61S PICOCALC PICO-H' not in status or 'UI=CALCULATOR' not in status or 'SERVICE=CLOSED' not in status:

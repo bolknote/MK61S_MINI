@@ -209,8 +209,8 @@ def build(args: argparse.Namespace) -> dict:
     if len(set(sources)) != len(sources):
         raise ValueError("duplicate source")
     pico_target = getattr(args,"target","stm32") == "picocalc-pico-h"
-    if pico_target and (args.system or args.shared_runtime):
-        raise ValueError("PicoCalc builds use the resident system services; --system/--shared-runtime require STM32")
+    if pico_target and args.system:
+        raise ValueError("PicoCalc builds use resident system services; --system requires STM32")
     cpu_flags = (["-mcpu=cortex-m0plus","-mthumb","-mfloat-abi=soft"] if pico_target else
                  ["-mcpu=cortex-m4","-mthumb","-mfpu=fpv4-sp-d16","-mfloat-abi=hard"])
     rust_target = "thumbv6m-none-eabi" if pico_target else "thumbv7em-none-eabihf"

@@ -13,6 +13,9 @@
 #include "clock.hpp"
 #include "power.hpp"
 #include "usb_screen.hpp"
+#include "terminal.hpp"
+#include "terminal_command_ids.hpp"
+#include "version.hpp"
 #include "m61_text.hpp"
 #include "tusb.h"
 #include "hardware/clocks.h"
@@ -20,6 +23,7 @@
 #include "hardware/watchdog.h"
 #include "pico/bootrom.h"
 #include "pico/rand.h"
+#include "pico/unique_id.h"
 #include "pico/stdlib.h"
 #include <cstdio>
 #include <cstring>
@@ -32,6 +36,7 @@ picocalc::Panel panel;
 picocalc::Screen screen;
 picocalc::Ui ui;
 picocalc::Services services;
+picocalc::Terminal terminal(calculator,services,ui);
 picocalc::UsbScreen remote_screen;
 picocalc::SleepPolicy power;
 picocalc::SleepClocks sleep_clocks;
@@ -46,6 +51,7 @@ const char* settings_status = "DEFAULT";
 u64 save_at = 0, tone_until = 0, last_activity = 0;
 u64 last_usb_service = 0;
 u32 max_usb_gap = 0;
+unsigned math_failures = 0;
 constexpr u32 STACK_PATTERN = 0xD52AC37E;
 void mark_stack() {
     uintptr_t sp;
@@ -99,9 +105,10 @@ void save_settings() {
 
 void report(unsigned math_failures) {
     const auto model = calculator.snapshot();
-    std::printf("MK61S PICOCALC PICO-H 0.4.1 RP2040 %lu MHz\n",
-                (unsigned long)(clock_get_hz(clk_sys) / 1000000));
-    std::printf("CORE=shared MATH=compact-binary64/SDK-softfloat MATH_TEST=%s failures=%u\n",
+    std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
+                picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
+    std::printf("TERMINAL=%s\n",terminal.raw()?"RAW":"COMMAND");
+    std::printf("CORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=%s failures=%u\n",
                 math_failures ? "FAIL" : "OK", math_failures);
     std::printf("KBD=%s errors=%lu dropped=%lu X=[%s] IP=%02u RUN=%u BUSY=%u\n",
                 keyboard.online() ? "OK" : "WAIT", (unsigned long)keyboard.errors(),
@@ -182,7 +189,9 @@ bool service_pump(void*, u8& key) {
     int c = getchar_timeout_us(0);
     if(c!=PICO_ERROR_TIMEOUT) c=remote_screen.receive((u8)c,(u32)(now/1000));
     if(c<0) return false;
-    if(c == 5) { report(0); return false; }
+    if(c == 5) { report(math_failures); return false; }
+    c=terminal.receive((u8)c);
+    if(c<0) return false;
     if(c != PICO_ERROR_TIMEOUT) {
         const bool skip = c == '\n' && serial_cr;
         serial_cr = c == '\r';
@@ -217,14 +226,46 @@ int main() {
     picocalc::Settings settings;
     if(picocalc::load_device_settings(settings)) settings_status = "LOADED";
     ui.init(settings);
+    services.set_ui(ui);
     picocalc::clock::calibrate(settings.rtc_ppm);
     picocalc::clock::restore_alarms(settings.alarm_epoch,settings.alarm_flags);
     services.set_pump(service_pump, nullptr);
+    terminal.init({nullptr,
+        [](void*,const char* text,unsigned n) { std::printf("%.*s",(int)n,text); },
+        [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(); },
+        [](void*,u8 id,const char* args) {
+            if(id==CMD_IDENTITY) {
+                char uid[2*PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1];pico_get_unique_board_id_string(uid,sizeof(uid));
+                std::printf("MK61S PicoCalc %s CPU=RP2040 UID=%s FLASH=2097152\n",picocalc::VERSION,uid);return true;
+            }
+            if(id==CMD_USB_SCREEN) {
+                if(*args && std::strcmp(args,"on") && std::strcmp(args,"off")) return false;
+                remote_screen.enable(std::strcmp(args,"off")!=0);ui.calculator_page();return true;
+            }
+            if(id==CMD_DFU || id==CMD_RESET) {
+                if(id==CMD_DFU && !std::strcmp(args,"status")) { std::puts("BOOTLOADER=RP2040 ROM UF2");return true; }
+                if((id==CMD_DFU && *args) || (id==CMD_RESET && std::strcmp(args,"now")) || services.running() || picocalc::files::usb_active()) return false;
+                save_settings();stdio_flush();
+                if(id==CMD_DFU) reset_usb_boot(0,0);else watchdog_reboot(0,0,10);
+                for(;;) tight_loop_contents();
+            }
+            if(id==CMD_DISPLAY) {
+                if(!std::strcmp(args,"reinit")) { panel_ready=false;return true; }
+                if(!std::strcmp(args,"on")) { wake(time_us_64());return true; }
+                if(!std::strcmp(args,"off") && !services.active() && !m61_text::active() && calculator.idle() && !core_61::is_RUN()) { power.sleep();return true; }
+                if(!*args || !std::strcmp(args,"status")) { report(math_failures);return true; }
+                return false;
+            }
+            if(id==CMD_VFAT_LOG) { report(math_failures);return !*args; }
+            if(id==CMD_DISASM) { if(*args) return false;ui.program_view();return true; }
+            return false;
+        }});
     picocalc::script::attach(calculator, services);
+    picocalc::script::text_profile({settings.text_rows,settings.text_width,settings.text_height,settings.text_gap});
     picocalc::script::memory_mode(settings.memory);
     calculator.set_memory_mode(settings.memory);
     core_61::configure_random_seed(settings.random != 0, get_rand_64());
-    unsigned math_failures = picocalc::math_self_test();
+    math_failures = picocalc::math_self_test();
     report(math_failures);
     (void)picocalc::files::mount();
     u64 next_frame = 0;
@@ -235,6 +276,7 @@ int main() {
     u32 settings_revision = ui.settings_revision();
     u8 applied_memory = settings.memory, applied_random = settings.random;
     u8 applied_lcd = 0, applied_keys = 255;
+    picocalc::Settings applied_profile=settings;
     char previous_indicator[INDICATOR_STRING_LENGTH] = {};
     bool drawn_usb = false, drawn_ejected = false;
     u64 drawn_activity = 0;
@@ -261,22 +303,32 @@ int main() {
             next_frame = 0;
             std::puts("PICOCALC PANEL INITIALIZED KBD=OK");
         }
-        // Bounded input service: an attached terminal cannot starve the core.
-        for(unsigned i = 0; i < 8; ++i) {
+        // Raw keys keep the original short burst. A shell line must not need
+        // thirty full emulator cycles before it can acknowledge a file chunk.
+        // Both modes have a fixed bound and yield to the core every loop.
+        const unsigned input_budget=terminal.raw()?8U:terminal_core::INPUT_CAPACITY;
+        for(unsigned i = 0; i < input_budget; ++i) {
             int c = sleep_clocks.usb_available() ? getchar_timeout_us(0) : PICO_ERROR_TIMEOUT;
             if(c == PICO_ERROR_TIMEOUT) break;
             c=remote_screen.receive((u8)c,millis());
             if(c<0) continue;
-            if(c == 5 || (!services.active() && (c == '?' || c == 'm'))) {
+            if(c == 5 || (terminal.raw() && !services.active() && (c == '?' || c == 'm'))) {
                 if(c == 'm') math_failures = picocalc::math_self_test();
                 report(math_failures);
-            } else if(c == '!' && !services.active()) {
+            } else if(c == '!' && terminal.raw() && !services.active()) {
                 std::puts("Entering RP2040 USB BOOTSEL");
                 stdio_flush();
                 reset_usb_boot(0, 0);
-            } else if(c != '\n' || !serial_cr) { picocalc::controls::pulse((u8)c,millis());input((u8)c, false); }
+            } else {
+                const int key=terminal.receive((u8)c);
+                if(key>=0 && (key!='\n' || !serial_cr)) { picocalc::controls::pulse((u8)key,millis());input((u8)key,false); }
+                else if(c<0x1D || c>0x1F) { power.activity(time_us_64());if(power.asleep()) wake(time_us_64()); }
+            }
             serial_cr = c == '\r';
+            if(c>=0x1D && c<=0x1F) break;
+            if(terminal.pending()) break;
         }
+        terminal.tick();
         const u64 now = time_us_64();
         if(power.asleep()!=sleep_applied && panel_ready && !keyboard.transaction_pending()) {
             sleep_applied=power.asleep();
@@ -303,6 +355,11 @@ int main() {
             picocalc::clock::calibrate(ui.settings().rtc_ppm);
         }
         const auto& current = ui.settings();
+        if(current.text_rows!=applied_profile.text_rows || current.text_width!=applied_profile.text_width ||
+            current.text_height!=applied_profile.text_height || current.text_gap!=applied_profile.text_gap) {
+            picocalc::script::text_profile({current.text_rows,current.text_width,current.text_height,current.text_gap});
+            applied_profile=current;
+        }
         if(applied_memory != current.memory) {
             m61_text::cancel();
             calculator.set_memory_mode(current.memory);

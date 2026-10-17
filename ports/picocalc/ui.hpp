@@ -19,6 +19,10 @@ public:
     u8 selected() const { return selected_[(unsigned)page_]; }
     unsigned count() const;
     const Settings& settings() const { return settings_; }
+    bool apply_settings(const Settings& value) {
+        if(!valid_settings(value)) return false;
+        settings_ = value; ++settings_revision_; return true;
+    }
     u32 settings_revision() const { return settings_revision_; }
     const char* title() const;
     void row(unsigned index, char out[64]) const;
@@ -26,6 +30,7 @@ public:
     const char* page_name() const;
     Action take_action();
     void calculator_page() { page_ = Page::CALCULATOR; }
+    void program_view() { page_=Page::CALCULATOR;view_=view_==View::PROGRAM?View::STACK:View::PROGRAM;offset_=0; }
     void sync_alarms();
 private:
     const char* text(const char* en, const char* ru) const { return settings_.russian ? ru : en; }

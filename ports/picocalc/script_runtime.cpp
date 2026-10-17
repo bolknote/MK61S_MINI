@@ -1,6 +1,7 @@
 #include "builtin_font.hpp"
 #include "cross_hal.h"
 #include "fmk_font.hpp"
+#include "prepared_font.hpp"
 #include "m61_ansi.hpp"
 #include "m61_platform.hpp"
 #include "m61_print.hpp"
@@ -16,6 +17,7 @@
 #include "terminal_mnemonics.hpp"
 #include "terminal_script.hpp"
 #include "terminal_script_backend.hpp"
+#include "version.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -40,8 +42,14 @@ text_screen::Grid grid;
 u8 raster[1536]{};
 m61_ansi::SavedCursor saved_cursor{};
 fmk::Face face;
+prepared_font::Face prepared;
+bool open_face(const u8* data,unsigned size) { face.reset();prepared.reset();return face.open(data,size) || prepared.open(data,size); }
 u8 *font_data = nullptr;
-bool font_session = false;
+unsigned font_size = 0;
+text_screen::FontGeometry profile{8,5,8,0};
+struct SavedFont { u8* data; unsigned size; text_screen::FontGeometry profile; };
+SavedFont saved_fonts[4]{};
+unsigned font_depth = 0;
 constexpr char classic_isa[] =
 #include "terminal_classic_isa.inc"
     ;
@@ -54,10 +62,10 @@ Effect sound[16]{}, light[16]{};
 u8 sound_count = 0, sound_index = 0, light_count = 0, light_index = 0;
 u32 sound_at = 0, light_at = 0;
 unsigned cell_width() {
-  return face.valid() ? face.metrics().default_advance : 6;
+  return prepared.valid()?prepared.metrics().default_advance:face.valid() ? face.metrics().default_advance : profile.width + 1;
 }
 unsigned cell_height() {
-  return face.valid() ? face.metrics().height + face.metrics().line_gap : 8;
+  return prepared.valid()?prepared.metrics().height+prepared.metrics().line_gap:face.valid() ? face.metrics().height + face.metrics().line_gap : profile.height + profile.line_gap;
 }
 void pixel(unsigned x, unsigned y, bool on) {
   if (x >= 192 || y >= 64)
@@ -78,18 +86,23 @@ void paint(u8 x, u8 y, u16 cp) {
   u8 byte = 0;
   fmk::Glyph glyph{};
   u8 bitmap[fmk::MAX_BITMAP_SIZE]{};
-  if (face.valid() && mk8::from_codepoint(cp, byte) &&
-      face.glyph(byte, glyph) && face.decode(glyph, bitmap, sizeof(bitmap))) {
+  prepared_font::Glyph pg{};
+  const bool has_byte=mk8::from_codepoint(cp,byte);
+  const bool has_prepared=prepared.valid() && has_byte && prepared.glyph(byte,pg) && prepared.decode(pg,bitmap,sizeof(bitmap));
+  if(has_prepared) { glyph.width=pg.width;glyph.height=pg.height; }
+  if (has_prepared || (face.valid() && has_byte &&
+      face.glyph(byte, glyph) && face.decode(glyph, bitmap, sizeof(bitmap)))) {
     for (unsigned gy = 0; gy < glyph.height; ++gy)
       for (unsigned gx = 0; gx < glyph.width; ++gx)
         if (fmk::bitmapPixel(bitmap, glyph.width, gx, gy))
           pixel(left + gx, top + gy, true);
   } else {
-    u8 rows[8];
-    if (builtin_font::copyRows5x8(cp, rows))
-      for (unsigned gy = 0; gy < 8; ++gy)
-        for (unsigned gx = 0; gx < 5; ++gx)
-          if (rows[gy] & (1U << (4 - gx)))
+    builtin_font::Raster glyph{};
+    if (builtin_font::decode(profile.width <= 3 && profile.height <= 5
+            ? builtin_font::FaceId::FONT_3X5 : builtin_font::FaceId::FONT_5X8, cp, glyph))
+      for (unsigned gy = 0; gy < profile.height; ++gy)
+        for (unsigned gx = 0; gx < profile.width; ++gx)
+          if (fmk::bitmapPixel(glyph.data,glyph.width,gx*glyph.width/profile.width,gy*glyph.height/profile.height))
             pixel(left + gx, top + gy, true);
   }
 }
@@ -110,6 +123,7 @@ void reshape() {
     columns = text_screen::MAX_COLS;
   if (rows > text_screen::MAX_ROWS)
     rows = text_screen::MAX_ROWS;
+  if(!face.valid() && !prepared.valid() && rows>profile.rows) rows=profile.rows;
   grid.reshape((u8)(rows ? rows : 1), (u8)(columns ? columns : 1));
   std::memset(raster, 0, sizeof(raster));
   for (u8 y = 0; y < grid.rows(); ++y)
@@ -361,6 +375,34 @@ void write_text(unsigned column,unsigned row,const char* text,unsigned length) {
   for(unsigned i=0;i<length && column+i<grid.cols() && row<grid.rows();++i)
     put((u8)(column+i),(u8)row,mk8::codepoint((u8)text[i]),nullptr);
 }
+void write_codepoint(unsigned column,unsigned row,u16 cp) {
+  if(column<grid.cols() && row<grid.rows()) put((u8)column,(u8)row,cp,nullptr);
+}
+int flow_text(const char* text,unsigned length,unsigned first,unsigned maximum,bool tail,bool empty) {
+  if(!text || length>65535 || first>=grid.rows() || !maximum || !mk8::text_valid((const u8*)text,length)) return 0;
+  if(maximum>grid.rows()-first) maximum=grid.rows()-first;
+  const auto next=[&](unsigned at,unsigned& end) {
+    end=at;unsigned space=at;
+    while(end<length && text[end]!='\n' && end-at<grid.cols()) { if(text[end]==' ' || text[end]=='\t') space=end;++end; }
+    if(end<length && text[end]=='\n') return end+1;
+    if(end<length && space>at) { end=space;return space+1; }
+    return end;
+  };
+  unsigned total=0;
+  for(unsigned at=0;at<length;) { unsigned end;at=next(at,end);++total; }
+  if(!length && empty) total=1;
+  const unsigned skip=tail && total>maximum?total-maximum:0;unsigned row=0,index=0;
+  for(unsigned at=0;at<length;) {
+    unsigned end;const unsigned after=next(at,end);
+    if(index++>=skip && row<maximum) {
+      for(unsigned x=0;x<grid.cols();++x) put((u8)x,(u8)(first+row),x<end-at?mk8::codepoint((u8)text[at+x]):' ',nullptr);
+      ++row;
+    }
+    at=after;
+  }
+  if(!length && empty) { for(unsigned x=0;x<grid.cols();++x) put((u8)x,(u8)first,' ',nullptr);row=1; }
+  return (int)row;
+}
 void show_lines(const char *lines, unsigned stride, unsigned count,
                 unsigned cursor_x, unsigned cursor_y) {
   clear(nullptr);
@@ -453,7 +495,24 @@ bool font_rows(u16 cp, u8 rows[8]) {
   return face.valid() && mk8::from_codepoint(cp, byte) &&
          face.glyph(byte, glyph) && fmk::scaleToLcd5x8(face, glyph, rows);
 }
-bool font_active() { return face.valid(); }
+bool font_active() { return face.valid() || prepared.valid(); }
+text_screen::FontGeometry text_profile() {
+  if(prepared.valid()) return {(u8)grid.rows(),prepared.metrics().max_width,prepared.metrics().height,prepared.metrics().line_gap};
+  return face.valid() ? text_screen::FontGeometry{(u8)grid.rows(),face.metrics().default_advance,
+      face.metrics().height,face.metrics().line_gap} : profile;
+}
+bool text_profile(text_screen::FontGeometry value) {
+  if(!value.rows || value.rows>10 || value.width<3 || value.width>10 || value.height<5 ||
+      value.height>16 || value.line_gap>4 || value.rows*(value.height+value.line_gap)>64) return false;
+  profile=value;face.reset();prepared.reset();std::free(font_data);font_data=nullptr;font_size=0;reshape();return true;
+}
+bool activate_font() { reshape();return true; }
+bool install_prepared(const u8* data,unsigned size) {
+  prepared_font::Face candidate;if(!data || size>prepared_font::MAX_IMAGE_SIZE || !candidate.open(data,size)) return false;
+  auto* copy=(u8*)std::malloc(size);if(!copy) return false;std::memcpy(copy,data,size);
+  face.reset();prepared.reset();std::free(font_data);font_data=copy;font_size=size;
+  prepared.open(copy,size);reshape();return true;
+}
 unsigned columns() { return grid.cols(); }
 unsigned rows() { return grid.rows(); }
 } // namespace script
@@ -501,20 +560,34 @@ bool load_binary_program(u16 directory, const char *args) {
   return program_load::load(entry.id, request.address, program_limit());
 }
 i32 program_store_text_font_begin() {
-  picocalc::script::font_session = true;
+  using namespace picocalc::script;
+  if(font_depth==4) return -3;
+  u8* copy=nullptr;
+  if(font_data) { copy=(u8*)std::malloc(font_size);if(!copy) return -3;std::memcpy(copy,font_data,font_size); }
+  saved_fonts[font_depth++]={font_data,font_size,profile};
+  font_data=copy;if(copy) open_face(copy,font_size);
   return 1;
 }
 i32 program_store_text_font_restore() {
   using namespace picocalc::script;
-  face.reset();
-  std::free(font_data);
-  font_data = nullptr;
+  u8* copy=nullptr;unsigned size=0;
+  if(font_depth) {
+    const auto& saved=saved_fonts[font_depth-1];size=saved.size;
+    if(saved.data) { copy=(u8*)std::malloc(size);if(!copy) return -3;std::memcpy(copy,saved.data,size); }
+    profile=saved.profile;
+  }
+  face.reset();prepared.reset();std::free(font_data);font_data=copy;font_size=size;
+  if(copy) open_face(copy,size);
   reshape();
   return 1;
 }
 i32 program_store_text_font_end() {
-  program_store_text_font_restore();
-  picocalc::script::font_session = false;
+  using namespace picocalc::script;
+  if(!font_depth) return program_store_text_font_restore();
+  const auto saved=saved_fonts[--font_depth];saved_fonts[font_depth]={};
+  face.reset();prepared.reset();std::free(font_data);font_data=saved.data;font_size=saved.size;profile=saved.profile;
+  if(font_data) open_face(font_data,font_size);
+  reshape();
   return 1;
 }
 i32 program_store_text_font_load_from(const char *name, u16 directory) {
@@ -537,7 +610,8 @@ i32 program_store_text_font_load_from(const char *name, u16 directory) {
   }
   u8 *old = font_data;
   font_data = bytes;
-  face = candidate;
+  font_size = used;
+  face = candidate;prepared.reset();
   std::free(old);
   reshape();
   return 1;
@@ -578,7 +652,7 @@ terminal_protocol::Result command(u8 id, const char *line, bool) {
   if (id == CMD_LED || id == CMD_BEEP)
     return pattern(args, id == CMD_BEEP) ? Result::ok() : Result::error();
   if (id == CMD_VERSION) {
-    output("MK61S PicoCalc 0.4 / shared M61 runner\n");
+    output("MK61S PicoCalc ");output(picocalc::VERSION);output(" / shared M61 runner\n");
     return Result::ok();
   }
   if (id == CMD_STACK || id == CMD_REG_DUMP) {

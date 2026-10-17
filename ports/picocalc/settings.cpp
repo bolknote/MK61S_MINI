@@ -29,13 +29,16 @@ bool valid_settings(const Settings &s) {
           s.sleep_minutes == 5 || s.sleep_minutes == 15 ||
           s.sleep_minutes == 30) &&
          s.rtc_ppm >= -500 && s.rtc_ppm <= 500 && s.alarm_flags < 16 &&
-         s.alarm_epoch[0] < 3155760000UL && s.alarm_epoch[1] < 3155760000UL;
+         s.alarm_epoch[0] < 3155760000UL && s.alarm_epoch[1] < 3155760000UL &&
+         s.text_rows>=1 && s.text_rows<=10 && s.text_width>=3 && s.text_width<=10 &&
+         s.text_height>=5 && s.text_height<=16 && s.text_gap<=4 &&
+         s.text_rows*(s.text_height+s.text_gap)<=64;
 }
 void encode_settings(const Settings &s, u32 sequence,
                      u8 out[SETTINGS_PAGE_BYTES]) {
   std::memset(out, 0xFF, SETTINGS_PAGE_BYTES);
   std::memcpy(out, "M61P", 4);
-  out[4] = 3;
+  out[4] = 4;
   put32(out + 8, sequence);
   const u8 values[] = {s.volume,          s.idle_signal,  s.classic_speed,
                        s.memory,          s.random,       s.russian,
@@ -48,10 +51,11 @@ void encode_settings(const Settings &s, u32 sequence,
   out[25] = s.alarm_flags;
   put32(out + 26, s.alarm_epoch[0]);
   put32(out + 30, s.alarm_epoch[1]);
+  out[34]=s.text_rows;out[35]=s.text_width;out[36]=s.text_height;out[37]=s.text_gap;
   put32(out + 64, checksum(out, 64));
 }
 bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
-  if (std::memcmp(page, "M61P", 4) || page[4] < 1 || page[4] > 3)
+  if (std::memcmp(page, "M61P", 4) || page[4] < 1 || page[4] > 4)
     return false;
   const unsigned crc_offset = page[4] >= 3 ? 64 : 32;
   if (get32(page + crc_offset) != checksum(page, crc_offset))
@@ -67,6 +71,7 @@ bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
     next.alarm_epoch[0] = get32(page + 26);
     next.alarm_epoch[1] = get32(page + 30);
   }
+  if(page[4]>=4) { next.text_rows=page[34];next.text_width=page[35];next.text_height=page[36];next.text_gap=page[37]; }
   if (!valid_settings(next))
     return false;
   value = next;

@@ -71,6 +71,7 @@ def main():
 
     try:
         tty.setraw(fd)
+        os.write(fd, b'\x1e')
         settings = termios.tcgetattr(fd)
         settings[4] = settings[5] = termios.B115200
         settings[2] |= termios.CLOCAL | termios.CREAD

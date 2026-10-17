@@ -11,6 +11,9 @@
 #define SAMPLES 1024U
 #define SIGN UINT64_C(0x8000000000000000)
 #define INF UINT64_C(0x7ff0000000000000)
+#ifndef MK61_MATH_VECTOR_ROOT
+#define MK61_MATH_VECTOR_ROOT ""
+#endif
 
 typedef union { double number; uint64_t bits; } binary64;
 typedef struct { uint32_t operation, reserved; uint64_t a,b,expected; } vector;
@@ -27,13 +30,16 @@ int main(void) {
   const mk61_app_services* s=mk61_app_get_services(mk61_api,MK61_SERVICE_CAP_FILES|MK61_SERVICE_CAP_MATH);
   if (!s || !s->math || !mk61_api->file_read) return MK61_APP_RUNTIME_ERROR;
   report.magic=UINT32_C(0x54414d51);report.version=1;report.samples=SAMPLES;report.rounds=ROUNDS;
-  uint32_t total=0;
+  uint32_t total=0,parent=MK61_SERVICE_ROOT_ID;
   for (uint32_t part=0;!total || report.cases<total;++part) {
     if (part>=32) return MK61_APP_INVALID_FILE;
-    char name[]="/MATH00.bin";name[5]=(char)('0'+part/10);name[6]=(char)('0'+part%10);
+    char name[]=MK61_MATH_VECTOR_ROOT "/MATH00.bin";
+    name[sizeof(MK61_MATH_VECTOR_ROOT)+4]=(char)('0'+part/10);
+    name[sizeof(MK61_MATH_VECTOR_ROOT)+5]=(char)('0'+part%10);
     mk61_service_file file={0};
     if (s->call(MK61_SERVICE_FILE_RESOLVE,MK61_SERVICE_ROOT_ID,MK61_SERVICE_FILE_MK61_BINARY,
                 (uint32_t)(uintptr_t)name,&file)!=0) return MK61_APP_IO_ERROR;
+    parent=file.parent;
     uint32_t header[4];
     if (mk61_api->file_read(file.id,0,(uint8_t*)header,sizeof(header))!=sizeof(header) ||
         header[0]!=UINT32_C(0x5641544d) || !header[1] || header[1]>127 ||
@@ -81,6 +87,6 @@ int main(void) {
     }
   }
   mk61_service_write out={"MATHOUT",(const uint8_t*)&report,sizeof(report),MK61_SERVICE_INVALID_ID};
-  return s->call(MK61_SERVICE_FILE_WRITE,MK61_SERVICE_ROOT_ID,MK61_SERVICE_INVALID_ID,
+  return s->call(MK61_SERVICE_FILE_WRITE,parent,MK61_SERVICE_INVALID_ID,
                  MK61_SERVICE_FILE_MK61_BINARY,&out)?MK61_APP_OK:MK61_APP_IO_ERROR;
 }

@@ -48,7 +48,7 @@ def main():
     cases = [];cycles = []
     with ClockPico(args.port) as p:
         p.log_output = args.output
-        initial = p.expect('PICO-H 0.4.1', 'SERVICE=CLOSED', 'USB_DISK=0')
+        initial = p.expect('PICO-H 0.5.0', 'SERVICE=CLOSED', 'USB_DISK=0')
         if 'SLEEP=1' in initial: p.step(b' ', 'SLEEP=0')
         if 'UI=CALCULATOR' not in p.status(): p.step(b'\t', 'UI=CALCULATOR')
         p.step(b'\x0842', 'X_RAW=[ 4.2000000  01]')

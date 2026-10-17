@@ -31,6 +31,7 @@ bool rename(const char* from, const char* to);
 bool exists(const char* path);
 bool stat(const char* path, Entry& out);
 u32 revision();
+bool space(u64& total,u64& free);
 bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned& used);
 bool begin_usb();
 bool end_usb();

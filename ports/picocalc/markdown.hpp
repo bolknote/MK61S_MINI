@@ -1,0 +1,29 @@
+#ifndef MK61_PICOCALC_MARKDOWN_HPP
+#define MK61_PICOCALC_MARKDOWN_HPP
+#include "markdown_document.hpp"
+#include "storage.hpp"
+namespace picocalc {
+class MarkdownView {
+public:
+  static constexpr unsigned COLS = 38, ROWS = 14;
+  bool open(const char *path);
+  void row(unsigned index, char out[COLS + 1]) const;
+  bool selected(unsigned row, unsigned column) const;
+  void scroll(int direction);
+  void select(int direction);
+  bool target(char out[files::PATH_SIZE]) const;
+  const char *path() const { return path_; }
+  u16 top = 0, selection = 0xFFFF;
+  u16 links() const { return link_count_; }
+
+private:
+  u16 next(u16 at) const;
+  u16 row_start(unsigned row) const;
+  char path_[files::PATH_SIZE]{};
+  u8 compiled_[markdown::MAX_COMPILED_SIZE]{};
+  char plain_[markdown::MAX_COMPILED_SIZE + 1]{};
+  markdown::PlainLink links_[markdown::MAX_PLAIN_LINKS]{};
+  u16 compiled_size_ = 0, length_ = 0, link_count_ = 0;
+};
+} // namespace picocalc
+#endif

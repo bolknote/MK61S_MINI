@@ -1,6 +1,7 @@
 #include "services.hpp"
 #include "script.hpp"
 #include "m61_text.hpp"
+#include "markdown.hpp"
 #include "text_editor.hpp"
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
@@ -48,6 +49,14 @@ void Services::message(const char* value, ServicePage parent) {
     std::snprintf(status_, sizeof(status_), "%s", value);
     message_parent_ = parent; page_ = ServicePage::MESSAGE;
 }
+bool Services::leave_for_script() {
+    if(dirty_ || running_ || files::usb_active() || m61_text::active()) return false;
+    page_ = ServicePage::CLOSED;
+    viewing_ = image_viewing_ = waiting_ = pending_run_ = false;
+    runtime_graphics_ = graph_visible_ = false;
+    graph_.reset();
+    return true;
+}
 void Services::open(Action action, bool russian, Calculator& calculator) {
     calculator_ = &calculator; russian_ = russian; selection_ = 0;
     script::attach(calculator, *this);
@@ -83,7 +92,8 @@ void Services::new_document(Document kind) {
     length_ = cursor_ = top_ = horizontal_ = 0; dirty_ = false;
     page_ = ServicePage::EDITOR; status_[0] = 0;
 }
-bool Services::load_document(const char* path) {
+bool Services::load_document(const char* path,bool edit) {
+    if(!edit && extension(path,".md")) { (void)view_markdown(path);return false; }
     if(extension(path,".sheet")) { (void)run_handled(path,program_store::TYPE_MAGIC_SHEET);return false; }
     if(extension(path, ".app")) {
         (void)run_native(path);
@@ -285,7 +295,7 @@ bool Services::input(u8 code) {
         if(cancel) { page_ = ServicePage::BROWSER; selection_ = 0; refresh(); }
         else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, 4, code == 0xB5 ? -1 : 1);
         else if(accept) {
-            if(selection_ < 2) { return_ = ServicePage::BROWSER; if(load_document(selected_file_) && selection_ == 1) pending_run_ = true; }
+            if(selection_ < 2) { return_ = ServicePage::BROWSER; if(load_document(selected_file_,selection_==0) && selection_ == 1) pending_run_ = true; }
             else if(selection_ == 2) prompt(Prompt::RENAME, ServicePage::BROWSER, std::strrchr(selected_file_, '/') + 1);
             else { confirm_ = Confirm::DELETE_FILE; confirm_parent_ = page_; page_ = ServicePage::CONFIRM; }
         }
@@ -350,6 +360,7 @@ void Services::heading(char out[64]) const {
     } else std::snprintf(out, 64, "%s", title());
 }
 const char* Services::footer() const {
+    if(markdown_) return tr("Up/Down: scroll  Left/Right: links  Enter", M8("Up/Down: текст  Left/Right: ссылки"));
     if(viewing_) return tr("Up/Down: scroll  Enter/Esc: close", M8("Up/Down: текст  Enter/Esc: назад"));
     if(page_ == ServicePage::EDITOR) return tr("F1: Save as  F2: Save  F3: Run  Esc", M8("F1: имя  F2: запись  F3: пуск  Esc"));
     if(page_ == ServicePage::BROWSER) return tr("F1: actions F2: new F4: dir F5: MK61", M8("F1: файл F2: новый F4: папка F5: MK61"));
@@ -359,6 +370,7 @@ const char* Services::footer() const {
 }
 void Services::row(unsigned index, char out[COLS + 1]) const {
     out[0] = 0;
+    if(markdown_) { markdown_->row(index,out);return; }
     if(page_ == ServicePage::EDITOR) {
         u16 at = top_;
         for(unsigned i = 0; i < index && at < length_; ++i) at = text_editor::next_line_start(source_, at, length_);

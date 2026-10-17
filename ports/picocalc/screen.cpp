@@ -17,11 +17,12 @@ void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) c
         std::memcpy(out,m61_text::display_owned()?script::frame():face_,1536);return;
     }
     std::memset(out,0,1536);
-    auto text=[&](unsigned row,const char* s,bool inverse) {
+    auto text=[&](unsigned row,const char* s,bool inverse,unsigned source_row=Services::ROWS) {
         for(unsigned x=0;x<32;++x) {
             u8 glyph[8]{};if(*s) builtin_font::copyRows5x8(mk8::codepoint((u8)*s++),glyph);
+            const bool selected=inverse || (source_row<Services::ROWS && services.selected_text(source_row,x));
             for(unsigned y=0;y<8;++y) for(unsigned dx=0;dx<6;++dx)
-                if((dx<5 && (glyph[y]&(1U<<(4-dx))))!=inverse) out[row*192+x*6+dx]|=(u8)(1U<<y);
+                if((dx<5 && (glyph[y]&(1U<<(4-dx))))!=selected) out[row*192+x*6+dx]|=(u8)(1U<<y);
         }
     };
     char line[65]{};
@@ -32,7 +33,7 @@ void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) c
     if(services.active() && services.fixed_text()) first=services.first_console_row(7);
     for(unsigned row=0;row<7;++row) {
         if(services.active()) services.row(first+row,line);else ui.row(first+row,line);
-        text(row+1,line,!(services.active() && services.fixed_text()) && first+row==selected);
+        text(row+1,line,!(services.active() && services.fixed_text()) && first+row==selected,first+row);
     }
 }
 void Screen::set_pixel(unsigned x, unsigned y) {
@@ -143,7 +144,8 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
                 u8 glyph[8];
                 if(builtin_font::copyRows5x8(mk8::codepoint((u8)value[column]), glyph))
                     for(unsigned y = 0; y < 16; ++y) for(unsigned x = 0; x < 7; ++x)
-                    if(glyph[y / 2] & (1U << (4 - x * 5 / 7))) set_pixel(8 + column * 8 + x, top + row * 17 + y);
+                    if(((glyph[y / 2] & (1U << (4 - x * 5 / 7)))!=0) != services->selected_text(first+row,column))
+                        set_pixel(8 + column * 8 + x, top + row * 17 + y);
             }
         }
         if(services->editor_cursor()) {
@@ -173,7 +175,7 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
         char label[64];
         ui->row(index, label);
         if((ui->page() == Page::INFO || ui->page() == Page::HARDWARE) && row < 6) {
-            const char* info[] = {"MK61S / PicoCalc 0.3", "Pico H / RP2040 / 125 MHz", "ST7365P / RGB565 / 320x320",
+            const char* info[] = {"MK61S / PicoCalc 0.5.0", "Pico H / RP2040 / 125 MHz", "ST7365P / RGB565 / 320x320",
                 "Shared MK61 core + compact math", "Pico SDK / soft float", "Micro-USB: CDC + SD disk + UF2"};
             std::snprintf(label, sizeof(label), "%s", info[row]);
         }

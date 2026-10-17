@@ -82,6 +82,7 @@ def main():
 
     try:
         tty.setraw(fd)
+        os.write(fd, b'\x1e')
         status = query()
         for required in ('MK61S PICOCALC PICO-H 0.', 'SERVICE=CLOSED',
                          'UI=CALCULATOR', 'USB_DISK=0', 'SD=OK', 'RUN=0'):

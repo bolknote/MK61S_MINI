@@ -5,8 +5,10 @@
 #include "language_bytecode.hpp"
 #include "basic_graphics.hpp"
 #include "text_screen.hpp"
+#include "app_flow.h"
 
 namespace picocalc {
+class MarkdownView;
 enum class ServicePage : u8 { CLOSED, DEVELOPMENT, LANGUAGE, BROWSER, FILE_ACTIONS,
     EDITOR, CONSOLE, PROMPT, CONFIRM, MESSAGE, USB_DISK };
 enum class Document : u8 { BASIC, FOCAL, MK61, TEXT };
@@ -19,6 +21,7 @@ public:
     using Pump = bool (*)(void*, u8&);
     Services();
     void set_pump(Pump callback, void* context) { pump_ = callback; pump_context_ = context; }
+    void set_ui(Ui& ui) { ui_ = &ui; }
     bool active() const { return page_ != ServicePage::CLOSED; }
     void open(Action action, bool russian, Calculator& calculator);
     bool input(u8 code);
@@ -26,7 +29,7 @@ public:
     const char* title() const;
     void heading(char out[64]) const;
     bool fixed_text() const { return page_ == ServicePage::EDITOR || page_ == ServicePage::CONSOLE || page_ == ServicePage::PROMPT; }
-    unsigned first_console_row(unsigned visible) const { return console_row_ >= visible ? console_row_ + 1 - visible : 0; }
+    unsigned first_console_row(unsigned visible) const { return !markdown_ && console_row_ >= visible ? console_row_ + 1 - visible : 0; }
     const char* footer() const;
     const char* page_name() const;
     void row(unsigned index, char out[COLS + 1]) const;
@@ -41,15 +44,19 @@ public:
     bool running() const { return running_; }
     unsigned source_size() const { return length_; }
     bool dirty() const { return dirty_; }
+    bool leave_for_script();
     const char* path() const { return path_; }
     const char* status() const { return status_; }
     language_vm::Error last_error() const { return last_error_; }
     // Device/host integration tests use the same public document operations.
-    bool load_document(const char* path);
+    bool load_document(const char* path,bool edit=false);
     bool save_document(const char* path);
+    bool save_program(const char* path,Calculator& calculator) { calculator_=&calculator;return export_program(path); }
     void new_document(Document kind);
     u8 run_external(const char* path);
     u8 view_image(const char* path);
+    u8 view_markdown(const char* path);
+    bool selected_text(unsigned row,unsigned column) const;
     u8 run_chip8(const char* path);
     u8 run_native(const char* path, u16 file = 0xFFFF);
     u8 run_handled(const char* path, u16 magic);
@@ -85,6 +92,7 @@ private:
     bool flush_print(bool newline);
     double math(language_vm::Function, double, double);
     bool export_program(const char* path);
+    u8 run_native_step(const char* path,u16 file,mk61_app_flow* flow);
     static bool graph_capture(void*, u8*, size_t, u8, u8);
 
     ServicePage page_ = ServicePage::CLOSED, return_ = ServicePage::DEVELOPMENT;
@@ -95,6 +103,8 @@ private:
     Prompt prompt_ = Prompt::SAVE;
     Confirm confirm_ = Confirm::DISCARD;
     Calculator* calculator_ = nullptr;
+    Ui* ui_ = nullptr;
+    MarkdownView* markdown_ = nullptr;
     bool russian_ = true, dirty_ = false, more_ = false, pending_run_ = false;
     bool browser_load_program_ = false;
     bool running_ = false, stopped_ = false, waiting_ = false, graph_visible_ = false;

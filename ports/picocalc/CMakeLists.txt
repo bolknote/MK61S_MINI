@@ -22,9 +22,9 @@ endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 add_executable(mk61s-picocalc-pico-h
-    main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp
+    main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
-    script_files.cpp script_runtime.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp usb_screen.cpp
+    script_files.cpp script_runtime.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
     "${MK61_ROOT}/code/mk61emu_core.cpp"
@@ -34,11 +34,12 @@ add_executable(mk61s-picocalc-pico-h
     "${MK61_ROOT}/code/text_screen.cpp"
     "${MK61_ROOT}/code/builtin_font.cpp"
     "${MK61_ROOT}/code/ui_font.cpp"
-    "${MK61_ROOT}/code/fmk_font.cpp")
+    "${MK61_ROOT}/code/fmk_font.cpp" "${MK61_ROOT}/code/prepared_font.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/language_bytecode.cpp"
     "${MK61_ROOT}/code/language_vm.cpp"
     "${MK61_ROOT}/code/basic_graphics.cpp")
+target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/basic_native_io.cpp" "${MK61_ROOT}/code/app_flow.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/m61_text.cpp" "${MK61_ROOT}/code/m61_print.cpp"
     "${MK61_ROOT}/code/m61_ansi.cpp" "${MK61_ROOT}/code/terminal_script_runtime.cpp"
@@ -53,6 +54,7 @@ target_include_directories(mk61s-picocalc-pico-h PRIVATE
 target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_CORE_STANDALONE=1
     MK61_ENABLE_RTC_ALARM_TERMINAL=1
+    MK61_ENABLE_USB_SCREEN=1
     MK61_M61_READ_CACHE_BYTES=1024
     MK61_USE_COMPACT_LIBM=1 MK61_MATH_BACKEND=0 MK61_USE_NATIVE_EABI=0
     PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=0
@@ -74,10 +76,12 @@ target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     hardware_flash pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
 pico_enable_stdio_uart(mk61s-picocalc-pico-h 1)
 pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
-pico_set_float_implementation(mk61s-picocalc-pico-h pico)
-pico_set_double_implementation(mk61s-picocalc-pico-h pico)
+# SDK/bootrom arithmetic does not promise full IEEE subnormal semantics.
+# The shared math kernels and native APP ABI require gradual underflow.
+pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
+pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.4.1")
+pico_set_program_version(mk61s-picocalc-pico-h "0.5.0")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.

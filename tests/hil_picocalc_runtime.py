@@ -25,6 +25,7 @@ def disk(*args):
 class Pico(ScreenPort):
     def __init__(self,path):
         super().__init__(path,keyboard_layout=0)
+        self.raw(b'\x1e')
     def close(self):
         if hasattr(self,'log_output') and hasattr(self,'text'):
             (self.log_output/'transcript.txt').write_bytes(self.text)
@@ -73,7 +74,7 @@ def main():
         cases.append(text);print('PASS '+text,flush=True)
     with Pico(args.port) as p:
         p.log_output=out
-        initial=p.expect('PICO-H 0.4.','SERVICE=CLOSED','USB_DISK=0','RUN=0')
+        initial=p.expect('PICO-H 0.5.','SERVICE=CLOSED','USB_DISK=0','RUN=0')
         if 'SLEEP=1' in initial: p.step(b' ','SLEEP=0')
         if not args.directory:
             before=set(disk('list','-plist','external','physical')['WholeDisks'])

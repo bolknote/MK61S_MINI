@@ -10,6 +10,8 @@
 #include "m61_text.hpp"
 #include "cross_hal.h"
 #include "markdown_document.hpp"
+#include "markdown.hpp"
+#include <memory>
 #include "wbmp.hpp"
 #include "language_resources.hpp"
 #include <cstdio>
@@ -23,6 +25,10 @@ namespace { picocalc::Services* graphics_owner = nullptr; }
 namespace basic_graphics {
 Result dispatch(Request& request) {
     return graphics_owner ? graphics_owner->graph_request(request) : Result::UNAVAILABLE;
+}
+u8 native_text_rows() { return (u8)picocalc::script::rows(); }
+int native_text_flow(const char* text,u16 length,u8 first,u8 maximum) {
+    return picocalc::script::flow_text(text,length,first,maximum,true,true);
 }
 }
 namespace picocalc {
@@ -68,7 +74,9 @@ Services::Services() : graph_({this,
     graphics_owner = this;
 }
 basic_graphics::Result Services::graph_request(basic_graphics::Request& request) {
-    return graph_.apply(request);
+    const auto result=graph_.apply(request);
+    if(runtime_[0]=='A' && graph_.active()) { script::show_frame(graph_.frame());runtime_graphics_=false; }
+    return result;
 }
 bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 count) {
     if(bytes != 1536) return false;
@@ -372,18 +380,12 @@ u8 Services::run_external(const char* path) {
         char ext[8]{};unsigned i=0;
         for(;suffix[i] && i<7;++i) ext[i]=(char)(suffix[i]>='A' && suffix[i]<='Z'?suffix[i]+32:suffix[i]);
         if(!std::strcmp(ext,".app")) return run_native(path);
+        if(!std::strcmp(ext,".md")) return view_markdown(path);
         if(!std::strcmp(ext,".sheet")) return run_handled(path,program_store::TYPE_MAGIC_SHEET);
         if(!std::strcmp(ext,".ch8") || !std::strcmp(ext,".c8")) return run_chip8(path);
     }
     if(!load_document(path)) return 2;
     if(document_ == Document::TEXT) {
-        const char* suffix=std::strrchr(path,'.');
-        if(suffix && (suffix[1]=='m' || suffix[1]=='M') && (suffix[2]=='d' || suffix[2]=='D') && suffix[3]==0 && length_<=markdown::MAX_SOURCE_SIZE) {
-            auto* compiled=(u8*)std::malloc(markdown::MAX_COMPILED_SIZE);u16 used=0,plain=0;
-            const bool ok=compiled && markdown::compile((const u8*)source_,length_,compiled,markdown::MAX_COMPILED_SIZE,used)==markdown::Status::OK &&
-                markdown::to_plain_text(compiled,used,source_,SOURCE_CAPACITY,plain)==markdown::Status::OK;
-            std::free(compiled);if(!ok) return 2;length_=plain;
-        }
         viewing_ = waiting_ = true;
         if(!pump_) { viewing_ = waiting_ = false; page_ = ServicePage::CLOSED; return 2; }
         for(;;) {
@@ -414,6 +416,43 @@ u8 Services::run_external(const char* path) {
     page_ = ServicePage::CLOSED; return result;
 }
 unsigned Services::columns() const { return external_run_ || m61_text::active() || script::font_active()?script::columns():COLS; }
+bool Services::selected_text(unsigned row,unsigned column) const {
+    return markdown_ && markdown_->selected(row,column);
+}
+u8 Services::view_markdown(const char* path) {
+    if(markdown_ || !pump_) return 2;
+    std::unique_ptr<MarkdownView> document(new(std::nothrow) MarkdownView);
+    if(!document || !document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
+    struct History { char path[files::PATH_SIZE];u16 top,selection; } history[8]{};
+    unsigned depth=0;
+    const ServicePage parent=m61_text::active()?ServicePage::CLOSED:ServicePage::BROWSER;
+    markdown_=document.get();viewing_=waiting_=true;page_=ServicePage::EDITOR;
+    for(;;) {
+        std::snprintf(path_,sizeof(path_),"%s",document->path());
+        u8 key=0;if(!pump_(pump_context_,key)) continue;
+        if(key==0x1B || key==0xB1) {
+            if(!depth) break;
+            const auto& previous=history[--depth];
+            if(!document->open(previous.path)) { depth=0;break; }
+            document->top=previous.top;document->selection=previous.selection;
+        } else if(key==0xB5 || key==0xB6) document->scroll(key==0xB5?-1:1);
+        else if(key==0xB4 || key==0xB7 || key=='\t') document->select(key==0xB4?-1:1);
+        else if(key=='\r' || key=='\n') {
+            if(!document->links()) break;
+            if(document->selection==0xFFFF) { document->select(1);continue; }
+            char target[files::PATH_SIZE];
+            if(depth==8 || !document->target(target)) { std::snprintf(status_,sizeof(status_),"Link unavailable");continue; }
+            std::unique_ptr<MarkdownView> next(new(std::nothrow) MarkdownView);
+            if(!next || !next->open(target)) continue;
+            auto& saved=history[depth++];std::snprintf(saved.path,sizeof(saved.path),"%s",document->path());
+            saved.top=document->top;saved.selection=document->selection;
+            document=std::move(next);markdown_=document.get();status_[0]=0;
+        }
+    }
+    markdown_=nullptr;viewing_=waiting_=false;page_=parent;
+    if(parent==ServicePage::BROWSER) refresh();
+    return 0;
+}
 unsigned Services::rows() const { return external_run_ || m61_text::active() || script::font_active()?script::rows():ROWS; }
 bool Services::custom_console() const { return page_==ServicePage::CONSOLE && script::font_active() && !graph_visible_; }
 const u8* Services::graphics() const {

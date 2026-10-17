@@ -107,7 +107,8 @@ def size_limit_checks(args, work):
             result = subprocess.run([str(x) for x in oversized], env=environment,
                                     capture_output=True, text=True)
             assert result.returncode != 0, (ci, image_size, memory_size)
-            assert '20 KiB APP image limit' in result.stdout + result.stderr
+            message=result.stdout + result.stderr
+            assert '20 KiB APP image limit' in message or 'target APP image limit' in message, message
         # Incompressible payload fits loaded memory, but its ZX0 container
         # exceeds the independent 20544-byte file limit (header included).
         image.write_bytes(random.Random(0).randbytes(20480))

@@ -24,7 +24,7 @@ unsigned Ui::count() const {
   case Page::SETTINGS:
     return 11;
   case Page::FONTS:
-    return 2;
+    return 3;
   case Page::SYSTEM:
     return 8;
   case Page::CLOCK:
@@ -288,11 +288,18 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
   if (page_ == Page::FONTS) {
     if (selected() == 0)
       settings_.calculator_font ^= 1;
-    else
+    else if(selected()==1)
       settings_.ui_font_size =
           settings_.ui_font_size == (direction > 0 ? 16 : 12)
               ? (direction > 0 ? 12 : 16)
               : (u8)(settings_.ui_font_size + direction * 2);
+    else {
+      const unsigned current=settings_.text_width==3?1:settings_.text_width==10?2:0;
+      const unsigned next=(current+(direction<0?2:1))%3;
+      settings_.text_rows=next==1?10:next==2?4:8;
+      settings_.text_width=next==1?3:next==2?10:5;
+      settings_.text_height=next==1?5:next==2?16:8;settings_.text_gap=0;
+    }
   } else
     switch (selected()) {
     case 0:
@@ -414,9 +421,10 @@ void Ui::row(unsigned index, char out[64]) const {
     if (index == 0)
       std::snprintf(out, 64, "%s: %s", text("Calculator", M8("Калькулятор")),
                     settings_.calculator_font ? "Classic 10x16" : "MK61");
-    else
+    else if(index==1)
       std::snprintf(out, 64, "%s: Ark Pixel %u",
                     text("Interface", M8("Интерфейс")), settings_.ui_font_size);
+    else if(index==2) std::snprintf(out,64,"%s: %ux%u / %u",text("Text",M8("Текст")),settings_.text_width,settings_.text_height,settings_.text_rows);
   } else if (page_ == Page::SYSTEM) {
     static const char *en[] = {"Restart",     "Information", "Hardware",
                                "Format disk", "Full reset",  "USB Screen",

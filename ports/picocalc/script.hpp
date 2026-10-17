@@ -16,6 +16,8 @@ bool register_source(const char *path, const char *source, u16 length,
 void reset_files();
 bool register_file(const char *path, program_store::Entry &out);
 const char *file_path(u16 id);
+bool normalize_path(const char* base,const char* name,char out[384]);
+program_store::ProgramType file_type(const char* path);
 bool press_scan(u8 code);
 bool write_program(u16 address, const u8 *bytes, u16 count);
 u16 program_limit();
@@ -37,6 +39,12 @@ bool font_rows(u16 codepoint, u8 rows[8]);
 bool font_active();
 unsigned columns();
 unsigned rows();
+text_screen::FontGeometry text_profile();
+bool text_profile(text_screen::FontGeometry profile);
+bool activate_font();
+bool install_prepared(const u8* data,unsigned size);
+void write_codepoint(unsigned column,unsigned row,u16 codepoint);
+int flow_text(const char* text,unsigned length,unsigned first,unsigned maximum,bool tail=false,bool empty=false);
 } // namespace script
 } // namespace picocalc
 #endif

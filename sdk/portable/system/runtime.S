@@ -12,10 +12,20 @@
 .type \name, %function
 .thumb_func
 \name:
+#if defined(__ARM_ARCH_6M__)
+  push {r4}
+  ldr r4, =MK61_RUNTIME_POINTER
+  ldr r4, [r4]
+  ldr r4, [r4, #runtime_slot]
+  mov r12, r4
+  pop {r4}
+  bx r12
+#else
   ldr \scratch, =MK61_RUNTIME_POINTER
   ldr \scratch, [\scratch]
   ldr \scratch, [\scratch, #runtime_slot]
   bx \scratch
+#endif
 .ltorg
 .size \name, .-\name
 .set runtime_slot, runtime_slot + 4

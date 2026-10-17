@@ -43,20 +43,36 @@ COMMAND("mv", CMD_FS_MOVE, "mv <откуда> <куда>")
 COMMAND("rm", CMD_FS_REMOVE, "rm [-r] <путь> — удалить файл или дерево")
 COMMAND("del", CMD_FS_REMOVE, "то же, что rm")
 COMMAND("rmdir", CMD_FS_RMDIR, "rmdir <путь> — удалить пустой каталог")
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("df", CMD_FS_STAT, "ёмкость и свободное место microSD")
+#else
 COMMAND("df", CMD_FS_STAT, "ёмкость C6 и число узлов")
+#endif
 #if MK61_ENABLE_READ_BENCHMARKS
 COMMAND("bench", CMD_BENCHMARK, "тест чтения C6 без записи")
 #endif
 COMMAND("fsget", CMD_FS_GET, "fsget <путь> — машинное чтение файла")
 COMMAND("fsput", CMD_FS_PUT, "fsput begin|data|end|cancel — загрузка файла")
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("format", CMD_FORMAT_STORAGE, "format SD — форматировать microSD (Y/y)")
+#else
 COMMAND("format", CMD_FORMAT_STORAGE, "format C6 — форматировать (Y/y)")
+#endif
 COMMAND("clr", CMD_CLEAR, "очистить память программ (Y/y)")
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("vlog", CMD_VFAT_LOG, "диагностика USB-диска и microSD")
+#else
 COMMAND("vlog", CMD_VFAT_LOG, "диагностика импорта USB [clear]")
+#endif
 COMMAND("usbdisk", CMD_USB_DISK, "запустить режим USB-диска до безопасного извлечения")
 COMMAND("fsls", CMD_FS_LIST, "ls [путь] — показать каталог")
 COMMAND("fsrm", CMD_FS_REMOVE, "rm [-r] <путь> — удалить файл или дерево")
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("fsstat", CMD_FS_STAT, "ёмкость и свободное место microSD")
+#else
 COMMAND("fsstat", CMD_FS_STAT, "ёмкость C6 и число узлов")
 COMMAND("fsclean", CMD_FS_CLEAN, "удалить все пустые записи хранилища")
+#endif
 COMMAND("disa", CMD_DISASM, "включить или выключить дизассемблер")
 #if MK61_ENABLE_USB_SCREEN
 COMMAND("uscreen", CMD_USB_SCREEN, "запустить режим USB-экрана")
@@ -97,6 +113,14 @@ COMMAND("mpu", CMD_MPU, "mpu [status|test <guard|null|exec>] — защита п
 COMMAND("mpu", CMD_MPU, "mpu [status] — защита памяти")
   #endif
 #endif
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("display", CMD_DISPLAY, "display status|reinit|on|off — экран и сон")
+#else
 COMMAND("display", CMD_DISPLAY, "display status|reinit|on|off|test <режим>: text/alphabet/symbols/map/ddram/row/cgram/zero/clear/home/cursor/entry/autoshift/sleep/graphics/graphics-read/restore — экран")
+#endif
 COMMAND("rst", CMD_RESET, "rst [now] — перезапуск; без now просит подтверждение")
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("dfu", CMD_DFU, "dfu [status] — войти в ROM UF2 или показать состояние")
+#else
 COMMAND("dfu", CMD_DFU, "dfu [status] — войти в ROM DFU или показать состояние")
+#endif
