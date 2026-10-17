@@ -1,0 +1,301 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-17T18:45:41.372029+00:00",
+  "uid": "E6657CD423721C35",
+  "uf2_sha256": "5f686b078cf44d72c8fb5b0c795f663f83b63492fb4e540edcd0e80652c95174",
+  "directory": "/MK61S-PicoCalc-0.5",
+  "files": {
+    "HELLO.APP": "8b61163fd74e6585c9a610bd42fdcda89f9577f9ae6678d24c7cbf6f41fd0328",
+    "HELLO_CPP.APP": "fdc2123e5ebc07bac9b1b1ef386e8ef61f6ef099980392a3d5a889dce93785c1",
+    "HELLO_RS.APP": "89be52725beea1217d9a651e1d29e7918aaf828e76047f8e7a5b3725ad5af6b2",
+    "SERVICES.APP": "b2e87f3810bde69f806e24802fce7d6e6e2582dd3265fa9427f94cfb3e69f44d",
+    "ELIZA.APP": "ee9d0f3fdce124030b58427558347ca7e0bc6b2d9789941c7c0566a71bf09c9d",
+    "SHEET.APP": "a2b7aa172b54b4fa6b281719d06c0cff470b39621f95d64f4491f2cb7ec34b36",
+    "WBMP.APP": "37f829817fa687661d36e8350689f837d8f8f414923138f08464cbb86a2602d2",
+    "README.txt": "a62a6a40179f200cb9999b44133c6c7e91e889ad8f41854dc195216bf12b1e9f",
+    "ECHO8.ch8": "d53d2f9b87cd27f22d631fe73acf07ad9eb6a467167b5c168df68c0bc7607227",
+    "PATTERN.wbmp": "39abab1df0a4bb75b9985381d3948777303afeb690ed60adfc3835dc0b076ae5",
+    "BUDGET.sheet": "5eec63dc5597268cde913aceaf753e8650298b46dadc989870a1bfb920379e83",
+    "CYCLE.sheet": "e8a177281e7cf0ef63f8ae693c2c998fe6a1fd2362c320d3c93082ddb771e4ae",
+    "manifest.json": "4459fa77b3ca10a24f7ac050e7a0c7eb2a2a6caafda0395fce467eadca8a5504"
+  },
+  "cases": [
+    "all seven M0+ APPs and example assets read back byte-for-byte with POSIX CRC",
+    "HELLO.APP: two successful launches, expected text and clean exit",
+    "HELLO_CPP.APP: two successful launches, expected text and clean exit",
+    "HELLO_RS.APP: two successful launches, expected text and clean exit",
+    "SERVICES.APP: two successful launches, expected text and clean exit",
+    "WBMP.APP: two successful launches, expected text and clean exit",
+    "ELIZA.APP: graphical intro, QWERTY HELLO input, expected DOCTOR reply and exit",
+    "SHEET.APP: new book, Russian/formula document, cycle document, navigation and exit",
+    "installed WBMP.APP FILE_OPEN through APP_FLOW DIRECT; exact 192x64 pixel oracle",
+    "installed files unchanged after execution; registers, stack, program and terminal directory preserved"
+  ],
+  "screens": {
+    "HELLO-APP": "cc587e8858ae7efdd0a17dfaad17332b60c0f6128dbae621a33d53fba5cb0ff6",
+    "HELLO_CPP-APP": "f428be8ba82f21751d986867d274314ff6253fd1ff4f34b6d03ce26bf6f75c28",
+    "HELLO_RS-APP": "04af86cf90c38c1e0899b245cddeb9ceba40221be5c02f5b6d7f9c6747606f8e",
+    "SERVICES-APP": "413331b3650def3af6451285a6f6590a426c0745210e2edeb5cb15d5db3caee7",
+    "WBMP-APP": "08b3dfc5e63f472427ad16bfe838e154f0a607437a33eefd06a8ea79f323da23",
+    "ELIZA-APP": "d36e3c561d1eb9a46ef41b60a14cfb25bddd282d153b11b5ef8959aa0c782be0",
+    "ELIZA-reply": "eac188a8c29aff51d8e93b207817a7518a55cdcba963445141bcbaadddc5df3a",
+    "SHEET-APP": "1dc6031ed3775fa15176a5ac035aedea92a8107944d5e43cf4bc76ffbfa8d27f",
+    "BUDGET-sheet": "ad46f18c13b86dc2705e213dfcae99e5983445930ce4de30b0e52d44ee390d71",
+    "CYCLE-sheet": "9db5411205bfc4f5e060e7ced6e05dbbbc8601660facfe31a23c33bd66499eb3",
+    "WBMP-file-handler": "4e9dd6d1396a9bd68348ed97955da6e534f0e7095014ab9d9283dc37d0d85b60"
+  },
+  "initial": "MK61S PICOCALC PICO-H 0.5.0 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=143\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[/MK61S-PicoCalc-0.5/SHEET.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSTACK_USED=8660 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=944280\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=75 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T21:41:50 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "final": "MK61S PICOCALC PICO-H 0.5.0 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=223\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[/MK61S-PicoCalc-0.5/.WBMPCHK.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSTACK_USED=8660 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=944280\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=2 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=135 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-17T21:44:49 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "temporary_probe_removed": true,
+  "schema": 1,
+  "source_revision": "36ff01c60d3edf4b8fd350fb0c84a827907755de",
+  "source_has_uncommitted_app_changes": true,
+  "firmware_unchanged_from_0_5_0_parity_acceptance": true,
+  "native_apps": [
+    {
+      "name": "HELLO",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 4,
+      "relocation_bytes": 5,
+      "entry_offset": 0,
+      "image_bytes": 184,
+      "bss_bytes": 8,
+      "memory_bytes": 192,
+      "app_bytes": 250,
+      "compression": "ZX0",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/portable-apps/HELLO/main.c"
+      ],
+      "app_sha256": "8b61163fd74e6585c9a610bd42fdcda89f9577f9ae6678d24c7cbf6f41fd0328"
+    },
+    {
+      "name": "HELLO_CPP",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 3,
+      "relocation_bytes": 4,
+      "entry_offset": 0,
+      "image_bytes": 202,
+      "bss_bytes": 10,
+      "memory_bytes": 212,
+      "app_bytes": 262,
+      "compression": "ZX0",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/loadable-apps/HELLO/hello_app.cpp"
+      ],
+      "app_sha256": "fdc2123e5ebc07bac9b1b1ef386e8ef61f6ef099980392a3d5a889dce93785c1"
+    },
+    {
+      "name": "HELLO_RS",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 7,
+      "relocation_bytes": 7,
+      "entry_offset": 0,
+      "image_bytes": 360,
+      "bss_bytes": 12,
+      "memory_bytes": 372,
+      "app_bytes": 411,
+      "compression": "ZX0",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "rust_compiler": "rustc 1.94.1 (e408947bf 2026-03-25)",
+      "sources": [
+        "examples/portable-apps/HELLO-RUST/main.rs"
+      ],
+      "app_sha256": "89be52725beea1217d9a651e1d29e7918aaf828e76047f8e7a5b3725ad5af6b2"
+    },
+    {
+      "name": "SERVICES",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 5,
+      "relocation_bytes": 6,
+      "entry_offset": 0,
+      "image_bytes": 4104,
+      "bss_bytes": 4,
+      "memory_bytes": 4108,
+      "app_bytes": 3742,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/portable-apps/SERVICES/main.c"
+      ],
+      "app_sha256": "b2e87f3810bde69f806e24802fce7d6e6e2582dd3265fa9427f94cfb3e69f44d"
+    },
+    {
+      "name": "ELIZA",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 85,
+      "relocation_bytes": 96,
+      "entry_offset": 0,
+      "image_bytes": 15479,
+      "bss_bytes": 1541,
+      "memory_bytes": 17020,
+      "app_bytes": 11157,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/portable-apps/ELIZA/main.c",
+        "examples/portable-apps/ELIZA/eliza_engine.c"
+      ],
+      "app_sha256": "ee9d0f3fdce124030b58427558347ca7e0bc6b2d9789941c7c0566a71bf09c9d"
+    },
+    {
+      "name": "SHEET",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 275,
+      "relocation_bytes": 308,
+      "entry_offset": 0,
+      "image_bytes": 24760,
+      "bss_bytes": 4740,
+      "memory_bytes": 29500,
+      "app_bytes": 21279,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/portable-apps/SHEET/main.cpp",
+        "examples/portable-apps/SHEET/sheet_engine.cpp"
+      ],
+      "app_sha256": "a2b7aa172b54b4fa6b281719d06c0cff470b39621f95d64f4491f2cb7ec34b36"
+    },
+    {
+      "name": "WBMP",
+      "target": "picocalc-pico-h",
+      "abi": 6,
+      "load_address": 536870912,
+      "relocations": 6,
+      "relocation_bytes": 8,
+      "entry_offset": 0,
+      "image_bytes": 1131,
+      "bss_bytes": 3145,
+      "memory_bytes": 4276,
+      "app_bytes": 1162,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "sources": [
+        "examples/portable-apps/WBMP/main.c",
+        "examples/portable-apps/WBMP/viewer.cpp",
+        "code/wbmp.cpp"
+      ],
+      "app_sha256": "37f829817fa687661d36e8350689f837d8f8f414923138f08464cbb86a2602d2"
+    }
+  ],
+  "stm32": {
+    "f401": {
+      "build": "PASS",
+      "stack": {
+        "compiled_units": 157,
+        "dynamic_bounded": 0,
+        "limit": 2048,
+        "max_frame": 1336,
+        "max_function": "language_vm.cpp:702:7:language_vm::Error language_vm::inspect_flash(const flash::Reader&, flash::IO, View&)",
+        "records": 2633,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      },
+      "bin_bytes": 230292,
+      "bin_sha256": "d33f3f2fb424e8f90c9b02d5a1d901090f1f3f4896b1c86880b3e44a6e6dcb8f",
+      "log": ".build/picocalc-apps-stm32-f401.log",
+      "hardware_flashed": false
+    },
+    "f411": {
+      "build": "PASS",
+      "stack": {
+        "compiled_units": 157,
+        "dynamic_bounded": 0,
+        "limit": 5120,
+        "max_frame": 1928,
+        "max_function": "terminal.cpp:2385:27:terminal_protocol::Result class_terminal::benchmark_file(const char*)",
+        "records": 3025,
+        "schema": 1,
+        "status": "ok",
+        "unbounded": 0
+      },
+      "bin_bytes": 387144,
+      "bin_sha256": "98821127fbfb25b9a3dd76fbedcb69ae72ae2e776bc00e460fab87395d82f2dd",
+      "log": ".build/picocalc-apps-stm32-f411.log",
+      "hardware_flashed": false
+    }
+  },
+  "STM32_shipping_BIN_and_programs_app_unmodified": true,
+  "unchanged_preexisting_pico_apps": [
+    "HELLO",
+    "SERVICES",
+    "ELIZA",
+    "SHEET",
+    "WBMP"
+  ],
+  "ARM_execution_regression": {
+    "passed": true,
+    "cases": [
+      {
+        "target": "picocalc-pico-h",
+        "app": "HELLO_RS",
+        "load_addresses": 3,
+        "fresh_launches_per_address": 2
+      },
+      {
+        "target": "picocalc-pico-h",
+        "app": "HELLO_CPP",
+        "load_addresses": 3,
+        "fresh_launches_per_address": 2
+      },
+      {
+        "target": "stm32",
+        "app": "HELLO_RS",
+        "load_addresses": 3,
+        "fresh_launches_per_address": 2
+      },
+      {
+        "target": "stm32",
+        "app": "HELLO_CPP",
+        "load_addresses": 3,
+        "fresh_launches_per_address": 2
+      }
+    ]
+  },
+  "package_M4_rejection": {
+    "passed": true,
+    "case": "M4 CPU flag rejected despite valid header/payload CRC and matching SHA-256"
+  },
+  "host_SDK_tests": {
+    "status": "PASS",
+    "log": ".build/picocalc-apps-sdk-tests.log"
+  },
+  "screenshots": "binary/picocalc-pico-h/apps-hil-0.5.0",
+  "fixes": [
+    "Preserve the rustc proxy basename instead of resolving the symlink to rustup.",
+    "For mixed GCC/Rust links, compile startup as a non-LTO bridge so the strong native Rust main is called instead of the weak fallback.",
+    "C++ manifest example waits for a key and returns APP_OK rather than treating a nonzero key code as an error."
+  ],
+  "installation_note": "Created /MK61S-PicoCalc-0.5; former /MK61S-PicoCalc-0.4 and other user files were not replaced. Every collection file was read back and verified before and after native execution. No firmware flashing or SD formatting.",
+  "limits": [
+    "Battery/current qualification and hardware RTC/DORMANT limits are unchanged from the 0.5.0 firmware acceptance."
+  ]
+}

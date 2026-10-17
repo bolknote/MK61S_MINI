@@ -246,6 +246,7 @@ def build(args: argparse.Namespace) -> dict:
     objects = []
     compile_commands = []
     rust_compiler = None
+    has_rust = any(source.suffix == ".rs" for source in sources)
     for index, source in enumerate(sources):
         if source.suffix not in (".c", ".cpp", ".rs", ".S") or not source.is_file():
             raise ValueError(f"expected an existing .c, .cpp, .rs or .S source: {source}")
@@ -259,7 +260,9 @@ def build(args: argparse.Namespace) -> dict:
                         raise ValueError("Rust source requires rustc on PATH")
                     rust_compiler = Path(found)
                 else:
-                    rust_compiler = rust_compiler.resolve()
+                    # rustup chooses the compiler from argv[0]. Resolving its
+                    # rustc symlink would invoke the rustup CLI instead.
+                    rust_compiler = rust_compiler.expanduser().absolute()
                 if not rust_compiler.is_file():
                     raise ValueError(f"Rust compiler is missing: {rust_compiler}")
             command = [rust_compiler, "--edition", "2021",
@@ -291,7 +294,11 @@ def build(args: argparse.Namespace) -> dict:
                     else ["-std=c11"] if source.suffix == ".c" else [])
         # GCC can synthesize memset/memcpy after LTO's symbol pruning.
         # Keep their freestanding definitions in a normal object.
-        support = ["-fno-lto"] if source == ROOT / "sdk/portable/memory.c" else []
+        # GCC LTO cannot see Rust's native object body. Keep its weak startup
+        # hooks as linker calls, rather than folding the fallback main().
+        plain_object = source == ROOT / "sdk/portable/memory.c" or (
+            has_rust and source == ROOT / "sdk/portable/start.c")
+        support = ["-fno-lto"] if plain_object else []
         if shared_system_runtime and source == ROOT / "sdk/portable/memory.c":
             # Keep SDK strcmp, which has no resident runtime slot. Its compact
             # byte loop avoids linking newlib's much larger ARM routine.

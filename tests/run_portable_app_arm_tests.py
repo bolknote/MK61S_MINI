@@ -89,8 +89,10 @@ def oracle(width, height, x0=0, y0=0):
 
 
 class Machine:
-    def __init__(self, api_address, api):
+    def __init__(self, api_address, api, cpu_model=None):
         self.uc = Uc(UC_ARCH_ARM, UC_MODE_THUMB | UC_MODE_MCLASS)
+        if cpu_model is not None:
+            self.uc.ctl_set_cpu_model(cpu_model)
         self.uc.mem_map(BASE, 131072)
         self.uc.mem_map(0x08000000, 0x100000)
         self.api_address, self.api = api_address, api

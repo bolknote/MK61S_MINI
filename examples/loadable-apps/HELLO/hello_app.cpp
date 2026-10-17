@@ -16,6 +16,8 @@ extern "C" int main(void) {
   if((mk61_api->capabilities & MK61_APP_CAP_SOUND) != 0) {
     mk61_api->beep(880, 80, 35);
   }
-  return (mk61_api->capabilities & MK61_APP_CAP_KEYBOARD) != 0
-      ? mk61_api->key_wait() : 0;
+  if((mk61_api->capabilities & MK61_APP_CAP_KEYBOARD) != 0) {
+    (void)mk61_api->key_wait();
+  }
+  return MK61_APP_OK;
 }

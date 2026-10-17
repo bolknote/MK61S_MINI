@@ -242,11 +242,28 @@ I²C, отдельной линии IRQ клавиатуры к Pico нет. Д�
 Собрать HELLO, SERVICES, ELIZA, SHEET и WBMP из обычных исходников:
 
 ```sh
+rustup target add thumbv6m-none-eabi
 python3 tools/build_picocalc_apps.py
+python3 tools/package_picocalc.py
 ```
 
-Результат — `binary/picocalc-pico-h/apps/`. Копировать на microSD через
-USB-диск. Сборка отдельного приложения:
+Результат — `binary/picocalc-pico-h/apps/`: `HELLO.APP` (C), `HELLO_CPP.APP`
+(C++ manifest-пример), `HELLO_RS.APP` (Rust), `SERVICES.APP`, `ELIZA.APP`,
+`SHEET.APP` и `WBMP.APP`. Дополнительно создаются `ECHO8.ch8`, контрольное
+изображение `PATTERN.wbmp` и документы `BUDGET.sheet`/`CYCLE.sheet`.
+Формат этих таблиц совпадает с S1/`.mks`; Pico использует расширение `.sheet`.
+`manifest.json` содержит исходники, версии компиляторов и SHA-256 каждого APP.
+Rust требует установленного `rustc` и библиотеки `thumbv6m-none-eabi`;
+путь к компилятору можно передать через `--rustc`.
+
+Упаковщик обновляет `mk61s-picocalc-pico-h-0.5.0.zip`, сверяет CPU-флаги,
+границы, CRC и SHA-256, а затем повторно проверяет содержимое ZIP.
+Каталог `apps/` можно копировать на microSD через USB-диск в отдельную папку.
+Готовый набор установлен в `/MK61S-PicoCalc-0.5`; прежняя папка 0.4 сохранена.
+Каталоги STM32 `programs/app` и `/System` этот сборщик не заменяет.
+Системные APP STM32 для Pico не требуются: их службы встроены в UF2.
+
+Сборка отдельного приложения:
 
 ```sh
 python3 tools/build_portable_app.py --target picocalc-pico-h --name HELLO \
@@ -265,6 +282,23 @@ python3 tools/build_portable_app.py --target picocalc-pico-h --name HELLO \
 64 байта, `CALL`/`NEXT`/`RETURN`/`EXIT`, вызовы обычных APP через `DIRECT`.
 Каждая смена APP освобождает предыдущий образ; продолжение хранится в контексте.
 Системные цели C6/STM32 не загружаются в Pico: их службы доступны через общий API.
+
+Установка через CDC с проверкой всех файлов и запусков:
+
+```sh
+python3 tests/hil_picocalc_apps.py --port /dev/cu.usbmodem1401 \
+  --uid E6657CD423721C35 --install \
+  --output binary/picocalc-pico-h/apps-hil-0.5.0
+```
+
+UID и порт нужно заменить для своего Pico. Проверка создаёт новую папку;
+`--resume` разрешает продолжение только при побайтовом совпадении уже
+записанных файлов. Карта не форматируется. До и после исполнения сверяются
+программа МК-61, стек, регистры, каталог терминала и файлы приложений.
+WBMP проверяется именно через установленный `WBMP.APP`, вызванный общим
+`APP_FLOW DIRECT / FILE_OPEN`, с независимым пиксельным эталоном 192×64.
+Приёмка полного набора:
+[нативные APP Pico H](../../doc/measurements/picocalc-pico-h-apps-20261017.json).
 
 ## Терминал USB / UART
 

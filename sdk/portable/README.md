@@ -49,6 +49,23 @@ API, текущий вид и CRC образа, а также публичный
 Rust APP имеет тот же доступ к расширенным сервисам, что C/C++ System APP и
 обычная C/C++ APP; отдельного закрытого System API нет.
 
+Для Pico H используется `--target picocalc-pico-h` и Rust-библиотека
+`thumbv6m-none-eabi`. Полный набор C/C++/Rust-примеров собирает
+`tools/build_picocalc_apps.py`; файлы STM32 остаются отдельными.
+Явный `--rustc` может указывать на стандартный rustup proxy: сборщик
+сохраняет имя `rustc` и оставляет startup мостом без GCC LTO, чтобы native
+Rust `main()` не заменялся слабой заглушкой. Исполнение обеих CPU-сборок,
+релокации и выход по клавише проверяет `tests/portable_rust_app_arm_self_test.py`.
+
+Проверка реального ARM-кода требует Python-пакета `unicorn` и обеих Rust
+target-библиотек. В отличие от host-проверки Rust metadata, она обнаруживает
+сборку, в которой `main()` был удалён оптимизатором:
+
+```sh
+rustup target add thumbv6m-none-eabi thumbv7em-none-eabihf
+python3 tests/portable_rust_app_arm_self_test.py --rustc /path/to/rustc
+```
+
 На Windows используйте `python` и запишите команду в одну строку либо
 примените продолжение строки вашей оболочки. Встроенный Python-паковщик
 выбирается автоматически; принимается также готовый `--packer PATH`.
