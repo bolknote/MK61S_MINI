@@ -16,17 +16,48 @@ struct Fixture {
   std::string printed;
   std::vector<double> numbers;
   unsigned inputs=0;
+#if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
+  // Hot APPs require the resident lookup service. The fixture's independent
+  // ordered maps model that service; the actual C9 binary search has separate
+  // storage/ARM tests. No full map is added to production RAM.
+  std::map<uint32_t,uint32_t> pcs,lines;
+#endif
+  void bind_lookup(View& view) {
+#if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
+    view.lookup_context=this;
+    view.lookup=[](void* raw,uint32_t key,bool number,uint32_t* out) {
+      auto& f=*(Fixture*)raw;
+      if(number) {
+        auto it=f.pcs.find(key);*out=it==f.pcs.end()?UINT32_MAX:it->second;
+      } else {
+        auto it=f.lines.upper_bound(key);*out=it==f.lines.begin()?0:(--it)->second;
+      }
+      return true;
+    };
+#else
+    (void)view;
+#endif
+  }
   flash::Input input() {return {&disk,[](void* raw,uint32_t at,uint8_t* out,uint16_t n){return Disk::read(raw,IMAGE,at,out,n);},compiled.size};}
   View view(flash::Reader& reader) {
     View result{};const auto e=inspect_flash(reader,disk.io(),result);
     if(e!=Error::NONE)fprintf(stderr,"inspect: %s\n",error_name(e));
-    assert(e==Error::NONE);return result;
+    assert(e==Error::NONE);bind_lookup(result);return result;
   }
   void compile(Language language,const std::string& source) {
     language_vm::source::Reader text(source.data(),uint16_t(source.size()));
     compiled=compile_flash_source(language,text,disk.io());
     if(compiled.error!=Error::NONE)fprintf(stderr,"compile: %s at %u: %.100s\n",error_name(compiled.error),compiled.source_offset,source.c_str());
     assert(compiled.error==Error::NONE);
+#if defined(MK61_BUILD_LANGUAGE_VM_MODULE)
+    uint8_t header[32],row[8];pcs.clear();lines.clear();
+    assert(Disk::read(&disk,IMAGE,0,header,sizeof(header)));
+    for(unsigned i=0;i<flash::word(header+18);++i) {
+      assert(Disk::read(&disk,IMAGE,32+i*8,row,sizeof(row)));
+      const uint32_t number=flash::dword(row),pc=flash::dword(row+4);
+      pcs[number]=pc;lines[pc]=number;
+    }
+#endif
   }
   Bindings bindings() {return {variables,array,385,state.stack,MAX_STACK};}
   Services services(bool yield=false) {
@@ -216,6 +247,7 @@ static void strings_data_and_failures() {
   missing.disk.pages[IMAGE].erase((missing.compiled.size-1)/WRITE_BYTES);
   flash::Reader image(missing.input());uint8_t h[32];assert(image.read(0,h,sizeof(h)));
   View v={nullptr,missing.compiled.size,flash::dword(h+12),flash::word(h+18),flash::word(h+16),h[6],Language(h[5]),false,false,missing.compiled.size,&image,true};
+  missing.bind_lookup(v);
   auto result=language_vm::run(v,missing.state.control,missing.bindings(),missing.services(),100);
   assert(result.error==Error::IO && missing.refs[14]==0);
   Fixture duplicate;source::Reader source("2 A=1\n1 END\n2 END\n",18);

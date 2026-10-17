@@ -1,0 +1,1592 @@
+{
+  "status": "PASS",
+  "date": "2026-10-17",
+  "branch": "feature/flash-vm-perf",
+  "code_commit": "c19c5f317",
+  "source_base": "36ff01c60d3edf4b8fd350fb0c84a827907755de",
+  "production_source_sha256": {
+    "app_flow_transfer.cpp": "16185b9884ee455a71444542847c0f12edc752955d6396ea6bf3777fa645ca5d",
+    "app_flow_transfer.hpp": "4accb55ceaa4a2253a2372ed5f0e1d75ccbb6fbfc51d0ff373ecc12739211182",
+    "config.h": "bdcec7aee7279aa2b4011355c413e93bf6e1a9175a90b190777022f7a3b42b78",
+    "language_flash.hpp": "139a6d4e929e9a1b1296b9dc1acf24000d763aa97d5fa1cbfd217bf63394a205",
+    "language_flash_cache.hpp": "4c731880179c35beca4de4f3efdb51edd92149b738abffed9a41a6b1cd517218",
+    "language_flash_store.hpp": "6102f64660eb0ccdddd490a34bf6e077e69190c4ff548218f6176db64334c978",
+    "language_vm.cpp": "d97a790c0855c58925fdbab39c5980ec92be481e268828a8dda0985c0a3c9af6",
+    "language_vm_resident.cpp": "65a98416297753e1e35b18b2b6195f312d922ec7760b83959d999ee4de515f88",
+    "terminal.cpp": "867bf15bb372956ed816b751d9b2e42cbdcdc4fdb4baca8f9457cd9e5b538678",
+    "usb_screen.cpp": "15d6f5bc06926f66eeeb8b08bd363ce42b9520f7ead391850072294d06ba21d0"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "firmware": {
+    "path": "/private/tmp/mk61-flash-perf-hil-fast-at/images/current.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "3AB3DD45",
+    "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+    "source": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin"
+  },
+  "apps": {
+    "SRCEDIT.APP": {
+      "packed_bytes": 13483,
+      "memory_bytes": 18180,
+      "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+    },
+    "USBDISK.APP": {
+      "packed_bytes": 15303,
+      "memory_bytes": 20468,
+      "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+    },
+    "FOCAL.APP": {
+      "packed_bytes": 12674,
+      "memory_bytes": 17528,
+      "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+    },
+    "LANGVM.APP": {
+      "packed_bytes": 13807,
+      "memory_bytes": 20476,
+      "sha256": "822e2a6e0029c98226ad60d5843c53aaae787db8f82955e6c5b88f7c9ae43505"
+    },
+    "BASIC.APP": {
+      "packed_bytes": 14140,
+      "memory_bytes": 20060,
+      "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+    },
+    "LANGIN.APP": {
+      "packed_bytes": 14069,
+      "memory_bytes": 19180,
+      "sha256": "08b9443b320a67b51563f9c04390c77f074096c9567ac2e15b3149e546b370d5"
+    }
+  },
+  "resident_equivalence": {
+    "tested": {
+      "path": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin",
+      "bytes": 370064,
+      "footer": 368416,
+      "build": "3AB3DD45",
+      "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635"
+    },
+    "rebuilt": {
+      "path": "/private/tmp/mk61-flash-perf-classic-build/resident.bin",
+      "bytes": 370064,
+      "footer": 368416,
+      "build": "7EAA3816",
+      "sha256": "3a75a9d7c2bd80cfd05f4c6be14defee274d8d4a6baabdb471de0c2489ed1060"
+    },
+    "readback_sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+    "differing_byte_offsets": [
+      352851,
+      352852,
+      352854,
+      352855,
+      368436,
+      368437,
+      368438,
+      368439,
+      368440,
+      368441,
+      368442,
+      368443
+    ],
+    "interpretation": "Only four ASCII build-time characters and eight footer CRC/build bytes differ; all executable code and all other data are identical. Final 128-byte Reader is in the separately verified LANGVM/LANGIN APPs."
+  },
+  "configuration": {
+    "mcu": "STM32F411CE",
+    "clock_hz": 96000000,
+    "shared_screen_grid": true,
+    "screen_buffer_loan": false,
+    "usb_screen": true,
+    "math": "owned compact_math and native runtime; no external archives",
+    "overlay_vm": true,
+    "full_image_cache": false,
+    "page_cache_budget": 32768,
+    "page_frames": 29,
+    "page_bytes": 1024,
+    "instruction_window": 128,
+    "workspace": 8192,
+    "app_limit": 20480,
+    "effective_app_pool": 34880,
+    "largest_foreground_frame": 1928,
+    "limits_weakened": false,
+    "other_f411_page_cache_budget": 24576,
+    "f401_page_cache_budget": 0,
+    "resident_executor_page_cache_budget": 0
+  },
+  "measurement": {
+    "method": "USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes",
+    "profiling": false,
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "game_files": 29,
+    "package": {
+      "node.tbi": {
+        "bytes": 2262,
+        "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+      },
+      "history.tbi": {
+        "bytes": 2195,
+        "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+      },
+      "ep.tbi": {
+        "bytes": 1023,
+        "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+      },
+      "menu.tbi": {
+        "bytes": 1634,
+        "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+      },
+      "status.tbi": {
+        "bytes": 1619,
+        "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+      },
+      "help.tbi": {
+        "bytes": 701,
+        "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+      },
+      "Turochamp.FMK": {
+        "bytes": 985,
+        "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+      },
+      "board.tbi": {
+        "bytes": 2570,
+        "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+      },
+      "claims.tbi": {
+        "bytes": 734,
+        "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+      },
+      "turn.tbi": {
+        "bytes": 455,
+        "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+      },
+      "legal.tbi": {
+        "bytes": 4647,
+        "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+      },
+      "unmake.tbi": {
+        "bytes": 653,
+        "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+      },
+      "autoexec.m61": {
+        "bytes": 697,
+        "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+      },
+      "threat.tbi": {
+        "bytes": 1862,
+        "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+      },
+      "mobility.tbi": {
+        "bytes": 310,
+        "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+      },
+      "init.tbi": {
+        "bytes": 707,
+        "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+      },
+      "rstep.tbi": {
+        "bytes": 416,
+        "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+      },
+      "castle.tbi": {
+        "bytes": 1184,
+        "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+      },
+      "algorithm.md": {
+        "bytes": 746,
+        "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+      },
+      "make.tbi": {
+        "bytes": 1030,
+        "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+      },
+      "game.tbi": {
+        "bytes": 1668,
+        "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+      },
+      "rkey.tbi": {
+        "bytes": 575,
+        "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+      },
+      "eval.tbi": {
+        "bytes": 1478,
+        "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+      },
+      "claim.tbi": {
+        "bytes": 663,
+        "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+      },
+      "rules.md": {
+        "bytes": 830,
+        "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+      },
+      "manual.md": {
+        "bytes": 818,
+        "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+      },
+      "repeat.tbi": {
+        "bytes": 1096,
+        "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+      },
+      "promote.tbi": {
+        "bytes": 408,
+        "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+      },
+      "search.tbi": {
+        "bytes": 1775,
+        "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+      }
+    },
+    "stages": [
+      {
+        "name": "first-compile",
+        "cache_before": {
+          "budget": 32768,
+          "payload": 29696,
+          "used": 0,
+          "lookups": 0,
+          "hits": 0,
+          "misses": 0,
+          "invalidations": 0
+        },
+        "seconds": [
+          221.9137924160459,
+          59.54248262499459,
+          59.57562937500188,
+          59.48838712496217
+        ],
+        "minimum_stack_remaining": 8208,
+        "frames_crc_checked": 2199,
+        "cache_after": {
+          "budget": 32768,
+          "payload": 29696,
+          "used": 29696,
+          "lookups": 826655,
+          "hits": 824769,
+          "misses": 1886,
+          "invalidations": 200
+        },
+        "runs": [
+          {
+            "repeat": 0,
+            "temperature": "cold",
+            "seconds": 221.9137924160459,
+            "nodes": 420,
+            "nodes_per_second": 1.8926268413843352,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 53.82971008302411
+              },
+              {
+                "nodes": 21,
+                "seconds": 145.2299834160367
+              },
+              {
+                "nodes": 42,
+                "seconds": 147.95500120799989
+              },
+              {
+                "nodes": 63,
+                "seconds": 150.92374779103557
+              },
+              {
+                "nodes": 84,
+                "seconds": 153.81332945800386
+              },
+              {
+                "nodes": 105,
+                "seconds": 156.51895916601643
+              },
+              {
+                "nodes": 126,
+                "seconds": 159.2560661660391
+              },
+              {
+                "nodes": 147,
+                "seconds": 162.1549426660058
+              },
+              {
+                "nodes": 168,
+                "seconds": 165.0569037910318
+              },
+              {
+                "nodes": 189,
+                "seconds": 167.96406404103618
+              },
+              {
+                "nodes": 210,
+                "seconds": 170.88273762504105
+              },
+              {
+                "nodes": 231,
+                "seconds": 173.93450900004245
+              },
+              {
+                "nodes": 252,
+                "seconds": 177.00143529102206
+              },
+              {
+                "nodes": 273,
+                "seconds": 180.12121633300558
+              },
+              {
+                "nodes": 294,
+                "seconds": 183.2576332500321
+              },
+              {
+                "nodes": 315,
+                "seconds": 186.14442891604267
+              },
+              {
+                "nodes": 336,
+                "seconds": 189.04877458303235
+              },
+              {
+                "nodes": 357,
+                "seconds": 191.94558150001103
+              },
+              {
+                "nodes": 378,
+                "seconds": 194.8544373330078
+              },
+              {
+                "nodes": 399,
+                "seconds": 197.70682316605235
+              },
+              {
+                "nodes": 420,
+                "seconds": 200.6021127080312
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 17408,
+              "lookups": 207075,
+              "hits": 206256,
+              "misses": 819,
+              "invalidations": 200
+            }
+          },
+          {
+            "repeat": 1,
+            "temperature": "repeat",
+            "seconds": 59.54248262499459,
+            "nodes": 420,
+            "nodes_per_second": 7.053787169829789,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.11508729198249057
+              },
+              {
+                "nodes": 21,
+                "seconds": 3.78903787501622
+              },
+              {
+                "nodes": 42,
+                "seconds": 6.515006457979325
+              },
+              {
+                "nodes": 63,
+                "seconds": 9.487277417036239
+              },
+              {
+                "nodes": 84,
+                "seconds": 12.37792066700058
+              },
+              {
+                "nodes": 105,
+                "seconds": 15.081136082997546
+              },
+              {
+                "nodes": 126,
+                "seconds": 17.81591445801314
+              },
+              {
+                "nodes": 147,
+                "seconds": 20.723972042032983
+              },
+              {
+                "nodes": 168,
+                "seconds": 23.62352020799881
+              },
+              {
+                "nodes": 189,
+                "seconds": 26.539346417004708
+              },
+              {
+                "nodes": 210,
+                "seconds": 29.467114708037116
+              },
+              {
+                "nodes": 231,
+                "seconds": 32.517311958014034
+              },
+              {
+                "nodes": 252,
+                "seconds": 35.59611612500157
+              },
+              {
+                "nodes": 273,
+                "seconds": 38.71419625001727
+              },
+              {
+                "nodes": 294,
+                "seconds": 41.854017750010826
+              },
+              {
+                "nodes": 315,
+                "seconds": 44.74943766702199
+              },
+              {
+                "nodes": 336,
+                "seconds": 47.650512624997646
+              },
+              {
+                "nodes": 357,
+                "seconds": 50.55293725000229
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.45753558300203
+              },
+              {
+                "nodes": 399,
+                "seconds": 56.31957087502815
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.22394970798632
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 29696,
+              "lookups": 413609,
+              "hits": 412433,
+              "misses": 1176,
+              "invalidations": 200
+            }
+          },
+          {
+            "repeat": 2,
+            "temperature": "repeat",
+            "seconds": 59.57562937500188,
+            "nodes": 420,
+            "nodes_per_second": 7.0498625764620675,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.1258931250195019
+              },
+              {
+                "nodes": 21,
+                "seconds": 3.7908826250350103
+              },
+              {
+                "nodes": 42,
+                "seconds": 6.515599250036757
+              },
+              {
+                "nodes": 63,
+                "seconds": 9.489889916032553
+              },
+              {
+                "nodes": 84,
+                "seconds": 12.383022875001188
+              },
+              {
+                "nodes": 105,
+                "seconds": 15.099009625031613
+              },
+              {
+                "nodes": 126,
+                "seconds": 17.84329504100606
+              },
+              {
+                "nodes": 147,
+                "seconds": 20.75114766601473
+              },
+              {
+                "nodes": 168,
+                "seconds": 23.648769207997248
+              },
+              {
+                "nodes": 189,
+                "seconds": 26.565652916033287
+              },
+              {
+                "nodes": 210,
+                "seconds": 29.490486916038208
+              },
+              {
+                "nodes": 231,
+                "seconds": 32.55335416604066
+              },
+              {
+                "nodes": 252,
+                "seconds": 35.63325441599591
+              },
+              {
+                "nodes": 273,
+                "seconds": 38.75240895804018
+              },
+              {
+                "nodes": 294,
+                "seconds": 41.88713095802814
+              },
+              {
+                "nodes": 315,
+                "seconds": 44.78069650003454
+              },
+              {
+                "nodes": 336,
+                "seconds": 47.69333787501091
+              },
+              {
+                "nodes": 357,
+                "seconds": 50.592240583035164
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.48733487504069
+              },
+              {
+                "nodes": 399,
+                "seconds": 56.35188533301698
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.25569987500785
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 29696,
+              "lookups": 620132,
+              "hits": 618601,
+              "misses": 1531,
+              "invalidations": 200
+            }
+          },
+          {
+            "repeat": 3,
+            "temperature": "repeat",
+            "seconds": 59.48838712496217,
+            "nodes": 420,
+            "nodes_per_second": 7.060201499794268,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.12291454197838902
+              },
+              {
+                "nodes": 21,
+                "seconds": 3.778882041980978
+              },
+              {
+                "nodes": 42,
+                "seconds": 6.508743499987759
+              },
+              {
+                "nodes": 63,
+                "seconds": 9.476735208008904
+              },
+              {
+                "nodes": 84,
+                "seconds": 12.362366291985381
+              },
+              {
+                "nodes": 105,
+                "seconds": 15.078937667014543
+              },
+              {
+                "nodes": 126,
+                "seconds": 17.813533667009324
+              },
+              {
+                "nodes": 147,
+                "seconds": 20.719664666976314
+              },
+              {
+                "nodes": 168,
+                "seconds": 23.61394458299037
+              },
+              {
+                "nodes": 189,
+                "seconds": 26.522325875004753
+              },
+              {
+                "nodes": 210,
+                "seconds": 29.447793792001903
+              },
+              {
+                "nodes": 231,
+                "seconds": 32.497206416970585
+              },
+              {
+                "nodes": 252,
+                "seconds": 35.5724177499651
+              },
+              {
+                "nodes": 273,
+                "seconds": 38.691102999961004
+              },
+              {
+                "nodes": 294,
+                "seconds": 41.82067366701085
+              },
+              {
+                "nodes": 315,
+                "seconds": 44.71135349996621
+              },
+              {
+                "nodes": 336,
+                "seconds": 47.612440833006985
+              },
+              {
+                "nodes": 357,
+                "seconds": 50.515373791975435
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.40853754198179
+              },
+              {
+                "nodes": 399,
+                "seconds": 56.263299874961376
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.17217833298491
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 29696,
+              "lookups": 826655,
+              "hits": 824769,
+              "misses": 1886,
+              "invalidations": 200
+            }
+          }
+        ],
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 213 used, 811 free, 1024 total\r\nVisible: 129 files, 84 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=430/18 raw(v/t/b)=1493/955/1019 val(mV/dC/mV)=3329/333/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089988\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=8208 observed_remaining=8208 sram_xn=1\r\n/> ",
+          "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  3.0000000  00\r\nIP: 0\r\n/> ",
+          "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+          "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+          "pwd": "pwd\r\n/\r\n/> "
+        },
+        "manifests": [
+          {
+            "path": "/System/VMCache/Pages/0010/Manifest.bin",
+            "language": 1,
+            "lines": 53,
+            "bytecode_bytes": 2463,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/001F/Manifest.bin",
+            "language": 1,
+            "lines": 12,
+            "bytecode_bytes": 667,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0021/Manifest.bin",
+            "language": 1,
+            "lines": 18,
+            "bytecode_bytes": 940,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/000F/Manifest.bin",
+            "language": 1,
+            "lines": 77,
+            "bytecode_bytes": 3321,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002C/Manifest.bin",
+            "language": 1,
+            "lines": 44,
+            "bytecode_bytes": 1779,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002E/Manifest.bin",
+            "language": 1,
+            "lines": 34,
+            "bytecode_bytes": 1514,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0028/Manifest.bin",
+            "language": 1,
+            "lines": 61,
+            "bytecode_bytes": 2688,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0029/Manifest.bin",
+            "language": 1,
+            "lines": 9,
+            "bytecode_bytes": 469,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0031/Manifest.bin",
+            "language": 1,
+            "lines": 51,
+            "bytecode_bytes": 2125,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0037/Manifest.bin",
+            "language": 1,
+            "lines": 47,
+            "bytecode_bytes": 2433,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0016/Manifest.bin",
+            "language": 1,
+            "lines": 125,
+            "bytecode_bytes": 4014,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0020/Manifest.bin",
+            "language": 1,
+            "lines": 158,
+            "bytecode_bytes": 6589,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0013/Manifest.bin",
+            "language": 1,
+            "lines": 61,
+            "bytecode_bytes": 2377,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002F/Manifest.bin",
+            "language": 1,
+            "lines": 57,
+            "bytecode_bytes": 2447,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0012/Manifest.bin",
+            "language": 1,
+            "lines": 53,
+            "bytecode_bytes": 2283,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002A/Manifest.bin",
+            "language": 1,
+            "lines": 19,
+            "bytecode_bytes": 885,
+            "bank": 0
+          }
+        ]
+      },
+      {
+        "name": "ready-file-cache",
+        "cache_before": {
+          "budget": 32768,
+          "payload": 29696,
+          "used": 0,
+          "lookups": 0,
+          "hits": 0,
+          "misses": 0,
+          "invalidations": 0
+        },
+        "seconds": [
+          59.62693716597278,
+          59.533910707978066
+        ],
+        "minimum_stack_remaining": 11160,
+        "frames_crc_checked": 1065,
+        "cache_after": {
+          "budget": 32768,
+          "payload": 29696,
+          "used": 29696,
+          "lookups": 413062,
+          "hits": 412335,
+          "misses": 727,
+          "invalidations": 1
+        },
+        "runs": [
+          {
+            "repeat": 0,
+            "temperature": "cold",
+            "seconds": 59.62693716597278,
+            "nodes": 420,
+            "nodes_per_second": 7.043796310230082,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.15680295799393207
+              },
+              {
+                "nodes": 21,
+                "seconds": 3.840496874996461
+              },
+              {
+                "nodes": 42,
+                "seconds": 6.566490457975306
+              },
+              {
+                "nodes": 63,
+                "seconds": 9.546834874956403
+              },
+              {
+                "nodes": 84,
+                "seconds": 12.441235915990546
+              },
+              {
+                "nodes": 105,
+                "seconds": 15.130814999982249
+              },
+              {
+                "nodes": 126,
+                "seconds": 17.871284707973246
+              },
+              {
+                "nodes": 147,
+                "seconds": 20.77839849999873
+              },
+              {
+                "nodes": 168,
+                "seconds": 23.680762624950148
+              },
+              {
+                "nodes": 189,
+                "seconds": 26.59779237495968
+              },
+              {
+                "nodes": 210,
+                "seconds": 29.519344249973074
+              },
+              {
+                "nodes": 231,
+                "seconds": 32.57649591600057
+              },
+              {
+                "nodes": 252,
+                "seconds": 35.664097999979276
+              },
+              {
+                "nodes": 273,
+                "seconds": 38.78236295795068
+              },
+              {
+                "nodes": 294,
+                "seconds": 41.92864899995038
+              },
+              {
+                "nodes": 315,
+                "seconds": 44.812890749948565
+              },
+              {
+                "nodes": 336,
+                "seconds": 47.7268517499906
+              },
+              {
+                "nodes": 357,
+                "seconds": 50.63649991597049
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.536981332988944
+              },
+              {
+                "nodes": 399,
+                "seconds": 56.40835074998904
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.30872458295198
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 29696,
+              "lookups": 206539,
+              "hits": 206167,
+              "misses": 372,
+              "invalidations": 1
+            }
+          },
+          {
+            "repeat": 1,
+            "temperature": "repeat",
+            "seconds": 59.533910707978066,
+            "nodes": 420,
+            "nodes_per_second": 7.054802800712306,
+            "move": "e2e3",
+            "complete_eight_rank_board": true,
+            "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+            "progress": [
+              {
+                "nodes": 0,
+                "seconds": 0.12545658298768103
+              },
+              {
+                "nodes": 21,
+                "seconds": 3.789044582983479
+              },
+              {
+                "nodes": 42,
+                "seconds": 6.512175832991488
+              },
+              {
+                "nodes": 63,
+                "seconds": 9.477165457967203
+              },
+              {
+                "nodes": 84,
+                "seconds": 12.364738041011151
+              },
+              {
+                "nodes": 105,
+                "seconds": 15.073401790985372
+              },
+              {
+                "nodes": 126,
+                "seconds": 17.809500249975827
+              },
+              {
+                "nodes": 147,
+                "seconds": 20.719792082963977
+              },
+              {
+                "nodes": 168,
+                "seconds": 23.60954400000628
+              },
+              {
+                "nodes": 189,
+                "seconds": 26.522906165977474
+              },
+              {
+                "nodes": 210,
+                "seconds": 29.45268720801687
+              },
+              {
+                "nodes": 231,
+                "seconds": 32.50743883301038
+              },
+              {
+                "nodes": 252,
+                "seconds": 35.59351712500211
+              },
+              {
+                "nodes": 273,
+                "seconds": 38.70228487497661
+              },
+              {
+                "nodes": 294,
+                "seconds": 41.841238915978465
+              },
+              {
+                "nodes": 315,
+                "seconds": 44.72902529098792
+              },
+              {
+                "nodes": 336,
+                "seconds": 47.635542374977376
+              },
+              {
+                "nodes": 357,
+                "seconds": 50.53768274997128
+              },
+              {
+                "nodes": 378,
+                "seconds": 53.433285458013415
+              },
+              {
+                "nodes": 399,
+                "seconds": 56.3055066249799
+              },
+              {
+                "nodes": 420,
+                "seconds": 59.21511895797448
+              }
+            ],
+            "flash_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 29696,
+              "lookups": 413062,
+              "hits": 412335,
+              "misses": 727,
+              "invalidations": 1
+            }
+          }
+        ],
+        "health": {
+          "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 213 used, 811 free, 1024 total\r\nVisible: 129 files, 84 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=443/18 raw(v/t/b)=1492/952/1019 val(mV/dC/mV)=3331/326/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090619\r\n/> ",
+          "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+          "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=11160 observed_remaining=11160 sram_xn=1\r\n/> ",
+          "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  3.0000000  00\r\nIP: 0\r\n/> ",
+          "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+          "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+          "pwd": "pwd\r\n/\r\n/> "
+        },
+        "manifests": [
+          {
+            "path": "/System/VMCache/Pages/0010/Manifest.bin",
+            "language": 1,
+            "lines": 53,
+            "bytecode_bytes": 2463,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/001F/Manifest.bin",
+            "language": 1,
+            "lines": 12,
+            "bytecode_bytes": 667,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0021/Manifest.bin",
+            "language": 1,
+            "lines": 18,
+            "bytecode_bytes": 940,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/000F/Manifest.bin",
+            "language": 1,
+            "lines": 77,
+            "bytecode_bytes": 3321,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002C/Manifest.bin",
+            "language": 1,
+            "lines": 44,
+            "bytecode_bytes": 1779,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002E/Manifest.bin",
+            "language": 1,
+            "lines": 34,
+            "bytecode_bytes": 1514,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0028/Manifest.bin",
+            "language": 1,
+            "lines": 61,
+            "bytecode_bytes": 2688,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0029/Manifest.bin",
+            "language": 1,
+            "lines": 9,
+            "bytecode_bytes": 469,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0031/Manifest.bin",
+            "language": 1,
+            "lines": 51,
+            "bytecode_bytes": 2125,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0037/Manifest.bin",
+            "language": 1,
+            "lines": 47,
+            "bytecode_bytes": 2433,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0016/Manifest.bin",
+            "language": 1,
+            "lines": 125,
+            "bytecode_bytes": 4014,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0020/Manifest.bin",
+            "language": 1,
+            "lines": 158,
+            "bytecode_bytes": 6589,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0013/Manifest.bin",
+            "language": 1,
+            "lines": 61,
+            "bytecode_bytes": 2377,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002F/Manifest.bin",
+            "language": 1,
+            "lines": 57,
+            "bytecode_bytes": 2447,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/0012/Manifest.bin",
+            "language": 1,
+            "lines": 53,
+            "bytecode_bytes": 2283,
+            "bank": 0
+          },
+          {
+            "path": "/System/VMCache/Pages/002A/Manifest.bin",
+            "language": 1,
+            "lines": 19,
+            "bytecode_bytes": 885,
+            "bank": 0
+          }
+        ]
+      }
+    ],
+    "compile_cold_seconds": 221.9137924160459,
+    "warm_median_seconds": 59.54248262499459,
+    "ready_pages_reboot_seconds": 59.62693716597278,
+    "complete_searches": 6,
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "minimum_stack_remaining": 8208
+  },
+  "baseline": {
+    "source_commit": "36ff01c60d3edf4b8fd350fb0c84a827907755de",
+    "firmware": {
+      "path": "/private/tmp/mk61-chess-current-20261017.YOEYVY/hardware-long-menu/images/current.bin",
+      "bytes": 368660,
+      "footer": 367012,
+      "build": "3DF44CE4",
+      "sha256": "5832dc06f5f25786e747b4f67ceb389dba858c7ee4ff27776321a42501de8804",
+      "source": "/private/tmp/mk61-chess-current-20261017.YOEYVY/bundle/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+    },
+    "result": "TIMEOUT",
+    "full_search_seconds": null,
+    "timeout_seconds": 600,
+    "final_nodes": 210,
+    "progress": [
+      {
+        "nodes": 0,
+        "seconds": 54.3895268329652
+      },
+      {
+        "nodes": 21,
+        "seconds": 199.3576990829897
+      },
+      {
+        "nodes": 42,
+        "seconds": 243.15609320800286
+      },
+      {
+        "nodes": 63,
+        "seconds": 288.7348444579984
+      },
+      {
+        "nodes": 84,
+        "seconds": 333.3942228750093
+      },
+      {
+        "nodes": 105,
+        "seconds": 375.7911324579618
+      },
+      {
+        "nodes": 126,
+        "seconds": 419.1507742499816
+      },
+      {
+        "nodes": 147,
+        "seconds": 463.5025804580073
+      },
+      {
+        "nodes": 168,
+        "seconds": 507.8425674170139
+      },
+      {
+        "nodes": 189,
+        "seconds": 552.2434362919885
+      },
+      {
+        "nodes": 210,
+        "seconds": 597.0956130420091
+      }
+    ],
+    "profiling": false,
+    "raw_artifacts": "/private/tmp/mk61-chess-current-20261017.YOEYVY/hardware-long-menu",
+    "warm_seconds": null,
+    "same_game_package_sha256": true,
+    "configuration": "Matched Classic GRID=1, default resident menus/viewers/CHIP8, external USBDISK, owned compact_math."
+  },
+  "diagnostic": {
+    "firmware": {
+      "path": "/private/tmp/mk61-flash-perf-profile-hil/images/current.bin",
+      "bytes": 372524,
+      "footer": 370468,
+      "build": "DECE7830",
+      "sha256": "12afce9a943a98637036ffe380f2597ef8e20d75869a6aedc70f23b69583f1bf",
+      "source": "/private/tmp/mk61-flash-perf-profile-build/resident.bin"
+    },
+    "instrumentation": "MK61_DWT_RUNTIME_DETAIL=1; diagnostic only, excluded from final timings",
+    "repeat_probe_seconds": 40,
+    "complete_search": false,
+    "progress": [
+      {
+        "nodes": 0,
+        "seconds": 0.5416080410359427
+      },
+      {
+        "nodes": 21,
+        "seconds": 38.39403420803137
+      }
+    ],
+    "flash_cache": {
+      "budget": 32768,
+      "payload": 29696,
+      "used": 29696,
+      "lookups": 46941,
+      "hits": 46443,
+      "misses": 498,
+      "invalidations": 180
+    },
+    "points": {
+      "vm.invoke": {
+        "calls": 536,
+        "total_cycles": 3943694139,
+        "total_seconds": 41.08014728125,
+        "maximum_cycles": 116949449,
+        "self_cycles": 7287541,
+        "self_seconds": 0.07591188541666667
+      },
+      "app.load.vm": {
+        "calls": 536,
+        "total_cycles": 3353541615,
+        "total_seconds": 34.93272515625,
+        "maximum_cycles": 6280935,
+        "self_cycles": 150622594,
+        "self_seconds": 1.5689853541666667
+      },
+      "zx0.app.vm": {
+        "calls": 536,
+        "total_cycles": 3042689162,
+        "total_seconds": 31.694678770833335,
+        "maximum_cycles": 5681971,
+        "self_cycles": 2025078688,
+        "self_seconds": 21.09456966666667
+      },
+      "app.entry.vm": {
+        "calls": 1608,
+        "total_cycles": 580930744,
+        "total_seconds": 6.051361916666667,
+        "maximum_cycles": 110394611,
+        "self_cycles": 412738445,
+        "self_seconds": 4.299358802083334
+      },
+      "flash.read": {
+        "calls": 168125,
+        "total_cycles": 1003481450,
+        "total_seconds": 10.452931770833333,
+        "maximum_cycles": 34915,
+        "self_cycles": 1003481450,
+        "self_seconds": 10.452931770833333
+      },
+      "flash.write": {
+        "calls": 0,
+        "total_cycles": 0,
+        "total_seconds": 0.0,
+        "maximum_cycles": 0,
+        "self_cycles": 0,
+        "self_seconds": 0.0
+      },
+      "flash.erase": {
+        "calls": 0,
+        "total_cycles": 0,
+        "total_seconds": 0.0,
+        "maximum_cycles": 0,
+        "self_cycles": 0,
+        "self_seconds": 0.0
+      }
+    },
+    "interpretation": "Every RUN evicted the hot VM: 536 invocations and 536 loads in this partial sample. Inclusive load/decode/Flash durations overlap.",
+    "raw_artifacts": "/tmp/mk61-flash-perf-profile-hil"
+  },
+  "intermediate_experiments": [
+    {
+      "variant": "opcode-only-256",
+      "qualification_status": "FAIL",
+      "complete_searches": 2,
+      "seconds": [
+        229.13927666697418,
+        66.63358445797348
+      ],
+      "board_sha256": [
+        "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+        "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+      ],
+      "raw_artifacts": "/tmp/mk61-flash-perf-hil-473fa86a",
+      "selected": false
+    },
+    {
+      "variant": "rejected-generic-reader-256",
+      "qualification_status": "RUNNING",
+      "complete_searches": 2,
+      "seconds": [
+        244.1694376670057,
+        81.42039454198675
+      ],
+      "board_sha256": [
+        "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+        "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460"
+      ],
+      "raw_artifacts": "/tmp/mk61-flash-perf-hil-final",
+      "selected": false
+    }
+  ],
+  "verification": {
+    "app_flow": "ASan/UBSan: 20 warm paged RUNs keep APP/protected values with a logical 200KB image; cold eviction, pin refusal and errors PASS",
+    "flash": "ASan/UBSan: reference + shipping VM, >64-KiB images, calls/FOR/IF/ON/DATA/INPUT, source order, SIMD and errors PASS",
+    "reader": "192000 byte fetches and 1000 operand reads use one backing callback; exact tail/zero length/sticky I/O PASS",
+    "c9": "Real C9/NOR: 20 Store replacements, 16 page alternations per RUN; warm metadata; 7540 -> 11 reads, fully warm 0; no writes; source/compiler/media invalidation PASS",
+    "arm": {
+      "image_bytes": 66225,
+      "basic_lines": 4406,
+      "focal_lines": 4407,
+      "load_addresses": 3,
+      "source_window": 1488,
+      "basic_callbacks_before": 366454,
+      "basic_callbacks_after": 116317,
+      "focal_callbacks_before": 366483,
+      "focal_callbacks_after": 116538,
+      "scope": "ARM fixture adapter counters, not chess timing or physical NOR reads",
+      "input_resume": true
+    },
+    "usb": "Real ARM allocator/start: cold preparation, observation without allocation, idempotence, IRQ/OOM canaries and retry PASS",
+    "languages": "Full VM/scalar/SIMD, BASIC/FOCAL/functions/source/editor and overlay/resident handoff PASS",
+    "native": "Archive exclusion, pinned SDK, CDC RX, Flash/RAM/stack and APP gates PASS",
+    "resident_placement": {
+      "bytes": 400620,
+      "page_cache_budget": 0,
+      "effective_app_pool": 65760,
+      "largest_frame": 2784,
+      "hardware_tested": false
+    },
+    "f401": {
+      "path": "/private/tmp/mk61-flash-perf-f401/mk61s-M-mini-v3-lcd1602-a00-f401/mk61s-M-mini-v3-lcd1602-a00-f401.bin",
+      "bytes": 231016,
+      "footer": 229660,
+      "build": "4EA42AD7",
+      "sha256": "42a26a870ed4fcc8158fcda2dc39d2451a7799e0b54005994c9f87e8bcab6bed",
+      "hardware_tested": false
+    }
+  },
+  "final_state": {
+    "candidate_kept": true,
+    "original_firmware_restored": false,
+    "measured_session_firmware_writes": 0,
+    "owned_game_and_derived_pages_removed": true,
+    "non_app_original_files_preserved": true,
+    "candidate_apps_verified": true,
+    "calculator_preserved": true,
+    "health": {
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=443/18 raw(v/t/b)=1492/956/1019 val(mV/dC/mV)=3331/339/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090048\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14484 observed_remaining=14484 sram_xn=1\r\n/> ",
+      "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+      "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+      "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+      "pwd": "pwd\r\n/\r\n/> "
+    },
+    "port_closed": true,
+    "pico_touched": false,
+    "mini_touched": false,
+    "original_snapshot": "/tmp/mk61-flash-perf-hil-fast-at/original-files",
+    "cleanup": {
+      "status": "PASS",
+      "firmware_kept": "3AB3DD45",
+      "firmware_writes": 0,
+      "removed": [
+        {
+          "path": "/FLASHCHESS",
+          "reply": "rm -r \"/FLASHCHESS\"\r\nRemoved 30 entries.\r\n/> "
+        },
+        {
+          "path": "/System/VMCache/Pages",
+          "reply": "rm -r \"/System/VMCache/Pages\"\r\nRemoved 157 entries.\r\n/> "
+        }
+      ],
+      "port_closed": true,
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3AB3DD45",
+        "profile": "classic-v3-uc1609"
+      },
+      "health_before": {
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 213 used, 811 free, 1024 total\r\nVisible: 129 files, 84 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=433/18 raw(v/t/b)=1493/951/1021 val(mV/dC/mV)=3329/320/3320 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090042\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=11160 observed_remaining=11160 sram_xn=1\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  3.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> "
+      },
+      "non_app_original_files_preserved": true,
+      "candidate_apps_verified": true,
+      "original_files": 24,
+      "original_directories": 2,
+      "filesystem_after": {
+        "files": {
+          "/System/SRCEDIT.app": {
+            "bytes": 13483,
+            "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+          },
+          "/System/EXPLORER.app": {
+            "bytes": 5738,
+            "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+          },
+          "/System/SETUP.app": {
+            "bytes": 9974,
+            "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+          },
+          "/System/MARKDOWN.app": {
+            "bytes": 13482,
+            "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+          },
+          "/System/USBDISK.app": {
+            "bytes": 15303,
+            "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+          },
+          "/System/LANGVM.app": {
+            "bytes": 13807,
+            "sha256": "822e2a6e0029c98226ad60d5843c53aaae787db8f82955e6c5b88f7c9ae43505"
+          },
+          "/System/LANGIN.app": {
+            "bytes": 14069,
+            "sha256": "08b9443b320a67b51563f9c04390c77f074096c9567ac2e15b3149e546b370d5"
+          },
+          "/System/HELP1.txt": {
+            "bytes": 1269,
+            "sha256": "36ee9aede6c0c6b0997355205a516593e681fa047cb5b159e3563cb5a45466b5"
+          },
+          "/System/HELP0.txt": {
+            "bytes": 1533,
+            "sha256": "595372a6e45f4e2ef3c26b021c59e5750145b5572629f97ad8b46ae7c3bc2d12"
+          },
+          "/System/FOCAL.app": {
+            "bytes": 12674,
+            "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+          },
+          "/System/BASIC.app": {
+            "bytes": 14140,
+            "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+          },
+          "/System/VMCache/VMC-0015.app": {
+            "bytes": 281,
+            "sha256": "68a82b855fdcf51452bea29eb7d4368c19217bb6a2f63a880732f0e2419058b1"
+          },
+          "/System/VMCache/VMC-0014.app": {
+            "bytes": 261,
+            "sha256": "f1566f4810e9c0271c1a1384839e75f23e9cba2f847f91bf17d8971b7d5f970b"
+          },
+          "/System/VMCache/VMC-0017.app": {
+            "bytes": 229,
+            "sha256": "96e4c37e393949174a4f36d4183fb54f33be39cda83dcf979056e0c155e3b74a"
+          },
+          "/System/VMCache/VMC-0023.app": {
+            "bytes": 184,
+            "sha256": "05ea13d011732d7f942bd42bea94700b611abd05292569ba8b8673c33a445d56"
+          },
+          "/System/VMCache/VMC-0020.app": {
+            "bytes": 184,
+            "sha256": "68c87dc8ae82690e784ad2ff0d09f6b34534a0dc32b52cf992e6c0057fc56456"
+          },
+          "/System/VMCache/VMC-0016.app": {
+            "bytes": 3794,
+            "sha256": "a6cfc680505122f9b4fd6d5d12c40dc77e12c0af9609313d2bf5d008043d8251"
+          },
+          "/System/VMCache/VMC-0010.app": {
+            "bytes": 213,
+            "sha256": "e9637fb84988fafa802a022fda78246bbdce3d134c07fb02684a5efc5b5bb699"
+          },
+          "/System/VMCache/VMC-0012.app": {
+            "bytes": 213,
+            "sha256": "9ee22d9a011c2e85eb47d761f7d556b3ec3f5754ff09f73f10b2bc806805b04c"
+          },
+          "/System/VMCache/VMC-0011.app": {
+            "bytes": 172,
+            "sha256": "98ab4f4f9ae8ae01df76199fcb3a139dd1275b11100a640a94e4cf0ba9025751"
+          },
+          "/System/VMCache/VMC-000f.app": {
+            "bytes": 172,
+            "sha256": "6d1eb84a4d016ba736828dad46aa3862e14f5a1a3ca4f4469f8ff6d67c802f1d"
+          },
+          "/System/VMCache/VMC-000e.app": {
+            "bytes": 233,
+            "sha256": "31c77338d9090d47692cc68031e25b4228287ab4c3507112f2783ced673ab90c"
+          },
+          "/System/VMCache/VMC-000d.app": {
+            "bytes": 213,
+            "sha256": "95494299ac11526a38e018929e282f2452376fc53cc7a5af180f2aade8efd86c"
+          },
+          "/System/VMCache/VMSTORE.app": {
+            "bytes": 7361,
+            "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+          }
+        },
+        "directories": [
+          "/System",
+          "/System/VMCache"
+        ]
+      },
+      "health": {
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=443/18 raw(v/t/b)=1492/956/1019 val(mV/dC/mV)=3331/339/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1090048\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14484 observed_remaining=14484 sram_xn=1\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> "
+      },
+      "calculator_preserved": true
+    }
+  },
+  "raw_artifacts": "/tmp/mk61-flash-perf-hil-fast-at"
+}

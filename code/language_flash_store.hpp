@@ -2,6 +2,7 @@
 #define MK61_LANGUAGE_FLASH_STORE_HPP
 #include "language_vm_abi.hpp"
 #include "language_flash_program.hpp"
+#include "language_flash_cache.hpp"
 #include "program_store.hpp"
 #include "storage_path.hpp"
 #include "crc32.hpp"
@@ -23,10 +24,11 @@ class Store {
   bool opened_=false,building_=false,committed_=false;
   bool (*service_)();
   uint8_t* cache_;
+  ReadCache* shared_cache_;
 #if !defined(ARDUINO_ARCH_STM32)
   uint8_t fallback_[WRITE_BYTES];
 #endif
-  uint32_t cached_=UINT32_MAX;
+  uint32_t cached_=UINT32_MAX,cache_revision_=0;
   Space cached_space_=IMAGE;
   static bool find(uint16_t parent,bool directory,Type type,const char* name,uint16_t& id) {
     id=INVALID;
@@ -135,11 +137,15 @@ class Store {
     if(!cache_ || space>BOUNDARIES || dirs_[space]==INVALID)return false;
     while(n) {
       const uint32_t chunk=at/WRITE_BYTES;
-      if(cached_!=chunk || cached_space_!=space) {
-        char text[16];name(chunk,text);uint16_t file,copied=0;
-        if(!find(dirs_[space],false,Type::MK61_BINARY,text,file) ||
-           !program_store::read_source_range_id(file,0,cache_,WRITE_BYTES,&copied) || copied!=WRITE_BYTES)return false;
-        cached_=chunk;cached_space_=space;
+      const uint32_t revision=program_store::media_revision();
+      if(cached_!=chunk || cached_space_!=space || cache_revision_!=revision) {
+        if(!shared_cache_ || !shared_cache_->get(revision,dirs_[space],chunk,cache_)) {
+          char text[16];name(chunk,text);uint16_t file,copied=0;
+          if(!find(dirs_[space],false,Type::MK61_BINARY,text,file) ||
+             !program_store::read_source_range_id(file,0,cache_,WRITE_BYTES,&copied) || copied!=WRITE_BYTES)return false;
+          if(shared_cache_)shared_cache_->put(revision,dirs_[space],chunk,cache_);
+        }
+        cached_=chunk;cached_space_=space;cache_revision_=revision;
       }
       unsigned count=WRITE_BYTES-at%WRITE_BYTES;if(count>n)count=n;
       memcpy(out,cache_+at%WRITE_BYTES,count);out+=count;at+=count;n=uint16_t(n-count);
@@ -182,8 +188,8 @@ class Store {
     return true;
   }
 public:
-  Store(uint16_t* source,uint32_t fingerprint,bool (*service)()=nullptr,uint8_t* cache=nullptr)
-      :source_(source),fingerprint_(fingerprint),service_(service),cache_(cache) {
+  Store(uint16_t* source,uint32_t fingerprint,bool (*service)()=nullptr,uint8_t* cache=nullptr,ReadCache* shared_cache=nullptr)
+      :source_(source),fingerprint_(fingerprint),service_(service),cache_(cache),shared_cache_(shared_cache) {
 #if !defined(ARDUINO_ARCH_STM32)
     if(!cache_)cache_=fallback_;
 #endif
@@ -217,6 +223,13 @@ public:
     },size};
   }
   bool load(ValidatedImage& certificate) {
+    ReadCache::Image cached;
+    if(shared_cache_ && source_ && *source_!=INVALID &&
+       shared_cache_->image(program_store::media_revision(),*source_,fingerprint_,cached)) {
+      source_id_=*source_;stamp_=cached.stamp;parent_=cached.parent;root_=cached.root;
+      dirs_[IMAGE]=cached.directory;bank_=cached.bank;opened_=true;
+      certificate=cached.validated;size_=certificate.size;return true;
+    }
     if(!root())return false;
     uint16_t file,copied=0;uint8_t m[64];
     if(!find(root_,false,Type::MK61_BINARY,"Manifest",file) ||
@@ -230,6 +243,8 @@ public:
     if(!read(IMAGE,0,h,sizeof(h)) || memcmp(h,m+16,sizeof(h)) || memcmp(h,"LBV2",4) || h[4]!=14)return false;
     size_=dword(h+8);
     certificate={VALIDATED_MAGIC,size_,dword(h+12),word(h+16),dword(h+28),word(h+18),h[6],h[7],Language(h[5]),true};
+    if(shared_cache_)shared_cache_->remember_image(program_store::media_revision(),
+        {fingerprint_,stamp_,0,source_id_,parent_,root_,dirs_[IMAGE],bank_,certificate});
     return true;
   }
   bool publish(const ValidatedImage& certificate) {

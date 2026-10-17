@@ -993,10 +993,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       error = Error::INVALID_IMAGE;
       break;
     }
-    uint8_t operands[13];
-    const uint16_t operand_bytes=uint16_t(after-instruction<=sizeof(operands)?after-instruction:3);
-    if(!v.at(instruction).read(operands,operand_bytes)){error=Error::IO;break;}
-    const uint8_t* p=operands+1;
+    // The opcode is already known. Read only the aligned operand payload;
+    // variable records need just their two-byte count here.
+    alignas(4) uint8_t operands[12];
+    const uint8_t operand_bytes=uint8_t(after-instruction-1<=sizeof(operands)?after-instruction-1:2);
+    if(!v.at(instruction+1).read(operands,operand_bytes)){error=Error::IO;break;}
+    const uint8_t* p=operands;
     s.pc = after;
     Value a = 0, b = 0, value = 0;
     switch (op) {
@@ -1325,8 +1327,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #if MK61_VM_COMPARE_BLOCK
         if(compiled_block(v,s,data,steps,instruction,limit)) {
           VM_OPCODE_FUSED(3);
-          if(!v.at(instruction).read(operands,uint16_t(2+v.address_bytes()))){error=Error::IO;break;}
-          p=operands+1;
+          if(!v.at(instruction+1).read(operands,uint16_t(1+v.address_bytes()))){error=Error::IO;break;}
+          p=operands;
         } else
 #endif
         {

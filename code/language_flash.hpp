@@ -32,28 +32,46 @@ struct Input {
   uint32_t size;
 };
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
-// The resident C9 adapter already owns a 1 KiB page cache across APP swaps.
-// Keep only a bounded read facade here; duplicating the cache in each APP
-// would add copying, RAM and two independent invalidation policies.
+// Keep a bounded opcode window for this invocation. Its bytes remain valid
+// when resident line-map reads displace the C9 page; no pointer survives APP
+// replacement. Opcode and operand reads share this bounded window.
 class Reader {
-  Input input_;mutable bool good_;
+  // Narrow immediates keep fast opcode/operand hits inside the APP budget.
+  static constexpr unsigned WINDOW_BYTES=128;
+  mutable Input input_;
+  mutable uint32_t begin_=UINT32_MAX;mutable uint8_t page_[WINDOW_BYTES];
 public:
-  explicit Reader(Input input):input_(input),good_(input.read!=nullptr) {}
-  bool good() const {return good_;}
-  void fail() const {good_=false;}
+  explicit Reader(Input input):input_(input) {}
+  bool good() const {return input_.read!=nullptr;}
+  void fail() const {input_.read=nullptr;begin_=UINT32_MAX;}
   uint32_t size() const {return input_.size;}
-  void invalidate() const {}
-  bool read(uint32_t at,void* output,size_t n) const {
-    if(!good_ || at>size() || n>size()-at || (!output && n))return false;
+  void invalidate() const {begin_=UINT32_MAX;}
+  __attribute__((noinline)) bool read(uint32_t at,void* output,size_t n) const {
+    if(!good() || at>size() || n>size()-at || (!output && n))return false;
+    if(!n)return true;
     auto* out=static_cast<uint8_t*>(output);
-    while(n) {
-      const uint16_t count=uint16_t(n<READ_BYTES?n:READ_BYTES);
-      if(!input_.read(input_.context,at,out,count)){good_=false;return false;}
-      at+=count;out+=count;n-=count;
+    const uint32_t offset=at-begin_;
+    if(at>=begin_ && n+offset<=WINDOW_BYTES) {
+      memcpy(out,page_+offset,n);return true;
     }
+    do {
+      const uint16_t count=uint16_t(n<READ_BYTES?n:READ_BYTES);
+      if(!input_.read(input_.context,at,out,count)){fail();return false;}
+      at+=count;out+=count;n-=count;
+    } while(n);
     return true;
   }
-  uint8_t at(uint32_t offset) const {uint8_t byte=0;(void)read(offset,&byte,1);return byte;}
+  uint8_t at(uint32_t offset) const {
+    if(offset>=size())return 0;
+    const uint32_t begin=offset/WINDOW_BYTES*WINDOW_BYTES;
+    if(begin_!=begin) {
+      const uint32_t remaining=size()-begin;
+      const uint16_t count=uint16_t(remaining<WINDOW_BYTES?remaining:WINDOW_BYTES);
+      if(!read(begin,page_,count))return 0;
+      begin_=begin;
+    }
+    return page_[offset%WINDOW_BYTES];
+  }
 };
 #else
 class Reader {

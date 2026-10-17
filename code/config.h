@@ -871,6 +871,23 @@
     #define MK61_FLASH_LANGUAGE_VM (MK61_OVERLAY_LANGUAGE_VM || MK61_RESIDENT_LANGUAGE_VM)
   #endif
 #endif
+// Bounded Flash pages reuse the former split-VM image-cache allowance:
+// Classic F411 32 KiB, other F411 boards 24 KiB. F401 and the resident-VM
+// experiment keep their existing single resident page.
+#ifndef MK61_FLASH_VM_PAGE_CACHE_BYTES
+  #if MK61_FLASH_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
+    #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
+      #define MK61_FLASH_VM_PAGE_CACHE_BYTES 32768
+    #else
+      #define MK61_FLASH_VM_PAGE_CACHE_BYTES 24576
+    #endif
+  #else
+    #define MK61_FLASH_VM_PAGE_CACHE_BYTES 0
+  #endif
+#endif
+#if MK61_FLASH_VM_PAGE_CACHE_BYTES < 0 || MK61_FLASH_VM_PAGE_CACHE_BYTES > 32768
+  #error "Flash page cache must fit in 32 KiB"
+#endif
 // Select the cache budget after complete board profiles and legacy aliases.
 // Classic F411 retains 32 KiB raw images; other F411 boards keep 24 KiB.
 // F401/no-overlay profiles keep zero; explicit qualification overrides remain.

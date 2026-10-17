@@ -89,6 +89,28 @@ static_assert(sizeof(Persistent) == VALUES_SIZE, "workspace partition ABI change
 static_assert(sizeof(Persistent) < shared_memory::WORKSPACE_SIZE,
               "values need workspace");
 bool busy;
+#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
+using FlashPageCache=flash::PageCache<MK61_FLASH_VM_PAGE_CACHE_BYTES>;
+static_assert(sizeof(FlashPageCache)<=MK61_FLASH_VM_PAGE_CACHE_BYTES,"Flash page cache budget");
+#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#error "select either legacy image caching or Flash page caching"
+#endif
+#define MK61_FLASH_CACHE_STRING_INNER(x) #x
+#define MK61_FLASH_CACHE_STRING(x) MK61_FLASH_CACHE_STRING_INNER(x)
+__asm__(".global mk61_lazy_vm_cache_bytes\n.set mk61_lazy_vm_cache_bytes, "
+        MK61_FLASH_CACHE_STRING(MK61_FLASH_VM_PAGE_CACHE_BYTES));
+flash::ReadCache* flash_page_cache(bool allocate=true) {
+  static FlashPageCache* cache=nullptr;
+  if(!cache && allocate) {
+    void* memory=shared_memory::allocate_retained_buffer(sizeof(FlashPageCache));
+    if(memory)cache=new(memory) FlashPageCache;
+  }
+  return cache;
+}
+#elif MK61_FLASH_LANGUAGE_VM && MK61_OVERLAY_LANGUAGE_VM
+flash::ReadCache* flash_page_cache() {return nullptr;}
+#endif
+
 #if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
 static_assert(MK61_LANGUAGE_VM_CACHE_DENSITY == 0 || MK61_LANGUAGE_VM_CACHE_DENSITY == 1,
               "cache density must be 0 or 1");
@@ -386,7 +408,9 @@ uint16_t flash_source(Language language,loadable_module::Command command,uint32_
     return a<=0xFFFF?uint16_t(a):0xFFFF;
   return 0xFFFF;
 }
-uint32_t flash_fingerprint(Language language) {
+uint32_t flash_fingerprint(Language language,flash::ReadCache* cache) {
+  uint32_t value;
+  if(cache && cache->fingerprint(program_store::media_revision(),language,value))return value;
   uint32_t crc=0;program_store::Entry entry;
   const loadable_module::Kind kinds[]={language==Language::BASIC?loadable_module::Kind::TINYBASIC:loadable_module::Kind::FOCAL,
     loadable_module::Kind::LANGUAGE_VM,loadable_module::Kind::LANGUAGE_INPUT};
@@ -395,7 +419,9 @@ uint32_t flash_fingerprint(Language language) {
     if(!loadable_module::find_system_app(kind,entry) || !program_store::content_stamp(entry.id,stamp))return 0;
     crc=(crc<<7)|(crc>>25);crc^=stamp;
   }
-  return crc^COMPILER_MAGIC^resident_firmware::build_id();
+  value=crc^COMPILER_MAGIC^resident_firmware::build_id();
+  if(cache)cache->remember_fingerprint(program_store::media_revision(),language,value);
+  return value;
 }
 }
 #endif
@@ -456,8 +482,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   context.source_id=source_id;
 #endif
 #if MK61_FLASH_LANGUAGE_VM
-  flash::Store store(&context.compile.request.source_id,flash_fingerprint(language),
-      [](){idle_main_process();return true;},partition.tail()-FLASH_CACHE_BYTES);
+  auto* page_cache=flash_page_cache();
+  flash::Store store(&context.compile.request.source_id,flash_fingerprint(language,page_cache),
+      [](){idle_main_process();return true;},partition.tail()-FLASH_CACHE_BYTES,page_cache);
   auto flash_io=store.io();context.storage=&flash_io;
 #endif
   app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
@@ -546,7 +573,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
       stage.request.compiled={Error::NONE,certificate.size,0,0,certificate.stack};
       stage.request.storage=&flash_io;
       plan.size=certificate.size;plan.prefix=sizeof(ExecutionState);
-      const auto committed=memory.commit_paged(plan);
+      // No compiler native frame is live here. Preserve an already loaded
+      // VM between RUNs; load(kind) still replaces/revalidates other APPs.
+      const auto committed=memory.commit_paged(plan,false);
       if(committed!=RuntimeStatus::OK)return committed;
       store.invalidate();
       r.size=sizeof(r);r.version=REQUEST_VERSION;r.paged=store.input(certificate.size);r.storage=&flash_io;
@@ -759,7 +788,9 @@ loadable_module::RuntimeStatus invoke_resident(Language language, loadable_modul
   return status;
 }
 bool prepare_image_cache() {
-#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && defined(STM32F411xE)
+#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
+  return flash_page_cache()!=nullptr;
+#elif MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && defined(STM32F411xE)
   return image_cache.ensure();
 #else
   return true;
@@ -767,7 +798,16 @@ bool prepare_image_cache() {
 }
 bool cache_diagnostics(CacheDiagnostics& out) {
   out={};
-#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
+  out.budget=MK61_FLASH_VM_PAGE_CACHE_BYTES;
+  auto* cache=flash_page_cache(false);
+  if(cache) {
+    const auto& s=cache->statistics();
+    out={MK61_FLASH_VM_PAGE_CACHE_BYTES,cache->payload(),cache->used(),
+        s.lookups,s.hits,s.misses,0,0,s.publications,s.evictions,s.invalidations};
+  }
+  return true;
+#elif MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   const auto& s=image_cache.statistics();
   out={MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES,ProgramCache::PAYLOAD_CAPACITY,image_cache.used(),
        s.lookups,s.hits,s.misses,s.reservations,s.reservation_failures,s.publications,s.evictions,s.invalidations};

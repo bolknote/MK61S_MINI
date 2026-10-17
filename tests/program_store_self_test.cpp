@@ -4689,7 +4689,7 @@ static void test_source_draft_banks_on_small_flash() {
 #include "language_flash_fs_cases.inc"
 #endif
 int main(int argc, char** argv) {
-  if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();
+  if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
     test_language_flash_compiler_on_c9();
 #endif
