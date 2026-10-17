@@ -1,7 +1,7 @@
 #ifndef TEXT_SCREEN_HPP
 #define TEXT_SCREEN_HPP
 
-#include "config.h"
+#include "ui_build_config.hpp"
 #include "rust_types.h"
 
 namespace text_screen {

@@ -471,6 +471,18 @@ class DeviceController extends ChangeNotifier {
       _state = DeviceConnectionState.attached;
       _markDisplayChanged();
       _lastError = null;
+      if ((caps.flags & MkCapability.clockSync) != 0) {
+        final now = DateTime.now();
+        final clock = Uint8List(8);
+        clock[0] = 1; // Preserve a clock already set on the device.
+        MkProtocol.writeU16(clock, 1, now.year);
+        clock[3] = now.month;
+        clock[4] = now.day;
+        clock[5] = now.hour;
+        clock[6] = now.minute;
+        clock[7] = now.second;
+        _send(MkMessage.clockSync, clock);
+      }
       _send(MkMessage.requestKeyframe);
       _notify();
     } on FormatException catch (error) {
@@ -748,7 +760,10 @@ class DeviceController extends ChangeNotifier {
     }
     _stopActivationRetries();
     _activationRequested = true;
-    if (!_writeBytes(_activateUsbScreenCommand)) {
+    bool activate() => _portDescriptors[_connectedPort]?.isPicoCalc == true
+        ? _send(MkMessage.activate)
+        : _writeBytes(_activateUsbScreenCommand);
+    if (!activate()) {
       _activationRequested = false;
       return false;
     }
@@ -760,7 +775,7 @@ class DeviceController extends ChangeNotifier {
         if (identical(_activationTimer, timer)) _activationTimer = null;
         return;
       }
-      if (!_writeBytes(_activateUsbScreenCommand)) {
+      if (!activate()) {
         timer.cancel();
         if (identical(_activationTimer, timer)) _activationTimer = null;
       }

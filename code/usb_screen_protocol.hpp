@@ -38,6 +38,7 @@ enum class MessageType : u8 {
   PING = 0x14,
   PONG = 0x15,
   REQUEST_KEYFRAME = 0x16,
+  ACTIVATE = 0x17,
 
   FRAME_BEGIN = 0x20,
   RECT = 0x21,
@@ -45,6 +46,9 @@ enum class MessageType : u8 {
 
   KEY_EVENT = 0x30,
   RELEASE_ALL_KEYS = 0x31,
+  // Optional clock service, advertised separately; older residents ignore it.
+  CLOCK_SYNC = 0x40,
+  CLOCK_STATE = 0x41,
 };
 
 enum class Codec : u8 {
@@ -60,6 +64,7 @@ enum Capability : u16 {
   CAP_ATOMIC_FRAMES = 1U << 4,
   CAP_TERMINAL_MUX = 1U << 5,
   CAP_TERMINAL_KBD = 1U << 6,
+  CAP_CLOCK_SYNC = 1U << 7,
 };
 
 static constexpr u16 CAPABILITIES =

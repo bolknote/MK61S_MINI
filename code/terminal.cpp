@@ -1,4 +1,5 @@
 #include "terminal.hpp"
+#include "terminal_script_backend.hpp"
 #include "Arduino.h"
 #include "bounded_string.hpp"
 #include "config.h"
@@ -242,19 +243,8 @@ static void terminal_print_hex_u32(u32 value) {
 // мнемоники lasm/isa формируются в terminal_mnemonics без второй большой таблицы.
 // Русские буквы записаны байтами M8/CP1251, остальные знаки - ASCII.
 static constexpr char ISA_61[] =
-"0,1,2,3,4,5,6,7,8,9,.,/-/,\302\317,CX,B^,Bx,+,-,*,:,XY,F10^x,Fe^x,Flg,Fln,Fasin,Facos,Fatg,Fsin,Fcos,Ftg,far,\
-\317\xE8,V\"\"\",Fx^2,F1/x,Fx^y,(),Ko->',?,?,?,Ko->'\",?,?,?,?,disp,Ko<-'\",|x|,3H,Ko<-',K[x],K{x},Kmax,K^,Kv,K(+),\310HB,C\327,?,Ko->'\",?,?,\
-X->\3170,X->\3171,X->\3172,X->\3173,X->\3174,X->\3175,X->\3176,X->\3177,X->\3178,X->\3179,X->\317A,X->\317B,X->\317C,X->\317\304,X->\317E,X->\317F,\
-C/\317,\301/\317,B/O,\317/\317,HO\317,K1,K2,Fx!=0,FL2,Fx>=0,FL3,FL1,Fx<0,FL0,Fx=0,?,\
-\317->X0,\317->X1,\317->X2,\317->X3,\317->X4,\317->X5,\317->X6,\317->X7,\317->X8,\317->X9,\317->XA,\317->XB,\317->XC,\317->X\xC4,\317->XE,\317->XF,\
-Kx!=0 0,Kx!=0 1,Kx!=0 2,Kx!=0 3,Kx!=0 4,Kx!=0 5,Kx!=0 6,Kx!=0 7,Kx!=0 8,Kx!=0 9,Kx!=0 A,Kx!=0 B,Kx!=0 C,Kx!=0 \304,Kx!=0 E,?,\
-K\301\3170,K\301\3171,K\301\3172,K\301\3173,K\301\3174,K\301\3175,K\301\3176,K\301\3177,K\301\3178,K\301\3179,K\301\317A,K\301\317B,K\301\317C,K\301\317\304,K\301\317E,?,\
-Kx>=0 0,Kx>=0 1,Kx>=0 2,Kx>=0 3,Kx>=0 4,Kx>=0 5,Kx>=0 6,Kx>=0 7,Kx>=0 8,Kx>=0 9,Kx>=0 A,Kx>=0 B,Kx>=0 C,Kx>=0 \304,Kx>=0 E,?,\
-\312\317\3170,\312\317\3171,\312\317\3172,\312\317\3173,\312\317\3174,\312\317\3175,\312\317\3176,\312\317\3177,\312\317\3178,\312\317\3179,\312\317\317A,\312\317\317B,\312\317\317C,\312\317\317\304,\312\317\317E,?,\
-KX->\3170,KX->\3171,KX->\3172,KX->\3173,KX->\3174,KX->\3175,KX->\3176,KX->\3177,KX->\3178,KX->\3179,KX->\317A,KX->\317B,KX->\317C,KX->\317\304,KX->\317E,?,\
-Kx<0 0,Kx<0 1,Kx<0 2,Kx<0 3,Kx<0 4,Kx<0 5,Kx<0 6,Kx<0 7,Kx<0 8,Kx<0 9,Kx<0 A,Kx<0 B,Kx<0 C,Kx<0 \304,Kx<0 E,?,\
-K\317->X0,K\317->X1,K\317->X2,K\317->X3,K\317->X4,K\317->X5,K\317->X6,K\317->X7,K\317->X8,K\317->X9,K\317->XA,K\317->XB,K\317->XC,K\317->X\304,K\317->XE,?,\
-Kx=0 0,Kx=0 1,Kx=0 2,Kx=0 3,Kx=0 4,Kx=0 5,Kx=0 6,Kx=0 7,Kx=0 8,Kx=0 9,Kx=0 A,Kx=0 B,Kx=0 C,Kx=0 \304,Kx=0 E,?";
+#include "terminal_classic_isa.inc"
+;
 
 template<usize N>
 constexpr usize terminal_mnemonic_count(const char (&table)[N]) {
@@ -4959,4 +4949,9 @@ terminal_protocol::Result class_terminal::execute_script_line(
   }
   memcpy(input_buffer, interactive_line, MAX_INPUT_CHAR);
   return result;
+}
+
+bool terminal_script_backend::assemble(const char* args, isize& next) {
+  TerminalMnemonicTable table;
+  return table.ok() && terminal_script::assemble(args, next, table.data());
 }

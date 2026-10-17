@@ -2,7 +2,12 @@
 #define MK61_MK52_CROSS_HAL
 
 #include "rust_types.h"
+#if defined(MK61_CORE_STANDALONE)
+#include "keyboard_core.hpp"
+enum class key_state { PRESSED = 0, RELEASED = keyboard_core::RELEASE_MASK };
+#else
 #include "keyboard.h"
+#endif
 #include "keyboard_layout.hpp"
 
 class __attribute__((__packed__)) TMK61_cross_key {

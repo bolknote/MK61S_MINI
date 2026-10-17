@@ -1,4 +1,4 @@
-#include "config.h"
+#include "ui_build_config.hpp"
 
 #if MK61_PROPORTIONAL_UI_FONTS
 

@@ -10,12 +10,12 @@ ABS32 = 2
 PC_RELATIVE = {3, 10, 30, 42, 51}  # REL32, THM_CALL, THM_JUMP24, PREL31, THM_JUMP19
 
 
-def encode_offsets(offsets):
+def encode_offsets(offsets, image_limit=20480):
     output = bytearray()
     end = 0
     for offset in offsets:
         gap = offset - end
-        if gap < 0 or offset > 20480 - 4:
+        if gap < 0 or offset > image_limit - 4:
             raise ValueError('overlapping or out-of-range APP relocation')
         while gap >= 128:
             output.append((gap & 127) | 128)
@@ -93,4 +93,4 @@ def extract(path: Path, base: int, image_size: int, memory_size: int):
     if not records:
         raise ValueError('ELF contains no relocation records; link with --emit-relocs')
     offsets.sort()
-    return offsets, encode_offsets(offsets)
+    return offsets, encode_offsets(offsets, image_size)

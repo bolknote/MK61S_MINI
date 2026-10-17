@@ -21,10 +21,20 @@ class DeviceSerialPort {
   final String? productName;
   final String? serialNumber;
 
+  bool get isPicoCalc =>
+      vendorId == 0xcafe &&
+      productId == 0x4003 &&
+      [
+        description,
+        manufacturer,
+        productName,
+      ].whereType<String>().join(' ').toLowerCase().contains('mk61s picocalc');
+
   /// Автоматическая активация намеренно ограничена USB-идентификатором прошивки
   /// МК-61. Имена портов вроде COM3 или ttyUSB0 ничего не доказывают: они могут
   /// принадлежать модемам, ИБП, отладочным консолям или посторонним контроллерам.
   bool get isAutomaticCandidate {
+    if (isPicoCalc) return true;
     if (vendorId != 0x0483 || productId != 0x5740) return false;
     final identity = [
       description,

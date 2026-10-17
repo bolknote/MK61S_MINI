@@ -1,0 +1,30 @@
+name: PicoCalc Pico H prototype
+
+on:
+  pull_request:
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'tools/build_picocalc*.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mk61-app/**', 'tests/picocalc*', 'tests/run_picocalc_tests.sh', '.github/workflows/picocalc.yml']
+  push:
+    branches: [main]
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'tools/build_picocalc*.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mk61-app/**', 'tests/picocalc*', 'tests/run_picocalc_tests.sh', '.github/workflows/picocalc.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Test core, UI, FAT, languages, M61, RTC, sleep, USB Screen and UF2
+        run: MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh
+      - name: Install pinned GNU Arm compiler
+        uses: ./.github/actions/setup-native-gcc
+      - name: Build RP2040 firmware and check CPU/ABI and UF2 payload
+        run: python3 tools/build_picocalc.py --fetch-sdk
+      - name: Build ARMv6-M native APP examples
+        run: python3 tools/build_picocalc_apps.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: mk61s-picocalc-pico-h-prototype
+          path: binary/picocalc-pico-h/

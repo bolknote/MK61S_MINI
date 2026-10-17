@@ -22,8 +22,12 @@
 #include <string.h>
 //#include "Arduino.h"
 #include "mk61emu_core.h"
+#if defined(MK61_CORE_STANDALONE)
+#include "mk61emu_standalone.hpp"
+#else
 #include "debug.h"
 #include "config.h"
+#endif
 #include "rust_types.h"
 #include "stm32_sram_bit_band.hpp"
 #include "dwt_profiler.hpp"

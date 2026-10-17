@@ -320,11 +320,13 @@ def type_magic(value: str | None) -> int:
 
 
 def pack(args: argparse.Namespace) -> bytes:
+    pico_target = getattr(args, "target", "stm32") == "picocalc-pico-h"
+    memory_limit = 48 * 1024 if pico_target else APP_MAX_MEMORY_SIZE
     image = args.image.read_bytes()
     table = args.relocations.read_bytes()
     memory_size = args.memory_size
-    if not image or len(image) > memory_size or memory_size > APP_MAX_MEMORY_SIZE:
-        raise PackError("module exceeds the 20 KiB APP image limit")
+    if not image or len(image) > memory_size or memory_size > memory_limit:
+        raise PackError("module exceeds the target APP image limit")
     if args.entry_offset < 0 or args.entry_offset >= len(image) or args.entry_offset & 1:
         raise PackError("entry offset must be aligned and inside the image")
     if args.load_address != LOAD_ADDRESS:
@@ -346,9 +348,11 @@ def pack(args: argparse.Namespace) -> bytes:
           f"selected={'BCJ' if use_bcj else 'plain'}")
 
     stored = code + table
-    if HEADER_SIZE + len(stored) > HEADER_SIZE + APP_MAX_MEMORY_SIZE:
-        raise PackError("module exceeds the 20 KiB APP container limit")
+    if HEADER_SIZE + len(stored) > HEADER_SIZE + memory_limit:
+        raise PackError("module exceeds the target APP container limit")
     flags = PORTABLE_FLAG | RELOCATABLE_FLAG | (BCJ_FLAG if use_bcj else 0)
+    if pico_target:
+        flags |= 8
     header = bytearray(HEADER_SIZE)
     header[:8] = b"MK61APP\0"
     struct.pack_into("<HHHBBIIIIIIIIIIH", header, 8,
@@ -365,6 +369,7 @@ def pack(args: argparse.Namespace) -> bytes:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--portable", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--target", choices=("stm32", "picocalc-pico-h"), default="stm32")
     parser.add_argument("--kind", choices=KINDS, required=True)
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--relocations", type=Path, required=True)

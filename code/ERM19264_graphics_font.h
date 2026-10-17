@@ -8,7 +8,10 @@
 #ifndef ERM19264_FONT_S_H
 #define ERM19264_FONT_S_H
 
-#if (ARDUINO >=100)
+#if defined(MK61_CORE_STANDALONE)
+  #include <stddef.h>
+  #include <stdint.h>
+#elif (ARDUINO >=100)
   #include "Arduino.h"
 #else
   #include "WProgram.h"

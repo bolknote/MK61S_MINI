@@ -1,0 +1,43 @@
+#ifndef MK61_PICOCALC_STORAGE_HPP
+#define MK61_PICOCALC_STORAGE_HPP
+#include "rust_types.h"
+
+namespace picocalc {
+namespace sd {
+bool init();
+bool ready();
+u32 sectors();
+bool read(u32 sector, u8 out[512]);
+bool read_sectors(u32 sector, u8* out, u32 count);
+bool write(u32 sector, const u8 data[512]);
+bool read_bytes(u32 sector, u32 offset, u8* out, u32 count);
+bool write_bytes(u32 sector, u32 offset, const u8* data, u32 count);
+bool sync();
+}
+namespace files {
+constexpr unsigned PATH_SIZE = 384;
+struct Entry { char name[256]; bool directory; u32 size; };
+bool mount();
+bool ready();
+const char* error();
+bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more);
+bool read(const char* path, u8* out, unsigned capacity, unsigned& used);
+bool read_text(const char* path, char* out, unsigned capacity, unsigned& used);
+bool write(const char* path, const u8* data, unsigned size);
+bool write_text(const char* path, const char* data, unsigned size);
+bool mkdir(const char* path);
+bool remove(const char* path);
+bool rename(const char* from, const char* to);
+bool exists(const char* path);
+bool stat(const char* path, Entry& out);
+u32 revision();
+bool read_range(const char* path, u32 offset, u8* out, unsigned count, unsigned& used);
+bool begin_usb();
+bool end_usb();
+bool usb_active();
+bool usb_ejected();
+void usb_eject();
+bool format();
+}
+} // namespace picocalc
+#endif

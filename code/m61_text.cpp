@@ -11,7 +11,9 @@
 #include "terminal_catalog.hpp"
 #include "shared_memory.hpp"
 
-#ifndef M61_TEXT_HOST_TEST
+#if defined(MK61_CORE_STANDALONE)
+#include "m61_platform.hpp"
+#elif !defined(M61_TEXT_HOST_TEST)
 #include "Arduino.h"
 #include "calculator_control.hpp"
 #include "development.hpp"
@@ -46,7 +48,7 @@ void lcd_std_display_redraw(void);
 #include <stdio.h>
 #include <string.h>
 
-#if defined(M61_TEXT_HOST_TEST) || defined(MK61_DISPLAY_UC1609)
+#if defined(M61_TEXT_HOST_TEST) || defined(MK61_DISPLAY_UC1609) || defined(MK61_CORE_STANDALONE)
   #define M61_TEXT_FONT_COMMAND 1
 #else
   #define M61_TEXT_FONT_COMMAND 0
@@ -665,7 +667,9 @@ static void fail_script(const char* message, u16 line) {
                        message == NULL ? "unknown error" : message);
   stop_runner();
   has_error = true;
-#ifndef M61_TEXT_HOST_TEST
+#if defined(MK61_CORE_STANDALONE)
+  picocalc::script::report_error(last_error_info);
+#elif !defined(M61_TEXT_HOST_TEST)
   Serial.print("M61 error in ");
   Serial.print(last_error_info.script);
   if(line != 0) {
@@ -741,7 +745,7 @@ static bool prepare_read_window(void) {
 }
 
 static bool read_next_line(char* line, u16 capacity) {
-#ifndef M61_TEXT_HOST_TEST
+#if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_READ_LINE);
 #endif
   if(line == NULL || capacity == 0) return false;
@@ -1501,7 +1505,9 @@ enum class ReferencedOpenResult : u8 {
 
 static ReferencedOpenResult open_referenced_entry(
     const program_store::Entry& entry) {
-#ifndef M61_TEXT_HOST_TEST
+#if defined(MK61_CORE_STANDALONE)
+  return (ReferencedOpenResult)picocalc::script::open_entry(entry);
+#elif !defined(M61_TEXT_HOST_TEST)
   if(entry.type == program_store::ProgramType::TINYBASIC) {
     const TinyBasicRunStatus status = RunTinyBasicProgramStatus(
         entry.id, TinyBasicRunMode::M61_SCENARIO);
@@ -1570,7 +1576,7 @@ static bool resolve_referenced_file(u16 cwd, const char* path,
 
 static ReferencedOpenResult open_referenced_file(const char* path,
                                                PreparedLine* prepared = nullptr) {
-#ifndef M61_TEXT_HOST_TEST
+#if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_OPEN);
 #endif
   program_store::Entry entry;
@@ -1761,7 +1767,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
 
 static bool execute_script_line(const char* raw_line,
                                PreparedLine* prepared = nullptr) {
-#ifndef M61_TEXT_HOST_TEST
+#if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_COMMAND);
 #endif
   line_error_message = NULL;
@@ -1916,7 +1922,7 @@ static bool execute_script_result(const terminal_protocol::Result& result,
 
 #if MK61_M61_PREPARED_CACHE
 static bool execute_prepared_line(PreparedLine* cached, char* line) {
-#ifndef M61_TEXT_HOST_TEST
+#if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_COMMAND);
 #endif
   // A returned action can release this runtime. Keep command metadata local,
@@ -1944,7 +1950,7 @@ static bool execute_prepared_line(PreparedLine* cached, char* line) {
 #endif
 
 void service(void) {
-#ifndef M61_TEXT_HOST_TEST
+#if !defined(M61_TEXT_HOST_TEST) && !defined(MK61_CORE_STANDALONE)
   MK61_RUNTIME_PROFILE_SCOPE(dwt_profiler::Point::M61_RUNNER);
 #endif
   if(runner_state == RunnerState::WAIT_TIME) {

@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-17T15:03:04.312094+00:00",
+  "source_revision": "94a8bac7158d74e26f77f9fdafae5876fe3192e6",
+  "source_has_uncommitted_port_changes": true,
+  "build": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.3.0",
+    "mcu": "RP2040",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + Pico SDK float/double helpers",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 445952,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 142232,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 891904,
+    "bin_sha256": "96a121e0ff5a3c1bc7550fbd6309e62fd9881bea3ef957a90eac5d88c870c8c9",
+    "uf2_sha256": "606233c72c1bb730bccff05038c5c8d700dc0267e40fa785841eb8e524a260fc",
+    "hardware_verified": false
+  },
+  "architecture": {
+    "m61_runner": "Shared code/m61_text.cpp, including prepared cache, traps, bindings, nested returns and context restoration",
+    "command_runtime": "Shared code/terminal_script_runtime.cpp; 29 allowed commands; board backends own effects and storage",
+    "shared_components": [
+      "calculator core and math",
+      "keyboard scan coordinates and opcode sequences",
+      "BASIC/FOCAL compilers and VM",
+      "FMK, M8, ANSI and PRINT parsing",
+      "CRC32+ZX0 binary loader",
+      "Markdown semantic decoder and WBMP"
+    ],
+    "pico_adapters": [
+      "FAT paths / program_store IDs",
+      "immutable editor source snapshot",
+      "192x64 logical raster and FMK geometry",
+      "foreground keyboard/USB pump",
+      "PWM audio and Pico LED"
+    ],
+    "future_parity_guard": "Pico CI exercises the real runner and checks all 256 command IDs against shared script permissions"
+  },
+  "hardware": {
+    "flash_uid": "E6657CD423721C35",
+    "flash_write_and_readback_verified_with_official_picotool": true,
+    "qualified_uf2_sha256": "606233c72c1bb730bccff05038c5c8d700dc0267e40fa785841eb8e524a260fc",
+    "m61_hil_passed": true,
+    "m61_cases": [
+      "USB SD round trip with new isolated M61 test directory",
+      "Nested M61/BASIC, persistent variables/array, FMK geometry, RUN and TRAP/context return",
+      "BIND consumes physical calculator opcode without entering the digit",
+      "OK opens Markdown; viewer Esc returns to scenario; next Esc cancels and restores font",
+      "Unsaved root source survives nested interpreters and cancellation, returns to editor, explicit discard",
+      "Unmodified Turochamp: autoexec -> side menu -> board -> RUN game menu -> Esc",
+      "Unmodified Bumblebee: optional manual, real program traps, OK help and cancel"
+    ],
+    "test_input_transport": "USB CDC through the same foreground key dispatch; separate user confirmation of physical keyboard below",
+    "card_test_directory": "/MK61S-M61-20261017-175722",
+    "card_formatted_or_repaired": false,
+    "user_confirmed_russian_turochamp_screen_and_physical_arrows": true,
+    "user_reply": "Да, надписи и стрелки работают",
+    "final_service": "Turochamp board.tbi, waiting for game input",
+    "physical_keys_since_flash": 6,
+    "keyboard_errors": 0,
+    "dropped_keys": 0,
+    "stack_peak_bytes": 7996,
+    "stack_reserved_bytes": 32768,
+    "msc_read_errors": 0,
+    "msc_write_errors": 0,
+    "math_smoke_passed": true,
+    "calculator_cases": [
+      {
+        "case": "12 ENTER 34 +",
+        "result": 46.0,
+        "passed": true
+      },
+      {
+        "case": "sqrt(9)",
+        "result": 3.0,
+        "passed": true
+      },
+      {
+        "case": "sin(90 DEG)",
+        "result": 1.0,
+        "passed": true
+      }
+    ],
+    "ui_cases": [
+      "Menu owns input; X preserved",
+      "Live RU/EN selection and restoration",
+      "Independent calculator font selection and restoration",
+      "Deferred settings save to Pico flash"
+    ],
+    "lcd": "Unchanged ST7365P RGB565 / complete frame per CS / CABC disabled / backlight 240",
+    "evidence": [
+      "binary/picocalc-pico-h/hardware-m61-smoke.json",
+      "binary/picocalc-pico-h/hardware-m61-ui-smoke.json",
+      "binary/picocalc-pico-h/hardware-m61-final-status.txt"
+    ],
+    "evidence_scope": "Full M61 HIL and math/UI HIL used this exact verified UF2; user then used physical arrows and Enter to reach the Turochamp board"
+  },
+  "host_checks": {
+    "asan_ubsan": "passed on the final source",
+    "m61_production_backend": [
+      "nested relative paths and extension/type resolution",
+      "persistent and separate BASIC/FOCAL variables/arrays",
+      "run -> stop -> next scenario line",
+      "trap saved context and angle preservation",
+      "opcode binding and OK/manual/ESC handoff",
+      "FMK 27x9 console and real Turochamp initial board",
+      "CRC32+ZX0 across bank zero",
+      "INS branch operand adjustment",
+      "invalid HIN rejected before write",
+      "script/trap permissions and lazy IF",
+      "large PRINT/INPUT with SOURCE resources",
+      "unsaved root editor text restored after nested interpreter"
+    ],
+    "shared_runner_matrix": "10 cache/scoped-buffer variants; 3 keyboard layouts; 12 game manual OK bindings",
+    "legacy_terminal_regressions": "ASM/ISA/LASM/PUB, RUN, 2304 Result returns and 712056 IF comparisons per each of 4 variants passed",
+    "ui_contract_profiles": 6,
+    "text_editor_contract": "passed",
+    "uf2_transport_tests": 4
+  },
+  "stm32": {
+    "hardware_flashed": false,
+    "f411_classic_v3": {
+      "build": "passed",
+      "flash_bytes": 382624,
+      "static_ram_bytes": 21760,
+      "max_stack_frame": 1928,
+      "stack_limit": 5120
+    },
+    "f401_product_a00": {
+      "link": "passed",
+      "stack_check": "pre-existing failure, same function and size as baseline without Pico port",
+      "max_stack_frame": 2304,
+      "stack_limit": 2048,
+      "function": "program_store.cpp:3725:27:bool program_store::write_file_from_source_impl(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u16, u16*, u8*, usize, const u8*, u8*)",
+      "baseline_revision": "aba82ddb3c14c202ea9eaf3d8a4df6e9f37b05cc",
+      "baseline_max_stack_frame": 2304
+    }
+  },
+  "remaining_profile_limits": [
+    "Native STM32 APP machine code needs a separate RP2040 build/loader",
+    "CHIP-8, USB Screen, RTC and sleep are not included in the Pico profile",
+    "Markdown is a text/manual viewer without interactive link navigation",
+    "Full device feature parity is not yet achieved; shared M61 behavior and regression checks are now in place"
+  ]
+}

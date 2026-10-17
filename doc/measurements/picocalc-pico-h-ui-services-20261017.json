@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "recorded_at_utc": "2026-10-17T13:53:07.238776+00:00",
+  "source_revision": "c693f28595e7cdc4835ac49ecd515692b2e0a9e0",
+  "source_has_uncommitted_port_changes": true,
+  "build": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.2.0",
+    "mcu": "RP2040",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + Pico SDK float/double helpers",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 356776,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 131628,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 713728,
+    "bin_sha256": "67b804ee5197ce996910040b72fb4c0c779c0fd4899c76a3cbdf0a654188e57d",
+    "uf2_sha256": "059e0dc7ec02e9b9be28fd0f28f058a08ecbfa668955b731299a003d071cc235",
+    "hardware_verified": false
+  },
+  "hardware": {
+    "flash_uid": "E6657CD423721C35",
+    "flash_write_and_readback_verified_with_official_picotool": true,
+    "user_confirmed_menu_screen_and_physical_keyboard": true,
+    "user_confirmation": "Tab, arrows, Settings, Development and Esc work normally",
+    "lcd_driver_unchanged": "ST7365P RGB565, one complete changed frame per CS transaction; CABC disabled; backlight 240",
+    "math_smoke_passed": true,
+    "calculator_cases": [
+      {
+        "case": "12 ENTER 34 +",
+        "result": 46.0,
+        "passed": true
+      },
+      {
+        "case": "sqrt(9)",
+        "result": 3.0,
+        "passed": true
+      },
+      {
+        "case": "sin(90 DEG)",
+        "result": 1.0,
+        "passed": true
+      }
+    ],
+    "ui_cases": [
+      "Menu owns input; X preserved",
+      "Live RU/EN selection and restoration",
+      "Independent calculator font selection and restoration",
+      "Deferred settings save to Pico flash"
+    ],
+    "services_cases": [
+      "Editor saved MK61S-HIL-20261017-154210.bas",
+      "BASIC compile/run, PRINT, INPUT, math, MK61 registers and graphics",
+      "Editor saved MK61S-HIL-20261017-154210.foc",
+      "FOCAL compile/run, PRINT and shared math/registers"
+    ],
+    "settings_reloaded_after_flash": true,
+    "usb_disk": {
+      "passed": true,
+      "protocol": "CDC+MSC / TinyUSB CAFE:4003",
+      "card_sectors": 62333952,
+      "checked_files": [
+        "MK61S-HIL-20261017-154210.bas",
+        "MK61S-HIL-20261017-154210.foc"
+      ],
+      "returned_file": "MK61S-USB-20261017-164852.bas",
+      "returned_source": "10 .X=12345\n20 PRINT \"USB ROUND TRIP\"\n30 END\n",
+      "executed_by_pico_basic": true,
+      "metrics": {
+        "STACK_USED": 5180,
+        "STACK_BYTES": 32768,
+        "MSC_READ": 16601,
+        "WRITE": 2343,
+        "READ_ERROR": 0,
+        "WRITE_ERROR": 0,
+        "MSC_SD_READ_US": 8087287,
+        "COMMANDS": 804,
+        "MAX_READ_US": 72626,
+        "MAX_READ_BYTES": 32768
+      },
+      "fix": "Pause core, settings flash writes and static redraws while USB owns SD; multi-sector CMD18/CMD12 reads; byte-table CRC16; 4096-byte MSC transfers",
+      "card_reader_cross_check": {
+        "mounted": true,
+        "volume_uuid": "444CD235-5A17-31C5-876C-E46338820BE7",
+        "checked_files": [
+          {
+            "name": "MK61S-HIL-20261017-154210.bas",
+            "bytes": 130,
+            "sha256": "6de2303f0b64a08150c6347968dfd0ced8808be349936072f733b1588ddf6a53",
+            "matches_device_source": true
+          },
+          {
+            "name": "MK61S-HIL-20261017-154210.foc",
+            "bytes": 67,
+            "sha256": "4b450259fba679c562371f3c27489b41565913bf856254cdbf1f6c0628d74c08",
+            "matches_device_source": true
+          }
+        ],
+        "returned_file": "MK61S-READER-20261017-164258.bas",
+        "returned_file_executed_on_pico": true
+      },
+      "formatted_or_repaired_card": false
+    },
+    "evidence": [
+      "binary/picocalc-pico-h/hardware-ui-smoke.json",
+      "binary/picocalc-pico-h/hardware-services-smoke.json",
+      "binary/picocalc-pico-h/hardware-usb-disk-smoke.json"
+    ],
+    "evidence_scope": "UI/language HIL preceded the final SD-only optimization. USB round trip and user menu acceptance used this exact final UF2."
+  },
+  "host_checks": {
+    "asan_ubsan": "passed",
+    "real_fatfs_ram_disk": "FAT/exFAT, UTF8/M8, failed reads/writes and ownership",
+    "services": "menus, settings codec, editor, BASIC/FOCAL VM, graph, INPUT, atomic HIN import and overwrite confirmation",
+    "sd_crc": "Golden CRC and independent bitwise CRC on all 4097 prefixes of a 4096-byte multi-sector buffer",
+    "uf2_transport_tests": 4,
+    "stm32_shared_ui_contract_profiles": 6,
+    "stm32_display_contract_profiles": 5,
+    "text_editor_contract": "passed"
+  },
+  "stm32": {
+    "f411_classic_v3": {
+      "build": "passed",
+      "flash_bytes": 380060,
+      "static_ram_bytes": 21760,
+      "max_stack_frame": 1928,
+      "stack_limit": 5120
+    },
+    "f401_product_a00": {
+      "link": "passed",
+      "stack_check": "pre-existing failure reproduced without the port",
+      "max_stack_frame": 2304,
+      "stack_limit": 2048,
+      "function": "program_store.cpp:3725:27:bool program_store::write_file_from_source_impl(u16, u16, ProgramType, const char*, u16, const FileSource&, const u16*, u16, u16*, u8*, usize, const u8*, u8*)",
+      "baseline_revision": "aba82ddb3c14c202ea9eaf3d8a4df6e9f37b05cc",
+      "baseline_max_stack_frame": 2304
+    }
+  },
+  "remaining_profile_limits": [
+    "STM32 native APP/BIN binaries cannot execute on Cortex-M0+",
+    "M61 currently imports/exports validated HIN program data; full trap/bind/open scripting is not enabled",
+    "CHIP-8, USB Screen, RTC and sleep are not included in this profile"
+  ]
+}

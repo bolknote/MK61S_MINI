@@ -1,6 +1,6 @@
 #include "builtin_font.hpp"
 
-#include "config.h"
+#include "ui_build_config.hpp"
 #define MK61_BUILTIN_RASTER_ENABLED (MK61_HAS_COMPILED_GRAPHICS || MK61_MARKDOWN_USES_WBMP || \
     (MK61_ENABLE_TINYBASIC && MK61_HAS_FULLSCREEN_BITMAP))
 #include "display_symbols.hpp"

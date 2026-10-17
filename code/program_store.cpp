@@ -159,7 +159,7 @@ static bool compute_geometry(u32 capacity,
   return storage_geometry::compute(capacity, geometry);
 }
 
-#if MK61_SCOPED_RESIDENT_BUFFERS && defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__)
 #define C9_WRITE_IMPL __attribute__((noinline))
 #else
 #define C9_WRITE_IMPL
@@ -3730,9 +3730,6 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
                             u8* compression_buffer,
                             usize compression_buffer_size,
                             const u8* contiguous_data, u8* temporary) {
-#if !MK61_STORAGE_SHARED_TEMP
-  (void)temporary;
-#endif
 #if !defined(PROGRAM_STORE_HOST_TEST)
   struct ImportProgressScope {
     bool previous;
@@ -3749,11 +3746,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   if(!g_ready || !prepare_local_catalog_mutation()) return false;
   LargeWriteGuard large_guard;
   // The compression plan is consumed before the catalog transaction starts.
-#if MK61_STORAGE_SHARED_TEMP
   WriteWorkspace& write_workspace = *new(temporary) WriteWorkspace;
-#else
-  WriteWorkspace write_workspace;
-#endif
   write_workspace.compression[0] = 0; // Start the trivial array's lifetime.
   auto& fallback_workspace = write_workspace.compression;
   const u16 max_data_len = maximum_data_len(type);
@@ -3947,7 +3940,7 @@ C9_WRITE_IMPL static bool write_file_from_source_impl(u16 parent_id, u16 preferr
   return true;
 }
 
-bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
+C9_WRITE_IMPL bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
                             const char* name, u16 data_len,
                             const FileSource& source,
                             const u16* fat_extents, u16 fat_extent_count,
@@ -3961,7 +3954,13 @@ bool write_file_from_source(u16 parent_id, u16 preferred_id, ProgramType type,
         return write_file_from_source_impl(parent_id, preferred_id, type, name, data_len, source, fat_extents, fat_extent_count, out_id, compression_buffer, compression_buffer_size, contiguous_data, temporary);
       });
 #else
-  return write_file_from_source_impl(parent_id, preferred_id, type, name, data_len, source, fat_extents, fat_extent_count, out_id, compression_buffer, compression_buffer_size, contiguous_data, nullptr);
+  // Keep the 1 KiB compression/transaction scratch in its caller's bounded
+  // frame. F401's implementation also owns the maximal UTF-8 FAT chain;
+  // combining both frames exceeds its 2 KiB per-function stack contract.
+  // The storage lifetime and aggregate stack allocation stay synchronous;
+  // no persistent RAM, heap allocation or storage ordering changes.
+  alignas(WriteWorkspace) u8 temporary[sizeof(WriteWorkspace)];
+  return write_file_from_source_impl(parent_id, preferred_id, type, name, data_len, source, fat_extents, fat_extent_count, out_id, compression_buffer, compression_buffer_size, contiguous_data, temporary);
 #endif
 }
 

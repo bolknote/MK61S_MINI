@@ -49,6 +49,9 @@ https://github.com/UN7FGO/MK61S_MINI/blob/main/doc/MK61s-mini-RTC.pdf
 **Поддерживаемые платы, дисплеи и аппаратные профили:**
 [Markdown](doc/src/MK61s-mini-Hardware.md) / [PDF](doc/MK61s-mini-Hardware.pdf)
 
+**Прототип для PicoCalc с Raspberry Pi Pico H (RP2040):**
+[Сборка UF2, меню, M61, CHIP-8, USB Screen, RTC, сон и APP](ports/picocalc/README.md)
+
 **OLED1602 WEH001602A/WS0010 — подключение и аппаратная приёмка:**
 [Markdown](doc/src/MK61s-mini-WS0010.md) / [PDF](doc/MK61s-mini-WS0010.pdf)
 
