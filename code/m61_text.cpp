@@ -17,6 +17,7 @@
 #include "development.hpp"
 #include "storage_path.hpp"
 #include "dwt_profiler.hpp"
+#include "loadable_module_runtime.hpp"
 #include "tinybasic.hpp"
 #include "tools.hpp"
 #else
@@ -146,6 +147,12 @@ static RuntimeBuffers& runtime_buffers() {
 }
 static bool prepare_runtime() {
   if(runtime_storage.ok()) return true;
+#if MK61_APP_RUNTIME_AVAILABLE && !defined(M61_TEXT_HOST_TEST)
+  // Place a new root script above the APP gap, rather than below an idle
+  // editor image. Otherwise that image fragments RAM and a larger VM cannot
+  // load later. Active/pinned native calls refuse this cache eviction.
+  (void)loadable_module::evict_cached();
+#endif
   if(!runtime_storage.acquire(shared_memory::Owner::M61_RUNTIME,
                               sizeof(RuntimeBuffers))) return false;
   new(runtime_storage.data()) RuntimeBuffers{};

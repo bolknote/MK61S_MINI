@@ -247,7 +247,7 @@ function Assert-SizeBudget {
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
         elseif ($System -eq 'explorer') { $appLimit = 8000; $memoryLimit = 10000 }
         elseif ($System -eq 'language-input') { $appLimit = 14144; $memoryLimit = 17152 }
-        elseif ($System -eq 'source-editor') { $appLimit = 14848; $memoryLimit = 18176 }
+        elseif ($System -eq 'source-editor') { $appLimit = 14848; $memoryLimit = 18304 }
     }
     if ($LanguageVmCompiler -and $System -eq 'focal') {
         $appLimit = 15360

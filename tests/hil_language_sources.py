@@ -14,13 +14,23 @@ from pathlib import Path
 import random
 import time
 
-from hil_c6_system_bootstrap import read_file, write_file
+from hil_c6_system_bootstrap import write_file
+from hil_c5_stack import read_file as read_bytes
 from hil_language_vm import health
 from hil_multi_device_identity import parse_identity
 from hil_portable_apps import ScreenPort, PROMPT
 from hil_portable_system_apps import registers
 
 ROOT = "/SRCHIL"
+
+
+def read_file(port, path, expected):
+    actual = read_bytes(port, path)
+    if actual != expected:
+        first = next((i for i, pair in enumerate(zip(actual, expected))
+                      if pair[0] != pair[1]), min(len(actual), len(expected)))
+        raise AssertionError(f"{path}: expected {len(expected)} bytes, got {len(actual)}; "
+                             f"first mismatch at {first}; sha256={hashlib.sha256(actual).hexdigest()}")
 
 
 class SourcePort(ScreenPort):
@@ -157,9 +167,12 @@ def main() -> None:
             raise
         finally:
             if port.attached:
-                port.send(0x13)
-                port.attached = False
-                port.pump(.2)
+                try:
+                    port.send(0x13)
+                    port.attached = False
+                    port.pump(.2)
+                except (OSError, TimeoutError, AssertionError) as cleanup:
+                    result["cleanup_error"] = repr(cleanup)
             result["crc_checked_frames"] = len(port.frames)
             (args.output_dir / "terminal.txt").write_bytes(port.text)
             save_report(report_path, result)

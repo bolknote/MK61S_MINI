@@ -5,8 +5,8 @@
 
 namespace language_vm { namespace source {
 // Two private banks in the existing power-safe staging journal. No inode or
-// directory entry is published until the user saves. The other bank remains
-// readable if a page write fails; cancellation only forgets these keys.
+// directory entry is published until the user saves. Each page keeps its old
+// bank until the new page map commits; cancellation only forgets these keys.
 static constexpr unsigned DRAFT_PAGE_SIZE = 512;
 static constexpr unsigned DRAFT_PAGES = (MAX_SIZE+DRAFT_PAGE_SIZE-1)/DRAFT_PAGE_SIZE;
 static constexpr uint32_t DRAFT_FIRST_KEY = 0x007FF000U;
@@ -29,7 +29,7 @@ private:
   uint8_t page_[DRAFT_PAGE_SIZE];
   uint16_t base_size_,start_=0,old_=0,used_=0,load_;
   uint32_t hash_=0,generation_=0;
-  uint8_t bank_=0;
+  uint8_t banks_[(DRAFT_PAGES+7)/8]={};
   bool open_=false,staged_=false,dirty_=false;
   static uint32_t hash(const char* text,unsigned n) {
     uint32_t value=2166136261U;
@@ -48,7 +48,8 @@ private:
     }
     while(n) {
       const unsigned page=offset/DRAFT_PAGE_SIZE,in=offset%DRAFT_PAGE_SIZE;
-      if(!io_.read(io_.context,DRAFT_FIRST_KEY+bank_*DRAFT_PAGES+page,page_))return false;
+      const unsigned bank=(banks_[page/8]>>(page%8))&1U;
+      if(!io_.read(io_.context,DRAFT_FIRST_KEY+bank*DRAFT_PAGES+page,page_))return false;
       unsigned count=DRAFT_PAGE_SIZE-in;if(count>n)count=n;
       memcpy(output,page_+in,count);output+=count;offset=uint16_t(offset+count);n=uint16_t(n-count);
     }
@@ -102,23 +103,42 @@ public:
   }
   bool flush() {
     if(!dirty_)return true;
-    const unsigned length=size(),next=staged_?bank_^1U:0;
-    const uint32_t key=DRAFT_FIRST_KEY+next*DRAFT_PAGES;
-    if(!io_.forget(io_.context,key,DRAFT_PAGES))return false;
+    const unsigned length=size(),old_pages=(base_size_+DRAFT_PAGE_SIZE-1)/DRAFT_PAGE_SIZE;
+    const unsigned pages=(length+DRAFT_PAGE_SIZE-1)/DRAFT_PAGE_SIZE;
+    uint8_t next[sizeof(banks_)];memcpy(next,banks_,sizeof(next));
     // read() also needs page_ for the old bank: the output page must be
     // separate so a cross-page read cannot overwrite its own prefix.
     uint8_t output[DRAFT_PAGE_SIZE];
     for(unsigned at=0;at<length;at+=DRAFT_PAGE_SIZE) {
       unsigned n=length-at;if(n>DRAFT_PAGE_SIZE)n=DRAFT_PAGE_SIZE;
       memset(output,0,sizeof(output));
-      if(!read(uint16_t(at),output,uint16_t(n)) ||
-         !io_.write(io_.context,key+at/DRAFT_PAGE_SIZE,output))return false;
+      if(!read(uint16_t(at),output,uint16_t(n)))return false;
+      const unsigned page=at/DRAFT_PAGE_SIZE,mask=1U<<(page%8);
+      const unsigned previous=(banks_[page/8]>>(page%8))&1U;
+      const bool exists=staged_ && page<old_pages;
+      if(exists) {
+        if(!io_.read(io_.context,DRAFT_FIRST_KEY+previous*DRAFT_PAGES+page,page_))return false;
+        // Keep unchanged pages in their current bank. Editing a tail must
+        // not require a second full-file snapshot on a small NOR volume.
+        if(!memcmp(output,page_,sizeof(output)))continue;
+      }
+      const unsigned bank=exists?previous^1U:0;
+      const uint32_t key=DRAFT_FIRST_KEY+bank*DRAFT_PAGES+page;
+      if(!io_.forget(io_.context,key,1) || !io_.write(io_.context,key,output))return false;
+      next[page/8]=uint8_t((next[page/8]&~mask)|(bank?mask:0));
     }
+    // Publish the page map only after every changed page is durable. A failed
+    // write leaves the old map and the current RAM edit readable for retry.
+    uint8_t previous[sizeof(banks_)];memcpy(previous,banks_,sizeof(previous));
     const bool had_bank=staged_;
-    const unsigned previous=bank_;
-    bank_=uint8_t(next);staged_=true;base_size_=uint16_t(length);old_=used_;
+    memcpy(banks_,next,sizeof(banks_));staged_=true;base_size_=uint16_t(length);old_=used_;
     hash_=hash(window,used_);dirty_=false;
-    return !had_bank || io_.forget(io_.context,DRAFT_FIRST_KEY+previous*DRAFT_PAGES,DRAFT_PAGES);
+    if(had_bank)for(unsigned page=0;page<old_pages;++page) {
+      const unsigned bank=(previous[page/8]>>(page%8))&1U;
+      if(page>=pages || bank!=unsigned((banks_[page/8]>>(page%8))&1U))
+        if(!io_.forget(io_.context,DRAFT_FIRST_KEY+bank*DRAFT_PAGES+page,1))return false;
+    }
+    return true;
   }
   bool seek(text_editor::Buffer& editor,uint16_t absolute) {
     if(absolute>size())absolute=size();

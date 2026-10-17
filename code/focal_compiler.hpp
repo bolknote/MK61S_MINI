@@ -486,11 +486,9 @@ private:
       const unsigned length = candidate.length + candidate.colon;
       if (length != n + colon)
         continue;
-      unsigned same = 0;
-      while (same < length &&
-             resource_byte(candidate, same) == resource_byte(r, same))
-        ++same;
-      if (same == length)
+      const unsigned common = candidate.length < n ? candidate.length : n;
+      if (language_vm::source::equal(source_ + candidate.begin, b, common) &&
+          (candidate.length == n || resource_byte(candidate, common) == resource_byte(r, common)))
         return candidate.offset;
     }
     if (pass_ || resource_count_ == 256) {

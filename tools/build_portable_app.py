@@ -53,7 +53,7 @@ SYSTEM_SIZE_BUDGETS = {
     # The cold module owns retry, resource verification and INPUT rendering.
     # Shared expression parsing now includes the bounded source cursor.
     "language-input": {"app_bytes": 12_800, "memory_bytes": 17_152},
-    "source-editor": {"app_bytes": 13_568, "memory_bytes": 18_176},
+    "source-editor": {"app_bytes": 13_568, "memory_bytes": 18_304},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
     "focal": {"app_bytes": 14_000, "memory_bytes": 20_000},

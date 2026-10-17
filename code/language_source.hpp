@@ -138,8 +138,16 @@ public:
         source_scan::line_end(reinterpret_cast<const uint8_t*>(value_),size_t(end-*this));
   }
 };
-inline bool equal(Cursor a,Cursor b,unsigned n) {
-  for(unsigned i=0;i<n;++i)if(a[i]!=b[i])return false;
+__attribute__((noinline)) inline bool equal(Cursor a,Cursor b,unsigned n) {
+  // The two cursors can share one paged reader. Copy a bounded left span
+  // before reading the right one, avoiding a Flash page reload per byte.
+  uint8_t bytes[64];
+  while(n) {
+    const unsigned count=n<sizeof(bytes)?n:sizeof(bytes);
+    if(!a.copy(bytes,count))return false;
+    for(unsigned i=0;i<count;++i)if(bytes[i]!=uint8_t(b[i]))return false;
+    a+=count;b+=count;n-=count;
+  }
   return true;
 }
 }

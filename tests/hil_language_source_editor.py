@@ -13,11 +13,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from hil_c6_system_bootstrap import read_file, write_file
-from hil_language_sources import SourcePort, save_report
+from hil_c6_system_bootstrap import write_file
+from hil_language_sources import SourcePort, save_report, read_file
 from hil_language_vm import health
 from hil_multi_device_identity import parse_identity
-from hil_portable_system_apps import png
+from hil_portable_system_apps import png, registers
 from hil_rtc_alarm import warm_reset
 
 
@@ -27,7 +27,8 @@ def fixture(focal, size):
             b"\n20 REM short\n30 .RA=42;END\n")
     source = head + b"x" * (size - len(head) - len(tail)) + tail
     # Two edits at the ends of separate comments, in distant source windows.
-    expected = source.replace(b"\n", b"7\n", 1).replace(b"short\n", b"short5\n", 1)
+    expected = source[:len(head)] + b"7" + source[len(head):]
+    expected = expected.replace(b"short\n", b"short5\n", 1)
     if focal:
         for full, compact in ((b"COMMENT", b"C"), (b"SET", b"S"), (b"EXIT", b"E")):
             expected = expected.replace(full, compact)
@@ -59,13 +60,19 @@ def open_editor(port, focal, output):
     snapshot(port, output / "editor.png")
 
 
-def edit_two_windows(port, output):
-    port.key(28)  # Next physical line, skipping the 34/64 KiB first comment.
-    port.key(38)  # Back over its separator: end of the long comment.
+def edit_two_windows(port, focal, output):
+    for _ in range(6 if focal else 7):
+        port.key(36)  # Address plus the atomic COMMENT token / plain REM.
     port.key(19)  # Insert 7.
-    port.key(28)  # Flush draft bank, seek to the end of the next comment.
+    port.key(28)  # Flush draft bank, skip the 34/64 KiB first comment.
+    port.pump(2)  # Let the long Flash write finish before the next short tap.
+    # Horizontal arrows stay within a physical line. Reach its end without
+    # depending on FOCAL's compact/expanded cursor mapping inside COMMENT.
+    for _ in range(24):
+        port.key(36)
     port.key(13)  # Insert 5.
     port.key(28)  # Flush the other bank and seek to the executable statement.
+    port.pump(2)
     snapshot(port, output / "edited.png")
 
 
@@ -85,12 +92,51 @@ def leave_editor(port, save, output):
     port.pump(.2)
 
 
+def focal_operator_keys(port, output):
+    output.mkdir(exist_ok=True)
+    remote = "/7772.foc"
+    # An incomplete operator field is editable and can be saved independently
+    # of compilation. The original B key must render IF and erase atomically.
+    write_file(port, remote, b"1.10 \n1.20 SET .RB=42\n1.30 EXIT\n")
+    open_editor(port, True, output)
+    for _ in range(5):
+        port.key(36)
+    port.key(2)
+    snapshot(port, output / "if.png")
+    port.key(0)
+    snapshot(port, output / "atomic-delete.png")
+    port.key(2)
+    for key in (24, 38, 4, 24, 36):  # K+(, 0, K+).
+        port.key(key)
+    for branch in range(3):
+        if branch:
+            port.key(24)
+            port.key(20)  # K+PP is comma.
+        for key in (9, 3, 8, 4):
+            port.key(key)  # 1.20
+    snapshot(port, output / "if-complete.png")
+    leave_editor(port, True, output)
+    expected = b"1.10 B (0)1.20,1.20,1.20\n1.20 S .RB=42\n1.30 E\n"
+    read_file(port, remote, expected)
+    write_file(port, "/SRCHIL/run.m61", b'open "/7772.foc"\nret\n')
+    port.command("RB= 0")
+    port.run_source("/SRCHIL/run.m61", True)
+    values, report = registers(port)
+    assert values["RB"] == 42, report
+    response = port.command('rm "' + remote + '"', timeout=30)
+    assert "Removed 1 entry." in response, response
+    print("FOCAL B key renders IF, atomic erase, compact save and VM branch PASS", flush=True)
+    return dict(test="focal-operator-IF", original_key=2, view="IF", stored="B",
+                atomic_delete=True, register="RB", value=42, verified=True)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--port", required=True)
     ap.add_argument("--public-id", required=True)
     ap.add_argument("--build-id", required=True)
     ap.add_argument("--output-dir", required=True, type=Path)
+    ap.add_argument("--operators-only", action="store_true")
     args = ap.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result = {"status": "RUNNING", "cases": []}
@@ -103,8 +149,10 @@ def main():
         result["identity"] = asdict(identity)
         result["before"] = health(port)
         port.attach()
-        for size, mode in ((34000, "save"), (34000, "cancel"), (34000, "reset"),
-                           (65530, "save"), (65530, "cancel")):
+        cases = () if args.operators_only else (
+            (34000, "save"), (34000, "cancel"), (34000, "reset"),
+            (65530, "save"), (65530, "cancel"))
+        for size, mode in cases:
             for focal in (False, True):
                 label = ("focal" if focal else "basic") + f"-{size}-{mode}"
                 output = args.output_dir / label
@@ -114,7 +162,7 @@ def main():
                 write_file(port, remote, source)
                 read_file(port, remote, source)
                 open_editor(port, focal, output)
-                edit_two_windows(port, output)
+                edit_two_windows(port, focal, output)
                 # Drafts must never publish edits before the explicit Save.
                 read_file(port, remote, source)
                 if mode == "reset":
@@ -138,6 +186,7 @@ def main():
                 print(label, "byte-for-byte PASS", flush=True)
                 response = port.command('rm "' + remote + '"', timeout=30)
                 assert "Removed 1 entry." in response, response
+        result["cases"].append(focal_operator_keys(port, args.output_dir / "focal-operators"))
         result["after"] = health(port)
         result["status"] = "PASS"
     except BaseException as error:
@@ -148,9 +197,12 @@ def main():
         raise
     finally:
         if port.attached:
-            port.send(0x13)
-            port.attached = False
-            port.pump(.2)
+            try:
+                port.send(0x13)
+                port.attached = False
+                port.pump(.2)
+            except (OSError, TimeoutError, AssertionError) as cleanup:
+                result["cleanup_error"] = repr(cleanup)
         result["crc_checked_frames_last_session"] = len(port.frames)
         (args.output_dir / "terminal-last-session.txt").write_bytes(port.text)
         port.close()

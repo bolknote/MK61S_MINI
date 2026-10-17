@@ -1,74 +1,527 @@
 {
-  "status": "partial",
-  "source_commit": "bbaa1a405e46d34b6b0936224aef75e17cc948bd",
+  "status": "PASS",
+  "date": "2026-10-17",
+  "source_base_commit": "93de7417295ca138d8737866db69625652eb6552",
+  "build_scope": "Clean archived main plus the language, USB Screen and M61 fixes in this commit; unrelated working-directory changes were excluded.",
   "device": {
     "public_id": "AEB505B6E0067623",
     "usb_serial": "2068336B4731",
     "profile": "classic-v3-uc1609",
     "mcu": "STM32F411CE",
-    "external_flash_bytes": 524288
+    "ram_bytes": 131072,
+    "external_flash_bytes": 524288,
+    "nor_jedec": "EF3013"
   },
   "installed": {
-    "firmware_build": "FC9703CE",
-    "firmware_bytes": 343176,
-    "firmware_sha256": "95111c35879d94587139afc58adafd4a3665d76c6333240dd6904fea420b0971",
+    "firmware_build": "2539ED52",
+    "firmware_bytes": 343168,
+    "firmware_sha256": "7a96139a9ba561df4696c5b4af29a6dcb1e65fdfca160497e673f11a76553737",
     "firmware_crc": "valid",
     "matching_system_files_byte_verified": 10,
-    "source_editor_installed": true,
     "old_data_discarded_with_user_authorization": true,
-    "old_firmware_backup_requested": false
+    "old_firmware_backup_requested": false,
+    "apps": [
+      {
+        "name": "BASIC.APP",
+        "packed_bytes": 14398,
+        "image_bytes": 20416,
+        "memory_bytes": 20468,
+        "sha256": "6fc5a1d1a70817dbb2b0006db75140bef467e012ea0f1ef3c9daa3205594bc96"
+      },
+      {
+        "name": "FOCAL.APP",
+        "packed_bytes": 11907,
+        "image_bytes": 16508,
+        "memory_bytes": 16544,
+        "sha256": "531e02ecdddcc3f3843786c2a79e88459a6b382ceacead24f30b0d3685ea1eaa"
+      },
+      {
+        "name": "LANGIN.APP",
+        "packed_bytes": 12563,
+        "image_bytes": 16816,
+        "memory_bytes": 16836,
+        "sha256": "e1260811d3e58c3e1a29a3b4a06988b31cf672982d25e84ee47e69a4154d5771"
+      },
+      {
+        "name": "LANGVM.APP",
+        "packed_bytes": 13256,
+        "image_bytes": 19440,
+        "memory_bytes": 19460,
+        "sha256": "0db97fb97bf12686a3cc978f6f8ccf0acc3c0b3926232ab6c2d5f9609f144f47"
+      },
+      {
+        "name": "MARKDOWN.APP",
+        "packed_bytes": 13482,
+        "image_bytes": 16951,
+        "memory_bytes": 16976,
+        "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+      },
+      {
+        "name": "SETUP.APP",
+        "packed_bytes": 9974,
+        "image_bytes": 13223,
+        "memory_bytes": 13248,
+        "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+      },
+      {
+        "name": "SRCEDIT.APP",
+        "packed_bytes": 13527,
+        "image_bytes": 18192,
+        "memory_bytes": 18220,
+        "sha256": "4f8955d4261f51406ab652a7c5e5647afd025c70ce9fcf4eba3ea0cdd8f35ca4"
+      },
+      {
+        "name": "VMCache/VMSTORE.APP",
+        "packed_bytes": 7361,
+        "image_bytes": 9163,
+        "memory_bytes": 9180,
+        "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+      }
+    ]
   },
-  "passed": [
+  "bounded_source_storage": {
+    "maximum_source_m8_bytes": 65534,
+    "source_reader_window_bytes": 256,
+    "editor_window_bytes": 1024,
+    "draft_page_bytes": 512,
+    "hard_app_memory_bytes": 20480
+  },
+  "hardware": {
+    "source_execution": {
+      "status": "PASS",
+      "firmware_build": "2539ED52",
+      "cases": [
+        {
+          "language": "basic",
+          "bytes": 3585,
+          "source_resources": false,
+          "sha256": "97ee4c9d0c97aa7b5c6f284e207d666eb02b7212a50de2bcfb13e27f1b7bb10a",
+          "store_verify_seconds": 0.986631,
+          "run_seconds": [
+            0.46431,
+            0.189613
+          ],
+          "register": "RA",
+          "value": 3585
+        },
+        {
+          "language": "focal",
+          "bytes": 3585,
+          "source_resources": false,
+          "sha256": "9edf8a8b047084ed1070974aeab306e6e6b4433e45615e1cf47c61e1365ef555",
+          "store_verify_seconds": 1.021527,
+          "run_seconds": [
+            0.723696,
+            0.731444
+          ],
+          "register": "RB",
+          "value": 3585
+        },
+        {
+          "language": "basic",
+          "bytes": 16384,
+          "source_resources": false,
+          "sha256": "3cfc17452cd96f5437f3257a91b6535bbcfe0c004588872b98d58694d5635ae1",
+          "store_verify_seconds": 3.275506,
+          "run_seconds": [
+            0.721428,
+            0.250769
+          ],
+          "register": "RA",
+          "value": 16384
+        },
+        {
+          "language": "focal",
+          "bytes": 16384,
+          "source_resources": false,
+          "sha256": "7a40e15cb915aadd8c47357789b196847c16a6b020a17786de7e6808f6b81d2e",
+          "store_verify_seconds": 3.338264,
+          "run_seconds": [
+            0.732232,
+            0.740888
+          ],
+          "register": "RB",
+          "value": 16384
+        },
+        {
+          "language": "basic",
+          "bytes": 32768,
+          "source_resources": false,
+          "sha256": "889561ee78ab7fa645f003f70915e4aa1e841c656eee081cfd793e24a48b887f",
+          "store_verify_seconds": 6.545431,
+          "run_seconds": [
+            0.996524,
+            0.315427
+          ],
+          "register": "RA",
+          "value": 32768
+        },
+        {
+          "language": "focal",
+          "bytes": 32768,
+          "source_resources": false,
+          "sha256": "26ff9124171faf424eda885102d3ec398ec087eff7ac722b172ff68b04ac1eca",
+          "store_verify_seconds": 6.605103,
+          "run_seconds": [
+            1.024629,
+            0.73709
+          ],
+          "register": "RB",
+          "value": 32768
+        },
+        {
+          "language": "basic",
+          "bytes": 65534,
+          "source_resources": false,
+          "sha256": "f200820288b1ff1d367fe3f27d41a56e57f252694bd83063526a5fe35e713d30",
+          "store_verify_seconds": 13.168848,
+          "run_seconds": [
+            1.568637,
+            0.456531
+          ],
+          "register": "RA",
+          "value": 65534
+        },
+        {
+          "language": "focal",
+          "bytes": 65534,
+          "source_resources": false,
+          "sha256": "95c6384263330f04893988f04b97253e0395401be9c841b306adb2465cea8bd9",
+          "store_verify_seconds": 13.170351,
+          "run_seconds": [
+            1.567886,
+            0.748238
+          ],
+          "register": "RB",
+          "value": 65534
+        },
+        {
+          "language": "basic",
+          "bytes": 65534,
+          "source_resources": true,
+          "sha256": "bc216e6e00eef0ceac2353b537004bf72c67aeab57a2236d90421495f66d41b1",
+          "store_verify_seconds": 13.278428,
+          "run_seconds": [
+            5.305293,
+            5.290322
+          ],
+          "register": "RA",
+          "value": 65534
+        },
+        {
+          "language": "focal",
+          "bytes": 65534,
+          "source_resources": true,
+          "sha256": "9c6f2604e82ccbde49c1a67702c7fa2df8fff0757058f711e958d8b7cc73fb21",
+          "store_verify_seconds": 13.154299,
+          "run_seconds": [
+            4.218501,
+            4.226844
+          ],
+          "register": "RB",
+          "value": 65534
+        }
+      ],
+      "runs_per_case": 2,
+      "basic_last_array_index": 384,
+      "basic_SIZE": 768,
+      "transport_retry": {
+        "count": 1,
+        "phase": "Upload of the final FOCAL resource fixture, before execution",
+        "offset_bytes": 16416,
+        "observation": "A truncated CDC ACK caused a timeout. Upload was cancelled successfully; device identity, firmware CRC and crash diagnostics stayed valid. The affected case passed a fresh upload, byte readback and both VM runs.",
+        "firmware_reset": false
+      }
+    },
+    "paged_editor": {
+      "status": "PASS",
+      "firmware_build": "CCFF9E2E",
+      "apps_byte_identical_to_final_bundle": true,
+      "cases": [
+        {
+          "test": "basic-34000-save",
+          "source_bytes": 34000,
+          "saved_bytes": 34002,
+          "original_sha256": "0ba56474e2c0c6dee324dd95e0a9b8ba5e9b1ef6bc97dbdb168c347743da1a8b",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "focal-34000-save",
+          "source_bytes": 34000,
+          "saved_bytes": 33985,
+          "original_sha256": "49385260df1cf604149d81f0ac3d6f6baf67eadff61afa10320f338efc82cb13",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "basic-34000-cancel",
+          "source_bytes": 34000,
+          "saved_bytes": 34000,
+          "original_sha256": "0ba56474e2c0c6dee324dd95e0a9b8ba5e9b1ef6bc97dbdb168c347743da1a8b",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "focal-34000-cancel",
+          "source_bytes": 34000,
+          "saved_bytes": 34000,
+          "original_sha256": "49385260df1cf604149d81f0ac3d6f6baf67eadff61afa10320f338efc82cb13",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "basic-34000-reset",
+          "source_bytes": 34000,
+          "saved_bytes": 34000,
+          "original_sha256": "0ba56474e2c0c6dee324dd95e0a9b8ba5e9b1ef6bc97dbdb168c347743da1a8b",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "focal-34000-reset",
+          "source_bytes": 34000,
+          "saved_bytes": 34000,
+          "original_sha256": "49385260df1cf604149d81f0ac3d6f6baf67eadff61afa10320f338efc82cb13",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "basic-65530-save",
+          "source_bytes": 65530,
+          "saved_bytes": 65532,
+          "original_sha256": "6662ba9ac21503f7cab9945f9e7b52ffcb8fce33e5e4922b46e283b5881dfc3f",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "focal-65530-save",
+          "source_bytes": 65530,
+          "saved_bytes": 65515,
+          "original_sha256": "9eb7597f94761c3d7e9867ebd48c5e22d3fc22b307ad1945fb642f2e30dc624b",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "basic-65530-cancel",
+          "source_bytes": 65530,
+          "saved_bytes": 65530,
+          "original_sha256": "6662ba9ac21503f7cab9945f9e7b52ffcb8fce33e5e4922b46e283b5881dfc3f",
+          "published_before_save": false,
+          "verified": true
+        },
+        {
+          "test": "focal-65530-cancel",
+          "source_bytes": 65530,
+          "saved_bytes": 65530,
+          "original_sha256": "9eb7597f94761c3d7e9867ebd48c5e22d3fc22b307ad1945fb642f2e30dc624b",
+          "published_before_save": false,
+          "verified": true
+        }
+      ],
+      "reset_kind": "CDC warm reset during unsaved 34000-byte BASIC and FOCAL drafts"
+    },
+    "focal_operator_keys": {
+      "status": "PASS",
+      "firmware_build": "2539ED52",
+      "cases": [
+        {
+          "test": "focal-operator-IF",
+          "original_key": 2,
+          "view": "IF",
+          "stored": "B",
+          "atomic_delete": true,
+          "register": "RB",
+          "value": 42,
+          "verified": true
+        }
+      ],
+      "path": "Explorer -> EDIT -> Save -> M61 -> VM; no loader readback warmup before the M61 launch",
+      "screenshot": "language-source-focal-if-classic-20261017.png"
+    },
+    "baseline": {
+      "status": "PASS",
+      "firmware_build": "2539ED52",
+      "checks": [
+        "physical-M61-language-state",
+        "USB-language-input",
+        "USB-large-image-detach-reattach-INPUT",
+        "USB-FOCAL-INPUT-FOR",
+        "USB-numeric.tbi-overflow-wide-floor-FOR",
+        "USB-numeric.foc-overflow-wide-floor-FOR",
+        "USB-large-image-INPUT-cancel"
+      ],
+      "runs": [
+        {
+          "test": "physical-M61",
+          "repeat": 0,
+          "seconds": 0.463157
+        },
+        {
+          "test": "physical-M61",
+          "repeat": 1,
+          "seconds": 0.204446
+        },
+        {
+          "test": "physical-M61",
+          "repeat": 2,
+          "seconds": 0.203319
+        }
+      ],
+      "usb_frames_crc_checked": 64
+    },
+    "final_system_files": [
+      {
+        "name": "BASIC.APP",
+        "bytes": 14398,
+        "sha256": "6fc5a1d1a70817dbb2b0006db75140bef467e012ea0f1ef3c9daa3205594bc96"
+      },
+      {
+        "name": "FOCAL.APP",
+        "bytes": 11907,
+        "sha256": "531e02ecdddcc3f3843786c2a79e88459a6b382ceacead24f30b0d3685ea1eaa"
+      },
+      {
+        "name": "HELP0.TXT",
+        "bytes": 1533,
+        "sha256": "595372a6e45f4e2ef3c26b021c59e5750145b5572629f97ad8b46ae7c3bc2d12"
+      },
+      {
+        "name": "HELP1.TXT",
+        "bytes": 1269,
+        "sha256": "36ee9aede6c0c6b0997355205a516593e681fa047cb5b159e3563cb5a45466b5"
+      },
+      {
+        "name": "LANGIN.APP",
+        "bytes": 12563,
+        "sha256": "e1260811d3e58c3e1a29a3b4a06988b31cf672982d25e84ee47e69a4154d5771"
+      },
+      {
+        "name": "LANGVM.APP",
+        "bytes": 13256,
+        "sha256": "0db97fb97bf12686a3cc978f6f8ccf0acc3c0b3926232ab6c2d5f9609f144f47"
+      },
+      {
+        "name": "MARKDOWN.APP",
+        "bytes": 13482,
+        "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+      },
+      {
+        "name": "SETUP.APP",
+        "bytes": 9974,
+        "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+      },
+      {
+        "name": "SRCEDIT.APP",
+        "bytes": 13527,
+        "sha256": "4f8955d4261f51406ab652a7c5e5647afd025c70ce9fcf4eba3ea0cdd8f35ca4"
+      },
+      {
+        "name": "VMCache/VMSTORE.APP",
+        "bytes": 7361,
+        "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+      }
+    ],
+    "final_health": {
+      "firmware_crc": "valid",
+      "mpu_layout": "ok",
+      "crash": "none",
+      "minimum_observed_stack_remaining_bytes": 7812,
+      "watchdog": "wdog status\r\nWDOG backend=IWDG running=1 nominal_ms=32768 reset=0 generation=1 epochs=643073 reloads=1231 last_epoch_ms=347435 last_reload_ms=347344 max_gap_ms=5315\r\n/>",
+      "test_directories_removed": [
+        "/SRCHIL",
+        "/VMHIL"
+      ],
+      "root_after_cleanup": "ls /\r\nd\tSystem/\r\n1 entry.\r\n/>"
+    }
+  },
+  "defects_reproduced_and_fixed": [
     {
-      "test": "physical M61 calling BASIC arithmetic, FOR, GOSUB, arrays and retained values",
-      "runs": 3,
-      "seconds": [
-        1.053734750021249,
-        0.47202345804544166,
-        0.14988483296474442
+      "problem": "The USB Screen session held the exclusive OVERLAY arena and prevented Flash uploads and editor staging.",
+      "fix": "Use an independent LifetimeBuffer for the session on native F411.",
+      "regression": "tests/run_usb_screen_stage_arm_tests.py: old ELF conflict reproduced, final ELF passes USB-first and stage-first with separate byte ranges and lifetimes."
+    },
+    {
+      "problem": "Comparing distant streamed string resources bounced a single Flash cache per byte and caused a watchdog reset.",
+      "fix": "Compare bounded 64-byte spans and stop resource comparison immediately on mismatch.",
+      "regression": "tests/language_source_stream_self_test.cpp: distant spans, bounded read counts, mismatch, I/O failure; both 65534-byte source-resource fixtures pass on Classic."
+    },
+    {
+      "problem": "The second full-file editor draft snapshot exhausted stage space with a full System on 512-KiB NOR.",
+      "fix": "Keep a per-page bank map, reuse unchanged pages and publish the new map after all changed pages are durable.",
+      "regression": "tests/language_source_document_self_test.cpp: two distant edits need 129 pages rather than 256; failed partial writes, retry and truncation preserve the original. Hardware 65530-byte Save and Cancel pass in both languages."
+    },
+    {
+      "problem": "Starting M61 below a cached SRCEDIT.APP fragmented RAM and prevented the larger VM APP from loading.",
+      "fix": "Evict an idle APP before placing the new root M61 runtime; active/pinned calls refuse eviction.",
+      "regression": "tests/run_m61_source_editor_arm_tests.py: old ELF fragmentation reproduced; final ELF admits APPs through 20480 bytes and preserves a live native APP. The physical editor-to-M61 IF scenario passes."
+    }
+  ],
+  "offline_verification": [
+    {
+      "test": "tests/run_language_source_stream_tests.sh",
+      "status": "PASS",
+      "sanitizers": [
+        "AddressSanitizer",
+        "UndefinedBehaviorSanitizer"
       ]
     },
     {
-      "test": "USB Screen BASIC arithmetic and two INPUT values",
-      "input_sum": 30
+      "test": "tests/run_memory_buffer_tests.sh",
+      "status": "PASS",
+      "sanitizers": [
+        "AddressSanitizer",
+        "UndefinedBehaviorSanitizer"
+      ]
     },
     {
-      "test": "USB Screen FOCAL arithmetic and FOR/DO",
-      "arithmetic_result": 14,
-      "loop_result": 6
-    },
-    {
-      "test": "BASIC large image INPUT after USB Screen detach/reattach, manual repeat",
-      "input_result": 15,
-      "note": "The first automated run timed out awaiting CAPS; the repeat allowed compilation to finish before detaching."
-    },
-    {
-      "test": "BASIC source beyond the former 3584-byte limit, real C9 upload/readback and cold/warm VM",
-      "source_bytes": 3585,
-      "source_sha256": "97ee4c9d0c97aa7b5c6f284e207d666eb02b7212a50de2bcfb13e27f1b7bb10a",
-      "run_seconds": [
-        0.3756602500216104,
-        0.12698495801305398
+      "test": "tests/run_m61_text_tests.sh",
+      "status": "PASS",
+      "sanitizers": [
+        "AddressSanitizer",
+        "UndefinedBehaviorSanitizer"
       ],
-      "register_result": 3585,
-      "array_last_index": 384,
-      "SIZE": 768
+      "profiles": "64/256/1023/1024-byte read caches, prepared-cache on/off, scoped/unscoped runtime"
+    },
+    {
+      "test": "tests/run_language_vm_tests.sh",
+      "status": "PASS",
+      "checks": "Full BASIC/FOCAL compatibility, resources, numeric functions and VM suites"
+    },
+    {
+      "test": "tests/hil_language_sources_self_test.py",
+      "status": "PASS",
+      "checks": "Exact hardware source fixtures, source-backed resources above offset 32767 and owned-resource overflow"
+    },
+    {
+      "test": "tests/portable_app_size_budget_self_test.py",
+      "status": "PASS"
+    },
+    {
+      "test": "tests/run_language_source_editor_arm_tests.py",
+      "status": "PASS",
+      "firmware_build": "CCFF9E2E",
+      "checks": "Final identical APPs at three load addresses; 34-KiB editor Save/Cancel/I/O, retained values, 64-KiB compiler/VM; measured editor stack peak 1796 bytes"
+    },
+    {
+      "test": "tests/run_usb_screen_stage_arm_tests.py",
+      "status": "PASS",
+      "firmware_build": "2539ED52"
+    },
+    {
+      "test": "tests/run_m61_source_editor_arm_tests.py",
+      "status": "PASS",
+      "firmware_build": "2539ED52"
+    },
+    {
+      "test": "tests/run_usb_screen_cold_buffers_arm_tests.py --cache-bytes 32768",
+      "status": "PASS",
+      "firmware_build": "2539ED52",
+      "checks": "Cold/warm font access, initialized VM cache, independent session memory, IRQ/OOM refusal with live bytes intact"
     }
   ],
-  "last_completed_health_check": {
-    "firmware_crc": "valid",
-    "mpu_layout": "ok",
-    "crash": "none",
-    "minimum_stack_remaining_bytes": 8216
-  },
-  "incomplete": [
-    "The first FOCAL source fixture reached its final key wait without USB Screen enabled; the harness timed out and a physical ESC was requested.",
-    "Hardware execution of 16/32/64 KiB sources and large-offset source resources remains pending.",
-    "Hardware paged-editor Save/Cancel and reset-during-draft scenarios remain pending.",
-    "Only Classic V3 was available; no physical F401 qualification was performed."
-  ],
-  "offline_verification": [
-    "The exact 3585/16384/32768/65534-byte BASIC and FOCAL fixtures compile; oversized owned strings require source resources with offsets above 32767.",
-    "Streamed source and paged document regression suites pass under AddressSanitizer and UndefinedBehaviorSanitizer."
+  "qualification_scope": [
+    "Only Classic V3/F411 was available. Physical F401 testing was not performed.",
+    "Draft-reset checks used a warm reset, not a power interruption."
   ]
 }

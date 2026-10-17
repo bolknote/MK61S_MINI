@@ -28,6 +28,8 @@ static void compare(Language lang,const std::string& text,const ResourceSource* 
   assert(sized.size==made.size && made.size==old.size);
   assert(!memcmp(actual.data(),expected.data(),made.size));
   assert(f.largest<=source::PAGE_SIZE && f.calls);
+  if(text.size()>60000 && resources && resources->mode==ResourceMode::SOURCE)
+    assert(f.calls<32000); // Repeated 4-KiB resources must compare in bounded spans.
   View v;assert(inspect(actual.data(),made.size,v)==Error::NONE);
   assert(v.source_size==text.size());
   if(resources && resources->mode==ResourceMode::SOURCE) {
@@ -59,7 +61,24 @@ static void compact_source() {
     }
   }
 }
+static void distant_equal_spans() {
+  File file{std::string(65534,'x')};
+  source::Reader input(file.input());source::CursorScope scope(input);
+  const source::Cursor begin(input);
+  // Resource interning compares repeated chunks from distant source pages.
+  // A single cache must not bounce once for each byte in those two spans.
+  assert(source::equal(begin+32760,begin+40000,4096));
+  assert(file.calls<400);
+  file.text[44095]='y';
+  source::Reader changed(file.input());source::CursorScope changed_scope(changed);
+  assert(!source::equal(source::Cursor(changed,32760),source::Cursor(changed,40000),4096));
+  file.fail=40000;
+  source::Reader failed(file.input());source::CursorScope failed_scope(failed);
+  assert(!source::equal(source::Cursor(failed,32760),source::Cursor(failed,40000),4096));
+  assert(!failed.good());
+}
 int main() {
+  distant_equal_spans();
   compact_source();
   // Keyword matching must not wrap at 256 letters after lifting the file cap.
   const std::string bad_keyword="10 END"+std::string(256,'A')+"\n";

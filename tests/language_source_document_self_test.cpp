@@ -28,6 +28,7 @@ struct Disk {
   std::string original;
   std::map<uint32_t,std::array<uint8_t,512>> pages;
   int writes=0,fail=-1;
+  unsigned page_writes=0,peak_pages=0;
   unsigned reads=0;
   bool locked=false;
   static bool read_file(void* raw,uint16_t at,uint8_t* out,uint16_t n) {
@@ -41,7 +42,9 @@ struct Disk {
   static bool write(void* raw,uint32_t key,const uint8_t* bytes) {
     auto& d=*(Disk*)raw;
     if(d.fail>=0 && d.writes++==d.fail)return false;
-    memcpy(d.pages[key].data(),bytes,512);return true;
+    memcpy(d.pages[key].data(),bytes,512);++d.page_writes;
+    if(d.pages.size()>d.peak_pages)d.peak_pages=unsigned(d.pages.size());
+    return true;
   }
   static bool forget(void* raw,uint32_t key,uint16_t n) {auto& d=*(Disk*)raw;for(unsigned i=0;i<n;++i)d.pages.erase(key+i);return true;}
   static void end(void* raw) {((Disk*)raw)->locked=false;}
@@ -86,6 +89,33 @@ static void focal_page_context() {
 }
 int main() {
   focal_page_context();
+  {
+    Disk disk;disk.original=std::string(65530,'x');
+    for(unsigned i=0;i<disk.original.size();++i)disk.original[i]=char('a'+i%26);
+    const auto original=disk.original;
+    Document doc({&disk,Disk::read_file,65530},disk.io());assert(doc.open());
+    text_editor::Buffer editor{};assert(doc.seek(editor,7));
+    std::string expected=disk.original;
+    assert(text_editor::insert_text(editor.source,editor.len,editor.cursor,editor.capacity,"7"));
+    expected.insert(7,"7");assert(doc.accept(editor.len));
+    assert(doc.seek(editor,65520));
+    assert(disk.pages.size()==128 && disk.page_writes==128);
+    assert(text_editor::insert_text(editor.source,editor.len,editor.cursor,editor.capacity,"5"));
+    expected.insert(65520,"5");assert(doc.accept(editor.len));
+    assert(doc.seek(editor,7));assert(contents(doc)==expected);
+    assert(disk.page_writes==129 && disk.peak_pages==129);
+    // Partial writes to the other bank must not change any published page
+    // mapping. Retrying an edit near the beginning rewrites many pages.
+    assert(text_editor::insert_text(editor.source,editor.len,editor.cursor,editor.capacity,"A"));
+    expected.insert(7,"A");assert(doc.accept(editor.len));
+    disk.fail=5;disk.writes=0;
+    assert(!doc.flush());assert(contents(doc)==expected);
+    disk.fail=-1;assert(doc.flush());assert(contents(doc)==expected);
+    assert(doc.erase(1000,2000,editor));expected.erase(1000,1000);
+    assert(contents(doc)==expected);
+    assert(disk.pages.size()==(expected.size()+511)/512);
+    assert(disk.original==original);
+  }
   {
     Disk disk;disk.original=std::string(65534,'x');
     Document doc({&disk,Disk::read_file,65534},disk.io());assert(doc.open());

@@ -27,6 +27,10 @@ class LanguageMachine(Machine):
 
 def package(reader, path, elf, work, kind, fixture_bytes=2048):
     packed = path.read_bytes()
+    # Metadata and all relocation variants must describe the same bytes even
+    # when a concurrent build atomically replaces the original APP pathname.
+    snapshot = work / (kind + ".APP")
+    snapshot.write_bytes(packed)
     image_size, memory_size, entry = struct.unpack_from("<III", packed, 28)
     crc = struct.unpack_from("<I", packed, 52)[0]
     low = (elf.fixture_buffer_begin() + fixture_bytes + 31) & ~31
@@ -36,8 +40,10 @@ def package(reader, path, elf, work, kind, fixture_bytes=2048):
     variants = []
     for address in (low, ((low + high) // 2) & ~31, high):
         decoded = work / "decoded.bin"
-        run([reader, path, decoded, hex(address)])
-        variants.append((address, decoded.read_bytes()))
+        run([reader, snapshot, decoded, hex(address)])
+        image = decoded.read_bytes()
+        assert len(image) == memory_size, (kind, len(image), memory_size)
+        variants.append((address, image))
     return kind, variants, image_size, entry, crc
 
 

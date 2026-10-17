@@ -355,16 +355,14 @@ class Compiler {
     // INPUT share handles even if they spelled the same text differently.
     for (uint16_t at = 0; at < resource_size_;) {
       const uint8_t* r = resource_data_.at(at);
-      uint16_t decoded = 0;
+      unsigned decoded = 0;
       bool same = (uint16_t)(r[0] | ((uint16_t)r[1] << 8)) == length;
-      for (uint8_t i = 0; i < r[2]; ++i) {
+      for (unsigned i = 0; same && i < r[2]; ++i) {
         const uint8_t* part = resource_data_.at((uint16_t)(at + 3 + i * 3));
         const uint16_t offset = (uint16_t)(part[0] | ((uint16_t)part[1] << 8));
         const uint8_t n = part[2];
-        if (same) {
-          if (!n) same = (uint8_t)text[decoded] == (uint8_t)offset;
-          else same = source::equal(text + decoded, source_ + offset, n);
-        }
+        if (!n) same = (uint8_t)text[decoded] == (uint8_t)offset;
+        else same = source::equal(text + decoded, source_ + offset, n);
         decoded += n ? n : 1;
       }
       if (same) return at;
