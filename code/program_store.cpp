@@ -4277,6 +4277,21 @@ bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
   return read_file_range(id, offset, data, len, out_len, nullptr);
 }
 
+bool content_stamp(u16 id,u32& stamp) {
+  Inode inode;u8 header[RECORD_HEADER_SIZE];
+  if(!g_ready || !get_inode(id,inode) || inode_kind(inode)!=NodeKind::FILE ||
+     !read_record_header(inode,id,header))return false;
+  // The record CRC covers identity/name/payload and is copied unchanged by
+  // GC for ordinary records. Large descriptors contain movable addresses;
+  // their data CRC and decoded length are the stable identity instead.
+  if(large_file_inode(inode)) {
+    LargeDescriptor descriptor;
+    if(!read_large_descriptor(id,inode,descriptor))return false;
+    stamp=descriptor.data_crc ^ (u32(inode.data_len)<<16) ^ u32(inode_type(inode));
+  } else stamp=get_le32(header,12);
+  return true;
+}
+
 bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len) {
   return read_file_range(id,offset,data,len,out_len,nullptr,false);
 }

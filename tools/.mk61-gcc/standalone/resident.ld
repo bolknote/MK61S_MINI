@@ -178,7 +178,7 @@ SECTIONS
 
 __mk61_dynamic_begin = ALIGN(_end, 8);
 __mk61_dynamic_end = ORIGIN(RAM) + LENGTH(RAM)
-                    - (LENGTH(RAM) == 64K ? 6K : 16K) - 256;
+                    - (LENGTH(RAM) == 64K ? 10K : 16K) - 256;
 ASSERT(LENGTH(RAM) == 64K || LENGTH(RAM) == 128K,
        "portable APP requires an F401/F411 SRAM profile")
 ASSERT(_edata <= _sbss && _ebss <= _end &&

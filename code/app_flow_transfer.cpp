@@ -62,6 +62,15 @@ RuntimeStatus Transfer::commit(ImageTransfer& p) {
   }
   return RuntimeStatus::OK;
 }
+RuntimeStatus Transfer::commit_paged(ImageTransfer& p) {
+  if(!p.size || p.image || p.prefix>=shared_memory::capacity(shared_memory::Arena::WORKSPACE))
+    return RuntimeStatus::CORRUPT_MODULE;
+  const auto evicted=loadable_module::evict_cached();
+  if(evicted!=RuntimeStatus::OK)return evicted;
+  if(!workspace_swap::acquire(owner_,shared_memory::capacity(shared_memory::Arena::WORKSPACE),
+      workspace_swap::AcquireMode::REQUIRED,workspace_))return RuntimeStatus::BUSY;
+  p.workspace=workspace_.data();p.workspace_size=workspace_.size();return RuntimeStatus::OK;
+}
 RuntimeStatus Transfer::retain_image(ImageTransfer& p, bool evict) {
   if(!p.image || !p.size || p.prefix>=shared_memory::capacity(shared_memory::Arena::WORKSPACE))
     return RuntimeStatus::CORRUPT_MODULE;

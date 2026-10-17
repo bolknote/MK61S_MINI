@@ -40,7 +40,7 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
     }
     request = {};
     request.size = sizeof(request); request.version = REQUEST_VERSION;
-    request.capacity = MAX_MODULE; request.source_id = 0xFFFF;
+    request.capacity = c.storage?UINT32_MAX:MAX_MODULE; request.storage=c.storage; request.source_id = 0xFFFF;
     request.resources = ResourceMode::EMBEDDED;
     request.language = (uint8_t)language;
     uint32_t result = 0;
@@ -71,13 +71,17 @@ uint32_t flow_compile(mk61_app_flow* flow, CompileFrontend frontend) {
       mk61_app_flow_exit(flow, result, MK61_FLOW_OK); return 1;
     }
     if(request.compiled.error != Error::NONE || request.compiled.size < HEADER_SIZE ||
-       request.compiled.size > MAX_MODULE) {
+       (!request.storage && request.compiled.size > MAX_MODULE)) {
       mk61_app_flow_exit(flow, 0, MK61_FLOW_CORRUPT); return 1;
     }
     stage.transfer.size = request.compiled.size;
     stage.transfer.prefix = sizeof(ExecutionState);
     stage.transfer.next = mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_INPUT,
         MK61_APP_FLOW_SYSTEM_FILE, FLOW_VALIDATE_PROGRAM);
+    if(request.storage) {
+      mk61_app_flow_next(flow,mk61_app_flow_to(MK61_APP_FLOW_HOST,MK61_APP_FLOW_SYSTEM_FILE,app_flow::COMMIT_FLASH_IMAGE));
+      return 1;
+    }
     mk61_app_flow_call(flow, mk61_app_flow_to(MK61_APP_FLOW_HOST,
         MK61_APP_FLOW_SYSTEM_FILE, app_flow::RESERVE_IMAGE), FLOW_EMIT_SOURCE);
     return 1;
@@ -130,7 +134,7 @@ bool prepare_compiled_flow(mk61_app_flow* flow) {
   auto& c = *(CompilerContext*)flow->context;
   if(c.prepared) return true;
   const auto& stage = c.compile;
-  if(stage.magic != FLOW_CONTEXT_MAGIC || !stage.transfer.image || !stage.transfer.workspace ||
+  if(stage.magic != FLOW_CONTEXT_MAGIC || (!stage.transfer.image && !c.execution.paged.read) || !stage.transfer.workspace ||
      stage.transfer.workspace_size < sizeof(ExecutionState) ||
      stage.transfer.size != stage.request.compiled.size || stage.request.compiled.error != Error::NONE)
     return false;

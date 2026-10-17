@@ -49,7 +49,7 @@ bool prepare_input(FlowContext& c) {
   auto& s = *c.program.state;
   if(r.result.pc >= r.image_size || s.prompt_offset > r.image_size ||
      s.control.sp >= INPUT_STACK_CAPACITY) return false;
-  const bool resource = (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE &&
+  const bool resource = !r.paged.read && (Op)r.image[r.result.pc] == Op::INPUT_RESOURCE &&
                         !(r.image[7] & OWNED_RESOURCE_FLAG);
   if(resource ? s.prompt_length > 95 || r.image_size - s.prompt_offset < 3
               : s.prompt_length > r.image_size - s.prompt_offset) return false;
@@ -58,7 +58,7 @@ bool prepare_input(FlowContext& c) {
       resource_word(r.image + s.prompt_offset) != s.prompt_length)) return false;
   c.input = {};
   c.input.size = sizeof(c.input); c.input.version = REQUEST_VERSION;
-  c.input.prompt = (const char*)r.image + s.prompt_offset;
+  c.input.prompt = r.paged.read?s.prompt:(const char*)r.image + s.prompt_offset;
   if(resource) c.input.resource_image = r.image;
   c.input.prompt_length = s.prompt_length;
   c.input.image = input_image_storage(s);
@@ -150,6 +150,7 @@ uint32_t flow_input(mk61_app_flow* flow, FlowExecute validate,
         returned(flow, 0, MK61_FLOW_CORRUPT); return 1;
       }
       c->expression = *c->program.execution;
+      c->expression.paged={};c->expression.storage=nullptr;
       c->expression.image = c->input.image; c->expression.image_size = c->input.image_size;
       c->expression_request = {sizeof(OverlayRequest), REQUEST_VERSION, &c->expression,
                                &s, &c->expression_validated, OverlayAction::EXPRESSION, {0,0,0}};

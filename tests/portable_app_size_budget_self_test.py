@@ -2,6 +2,7 @@
 """Keep compactness ceilings in CI and allow valid larger ordinary APP builds."""
 
 import importlib.util
+import argparse
 import os
 from pathlib import Path
 import unittest
@@ -21,7 +22,7 @@ PROFILES = (
     ("setup", {}, {"app_bytes": 10000, "memory_bytes": 20480}),
     ("focal", {}, {"app_bytes": 12000, "memory_bytes": 17000}),
     ("explorer", {}, {"app_bytes": 8000, "memory_bytes": 10000}),
-    ("language-input", {}, {"app_bytes": 12800, "memory_bytes": 17152}),
+    ("language-input", {}, {"app_bytes": 16000, "memory_bytes": 20480}),
     ("source-editor", {}, {"app_bytes": 13568, "memory_bytes": 18304}),
     ("focal", {"local_float_math": True},
      {"app_bytes": 14000, "memory_bytes": 20000}),
@@ -34,20 +35,27 @@ PROFILES = (
     ("tinybasic", {"local_float_math": True, "greedy_packer": True},
      {"app_bytes": 13000, "memory_bytes": 17500}),
     ("language-input", {"greedy_packer": True},
-     {"app_bytes": 14144, "memory_bytes": 17152}),
+     {"app_bytes": 17000, "memory_bytes": 20480}),
     ("source-editor", {"greedy_packer": True},
      {"app_bytes": 14848, "memory_bytes": 18304}),
+    ("tinybasic", {"language_vm_compiler": True},
+     {"app_bytes": 15000, "memory_bytes": 20480}),
     ("focal", {"language_vm_compiler": True},
      {"app_bytes": 14560, "memory_bytes": 19648}),
     ("focal", {"language_vm_compiler": True, "greedy_packer": True},
      {"app_bytes": 15360, "memory_bytes": 19648}),
-    ("language-vm", {"split_language_vm": True}, {"memory_bytes": 19520}),
+    ("language-vm", {"split_language_vm": True}, {"memory_bytes": 20480}),
     ("language-vm", {"split_language_vm": True, "local_float_math": True},
-     {"memory_bytes": 19968}),
+     {"memory_bytes": 20480}),
 )
 
 
 class PortableAppSizeBudgetSelfTest(unittest.TestCase):
+    def test_language_apps_cannot_reenable_external_libm(self):
+        for system in ('focal', 'tinybasic', 'language-vm', 'language-input', 'source-editor'):
+            with self.subTest(system=system), patch.object(BUILDER.sys, 'platform', 'darwin'), self.assertRaisesRegex(ValueError, 'local libm is disabled'):
+                BUILDER.build(argparse.Namespace(system=system, local_float_math=True))
+
     def test_ordinary_builds_skip_all_compactness_ceilings(self):
         for ci in (None, "", "false", "0"):
             with self.subTest(ci=ci), patch.dict(os.environ):
@@ -62,7 +70,7 @@ class PortableAppSizeBudgetSelfTest(unittest.TestCase):
                             "focal_trace": trace,
                         }, **options)
 
-    def test_ci_keeps_each_existing_ceiling(self):
+    def test_ci_enforces_each_measured_ceiling(self):
         for ci in ("true", "TRUE", "1", " true "):
             with patch.dict(os.environ, CI=ci):
                 for system, options, limits in PROFILES:

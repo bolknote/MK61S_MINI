@@ -862,11 +862,20 @@
   #error "REVISION_V2 cannot be combined with a UC1609 board profile"
 #endif
 
+// Shipping language APPs stream index/bytecode from C9. Host legacy-ABI
+// probes may retain their original RAM transfer/cache fixtures.
+#ifndef MK61_FLASH_LANGUAGE_VM
+  #if defined(LANGUAGE_VM_HOST_TEST)
+    #define MK61_FLASH_LANGUAGE_VM 0
+  #else
+    #define MK61_FLASH_LANGUAGE_VM (MK61_OVERLAY_LANGUAGE_VM || MK61_RESIDENT_LANGUAGE_VM)
+  #endif
+#endif
 // Select the cache budget after complete board profiles and legacy aliases.
 // Classic F411 retains 32 KiB raw images; other F411 boards keep 24 KiB.
 // F401/no-overlay profiles keep zero; explicit qualification overrides remain.
 #ifndef MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
-  #if MK61_OVERLAY_LANGUAGE_VM && defined(STM32F411xE)
+  #if MK61_OVERLAY_LANGUAGE_VM && !MK61_FLASH_LANGUAGE_VM && defined(STM32F411xE)
     #if defined(MK61_BOARD_CLASSIC_V2) || defined(MK61_BOARD_CLASSIC_V3)
       #define MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES 32768
     #else

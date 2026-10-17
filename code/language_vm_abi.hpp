@@ -5,10 +5,15 @@
 #include <string.h>
 
 namespace language_vm {
-static constexpr uint32_t REQUEST_VERSION = 11;
-static constexpr uint32_t COMPILER_MAGIC = 0x3E4D5643UL;
+static constexpr uint32_t REQUEST_VERSION = 13;
+static constexpr uint32_t COMPILER_MAGIC = 0x424D5643UL;
 static constexpr uint16_t VALUES_SIZE = 4016;
 static constexpr uint16_t COMPILER_WORKSPACE_SIZE = 8192 - VALUES_SIZE;
+// Frontend selection/printing lives below this fixed offset. Flash writers
+// use the rest of the existing compiler prefix instead of the MCU stack.
+static constexpr uint16_t FLASH_FRONTEND_BYTES = 512;
+static constexpr uint16_t FLASH_CACHE_BYTES = flash::WRITE_BYTES;
+static constexpr uint16_t FLASH_COMPILER_WORKSPACE_SIZE = COMPILER_WORKSPACE_SIZE-FLASH_CACHE_BYTES;
 // Resident-owned, synchronous request. Output survives compiler eviction;
 // none of the pointers may point into the native compiler's APP allocation.
 struct Request {
@@ -22,6 +27,7 @@ struct Request {
   uint8_t retained_source;
   uint8_t edit_requested, reserved;
   uint32_t source_revision;
+  flash::IO* storage;
 };
 struct ExecuteRequest {
   uint32_t size, version;
@@ -35,10 +41,12 @@ struct ExecuteRequest {
   uint16_t error_column;
   uint8_t edit_requested, reserved2;
   RunResult result;
+  flash::Input paged;
+  flash::IO* storage;
 };
-static constexpr uint32_t OVERLAY_MAGIC = 0x3F564D4CUL;
-static constexpr uint32_t INPUT_MAGIC = 0x3F494D4CUL;
-static constexpr uint32_t VALIDATED_MAGIC = 0x3E49424CUL;
+static constexpr uint32_t OVERLAY_MAGIC = 0x41564D4CUL;
+static constexpr uint32_t INPUT_MAGIC = 0x41494D4CUL;
+static constexpr uint32_t VALIDATED_MAGIC = 0x4149424CUL;
 // BASIC keyboard expressions are <=64 source bytes. Even if every two-byte
 // fraction needs F64 (9 bytes), 21 leaves + 20 operators + header/CHECK/HALT
 // use 243 bytes; remaining unary/group syntax cannot exceed the 256 ceiling.
@@ -62,7 +70,9 @@ struct ExecutionState {
   char output[96];
   Value input_value;
   uint32_t steps;
-  uint16_t prompt_offset, prompt_length, array_count;
+  uint32_t prompt_offset;
+  uint16_t prompt_length, array_count;
+  char prompt[96];
   Language language;
   uint8_t row, width, output_cursor, precision;
   bool cancelled, normal_stop;
@@ -98,9 +108,13 @@ inline uint8_t* input_image_storage(ExecutionState& state) {
 // for arbitrary native APPs. It contains no pointers into an unloaded APP.
 struct ValidatedImage {
   uint32_t magic;
-  uint16_t size, code, source_size, end;
-  uint8_t lines, stack, flags;
+  uint32_t size, code;
+  uint16_t source_size;
+  uint32_t end;
+  uint16_t lines;
+  uint8_t stack, flags;
   Language language;
+  bool wide;
 };
 struct OverlayRequest {
   uint32_t size, version;
@@ -115,25 +129,27 @@ inline bool execution_compatible(const OverlayRequest* p) {
       !p->state || !p->execution || !p->validated || p->action > OverlayAction::ABORT ||
       p->reserved[0] || p->reserved[1] || p->reserved[2]) return false;
   const auto& r = *p->execution;
-  return r.size == sizeof(r) && r.version == REQUEST_VERSION && r.image &&
-         r.image_size >= HEADER_SIZE && r.image_size <= MAX_MODULE && r.variables &&
+  return r.size == sizeof(r) && r.version == REQUEST_VERSION &&
+         (r.paged.read ? r.storage && r.paged.size==r.image_size : r.image && r.image_size<=MAX_MODULE) &&
+         r.image_size >= HEADER_SIZE && r.variables &&
          r.array_count <= 385 && (!r.array_count || r.array) && r.mode <= 1 && !r.reserved &&
          !r.reserved2 && r.edit_requested <= 1 &&
          (p->state->language == Language::BASIC || p->state->language == Language::FOCAL);
 }
-inline bool validated_view(const OverlayRequest& p, View& v) {
+inline bool validated_view(const OverlayRequest& p, View& v,const flash::Reader* reader=nullptr) {
   const auto& m = *p.validated;
   const auto& r = *p.execution;
   const bool basic = m.language == Language::BASIC;
   if (m.magic != VALIDATED_MAGIC || m.size != r.image_size ||
       m.language != p.state->language || m.flags > 15 || (uint8_t)(m.stack - 1) >= MAX_STACK ||
-      m.code != HEADER_SIZE + m.lines * (basic ? 4 : 6) || m.code >= m.end || m.end > MAX_IMAGE || m.end > m.size ||
+      m.code != HEADER_SIZE + uint32_t(m.lines) * (m.wide?8:basic ? 4 : 6) || m.code >= m.end || (!m.wide && m.end > MAX_IMAGE) || m.end > m.size ||
       (uint16_t)(m.source_size - 1) >= source::MAX_SIZE ||
-      m.lines > (basic ? 192 : 80) ||
+      (!m.wide && m.lines > (basic ? 192 : 80)) ||
       ((m.flags & 1) ? m.lines || m.source_size > (basic ? 64 : 111) : !m.lines))
     return false;
   v = {r.image, m.size, m.code, m.lines, m.source_size, m.stack, m.language,
-       (m.flags & 1) != 0, (m.flags & 2) != 0, m.end};
+       (m.flags & 1) != 0, (m.flags & 2) != 0, m.end, m.wide?reader:nullptr,m.wide};
+  if(m.wide && r.storage) {v.lookup_context=r.storage->context;v.lookup=r.storage->lookup;}
   return v.expression == (p.action == OverlayAction::EXPRESSION);
 }
 inline void initialize_validated_state(const ExecuteRequest& r, const ValidatedImage& image,
@@ -153,8 +169,8 @@ inline RunResult evaluate_input(const View& view, ExecutionState& s,
                                 const Bindings& program, const Services& services) {
   if (!view.expression || s.control.sp >= INPUT_STACK_CAPACITY)
     return {Error::INVALID_IMAGE, 0, 0, 0};
-  const uint16_t pc = s.control.pc;
-  const uint16_t data_pc = s.control.data_pc, data_index = s.control.data_index;
+  const uint32_t pc = s.control.pc;
+  const uint32_t data_pc = s.control.data_pc, data_index = s.control.data_index;
   const uint8_t sp = s.control.sp, calls = s.control.call_count, loops = s.control.loop_count;
   const Bindings expression = {program.variables, program.array, program.array_count,
                                s.stack + sp, (uint8_t)(INPUT_STACK_CAPACITY - sp)};
@@ -182,7 +198,7 @@ struct InputRequest {
 };
 inline bool compatible(const Request* r) {
   return r && r->size == sizeof(*r) && r->version == REQUEST_VERSION &&
-         r->capacity >= HEADER_SIZE && r->capacity <= MAX_MODULE &&
+         r->capacity >= HEADER_SIZE && (r->storage || r->capacity <= MAX_MODULE) &&
          r->resources <= ResourceMode::EMBEDDED && r->retained_source <= 1 && r->edit_requested <= 1 && !r->reserved;
 }
 // Bound by each compiler APP command, reset before returning to the resident.
@@ -193,13 +209,13 @@ uint16_t frontend_source_id(void);
 // Emit the previously sized, still-resident source, without opening the
 // editor or repeating file/name selection. Used only by compiler-only APPs.
 bool frontend_emit(void);
+
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(Request) == 40, "compiler request ARM ABI changed");
-static_assert(sizeof(ExecuteRequest) == 48, "execution request ARM ABI changed");
-static_assert(sizeof(OverlayRequest) == 24, "overlay request ARM ABI changed");
-static_assert(sizeof(ValidatedImage) == 16, "validated descriptor ARM ABI changed");
-static_assert(sizeof(InputRequest) == 40, "input request ARM ABI changed");
-static_assert(sizeof(ExecutionState) == 1664, "continuation layout changed; update measurements");
+static_assert(sizeof(Request)==52 && offsetof(Request,storage)==48,"Flash compiler request ABI");
+static_assert(sizeof(ExecuteRequest)==68 && offsetof(ExecuteRequest,paged)==52,"paged executor ABI");
+static_assert(sizeof(ValidatedImage)==28 && sizeof(OverlayRequest)==24,"32-bit image certificate ABI");
+static_assert(sizeof(ExecutionState)==1992 && sizeof(Continuation)==976,"32-bit continuation ABI");
+static_assert(sizeof(InputRequest)==40,"INPUT protocol ABI");
 #endif
 }  // namespace language_vm
 #endif

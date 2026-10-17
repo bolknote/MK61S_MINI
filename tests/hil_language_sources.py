@@ -47,9 +47,9 @@ class SourcePort(ScreenPort):
                 return self.text[start:].decode("cp1251", "replace")
         raise TimeoutError(f"{command}: {self.text[start:]!r}")
 
-    def run_source(self, loader, focal):
+    def run_source(self, loader, focal, timeout=120):
         self.open(loader)
-        deadline = time.monotonic() + 120
+        deadline = time.monotonic() + timeout
         next_key = time.monotonic() + .5
         while time.monotonic() < deadline:
             self.pump(.03)

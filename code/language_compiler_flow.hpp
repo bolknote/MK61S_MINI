@@ -42,13 +42,12 @@ struct CompilerContext {
   // Captured optional helper, or 0xFFFF for no persistence/already-loaded data.
   // Survives compiler/VM union reuse without another resident path lookup.
   uint16_t cache_driver;
+  flash::IO* storage = nullptr;
 };
+
 #if UINTPTR_MAX == UINT32_MAX
-static_assert(sizeof(CompilerStage) == 128 && offsetof(CompilerStage, request) == 8 &&
-              offsetof(CompilerStage, transfer) == 48 && offsetof(CompilerStage, values) == 76 &&
-              sizeof(CompilerContext) == 240 && offsetof(CompilerContext, execution) == 184 &&
-              offsetof(CompilerContext, source_id) == 232,
-              "compiler flow wire layout changed");
+static_assert(sizeof(CompilerContext)==312 && sizeof(CompilerStage)==152 &&
+    offsetof(CompilerContext,execution)==232 && offsetof(CompilerStage,transfer)==60,"Flash compiler flow ABI");
 #endif
 enum CompilerPhase : uint32_t { FLOW_COMPILE_SOURCE = 0x100, FLOW_EMIT_SOURCE, FLOW_EDIT_SOURCE };
 using CompileFrontend = uint32_t (*)(loadable_module::Command, uint32_t, uint32_t,

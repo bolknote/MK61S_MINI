@@ -10,10 +10,12 @@ struct File {
   uint16_t id,size;
   uint32_t revision;
   bool catalog=false;
+  bool stable=false;
+  bool pin() {stable=portable_system::call(MK61_SYS_RESOURCE_READ,6,id,0,&revision)!=0;return stable;}
   static bool read(void* raw,uint16_t at,uint8_t* out,uint16_t n) {
     const auto& f=*static_cast<File*>(raw);
     if(at>f.size || n>unsigned(f.size-at))return false;
-    const mk61_service_resource request={f.revision,f.id,at,out,n,u16(f.catalog?1:0)};
+    const mk61_service_resource request={f.revision,f.id,at,out,n,u16(f.stable?2:f.catalog?1:0)};
     return portable_system::call(MK61_SYS_RESOURCE_READ,5,0,0,(void*)&request)!=0;
   }
   Input input() {return {this,read,size};}

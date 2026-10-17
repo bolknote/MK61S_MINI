@@ -17,18 +17,18 @@ int main(void) {
                 "128-KiB encoding");
 
   const Layout f401 = make_layout(
-      F401_PROFILE, 0x2000E4D0UL, 0x2000FFF0UL, 8);
+      F401_PROFILE, 0x2000D4D0UL, 0x2000FFF0UL, 8);
   assert(f401.valid);
   assert(f401.required_regions == 2);
-  assert(f401.guard_base == 0x2000E700UL);
-  assert(f401.guard_end == 0x2000E800UL);
+  assert(f401.guard_base == 0x2000D700UL);
+  assert(f401.guard_end == 0x2000D800UL);
   assert(!f401.sram_execute_never);
 
-  assert(!make_layout(F401_PROFILE, 0x2000E701UL,
+  assert(!make_layout(F401_PROFILE, 0x2000D701UL,
                       0x2000FFF0UL, 8).valid);
-  assert(!make_layout(F401_PROFILE, 0x2000E4D0UL,
-                      0x2000E7FCUL, 8).valid);
-  assert(!make_layout(F401_PROFILE, 0x2000E4D0UL,
+  assert(!make_layout(F401_PROFILE, 0x2000D4D0UL,
+                      0x2000D7FCUL, 8).valid);
+  assert(!make_layout(F401_PROFILE, 0x2000D4D0UL,
                       0x2000FFF0UL, 1).valid);
 
   const Layout f411 = make_layout(

@@ -10,57 +10,26 @@
     defined(MK61_BUILD_SOURCE_EDITOR_MODULE) || \
     defined(MK61_BUILD_FOCAL_MODULE) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
 #include "language_bytecode.hpp"
+#include "language_vm_abi.hpp"
 #include "language_source_scan.hpp"
 #include "tinybasic_syntax.hpp"
 #include "basic_graphics_protocol.hpp"
 #include "focal_compiler.hpp"
+#include "language_flash_program.hpp"
+#include "language_integer_spans.hpp"
 
 #include <string.h>
+#include <new>
 
 #include "mk_math.hpp"
 
 namespace language_vm {
 void mark_integer_spans(uint8_t* bytes,uint16_t code,uint16_t end) {
-  uint16_t first=0;unsigned count=0;
-  auto finish=[&]() {
-    if(first && count>=5)bytes[first]=(uint8_t)Op::INTEGER_SPAN;
-    first=0;count=0;
-  };
-  for(uint16_t pc=code;pc<end;) {
-    const Op op=(Op)bytes[pc];
-    const uint16_t after=instruction_end(bytes,end,pc);
-    if(!after)break;
-    if(op==Op::SOURCE_POS) {pc=after;continue;}
-    // The existing index mark proves its first three scalar instructions;
-    // never replace the interior LOAD with another hint.
-    if(op==Op::BLOCK_INDEX) {finish();pc=(uint16_t)(pc+6);continue;}
-    if(op==Op::LOAD) {
-      auto skip_position=[&](uint16_t at) {
-        while(end-at>=3 && (Op)bytes[at]==Op::SOURCE_POS)at=(uint16_t)(at+3);
-        return at;
-      };
-      const uint16_t middle=skip_position(after);
-      if(middle<end && ((Op)bytes[middle]==Op::LOAD_ARRAY ||
-         (end-middle>=2 && (Op)bytes[middle]==Op::FUNCTION &&
-          (Function)bytes[middle+1]==Function::ABS))) {
-        const uint16_t last=skip_position((uint16_t)(middle+((Op)bytes[middle]==Op::LOAD_ARRAY?1:2)));
-        if(end-last>=2 && (Op)bytes[last]==Op::STORE) {
-          finish();bytes[pc]=(uint8_t)Op::INTEGER_SHORT;
-          pc=(uint16_t)(last+2);continue;
-        }
-      }
-    }
-    const bool supported=op==Op::LOAD || op==Op::LOAD_ARRAY_FIXED ||
-        op==Op::LOAD_ARRAY || op==Op::STORE || op==Op::STORE_ARRAY ||
-        op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
-        (op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::NEG || op==Op::NOT ||
-        (op>=Op::ADD && op<=Op::XOR && op!=Op::POW) || op==Op::FLOOR_DIV;
-    if(!supported)finish();
-    else {if(!first && op==Op::LOAD)first=pc;if(first)++count;}
-    pc=after;
-  }
-  finish();
+  detail::integer_spans(code,end,[&](uint32_t pc){return bytes[pc];},
+      [&](uint32_t pc){return instruction_end(bytes,end,uint16_t(pc));},
+      [&](uint32_t pc,Op op){bytes[pc]=uint8_t(op);});
 }
+
 namespace {
 void put_word(uint8_t* p, uint16_t v) {
   p[0] = (uint8_t)v;
@@ -79,7 +48,8 @@ bool digit(char c) { return c >= '0' && c <= '9'; }
 bool space(char c) { return c == ' ' || c == '\t'; }
 struct Line {
   uint32_t number;
-  uint16_t begin, end, pc;
+  uint16_t begin, end;
+  uint32_t pc;
 };
 struct Keyword {
   const char* text;
@@ -170,40 +140,41 @@ struct Target {
   uint8_t kind, index;
 };  // 0 variable, 1 reference, 2 array
 
-template <Language Lang>
+template <Language Lang,bool Paged=false>
 class Compiler {
   using Text = source::Cursor;
   const source::Reader* input_;
  public:
-  __attribute__((noinline)) Compiler(const source::Reader& input, uint16_t length, uint8_t* out, uint16_t capacity,
-           Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {}) {
+  __attribute__((noinline)) Compiler(const source::Reader& input, uint16_t length, uint8_t* out, uint32_t capacity,
+           Line* lines, bool rf_available = true, const ResourceSource* resources = nullptr, ResourceWorkspace workspace = {}, flash::Program* flash = nullptr) {
     // All fields are scalar pointers, integers or POD workspace descriptors.
     // A shared cold initializer avoids duplicating dozens of zero stores for
     // every bounded resource-workspace specialization in the compiler APP.
     static_assert((unsigned)Error::NONE==0 && (unsigned)Op::HALT==0,"zero compiler state changed");
     memset(static_cast<void*>(this),0,sizeof(*this));
     input_=&input;source_=p_=end_=Text(input);length_=length;out_=out;capacity_=capacity;
-    lines_=lines;rf_available_=rf_available;resources_=resources;resource_data_=workspace;
+    flash_=flash;lines_=lines;rf_available_=rf_available;resources_=resources;resource_data_=workspace;
   }
 
   CompileResult compile() {
     if (!source_) return {Error::SYNTAX, 0, 0, 0, 0};
     const uint16_t quota = source::MAX_SIZE;
-    if (length_ == 0 || length_ > quota || input_->contains_nul())
+    if (length_ == 0 || length_ > quota || (!Paged && input_->contains_nul()))
       return {length_ > quota ? Error::FULL : !input_->good() ? Error::IO : Error::SYNTAX, 0, 0, 0, 0};
     index_lines();
     if (!count_ && error_ == Error::NONE) fail(Error::LINE);
-    const uint16_t code = (uint16_t)(HEADER_SIZE + count_ * stride());
+    const uint32_t code = HEADER_SIZE + uint32_t(count_) * stride();
     // Labels and instruction lengths are determined before emission; source
     // may be unordered and every forward reference gets its final offset.
     for (pass_ = 0; pass_ < 2 && error_ == Error::NONE; ++pass_) {
+      if(pass_ && Paged && !flash_->begin_image()) {fail(Error::IO);break;}
       pc_ = code;
       resource_size_ = 0;
       sp_ = maximum_ = depth_ = 0;
       for (line_ = 0; line_ < count_ && error_ == Error::NONE; ++line_) {
-        if (!pass_) lines_[line_].pc = pc_;
-        p_ = source_ + lines_[line_].begin;
-        end_ = source_ + lines_[line_].end;
+        if (!pass_) set_line_pc(line_,pc_);
+        p_ = source_ + line_at(line_).begin;
+        end_ = source_ + line_at(line_).end;
         if (basic())
           commands(0);
         else
@@ -212,9 +183,9 @@ class Compiler {
         emit(Op::LINE);
       }
       emit(Op::HALT);
-      if (!pass_) image_end_ = (uint16_t)(pc_ - 1);
+      if (!pass_) image_end_ = pc_ - 1;
     }
-    const uint16_t code_end = pc_;
+    const uint32_t code_end = pc_;
     if (error_ == Error::NONE && resource_size_ && resource_data_.first) {
       if (pc_ > capacity_ || resource_size_ > capacity_ - pc_ ||
           resource_size_ > (owned_resources() ? MAX_MODULE : MAX_IMAGE) - pc_) fail(Error::FULL);
@@ -226,6 +197,10 @@ class Compiler {
         }
         pc_ += resource_size_;
       }
+    }
+    if(Paged) {
+      if(error_==Error::NONE && !flash_->finish(Lang,pc_,parameter_calls_?MAX_STACK:maximum_,rf_required_))error_=Error::IO;
+      if(flash_->error()!=Error::NONE)error_=flash_->error();
     }
     if (error_ == Error::NONE && out_) {
       memset(out_, 0, HEADER_SIZE);
@@ -250,10 +225,10 @@ class Compiler {
       for (uint16_t i = 0; i < count_; ++i) {
         uint8_t* record = out_ + HEADER_SIZE + i * stride();
         if (basic())
-          put_word(record, (uint16_t)lines_[i].number);
+          put_word(record, (uint16_t)line_at(i).number);
         else
-          put_dword(record, lines_[i].number);
-        put_word(record + stride() - 2, lines_[i].pc);
+          put_dword(record, line_at(i).number);
+        put_word(record + stride() - 2, line_at(i).pc);
       }
       mark_integer_spans(out_,code,code_end);
       put_dword(out_ + 20, checksum(out_ + HEADER_SIZE, pc_ - HEADER_SIZE));
@@ -301,28 +276,36 @@ class Compiler {
   Text source_;
   uint16_t length_;
   uint8_t* out_;
-  uint16_t capacity_;
+  uint32_t capacity_;
   Text p_;
   Text end_;
   Error error_;
   Line* lines_;
-  uint16_t count_, pc_;
+  flash::Program* flash_;
+  Line line_at(uint16_t i) {
+    if(!Paged)return lines_[i];
+    const auto l=flash_->line(i);return {l.number,l.begin,l.end,l.pc};
+  }
+  void set_line_pc(uint16_t i,uint32_t pc) {if(Paged)flash_->pc(i,pc);else lines_[i].pc=pc;}
+  void put_byte(uint32_t at,uint8_t b) {if(Paged)flash_->byte(at,b);else if(out_)out_[at]=b;}
+  uint16_t count_;
+  uint32_t pc_;
   uint8_t sp_, maximum_, depth_;
   uint16_t line_;
   uint8_t pass_;
-  uint16_t image_end_;
+  uint32_t image_end_;
   bool rf_available_, rf_required_, expression_only_, parameter_calls_, graph_expression_;
   const ResourceSource* resources_;
   uint16_t resource_size_;
   ResourceWorkspace resource_data_;
   Op last_op_;
-  uint16_t last_at_;
+  uint32_t last_at_;
   // Two previous short instructions: pc:16, opcode:8, first operand:8.
   // Emission metadata works without an output buffer in the sizing pass.
-  uint32_t previous_[2];
+  uint64_t previous_[2];
   uint8_t last_operand_;
-  bool owned_resources() const { return resources_ && resources_->mode == ResourceMode::EMBEDDED; }
-  bool resource_literals() const { return resources_ && (owned_resources() || resources_->id != 0xFFFF); }
+  bool owned_resources() const { return !Paged && resources_ && resources_->mode == ResourceMode::EMBEDDED; }
+  bool resource_literals() const { return !Paged && resources_ && (owned_resources() || resources_->id != 0xFFFF); }
   uint16_t intern_resource(Text text, uint16_t length) {
     if(owned_resources()) {
       if(length > MAX_MODULE-2U || resource_size_ > MAX_MODULE-2U-length) {fail(Error::FULL);return 0;}
@@ -398,7 +381,7 @@ class Compiler {
     return at;
   }
   static constexpr bool basic() { return Lang == Language::BASIC; }
-  uint8_t stride() const { return basic() ? 4 : 6; }
+  uint8_t stride() const { return Paged ? 8 : basic() ? 4 : 6; }
   void fail(Error e) {
     if (error_ == Error::NONE) error_ = e;
   }
@@ -414,12 +397,13 @@ class Compiler {
     return false;
   }
   void byte(uint8_t v) {
-    if (pc_ >= capacity_ || pc_ >= MAX_IMAGE) {
+    if (pc_ >= capacity_ || (!Paged && pc_ >= MAX_IMAGE)) {
       fail(Error::FULL);
       return;
     }
     if(pc_==last_at_+1) last_operand_=v;
-    if (pass_ && out_) out_[pc_] = v;
+    if(pass_ && (out_ || Paged))put_byte(pc_,v);
+    if(Paged && flash_->error()!=Error::NONE)fail(flash_->error());
     ++pc_;
   }
   void emit(Op op) {
@@ -428,23 +412,23 @@ class Compiler {
     // stay unchanged. Sizing needs no output buffer or extra metadata. These
     // marks select a proven block, rather than probing ordinary LOAD/CONST at
     // every execution. Scalar execution remains valid at every interior PC.
-    uint16_t block_at=0; Op block=Op::HALT;
+    uint32_t block_at=0; Op block=Op::HALT;
     if(index_block_shape(op,pc_,(Op)((previous_[1]>>8)&255),
-                         (uint16_t)(previous_[1]>>16),last_op_,last_at_)) {
-      block_at=(uint16_t)(previous_[1]>>16);block=Op::BLOCK_INDEX;
+                         (uint32_t)(previous_[1]>>16),last_op_,last_at_)) {
+      block_at=(uint32_t)(previous_[1]>>16);block=Op::BLOCK_INDEX;
     }
     if(op==Op::COMPARE_FALSE && pc_==last_at_) {
-      const uint16_t lhs=(uint16_t)(previous_[0]>>16),rhs=(uint16_t)(previous_[1]>>16);
+      const uint32_t lhs=(uint32_t)(previous_[0]>>16),rhs=(uint32_t)(previous_[1]>>16);
       const Op right=(Op)((previous_[1]>>8)&255);
       const unsigned width=right>=Op::CONST_0 && right<=Op::CONST_15 ? 1 : 0;
       if(((previous_[0]>>8)&255)==(unsigned)Op::LOAD && rhs==lhs+2U &&
          width && pc_==rhs+width) {block_at=lhs;block=Op::BLOCK_COMPARE;}
     }
-    if(block!=Op::HALT && pass_ && out_)out_[block_at]=(uint8_t)block;
+    if(block!=Op::HALT && pass_ && (out_ || Paged))put_byte(block_at,(uint8_t)block);
 #endif
     if(op != Op::SOURCE_POS) {
       previous_[0]=previous_[1];
-      previous_[1]=((uint32_t)last_at_<<16)|((uint32_t)last_op_<<8)|last_operand_;
+      previous_[1]=((uint64_t)last_at_<<16)|((uint32_t)last_op_<<8)|last_operand_;
       last_op_=op;last_at_=pc_;
     }
     byte((uint8_t)op);
@@ -453,9 +437,11 @@ class Compiler {
     byte((uint8_t)v);
     byte((uint8_t)(v >> 8));
   }
-  void patch(uint16_t at, uint16_t v) {
-    if (pass_ && out_ && at <= capacity_ && capacity_ - at >= 2) put_word(out_ + at, v);
+  void patch(uint32_t at, uint16_t v) {
+    if(pass_ && (out_ || Paged) && at<=capacity_ && capacity_-at>=2) {put_byte(at,uint8_t(v));put_byte(at+1,uint8_t(v>>8));}
   }
+  void emit_address(uint32_t value) {u16(uint16_t(value));if(Paged)u16(uint16_t(value>>16));}
+  void patch_address(uint32_t at,uint32_t value) {patch(at,uint16_t(value));if(Paged)patch(at+2,uint16_t(value>>16));}
   void stack(int effect) {
     const int n = sp_ + effect;
     if (n < 0 || n > MAX_STACK) {
@@ -582,6 +568,7 @@ class Compiler {
     return major * 1000 + minor;
   }
   void index_lines() {
+    if(Paged) {count_=flash_->count();return;}
     Text cursor = source_;
     while (cursor < source_ + length_ && error_ == Error::NONE) {
       while (cursor < source_ + length_ && (*cursor == '\r' || *cursor == '\n'))
@@ -625,11 +612,11 @@ class Compiler {
         break;
       }
       uint16_t at = count_;
-      while (at && lines_[at - 1].number > number) {
+      while (at && line_at(at - 1).number > number) {
         lines_[at] = lines_[at - 1];
         --at;
       }
-      if (at && lines_[at - 1].number == number) {
+      if (at && line_at(at - 1).number == number) {
         fail(Error::LINE);
         break;
       }
@@ -637,11 +624,15 @@ class Compiler {
       ++count_;
     }
   }
-  uint16_t target_pc(uint32_t number, bool group = false) {
+  uint32_t target_pc(uint32_t number, bool group = false) {
     if (!pass_) return 0;
+    if(Paged) {
+      const int i=flash_->find(group?number/1000:number,group);
+      return i<0?UINT32_MAX:line_at(uint16_t(i)).pc;
+    }
     for (uint16_t i = 0; i < count_; ++i)
-      if (group ? lines_[i].number / 1000 == number / 1000 : lines_[i].number == number)
-        return lines_[i].pc;
+      if (group ? line_at(i).number / 1000 == number / 1000 : line_at(i).number == number)
+        return line_at(i).pc;
     return 0xFFFF;
   }
   bool direct_basic_branch(bool sub) {
@@ -658,7 +649,7 @@ class Compiler {
     // Resolve only a bare, valid line literal. Dynamic/invalid numeric
     // expressions retain their original evaluation and error semantics.
     emit(sub ? Op::GOSUB_DIRECT : Op::GOTO_DIRECT);
-    u16(target_pc(number));p_=q;return true;
+    emit_address(target_pc(number));p_=q;return true;
   }
   void basic_call(bool result) {
     unsigned number = 0;
@@ -672,7 +663,7 @@ class Compiler {
     }
     parameter_calls_ = true;
     operation(Op::CALL_PARAMS, int(result) - int(arguments));
-    u16(target_pc(number)); u16(result ? image_end_ : 0);
+    emit_address(target_pc(number)); emit_address(result ? image_end_ : 0);
     byte((uint8_t)arguments); byte(result);
   }
   bool fixed_array_index(uint16_t& index) {
@@ -966,10 +957,10 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       if (!match(')')) fail(Error::EXPECTED_PAREN);
       if (f == Function::RND && !basic()) fail(Error::FUNCTION);
       const bool floor_div = f == Function::INT && last_op_ == Op::DIV;
-      const uint16_t division = last_at_;
+      const uint32_t division = last_at_;
       if (basic()) source_position(primary_start);
       if(floor_div) {
-        if(pass_ && out_) out_[division]=(uint8_t)Op::FLOOR_DIV;
+        if(pass_ && (out_ || Paged))put_byte(division,(uint8_t)Op::FLOOR_DIV);
         last_op_=Op::FLOOR_DIV; last_at_=division;
       } else {
         emit(Op::FUNCTION);
@@ -1095,7 +1086,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
     if (!match('=')) fail(Error::SYNTAX);
     do {
 #if !defined(LANGUAGE_VM_TEST_NO_FUSION)
-      const uint16_t begin=pc_;
+      const uint32_t begin=pc_;
 #endif
       expression();
 #if !defined(LANGUAGE_VM_TEST_NO_FUSION)
@@ -1105,7 +1096,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       skip();
       if (!basic() || !match(',')) break;
       Text saved = p_;
-      const uint16_t save_pc = pc_;
+      const uint32_t save_pc = pc_;
       const uint8_t save_sp = sp_;
       const Error save_error = error_;
       Target next = target();
@@ -1123,10 +1114,10 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       }
     } while (error_ == Error::NONE);
   }
-  bool fuse_assignment(uint8_t index,uint16_t begin) {
+  bool fuse_assignment(uint8_t index,uint32_t begin) {
     if((last_op_!=Op::ADD && last_op_!=Op::SUB) || pc_!=last_at_+1) return false;
-    const uint32_t second=previous_[1];
-    if(previous_[0]!=(((uint32_t)begin<<16)|((uint32_t)Op::LOAD<<8)|index) ||
+    const uint64_t second=previous_[1];
+    if(previous_[0]!=(((uint64_t)begin<<16)|((uint32_t)Op::LOAD<<8)|index) ||
        (second>>16)!=begin+2U) return false;
     const Op op=(Op)((second>>8)&255);
     uint8_t rhs=(uint8_t)second;
@@ -1239,9 +1230,9 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
       return;
     }
     operation(Op::GRAPH_BEGIN, -4);
-    const uint16_t next_at = pc_;
-    u16(0);
-    const uint16_t body = pc_;
+    const uint32_t next_at = pc_;
+    emit_address(0);
+    const uint32_t body = pc_;
     p_ = expression_start;
     end_ = comma;
     graph_expression_ = true;
@@ -1250,10 +1241,10 @@ if (!number(value, after)) { fail(Error::SYNTAX); return; }
     skip();
     if (p_ != end_)
       fail(Error::SYNTAX);
-    const uint16_t next = pc_;
+    const uint32_t next = pc_;
     operation(Op::GRAPH_NEXT, -1);
-    u16(body);
-    patch(next_at, next);
+    emit_address(body);
+    patch_address(next_at, next);
     end_ = full_end;
     p_ = full_end;
   }
@@ -1383,9 +1374,9 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
   }
   void data() {
     emit(Op::DATA);
-    const uint16_t count_at = pc_;
-    u16(0);
-    uint16_t count = 0;
+    const uint32_t count_at = pc_;
+    emit_address(0);
+    uint32_t count = 0;
     do {
       Text literal=p_;
       while(literal<end_ && space(*literal)) ++literal;
@@ -1394,11 +1385,11 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
       while(literal<end_ && space(*literal)) ++literal;
       double value = 0;
       if (!data_literal(value)) break;
-      const uint16_t before = pc_;
+      const uint32_t before = pc_;
       constant(negative ? -value : value,literal,p_);
       if(negative) emit(Op::NEG);
       stack(-1);  // DATA literals occupy the image, never the execution stack.
-      count = (uint16_t)(count + pc_ - before);
+      count += pc_ - before;
       skip();
       if (p_ == end_) break;
       if (!match(',')) {
@@ -1407,7 +1398,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
       }
       if (p_ == end_) fail(Error::SYNTAX);
     } while (error_ == Error::NONE);
-    patch(count_at, count);
+    patch_address(count_at, count);
   }
   void read_data() {
     do {
@@ -1431,7 +1422,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
       return;
     }
     operation(sub ? Op::ON_GOSUB : Op::ON_GOTO, -1);
-    const uint16_t count_at = pc_;
+    const uint32_t count_at = pc_;
     u16(0);
     uint16_t count = 0;
     do {
@@ -1488,8 +1479,8 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         } else
 #endif
           operation(Op::JUMP_FALSE, -1);
-        const uint16_t patch_at = pc_;
-        u16(0);
+        const uint32_t patch_at = pc_;
+        emit_address(0);
         skip();
         if (p_ == end_) fail(Error::SYNTAX);
         Text full_end = end_;
@@ -1501,17 +1492,17 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         commands((uint8_t)(nesting + 1));
         if (alternate < full_end) {
           emit(Op::JUMP);
-          const uint16_t skip_else = pc_;
-          u16(0);
-          patch(patch_at, pc_);
+          const uint32_t skip_else = pc_;
+          emit_address(0);
+          patch_address(patch_at, pc_);
           end_ = full_end;
           p_ = after_else;
           skip();
           if (p_ == end_) fail(Error::SYNTAX);
           commands((uint8_t)(nesting + 1));
-          patch(skip_else, pc_);
+          patch_address(skip_else, pc_);
         } else
-          patch(patch_at, pc_);
+          patch_address(patch_at, pc_);
         end_ = full_end;
         p_ = full_end;
         break;
@@ -1666,7 +1657,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         operation(Op::BRANCH, -1);
         for (uint8_t i = 0; i < 3; ++i) {
           const uint32_t number = address(false);
-          u16(target_pc(number));
+          emit_address(target_pc(number));
           if (i < 2 && !match(',')) fail(Error::LINE);
         }
         break;
@@ -1682,11 +1673,11 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         uint16_t finish = 0xFFFF;
         if (pass_)
           for (uint16_t i = 0; i < count_; ++i)
-            if (lines_[i].pc == target_pc(number, group)) {
+            if (line_at(i).pc == target_pc(number, group)) {
               uint16_t j = (uint16_t)(i + 1);
               if (group)
-                while (j < count_ && lines_[j].number / 1000 == number / 1000) ++j;
-              finish = j < count_ ? lines_[j].pc : image_end_;
+                while (j < count_ && line_at(j).number / 1000 == number / 1000) ++j;
+              finish = j < count_ ? line_at(j).pc : image_end_;
               break;
             }
         u16(finish == 0xFFFF ? finish : (uint16_t)(finish | (group ? 0x8000U : 0U)));
@@ -1708,9 +1699,9 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
         }
         operation(Op::FOR_FOCAL, -3);
         byte(t.index);
-        const uint16_t after = pc_;
+        const uint32_t after = pc_;
         u16(0);
-        const uint16_t body = pc_;
+        const uint32_t body = pc_;
         byte(0);  // patched below: operand order
         // Distinguish two/three expressions without reparsing literals.
         bool three = false;
@@ -1725,7 +1716,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
             ++commas;
         }
         three = commas == 2;
-        if (pass_ && out_ && body < capacity_) out_[body] = three ? 1 : 0;
+        if(pass_ && (out_ || Paged) && body<capacity_)put_byte(body,three?1:0);
         if (!match(';')) fail(Error::FOR);
         focal_statement((uint8_t)(nesting + 1));
         emit(Op::NEXT_FOCAL);
@@ -1735,7 +1726,7 @@ if (!number(value, after)) { fail(Error::SYNTAX); return false; }
       case 8: {
         const uint32_t number = address(false);
         emit(Op::JUMP);
-        u16(target_pc(number));
+        emit_address(target_pc(number));
         break;
       }
       case 9:
@@ -1789,6 +1780,28 @@ uint32_t checksum(const uint8_t* p, size_t length) {
 // than relying on LTO to discard their workspace frames.
 #if !defined(ARDUINO_ARCH_STM32) || defined(MK61_LANGUAGE_VM_COMPILER) || \
     defined(MK61_LANGUAGE_VM_TEST) || (MK61_ENABLE_FOCAL && !MK61_FOCAL_IS_LOADABLE)
+CompileResult compile_flash_source(Language language,const source::Reader& source,flash::IO io,bool rf_available,void* scratch) {
+  if(language!=Language::BASIC && language!=Language::FOCAL)return {Error::SYNTAX,0,0,0,0};
+  if(!io.read || !io.write || !io.truncate)return {Error::IO,0,0,0,0};
+#if defined(MK61_BUILD_PORTABLE_SYSTEM) && defined(MK61_LANGUAGE_VM_COMPILER)
+  if(!scratch)return {Error::IO,0,0,0,0};
+  static_assert(sizeof(flash::Program)<=FLASH_COMPILER_WORKSPACE_SIZE-FLASH_FRONTEND_BYTES,"Flash compiler scratch prefix");
+#else
+  alignas(flash::Program) uint8_t local[sizeof(flash::Program)];
+  if(!scratch)scratch=local;
+#endif
+  source::CursorScope scope(source);
+  auto& program=*new(scratch) flash::Program(source,io);
+  struct ProgramLifetime {
+    flash::Program& value;
+    ~ProgramLifetime(){value.~Program();memset(static_cast<void*>(&value),0,sizeof(value));}
+  } lifetime{program};
+  if(!program.prepare(language))return {program.error(),0,0,0,0};
+  if(language==Language::FOCAL)return focal_next::compile_flash_program(source,program,rf_available);
+  Compiler<Language::BASIC,true> compiler(source,source.size(),nullptr,UINT32_MAX,nullptr,
+                                    rf_available,nullptr,{},&program);
+  return compiler.compile();
+}
 CompileResult compile_basic_source(const source::Reader& source, uint16_t length, uint8_t* output,
                             uint16_t capacity, bool rf_available, const ResourceSource* resources) {
   if (capacity < HEADER_SIZE) return {Error::FULL, 0, 0, 0, 0};

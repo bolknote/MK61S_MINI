@@ -246,9 +246,10 @@ function Assert-SizeBudget {
         if ($System -eq 'setup') { $appLimit = 10000; $memoryLimit = 20480 }
         elseif ($System -eq 'focal') { $appLimit = 13500; $memoryLimit = 17000 }
         elseif ($System -eq 'explorer') { $appLimit = 8000; $memoryLimit = 10000 }
-        elseif ($System -eq 'language-input') { $appLimit = 14144; $memoryLimit = 17152 }
+        elseif ($System -eq 'language-input') { $appLimit = 17000; $memoryLimit = 20480 }
         elseif ($System -eq 'source-editor') { $appLimit = 14848; $memoryLimit = 18304 }
     }
+    if ($LanguageVmCompiler -and $System -eq 'tinybasic') { $appLimit = 16000; $memoryLimit = 20480 }
     if ($LanguageVmCompiler -and $System -eq 'focal') {
         $appLimit = 15360
         $memoryLimit = if ($FocalTrace) { 19840 } else { 19648 }
@@ -256,7 +257,7 @@ function Assert-SizeBudget {
     if ($SplitLanguageVm) {
         # Match build_portable_app.py's current graphics/integer-span VM contract.
         # The loader's 20-KiB arena remains the hard upper bound.
-        $memoryLimit = if ($LocalFloatMath) { 19968 } else { 19520 }
+        $memoryLimit = 20480
     }
     $failures = @()
     if ($null -ne $appLimit -and $Report.app_bytes -gt $appLimit) {
@@ -275,6 +276,10 @@ try {
     if ($System -eq 'focal') { $LanguageVmCompiler = $true }
     if ($LanguageVmCompiler -and $System -notin @('focal', 'tinybasic')) {
         throw '-LanguageVmCompiler applies only to BASIC/FOCAL'
+    }
+    $residentLanguage = $System -in @('focal', 'tinybasic', 'language-vm', 'language-input', 'source-editor')
+    if ($residentLanguage -and $LocalFloatMath) {
+        throw 'language APPs use the resident runtime; local libm is disabled'
     }
     if ($LanguageVmCompiler -and $LocalFloatMath) {
         throw 'compiler-only APP delegates math to LANGVM; select local math on LANGVM'
@@ -440,14 +445,22 @@ try {
         ('-Wl,-Map,' + $map))) { $link.Add($flag) }
     foreach ($object in $objects) { $link.Add($object) }
     if ($LocalFloatMath) { $link.Add('-lm') }
-    $link.Add('-lc')
-    $link.Add('-lgcc')
+    if (-not $residentLanguage) {
+        $link.Add('-lc')
+        $link.Add('-lgcc')
+    }
     $link.Add('-o')
     $link.Add($elf)
     Invoke-ArmTool $gxx $link.ToArray()
     $undefined = Invoke-ArmTool $nm @('--undefined-only', $elf) -Capture
     if (-not [string]::IsNullOrWhiteSpace($undefined)) {
         throw "APP has unresolved imports:`n$undefined"
+    }
+    if ($residentLanguage) {
+        $included = ([IO.File]::ReadAllText($map) -split 'Discarded input sections', 2)[0]
+        if ($included -match '[\\/]lib(gcc|m|stdc\+\+|c_nano|c|nosys)\.a\(') {
+            throw 'language APP pulled a forbidden runtime archive'
+        }
     }
     $symbols = Get-Symbols $nm $elf
     foreach ($symbol in @('__module_image_start', '__module_memory_end',

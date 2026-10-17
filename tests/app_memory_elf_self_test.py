@@ -70,6 +70,17 @@ class AppMemoryTests(unittest.TestCase):
         # Images without graphics have no extra retained reservation.
         self.assertEqual(gate.effective_pool(free, {})[0], free)
 
+    def test_source_editor_uses_canonical_generic_application_role(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / 'USBDISK.APP').write_bytes(app(18624))
+            editor = root / 'SRCEDIT.APP'
+            editor.write_bytes(app(18316, kind=4))
+            self.assertEqual(gate.system_memory_sizes(root), (18624, 18624))
+            (root / 'OTHER.APP').write_bytes(app(1024, kind=4))
+            with self.assertRaises(AssertionError):
+                gate.system_memory_sizes(root)
+
     def test_bundle_reads_memory_including_bss_and_all_modules(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

@@ -14,7 +14,7 @@
 using namespace language_vm;
 using namespace loadable_module;
 namespace {
-const char* source;
+const char* program_text;
 bool legacy, input_legacy, input_missing, cancel;
 bool vm_legacy, corrupt_input_stack;
 bool expect_large;
@@ -122,11 +122,11 @@ RuntimeStatus frontend(Kind kind, Command command, uint32_t a, uint32_t b,
 #endif
   if (command == Command::LANGUAGE_COMPILER_EMIT && fail_emit) return RuntimeStatus::IO_ERROR;
   const Language language = kind == Kind::TINYBASIC ? Language::BASIC : Language::FOCAL;
-  request->compiled = compile(language, source, (uint16_t)strlen(source),
+  request->compiled = compile(language, program_text, (uint16_t)strlen(program_text),
                                request->output, (uint16_t)request->capacity);
   if (request->compiled.error != Error::NONE)
     fprintf(stderr, "compile error %s at %u: %s\n", error_name(request->compiled.error),
-            request->compiled.source_offset, source);
+            request->compiled.source_offset, program_text);
   assert(request->compiled.error == Error::NONE);
   request->run_requested = 1; request->source_id = inode;
   request->language = (uint8_t)language; request->mode = mode;
@@ -253,27 +253,27 @@ RuntimeStatus overlay(Kind kind, Command command, void* payload, uint32_t& resul
 }
 }
 int main() {
-  static_assert(sizeof(ExecutionState) == 1664, "measurement needs updating");
+  static_assert(sizeof(ExecutionState) == 1992, "measurement needs updating");
   uint32_t result;
 #if MK61_SCREEN_BUFFER_LOAN
   memset(screen_storage,0xDD,sizeof(screen_storage));
 #endif
-  source = "10 S=0\n20 FOR I=1 TO 3\n30 GOSUB 100\n40 NEXT I\n"
+  program_text = "10 S=0\n20 FOR I=1 TO 3\n30 GOSUB 100\n40 NEXT I\n"
            "50 IF S<>60 GOTO 999\n60 END\n100 INPUT @(I)\n110 S=S+@(I);RETURN\n";
   entries = {"I*10", "1/0", "I*10", "I*10"};
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
   assert(starts == 1 && resumes == 3 && expressions == 4 && retries == 1 && swaps >= 8);
   assert(validations == 5 && finishes == 0); // one per immutable image, not per resume
-  source = "10 IF @(1)<>10 GOTO 999\n20 IF @(3)<>30 GOTO 999\n";
+  program_text = "10 IF @(1)<>10 GOTO 999\n20 IF @(3)<>30 GOTO 999\n";
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_INDEX, 0, 0, result)
          == RuntimeStatus::OK && result == 1);
-  source = "1.10 D 2\n1.20 E\n2.10 F I=1,3; A X\n2.20 S A=X\n";
+  program_text = "1.10 D 2\n1.20 E\n2.10 F I=1,3; A X\n2.20 S A=X\n";
   entries = {"10", "20", "30"}; position = 0;
   assert(invoke_resident(Language::FOCAL, Command::FOCAL_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 0);
   assert(resumes == 6);
-  source = "1.10 B (A-30) 9.10,2.10,9.10\n2.10 E\n9.10 S A=1/0\n";
+  program_text = "1.10 B (A-30) 9.10,2.10,9.10\n2.10 E\n9.10 S A=1/0\n";
   assert(invoke_resident(Language::FOCAL, Command::FOCAL_RUN_INDEX, 0, 0, result)
          == RuntimeStatus::OK && result == 0);
   std::string large = "10 A=0\n";
@@ -283,17 +283,17 @@ int main() {
   }
   large += "2000 INPUT @(2)\n2010 IF @(2)<>2 GOTO 9999\n2020 END\n";
   entries = {"1+1"}; position = 0;
-  source = large.c_str(); expect_large = true;
+  program_text = large.c_str(); expect_large = true;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
   expect_large = false;
-  source = "10 INPUT @(2)\n20 IF @(2)<>16 GOTO 999\n";
+  program_text = "10 INPUT @(2)\n20 IF @(2)<>16 GOTO 999\n";
   std::string deepest = "1";
   for (unsigned i=1; i<16; ++i) deepest = "1+("+deepest+")";
   entries = {deepest.c_str()}; position = 0;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
-  source = "10 IF @(2)<>16 GOTO 999\n";
+  program_text = "10 IF @(2)<>16 GOTO 999\n";
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
   // RESUME may use the former INPUT-image slots again: a normal program
@@ -302,22 +302,22 @@ int main() {
   for (unsigned i=0; i<INPUT_STACK_CAPACITY; ++i) wide = "1+("+wide+")";
   const std::string wide_source = "10 INPUT @(2)\n20 A="+wide+
       "\n30 IF A<>65 GOTO 999\n40 A=0\n";
-  source = wide_source.c_str(); entries = {"2"}; position = 0;
+  program_text = wide_source.c_str(); entries = {"2"}; position = 0;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
-  source = "10 INPUT A\n"; corrupt_input_stack = true;
+  program_text = "10 INPUT A\n"; corrupt_input_stack = true;
   const unsigned before_bad_input = expressions;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::CORRUPT_MODULE && expressions == before_bad_input);
   corrupt_input_stack = false;
-  source = "10 IF A<>0 GOTO 999\n";
+  program_text = "10 IF A<>0 GOTO 999\n";
   fail_emit = true;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::IO_ERROR);
   fail_emit = false;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::OK && result == 1);
-  source = "10 INPUT A\n20 A=999\n";
+  program_text = "10 INPUT A\n20 A=999\n";
   cancel = true;
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID_STATUS, inode, 1, result)
          == RuntimeStatus::OK && result == 2);
@@ -337,7 +337,7 @@ int main() {
   assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
          == RuntimeStatus::INCOMPATIBLE_FIRMWARE);
 #if MK61_SCREEN_BUFFER_LOAN
-  vm_legacy=false; source="10 A=0\n";
+  vm_legacy=false; program_text="10 A=0\n";
   assert(screen_loans && !loan_live);
   const unsigned before_fallback=screen_loans;
   screen_unavailable=true;
@@ -361,20 +361,20 @@ int main() {
 #if MK61_SCREEN_BUFFER_LOAN
     screen_unavailable=true;
 #endif
-    source="10 FOR I=1 TO 2\n20 INPUT @(I)\n30 NEXT I\n"
+    program_text="10 FOR I=1 TO 2\n20 INPUT @(I)\n30 NEXT I\n"
            "40 IF @(1)+@(2)<>30 GOTO 999\n50 END\n";
     entries={"10","20"}; position=0;
     assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
            == RuntimeStatus::OK && result==1);
     check_usb(); assert(shared_memory::validate_invariants());
-    source="1.10 F I=1,2; A X\n1.20 B (X-20) 9.10,2.10,9.10\n2.10 E\n";
+    program_text="1.10 F I=1,2; A X\n1.20 B (X-20) 9.10,2.10,9.10\n2.10 E\n";
     entries={"10","20"}; position=0;
     assert(invoke_resident(Language::FOCAL, Command::FOCAL_RUN_ID, inode, 0, result)
            == RuntimeStatus::OK && result==0);
     check_usb();
     // Large image stays live during INPUT even when USB exits and releases
     // the earlier OVERLAY allocation. Neither pointer may move or overlap.
-    source=large.c_str(); entries={"1+1"}; position=0; expect_large=true;
+    program_text=large.c_str(); entries={"1+1"}; position=0; expect_large=true;
     assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
            == RuntimeStatus::OK && result==1);
     check_usb();
@@ -386,7 +386,7 @@ int main() {
     // Failures must return their staging allocation without releasing USB.
     assert(session.acquire(shared_memory::Arena::OVERLAY,
                            shared_memory::Owner::USB_SCREEN,2793));
-    memset(session.data(),0xB7,session.size()); source="10 END\n"; fail_emit=true;
+    memset(session.data(),0xB7,session.size()); program_text="10 END\n"; fail_emit=true;
     assert(invoke_resident(Language::BASIC, Command::TINYBASIC_RUN_ID, inode, 0, result)
            == RuntimeStatus::IO_ERROR);
     fail_emit=false; check_usb(); usb_session=nullptr;
@@ -395,7 +395,7 @@ int main() {
 #endif
   }
 #endif
-  source="10 A=1/0\n"; mode=0; edit_after_failure=true;
+  program_text="10 A=1/0\n"; mode=0; edit_after_failure=true;
   uint32_t edit_run_result=1;
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,inode,0,edit_run_result)
          ==RuntimeStatus::OK && edit_run_result==0);

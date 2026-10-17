@@ -83,7 +83,7 @@ Placement variables (0 = resident, 1 = APP):
   MK61_MARKDOWN_VIEWER_AS_APP, MK61_CHIP8_AS_APP, MK61_SETUP_AS_APP,
   MK61_EXPLORER_AS_APP
 Math backend: MK61_MATH_BACKEND=0 (LIBM) or 1 (CORE).
-APP math: MK61_APP_LOCAL_FLOAT_MATH=1 links local float ln/lg/exp/sqrt into FOCAL/BASIC.
+APP math: language APPs use the resident runtime; MK61_APP_LOCAL_FLOAT_MATH=1 is rejected.
   Markdown handles T2 and graphical I1; WBMP.APP is built only with
   MK61_ENABLE_MARKDOWN_VIEWER=0.
 
@@ -549,6 +549,7 @@ for definition in $compile_flags; do
 done
 printf 'Building native %s resident firmware (%s)…\n' "$target_mcu" "$profile"
 python3 "$root/tools/.mk61-gcc/build-standalone.py" "${native_args[@]}"
+python3 "$root/tests/check_native_runtime_libraries.py" --without-libc "$resident_build/resident.map"
 python3 "$root/tests/check_standalone_sdk_build.py" "$resident_build/compile_commands.json"
 python3 "$root/tests/analyze_stack_usage.py" \
   --compile-commands "$resident_build/compile_commands.json" \

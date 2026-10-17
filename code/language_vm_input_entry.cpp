@@ -37,7 +37,8 @@ uint32_t finish(OverlayRequest* p) {
   else if (s.failure != Error::NONE) r.result.error = s.failure;
   if(r.result.error != Error::NONE) {
     View view;
-    if(validated_view(*p, view)) r.error_column = source_column(view, r.result.pc);
+    flash::Reader reader(r.paged);
+    if(validated_view(*p, view,r.paged.read?&reader:nullptr)) r.error_column = source_column(view, r.result.pc);
   }
   if (r.result.error != Error::NONE &&
       !(r.mode == 1 && r.result.error == Error::STOPPED)) {

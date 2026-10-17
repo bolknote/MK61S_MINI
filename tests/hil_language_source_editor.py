@@ -118,6 +118,7 @@ def focal_operator_keys(port, output):
     leave_editor(port, True, output)
     expected = b"1.10 B (0)1.20,1.20,1.20\n1.20 S .RB=42\n1.30 E\n"
     read_file(port, remote, expected)
+    port.command("mkdir /SRCHIL", timeout=20)
     write_file(port, "/SRCHIL/run.m61", b'open "/7772.foc"\nret\n')
     port.command("RB= 0")
     port.run_source("/SRCHIL/run.m61", True)

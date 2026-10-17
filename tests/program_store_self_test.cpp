@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <vector>
+#include <string>
 #include <utility>
 
 #include "SPIFlash.h"
@@ -12,6 +13,7 @@
 #include "loadable_module_system_app.hpp"
 #include "mk8_codec.hpp"
 #include "program_store.hpp"
+#include "language_flash_store.hpp"
 #include "mk8_codec.hpp"
 #include <algorithm>
 #include "config.h"
@@ -4682,7 +4684,16 @@ static void test_source_draft_banks_on_small_flash() {
   }
   puts("Source draft banks: 256 pages on 512-KiB/1-MiB NOR, exclusive lock and reboot PASS");
 }
+#include "language_flash_store_cases.inc"
+#if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
+#include "language_flash_fs_cases.inc"
+#endif
 int main(int argc, char** argv) {
+  if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();
+#if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
+    test_language_flash_compiler_on_c9();
+#endif
+    return 0;}
   test_streamed_language_sources();
   test_source_draft_banks_on_small_flash();
   test_catalog_sector_reference_checks_full_width();

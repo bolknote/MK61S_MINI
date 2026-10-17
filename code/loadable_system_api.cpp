@@ -392,13 +392,14 @@ static __attribute__((noinline)) u32 other_system_call(u32 operation, u32 a, u32
       const u32 revision = program_store::media_revision();
       if(a == 0) return revision;
       if(a == 4) return program_store::catalog_revision();
+      if(a == 6 && payload)return program_store::content_stamp((u16)b,*(u32*)payload);
       if(a == 5 && payload) {
         const auto& r=*(const mk61_service_resource*)payload;
-        const auto current=[&](){return r.reserved?program_store::catalog_revision():program_store::media_revision();};
+        const auto current=[&](){u32 stamp=0;if(r.reserved==2)return program_store::content_stamp(r.id,stamp) && stamp==r.revision;return r.revision==(r.reserved?program_store::catalog_revision():program_store::media_revision());};
         u16 copied=0;
-        return r.reserved<=1 && r.output && r.revision==current() &&
+        return r.reserved<=2 && r.output && current() &&
             program_store::read_source_range_id(r.id,r.offset,r.output,r.length,&copied) &&
-            copied==r.length && r.revision==current();
+            copied==r.length && current();
       }
 
       if(a == 3) {

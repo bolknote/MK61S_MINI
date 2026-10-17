@@ -28,7 +28,7 @@ struct Layout {
 };
 
 static constexpr Profile F401_PROFILE = {
-    0x20000000UL, 64UL * 1024UL, 6UL * 1024UL, 256UL, false};
+    0x20000000UL, 64UL * 1024UL, 10UL * 1024UL, 256UL, false};
 static constexpr Profile F411_PROFILE = {
     0x20000000UL, 128UL * 1024UL, 16UL * 1024UL, 256UL, true};
 

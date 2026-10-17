@@ -590,7 +590,7 @@ static usize tinybasic_array_capacity(void) {
 static_assert(sizeof(TinyBasicRuntime) <= language_workspace::SIZE, "TinyBASIC runtime does not fit language workspace");
 
 #if defined(MK61_LANGUAGE_VM_COMPILER)
-static_assert(sizeof(TinyBasicRuntime) <= language_vm::COMPILER_WORKSPACE_SIZE,
+static_assert(sizeof(TinyBasicRuntime) <= language_vm::FLASH_FRONTEND_BYTES,
               "compiler-only BASIC overlaps retained VM values");
 static constexpr usize TB_WORKSPACE_REQUEST = sizeof(TinyBasicRuntime);
 #else
@@ -1989,9 +1989,15 @@ static bool tb_compile_source(const char* source, TbAst& ast) {
   if (!source) return tb_error("WHAT?");
   const usize length = text_editor::bounded_length(source, MK61_PAGED_LANGUAGE_SOURCE ? language_vm::source::MAX_SIZE+1U : TB_SOURCE_SIZE);
   if (length >= (MK61_PAGED_LANGUAGE_SOURCE ? language_vm::source::MAX_SIZE+1U : TB_SOURCE_SIZE)) return tb_error("SORRY");
+#if MK61_PAGED_LANGUAGE_SOURCE
+  if(!language_vm::frontend_request || !language_vm::frontend_request->storage)return tb_error("HOW?");
+  language_vm::source::Reader input(source,u16(length));
+  const auto result=language_vm::compile_flash_source(language_vm::Language::BASIC,input,*language_vm::frontend_request->storage,true,(u8*)language_workspace::data(language_workspace::Owner::TINYBASIC)+language_vm::FLASH_FRONTEND_BYTES);
+#else
   const auto result =
       language_vm::compile(language_vm::Language::BASIC, source, (u16)length, nullptr,
                            language_vm::MAX_IMAGE);
+#endif
   ast.source_len = (u16)length;
   ast.line_count = (u8)result.line;
   if (result.error != language_vm::Error::NONE) {
@@ -3188,17 +3194,18 @@ static TinyBasicRunStatus tb_run_program(
       program_index >= TB_PROGRAM_COUNT || !tb_program_used(programs[program_index]))
     return TinyBasicRunStatus::UNAVAILABLE;
   auto& request = *language_vm::frontend_request;
-  language_vm::ResourceSource resources = {
-      programs[program_index].store_id, programs[program_index].source_revision, request.resources};
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[program_index].store_id,programs[program_index].source_len,programs[program_index].source_revision};
   language_vm::source::Reader input(file.input());
-  request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,request.output,(u16)request.capacity,true,&resources);
-  if(!request.output && request.compiled.error==language_vm::Error::FULL && request.resources==language_vm::ResourceMode::EMBEDDED) {
-    request.resources=resources.mode=language_vm::ResourceMode::SOURCE;request.capacity=language_vm::MAX_IMAGE;
-    request.compiled=language_vm::compile_source(language_vm::Language::BASIC,input,nullptr,language_vm::MAX_IMAGE,true,&resources);
-  }
+  if(request.storage) {
+    request.source_id=file.id;
+    request.compiled=file.pin()?language_vm::compile_flash_source(language_vm::Language::BASIC,input,*request.storage,true,(u8*)language_workspace::data(language_workspace::Owner::TINYBASIC)+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
+
+  } else request.compiled={language_vm::Error::IO,0,0,0,0};
 #else
+  language_vm::ResourceSource resources = {
+      programs[program_index].store_id, programs[program_index].source_revision, request.resources};
+
   request.compiled = language_vm::compile(
       language_vm::Language::BASIC, programs[program_index].source,
       programs[program_index].source_len, request.output, (u16)request.capacity, true, &resources);
@@ -3334,6 +3341,7 @@ static TinyBasicRunStatus tb_run_program(
           case language_vm::Event::RESOURCE_TEXT:
           case language_vm::Event::RESOURCE_INPUT: return false;
           case language_vm::Event::TEXT:
+          case language_vm::Event::TEXT_CONTINUE:
             if (tb_append_print_range(text, text + length)) return true;
             c.failure = "SORRY";
             return false;

@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 from unicorn import Uc, UC_ARCH_ARM, UC_MODE_MCLASS, UC_MODE_THUMB, UC_HOOK_MEM_READ
-from unicorn.arm_const import UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7, UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11, UC_ARM_REG_SP, UC_ARM_REG_LR
+from unicorn.arm_const import UC_ARM_REG_R0, UC_ARM_REG_R1, UC_ARM_REG_R2, UC_ARM_REG_R4, UC_ARM_REG_R5, UC_ARM_REG_R6, UC_ARM_REG_R7, UC_ARM_REG_R8, UC_ARM_REG_R9, UC_ARM_REG_R10, UC_ARM_REG_R11, UC_ARM_REG_SP, UC_ARM_REG_LR
 from run_portable_system_arm_tests import Elf
 
 def main():
@@ -44,5 +44,23 @@ def main():
                 for index,register in enumerate(registers):assert uc.reg_read(register)==0xBADC0000+index
                 tested+=1
     print(f"Standalone ARM strcmp: {tested} alignment/unsigned/NUL/ABI cases PASS")
+    searched=0
+    for length in [0,1,2,3,4,7,31,255,256,257,1024]:
+        value=bytes(index%256 for index in range(length))
+        for alignment in range(4):
+            pointer=first+alignment
+            uc.mem_write(pointer,value or b"x")
+            bounds[:]=[(pointer,pointer+length),(0x2000EFC0,0x2000F000)]
+            for wanted in [-257,-1,0,1,42,255,256,511]:
+                expected=value.find(bytes([wanted&255]))
+                for index,register in enumerate(registers):uc.reg_write(register,0xBADC0000+index)
+                uc.reg_write(UC_ARM_REG_SP,0x2000F000);uc.reg_write(UC_ARM_REG_LR,stop|1)
+                uc.reg_write(UC_ARM_REG_R0,pointer);uc.reg_write(UC_ARM_REG_R1,wanted&0xFFFFFFFF);uc.reg_write(UC_ARM_REG_R2,length)
+                uc.emu_start(elf.symbols["memchr"]|1,stop,count=20000)
+                assert uc.reg_read(UC_ARM_REG_R0)==(0 if expected<0 else pointer+expected),(length,alignment,wanted)
+                assert uc.reg_read(UC_ARM_REG_SP)==0x2000F000
+                for index,register in enumerate(registers):assert uc.reg_read(register)==0xBADC0000+index
+                searched+=1
+    print(f"Standalone ARM memchr: {searched} bounds/unsigned/zero-length/ABI cases PASS")
 
 if __name__=="__main__":main()

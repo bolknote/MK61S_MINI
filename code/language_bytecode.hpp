@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include "language_value.hpp"
 #include "language_source.hpp"
+#include "language_flash.hpp"
 
 // Experimental, relocatable bytecode. The compiler, VM and host probes share
 // this wire format; no native pointers or C++ layouts are serialized.
@@ -144,8 +145,8 @@ constexpr Op scalar_op(Op op) {
   return op==Op::BLOCK_INDEX ? Op::CONST_I16 :
       op==Op::BLOCK_COMPARE || op==Op::INTEGER_SPAN || op==Op::INTEGER_SHORT ? Op::LOAD : op;
 }
-constexpr bool index_block_shape(Op op,uint16_t pc,Op first,uint16_t first_pc,
-                                 Op second,uint16_t second_pc) {
+constexpr bool index_block_shape(Op op,uint32_t pc,Op first,uint32_t first_pc,
+                                 Op second,uint32_t second_pc) {
   return op==Op::ADD && first==Op::CONST_I16 && second==Op::LOAD &&
          second_pc==first_pc+3U && pc==second_pc+2U;
 }
@@ -216,6 +217,8 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
 static constexpr uint16_t VERSION = 13;
+// LBV1 in-memory compatibility/INPUT tooling only. Stored programs use
+// LBV2 Flash images with 32-bit addresses and no such image quota.
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.
@@ -227,20 +230,45 @@ static constexpr uint8_t MAX_LOOPS = 16;
 
 struct CompileResult {
   Error error;
-  uint16_t size;
+  uint32_t size;
   uint16_t line;
   uint16_t source_offset;
   uint8_t stack;
 };
 struct View {
   const uint8_t* bytes;
-  uint16_t size, code, lines, source_size;
+  uint32_t size, code;
+  uint16_t lines, source_size;
   uint8_t stack;
   Language language;
   bool expression;
   bool requires_rf;
-  uint16_t end = 0; // instruction boundary; source-backed recipes follow it
+  uint32_t end = 0; // instruction boundary; source-backed recipes follow it
+  const flash::Reader* reader = nullptr;
+  bool wide = false;
+  void* lookup_context = nullptr;
+  bool (*lookup)(void*,uint32_t,bool,uint32_t*) = nullptr;
+  flash::Cursor at(uint32_t n) const {return {bytes,reader,n};}
+  uint8_t byte(uint32_t n) const {return *at(n);}
+  bool wide_code() const {
+#if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+    // Shipping APPs accept LBV2 programs and branch-free LBV1 INPUT recipes.
+    return true;
+#else
+    return wide;
+#endif
+  }
+  uint8_t address_bytes() const {return wide_code()?4:2;}
+  uint32_t address(flash::Cursor p) const {return wide_code()?flash::dword(p):flash::word(p);}
+  uint32_t address(const uint8_t* p) const {return wide_code()?flash::dword(p):flash::word(p);}
+  uint32_t missing() const {return wide_code()?UINT32_MAX:0xFFFF;}
+  uint32_t group_bit() const {return wide_code()?UINT32_C(0x80000000):0x8000;}
+  bool good() const {return !reader || reader->good();}
+
 };
+// Every program address is 32-bit. Source coordinates and line counts are
+// naturally bounded by the source-file wire size, never by a RAM array.
+// The reader belongs to the current APP invocation, never the continuation.
 // All callbacks are supplied afresh by the currently active executor. They
 // are never stored in an image or retained across unloading a native APP.
 enum class Event : uint8_t {
@@ -265,7 +293,8 @@ enum class Event : uint8_t {
   GRAPHICS,
   PRINT_AT,
   PRINT_PUSH,
-  PRINT_POP
+  PRINT_POP,
+  TEXT_CONTINUE
 };
 struct Services {
   void* context;
@@ -279,22 +308,23 @@ struct Services {
   bool isolate_print = false;
 };
 struct CallFrame {
-  uint16_t resume, end;
+  uint32_t resume, end;
   uint8_t loops;
   bool group;
   uint8_t base = 0, arguments = 0, mode = 0; // mode: parameter call + value result
   uint8_t print_width = 0; // fills the old padding byte; mode's high nibble saves precision
 };
-static_assert(sizeof(CallFrame) == 10, "call frame must retain its existing budget");
+static_assert(sizeof(CallFrame) == 16, "call frame contains 32-bit program addresses");
 struct LoopFrame {
   Value limit, step, value;
-  uint16_t body, end;
+  uint32_t body, end;
   uint16_t variable;
 };
 struct GraphFrame {
   double bounds[4];
   Value saved_x;
-  uint16_t body, next, column, width, height;
+  uint32_t body, next;
+  uint16_t column, width, height;
   uint8_t base;
   bool active, skip;
 };
@@ -302,7 +332,7 @@ struct GraphFrame {
 struct Continuation {
   CallFrame calls[MAX_CALLS];
   LoopFrame loops[MAX_LOOPS];
-  uint16_t pc, data_pc, data_index;
+  uint32_t pc, data_pc, data_index;
   uint8_t sp, call_count, loop_count;
   GraphFrame graph;
 };
@@ -316,7 +346,7 @@ struct Bindings {
 struct State : Continuation, Bindings {};
 struct RunResult {
   Error error;
-  uint16_t pc;
+  uint32_t pc;
   uint32_t line;
   uint32_t steps;
 };
@@ -329,6 +359,7 @@ struct ResourceSource {
   uint32_t revision;
   ResourceMode mode = ResourceMode::SOURCE;
 };
+CompileResult compile_flash_source(Language,const source::Reader&,flash::IO,bool rf_available=true,void* scratch=nullptr);
 CompileResult compile_source(Language, const source::Reader&, uint8_t*, uint16_t, bool = true,
                              const ResourceSource* = nullptr);
 CompileResult compile_basic(const char*, uint16_t, uint8_t*, uint16_t, bool,
@@ -348,14 +379,16 @@ bool validate_focal_expression(const char*,uint16_t,bool rf_available=true);
 CompileResult compile_expression(Language, const char*, uint16_t, uint8_t*, uint16_t);
 // No output buffer means validation/sizing only, with identical grammar.
 Error inspect(const uint8_t* bytes, uint16_t length, View& output);
+Error inspect_flash(const flash::Reader&, flash::IO, View&);
+uint32_t instruction_end(const View&,uint32_t);
 RunResult run(const View&, State&, const Services&, uint32_t step_limit = 0,
               bool resume = false);
 RunResult run(const View&, Continuation&, const Bindings&, const Services&,
               uint32_t step_limit = 0, bool resume = false);
 uint32_t checksum(const uint8_t*, size_t);
-uint32_t source_line(const View&, uint16_t pc);
-uint16_t source_column(const View&, uint16_t pc);
-uint16_t line_pc(const View&, uint32_t number);
+uint32_t source_line(const View&, uint32_t pc);
+uint16_t source_column(const View&, uint32_t pc);
+uint32_t line_pc(const View&, uint32_t number);
 const char* error_name(Error);
 }  // namespace language_vm
 #endif

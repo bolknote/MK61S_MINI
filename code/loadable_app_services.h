@@ -112,7 +112,9 @@ enum mk61_service_operation {
  * A suspended APP can pass this data again after relocation.
  * Operation 4 returns the catalog revision (staging writes do not change it).
  * Operation 5 reads without materializing the whole file in the read cache;
- * reserved=0 checks media revision, reserved=1 checks catalog revision. */
+ * reserved=0 checks media revision, reserved=1 checks catalog revision,
+ * reserved=2 checks the per-file content stamp. Operation 6 stores that
+ * stamp in the uint32_t payload for inode b, independent of unrelated writes. */
 typedef struct mk61_service_resource {
   uint32_t revision;
   uint16_t id, offset;

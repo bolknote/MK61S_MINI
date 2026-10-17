@@ -227,6 +227,7 @@ using namespace kbd;
 #if defined(MK61_LANGUAGE_VM_COMPILER) && !defined(FOCAL_HOST_TEST)
 #define MK61_PAGED_LANGUAGE_SOURCE 1
 #include "language_source_file.hpp"
+#include "language_flash_program.hpp"
 static_assert(program_store::MAX_LANGUAGE_SOURCE_SIZE==language_vm::source::MAX_SIZE,"source storage and compiler bounds must match");
 #else
 #define MK61_PAGED_LANGUAGE_SOURCE 0
@@ -754,18 +755,19 @@ static FocalRunStatus tb_run_program(int slot) {
   if (!language_vm::compatible(language_vm::frontend_request))
     return FocalRunStatus::UNAVAILABLE;
   auto &request = *language_vm::frontend_request;
-  language_vm::ResourceSource resource = {programs[slot].store_id,
-                                          programs[slot].source_revision,
-                                          request.resources};
 #if MK61_PAGED_LANGUAGE_SOURCE
   language_vm::source::File file={programs[slot].store_id,programs[slot].source_len,programs[slot].source_revision};
   language_vm::source::Reader input(file.input());
-  request.compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,request.output,(u16)request.capacity,mk61_ref::register_available(15),&resource);
-  if(!request.output && request.compiled.error==language_vm::Error::FULL && resource.mode==language_vm::ResourceMode::EMBEDDED) {
-    request.resources=resource.mode=language_vm::ResourceMode::SOURCE;request.capacity=language_vm::MAX_IMAGE;
-    request.compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,nullptr,language_vm::MAX_IMAGE,mk61_ref::register_available(15),&resource);
-  }
+  if(request.storage) {
+    request.source_id=file.id;
+    request.compiled=file.pin()?language_vm::compile_flash_source(language_vm::Language::FOCAL,input,*request.storage,mk61_ref::register_available(15),(u8*)language_workspace::data(language_workspace::Owner::FOCAL)+language_vm::FLASH_FRONTEND_BYTES):language_vm::CompileResult{language_vm::Error::IO,0,0,0,0};
+
+  } else request.compiled={language_vm::Error::IO,0,0,0,0};
 #else
+  language_vm::ResourceSource resource = {programs[slot].store_id,
+                                          programs[slot].source_revision,
+                                          request.resources};
+
   request.compiled = language_vm::compile(
       language_vm::Language::FOCAL, programs[slot].source,
       programs[slot].source_len, request.output, (u16)request.capacity,
@@ -883,6 +885,8 @@ static FocalRunStatus tb_run_program(int slot) {
         case language_vm::Event::TEXT:
           if (tb_pending_print[0] && !next_text(nullptr, " ", 1))
             return false;
+          return next_text(nullptr, text, length);
+        case language_vm::Event::TEXT_CONTINUE:
           return next_text(nullptr, text, length);
         case language_vm::Event::NUMBER:
           if (tb_pending_print[0] && !next_text(nullptr, " ", 1))
@@ -1031,8 +1035,11 @@ static constexpr usize FOCAL_EDITOR_OFFSET = (sizeof(FocalRuntime) + 3u) & ~3u;
 [[maybe_unused]] static constexpr usize FOCAL_EDITOR_WORKSPACE =
     FOCAL_EDITOR_OFFSET + TB_SOURCE_SIZE;
 #if defined(MK61_LANGUAGE_VM_COMPILER) && !defined(FOCAL_HOST_TEST)
-static_assert(FOCAL_EDITOR_WORKSPACE <= language_vm::COMPILER_WORKSPACE_SIZE,
+static_assert(FOCAL_EDITOR_WORKSPACE <= language_vm::FLASH_COMPILER_WORKSPACE_SIZE,
               "FOCAL editor must retain the protected VM values");
+static constexpr usize FOCAL_MEMORY_SCRATCH = (FOCAL_EDITOR_WORKSPACE+7u)&~7u;
+static_assert(FOCAL_MEMORY_SCRATCH+sizeof(language_vm::flash::Program)<=language_vm::FLASH_COMPILER_WORKSPACE_SIZE,
+              "FOCAL memory validation must not overlap its source");
 #endif
 [[maybe_unused]] static char *focal_editor_source() {
 #ifdef FOCAL_HOST_TEST
@@ -1050,8 +1057,8 @@ bool CompileFocal(const char *source) {
   const usize length=text_editor::bounded_length(source,language_vm::source::MAX_SIZE+1U);
   if(length>language_vm::source::MAX_SIZE)return tb_error("FULL?");
   language_vm::source::Reader input(source,u16(length));
-  language_vm::ResourceSource external={0,0,language_vm::ResourceMode::SOURCE};
-  next_compiled=language_vm::compile_source(language_vm::Language::FOCAL,input,nullptr,language_vm::MAX_IMAGE,mk61_ref::register_available(15),&external);
+  if(!language_vm::frontend_request || !language_vm::frontend_request->storage)return false;
+  next_compiled=language_vm::compile_flash_source(language_vm::Language::FOCAL,input,*language_vm::frontend_request->storage,mk61_ref::register_available(15),(u8*)language_workspace::data(language_workspace::Owner::FOCAL)+FOCAL_MEMORY_SCRATCH);
   if(next_compiled.error!=language_vm::Error::NONE)return tb_error(focal_error_name(next_compiled.error));
   focal_text::CompactSource compact(input);u16 saved=TB_INVALID_STORE_ID;
   char name[TB_NAME_SIZE];tb_program_default_name(0,name,sizeof(name));

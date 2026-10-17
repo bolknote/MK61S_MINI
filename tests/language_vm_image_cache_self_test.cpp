@@ -52,11 +52,11 @@ const char* program(uint32_t id) {
     static const std::vector<std::string> pressure=[] {
       std::vector<std::string> sources;
       for(unsigned variant=0;variant<5;++variant) {
-        std::string source="10 @(1)=@(1)+1\n";
+        std::string program_text="10 @(1)=@(1)+1\n";
         for(unsigned line=0;line<20+5*variant;++line)
-          source+=std::to_string(20+line*10)+" PRINT 'RESOURCE "+std::to_string(line)+
+          program_text+=std::to_string(20+line*10)+" PRINT 'RESOURCE "+std::to_string(line)+
               " ABCDEFGHIJKLMNOPQRSTUVWXYZ ABCDEFGHIJKLMNOPQRSTUVWXYZ'\n";
-        sources.push_back(source+"1000 INPUT 'PROMPT',@(0)\n1010 END\n");
+        sources.push_back(program_text+"1000 INPUT 'PROMPT',@(0)\n1010 END\n");
       }
       return sources;
     }();
@@ -94,11 +94,11 @@ RuntimeStatus frontend(Kind kind,Command command,uint32_t a,uint32_t b,Request* 
                                 workspace_swap::AcquireMode::REQUIRED,workspace));
   if(command!=Command::LANGUAGE_COMPILER_EMIT){selected_id=a;selected_mode=b;}
   const Language language=kind==Kind::FOCAL?Language::FOCAL:Language::BASIC;
-  const char* source=language==Language::FOCAL ? "1.10 S A=A+2\n1.20 PRINT \"RAM FOCAL\"\n1.30 EXIT\n" : program(selected_id);
+  const char* program_text=language==Language::FOCAL ? "1.10 S A=A+2\n1.20 PRINT \"RAM FOCAL\"\n1.30 EXIT\n" : program(selected_id);
   if(command!=Command::LANGUAGE_COMPILER_EMIT)++compiles;
-  if(!source) {r->run_requested=0;result=4;return RuntimeStatus::OK;}
+  if(!program_text) {r->run_requested=0;result=4;return RuntimeStatus::OK;}
   const ResourceSource resource={(uint16_t)selected_id,revision,r->resources};
-  r->compiled=compile(language,source,(uint16_t)strlen(source),r->output,(uint16_t)r->capacity,true,&resource);
+  r->compiled=compile(language,program_text,(uint16_t)strlen(program_text),r->output,(uint16_t)r->capacity,true,&resource);
   r->source_id=(uint16_t)selected_id;r->run_requested=r->compiled.error==Error::NONE;r->mode=(uint8_t)selected_mode;
   r->source_revision=revision;
   r->language=(uint8_t)language;r->clear_requested=selected_id==3;
@@ -123,7 +123,7 @@ uint32_t finish(OverlayRequest* p) {
 uint32_t input(InputRequest* r) {
   check_usb();
   last_prompt.assign(r->prompt,r->prompt_length);
-  assert(!r->resource_image); // No source read even while the hot APP is gone.
+  assert(!r->resource_image); // No program_text read even while the hot APP is gone.
   if(change_revision_on_input) {++revision;change_revision_on_input=false;}
   if(cancel_input) { r->result=InputResult::CANCELLED; return 1; }
   const auto compiled=compile_expression(Language::BASIC,input_text,
@@ -244,7 +244,7 @@ int main() {
   execute(7,0,4);
   assert(compiles==before_editor && edits==1 && edit_position==STALE_SOURCE_POSITION);
   edit_after_error=false;
-  // A changed source during cold verification cannot publish a candidate.
+  // A changed program_text during cold verification cannot publish a candidate.
   const unsigned before_building=compiles;
   change_revision_on_validate=true;uint32_t building_result=0;
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID_STATUS,2,1,building_result)==RuntimeStatus::IO_ERROR);
@@ -260,7 +260,7 @@ int main() {
   assert(compiles==before_focal+1 && variables[0]==6);
   assert(invoke_resident(Language::FOCAL,Command::FOCAL_RUN_NAME,1,0,focal_result)==RuntimeStatus::OK);
   assert(compiles==before_focal+1 && variables[0]==8);
-  // Deleted/bad source must not fall back to an older READY image. Reusing
+  // Deleted/bad program_text must not fall back to an older READY image. Reusing
   // the same inode after a new revision must execute the replacement.
   const Value retained=array[1];
   program2=nullptr;++revision;execute(2,1,4);assert(array[1]==retained);

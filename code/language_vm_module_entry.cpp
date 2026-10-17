@@ -31,7 +31,7 @@ namespace portable_system {
 static u32 call(u32 op, u32 a = 0, u32 b = 0, u32 c = 0, void* payload = nullptr) {
   return loadable_module::app_services().call(op, a, b, c, payload);
 }
-static bool parse_number(const char* text, double& value, const char*& end) {
+[[maybe_unused]] static bool parse_number(const char* text, double& value, const char*& end) {
   mk61_system_number_parse request = {0, text, 0};
   if (!call(MK61_SYS_NUMBER_PARSE, 0, 0, 0, &request)) return false;
   value = request.value;
@@ -325,6 +325,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
       return graphics_result(basic_graphics::pop_print(runtime.position,runtime.output,runtime.output_cursor));
     case Event::TEXT:
       return append(text,length,!basic);
+    case Event::TEXT_CONTINUE:return append(text,length,false);
     case Event::RESOURCE_TEXT:
       if(resource_text((const uint8_t*)text, portable_system::resource_read,
                        (void*)runtime.request->image, resource_append, nullptr)) return true;
@@ -413,12 +414,14 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
 uint32_t execute(ExecuteRequest* request) {
   if (!request || request->size != sizeof(*request) ||
       request->version != REQUEST_VERSION || !request->variables ||
-      request->image_size > MAX_MODULE || request->array_count > 385 ||
+      (!request->paged.read && request->image_size > MAX_MODULE) ||
+      (request->paged.read && !request->storage) || request->array_count > 385 ||
       request->mode > 1 || request->reserved)
     return 0;
   View view;
   request->result = {};
-  const Error checked = inspect(request->image, (uint16_t)request->image_size, view);
+  flash::Reader reader(request->paged);
+  const Error checked=request->paged.read?inspect_flash(reader,*request->storage,view):inspect(request->image,(uint16_t)request->image_size,view);
   if (checked != Error::NONE) {
     request->result.error = checked;
     return 1;

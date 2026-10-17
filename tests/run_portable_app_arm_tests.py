@@ -58,7 +58,7 @@ def resident_api(path):
     assert BASE <= symbols["_sdata"] <= symbols["_edata"] <= symbols["_sbss"]
     assert symbols["_ebss"] <= symbols["_end"] <= symbols["__mk61_dynamic_begin"]
     assert symbols["__mk61_dynamic_begin"] + OVERLAY <= symbols["__mk61_dynamic_end"]
-    assert symbols["__mk61_dynamic_end"] in (0x2000E700, 0x2001BF00)
+    assert symbols["__mk61_dynamic_end"] in (0x2000D700, 0x2001BF00)
     assert struct.unpack_from("<IHH", api) == (0x31505041, 1, len(api))
     return api_address, api
 
@@ -226,7 +226,7 @@ def main():
             assert decoded[:image_size] == (work / name / (name + ".bin")).read_bytes()
             assert decoded[image_size:] == bytes(len(decoded) - image_size)
             reserved = (len(decoded) + 31) & ~31
-            for address in (BASE, BASE + 8, 0x2000E700 - reserved, 0x2001BF00 - reserved):
+            for address in (BASE, BASE + 8, 0x2000D700 - reserved, 0x2001BF00 - reserved):
                 run([reader, app, memory, hex(address)])
                 relocated = memory.read_bytes()
                 for api_address, api in apis:

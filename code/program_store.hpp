@@ -293,6 +293,8 @@ bool read_id(u16 id, u8* data, u16 capacity, u16* out_len);
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len);
 // Language readers never materialize a complete file in the optional cache.
 bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len);
+// Content identity survives catalog commits and garbage collection.
+bool content_stamp(u16 id,u32& stamp);
 // Exact USB-visible byte length, persisted in the CRC-protected catalog.
 bool exported_size_id(u16 id, u32& size);
 #if MK61_PROGRAM_STORE_READ_CACHE_BYTES

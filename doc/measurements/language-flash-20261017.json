@@ -1,0 +1,444 @@
+{
+  "status": "PASS",
+  "branch": "feature/flash-language-vm",
+  "base": "c693f2859",
+  "date": "2026-10-17",
+  "bytecode": "LBV2/14",
+  "request_abi": 13,
+  "source_limit_m8": 65534,
+  "builds": {
+    "f401": {
+      "build_id": "C1A1B578",
+      "bin_bytes": 227728,
+      "sha256": "f7fc0e5b3971c685252642214ff78ccfce104e05c410af18dea9879bf8703313",
+      "effective_dynamic_pool": 27744,
+      "stack_bytes": 10240,
+      "forbidden_archive_gate_passes": 6,
+      "apps": {
+        "BASIC.APP": {
+          "file_bytes": 14109,
+          "memory_bytes": 20068,
+          "sha256": "da3c64d7f4b8b28888f9f00ccc0f3c179dbe8cb5513c64657fc9d20eac6c830d"
+        },
+        "EXPLORER.APP": {
+          "file_bytes": 5738,
+          "memory_bytes": 7572,
+          "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+        },
+        "FOCAL.APP": {
+          "file_bytes": 12633,
+          "memory_bytes": 17504,
+          "sha256": "4e7fac9668ad244ff0415324d92e6875dec1a68f9b389909b88c19e05a3dbed4"
+        },
+        "LANGIN.APP": {
+          "file_bytes": 14074,
+          "memory_bytes": 19228,
+          "sha256": "715e52382255ff4aff5b96bfa373ad669a93fc580954d13064b5c71d974ec518"
+        },
+        "LANGVM.APP": {
+          "file_bytes": 13719,
+          "memory_bytes": 20436,
+          "sha256": "3f526ceec77daa0627a02e609578f75818ced3ce298ea8375fe4fc2aa3bbc278"
+        },
+        "MARKDOWN.APP": {
+          "file_bytes": 6565,
+          "memory_bytes": 8456,
+          "sha256": "172030d531a40939dece23387f1f4ca0ef8b4b418a6e33fbc740133c849ee7fa"
+        },
+        "SETUP.APP": {
+          "file_bytes": 8063,
+          "memory_bytes": 10648,
+          "sha256": "34cdbe378bbb1198aa30b7b8e410de297d75be5e7b85d077a4eb9f53c5a85cd7"
+        },
+        "SRCEDIT.APP": {
+          "file_bytes": 13451,
+          "memory_bytes": 18164,
+          "sha256": "aa5055039994b9e2371077900e88cb64e11f555b6529246813fb7a082b14ca95"
+        },
+        "USBDISK.APP": {
+          "file_bytes": 15303,
+          "memory_bytes": 20468,
+          "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+        }
+      }
+    },
+    "classic": {
+      "build_id": "3E8F4D7B",
+      "bin_bytes": 324876,
+      "sha256": "1bc494c3320c4efa9c4c74d397317764f66ce533e8613ad7a7b0e1a44e2af877",
+      "effective_dynamic_pool": 66656,
+      "stack_bytes": 16384,
+      "forbidden_archive_gate_passes": 6,
+      "apps": {
+        "BASIC.APP": {
+          "file_bytes": 14109,
+          "memory_bytes": 20068,
+          "sha256": "da3c64d7f4b8b28888f9f00ccc0f3c179dbe8cb5513c64657fc9d20eac6c830d"
+        },
+        "EXPLORER.APP": {
+          "file_bytes": 5738,
+          "memory_bytes": 7572,
+          "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+        },
+        "FOCAL.APP": {
+          "file_bytes": 12633,
+          "memory_bytes": 17504,
+          "sha256": "4e7fac9668ad244ff0415324d92e6875dec1a68f9b389909b88c19e05a3dbed4"
+        },
+        "LANGIN.APP": {
+          "file_bytes": 14074,
+          "memory_bytes": 19228,
+          "sha256": "715e52382255ff4aff5b96bfa373ad669a93fc580954d13064b5c71d974ec518"
+        },
+        "LANGVM.APP": {
+          "file_bytes": 13719,
+          "memory_bytes": 20436,
+          "sha256": "3f526ceec77daa0627a02e609578f75818ced3ce298ea8375fe4fc2aa3bbc278"
+        },
+        "MARKDOWN.APP": {
+          "file_bytes": 13482,
+          "memory_bytes": 16976,
+          "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+        },
+        "SETUP.APP": {
+          "file_bytes": 9974,
+          "memory_bytes": 13248,
+          "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+        },
+        "SRCEDIT.APP": {
+          "file_bytes": 13451,
+          "memory_bytes": 18164,
+          "sha256": "aa5055039994b9e2371077900e88cb64e11f555b6529246813fb7a082b14ca95"
+        },
+        "USBDISK.APP": {
+          "file_bytes": 15303,
+          "memory_bytes": 20468,
+          "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+        }
+      }
+    },
+    "resident": {
+      "build_id": "C3FD622D",
+      "bin_bytes": 356340,
+      "sha256": "910425b78474f804b0eb6aaa56980fffe004461f0093f5383e3079adb2a51cd5",
+      "effective_dynamic_pool": 64736,
+      "stack_bytes": 16384,
+      "forbidden_archive_gate_passes": 4,
+      "apps": {
+        "BASIC.APP": {
+          "file_bytes": 14109,
+          "memory_bytes": 20068,
+          "sha256": "da3c64d7f4b8b28888f9f00ccc0f3c179dbe8cb5513c64657fc9d20eac6c830d"
+        },
+        "EXPLORER.APP": {
+          "file_bytes": 5738,
+          "memory_bytes": 7572,
+          "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+        },
+        "FOCAL.APP": {
+          "file_bytes": 12633,
+          "memory_bytes": 17504,
+          "sha256": "4e7fac9668ad244ff0415324d92e6875dec1a68f9b389909b88c19e05a3dbed4"
+        },
+        "MARKDOWN.APP": {
+          "file_bytes": 13482,
+          "memory_bytes": 16976,
+          "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+        },
+        "SETUP.APP": {
+          "file_bytes": 9974,
+          "memory_bytes": 13248,
+          "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+        },
+        "SRCEDIT.APP": {
+          "file_bytes": 13451,
+          "memory_bytes": 18164,
+          "sha256": "aa5055039994b9e2371077900e88cb64e11f555b6529246813fb7a082b14ca95"
+        },
+        "USBDISK.APP": {
+          "file_bytes": 15303,
+          "memory_bytes": 20468,
+          "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+        }
+      }
+    }
+  },
+  "hardware": {
+    "normal": {
+      "status": "PASS",
+      "wide": false,
+      "cases": [
+        {
+          "language": "basic",
+          "reverse": false,
+          "lines": 605,
+          "source_bytes": 4832,
+          "run_seconds": [
+            25.55798741604667,
+            0.6035756249912083
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/001F/Manifest.bin",
+              "language": 1,
+              "lines": 605,
+              "bytecode_bytes": 9191,
+              "bank": 0
+            }
+          ]
+        },
+        {
+          "language": "focal",
+          "reverse": false,
+          "lines": 604,
+          "source_bytes": 6641,
+          "run_seconds": [
+            23.67499112500809,
+            0.731572833028622
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/002D/Manifest.bin",
+              "language": 2,
+              "lines": 604,
+              "bytecode_bytes": 9172,
+              "bank": 0
+            }
+          ]
+        },
+        {
+          "language": "basic",
+          "reverse": true,
+          "lines": 605,
+          "source_bytes": 4832,
+          "run_seconds": [
+            78.02843812498031,
+            0.6234048749902286
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/001F/Manifest.bin",
+              "language": 1,
+              "lines": 605,
+              "bytecode_bytes": 9191,
+              "bank": 1
+            }
+          ]
+        },
+        {
+          "language": "focal",
+          "reverse": true,
+          "lines": 604,
+          "source_bytes": 6641,
+          "run_seconds": [
+            77.88111462502275,
+            0.7194840839947574
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/002D/Manifest.bin",
+              "language": 2,
+              "lines": 604,
+              "bytecode_bytes": 9172,
+              "bank": 1
+            }
+          ]
+        }
+      ],
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3E8F4D7B",
+        "profile": "classic-v3-uc1609"
+      },
+      "before": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=8352 observed_remaining=8352 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 38 used, 986 free, 1024 total\r\nVisible: 29 files, 9 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=432/18 raw(v/t/b)=1493/953/1019 val(mV/dC/mV)=3329/326/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=958069\r\n/> "
+      },
+      "after": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=8212 observed_remaining=8212 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 76 used, 948 free, 1024 total\r\nVisible: 54 files, 22 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=431/18 raw(v/t/b)=1493/957/1018 val(mV/dC/mV)=3329/339/3310 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=958499\r\n/> "
+      },
+      "minimum_stack_remaining": 8212
+    },
+    "editor": {
+      "status": "PASS",
+      "cases": [
+        {
+          "test": "focal-operator-IF",
+          "original_key": 2,
+          "view": "IF",
+          "stored": "B",
+          "atomic_delete": true,
+          "register": "RB",
+          "value": 42,
+          "verified": true
+        }
+      ],
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3E8F4D7B",
+        "profile": "classic-v3-uc1609"
+      },
+      "before": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=12416 observed_remaining=12416 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 30 used, 994 free, 1024 total\r\nVisible: 27 files, 3 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=439/18 raw(v/t/b)=1492/948/1018 val(mV/dC/mV)=3331/313/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=957549\r\n/> "
+      },
+      "after": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=8352 observed_remaining=8352 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 38 used, 986 free, 1024 total\r\nVisible: 29 files, 9 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=449/18 raw(v/t/b)=1492/953/1017 val(mV/dC/mV)=3331/330/3309 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=957386\r\n/> "
+      },
+      "crc_checked_frames_last_session": 178
+    },
+    "wide": {
+      "status": "PASS",
+      "wide": true,
+      "cases": [
+        {
+          "language": "basic",
+          "reverse": false,
+          "lines": 555,
+          "source_bytes": 46232,
+          "run_seconds": [
+            166.84691054199357,
+            0.6485099169658497
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/0009/Manifest.bin",
+              "language": 1,
+              "lines": 555,
+              "bytecode_bytes": 73891,
+              "bank": 0
+            }
+          ]
+        },
+        {
+          "language": "focal",
+          "reverse": false,
+          "lines": 554,
+          "source_bytes": 52291,
+          "run_seconds": [
+            113.63506870903075,
+            0.7401249589747749
+          ],
+          "manifests": [
+            {
+              "path": "/System/VMCache/Pages/0009/Manifest.bin",
+              "language": 2,
+              "lines": 554,
+              "bytecode_bytes": 73872,
+              "bank": 1
+            }
+          ]
+        }
+      ],
+      "identity": {
+        "public": "AEB505B6E0067623",
+        "short": "E0067623",
+        "usb": "2068336B4731",
+        "volume": "AED647EB",
+        "build": "3E8F4D7B",
+        "profile": "classic-v3-uc1609"
+      },
+      "before": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=8212 observed_remaining=8212 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 22 used, 1002 free, 1024 total\r\nVisible: 20 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=447/18 raw(v/t/b)=1493/952/1019 val(mV/dC/mV)=3329/323/3314 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=957339\r\n/> "
+      },
+      "after": {
+        "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=7848 observed_remaining=7848 sram_xn=1\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 107 used, 917 free, 1024 total\r\nVisible: 97 files, 10 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=439/18 raw(v/t/b)=1493/959/1020 val(mV/dC/mV)=3329/346/3317 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=957198\r\n/> "
+      },
+      "minimum_stack_remaining": 7848
+    }
+  },
+  "f401_stack_policy_on_classic": {
+    "status": "PASS",
+    "cases": [
+      {
+        "language": "basic",
+        "lines": 605,
+        "reverse": false,
+        "run_seconds": [
+          24.481605209002737,
+          0.63168766599847
+        ]
+      },
+      {
+        "language": "basic",
+        "lines": 605,
+        "reverse": true,
+        "run_seconds": [
+          79.05156658304622,
+          0.6083092500339262
+        ]
+      }
+    ],
+    "before": {
+      "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=435DEDF2 profile=classic-v3-uc1609\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006B58 guard=0x2001D700+256 stack_budget=10240 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=9304 watermark=1 watermark_remaining=8624 observed_remaining=8624 sram_xn=1\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 73 used, 951 free, 1024 total\r\nVisible: 57 files, 16 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=443/18 raw(v/t/b)=1492/952/1020 val(mV/dC/mV)=3331/326/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=314120 footer=312456 expected=0x435DEDF2 build=0x435DEDF2 actual=0x435DEDF2 backend=hardware cycles=926485\r\n/> "
+    },
+    "after": {
+      "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=435DEDF2 profile=classic-v3-uc1609\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20006B58 guard=0x2001D700+256 stack_budget=10240 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=9304 watermark=1 watermark_remaining=2112 observed_remaining=2112 sram_xn=1\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 75 used, 949 free, 1024 total\r\nVisible: 57 files, 18 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=438/18 raw(v/t/b)=1493/951/1020 val(mV/dC/mV)=3329/320/3317 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=314120 footer=312456 expected=0x435DEDF2 build=0x435DEDF2 actual=0x435DEDF2 backend=hardware cycles=925537\r\n/> "
+    },
+    "minimum_stack_remaining": 2112
+  },
+  "validation_logs": {
+    "flash_asan_ubsan": "Flash language files: 200 KiB, >64-KiB patches, 3000 reverse lines, bounded RAM and I/O failures PASS\nFlash compiler BASIC: 5002 lines, 43926 source bytes, 75072 bytecode bytes, target=75057 PASS\nFlash compiler FOCAL: 5002 lines, 59475 source bytes, 75070 bytecode bytes, target=75057 PASS\nFlash VM: >64-KB calls/FOR/IF/parameters, external sorting, INPUT APP replacement, DATA, long text and lost pages PASS\n",
+    "c9_fault_injection": "C9 inode wire: 10000 independent golden records, 8 alignments, padding/canaries and exact protected-page tails PASS\nC9 inode wire: 10000 independent golden records, 8 alignments, padding/canaries and exact protected-page tails PASS\nC9 language pages: 200 KB, page/64-KB boundaries, reboot, torn writes, physical full, source/compiler cache identity and derived-cache eviction PASS\nC9 compiler + VM: BASIC/FOCAL, 602 lines and >64-KB images, streamed source stamp survives index/image/verification writes PASS\nC9 language pages: 200 KB, page/64-KB boundaries, reboot, torn writes, physical full, source/compiler cache identity and derived-cache eviction PASS\nC9 compiler + VM: BASIC/FOCAL, 602 lines and >64-KB images, streamed source stamp survives index/image/verification writes PASS\nC9 language pages: 200 KB, page/64-KB boundaries, reboot, torn writes, physical full, source/compiler cache identity and derived-cache eviction PASS\nC9 compiler + VM: BASIC/FOCAL, 602 lines and >64-KB images, streamed source stamp survives index/image/verification writes PASS\n",
+    "arm_final": "ARM frontend compiled 1 66132\nARM run 1 0\nARM run 1 1\nARM run 1 2\n{\"language\": 1, \"lines\": 4403, \"image_bytes\": 66132, \"addresses\": 3, \"counts\": {\"read\": 365941, \"write\": 246, \"lookup\": 9}}\nARM frontend compiled 2 66225\nARM run 2 0\nARM run 2 1\nARM run 2 2\n{\"language\": 2, \"lines\": 4407, \"image_bytes\": 66225, \"addresses\": 3, \"counts\": {\"read\": 366483, \"write\": 246, \"lookup\": 9}}\nFlash ARM: real frontends + resident index service, >64-KB images, 3 APP addresses, INPUT eviction/resume PASS\n",
+    "legacy_regressions": "language_vm_self_test: ok\nlanguage_resources: M8 dedup, PRINT/INPUT equivalence, streaming, relocation, resume, stale source, malformed recipes PASS\nlanguage value: eight bytes, int32/float, overflow promotion, signed zero, NaN, 100000 arithmetic pairs PASS\ninteger VM: automatic types, int32 overflow, fractional division, FLOOR_DIV, MOD, wide history, signed zero, FOR/INPUT/DATA PASS\nlanguage_vm_input: bound=256 maximum=134, whitelist, borrowed stack, validation PASS\nlanguage_vm_input: bound=256 maximum=244, whitelist, borrowed stack, validation PASS\nscalar loop: 20028 value/stack cases and service-before-fetch PASS\nlanguage_vm reset: 156 poisoned/zero comparisons, BASIC/FOCAL control, DATA, INPUT/resume, errors/limits/ESC, exact values/events/diagnostics PASS\nscalar loop: 20028 value/stack cases and service-before-fetch PASS\nlanguage_vm reset: 156 poisoned/zero comparisons, BASIC/FOCAL control, DATA, INPUT/resume, errors/limits/ESC, exact values/events/diagnostics PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ncompiled VM blocks: 46029 scalar-reference comparisons, exact trace/steps/stack/errors/INPUT/ESC, verifier PASS\ninteger spans: 140072 exact reference comparisons; 71881 spans, 67739 multi-op, 26429 short blocks; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\ninteger spans: 140072 exact reference comparisons; 71881 spans, 67739 multi-op, 26429 short blocks; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\nhigh_noon_package_self_test: ok\ntinybasic_self_test: ok\nfocal_next_self_test: ok, adapter RAM=2432\nFOCAL graphics: 80x16/192x64, PRINT AT, formatting/nested CALL, ASK, GRAPH cleanup and errors PASS\nfocal_next_self_test: ok, adapter RAM=2432\nFOCAL graphics: 80x16/192x64, PRINT AT, formatting/nested CALL, ASK, GRAPH cleanup and errors PASS\nfocal_next_self_test: ok, adapter RAM=2432\nFOCAL graphics: 80x16/192x64, PRINT AT, formatting/nested CALL, ASK, GRAPH cleanup and errors PASS\nfocal compatibility: 82 checks, 0 failures\nfocal compatibility: 85 checks, 0 failures\nfocal compatibility: 82 checks, 0 failures\nfocal compatibility: 85 checks, 0 failures\nfocal compatibility: 82 checks, 0 failures\nfocal compatibility: 85 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nBASIC functions: 76 checks, 0 failures\nStreamed BASIC/FOCAL: 64 KiB source, 256-byte reads, page boundaries, resource offsets and I/O PASS\nPaged source editor: bounded RAM, cross-page edits, 64 KiB files, cancel and failed writes PASS\nlanguage_vm_overlay: loops/calls/array INPUT, retries, cancellation, failures PASS\nlanguage_vm_overlay: loops/calls/array INPUT, retries, cancellation, failures PASS\nlanguage_vm_overlay: loops/calls/array INPUT, retries, cancellation, failures PASS\nlanguage_vm_overlay: loops/calls/array INPUT, retries, cancellation, failures PASS\nworkspace partition: protected tail, owners/epochs, full snapshots, no partial restore PASS\nlanguage_vm_resident_self_test: handoff, retained vars/array, status, failures PASS\ncompiler APP flow: selection, clear, no-run, sizing/emit errors, reserve resume, tail commit and one-time state preparation PASS\ncompiler BASIC specialization: wrong language, index, clear, tail handoff PASS\ncompiler FOCAL specialization: wrong language, index, clear, tail handoff PASS\nStreamed BASIC/FOCAL: 64 KiB source, 256-byte reads, page boundaries, resource offsets and I/O PASS\nPaged source editor: bounded RAM, cross-page edits, 64 KiB files, cancel and failed writes PASS\n....\n----------------------------------------------------------------------\nRan 4 tests in 0.003s\n\nOK\n"
+  },
+  "restoration": {
+    "status": "PASS",
+    "verified_files": [
+      "USBDISK.APP",
+      "HELP0.TXT",
+      "HELP1.TXT",
+      "FOCAL.APP",
+      "BASIC.APP",
+      "MARKDOWN.APP",
+      "SETUP.APP",
+      "EXPLORER.APP",
+      "LANGVM.APP",
+      "LANGIN.APP",
+      "SRCEDIT.APP"
+    ],
+    "before_reset": {
+      "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=7848 observed_remaining=7848 sram_xn=1\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=443/18 raw(v/t/b)=1492/951/1018 val(mV/dC/mV)=3331/323/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=958270\r\n/> "
+    },
+    "after": {
+      "identity": "identity\r\nMK61 ID v=1 public=AEB505B6E0067623 short=E0067623 usb=2068336B4731 volume=AED647EB build=3E8F4D7B profile=classic-v3-uc1609\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005828 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC58 observed_low=0x2001FC58 sampled_remaining=15448 watermark=1 watermark_remaining=14784 observed_remaining=14784 sram_xn=1\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1492/955/1020 val(mV/dC/mV)=3331/336/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=324876 footer=323228 expected=0x3E8F4D7B build=0x3E8F4D7B actual=0x3E8F4D7B backend=hardware cycles=958016\r\n/> "
+    },
+    "root": "ls /\r\nd\tSystem/\r\n1 entry.\r\n/> ",
+    "system": "ls /System\r\nf\t13451 B\tSRCEDIT.app\r\nf\t5738 B\tEXPLORER.app\r\nf\t9974 B\tSETUP.app\r\nf\t13482 B\tMARKDOWN.app\r\nf\t15303 B\tUSBDISK.app\r\nf\t13719 B\tLANGVM.app\r\nf\t14074 B\tLANGIN.app\r\nf\t1269 B\tHELP1.txt\r\nf\t1533 B\tHELP0.txt\r\nf\t12633 B\tFOCAL.app\r\nf\t14109 B\tBASIC.app\r\nd\tVMCache/\r\n12 entries.\r\n/> "
+  }
+}

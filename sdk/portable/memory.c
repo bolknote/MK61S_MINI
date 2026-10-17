@@ -31,6 +31,16 @@ size_t strlen(const char* text) {
 }
 #endif
 
+/* Source-page NUL checks also need memchr. Keep it freestanding even when
+ * the other memory functions use the resident runtime table. */
+void* memchr(const void* data, int value, size_t size) {
+  const unsigned char* bytes = (const unsigned char*) data;
+  const unsigned char wanted = (unsigned char) value;
+  for(size_t i = 0; i < size; ++i)
+    if(bytes[i] == wanted) return (void*) (bytes + i);
+  return NULL;
+}
+
 int strcmp(const char* left, const char* right) {
   const unsigned char* a = (const unsigned char*) left;
   const unsigned char* b = (const unsigned char*) right;

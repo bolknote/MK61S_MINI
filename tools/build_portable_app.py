@@ -52,7 +52,7 @@ SYSTEM_SIZE_BUDGETS = {
     "explorer": {"app_bytes": 8_000, "memory_bytes": 10_000},
     # The cold module owns retry, resource verification and INPUT rendering.
     # Shared expression parsing now includes the bounded source cursor.
-    "language-input": {"app_bytes": 12_800, "memory_bytes": 17_152},
+    "language-input": {"app_bytes": 16_000, "memory_bytes": 20_480},
     "source-editor": {"app_bytes": 13_568, "memory_bytes": 18_304},
 }
 LOCAL_FLOAT_SIZE_BUDGETS = {
@@ -66,13 +66,14 @@ GREEDY_APP_SIZE_BUDGETS = {
     (False, "focal"): 13_500,
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
-    (False, "language-input"): 14_144,
+    (False, "language-input"): 17_000,
     (False, "source-editor"): 14_848,
 }
 # Compiler FLOW_STEP owns source selection, translation and literal interning.
 # Leave ordinary interpreter ceilings unchanged; only external compiler APPs
 # pay for this policy. The shared APP arena remains the same 20 KiB.
 COMPILER_SIZE_BUDGETS = {
+    "tinybasic": {"app_bytes": 15_000, "memory_bytes": 20_480},
     # The FOCAL frontend now emits the shared graphics instructions as well.
     # The measured 19,404-byte image still fits the unchanged 20-KiB arena.
     "focal": {"app_bytes": 14_560, "memory_bytes": 19_648},
@@ -104,7 +105,7 @@ def enforce_system_size_budget(system: str | None, report: dict,
         # This is a regression ceiling, not an allocator partition. The loader
         # and strict whole-firmware RAM gate still cap every APP at 20 KiB.
         # BASIC graphics adds raster events, PRINT AT and a pure GRAPH loop.
-        budget = {"memory_bytes": 19_968 if local_float_math else 19_520}
+        budget = {"memory_bytes": 20_480}
     if budget is None:
         return
     budget = dict(budget)
@@ -134,6 +135,9 @@ def build(args: argparse.Namespace) -> dict:
     if args.system == "focal":
         args.language_vm_compiler = True
     system = SYSTEM_MODULES.get(args.system)
+    resident_language = args.system in ("focal", "tinybasic", "language-vm", "language-input", "source-editor")
+    if resident_language and args.local_float_math:
+        raise ValueError("language APPs use the resident runtime; local libm is disabled")
     if getattr(args, "split_language_vm", False):
         if args.system != "language-vm":
             raise ValueError("--split-language-vm applies only to language-vm")
@@ -325,9 +329,12 @@ def build(args: argparse.Namespace) -> dict:
          "-Wl,-T," + str(ROOT / "tools/.mk61-app/mk61_module.ld"),
          "-Wl,-Map," + str(out / (args.name + ".map")),
          *objects, *args.library, *(["-lm"] if args.local_float_math else []),
-         *(["-lc"] if system else []), "-lgcc", "-o", elf])
+         *([] if resident_language else (["-lc"] if system else []) + ["-lgcc"]), "-o", elf])
     if run([tool("nm"), "--undefined-only", elf]).strip():
         raise ValueError("APP has unresolved imports")
+    if resident_language:
+        print(run([sys.executable, ROOT / "tests/check_native_runtime_libraries.py",
+                   "--app", out / (args.name + ".map")]), end="")
     symbols = {}
     for line in run([tool("nm"), "--defined-only", elf]).splitlines():
         parts = line.split()
@@ -424,7 +431,7 @@ def main() -> None:
     parser.add_argument("--no-ui-fonts", action="store_true",
                         help="omit the optional proportional UI client from a system APP")
     parser.add_argument("--local-float-math", action="store_true",
-                        help="link local single-precision libm into FOCAL, TinyBASIC or LANGVM")
+                        help="retired: language APPs always use the resident math runtime")
     parser.add_argument("--local-float-math-mask", type=lambda value: int(value, 0),
                         help=argparse.SUPPRESS)
     parser.add_argument("--include", type=Path, action="append", default=[])

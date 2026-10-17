@@ -14,6 +14,7 @@ class Transfer {
   explicit Transfer(shared_memory::Owner owner) : owner_(owner) {}
   loadable_module::RuntimeStatus reserve(ImageTransfer&);
   loadable_module::RuntimeStatus commit(ImageTransfer&);
+  loadable_module::RuntimeStatus commit_paged(ImageTransfer&);
   // The caller separately owns and pins this immutable image (e.g. a cache
   // reservation). Only the runtime workspace is acquired here, no copy.
   // A source/compiler APP must be evicted before its workspace is reused.

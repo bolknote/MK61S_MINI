@@ -15,7 +15,7 @@ def app_memory_size(path):
     data = path.read_bytes()
     assert len(data) >= 64 and data[:8] == b'MK61APP\0', f'{path}: invalid APP header'
     assert struct.unpack_from('<3H', data, 8) == (1, 64, 6), f'{path}: incompatible APP'
-    helper=path.name.upper()=='VMSTORE.APP' and path.parent.name.upper()=='VMCACHE'
+    helper=(path.name.upper()=='VMSTORE.APP' and path.parent.name.upper()=='VMCACHE') or path.name.upper()=='SRCEDIT.APP'
     assert data[14] in ((4,) if helper else (1, 2, 3, 5, 6, 7, 8, 9, 10, 11)), f'{path}: not a System APP'
     assert zlib.crc32(data[:60]) == struct.unpack_from('<I', data, 60)[0], f'{path}: header CRC'
     stored, image, memory = struct.unpack_from('<3I', data, 24)
@@ -88,7 +88,7 @@ def check(path, module_memory=APP_MAX_SIZE, disk_memory=APP_MAX_SIZE):
     assert value('_ebss') <= value('_end') <= value('__mk61_dynamic_begin')
     assert value('__mk61_dynamic_begin') == (value('_end') + 7) & ~7
     end = value('__mk61_dynamic_end')
-    assert end in (0x2000E700, 0x2001BF00), 'stack/guard budget changed'
+    assert end in (0x2000D700, 0x2001BF00), 'stack/guard budget changed'
     free = end - value('__mk61_dynamic_begin')
     effective, lazy, scoped, placement = effective_pool(free, symbols)
     assert effective >= 0, 'lazy resident buffers exceed dynamic RAM'

@@ -28,6 +28,13 @@ if [[ "${MK61_TEST_SANITIZERS:-0}" == "1" ]]; then
   sanitizer_flags=(-O1 -fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
 fi
 
+flash_flags=()
+flash_sources=()
+if [[ "${1:-}" == --language-flash ]]; then
+  flash_flags=(-DLANGUAGE_FLASH_FS_COMPILER_TEST)
+  flash_sources=("$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp")
+fi
+
 for backend in software stm32; do
   backend_flags=()
   if [[ "$backend" == "stm32" ]]; then
@@ -37,7 +44,7 @@ for backend in software stm32; do
     backend_flags=(-DMK61_ENABLE_USB_SCREEN=1)
   fi
   clang++ -std=c++17 -Wall -Wextra -Werror \
-    "${sanitizer_flags[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
+    "${sanitizer_flags[@]}" "${flash_flags[@]}" "${flash_sources[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
     "${backend_flags[@]}" \
     -DARDUINO_BLACKPILL_F401CC \
     -include "$root/tests/program_store_shim/program_store_test_shim.h" \
@@ -69,7 +76,7 @@ done
 # C9 large-file path; otherwise a parser-only size increase could pass CI while
 # USB imports of a real large font still fail on hardware.
 clang++ -std=c++17 -Wall -Wextra -Werror \
-  "${sanitizer_flags[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
+  "${sanitizer_flags[@]}" "${flash_flags[@]}" "${flash_sources[@]}" "${shared_flags[@]}" "${capacity_flags[@]}" \
   -include "$root/tests/program_store_shim/program_store_test_shim.h" \
   -I"$root/tests/program_store_shim" \
   -I"$build_dir" \

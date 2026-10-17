@@ -130,6 +130,7 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
     case Event::PRINT_POP:
       return graphics_result(basic_graphics::pop_print(s.position,s.output,s.output_cursor));
     case Event::TEXT: return append(text,length,!basic);
+    case Event::TEXT_CONTINUE:return append(text,length,false);
     case Event::RESOURCE_TEXT:
       return portable_system::resource_print(request().image, (const uint8_t*)text,
                                              resource_append, nullptr);
@@ -219,7 +220,8 @@ uint32_t execute(OverlayRequest* payload) {
   View view;
   const bool expression = payload->action == OverlayAction::EXPRESSION;
   r.result = {};
-  if (!validated_view(*payload, view)) {
+  flash::Reader reader(r.paged);
+  if (!validated_view(*payload, view,r.paged.read?&reader:nullptr)) {
     r.result.error = Error::INVALID_IMAGE; return 1;
   }
   active = payload;
@@ -239,14 +241,15 @@ uint32_t execute(OverlayRequest* payload) {
       s.steps += r.result.steps;
       r.result.steps = s.steps;
       if (r.result.error == Error::YIELDED) {
-        const uint8_t* p = view.bytes + r.result.pc + 1;
-        if((Op)view.bytes[r.result.pc] == Op::INPUT_RESOURCE) {
-          s.prompt_offset = (uint16_t)(view.end + resource_word(p));
-          s.prompt_length = resource_word(view.bytes + s.prompt_offset);
-          if(view.bytes[7] & OWNED_RESOURCE_FLAG) s.prompt_offset += 2;
+        const auto p=view.at(r.result.pc+1);
+        if(Op(view.byte(r.result.pc))==Op::INPUT_RESOURCE) {
+          s.prompt_offset=view.end+flash::word(p);
+          s.prompt_length=flash::word(view.at(s.prompt_offset));
+          if(view.byte(7)&OWNED_RESOURCE_FLAG)s.prompt_offset+=2;
         } else {
-          s.prompt_offset = (uint16_t)(r.result.pc + 3);
-          s.prompt_length = resource_word(p);
+          s.prompt_offset=r.result.pc+3;s.prompt_length=flash::word(p);
+          if(view.reader && (s.prompt_length>95 || !view.at(s.prompt_offset).read(s.prompt,s.prompt_length)))
+            r.result.error=Error::IO;
         }
         r.pause_final = 0;
       }

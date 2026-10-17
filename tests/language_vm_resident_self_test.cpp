@@ -7,7 +7,7 @@
 
 namespace {
 bool legacy,evicted,fail;
-const char* source;
+const char* program_text;
 unsigned executions,frontend_calls;
 uint16_t inode=42;
 }
@@ -34,7 +34,7 @@ loadable_module::RuntimeStatus frontend(loadable_module::Kind kind,
   }
   assert(a==inode);
   const Language language=kind==Kind::TINYBASIC?Language::BASIC:Language::FOCAL;
-  request->compiled=compile(language,source,(uint16_t)strlen(source),request->output,(uint16_t)request->capacity);
+  request->compiled=compile(language,program_text,(uint16_t)strlen(program_text),request->output,(uint16_t)request->capacity);
   assert(request->compiled.error==Error::NONE);
   request->run_requested=1;request->source_id=inode;request->language=(uint8_t)language;
   request->mode=1;result=1;return RuntimeStatus::OK;
@@ -64,12 +64,12 @@ int main() {
     assert(temporary.shrink_to(64) && temporary.data()==pointer && pointer[0]==42);
     assert(temporary.size()==64 && shared_memory::validate_invariants());
   }
-  source="10 A=A+1\n20 @(0)=@(0)+1\n";
+  program_text="10 A=A+1\n20 @(0)=@(0)+1\n";
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,42,0,result)==RuntimeStatus::OK && result==1);
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_INDEX,0,0,result)==RuntimeStatus::OK);
-  source="1.10 S A=A+10\n1.20 E\n";
+  program_text="1.10 S A=A+10\n1.20 E\n";
   assert(invoke_resident(Language::FOCAL,Command::FOCAL_RUN_ID,42,0,result)==RuntimeStatus::OK && result==0);
-  source="10 IF A<>2 GOTO 999\n20 IF @(0)<>2 GOTO 999\n";
+  program_text="10 IF A<>2 GOTO 999\n20 IF @(0)<>2 GOTO 999\n";
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,42,0,result)==RuntimeStatus::OK);
   assert(executions==4);
   legacy=true;
@@ -81,9 +81,9 @@ int main() {
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,42,0,result)==RuntimeStatus::OK);
   assert(executions==5);
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_MENU_SELECT,0,0,result)==RuntimeStatus::OK);
-  source="10 IF A<>0 GOTO 999\n20 IF @(0)<>0 GOTO 999\n";
+  program_text="10 IF A<>0 GOTO 999\n20 IF @(0)<>0 GOTO 999\n";
   assert(invoke_resident(Language::BASIC,Command::TINYBASIC_RUN_ID,42,0,result)==RuntimeStatus::OK);
-  source="1.10 S A=A-10\n1.20 E\n";
+  program_text="1.10 S A=A-10\n1.20 E\n";
   assert(invoke_resident(Language::FOCAL,Command::FOCAL_RUN_ID,42,0,result)==RuntimeStatus::OK);
   assert(executions==7 && frontend_calls>14 && shared_memory::validate_invariants());
   assert(shared_memory::active_owner(shared_memory::Arena::WORKSPACE)==shared_memory::Owner::NONE);
