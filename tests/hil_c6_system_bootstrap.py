@@ -38,6 +38,7 @@ OPTIONAL_FILES = (
     "EXPLORER.APP",
     "LANGVM.APP",
     "LANGIN.APP",
+    "SRCEDIT.APP",
 )  # Optional roles follow the matched bundle; split VM always needs both APPs.
 CHUNK_SIZE = 48
 

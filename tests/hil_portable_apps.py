@@ -136,12 +136,12 @@ class ScreenPort(Port):
         self.command('uscreen')
         self.attach_waiting()
 
-    def attach_waiting(self):
+    def attach_waiting(self, timeout=3):
         self.caps = None
         # Do not send PING until CAPS: the firmware has one response slot,
         # so an immediate heartbeat could replace the handshake response.
         self.send(0x11)
-        deadline = time.monotonic() + 3
+        deadline = time.monotonic() + timeout
         while self.caps is None and time.monotonic() < deadline: self.pump()
         assert self.caps is not None, 'USB Screen did not attach'
 

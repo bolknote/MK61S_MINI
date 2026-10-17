@@ -5,6 +5,7 @@
 
 #include "language_bytecode.hpp"
 #include "language_resources.hpp"
+#include "language_source.hpp"
 #include "language_vm_image_cache.hpp"
 #include "zx0.hpp"
 
@@ -26,7 +27,7 @@ int main(int argc, char** argv) {
   if ((argc != 4 && argc != 5) || (strcmp(argv[1], "basic") && strcmp(argv[1], "focal"))) return 2;
   FILE* input = fopen(argv[2], "rb");
   if (!input) return 2;
-  std::vector<uint8_t> source(3585);
+  std::vector<uint8_t> source(language_vm::source::MAX_SIZE + 1U);
   const size_t n = fread(source.data(), 1, source.size(), input);
   const bool error = ferror(input) || fgetc(input) != EOF;
   fclose(input);

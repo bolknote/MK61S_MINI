@@ -1,0 +1,74 @@
+{
+  "status": "partial",
+  "source_commit": "bbaa1a405e46d34b6b0936224aef75e17cc948bd",
+  "device": {
+    "public_id": "AEB505B6E0067623",
+    "usb_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "mcu": "STM32F411CE",
+    "external_flash_bytes": 524288
+  },
+  "installed": {
+    "firmware_build": "FC9703CE",
+    "firmware_bytes": 343176,
+    "firmware_sha256": "95111c35879d94587139afc58adafd4a3665d76c6333240dd6904fea420b0971",
+    "firmware_crc": "valid",
+    "matching_system_files_byte_verified": 10,
+    "source_editor_installed": true,
+    "old_data_discarded_with_user_authorization": true,
+    "old_firmware_backup_requested": false
+  },
+  "passed": [
+    {
+      "test": "physical M61 calling BASIC arithmetic, FOR, GOSUB, arrays and retained values",
+      "runs": 3,
+      "seconds": [
+        1.053734750021249,
+        0.47202345804544166,
+        0.14988483296474442
+      ]
+    },
+    {
+      "test": "USB Screen BASIC arithmetic and two INPUT values",
+      "input_sum": 30
+    },
+    {
+      "test": "USB Screen FOCAL arithmetic and FOR/DO",
+      "arithmetic_result": 14,
+      "loop_result": 6
+    },
+    {
+      "test": "BASIC large image INPUT after USB Screen detach/reattach, manual repeat",
+      "input_result": 15,
+      "note": "The first automated run timed out awaiting CAPS; the repeat allowed compilation to finish before detaching."
+    },
+    {
+      "test": "BASIC source beyond the former 3584-byte limit, real C9 upload/readback and cold/warm VM",
+      "source_bytes": 3585,
+      "source_sha256": "97ee4c9d0c97aa7b5c6f284e207d666eb02b7212a50de2bcfb13e27f1b7bb10a",
+      "run_seconds": [
+        0.3756602500216104,
+        0.12698495801305398
+      ],
+      "register_result": 3585,
+      "array_last_index": 384,
+      "SIZE": 768
+    }
+  ],
+  "last_completed_health_check": {
+    "firmware_crc": "valid",
+    "mpu_layout": "ok",
+    "crash": "none",
+    "minimum_stack_remaining_bytes": 8216
+  },
+  "incomplete": [
+    "The first FOCAL source fixture reached its final key wait without USB Screen enabled; the harness timed out and a physical ESC was requested.",
+    "Hardware execution of 16/32/64 KiB sources and large-offset source resources remains pending.",
+    "Hardware paged-editor Save/Cancel and reset-during-draft scenarios remain pending.",
+    "Only Classic V3 was available; no physical F401 qualification was performed."
+  ],
+  "offline_verification": [
+    "The exact 3585/16384/32768/65534-byte BASIC and FOCAL fixtures compile; oversized owned strings require source resources with offsets above 32767.",
+    "Streamed source and paged document regression suites pass under AddressSanitizer and UndefinedBehaviorSanitizer."
+  ]
+}

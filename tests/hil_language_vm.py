@@ -126,7 +126,10 @@ def run():
                     # Fresh CAPS below proves the session reached WAITING:
                     # an ATTACH sent to an already ATTACHED session is ignored.
                     port.send(0x13);port.attached=False;port.pump(.3)
-                    port.attach_waiting();port.pump(.2)
+                    # A cold compiler can still own the foreground when the
+                    # DETACH/ATTACH pair is sent. Wait for its queued handshake
+                    # before sending INPUT keys; a warm image is much faster.
+                    port.attach_waiting(timeout=15);port.pump(.2)
                     for key in number15:port.key(key)
                     port.pump(.5);port.close_app()
                     values,report=registers(port);assert values["R8"]==15,(values,report)
@@ -163,7 +166,7 @@ def run():
             result["status"]="FAIL";result["error"]=str(error)
             try:
                 if args.screen and port.caps is not None and not port.attached:
-                    port.attach_waiting()
+                    port.attach_waiting(timeout=15)
                 if port.attached:
                     port.key(39);port.key(39)
                 result["after_failure"]=health(port)
