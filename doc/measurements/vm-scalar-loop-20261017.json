@@ -1,0 +1,866 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED",
+  "date": "2026-10-17",
+  "baseline_revision": "bb798405806ecc9e3d06aa586fafbfa500fc9e85",
+  "implementation": [
+    "Test the boxed Value tag/exponent directly in the outlined push, eliminating a spill and nested finite() call.",
+    "Reuse existing Grid row damage for the normal USB raster and UI controller-page raster, including Turochamp FMK; preserve full invalidation, cursor and overlays without new buffers."
+  ],
+  "bytecode_version": 12,
+  "request_ABI": 10,
+  "APP_ABI": 6,
+  "program_sources_and_algorithm_unchanged": true,
+  "file_cache_recompile_required": false,
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM"
+  },
+  "scenario": "Uninstrumented VM ordinary A/B/A, four searches per stage, active USB Screen; baseline includes the runtime profiler but no dense VM opcode probes.",
+  "workload": "Unchanged installed Turochamp, book off, level 2, maximum depth 8; every search e2-e3 / 420 nodes.",
+  "stages": {
+    "baseline": {
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-scalar-20261017.VXUUoK/hardware-render/images/baseline.bin",
+        "bytes": 376308,
+        "footer": 374596,
+        "build": "DF1FEB64",
+        "sha256": "3e15325f18b475283ddbfc7f4673d2bba9b5ba8f3be2c6eb0f78117240e209ff",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-span-20261017.nWNYmE/ordinary/resident.bin"
+      },
+      "all_seconds": [
+        45.90543924999656,
+        31.134946041041985,
+        29.963578124996275,
+        29.878071125014685
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 29.92082462500548,
+      "steady_NOR_reads": [
+        1399,
+        1399
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13243,
+          "sha256": "6f73436c6f72e2793f95e732d01292bccb8269f80f7d5a5387e3462b977aec66"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    },
+    "candidate": {
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-scalar-20261017.VXUUoK/hardware-render/images/candidate.bin",
+        "bytes": 376580,
+        "footer": 374868,
+        "build": "2C7F9D70",
+        "sha256": "e7507f3727405f4d678619df408046643a2c6f791223df070bbca6f52a12a697",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-scalar-20261017.VXUUoK/render/ordinary/resident.bin"
+      },
+      "all_seconds": [
+        43.675198458950035,
+        28.806807332963217,
+        27.64092733396683,
+        27.55742716701934
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 27.599177250493085,
+      "steady_NOR_reads": [
+        1399,
+        1399
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13250,
+          "sha256": "81dba25f574db5be578af6b2315eb83ce4e9bb61d62453d3b522b916acdbe403"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    },
+    "control": {
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/.build/vm-scalar-20261017.VXUUoK/hardware-render/images/baseline.bin",
+        "bytes": 376308,
+        "footer": 374596,
+        "build": "DF1FEB64",
+        "sha256": "3e15325f18b475283ddbfc7f4673d2bba9b5ba8f3be2c6eb0f78117240e209ff",
+        "source": "/Users/bolk/Projects/MK61S_MINI/.build/vm-span-20261017.nWNYmE/ordinary/resident.bin"
+      },
+      "all_seconds": [
+        45.99501641700044,
+        31.14186700002756,
+        29.959598291956354,
+        29.880409666977357
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 29.920003979466856,
+      "steady_NOR_reads": [
+        1409,
+        1409
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13243,
+          "sha256": "6f73436c6f72e2793f95e732d01292bccb8269f80f7d5a5387e3462b977aec66"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    }
+  },
+  "ordinary_reference_seconds": 29.920414302236168,
+  "candidate_seconds": 27.599177250493085,
+  "elapsed_reduction_percent": 7.758037800865614,
+  "speedup": 1.0841052988889954,
+  "control_drift_percent": -0.002742723667914504,
+  "cold_reference_seconds": 45.9502278334985,
+  "cold_candidate_seconds": 43.675198458950035,
+  "cold_elapsed_reduction_percent": 4.951073110653725,
+  "steady_filter": "Non-first search, exactly 3 ZX0 decodes, zero NOR writes/erases; retain every cold and partial-warm observation.",
+  "attribution": "Combined push and raster change; A/B/A does not isolate their individual contributions. USB raster benefit applies with active USB Screen, not necessarily standalone operation.",
+  "diagnostic_profiles": {
+    "profile": {
+      "raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-profile/report.json",
+      "raw_sha256": "7a7d95315716180b984afb902a9734de0b61bb34a7845672262d63c2a0cd5c03",
+      "sample_index": 2,
+      "instrumented_elapsed_seconds": 48.26209870900493,
+      "rows": {
+        "constants": {
+          "calls": 586878,
+          "total_cycles": 107383639,
+          "total_seconds": 1.1185795729166668
+        },
+        "LOAD": {
+          "calls": 228137,
+          "total_cycles": 54196228,
+          "total_seconds": 0.5645440416666667
+        },
+        "arrays": {
+          "calls": 619720,
+          "total_cycles": 157746651,
+          "total_seconds": 1.64319428125
+        },
+        "predicates": {
+          "calls": 381930,
+          "total_cycles": 89686652,
+          "total_seconds": 0.9342359583333333
+        },
+        "control": {
+          "calls": 210727,
+          "total_cycles": 59683635,
+          "total_seconds": 0.62170453125
+        },
+        "STORE/update": {
+          "calls": 184460,
+          "total_cycles": 36464481,
+          "total_seconds": 0.37983834375
+        },
+        "LINE": {
+          "calls": 754299,
+          "total_cycles": 31144917,
+          "total_seconds": 0.32442621875
+        },
+        "other bodies": {
+          "calls": 368162,
+          "total_cycles": 447414130,
+          "total_seconds": 4.660563854166667
+        },
+        "fused": {
+          "calls": 3179669,
+          "total_cycles": 515176488,
+          "total_seconds": 5.36642175
+        }
+      }
+    },
+    "header": {
+      "raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-header/report.json",
+      "raw_sha256": "b2e51950e3e379a6ab8f156ebf734339ea5181512cd33cf237a87575c49688e8",
+      "sample_index": 2,
+      "instrumented_elapsed_seconds": 68.8901652499917,
+      "rows": {
+        "boundary/fetch excluding services": {
+          "calls": 3845674,
+          "total_cycles": 348968829,
+          "total_seconds": 3.63509196875
+        },
+        "decoder including LINE/small constants": {
+          "calls": 3845674,
+          "total_cycles": 345273883,
+          "total_seconds": 3.596602947916667
+        },
+        "FUNCTION": {
+          "calls": 59275,
+          "total_cycles": 16914887,
+          "total_seconds": 0.17619673958333334
+        },
+        "arithmetic": {
+          "calls": 335010,
+          "total_cycles": 87895801,
+          "total_seconds": 0.9155812604166667
+        },
+        "references": {
+          "calls": 21370,
+          "total_cycles": 27870376,
+          "total_seconds": 0.2903164166666667
+        },
+        "HALT/IO": {
+          "calls": 19550,
+          "total_cycles": 286478599,
+          "total_seconds": 2.984152072916667
+        },
+        "scalar data": {
+          "calls": 1184050,
+          "total_cycles": 216232485,
+          "total_seconds": 2.25242171875
+        },
+        "control": {
+          "calls": 468070,
+          "total_cycles": 83118839,
+          "total_seconds": 0.8658212395833333
+        },
+        "fused": {
+          "calls": 693492,
+          "total_cycles": 449627511,
+          "total_seconds": 4.68361990625
+        }
+      },
+      "integer_arithmetic": {
+        "calls": 332236,
+        "total_arithmetic_calls": 335010,
+        "percent": 99.17196501596968
+      }
+    },
+    "io2": {
+      "raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-io2/report.json",
+      "raw_sha256": "0d8798f6fdaeb5f9a45118e70adc1192970bb3e964d3c0e5e1fb935a0a492d9b",
+      "sample_index": 2,
+      "instrumented_elapsed_seconds": 35.309485082980245,
+      "rows": {
+        "HALT": {
+          "calls": 11303,
+          "total_cycles": 12752884,
+          "total_seconds": 0.13284254166666667
+        },
+        "PRINT_BEGIN": {
+          "calls": 2226,
+          "total_cycles": 1089206,
+          "total_seconds": 0.011345895833333333
+        },
+        "PRINT_TEXT/RESOURCE": {
+          "calls": 1850,
+          "total_cycles": 897084,
+          "total_seconds": 0.009344625
+        },
+        "PRINT_END": {
+          "calls": 2226,
+          "total_cycles": 257589632,
+          "total_seconds": 2.683225333333333
+        },
+        "PRINT_FLUSH": {
+          "calls": 0,
+          "total_cycles": 0,
+          "total_seconds": 0.0
+        },
+        "CLEAR": {
+          "calls": 22,
+          "total_cycles": 27325738,
+          "total_seconds": 0.28464310416666666
+        },
+        "PRINT_NUMBER/FORMAT": {
+          "calls": 422,
+          "total_cycles": 981965,
+          "total_seconds": 0.010228802083333334
+        },
+        "separator/precision/position/INPUT/WAIT/key": {
+          "calls": 2251,
+          "total_cycles": 16031869,
+          "total_seconds": 0.16699863541666668
+        },
+        "unused": {
+          "calls": 0,
+          "total_cycles": 0,
+          "total_seconds": 0.0
+        }
+      }
+    }
+  },
+  "first_candidate_ABA": {
+    "raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-timing/report.json",
+    "ordinary_reference_seconds": 29.918598593998468,
+    "candidate_seconds": 29.64739768751315,
+    "elapsed_reduction_percent": 0.906462599286717,
+    "all_seconds": {
+      "baseline": [
+        45.885191250010394,
+        31.127722207980696,
+        29.95864220801741,
+        29.87909620901337
+      ],
+      "candidate": [
+        45.78310699999565,
+        30.866463415964972,
+        29.689966042002197,
+        29.6048293330241
+      ],
+      "control": [
+        45.900862624985166,
+        31.128228040994145,
+        29.957537833950482,
+        29.87911812501261
+      ]
+    },
+    "firmware": "E3E40CDF",
+    "source_diff_sha256": "bed353d55ff0e2e5af1b17f9a65ed62aaf6d4eafa543d9a2fc424e437cf1a650",
+    "interpretation": "Compact push plus normal text row raster only. Turochamp FMK activates the UI renderer, so this does not measure the final UI-page optimization."
+  },
+  "diagnostic_caveat": "Dense DWT probes perturb elapsed time. Rows from different diagnostic builds are not a decomposition of the ordinary search, and are not compared as speedups.",
+  "finding": "PRINT_END/rasterization, not HALT teardown, was the most expensive measured individual scalar handler family; arithmetic was overwhelmingly integer but not the largest remaining handler cost.",
+  "excluded_measurement": "hardware-io used an ignored split-builder source override. It passed correctness/recovery but is excluded from IO attribution; hardware-io2 used the verified isolated source tree.",
+  "system_apps": {
+    "LANGVM.APP": {
+      "before": {
+        "image": 19432,
+        "loaded": 19452,
+        "stored_file": 13243,
+        "sha256": "6f73436c6f72e2793f95e732d01292bccb8269f80f7d5a5387e3462b977aec66"
+      },
+      "after": {
+        "image": 19432,
+        "loaded": 19452,
+        "stored_file": 13250,
+        "sha256": "81dba25f574db5be578af6b2315eb83ce4e9bb61d62453d3b522b916acdbe403"
+      }
+    },
+    "LANGIN.APP": {
+      "before": {
+        "image": 15696,
+        "loaded": 15712,
+        "stored_file": 11946,
+        "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+      },
+      "after": {
+        "image": 15696,
+        "loaded": 15712,
+        "stored_file": 11946,
+        "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+      }
+    },
+    "BASIC.APP": {
+      "before": {
+        "image": 19708,
+        "loaded": 19760,
+        "stored_file": 14198,
+        "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+      },
+      "after": {
+        "image": 19708,
+        "loaded": 19760,
+        "stored_file": 14198,
+        "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+      }
+    },
+    "FOCAL.APP": {
+      "before": {
+        "image": 19520,
+        "loaded": 19548,
+        "stored_file": 14366,
+        "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+      },
+      "after": {
+        "image": 19520,
+        "loaded": 19548,
+        "stored_file": 14366,
+        "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+      }
+    },
+    "VMCache/VMSTORE.APP": {
+      "before": {
+        "image": 9119,
+        "loaded": 9132,
+        "stored_file": 7340,
+        "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+      },
+      "after": {
+        "image": 9119,
+        "loaded": 9132,
+        "stored_file": 7340,
+        "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+      }
+    }
+  },
+  "resources": {
+    "F411_LIBM": {
+      "before_flash": 376308,
+      "after_flash": 376580,
+      "flash_delta": 272,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "actual_flash_headroom": 147708,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120,
+      "sha256": "e7507f3727405f4d678619df408046643a2c6f791223df070bbca6f52a12a697"
+    },
+    "F411_CORE": {
+      "before_flash": 366628,
+      "after_flash": 366900,
+      "flash_delta": 272,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "actual_flash_headroom": 157388,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120,
+      "sha256": "42e26822907a66609bd6f3f28f24de5a67a9e2c52455801ff09dd61e6c48b4bf"
+    },
+    "F401_Classic_CORE": {
+      "before_flash": 255484,
+      "after_flash": 255484,
+      "flash_delta": 0,
+      "before_global_RAM": 30644,
+      "after_global_RAM": 30644,
+      "minimum_flash_headroom": 4096,
+      "actual_flash_headroom": 6660,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048,
+      "sha256": "6e99af465ec9947c6a0fa2a9cc1e445de284e7b67cdcef7a864d7d540f01d795"
+    },
+    "F401_WS_CORE": {
+      "before_flash": 227040,
+      "after_flash": 227036,
+      "flash_delta": -4,
+      "before_global_RAM": 27236,
+      "after_global_RAM": 27236,
+      "minimum_flash_headroom": 8192,
+      "actual_flash_headroom": 35108,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048,
+      "sha256": "d6d600f8efd6102026209d7d638a2f45586f5292660f0a08e8d41d9180bc18c5"
+    }
+  },
+  "limits": {
+    "final_unchanged": true,
+    "hot_LANGVM_loaded": 19456,
+    "APP_format_ceiling": 20480,
+    "VM_cache": 32768,
+    "hardware_stack_budget": 16384
+  },
+  "tests": {
+    "exact_baseline_differential_cases_per_backend": 140072,
+    "ordinary_ABA_searches": 24,
+    "final_ABA_KBD_overflow_and_SPI_DMA_errors": "zero on all 12 searches",
+    "new_value_stack_cases_per_backend": 20028,
+    "service_before_fetch_ordering": "PASS",
+    "VM_BASIC_FOCAL_ASan_UBSan": "PASS",
+    "actual_CORE_math_and_packed_native_AMK": "PASS",
+    "arithmetic_backends": [
+      0,
+      1
+    ],
+    "ARM_total_instruction_comparisons": {
+      "0": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.0037080595986307,
+          "instruction_change_percent": -0.3694360689016962,
+          "total_instruction_change_percent": -0.3694360689016962,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1.0232250900884692,
+          "instruction_change_percent": -2.269792865073428,
+          "total_instruction_change_percent": -2.269792865073428,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1.0275922267652868,
+          "instruction_change_percent": -2.685133854325006,
+          "total_instruction_change_percent": -2.685133854325006,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1.0001119357737405,
+          "instruction_change_percent": -0.011192324552544708,
+          "total_instruction_change_percent": -0.011192324552544708,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1.0220212357213863,
+          "instruction_change_percent": -2.1546749667919363,
+          "total_instruction_change_percent": -2.1546749667919363,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1.025166034652532,
+          "instruction_change_percent": -2.4548252479962063,
+          "total_instruction_change_percent": -2.4548252479962063,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.010821121604339,
+          "instruction_change_percent": -1.070527848405478,
+          "total_instruction_change_percent": -1.070527848405478,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0097615481626123,
+          "instruction_change_percent": -0.9667181504756983,
+          "total_instruction_change_percent": -0.9667181504756983,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1.0129638004468413,
+          "instruction_change_percent": -1.2797891139962547,
+          "total_instruction_change_percent": -1.2797891139962547,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1.0139043830549277,
+          "instruction_change_percent": -1.371370248250947,
+          "total_instruction_change_percent": -1.371370248250947,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1.0001818172635493,
+          "instruction_change_percent": -0.018178421204118056,
+          "total_instruction_change_percent": -0.018178421204118056,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.0070052234397,
+          "instruction_change_percent": -0.6956491661256559,
+          "total_instruction_change_percent": -0.6956491661256559,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1.0017211703958693,
+          "instruction_change_percent": -0.1718213058419238,
+          "total_instruction_change_percent": -0.1718213058419238,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1.0189428799634392,
+          "instruction_change_percent": -1.8590718219767988,
+          "total_instruction_change_percent": -1.8590718219767988,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1.0001095273590215,
+          "instruction_change_percent": -0.010951536409298246,
+          "total_instruction_change_percent": -0.010951536409298246,
+          "image_delta": 0
+        }
+      },
+      "1": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.0037080595986307,
+          "instruction_change_percent": -0.3694360689016962,
+          "total_instruction_change_percent": -0.3694360689016962,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1.0232250900884692,
+          "instruction_change_percent": -2.269792865073428,
+          "total_instruction_change_percent": -2.269792865073428,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1.0275922267652868,
+          "instruction_change_percent": -2.685133854325006,
+          "total_instruction_change_percent": -2.685133854325006,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1.0001119357737405,
+          "instruction_change_percent": -0.011192324552544708,
+          "total_instruction_change_percent": -0.011192324552544708,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1.0220212357213863,
+          "instruction_change_percent": -2.1546749667919363,
+          "total_instruction_change_percent": -2.1546749667919363,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1.025166034652532,
+          "instruction_change_percent": -2.4548252479962063,
+          "total_instruction_change_percent": -2.4548252479962063,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.010821121604339,
+          "instruction_change_percent": -1.070527848405478,
+          "total_instruction_change_percent": -1.070527848405478,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0097615481626123,
+          "instruction_change_percent": -0.9667181504756983,
+          "total_instruction_change_percent": -0.9667181504756983,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1.0129638004468413,
+          "instruction_change_percent": -1.2797891139962547,
+          "total_instruction_change_percent": -1.2797891139962547,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1.0139043830549277,
+          "instruction_change_percent": -1.371370248250947,
+          "total_instruction_change_percent": -1.371370248250947,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1.0001818172635493,
+          "instruction_change_percent": -0.018178421204118056,
+          "total_instruction_change_percent": -0.018178421204118056,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.0070052234397,
+          "instruction_change_percent": -0.6956491661256559,
+          "total_instruction_change_percent": -0.6956491661256559,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1.0017211703958693,
+          "instruction_change_percent": -0.1718213058419238,
+          "total_instruction_change_percent": -0.1718213058419238,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1.0189428799634392,
+          "instruction_change_percent": -1.8590718219767988,
+          "total_instruction_change_percent": -1.8590718219767988,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1.0001095273590215,
+          "instruction_change_percent": -0.010951536409298246,
+          "total_instruction_change_percent": -0.010951536409298246,
+          "image_delta": 0
+        }
+      }
+    },
+    "ARM_note": "Instruction counts, not Cortex cycles; no IO/loading in this gate.",
+    "ARM_APP_overlay_poisoned_INPUT_relocation": "PASS",
+    "file_cache": "PASS",
+    "opcode_profile_configs": "PASS",
+    "Turochamp_interpreter_and_VM_rules_search_perft": "PASS",
+    "USB_surface_ASan_UBSan_exact_frame_comparisons": 29952,
+    "display_fonts_and_external_Turochamp_FMK": "PASS",
+    "retained_BASIC_graphics": "PASS",
+    "UI_display_and_disk_exclusion": "PASS",
+    "native_four_profile_build_and_memory_gates": "PASS",
+    "legacy_cold_USB_ARM_harness": "NOT_APPLICABLE: expects Arduino millis symbol absent in native GCC ELF; no production change made to bypass this."
+  },
+  "PoCs": [
+    {
+      "name": "forced inline push+pop",
+      "outcome": "Rejected: ARM instruction counts regressed; estimated loaded APP also exceeded the default 20 KiB package/loader ceiling. No hardware speed claim.",
+      "estimated_loaded": 21116
+    },
+    {
+      "name": "forced inline push only",
+      "loaded": 20324,
+      "outcome": "Built within default APP format ceiling, above hot cap; no measured hardware speed claim."
+    },
+    {
+      "name": "cached next opcode with service re-fetch",
+      "loaded": 19492,
+      "outcome": "Exact state differential passed, but ARM basic_integer regressed 0.978%; reverted."
+    },
+    {
+      "name": "event result avoids boxing unused notifications",
+      "loaded": 19460,
+      "outcome": "Exact state differential and VM tests passed; deferred without hardware performance claim, not shipped."
+    }
+  ],
+  "original_firmware": {
+    "build": "122A5FF9",
+    "bytes": 360564,
+    "sha256": "059bff2d4d2aba948ba75ba382f52c4c7593439156be6ec045d674002f7db1da"
+  },
+  "recovery": {
+    "status": "PASS",
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_files": 116,
+    "original_directories": 24
+  },
+  "all_hardware_pass_recoveries": {
+    "ordinary_ABA": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    },
+    "profile": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    },
+    "header": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    },
+    "io2": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    },
+    "excluded_misconfigured_IO_attempt": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    },
+    "first_candidate_ABA": {
+      "status": "PASS",
+      "restored": true,
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "serial_closed": true,
+      "mini_touched": false,
+      "original_files": 116,
+      "original_directories": 24
+    }
+  },
+  "additional_graphics_gate": {
+    "status": "NOT_PASSED_ON_BASELINE",
+    "baseline_firmware": "DF1FEB64",
+    "candidate_was_not_tested": true,
+    "failure": "The optional Graphics.tbi oracle got Open failed on the unchanged baseline; no page arrived.",
+    "raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-aba/graphics-baseline/result.json",
+    "firmware_files_state_restored": true,
+    "resolution": "Kept as a separate failed qualification, not called PASS or attributed to the candidate. Ordinary chess A/B/A reran separately with unchanged correctness and memory gates."
+  },
+  "ordinary_raw_report": ".build/vm-scalar-20261017.VXUUoK/hardware-render/report.json",
+  "ordinary_raw_sha256": "89cecf78a94a951a0e9f50d6e812700cc454199a9c1a65a888ca1b533c3f8f19",
+  "board_normalized_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "source_sha256": {
+    "code/language_vm.cpp": "47d0144afb56b16642734910d976a39367f4d327fb8429d85dcf561856f1f8eb",
+    "code/usb_screen_surface.cpp": "831e098dd2ff6f3ae965c721d1722ea76aecd912264c0fe2e5c33fc993c31328",
+    "code/usb_screen_surface.hpp": "840b9b70ce45a7f273c555372435babed1efad3f388572752532f3799ad80865",
+    "code/ui_text_renderer.cpp": "d54785412b22fe4d22829e2f2c64cefe75e187862beeb6f864689d81c0812814",
+    "code/ui_text_renderer.hpp": "92e2b81908800af646b2a1ab9096284280402887c961c64c34aeb96d434c0da6",
+    "tests/language_vm_scalar_self_test.cpp": "fe6fc4ae58e25d4cdd43f10eb13189982ac43a29801ca82a80d50ea73e8a8336",
+    "tests/run_language_vm_tests.sh": "453d5423f8b45d9ad5b3bc5c39de17bb726430f75ebfd3322015849118873bcc",
+    "tests/usb_screen_surface_self_test.cpp": "b4947f034cfc079be0fa3fc7eb14de7b64fb7b370dbf586615a1acc0c49c1601",
+    "tests/run_usb_screen_surface_tests.sh": "6cad8f7c7c7c52f6b27612ec82c91fa6f7418fa19f36fe34e1d0c3805312584e"
+  },
+  "next_candidates": [
+    "Profile common fetch/decode with a less perturbing sampler; cached-fetch prototype was already a regression.",
+    "If PRINT still dominates, profile glyph lookup/decode and horizontal damage within the remaining UI pages before adding any glyph cache. Do not reduce keyboard/USB service frequency."
+  ]
+}

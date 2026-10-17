@@ -19,6 +19,7 @@ fi
 clang++ -std=c++17 -Wall -Wextra -Werror \
   "${sanitizer_flags[@]}" \
   -DARDUINO=100 \
+  -DMK61_USB_SCREEN_SURFACE_TEST=1 \
   -DMK61_ENABLE_USB_SCREEN=1 \
   "${panel_flags[@]}" \
   -DMK61_FIXED_CALCULATOR_FACE=0 \

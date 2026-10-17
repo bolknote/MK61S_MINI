@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <initializer_list>
 
 namespace {
 
@@ -391,6 +392,80 @@ static void test_disk_activity_overlay(void) {
   assert(ink(surface) == 0); // no stale indicator on the next USB session
 }
 
+static void test_row_damage_matches_full_raster() {
+  // The reference always takes the historical full-frame path. Include
+  // cursor/overlay ownership, geometry, custom glyphs and batched writes.
+#if MK61_PROPORTIONAL_UI_FONTS
+  constexpr unsigned styles=6;
+#else
+  constexpr unsigned styles=1;
+#endif
+  for(usb_screen::TextProfile profile:{usb_screen::profile5x8(),
+      usb_screen::profile3x5(),usb_screen::TextProfile{9,7,7,0}})
+      for(unsigned style=0;style<styles;++style) {
+    u8 actual_pixels[usb_screen::FRAME_BYTES],reference_pixels[usb_screen::FRAME_BYTES];
+    memset(actual_pixels,0x5A,sizeof(actual_pixels));
+    memset(reference_pixels,0xA5,sizeof(reference_pixels));
+    TEST_SURFACE(actual,actual_pixels);TEST_SURFACE(reference,reference_pixels);
+    actual.begin(profile);reference.begin(profile);
+#if MK61_PROPORTIONAL_UI_FONTS
+    actual.setTextLayout(profile,26);reference.setTextLayout(profile,26);
+    u8 font_data[27]={};auto font=narrowFont(font_data);
+    const ui_font::Face face={ui_font::Family::PIXEL,ui_font::Size::PX14};
+    actual.setUiTextStyle(style!=0,style>1,style==3,style==4,face);
+    reference.setUiTextStyle(style!=0,style>1,style==3,style==4,face);
+    if(style==5){actual.setFont(&font);reference.setFont(&font);}
+#endif
+    u32 random=0x61F411U,now=0;
+    auto next=[&](){random^=random<<13;random^=random>>17;random^=random<<5;return random;};
+    for(unsigned n=0;n<768;++n) {
+      const u32 a=next(),b=next();const u8 x=(u8)(a%actual.cols()),y=(u8)(b%actual.rows());
+      switch(n%16) {
+        case 0:actual.setCursor(x,y);reference.setCursor(x,y);break;
+        case 1:actual.writeCodepoint((u16)(0x410+a%32));reference.writeCodepoint((u16)(0x410+a%32));break;
+        case 2:actual.writeByte((u8)('A'+a%26));reference.writeByte((u8)('A'+a%26));break;
+        case 3:{u8 glyph[8];for(u8& row:glyph)row=(u8)(next()&31);
+          actual.createChar((u8)(a%8),glyph);reference.createChar((u8)(a%8),glyph);break;}
+        case 4:actual.writeByte((u8)(a%8));reference.writeByte((u8)(a%8));break;
+        case 5:actual.clearCustomChar((u8)(a%8));reference.clearCustomChar((u8)(a%8));break;
+        case 6:if(a&1){actual.cursorOn();reference.cursorOn();}else{actual.cursorOff();reference.cursorOff();}break;
+        case 7:if(a&1){actual.blinkOn(now);reference.blinkOn(now);}else{actual.blinkOff();reference.blinkOff();}break;
+        case 8:{u32 rows[13];for(unsigned k=0;k<13;++k)rows[k]=k&1?a:b;
+          assert(actual.showTopRightOverlay(rows,13,13,1));
+          assert(reference.showTopRightOverlay(rows,13,13,1));break;}
+        case 9:actual.hideTopRightOverlay();reference.hideTopRightOverlay();break;
+        case 10:actual.setDiskActivity((u8)(a%3));reference.setDiskActivity((u8)(a%3));break;
+        case 11:actual.beginUpdate();reference.beginUpdate();
+          actual.writeByte('X');reference.writeByte('X');
+          actual.flush(now);reference.flush(now);
+          assert(memcmp(actual_pixels,reference_pixels,sizeof(actual_pixels))==0);
+          actual.endUpdate();reference.endUpdate();break;
+        case 12:actual.writeByte('\n');reference.writeByte('\n');break;
+        case 13:if(a&1){actual.clear();reference.clear();}else{
+#if MK61_SHARED_SCREEN_GRID
+          const u8 rows=(u8)(1+a%actual.rows()),cols=(u8)(16+b%32);
+          actual_grid.reshape(rows,cols);reference_grid.reshape(rows,cols);
+#else
+          actual.setTextProfile(profile);reference.setTextProfile(profile);
+#endif
+        }break;
+        case 14:
+#if MK61_PROPORTIONAL_UI_FONTS
+          actual.setFont(a&1?&font:nullptr);reference.setFont(a&1?&font:nullptr);
+#endif
+          break;
+        default:for(unsigned k=0;k<48;++k){actual.writeByte(' ');reference.writeByte(' ');}break;
+      }
+      now+=17;
+      reference.forceFullRasterForTest();actual.flush(now);reference.flush(now);
+      if(memcmp(actual_pixels,reference_pixels,sizeof(actual_pixels))) {
+        fprintf(stderr,"row raster mismatch n=%u style=%u profile=%u/%u/%u\n",n,style,profile.rows,profile.glyph_width,profile.glyph_height);
+        assert(false);
+      }
+    }
+  }
+}
+
 } // безымянное пространство имён
 
 #if MK61_SHARED_SCREEN_GRID
@@ -428,6 +503,7 @@ int main(void) {
   test_update_batching();
   test_noop_updates_do_not_render();
   test_disk_activity_overlay();
+  test_row_damage_matches_full_raster();
   printf("usb_screen_surface_self_test: ok\n");
   return 0;
 }

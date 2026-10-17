@@ -139,6 +139,9 @@ class Surface {
 
     const u8* framebuffer(void) const { return framebuffer_; }
     u32 revision(void) const { return revision_; }
+#if defined(MK61_USB_SCREEN_SURFACE_TEST)
+    void forceFullRasterForTest() { markDirty(); }
+#endif
 
   private:
 #if MK61_DISK_ACTIVITY_SUPPORTED
@@ -202,7 +205,7 @@ class Surface {
     void drawCursor(u8 cell_x, u8 cell_width, u8 row, bool block);
     void drawOverlay(void);
 #if MK61_PROPORTIONAL_UI_FONTS
-    void renderUi(void);
+    void renderUi(bool full);
 #endif
 };
 

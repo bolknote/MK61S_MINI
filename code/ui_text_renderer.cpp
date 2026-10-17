@@ -200,6 +200,24 @@ u8 glyphAdvance(const Style& style, u16 value, bool custom) {
       ? resolved.glyph.advance : 6U;
 }
 
+u8 dirtyPages(const text_screen::Grid& grid, const Style& style) {
+  const LineMetrics metrics = lineMetrics(style, grid.rows());
+  u8 pages = 0;
+  for(u8 row = 0; row < grid.rows(); ++row) {
+    if(!grid.dirtyMask(row)) continue;
+    const i16 top = metrics.first_top +
+        (i16) row * (metrics.height + metrics.line_gap);
+    for(u8 page = 0; page < 8U; ++page) {
+      const i16 page_y = (i16) page * PAGE_HEIGHT;
+      // Keep precisely the same line clipping as renderPage(). A whole
+      // page is repainted, including any neighbouring line sharing it.
+      if(top < page_y + PAGE_HEIGHT && top + metrics.height > page_y)
+        pages |= (u8) 1U << page;
+    }
+  }
+  return pages;
+}
+
 void renderPage(const text_screen::Grid& grid, const Style& style,
                 u8 page, u8 first_col, u8 count, u8* output) {
   if(output == NULL || page >= 8U || count == 0 || first_col >= 16U ||

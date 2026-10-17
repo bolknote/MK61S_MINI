@@ -39,6 +39,10 @@ struct Style {
 // for fixed, proportional and external faces.
 u8 glyphAdvance(const Style& style, u16 value, bool custom = false);
 
+// Pages intersecting damaged text rows. Geometry/style changes still need
+// full invalidation by the owner; no glyphs or pixels are decoded here.
+u8 dirtyPages(const text_screen::Grid& grid, const Style& style);
+
 void renderPage(const text_screen::Grid& grid, const Style& style,
                 u8 page, u8 first_col, u8 count, u8* output);
 

@@ -259,28 +259,28 @@ void Surface::writeByte(u8 value) {
   if(value == '\r') return;
   const u8 old_x = grid_.cursorX();
   const u8 old_y = grid_.cursorY();
-  bool content_changed = false;
   if(value == '\n') grid_.newline();
   else if(value < CUSTOM_GLYPHS && custom_valid_[value]) {
-    content_changed = grid_.writeByte(value);
+    grid_.writeByte(value);
   } else {
-    content_changed = grid_.writeCodepoint(value);
+    grid_.writeCodepoint(value);
   }
   const bool cursor_changed = old_x != grid_.cursorX() ||
                               old_y != grid_.cursorY();
-  if(content_changed || (cursorVisible() && cursor_changed)) markDirty();
+  // Grid writes already retain row damage. Only a visible cursor move needs
+  // a full redraw: its old and new cells may belong to different rows.
+  if(cursorVisible() && cursor_changed) markDirty();
 }
 
 void Surface::writeCodepoint(u16 codepoint) {
   if(!active_ || codepoint == '\r') return;
   const u8 old_x = grid_.cursorX();
   const u8 old_y = grid_.cursorY();
-  bool content_changed = false;
   if(codepoint == '\n') grid_.newline();
-  else content_changed = grid_.writeCodepoint(codepoint);
+  else grid_.writeCodepoint(codepoint);
   const bool cursor_changed = old_x != grid_.cursorX() ||
                               old_y != grid_.cursorY();
-  if(content_changed || (cursorVisible() && cursor_changed)) markDirty();
+  if(cursorVisible() && cursor_changed) markDirty();
 }
 
 #if MK61_FIXED_CALCULATOR_FACE
@@ -555,6 +555,11 @@ void Surface::flush(t_time_ms now) {
   if(!active_ || update_depth_ != 0 || fullscreen_bitmap_active_) return;
   updateCursorBlink(now);
   if(!dirty_ && !grid_.anyDirty()) return;
+#if MK61_DISK_ACTIVITY_SUPPORTED
+  // The retained bitmap includes a save-under icon. Restore the text before
+  // updating only damaged rows, then capture the new background below.
+  disk_overlay_.restore(framebuffer_);
+#endif
   render();
 #if MK61_DISK_ACTIVITY_SUPPORTED
   disk_overlay_.composeFrame(framebuffer_);
@@ -772,13 +777,21 @@ void Surface::render(void) {
     return;
   }
 #endif
+  bool full=dirty_;
+  if(!full) {
+    // Shared-grid reshapes invalidate every row, including pixels which
+    // belonged to the previous geometry. Do not retain those old gutters.
+    full=true;
+    for(u8 row=0;row<grid_.rows();++row)
+      if(!grid_.dirtyMask(row)){full=false;break;}
+  }
 #if MK61_PROPORTIONAL_UI_FONTS
   if(ui_text_active_) {
-    renderUi();
+    renderUi(full);
     return;
   }
 #endif
-  clearPixels();
+  if(full)clearPixels();
   const bool wide_text = grid_.cols() > COLS;
   u8 cell_width = CELL_WIDTH;
   if(wide_text) {
@@ -789,6 +802,10 @@ void Surface::render(void) {
   }
   const u8 left_margin = wide_text ? 2U : 0U;
   for(u8 row = 0; row < grid_.rows(); row++) {
+    if(!full) {
+      if(!grid_.dirtyMask(row))continue;
+      fillRect(0,rowTop(row),WIDTH,rowPitch(row),false);
+    }
     for(u8 col = 0; col < grid_.cols(); col++) {
       const u16 cell_x = (u16) left_margin + (u16) col * cell_width;
       if(cell_x >= WIDTH) break;
@@ -807,14 +824,16 @@ void Surface::render(void) {
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
-void Surface::renderUi(void) {
+void Surface::renderUi(bool full) {
   const ui_text_renderer::Style style = {
     ui_font_enabled_, ui_classic_10x16_, ui_compact_3x5_, ui_face_, font_,
     custom_glyphs_, custom_valid_,
     ui_row_gutters_, ui_row_tails_, grid_.cursorX(), grid_.cursorY(),
     cursor_underline_, cursor_blink_ && cursor_blink_phase_
   };
+  const u8 pages = full ? 0xFFU : ui_text_renderer::dirtyPages(grid_, style);
   for(u8 page = 0; page < PAGE_COUNT; ++page) {
+    if(!(pages & ((u8) 1U << page))) continue;
     ui_text_renderer::renderPage(
         grid_, style, page, 0, 16,
         framebuffer_ + (usize) page * WIDTH);

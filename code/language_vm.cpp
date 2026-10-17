@@ -725,7 +725,12 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
   Value decimal_values[8];
   uint16_t decimal_pcs[8]={0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF,0xFFFF};
   auto push = [&](Value value) {
-    if (!value.finite())
+    // The outlined push already receives both words in registers. Test the
+    // tag/exponent here, avoiding a spill and another call to finite().
+    // Shifting the high word discards the sign; NaNs and infinities are the
+    // remaining values at or above 0xFFE00000, apart from our int32 tag.
+    const uint32_t high=(uint32_t)(value.representation()>>32);
+    if (high!=Value::INTEGER_TAG && (high<<1)>=UINT32_C(0xFFE00000))
       error = Error::MATH;
     else if (s.sp >= data.stack_capacity)
       error = Error::STACK;

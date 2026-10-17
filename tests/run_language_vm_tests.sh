@@ -36,9 +36,16 @@ for variant in compact f64; do
   "$work/input-$variant"
 done
 
-# New launches must not read inactive call/loop/value slots left by a prior
-# module. Compare poisoned scratch with the historical all-zero continuation.
+# Cover scalar stack/fetch ordering under both arithmetic configurations.
+# New launches must not read inactive slots left by a prior module: compare
+# poisoned scratch with the historical all-zero continuation as well.
 for backend in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+    -DMK61_MATH_BACKEND="$backend" -I"$root/code" \
+    "$root/tests/language_vm_scalar_self_test.cpp" \
+    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" \
+    -o "$work/scalar-$backend"
+  "$work/scalar-$backend"
   clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
     -DMK61_MATH_BACKEND="$backend" \
     -I"$root/code" "$root/tests/language_vm_reset_self_test.cpp" \
