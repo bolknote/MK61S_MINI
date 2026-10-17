@@ -270,8 +270,9 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 }
 #endif
 #if MK61_VM_INTEGER_SPAN
-// Execute the existing stream while its values are int32. PC/SP stay local;
-// all stack cells survive, including inactive ones. A rejected operation is
+// Execute the existing stream while its values are int32. PC and a stack
+// cursor stay local; every write still preserves inactive cells and aliases.
+// A rejected operation is
 // left untouched for the ordinary evaluator. Its first step is already polled,
 // counted and traced. No span crosses the next service/limit/call boundary.
 __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
@@ -283,7 +284,9 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
   if(s.call_count && s.calls[s.call_count-1].end && s.calls[s.call_count-1].end<end)
     end=s.calls[s.call_count-1].end;
   uint16_t pc=instruction,last=pc;
-  unsigned sp=s.sp;
+  Value* const bottom=data.stack;
+  Value* const ceiling=bottom+data.stack_capacity;
+  Value* top=bottom+s.sp;
   uint8_t count=0;
 #if defined(LANGUAGE_VM_TRACE)
 #define SPAN_TRACE() do {if(count)trace_instruction(v,pc,steps+count);} while(false)
@@ -292,23 +295,27 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
 #endif
   while(count<budget && pc<end) {
     const Op op=(Op)v.bytes[pc];
-    const unsigned width=(unsigned)op<sizeof(wire_widths)?wire_widths[(unsigned)op]:0;
-    if(!width || width==255 || width>(unsigned)(end-pc))break;
+    // Only supported fixed-width handlers advance PC. Multi-byte handlers
+    // check their operands before reading; unsupported/variable records leave
+    // the stream untouched for the scalar decoder.
+    unsigned width=1;
     const auto* p=v.bytes+pc+1;
     Value result;
     int32_t x,y,z;
     if(op>=Op::CONST_0 && op<=Op::CONST_15) {
-      if(sp>=data.stack_capacity)break;
+      if(top>=ceiling)break;
       result=(uint8_t)op-(uint8_t)Op::CONST_0;
-      SPAN_TRACE();data.stack[sp++]=result;
+      SPAN_TRACE();*top++=result;
     } else switch(op) {
       case Op::CONST_I8: case Op::CONST_I16: case Op::CONST_I32:
-        if(sp>=data.stack_capacity)goto done;
+        width=op==Op::CONST_I8?2:op==Op::CONST_I16?3:5;
+        if(width>(unsigned)(end-pc) || top>=ceiling)goto done;
         result=op==Op::CONST_I8?(int32_t)(int8_t)*p:
             op==Op::CONST_I16?(int32_t)(int16_t)word(p):(int32_t)dword(p);
-        SPAN_TRACE();data.stack[sp++]=result;break;
+        SPAN_TRACE();*top++=result;break;
       case Op::LOAD: case Op::INTEGER_SPAN: case Op::LOAD_ARRAY_FIXED:
-        if(sp>=data.stack_capacity)goto done;
+        width=op==Op::LOAD_ARRAY_FIXED?3:2;
+        if(width>(unsigned)(end-pc) || top>=ceiling)goto done;
         if(op!=Op::LOAD_ARRAY_FIXED) {
           if(*p>=26)goto done;
           result=data.variables[*p];
@@ -318,34 +325,35 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
           result=data.array[index];
         }
         if(!result.integer())goto done;
-        SPAN_TRACE();data.stack[sp++]=result;break;
+        SPAN_TRACE();*top++=result;break;
       case Op::LOAD_ARRAY:
-        if(!sp || !data.array || !data.stack[sp-1].integer())goto done;
-        x=data.stack[sp-1].integer_value();
+        if(top==bottom || !data.array || !top[-1].integer())goto done;
+        x=top[-1].integer_value();
         if(x<0 || (uint32_t)x>=data.array_count)goto done;
         result=data.array[x];if(!result.integer())goto done;
-        SPAN_TRACE();data.stack[sp-1]=result;break;
+        SPAN_TRACE();top[-1]=result;break;
       case Op::STORE:
-        if(!sp || *p>=26)goto done;
-        SPAN_TRACE();data.variables[*p]=data.stack[--sp];break;
+        width=2;
+        if(end-pc<2 || top==bottom || *p>=26)goto done;
+        SPAN_TRACE();data.variables[*p]=*--top;break;
       case Op::STORE_ARRAY:
-        if(sp<2 || !data.array || !data.stack[sp-2].integer())goto done;
-        x=data.stack[sp-2].integer_value();
+        if((unsigned)(top-bottom)<2 || !data.array || !top[-2].integer())goto done;
+        x=top[-2].integer_value();
         if(x<0 || (uint32_t)x>=data.array_count)goto done;
-        SPAN_TRACE();data.array[x]=data.stack[sp-1];sp-=2;break;
+        SPAN_TRACE();data.array[x]=top[-1];top-=2;break;
       case Op::NEG: case Op::NOT:
-        if(!sp || !data.stack[sp-1].integer())goto done;
-        x=data.stack[sp-1].integer_value();
+        if(top==bottom || !top[-1].integer())goto done;
+        x=top[-1].integer_value();
         if(op==Op::NEG) {
           if(!x || __builtin_sub_overflow(0,x,&z))goto done;
         } else z=!x;
-        SPAN_TRACE();data.stack[sp-1]=z;break;
+        SPAN_TRACE();top[-1]=z;break;
       case Op::ADD: case Op::SUB: case Op::MUL: case Op::DIV:
       case Op::FLOOR_DIV: case Op::MOD:
       case Op::EQ: case Op::NE: case Op::LT: case Op::LE: case Op::GT: case Op::GE:
       case Op::AND: case Op::OR: case Op::XOR:
-        if(sp<2 || !data.stack[sp-2].integer() || !data.stack[sp-1].integer())goto done;
-        x=data.stack[sp-2].integer_value();y=data.stack[sp-1].integer_value();
+        if((unsigned)(top-bottom)<2 || !top[-2].integer() || !top[-1].integer())goto done;
+        x=top[-2].integer_value();y=top[-1].integer_value();
         switch(op) {
           case Op::ADD:if(__builtin_add_overflow(x,y,&z))goto done;break;
           case Op::SUB:if(__builtin_sub_overflow(x,y,&z))goto done;break;
@@ -369,14 +377,16 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
           case Op::AND:z=x && y;break;case Op::OR:z=x || y;break;
           default:z=(x!=0)!=(y!=0);break;
         }
-        SPAN_TRACE();data.stack[sp-2]=z;--sp;break;
+        SPAN_TRACE();top[-2]=z;--top;break;
       default:goto done;
     }
     last=pc;pc=(uint16_t)(pc+width);++count;
     uint16_t following=pc;
-    while(end-following>=3 && (Op)v.bytes[following]==Op::SOURCE_POS)
+    while(following<end && (Op)v.bytes[following]==Op::SOURCE_POS) {
+      if(end-following<3)goto done;
       following=(uint16_t)(following+3);
-    if(following>=end || (Op)v.bytes[following]==Op::SOURCE_POS)break;
+    }
+    if(following>=end)break;
     if(count<budget) {
       const Op next_op=(Op)v.bytes[following];
       if(next_op==Op::LINE || next_op==Op::HALT)break;
@@ -388,7 +398,7 @@ done:
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
     integer_span_applied(instruction,count);
 #endif
-    s.sp=(uint8_t)sp;s.pc=pc;instruction=last;steps+=count-1U;
+    s.sp=(uint8_t)(top-bottom);s.pc=pc;instruction=last;steps+=count-1U;
   }
 #undef SPAN_TRACE
   return count;

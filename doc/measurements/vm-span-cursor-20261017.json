@@ -1,0 +1,609 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED_SMALL_GAIN",
+  "date": "2026-10-17",
+  "baseline_revision": "d1b6290b87af85d57aec1fa59cd822f9eac29328",
+  "implementation": "integer_span uses a bounded stack cursor; fixed widths are checked by supported multi-byte handlers; SOURCE_POS lookahead is bounded and avoids repeated tests",
+  "no_register_value_cache_shipped": true,
+  "bytecode_version": 12,
+  "request_ABI": 10,
+  "APP_ABI": 6,
+  "program_sources_and_algorithm_unchanged": true,
+  "file_cache_recompile_required": false,
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM"
+  },
+  "scenario": "Fresh ordinary A/B/A, four searches at each stage, identical resident and all APPs except LANGVM",
+  "workload": "Unchanged installed Turochamp, opening book off, level 2, maximum depth 8, e2e3 and 420 nodes",
+  "stages": {
+    "baseline": {
+      "firmware": "DF1FEB64",
+      "all_seconds": [
+        46.078965083986986,
+        31.31183125003008,
+        30.1448544159648,
+        30.063675500045065
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.104264958004933,
+      "steady_NOR_reads": [
+        1399,
+        1399
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13221,
+          "sha256": "3a8452bed80223238303ea4bd1151c4467b3687e0e61f1fd4fb35647b1470481"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    },
+    "candidate": {
+      "firmware": "DF1FEB64",
+      "all_seconds": [
+        45.90528379200259,
+        31.132502333959565,
+        30.0919359169784,
+        30.000188375008292
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.046062145993346,
+      "steady_NOR_reads": [
+        1399,
+        1399
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13243,
+          "sha256": "6f73436c6f72e2793f95e732d01292bccb8269f80f7d5a5387e3462b977aec66"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    },
+    "control": {
+      "firmware": "DF1FEB64",
+      "all_seconds": [
+        46.24128770799143,
+        31.327645540994126,
+        30.150204250006936,
+        30.065559500013478
+      ],
+      "decodes": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.107881875010207,
+      "steady_NOR_reads": [
+        1409,
+        1409
+      ],
+      "stack_watermark_remaining": 9772,
+      "APPs": {
+        "LANGVM.APP": {
+          "bytes": 13221,
+          "sha256": "3a8452bed80223238303ea4bd1151c4467b3687e0e61f1fd4fb35647b1470481"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    }
+  },
+  "ordinary_reference_seconds": 30.10607341650757,
+  "candidate_seconds": 30.046062145993346,
+  "elapsed_reduction_percent": 0.19933277144444927,
+  "speedup": 1.00199730900584,
+  "control_drift_percent": 0.01201463317679341,
+  "steady_filter": "Non-first search, exactly 3 decodes, zero NOR writes and erases; retain every cold/partial-warm observation",
+  "system_apps": {
+    "LANGVM.APP": {
+      "before_image": 19336,
+      "after_image": 19432,
+      "before_loaded": 19356,
+      "after_loaded": 19452,
+      "before_stored": 13221,
+      "after_stored": 13243,
+      "sha256": "6f73436c6f72e2793f95e732d01292bccb8269f80f7d5a5387e3462b977aec66"
+    },
+    "LANGIN.APP": {
+      "before_image": 15696,
+      "after_image": 15696,
+      "before_loaded": 15712,
+      "after_loaded": 15712,
+      "before_stored": 11946,
+      "after_stored": 11946,
+      "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+    },
+    "BASIC.APP": {
+      "before_image": 19708,
+      "after_image": 19708,
+      "before_loaded": 19760,
+      "after_loaded": 19760,
+      "before_stored": 14198,
+      "after_stored": 14198,
+      "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+    },
+    "FOCAL.APP": {
+      "before_image": 19520,
+      "after_image": 19520,
+      "before_loaded": 19548,
+      "after_loaded": 19548,
+      "before_stored": 14366,
+      "after_stored": 14366,
+      "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+    },
+    "VMCache/VMSTORE.APP": {
+      "before_image": 9119,
+      "after_image": 9119,
+      "before_loaded": 9132,
+      "after_loaded": 9132,
+      "before_stored": 7340,
+      "after_stored": 7340,
+      "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+    }
+  },
+  "resources": {
+    "F411_LIBM": {
+      "before_flash": 376308,
+      "after_flash": 376308,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F411_CORE": {
+      "before_flash": 366628,
+      "after_flash": 366628,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F401_Classic_CORE": {
+      "before_flash": 255484,
+      "after_flash": 255484,
+      "before_global_RAM": 30644,
+      "after_global_RAM": 30644,
+      "minimum_flash_headroom": 4096,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    },
+    "F401_WS_CORE": {
+      "before_flash": 227036,
+      "after_flash": 227040,
+      "before_global_RAM": 27236,
+      "after_global_RAM": 27236,
+      "minimum_flash_headroom": 8192,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    }
+  },
+  "limits": {
+    "weakened": false,
+    "hot_APP": 19456,
+    "hot_APP_remaining": 4,
+    "APP_arena": 20480,
+    "hardware_stack": 16384,
+    "VM_cache": 32768,
+    "new_mutable_global_RAM": 0
+  },
+  "interpretation": "Small 0.2% chess observation, not a promise of broad or twofold device speedup; only two fully warm samples per stage. ARM instruction counts are a proxy, and the rejected pointer-only trial demonstrates the limitation",
+  "before_after_ARM_instruction_profiles": {
+    "basic_integer": {
+      "before_total": 1198841,
+      "after_total": 1071904,
+      "before_span": 811167,
+      "after_span": 684230,
+      "before_data_access": 238100,
+      "after_data_access": 195580
+    },
+    "basic_expressions": {
+      "before_total": 1185022,
+      "after_total": 1069379,
+      "before_span": 647268,
+      "after_span": 531625,
+      "before_data_access": 187851,
+      "after_data_access": 148617
+    },
+    "basic_array_abs": {
+      "before_total": 1146825,
+      "after_total": 1109734,
+      "before_span": 260350,
+      "after_span": 223259,
+      "before_data_access": 78275,
+      "after_data_access": 65463
+    },
+    "basic_mixed": {
+      "before_total": 398098,
+      "after_total": 398098,
+      "before_span": 0,
+      "after_span": 0,
+      "before_data_access": 0,
+      "after_data_access": 0
+    },
+    "focal_expressions": {
+      "before_total": 850228,
+      "after_total": 751672,
+      "before_span": 511129,
+      "after_span": 412573,
+      "before_data_access": 152458,
+      "after_data_access": 118210
+    }
+  },
+  "ARM_profiles_note": "Uninstrumented Cortex-M4 code executed in Unicorn, not device cycles; source-line attribution approximate; raw PC/mnemonic counts in artifacts",
+  "ARM_strict_gates": {
+    "0": {
+      "gate_phase": "total",
+      "target_cases": [
+        "basic_array_abs",
+        "basic_expressions",
+        "basic_integer",
+        "focal_expressions"
+      ],
+      "maximum_control_regression_percent": 0,
+      "comparisons": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.118421985550945,
+          "instruction_change_percent": -10.588309875955193,
+          "total_instruction_change_percent": -10.588309875955193,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.1081403319122594,
+          "instruction_change_percent": -9.758721779004942,
+          "total_instruction_change_percent": -9.758721779004942,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0334233248688425,
+          "instruction_change_percent": -3.2342336450635445,
+          "total_instruction_change_percent": -3.2342336450635445,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.1311156994008025,
+          "instruction_change_percent": -11.591714222537952,
+          "total_instruction_change_percent": -11.591714222537952,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        }
+      }
+    },
+    "1": {
+      "gate_phase": "total",
+      "target_cases": [
+        "basic_array_abs",
+        "basic_expressions",
+        "basic_integer",
+        "focal_expressions"
+      ],
+      "maximum_control_regression_percent": 0,
+      "comparisons": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.118421985550945,
+          "instruction_change_percent": -10.588309875955193,
+          "total_instruction_change_percent": -10.588309875955193,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.1081403319122594,
+          "instruction_change_percent": -9.758721779004942,
+          "total_instruction_change_percent": -9.758721779004942,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0334233248688425,
+          "instruction_change_percent": -3.2342336450635445,
+          "total_instruction_change_percent": -3.2342336450635445,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.1311156994008025,
+          "instruction_change_percent": -11.591714222537952,
+          "total_instruction_change_percent": -11.591714222537952,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1,
+          "instruction_change_percent": 0,
+          "total_instruction_change_percent": 0,
+          "image_delta": 0
+        }
+      }
+    }
+  },
+  "pointer_only_rejected": {
+    "A_before": 30.107881875010207,
+    "B": 30.19043737501488,
+    "A_after": 30.103385916969273,
+    "elapsed_reduction_percent": -0.28168640898951214,
+    "loaded_APP": 19364,
+    "stored_APP": 13214,
+    "raw_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-span-pointer-20261017.c2jfuA/hardware-aba/report.json",
+    "source_sha256": "22cb1a87f3f6cedb3ebaf02f26eac3b32b4ef0cf9e77aa196075875de18f12e0",
+    "note": "Compact code and fewer emulated ARM instructions did not provide the best measured chess latency; all states and controls passed"
+  },
+  "rejected_prototypes": [
+    "A suffix of already checked integer types: slower and larger than the pointer-only variant",
+    "Register cache of the top integer with exact stack write-through: valid but worse instruction counts than pointer-only",
+    "Pointer guard top < bottom+2: superseded by bounded unsigned pointer-distance guard, safe for a one-cell stack"
+  ],
+  "validation": {
+    "exact_ASan_UBSan_comparisons_per_backend": 140072,
+    "backends": [
+      "LIBM",
+      "CORE"
+    ],
+    "full_VM_BASIC_FOCAL": "PASS ASan/UBSan",
+    "real_CORE_math_engine": "PASS ASan/UBSan",
+    "file_cache": "PASS ASan/UBSan",
+    "opcode_census_matrix": "PASS ASan/UBSan",
+    "all_12_searches": "420 nodes / e2e3 / same full eight-rank board",
+    "complete_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_crc_verified": 2933,
+    "keyboard_overflows": 0,
+    "SPI_DMA_errors_and_timeouts": 0,
+    "unique_device_searches_across_both_prototypes": 20,
+    "minimum_observed_stack_watermark_remaining": 9772,
+    "actual_ARM_APP_INPUT_relocation_poison": {
+      "generation": 18,
+      "profile": "libm",
+      "poisoned_inactive_continuation": true,
+      "native_call_stack_peaks": {
+        "startup": 4096,
+        "verification": 980,
+        "program": 1416,
+        "input": 984,
+        "expression": 1216,
+        "finish": 376
+      },
+      "stress_native_call_stack_peaks": {
+        "startup": 3988,
+        "verification": 980,
+        "program": 1264,
+        "input": 3196,
+        "expression": 1216,
+        "finish": 376
+      },
+      "compiler_workspace_bytes": {
+        "BASIC": 3976,
+        "FOCAL": 1708
+      },
+      "input_image_c_stack_bytes": 0,
+      "input_image_in_value_stack": true,
+      "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+    },
+    "physical_CORE_HIL": false,
+    "poll_steps_and_service_snapshots_identical": true,
+    "note": "Same exact scalar reference tests include overflow, signed zero, fractions, alias banks, dead cells, INPUT/ESC, call boundaries, every resume PC, truncated widths, unknown opcodes and one-cell stack"
+  },
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_files": 116,
+    "original_directories": 24
+  },
+  "second_experiment_recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_files": 116,
+    "original_directories": 24
+  },
+  "source_sha256": {
+    "code/language_vm.cpp": "12434d49de7c190edda1c80dcd10259522f8eae88eb59b81ba5b47b41bb2fd1f",
+    "tests/language_vm_integer_span_self_test.cpp": "fe4e90a4de6d3877dbf9fe1c16a0984a601857f11982444e06903afad2d409ae"
+  },
+  "raw_ABA_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-span-20261017.nWNYmE/hardware-aba/report.json",
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/vm-span-20261017.nWNYmE"
+}

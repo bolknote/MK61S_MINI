@@ -234,6 +234,46 @@ int main() {
     }
     equal(fast,reference,limit);
   }
+  // Multi-byte span operations must reject every truncated operand before
+  // reading it, then retain the scalar error PC/steps and all dead cells.
+  for(Op op:{Op::CONST_I8,Op::CONST_I16,Op::CONST_I32,Op::LOAD,
+             Op::INTEGER_SPAN,Op::LOAD_ARRAY_FIXED,Op::STORE})
+      for(unsigned available=1;available<=wire_widths[(unsigned)op];++available)
+      for(unsigned limit:{0U,1U,2U,3U,31U,32U,33U}) {
+    Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+    for(Fixture* f:{&fast,&reference}) {
+      uint16_t at=f->view.code;
+      while((Op)f->image[at]!=Op::INTEGER_SPAN)at=instruction_end(f->image,f->view.end,at);
+      at=(uint16_t)(at+2);f->image[at]=(uint8_t)op;
+      std::memset(f->image+at+1,0,wire_widths[(unsigned)op]-1);
+      f->view.end=(uint16_t)(at+available);
+    }
+    equal(fast,reference,limit);
+  }
+  // Unassigned opcode bytes, including zero-width table holes, must not be
+  // consumed as one-byte span instructions or spin inside its local loop.
+  for(unsigned op=0;op<256;++op) {
+    if(op<sizeof(wire_widths) && wire_widths[op])continue;
+    for(unsigned limit:{0U,1U,2U,31U,32U,33U}) {
+      Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+      for(Fixture* f:{&fast,&reference}) {
+        uint16_t at=f->view.code;
+        while((Op)f->image[at]!=Op::INTEGER_SPAN)at=instruction_end(f->image,f->view.end,at);
+        at=(uint16_t)(at+2);f->image[at]=(uint8_t)op;f->view.end=(uint16_t)(at+1);
+      }
+      equal(fast,reference,limit);
+    }
+  }
+  // A caller may supply only one actual stack cell. Pointer guards must not
+  // form a pointer two cells past its beginning, even on an underflow path.
+  for(unsigned limit:{0U,1U,2U,3U,31U,32U,33U}) {
+    Fixture fast(basic[0],Language::BASIC,3,5),reference(basic[0],Language::BASIC,3,5);
+    Value a[1]={Value(123)},b[1]={Value(123)};
+    fast.view.stack=reference.view.stack=1;
+    fast.state.stack=a;reference.state.stack=b;
+    fast.state.stack_capacity=reference.state.stack_capacity=1;
+    equal(fast,reference,limit);assert(a[0].representation()==b[0].representation());
+  }
   assert(marked>1000 && spans>1000 && multiple>1000 && short_blocks>1000);
   std::printf("integer spans: %u exact reference comparisons; %u spans, %u multi-op, %u short blocks; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\n",comparisons,spans,multiple,short_blocks);
 }
