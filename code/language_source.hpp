@@ -20,60 +20,78 @@ class Reader {
   Input input_{};
   const char* memory_ = nullptr;
   mutable uint8_t page_[PAGE_SIZE];
-  mutable uint16_t begin_ = 0, count_ = 0;
+  mutable uint16_t begin_ = 0, end_ = 0;
   mutable bool good_ = true;
+  // Fits the old Reader's trailing padding; no additional page allocation.
+  uint16_t window_size_ = PAGE_SIZE;
+  // A span is consumed synchronously, before any subsequent cache refill.
+  const uint8_t* span(uint16_t at) const {
+    if(!good_ || at >= size()) return nullptr;
+    auto* page = memory_ ? (uint8_t*)memory_ : page_;
+    if(at < begin_ || at >= end_) {
+      // Keep the old page grid even for a wider window. Small backwards
+      // parser lookups must not force a fresh decode for every byte.
+      begin_ = uint16_t(at / PAGE_SIZE * PAGE_SIZE);
+      unsigned count = size()-begin_;
+      if(count > window_size_) count = window_size_;
+      end_ = uint16_t(begin_+count);
+      if(!input_.read(input_.context,begin_,page,uint16_t(count))) { good_=false;return nullptr; }
+    }
+    return page+(at-begin_);
+  }
 public:
-  Reader(const char* memory, uint16_t size) : input_{nullptr,nullptr,size}, memory_(memory) {
+  Reader(const char* memory, uint16_t size) : input_{nullptr,nullptr,size}, memory_(memory), end_(size) {
     good_ = memory != nullptr && size <= MAX_SIZE;
   }
   explicit Reader(Input input, void* buffer = nullptr, size_t capacity = 0) : input_(input) {
     // The caller lends otherwise-unused workspace for this reader's lifetime.
-    // A full read verifies/decompresses the source only once. Oversized files
-    // (or an unavailable loan) keep the bounded page path; I/O errors do not.
-    if(input.size <= capacity) memory_ = static_cast<const char*>(buffer);
-    good_ = input.read != nullptr && input.size <= MAX_SIZE &&
-        (!memory_ || input.read(input.context,0,static_cast<uint8_t*>(buffer),input.size));
+    // A full read verifies/decompresses a small source only once. Otherwise
+    // reuse the loan as a bounded window, not an unused full-source buffer.
+    // A missing/small loan keeps the stack page; I/O errors never fall back.
+    good_ = input.read != nullptr && input.size <= MAX_SIZE;
+    if(buffer && (input.size <= capacity || capacity > PAGE_SIZE)) {
+      memory_ = static_cast<const char*>(buffer);
+      if(input.size <= capacity) {
+        good_ = good_ && input.read(input.context,0,static_cast<uint8_t*>(buffer),input.size);
+        end_ = input.size;
+      } else window_size_ = uint16_t(capacity);
+    }
   }
   uint16_t size() const { return input_.size; }
   bool good() const { return good_; }
   bool read(uint16_t at, void* output, size_t count) const {
     if(!good_ || at > size() || count > unsigned(size()-at) || (!output && count)) return false;
-    if(memory_) { if(count) memcpy(output,memory_+at,count); return true; }
     auto* bytes = static_cast<uint8_t*>(output);
     while(count) {
-      if(at < begin_ || unsigned(at-begin_) >= count_) {
-        begin_ = uint16_t(at / PAGE_SIZE * PAGE_SIZE);
-        count_ = uint16_t(size()-begin_);
-        if(count_ > PAGE_SIZE) count_ = PAGE_SIZE;
-        if(!input_.read(input_.context,begin_,page_,count_)) { good_=false;return false; }
-      }
-      size_t n = count_-(at-begin_);
+      const auto* page = span(at);
+      if(!page) return false;
+      size_t n = end_-at;
       if(n>count) n=count;
-      memcpy(bytes,page_+(at-begin_),n);
+      memcpy(bytes,page,n);
       at=uint16_t(at+n);bytes+=n;count-=n;
     }
     return true;
   }
   char at(uint16_t position) const {
-    char value=0;
-    if(position < size()) (void)read(position,&value,1);
-    return value;
+    const auto* value = span(position);
+    return value ? char(*value) : 0;
   }
   bool contains_nul() const {
-    uint8_t bytes[64];
     for(unsigned at=0;at<size();) {
-      const unsigned n=size()-at<sizeof(bytes)?size()-at:sizeof(bytes);
-      if(!read(uint16_t(at),bytes,n) || memchr(bytes,0,n)) return true;
+      const auto* bytes=span(uint16_t(at));
+      if(!bytes) return true;
+      const unsigned n=end_-at;
+      if(memchr(bytes,0,n)) return true;
       at+=n;
     }
     return false;
   }
   uint32_t checksum() const {
     uint32_t crc=~uint32_t(0);
-    uint8_t bytes[64];
     for(unsigned at=0;at<size();) {
-      const unsigned n=size()-at<sizeof(bytes)?size()-at:sizeof(bytes);
-      if(!read(uint16_t(at),bytes,n)) return 0;
+      const auto* bytes=span(uint16_t(at));
+      if(!bytes) return 0;
+      const unsigned n=end_-at;
       for(unsigned i=0;i<n;++i) {
         crc^=bytes[i];
         for(unsigned bit=0;bit<8;++bit) crc=(crc>>1)^(0xEDB88320U & (0U-(crc&1U)));
@@ -83,11 +101,12 @@ public:
     return ~crc;
   }
   unsigned line_end(unsigned at, unsigned end) const {
-    uint8_t bytes[64];
     const unsigned start=at;
     while(at<end) {
-      unsigned n=end-at<sizeof(bytes)?end-at:sizeof(bytes);
-      if(!read(uint16_t(at),bytes,n)) return at-start;
+      const auto* bytes = span(uint16_t(at));
+      if(!bytes) return at-start;
+      unsigned n=end_-at;
+      if(n>end-at) n=end-at;
       const auto found=source_scan::line_end(bytes,n);
       at+=found;
       if(found<n) break;

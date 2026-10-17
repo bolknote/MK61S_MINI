@@ -86,10 +86,14 @@ def main():
     ap.add_argument('--no-profile', action='store_true')
     ap.add_argument('--candidate-basic', type=Path,
                     help='A/B/A compiler-only comparison; game packages must be identical')
+    ap.add_argument('--baseline-basic', type=Path,
+                    help='Explicit A/A compiler for --candidate-basic; restore the original afterwards')
     ap.add_argument('--common-basic', type=Path,
                     help='Use the same BASIC compiler in every stage, restoring the original afterwards')
     ap.add_argument('--baseline-vmstore', type=Path)
     ap.add_argument('--candidate-vmstore', type=Path)
+    ap.add_argument('--common-vmstore', type=Path,
+                    help='Use the same VMSTORE in every stage, restoring the original afterwards')
     ap.add_argument('--output-dir', type=Path, required=True)
     args = ap.parse_args()
     output = args.output_dir.resolve()
@@ -97,7 +101,9 @@ def main():
     baseline, candidate = package(args.baseline_game), package(args.candidate_game)
     assert baseline['Turochamp.FMK'] == candidate['Turochamp.FMK']
     assert not (args.candidate_basic and args.common_basic)
+    assert not args.baseline_basic or args.candidate_basic
     assert bool(args.baseline_vmstore) == bool(args.candidate_vmstore)
+    assert not (args.common_vmstore and args.candidate_vmstore)
     assert not (args.candidate_basic and args.candidate_vmstore), 'Vary only one APP'
     def checked_app(path, kind):
         from check_app_memory_elf import app_memory_size
@@ -106,9 +112,12 @@ def main():
         assert data[14] == kind, 'Incorrect APP kind'
         return data
     basic = checked_app(args.candidate_basic, 2) if args.candidate_basic else None
+    base_basic = checked_app(args.baseline_basic, 2) if args.baseline_basic else None
     common = checked_app(args.common_basic, 2) if args.common_basic else None
+    common_store = checked_app(args.common_vmstore, 4) if args.common_vmstore else None
     stores = ((checked_app(args.baseline_vmstore, 4), checked_app(args.candidate_vmstore, 4))
               if args.candidate_vmstore else None)
+    if common_store is not None: stores = (common_store, common_store)
     if basic is not None or common is not None or stores:
         assert baseline == candidate, 'Do not confound compiler and game changes'
     output.mkdir(parents=True)
@@ -135,7 +144,9 @@ def main():
         result['compiler'] = dict(original=original['files'][BASIC],
             candidate=dict(bytes=len(basic), sha256=hashlib.sha256(basic).hexdigest()))
     variants = {}
-    if basic is not None: variants[BASIC] = ((backup/BASIC.lstrip('/')).read_bytes(), basic)
+    if basic is not None:
+        variants[BASIC] = (base_basic if base_basic is not None else
+                           (backup/BASIC.lstrip('/')).read_bytes(), basic)
     if common is not None: variants[BASIC] = (common, common)
     if stores: variants[VMSTORE] = stores
     result['app_variants'] = {remote: {stage:dict(bytes=len(data), sha256=hashlib.sha256(data).hexdigest())

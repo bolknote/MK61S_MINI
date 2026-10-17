@@ -177,8 +177,10 @@ def execute(m, packages, language, source, answers, cancelled=False, mode=1, com
 
 
 def source_buffer_checks(elf, packages, address):
+    rows = []
     for language in (1, 2):
-        for length in (3072, 4177):
+        loan = 3784 if language == 1 else 4004
+        for length in ((3072, loan, loan+1, 4177, 65534) if address == 0 else (3072, 4177)):
             head = b'10 REM ' if language == 1 else b'1.01 C '
             tail = b'\n20 A=42;END\n' if language == 1 else b'\n1.02 S A=42;E\n'
             source = head + b'x'*(length-len(head)-len(tail)) + tail
@@ -191,16 +193,21 @@ def source_buffer_checks(elf, packages, address):
             assert value == 42 and not error
             reads = [x for x in machine.trace if x[0] == 'source_read' and x[1] == 42]
             assert reads
-            if length == 3072:
+            if length <= loan:
                 # Exactly one verified decode per frontend call (size + emit),
                 # not one decode per page or compiler pass.
                 assert len(reads) == 2 and all(x[2] == 0 and x[4] == length for x in reads), reads
-                assert all(machine.workspace <= x[3] and x[3]+x[4] <= machine.workspace+4176 for x in reads)
             else:
-                assert len(reads) > 2 and all(x[4] <= 256 for x in reads)
+                assert len(reads) > 2 and all(x[4] <= loan for x in reads)
+                assert max(x[4] for x in reads) == loan
+            assert all(machine.workspace+4176-loan <= x[3] and
+                       x[3]+x[4] <= machine.workspace+4176 for x in reads)
             assert all(size <= 4176 for _, size in machine.workspace_requests)
             print('ARM source loan', address, language, length,
                   'reads', len(reads), 'stack', max(machine.stage_peaks.values()), flush=True)
+            rows.append(dict(address=address, language=language, source_bytes=length,
+                loan_bytes=loan, reads=len(reads), stack_peak=max(machine.stage_peaks.values())))
+    return rows
 
 
 def main():
@@ -229,9 +236,9 @@ def main():
                                        ("language-vm", "LANGVM.APP"), ("language-input", "LANGIN.APP"))}
         user = package(reader, args.user_app, elf, work, "application") if args.user_app else None
         legacy = package(reader, args.legacy_app, elf, work, "application") if args.legacy_app else None
-        traces = []
+        traces, source_checks = [], []
         for address in range(3):
-            source_buffer_checks(args.resident_elf, packages, address)
+            source_checks.extend(source_buffer_checks(args.resident_elf, packages, address))
             if args.specialized:
                 reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["tinybasic"], 2, 2)
                 reject_other_language(OverlayMachine(args.resident_elf, True, address), packages["focal"], 1, 1)
@@ -278,6 +285,7 @@ def main():
         report = {"status": "PASS", "vm_profile": args.vm_profile,
                   "compiler_context_bytes": COMPILER_CONTEXT_SIZE,
                   "specialized_language_guards": args.specialized, "runs": traces,
+                  "source_window_checks":source_checks,
                   "legacy_language_contexts_rejected":args.specialized,
                   "note": "Real ARM APP policy and relocation; native loader/allocator remain fixtures."}
         if args.vm_profile == "core":

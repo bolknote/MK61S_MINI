@@ -77,6 +77,15 @@ def main():
         assert port.files == {**original, **targets}
         port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True, targets=targets)
         assert not port.operations  # No common-BASIC rewrite between measured stages.
+        baseline={USER:b'explicit baseline BASIC', STORE:b'common VMSTORE'}
+        candidate={USER:b'window BASIC', STORE:b'common VMSTORE'}
+        port, _ = exercise(dict(original), replace_basic=True, replace_vmstore=True, targets=baseline)
+        assert port.files=={**original,**baseline}
+        for target in (candidate,baseline):
+            port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True, targets=target)
+            assert port.files=={**original,**target} and port.operations==[('write',USER)]
+        port, _ = exercise(dict(port.files), replace_basic=True, replace_vmstore=True)
+        assert port.files==original and set(port.operations)=={('write',USER),('write',STORE)}
         exercise(dict(original), fail=True, targets=targets)
         exercise(dict(original), fail=True, replace_basic=True, targets={STORE:b'not allowed'})
         exercise(dict(original), fail=True, replace_basic=True, targets={'/user.txt':b'not allowed'})

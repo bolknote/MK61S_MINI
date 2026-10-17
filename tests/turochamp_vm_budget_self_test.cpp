@@ -35,8 +35,27 @@ int main(int argc, char** argv) {
     language_vm::View view;
     assert(language_vm::inspect(image, compiled.size, view) == language_vm::Error::NONE);
     assert(view.lines <= 192 && view.stack <= language_vm::MAX_STACK);
+    struct Input {
+      const std::vector<uint8_t>& source;
+      unsigned calls=0;
+      static bool read(void* raw,uint16_t at,uint8_t* output,uint16_t count) {
+        auto& input=*static_cast<Input*>(raw);++input.calls;
+        assert(count<=3784 && at+unsigned(count)<input.source.size());
+        memcpy(output,input.source.data()+at,count);return true;
+      }
+    } input{source};
+    uint8_t loan[3786];memset(loan,0x5A,sizeof(loan));
+    language_vm::source::Reader reader({&input,Input::read,uint16_t(length)},loan+1,3784);
+    uint8_t window_image[language_vm::MAX_IMAGE];
+    const auto windowed=language_vm::compile_source(language_vm::Language::BASIC,reader,
+        window_image,sizeof(window_image));
+    assert(windowed.error==language_vm::Error::NONE && windowed.size==compiled.size);
+    assert(!memcmp(image,window_image,compiled.size) && loan[0]==0x5A && loan[3785]==0x5A);
+    if(length>3784)
+      std::cout << "Turochamp source window: " << argv[index] << " M8=" << length
+                << " reads=" << input.calls << " byte-exact PASS\n";
     if(compiled.size > largest) largest = compiled.size;
   }
   std::cout << "Turochamp VM budget: " << argc-1 << " files, largest " << largest
-            << "/6144 bytes, source/line/stack limits unchanged PASS\n";
+            << "/6144 bytes, byte-exact borrowed-window compilation, source/line/stack limits unchanged PASS\n";
 }
