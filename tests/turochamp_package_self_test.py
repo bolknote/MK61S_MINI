@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'tools'))
 sys.path.insert(0, str(ROOT/'tools/turochamp'))
 from m8_codec import encode
-from layout import MODULES, LOCAL_ONLY, MAX_ARRAY_INDEX, SOURCE_BUDGET
+from layout import MODULES, LOCAL_ONLY, MAX_ARRAY_INDEX, SOURCE_BUDGET, PACKAGES, CLUSTERS
 GAME = ROOT/'programs/games/Turochamp'
 SOURCE = ROOT/'tools/turochamp/basic'
 
@@ -42,12 +42,17 @@ def decode_font(data):
 def main():
     for tool in ('assemble.py', 'font.py'):
         subprocess.run([sys.executable, ROOT/'tools/turochamp'/tool, '--check'], check=True)
-    assert {p.stem for p in GAME.glob('*.tbi')} == set(MODULES)
+    assert {p.stem for p in GAME.glob('*.tbi')} == set(PACKAGES.values())
     assert {p.stem for p in SOURCE.glob('*.bas')} == set(MODULES) | LOCAL_ONLY
+    storage = (ROOT/'code/program_store.hpp').read_text()
+    assert SOURCE_BUDGET == int(re.search(r'MAX_LANGUAGE_SOURCE_SIZE = (\d+);', storage)[1])
+    assert all(root in MODULES and members and root not in members for root, members in CLUSTERS.items())
+    assert len({name for members in CLUSTERS.values() for name in members}) == sum(map(len, CLUSTERS.values()))
+    assert not set(CLUSTERS).intersection(name for members in CLUSTERS.values() for name in members)
     driver = (GAME/'autoexec.m61').read_text()
     assert len(driver.encode())+driver.count('\n') <= 1536
     for name, ident in MODULES.items():
-        assert f'if re=={ident} open {name}.tbi' in driver
+        assert f'if re=={ident} open {PACKAGES[name]}.tbi' in driver
     assert driver.startswith('reinit\nloadfont Turochamp\nopen init.tbi\n')
     assert driver.endswith('if re==99 ret\nrun :dispatch\n')
     font_data = (GAME/'Turochamp.FMK').read_bytes()
@@ -58,24 +63,23 @@ def main():
         assert len(data)+data.count(b'\n') <= 1536, name
     largest = 0
     graph = {}
-    for name in MODULES:
+    for name in set(PACKAGES.values()):
         text = (GAME/(name+'.tbi')).read_text()
         m8 = encode(text)
         cost = len(m8)+m8.count(b'\n')
         assert cost <= SOURCE_BUDGET, (name, cost)
-        assert (3584-cost)//2+1 > MAX_ARRAY_INDEX
-        assert len(text.encode())+text.count('\n') <= 3584, name
         lines = text.splitlines()
         assert len(lines) <= 192 and max(map(len, map(encode,lines))) <= 239, name
         for literal in re.findall(r'"([^"]*)"', text):
             assert set(encode(literal)) <= glyphs.keys(), (name,literal)
+        largest = max(largest,cost)
+    for name in MODULES:
         template = (SOURCE/(name+'.bas')).read_text()
         targets = set(re.findall(r'^(?:CALL|JUMP) (\w+)',template,re.M))
         assert targets <= MODULES.keys(), (name, targets - MODULES.keys())
         local = set(re.findall(r'^LOCAL (\w+)',template,re.M))
         assert local <= set(MODULES) | LOCAL_ONLY, (name, local)
         graph[name] = re.findall(r'^CALL (\w+) ',template,re.M)
-        largest = max(largest,cost)
     def depth(name, ancestors=()):
         assert name not in ancestors, ('recursive M61 call', ancestors, name)
         return max((1+depth(c,ancestors+(name,)) for c in graph[name]),default=0)
@@ -88,8 +92,10 @@ def main():
                                  for y,row in enumerate(rows))
     assert glyphs[ord('G')] == (0,)*7
     assert glyphs[ord('T')] == (127,)*7
-    print(f'Turochamp package: {len(MODULES)} BASIC parts, maximum {largest} M8/CRLF bytes, '
-          f'{len(font_data)}-byte 7x7 font, C6 quotas and call stack PASS')
+    assert MAX_ARRAY_INDEX < 385
+    print(f'Turochamp package: {len(set(PACKAGES.values()))} BASIC files / {len(MODULES)} entries, '
+          f'maximum {largest} M8/CRLF bytes, {len(font_data)}-byte 7x7 font, '
+          'streamed-source/line quotas and call stack PASS')
 
 
 if __name__ == '__main__':

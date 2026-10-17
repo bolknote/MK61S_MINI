@@ -9,7 +9,12 @@ Their bodies have no M61 calls and are expanded from one shared template.
 The BASIC uses ON GOTO/GOSUB for return phases, glyphs and menu dispatch.
 DATA/READ initializes the back rank and move offsets; ELSE selects the
 board orientation heading. These require the extended TinyBASIC syntax.
-The package has 25 BASIC parts. Search descent and traversal share node.tbi
+The package has 25 logical BASIC entries in 24 files. `legal.tbi` also contains
+the hot `pseudo` coroutine. Their calls and returns keep the original
+array-backed continuation protocol but jump within the VM instead of invoking
+M61 OPEN. Both external entry IDs remain valid, including a return from
+`castle.tbi`; local leaf services share one copy. No extra VM/native stack is
+used. Search descent and traversal share node.tbi
 and use local GOTOs; the result dialog shares game.tbi. Attack and pawn
 services remain shared source templates, embedded only where needed.
 Assembly emits the runtime module registry and removes obsolete TBI parts.
@@ -36,12 +41,24 @@ before the first instruction and at most every 32 instructions; source-line
 markers do not duplicate it. Blocking keyboard/input services keep their
 normal polling.
 
-On Classic V3/F411 at 96 MHz, 20 trivial M61 BASIC launches originally fell
+In an early Classic V3/F411 benchmark at 96 MHz, 20 trivial M61 BASIC launches fell
 from 3.863 s (80 APP decodes) to 0.425 s (3 decodes). The initial no-book
-search now completes e2-e3 at 420 nodes in 163.489 s, down from 359.177 s.
+search completed e2-e3 at 420 nodes in 163.489 s, down from 359.177 s.
 First nonzero progress appears after 12.100 s rather than 25.136 s, then
 about every 8 s. Flash reads dropped from 252 MB to about 24.5 MB. The
 historical 2/8-ply search and move/score results are unchanged.
+
+On 2026-10-17, a same-firmware A/B/A on Classic (`2539ED52`) measured the
+`legal`/`pseudo` merge at 26.821 / 25.206 / 26.823 s for the steady no-book
+420-node search: 6.024% less elapsed time, with 0.0064% control drift. All
+12 searches produced the same complete board. This removes 3578 M61 handoffs
+in the matching host search census without changing the algorithm. The merged
+image is 5609 bytes / 158 lines (formerly 3231 + 2258 bytes / 90 + 62 lines),
+with the same six-value peak expression stack. Firmware/System APPs were not
+changed, and hardware native-stack headroom stayed at 7400/16384 bytes.
+First searches requiring file-cache compilation remained about 97–98 s;
+these are not reboot timings with an already populated bytecode file cache.
+See [the measurement report](../../doc/measurements/chess-merged-modules-20261017.json).
 
 An optional opening book shares `history.tbi`, so it adds no runtime files.
 It contains 17 hand-curated six-ply lines, packed into 77 shared-prefix
@@ -111,8 +128,13 @@ python3 tools/turochamp/font.py
 python3 tools/turochamp/font.py --check
 ```
 
-Each part retains room for `@(0)..@(351)`, fits in 192 lines and in one
-3584-byte C6 BASIC file. Array storage remains shared between M61 parts.
+Each file fits in 192 lines and the unchanged 6144-byte VM code/map budget.
+Sources use the existing 65534-M8-byte streamed-source limit; the merged legal
+generator exceeds the obsolete 3584-byte source buffer. A matching streamed
+BASIC/VM System bundle and resident firmware are required. Array storage is
+source-independent and remains shared between M61 parts; chess still uses
+only `@(0)..@(351)`. The host oracle opts into contiguous backing for that
+shipping source limit; it changes no device allocation or VM limits.
 There is no native chess engine, website access or external book database
 at game runtime.
 

@@ -137,7 +137,7 @@ constexpr Module MODULES[] = {
   {M_INIT, "init"},
   {M_GAME, "game"},
   {M_BOARD, "board"},
-  {M_PSEUDO, "pseudo"},
+  {M_PSEUDO, "legal"},
   {M_LEGAL, "legal"},
   {M_MAKE, "make"},
   {M_UNMAKE, "unmake"},

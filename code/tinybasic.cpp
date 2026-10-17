@@ -306,7 +306,14 @@ static constexpr int TB_PROGRAM_COUNT = 1;
 #endif
 static_assert(TB_PROGRAM_COUNT > 0 && TB_PROGRAM_COUNT <= 127,
               "TinyBASIC source index must fit signed byte snapshot field");
+#if defined(TINYBASIC_HOST_TEST) && defined(TINYBASIC_HOST_STREAMED_SOURCE)
+#include "language_source.hpp"
+// Contiguous host backing for the shipping paged-source oracle. No device
+// buffer or VM bytecode/line/stack budget changes with this test option.
+static constexpr int TB_SOURCE_SIZE = language_vm::source::MAX_SIZE + 1U;
+#else
 static constexpr int TB_SOURCE_SIZE = 3585;
+#endif
 static constexpr int TB_NAME_SIZE = 32;
 #ifndef TINYBASIC_HOST_TEST
 static_assert(TB_SOURCE_SIZE <= program_store::MAX_TINYBASIC_TEXT_SIZE + 1,
@@ -724,12 +731,16 @@ static void tinybasic_clear_array(void) {
 static usize tinybasic_array_max_index(void) {
   const usize capacity = tinybasic_array_capacity();
   if(capacity == 0) return 0;
+#if defined(TINYBASIC_HOST_TEST) && defined(TINYBASIC_HOST_STREAMED_SOURCE)
+  return capacity - 1U; // Source-independent, like LANGVM.APP.
+#else
   const usize source_len = tb_ast.source_len;
   const usize unused_source = source_len < (usize) (TB_SOURCE_SIZE - 1)
       ? (usize) (TB_SOURCE_SIZE - 1) - source_len : 0;
   const usize source_limited = unused_source / 2U;
   const usize physical_max = capacity - 1U;
   return source_limited < physical_max ? source_limited : physical_max;
+#endif
 }
 
 static double tinybasic_size_value(void) {
@@ -4500,6 +4511,10 @@ extern "C" double TinyBasicTestMkX(void) {
 
 extern "C" double TinyBasicTestMkRegister(int reg) {
   return reg >= 0 && reg < 16 ? mk61_ref::host_get_register((u8) reg) : 0.0;
+}
+
+extern "C" void TinyBasicTestSetMkRegister(int reg, double value) {
+  if(reg >= 0 && reg < 16) (void)mk61_ref::write({mk61_ref::Kind::R, (u8)reg}, value);
 }
 
 extern "C" void TinyBasicTestSetRfEnabled(bool enabled) {

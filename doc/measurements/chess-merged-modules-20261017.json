@@ -1,0 +1,290 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED_FASTER",
+  "date": "2026-10-17",
+  "base_revision": "aba82ddb3c14c202ea9eaf3d8a4df6e9f37b05cc",
+  "feature": "Fuse the hot legal/pseudo BASIC coroutines into legal.tbi, preserving logical entry IDs and the array-backed continuation protocol",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "2539ED52",
+    "profile": "classic-v3-uc1609"
+  },
+  "workload": {
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "move": "e2e3",
+    "nodes": 420
+  },
+  "methodology": {
+    "scenario": "Same resident and byte-identical System APPs; source-package A/B/A",
+    "timing": "Host monotonic key-to-complete-eight-rank USB frame, with packet and full-frame CRC checking",
+    "DWT_profile": false,
+    "DWT_note": "Installed ordinary firmware has no prof command; --no-profile explicitly omits DWT commands, not screen/result/health checks",
+    "runs_per_stage": 4,
+    "steady_filter": "Median of indices 2 and 3; first compilation and first transient repeat excluded",
+    "reference": "Mean of baseline and control steady medians",
+    "cache_normalization": "Restore the original VMC files before each stage, then reset to clear RAM caches",
+    "cold_definition": "First search must compile this newly installed package and populate bytecode file/RAM caches; NOT reboot with an already updated package file cache",
+    "file_ID_control": "Keep the unused baseline pseudo.tbi in /TCMERGE during B so directory occupancy/inodes stay the same; deployed package omits it",
+    "source_verification": "Every frozen package file byte-read back before each stage",
+    "parallel_changes": "Unrelated PicoCalc/display work was not compiled, deployed or included"
+  },
+  "reference_seconds": 26.821948405980947,
+  "candidate_seconds": 25.206198083498748,
+  "elapsed_saved_seconds": 1.6157503224821994,
+  "elapsed_reduction_percent": 6.023985647969954,
+  "speedup": 1.0641013102067127,
+  "control_drift_percent": 0.006396160548138852,
+  "stages": [
+    {
+      "name": "baseline",
+      "all_seconds": [
+        97.17477049998706,
+        28.00554662500508,
+        26.86289654194843,
+        26.779284749994986
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 26.821090645971708,
+      "first_search_seconds": 97.17477049998706,
+      "frames_crc_checked": 978,
+      "native_stack_budget_bytes": 16384,
+      "native_stack_remaining_bytes": 7400,
+      "static_RAM_end": "0x200058D8",
+      "all_moves": [
+        "e2e3"
+      ],
+      "all_nodes": [
+        420
+      ],
+      "all_complete_boards": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "crash": "CRASH none reset=0x14000000 layout=ok"
+    },
+    {
+      "name": "candidate",
+      "all_seconds": [
+        97.86417587503092,
+        26.397176625032444,
+        25.233516375010367,
+        25.17887979198713
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 25.206198083498748,
+      "first_search_seconds": 97.86417587503092,
+      "frames_crc_checked": 967,
+      "native_stack_budget_bytes": 16384,
+      "native_stack_remaining_bytes": 7400,
+      "static_RAM_end": "0x200058D8",
+      "all_moves": [
+        "e2e3"
+      ],
+      "all_nodes": [
+        420
+      ],
+      "all_complete_boards": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "crash": "CRASH none reset=0x14000000 layout=ok"
+    },
+    {
+      "name": "control",
+      "all_seconds": [
+        97.162882582983,
+        28.003007374994922,
+        26.86268504097825,
+        26.782927291002125
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 26.822806165990187,
+      "first_search_seconds": 97.162882582983,
+      "frames_crc_checked": 978,
+      "native_stack_budget_bytes": 16384,
+      "native_stack_remaining_bytes": 7400,
+      "static_RAM_end": "0x200058D8",
+      "all_moves": [
+        "e2e3"
+      ],
+      "all_nodes": [
+        420
+      ],
+      "all_complete_boards": true,
+      "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "crash": "CRASH none reset=0x14000000 layout=ok"
+    }
+  ],
+  "resources": {
+    "production_source_limit_M8_bytes": 65534,
+    "source_limit_increased_by_this_change": false,
+    "BASIC_line_limit": 192,
+    "VM_code_map_limit_bytes": 6144,
+    "VM_operand_stack_limit": 96,
+    "VM_call_stack_limit": 16,
+    "VM_loop_stack_limit": 16,
+    "System_APP_arena_limit_bytes": 20480,
+    "native_stack_budget_bytes": 16384,
+    "limits_weakened": false,
+    "firmware_internal_Flash_delta_bytes": 0,
+    "static_RAM_delta_bytes": 0,
+    "firmware_image_bytes": 343168,
+    "firmware_build_before_after": "2539ED52",
+    "VM_cache_allocation_change_bytes": 0,
+    "former_legal": {
+      "source_M8_bytes": 2587,
+      "bytecode_bytes": 3231,
+      "lines": 90,
+      "expression_stack_values": 6
+    },
+    "former_pseudo": {
+      "source_M8_bytes": 1798,
+      "bytecode_bytes": 2258,
+      "lines": 62,
+      "expression_stack_values": 5
+    },
+    "merged_legal": {
+      "source_M8_bytes": 4647,
+      "conservative_M8_CRLF_bytes": 4805,
+      "bytecode_bytes": 5609,
+      "lines": 158,
+      "expression_stack_values": 6
+    },
+    "live_bytecode_sum_delta_bytes": 120,
+    "bytecode_note": "An additional 120 bytes of payload inside the unchanged cache allocation; no claim of zero payload growth",
+    "logical_entries_before_after": 25,
+    "physical_BASIC_files_before": 25,
+    "physical_BASIC_files_after": 24,
+    "continuation_stack": "Same RETURNS/SP array and logical call depth; LOCAL leaf frames finish before external OPEN",
+    "native_stack_remaining_bytes_all_stages": 7400,
+    "first_compilation_note": "No cold-start win: measured first searches remain about 97-98 seconds"
+  },
+  "host_census": {
+    "scope": "set BOOK_ENABLED=0; best; quit using the actual BASIC and host VM; includes initial INIT, excludes hardware UI redraws",
+    "before_launches": 11241,
+    "after_launches": 7663,
+    "removed_launches": 3578,
+    "before_legal": 3158,
+    "before_pseudo": 2274,
+    "after_legal": 1369,
+    "after_pseudo": 485,
+    "result": "e2e3 / score 54 / 420 nodes, unchanged",
+    "host_timing_used_as_performance_evidence": false
+  },
+  "validation": [
+    {
+      "test": "TUROCHAMP_PYTHON=<temporary pinned chess 1.11.2 venv> bash tests/run_turochamp_tests.sh",
+      "status": "PASS",
+      "coverage": "Interpreter and VM: independent legal move sets, perft, castling, EP, promotions, undo, repetition, adjudication, evaluation, exhaustive search comparisons, keyboard, screen, complete opening book"
+    },
+    {
+      "test": "bash tests/run_turochamp_cluster_tests.sh",
+      "status": "PASS",
+      "coverage": "All 24 physical files compile/inspect within the locked 6144/192/96/16/16 VM budgets under MK61_MATH_BACKEND=0 and 1; ownership/hash gates"
+    },
+    {
+      "test": "bash tests/run_tinybasic_tests.sh",
+      "status": "PASS"
+    },
+    {
+      "test": "MK61_LANGUAGE_VM_TEST=1 MK61_TEST_SANITIZERS=1 bash tests/run_tinybasic_tests.sh",
+      "status": "PASS"
+    },
+    {
+      "test": "python3 tests/hil_turochamp_performance_self_test.py",
+      "status": "PASS",
+      "coverage": "Partial-board rejection, disk mask, detached-screen rejection with/without DWT"
+    },
+    {
+      "test": "python3 tests/hil_vm_compiled_blocks_self_test.py",
+      "status": "PASS"
+    },
+    {
+      "test": "python3 tests/turochamp_package_self_test.py; python3 tools/turochamp/assemble.py --check; git diff --check",
+      "status": "PASS"
+    },
+    {
+      "test": "Classic source-only A/B/A",
+      "status": "PASS",
+      "searches": 12,
+      "CRC_checked_frames": 2923,
+      "all_boards_identical": true
+    }
+  ],
+  "harness_adjustments": [
+    "An initial attempt stopped before searching because prof was unavailable. Added explicit ordinary-firmware wall-clock mode; no timing data from that attempt was used.",
+    "An initial cleanup left only the empty owned /TCMERGE directory (rm rejects directories). Removed it with rmdir and byte-verified original state before the full A/B/A.",
+    "Final reset releases the detached/waiting USB Screen session and RAM caches, followed by another exact filesystem/calculator check."
+  ],
+  "System_apps": {
+    "/System/SRCEDIT.app": {
+      "bytes": 13527,
+      "sha256": "4f8955d4261f51406ab652a7c5e5647afd025c70ce9fcf4eba3ea0cdd8f35ca4"
+    },
+    "/System/SETUP.app": {
+      "bytes": 9974,
+      "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+    },
+    "/System/MARKDOWN.app": {
+      "bytes": 13482,
+      "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+    },
+    "/System/LANGVM.app": {
+      "bytes": 13256,
+      "sha256": "0db97fb97bf12686a3cc978f6f8ccf0acc3c0b3926232ab6c2d5f9609f144f47"
+    },
+    "/System/LANGIN.app": {
+      "bytes": 12563,
+      "sha256": "e1260811d3e58c3e1a29a3b4a06988b31cf672982d25e84ee47e69a4154d5771"
+    },
+    "/System/FOCAL.app": {
+      "bytes": 11907,
+      "sha256": "531e02ecdddcc3f3843786c2a79e88459a6b382ceacead24f30b0d3685ea1eaa"
+    },
+    "/System/BASIC.app": {
+      "bytes": 14398,
+      "sha256": "6fc5a1d1a70817dbb2b0006db75140bef467e012ea0f1ef3c9daa3205594bc96"
+    },
+    "/System/VMCache/VMSTORE.app": {
+      "bytes": 7361,
+      "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+    }
+  },
+  "source_sha256": {
+    "programs/games/Turochamp/legal.tbi": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6",
+    "programs/games/Turochamp/autoexec.m61": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767",
+    "tools/turochamp/assemble.py": "dab2daeff3f6a07f72b24625494cd2b93a0d9a7036dd5ab53514db9a3900ec24",
+    "tools/turochamp/layout.py": "265120c2849792be5091430e6b41ca375029040535326490136f611ca9a4b8f0",
+    "tools/turochamp/layout.hpp": "b7a78031bb4427d2bb1f5fccc69b6792f3f05fa30c395081b33afdda057a3773"
+  },
+  "recovery": {
+    "restored": true,
+    "original_files": 22,
+    "original_directories": 2,
+    "exact_files_and_calculator_preserved": true,
+    "firmware_writes": 0,
+    "System_APP_writes": 0,
+    "mini_touched": false,
+    "usb_session_released_by_reset": true,
+    "serial_closed": true
+  },
+  "artifacts": {
+    "root": "/private/tmp/mk61-chess-merge.Wcvlh1",
+    "raw_ABA_report": "/private/tmp/mk61-chess-merge.Wcvlh1/hil-wall/report.json",
+    "original_snapshot": "/private/tmp/mk61-chess-merge.Wcvlh1/hil-wall/snapshot.json",
+    "original_file_backups": "/private/tmp/mk61-chess-merge.Wcvlh1/hil-wall/original-files",
+    "baseline_game": "/private/tmp/mk61-chess-merge.Wcvlh1/baseline-game",
+    "candidate_game": "/private/tmp/mk61-chess-merge.Wcvlh1/candidate-game"
+  }
+}

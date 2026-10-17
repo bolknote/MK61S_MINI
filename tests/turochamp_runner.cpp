@@ -22,6 +22,7 @@ extern "C" TinyBasicRunStatus TinyBasicTestRunSource(const char*);
 extern "C" double TinyBasicTestArray(int);
 extern "C" bool TinyBasicTestSetArray(int,double);
 extern "C" double TinyBasicTestMkRegister(int);
+extern "C" void TinyBasicTestSetMkRegister(int,double);
 extern "C" const char* TinyBasicTestError();
 extern "C" void TinyBasicTestSetKeys(const int*,int);
 extern "C" void TinyBasicTestSetPauseEsc(bool);
@@ -37,6 +38,7 @@ void put(int at,double x) {
 int code() {return (int)TinyBasicTestMkRegister(14);}
 void part(int id) {
   if(!parts.count(id))throw std::runtime_error("missing BASIC module "+std::to_string(id));
+  TinyBasicTestSetMkRegister(14,id); // M61 leaves RE at the logical entry ID.
   if(std::getenv("TURO_TRACE"))std::cerr<<"part "<<id<<" phase "<<get(tc::PHASE)
       <<" cursor "<<get(tc::GEN_CURSOR)<<" move "<<get(tc::GLMOVE)<<" sp "<<get(tc::SP)<<'\n';
   const auto result=TinyBasicTestRunSource(parts.at(id).c_str());
@@ -160,6 +162,7 @@ void ui(int id,const std::vector<int>& logical) {
     if(!parts.count(id))throw std::runtime_error("missing UI module");
     if(std::getenv("TURO_TRACE"))std::cerr<<"UI part "<<id<<" phase "<<get(tc::PHASE)
         <<" key "<<get(tc::UI_KEY)<<" sp "<<get(tc::SP)<<'\n';
+    TinyBasicTestSetMkRegister(14,id);
     const auto status=TinyBasicTestRunSource(parts.at(id).c_str());
     if(status==TinyBasicRunStatus::STOPPED)break;
     if(status!=TinyBasicRunStatus::COMPLETED)throw std::runtime_error(

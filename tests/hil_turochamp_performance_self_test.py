@@ -90,4 +90,11 @@ with tempfile.TemporaryDirectory(prefix='mk61-chess-detach-') as temp:
         except AssertionError as error:
             assert 'USB Screen detached during search' in str(error)
         else:raise AssertionError('detached stale frame accepted as a live search')
+    options.no_profile=True
+    with patch.object(benchmark,'wait_screen'),patch.object(benchmark,'png'), \
+         patch.object(DetachedPort,'command',side_effect=AssertionError('DWT command used in ordinary mode')):
+        try:benchmark.search(DetachedPort(),NoBookFont(),options,0,Path(temp))
+        except AssertionError as error:
+            assert 'USB Screen detached during search' in str(error)
+        else:raise AssertionError('ordinary mode accepted detached stale frame')
 print('Turochamp performance oracle: M8, eight ranks, bounded disk mask and DWT timing PASS')

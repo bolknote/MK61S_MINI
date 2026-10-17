@@ -19,5 +19,5 @@ if [[ "${MK61_LANGUAGE_VM_TEST:-0}" == 1 ]]; then
   fi
 fi
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -DTINYBASIC_HOST_TEST \
-  -DTINYBASIC_SELF_TEST -I"$root/code" "$root/tests/turochamp_runner.cpp" \
+  -DTINYBASIC_HOST_STREAMED_SOURCE -DTINYBASIC_SELF_TEST -I"$root/code" "$root/tests/turochamp_runner.cpp" \
   "$root/code/tinybasic.cpp" "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" "${extra[@]}" -o "$out"

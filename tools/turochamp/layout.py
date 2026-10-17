@@ -33,7 +33,13 @@ MODULES = {
 }
 LOCAL_ONLY = {"attack", "pawns"}
 
-SOURCE_BUDGET = 2800  # M8 bytes, including conservative CRLF overhead.
+# Logical IDs stay stable. Fused coroutines share a physical source and keep
+# their existing array-backed continuation stack, without an M61 OPEN in between.
+CLUSTERS = {"legal": ("pseudo",)}
+PACKAGES = {name: next((root for root, members in CLUSTERS.items()
+                       if name in members), name) for name in MODULES}
+
+SOURCE_BUDGET = 65534  # Shipping streamed-source limit, including CRLF overhead.
 MAX_ARRAY_INDEX = 351
 FRAME_SIZE = 7
 MAX_SEARCH_PLIES = 8

@@ -136,6 +136,7 @@ MK61_TEST_SANITIZERS="${MK61_TEST_SANITIZERS:-1}" MK61_VM_CACHE_MIXED_TEST=1 \
 bash "$root/tests/run_language_workspace_vm_default_tests.sh"
 "$root/tests/run_high_noon_equivalence_tests.sh"
 python3 "$root/tests/turochamp_package_self_test.py"
+bash "$root/tests/run_turochamp_cluster_tests.sh"
 python3 "$root/tests/hil_turochamp_performance_self_test.py"
 python3 "$root/tests/hil_rtc_transport_self_test.py"
 python3 "$root/tests/hil_dfu_safety_self_test.py"

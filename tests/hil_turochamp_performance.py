@@ -158,6 +158,7 @@ def board_pixels(frame):
 
 
 def search(port,font,args,index,out):
+    profiling = not getattr(args, 'no_profile', False)
     port.open(args.game_dir+'/autoexec.m61')
     wait_screen(port,font,'ВЫБЕРИТЕ СТОРОНУ')
     for _ in range(4):port.key(36)
@@ -167,7 +168,8 @@ def search(port,font,args,index,out):
     png(port.frames[-1],out/'book-off.png')
     for _ in range(2):port.key(36) # book(4) -> White(0) -> Black(1)
     wait_screen(port,font,'ЧЁРНЫЕ')
-    assert 'PROF started' in port.command('prof start')
+    if profiling:
+        assert 'PROF started' in port.command('prof start')
     cursor=len(port.frames);started=time.monotonic();port.key(37)
     progress=[];seen=set();last_notice=started;finished=None
     while time.monotonic()-started<args.timeout:
@@ -193,14 +195,15 @@ def search(port,font,args,index,out):
         assert b'Open failed!' not in port.text[port.open_text_start:],port.text[-600:]
     assert finished is not None,('search timeout',progress,port.text[-900:])
     assert progress and progress[-1]['nodes']==420,progress
-    counters=port.command('prof stop',timeout=15)
-    (out/'prof.txt').write_text(counters)
+    counters=port.command('prof stop',timeout=15) if profiling else None
+    if counters is not None:
+        (out/'prof.txt').write_text(counters)
     elapsed=finished-started
     result={'repeat':index,'temperature':'cold' if index==0 and args.reset_before else 'repeat',
             'seconds':elapsed,'nodes':420,'nodes_per_second':420/elapsed,'move':'e2e3',
             'final_frame_sha256':digest,'complete_eight_rank_board':True,
             'board_frame_sha256':board_digest,
-            'progress':progress,'profile':profile(counters)}
+            'progress':progress,'profile':profile(counters) if profiling else None}
     (out/'run.json').write_text(json.dumps(result,indent=2)+'\n')
     print(f'{args.build_id} run {index}: e2-e3 / 420 nodes in {elapsed:.3f}s PASS',flush=True)
     stop_game(port)
@@ -214,6 +217,7 @@ def main():
     ap.add_argument('--game-dir',default='/Games/Turochamp')
     ap.add_argument('--runs',type=int,default=3);ap.add_argument('--timeout',type=float,default=360)
     ap.add_argument('--reset-before',action='store_true')
+    ap.add_argument('--no-profile',action='store_true',help='Wall-clock/frame timing on ordinary firmware without DWT commands')
     args=ap.parse_args();assert 1<=args.runs<=10
     args.output_dir.mkdir(parents=True,exist_ok=True)
     report={'result':'RUNNING','device':args.public_id,'build':args.build_id,'opening_book':False,
@@ -228,7 +232,7 @@ def main():
             if not path.is_file():continue
             payload=path.read_bytes() if path.suffix.lower()=='.fmk' else encode(path.read_text())
             read_file(port,args.game_dir+'/'+path.name,payload)
-        report['verified_files']=30
+        report['verified_files']=sum(path.is_file() for path in (ROOT/'programs/games/Turochamp').iterdir())
         if args.reset_before:
             port.drain();port.write_line('rst now');time.sleep(.2)
     if args.reset_before:
@@ -268,7 +272,7 @@ def main():
         finally:
             try:
                 if port.attached:port.send(0x13);port.attached=False;port.pump(.2)
-                port.command('prof stop')
+                if not args.no_profile:port.command('prof stop')
                 for name,value in saved.items():port.command(name+'= '+str(value))
                 port.command('cd "'+cwd+'"')
                 report['health_after']={c:port.command(c,timeout=15) for c in ('identity','df','mpu status','crash show')}

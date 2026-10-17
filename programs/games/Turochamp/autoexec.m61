@@ -5,7 +5,7 @@ open init.tbi
 if re==1 open init.tbi
 if re==2 open game.tbi
 if re==3 open board.tbi
-if re==4 open pseudo.tbi
+if re==4 open legal.tbi
 if re==5 open legal.tbi
 if re==7 open make.tbi
 if re==8 open unmake.tbi
