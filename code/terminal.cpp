@@ -63,7 +63,8 @@ extern void release_segment_ws_graphics(void);
 #include "usb_mass_storage.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
-#if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && (MK61_LANGUAGE_VM_CACHE_MIXED || MK61_DWT_SERVICE_GAPS)
+#if (MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES) || \
+    (MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && (MK61_LANGUAGE_VM_CACHE_MIXED || MK61_DWT_SERVICE_GAPS))
 #include "language_vm_resident.hpp"
 #endif
 #include "classic_timer.hpp"
@@ -1533,6 +1534,18 @@ void class_terminal::print_u64(u64 value) {
     }
 
 void class_terminal::print_profile_statistics(void) {
+#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
+      language_vm::CacheDiagnostics flash_cache={};
+      (void)language_vm::cache_diagnostics(flash_cache);
+      terminal_output::field(Serial,"VMFLASH budget=",flash_cache.budget);
+      terminal_output::field(Serial," payload=",flash_cache.payload);
+      terminal_output::field(Serial," used=",flash_cache.used);
+      terminal_output::field(Serial," lookups=",flash_cache.lookups);
+      terminal_output::field(Serial," hits=",flash_cache.hits);
+      terminal_output::field(Serial," misses=",flash_cache.misses);
+      terminal_output::line(Serial," invalidations=",flash_cache.invalidations);
+#endif
+
       terminal_output::field(
           Serial, "PROF state=", dwt_profiler::running() ? "running" : "stopped");
       terminal_output::field(Serial, " clock=", dwt_profiler::clock_hz());

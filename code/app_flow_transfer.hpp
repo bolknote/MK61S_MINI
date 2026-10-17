@@ -14,7 +14,10 @@ class Transfer {
   explicit Transfer(shared_memory::Owner owner) : owner_(owner) {}
   loadable_module::RuntimeStatus reserve(ImageTransfer&);
   loadable_module::RuntimeStatus commit(ImageTransfer&);
-  loadable_module::RuntimeStatus commit_paged(ImageTransfer&);
+  // Cold compilation releases its APP before reusing compiler scratch.
+  // A verified paged RUN can retain an idle VM; its image occupies no
+  // workspace bytes and the dispatcher still checks APP/epoch identity.
+  loadable_module::RuntimeStatus commit_paged(ImageTransfer&, bool evict = true);
   // The caller separately owns and pins this immutable image (e.g. a cache
   // reservation). Only the runtime workspace is acquired here, no copy.
   // A source/compiler APP must be evicted before its workspace is reused.

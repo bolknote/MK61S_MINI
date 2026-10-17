@@ -17,3 +17,10 @@ python3 "$root/tests/app_flow_runtime_surface.py" "$work/app_flow_runtime.inc"
 clang++ -std=c++17 "${flags[@]}" -I"$root/code" -I"$work" \
   "$root/tests/app_flow_runtime_self_test.cpp" -o "$work/runtime"
 "$work/runtime"
+clang++ -std=c++17 "${flags[@]}" -DCONFIG -DMK61_DISPLAY_UC1609 \
+  -DMK61_OVERLAY_LANGUAGE_VM=1 -DLANGUAGE_VM_HOST_TEST \
+  -I"$root/code" "$root/tests/app_flow_paged_transfer_self_test.cpp" \
+  "$root/code/app_flow_transfer.cpp" "$root/code/shared_memory.cpp" \
+  "$root/code/workspace_swap.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
+  -o "$work/paged-transfer"
+"$work/paged-transfer"

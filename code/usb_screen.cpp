@@ -7,7 +7,8 @@
 #include "keyboard_layout.hpp"
 #include "runtime_safety.hpp"
 #include "shared_memory.hpp"
-#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#if (MK61_OVERLAY_LANGUAGE_VM || MK61_RESIDENT_LANGUAGE_VM) && \
+    (MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES || MK61_FLASH_VM_PAGE_CACHE_BYTES)
 #include "language_vm_resident.hpp"
 #endif
 #include "usb_screen_protocol.hpp"
@@ -453,7 +454,8 @@ bool start(void) {
   // Materialize lazy font/workspace buffers before the long-lived session.
   // The legacy lease pins the lower free-RAM boundary until USB exits.
   if(!shared_memory::prepare_retained_buffers()) return false;
-#if MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
+#if (MK61_OVERLAY_LANGUAGE_VM || MK61_RESIDENT_LANGUAGE_VM) && \
+    (MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES || MK61_FLASH_VM_PAGE_CACHE_BYTES)
   // Optional acceleration must not silently depend on launching BASIC first.
   // If there really is no room, retain the existing uncached fallback.
   (void)language_vm::prepare_image_cache();

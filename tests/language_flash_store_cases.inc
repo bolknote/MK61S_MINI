@@ -107,3 +107,75 @@ static void test_language_flash_store() {
   }
   puts("C9 language pages: 200 KB, page/64-KB boundaries, reboot, torn writes, physical full, source/compiler cache identity and derived-cache eviction PASS");
 }
+
+static void test_language_flash_repeated_run_io() {
+  namespace lf=language_vm::flash;
+  using namespace language_vm;
+  fresh(512U*1024U);
+  const u8 source[]="10 END\n";u16 id=program_store::INVALID_ID;
+  assert(program_store::write_file(program_store::ROOT_ID,id,ProgramType::TINYBASIC,
+      "RUN",source,sizeof(source)-1,&id));
+  {
+    lf::Store store(&id,789);auto io=store.io();assert(io.truncate(io.context,lf::IMAGE,0));
+    lf::Writer writer(io,lf::IMAGE);u8 page[lf::WRITE_BYTES];
+    for(unsigned at=0;at<8192;at+=sizeof(page)) {
+      for(unsigned i=0;i<sizeof(page);++i)page[i]=u8((at+i)*37U);
+      if(!at) {
+        memset(page,0,32);memcpy(page,"LBV2",4);page[4]=14;page[5]=1;page[6]=1;
+        lf::dword(page+8,8192);lf::dword(page+12,40);lf::word(page+16,sizeof(source)-1);
+        lf::word(page+18,1);lf::dword(page+28,8192);
+      }
+      assert(writer.write(at,page,sizeof(page)));
+    }
+    assert(writer.flush());(void)store.input(8192);
+    assert(store.publish({VALIDATED_MAGIC,8192,40,sizeof(source)-1,8192,1,1,0,Language::BASIC,true}));
+  }
+  lf::PageCache<8192> cache;
+  auto measure=[&](lf::ReadCache* shared) {
+    // Materialize C9's lazily rebuilt FAT directory chains outside the
+    // read-only RUN interval, including after the unrelated write below.
+    {lf::Store warm(&id,789,nullptr,nullptr,shared);ValidatedImage image;assert(warm.load(image));}
+    SPIFlash::resetOperationCounts();
+    for(unsigned run=0;run<20;++run) {
+      lf::Store store(&id,789,nullptr,nullptr,shared);ValidatedImage image;assert(store.load(image));
+      auto io=store.io();u8 byte=0;
+      for(unsigned jump=0;jump<16;++jump) {
+        assert(io.read(io.context,lf::IMAGE,300,&byte,1) && byte==u8(300U*37));
+        assert(io.read(io.context,lf::IMAGE,7400,&byte,1) && byte==u8(7400U*37));
+      }
+    }
+    assert(SPIFlash::mutationOperations()==0);
+    return SPIFlash::readOperations();
+  };
+  const unsigned uncached=measure(nullptr),cached=measure(&cache);
+  fprintf(stderr,"Flash RUN page reuse: %u -> %u physical NOR reads\n",uncached,cached);
+  assert(cached*4U<uncached);
+  assert(measure(&cache)==0); // Ready RUN needs no NOR metadata/payload reads.
+  // C9 writes invalidate shared frames, including metadata and inode reuse.
+  const u8 other[]={'a','b','c'};
+  assert(program_store::write(ProgramType::TEXT,"OTHER",other,sizeof(other)));
+  assert(measure(&cache)<uncached/4U);
+  // A mutation also invalidates the live Store's local copy, not just a
+  // newly constructed Store. Direct updates here model an external C9 write.
+  lf::Store live(&id,789,nullptr,nullptr,&cache);ValidatedImage image;assert(live.load(image));
+  auto io=live.io();u8 value=0;
+  assert(io.read(io.context,lf::IMAGE,7400,&value,1) && value==u8(7400U*37));
+  char path[100];snprintf(path,sizeof(path),"/System/VMCache/Pages/%04X/Image0/00000007.bin",unsigned(id));
+  program_store::Entry entry;
+  assert(storage_path::resolve_file(program_store::ROOT_ID,path,ProgramType::MK61_BINARY,entry)==storage_path::Status::OK);
+  u8 page[lf::WRITE_BYTES];u16 copied=0;
+  assert(program_store::read_source_range_id(entry.id,0,page,sizeof(page),&copied) && copied==sizeof(page));
+  page[7400%sizeof(page)]=0xA7;
+  assert(program_store::write_file(entry.parent_id,entry.id,ProgramType::MK61_BINARY,entry.name,page,sizeof(page)));
+  assert(io.read(io.context,lf::IMAGE,7400,&value,1) && value==0xA7);
+  // An epoch-valid descriptor may skip metadata reads. Source edits and a
+  // different compiler identity must therefore reject that descriptor too.
+  {lf::Store changed_compiler(&id,790,nullptr,nullptr,&cache);
+   ValidatedImage stale;assert(!changed_compiler.load(stale));}
+  const u8 replacement[]="10 A=9\n";
+  assert(program_store::write_file(program_store::ROOT_ID,id,ProgramType::TINYBASIC,
+      "RUN",replacement,sizeof(replacement)-1));
+  {lf::Store changed_source(&id,789,nullptr,nullptr,&cache);
+   ValidatedImage stale;assert(!changed_source.load(stale));}
+  puts("C9 Flash RUN: bounded pages survive Store replacement; source/compiler/epoch invalidation, exact bytes, no writes PASS");
+}
