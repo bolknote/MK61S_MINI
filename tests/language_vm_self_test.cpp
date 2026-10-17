@@ -253,7 +253,7 @@ void test_validation() {
   const auto image = std::vector<uint8_t>(f.image, f.image + f.view.size);
   const uint16_t size = f.view.size;
   View old;
-  for(uint8_t version:{1,2,3,4,5,6,7}) {
+  for(uint8_t version=1;version<VERSION;++version) {
     f.image[4]=version;assert(inspect(f.image,size,old)==Error::INVALID_IMAGE);
   }
   f.image[4]=VERSION;

@@ -134,12 +134,14 @@ enum class Op : uint8_t {
   GRAPHICS,        // operation/count bytes; pops arguments, POINT pushes result
   PRINT_AT,        // two coordinates -> a positioned PRINT context
   GRAPH_BEGIN,     // four bounds -> temporary X; word points to GRAPH_NEXT
-  GRAPH_NEXT       // one sample -> raster point; word points to expression body
+  GRAPH_NEXT,      // one sample -> raster point; word points to expression body
+  INTEGER_SHORT    // LOAD layout; short array/ABS-to-local block, scalar LOAD fallback
 };
 // A block mark changes neither the first instruction's width nor its logical
 // identity. Diagnostic/host traces use the original scalar opcode.
 constexpr Op scalar_op(Op op) {
-  return op==Op::BLOCK_INDEX ? Op::CONST_I16 : op==Op::BLOCK_COMPARE || op==Op::INTEGER_SPAN ? Op::LOAD : op;
+  return op==Op::BLOCK_INDEX ? Op::CONST_I16 :
+      op==Op::BLOCK_COMPARE || op==Op::INTEGER_SPAN || op==Op::INTEGER_SHORT ? Op::LOAD : op;
 }
 constexpr bool index_block_shape(Op op,uint16_t pc,Op first,uint16_t first_pc,
                                  Op second,uint16_t second_pc) {
@@ -180,9 +182,9 @@ inline constexpr uint8_t wire_widths[] = {
   1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, // 64..79
   255,1,1,255,255,1,1,3,3,3,5,1,3,3,3,4,3, // 80..96
   2,7,1,1,1,3,3,2,2, // 97..105
-  3,1,3,3 // GRAPHICS, PRINT_AT, GRAPH_BEGIN, GRAPH_NEXT
+  3,1,3,3,2 // GRAPHICS, PRINT_AT, GRAPH_BEGIN, GRAPH_NEXT, INTEGER_SHORT
 };
-static_assert(sizeof(wire_widths)==(unsigned)Op::GRAPH_NEXT+1,"opcode width table changed");
+static_assert(sizeof(wire_widths)==(unsigned)Op::INTEGER_SHORT+1,"opcode width table changed");
 inline uint16_t instruction_end(const uint8_t* bytes, uint16_t end, uint16_t pc) {
   if(pc>=end) return 0;
   const uint8_t op=bytes[pc];
@@ -212,7 +214,7 @@ static_assert(comparison_mask(Op::EQ)==2 && comparison_mask(Op::NE)==13 &&
               comparison_mask(Op::GT)==4 && comparison_mask(Op::GE)==6,
               "comparison mask encoding changed");
 static constexpr uint16_t HEADER_SIZE = 32;
-static constexpr uint16_t VERSION = 11;
+static constexpr uint16_t VERSION = 12;
 static constexpr uint16_t MAX_IMAGE = 6144;
 // Keep the instruction/map budget unchanged; owned resource bytes have a
 // separate bounded allowance, rather than increasing source or stack quotas.

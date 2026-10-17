@@ -16,7 +16,7 @@ for backend in 0 1; do
     -Dtrace_following=reference_trace_following -Derror_name=reference_error_name \
     -I"$root/code" -c "$root/code/language_vm.cpp" -o "$work/reference.o"
   clang++ "${flags[@]}" -DMK61_MATH_BACKEND="$backend" -DMK61_VM_INTEGER_SPAN=1 \
-    -DLANGUAGE_VM_TEST_INTEGER_SPAN -I"$root/code" \
+    -DLANGUAGE_VM_TEST_INTEGER_SPAN -DLANGUAGE_VM_TEST_INTEGER_SHORT_BLOCK -I"$root/code" \
     "$root/tests/language_vm_integer_span_self_test.cpp" "$root/code/language_bytecode.cpp" \
     "$root/code/language_vm.cpp" "$work/reference.o" -o "$work/test"
   "$work/test"

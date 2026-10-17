@@ -33,6 +33,22 @@ void mark_integer_spans(uint8_t* bytes,uint16_t code,uint16_t end) {
     // The existing index mark proves its first three scalar instructions;
     // never replace the interior LOAD with another hint.
     if(op==Op::BLOCK_INDEX) {finish();pc=(uint16_t)(pc+6);continue;}
+    if(op==Op::LOAD) {
+      auto skip_position=[&](uint16_t at) {
+        while(end-at>=3 && (Op)bytes[at]==Op::SOURCE_POS)at=(uint16_t)(at+3);
+        return at;
+      };
+      const uint16_t middle=skip_position(after);
+      if(middle<end && ((Op)bytes[middle]==Op::LOAD_ARRAY ||
+         (end-middle>=2 && (Op)bytes[middle]==Op::FUNCTION &&
+          (Function)bytes[middle+1]==Function::ABS))) {
+        const uint16_t last=skip_position((uint16_t)(middle+((Op)bytes[middle]==Op::LOAD_ARRAY?1:2)));
+        if(end-last>=2 && (Op)bytes[last]==Op::STORE) {
+          finish();bytes[pc]=(uint8_t)Op::INTEGER_SHORT;
+          pc=(uint16_t)(last+2);continue;
+        }
+      }
+    }
     const bool supported=op==Op::LOAD || op==Op::LOAD_ARRAY_FIXED ||
         op==Op::LOAD_ARRAY || op==Op::STORE || op==Op::STORE_ARRAY ||
         op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||

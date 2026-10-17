@@ -47,6 +47,9 @@ void integer_block_applied(uint16_t, uint8_t);
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
 void integer_span_applied(uint16_t, uint8_t);
 #endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_SHORT_BLOCK)
+void integer_short_block_applied(uint16_t);
+#endif
 #if defined(LANGUAGE_VM_TRACE)
 // Host-only instrumentation. No callback, counters or ABI fields are shipped.
 void trace_instruction(const View&, uint16_t, uint32_t);
@@ -152,8 +155,8 @@ Error update_local(Value* variables,uint8_t index,uint8_t encoded) {
   if(!result.finite()) return Error::MATH;
   variables[index]=result;return Error::NONE;
 }
-#if MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK
-#if MK61_VM_INTEGER_BLOCK || defined(LANGUAGE_VM_TRACE)
+#if MK61_VM_INTEGER_BLOCK || MK61_VM_INTEGER_SPAN || \
+    ((MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK) && defined(LANGUAGE_VM_TRACE))
 uint16_t block_next(const View& v,uint16_t pc) {
   while(pc<v.end && (Op)v.bytes[pc]==Op::SOURCE_POS) {
     if(v.end-pc<3)return 0;
@@ -162,20 +165,46 @@ uint16_t block_next(const View& v,uint16_t pc) {
   return pc;
 }
 #endif
+#if MK61_VM_INTEGER_BLOCK || MK61_VM_COMPARE_BLOCK || MK61_VM_INTEGER_SPAN
 // Compiler marks retain the original instruction widths and all interior PCs.
-// Share runtime guards and commit code for both block families. No write or
+// Share runtime guards and commit code for all block families. No write or
 // trace occurs before every guard passes; boundaries deopt to ordinary run().
-// The cold verifier proves marked shapes. Bounded public-View checks also
-// retain safe scalar fallback for truncated views and invalid local IDs.
+// The cold verifier checks index/compare shapes; short marks are only hints.
+// Bounded runtime checks retain scalar fallback for nonmatching/truncated
+// views and invalid local IDs.
 __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint16_t& instruction, uint32_t limit) {
   const uint16_t first=instruction;
-  if(data.stack_capacity-s.sp<2)return 0;
+  const bool short_value=(Op)v.bytes[first]==Op::INTEGER_SHORT;
+  if(data.stack_capacity-s.sp<(short_value?1:2))return 0;
   uint16_t after,last;
   uint8_t count=3,dst=255,delta;
   Value a,b;
   const bool compare=(Op)v.bytes[first]==Op::BLOCK_COMPARE;
-  if(compare) {
+  if(short_value) {
+#if MK61_VM_INTEGER_SPAN
+    if(v.end-first<2 || v.bytes[first+1]>=26)return 0;
+    a=data.variables[v.bytes[first+1]];if(!a.finite())return 0;
+    const uint16_t middle=block_next(v,(uint16_t)(first+2));
+    if(!middle || middle>=v.end)return 0;
+    const Op op=(Op)v.bytes[middle];
+    if(op==Op::LOAD_ARRAY) {
+      if(!a.integer())return 0;
+      const int32_t index=a.integer_value();
+      if(!data.array || index<0 || (uint32_t)index>=data.array_count ||
+         data.array+index==data.stack+s.sp)return 0;
+      a=data.array[index];if(!a.finite())return 0;
+    } else {
+      if(v.end-middle<2 || op!=Op::FUNCTION || (Function)v.bytes[middle+1]!=Function::ABS)return 0;
+      a=a.absolute();
+    }
+    last=block_next(v,(uint16_t)(middle+(op==Op::LOAD_ARRAY?1:2)));
+    if(!last || v.end-last<2 || (Op)v.bytes[last]!=Op::STORE || v.bytes[last+1]>=26)return 0;
+    dst=v.bytes[last+1];after=(uint16_t)(last+2);delta=0;
+#else
+    return 0;
+#endif
+  } else if(compare) {
 #if MK61_VM_COMPARE_BLOCK
     if(v.end-first<7 || v.bytes[first+1]>=26)return 0;
     const uint8_t rhs=v.bytes[first+2];
@@ -222,14 +251,20 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 #endif
   // Match even inactive cells: INPUT, snapshots and scalar fallback retain
   // the exact same operand bank, not only the final numerical result.
-  data.stack[s.sp]=a;data.stack[s.sp+1]=b;
+  data.stack[s.sp]=a;if(!short_value)data.stack[s.sp+1]=b;
   if(dst<26)data.variables[dst]=a;
   s.sp=(uint8_t)(s.sp+delta);s.pc=after;instruction=last;steps+=count-1;
 #if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK)
-  if(!compare)integer_block_applied(first,count);
+  if(!compare && !short_value)integer_block_applied(first,count);
 #endif
 #if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
   if(compare)compare_block_applied(first);
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
+  if(short_value)integer_span_applied(first,count);
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_SHORT_BLOCK)
+  if(short_value)integer_short_block_applied(first);
 #endif
   return count;
 }
@@ -439,7 +474,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
     // hot INPUT evaluator to borrow the suspended program's stack safely.
     if (v.expression && op != Op::HALT && op != Op::CONST_I8 &&
         op != Op::CONST_I16 && op != Op::BLOCK_INDEX && op != Op::CONST_I32 && op != Op::CONST_F64 && op != Op::CONST_DEC8 &&
-        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::LOAD_REF &&
+        op != Op::CONST_DEC16 && op != Op::LOAD && op != Op::INTEGER_SPAN && op != Op::INTEGER_SHORT && op != Op::LOAD_REF &&
         op != Op::LOAD_ARRAY && op != Op::ARRAY_CELL && op != Op::LOAD_ARRAY_FIXED && !(op >= Op::NEG && op <= Op::CHECK) && op != Op::FLOOR_DIV &&
         !(op >= Op::CONST_0 && op <= Op::CONST_15) &&
         !(op==Op::GRAPHICS && bytes[pc+1]==(uint8_t)basic_graphics::Operation::POINT)) return Error::INVALID_IMAGE;
@@ -450,7 +485,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
       if(!cmp || v.end-cmp<4 || (Op)bytes[cmp]!=Op::COMPARE_FALSE ||
          !((Op)bytes[rhs]>=Op::CONST_0 && (Op)bytes[rhs]<=Op::CONST_15))return Error::INVALID_IMAGE;
     }
-    if (((op == Op::LOAD || op == Op::INTEGER_SPAN || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
+    if (((op == Op::LOAD || op == Op::INTEGER_SPAN || op == Op::INTEGER_SHORT || op == Op::BLOCK_COMPARE || op == Op::STORE || op == Op::NEXT_BASIC ||
           op == Op::FOR_BASIC || op == Op::FOR_FOCAL) &&
          bytes[pc + 1] >= 26) ||
         ((op == Op::LOAD_REF || op == Op::STORE_REF || op == Op::TARGET_REF) &&
@@ -538,7 +573,7 @@ Error inspect(const uint8_t* bytes, uint16_t length, View& out) {
             inner==Op::LOAD_ARRAY || (inner>=Op::NEG && inner<=Op::FUNCTION) ||
             inner==Op::CONST_DEC8 || inner==Op::CONST_DEC16 || inner==Op::CONST_I32 ||
             inner==Op::FLOOR_DIV || inner==Op::LOAD_ARRAY_FIXED || inner==Op::SOURCE_POS ||
-            inner==Op::LOAD_PARAMETER || inner==Op::BLOCK_INDEX || inner==Op::INTEGER_SPAN ||
+            inner==Op::LOAD_PARAMETER || inner==Op::BLOCK_INDEX || inner==Op::INTEGER_SPAN || inner==Op::INTEGER_SHORT ||
             (inner>=Op::CONST_0 && inner<=Op::CONST_15) ||
             (inner==Op::GRAPHICS && bytes[at+1]==(uint8_t)basic_graphics::Operation::POINT);
         if(!allowed || inner==Op::STORE || (inner==Op::FUNCTION &&
@@ -916,6 +951,14 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         if(*p<26 && data.variables[*p].integer()) {
           const uint8_t count=integer_span(v,s,data,steps,instruction,limit);
           if(count) {VM_OPCODE_FUSED(count);break;}
+        }
+#endif
+        [[fallthrough]];
+      case Op::INTEGER_SHORT:
+#if MK61_VM_INTEGER_SPAN
+        if(op==Op::INTEGER_SHORT) {
+          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit);
+          if(count) {VM_OPCODE_FUSED_VALUE(count);break;}
         }
 #endif
         [[fallthrough]];

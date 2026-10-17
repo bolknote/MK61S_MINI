@@ -59,7 +59,9 @@ public:
     // A guarded block replaces several logical instructions, not their
     // semantics. Attribute its elapsed time once, separately from scalar
     // opcode groups; n is the number of useful instructions it consumed.
-    void fused(uint8_t count) {integer_=MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS!=0;count_=count;}
+    void fused(uint8_t count,bool integers=true) {
+      integer_=MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS && integers;count_=count;
+    }
     __attribute__((noinline)) ~Sample() {
       const uint32_t elapsed=MK61_VM_OPCODE_PROFILE_TIMING?cycles()-start_:0;
       const uint64_t measured=((uint64_t)overhead_<<32)|elapsed;
@@ -75,10 +77,12 @@ public:
 #define VM_OPCODE_PROFILE(view) language_vm::OpcodeProfile vm_opcode_profile(view)
 #define VM_OPCODE_SAMPLE(op,state,data) language_vm::OpcodeProfile::Sample vm_opcode_sample(vm_opcode_profile,op,state,data)
 #define VM_OPCODE_FUSED(count) vm_opcode_sample.fused((uint8_t)(count))
+#define VM_OPCODE_FUSED_VALUE(count) vm_opcode_sample.fused((uint8_t)(count),false)
 #else
 #define LANGUAGE_VM_OPCODE_PROFILE_SUPPORTED 0
 #define VM_OPCODE_PROFILE(view) ((void)0)
 #define VM_OPCODE_SAMPLE(op,state,data) ((void)0)
 #define VM_OPCODE_FUSED(count) ((void)0)
+#define VM_OPCODE_FUSED_VALUE(count) ((void)0)
 #endif
 #endif

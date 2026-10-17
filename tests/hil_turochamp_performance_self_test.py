@@ -30,6 +30,12 @@ data=profile('PROF state=stopped clock=96000000 overhead=1\n'
 assert data['points']['flash.read']['calls']==23
 assert data['points']['flash.read']['total_seconds']==1
 assert data['points']['zx0.decode']['total_seconds']==2
+for block_name in ('vm.block.integer','vm.block.fused'):
+    block=profile('PROF state=stopped clock=96000000\n'
+                  f'PROF {block_name} n=3 min=0 avg=32 max=0 total=96 self=96\n'
+                  'VMOP op=256 n=3 integers=0 cycles=96\n')
+    assert block['vm_opcodes']==[{'opcode':256,'instructions':3,'integer_pairs':0,
+                                  'cycles':96,'seconds':.000001}]
 detail=profile('PROF state=stopped clock=96000000\n'
                'PROF app.entry.vm n=2 min=10 avg=20 max=50 total=96000000 self=48000000\n'
                'VMCACHE dropped=0\n'

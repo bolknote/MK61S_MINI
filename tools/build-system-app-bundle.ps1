@@ -175,14 +175,14 @@ function Get-AppVariant {
         $parts.Add($(if ($Graphics -eq '1') { 'graphics' } else { 'text' }))
     }
     if ($SystemName -in @('focal', 'tinybasic')) {
-        $parts.Add($(if ($LanguageVmCompiler -eq '1') { 'vm-compiler-v8-fused' }
+        $parts.Add($(if ($LanguageVmCompiler -eq '1') { 'vm-compiler-v12-short' }
             elseif ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
     }
     if ($SystemName -eq 'language-vm') {
-        $parts.Add('split-v9-fused')
+        $parts.Add('split-v12-short')
         $parts.Add($(if ($LocalFloatMath -eq '1') { 'float' } else { 'core' }))
     }
-    if ($SystemName -eq 'language-input') { $parts.Add('cold-v9-fused') }
+    if ($SystemName -eq 'language-input') { $parts.Add('cold-v12-short') }
     if ($FocalTrace -eq '1' -and $SystemName -in @('focal', 'language-vm')) {
         $parts.Add('trace')
     }

@@ -268,7 +268,7 @@ void record_vm_opcode(u32 opcode, u32 count, u32 integers, u64 cycles);
 u32 vm_opcode_integers(usize group);
 #if MK61_DWT_VM_OPCODE_DETAIL
 struct VmOpcodeRow { u64 cycles = 0; u32 count = 0, integers = 0; };
-// Wire opcodes are byte-sized; slot 256 is the guarded integer block.
+// Wire opcodes are byte-sized; slot 256 aggregates guarded fused blocks.
 const VmOpcodeRow& vm_opcode_row(usize opcode);
 #endif
 #endif

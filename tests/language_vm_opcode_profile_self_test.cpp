@@ -26,7 +26,6 @@ uint32_t call(uint32_t operation,uint32_t group,uint32_t count,uint32_t integers
     (op==Op::DIV || op==Op::MOD || op==Op::FLOOR_DIV)?5:
     ((op>=Op::EQ && op<=Op::XOR) || op==Op::COMPARE_FALSE)?6:
     ((op>=Op::CONST_0 && op<=Op::CONST_15) || op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 || op==Op::CONST_F64 || op==Op::CONST_DEC8 || op==Op::CONST_DEC16)?0:7;
-  if(group==8)integers=count;
   assert(operation==MK61_SERVICE_VM_PROFILE && group<9 && count && integers<=count && payload);
   uint64_t cycles;std::memcpy(&cycles,payload,sizeof(cycles));
   // The wire flag is set by the APP; this test receiver mirrors subtraction.
@@ -48,9 +47,16 @@ int main() {
     Continuation state={};Bindings data={};
     {OpcodeProfile::Sample sample(profile,Op::CONST_I16,state,data);sample.fused(5);}
   }
-  assert(rows[8].count==5 && rows[8].integers==5 &&
+  assert(rows[8].count==5 && rows[8].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?5U:0U) &&
          rows[8].cycles==(MK61_VM_OPCODE_PROFILE_TIMING?10U:0U));
   for(unsigned i=0;i<8;++i)assert(!rows[i].count && !rows[i].cycles);
+  reset();
+  {
+    OpcodeProfile profile(View{});
+    Continuation state={};Bindings data={};
+    {OpcodeProfile::Sample sample(profile,Op::LOAD,state,data);sample.fused(3,false);}
+  }
+  assert(rows[8].count==3 && rows[8].integers==0);
   reset();
   {
     OpcodeProfile profile(View{});
@@ -72,7 +78,7 @@ int main() {
   uint32_t total=0;for(const auto& row:rows)total+=row.count;
   assert(total==result.steps);
 #if MK61_VM_INTEGER_BLOCK
-  assert(applied==1 && rows[8].count==4 && rows[8].integers==4);
+  assert(applied==1 && rows[8].count==4 && rows[8].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?4U:0U));
   assert((rows[8].cycles!=0)==(MK61_VM_OPCODE_PROFILE_TIMING!=0));
   assert(!rows[0].count && !rows[1].count && !rows[3].count);
 #else
@@ -100,5 +106,16 @@ int main() {
     total=0;for(const auto& row:rows)total+=row.count;
     assert(total==r.steps && rows[8].count==(input.integer()?3U:0U));
   }
+  // The same-width short block copies finite fractional cells and uses the
+  // original ABS Value operation. It is fused work, not an integer census.
+  const char copied[]="10 I=1;@(I)=.25;A=@(I);B=ABS(A)\n";
+  const auto c=compile(Language::BASIC,copied,sizeof(copied)-1,image,sizeof(image));
+  assert(c.error==Error::NONE && inspect(image,c.size,view)==Error::NONE);
+  Value array[2]={};reset();state={};state.variables=variables;state.stack=stack;
+  state.stack_capacity=MAX_STACK;state.array=array;state.array_count=2;
+  const auto r=run(view,state,Services{});
+  assert(r.error==Error::NONE && variables[0]==.25 && variables[1]==.25);
+  assert(rows[8].count==6 && rows[8].integers==0);
+  total=0;for(const auto& row:rows)total+=row.count;assert(total==r.steps);
   std::puts("VM opcode profile: active block, logical counts, single elapsed attribution and limit fallback PASS");
 }

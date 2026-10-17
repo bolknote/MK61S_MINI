@@ -167,10 +167,10 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
         basic = bundle.app_variant("tinybasic", args)
         args.language_vm_compiler = True
         self.assertNotEqual(basic, bundle.app_variant("tinybasic", args))
-        self.assertIn("vm-compiler-v10-spans", bundle.app_variant("tinybasic", args))
+        self.assertIn("vm-compiler-v12-short", bundle.app_variant("tinybasic", args))
         core = bundle.app_variant("language-vm", args)
-        self.assertIn("split-v11-spans", core)
-        self.assertIn("cold-v11-spans", bundle.app_variant("language-input", args))
+        self.assertIn("split-v12-short", core)
+        self.assertIn("cold-v12-short", bundle.app_variant("language-input", args))
         args.local_float_math = True
         self.assertNotEqual(core, bundle.app_variant("language-vm", args))
         self.assertIn("LANGVM.APP", bundle.CANONICAL)

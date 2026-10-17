@@ -169,7 +169,6 @@ void record_vm_opcodes(u32 group, u32 count, u32 integers, u64 cycles) {
 u32 vm_opcode_integers(usize group) {return group<VM_OPCODE_GROUPS?opcode_integers[group]:0;}
 void record_vm_opcode(u32 opcode, u32 count, u32 integers, u64 cycles) {
   const u32 group=vm_opcode_group(opcode);
-  if(opcode==256)integers=count;
   if(!collection_active || group>=VM_OPCODE_GROUPS || !count || integers>count)return;
   if(count>UINT32_MAX-point_statistics[(usize)Point::VM_CONSTANTS+group].samples)return;
 #if MK61_DWT_VM_OPCODE_DETAIL
@@ -354,7 +353,7 @@ const char* point_name(Point point) {
     case Point::VM_DIV_MOD: return "vm.op.divmod";
     case Point::VM_COMPARE: return "vm.op.compare";
     case Point::VM_OTHER: return "vm.op.other";
-    case Point::VM_INTEGER_BLOCK: return "vm.block.integer";
+    case Point::VM_INTEGER_BLOCK: return "vm.block.fused";
 #endif
 #if MK61_DWT_IDLE_DETAIL
     case Point::IDLE_POWER: return "idle.power";

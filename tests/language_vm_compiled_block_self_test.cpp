@@ -53,7 +53,8 @@ struct Fixture {
     // the optimized handler. All instruction/source PCs and widths stay exact.
     for(uint16_t pc=view.code;pc<view.end;) {
       const auto following=trace_following(view,pc);assert(following);
-      if((Op)image[pc]==Op::BLOCK_COMPARE || (Op)image[pc]==Op::INTEGER_SPAN)image[pc]=(uint8_t)Op::LOAD;
+      if((Op)image[pc]==Op::BLOCK_COMPARE || (Op)image[pc]==Op::INTEGER_SPAN ||
+         (Op)image[pc]==Op::INTEGER_SHORT)image[pc]=(uint8_t)Op::LOAD;
       if((Op)image[pc]==Op::BLOCK_INDEX)image[pc]=(uint8_t)Op::CONST_I16;
       pc=following;
     }

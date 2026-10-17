@@ -359,12 +359,17 @@ def main():
                     (b'10 I=-2147483648;J=-1;A=I/J+I MOD J\n',[],2147483648),
                     (b'10 I=.5;J=4;A=(I+3)*(J-2)\n',[],7),
                     (b'10 I=1;J=2;@(1)=.5;A=@(I)+I*J-J\n',[],.5),
+                    (b'10 I=-17;A=ABS(I);J=3;@(J)=-42;B=@(J);A=ABS(B)\n',[],42),
+                    (b'10 I=-2147483648;A=ABS(I)\n',[],2147483648),
                     (b'10 I=3;J=4;INPUT B\n20 A=(I+B)*(J-2)\n',["7.5"],21)):
                     m=OverlayMachine(args.resident_elf,True,address)
                     assert execute(m,packages,1,program,answers)[:2]==(expected,0)
                     record(m)
                 m=OverlayMachine(args.resident_elf,True,address)
                 assert execute(m,packages,2,b'1.10 S I=3;S J=5;S A=(I+3)*(J-2)\n',[])[:2]==(18,0)
+                record(m)
+                m=OverlayMachine(args.resident_elf,True,address)
+                assert execute(m,packages,2,b'1.10 S I=-17;S A=ABS(I)\n',[])[:2]==(17,0)
                 record(m)
             if GENERATION >= 15:
                 for program, answers, expected in (

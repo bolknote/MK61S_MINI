@@ -18,7 +18,8 @@ struct Snapshot {
   }
 };
 Snapshot* recording;
-unsigned comparisons=0,spans=0,multiple=0;
+const View* executing_view;
+unsigned comparisons=0,spans=0,multiple=0,short_blocks=0;
 struct Fixture {
   uint8_t image[MAX_IMAGE]; View view={};
   Value variables[26],array[385],stack[MAX_STACK]; State state={};
@@ -56,7 +57,7 @@ struct Fixture {
     state.stack=stack;state.stack_capacity=MAX_STACK;
   }
   Snapshot execute(bool reference,unsigned limit,bool resume=false) {
-    recording=&result;
+    recording=&result;executing_view=&view;
     Services host={};host.context=this;host.service=service;host.event=event;host.math=math;host.yield_input=true;
     for(unsigned phase=0;;++phase) {
       assert(phase<5);
@@ -65,7 +66,7 @@ struct Fixture {
       if(r.error!=Error::YIELDED)break;
       assert(state.sp<MAX_STACK);stack[state.sp++]=Value(7.5);resume=true;
     }
-    recording=nullptr;
+    recording=nullptr;executing_view=nullptr;
     for(const auto& v:variables)result.cells.push_back(v.representation());
     for(const auto& v:array)result.cells.push_back(v.representation());
     for(const auto& v:stack)result.cells.push_back(v.representation());
@@ -81,7 +82,8 @@ struct Fixture {
     return result;
   }
   unsigned marks()const {
-    unsigned n=0;for(uint16_t pc=view.code;pc<view.end;pc=instruction_end(image,view.end,pc))n+=(Op)image[pc]==Op::INTEGER_SPAN;
+    unsigned n=0;for(uint16_t pc=view.code;pc<view.end;pc=instruction_end(image,view.end,pc))
+      n+=(Op)image[pc]==Op::INTEGER_SPAN || (Op)image[pc]==Op::INTEGER_SHORT;
     return n;
   }
 };
@@ -101,7 +103,13 @@ namespace language_vm {
 void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
   if(recording)recording->trace.insert(recording->trace.end(),{pc,steps,(uint64_t)scalar_op((Op)v.bytes[pc])});
 }
-void integer_span_applied(uint16_t,uint8_t count) {++spans;multiple+=count>1;}
+void integer_span_applied(uint16_t first,uint8_t count) {
+  ++spans;multiple+=count>1;
+  assert(executing_view);
+  assert((Op)executing_view->bytes[first]==Op::INTEGER_SPAN ||
+         (Op)executing_view->bytes[first]==Op::INTEGER_SHORT);
+}
+void integer_short_block_applied(uint16_t) {++short_blocks;}
 }
 int main() {
   const char* basic[]={
@@ -121,7 +129,12 @@ int main() {
     "10 DATA 1,-2,105\n20 READ A,B,C;A=(I+3)*(J-2)+A\n",
     "10 PRINT \"I LIKE SPANS\";I*J+I-J\n",
     "10 A=128+I;B=@(128+I);C=(I+3)*(J-2)\n",
-    "10 A=I^J+I*J-I\n"
+    "10 A=I^J+I*J-I\n",
+    "10 A=ABS(I);B=ABS(J)\n",
+    "10 A=@(I);B=ABS(A);C=@(J)\n",
+    "10 A=ABS(ABS(I));B=ABS(I+J);C=ABS(I*J)\n",
+    "10 A=@(I);B=ABS(A)*J;@(I)=ABS(B)\n",
+    "10 A=ABS(I);B=SQRT(J);C=ABS(B)\n"
   };
   const Value values[]={Value(INT32_MIN),Value(INT32_MIN+1),Value(-129),Value(-1),Value(0),Value(1),
     Value(15),Value(16),Value(384),Value(385),Value(INT32_MAX),Value(.5),Value(2147483648.),
@@ -134,14 +147,15 @@ int main() {
       marked+=fast.marks();fast.stop=reference.stop=stop;equal(fast,reference,limit);
     }
   for(const char* source:{"1.10 S A=(I+3)*(J-2)\n","1.10 F K=1,9;S A=(I+3)*(J-2)\n",
-      "1.10 D 2,3;EXIT\n2.10 S A=(I+3)*(J-2);RETURN ARG(1)\n"})
+      "1.10 D 2,3;EXIT\n2.10 S A=(I+3)*(J-2);RETURN ARG(1)\n",
+      "1.10 S A=(I+3)*(J-2);S B=ABS(I);S C=ABS(ABS(J))\n"})
     for(Value x:values)for(Value y:{Value(0),Value(3),Value(.5)})for(unsigned limit:{0U,1U,2U,5U,31U,32U,33U,65U}) {
       Fixture fast(source,Language::FOCAL,x,y),reference(source,Language::FOCAL,x,y);
       assert(fast.marks());equal(fast,reference,limit);
     }
   // Every original instruction remains a legal resume point. Include nearly
   // full stacks and call endings inside the expression, not just its labels.
-  for(unsigned program:{0U,2U,6U,7U,15U}) {
+  for(unsigned program:{0U,2U,6U,7U,15U,17U,18U,19U,20U,21U}) {
     Fixture full(basic[program],Language::BASIC,3,5);
     for(uint16_t pc=full.view.code;pc<full.view.end;pc=instruction_end(full.image,full.view.end,pc))
       for(unsigned sp:{0U,1U,2U,94U,95U,96U})for(unsigned limit:{0U,1U,2U,5U,31U,32U,33U})for(bool call:{false,true}) {
@@ -164,14 +178,17 @@ int main() {
   for(unsigned n=0;n<20000;++n) {
     int32_t x=mk_math::bit_copy<int32_t>(random()),y=mk_math::bit_copy<int32_t>(random());
     if(n&1){x%=32768;y%=32768;}
-    const char* source=basic[n%3];
-    Fixture fast(source,Language::BASIC,Value(x),Value(y)),reference(source,Language::BASIC,Value(x),Value(y));
-    fast.stop=reference.stop=n%7==0?2:0;
-    equal(fast,reference,n%4==0?0:30+n%4);
+    for(unsigned family=0;family<2;++family) {
+      const char* source=basic[family?17+n%5:n%3];
+      Fixture fast(source,Language::BASIC,Value(x),Value(y)),reference(source,Language::BASIC,Value(x),Value(y));
+      fast.stop=reference.stop=n%7==0?2:0;
+      equal(fast,reference,n%4==0?0:30+n%4);
+    }
   }
   // Public bindings do not promise that the value banks are disjoint.
-  for(unsigned alias=0;alias<3;++alias)for(unsigned limit:{0U,1U,5U,31U,32U,33U}) {
-    Fixture fast(basic[7],Language::BASIC,3,5),reference(basic[7],Language::BASIC,3,5);
+  for(unsigned program:{7U,20U})for(unsigned alias=0;alias<3;++alias)for(int x:{0,3})
+      for(unsigned limit:{0U,1U,5U,31U,32U,33U}) {
+    Fixture fast(basic[program],Language::BASIC,x,5),reference(basic[program],Language::BASIC,x,5);
     for(Fixture* f:{&fast,&reference}) {
       if(alias==0)f->state.variables=f->stack;
       if(alias==1){f->state.array=f->stack;f->state.array_count=MAX_STACK;}
@@ -179,6 +196,44 @@ int main() {
     }
     equal(fast,reference,limit);
   }
-  assert(marked>1000 && spans>1000 && multiple>1000);
-  std::printf("integer spans: %u exact reference comparisons; %u spans, %u multi-op; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\n",comparisons,spans,multiple);
+  // The existing hint retains every instruction width and scalar fallback.
+  // Changed compiler APP CRC automatically invalidates its old file cache.
+  Fixture short_chain(basic[17],Language::BASIC,-17,3);
+  assert(short_chain.marks()==2);
+  for(Value cell:{Value(.25),Value::floating_bits(UINT64_C(0x8000000000000000)),
+      Value::floating_bits(UINT64_C(0x3FF0000000000000)),
+      Value(std::numeric_limits<double>::infinity()),
+      Value(-std::numeric_limits<double>::infinity()),
+      Value(std::numeric_limits<double>::quiet_NaN())})
+      for(unsigned limit:{0U,1U,2U,3U,4U,31U,32U,33U})for(unsigned stop:{0U,1U,2U}) {
+    Fixture fast(basic[18],Language::BASIC,3,5),reference(basic[18],Language::BASIC,3,5);
+    fast.array[3]=reference.array[3]=cell;fast.stop=reference.stop=stop;
+    equal(fast,reference,limit);
+  }
+  // Near-integral floating indices retain the scalar tolerance and error PC.
+  for(double index:{3+1e-8,3-1e-8,-1e-8,384-1e-8})
+      for(unsigned limit:{0U,1U,2U,3U,4U,31U,32U,33U}) {
+    Fixture fast(basic[18],Language::BASIC,index,5),reference(basic[18],Language::BASIC,index,5);
+    equal(fast,reference,limit);
+  }
+  // A short mark is only a hint. A valid but nonmatching middle instruction
+  // must execute through ordinary LOAD/function/STORE, not the fast shape.
+  for(Function function:{Function::INT,Function::SGN,Function::SQRT})
+      for(Value x:{Value(0),Value(-17),Value(INT32_MIN),Value(.5)})
+      for(unsigned limit:{0U,1U,2U,3U,31U,32U,33U}) {
+    Fixture fast(basic[17],Language::BASIC,x,3),reference(basic[17],Language::BASIC,x,3);
+    for(Fixture* f:{&fast,&reference}) {
+      uint16_t at=f->view.code;
+      while((Op)f->image[at]!=Op::INTEGER_SHORT)at=instruction_end(f->image,f->view.end,at);
+      at=(uint16_t)(at+2);
+      while((Op)f->image[at]==Op::SOURCE_POS)at=(uint16_t)(at+3);
+      assert((Op)f->image[at]==Op::FUNCTION);f->image[at+1]=(uint8_t)function;
+      const uint32_t crc=checksum(f->image+HEADER_SIZE,f->view.size-HEADER_SIZE);
+      for(unsigned byte=0;byte<4;++byte)f->image[20+byte]=(uint8_t)(crc>>(byte*8));
+      assert(inspect(f->image,f->view.size,f->view)==Error::NONE);
+    }
+    equal(fast,reference,limit);
+  }
+  assert(marked>1000 && spans>1000 && multiple>1000 && short_blocks>1000);
+  std::printf("integer spans: %u exact reference comparisons; %u spans, %u multi-op, %u short blocks; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\n",comparisons,spans,multiple,short_blocks);
 }

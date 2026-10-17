@@ -109,7 +109,7 @@ def profile(report):
     if opcodes:
         assert len({row['opcode'] for row in opcodes})==len(opcodes), 'duplicate raw opcode rows'
         assert all(row['integer_pairs']<=row['instructions'] for row in opcodes)
-        groups=[value for name,value in points.items() if name.startswith('vm.op.') or name=='vm.block.integer']
+        groups=[value for name,value in points.items() if name.startswith('vm.op.') or name in ('vm.block.integer','vm.block.fused')]
         assert sum(row['instructions'] for row in opcodes)==sum(row['calls'] for row in groups)
         assert sum(row['cycles'] for row in opcodes)==sum(row['total_cycles'] for row in groups)
         result['vm_opcodes']=opcodes

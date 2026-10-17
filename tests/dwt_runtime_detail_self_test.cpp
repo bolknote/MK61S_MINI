@@ -218,13 +218,15 @@ static void opcode_batches() {
   reset();
   record_vm_opcode(5,10,0,700);
   record_vm_opcode(256,5,0,300);
+  record_vm_opcode(256,3,3,150);
   record_vm_opcode(257,1,1,50);
   record_vm_opcode(5,1,2,50);
   assert(statistics(Point::VM_LOCALS).samples==10);
-  assert(statistics(Point::VM_INTEGER_BLOCK).samples==5 && vm_opcode_integers(8)==5);
+  assert(statistics(Point::VM_INTEGER_BLOCK).samples==8 && vm_opcode_integers(8)==3);
+  assert(statistics(Point::VM_INTEGER_BLOCK).total_cycles==450);
 #if MK61_DWT_VM_OPCODE_DETAIL
   assert(vm_opcode_row(5).count==10 && vm_opcode_row(5).cycles==700);
-  assert(vm_opcode_row(256).count==5 && vm_opcode_row(256).integers==5);
+  assert(vm_opcode_row(256).count==8 && vm_opcode_row(256).integers==3 && vm_opcode_row(256).cycles==450);
   assert(!vm_opcode_row(257).count && !vm_opcode_row(6).count);
   stop();record_vm_opcode(5,1,0,50);assert(vm_opcode_row(5).count==10);
   reset();assert(!vm_opcode_row(5).count && !vm_opcode_row(256).cycles);

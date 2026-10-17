@@ -1,0 +1,1318 @@
+{
+  "format": 1,
+  "status": "PASS",
+  "outcome": "ACCEPTED_FASTER",
+  "date": "2026-10-16",
+  "base_revision": "6d4f4a81930b10aa7da6ba1ee09116864a5b3bf7",
+  "feature": "Same-width INTEGER_SHORT: finite Value copy/ABS in the shared guarded block executor",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "USB_serial": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000,
+    "math_backend": "LIBM"
+  },
+  "workload": "Unchanged installed Turochamp; book off, level 2, maximum depth 8, e2e3, 420 nodes",
+  "stages": {
+    "baseline": {
+      "build": "F11CEA95",
+      "all_seconds": [
+        46.193556917016394,
+        31.505086333025247,
+        30.330683000036515,
+        30.25101295899367
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.290847979515092,
+      "steady_NOR_read_calls": [
+        1408,
+        1408
+      ],
+      "stack_watermark_remaining": 9772,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 12970,
+          "sha256": "d384c2e4e45f0e854b3558d781ff16c828c619a264ebae2e1c7a3d6e5aed7336"
+        },
+        "LANGIN.APP": {
+          "bytes": 11941,
+          "sha256": "9bbbf1d0aff69bcc7cf59b3290275623eba742acdedc4e5112f5392cfdf94d0e"
+        },
+        "BASIC.APP": {
+          "bytes": 14095,
+          "sha256": "3b5fcf0d6ab3879b0b6bdb2af74c92c83506a3a119d2f934df8557f669090074"
+        },
+        "FOCAL.APP": {
+          "bytes": 14238,
+          "sha256": "279d2feedd8dd6c7654bfdfd1fef33ace10aad64056230d477ad71b031910d00"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7328,
+          "sha256": "3d749e69d0efd59b856490ef3cebc373d5d00fe280e411b8cfc865f0d36ed7c7"
+        }
+      }
+    },
+    "candidate": {
+      "build": "F11CEA95",
+      "all_seconds": [
+        46.13758850004524,
+        31.32759412500309,
+        30.14575295901159,
+        30.07604687503772
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.110899917024653,
+      "steady_NOR_read_calls": [
+        1409,
+        1409
+      ],
+      "stack_watermark_remaining": 9772,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 13221,
+          "sha256": "3a8452bed80223238303ea4bd1151c4467b3687e0e61f1fd4fb35647b1470481"
+        },
+        "LANGIN.APP": {
+          "bytes": 11946,
+          "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+        },
+        "BASIC.APP": {
+          "bytes": 14198,
+          "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+        },
+        "FOCAL.APP": {
+          "bytes": 14366,
+          "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7340,
+          "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+        }
+      }
+    },
+    "control": {
+      "build": "F11CEA95",
+      "all_seconds": [
+        46.20209325000178,
+        31.488715125015005,
+        30.328801332972944,
+        30.255690499965567
+      ],
+      "decode_counts": [
+        258,
+        27,
+        3,
+        3
+      ],
+      "steady_indices": [
+        2,
+        3
+      ],
+      "steady_seconds": 30.292245916469255,
+      "steady_NOR_read_calls": [
+        1398,
+        1398
+      ],
+      "stack_watermark_remaining": 9772,
+      "system_apps": {
+        "LANGVM.APP": {
+          "bytes": 12970,
+          "sha256": "d384c2e4e45f0e854b3558d781ff16c828c619a264ebae2e1c7a3d6e5aed7336"
+        },
+        "LANGIN.APP": {
+          "bytes": 11941,
+          "sha256": "9bbbf1d0aff69bcc7cf59b3290275623eba742acdedc4e5112f5392cfdf94d0e"
+        },
+        "BASIC.APP": {
+          "bytes": 14095,
+          "sha256": "3b5fcf0d6ab3879b0b6bdb2af74c92c83506a3a119d2f934df8557f669090074"
+        },
+        "FOCAL.APP": {
+          "bytes": 14238,
+          "sha256": "279d2feedd8dd6c7654bfdfd1fef33ace10aad64056230d477ad71b031910d00"
+        },
+        "VMCache/VMSTORE.APP": {
+          "bytes": 7328,
+          "sha256": "3d749e69d0efd59b856490ef3cebc373d5d00fe280e411b8cfc865f0d36ed7c7"
+        }
+      }
+    }
+  },
+  "ordinary_reference_seconds": 30.291546947992174,
+  "candidate_seconds": 30.110899917024653,
+  "A_before_reused_from": "/Users/bolk/Projects/MK61S_MINI/.build/vm-chain-20261016.1PfSo7/hardware-aba/report.json",
+  "elapsed_reduction_percent": 0.596361193694317,
+  "speedup": 1.0059993899705861,
+  "control_drift_percent": 0.004615047274691975,
+  "steady_filter": "Non-first search, exactly 3 decodes, no NOR writes/erases; all samples retained",
+  "final_timing_has_detailed_probes": false,
+  "resources": {
+    "F411_LIBM": {
+      "baseline_flash": 376308,
+      "candidate_flash": 376308,
+      "delta_flash": 0,
+      "baseline_global_RAM": 21584,
+      "candidate_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F411_CORE": {
+      "baseline_flash": 366628,
+      "candidate_flash": 366628,
+      "delta_flash": 0,
+      "baseline_global_RAM": 21584,
+      "candidate_global_RAM": 21584,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "max_native_frame": 1928,
+      "native_frame_limit": 5120
+    },
+    "F401_Classic_CORE": {
+      "baseline_flash": 255484,
+      "candidate_flash": 255484,
+      "delta_flash": 0,
+      "baseline_global_RAM": 30644,
+      "candidate_global_RAM": 30644,
+      "minimum_flash_headroom": 4096,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    },
+    "F401_WS_CORE": {
+      "baseline_flash": 227040,
+      "candidate_flash": 227036,
+      "delta_flash": -4,
+      "baseline_global_RAM": 27236,
+      "candidate_global_RAM": 27236,
+      "minimum_flash_headroom": 8192,
+      "global_RAM_limit": 52428,
+      "max_native_frame": 1552,
+      "native_frame_limit": 2048
+    }
+  },
+  "system_apps": {
+    "LANGVM.APP": {
+      "baseline_image": 18976,
+      "candidate_image": 19336,
+      "baseline_memory": 18996,
+      "candidate_memory": 19356,
+      "delta_memory": 360,
+      "baseline_stored": 12970,
+      "candidate_stored": 13221,
+      "sha256": "3a8452bed80223238303ea4bd1151c4467b3687e0e61f1fd4fb35647b1470481"
+    },
+    "LANGIN.APP": {
+      "baseline_image": 15696,
+      "candidate_image": 15696,
+      "baseline_memory": 15712,
+      "candidate_memory": 15712,
+      "delta_memory": 0,
+      "baseline_stored": 11941,
+      "candidate_stored": 11946,
+      "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+    },
+    "BASIC.APP": {
+      "baseline_image": 19564,
+      "candidate_image": 19708,
+      "baseline_memory": 19616,
+      "candidate_memory": 19760,
+      "delta_memory": 144,
+      "baseline_stored": 14095,
+      "candidate_stored": 14198,
+      "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+    },
+    "FOCAL.APP": {
+      "baseline_image": 19376,
+      "candidate_image": 19520,
+      "baseline_memory": 19404,
+      "candidate_memory": 19548,
+      "delta_memory": 144,
+      "baseline_stored": 14238,
+      "candidate_stored": 14366,
+      "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+    },
+    "VMCache/VMSTORE.APP": {
+      "baseline_image": 9106,
+      "candidate_image": 9119,
+      "baseline_memory": 9124,
+      "candidate_memory": 9132,
+      "delta_memory": 8,
+      "baseline_stored": 7328,
+      "candidate_stored": 7340,
+      "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+    }
+  },
+  "hot_APP_memory_limit": 19456,
+  "APP_arena_limit": 20480,
+  "VM_cache_bytes": 32768,
+  "hardware_stack_bytes": 16384,
+  "bytecode_version_before_after": [
+    11,
+    12
+  ],
+  "request_ABI_unchanged": 10,
+  "APP_ABI_unchanged": 6,
+  "bytecode_size_note": "Only existing LOAD opcode bytes replaced; original widths, interior PCs and SOURCE_POS retained; no raw-image growth in ARM cases",
+  "file_cache_note": "Old wire versions rejected as hits and replaced only when owned; compiler APP CRC also changes the key; one-time rebuild, no new cache quota or format bytes",
+  "guards": "int32 array index, finite Value cells, original ABS promotion/rounding, array bounds/alias, stack space, limit, 32-instruction epoch, call boundary; failures retain scalar LOAD fallback",
+  "diagnostics": {
+    "group_pass": [
+      {
+        "name": "baseline",
+        "seconds": 30.29087077101576,
+        "points": {}
+      },
+      {
+        "name": "candidate",
+        "seconds": 47.811197708477266,
+        "points": {
+          "vm.op.constants": {
+            "calls": 586335,
+            "seconds": 1.13047159375
+          },
+          "vm.op.locals": {
+            "calls": 665037,
+            "seconds": 1.4325651770833334
+          },
+          "vm.op.arrays": {
+            "calls": 679067,
+            "seconds": 1.8416205885416668
+          },
+          "vm.op.addsub": {
+            "calls": 130813,
+            "seconds": 0.36043971354166665
+          },
+          "vm.op.multiply": {
+            "calls": 55267,
+            "seconds": 0.1652070104166667
+          },
+          "vm.op.divmod": {
+            "calls": 56626,
+            "seconds": 0.18081406770833333
+          },
+          "vm.op.compare": {
+            "calls": 291974,
+            "seconds": 0.754176171875
+          },
+          "vm.op.other": {
+            "calls": 1251600,
+            "seconds": 5.328268958333334
+          },
+          "vm.block.integer": {
+            "calls": 2797263,
+            "seconds": 4.731995057291667
+          }
+        }
+      },
+      {
+        "name": "control",
+        "seconds": 30.288520479021827,
+        "points": {}
+      }
+    ],
+    "focus_pass": [
+      {
+        "name": "qualification",
+        "seconds": 48.65637331301696,
+        "points": {
+          "vm.op.constants": {
+            "calls": 754299,
+            "seconds": 0.332614296875
+          },
+          "vm.op.locals": {
+            "calls": 125690,
+            "seconds": 0.4271403020833333
+          },
+          "vm.op.arrays": {
+            "calls": 8800,
+            "seconds": 0.06541202604166667
+          },
+          "vm.op.addsub": {
+            "calls": 91607,
+            "seconds": 0.19709325
+          },
+          "vm.op.multiply": {
+            "calls": 199270,
+            "seconds": 0.5307273229166667
+          },
+          "vm.op.divmod": {
+            "calls": 11303,
+            "seconds": 0.2667809010416667
+          },
+          "vm.op.compare": {
+            "calls": 4785,
+            "seconds": 0.019355526041666668
+          },
+          "vm.op.other": {
+            "calls": 2520965,
+            "seconds": 9.33497509375
+          },
+          "vm.block.integer": {
+            "calls": 2797263,
+            "seconds": 4.737234895833334
+          }
+        }
+      }
+    ],
+    "focus_mapping": {
+      "diagnostic_only": true,
+      "vm.op.constants": "LINE",
+      "vm.op.locals": "FUNCTION ABS",
+      "vm.op.arrays": "POW",
+      "vm.op.addsub": "JUMP_FALSE",
+      "vm.op.multiply": "GOTO_DIRECT/GOSUB_DIRECT/GOTO/GOSUB/RETURN/FOR_BASIC/NEXT_BASIC",
+      "vm.op.divmod": "LOAD_REF/STORE_REF",
+      "vm.op.compare": "Other FUNCTION",
+      "vm.op.other": "All other ordinary opcodes",
+      "vm.block.integer": "Existing fused blocks and spans"
+    },
+    "note": "Diagnostic cycle attribution only, not a decomposition of ordinary elapsed time; dense raw rows rejected by unchanged APP coexistence gate"
+  },
+  "host_census": {
+    "baseline": {
+      "instructions": 6409191,
+      "runs": 11241,
+      "already_fused_instructions": 2749966,
+      "remaining_scalar": [
+        [
+          0,
+          11241
+        ],
+        [
+          1,
+          744559
+        ],
+        [
+          2,
+          65282
+        ],
+        [
+          3,
+          144896
+        ],
+        [
+          5,
+          351006
+        ],
+        [
+          6,
+          294714
+        ],
+        [
+          8,
+          11241
+        ],
+        [
+          9,
+          108680
+        ],
+        [
+          10,
+          123832
+        ],
+        [
+          11,
+          12585
+        ],
+        [
+          13,
+          114403
+        ],
+        [
+          14,
+          10257
+        ],
+        [
+          15,
+          54449
+        ],
+        [
+          16,
+          148
+        ],
+        [
+          17,
+          8788
+        ],
+        [
+          18,
+          30912
+        ],
+        [
+          19,
+          16592
+        ],
+        [
+          20,
+          2448
+        ],
+        [
+          21,
+          2
+        ],
+        [
+          22,
+          5383
+        ],
+        [
+          23,
+          35631
+        ],
+        [
+          25,
+          842
+        ],
+        [
+          26,
+          39467
+        ],
+        [
+          31,
+          91414
+        ],
+        [
+          34,
+          7092
+        ],
+        [
+          35,
+          5146
+        ],
+        [
+          36,
+          62258
+        ],
+        [
+          51,
+          11241
+        ],
+        [
+          52,
+          151854
+        ],
+        [
+          53,
+          189
+        ],
+        [
+          64,
+          126223
+        ],
+        [
+          65,
+          92184
+        ],
+        [
+          66,
+          36757
+        ],
+        [
+          67,
+          8165
+        ],
+        [
+          68,
+          10887
+        ],
+        [
+          69,
+          7257
+        ],
+        [
+          70,
+          45475
+        ],
+        [
+          71,
+          7998
+        ],
+        [
+          72,
+          9560
+        ],
+        [
+          73,
+          2004
+        ],
+        [
+          74,
+          5674
+        ],
+        [
+          75,
+          1381
+        ],
+        [
+          79,
+          8
+        ],
+        [
+          81,
+          24
+        ],
+        [
+          83,
+          9809
+        ],
+        [
+          90,
+          13672
+        ],
+        [
+          91,
+          24800
+        ],
+        [
+          92,
+          111571
+        ],
+        [
+          93,
+          7092
+        ],
+        [
+          94,
+          293082
+        ],
+        [
+          95,
+          188619
+        ],
+        [
+          96,
+          10146
+        ],
+        [
+          521,
+          189
+        ],
+        [
+          522,
+          125503
+        ],
+        [
+          523,
+          189
+        ],
+        [
+          526,
+          4382
+        ],
+        [
+          527,
+          20
+        ],
+        [
+          532,
+          1
+        ],
+        [
+          533,
+          1
+        ]
+      ],
+      "functions": [
+        [
+          9,
+          189
+        ],
+        [
+          10,
+          125503
+        ],
+        [
+          11,
+          189
+        ],
+        [
+          14,
+          4382
+        ],
+        [
+          15,
+          20
+        ],
+        [
+          20,
+          1
+        ],
+        [
+          21,
+          1
+        ]
+      ],
+      "remaining_functions": [
+        [
+          9,
+          189
+        ],
+        [
+          10,
+          125503
+        ],
+        [
+          11,
+          189
+        ],
+        [
+          14,
+          4382
+        ],
+        [
+          15,
+          20
+        ],
+        [
+          20,
+          1
+        ],
+        [
+          21,
+          1
+        ]
+      ],
+      "successful_blocks": [
+        [
+          0,
+          49192
+        ],
+        [
+          1,
+          299383
+        ],
+        [
+          2,
+          214208
+        ]
+      ]
+    },
+    "candidate": {
+      "instructions": 6409191,
+      "runs": 11241,
+      "already_fused_instructions": 3131763,
+      "remaining_scalar": [
+        [
+          0,
+          11241
+        ],
+        [
+          1,
+          744559
+        ],
+        [
+          2,
+          65282
+        ],
+        [
+          3,
+          144896
+        ],
+        [
+          5,
+          222971
+        ],
+        [
+          6,
+          170711
+        ],
+        [
+          8,
+          11241
+        ],
+        [
+          9,
+          51323
+        ],
+        [
+          10,
+          123832
+        ],
+        [
+          11,
+          12585
+        ],
+        [
+          13,
+          114403
+        ],
+        [
+          14,
+          10257
+        ],
+        [
+          15,
+          52801
+        ],
+        [
+          16,
+          148
+        ],
+        [
+          17,
+          8788
+        ],
+        [
+          18,
+          30912
+        ],
+        [
+          19,
+          16592
+        ],
+        [
+          20,
+          2448
+        ],
+        [
+          21,
+          2
+        ],
+        [
+          22,
+          3735
+        ],
+        [
+          23,
+          35631
+        ],
+        [
+          25,
+          842
+        ],
+        [
+          26,
+          39467
+        ],
+        [
+          31,
+          91414
+        ],
+        [
+          34,
+          7092
+        ],
+        [
+          35,
+          5146
+        ],
+        [
+          36,
+          62258
+        ],
+        [
+          51,
+          11241
+        ],
+        [
+          52,
+          151854
+        ],
+        [
+          53,
+          189
+        ],
+        [
+          64,
+          126766
+        ],
+        [
+          65,
+          92184
+        ],
+        [
+          66,
+          36757
+        ],
+        [
+          67,
+          8165
+        ],
+        [
+          68,
+          10887
+        ],
+        [
+          69,
+          7257
+        ],
+        [
+          70,
+          45475
+        ],
+        [
+          71,
+          7998
+        ],
+        [
+          72,
+          9560
+        ],
+        [
+          73,
+          2004
+        ],
+        [
+          74,
+          5674
+        ],
+        [
+          75,
+          1381
+        ],
+        [
+          79,
+          8
+        ],
+        [
+          81,
+          24
+        ],
+        [
+          83,
+          9809
+        ],
+        [
+          90,
+          13672
+        ],
+        [
+          91,
+          24800
+        ],
+        [
+          92,
+          111571
+        ],
+        [
+          93,
+          7092
+        ],
+        [
+          94,
+          291194
+        ],
+        [
+          95,
+          188619
+        ],
+        [
+          96,
+          10146
+        ],
+        [
+          521,
+          189
+        ],
+        [
+          522,
+          57742
+        ],
+        [
+          523,
+          189
+        ],
+        [
+          526,
+          4382
+        ],
+        [
+          527,
+          20
+        ],
+        [
+          532,
+          1
+        ],
+        [
+          533,
+          1
+        ]
+      ],
+      "functions": [
+        [
+          9,
+          189
+        ],
+        [
+          10,
+          125503
+        ],
+        [
+          11,
+          189
+        ],
+        [
+          14,
+          4382
+        ],
+        [
+          15,
+          20
+        ],
+        [
+          20,
+          1
+        ],
+        [
+          21,
+          1
+        ]
+      ],
+      "remaining_functions": [
+        [
+          9,
+          189
+        ],
+        [
+          10,
+          57742
+        ],
+        [
+          11,
+          189
+        ],
+        [
+          14,
+          4382
+        ],
+        [
+          15,
+          20
+        ],
+        [
+          20,
+          1
+        ],
+        [
+          21,
+          1
+        ]
+      ],
+      "successful_blocks": [
+        [
+          0,
+          49192
+        ],
+        [
+          1,
+          299383
+        ],
+        [
+          2,
+          364613
+        ]
+      ]
+    }
+  },
+  "ARM_instruction_gate": {
+    "0": {
+      "comparisons": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.0000008445881745,
+          "instruction_change_percent": -0.00008445874613016713,
+          "total_instruction_change_percent": 0.014265811274172258,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1.0000025587095915,
+          "instruction_change_percent": -0.0002558703044552857,
+          "total_instruction_change_percent": 0.01658158138038157,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1.0000030503428585,
+          "instruction_change_percent": -0.00030503335539666665,
+          "total_instruction_change_percent": 0.014308454508049628,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1.0000031970944805,
+          "instruction_change_percent": -0.0003197084259110028,
+          "total_instruction_change_percent": 0.02301173909662335,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1.0000012109352294,
+          "instruction_change_percent": -0.00012109337631516226,
+          "total_instruction_change_percent": 0.014323586530573529,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1.000000686118586,
+          "instruction_change_percent": -0.00006861181152117979,
+          "total_instruction_change_percent": 0.006948872647605242,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.0000008529228386,
+          "instruction_change_percent": -0.00008529221111608365,
+          "total_instruction_change_percent": 0.01223755714727659,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0155545331476514,
+          "instruction_change_percent": -1.5316295324329987,
+          "total_instruction_change_percent": -1.500817229938356,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1.049676542759222,
+          "instruction_change_percent": -4.732557196013953,
+          "total_instruction_change_percent": -4.656271958302572,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1.0745270921383099,
+          "instruction_change_percent": -6.9358039163071155,
+          "total_instruction_change_percent": -6.600657834689461,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1.000005271397922,
+          "instruction_change_percent": -0.0005271370134507514,
+          "total_instruction_change_percent": 0.02626461600625518,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.0000011923569916,
+          "instruction_change_percent": -0.0001192355569945569,
+          "total_instruction_change_percent": 0.012939380180165827,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1.1013844197101041,
+          "instruction_change_percent": -9.205180125644919,
+          "total_instruction_change_percent": -8.958228485153496,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1.0000020976629937,
+          "instruction_change_percent": -0.0002097658593491758,
+          "total_instruction_change_percent": 0.013374925923481662,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1.0000031365070603,
+          "instruction_change_percent": -0.0003136497222611112,
+          "total_instruction_change_percent": 0.018560214203122705,
+          "image_delta": 0
+        }
+      },
+      "maximum_control_regression_percent": 0
+    },
+    "1": {
+      "comparisons": {
+        "basic_integer": {
+          "arm_instruction_ratio": 1.0000008445881745,
+          "instruction_change_percent": -0.00008445874613016713,
+          "total_instruction_change_percent": 0.014265811274172258,
+          "image_delta": 0
+        },
+        "basic_mixed": {
+          "arm_instruction_ratio": 1.0000025587095915,
+          "instruction_change_percent": -0.0002558703044552857,
+          "total_instruction_change_percent": 0.01658158138038157,
+          "image_delta": 0
+        },
+        "basic_branches": {
+          "arm_instruction_ratio": 1.0000030503428585,
+          "instruction_change_percent": -0.00030503335539666665,
+          "total_instruction_change_percent": 0.014308454508049628,
+          "image_delta": 0
+        },
+        "basic_subroutines": {
+          "arm_instruction_ratio": 1.0000031970944805,
+          "instruction_change_percent": -0.0003197084259110028,
+          "total_instruction_change_percent": 0.02301173909662335,
+          "image_delta": 0
+        },
+        "basic_wide": {
+          "arm_instruction_ratio": 1.0000012109352294,
+          "instruction_change_percent": -0.00012109337631516226,
+          "total_instruction_change_percent": 0.014323586530573529,
+          "image_delta": 0
+        },
+        "basic_decimals": {
+          "arm_instruction_ratio": 1.000000686118586,
+          "instruction_change_percent": -0.00006861181152117979,
+          "total_instruction_change_percent": 0.006948872647605242,
+          "image_delta": 0
+        },
+        "basic_expressions": {
+          "arm_instruction_ratio": 1.0000008529228386,
+          "instruction_change_percent": -0.00008529221111608365,
+          "total_instruction_change_percent": 0.01223755714727659,
+          "image_delta": 0
+        },
+        "basic_array_abs": {
+          "arm_instruction_ratio": 1.0155545331476514,
+          "instruction_change_percent": -1.5316295324329987,
+          "total_instruction_change_percent": -1.500817229938356,
+          "image_delta": 0
+        },
+        "basic_float_abs": {
+          "arm_instruction_ratio": 1.049676542759222,
+          "instruction_change_percent": -4.732557196013953,
+          "total_instruction_change_percent": -4.656271958302572,
+          "image_delta": 0
+        },
+        "basic_float_array": {
+          "arm_instruction_ratio": 1.0745270921383099,
+          "instruction_change_percent": -6.9358039163071155,
+          "total_instruction_change_percent": -6.600657834689461,
+          "image_delta": 0
+        },
+        "focal_integer": {
+          "arm_instruction_ratio": 1.000005271397922,
+          "instruction_change_percent": -0.0005271370134507514,
+          "total_instruction_change_percent": 0.02626461600625518,
+          "image_delta": 0
+        },
+        "focal_expressions": {
+          "arm_instruction_ratio": 1.0000011923569916,
+          "instruction_change_percent": -0.0001192355569945569,
+          "total_instruction_change_percent": 0.012939380180165827,
+          "image_delta": 0
+        },
+        "focal_abs": {
+          "arm_instruction_ratio": 1.1013844197101041,
+          "instruction_change_percent": -9.205180125644919,
+          "total_instruction_change_percent": -8.958228485153496,
+          "image_delta": 0
+        },
+        "focal_mixed": {
+          "arm_instruction_ratio": 1.0000020976629937,
+          "instruction_change_percent": -0.0002097658593491758,
+          "total_instruction_change_percent": 0.013374925923481662,
+          "image_delta": 0
+        },
+        "focal_subroutines": {
+          "arm_instruction_ratio": 1.0000031365070603,
+          "instruction_change_percent": -0.0003136497222611112,
+          "total_instruction_change_percent": 0.018560214203122705,
+          "image_delta": 0
+        }
+      },
+      "maximum_control_regression_percent": 0
+    }
+  },
+  "ARM_gate_phase": "run, zero control regression; total validation/fixture counts also retained in raw reports",
+  "cold_validation_tradeoff": "Unchanged control workloads execute identically or slightly fewer run instructions, but validation/fixture adds fixed 48..171 instructions; total control increase is at most 0.027%, not hidden by the run-only gate",
+  "validation": {
+    "searches": 12,
+    "all_nodes": 420,
+    "all_move": "e2e3",
+    "complete_eight_rank_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frames_crc_verified": 2928,
+    "keyboard_overflows": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "SPI_DMA_errors_and_timeouts": 0,
+    "minimum_stack_watermark_remaining": 9772,
+    "ASan_UBSan_exact_comparisons_per_math_backend": 139008,
+    "full_VM_Basic_Focal_suite": "PASS",
+    "file_cache_suite": "PASS ASan/UBSan",
+    "real_CORE_math_suite": "PASS",
+    "real_ARM_APP_poison_relocation_INPUT": {
+      "generation": 18,
+      "profile": "libm",
+      "poisoned_inactive_continuation": true,
+      "native_call_stack_peaks": {
+        "startup": 4096,
+        "verification": 980,
+        "program": 1416,
+        "input": 984,
+        "expression": 1216,
+        "finish": 376
+      },
+      "stress_native_call_stack_peaks": {
+        "startup": 3988,
+        "verification": 980,
+        "program": 1264,
+        "input": 3196,
+        "expression": 1216,
+        "finish": 376
+      },
+      "compiler_workspace_bytes": {
+        "BASIC": 3976,
+        "FOCAL": 1708
+      },
+      "input_image_c_stack_bytes": 0,
+      "input_image_in_value_stack": true,
+      "note": "APP/native service calls only; resident dispatcher/loader frames and live heap are not modeled."
+    },
+    "system_APP_CI_size_gates": "PASS",
+    "Python_and_PowerShell_APP_catalog_tests": "PASS"
+  },
+  "discarded_prototypes": [
+    "Runtime recognition through the long span loop: generic ARM regressions",
+    "Dedicated unmarked LOAD block: APP memory 19532 > 19456 and control regressions",
+    "Shared INTEGER_SPAN mark: repeated shape checks in unrelated long spans; replaced by distinct same-width hint",
+    "Integer-only short block: matched chess +1.4%, fractional-array control +4.67% slower; superseded by general finite Value support"
+  ],
+  "Flash_RAM_stack_limits_weakened": false,
+  "final_counts_only_diagnostic": "Not installed: optional profiled LANGVM.APP memory 19484 exceeds unchanged 19456 cap by 28 bytes. Fresh before-change device profiles were completed; ordinary production APP is 19356 and passes all gates",
+  "recovery": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "original_files": 116,
+    "original_directories": 24
+  },
+  "changed_file_sha256": {
+    "code/dwt_profiler.cpp": "fb2a2bf2d72ce33e539448768265bc375e14a4cf5422d103268c338c02b8301f",
+    "code/dwt_profiler.hpp": "1adf062be25b0ac83a4c2ab40575f400fe3c4c514fe5960ac5d7e8146c1c15a5",
+    "code/language_bytecode.cpp": "6086cc66fdbbad0c4c67c2273da9cf063b1ac0d28484f98327574be7cf6ff231",
+    "code/language_bytecode.hpp": "b1a80b9ab4d7769fb544800646f0e578adf463da5acd3b737c4624a4747deffa",
+    "code/language_vm.cpp": "ef0fbcba065e9d2f644f7b9b7067e2fbdabe8e3cbef71438445537af626b9ce1",
+    "code/language_vm_profile.hpp": "13e6ecf86a086f738b6c1600c8e000ab859a30651819d7e67a3ba9dda4520e55",
+    "tests/dwt_runtime_detail_self_test.cpp": "e769e67af95dc5a7ecb974287b5610eb17af6046dfad40f69e0d9307acbecca5",
+    "tests/hil_turochamp_performance.py": "64de0bbb7f05528267744b0ef7e1ddf6fbdc4db97c6368cee994b2de52fa29f0",
+    "tests/hil_turochamp_performance_self_test.py": "afe0d11af4c89c3da60020c9191a0c6213202fcb0981d22c59f4f79c24a5fce9",
+    "tests/language_vm_compiled_block_self_test.cpp": "267a27cc913c90ee36dce54dbd650426910acecc1999db6933b747748130ffe5",
+    "tests/language_vm_integer_span_self_test.cpp": "c53699ac52dcafb6b41b810b427052854c7c183bd6be5518726ccf833af549f5",
+    "tests/language_vm_opcode_profile_self_test.cpp": "84d04670abae0120c21ed7c854f09d03b3ae6a2eae629783ed01da4e18d50707",
+    "tests/language_vm_self_test.cpp": "12a4ff8b0019fd02353f7847e34a4e1551a6df604ce3bfe9dedd0d76d9b2c3c6",
+    "tests/run_language_vm_integer_span_tests.sh": "76c38472872eb5fec43efac2ed9e4c05ddd7d1f5ecd754f2b32bbe579189a8d1",
+    "tests/run_language_vm_overlay_arm_tests.py": "f6f7cff6b582ca84a338acc8c30cc2dd43abb15d08a5e50586e13efca024919e",
+    "tests/run_language_vm_speed_arm_tests.py": "98ea7d6a4c26d1fef5b61668d4e5cefed3e6e93f581d041d76ea082f61c61cf5",
+    "tests/system_app_catalog_self_test.py": "db25e6170fb06fb05c59e7bd2cf38e369221dff1d55794f2da822fb9860bb882",
+    "tools/build-system-app-bundle.ps1": "baa44b1f6a226cffeedb164a5268c6dbf463a4c3210894345393509e7c78ab38",
+    "tools/build_system_app_bundle.py": "54b24e87ce36c34db7dddfb400ff6a769e58b0fd11716a5688facb6d418eb7db"
+  },
+  "artifacts": "/Users/bolk/Projects/MK61S_MINI/.build/vm-chain-20261016.1PfSo7",
+  "raw_ABA_report": "/Users/bolk/Projects/MK61S_MINI/.build/vm-chain-20261016.1PfSo7/hardware-value-release/report.json"
+}
