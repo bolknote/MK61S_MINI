@@ -182,6 +182,19 @@ class Machine:
             assert native_call(acquire, arguments) == 1
             self.workspace = self.words(temporary + 4, 1)[0]
             native_call('_ZN13shared_memory5Lease5reset', (temporary,))
+            if any('basic_graphics' in name and 'session_storage' in name
+                   for name in elf.symbols):
+                # APP relocation/source storage above input is owned by this
+                # peripheral fixture, not the resident's mocked APP loader.
+                # Tell the real high-gap allocator about that live interval:
+                # lazy graphics must not be placed in a modeled APP's tail.
+                # Keep all existing poisoned gaps/canaries checked by call().
+                fixture = temporary + 64
+                self.uc.mem_write(fixture, bytes(16))
+                reserved = (self.pool_end - self.input + 31) & ~31
+                assert native_call('_ZN13shared_memory14LifetimeBuffer7acquire',
+                    (fixture, names.index('LOADABLE_MODULE'), reserved)) == 1
+                assert self.words(fixture, 1)[0] <= self.input
         else:
             self.workspace = elf.symbol('17workspace_storageE')
         self.scratch = elf.symbol('15scratch_storageE')

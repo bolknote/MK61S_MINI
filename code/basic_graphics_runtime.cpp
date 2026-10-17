@@ -19,6 +19,7 @@ __attribute__((noinline)) int native_text_flow(const char *text, uint16_t length
 #include "native_libc.h"
 #include "shared_memory.hpp"
 #include <new>
+#include <string.h>
 namespace basic_graphics {
 namespace {
 __attribute__((noinline)) void screen_geometry(void *, uint16_t &width, uint16_t &height) {
@@ -46,19 +47,31 @@ int screen_flow(void *, uint8_t *pixels, size_t size, const char *text, uint16_t
 }
 constexpr size_t canvas_capacity = MK61_HAS_COMPILED_GRAPHICS ? 1536 : 160;
 Session *value = nullptr;
+#if MK61_SCOPED_RESIDENT_BUFFERS
+shared_memory::LifetimeBuffer session_storage;
+#endif
 Session *session() {
   if (value)
     return value;
-  // A single retained foreground buffer follows the same guarded allocation
-  // policy as the VM cache. APP/INPUT eviction cannot move or reclaim it.
+  // Keep one lazy, stable session until END across APP/INPUT replacement. On native
+  // F411 its independent high-gap buffer can also start after USB Screen has
+  // pinned the lower arena; growing the retained heap then is forbidden.
 #if defined(__arm__) || defined(__thumb__)
   __asm__ volatile(".global mk61_lazy_basic_graphics_bytes\n"
                    ".set mk61_lazy_basic_graphics_bytes, %c0" ::
                    "i" (sizeof(Session) + canvas_capacity +
                         (MK61_USE_NATIVE_LIBC ? 16 : 32)));
 #endif
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  if (!session_storage.acquire(shared_memory::Owner::BASIC_GRAPHICS,
+                               sizeof(Session) + canvas_capacity))
+    return nullptr;
+  auto *storage = session_storage.data();
+  memset(storage, 0, sizeof(Session) + canvas_capacity);
+#else
   auto *storage = static_cast<uint8_t *>(
       shared_memory::allocate_retained_buffer(sizeof(Session) + canvas_capacity));
+#endif
   if (!storage)
     return nullptr;
   auto *canvas = storage + sizeof(Session);
@@ -120,7 +133,18 @@ Result dispatch(Request &request) {
   auto *current = session();
   if (!current)
     return Result::FULL;
-  return current->apply(request);
+  const auto result = current->apply(request);
+#if MK61_SCOPED_RESIDENT_BUFFERS
+  if (result == Result::OK && request.operation == Operation::END) {
+    // Release only after the run has finished, never on INPUT/SUSPEND or an
+    // invalid END. Otherwise the old VM-sized upper gap can obstruct a larger
+    // compiler/APP on the next run while USB still owns the lower boundary.
+    current->~Session();
+    value = nullptr;
+    session_storage.reset();
+  }
+#endif
+  return result;
 }
 } // namespace basic_graphics
 #else

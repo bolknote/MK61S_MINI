@@ -72,15 +72,19 @@ def main():
     parser.add_argument('--public-id', required=True)
     parser.add_argument('--build-id', required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
+    parser.add_argument('--reopen', action='store_true',
+                        help='run a second uncached source without detaching USB after the first END')
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result = {'status': 'RUNNING', 'pages': []}
     extension = 'foc' if args.language == 'focal' else 'tbi'
     remote = '/GFXDEMO.' + extension
+    remotes = [remote] + (['/GFXNEXT.' + extension] if args.reopen else [])
     result['language'] = args.language
     source = (ROOT/('programs/examples/Graphics.'+extension)).read_bytes()
     port = None
-    written = screen_started = False
+    written = []
+    screen_started = False
     before = saved = None
     cache_saved = {}
 
@@ -104,40 +108,46 @@ def main():
         result['identity'] = asdict(identity)
         result['before'] = health(port)
         before = fingerprint(port)
-        assert remote.casefold() not in {n.casefold() for n in before['files']}, remote
+        assert not {p.casefold() for p in remotes} & {n.casefold() for n in before['files']}, remotes
         cache_saved = {path: read_file(port, path) for path in before['files'] if cache_entry(path)}
         saved = {c: port.command(c) for c in ('reg', 'stk', 'dump', 'pwd')}
         result['alarms'] = [line for line in port.command('alarm').splitlines()
                             if line.startswith('RTC ALARM ')]
-        write_file(port, remote, source)
-        written = True
-        assert read_file(port, remote) == source
+        for path in remotes:
+            write_file(port, path, source)
+            written.append(path)
+            assert read_file(port, path) == source
         port.attach()
         screen_started = True
-        first = len(port.frames)
-        port.open(remote)
-        frame = wait_page(port, first, lambda f:
-            pixel(f, 0, 30) and pixel(f, 69, 21) and not pixel(f, 90, 30)
-            and pixel(f, 160, 27) and pixel(f, 50, 12))
-        png(frame, args.output_dir/'primitives.png')
-        (args.output_dir/'primitives.bin').write_bytes(frame)
-        result['pages'].append({'name': 'primitives', 'sha256': hashlib.sha256(frame).hexdigest()})
-        first = len(port.frames)
-        port.pump(.2)  # Let SHOW return and PAUSE/ASK enter its key wait.
-        port.key(37)
-        frame = wait_page(port, first, lambda f:
-            pixel(f, 48, 42) and pixel(f, 144, 42) and pixel(f, 96, 20)
-            and pixel(f, 30, 53))
-        png(frame, args.output_dir/'graph.png')
-        (args.output_dir/'graph.bin').write_bytes(frame)
-        result['pages'].append({'name': 'graph', 'sha256': hashlib.sha256(frame).hexdigest()})
-        port.pump(.2)
-        port.key(37)
-        deadline = time.monotonic()+5
-        while not PROMPT.search(port.text[port.open_text_start:]) and time.monotonic() < deadline:
-            port.pump(.1)
-        assert PROMPT.search(port.text[port.open_text_start:]), 'example did not exit after its second wait'
+        for index, path in enumerate(remotes):
+            prefix = 'reopen-' if index else ''
+            first = len(port.frames)
+            port.open(path)
+            frame = wait_page(port, first, lambda f:
+                pixel(f, 0, 30) and pixel(f, 69, 21) and not pixel(f, 90, 30)
+                and pixel(f, 160, 27) and pixel(f, 50, 12))
+            png(frame, args.output_dir/(prefix+'primitives.png'))
+            (args.output_dir/(prefix+'primitives.bin')).write_bytes(frame)
+            result['pages'].append({'name': prefix+'primitives', 'sha256': hashlib.sha256(frame).hexdigest()})
+            first = len(port.frames)
+            port.pump(.2)  # Let SHOW return and PAUSE/ASK enter its key wait.
+            port.key(37)
+            frame = wait_page(port, first, lambda f:
+                pixel(f, 48, 42) and pixel(f, 144, 42) and pixel(f, 96, 20)
+                and pixel(f, 30, 53))
+            png(frame, args.output_dir/(prefix+'graph.png'))
+            (args.output_dir/(prefix+'graph.bin')).write_bytes(frame)
+            result['pages'].append({'name': prefix+'graph', 'sha256': hashlib.sha256(frame).hexdigest()})
+            port.pump(.2)
+            port.key(37)
+            deadline = time.monotonic()+5
+            while not PROMPT.search(port.text[port.open_text_start:]) and time.monotonic() < deadline:
+                port.pump(.1)
+            assert PROMPT.search(port.text[port.open_text_start:]), 'example did not exit after its second wait'
+            assert b'Open failed!' not in port.text[port.open_text_start:]
+        result['uncached_reopen_same_usb_session'] = args.reopen
         result['crc_checked_frames'] = len(port.frames)
+        result['foreground_health'] = health(port)  # Capture stack watermark before cleanup resets it.
         result['status'] = 'PASS'
     except BaseException as error:
         result['status'] = 'FAIL'
@@ -169,9 +179,9 @@ def main():
                             if time.monotonic() >= deadline:
                                 raise
                             time.sleep(.2)
-                if written:
-                    assert read_file(port, remote) == source
-                    assert 'Removed 1 entry.' in port.command('rm "'+remote+'"')
+                for path in written:
+                    assert read_file(port, path) == source
+                    assert 'Removed 1 entry.' in port.command('rm "'+path+'"')
                 if before is not None:
                     result['vm_cache_cleanup'] = restore_cache(port, cache_saved)
                 if saved is not None:
@@ -194,7 +204,8 @@ def main():
             if port is not None:
                 port.close()
             (args.output_dir/'result.json').write_text(json.dumps(result, indent=2)+'\n')
-    print('BASIC graphics USB Screen: two pages, frame CRCs, files/state preserved PASS')
+    print(args.language.upper(), 'graphics USB Screen:', len(result['pages']),
+          'pages, frame CRCs, files/state preserved PASS')
 
 
 if __name__ == '__main__':

@@ -38,8 +38,10 @@ RuntimeScreen &main_lcd();
 namespace builtin_font {
 bool copyRows5x8(uint16_t, uint8_t rows[8]);
 }
+#if !defined(BASIC_GRAPHICS_REAL_SHARED_MEMORY)
 #define MK61_SHARED_MEMORY_HPP
 namespace shared_memory {
 void *allocate_retained_buffer(unsigned int);
 }
+#endif
 #endif

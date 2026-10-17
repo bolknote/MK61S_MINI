@@ -97,3 +97,6 @@ MK61_SHARED_MEMORY_OWNER(USB_FRAMEBUFFER, "usb-framebuffer",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
 MK61_SHARED_MEMORY_OWNER(STORAGE_WORKSPACE, "store-workspace",
                          arena_mask(Arena::OVERLAY), 0, 0, 0, 0)
+// BASIC and FOCAL share the lazy resident canvas and positioned PRINT state.
+MK61_SHARED_MEMORY_OWNER(BASIC_GRAPHICS, "basic-graphics",
+                         arena_mask(Arena::OVERLAY), 0, 0, 0, 0)

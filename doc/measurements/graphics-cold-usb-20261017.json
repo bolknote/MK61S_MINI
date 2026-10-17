@@ -1,0 +1,239 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "status": "PASS",
+  "purpose": "Fix cold USB Screen Graphics launch through independent, lazy foreground buffer",
+  "base_commit": "d33befb1490f1635446effee77559a3f7383900a",
+  "parallel_uncommitted_work_excluded": true,
+  "limits_relaxed": false,
+  "storage": {
+    "allocator": "shared_memory::LifetimeBuffer on native F411; legacy retained fallback unchanged",
+    "owner": "BASIC_GRAPHICS, appended without shifting existing IDs",
+    "allocation": "first drawing/PRINT context only",
+    "release": "successful END; retain across INPUT/SUSPEND",
+    "arm_session_and_canvas_bytes": 3392,
+    "arm_canvas_bytes": 1536,
+    "existing_worst_case_ELF_reserve_bytes": 3408
+  },
+  "regression": {
+    "original_failure": "source line 30 BOX: retained allocation forbidden by live USB OVERLAY lease, FULL then Open failed",
+    "original_runtime_fails_new_test": true,
+    "independent_but_unreleased_buffer_obstructs_larger_APP": true,
+    "fixed_native_cases": "80x16 and 192x64; 49152 and 43712 byte model pools; maximum APP and 19452-byte VM -> maximum APP",
+    "checks": [
+      "real OOM/retry",
+      "live USB and APP canaries",
+      "INPUT replacement",
+      "nested PRINT state",
+      "valid END releases storage; invalid END preserves it",
+      "USB may end before canvas",
+      "repeated allocation/release without heap growth"
+    ]
+  },
+  "resources": {
+    "F411_LIBM": {
+      "before_flash": 376580,
+      "after_flash": 376684,
+      "flash_delta": 104,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21600,
+      "global_RAM_delta": 16,
+      "max_native_frame": 1928,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "native_frame_limit": 5120,
+      "build": "7DB815E4",
+      "sha256": "235de62de16f41871e6d6023fd902bb02877cd8f56e0418aacdb6ff921bb0e07"
+    },
+    "F411_CORE": {
+      "before_flash": 366900,
+      "after_flash": 367004,
+      "flash_delta": 104,
+      "before_global_RAM": 21584,
+      "after_global_RAM": 21600,
+      "global_RAM_delta": 16,
+      "max_native_frame": 1928,
+      "minimum_flash_headroom": 131072,
+      "global_RAM_limit": 49152,
+      "native_frame_limit": 5120,
+      "build": "8BD00BCC",
+      "sha256": "450adc2212e28ab3836acdafe9c14da63ce2f2b6aa1057a43dbc83bbd0c1d942"
+    },
+    "F401_Classic_CORE": {
+      "before_flash": 255484,
+      "after_flash": 255492,
+      "flash_delta": 8,
+      "before_global_RAM": 30644,
+      "after_global_RAM": 30644,
+      "global_RAM_delta": 0,
+      "max_native_frame": 1552,
+      "minimum_flash_headroom": 4096,
+      "global_RAM_limit": 52428,
+      "native_frame_limit": 2048,
+      "build": "94EED229",
+      "sha256": "536f48ce3769210712a1c02ddf4d58cebf25ea09a69c86eded99dcde6141c4fe"
+    },
+    "F401_WS_CORE": {
+      "before_flash": 227036,
+      "after_flash": 227048,
+      "flash_delta": 12,
+      "before_global_RAM": 27236,
+      "after_global_RAM": 27236,
+      "global_RAM_delta": 0,
+      "max_native_frame": 1552,
+      "minimum_flash_headroom": 8192,
+      "global_RAM_limit": 52428,
+      "native_frame_limit": 2048,
+      "build": "762B8EB9",
+      "sha256": "2b237abeffd70202e9de6d1f6ccf1db4a314af4984f6c131b37f290951793568"
+    }
+  },
+  "system_apps": {
+    "BASIC.APP": {
+      "bytes": 14198,
+      "loaded_bytes": 19760,
+      "sha256": "ceddc0f63f242ab9aa1af06ba47ec16ad83e94b57bbcfb822ce1530a7177f7b5"
+    },
+    "FOCAL.APP": {
+      "bytes": 14366,
+      "loaded_bytes": 19548,
+      "sha256": "4a7fe31913bf905a1ae2eae916f4c12fce290ab4f7600388de1222efefb195a2"
+    },
+    "LANGIN.APP": {
+      "bytes": 11946,
+      "loaded_bytes": 15712,
+      "sha256": "d40cddab9f3e58ac7fd601684913b575e3fb1702082d89f7cde68ce2d19abd66"
+    },
+    "LANGVM.APP": {
+      "bytes": 13250,
+      "loaded_bytes": 19452,
+      "sha256": "81dba25f574db5be578af6b2315eb83ce4e9bb61d62453d3b522b916acdbe403"
+    },
+    "VMCache/VMSTORE.APP": {
+      "bytes": 7340,
+      "loaded_bytes": 9132,
+      "sha256": "fe2c13284d48c65d4be934e04364ee66c4993447fa906c33e4beb90d8fe216ba"
+    }
+  },
+  "hardware": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "arithmetic": "LIBM",
+    "build": "7DB815E4",
+    "languages": [
+      {
+        "language": "basic",
+        "cold_mcu_reset_before_attach": true,
+        "uncached_reopen_same_usb_session": true,
+        "pages": [
+          {
+            "name": "primitives",
+            "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+          },
+          {
+            "name": "graph",
+            "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+          },
+          {
+            "name": "reopen-primitives",
+            "sha256": "13401718041d86b7f4064060955657a3b0566fe8de5cb635bcbdaf74ab305bc3"
+          },
+          {
+            "name": "reopen-graph",
+            "sha256": "07ae52e42c88adfbc581e3658cacfaa73209f345be4312a3b13e2d85a9b18383"
+          }
+        ],
+        "crc_checked_frames": 12,
+        "source_sha256": "b75062cab913531b8175d1337c8cb27bfc76629cda90f335d19d7b24bc9fc0b3",
+        "foreground_mpu_status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005468 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=10612 observed_remaining=10612 sram_xn=1\r\n/> ",
+        "foreground_crash": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "minimum_observed_stack_remaining": 10612,
+        "stack_budget": 16384,
+        "plots_identical_outside_transient_io_overlay": true,
+        "transient_io_overlay_changed_pixels": {
+          "primitives": 0,
+          "graph": 0
+        }
+      },
+      {
+        "language": "focal",
+        "cold_mcu_reset_before_attach": true,
+        "uncached_reopen_same_usb_session": true,
+        "pages": [
+          {
+            "name": "primitives",
+            "sha256": "fda59d7d13cb8df224edeaa110a4d16d2ef9759f6dd9c3c2680625f43c0bdbbe"
+          },
+          {
+            "name": "graph",
+            "sha256": "a0674b0c02bbc051f807771d8f81dd355d636029b2d0d4b99b3a4be713c3e3ef"
+          },
+          {
+            "name": "reopen-primitives",
+            "sha256": "131aa7881fbafee16788102e3e3c9bea741c7d0f3464fe8922a6288d3a9b290d"
+          },
+          {
+            "name": "reopen-graph",
+            "sha256": "a0674b0c02bbc051f807771d8f81dd355d636029b2d0d4b99b3a4be713c3e3ef"
+          }
+        ],
+        "crc_checked_frames": 13,
+        "source_sha256": "babe2cf72523358f223d0166a88cfa6de6037197c88135b6838317e8eb196a9e",
+        "foreground_mpu_status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005468 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=10576 observed_remaining=10576 sram_xn=1\r\n/> ",
+        "foreground_crash": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "minimum_observed_stack_remaining": 10576,
+        "stack_budget": 16384,
+        "plots_identical_outside_transient_io_overlay": true,
+        "transient_io_overlay_changed_pixels": {
+          "primitives": 87,
+          "graph": 0
+        }
+      }
+    ],
+    "original_build": "122A5FF9",
+    "restored": true,
+    "files_preserved": 116,
+    "directories_preserved": 24,
+    "calculator_preserved": true,
+    "serial_closed": true,
+    "mini_touched": false,
+    "raw_report": ".build/graphics-buffer-20261017.Eb8W2q/hardware-final/report.json"
+  },
+  "checks": {
+    "graphics_and_allocator_ASan_UBSan": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-graphics-final.log"
+    },
+    "shared_memory_ASan_UBSan": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-memory.log"
+    },
+    "real_CORE_and_LIBM_math": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-math.log"
+    },
+    "FOCAL_host": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-focal.log"
+    },
+    "BASIC_ARM_native_VM": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-arm-basic-final.log"
+    },
+    "FOCAL_ARM": {
+      "status": "PASS",
+      "log": ".build/graphics-buffer-20261017.Eb8W2q/test-arm-focal-final.log"
+    }
+  },
+  "ARM_fixture": "Real high-gap allocator reserves the fixture-owned source/relocation interval; existing APP gap/tail poison and register canaries unchanged",
+  "source_sha256": {
+    "code/basic_graphics_runtime.cpp": "49f480d1fe76472880922c8d75a095faeff6d026651967d80adca7cddbcc60d0",
+    "code/shared_memory_owner_catalog.inc": "ffc5e6b2bb08b5040ca4929eee82176e6f79ab53282de4ded0ee017f2878b098",
+    "tests/basic_graphics_cold_usb_self_test.cpp": "c437ffd0427a788478783e625c0d8923bd8cd240b4f5801a45b4b2e75eeb38c4",
+    "tests/basic_graphics_runtime_fixture.hpp": "2ed99610a15565f5fe4457f009a1d7f40d5a72334fd287665b8914a7b299adc6",
+    "tests/run_basic_graphics_tests.sh": "7c7e1e45895e74258acd534ec1050255778f598bad33060d6acc9913a67b127b",
+    "tests/run_portable_system_arm_tests.py": "6222b40d6dd37dd63c453327c79682c2fa09ac8a81572450c12083a654f67b31",
+    "tests/hil_basic_graphics.py": "5a0eb749bde58ef21d7b93e2212c5adc0cdc725cee4d98977355deca4c7b59b6"
+  }
+}
