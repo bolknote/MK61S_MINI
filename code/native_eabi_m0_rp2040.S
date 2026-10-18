@@ -9,8 +9,9 @@
  * License: ../third_party/rp2040-softfloat/LICENSE.TXT
  *
  * Project changes: full IEEE C++ fallback guards, normal-only unpacking,
- * chunked cancellation normalization, power-of-two multiplication/division,
- * rational reciprocal seeds, and fallback while SIO's divider is dirty.
+ * unsigned equal-sign addition, chunked cancellation normalization,
+ * power-of-two multiplication/division, rational reciprocal seeds, and
+ * fallback while SIO's divider is dirty.
  * No Qfplib GPL-2.0 source is linked or copied into this firmware.
  */
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
@@ -37,9 +38,8 @@
  lsls \re,#21
  lsrs \re,#21
 .endm
-.macro mdunpacks ra,rb,re,rt0,rt1
- lsrs \re,\rb,#20
- lsrs \rt1,\rb,#31
+.macro mdunpacks_normal ra,rb,re,rt0
+ // re already contains sign:exponent from the common IEEE guard.
  subs \rt0,\re,#1
  lsls \rt0,#20
  subs \rb,\rt0
@@ -54,6 +54,12 @@
 .endm
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
 
+.Lda_slow:
+ sub sp, #4
+ bl mk61_m0_dadd_slow
+ add sp, #4
+ pop {r4-r7,pc}
+
 regular_func __aeabi_dsub
  push {r4-r7,r14}
  movs r4,#1
@@ -66,33 +72,150 @@ regular_func __aeabi_dsub
 regular_func __aeabi_dadd
  push {r4-r7,r14}
 da_entry:
- lsls r4, r1, #1
- lsrs r4, r4, #21
- lsls r5, r3, #1
- lsrs r5, r5, #21
- // The maximum-exponent guard below also rejects Inf/NaN in either input.
- cmp r4, #0
- beq 90f
- cmp r5, #0
- beq 90f
- cmp r4, r5
+ lsrs r4, r1, #20
+ lsrs r5, r3, #20
+ // Normal inputs and max exponent 55..2045 guarantee that every nonzero
+ // result is normal, including cancellation across a power-of-two boundary.
+ // This also rejects Inf/NaN before the significands change.
+ lsls r6, r4, #21
+ beq .Lda_slow
+ lsls r7, r5, #21
+ beq .Lda_slow
+ cmp r6, r7
  bhs 89f
- mov r4, r5
+ mov r6, r7
 89:
- mov r6, r4
+ lsrs r6, #21
  subs r6, #55
  ldr r7, =1990
  cmp r6, r7
- bhi 90f
- b 91f
-90:
- sub sp, #4
- bl mk61_m0_dadd_slow
- add sp, #4
+ bhi .Lda_slow
+ mov r6,r1
+ eors r6,r3
+ bmi .Lda_mixed_sign
+ // With equal signs there is no cancellation or signed normalization.
+ // Keep the larger operand's packed exponent/sign as the final addend;
+ // only the fraction and implicit leading bit enter the unsigned sum.
+ subs r6,r4,r5
+ subs r4,#1
+ lsls r4,#20
+ subs r1,r4
+ subs r5,#1
+ lsls r5,#20
+ subs r3,r5
+ mov r12,r4
+ movs r4,#0
+ cmp r6,#0
+ bmi .Lda_same_y
+ beq .Lda_same_add
+ cmp r6,#32
+ bhs .Lda_same_x_far
+ movs r7,#32
+ subs r7,r7,r6
+ movs r4,r2
+ lsls r4,r7
+ movs r5,r3
+ lsls r5,r7
+ lsrs r2,r6
+ lsrs r3,r6
+ orrs r2,r5
+.Lda_same_add:
+ adds r0,r2
+ adcs r1,r3
+ lsrs r5,r1,#21
+ bne .Lda_same_shift
+ lsls r4,#1
+ bcc .Lda_same_pack
+.Lda_same_increment:
+ adds r0,#1
+ bcc 1f
+ adds r1,#1
+1:
+ cmp r4,#0
+ bne .Lda_same_pack
+ lsrs r0,#1                    @ an exact midpoint rounds to even
+ lsls r0,#1
+.Lda_same_pack:
+ mov r2,r12
+ adds r1,r2
  pop {r4-r7,pc}
-91:
- mdunpacks r0,r1,r4,r6,r7
- mdunpacks r2,r3,r5,r6,r7
+.Lda_same_shift:
+ // The sum has one extra leading bit. Its discarded low bit is the
+ // guard; the entire alignment tail remains available as sticky bits.
+ lsls r6,r0,#31
+ lsrs r0,#1
+ lsls r5,r1,#31
+ orrs r0,r5
+ lsrs r1,#1
+ movs r2,#1
+ lsls r2,#20
+ add r12,r2
+ cmp r6,#0
+ beq .Lda_same_pack
+ b .Lda_same_increment
+
+.Lda_same_y:
+ mov r12,r5
+ negs r6,r6
+ cmp r6,#32
+ bhs .Lda_same_y_far
+ movs r7,#32
+ subs r7,r7,r6
+ movs r4,r0
+ lsls r4,r7
+ movs r5,r1
+ lsls r5,r7
+ lsrs r0,r6
+ lsrs r1,r6
+ orrs r0,r5
+ b .Lda_same_add
+
+.Lda_same_x_far:
+ cmp r6,#54
+ bhs .Lda_same_pack            @ less than half an ULP: larger input is exact
+ movs r7,#64
+ subs r7,r7,r6
+ movs r4,r2
+ lsls r4,r7
+ beq 1f
+ movs r4,#1
+1:
+ subs r6,#32
+ lsrs r2,r6
+ orrs r4,r2
+ movs r2,r3
+ lsls r3,r7
+ orrs r4,r3
+ lsrs r2,r6
+ movs r3,#0
+ b .Lda_same_add
+.Lda_same_y_far:
+ cmp r6,#54
+ blo 1f
+ movs r0,r2
+ movs r1,r3
+ b .Lda_same_pack
+1:
+ movs r7,#64
+ subs r7,r7,r6
+ movs r4,r0
+ lsls r4,r7
+ beq 2f
+ movs r4,#1
+2:
+ subs r6,#32
+ lsrs r0,r6
+ orrs r4,r0
+ movs r0,r1
+ lsls r1,r7
+ orrs r4,r1
+ lsrs r0,r6
+ movs r1,#0
+ b .Lda_same_add
+
+.Lda_mixed_sign:
+ mdunpacks_normal r0,r1,r4,r6
+ mdunpacks_normal r2,r3,r5,r6
  subs r7,r5,r4                 @ ye-xe
  subs r6,r4,r5                 @ xe-ye
  bmi da_ygtx
@@ -190,28 +313,13 @@ da_4:
  lsrs r0,#1                    @ round to even
  lsls r0,#1
 da_3:
+ // The entry guard already excludes underflow and overflow. Do not repeat
+ // those checks after the exact signed sum and nearest-even rounding.
  subs r2,#1
- bmi da_6
- adds r4,r2,#2                 @ check if exponent is overflowing
- lsrs r4,#11
- bne da_7
  lsls r2,#20                   @ pack exponent and sign
  add r1,r2
  lsls r3,#31
  add r1,r3
- pop {r4-r7,r15}
-
-da_7:
-@ here exponent overflow: return signed infinity
- lsls r1,r3,#31
- ldr r3,=0x7ff00000
- orrs r1,r3
- b 1f
-da_6:
-@ here exponent underflow: return signed zero
- lsls r1,r3,#31
-1:
- movs r0,#0
  pop {r4-r7,r15}
 
 da_5:

@@ -20,6 +20,7 @@ class BenchmarkShell(PicoShell):
 def decode(raw):
     assert len(raw)>=24
     magic,version,cases,samples,rounds=struct.unpack_from('<5I',raw)
+    if version==2:return decode_addition_streams(raw)
     assert (magic,version,cases,samples,rounds)==(0x30414C55,1,12,1024,9)
     assert len(raw)==24+4*cases*96
     result={}
@@ -38,6 +39,30 @@ def decode(raw):
                 'raw_us':list(elapsed),'control_us':list(control)})
         result[name]=rows
     return result
+
+def decode_addition_streams(raw):
+    assert struct.unpack_from('<6I',raw)==(0x30414C55,2,32,1024,9,6)
+    assert len(raw)==24+6*(32*24+72)
+    names=('same_sign_positive','same_sign_negative','mixed_sign_close',
+           'wide_gap','same_exponent','full_exponent_range')
+    rows=[]
+    for group,name in enumerate(names):
+        offset=24+group*(32*24+72);pairs=[]
+        for case in range(32):
+            a,b,value=struct.unpack_from('<3Q',raw,offset+case*24)
+            x,y=struct.unpack('<2d',struct.pack('<2Q',a,b))
+            assert value==struct.unpack('<Q',struct.pack('<d',x+y))[0],(name,case,hex(a),hex(b),hex(value))
+            pairs.append({'a':f'{a:016X}','b':f'{b:016X}','result':f'{value:016X}'})
+        elapsed=struct.unpack_from('<9I',raw,offset+32*24)
+        control=struct.unpack_from('<9I',raw,offset+32*24+36)
+        rows.append({'name':name,'pairs':pairs,
+            'us_per_call':statistics.median(x-y for x,y in zip(elapsed,control))/1024,
+            'raw_us':list(elapsed),'control_us':list(control)})
+    return {'dadd_streams':rows}
+
+def operands(result):
+    return {name:[[(pair['a'],pair['b']) for pair in row.get('pairs',[row])] for row in rows]
+            for name,rows in result.items()}
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
@@ -73,6 +98,9 @@ def main():
                 raw=read_file(p,f'{directory}/{name}.bin')
                 (args.output/(name+'.bin')).write_bytes(raw);results[name]=decode(raw)
                 print(name,{op:round(statistics.mean(r['us_per_call'] for r in rows),4) for op,rows in results[name].items()},flush=True)
+            if results:
+                reference=operands(next(iter(results.values())))
+                assert all(operands(result)==reference for result in results.values()),'benchmark operands differ between implementations'
             if 'math_probe' in config:
                 names=('sin','cos','tan','asin','acos','atan','ln','log10','exp','sqrt','pow')
                 records=[]

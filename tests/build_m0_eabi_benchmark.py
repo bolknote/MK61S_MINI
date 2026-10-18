@@ -15,6 +15,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir',type=Path,required=True)
     parser.add_argument('--qfplib-source',type=Path)
+    parser.add_argument('--baseline-library',type=Path,help='Also time a previously built owned runtime archive')
+    parser.add_argument('--addition-streams',action='store_true',help='Time six streams of varied addition operands')
     parser.add_argument('--directory',default='MK61S-M0-ALU-20261018')
     parser.add_argument('--toolchain',type=Path)
     parser.add_argument('--math-probe',action='store_true',help='Also build all eleven local binary64 functions for hardware qualification')
@@ -34,6 +36,7 @@ def main():
             *(['-std=c++17','-fno-exceptions','-fno-rtti'] if source.suffix=='.cpp' else []),'-c',str(source),'-o',str(obj)],check=True)
     subprocess.run([str(tc/'arm-none-eabi-ar'),'rcs',str(out/'owned.a'),*[str(p) for p in objects]],check=True)
     variants=[('OWN',''),('GCC','#define M0_BENCH_RESIDENT 1\n')]
+    if args.baseline_library:variants.insert(1,('BASE',''))
     if args.qfplib_source:
         subprocess.run([str(tc/'arm-none-eabi-gcc'),*flags,'-c',str(args.qfplib_source),'-o',str(out/'qfplib.o')],check=True)
         subprocess.run([str(tc/'arm-none-eabi-ar'),'rcs',str(out/'qfplib.a'),str(out/'qfplib.o')],check=True)
@@ -41,14 +44,19 @@ def main():
     results={}
     for name,define in variants:
         wrapper=out/(name+'.c')
-        wrapper.write_text(define+f'#define M0_BENCH_OUTPUT "{name}"\n#define M0_BENCH_MARKER "/{args.directory}/marker.bin"\n#include "{ROOT/"tests/fixtures/m0_eabi_benchmark.c"}"\n')
+        fixture=ROOT/'tests/fixtures'/('m0_eabi_add_benchmark.c' if args.addition_streams else 'm0_eabi_benchmark.c')
+        wrapper.write_text(define+f'#define M0_BENCH_OUTPUT "{name}"\n#define M0_BENCH_MARKER "/{args.directory}/marker.bin"\n#include "{fixture}"\n')
         cmd=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
             '--source',str(wrapper),'--arm-toolchain-bin',str(tc),'--output-dir',str(out/name)]
-        if name!='GCC':cmd+=['--library',str(out/('owned.a' if name=='OWN' else 'qfplib.a'))]
+        if name!='GCC':
+            library=args.baseline_library.resolve() if name=='BASE' else out/('owned.a' if name=='OWN' else 'qfplib.a')
+            cmd+=['--library',str(library)]
         with (out/(name+'.log')).open('w') as log:subprocess.run(cmd,check=True,stdout=log,stderr=subprocess.STDOUT)
         app=out/name/(name+'.APP');results[name]={'file':str(app),'bytes':app.stat().st_size,'sha256':hashlib.sha256(app.read_bytes()).hexdigest()}
         print(name,results[name],flush=True)
     metadata={'directory':'/'+args.directory,'apps':results,'code_location':'All local implementations execute in SRAM; GCC control uses resident Flash.',
+        'corpus':'addition-streams' if args.addition_streams else 'four-operations',
+        'baseline_library_sha256':hashlib.sha256(args.baseline_library.read_bytes()).hexdigest() if args.baseline_library else None,
         'qfplib_source_sha256':hashlib.sha256(args.qfplib_source.read_bytes()).hexdigest() if args.qfplib_source else None}
     if args.math_probe:
         fixture=(ROOT/'tests/fixtures/compact_math_probe_app.c').read_text()

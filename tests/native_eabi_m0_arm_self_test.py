@@ -206,6 +206,36 @@ def fast_path_boundaries(m):
                     m.floating('__aeabi_dmul',a,d,bits(real(a)*real(d)))
                     m.floating('__aeabi_dmul',d,a,bits(real(d)*real(a)))
 
+def addition_rounding(m):
+    # Uniform random encodings mostly reach the large-exponent-gap branch.
+    # Deliberately cover both alignment directions, guard/sticky ties, a
+    # significand carry, and equal negative signs throughout the fast guard.
+    fractions=(0,1,1<<31,(1<<52)-2,(1<<52)-1)
+    for exponent in (1,2,54,55,56,1022,1023,1024,2044,2045,2046):
+        for delta in (0,1,2,31,32,33,52,53,54,55,60,64):
+            if exponent<=delta:continue
+            for af in fractions:
+                for bf in fractions:
+                    a=(exponent<<52)|af
+                    b=((exponent-delta)<<52)|bf
+                    for sign in (0,SIGN):
+                        x,y=a|sign,b|sign
+                        expected=bits(real(x)+real(y))
+                        m.floating('__aeabi_dadd',x,y,expected)
+                        m.floating('__aeabi_dadd',y,x,expected)
+                        m.floating('__aeabi_dsub',x,y^SIGN,expected)
+    rng=random.Random(0xADD06140)
+    for _ in range(4096):
+        exponent=rng.randrange(1,2047)
+        a=(exponent<<52)|rng.getrandbits(52)
+        b=(max(1,exponent-rng.randrange(65))<<52)|rng.getrandbits(52)
+        for sa,sb in ((0,0),(SIGN,SIGN),(0,SIGN),(SIGN,0)):
+            x,y=a|sa,b|sb
+            expected=bits(real(x)+real(y))
+            m.floating('__aeabi_dadd',x,y,expected)
+            m.floating('__aeabi_dadd',y,x,expected)
+            m.floating('__aeabi_dsub',x,y^SIGN,expected)
+
 def build(toolchain,out,rp2040=False):
     out.mkdir(parents=True,exist_ok=True)
     flags=['-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-ffunction-sections','-fdata-sections',
@@ -238,7 +268,8 @@ def main():
         sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
         elf=build(compiler_bin(a.toolchain),a.output_dir,a.rp2040)
     m=Machine(elf,a.rp2040)
-    if not a.math_only:arithmetic(m,a.samples);fast_path_boundaries(m)
+    if not a.math_only:
+        arithmetic(m,a.samples);fast_path_boundaries(m);addition_rounding(m)
     worst=math_vectors(m)
     if a.rp2040:
         # A caller with pending divider state must get the full software path,
