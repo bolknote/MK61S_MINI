@@ -6,6 +6,7 @@
 #include "terminal_encoding.hpp"
 #include "terminal_file_transfer.hpp"
 #include "terminal_script.hpp"
+#include "diagnostics.hpp"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -211,25 +212,34 @@ bool Terminal::path(const char *&args, char out_path[files::PATH_SIZE]) {
          script::normalize_path(directory_, encoded, out_path);
 }
 void Terminal::cancel_upload() {
-  std::free(upload_);
-  upload_ = nullptr;
-  upload_size_ = upload_used_ = 0;
-  upload_path_[0] = 0;
+  files::cancel_write(upload_);
+  upload_size_ = upload_used_ = upload_running_crc_ = 0;
 }
 bool Terminal::get(const char *args) {
   char name[files::PATH_SIZE];
   files::Entry entry;
-  if (!path(args, name) || !terminal_core::at_end(args) ||
-      !files::stat(name, entry) || entry.directory || entry.size > 65534)
+  if (!path(args, name)) return false;
+  args=terminal_core::skip_spaces(args);
+  const bool m8=!std::strncmp(args,"m8",2) && terminal_core::at_end(args+2);
+  if ((!terminal_core::at_end(args) && !m8) ||
+      !files::stat(name, entry) || entry.directory || (!m8 && entry.size > 65534))
     return false;
+  program_store::Entry logical{};
+  if(m8 && (!program_store::text_content(script::file_type(name)) || !script::register_file(name,logical))) return false;
+  const u32 size=m8?logical.data_len:entry.size;
+  const auto read=[&](u32 at,u8* bytes,unsigned n,unsigned& used) {
+    if(!m8) return files::read_range(name,at,bytes,n,used);
+    u16 count=0;const bool ok=program_store::read_range_id(logical.id,(u16)at,bytes,(u16)n,&count);
+    used=count;return ok;
+  };
   const u32 revision = files::revision();
   u32 crc = 0;
   u8 bytes[96];
   unsigned used;
-  for (u32 at = 0; at < entry.size;) {
+  for (u32 at = 0; at < size;) {
     const unsigned n =
-        entry.size - at < sizeof(bytes) ? entry.size - at : sizeof(bytes);
-    if (!files::read_range(name, at, bytes, n, used) || used != n ||
+        size - at < sizeof(bytes) ? size - at : sizeof(bytes);
+    if (!read(at, bytes, n, used) || used != n ||
         files::revision() != revision)
       return false;
     for (unsigned i = 0; i < n; ++i)
@@ -238,13 +248,13 @@ bool Terminal::get(const char *args) {
     if (backend_.service)
       backend_.service(backend_.context);
   }
-  crc = terminal_file_transfer::checksum_finish(crc, entry.size);
-  out("@MKC:GET %lu %lu\r\n", (unsigned long)entry.size, (unsigned long)crc);
-  for (u32 at = 0; at < entry.size;) {
+  crc = terminal_file_transfer::checksum_finish(crc, size);
+  out("@MKC:GET %lu %lu\r\n", (unsigned long)size, (unsigned long)crc);
+  for (u32 at = 0; at < size;) {
     const unsigned n =
-        entry.size - at < sizeof(bytes) ? entry.size - at : sizeof(bytes);
+        size - at < sizeof(bytes) ? size - at : sizeof(bytes);
     char hex[193];
-    if (!files::read_range(name, at, bytes, n, used) || used != n ||
+    if (!read(at, bytes, n, used) || used != n ||
         files::revision() != revision)
       return false;
     for (unsigned i = 0; i < n; ++i) {
@@ -257,7 +267,7 @@ bool Terminal::get(const char *args) {
     if (backend_.service)
       backend_.service(backend_.context);
   }
-  out("@MKC:END %lu %lu\r\n", (unsigned long)entry.size, (unsigned long)crc);
+  out("@MKC:END %lu %lu\r\n", (unsigned long)size, (unsigned long)crc);
   return true;
 }
 bool Terminal::put(const char *args) {
@@ -274,17 +284,20 @@ bool Terminal::put(const char *args) {
     usize size = 0, crc = 0;
     if (!path(args, name) ||
         !terminal_core::parse_unsigned(args, 10, 65534, size) ||
-        !terminal_core::parse_unsigned(args, 10, UINT32_MAX, crc) ||
-        !terminal_core::at_end(args) || files::usb_active())
+        !terminal_core::parse_unsigned(args, 10, UINT32_MAX, crc) || files::usb_active())
       return false;
+    args=terminal_core::skip_spaces(args);
+    const bool m8=!std::strncmp(args,"m8",2) && terminal_core::at_end(args+2);
+    if((!terminal_core::at_end(args) && !m8) ||
+       (m8 && !program_store::text_content(script::file_type(name)))) return false;
     cancel_upload();
-    upload_ = (u8 *)std::malloc(size ? size : 1);
+    upload_ = files::begin_write(name,m8);
     if (!upload_)
       return false;
     upload_size_ = (u32)size;
     upload_crc_ = (u32)crc;
+    upload_running_crc_=0;
     upload_revision_ = files::revision();
-    std::strcpy(upload_path_, name);
     out("@MKC:READY %lu\r\n", (unsigned long)size);
     return true;
   }
@@ -304,7 +317,8 @@ bool Terminal::put(const char *args) {
         !terminal_file_transfer::decode_hex(hex, data, sizeof(data), n) || !n ||
         offset != upload_used_ || n > upload_size_ - upload_used_)
       return false;
-    std::memcpy(upload_ + upload_used_, data, n);
+    if(!files::append_write(upload_,data,n)) { cancel_upload();return false; }
+    for(unsigned i=0;i<n;++i) upload_running_crc_=terminal_file_transfer::checksum_update(upload_running_crc_,data[i]);
     upload_used_ += n;
     out("@MKC:ACK %lu\r\n", (unsigned long)upload_used_);
     return true;
@@ -312,13 +326,13 @@ bool Terminal::put(const char *args) {
   if (std::strcmp(action, "end") || !terminal_core::at_end(args) ||
       upload_used_ != upload_size_)
     return false;
-  const u32 crc = terminal_file_transfer::checksum(upload_, upload_size_);
+  const u32 crc = terminal_file_transfer::checksum_finish(upload_running_crc_, upload_size_);
   if (crc != upload_crc_) {
     cancel_upload();
     out("@MKC:ERROR PUT_CHECKSUM\r\n");
     return false;
   }
-  if (!files::write(upload_path_, upload_, upload_size_))
+  if (!files::commit_write(upload_))
     return false;
   out("@MKC:DONE %lu %lu\r\n", (unsigned long)upload_size_, (unsigned long)crc);
   cancel_upload();
@@ -454,6 +468,8 @@ bool Terminal::execute(const char *line) {
     }
     return true;
   }
+  if(id==CMD_CRASH || id==CMD_WATCHDOG || id==CMD_PROFILE)
+    return diagnostics::command(id,args,directory_,backend_.write,backend_.context);
   if (id == CMD_FS_GET)
     return get(args);
   if (id == CMD_FS_PUT)
@@ -500,6 +516,7 @@ bool Terminal::execute(const char *line) {
       return true;
     }
     if (id == CMD_FS_LIST) {
+      unsigned count=0;
       for (unsigned i = 0; i < 4096; ++i) {
         files::Entry entry;
         unsigned used = 0;
@@ -508,15 +525,17 @@ bool Terminal::execute(const char *line) {
           return false;
         if (!used)
           break;
-        out("%c\t%lu\t", entry.directory ? 'd' : 'f',
-            (unsigned long)entry.size);
+        if(entry.directory) out("d\t");
+        else out("f\t%lu B\t",(unsigned long)entry.size);
         path_text(entry.name);
         out("%s\r\n", entry.directory ? "/" : "");
+        ++count;
         if (backend_.service)
           backend_.service(backend_.context);
         if (!more)
           break;
       }
+      out("%u %s\r\n",count,count==1?"entry.":"entries.");
       return true;
     }
     if (id == CMD_FS_MKDIR && recursive) {

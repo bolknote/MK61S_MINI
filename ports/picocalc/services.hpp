@@ -6,6 +6,7 @@
 #include "basic_graphics.hpp"
 #include "text_screen.hpp"
 #include "app_flow.h"
+#include "loadable_app_services.h"
 
 namespace picocalc {
 class MarkdownView;
@@ -22,6 +23,7 @@ public:
     Services();
     void set_pump(Pump callback, void* context) { pump_ = callback; pump_context_ = context; }
     void set_ui(Ui& ui) { ui_ = &ui; }
+    unsigned sound_volume() const { return ui_ ? ui_->settings().volume : 10; }
     bool active() const { return page_ != ServicePage::CLOSED; }
     void open(Action action, bool russian, Calculator& calculator);
     bool input(u8 code);
@@ -37,7 +39,9 @@ public:
     unsigned cursor_column() const;
     bool editor_cursor() const { return !viewing_ && (page_ == ServicePage::EDITOR || page_ == ServicePage::PROMPT); }
     const u8* graphics() const;
+    const u8* native_graphics() const;
     bool custom_console() const;
+    bool graphical_document() const { return markdown_ != nullptr; }
     unsigned columns() const;
     unsigned rows() const;
     basic_graphics::Result graph_request(basic_graphics::Request& request);
@@ -50,6 +54,8 @@ public:
     language_vm::Error last_error() const { return last_error_; }
     // Device/host integration tests use the same public document operations.
     bool load_document(const char* path,bool edit=false);
+    bool enter_directory(const char* path);
+    void filter_directory(const char* utf8);
     bool save_document(const char* path);
     bool save_program(const char* path,Calculator& calculator) { calculator_=&calculator;return export_program(path); }
     void new_document(Document kind);
@@ -60,12 +66,15 @@ public:
     u8 run_chip8(const char* path);
     u8 run_native(const char* path, u16 file = 0xFFFF);
     u8 run_handled(const char* path, u16 magic);
+#if !defined(PICO_ON_DEVICE)
+    void test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context);
+#endif
     const char* runtime_name() const { return runtime_; }
     void show_script_error(const char* text) { message(text, ServicePage::CLOSED); }
     bool take_calculator_request() { const bool value=calculator_requested_;calculator_requested_=false;return value; }
 private:
     friend class NativeHost;
-    enum class Prompt : u8 { SAVE, RENAME, MKDIR, NEW_FILE, EXPORT, OPEN };
+    enum class Prompt : u8 { SAVE, RENAME, MKDIR, NEW_FILE, EXPORT, OPEN, SEARCH, MOVE };
     enum class Confirm : u8 { DELETE_FILE, DISCARD, FORMAT, OVERWRITE };
     const char* tr(const char* en, const char* ru) const { return russian_ ? ru : en; }
     void message(const char* value, ServicePage parent);
@@ -110,6 +119,7 @@ private:
     bool running_ = false, stopped_ = false, waiting_ = false, graph_visible_ = false;
     bool serial_output_ = false;
     bool viewing_ = false;
+    bool input_russian_ = false;
     bool image_viewing_ = false;
     bool calculator_requested_ = false;
     bool external_run_ = false;
@@ -128,6 +138,7 @@ private:
     char source_[SOURCE_CAPACITY] = {};
     char path_[files::PATH_SIZE] = {}, directory_[files::PATH_SIZE] = "/";
     char selected_file_[files::PATH_SIZE] = {}, prompt_text_[256] = {};
+    char filter_[64] = {};
     char status_[96] = {}, console_[ROWS][text_screen::MAX_COLS + 1] = {};
     files::Entry entries_[7] = {};
     u8 image_[language_vm::MAX_MODULE] = {};
@@ -143,6 +154,7 @@ private:
     basic_graphics::PrintPosition position_{};
     Pump pump_ = nullptr;
     void* pump_context_ = nullptr;
+    u16 graph_width_=320,graph_height_=320;
     basic_graphics::Session graph_;
 };
 } // namespace picocalc

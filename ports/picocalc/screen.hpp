@@ -24,9 +24,12 @@ private:
     u8 pixels_[BYTES] = {};
     text_screen::Grid face_grid_;
     u8 face_[calculator_face::FRAME_BYTES] = {};
+    const Settings* font_settings_ = nullptr;
     void set_pixel(unsigned x, unsigned y);
     void text(unsigned x, unsigned y, const char* value, unsigned height = 14);
+    void status_field(unsigned left, unsigned width, const char* value);
     void line(unsigned y);
+    void bitmap(const u8* frame,unsigned width,unsigned height,unsigned left=0,unsigned top=0);
     void calculator(const Snapshot& model, const Ui& ui);
 };
 

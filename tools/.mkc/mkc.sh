@@ -458,15 +458,16 @@ list_cdc_ports() {
   if command -v jq >/dev/null 2>&1; then
     printf '%s\n' "$json" | jq -r '
       .detected_ports[]?.port |
-      select(((.properties.vid // "") | ascii_downcase | sub("^0x"; "")) == "0483") |
-      select(((.properties.pid // "") | ascii_downcase | sub("^0x"; "")) == "5740") |
+      select(([(.properties.vid // ""),(.properties.pid // "")] | map(ascii_downcase | sub("^0x"; ""))) as $usb |
+        $usb == ["0483","5740"] or $usb == ["cafe","4003"]) |
       .address' 2>/dev/null
     return
   fi
   printf '%s\n' "$json" | awk '
     function emit() {
       gsub(/^0[xX]/, "", vid); gsub(/^0[xX]/, "", pid)
-      if(address != "" && tolower(vid) == "0483" && tolower(pid) == "5740") print address
+      if(address != "" && ((tolower(vid) == "0483" && tolower(pid) == "5740") ||
+          (tolower(vid) == "cafe" && tolower(pid) == "4003"))) print address
     }
     /"address"[[:space:]]*:/ {
       emit(); address=$0; vid=""; pid=""
@@ -508,6 +509,17 @@ parse_identity_line() {
   PROBE_PROFILE=
   PROBE_BUILD=
   case "$line" in
+    'MK61S PicoCalc '*)
+      if [[ "$line" =~ ^MK61S\ PicoCalc\ [0-9]+\.[0-9]+\.[0-9]+\ CPU=RP2040\ UID=([[:xdigit:]]{16})\ FLASH=2097152$ ]]; then
+        PROBE_KIND=identity
+        PROBE_PUBLIC=${BASH_REMATCH[1]}
+        PROBE_SHORT=${PROBE_PUBLIC:8:8}
+        PROBE_USB=$PROBE_PUBLIC
+        PROBE_PROFILE=picocalc-pico-h
+        return 0
+      fi
+      return 1
+      ;;
     'MK61 ID v=1 '*)
       public=$(identity_token_value "$line" public) || return 1
       short=$(identity_token_value "$line" short) || return 1
@@ -541,7 +553,7 @@ parse_identity_line() {
 }
 
 probe_port() {
-  local candidate=$1 probe_dir probe_pid line attempts=0 result=1
+  local candidate=$1 probe_dir probe_pid line attempts=0 result=1 deadline
   PROBE_KIND=
   PROBE_PUBLIC=
   PROBE_SHORT=
@@ -562,7 +574,8 @@ probe_port() {
     # Две read-only команды дают совместимость со старой прошивкой; новая
     # отвечает на identity первой и предоставляет стабильный selector.
     printf 'identity\rver\r' >&5
-    while [ "$attempts" -lt 4 ]; do
+    deadline=$((SECONDS+5))
+    while [ "$attempts" -lt 1024 ] && [ "$SECONDS" -lt "$deadline" ]; do
       if IFS= read -r -t 1 line <&6; then
         line=${line%$'\r'}
         if parse_identity_line "$line"; then
@@ -662,7 +675,7 @@ select_mk61_port() {
   fi
   CANDIDATE_COUNT=$candidate_count
   if [ "$CANDIDATE_COUNT" -eq 0 ]; then
-    SELECT_ERROR='устройства STM32 CDC 0483:5740 не найдены'
+    SELECT_ERROR='устройства MK61S CDC 0483:5740 / CAFE:4003 не найдены'
     return 1
   fi
 
@@ -680,7 +693,7 @@ select_mk61_port() {
     fi
   done
   if [ "$found_count" -eq 0 ]; then
-    SELECT_ERROR='ни один найденный STM32 CDC не ответил как MK61s'
+    SELECT_ERROR='ни одно найденное CDC-устройство не ответило как MK61s'
     return 1
   fi
 
@@ -767,14 +780,17 @@ serial_read_line() {
       STATUS_TEXT='Калькулятор прислал неверную строку CP1251'
       return 1
     }
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then
+    case "$SERIAL_LINE" in 'mk61> '*) SERIAL_LINE=${SERIAL_LINE#'mk61> '} ;; esac
+  fi
   return 0
 }
 
 wait_for_marker() {
-  local wanted=$1 attempts=0
+  local wanted=$1 attempts=0 timeout=${2:-5}
   MARKER_LINE=
   while [ "$attempts" -lt 200 ]; do
-    if ! serial_read_line 5; then
+    if ! serial_read_line "$timeout"; then
       STATUS_TEXT='Таймаут ответа калькулятора'
       return 1
     fi
@@ -1046,7 +1062,7 @@ hex_file_to_binary() {
 }
 
 remote_put_file() {
-  local source=$1 destination=$2 payload=$1 size crc hex offset=0 chunk expected
+  local source=$1 destination=$2 payload=$1 size crc hex offset=0 chunk expected wire_mode=
   if is_text_path "$destination"; then
     payload="$SESSION_DIR/upload.m8"
     if ! utf8_to_m8_file "$source" "$payload" 2>/dev/null; then
@@ -1062,7 +1078,8 @@ remote_put_file() {
   fi
   size=$(wc -c < "$payload" | tr -d '[:space:]')
   crc=$(file_checksum "$payload") || return 1
-  remote_send "fsput begin \"$destination\" $size $crc" || return 1
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ] && is_text_path "$destination"; then wire_mode=' m8'; fi
+  remote_send "fsput begin \"$destination\" $size $crc$wire_mode" || return 1
   wait_for_marker '@MKC:READY ' || return 1
   expected=${MARKER_LINE#@MKC:READY }
   [ "$expected" = "$size" ] || { STATUS_TEXT='Неверный ответ fsput begin'; return 1; }
@@ -1098,8 +1115,11 @@ remote_get_file() {
     return 0
   fi
   : > "$SESSION_DIR/download.hex"
-  remote_send "fsget \"$source\"" || return 1
-  wait_for_marker '@MKC:GET ' || return 1
+  local wire_mode= header_timeout=5
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then header_timeout=120; fi
+  if [ "$DETECTED_PROFILE" = picocalc-pico-h ] && is_text_path "$source"; then wire_mode=' m8'; fi
+  remote_send "fsget \"$source\"$wire_mode" || return 1
+  wait_for_marker '@MKC:GET ' "$header_timeout" || return 1
   rest=${MARKER_LINE#@MKC:GET }
   header_size=${rest%% *}
   header_crc=${rest#* }
@@ -3561,6 +3581,10 @@ install_system_unattended() {
       [ "$SECONDS" -lt "$deadline" ] || { STATUS_TEXT=$SELECT_ERROR; return 1; }
       sleep 0.5
     done
+    if [ "$DETECTED_PROFILE" = picocalc-pico-h ]; then
+      STATUS_TEXT='Системные службы PicoCalc встроены в UF2; пакет System для STM32 не подходит'
+      return 1
+    fi
     if [ -n "$EXPECTED_PROFILE" ] && [ "$DETECTED_PROFILE" != "$EXPECTED_PROFILE" ]; then
       STATUS_TEXT="прошивка $DETECTED_PROFILE не соответствует пакету $EXPECTED_PROFILE"
       return 1
@@ -3699,7 +3723,7 @@ main() {
   TTY_FD=9
   if [ -z "$MOCK_ROOT" ] && ! select_mk61_port; then
     if [ "$CANDIDATE_COUNT" -eq 0 ] && [ "$PORT_EXPLICIT" -eq 0 ]; then
-      printf 'MKC: устройство 0483:5740 не найдено. Укажите последовательный порт: ' >&9
+      printf 'MKC: устройство MK61S не найдено. Укажите последовательный порт: ' >&9
       IFS= read -r prompted_port <&9 || prompted_port=
       PORT=$prompted_port
       PORT_EXPLICIT=1

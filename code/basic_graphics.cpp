@@ -52,7 +52,7 @@ Result Session::ensure() {
   uint16_t w = 0, h = 0;
   backend_.geometry(backend_.context, w, h);
   // Bound every loop and allocation independently of a backend's report.
-  if (w > 192 || h > 64 || h % 8)
+  if (w > 320 || h > 320 || h % 8)
     return Result::UNAVAILABLE;
   if (!backend_.allocate || !backend_.release)
     return Result::FULL;
@@ -246,8 +246,9 @@ Result Session::apply(Request &r) {
       value = rounded(value);
       return (int16_t)(value < low ? low : value > high ? high : value);
     };
-    context->x = coordinate(r.args[0], -576, 192);
-    context->y = coordinate(r.args[1], -8, 64);
+    uint16_t w=0,h=0;backend_.geometry(backend_.context,w,h);
+    context->x = coordinate(r.args[0], -3*(int)w, w);
+    context->y = coordinate(r.args[1], -8, h);
     context->cursor = (uint8_t)r.args[3];
     context->flags = (uint8_t)((r.args[2] != 0 ? 1 : 0) | (r.args[4] != 0 ? 2 : 0));
     memcpy(print_text_ + print_used_, r.text, r.length);

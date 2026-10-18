@@ -34,6 +34,17 @@ struct App {
   double preview_value;
 };
 App app;
+#if defined(MK61_TARGET_PICOCALC)
+constexpr unsigned FRAME_WIDTH=320,FRAME_HEIGHT=320,FRAME_BYTES=12800;
+// Layout uses table column/row units. Glyphs are drawn from native 16/12 px
+// strikes at these positions; no 192x64 bitmap is constructed or enlarged.
+int layout_x(int x) { return x*5/3; }
+int layout_y(int y) { return y*5; }
+#else
+constexpr unsigned FRAME_WIDTH=192,FRAME_HEIGHT=64,FRAME_BYTES=1536;
+int layout_x(int x) { return x; }
+int layout_y(int y) { return y; }
+#endif
 
 bool parse_number(const char* text,double& value) {
   mk61_service_number_parse request={0,text,0};
@@ -61,16 +72,17 @@ uint16_t length(const char* text) { return (uint16_t)strlen(text); }
 void close_graphics() { if(app.graphics) { app.api->graphics_end(); app.graphics=false; } }
 bool open_graphics() {
   if(app.graphics) return true;
-  if(!app.api->graphics_available() || app.api->graphics_width()!=192 ||
-     app.api->graphics_height()!=64 || !app.api->graphics_begin()) return false;
+  if(!app.api->graphics_available() || app.api->graphics_width()!=FRAME_WIDTH ||
+     app.api->graphics_height()!=FRAME_HEIGHT || !app.api->graphics_begin()) return false;
   app.graphics=true; app.revision=app.api->graphics_revision(); return true;
 }
 void pixel(int x,int y,bool ink=true) {
-  if(x<0 || x>=192 || y<0 || y>=64) return;
-  uint8_t& byte=app.frame[(y/8)*192+x]; const uint8_t bit=(uint8_t)(1U<<(y%8));
+  if(x<0 || x>=(int)FRAME_WIDTH || y<0 || y>=(int)FRAME_HEIGHT) return;
+  uint8_t& byte=app.frame[(y/8)*FRAME_WIDTH+x]; const uint8_t bit=(uint8_t)(1U<<(y%8));
   if(ink) byte|=bit; else byte&=(uint8_t)~bit;
 }
 void rectangle(int x,int y,int w,int h,bool fill=true) {
+  const int right=layout_x(x+w),bottom=layout_y(y+h);x=layout_x(x);y=layout_y(y);w=right-x;h=bottom-y;
   for(int row=0;row<h;++row) for(int col=0;col<w;++col)
     if(fill || row==0 || row==h-1 || col==0 || col==w-1) pixel(x+col,y+row);
 }
@@ -78,11 +90,21 @@ int advance(bool compact=false) { return compact?4:6; }
 void text(int x,int y,const char* value,bool inverse=false,bool compact=false,int maximum=192) {
   const int step=advance(compact);
   for(;*value && x+step<=maximum; ++value,x+=step) {
+#if defined(MK61_TARGET_PICOCALC)
+    mk61_service_ui_glyph glyph={};glyph.family=1;glyph.size=compact?12:16;
+    if(!app.services->call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_GLYPH,
+        mk8::codepoint((uint8_t)*value),sizeof(glyph),&glyph)) continue;
+    const int left=layout_x(x),top=layout_y(y)+(compact?7:10);
+    for(unsigned gy=0;gy<glyph.height;++gy) for(unsigned gx=0;gx<glyph.width;++gx)
+      if(glyph.pixels[gy*((glyph.width+7)/8)+gx/8]&(0x80U>>(gx&7)))
+        pixel(left+glyph.bearing_x+gx,top+(compact?10:14)-glyph.bearing_y+gy,!inverse);
+#else
     mk61_service_glyph glyph={};
     if(!app.services->call(MK61_SERVICE_FONT,compact?1U:0U,mk8::codepoint((uint8_t)*value),sizeof(glyph),&glyph) ||
        glyph.width>8 || glyph.height>8) continue;
     for(uint32_t gy=0;gy<glyph.height;++gy) for(uint32_t gx=0;gx<glyph.width;++gx)
       if(glyph.pixels[gy] & (uint8_t)(0x80U>>gx)) pixel(x+(int)gx,y+(int)gy,!inverse);
+#endif
   }
 }
 void band(int y,const char* value) { rectangle(0,y,192,8); text(2,y,value,true); }
@@ -630,20 +652,31 @@ uint32_t run(uint32_t file_id) {
       // calculator math, dialogs and C6, which may need that same arena.
       if(app.mode==Mode::EDIT && app.edit_kind!=Kind::TEXT)
         app.preview_error=sheet::evaluate(app.book,app.edit,app.edit_length,HOST,app.preview_value);
-      if(!app.services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,1536,&app.frame_lease)) {
-        result=MK61_APP_BUSY; break;
+#if defined(MK61_TARGET_PICOCALC)
+      mk61_service_framebuffer borrowed={};
+      if(!app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(borrowed),0,&borrowed) ||
+          borrowed.width!=FRAME_WIDTH || borrowed.height!=FRAME_HEIGHT || borrowed.bytes!=FRAME_BYTES) {
+        result=MK61_APP_UNSUPPORTED_DISPLAY;break;
+      }
+      app.frame=borrowed.pixels;
+#else
+      if(!app.services->call(MK61_SERVICE_MEMORY_ACQUIRE,MK61_SERVICE_SCRATCH,MK61_SERVICE_OWNER_APP,FRAME_BYTES,&app.frame_lease)) {
+        result=MK61_APP_BUSY;break;
       }
       app.frame=app.frame_lease.data;
-      if(!app.frame || app.frame_lease.size<1536) {
+      if(!app.frame || app.frame_lease.size<FRAME_BYTES) {
         app.services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_SCRATCH,0,0,&app.frame_lease);
-        result=MK61_APP_BUSY; break;
+        result=MK61_APP_BUSY;break;
       }
-      memset(app.frame,0,1536);
+#endif
+      memset(app.frame,0,FRAME_BYTES);
       if(app.mode==Mode::EDIT) editor();
       else if(app.mode==Mode::TABLE || app.mode==Mode::REFERENCE || app.mode==Mode::COPY || app.mode==Mode::FILL) table();
       else if(app.mode==Mode::HELP || app.mode==Mode::DETAILS) help(); else menu_draw();
-      const bool presented=app.api->graphics_present(app.frame,1536)!=0;
+      const bool presented=app.api->graphics_present(app.frame,FRAME_BYTES)!=0;
+      #if !defined(MK61_TARGET_PICOCALC)
       app.services->call(MK61_SERVICE_MEMORY_RELEASE,MK61_SERVICE_SCRATCH,0,0,&app.frame_lease);
+      #endif
       app.frame=nullptr;
       if(!presented) { result=MK61_APP_RUNTIME_ERROR; break; }
       app.redraw=false;

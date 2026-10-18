@@ -65,6 +65,8 @@ enum Capability : u16 {
   CAP_TERMINAL_MUX = 1U << 5,
   CAP_TERMINAL_KBD = 1U << 6,
   CAP_CLOCK_SYNC = 1U << 7,
+  // OFFER remains legacy; ATTACH {1} opts into CAPS + native u16 height.
+  CAP_NATIVE_320 = 1U << 8,
 };
 
 static constexpr u16 CAPABILITIES =

@@ -1,5 +1,6 @@
 #include "ui.hpp"
 #include "menu_model.hpp"
+#include "fonts.hpp"
 #include <cstdio>
 #include <cstring>
 
@@ -9,13 +10,22 @@ bool back(u8 code) { return code == 0x1B || code == 0xB1 || code == 0x08; }
 bool enter(u8 code) { return code == '\n' || code == '\r'; }
 } // namespace
 void Ui::init(const Settings &value) {
+  (void)fonts::select(Settings{});
   settings_ = valid_settings(value) ? value : Settings{};
+  if(!fonts::select(settings_)) {
+    settings_.ui_font_family=1;settings_.ui_font_key=0;settings_.ui_font_size=14;
+    (void)fonts::select(settings_);
+  }
   page_ = Page::CALCULATOR;
   view_ = View::STACK;
   action_ = confirm_ = Action::NONE;
   std::memset(selected_, 0, sizeof(selected_));
   offset_ = 0;
   settings_revision_ = 0;
+}
+bool Ui::apply_settings(const Settings& value,bool persist) {
+  if(!valid_settings(value) || !fonts::select(value)) return false;
+  settings_=value;if(persist) ++settings_revision_;return true;
 }
 unsigned Ui::count() const {
   switch (page_) {
@@ -288,11 +298,17 @@ void Ui::adjust(int direction, Calculator &calculator, bool cycle) {
   if (page_ == Page::FONTS) {
     if (selected() == 0)
       settings_.calculator_font ^= 1;
-    else if(selected()==1)
-      settings_.ui_font_size =
-          settings_.ui_font_size == (direction > 0 ? 16 : 12)
-              ? (direction > 0 ? 12 : 16)
-              : (u8)(settings_.ui_font_size + direction * 2);
+    else if(selected()==1) {
+      fonts::Item item{};
+      if(fonts::step(fonts::key(settings_),direction,item)) {
+        auto candidate=settings_;candidate.ui_font_size=item.size;
+        candidate.ui_font_family=item.family;candidate.ui_font_key=item.family==3?item.key:0;
+        if(!fonts::select(candidate)) {
+          notice(page_,"Cannot load UI font",M8("Не удалось загрузить шрифт"));return;
+        }
+        settings_=candidate;
+      }
+    }
     else {
       const unsigned current=settings_.text_width==3?1:settings_.text_width==10?2:0;
       const unsigned next=(current+(direction<0?2:1))%3;
@@ -387,7 +403,7 @@ void Ui::row(unsigned index, char out[64]) const {
       std::snprintf(out, 64, "%s %s", text("Memory", M8("Память")),
                     settings_.memory == 0   ? "105"
                     : settings_.memory == 1 ? "112+F"
-                                            : "AUTO");
+                                            : text("AUTO",M8("АВТО")));
       break;
     case 4:
       std::snprintf(out, 64, "%s %s", text("Random", M8("К СЧ")),
@@ -421,9 +437,11 @@ void Ui::row(unsigned index, char out[64]) const {
     if (index == 0)
       std::snprintf(out, 64, "%s: %s", text("Calculator", M8("Калькулятор")),
                     settings_.calculator_font ? "Classic 10x16" : "MK61");
-    else if(index==1)
-      std::snprintf(out, 64, "%s: Ark Pixel %u",
-                    text("Interface", M8("Интерфейс")), settings_.ui_font_size);
+    else if(index==1) {
+      fonts::Item item{};
+      const bool found=fonts::describe(fonts::key(settings_),item);
+      std::snprintf(out,64,"%s: %.43s",text("Interface",M8("Интерфейс")),found?item.name:"Ark Pixel");
+    }
     else if(index==2) std::snprintf(out,64,"%s: %ux%u / %u",text("Text",M8("Текст")),settings_.text_width,settings_.text_height,settings_.text_rows);
   } else if (page_ == Page::SYSTEM) {
     static const char *en[] = {"Restart",     "Information", "Hardware",

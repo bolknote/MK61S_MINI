@@ -445,7 +445,10 @@ class DeviceController extends ChangeNotifier {
       _state = DeviceConnectionState.attaching;
       if (wasAttached) _markDisplayChanged();
       _probeTimer?.cancel();
-      _send(MkMessage.attach);
+      _send(
+        MkMessage.attach,
+        (offer.flags & MkCapability.native320) != 0 ? [1] : const [],
+      );
       _probeTimer = Timer(_attachTimeout, () {
         if (_state == DeviceConnectionState.attaching) {
           unawaited(_connectionFailed('Устройство не подтвердило подключение'));
@@ -466,6 +469,7 @@ class DeviceController extends ChangeNotifier {
         throw const FormatException('неподдерживаемая геометрия или кадры');
       }
       _capabilities = caps;
+      _frames.configure(caps.width, caps.height);
       _probeTimer?.cancel();
       _frames.reset();
       _state = DeviceConnectionState.attached;

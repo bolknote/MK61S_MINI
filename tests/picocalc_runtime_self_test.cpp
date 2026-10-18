@@ -184,15 +184,44 @@ void picocalc_runtime_test() {
   u8 event[] = {21, 1};
   receive(screen, MessageType::KEY_EVENT, event, 2, 30);
   KeyEvent key;
-  require(screen.key(key) && key.pressed() && key.code == '1',
+  require(screen.key(key) && key.pressed() && key.code == '1' && key.native_scan==21,
           "USB virtual MINI key mapping");
   receive(screen, MessageType::DETACH, nullptr, 0, 31);
   require(!screen.attached() && screen.key(key) && key.state == 3 &&
-              key.code == '1',
+              key.code == '1' && key.native_scan==21,
           "detach releases delivered keys");
   require(screen.receive('7', 40) == '7', "terminal mux preserves text");
   receive(screen, MessageType::ATTACH, nullptr, 0, 50);
   screen.tick(3050);
   require(!screen.attached(), "USB heartbeat timeout");
+  {
+    Link native_link;unsigned captures=0;
+    struct Context { Link* link;unsigned* captures; } context{&native_link,&captures};
+    UsbScreen native;
+    native.init({&context,[](void*) { return 1024U; },
+      [](void* raw,const u8* bytes,unsigned n) { auto& v=((Context*)raw)->link->bytes;v.insert(v.end(),bytes,bytes+n);return n; },
+      [](void*,u8*) {},[](void* raw) { ++*((Context*)raw)->captures; },
+      [](void*,unsigned x,unsigned page,u8* out,unsigned n) { for(unsigned i=0;i<n;++i) out[i]=(u8)((page*320+x+i)*37+7); }});
+    native.enable(true);const u8 request=1;receive(native,MessageType::ATTACH,&request,1);
+    for(unsigned i=0;i<86;++i) native.tick(1);
+    require(captures==1 && !native.holds_frame(),"one stable native snapshot per complete frame");
+    StreamParser decoder;std::vector<u8> bitmap(12800);unsigned rectangles=0,completed=0;
+    for(u8 byte:native_link.bytes) if(decoder.push(byte)==PushResult::PACKET) {
+      const auto& p=decoder.packet();
+      if(p.type==MessageType::CAPS) require(p.payload_size==16 && p.payload[0]==64 && p.payload[1]==1 &&
+        p.payload[14]==64 && p.payload[15]==1,"native CAPS has 16-bit width and height");
+      if(p.type==MessageType::FRAME_BEGIN) require(p.payload[3]==80,"native frame has 80 bounded rectangles");
+      if(p.type==MessageType::RECT) {
+        require(p.payload_size==166 && p.payload[4]==160 && p.payload[5]==0,"native RAW rectangle length");
+        std::memcpy(bitmap.data()+p.payload[3]*320+p.payload[2],p.payload+6,160);++rectangles;
+      }
+      if(p.type==MessageType::FRAME_END) { ++completed;
+        require(((unsigned)p.payload[2]|(unsigned)p.payload[3]<<8)==crc16_ccitt(bitmap.data(),bitmap.size()),"native whole-frame CRC"); }
+    }
+    require(rectangles==80 && completed==1,"complete native USB keyframe");
+    for(unsigned i=0;i<bitmap.size();++i) require(bitmap[i]==(u8)(i*37+7),"native pixel positions include right/bottom edges");
+    native.tick(100);require(native.holds_frame(),"native framebuffer stays frozen during transmission");
+    native.enable(false);require(!native.holds_frame(),"detach releases native snapshot");
+  }
   std::puts("PicoCalc RTC/sleep/key state/USB Screen runtime tests passed");
 }

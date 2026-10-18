@@ -61,6 +61,8 @@ class ScreenPort(Port):
         super().__init__(path)
         assert keyboard_layout in (0,1,2)
         self.keyboard_layout = keyboard_layout
+        self.native_display=False
+        self.frame_width=192;self.frame_height=64
         self.packet = None; self.text = bytearray(); self.frames = []
         self.sequence = 0; self.attached = False; self.next_ping = 0
         self.caps = None; self.pending = None; self.pages = set()
@@ -82,25 +84,29 @@ class ScreenPort(Port):
         kind, payload = raw[3], raw[9:-2]
         if kind == 0x12:
             self.caps = payload
-            assert payload[:4] == bytes((192, 0, 64, 8))
+            if self.native_display:
+                assert len(payload)==16 and payload[:4]==bytes((64,1,64,8)) and payload[14:]==bytes((64,1))
+                self.frame_width=self.frame_height=320
+            else:assert payload[:4] == bytes((192, 0, 64, 8))
             assert payload[8:10] == bytes((self.keyboard_layout, 40)), 'unexpected keyboard layout'
             self.attached = True
             self.next_ping = time.monotonic() + .7
         elif kind == 0x20:
             self.frame_id, full, pages = struct.unpack('<HBB', payload)
-            assert full == 1 and pages == 8
-            self.pending = bytearray(1536); self.pages = set()
+            assert full == 1 and pages == (80 if self.native_display else 8)
+            self.pending = bytearray(self.frame_width*self.frame_height//8); self.pages = set()
         elif kind == 0x21:
             frame_id, x, page, width, codec = struct.unpack_from('<HBBBB', payload)
-            assert frame_id == self.frame_id and x == 0 and width == 192 and page < 8
-            assert page not in self.pages and codec in (0, 1)
+            assert frame_id==self.frame_id and page<self.frame_height//8
+            assert x in ((0,160) if self.native_display else (0,)) and width==(160 if self.native_display else 192)
+            assert (page,x) not in self.pages and codec in (0,1)
             pixels = payload[6:] if codec == 0 else packbits(payload[6:])
             assert len(pixels) == width
-            self.pending[page * 192:page * 192 + width] = pixels
-            self.pages.add(page)
+            self.pending[page*self.frame_width+x:page*self.frame_width+x+width] = pixels
+            self.pages.add((page,x))
         elif kind == 0x22:
             frame_id, checksum = struct.unpack('<HH', payload)
-            assert frame_id == self.frame_id and len(self.pages) == 8
+            assert frame_id == self.frame_id and len(self.pages) == (80 if self.native_display else 8)
             assert binascii.crc_hqx(self.pending, 65535) == checksum
             self.frames.append(bytes(self.pending)); self.pending = None
         elif kind == 0x13:
@@ -140,7 +146,7 @@ class ScreenPort(Port):
         self.caps = None
         # Do not send PING until CAPS: the firmware has one response slot,
         # so an immediate heartbeat could replace the handshake response.
-        self.send(0x11)
+        self.send(0x11,b"\1" if self.native_display else b"")
         deadline = time.monotonic() + timeout
         while self.caps is None and time.monotonic() < deadline: self.pump()
         assert self.caps is not None, 'USB Screen did not attach'

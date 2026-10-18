@@ -126,6 +126,22 @@ void picocalc_parity_test() {
          size == sizeof(data) && !std::memcmp(data, copied, size));
   assert(terminal.execute("fsget /Parity/data.bin") &&
          output.find("@MKC:DATA 0 00FF3D2A0D0A") != std::string::npos);
+  assert(!terminal.execute("fsget /Parity/data.bin m8") && !terminal.execute("fsput begin /Parity/data.bin 1 0 m8"));
+  const std::string russian(65534,(char)0xC6); // Ж: two UTF-8 bytes per logical M8 byte.
+  const u32 text_crc=terminal_file_transfer::checksum((const u8*)russian.data(),russian.size());
+  std::snprintf(request,sizeof(request),"fsput begin /Parity/maximum.txt %u %lu m8",(unsigned)russian.size(),(unsigned long)text_crc);
+  assert(terminal.execute(request));
+  for(unsigned at=0;at<russian.size();at+=96) {
+    const unsigned n=(unsigned)russian.size()-at<96?(unsigned)russian.size()-at:96;
+    std::snprintf(request,sizeof(request),"fsput data %u ",at);
+    for(unsigned i=0;i<n;++i) std::strcat(request,"C6");
+    assert(terminal.execute(request));
+  }
+  assert(terminal.execute("fsput end"));
+  files::Entry maximum{};assert(files::stat("/Parity/maximum.txt",maximum) && maximum.size==131068);
+  output.clear();assert(terminal.execute("fsget /Parity/maximum.txt m8 "));
+  assert(output.find("@MKC:GET 65534 ")!=std::string::npos && output.find("@MKC:DATA 65472 C6C6")!=std::string::npos);
+  script::reset_files();
   assert(terminal.execute("fsput begin /Parity/data.bin 1 0") &&
          terminal.execute("fsput data 0 11") && !terminal.execute("fsput end"));
   assert(files::read("/Parity/data.bin", copied, sizeof(copied), size) &&

@@ -1,9 +1,56 @@
 #include "markdown.hpp"
+#include "canvas.hpp"
 #include "script.hpp"
 #include "storage_path.hpp"
+#include "markdown_graphic_layout.hpp"
+#include "fonts.hpp"
+#include <memory>
+#include <new>
 #include <cstdio>
 #include <cstring>
 namespace picocalc {
+namespace {
+struct GraphicPlatform {
+  Settings settings;
+  bool enabled() const { return settings.ui_font_family!=0; }
+  mk61_service_ui_font_info info() const { return fonts::info(settings); }
+  u8 height() const { return info().height; }
+  u8 ascent() const { return info().ascent; }
+  u8 line_gap() const { return info().line_gap; }
+  bool glyph(u16 cp,mk61_service_ui_glyph& out) const { return fonts::glyph(settings,cp,out); }
+  struct Image {
+    std::unique_ptr<u8[]> bytes;
+    u16 length=0;
+    Image(const GraphicPlatform&,u16 parent,const char* path) {
+      program_store::Entry entry{};
+      if(storage_path::resolve_file(parent,path,program_store::ProgramType::IMAGE1,entry)!=storage_path::Status::OK ||
+         !entry.data_len || entry.data_len>program_store::MAX_IMAGE1_SIZE) return;
+      bytes.reset(new(std::nothrow) u8[entry.data_len]);unsigned used=0;
+      const u32 revision=files::revision();
+      if(!bytes || !files::read(script::file_path(entry.id),bytes.get(),entry.data_len,used) ||
+         used!=entry.data_len || revision!=files::revision()) { bytes.reset();return; }
+      length=(u16)used;
+    }
+    bool ok() const { return bytes!=nullptr; }
+    const u8* data() const { return bytes.get(); }
+    u16 size() const { return length; }
+  };
+};
+}
+const u8* MarkdownView::native_frame() const { return canvas::frame(); }
+void MarkdownView::render() {
+  program_store::Entry entry{};
+  if(!script::register_file(path_,entry)) { std::memset(frame_,0,sizeof(frame_));return; }
+  markdown_scroll::Probe compatibility(top);
+  markdown_graphics::Layout<GraphicPlatform> compact(frame_,192,64,top,64,
+      entry.parent_id,compatibility,selection,nullptr,GraphicPlatform{settings_});
+  (void)compact.render(compiled_,compiled_size_);
+  markdown_scroll::Probe probe(top);
+  markdown_graphics::Layout<GraphicPlatform> layout(canvas::frame(),320,240,top,240,
+      entry.parent_id,probe,selection,nullptr,GraphicPlatform{settings_});
+  metrics_=probe.finish(layout.render(compiled_,compiled_size_));
+  if(top!=metrics_.current_top) { top=metrics_.current_top;render(); }
+}
 bool MarkdownView::open(const char *path) {
   char input[markdown::MAX_SOURCE_SIZE + 1];
   unsigned used = 0;
@@ -18,6 +65,7 @@ bool MarkdownView::open(const char *path) {
   std::snprintf(path_, sizeof(path_), "%s", path);
   top = 0;
   selection = 0xFFFF;
+  render();
   return true;
 }
 u16 MarkdownView::next(u16 at) const {
@@ -31,7 +79,7 @@ u16 MarkdownView::next(u16 at) const {
   return at;
 }
 u16 MarkdownView::row_start(unsigned row) const {
-  u16 at = top;
+  u16 at = 0;
   while (row-- && at < length_)
     at = next(at);
   return at;
@@ -49,19 +97,11 @@ bool MarkdownView::selected(unsigned row, unsigned column) const {
   const unsigned at = row_start(row) + column;
   return at >= links_[selection].begin && at < links_[selection].end;
 }
-void MarkdownView::scroll(int direction) {
-  if (direction > 0) {
-    if (row_start(ROWS) < length_)
-      top = next(top);
-  } else {
-    u16 at = 0, previous = 0;
-    while (at < top) {
-      previous = at;
-      at = next(at);
-    }
-    top = previous;
-  }
+void MarkdownView::scroll(int direction,bool page) {
+  top=direction>0 ? (page?metrics_.fast_next_anchor:metrics_.next_anchor) :
+      (page?metrics_.fast_previous_anchor:metrics_.previous_anchor);
   selection = 0xFFFF;
+  render();
 }
 void MarkdownView::select(int direction) {
   if (!link_count_)
@@ -70,12 +110,14 @@ void MarkdownView::select(int direction) {
                   ? (direction < 0 ? link_count_ - 1 : 0)
                   : (u16)((selection + link_count_ + (direction < 0 ? -1 : 1)) %
                           link_count_);
-  const auto &link = links_[selection];
-  if (link.begin < top || link.begin >= row_start(ROWS)) {
-    top = 0;
-    while (next(top) <= link.begin && next(top) > top)
-      top = next(top);
-  }
+  program_store::Entry entry{};
+  if(!script::register_file(path_,entry)) return;
+  markdown_scroll::Probe probe(top);markdown_graphics::LinkLayout links{};
+  markdown_graphics::Layout<GraphicPlatform> layout(canvas::frame(),320,240,top,240,
+      entry.parent_id,probe,selection,&links,GraphicPlatform{settings_});
+  (void)layout.render(compiled_,compiled_size_);
+  if(links.selected_seen && !links.selected_visible) top=links.selected_top;
+  render();
 }
 bool MarkdownView::target(char out[files::PATH_SIZE]) const {
   if (selection >= link_count_)

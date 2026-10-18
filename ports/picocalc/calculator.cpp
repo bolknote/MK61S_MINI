@@ -1,4 +1,5 @@
 #include "calculator.hpp"
+#include "diagnostics.hpp"
 #include "display_symbols.hpp"
 #include <cstring>
 
@@ -71,6 +72,7 @@ bool Calculator::input(u8 code) {
 }
 
 void Calculator::tick() {
+    diagnostics::Scope measure(diagnostics::Point::CORE);
     if(!press_steps_ && !releasing_ && count_) {
         active_ = queue_[read_];
         read_ = (read_ + 1) % QUEUE_SIZE;
@@ -122,6 +124,7 @@ Snapshot Calculator::snapshot() const {
     result.ip = core_61::get_IP();
     result.running = core_61::is_RUN();
     result.programming = core_61::edit_program;
+    result.idle = idle();
     result.dropped_keys = dropped_keys_;
     return result;
 }

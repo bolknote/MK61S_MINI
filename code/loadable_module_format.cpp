@@ -68,7 +68,11 @@ static HeaderStatus validate_header(const Header& header, u32 slot_size,
 #endif
                              ;
   const bool binding_valid =
-      (header.flags & ~MK61_APP_ARM_THUMB_BCJ_FLAG) == required_flags &&
+      (header.flags & ~(MK61_APP_ARM_THUMB_BCJ_FLAG
+#if defined(MK61_CORE_STANDALONE)
+        | MK61_APP_NATIVE_320_FLAG
+#endif
+        )) == required_flags &&
       header.load_address == MK61_PORTABLE_APP_ADDRESS &&
       header.compression == Compression::ZX0 &&
       header.code_stored_size > 0 &&
@@ -386,7 +390,7 @@ bool decode_image(const Header& header, const Reader& reader, u8* output, u32 ad
      address > SRAM_LAST_ADDRESS - header.memory_size || (address & 7U) ||
      code_size > header.stored_size) return false;
   if(!decode_payload(reader, header.compression, code_size, output, header.image_size, decoded
-       , header.flags & ~(MK61_APP_RELOCATABLE_FLAG | MK61_APP_ARMV6M_FLAG)
+       , header.flags & ~(MK61_APP_RELOCATABLE_FLAG | MK61_APP_ARMV6M_FLAG | MK61_APP_NATIVE_320_FLAG)
        ) || decoded.image_crc32 != header.image_crc32) return false;
   if(header.relocation_count > header.image_size / 4) return false;
   const RelocationSource source = {&reader, code_size};

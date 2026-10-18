@@ -53,9 +53,9 @@ private:
   bool raw_ = false, pending_ = false, executing_ = false, cr_ = false,
        overflow_ = false;
   u8 confirmation_ = 0;
-  char directory_[files::PATH_SIZE] = "/", upload_path_[files::PATH_SIZE]{};
-  u8 *upload_ = nullptr;
-  u32 upload_size_ = 0, upload_used_ = 0, upload_crc_ = 0, upload_revision_ = 0;
+  char directory_[files::PATH_SIZE] = "/";
+  files::WriteSession *upload_ = nullptr;
+  u32 upload_size_ = 0, upload_used_ = 0, upload_crc_ = 0, upload_running_crc_ = 0, upload_revision_ = 0;
 };
 } // namespace picocalc
 #endif

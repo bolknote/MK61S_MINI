@@ -26,7 +26,11 @@ static constexpr u16 MAX_FONT_SIZE = 8192;
 #endif
 // 1600 байт вмещают полный WBMP Type 0 192x64 с заголовком и по-прежнему
 // независимо отображаются в цепочку из 512-байтных FAT-кластеров.
+#if defined(MK61_CORE_STANDALONE)
+static constexpr u16 MAX_IMAGE1_SIZE = 16384; // Native PicoCalc 320x320 WBMP.
+#else
 static constexpr u16 MAX_IMAGE1_SIZE = 1600;
+#endif
 // CHIP-8 загружает программы с адреса 0x200 в 4-КиБ память, поэтому
 // классический ROM занимает не более 4096 - 0x200 = 3584 байт.
 static constexpr u16 MAX_CHIP8_SIZE = 3584;

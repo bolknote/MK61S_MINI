@@ -50,7 +50,7 @@ void MK61Display::setUiFont(u8 family, u8 size) {
     const u8 width = external != NULL ? external->metrics().max_width
         : (uiFontCompact3x5() ? 3U : (uiFontEnabled() ? 10U : 5U));
     usb_surface.setFont(external);
-    usb_surface.setTextLayout(
+    usb_surface.setUiTextLayout(
         {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
     usb_surface.setUiTextStyle(
         true, uiFontEnabled(), uiFontClassic10x16(), uiFontCompact3x5(),
@@ -150,7 +150,7 @@ void MK61Display::beginUiText(void) {
     const u8 width = external != NULL ? external->metrics().max_width
         : (uiFontCompact3x5() ? 3U : (uiFontEnabled() ? 10U : 5U));
     usb_surface.setFont(external);
-    usb_surface.setTextLayout(
+    usb_surface.setUiTextLayout(
         {uiRows(), width, uiHeight(), uiLineGap()}, uiCols());
     usb_surface.setUiTextStyle(
         true, uiFontEnabled(), uiFontClassic10x16(), uiFontCompact3x5(),

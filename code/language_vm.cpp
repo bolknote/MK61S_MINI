@@ -1619,7 +1619,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         event(Event::GRAPHICS,(const char*)&request,sizeof(request),value);
         if(error!=Error::NONE)break;
         const double width=host.value(host.context,Function::GW),height=host.value(host.context,Function::GH);
-        if(width<1 || width>192 || height<1 || height>64){error=Error::GRAPHICS_UNAVAILABLE;break;}
+        if(width<1 || width>320 || height<1 || height>320){error=Error::GRAPHICS_UNAVAILABLE;break;}
         graph.width=(uint16_t)width;graph.height=(uint16_t)height;
         graph.next=v.address(p);graph.body=after;graph.column=0;graph.base=s.sp;
         graph.saved_x=data.variables['X'-'A'];graph.active=true;graph.skip=false;

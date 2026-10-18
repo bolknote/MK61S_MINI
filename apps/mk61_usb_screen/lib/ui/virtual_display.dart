@@ -47,7 +47,8 @@ class VirtualDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Виртуальный графический экран 192 на 64 пикселя',
+      label:
+          'Виртуальный графический экран ${framebuffer.length == 12800 ? 320 : 192} на ${framebuffer.length == 12800 ? 320 : 64} пикселя',
       liveRegion: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -72,7 +73,9 @@ class VirtualDisplay extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(7),
             child: AspectRatio(
-              aspectRatio: MkGeometry.width / MkGeometry.height,
+              aspectRatio: framebuffer.length == 12800
+                  ? 1
+                  : MkGeometry.width / MkGeometry.height,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -150,8 +153,10 @@ class _DisplayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scaleX = size.width / MkGeometry.width;
-    final scaleY = size.height / MkGeometry.height;
+    final width = framebuffer.length == 12800 ? 320 : MkGeometry.width;
+    final height = framebuffer.length == 12800 ? 320 : MkGeometry.height;
+    final scaleX = size.width / width;
+    final scaleY = size.height / height;
     canvas.drawRect(
       Offset.zero & size,
       Paint()
@@ -165,14 +170,12 @@ class _DisplayPainter extends CustomPainter {
       ..color = foreground
       ..isAntiAlias = false
       ..style = PaintingStyle.fill;
-    for (var y = 0; y < MkGeometry.height; y++) {
+    for (var y = 0; y < height; y++) {
       final page = y ~/ MkGeometry.pageHeight;
       final mask = 1 << (y & 7);
       var runStart = -1;
-      for (var x = 0; x <= MkGeometry.width; x++) {
-        final lit =
-            x < MkGeometry.width &&
-            (framebuffer[page * MkGeometry.width + x] & mask) != 0;
+      for (var x = 0; x <= width; x++) {
+        final lit = x < width && (framebuffer[page * width + x] & mask) != 0;
         if (lit && runStart < 0) {
           runStart = x;
         } else if (!lit && runStart >= 0) {
@@ -195,17 +198,17 @@ class _DisplayPainter extends CustomPainter {
         ..color = background.withValues(alpha: 0.32)
         ..strokeWidth = 0.16
         ..isAntiAlias = false;
-      for (var x = 1; x < MkGeometry.width; x++) {
+      for (var x = 1; x < width; x++) {
         canvas.drawLine(
           Offset(x.toDouble(), 0),
-          Offset(x.toDouble(), MkGeometry.height.toDouble()),
+          Offset(x.toDouble(), height.toDouble()),
           gridPaint,
         );
       }
-      for (var y = 1; y < MkGeometry.height; y++) {
+      for (var y = 1; y < height; y++) {
         canvas.drawLine(
           Offset(0, y.toDouble()),
-          Offset(MkGeometry.width.toDouble(), y.toDouble()),
+          Offset(width.toDouble(), y.toDouble()),
           gridPaint,
         );
       }

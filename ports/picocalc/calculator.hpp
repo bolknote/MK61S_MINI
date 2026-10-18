@@ -18,6 +18,8 @@ struct Key {
 struct KeyEvent {
     u8 state;
     u8 code;
+    // USB Screen carries a calculator scan; the BIOS carries QWERTY text.
+    u8 native_scan = 0xFF;
     bool pressed() const { return state == 1 && code != 0; }
 };
 
@@ -34,6 +36,7 @@ struct Snapshot {
     u8 ip = 0;
     bool running = false;
     bool programming = false;
+    bool idle = true;
     u32 dropped_keys = 0;
 };
 

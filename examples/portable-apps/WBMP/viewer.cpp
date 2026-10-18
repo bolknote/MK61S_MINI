@@ -5,8 +5,13 @@ namespace {
 
 // Private BSS fits in the 20-KiB limit of one APP allocation. The decoder is
 // reused unchanged; this prototype needs no resident C++ objects or leases.
-u8 file_bytes[1600];
-u8 frame[192 * 64 / 8];
+#if defined(MK61_TARGET_PICOCALC)
+u8 file_bytes[16384];u8* frame=nullptr;
+constexpr unsigned MAX_WIDTH=320,MAX_HEIGHT=320;
+#else
+u8 file_bytes[1600];u8 frame[192*64/8];
+constexpr unsigned MAX_WIDTH=192,MAX_HEIGHT=64;
+#endif
 
 u32 forward(u32 position, u32 step, u32 maximum) {
   return maximum - position < step ? maximum : position + step;
@@ -38,10 +43,17 @@ extern "C" uint32_t mk61_app_open_file(uint32_t file_id) {
     const u32 revision = api->graphics_revision();
     const u32 width = api->graphics_width();
     const u32 height = api->graphics_height();
-    if(width == 0 || width > 192 || height == 0 || height > 64) {
+    if(width == 0 || width > MAX_WIDTH || height == 0 || height > MAX_HEIGHT) {
       api->graphics_end();
       return MK61_APP_UNSUPPORTED_DISPLAY;
     }
+#if defined(MK61_TARGET_PICOCALC)
+    const auto services=(const mk61_app_services*)api->query_service(MK61_APP_SERVICE_COMMON,MK61_APP_SERVICES_VERSION);
+    mk61_service_framebuffer borrowed={};
+    if(!services || !services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(borrowed),0,&borrowed) ||
+       borrowed.width!=width || borrowed.height!=height) { api->graphics_end();return MK61_APP_UNSUPPORTED_DISPLAY; }
+    frame=borrowed.pixels;
+#endif
     const u32 bytes = wbmp::viewport_bytes(width, height,
                                            wbmp::Layout::PAGE_MAJOR_LSB);
     const u32 max_x = info.width > width ? info.width - width : 0;

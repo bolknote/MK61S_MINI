@@ -32,6 +32,33 @@ static usize ink(const usb_screen::Surface& surface) {
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
+static void test_ui_layout_envelope_and_lines() {
+  u8 framebuffer[usb_screen::FRAME_BYTES]={};TEST_SURFACE(surface,framebuffer);
+  surface.begin();
+  const ui_font::Face face{ui_font::Family::PIXEL,ui_font::Size::PX16};
+  assert(surface.setUiTextLayout({3,10,17,2},64));
+  surface.setUiTextStyle(true,true,false,false,face);
+  assert(surface.rows()==3 && surface.textProfile().glyph_height==17);
+  assert(!surface.setUiTextLayout({4,10,17,2},64) && surface.rows()==3);
+  surface.printUiLine(0,"A");surface.flush(0);
+  const auto glyph=ui_font::glyph(face,'A');
+  assert(surface.measureUiText("A",1)==glyph.advance && surface.uiTextWidth()==188);
+  for(u8 y=0;y<64;++y) for(u16 x=0;x<192;++x) {
+    const int gx=(int)x-2-glyph.bearing_x,gy=(int)y-4-14+glyph.bearing_y;
+    const bool expected=gx>=0 && gx<glyph.width && gy>=0 && gy<glyph.height &&
+        font_glyph::pixel(glyph,(u8)gx,(u8)gy);
+    assert(pixel(surface,x,y)==expected);
+  }
+  char long_line[180];memset(long_line,'A',sizeof(long_line)-1);long_line[179]=0;
+  surface.printUiLine(2,long_line,'>',0x2193);surface.flush(1);
+  u16 value=0;bool custom=false;
+  assert(surface.readCell(0,2,value,custom) && value=='>' && !custom);
+  assert(surface.readCell(surface.cols()-1,2,value,custom) && value==0x2193);
+  bool ellipsis=false;for(u8 x=1;x<surface.cols()-1;++x) {
+    assert(surface.readCell(x,2,value,custom));ellipsis|=value==0x2026;
+  }
+  assert(ellipsis);
+}
 static void putLe16(u8* target, u16 value) {
   target[0] = (u8) value;
   target[1] = (u8) (value >> 8);
@@ -495,6 +522,7 @@ int main(void) {
   test_profiles();
   test_text_unicode_and_cursor();
 #if MK61_PROPORTIONAL_UI_FONTS
+  test_ui_layout_envelope_and_lines();
   test_wide_external_font_layout();
 #endif
   test_custom_glyph();

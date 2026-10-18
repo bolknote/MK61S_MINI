@@ -19,11 +19,18 @@
 #include "number_format.hpp"
 #include "script.hpp"
 #include "services.hpp"
+#include "text_input.hpp"
 #include "storage_path.hpp"
 #include "terminal_core.hpp"
 #include "text_editor.hpp"
+#include "loadable_system_editor.hpp"
 #include "tinybasic_diagnostic.hpp"
 #include "ui_font_service.hpp"
+#include "fonts.hpp"
+#include "ui_font_catalog.hpp"
+#include "diagnostics.hpp"
+#include "native_display.hpp"
+#include "native_keyboard.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -36,8 +43,8 @@ namespace picocalc {
 namespace {
 const char *extension(unsigned type) {
   static const char *ext[] = {".m61", "",     ".foc",  ".bas", ".txt",
-                              ".sta", ".fmk", ".wbmp", ".app", ".ch8",
-                              ".md",  ".bin", ".sheet"};
+                              ".state.txt", ".fmk", ".wbmp", ".app", ".ch8",
+                              ".md",  ".bin", ".mks"};
   return type < 13 ? ext[type] : "";
 }
 bool utf8(const char *source, char *out, unsigned capacity) {
@@ -59,13 +66,22 @@ bool join(const char *directory, const char *leaf, char out[files::PATH_SIZE]) {
 // No APP pointers or leases survive return, media export or a subsequent load.
 class NativeHost {
 public:
-  explicit NativeHost(Services &service) : s(service) { current = this; }
+  explicit NativeHost(Services &service,bool native=false) : s(service), display(settings(),native) {
+    s.graph_.reset();
+    s.graph_width_=display.width();s.graph_height_=display.height();
+    current = this;
+    controls::set_listener([](void* raw,KeyEvent event) {
+      auto& host=*(NativeHost*)raw;host.input_received=true;host.keyboard.event(event,millis());
+    },this);
+  }
   ~NativeHost() {
+    controls::set_listener(nullptr,nullptr);
     while (font_sessions) {
       program_store_text_font_end();
       --font_sessions;
     }
     s.graph_.reset();
+    s.graph_width_=s.graph_height_=320;
     s.graph_visible_ = false;
     for (auto &lease : leases)
       std::free(lease.data);
@@ -76,40 +92,35 @@ public:
   static const mk61_app_services common;
   static const mk61_service_keyboard mapping;
   Services &s;
+  NativeDisplay display;
+  NativeKeyboard keyboard;
+  bool input_received=false;
   struct Lease {
     u8 *data = nullptr;
     unsigned size = 0;
   } leases[2];
-  u8 fifo[32]{}, head = 0, count = 0, last = 0;
-  unsigned cursor_x = 0, cursor_y = 0, revision = 1;
   bool graphics = false;
-  u32 sound_end = 0;
   unsigned font_sessions = 0;
   bool preview = false;
   Settings settings() const { return s.ui_ ? s.ui_->settings() : Settings{}; }
   u32 setup(u32 op, u32 a, u32 b, void *payload);
-  u32 resource(u32 op, void *payload);
+  u32 resource(u32 op, u32 inode, void *payload);
   void pump() {
+    display.settings(settings());display.flush();
+    input_received=false;
     u8 key = 0;
-    if (s.pump_ && s.pump_(s.pump_context_, key) && count < sizeof(fifo)) {
-      fifo[(head + count) % sizeof(fifo)] = key;
-      ++count;
-    }
-    if (sound_end && (i32)(millis() - sound_end) >= 0) {
-      script::tone(0, 0);
-      sound_end = 0;
-    }
+    if(s.pump_ && s.pump_(s.pump_context_,key) && !input_received) controls::pulse(key,millis());
+    controls::service(millis());
   }
   int take(bool wait = false) {
     do {
       pump();
-      if (count) {
-        last = fifo[head];
-        head = (head + 1) % sizeof(fifo);
-        --count;
-        return last;
-      }
+      const int key=keyboard.press();if(key>=0) return key;
     } while (wait);
+    return -1;
+  }
+  int raw_key(int state,bool wait) {
+    do { pump();const int key=keyboard.raw(state);if(key>=0) return key; } while(wait);
     return -1;
   }
   static void service() { current->pump(); }
@@ -118,24 +129,25 @@ public:
     while ((u32)(millis() - start) < ms)
       current->pump();
   }
-  static u32 columns() { return script::columns(); }
-  static u32 rows() { return script::rows(); }
+  static u32 columns() { current->display.settings(current->settings());return current->display.columns(); }
+  static u32 rows() { current->display.settings(current->settings());return current->display.rows(); }
   static u32 clear() {
-    current->cursor_x = current->cursor_y = 0;
-    script::show_text("");
-    return 1;
+    return current->display.clear();
   }
   static u32 write(u32 x, u32 y, const char *text, u32 n) {
     if (!text || n > MK61_APP_MAX_TEXT_BYTES || x >= columns() || y >= rows())
       return 0;
-    script::write_text(x, y, text, n);
-    return 1;
+    return current->display.write(x,y,text,n);
   }
   static i32 poll() {
     const int c = current->take();
+    if(c>=0) current->keyboard.handoff(current->keyboard.last(),millis());
     return c < 0 ? -1 : controls::logical((u8)c);
   }
-  static i32 wait() { return controls::logical((u8)current->take(true)); }
+  static i32 wait() {
+    const int c=current->take(true);current->keyboard.handoff(current->keyboard.last(),millis());
+    return controls::logical((u8)c);
+  }
   static u32 held(i32 key) {
     if (key < 0)
       return 0;
@@ -146,55 +158,41 @@ public:
   }
   static u32 file_size(u32 id) {
     program_store::Entry e;
-    return id < 0xFFFF && program_store::entry_by_id((u16)id, e) ? e.data_len
-                                                                 : 0;
+    return id < 0xFFFF && program_store::entry_by_id((u16)id, e) &&
+                   e.kind == program_store::NodeKind::FILE ? e.data_len : UINT32_MAX;
   }
   static u32 file_read(u32 id, u32 offset, u8 *out, u32 n) {
-    const char *path = id < 0xFFFF ? script::file_path((u16)id) : nullptr;
-    unsigned got = 0;
-    if (!path || !out || n > 65535 ||
-        !files::read_range(path, offset, out, n, got))
-      return 0;
+    if(id>=0xFFFF || offset>65535 || n>65535 || (!out && n)) return UINT32_MAX;
+    u16 got=0;
+    if(!program_store::read_range_id((u16)id,(u16)offset,out,(u16)n,&got)) return UINT32_MAX;
     return got;
   }
   static u32 beep(u32 hz, u32 ms, u32 volume) {
-    if (hz > 20000 || ms > 60000 || volume > 100)
+    if (hz > 65535 || !ms || ms > 65535 || volume > 100)
       return 0;
-    script::tone(volume ? hz : 0, 0);
-    current->sound_end = ms ? millis() + ms : 0;
+    script::tone(hz, ms, volume);
     return 1;
   }
   static void stop() {
     script::tone(0, 0);
-    current->sound_end = 0;
   }
   static void led(u32 on) { script::led(on != 0); }
   static u32 blink(u32 n, u32 on, u32 off) {
-    if (n > 100 || on > 10000 || off > 10000)
-      return 0;
-    for (u32 i = 0; i < n; ++i) {
-      script::led(true);
-      delay(on);
-      script::led(false);
-      delay(off);
-    }
-    return 1;
+    return script::led_blink(n,on,off);
   }
   static u32 yes() { return 1; }
-  static u32 width() { return 192; }
-  static u32 height() { return 64; }
-  static u32 graph_revision() { return current->revision; }
+  static u32 width() { return current->display.width(); }
+  static u32 height() { return current->display.height(); }
+  static u32 graph_revision() { return current->display.revision(); }
   static u32 graph_begin() {
-    current->graphics = true;
-    return 1;
+    return current->graphics = current->display.bitmap_begin();
   }
   static u32 graph_present(const u8 *data, u32 n) {
-    if (!current->graphics || !data || n != 1536)
+    if (!current->graphics || !data || n != current->display.width()*current->display.height()/8)
       return 0;
-    script::show_frame(data);
-    return 1;
+    return current->display.bitmap_present(data,n);
   }
-  static void graph_end() { current->graphics = false; }
+  static void graph_end() { current->display.bitmap_end();current->graphics = false; }
   static const void *query(u32 id, u32 version) {
     return id == MK61_APP_SERVICE_COMMON && version == MK61_APP_SERVICES_VERSION
                ? &common
@@ -222,8 +220,9 @@ public:
       return mk_math::exp(x);
     case MK61_SERVICE_SQRT:
       return mk_math::sqrt(x);
-    default:
+    case MK61_SERVICE_POW:
       return mk_math::pow(x, y);
+    default:return 0;
     }
   }
   static int format(char *out, u32 capacity, const char *text, va_list args) {
@@ -285,34 +284,34 @@ public:
     if (!target.name || capacity < 2 || capacity > 256)
       return false;
     const auto saved = s.page_;
+    const bool saved_graphics=s.runtime_graphics_;
     s.page_ = ServicePage::PROMPT;
     s.runtime_graphics_ = false;
-    std::snprintf(s.prompt_text_, sizeof(s.prompt_text_), "%s", target.name);
-    s.prompt_length_ = (u16)std::strlen(s.prompt_text_);
+    usize utf8_size=0;
+    const unsigned initial=(unsigned)std::strlen(target.name);
+    if(initial>=capacity || !mk8::to_utf8((const u8*)target.name,initial,(u8*)s.prompt_text_,sizeof(s.prompt_text_)-1,utf8_size)) {
+      s.page_=saved;s.runtime_graphics_=saved_graphics;return false;
+    }
+    s.prompt_length_=(u16)utf8_size;s.prompt_text_[utf8_size]=0;
     bool ok = false;
     for (;;) {
-      u8 c;
-      if (!s.pump_ || !s.pump_(s.pump_context_, c))
-        continue;
-      if (c == 0x1B || c == 0xB1)
-        break;
+      const u8 c=(u8)take(true);
+      if (c == 0x1B || c == 0xB1) { keyboard.handoff(controls::raw_key(c),millis());break; }
       if (c == '\r' || c == '\n') {
-        ok = s.prompt_length_ != 0;
-        break;
+        usize used=0;u8 converted[256];
+        if(s.prompt_length_ && mk8::from_utf8((const u8*)s.prompt_text_,s.prompt_length_,converted,capacity-1,used)) {
+          std::memcpy(target.name,converted,used);target.name[used]=0;
+          keyboard.handoff(controls::raw_key(c),millis());ok=true;break;
+        }
+        continue;
       }
-      if (c == 8 || c == 0x7F || c == 0xD4) {
-        if (s.prompt_length_)
-          --s.prompt_length_;
-      } else if (c >= 32 && c < 127 &&
-                 (unsigned)s.prompt_length_ + 1 < capacity && c != '/' &&
-                 c != '\\')
-        s.prompt_text_[s.prompt_length_++] = (char)c;
-      s.prompt_text_[s.prompt_length_] = 0;
+      if(c==0x88) s.input_russian_=!s.input_russian_;
+      else if(c==8 || c==0x7F || c==0xD4) text_input::backspace_utf8(s.prompt_text_,s.prompt_length_);
+      else if(text_input::mapped(c,s.input_russian_)!='/' && text_input::mapped(c,s.input_russian_)!='\\')
+        text_input::append_utf8(s.prompt_text_,s.prompt_length_,sizeof(s.prompt_text_),c,s.input_russian_);
     }
-    if (ok)
-      std::snprintf(target.name, capacity, "%s", s.prompt_text_);
     s.page_ = saved;
-    s.runtime_graphics_ = true;
+    s.runtime_graphics_ = saved_graphics;
     return ok;
   }
   bool choose(unsigned type, mk61_service_choice &choice) {
@@ -331,11 +330,11 @@ public:
           text, sizeof(text),
           "OPEN %u/%u\n\n%s\n\nArrows: choose\nEnter: open  Esc: cancel",
           selected + 1, total, f.name);
-      script::show_text(text);
+      clear();display.call(MK61_SERVICE_DISPLAY_PRINT,0,0,text);
       const int key = take(true);
-      if (key == 0x1B || key == 0xB1)
-        return false;
+      if (key == 0x1B || key == 0xB1) { keyboard.handoff(controls::raw_key((u8)key),millis());return false; }
       if (key == '\r' || key == '\n') {
+        keyboard.handoff(controls::raw_key((u8)key),millis());
         choice.file = f;
         choice.parent = f.parent;
         return true;
@@ -348,6 +347,12 @@ public:
   }
   static u32 call(u32 op, u32 a, u32 b, u32 c, void *payload);
 };
+#if !defined(PICO_ON_DEVICE)
+void Services::test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context) {
+  if(NativeHost::current || !test) return;
+  NativeHost host(*this);test(context,NativeHost::api,NativeHost::common);
+}
+#endif
 NativeHost *NativeHost::current = nullptr;
 const mk61_service_keyboard NativeHost::mapping = [] {
   mk61_service_keyboard m{};
@@ -401,6 +406,7 @@ const mk61_app_services NativeHost::common = {MK61_APP_SERVICES_MAGIC,
 
 u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   auto &host = *current;
+  host.display.settings(host.settings());
   auto &s = host.s;
   switch (op) {
   case MK61_SERVICE_CAPABILITIES:
@@ -419,8 +425,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
 #endif
         ;
   case MK61_SERVICE_UI_FONT:
-    return ui_font_service::call(1, host.settings().ui_font_size, a, b, c,
-                                 payload);
+    return fonts::service(host.settings(), a, b, c, payload);
   case MK61_SERVICE_TEXT_FONT:
     switch (a) {
     case MK61_TEXT_FONT_BEGIN: {
@@ -447,7 +452,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
       return (u32)MK61_TEXT_FONT_INVALID;
     }
   case MK61_SERVICE_RESOURCE_READ:
-    return host.resource(a, payload);
+    return host.resource(a, b, payload);
   case MK61_SERVICE_LANGUAGE_ERROR_TEXT:
     if (a > (u32)language_vm::Error::GRAPHICS_ARGUMENT || b > 1 || c || payload)
       return 0;
@@ -514,7 +519,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     auto &r = control ? request : *(basic_graphics::Request *)payload;
     const auto result = s.graph_request(r);
     if (s.graph_.active()) {
-      script::show_frame(s.graph_.frame());
+      if(s.graph_width_==320) script::show_native_frame(s.graph_.frame());else script::show_frame(s.graph_.frame());
       s.runtime_graphics_ = false;
     }
     if (control && (r.operation == basic_graphics::Operation::WIDTH ||
@@ -524,115 +529,27 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     return (u32)result + 1;
   }
   case MK61_SERVICE_DISPLAY:
-    switch (a) {
-    case MK61_SERVICE_DISPLAY_CLEAR:
-      return clear();
-    case MK61_SERVICE_DISPLAY_CURSOR:
-      host.cursor_x = b;
-      host.cursor_y = c;
-      return 1;
-    case MK61_SERVICE_DISPLAY_WRITE: {
-      if (b > 255 || !mk8::valid_byte((u8)b))
-        return 0;
-      if (b == '\r') {
-        host.cursor_x = 0;
-        return 1;
-      }
-      if (b == '\n') {
-        host.cursor_x = 0;
-        ++host.cursor_y;
-        return 1;
-      }
-      script::write_codepoint(host.cursor_x++, host.cursor_y,
-                              mk8::codepoint((u8)b));
-      if (host.cursor_x >= columns()) {
-        host.cursor_x = 0;
-        ++host.cursor_y;
-      }
-      return 1;
-    }
-    case MK61_SERVICE_DISPLAY_WRITE_CODEPOINT:
-      script::write_codepoint(host.cursor_x++, host.cursor_y,
-                              b <= 0xFFFF ? (u16)b : '?');
-      return 1;
-    case MK61_SERVICE_DISPLAY_FLOW_TEXT: {
-      if (!payload)
-        return 0;
-      const auto &p = *(const mk61_service_text_flow *)payload;
-      if (p.flags & ~3U)
-        return 0;
-      return script::flow_text(p.text, p.length, p.first_row, p.max_rows,
-                               (p.flags & 1) != 0, (p.flags & 2) != 0);
-    }
-    case MK61_SERVICE_DISPLAY_PRINT:
-      if (payload) {
-        for (const char *p = (const char *)payload; *p; ++p) {
-          if (*p == '\n') {
-            host.cursor_x = 0;
-            ++host.cursor_y;
-          } else {
-            if (host.cursor_x >= columns()) {
-              host.cursor_x = 0;
-              ++host.cursor_y;
-            }
-            script::write_text(host.cursor_x++, host.cursor_y, p, 1);
-          }
-        }
-        return 1;
-      }
-      return 0;
-    case MK61_SERVICE_DISPLAY_WIDTH:
-      return 192;
-    case MK61_SERVICE_DISPLAY_HEIGHT:
-      return 64;
-    case MK61_SERVICE_DISPLAY_GRAPHICS_MODE:
-      return host.graphics;
-    case MK61_SERVICE_DISPLAY_GRAPHICS:
-      return 1;
-    case MK61_SERVICE_DISPLAY_SUPPORTS_CURSOR:
-      return 0;
-    case MK61_SERVICE_DISPLAY_FLUSH:
-    case MK61_SERVICE_DISPLAY_BEGIN_UPDATE:
-    case MK61_SERVICE_DISPLAY_END_UPDATE:
-    case MK61_SERVICE_DISPLAY_END_VIEWPORT:
-    case MK61_SERVICE_DISPLAY_END_UI_TEXT:
-    case MK61_SERVICE_DISPLAY_CURSOR_OFF:
-      return 1;
-    default:
-      return 0;
-    }
+    return host.display.call(a,b,c,payload);
   case MK61_SERVICE_KEYBOARD:
-    if (a == MK61_SERVICE_KEY_SCAN) {
-      host.pump();
-      return 1;
+    switch(a) {
+    case MK61_SERVICE_KEY_SCAN:host.pump();return 1;
+    case MK61_SERVICE_KEY_ANY:host.pump();return controls::any_pressed(millis());
+    case MK61_SERVICE_KEY_POLL:return (u32)host.raw_key(-1,false);
+    case MK61_SERVICE_KEY_GET:
+      if(b!=0 && b!=keyboard_core::RELEASE_MASK && b!=UINT32_MAX) return UINT32_MAX;
+      return (u32)host.raw_key(b==UINT32_MAX?-1:(int)b,false);
+    case MK61_SERVICE_KEY_WAIT: {
+      const int key=host.raw_key(0,true);host.keyboard.handoff(key,millis());return (u32)key;
     }
-    if (a == MK61_SERVICE_KEY_ANY)
-      return host.count != 0;
-    if (a == MK61_SERVICE_KEY_POLL || a == MK61_SERVICE_KEY_GET ||
-        a == MK61_SERVICE_KEY_WAIT) {
-      const int key = host.take(a == MK61_SERVICE_KEY_WAIT);
-      if (key < 0)
-        return (u32)-1;
-      if (key == 0x1B || key == 0xB1)
-        return mapping.esc;
-      if (key == '\r' || key == '\n')
-        return mapping.ok;
-      if (key == 0xB4)
-        return mapping.left;
-      if (key == 0xB7)
-        return mapping.right;
-      if (key == 0xB5)
-        return mapping.shg_left;
-      if (key == 0xB6)
-        return mapping.shg_right;
-      const int scan = controls::scan((u8)key);
-      return scan < 0 ? MK61_APP_KEY_RAW_BASE + key : (u32)scan;
+    case MK61_SERVICE_KEY_PRESSED:host.pump();return controls::raw_pressed((i32)b,millis());
+    case MK61_SERVICE_KEY_IMMEDIATE:host.pump();return host.keyboard.immediate((i32)b);
+    case MK61_SERVICE_KEY_CLEAR_IMMEDIATE:host.keyboard.clear_immediate();return 1;
+    case MK61_SERVICE_KEY_CLEAR_HOLD:return 1; // BIOS supplies edge events; no resident repeat counter.
+    case MK61_SERVICE_KEY_HANDOFF:host.keyboard.handoff((i32)b,millis());return 1;
+    case MK61_SERVICE_KEY_HANDOFF_PENDING:host.pump();return host.keyboard.pending(millis());
+    case MK61_SERVICE_KEY_LAST:return (u32)host.keyboard.last();
+    default:return 0;
     }
-    if (a == MK61_SERVICE_KEY_PRESSED)
-      return held(keyboard_layout::logical_key(keyboard_layout::MINI, (i32)b));
-    if (a == MK61_SERVICE_KEY_LAST)
-      return host.last;
-    return 0;
   case MK61_SERVICE_SETTINGS:
     if (a == MK61_SERVICE_LANGUAGE)
       return s.russian_;
@@ -660,7 +577,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     for (unsigned row = 0; row < a && row < rows(); ++row) {
       if (!lines[row])
         return 0;
-      script::write_text(0, row, lines[row],
+      write(0, row, lines[row],
                          (unsigned)strnlen(lines[row], columns()));
     }
     return 1;
@@ -676,21 +593,21 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
                      first = selected >= visible ? selected - visible + 1 : 0;
       for (unsigned row = 0; row < visible && first + row < a; ++row) {
         const unsigned i = first + row;
-        script::write_text(0, row, i == selected ? ">" : " ", 1);
+        write(0, row, i == selected ? ">" : " ", 1);
         if (items[i].text)
-          script::write_text(1, row, items[i].text,
+          write(1, row, items[i].text,
                              (unsigned)strnlen(items[i].text, columns() - 1));
       }
       const int key = host.take(true);
-      if (key == 0x1B || key == 0xB1)
-        return 1;
+      if (key == 0x1B || key == 0xB1) { host.keyboard.handoff(controls::raw_key((u8)key),millis());return 1; }
       if ((key == 0xB4 || key == 0xB5) && selected)
         --selected;
       if ((key == 0xB7 || key == 0xB6) && selected + 1 < a)
         ++selected;
-      if ((key == '\r' || key == '\n') &&
-          (!items[selected].action || items[selected].action()))
-        return 1;
+      if (key == '\r' || key == '\n') {
+        host.keyboard.handoff(controls::raw_key((u8)key),millis());
+        if(!items[selected].action || items[selected].action()) return 1;
+      }
     }
   }
   case MK61_SERVICE_MEMORY_ACQUIRE: {
@@ -740,6 +657,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     if (!payload)
       return 0;
     auto &p = *(mk61_service_number_format *)payload;
+    if(!p.significant_digits || p.significant_digits>14) return 0;
     return number_format::general(p.value, (u8)p.significant_digits, p.output,
                                   p.capacity);
   }
@@ -775,7 +693,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     return 1;
   }
   case MK61_SERVICE_FLOAT_CONVERT: {
-    if (!payload)
+    if (!payload || a>MK61_DOUBLE_FROM_FLOAT)
       return 0;
     auto &p = *(mk61_service_float_convert *)payload;
     float f;
@@ -794,7 +712,7 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     return n;
   }
   case MK61_SERVICE_FILE_ENTRY:
-    if (!payload)
+    if (!payload || a>1 || (!a && b>=0xFFFF))
       return 0;
     if (!a)
       return file((u16)b, *(mk61_service_file *)payload);
@@ -838,7 +756,9 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
         return 0;
       std::snprintf(path, sizeof(path), "%s", old);
     }
-    if (!files::write(path, p.data, p.size))
+    if (program_store::text_content((program_store::ProgramType)c)
+            ? !files::write_text(path,(const char*)p.data,p.size)
+            : !files::write(path, p.data, p.size))
       return 0;
     program_store::Entry e;
     if (!script::register_file(path, e))
@@ -860,42 +780,39 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   }
   case MK61_SERVICE_EDITOR_SCROLL:
   case MK61_SERVICE_EDITOR_DRAW: {
-    if (!payload)
-      return 0;
-    auto &e = *(mk61_service_editor *)payload;
-    if (!e.source || e.length > 65534 || e.cursor > e.length)
-      return 0;
-    const unsigned cols = columns(), visible = rows();
-    unsigned cursor_row = 0, cursor_col = 0;
-    for (unsigned i = 0; i < e.cursor; ++i) {
-      if (e.source[i] == '\n' || ++cursor_col >= cols) {
-        ++cursor_row;
-        cursor_col = 0;
-      }
+    if(!payload) return 0;
+    auto& e=*(mk61_service_editor*)payload;
+    if(!e.source || e.length>65534 || e.cursor>e.length || e.top>65535 ||
+       !mk8::text_valid((const u8*)e.source,e.length)) return 0;
+    host.display.call(MK61_SERVICE_DISPLAY_END_UI_TEXT,0,0,nullptr);
+    const unsigned visible=rows(),cols=columns();
+    u16 top=text_editor::line_start_for_cursor(e.source,(u16)(e.top<e.length?e.top:e.length));
+    const u16 active=text_editor::line_start_for_cursor(e.source,(u16)e.cursor);
+    if(active<top) top=active;
+    u16 at=top;unsigned row=0;
+    while(at<active && row<visible) { at=text_editor::next_line_start(e.source,at,(u16)e.length);++row; }
+    if(row>=visible) {
+      top=active;for(unsigned i=1;i<visible && top;++i) top=text_editor::previous_line_start(e.source,top);
     }
-    if (cursor_row < e.top)
-      e.top = cursor_row;
-    if (cursor_row >= e.top + visible)
-      e.top = cursor_row - visible + 1;
-    if (op == MK61_SERVICE_EDITOR_DRAW) {
-      clear();
-      unsigned row = 0, col = 0;
-      for (unsigned i = 0; i < e.length && row < e.top + visible; ++i) {
-        const char ch = e.source[i];
-        if (ch == '\n') {
-          ++row;
-          col = 0;
-          continue;
-        }
-        if (row >= e.top)
-          script::write_text(col, row - e.top, &ch, 1);
-        if (++col >= cols) {
-          col = 0;
-          ++row;
-        }
+    e.top=top;
+    if(op==MK61_SERVICE_EDITOR_DRAW) {
+      clear();at=top;
+      const unsigned column=e.cursor-active;
+      const unsigned window=column>cols-2?column-(cols-2):0;
+      for(row=0;row<visible;++row) {
+        const bool current=at==active;
+        host.display.call(MK61_SERVICE_DISPLAY_CURSOR,0,row,nullptr);
+        host.display.call(MK61_SERVICE_DISPLAY_WRITE,current?'>':' ',0,nullptr);
+        const u16 end=text_editor::line_end_for_start(e.source,at,(u16)e.length);
+        unsigned pos=at+(current?window:0);
+        for(unsigned col=1;col<cols && pos<end;++col,++pos)
+          host.display.call(MK61_SERVICE_DISPLAY_WRITE,(u8)e.source[pos],0,nullptr);
+        if(at==e.length) break;
+        at=text_editor::next_line_start(e.source,at,(u16)e.length);
       }
-      if (cursor_row >= e.top && cursor_row < e.top + visible)
-        script::write_text(cursor_col, cursor_row - e.top, "_", 1);
+      at=top;row=0;while(at<active && row+1<visible) { at=text_editor::next_line_start(e.source,at,(u16)e.length);++row; }
+      host.display.call(MK61_SERVICE_DISPLAY_CURSOR,1+column-window,row,nullptr);
+      host.display.call(MK61_SERVICE_DISPLAY_CURSOR_ON,0,0,nullptr);
     }
     return 1;
   }
@@ -906,28 +823,10 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
     if (!e.source || e.capacity < 1 || e.capacity > 65535 ||
         e.length >= e.capacity || e.cursor > e.length)
       return 0;
-    u16 len = (u16)e.length, cur = (u16)e.cursor;
-    bool changed = false;
-    const u8 key = host.last;
-    if (key == 8 || key == 0x7F || key == 0xD4)
-      changed = text_editor::backspace(e.source, len, cur);
-    else if (key == 0xB4) {
-      if (cur)
-        --cur;
-      changed = true;
-    } else if (key == 0xB7) {
-      if (cur < len)
-        ++cur;
-      changed = true;
-    } else if (key >= 32 && key < 127) {
-      const char text[] = {char(key), 0};
-      changed =
-          text_editor::insert_text(e.source, len, cur, (u16)e.capacity, text);
-    }
-    e.length = len;
-    e.cursor = cur;
-    e.sms_active = e.shift = 0;
-    return changed;
+    char literal[2]{};
+    if(e.key>=MK61_APP_KEY_RAW_BASE+32 && e.key<MK61_APP_KEY_RAW_BASE+256 &&
+       e.key!=MK61_APP_KEY_RAW_BASE+127) literal[0]=(char)(e.key-MK61_APP_KEY_RAW_BASE);
+    return loadable_module::system_editor::handle(e,literal[0]?literal:nullptr);
   }
   case MK61_SERVICE_SETUP:
     return host.setup(a, b, c, payload);
@@ -941,10 +840,14 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
   }
 }
 
-u32 NativeHost::resource(u32 op, void *payload) {
+u32 NativeHost::resource(u32 op, u32 inode, void *payload) {
   const u32 revision = files::revision();
   if (op == 0 || op == 4)
     return revision;
+  if(op==6 && payload) {
+    const char* path=inode<0xFFFF ? script::file_path((u16)inode) : nullptr;
+    return path && files::content_stamp(path,*(u32*)payload);
+  }
   if (op == 3) {
     if (!payload)
       return 1;
@@ -990,10 +893,14 @@ u32 NativeHost::resource(u32 op, void *payload) {
   if ((op != 1 && op != 5) || !payload)
     return 0;
   const auto &r = *(const mk61_service_resource *)payload;
-  if (r.revision != revision || !r.output || r.reserved > (op == 5 ? 1U : 0U))
+  if (!r.output || r.reserved > (op == 5 ? 2U : 0U))
     return 0;
-  return file_read(r.id, r.offset, r.output, r.length) == r.length &&
-         files::revision() == revision;
+  const auto current=[&]() {
+    if(r.reserved!=2) return r.revision==files::revision();
+    u32 stamp=0;const char* path=script::file_path(r.id);
+    return path && files::content_stamp(path,stamp) && stamp==r.revision;
+  };
+  return current() && file_read(r.id, r.offset, r.output, r.length) == r.length && current();
 }
 u32 NativeHost::setup(u32 op, u32 a, u32 b, void *payload) {
   auto settings = this->settings();
@@ -1002,9 +909,10 @@ u32 NativeHost::setup(u32 op, u32 a, u32 b, void *payload) {
   case MK61_SETUP_VERSION:
     return MK61_SETUP_API_VERSION;
   case MK61_SETUP_FEATURES:
-    return MK61_SETUP_FEATURE_TEXT_PROFILE |
+    return MK61_SETUP_FEATURE_UI_TEXT_MODE | MK61_SETUP_FEATURE_TEXT_PROFILE |
            MK61_SETUP_FEATURE_EXTENDED_TEXT_PROFILE |
            MK61_SETUP_FEATURE_UI_FONT | MK61_SETUP_FEATURE_UI_FONT_CATALOG |
+           MK61_SETUP_FEATURE_CLASSIC_UI_FONT | MK61_SETUP_FEATURE_COMPACT_UI_FONT |
            MK61_SETUP_FEATURE_CALCULATOR_FONT;
   case MK61_SETUP_RTC_CALIBRATION:
     if (!a)
@@ -1079,64 +987,99 @@ u32 NativeHost::setup(u32 op, u32 a, u32 b, void *payload) {
     if (!payload)
       return (u32)MK61_TEXT_FONT_INVALID;
     const auto &p = *(const mk61_setup_prepared_font *)payload;
-    if (p.role != MK61_PREPARED_FONT_TEXT || p.reserved || p.flags)
-      return (u32)MK61_TEXT_FONT_UNSUPPORTED;
+    if (p.role > MK61_PREPARED_FONT_UI || p.reserved ||
+        (p.flags & ~(MK61_PREPARED_FONT_PERSIST | MK61_PREPARED_FONT_SELECT_UI)) ||
+        (p.role == MK61_PREPARED_FONT_TEXT && (p.flags & MK61_PREPARED_FONT_SELECT_UI)))
+      return (u32)MK61_TEXT_FONT_INVALID;
     prepared_font::Face font;
     if (!font.open(p.data, p.size) ||
         (p.expected_height && p.expected_height != font.metrics().height))
       return (u32)MK61_TEXT_FONT_INVALID;
-    return script::install_prepared(p.data, p.size)
-               ? (u32)MK61_TEXT_FONT_OK
-               : (u32)MK61_TEXT_FONT_UNAVAILABLE;
+    if(p.role==MK61_PREPARED_FONT_UI) {
+      program_store::Entry source{};
+      if(p.source_id>=0xFFFF || !program_store::entry_by_id((u16)p.source_id,source) ||
+         source.type!=program_store::ProgramType::FONT) return (u32)MK61_TEXT_FONT_INVALID;
+      u32 choice=p.ui_key;
+      if(p.flags & MK61_PREPARED_FONT_SELECT_UI) {
+        fonts::Item item{};
+        if(!fonts::describe(choice,item) || item.family!=3 || item.size!=font.metrics().height)
+          return (u32)MK61_TEXT_FONT_INVALID;
+        mk61_setup_ui_font_source selected{};
+        if(!setup(MK61_SETUP_UI_FONT_SOURCE,choice,0,&selected) || selected.id!=p.source_id)
+          return (u32)MK61_TEXT_FONT_INVALID;
+      } else if(!choice) choice=fonts::key(settings);
+      if(!fonts::install(p.data,p.size,choice,p.expected_height)) return (u32)MK61_TEXT_FONT_INVALID;
+      if(p.flags & MK61_PREPARED_FONT_SELECT_UI) {
+        settings.ui_font_family=3;settings.ui_font_key=choice;settings.ui_font_size=font.metrics().height;
+        if(!s.ui_ || !s.ui_->apply_settings(settings,(p.flags & MK61_PREPARED_FONT_PERSIST)!=0))
+          return (u32)MK61_TEXT_FONT_UNAVAILABLE;
+      }
+      return (u32)MK61_TEXT_FONT_OK;
+    }
+    if(!script::install_prepared(p.data,p.size)) return (u32)MK61_TEXT_FONT_UNAVAILABLE;
+    if(p.flags & MK61_PREPARED_FONT_PERSIST) {
+      const auto profile=script::text_profile();
+      settings.text_rows=profile.rows;settings.text_width=profile.width;
+      settings.text_height=profile.height;settings.text_gap=profile.line_gap;
+      if(!save()) return (u32)MK61_TEXT_FONT_UNAVAILABLE;
+    }
+    return (u32)MK61_TEXT_FONT_OK;
   }
   case MK61_SETUP_FONT_RESTORE:
     return script::text_profile({settings.text_rows, settings.text_width,
                                  settings.text_height, settings.text_gap});
   case MK61_SETUP_UI_FONT_READ:
-    if (!payload)
-      return 0;
-    *(mk61_setup_ui_font *)payload = {1, settings.ui_font_size};
+    if (!payload) return 0;
+    *(mk61_setup_ui_font *)payload = {settings.ui_font_family, settings.ui_font_size};
     return 1;
   case MK61_SETUP_UI_FONT_APPLY: {
-    if (!payload)
-      return 0;
+    if (!payload) return 0;
     const auto &p = *(const mk61_setup_ui_font *)payload;
-    if (p.family != 1 && p.family != 2)
-      return 0;
-    settings.ui_font_size = p.size;
+    settings.ui_font_family=p.family==2?1:p.family;
+    settings.ui_font_size=p.size;
+    if(settings.ui_font_family!=3) settings.ui_font_key=0;
     return save();
   }
   case MK61_SETUP_UI_FONT_COUNT:
-    return 3;
+    return fonts::count();
   case MK61_SETUP_UI_FONT_CURRENT:
-    return settings.ui_font_size;
+    return fonts::key(settings);
   case MK61_SETUP_UI_FONT_ITEM:
-    if (!payload || a >= 3)
-      return 0;
-    {
-      auto &item = *(mk61_setup_ui_font_item *)payload;
-      item = {};
-      item.key = item.size = (u8)(12 + 2 * a);
-      std::snprintf(item.name, sizeof(item.name), "Ark Pixel %u", item.size);
-      return 1;
-    }
-  case MK61_SETUP_UI_FONT_APPLY_ITEM:
-    if (a != 12 && a != 14 && a != 16)
-      return 0;
-    settings.ui_font_size = (u8)a;
+  case MK61_SETUP_UI_FONT_STEP: {
+    if(!payload) return 0;
+    fonts::Item item{};
+    if(op==MK61_SETUP_UI_FONT_ITEM ? !fonts::item(a,item) :
+        !fonts::step(a,(i32)b,item)) return 0;
+    auto& out=*(mk61_setup_ui_font_item*)payload;
+    out={};out.key=item.key;out.size=item.size;
+    std::snprintf(out.name,sizeof(out.name),"%.31s",item.name);
+    return 1;
+  }
+  case MK61_SETUP_UI_FONT_APPLY_ITEM: {
+    fonts::Item item{};
+    if(!fonts::describe(a,item)) return 0;
+    settings.ui_font_family=item.family;settings.ui_font_size=item.size;
+    settings.ui_font_key=item.family==3?item.key:0;
     return save();
-  case MK61_SETUP_UI_FONT_STEP:
-    if (!payload || ((i32)b != -1 && b != 1))
-      return 0;
-    {
-      auto &item = *(mk61_setup_ui_font_item *)payload;
-      item = {};
-      const unsigned current = a == 12 ? 0 : a == 16 ? 2 : 1;
-      item.key = item.size =
-          (u8)(12 + 2 * ((current + ((i32)b < 0 ? 2 : 1)) % 3));
-      std::snprintf(item.name, sizeof(item.name), "Ark Pixel %u", item.size);
-      return 1;
+  }
+  case MK61_SETUP_UI_FONT_SOURCE: {
+    if(!payload) return 0;
+    fonts::Item item{};
+    if(!fonts::describe(a,item) || item.family!=3) return 0;
+    // Resolve by stable key, retaining the real UTF-8 filename.
+    for(unsigned skip=0;;++skip) {
+      files::Entry entry{};unsigned used=0;bool more=false;
+      if(!files::list("/Fonts",skip,&entry,1,used,more) || !used) return 0;
+      if(!entry.directory && ui_font_catalog::name_key(entry.name)==a) {
+        char path[files::PATH_SIZE];
+        std::snprintf(path,sizeof(path),"/Fonts/%s",entry.name);
+        program_store::Entry source{};
+        if(!script::register_file(path,source)) return 0;
+        auto& out=*(mk61_setup_ui_font_source*)payload;
+        out={};out.id=source.id;out.size=item.size;return 1;
+      }
     }
+  }
   case MK61_SETUP_CALCULATOR_FONT_READ:
     return settings.calculator_font;
   case MK61_SETUP_CALCULATOR_FONT_APPLY:
@@ -1144,6 +1087,8 @@ u32 NativeHost::setup(u32 op, u32 a, u32 b, void *payload) {
       return 0;
     settings.calculator_font = (u8)a;
     return save();
+  case MK61_SETUP_TEXT_MODE:
+    return a>1?0:display.call(a?MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT:MK61_SERVICE_DISPLAY_END_UI_TEXT,0,0,nullptr);
   case MK61_SETUP_TEXT:
     if (!payload || a >= rows())
       return 0;
@@ -1248,6 +1193,8 @@ u8 Services::run_native(const char *path, u16 file) {
   return result < 256 ? (u8)result : 5;
 }
 u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
+  diagnostics::Scope measure(diagnostics::Point::APP);
+  diagnostics::context(diagnostics::State::APP,file);
   if (NativeHost::current || running_ || files::usb_active())
     return 3;
   u8 encoded[64];
@@ -1269,6 +1216,9 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
             ServicePage::BROWSER);
     return 1;
   }
+  // A completed BASIC drawing no longer owns the foreground. Release its
+  // native frame before reserving an APP image (SHEET needs almost 30 KiB).
+  graph_.reset();graph_visible_=false;
   auto *allocation = (u8 *)std::calloc(1, header.memory_size + 7);
   if (!allocation) {
     message("APP: not enough RAM", ServicePage::BROWSER);
@@ -1310,7 +1260,7 @@ u8 Services::run_native_step(const char *path, u16 file, mk61_app_flow *flow) {
   script::show_text("");
   u32 result = 5;
   {
-    NativeHost host(*this);
+    NativeHost host(*this,(header.flags&MK61_APP_NATIVE_320_FLAG)!=0);
 #if defined(PICO_ON_DEVICE)
     __dmb();
     __isb();

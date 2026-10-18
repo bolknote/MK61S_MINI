@@ -1,4 +1,5 @@
 #include "chip8.hpp"
+#include "canvas.hpp"
 #include "cross_hal.h"
 #include "input.hpp"
 #include "m61_platform.hpp"
@@ -91,6 +92,12 @@ u8 Services::run_chip8(const char *path) {
                 frame[(yy / 8) * 192 + xx] |= (u8)(1U << (yy % 8));
               }
       script::show_frame(frame);
+      canvas::clear();
+      // A CHIP-8 pixel is a uniform 5x5 block. This is the VM's own pixel
+      // geometry, not a resampled 192x64 display image.
+      for(unsigned y=0;y<32;++y) for(unsigned x=0;x<64;++x)
+        if(chip8::pixel(*vm,(u8)x,(u8)y)) canvas::rect(canvas::frame(),x*5,80+y*5,5,5,true);
+      script::show_native_frame(canvas::frame(),false);
       frame_at = now;
       dirty = false;
     }

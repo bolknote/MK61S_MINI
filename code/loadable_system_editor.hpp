@@ -4,25 +4,28 @@
 #include "text_editor.hpp"
 
 namespace loadable_module { namespace system_editor {
+struct Context { mk61_system_edit_key& request; const char* literal; };
 static const char* insert(text_editor::Shift shift, i32 key, const char* source, u16 cursor, void* context) {
-  auto& request = *(mk61_system_edit_key*) context;
+  auto& input = *(Context*) context;
+  auto& request = input.request;
+  if(!(request.hook_mask & 1)) return input.literal;
   mk61_system_edit_hook event = {(char*) source, 0, cursor, 0, (u32) shift, key, 0, request.context};
-  return (const char*) (usize) request.hook(MK61_EDIT_INSERT, &event);
+  return (const char*) (uintptr_t) request.hook(MK61_EDIT_INSERT, &event);
 }
 static bool alpha(char* source, u16& len, u16& cursor, u16 capacity, i32 key, void* context) {
-  auto& request = *(mk61_system_edit_key*) context;
+  auto& request = ((Context*) context)->request;
   mk61_system_edit_hook event = {source, len, cursor, capacity, 0, key, 0, request.context};
   const bool result = request.hook(MK61_EDIT_ALPHA, &event);
   len = (u16) event.length; cursor = (u16) event.cursor; return result;
 }
 static bool move(const char* source, u16 len, u16& cursor, int delta, void* context) {
-  auto& request = *(mk61_system_edit_key*) context;
+  auto& request = ((Context*) context)->request;
   mk61_system_edit_hook event = {(char*) source, len, cursor, 0, 0, 0, delta, request.context};
   const bool result = request.hook(MK61_EDIT_MOVE, &event);
   cursor = (u16) event.cursor; return result;
 }
 static bool backspace(char* source, u16& len, u16& cursor, u16 capacity, void* context) {
-  auto& request = *(mk61_system_edit_key*) context;
+  auto& request = ((Context*) context)->request;
   mk61_system_edit_hook event = {source, len, cursor, capacity, 0, 0, 0, request.context};
   const bool result = request.hook(MK61_EDIT_BACKSPACE, &event);
   len = (u16) event.length; cursor = (u16) event.cursor; return result;
@@ -39,7 +42,7 @@ static text_editor::KeyMap key_map(const mk61_system_edit_key& request) {
   return {k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7], k[8], k[9],
       k[10], k[11], k[12]};
 }
-static u32 handle(mk61_system_edit_key& request) {
+static u32 handle(mk61_system_edit_key& request, const char* literal = nullptr) {
   if(request.capacity > 0xFFFFU || request.length > 0xFFFFU ||
       request.cursor > 0xFFFFU || request.top > 0xFFFFU || request.shift > 2 ||
       request.sms_index > 0xFFU || (request.hook_mask && !request.hook)) return 0;
@@ -48,9 +51,10 @@ static u32 handle(mk61_system_edit_key& request) {
       (text_editor::Shift) request.shift,
       {request.sms_active != 0, request.sms_key, (u8) request.sms_index, request.sms_deadline}};
   const text_editor::KeyMap keys = key_map(request);
-  const text_editor::Hooks hooks = {request.hook_mask & 1 ? insert : nullptr,
+  Context context{request,literal};
+  const text_editor::Hooks hooks = {(request.hook_mask & 1) || literal ? insert : nullptr,
       request.hook_mask & 2 ? alpha : nullptr, request.hook_mask & 4 ? move : nullptr,
-      request.hook_mask & 8 ? backspace : nullptr, &request};
+      request.hook_mask & 8 ? backspace : nullptr, &context};
   const text_editor::Options options = {request.ok_text,
       (request.options & 1) != 0, (request.options & 2) != 0,
       (request.options & 4) != 0, (request.options & 8) != 0,

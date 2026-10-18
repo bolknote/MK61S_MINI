@@ -160,6 +160,9 @@ void picocalc_services_test(const char* preview);
 void picocalc_m61_test();
 void picocalc_runtime_test();
 void picocalc_parity_test();
+void picocalc_software_test(const char* preview_path);
+void picocalc_contract_test();
+void picocalc_firmware_test();
 int main(int argc, char** argv) {
     picocalc::Calculator calc;
     calc.init();
@@ -214,6 +217,9 @@ int main(int argc, char** argv) {
     picocalc_m61_test();
     picocalc_runtime_test();
     picocalc_parity_test();
+    picocalc_software_test(argc == 2 ? argv[1] : nullptr);
+    picocalc_contract_test();
+    picocalc_firmware_test();
 
     calc.init();
     for(unsigned i = 0; i < 32; ++i) require(calc.input('1'), "queue capacity");

@@ -1,7 +1,7 @@
 #ifndef MK61_UI_TEXT_RENDERER_HPP
 #define MK61_UI_TEXT_RENDERER_HPP
 
-#include "config.h"
+#include "ui_build_config.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 
 #include "prepared_font.hpp"

@@ -85,7 +85,7 @@ inline const char* status_name(Status status) {
 
 inline Status validate_metadata(const Footer& footer, u32 linked_image_size,
                                 u32 footer_offset, u32 expected_profile_id,
-                                u32 flash_capacity) {
+                                u32 flash_capacity, u32 image_start = IMAGE_START) {
   if(!magic_valid(footer)) return Status::BAD_MAGIC;
   if(footer.version != VERSION) return Status::BAD_VERSION;
   if(footer.size != sizeof(Footer)) return Status::BAD_SIZE;
@@ -97,7 +97,7 @@ inline Status validate_metadata(const Footer& footer, u32 linked_image_size,
   // canonical checksum treats both words as zero, avoiding a circular CRC.
   if(footer.build_id == 0 || footer.build_id != footer.expected_crc32)
     return Status::BAD_BUILD;
-  if(footer.image_start != IMAGE_START || footer.image_size == 0 ||
+  if(footer.image_start != image_start || footer.image_size == 0 ||
      footer.image_size != linked_image_size ||
      footer.image_size > flash_capacity ||
      footer_offset > footer.image_size ||

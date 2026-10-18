@@ -16,6 +16,8 @@
 #include "terminal.hpp"
 #include "terminal_command_ids.hpp"
 #include "version.hpp"
+#include "diagnostics.hpp"
+#include "firmware.hpp"
 #include "m61_text.hpp"
 #include "tusb.h"
 #include "hardware/clocks.h"
@@ -48,7 +50,7 @@ u32 physical_keys = 0;
 u8 last_physical_key = 0;
 bool settings_dirty = false;
 const char* settings_status = "DEFAULT";
-u64 save_at = 0, tone_until = 0, last_activity = 0;
+u64 save_at = 0, last_activity = 0;
 u64 last_usb_service = 0;
 u32 max_usb_gap = 0;
 unsigned math_failures = 0;
@@ -66,15 +68,7 @@ u32 used_stack() {
 
 void tone(u8 volume, unsigned duration = 25) {
     if(volume == 0) return;
-    constexpr unsigned pin = 26;
-    gpio_set_function(pin, GPIO_FUNC_PWM);
-    gpio_set_function(pin + 1, GPIO_FUNC_PWM);
-    const unsigned slice = pwm_gpio_to_slice_num(pin);
-    pwm_set_clkdiv(slice, (float)clock_get_hz(clk_sys) / 1000000.0f);
-    pwm_set_wrap(slice, 499); // 2 kHz.
-    pwm_set_both_levels(slice, volume * 10, volume * 10);
-    pwm_set_enabled(slice, true);
-    tone_until = time_us_64() + duration * 1000;
+    picocalc::script::tone(2000,duration);
 }
 void wake(u64 now) {
     if(sleep_clocks.active()) {
@@ -104,6 +98,13 @@ void save_settings() {
 }
 
 void report(unsigned math_failures) {
+    char diagnostic_status[512];
+    const unsigned diagnostic_size=picocalc::diagnostics::status_report(diagnostic_status,sizeof(diagnostic_status));
+    std::printf("%.*s",(int)diagnostic_size,diagnostic_status);
+    const unsigned firmware_size=picocalc::firmware::report(diagnostic_status,sizeof(diagnostic_status));
+    std::printf("%.*s",(int)firmware_size,diagnostic_status);
+    std::printf("UI_FONT_FAMILY=%u UI_FONT_SIZE=%u UI_FONT_KEY=%08lX\n",
+        ui.settings().ui_font_family,ui.settings().ui_font_size,(unsigned long)ui.settings().ui_font_key);
     const auto model = calculator.snapshot();
     std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
                 picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
@@ -154,12 +155,21 @@ void report(unsigned math_failures) {
         (unsigned long)usb.active_read_bytes, (unsigned long)usb.active_read_lba);
 }
 void usb_service() {
+    picocalc::diagnostics::Scope measure(picocalc::diagnostics::Point::USB);
     const u64 now=time_us_64();
     if(last_usb_service && now-last_usb_service>max_usb_gap) max_usb_gap=(u32)(now-last_usb_service);
     last_usb_service=now;
     if(sleep_clocks.usb_available()) tud_task_ext(0, false);
-    watchdog_update();
-    remote_screen.tick((u32)(now/1000),tud_cdc_connected() && !picocalc::files::usb_active());
+    picocalc::diagnostics::feed_watchdog();
+    // A native frame has 80 rectangles. Sending one per MK61 microcode cycle
+    // makes the idle calculator much slower to mirror than a foreground APP.
+    // Drain a bounded burst, yielding immediately to incoming commands/keys.
+    const u64 tx_until=time_us_64()+4000;
+    for(unsigned packet=0;packet<4096;++packet) {
+        remote_screen.tick((u32)(time_us_64()/1000),tud_cdc_connected() && !picocalc::files::usb_active());
+        if(!remote_screen.holds_frame() || time_us_64()>=tx_until || tud_cdc_available()) break;
+        if(sleep_clocks.usb_available()) tud_task_ext(0,false);
+    }
     static u64 next_rtc=0;
     if(now>=next_rtc) {
         picocalc::clock::service();next_rtc=now+100000;
@@ -176,9 +186,8 @@ bool service_pump(void*, u8& key) {
     usb_service();
     picocalc::script::service_effects();
     const u64 now = time_us_64();
-    if(tone_until && now >= tone_until) { pwm_set_both_levels(pwm_gpio_to_slice_num(26), 0, 0); tone_until = 0; }
     static u64 next = 0;
-    if(panel_ready && now >= next) {
+    if(panel_ready && !remote_screen.holds_frame() && now >= next) {
         screen.render(calculator.snapshot(), keyboard.online(), &ui, &services); panel.flush(screen); next = time_us_64() + 80000;
     }
     picocalc::KeyEvent event{};
@@ -205,8 +214,11 @@ bool service_pump(void*, u8& key) {
 } // namespace
 
 int main() {
+    picocalc::firmware::enforce();
+    picocalc::diagnostics::initialize();
     mark_stack();
     watchdog_enable(8000, true);
+    picocalc::diagnostics::watchdog_started(8000);
     const tusb_rhport_init_t usb_init{TUSB_ROLE_DEVICE, TUSB_SPEED_FULL};
     tusb_init(0, &usb_init);
     stdio_init_all();
@@ -215,12 +227,21 @@ int main() {
     remote_screen.init({nullptr,
         [](void*) { return (unsigned)tud_cdc_write_available(); },
         [](void*,const u8* data,unsigned size) { const unsigned n=tud_cdc_write(data,size);tud_cdc_write_flush();return n; },
-        [](void*,u8* frame) { screen.render(calculator.snapshot(),keyboard.online(),&ui,&services);screen.logical_frame(ui,services,frame); }});
+        [](void*,u8* frame) { screen.render(calculator.snapshot(),keyboard.online(),&ui,&services);screen.logical_frame(ui,services,frame); },
+        [](void*) {
+            screen.render(calculator.snapshot(),keyboard.online(),&ui,&services);
+            if(panel_ready && !power.asleep()) panel.flush(screen);
+        },
+        [](void*,unsigned x,unsigned page,u8* out,unsigned count) {
+            for(unsigned i=0;i<count;++i) {
+                u8 bits=0;for(unsigned y=0;y<8;++y) if(screen.pixel(x+i,page*8+y)) bits|=(u8)(1U<<y);out[i]=bits;
+            }
+        }});
     // Process enumeration before the core's boot probes and the card's
     // potentially slow power-up. No USB worker runs in an interrupt: MSC
     // callbacks and FatFs must stay on the same foreground core.
     const u64 enumerate_until = time_us_64() + 500000;
-    while(time_us_64() < enumerate_until) { tud_task_ext(0, false); watchdog_update(); }
+    while(time_us_64() < enumerate_until) { tud_task_ext(0, false); picocalc::diagnostics::feed_watchdog(); }
     keyboard.init();
     calculator.init();
     picocalc::Settings settings;
@@ -243,7 +264,10 @@ int main() {
                 remote_screen.enable(std::strcmp(args,"off")!=0);ui.calculator_page();return true;
             }
             if(id==CMD_DFU || id==CMD_RESET) {
-                if(id==CMD_DFU && !std::strcmp(args,"status")) { std::puts("BOOTLOADER=RP2040 ROM UF2");return true; }
+                if(id==CMD_DFU && !std::strcmp(args,"status")) {
+                    char text[512];const unsigned n=picocalc::firmware::report(text,sizeof(text),true);
+                    std::puts("BOOTLOADER=RP2040 ROM UF2");std::printf("%.*s",(int)n,text);return true;
+                }
                 if((id==CMD_DFU && *args) || (id==CMD_RESET && std::strcmp(args,"now")) || services.running() || picocalc::files::usb_active()) return false;
                 save_settings();stdio_flush();
                 if(id==CMD_DFU) reset_usb_boot(0,0);else watchdog_reboot(0,0,10);
@@ -268,6 +292,7 @@ int main() {
     math_failures = picocalc::math_self_test();
     report(math_failures);
     (void)picocalc::files::mount();
+    (void)picocalc::diagnostics::persist_crash();
     u64 next_frame = 0;
     u64 next_classic_step = 0;
     u64 usb_retry = time_us_64() + 3000000;
@@ -281,6 +306,11 @@ int main() {
     bool drawn_usb = false, drawn_ejected = false;
     u64 drawn_activity = 0;
     for(;;) {
+        picocalc::diagnostics::context(power.asleep()?picocalc::diagnostics::State::SLEEP:
+            picocalc::files::usb_active()?picocalc::diagnostics::State::USB_DISK:
+            m61_text::active()?picocalc::diagnostics::State::M61:
+            ui.page()==picocalc::Page::CALCULATOR?picocalc::diagnostics::State::CALCULATOR:
+            picocalc::diagnostics::State::MENU);
         if(sleep_clocks.refresh()) keyboard.clock_changed();
         usb_service();
         if(sleep_clocks.usb_available() && !tud_mounted() && time_us_64() >= usb_retry) {
@@ -333,7 +363,7 @@ int main() {
         if(power.asleep()!=sleep_applied && panel_ready && !keyboard.transaction_pending()) {
             sleep_applied=power.asleep();
             if(sleep_applied) {
-                save_settings();picocalc::script::tone(0,0);tone_until=0;
+                save_settings();picocalc::script::tone(0,0);picocalc::script::led_stop();
                 panel.sleep(true);keyboard.backlight(0,0);
                 keyboard.idle(true);sleep_clocks.enter();keyboard.clock_changed();
             } else {
@@ -342,10 +372,6 @@ int main() {
             }
         }
         if(power.asleep()) { sleep_ms(sleep_clocks.usb_available() ? 4 : 16);continue; }
-        if(tone_until && now >= tone_until) {
-            pwm_set_both_levels(pwm_gpio_to_slice_num(26), 0, 0);
-            tone_until = 0;
-        }
         ui.sync_alarms();
         if(ui.settings_revision() != settings_revision) {
             settings_revision = ui.settings_revision();
@@ -430,7 +456,7 @@ int main() {
                     std::memcpy(previous_indicator, model.indicator, sizeof(previous_indicator));
                     std::printf("X=[%s]\n", model.indicator);
                 }
-                if(panel_ready) {
+                if(panel_ready && !remote_screen.holds_frame()) {
                     screen.render(model, keyboard.online(), &ui, &services);
                     panel.flush(screen);
                 }

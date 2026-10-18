@@ -32,6 +32,7 @@ abstract final class MkCapability {
   static const terminalMux = 1 << 5;
   static const terminalKeyboard = 1 << 6;
   static const clockSync = 1 << 7;
+  static const native320 = 1 << 8;
 }
 
 abstract final class MkGeometry {
@@ -303,21 +304,23 @@ class DeviceCapabilities {
   });
 
   factory DeviceCapabilities.parse(List<int> payload) {
-    if (payload.length != 10 && payload.length != 14) {
+    if (payload.length != 10 && payload.length != 14 && payload.length != 16) {
       throw const FormatException('invalid capabilities payload');
     }
     return DeviceCapabilities(
       width: MkProtocol.readU16(payload, 0),
-      height: payload[2],
+      height: payload.length == 16
+          ? MkProtocol.readU16(payload, 14)
+          : payload[2],
       pageHeight: payload[3],
       flags: MkProtocol.readU16(payload, 4),
       heartbeatTimeoutMs: MkProtocol.readU16(payload, 6),
       keyboardLayout: payload[8],
       keyCount: payload[9],
-      textRows: payload.length == 14 ? payload[10] : null,
-      glyphWidth: payload.length == 14 ? payload[11] : null,
-      glyphHeight: payload.length == 14 ? payload[12] : null,
-      lineGap: payload.length == 14 ? payload[13] : null,
+      textRows: payload.length >= 14 ? payload[10] : null,
+      glyphWidth: payload.length >= 14 ? payload[11] : null,
+      glyphHeight: payload.length >= 14 ? payload[12] : null,
+      lineGap: payload.length >= 14 ? payload[13] : null,
     );
   }
 
@@ -334,12 +337,24 @@ class DeviceCapabilities {
   final int? lineGap;
 
   bool get validGeometry =>
-      width == MkGeometry.width &&
-      height == MkGeometry.height &&
+      ((width == MkGeometry.width && height == MkGeometry.height) ||
+          (width == 320 &&
+              height == 320 &&
+              (flags & MkCapability.native320) != 0)) &&
       pageHeight == MkGeometry.pageHeight;
 }
 
 class FrameAssembler {
+  int width = MkGeometry.width, height = MkGeometry.height;
+  void configure(int w, int h) {
+    if (!((w == 192 && h == 64) || (w == 320 && h == 320))) {
+      throw const FormatException("unsupported frame geometry");
+    }
+    width = w;
+    height = h;
+    reset();
+  }
+
   Uint8List _framebuffer = Uint8List(MkGeometry.frameBytes);
   Uint8List? _staging;
   int? _frameId;
@@ -371,14 +386,14 @@ class FrameAssembler {
   }
 
   void _begin(List<int> payload) {
-    if (payload.length != 4 || payload[2] > 1 || payload[3] > 32) {
+    if (payload.length != 4 || payload[2] > 1 || payload[3] > 80) {
       throw const FormatException('invalid FRAME_BEGIN');
     }
     _frameId = MkProtocol.readU16(payload, 0);
     _expectedRects = payload[3];
     _receivedRects = 0;
     _staging = payload[2] != 0
-        ? Uint8List(MkGeometry.frameBytes)
+        ? Uint8List(width * height ~/ 8)
         : Uint8List.fromList(_framebuffer);
   }
 
@@ -393,8 +408,8 @@ class FrameAssembler {
     final codec = payload[5];
     if (frameId != _frameId ||
         width == 0 ||
-        page >= MkGeometry.pages ||
-        x + width > MkGeometry.width ||
+        page >= height ~/ 8 ||
+        x + width > this.width ||
         _receivedRects >= _expectedRects) {
       throw const FormatException('invalid RECT geometry');
     }
@@ -406,8 +421,8 @@ class FrameAssembler {
       _ => throw FormatException('unknown rectangle codec $codec'),
     };
     _staging!.setRange(
-      page * MkGeometry.width + x,
-      page * MkGeometry.width + x + width,
+      page * this.width + x,
+      page * this.width + x + width,
       pixels,
     );
     _receivedRects++;
@@ -441,7 +456,7 @@ class FrameAssembler {
   }
 
   void reset() {
-    _framebuffer = Uint8List(MkGeometry.frameBytes);
+    _framebuffer = Uint8List(width * height ~/ 8);
     _staging = null;
     _frameId = null;
     completedFrames = 0;

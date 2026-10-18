@@ -34,6 +34,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
     parser.add_argument('--directory',default='MK61S-PARITY-'+time.strftime('%Y%m%d-%H%M%S'))
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=True)
     assert re.fullmatch(r'MK61S-PARITY-[A-Za-z0-9-]+',args.directory)
@@ -47,7 +48,7 @@ def main():
         ('MATHCHK','tests/fixtures/compact_math_probe_app.c','MK61_MATH_VECTOR_ROOT','.c')):
         wrapper=work/(name+ext)
         wrapper.write_text(f'#define {define} "{directory}"\n#include "{ROOT/source}"\n')
-        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h',
+        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--pico-legacy-display',
             '--name',name,'--source',str(wrapper),'--arm-toolchain-bin',str(compiler_bin(None)),
             '--output-dir',str(work/name),'--shared-runtime']
         if name=='PARITY':command+=['--handled-magic','S1']
@@ -79,7 +80,8 @@ def main():
         def passed(text):cases.append(text);print('PASS '+text,flush=True)
         os.write(p.fd,b'\x1f');p.pump(.2)
         identity=p.command('identity');assert 'UID=E6657CD423721C35' in identity,identity
-        initial=status();assert b'PICO-H 0.5.0' in initial and b'SERVICE=CLOSED' in initial and b'USB_DISK=0' in initial,initial
+        build=json.loads((args.firmware_directory/'manifest.json').read_text())
+        initial=status();assert ('PICO-H '+build['prototype_version']).encode() in initial and ('BUILD='+build['build_id'].upper()).encode() in initial and b'SERVICE=CLOSED' in initial and b'USB_DISK=0' in initial,initial
         assert b'MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0' in initial,initial
         if b'SLEEP=1' in initial: p.command('display on')
         assert 'fsput' in p.command('help')
@@ -144,7 +146,7 @@ def main():
                 answer=p.command('rm -r '+directory,timeout=30);assert 'ERROR' not in answer,answer
             p.command('poke X 42');final=status()
             (args.output/'transcript.bin').write_bytes(p.text)
-        digest=hashlib.sha256((ROOT/'binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest()
+        digest=hashlib.sha256((args.firmware_directory/'mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest()
         (args.output/'result.json').write_text(json.dumps({'passed':True,'uf2_sha256':digest,'identity':identity,
             'cases':cases,'math':math,'temporary_directory_removed':True,'actual_battery_operation_verified':False,
             'initial':initial.decode(errors='replace'),'final':final.decode(errors='replace')},ensure_ascii=False,indent=2)+'\n')

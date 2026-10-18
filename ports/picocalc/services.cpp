@@ -1,4 +1,5 @@
 #include "services.hpp"
+#include "text_input.hpp"
 #include "script.hpp"
 #include "m61_text.hpp"
 #include "markdown.hpp"
@@ -46,6 +47,7 @@ void label(const char* utf8, char* out, unsigned capacity) {
 }
 }
 void Services::message(const char* value, ServicePage parent) {
+    viewing_=image_viewing_=runtime_graphics_=false;
     std::snprintf(status_, sizeof(status_), "%s", value);
     message_parent_ = parent; page_ = ServicePage::MESSAGE;
 }
@@ -69,18 +71,31 @@ void Services::open(Action action, bool russian, Calculator& calculator) {
     } else page_ = ServicePage::DEVELOPMENT;
 }
 void Services::browse(ServicePage parent) {
+    graph_.reset();graph_visible_=false;
+    viewing_=image_viewing_=runtime_graphics_=false;
     browser_parent_ = parent; page_ = ServicePage::BROWSER;
     browser_load_program_ = false;
-    skip_ = selection_ = 0; refresh();
+    filter_[0]=0;skip_ = selection_ = 0; refresh();
 }
 void Services::refresh() {
-    if(!files::list(directory_, skip_, entries_, 7, used_, more_)) message(files::error(), browser_parent_);
+    if(!files::list(directory_, skip_, entries_, 7, used_, more_,filter_)) {
+        // A directory may disappear while USB or the terminal owns the card.
+        // Re-enter a readable root instead of retaining an unusable browser.
+        if(std::strcmp(directory_,"/") && files::list("/",0,entries_,7,used_,more_)) {
+            std::strcpy(directory_,"/");filter_[0]=0;skip_=selection_=0;status_[0]=0;
+        } else message(files::error(), browser_parent_);
+    }
     if(selection_ > used_) selection_ = used_;
+}
+void Services::filter_directory(const char* utf8) {
+    std::snprintf(filter_,sizeof(filter_),"%s",utf8?utf8:"");
+    skip_=selection_=0;refresh();
 }
 bool Services::selected_path(char out[files::PATH_SIZE]) const {
     return selection_ && selection_ <= used_ && join(directory_, entries_[selection_ - 1].name, out);
 }
 void Services::parent_directory() {
+    filter_[0]=0;
     if(std::strcmp(directory_, "/") == 0) { page_ = browser_parent_; selection_ = 0; return; }
     char* slash = std::strrchr(directory_, '/');
     if(slash == directory_) directory_[1] = 0;
@@ -88,42 +103,45 @@ void Services::parent_directory() {
     skip_ = selection_ = 0; refresh();
 }
 void Services::new_document(Document kind) {
+    viewing_=image_viewing_=runtime_graphics_=false;
     document_ = kind; source_[0] = path_[0] = 0;
     length_ = cursor_ = top_ = horizontal_ = 0; dirty_ = false;
     page_ = ServicePage::EDITOR; status_[0] = 0;
 }
 bool Services::load_document(const char* path,bool edit) {
-    if(!edit && extension(path,".md")) { (void)view_markdown(path);return false; }
-    if(extension(path,".sheet")) { (void)run_handled(path,program_store::TYPE_MAGIC_SHEET);return false; }
-    if(extension(path, ".app")) {
-        (void)run_native(path);
+    using Type = program_store::ProgramType;
+    const Type type = script::file_type(path);
+    if((type == Type::MARKDOWN && !edit) || type == Type::SHEET ||
+       type == Type::APP || type == Type::CHIP8 || type == Type::IMAGE1 ||
+       type == Type::FONT || type == Type::MK61_BINARY) {
+        const u8 result = run_external(path);
+        if(result == 2) message("Cannot open file", ServicePage::BROWSER);
+        else if(page_ == ServicePage::CLOSED) { page_ = ServicePage::BROWSER; refresh(); }
         return false;
     }
-    if(extension(path, ".ch8") || extension(path, ".c8")) {
-        (void)run_chip8(path);
-        return false;
-    }
-    if(extension(path, ".bin")) {
-        program_store::Entry entry;
-        const bool ok = script::register_file(path, entry) && script::open_entry(entry) == 0;
-        message(ok ? "MK61 binary program loaded" : "Invalid MK61 binary program", ServicePage::BROWSER);
-        return false;
-    }
-    // Read into temporary storage so a failed decode never destroys an open document.
+    // Preserve the smaller side of the replacement. Two maximum-size source
+    // buffers do not fit in the RP2040 heap: the live editor buffer is static.
+    // Back up the current document when it is smaller, so a large UTF-8 file
+    // can be decoded directly into that buffer without losing it on failure.
     files::Entry info;
     if(!files::stat(path,info)) { message(files::error(),ServicePage::BROWSER); return false; }
     const unsigned capacity=info.size>=SOURCE_CAPACITY-1?SOURCE_CAPACITY:info.size+1;
-    auto* temporary = new(std::nothrow) char[capacity];
+    const unsigned previous_size=length_+1;
+    const bool backup=previous_size<capacity;
+    auto* temporary = new(std::nothrow) char[backup?previous_size:capacity];
     if(!temporary) { message("Not enough memory to open source", ServicePage::BROWSER); return false; }
+    if(backup) std::memcpy(temporary,source_,previous_size);
     unsigned used = 0;
-    const bool ok = files::read_text(path, temporary, capacity, used);
+    const bool ok = files::read_text(path, backup?source_:temporary, capacity, used);
     if(ok) {
-        std::memcpy(source_, temporary, used + 1); length_ = (u16)used;
+        viewing_=image_viewing_=runtime_graphics_=false;
+        if(!backup) std::memcpy(source_, temporary, used + 1);
+        length_ = (u16)used;
         std::snprintf(path_, sizeof(path_), "%s", path);
         document_ = extension(path, ".bas") || extension(path, ".tbi") ? Document::BASIC : extension(path, ".foc") || extension(path, ".fcl")
             ? Document::FOCAL : extension(path, ".m61") ? Document::MK61 : Document::TEXT;
         cursor_ = top_ = horizontal_ = 0; dirty_ = false; page_ = ServicePage::EDITOR; status_[0] = 0;
-    }
+    } else if(backup) std::memcpy(source_,temporary,previous_size);
     delete[] temporary;
     if(!ok) message(files::error(), ServicePage::BROWSER);
     return ok;
@@ -141,11 +159,31 @@ void Services::prompt(Prompt op, ServicePage parent, const char* initial) {
     prompt_length_ = (u16)std::strlen(prompt_text_);
 }
 void Services::accept_prompt() {
+    if(prompt_==Prompt::SEARCH) {
+        page_=ServicePage::BROWSER;filter_directory(prompt_text_);return;
+    }
     if(!prompt_length_) return;
+    if(prompt_==Prompt::MOVE) {
+        char target[files::PATH_SIZE];
+        if(!script::normalize_path(directory_,prompt_text_,target)) {
+            message("Path too long",ServicePage::PROMPT);return;
+        }
+        files::Entry entry{};
+        if(files::stat(target,entry) && entry.directory) {
+            char parent[files::PATH_SIZE];std::snprintf(parent,sizeof(parent),"%s",target);
+            if(!join(parent,std::strrchr(selected_file_,'/')+1,target)) {
+                message("Path too long",ServicePage::PROMPT);return;
+            }
+        }
+        if(!files::rename(selected_file_,target)) { message(files::error(),ServicePage::PROMPT);return; }
+        page_=ServicePage::BROWSER;skip_=selection_=0;refresh();return;
+    }
     if(prompt_==Prompt::OPEN) {
         char target[files::PATH_SIZE];
         if(prompt_text_[0]=='/' || prompt_text_[0]=='\\') std::snprintf(target,sizeof(target),"%s",prompt_text_);
         else if(!join(directory_,prompt_text_,target)) { message("Path too long",ServicePage::PROMPT);return; }
+        files::Entry info{};
+        if(files::stat(target,info) && info.directory) { (void)enter_directory(target);return; }
         return_=ServicePage::BROWSER;(void)load_document(target);return;
     }
     if(std::strchr(prompt_text_, '/') || std::strchr(prompt_text_, '\\') ||
@@ -166,6 +204,7 @@ void Services::accept_prompt() {
         case Prompt::MKDIR: ok = files::mkdir(target); break;
         case Prompt::EXPORT: ok = export_program(target); break;
         case Prompt::OPEN: return_ = ServicePage::BROWSER; (void)load_document(target); return;
+        case Prompt::SEARCH: case Prompt::MOVE: return;
         case Prompt::NEW_FILE:
             if(files::exists(target)) { message("Name already exists", ServicePage::PROMPT); return; }
             new_document(extension(target, ".bas") ? Document::BASIC : extension(target, ".foc") ? Document::FOCAL :
@@ -204,12 +243,11 @@ bool Services::input(u8 code) {
     }
     if(page_ == ServicePage::MESSAGE) { if(cancel || accept) page_ = message_parent_; return true; }
     if(page_ == ServicePage::PROMPT) {
-        if(cancel) page_ = prompt_parent_;
+        if(code==0x88) input_russian_=!input_russian_;
+        else if(cancel) page_ = prompt_parent_;
         else if(accept) accept_prompt();
-        else if((code == 8 || code == 0x7F || code == 0xD4) && prompt_length_) prompt_text_[--prompt_length_] = 0;
-        else if(code >= 32 && code < 127 && (unsigned)prompt_length_ + 1 < sizeof(prompt_text_)) {
-            prompt_text_[prompt_length_++] = (char)code; prompt_text_[prompt_length_] = 0;
-        }
+        else if(code == 8 || code == 0x7F || code == 0xD4) text_input::backspace_utf8(prompt_text_,prompt_length_);
+        else text_input::append_utf8(prompt_text_,prompt_length_,sizeof(prompt_text_),code,input_russian_);
         return true;
     }
     if(page_ == ServicePage::CONFIRM) {
@@ -238,6 +276,7 @@ bool Services::input(u8 code) {
         return true;
     }
     if(page_ == ServicePage::EDITOR) {
+        if(code==0x88) { input_russian_=!input_russian_;return true; }
         if(cancel) { leave_editor(); return true; }
         if(code == 0x82 || code == 0x13) {
             if(path_[0]) (void)save_document(path_);
@@ -259,7 +298,7 @@ bool Services::input(u8 code) {
         else if(code == 0x7F || code == 0xD4) {
             if(cursor_ < length_) changed = text_editor::replace_range(source_, length_, cursor_, SOURCE_CAPACITY, cursor_, cursor_ + 1, "");
         } else if(accept || code == '\t' || (code >= 32 && code < 127)) {
-            char text[] = {(char)(accept ? '\n' : code), 0};
+            char text[] = {(char)(accept ? '\n' : text_input::mapped(code,input_russian_)), 0};
             changed = text_editor::insert_text(source_, length_, cursor_, SOURCE_CAPACITY, code == '\t' ? "  " : text);
             if(!changed) std::snprintf(status_, sizeof(status_), "Source limit: 65534 bytes");
         }
@@ -267,6 +306,7 @@ bool Services::input(u8 code) {
         normalize_view(); return true;
     }
     if(page_ == ServicePage::BROWSER) {
+        if(cancel && filter_[0]) { filter_directory("");return true; }
         if(cancel || code == 0xB4) { parent_directory(); return true; }
         if(code == 0xB5) {
             if(selection_) --selection_;
@@ -278,12 +318,14 @@ bool Services::input(u8 code) {
         else if(code == '/') prompt(Prompt::OPEN, page_);
         else if(code == 0x84) prompt(Prompt::MKDIR, page_, "NewFolder");
         else if(code == 0x85) prompt(Prompt::EXPORT, page_, "program.m61");
+        else if(code == 0x86) prompt(Prompt::SEARCH,page_,filter_);
+        else if(code == 0x87 && selected_path(selected_file_)) prompt(Prompt::MOVE,page_,directory_);
         else if(accept || code == 0x81 || code == 0x83) {
             if(!selection_) { parent_directory(); return true; }
             if(!selected_path(selected_file_)) { message("Path too long", page_); return true; }
             if(code == 0x81) { page_ = ServicePage::FILE_ACTIONS; selection_ = 0; }
             else if(entries_[selection_ - 1].directory) {
-                std::snprintf(directory_, sizeof(directory_), "%s", selected_file_); skip_ = selection_ = 0; refresh();
+                (void)enter_directory(selected_file_);
             } else {
                 return_ = ServicePage::BROWSER;
                 if(load_document(selected_file_) && (code == 0x83 || (browser_load_program_ && document_ == Document::MK61))) pending_run_ = true;
@@ -293,10 +335,11 @@ bool Services::input(u8 code) {
     }
     if(page_ == ServicePage::FILE_ACTIONS) {
         if(cancel) { page_ = ServicePage::BROWSER; selection_ = 0; refresh(); }
-        else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, 4, code == 0xB5 ? -1 : 1);
+        else if(code == 0xB5 || code == 0xB6) selection_ = menu_model::step(selection_, 5, code == 0xB5 ? -1 : 1);
         else if(accept) {
             if(selection_ < 2) { return_ = ServicePage::BROWSER; if(load_document(selected_file_,selection_==0) && selection_ == 1) pending_run_ = true; }
             else if(selection_ == 2) prompt(Prompt::RENAME, ServicePage::BROWSER, std::strrchr(selected_file_, '/') + 1);
+            else if(selection_ == 4) prompt(Prompt::MOVE,ServicePage::BROWSER,directory_);
             else { confirm_ = Confirm::DELETE_FILE; confirm_parent_ = page_; page_ = ServicePage::CONFIRM; }
         }
         return true;
@@ -331,7 +374,7 @@ void Services::tick() {
     if(!m61_text::active() && !script_editor_.valid) script::reset_files();
 }
 const char* Services::page_name() const {
-    if(viewing_) return "VIEWER";
+    if(viewing_ && active()) return "VIEWER";
     static const char* names[] = {"CLOSED", "DEVELOPMENT", "LANGUAGE", "BROWSER", "FILE_ACTIONS", "EDITOR",
         "CONSOLE", "PROMPT", "CONFIRM", "MESSAGE", "USB_DISK"};
     return names[(unsigned)page_];
@@ -345,25 +388,33 @@ const char* Services::title() const {
             return document_ == Document::BASIC ? "TinyBASIC" : document_ == Document::FOCAL ? "FOCAL" : document_ == Document::MK61 ? "MK61 files" : "Text";
         case ServicePage::BROWSER: return tr("Explorer / microSD", M8("Проводник / microSD"));
         case ServicePage::FILE_ACTIONS: return tr("File actions", M8("Действия с файлом"));
-        case ServicePage::PROMPT: return tr("Filename", M8("Имя файла"));
+        case ServicePage::PROMPT:
+            return prompt_==Prompt::SEARCH?tr("Search",M8("Поиск")):
+                prompt_==Prompt::MOVE?tr("Destination",M8("Куда переместить")):tr("Filename", M8("Имя файла"));
         case ServicePage::CONFIRM: return tr("Confirm", M8("Подтверждение"));
         case ServicePage::USB_DISK: return tr("USB disk / microSD", M8("USB-диск / microSD"));
         default: return "MK61S";
     }
 }
 void Services::heading(char out[64]) const {
+    if(markdown_) {
+        const char* slash=std::strrchr(path_,'/');
+        label(slash?slash+1:path_,out,64);return;
+    }
     if(page_ == ServicePage::EDITOR) {
         char name[40];
         const char* slash = std::strrchr(path_, '/');
         label(path_[0] ? (slash ? slash + 1 : path_) : title(), name, sizeof(name));
-        std::snprintf(out, 64, "%s%s  %u B", name, dirty_ ? " *" : "", length_);
+        std::snprintf(out, 64, "%s%s %u B [%s]", name, dirty_ ? " *" : "", length_,input_russian_?"RU":"EN");
+    } else if(page_==ServicePage::PROMPT) {
+        std::snprintf(out,64,"%s [%s] F8",title(),input_russian_?"RU":"EN");
     } else std::snprintf(out, 64, "%s", title());
 }
 const char* Services::footer() const {
     if(markdown_) return tr("Up/Down: scroll  Left/Right: links  Enter", M8("Up/Down: текст  Left/Right: ссылки"));
     if(viewing_) return tr("Up/Down: scroll  Enter/Esc: close", M8("Up/Down: текст  Enter/Esc: назад"));
-    if(page_ == ServicePage::EDITOR) return tr("F1: Save as  F2: Save  F3: Run  Esc", M8("F1: имя  F2: запись  F3: пуск  Esc"));
-    if(page_ == ServicePage::BROWSER) return tr("F1: actions F2: new F4: dir F5: MK61", M8("F1: файл F2: новый F4: папка F5: MK61"));
+    if(page_ == ServicePage::EDITOR) return tr("F1: name F2: save F3: run F8: RU/EN", M8("F1: имя F2: запись F3: пуск F8: RU/EN"));
+    if(page_ == ServicePage::BROWSER) return tr("F1: actions F6: search F7: move", M8("F1: файл F6: поиск F7: перенос"));
     if(page_ == ServicePage::USB_DISK) return tr("Eject on computer, then Enter / Esc", M8("Извлечь на ПК, затем Enter / Esc"));
     if(page_ == ServicePage::CONSOLE) return running_ ? "Esc: STOP" : tr("Enter / Esc: editor", M8("Enter / Esc: редактор"));
     return tr("Up/Down  Enter: select  Esc: back", M8("Up/Down  Enter: выбор  Esc: назад"));
@@ -381,6 +432,7 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
     } else if(page_ == ServicePage::CONSOLE) std::snprintf(out, COLS + 1, "%s", console_[index % ROWS]);
     else if(page_ == ServicePage::BROWSER) {
         if(index == 0) label(directory_, out, COLS + 1);
+        else if(index == 1 && filter_[0]) { char value[COLS-2];label(filter_,value,sizeof(value));std::snprintf(out,COLS+1,"? %s",value); }
         else if(index == 2) std::snprintf(out, COLS + 1, "%c ..", selection_ == 0 ? '>' : ' ');
         else if(index >= 3 && index < 3 + used_) {
             const auto& item = entries_[index - 3]; char name[COLS - 3]; label(item.name, name, sizeof(name));
@@ -388,12 +440,12 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         } else if(index == 11 && more_) std::snprintf(out, COLS + 1, "%s", tr("Down: next page", M8("Down: следующая страница")));
         else if(index == 13) std::snprintf(out, COLS + 1, "%s", tr("/: open file by name", M8("/: открыть файл по имени")));
     } else if(page_ == ServicePage::DEVELOPMENT || page_ == ServicePage::LANGUAGE || page_ == ServicePage::FILE_ACTIONS) {
-        if(index < 4) {
+        if(index < (page_ == ServicePage::FILE_ACTIONS?5U:4U)) {
             const char* dev[] = {tr("Explorer", M8("Проводник")), tr("MK61 files", M8("Файлы МК-61")), "FOCAL", "TinyBASIC"};
             const char* lang[] = {tr("New source", M8("Новый исходник")), tr("Open file...", M8("Открыть файл...")),
                 tr("Edit source", M8("Редактор")), tr("Run source", M8("Запуск"))};
             const char* actions[] = {tr("Open / edit", M8("Открыть / править")), tr("Run", M8("Запуск")),
-                tr("Rename", M8("Переименовать")), tr("Delete", M8("Удалить"))};
+                tr("Rename", M8("Переименовать")), tr("Delete", M8("Удалить")),tr("Move...",M8("Переместить..."))};
             if(page_ == ServicePage::LANGUAGE && tool_ == Document::MK61) {
                 if(index < 2) std::snprintf(out, COLS + 1, "%c %s", selection_ == index ? '>' : ' ',
                     index == 0 ? tr("Load MK61", M8("Загрузить МК-61")) : tr("Save MK61", M8("Сохранить МК-61")));
@@ -404,7 +456,11 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         }
     } else if(page_ == ServicePage::PROMPT) {
         if(index == 0) label(directory_, out, COLS + 1);
-        if(index == 2) std::snprintf(out, COLS + 1, "%.38s", prompt_text_ + (prompt_length_ >= COLS ? prompt_length_ - COLS + 1 : 0));
+        if(index == 2) {
+            char text[sizeof(prompt_text_)];label(prompt_text_,text,sizeof(text));
+            const unsigned length=(unsigned)std::strlen(text);
+            std::snprintf(out,COLS+1,"%.38s",text+(length>=COLS?length-COLS+1:0));
+        }
         if(index == 5) std::snprintf(out, COLS + 1, "Enter: OK   Esc: cancel");
     } else if(page_ == ServicePage::CONFIRM) {
         if(index == 0) std::snprintf(out, COLS + 1, "%s", confirm_ == Confirm::FORMAT ? tr("Erase ALL files on microSD?", M8("Стереть ВСЕ файлы microSD?")) :
@@ -429,7 +485,10 @@ unsigned Services::cursor_row() const {
     return row < ROWS ? row : ROWS - 1;
 }
 unsigned Services::cursor_column() const {
-    if(page_ == ServicePage::PROMPT) return prompt_length_ < COLS ? prompt_length_ : COLS - 1;
+    if(page_ == ServicePage::PROMPT) {
+        char text[sizeof(prompt_text_)];label(prompt_text_,text,sizeof(text));
+        const unsigned length=(unsigned)std::strlen(text);return length<COLS?length:COLS-1;
+    }
     return cursor_ - text_editor::line_start_for_cursor(source_, cursor_) - horizontal_;
 }
 } // namespace picocalc

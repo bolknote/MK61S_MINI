@@ -1,4 +1,5 @@
 #include "services.hpp"
+#include "canvas.hpp"
 #include "mk61_ref.hpp"
 #include "mk_math.hpp"
 #include "mk8_codec.hpp"
@@ -13,6 +14,8 @@
 #include "markdown.hpp"
 #include <memory>
 #include "wbmp.hpp"
+#include "explorer_autoexec.hpp"
+#include "diagnostics.hpp"
 #include "language_resources.hpp"
 #include <cstdio>
 #include <cstdlib>
@@ -62,7 +65,7 @@ int logical_key(u8 code) {
 }
 }
 Services::Services() : graph_({this,
-    [](void*, u16& width, u16& height) { width = 192; height = 64; },
+    [](void* raw, u16& width, u16& height) { auto& s=*(Services*)raw;width=s.graph_width_;height=s.graph_height_; },
     [](void* context) { ((Services*)context)->graph_visible_ = true; return true; },
     [](void* context) { ((Services*)context)->graph_visible_ = false; },
     [](void* context, const u8*, size_t) { ((Services*)context)->graph_visible_ = true; return true; },
@@ -75,17 +78,20 @@ Services::Services() : graph_({this,
 }
 basic_graphics::Result Services::graph_request(basic_graphics::Request& request) {
     const auto result=graph_.apply(request);
-    if(runtime_[0]=='A' && graph_.active()) { script::show_frame(graph_.frame());runtime_graphics_=false; }
+    if(runtime_[0]=='A' && graph_.active()) { if(graph_width_==320) script::show_native_frame(graph_.frame());else script::show_frame(graph_.frame());runtime_graphics_=false; }
     return result;
 }
 bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 count) {
-    if(bytes != 1536) return false;
     auto& self = *(Services*)raw;
+    if(bytes != self.graph_width_*self.graph_height_/8U) return false;
     const unsigned text_first=self.first_console_row(script::rows());
     script::show_lines(self.console_[text_first],sizeof(self.console_[0]),self.rows()-text_first,
         self.console_col_,self.console_row_-text_first);
-    const unsigned end = first + count < 8 ? first + count : 8;
-    for(unsigned row=first;row<end;++row) std::memcpy(frame+row*192,script::frame()+row*192,192);
+    const unsigned pages=self.graph_height_/8;
+    const unsigned end=first+count<pages?first+count:pages;
+    const u8* source=self.graph_width_==320?script::native_frame():script::frame();
+    if(!source) return false;
+    for(unsigned row=first;row<end;++row) std::memcpy(frame+row*self.graph_width_,source+row*self.graph_width_,self.graph_width_);
     return true;
 }
 void Services::clear_console() {
@@ -174,7 +180,8 @@ language_vm::Services Services::vm_services() {
         [](void* p, language_vm::Function f) {
             const auto& self=*(Services*)p;
             return f == language_vm::Function::SIZE ? 385.0 : f == language_vm::Function::COLS ? (double)self.columns() :
-                f == language_vm::Function::ROWS ? (double)self.rows() : f == language_vm::Function::GW ? 192.0 : 64.0;
+                f == language_vm::Function::ROWS ? (double)self.rows() :
+                f == language_vm::Function::GW ? (double)self.graph_width_ : (double)self.graph_height_;
         },
         [](void*, bool write, u8 index, double& value) {
             const mk61_ref::Ref ref{index < 4 ? (mk61_ref::Kind)index : mk61_ref::Kind::R, (u8)(index < 4 ? 0 : index - 4)};
@@ -286,6 +293,8 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
     }
 }
 void Services::run_document() {
+    diagnostics::Scope measure(diagnostics::Point::LANGUAGE);
+    diagnostics::context(diagnostics::State::LANGUAGE);
     if(calculator_ && (!calculator_->idle() || core_61::is_RUN())) { message("Stop MK61 before running source", ServicePage::EDITOR); return; }
     if(document_ == Document::TEXT) { message("Text file: use .bas, .foc or .m61 to run", ServicePage::EDITOR); return; }
     graph_.reset();
@@ -374,15 +383,44 @@ bool Services::export_program(const char* path) {
     }
     return files::write_text(path, text, at);
 }
+bool Services::enter_directory(const char* path) {
+    files::Entry info{};
+    if(!path || !files::stat(path, info) || !info.directory) return false;
+    std::snprintf(directory_, sizeof(directory_), "%s", path);
+    filter_[0]=0;
+    skip_ = selection_ = 0; page_ = ServicePage::BROWSER; refresh();
+    program_store::Entry directory{}, entry{};
+    if(!script::register_file(directory_, directory) ||
+       !explorer_autoexec::find(directory.id, entry)) return true;
+    char name[files::PATH_SIZE];
+    std::snprintf(name, sizeof(name), "%s", script::file_path(entry.id));
+    if(entry.type == program_store::ProgramType::MK61) {
+        if(!leave_for_script() || !script::start(name)) {
+            message("Cannot start autoexec.m61", ServicePage::BROWSER); return false;
+        }
+        calculator_requested_ = true;
+    } else {
+        const u8 result = run_external(name);
+        if(result == 2) message("Cannot run autoexec.tbi", ServicePage::BROWSER);
+        else { page_ = ServicePage::BROWSER; refresh(); }
+        return result != 2;
+    }
+    return true;
+}
 u8 Services::run_external(const char* path) {
-    const char* suffix=std::strrchr(path,'.');
-    if(suffix) {
-        char ext[8]{};unsigned i=0;
-        for(;suffix[i] && i<7;++i) ext[i]=(char)(suffix[i]>='A' && suffix[i]<='Z'?suffix[i]+32:suffix[i]);
-        if(!std::strcmp(ext,".app")) return run_native(path);
-        if(!std::strcmp(ext,".md")) return view_markdown(path);
-        if(!std::strcmp(ext,".sheet")) return run_handled(path,program_store::TYPE_MAGIC_SHEET);
-        if(!std::strcmp(ext,".ch8") || !std::strcmp(ext,".c8")) return run_chip8(path);
+    using Type = program_store::ProgramType;
+    switch(script::file_type(path)) {
+    case Type::APP: return run_native(path);
+    case Type::MARKDOWN: return view_markdown(path);
+    case Type::SHEET: return run_handled(path, program_store::TYPE_MAGIC_SHEET);
+    case Type::CHIP8: return run_chip8(path);
+    case Type::IMAGE1: return view_image(path);
+    case Type::FONT:
+    case Type::MK61_BINARY: {
+        program_store::Entry entry{};
+        return script::register_file(path, entry) ? script::open_entry(entry) : 2;
+    }
+    default: break;
     }
     if(!load_document(path)) return 2;
     if(document_ == Document::TEXT) {
@@ -407,7 +445,7 @@ u8 Services::run_external(const char* path) {
     external_run_=false;
     const u8 result=last_error_==language_vm::Error::NONE?0:last_error_==language_vm::Error::STOPPED?1:2;
     if(result==0) {
-        if(graph_visible_) script::show_frame(graph_.frame());
+        if(graph_visible_) script::show_native_frame(graph_.frame());
         else {
             const unsigned first=first_console_row(script::rows());
             script::show_lines(console_[first],sizeof(console_[0]),rows()-first,console_col_,console_row_-first);
@@ -423,6 +461,7 @@ u8 Services::view_markdown(const char* path) {
     if(markdown_ || !pump_) return 2;
     std::unique_ptr<MarkdownView> document(new(std::nothrow) MarkdownView);
     if(!document || !document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
+    if(ui_) document->set_font(ui_->settings());
     struct History { char path[files::PATH_SIZE];u16 top,selection; } history[8]{};
     unsigned depth=0;
     const ServicePage parent=m61_text::active()?ServicePage::CLOSED:ServicePage::BROWSER;
@@ -434,8 +473,11 @@ u8 Services::view_markdown(const char* path) {
             if(!depth) break;
             const auto& previous=history[--depth];
             if(!document->open(previous.path)) { depth=0;break; }
-            document->top=previous.top;document->selection=previous.selection;
+            document->restore(previous.top,previous.selection);
         } else if(key==0xB5 || key==0xB6) document->scroll(key==0xB5?-1:1);
+        else if(key==0xD6 || key==0xD7) document->scroll(key==0xD6?-1:1,true);
+        else if(key==0xD2) document->restore(0,0xFFFF);
+        else if(key==0xD5) document->restore(0xFFFF,0xFFFF);
         else if(key==0xB4 || key==0xB7 || key=='\t') document->select(key==0xB4?-1:1);
         else if(key=='\r' || key=='\n') {
             if(!document->links()) break;
@@ -444,6 +486,7 @@ u8 Services::view_markdown(const char* path) {
             if(depth==8 || !document->target(target)) { std::snprintf(status_,sizeof(status_),"Link unavailable");continue; }
             std::unique_ptr<MarkdownView> next(new(std::nothrow) MarkdownView);
             if(!next || !next->open(target)) continue;
+            if(ui_) next->set_font(ui_->settings());
             auto& saved=history[depth++];std::snprintf(saved.path,sizeof(saved.path),"%s",document->path());
             saved.top=document->top;saved.selection=document->selection;
             document=std::move(next);markdown_=document.get();status_[0]=0;
@@ -455,10 +498,18 @@ u8 Services::view_markdown(const char* path) {
 }
 unsigned Services::rows() const { return external_run_ || m61_text::active() || script::font_active()?script::rows():ROWS; }
 bool Services::custom_console() const { return page_==ServicePage::CONSOLE && script::font_active() && !graph_visible_; }
+const u8* Services::native_graphics() const {
+    if(markdown_) return markdown_->native_frame();
+    if(runtime_graphics_ || image_viewing_) return script::native_frame();
+    if(graph_visible_ && graph_width_==320) return graph_.frame();
+    if(custom_console()) return script::native_frame();
+    return nullptr;
+}
 const u8* Services::graphics() const {
+    if(markdown_) return markdown_->frame();
     if(runtime_graphics_) return script::frame();
     if(image_viewing_) return script::frame();
-    if(graph_visible_) return graph_.frame();
+    if(graph_visible_) { if(graph_width_==320) { script::show_native_frame(graph_.frame());return script::frame(); }return graph_.frame(); }
     if(!custom_console()) return nullptr;
     script::show_lines(console_[0],sizeof(console_[0]),rows(),console_col_,console_row_);return script::frame();
 }
@@ -467,16 +518,16 @@ u8 Services::view_image(const char* path) {
     if(!bytes) return 2;
     if(!files::read(path,bytes,program_store::MAX_IMAGE1_SIZE,used) || wbmp::inspect(bytes,used,info)!=wbmp::Status::OK || !pump_) {std::free(bytes);return 2;}
     std::snprintf(path_,sizeof(path_),"%s",path);clear_console();page_=ServicePage::CONSOLE;running_=false;viewing_=image_viewing_=true;
-    unsigned x=0,y=0;u8 frame[1536];
+    unsigned x=0,y=0;u8* frame=canvas::frame();
     for(;;) {
-        if(wbmp::decode_viewport(bytes,used,info,x,y,192,64,wbmp::Layout::PAGE_MAJOR_LSB,frame,sizeof(frame))!=wbmp::Status::OK) break;
-        script::show_frame(frame);
+        if(wbmp::decode_viewport(bytes,used,info,x,y,320,320,wbmp::Layout::PAGE_MAJOR_LSB,frame,canvas::BYTES)!=wbmp::Status::OK) break;
+        script::show_native_frame(frame);
         u8 key=0;while(!pump_(pump_context_,key)) {}
         if(key==0x1B || key==0xB1 || key=='\n' || key=='\r') {std::free(bytes);viewing_=image_viewing_=false;page_=ServicePage::CLOSED;return 0;}
         if(key==0xB4) x=x>8?x-8:0;
-        if(key==0xB7 && x+192<info.width) x+=8;
+        if(key==0xB7 && x+320<info.width) x+=8;
         if(key==0xB5) y=y>8?y-8:0;
-        if(key==0xB6 && y+64<info.height) y+=8;
+        if(key==0xB6 && y+320<info.height) y+=8;
     }
     std::free(bytes);viewing_=image_viewing_=false;page_=ServicePage::CLOSED;return 2;
 }

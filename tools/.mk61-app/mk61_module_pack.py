@@ -353,6 +353,7 @@ def pack(args: argparse.Namespace) -> bytes:
     flags = PORTABLE_FLAG | RELOCATABLE_FLAG | (BCJ_FLAG if use_bcj else 0)
     if pico_target:
         flags |= 8
+        if getattr(args,"native_display",False): flags |= 16
     header = bytearray(HEADER_SIZE)
     header[:8] = b"MK61APP\0"
     struct.pack_into("<HHHBBIIIIIIIIIIH", header, 8,
@@ -369,6 +370,7 @@ def pack(args: argparse.Namespace) -> bytes:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--portable", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--native-display", action="store_true")
     parser.add_argument("--target", choices=("stm32", "picocalc-pico-h"), default="stm32")
     parser.add_argument("--kind", choices=KINDS, required=True)
     parser.add_argument("--image", type=Path, required=True)

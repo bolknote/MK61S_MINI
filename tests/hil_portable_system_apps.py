@@ -52,11 +52,12 @@ def chip_frame(x):
 
 
 def png(frame, path):
+    width,height=(320,320) if len(frame)==12800 else (192,64)
     def chunk(kind, data):
         return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data))
-    pixels = b''.join(b'\0'+bytes(0 if frame[y//8*192+x] & (1<<(y%8)) else 255
-                                  for x in range(192)) for y in range(64))
-    path.write_bytes(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',192,64,8,0,0,0,0))
+    pixels = b''.join(b'\0'+bytes(0 if frame[y//8*width+x] & (1<<(y%8)) else 255
+                                  for x in range(width)) for y in range(height))
+    path.write_bytes(b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',width,height,8,0,0,0,0))
                      +chunk(b'IDAT',zlib.compress(pixels))+chunk(b'IEND',b''))
 
 

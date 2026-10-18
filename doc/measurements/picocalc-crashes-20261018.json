@@ -1,0 +1,124 @@
+{
+  "recorded_at_utc": "2026-10-18T04:39:50.273084+00:00",
+  "uid": "E6657CD423721C35",
+  "review": "all six existing SD reports read and classified; five match intentional-test evidence by SHA-256, one matches an earlier real-crash capture",
+  "current_build": "A96B4B7E",
+  "current_crash": "NONE",
+  "current_firmware_crc": "valid",
+  "sd_files_modified": false,
+  "file_retention": "crash clear removes the retained RAM record; already written SD reports remain as historical files.",
+  "files": [
+    {
+      "path": "/crash-picocalc-B0EA2251-1-0.txt",
+      "bytes": 519,
+      "sha256": "483acc14036a0220ed5258325b2afac973bb678b80e758ef58a3089d9ff9e750",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=B0EA2251 CURRENT_BUILD=B0EA2251 VERSION=0.6.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=2002DB76 LR=1001C7A5 XPSR=21000000 MSP=200404A0 PSP=FFFFFFFC\r\nR0=00000136 R1=00000000 R2=0000012F R3=00000000 R12=00000096\r\nR4=0000002C R5=00000037 R6=100861D4 R7=20027DB0 R8=00000000 R9=00000000 R10=200405CC R11=2002DAD0\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=5457 STATE=6 DETAIL=65535\r\n",
+      "build_id": "B0EA2251",
+      "classification": "intentional HardFault self-test",
+      "historical_evidence": {
+        "path": ".build/picocalc-software-pre-final-hil.json",
+        "record_sha256": "ee75a9a997580812d20cda823f4a1f48d442ec5fd71cbe3c7ae13a8b89c2d44a",
+        "test": "tests/picocalc_fault_probe.c: intentional undefined instruction with R4=44 and R5=55",
+        "automatic_sd_path": "/crash-picocalc-B0EA2251-1-0.txt"
+      }
+    },
+    {
+      "path": "/crash-picocalc-AC99ED4A-1-0.txt",
+      "bytes": 519,
+      "sha256": "437562386e678e2ade928aed2e1d3956f0da01005228975ec1bad4ef49957778",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=AC99ED4A CURRENT_BUILD=AC99ED4A VERSION=0.6.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=2002DB76 LR=1001CE19 XPSR=21000000 MSP=200404A0 PSP=FFFFFFFC\r\nR0=00000133 R1=00000000 R2=00000311 R3=00000000 R12=00000096\r\nR4=0000002C R5=00000037 R6=100868A0 R7=20027DB0 R8=00000000 R9=00000000 R10=200405CC R11=2002DAD0\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=5717 STATE=6 DETAIL=65535\r\n",
+      "build_id": "AC99ED4A",
+      "classification": "intentional HardFault self-test",
+      "historical_evidence": {
+        "path": "binary/picocalc-pico-h/software-hil-0.6.0/result.json",
+        "record_sha256": "0d754d0454ea98a2c808ef8faad5d8ede760aa828e489f0ef52ef23cf45f43d1",
+        "test": "tests/picocalc_fault_probe.c: intentional undefined instruction with R4=44 and R5=55",
+        "automatic_sd_path": "/crash-picocalc-AC99ED4A-1-0.txt"
+      }
+    },
+    {
+      "path": "/crash-picocalc-2A223C09-1-0.txt",
+      "bytes": 517,
+      "sha256": "d2e4e67a3bdbc898b935c798392b72e7ec86ecb55e68765e707f984a93c5bd38",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=2A223C09 CURRENT_BUILD=2A223C09 VERSION=0.7.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=10079C98 LR=10075F65 XPSR=21000000 MSP=20040898 PSP=FFFFFFFC\r\nR0=00000001 R1=00000000 R2=00000000 R3=D0000154 R12=200006F5\r\nR4=0000FFFE R5=0000FFFE R6=00000001 R7=00000001 R8=FFFFFFF0 R9=4D9400F2 R10=200255E8 R11=200255E8\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=119209 STATE=1 DETAIL=0\r\n",
+      "build_id": "2A223C09",
+      "classification": "previously recorded real development crash",
+      "historical_evidence": {
+        "path": ".build/picocalc-mkc-real-crash.txt",
+        "sha256": "9c3bf4abddfa090dc4abb3d8be23927aa2ca153746205fc2b7a75b338e9513bf",
+        "matches_sd_report": true,
+        "normalization": "strip shell echo/prompt; omit PERSISTED_TO_C5 bit added after automatic SD save"
+      },
+      "context": "Earlier MKC development run for large M8 text transfers; registers R4/R5 contain 65534.",
+      "related_fixes": [
+        "Pico SDK allocation panic disabled with PICO_MALLOC_PANIC=0; allocation failures return through the resident/APP ABI.",
+        "M8 text reads use a bounded 512-byte UTF-8 window and sparse offset index, without a second full text copy."
+      ],
+      "regression_evidence": [
+        "binary/picocalc-pico-h/mkc-hil-0.7.0/result.json",
+        "binary/picocalc-pico-h/contract-hil-0.7.0/result.json"
+      ],
+      "symbolication_limit": "The original 2A223C09 ELF is not retained; precise source-line attribution cannot be independently repeated from the currently saved ELF files."
+    },
+    {
+      "path": "/crash-picocalc-4D23491A-1-0.txt",
+      "bytes": 519,
+      "sha256": "9bbb161ee1ab7e29ecb88a43249f6dc60c35b2ab8c0ffab3fb7fbed5c21e7b68",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=4D23491A CURRENT_BUILD=4D23491A VERSION=0.7.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=2002DF06 LR=10021281 XPSR=21000000 MSP=2003F7B0 PSP=FFFFFFFC\r\nR0=00000126 R1=00000000 R2=00000237 R3=000019C6 R12=FAEF810A\r\nR4=0000002C R5=00000037 R6=10091418 R7=20027BA4 R8=00000000 R9=2003F9F8 R10=00000000 R11=2002DE61\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=6303 STATE=6 DETAIL=65535\r\n",
+      "build_id": "4D23491A",
+      "classification": "intentional HardFault self-test",
+      "historical_evidence": {
+        "path": "binary/picocalc-pico-h/development-acceptance-4d23491a/software-hil-0.7.0/result.json",
+        "record_sha256": "9036a1395ed485916b08a073ab6371779558ec640ae123779a10107d6fb927ed",
+        "test": "tests/picocalc_fault_probe.c: intentional undefined instruction with R4=44 and R5=55",
+        "automatic_sd_path": "/crash-picocalc-4D23491A-1-0.txt"
+      }
+    },
+    {
+      "path": "/crash-picocalc-1B243447-1-0.txt",
+      "bytes": 519,
+      "sha256": "43f497b2043e7f0ccd7906446a45bc31568ec5b1b67725cba497dbd01efa073b",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=1B243447 CURRENT_BUILD=1B243447 VERSION=0.7.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=2002DF06 LR=100212FD XPSR=21000000 MSP=2003F7B0 PSP=FFFFFFFC\r\nR0=0000012A R1=00000000 R2=000002D6 R3=00001A29 R12=FAEF810A\r\nR4=0000002C R5=00000037 R6=10091498 R7=20027BA4 R8=00000000 R9=2003F9F8 R10=00000000 R11=2002DE61\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=6406 STATE=6 DETAIL=65535\r\n",
+      "build_id": "1B243447",
+      "classification": "intentional HardFault self-test",
+      "historical_evidence": {
+        "path": "binary/picocalc-pico-h/development-acceptance-1b243447/software-hil-0.7.0/result.json",
+        "record_sha256": "695b5f7aebb86086e922837149afab063fe375c0b6de385c99fb3f2ce29f28a3",
+        "test": "tests/picocalc_fault_probe.c: intentional undefined instruction with R4=44 and R5=55",
+        "automatic_sd_path": "/crash-picocalc-1B243447-1-0.txt"
+      }
+    },
+    {
+      "path": "/crash-picocalc-837B1415-1-0.txt",
+      "bytes": 519,
+      "sha256": "54393aa96a753883ad7b9a88f84826f8a0e833fb7a503fac300107b5f1de2667",
+      "text": "MK61S PicoCalc crash / RP2040 Cortex-M0+\r\nBUILD=837B1415 CURRENT_BUILD=837B1415 VERSION=0.7.0 SEQUENCE=1 CRC=OK\r\nEXCEPTION=HardFault EXC_RETURN=FFFFFFF9 FLAGS=00000011\r\nPC=2002DF86 LR=1002130D XPSR=21000000 MSP=2003F790 PSP=FFFFFFFC\r\nR0=00000127 R1=00000000 R2=0000014D R3=00001A79 R12=FAEF810A\r\nR4=0000002C R5=00000037 R6=10091A94 R7=00000000 R8=20027BA4 R9=00000000 R10=2003F9D8 R11=2002DEE1\r\nCONTROL=00000000 PRIMASK=00000000 RESET_AT_FAULT=00010001 RESET_AFTER_REBOOT=00010001\r\nUPTIME_MS=6480 STATE=6 DETAIL=65535\r\n",
+      "build_id": "837B1415",
+      "classification": "intentional HardFault self-test",
+      "historical_evidence": {
+        "path": "binary/picocalc-pico-h/software-hil-0.7.0/result.json",
+        "record_sha256": "e29ad33b7bb46c7eddda9c8411e122ec46f39cd97c84da99173226c93f17cbba",
+        "test": "tests/picocalc_fault_probe.c: intentional undefined instruction with R4=44 and R5=55",
+        "automatic_sd_path": "/crash-picocalc-837B1415-1-0.txt"
+      }
+    }
+  ],
+  "current_status": "RESET_REASON=00010001 BOOTS=29 CRASH=NONE BUILD=A96B4B7E\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=1870 MAX_GAP_MS=948 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=8154 PREVIOUS_GAP_MS=948\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=659624 FOOTER=569492 EXPECTED=752B35A7 ACTUAL=752B35A7 CHECK_US=364496\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\nMK61S PICOCALC PICO-H 0.7.1 RP2040 125 MHz\nTERMINAL=COMMAND\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\nLCD_BKL=240 KBD_BKL=40\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=42\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\nSTACK_USED=3172 STACK_BYTES=32768\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\nUSB_MAX_GAP_US=948420\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=17 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T07:36:08 RTC_SET=1 RTC_PPM=0\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\n",
+  "cleanup": {
+    "recorded_at_utc": "2026-10-18T04:41:21.979744+00:00",
+    "uid": "E6657CD423721C35",
+    "removed": [
+      "/crash-picocalc-B0EA2251-1-0.txt",
+      "/crash-picocalc-AC99ED4A-1-0.txt",
+      "/crash-picocalc-2A223C09-1-0.txt",
+      "/crash-picocalc-4D23491A-1-0.txt",
+      "/crash-picocalc-1B243447-1-0.txt",
+      "/crash-picocalc-837B1415-1-0.txt"
+    ],
+    "already_absent": [],
+    "hashes_verified_before_removal": true,
+    "reviewed_files_absent": true,
+    "unrelated_entries_unchanged": true,
+    "local_archive_preserved": true
+  }
+}

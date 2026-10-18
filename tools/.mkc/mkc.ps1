@@ -298,8 +298,10 @@ function Get-CdcPortsFromJson {
         $port = Get-ObjectPropertyValue $detected 'port'
         if ($null -eq $port) { continue }
         $properties = Get-ObjectPropertyValue $port 'properties'
-        if ((Normalize-UsbId (Get-ObjectPropertyValue $properties 'vid')) -eq '0483' -and
-            (Normalize-UsbId (Get-ObjectPropertyValue $properties 'pid')) -eq '5740') {
+        $vid = Normalize-UsbId (Get-ObjectPropertyValue $properties 'vid')
+        $pidValue = Normalize-UsbId (Get-ObjectPropertyValue $properties 'pid')
+        if (($vid -eq '0483' -and $pidValue -eq '5740') -or
+            ($vid -eq 'cafe' -and $pidValue -eq '4003')) {
             $address = [string](Get-ObjectPropertyValue $port 'address')
             if (-not [string]::IsNullOrWhiteSpace($address)) { $ports.Add($address) }
         }
@@ -309,7 +311,7 @@ function Get-CdcPortsFromJson {
 
 function Test-CdcHardwareId {
     param([string]$HardwareId)
-    return $HardwareId -match '(?i)VID_0483&PID_5740'
+    return $HardwareId -match '(?i)(VID_0483&PID_5740|VID_CAFE&PID_4003)'
 }
 
 function Get-CdcPortFromPnpDevice {
@@ -384,6 +386,16 @@ function ConvertFrom-Mk61IdentityLine {
     param([string]$Line)
     if ([string]::IsNullOrWhiteSpace($Line)) { return $null }
     $trimmed = $Line.Trim()
+    $pico = [regex]::Match($trimmed,
+        '^MK61S PicoCalc [0-9]+\.[0-9]+\.[0-9]+ CPU=RP2040 UID=([0-9A-Fa-f]{16}) FLASH=2097152$')
+    if ($pico.Success) {
+        $uid = $pico.Groups[1].Value.ToUpperInvariant()
+        return [pscustomobject]@{
+            Kind = 'identity'; PublicId = $uid; ShortId = $uid.Substring(8)
+            UsbSerial = $uid; VolumeSerial = ''; BuildId = ''
+            Profile = 'picocalc-pico-h'; Line = $trimmed
+        }
+    }
     $match = [regex]::Match($trimmed,
         '^MK61 ID v=1 public=([0-9A-Fa-f]{16}) short=([0-9A-Fa-f]{8}) usb=([0-9A-Fa-f]{12}) volume=([0-9A-Fa-f]{8}) build=([0-9A-Fa-f]{8}) profile=([A-Za-z0-9._-]+)$')
     if ($match.Success) {
@@ -574,7 +586,7 @@ function Start-DirectSerial {
     $detected = if ($script:PortExplicit) { @() } else { @(Get-CdcPorts) }
     $candidates = @(Get-DirectSerialCandidates $script:Port $detected)
     if ($candidates.Count -eq 0) {
-        $script:StatusText = 'COM-порты STM32 0483:5740 не найдены'
+        $script:StatusText = 'COM-порты MK61S 0483:5740 / CAFE:4003 не найдены'
         return $false
     }
 
@@ -760,6 +772,14 @@ function Send-RemoteLine {
     }
 }
 
+function ConvertFrom-RemoteWireLine {
+    param([string]$Line)
+    if ($script:DetectedProfile -eq 'picocalc-pico-h' -and $Line.StartsWith('mk61> ')) {
+        return $Line.Substring(6)
+    }
+    return $Line
+}
+
 function Read-SerialLine {
     param([int]$TimeoutMilliseconds = 5000)
     $script:SerialLine = ''
@@ -768,7 +788,7 @@ function Read-SerialLine {
         try {
             $script:DirectSerial.ReadTimeout = $TimeoutMilliseconds
             $line = $script:DirectSerial.ReadLine()
-            $script:SerialLine = ([string]$line).TrimEnd("`r")
+            $script:SerialLine = ConvertFrom-RemoteWireLine (([string]$line).TrimEnd("`r"))
             return $true
         } catch [TimeoutException] {
             return $false
@@ -786,7 +806,7 @@ function Read-SerialLine {
         $line = $script:MonitorReadTask.Result
         $script:MonitorReadTask = $null
         if ($null -eq $line) { return $false }
-        $script:SerialLine = ([string]$line).TrimEnd("`r")
+        $script:SerialLine = ConvertFrom-RemoteWireLine (([string]$line).TrimEnd("`r"))
         return $true
     } catch {
         $script:MonitorReadTask = $null
@@ -1272,6 +1292,7 @@ function Send-RemoteFile {
     $size = $bytes.Length
     $crc = Get-PosixChecksumBytes $bytes
     $begin = 'fsput begin {0} {1} {2}' -f (Format-RemoteQuotedPath $Destination), $size, $crc
+    if ($script:DetectedProfile -eq 'picocalc-pico-h' -and (Test-M8TextPath $Destination)) { $begin += ' m8' }
     if (-not (Send-RemoteLine $begin) -or -not (Wait-RemoteMarker '@MKC:READY ')) { return $false }
     if ($script:MarkerLine.Substring(11).Trim() -ne [string]$size) {
         $script:StatusText = 'Неверный ответ fsput begin'
@@ -1308,8 +1329,11 @@ function Receive-RemoteFile {
             return $false
         }
     }
-    if (-not (Send-RemoteLine ('fsget ' + (Format-RemoteQuotedPath $Source))) -or
-        -not (Wait-RemoteMarker '@MKC:GET ')) { return $false }
+    $request = 'fsget ' + (Format-RemoteQuotedPath $Source)
+    $headerTimeout = if ($script:DetectedProfile -eq 'picocalc-pico-h') { 120000 } else { 5000 }
+    if ($script:DetectedProfile -eq 'picocalc-pico-h' -and (Test-M8TextPath $Source)) { $request += ' m8' }
+    if (-not (Send-RemoteLine $request) -or
+        -not (Wait-RemoteMarker '@MKC:GET ' $headerTimeout)) { return $false }
     $header = $script:MarkerLine.Substring(9).Trim() -split ' ', 2
     [long]$headerSize = 0
     [uint32]$headerCrc = 0
@@ -1409,6 +1433,9 @@ function Get-ValidatedSystemBundle {
 
 function Install-SystemBundle {
     param([string]$Directory)
+    if ([string]::IsNullOrEmpty($script:MockRoot) -and $script:DetectedProfile -eq 'picocalc-pico-h') {
+        throw 'Системные службы PicoCalc встроены в UF2; пакет System для STM32 не подходит'
+    }
     $canonical = @(Get-SystemBundleFiles)
     $system = Get-ValidatedSystemBundle $Directory
     if (-not [string]::IsNullOrEmpty($script:ExpectedProfile) -and
@@ -3512,7 +3539,7 @@ function Invoke-MkcApplication {
             if (-not [string]::IsNullOrEmpty($script:InstallSystemDir)) {
                 throw 'CDC-порт не найден; укажите --port COMx'
             }
-            $script:Port = Read-Host 'MKC: устройство 0483:5740 не найдено. Укажите COM-порт'
+            $script:Port = Read-Host 'MKC: устройство 0483:5740 / CAFE:4003 не найдено. Укажите COM-порт'
         }
         if ([string]::IsNullOrWhiteSpace($script:Port)) { throw 'порт не указан' }
     }

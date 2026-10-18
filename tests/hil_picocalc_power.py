@@ -43,12 +43,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--firmware-directory',type=Path,default=Path(__file__).resolve().parents[1]/'binary/picocalc-pico-h')
     parser.add_argument('--leave-asleep', action='store_true')
     args = parser.parse_args();args.output.mkdir(parents=True, exist_ok=True)
     cases = [];cycles = []
     with ClockPico(args.port) as p:
         p.log_output = args.output
-        initial = p.expect('PICO-H 0.5.0', 'SERVICE=CLOSED', 'USB_DISK=0')
+        build=json.loads((args.firmware_directory/'manifest.json').read_text())
+        initial = p.expect('PICO-H '+build['prototype_version'], 'BUILD='+build['build_id'].upper(),'SERVICE=CLOSED', 'USB_DISK=0')
         if 'SLEEP=1' in initial: p.step(b' ', 'SLEEP=0')
         if 'UI=CALCULATOR' not in p.status(): p.step(b'\t', 'UI=CALCULATOR')
         p.step(b'\x0842', 'X_RAW=[ 4.2000000  01]')
@@ -83,7 +85,7 @@ def main():
         if args.leave_asleep: p.system(7, 'SLEEP=1')
         final = p.status()
         root = Path(__file__).resolve().parents[1]
-        report = {'uf2_sha256': hashlib.sha256((root/'binary/picocalc-pico-h/mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),
+        report = {'uf2_sha256': hashlib.sha256((args.firmware_directory/'mk61s-picocalc-pico-h.uf2').read_bytes()).hexdigest(),
                   'passed': True, 'cases': cases, 'initial': initial, 'cycles': cycles, 'final': final,
                   'rtc_elapsed_seconds': (final_clock-start).total_seconds(), 'wall_elapsed_seconds': elapsed}
         (args.output/'result.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')

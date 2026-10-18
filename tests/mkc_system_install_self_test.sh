@@ -15,6 +15,13 @@ RESIDENT_USBDISK=0
 test ! -e "$MOCK_ROOT/System"
 RESIDENT_USBDISK=1
 printf 'Справка\r\n' > "$LOCAL_PATH/HELP0.TXT"
+(
+  MOCK_ROOT=
+  select_mk61_port() { DETECTED_PROFILE=picocalc-pico-h;return 0; }
+  start_monitor() { echo 'Pico installer reached a write transport' >&2;exit 99; }
+  ! install_system_unattended
+  [[ "$STATUS_TEXT" == *PicoCalc*UF2* ]]
+)
 install_system_unattended
 remote_get_file /System/HELP0.TXT "$work/help"
 grep -q 'Справка' "$work/help"

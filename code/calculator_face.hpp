@@ -8,6 +8,11 @@
 // canonical 16-column text shadow: the emulator/core keeps its old contract,
 // while presentation is no longer tied to a configurable text font.
 namespace calculator_face {
+// Original 16x35 segment planes, for panels with room for the native strike.
+u16 sourceRow(u8 mask,u8 row);
+u8 sourceSegments(u16 token);
+u16 sourceToken(u8 mask);
+u16 sourceArrowColumn(u8 column);
 
 enum class Font : u8 { MK61 = 0, CLASSIC_10X16 = 1 };
 Font font(void);

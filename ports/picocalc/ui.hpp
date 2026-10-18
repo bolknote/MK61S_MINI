@@ -19,10 +19,7 @@ public:
     u8 selected() const { return selected_[(unsigned)page_]; }
     unsigned count() const;
     const Settings& settings() const { return settings_; }
-    bool apply_settings(const Settings& value) {
-        if(!valid_settings(value)) return false;
-        settings_ = value; ++settings_revision_; return true;
-    }
+    bool apply_settings(const Settings& value,bool persist=true);
     u32 settings_revision() const { return settings_revision_; }
     const char* title() const;
     void row(unsigned index, char out[64]) const;

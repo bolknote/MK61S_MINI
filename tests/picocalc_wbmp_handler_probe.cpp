@@ -2,7 +2,7 @@
 #include "mk61_app.h"
 #include <stdint.h>
 #ifndef PICO_APPS_DIRECTORY
-#define PICO_APPS_DIRECTORY "/MK61S-PicoCalc-0.5"
+#define PICO_APPS_DIRECTORY "/MK61S-PicoCalc-0.6"
 #endif
 
 uint32_t mk61_app_flow_step(mk61_app_flow *flow) {

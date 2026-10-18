@@ -1,5 +1,6 @@
 #include "storage.hpp"
 #include "sd_crc.hpp"
+#include "diagnostics.hpp"
 #include "hardware/spi.h"
 #include "hardware/watchdog.h"
 #include "pico/stdlib.h"
@@ -100,7 +101,7 @@ bool read_sectors(u32 sector, u8* out, u32 count) {
     if(command(18, block_address ? sector : sector * 512) != 0) { deselect(); return false; }
     bool ok = true;
     for(u32 i = 0; i < count; ++i) {
-        watchdog_update();
+        picocalc::diagnostics::feed_watchdog();
         if(!receive(out + i * 512, 512)) { ok = false; break; }
     }
     // Stop even after CRC/token failure, so the next request starts cleanly.
@@ -131,7 +132,7 @@ DRESULT disk_read(BYTE drive, BYTE* out, LBA_t sector, UINT count) {
 }
 DRESULT disk_write(BYTE drive, const BYTE* in, LBA_t sector, UINT count) {
     if(drive || !count || sector > UINT32_MAX || sector + count > picocalc::sd::sectors()) return RES_PARERR;
-    for(UINT i = 0; i < count; ++i) { watchdog_update(); if(!picocalc::sd::write((u32)sector + i, in + i * 512)) return RES_ERROR; }
+    for(UINT i = 0; i < count; ++i) { picocalc::diagnostics::feed_watchdog(); if(!picocalc::sd::write((u32)sector + i, in + i * 512)) return RES_ERROR; }
     return RES_OK;
 }
 DRESULT disk_ioctl(BYTE drive, BYTE op, void* out) {

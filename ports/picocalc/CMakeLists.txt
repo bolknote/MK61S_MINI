@@ -22,7 +22,7 @@ endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 add_executable(mk61s-picocalc-pico-h
-    main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp
+    main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
     script_files.cpp script_runtime.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
@@ -34,7 +34,7 @@ add_executable(mk61s-picocalc-pico-h
     "${MK61_ROOT}/code/text_screen.cpp"
     "${MK61_ROOT}/code/builtin_font.cpp"
     "${MK61_ROOT}/code/ui_font.cpp"
-    "${MK61_ROOT}/code/fmk_font.cpp" "${MK61_ROOT}/code/prepared_font.cpp")
+    "${MK61_ROOT}/code/fmk_font.cpp" "${MK61_ROOT}/code/prepared_font.cpp" "${MK61_ROOT}/code/fmk_prepare.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/language_bytecode.cpp"
     "${MK61_ROOT}/code/language_vm.cpp"
@@ -48,11 +48,20 @@ target_sources(mk61s-picocalc-pico-h PRIVATE
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/calculator_control.cpp"
     "${MK61_ROOT}/code/chip8.cpp" "${MK61_ROOT}/code/usb_screen_protocol.cpp"
     "${MK61_ROOT}/code/loadable_module_format.cpp" "${MK61_ROOT}/code/zx0.cpp")
-target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/markdown_document.cpp" "${MK61_ROOT}/code/wbmp.cpp")
+target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/markdown_document.cpp" "${MK61_ROOT}/code/wbmp.cpp"
+    "${MK61_ROOT}/code/explorer_autoexec.cpp")
+target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/usb_screen_surface.cpp" "${MK61_ROOT}/code/ui_text_renderer.cpp")
+target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/crash_dump_format.cpp")
+if(DEFINED MK61_PICOCALC_BUILD_ID)
+    target_compile_definitions(mk61s-picocalc-pico-h PRIVATE MK61_PICOCALC_BUILD_ID=${MK61_PICOCALC_BUILD_ID})
+endif()
 target_include_directories(mk61s-picocalc-pico-h PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}" "${MK61_ROOT}/code" "${MK61_ROOT}/third_party/fatfs")
 target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_CORE_STANDALONE=1
+    # Allocation failures are handled by the resident/APP ABI. The SDK's
+    # default panic would turn a recoverable exhausted lease into HardFault.
+    PICO_MALLOC_PANIC=0
     MK61_ENABLE_RTC_ALARM_TERMINAL=1
     MK61_ENABLE_USB_SCREEN=1
     MK61_M61_READ_CACHE_BYTES=1024
@@ -81,7 +90,7 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.5.0")
+pico_set_program_version(mk61s-picocalc-pico-h "0.8.0")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.
@@ -92,6 +101,9 @@ string(REPLACE "SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k"
     "SCRATCH_X(rwx) : ORIGIN = 0x20041000, LENGTH = 4k" MK61_MEMMAP "${MK61_MEMMAP}")
 string(REPLACE "SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k"
     "SCRATCH_Y(rwx) : ORIGIN = 0x20038000, LENGTH = 36k" MK61_MEMMAP "${MK61_MEMMAP}")
+string(REPLACE ".rodata : {"
+    ".mk61_fw_footer : { KEEP(*(.mk61_fw_footer)) } > FLASH\n\n    .rodata : {"
+    MK61_MEMMAP "${MK61_MEMMAP}")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld" "${MK61_MEMMAP}")
 pico_set_linker_script(mk61s-picocalc-pico-h "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld")
 pico_add_extra_outputs(mk61s-picocalc-pico-h)

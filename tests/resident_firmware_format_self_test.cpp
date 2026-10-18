@@ -69,6 +69,11 @@ int main(void) {
   assert(validate(footer) == Status::BAD_FLAGS);
 
   footer = valid_footer();
+  footer.image_start=0x10000000;
+  assert(validate(footer)==Status::BAD_RANGE);
+  assert(resident_firmware_format::validate_metadata(footer,200000,180000,0x10203040UL,
+      2UL*1024*1024,0x10000000)==Status::VALID);
+  footer = valid_footer();
   assert(validate(footer, 199999) == Status::BAD_RANGE);
   assert(validate(footer, 200000, 199980) == Status::BAD_RANGE);
   assert(resident_firmware_format::validate_metadata(

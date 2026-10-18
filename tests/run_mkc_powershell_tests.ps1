@@ -211,19 +211,26 @@ try {
     Assert-True ((Normalize-RemotePath '/Programs' '../Games/./demo.m61') -eq '/Games/demo.m61') 'remote path normalization differs'
     Assert-True (Test-CdcHardwareId 'USB\VID_0483&PID_5740\3688388E3233') 'Windows CDC VID/PID was not recognized'
     Assert-True (-not (Test-CdcHardwareId 'USB\VID_0483&PID_DF11\3688388E3233')) 'DFU was mistaken for CDC'
+    Assert-True (Test-CdcHardwareId 'USB\VID_CAFE&PID_4003\E6657CD423721C35') 'Pico H CDC not recognized'
+    Assert-True (-not (Test-CdcHardwareId 'USB\VID_2E8A&PID_0003\E6657CD423721C35')) 'Pico ROM loader mistaken for CDC'
     $pnpDevice = [pscustomobject]@{
         InstanceId = 'USB\VID_0483&PID_5740\3688388E3233'
         FriendlyName = 'USB Serial Device (COM16)'
     }
     Assert-True ((Get-CdcPortFromPnpDevice $pnpDevice) -eq 'COM16') 'Windows PnP COM-port extraction failed'
-    $json = '{"detected_ports":[{"port":{"address":"COM7","properties":{"vid":"0x0483","pid":"5740"}}},{"port":{"address":"COM8","properties":{"vid":"2341","pid":"0043"}}}]}'
-    Assert-True ((@(Get-CdcPortsFromJson $json) -join ',') -eq 'COM7') 'arduino-cli JSON port detection failed'
+    $json = '{"detected_ports":[{"port":{"address":"COM7","properties":{"vid":"0x0483","pid":"5740"}}},{"port":{"address":"COM8","properties":{"vid":"2341","pid":"0043"}}},{"port":{"address":"COM9","properties":{"vid":"0xCAFE","pid":"4003"}}}]}'
+    Assert-True ((@(Get-CdcPortsFromJson $json) -join ',') -eq 'COM7,COM9') 'arduino-cli JSON port detection failed'
     $candidates = @(Get-DirectSerialCandidates 'COM12' @('COM16','com12','COM17'))
     Assert-True (($candidates -join ',') -eq 'COM12,COM16,COM17') 'direct COM candidates are not ordered or deduplicated'
     Assert-True (Test-Mk61IdentityLine 'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)') 'Classic V3 identity was rejected'
     Assert-True (Test-Mk61IdentityLine 'MK61s-40th ver. Aug 02 2026(12:34:56)') '40th identity was rejected'
     Assert-True (Test-Mk61IdentityLine 'MK61s mini ver. Jan 01 2024(00:00:00)') 'legacy MK61s identity was rejected'
     Assert-True (-not (Test-Mk61IdentityLine 'STM32F401 test firmware ver. 1')) 'unrelated STM32 identity was accepted'
+    $pico = ConvertFrom-Mk61IdentityLine 'MK61S PicoCalc 0.7.0 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152'
+    Assert-True ($null -ne $pico -and $pico.PublicId -eq 'E6657CD423721C35' -and
+        $pico.ShortId -eq '23721C35' -and $pico.Profile -eq 'picocalc-pico-h') 'Pico H identity rejected'
+    Assert-True (Test-Mk61IdentitySelector $pico '23721c35') 'Pico short selector rejected'
+    Assert-True (-not (Test-Mk61IdentityLine 'MK61S PicoCalc 0.7.0 CPU=RP2040 UID=bad FLASH=2097152')) 'bad Pico UID accepted'
     $identityLine = 'MK61 ID v=1 public=0123456789ABCDEF short=89ABCDEF usb=112233445566 volume=A1B2C3D4 build=12345678 profile=mini-v3-a00'
     $parsedIdentity = ConvertFrom-Mk61IdentityLine $identityLine
     Assert-True ($null -ne $parsedIdentity -and $parsedIdentity.Kind -eq 'identity') 'new identity handshake was rejected'

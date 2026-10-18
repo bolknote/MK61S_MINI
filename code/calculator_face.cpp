@@ -130,13 +130,13 @@ void drawSegmentsPage(u8* out, u8 page, i16 x, u8 mask, bool dot = false) {
   }
 }
 
-void drawArrowPage(u8* out, u8 page, i16 x) {
-  static constexpr u8 PAGE4[10] = {
+static constexpr u8 ARROW_PAGE4[10] = {
     0x00, 0x38, 0x38, 0x38, 0x38, 0x38, 0x39, 0xBA, 0x54, 0x38
-  };
-  x += (DIGIT_PITCH - sizeof(PAGE4)) / 2;
+};
+void drawArrowPage(u8* out, u8 page, i16 x) {
+  x += (DIGIT_PITCH - sizeof(ARROW_PAGE4)) / 2;
   if(page == 4) {
-    for(u8 col = 0; col < sizeof(PAGE4); ++col) out[x + col] |= PAGE4[col];
+    for(u8 col = 0; col < sizeof(ARROW_PAGE4); ++col) out[x + col] |= ARROW_PAGE4[col];
   } else if(page == 5) {
     out[x + 6] |= 0x01;
   }
@@ -254,6 +254,16 @@ void drawService(PageCanvas& canvas, const text_screen::Grid& grid) {
 }
 
 } // namespace
+
+u16 sourceRow(u8 mask,u8 row) {
+  if(row>=SOURCE_HEIGHT) return 0;
+  u16 bits=0;for(u8 i=0;i<8;++i) if(mask&(1U<<i)) bits|=SEGMENT_ROWS[i][row];return bits;
+}
+u8 sourceSegments(u16 token) { return segments(token); }
+u16 sourceToken(u8 mask) { return segmentToken(mask); }
+u16 sourceArrowColumn(u8 column) {
+  return column<sizeof(ARROW_PAGE4)?(u16)(ARROW_PAGE4[column]|(column==6?0x100:0)):0;
+}
 
 Font font(void) { return selected_font; }
 

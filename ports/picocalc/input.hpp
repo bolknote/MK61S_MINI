@@ -10,6 +10,13 @@ void clear();
 bool pressed(u8 code, u32 now);
 int logical(u8 code);
 int scan(u8 code);
+int raw_key(u8 code);
+int native_key(KeyEvent event);
+bool raw_pressed(i32 key,u32 now);
+bool any_pressed(u32 now);
+using Listener=void(*)(void*,KeyEvent);
+void set_listener(Listener callback,void* context);
+void service(u32 now);
 u8 from_scan(unsigned scan);
 u16 chip8_keys(u32 now);
 } // namespace controls

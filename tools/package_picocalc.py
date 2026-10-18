@@ -2,6 +2,7 @@
 """Package a verified Pico H UF2 and the current native APP collection."""
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -11,6 +12,16 @@ import zipfile
 import zlib
 
 from build_picocalc_apps import APPS, ASSETS, ROOT
+from seal_picocalc import verify as verify_firmware
+
+README='''MK61S / PicoCalc / Pico H
+
+Copy mk61s-picocalc-pico-h.uf2 to the RPI-RP2 ROM bootloader volume.
+Use the native Micro-USB connector on Pico H. The case USB-C is UART.
+Copy apps/ to a new directory on microSD; copy Fonts/ to the card root.
+APP images in this bundle target Cortex-M0+ and cannot replace STM32 APPs.
+See README.md for controls, supported formats, clock and power limitations.
+'''
 
 
 def sha256(path):
@@ -24,8 +35,10 @@ def verify_app(path, record):
     if len(data)<64 or data[:8]!=b'MK61APP\0' or struct.unpack_from('<HHHBB',data,8)!=(1,64,6,4,1):
         raise ValueError(f'{path.name}: invalid user APP header')
     flags,base,stored,image,memory,entry=struct.unpack_from('<6I',data,16)
-    if flags&13!=13 or flags&~15 or base!=0x20000000:
+    if flags&13!=13 or flags&~31 or base!=0x20000000:
         raise ValueError(f'{path.name}: incompatible CPU/relocation flags')
+    if 'native_display' in record and bool(flags&16)!=record['native_display']:
+        raise ValueError(f'{path.name}: display flag/build manifest mismatch')
     if not 0<image<=memory<=49152 or entry>=image or len(data)!=64+stored:
         raise ValueError(f'{path.name}: invalid APP bounds')
     if zlib.crc32(data[:60])!=struct.unpack_from('<I',data,60)[0] or zlib.crc32(data[64:])!=struct.unpack_from('<I',data,48)[0]:
@@ -46,19 +59,42 @@ def main():
     firmware=directory/'mk61s-picocalc-pico-h.uf2'
     if sha256(firmware)!=build['uf2_sha256']:
         raise ValueError('UF2/build manifest mismatch')
+    sys_path=str(ROOT/'ports/picocalc')
+    spec=importlib.util.spec_from_file_location('pico_uf2',Path(sys_path)/'uf2.py')
+    uf2=importlib.util.module_from_spec(spec);spec.loader.exec_module(uf2)
+    transport=firmware.read_bytes()
+    image=b''.join(transport[i+32:i+288] for i in range(0,len(transport),512))[:build['flash_bytes']]
+    uf2.validate(transport,image)
+    integrity=verify_firmware(image,build['firmware_integrity']['footer_offset'])
+    if integrity!=build['firmware_integrity'] or hashlib.sha256(image).hexdigest()!=build['bin_sha256']:
+        raise ValueError('sealed firmware/build manifest mismatch')
     apps=directory/'apps';records=json.loads((apps/'manifest.json').read_text())
     if [record['name'] for record in records]!=list(APPS):
         raise ValueError('APP manifest must contain the complete current collection')
     for record in records:verify_app(apps/(record['name']+'.APP'),record)
+    (directory/'README.txt').write_text(README)
+    shutil.copy2(ROOT/'ports/picocalc/README.md',directory/'README.md')
+    (directory/'Fonts').mkdir(exist_ok=True)
+    font_files=[]
+    for source in sorted((ROOT/'programs/Fonts').glob('*.FMK')):
+        target=directory/'Fonts'/source.name;shutil.copy2(source,target);font_files.append(target)
+    spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
+    licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
+    licenses.package(bundle=directory)
     shutil.copy2(ROOT/'tools/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
-    files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'sync_picocalc_clock.py',
+    files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
+        *font_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
-    for report_name in ('hardware-parity-summary.json','hardware-apps-summary.json'):
+    for report_name in ('hardware-parity-summary.json','hardware-apps-summary.json',
+                        'hardware-software-summary.json','hardware-power-summary.json',
+                        'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',
+                        'hardware-usb-disk-summary.json','hardware-full-parity-summary.json'):
         report=directory/report_name
         if not report.exists():continue
         evidence=json.loads(report.read_text())
         verified=evidence.get('uf2_sha256') or evidence.get('hardware',{}).get('verified_uf2_sha256')
         if verified!=build['uf2_sha256']:raise ValueError(f'{report_name}: report belongs to another UF2')
+        if evidence.get('passed') is False:raise ValueError(f'{report_name}: hardware verification failed')
         if report_name=='hardware-apps-summary.json':
             if not evidence.get('passed'):raise ValueError('APP hardware verification failed')
             expected={r['name']+'.APP':r['app_sha256'] for r in records}

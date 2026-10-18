@@ -21,7 +21,6 @@ struct Node {
 };
 Node *nodes = nullptr;
 u16 node_count = 0, node_capacity = 0;
-u16 disk_cache = program_store::INVALID_ID;
 bool reserve_node() {
   if (node_count < node_capacity)
     return true;
@@ -43,12 +42,16 @@ struct Extension {
   Type type;
 };
 constexpr Extension extensions[] = {
+    {".state.txt", Type::MK61_STATE},
     {".m61", Type::MK61},      {".tbi", Type::TINYBASIC},
     {".bas", Type::TINYBASIC}, {".foc", Type::FOCAL},
     {".fcl", Type::FOCAL},     {".md", Type::MARKDOWN},
     {".txt", Type::TEXT},      {".fmk", Type::FONT},
     {".wbmp", Type::IMAGE1},   {".bin", Type::MK61_BINARY},
-    {".ch8", Type::CHIP8},     {".app", Type::APP}, {".c8", Type::CHIP8}, {".sheet", Type::SHEET}};
+    {".ch8", Type::CHIP8},     {".app", Type::APP},
+    {".c8", Type::CHIP8},      {".mks", Type::SHEET},
+    {".sheet", Type::SHEET},   {".wbm", Type::IMAGE1},
+    {".t1", Type::TEXT},       {".m2", Type::MK61_STATE}};
 bool ends(const char *text, const char *suffix) {
   const unsigned n = std::strlen(text), k = std::strlen(suffix);
   if (n < k)
@@ -140,33 +143,15 @@ bool entry_at(u16 id, program_store::Entry &out) {
   if (id >= node_count)
     return false;
   auto &node = nodes[id];
-  files::Entry info;
-  if (!node.virtual_source && !files::stat(node.path, info))
-    return false;
-  if (node.type == Type::MK61 && !node.virtual_source &&
-      (!node.source || node.revision != files::revision())) {
-    // One decoded SD script cache; return frames keep stable file IDs.
-    // Visiting nested scripts must not retain every source in RAM.
-    if (disk_cache != id && disk_cache < node_count &&
-        !nodes[disk_cache].virtual_source) {
-      std::free(nodes[disk_cache].source);
-      nodes[disk_cache].source = nullptr;
-    }
-    disk_cache = id;
-    std::free(node.source);
-    node.source = nullptr;
-    const unsigned capacity = info.size < 65534 ? info.size + 1 : 65535;
-    char *source = (char *)std::malloc(capacity);
-    unsigned used = 0;
-    if (!source)
-      return false;
-    if (!files::read_text(node.path, source, capacity, used)) {
-      std::free(source);
-      return false;
-    }
-    std::free(node.source);
-    node.source = source;
-    node.length = (u16)used;
+  if(!node.virtual_source && node.revision!=files::revision()) {
+    files::Entry info{};
+    if(!files::stat(node.path,info)) return false;
+    node.directory=info.directory;
+    // Stable logical M8 sizes, backed by a bounded UTF-8 seek index/window.
+    // Real files never reserve their entire decoded text on the heap.
+    if(!node.directory && program_store::text_content(node.type)) {
+      unsigned used=0;if(!files::text_size(node.path,used)) return false;node.length=(u16)used;
+    } else node.length=node.directory?0:(u16)(info.size>65534?65534:info.size);
     node.revision = files::revision();
   }
   out = {};
@@ -175,9 +160,7 @@ bool entry_at(u16 id, program_store::Entry &out) {
   out.type = node.type;
   out.kind = node.directory ? program_store::NodeKind::DIRECTORY
                             : program_store::NodeKind::FILE;
-  out.data_len = node.type == Type::MK61
-                     ? node.length
-                     : (u16)(info.size > 65534 ? 65534 : info.size);
+  out.data_len = node.length;
   const char *name = std::strrchr(node.path, '/');
   name = name ? name + 1 : node.path;
   unsigned length = std::strlen(name);
@@ -245,7 +228,6 @@ void reset_files() {
   std::free(nodes);
   nodes = nullptr;
   node_count = node_capacity = 0;
-  disk_cache = program_store::INVALID_ID;
 }
 const char *file_path(u16 id) {
   return id == program_store::ROOT_ID ? "/"
@@ -306,8 +288,6 @@ bool register_source(const char *path, const char *source, u16 length,
   node.directory = false;
   node.virtual_source = true;
   node.revision = files::revision();
-  if (disk_cache == id)
-    disk_cache = program_store::INVALID_ID;
   return entry_at(id, out);
 }
 bool lookup_id(u16 id, program_store::Entry &out) { return entry_at(id, out); }
@@ -320,7 +300,13 @@ bool read_id(u16 id, u16 offset, u8 *out, u16 count, u16 *used) {
   if (!entry_at(id, entry))
     return false;
   auto &node = nodes[id];
-  if (node.type == Type::MK61) {
+  if (program_store::text_content(node.type)) {
+    if(!node.virtual_source) {
+      unsigned n=0;
+      if(!files::read_text_range(node.path,offset,out,count,n)) return false;
+      if(used) *used=(u16)n;
+      return true;
+    }
     const unsigned n =
         offset < node.length
             ? (node.length - offset < count ? node.length - offset : count)

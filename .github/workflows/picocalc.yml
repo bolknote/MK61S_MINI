@@ -1,30 +1,68 @@
-name: PicoCalc Pico H prototype
+name: PicoCalc Pico H
 
 on:
   pull_request:
-    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'tools/build_picocalc*.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mk61-app/**', 'tests/picocalc*', 'tests/run_picocalc_tests.sh', '.github/workflows/picocalc.yml']
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/Fonts/**', 'programs/sheets/**', 'tools/build_picocalc*.py', 'tools/seal_picocalc.py', 'tools/package_picocalc.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mkc/**', 'tools/.mk61-app/**', 'tools/.mk61-gcc/**', 'tools/.fmk-font/**', 'tests/picocalc*', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc_tests.sh', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
   push:
     branches: [main]
-    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'tools/build_picocalc*.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mk61-app/**', 'tests/picocalc*', 'tests/run_picocalc_tests.sh', '.github/workflows/picocalc.yml']
+    paths: ['code/**', 'ports/picocalc/**', 'third_party/fatfs/**', 'sdk/portable/**', 'examples/portable-apps/**', 'examples/loadable-apps/**', 'examples/chip8/**', 'programs/Fonts/**', 'programs/sheets/**', 'tools/build_picocalc*.py', 'tools/seal_picocalc.py', 'tools/package_picocalc.py', 'tools/sync_picocalc_clock.py', 'tools/build_portable_app.py', 'tools/.mkc/**', 'tools/.mk61-app/**', 'tools/.mk61-gcc/**', 'tools/.fmk-font/**', 'tests/picocalc*', 'tests/hil_picocalc*', 'tests/portable_rust_app_arm_self_test.py', 'tests/run_portable_app_arm_tests.py', 'tests/run_picocalc_tests.sh', 'tests/run_mkc*', 'tests/mkc_system_install_self_test.sh', 'tests/resident_firmware_format_self_test.cpp', 'tests/run_resident_firmware_format_tests.sh', 'tests/usb_screen_surface_self_test.cpp', 'tests/run_usb_screen_surface_tests.sh', '.github/workflows/picocalc.yml']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  prototype:
+  picocalc:
     runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: '1.94.1'
     steps:
       - uses: actions/checkout@v6
-      - name: Test core, UI, FAT, languages, M61, RTC, sleep, USB Screen and UF2
-        run: MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh
+      - name: Test core, files, autoexec, Markdown, fonts, RTC and diagnostics with sanitizers
+        run: |
+          MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh
+          MK61_TEST_SANITIZERS=1 bash tests/run_usb_screen_surface_tests.sh
+          MK61_TEST_SANITIZERS=1 bash tests/run_resident_firmware_format_tests.sh
+          bash tests/run_mkc_tests.sh
+          bash tests/mkc_system_install_self_test.sh
       - name: Install pinned GNU Arm compiler
         uses: ./.github/actions/setup-native-gcc
-      - name: Build RP2040 firmware and check CPU/ABI and UF2 payload
+      - name: Install pinned Rust and both native APP targets
+        run: |
+          rustup toolchain install 1.94.1 --profile minimal
+          rustup target add --toolchain 1.94.1 thumbv6m-none-eabi thumbv7em-none-eabihf
+      - name: Build RP2040 firmware and check CPU, ABI and UF2 payload
         run: python3 tools/build_picocalc.py --fetch-sdk
-      - name: Build ARMv6-M native APP examples
+      - name: Build all seven ARMv6-M native APP examples
         run: python3 tools/build_picocalc_apps.py
+      - name: Execute packed Rust and C++ APPs on Cortex-M0 and Cortex-M4
+        run: |
+          python3 -m venv .build/arm-tests
+          .build/arm-tests/bin/python -m pip install unicorn==2.1.4
+          .build/arm-tests/bin/python tests/portable_rust_app_arm_self_test.py --output .build/arm-tests/result.json
+      - name: Package clean Pico H release and verify its contents
+        run: |
+          python3 tools/package_picocalc.py
+          python3 tests/picocalc_package_self_test.py
       - uses: actions/upload-artifact@v7
         with:
-          name: mk61s-picocalc-pico-h-prototype
+          name: mk61s-picocalc-pico-h
           path: binary/picocalc-pico-h/
+
+  stm32-regression:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [f401-product-a00, f411-classic-v3]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup-native-gcc
+      - name: Build STM32 resident with its production budgets
+        run: python3 tools/.mk61-gcc/build-standalone.py --release-case '${{ matrix.case }}' --build-path '.build/picocalc-stm32/${{ matrix.case }}'
+      - name: Build matching STM32 System APPs
+        run: |
+          python3 tools/build_system_app_bundle.py \
+            --resident-elf '.build/picocalc-stm32/${{ matrix.case }}/resident.elf' \
+            --compile-commands '.build/picocalc-stm32/${{ matrix.case }}/compile_commands.json' \
+            --output-dir '.build/picocalc-stm32/${{ matrix.case }}/System'

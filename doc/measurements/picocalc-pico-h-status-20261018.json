@@ -1,0 +1,84 @@
+{
+  "passed": true,
+  "scope": "calculator status localization and idle clock layout regression",
+  "recorded_at_utc": "2026-10-18T04:35:07.299433+00:00",
+  "uid": "E6657CD423721C35",
+  "build_id": "a96b4b7e",
+  "uf2_sha256": "367471fb9a506d7d5d961bade8921ae8ccdac0911e8685b3fcccea614d7de385",
+  "cases": [
+    "Changing HH:MM leaves every status and numeric pixel unchanged; exact 5x7 clock at x165 y18",
+    "Live RU/EN status switch and longest English key RETURN remain visible with clock",
+    "Both calculator fonts preserve the separate clock row in RU and EN",
+    "Programming mode hides the idle clock"
+  ],
+  "screenshots": {
+    "RU-digit-12-34": "c21b3043f77924181536016b991cc31a218bd9037bc262521ed9aa8c26830e33",
+    "RU-digit-23-59": "6fe28716e59f04adde57df89a16ec81f62f57f9da46eaf37117d8c8832d6c1ce",
+    "EN-digit": "4edbfabdcfdd837c21ef704378371df28f9d4727e6f5a76284a96fb012d10f5a",
+    "EN-return": "a2c445f12db3a6a17e1137a0797da9a38f9cc375fd7b912021d1072ddac389d3",
+    "EN-classic": "b95dbfb8208e6631c77cc1a729292a5dccfc25cd2f1837a733c3bcddbe75a338",
+    "RU-classic": "2c99b723ae191c24a397fe8feba75466f40f353cb8e74b84cc4cbe720cba04d8",
+    "RU-programming": "d8f892fabf7e36d7ab6acc182b47e9c8108bc10dcfe3506859ddeab0dcbb9b5d"
+  },
+  "calculator_state_restored": true,
+  "snapshot_before": {
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nmk61> ",
+    "stk": "stk\r\nS0 =  4.2000000  01\r\nS1 =  0.0000000  00\r\nS2 =  0.0000000  00\r\nS3 =  0.0000000  00\r\nS4 =  0.0000000  00\r\nmk61> ",
+    "hout": "hout\r\nhin 0000 000000000000000000000000000000000000000000000000\r\nhin 0024 000000000000000000000000000000000000000000000000\r\nhin 0048 000000000000000000000000000000000000000000000000\r\nhin 0072 000000000000000000000000000000000000000000000000\r\nhin 0096 000000000000000000\r\nmk61> ",
+    "pwd": "pwd\r\n/\r\nmk61> "
+  },
+  "snapshot_after": {
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nmk61> ",
+    "stk": "stk\r\nS0 =  4.2000000  01\r\nS1 =  0.0000000  00\r\nS2 =  0.0000000  00\r\nS3 =  0.0000000  00\r\nS4 =  0.0000000  00\r\nmk61> ",
+    "hout": "hout\r\nhin 0000 000000000000000000000000000000000000000000000000\r\nhin 0024 000000000000000000000000000000000000000000000000\r\nhin 0048 000000000000000000000000000000000000000000000000\r\nhin 0072 000000000000000000000000000000000000000000000000\r\nhin 0096 000000000000000000\r\nmk61> ",
+    "pwd": "pwd\r\n/\r\nmk61> "
+  },
+  "final": "RESET_REASON=00010001 BOOTS=29 CRASH=NONE BUILD=A96B4B7E\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=534 MAX_GAP_MS=948 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=8154 PREVIOUS_GAP_MS=948\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=659624 FOOTER=569492 EXPECTED=752B35A7 ACTUAL=752B35A7 CHECK_US=364496\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nMK61S PICOCALC PICO-H 0.7.1 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=41\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=3172 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=948420\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=17 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T07:35:07 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "version": "0.7.1",
+  "reason": "Pico calculator status used English literals independently of the language setting; the old clock rectangle overlapped the centered last-key field.",
+  "changes": [
+    "Translate calculator mode, last-key labels, keyboard help and automatic memory choice into Russian; decode M8 labels into Unicode glyphs.",
+    "Use the MK-61 angle names Г / Р / ГРД in RU.",
+    "Draw the physical LCD clock at (260,10), scale 2, to the right of the MK61S title; no duplicated clock below the status.",
+    "The 192x64 USB Screen frame has no title row; its clock uses the empty row at (165,18), clear of all status and numeric pixels."
+  ],
+  "host_tests": {
+    "command": "MK61_TEST_SANITIZERS=1 bash tests/run_picocalc_tests.sh",
+    "passed": true,
+    "sanitizers": [
+      "AddressSanitizer",
+      "UndefinedBehaviorSanitizer"
+    ],
+    "regression_before_fix": "failed in face_status: Russian status did not match the selected language",
+    "coverage": [
+      "RU/EN status glyph raster",
+      "RUN and PRG labels",
+      "both calculator fonts",
+      "logical clock changes only its own rectangle",
+      "all 50x14 header-clock pixels match the 2x raster",
+      "no clock in the physical indicator/status area",
+      "clock hidden during input/RUN/PRG"
+    ],
+    "log_sha256": "26eb51daad056d90d7882fc2a51fa7b8186a7fba96c5fe77e9e28f588e5f21da"
+  },
+  "stm32_builds": {
+    "f401-product-a00": {
+      "passed": true,
+      "rebuild_result": "no work to do; platform sources unchanged",
+      "log_sha256": "84562768ac941d36a530edb245a10bbcd41709960145c19f344a377a1911b262"
+    },
+    "f411-classic-v3": {
+      "passed": true,
+      "rebuild_result": "no work to do; platform sources unchanged",
+      "log_sha256": "61f651ab9fc3f72fe4d75375f73bc5002c9d6f5e094691eb0ad8d3a340d76159"
+    }
+  },
+  "previous_full_qualification": {
+    "version": "0.7.0",
+    "build_id": "837b1415",
+    "uf2_sha256": "dc7d91e61f3917a10d9c98aafdc20f104789f71567465723dd9b968c2e3f7b0f",
+    "report": "doc/measurements/picocalc-pico-h-full-parity-20261018.json",
+    "artifact_archive": "binary/picocalc-pico-h/acceptance-0.7.0",
+    "note": "The eight hardware qualification suites remain evidence for that UF2; 0.7.1 has the focused UI hardware regression and complete Pico host tests above."
+  }
+}

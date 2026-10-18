@@ -18,20 +18,20 @@ APPS={
     'SHEET':(['examples/portable-apps/SHEET/main.cpp','examples/portable-apps/SHEET/sheet_engine.cpp'],'S1'),
     'WBMP':(['examples/portable-apps/WBMP/main.c','examples/portable-apps/WBMP/viewer.cpp','code/wbmp.cpp'],'I1'),
 }
-ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.sheet','CYCLE.sheet')
-README='''MK61S PicoCalc / Pico H: native APP collection, ABI 6 / Cortex-M0+.
+ASSETS=('README.txt','ECHO8.ch8','PATTERN.wbmp','BUDGET.mks','CYCLE.mks')
+README='''MK61S PicoCalc / Pico H: native 320x320 APP collection, ABI 6 / Cortex-M0+.
 
 HELLO.APP       C example; checks fresh data/BSS and prints HELLO C APP.
 HELLO_CPP.APP   C++ manifest example; text, LED, sound; any key exits.
 HELLO_RS.APP    no_std Rust example; prints HELLO, MK61S!; any key exits.
 SERVICES.APP    Math/formatting example; sqrt(3^2+4^2)=5; any key exits.
 ELIZA.APP       DOCTOR 1966 conversation program; Enter advances the intro.
-SHEET.APP       Spreadsheet; open .sheet files or start an empty book.
+SHEET.APP       Spreadsheet; open .mks files or start an empty book.
 WBMP.APP        Monochrome image handler; open a .wbmp file in Explorer.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
-PATTERN.wbmp    WBMP pixel-check example.
-BUDGET.sheet   Spreadsheet with formulas and Russian headings.
-CYCLE.sheet    Spreadsheet with an intentional reference cycle.
+PATTERN.wbmp    Native 320x320 WBMP pixel-check example.
+BUDGET.mks   Spreadsheet with formulas and Russian headings.
+CYCLE.mks    Spreadsheet with an intentional reference cycle.
 
 Copy this directory to a new folder on microSD and open APPs in Explorer.
 Do not replace STM32 /System or /app with this M0+ collection.
@@ -50,7 +50,7 @@ def main():
     reports=[]
     for name,(sources,magic) in APPS.items():
         build=args.build_dir/name
-        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
+        command=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--shared-runtime','--name',name,
                  '--arm-toolchain-bin',str(toolchain),'--output-dir',str(build)]
         for source in sources: command+=['--source',str(ROOT/source)]
         if args.rustc and any(source.endswith('.rs') for source in sources):
@@ -66,14 +66,14 @@ def main():
         shutil.copy2(args.build_dir/name/(name+'.APP'),args.output_dir/(name+'.APP'))
     subprocess.run([sys.executable,str(ROOT/'examples/chip8/ECHO-8/assemble.py'),
         str(ROOT/'examples/chip8/ECHO-8/echo8.asm'),str(args.output_dir/'ECHO8.ch8')],check=True)
-    # WBMP type 0: 192x64, horizontal bytes, MSB first.
-    image=bytearray(b'\0\0\x81\x40\x40')
-    for y in range(64):
-        for x in range(0,192,8):
+    # WBMP type 0: native 320x320, horizontal bytes, MSB first.
+    image=bytearray(b'\0\0\x82\x40\x82\x40')
+    for y in range(320):
+        for x in range(0,320,8):
             image.append(sum((0x80>>bit) for bit in range(8) if ((x+bit)*3+y*5)%11>=5))
     (args.output_dir/'PATTERN.wbmp').write_bytes(image)
     for name in ('BUDGET','CYCLE'):
-        shutil.copy2(ROOT/'programs/sheets'/(name+'.mks'),args.output_dir/(name+'.sheet'))
+        shutil.copy2(ROOT/'programs/sheets'/(name+'.mks'),args.output_dir/(name+'.mks'))
     (args.output_dir/'README.txt').write_text(README)
     (args.output_dir/'manifest.json').write_text(json.dumps(reports,indent=2)+'\n')
     print('Pico H APPs: '+str(args.output_dir))

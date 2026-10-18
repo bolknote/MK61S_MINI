@@ -174,10 +174,7 @@ Future<DeviceController> _openController(_FakeSerialTransport transport) async {
   expect(transport.openedBaudRate, 115200);
   expect(controller.state, DeviceConnectionState.waitingForOffer);
   expect(controller.stateLabel, 'Включение USB Screen');
-  expect(
-    utf8.decode(transport.connection.hostTerminalBytes),
-    'uscreen\r',
-  );
+  expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
   return controller;
 }
 
@@ -220,6 +217,61 @@ void _attach(
 }
 
 void main() {
+  test(
+    'PicoCalc opts into native 320x320 and publishes its bottom-right pixel',
+    () async {
+      final transport = _FakeSerialTransport(
+        ports: const [
+          DeviceSerialPort(
+            name: _FakeSerialTransport.portName,
+            vendorId: 0xcafe,
+            productId: 0x4003,
+            productName: 'MK61S PicoCalc',
+          ),
+        ],
+      );
+      final controller = DeviceController(serialTransport: transport);
+      addTearDown(controller.dispose);
+      await controller.refreshPorts();
+      final connection = transport.connection;
+      final offer = _capabilities(includeProfile: false);
+      offer[5] = 1;
+      connection.sendDevicePacket(MkMessage.offer, offer);
+      expect(
+        connection.hostPackets
+            .singleWhere((p) => p.type == MkMessage.attach)
+            .payload,
+        [1],
+      );
+      final caps = _capabilities(includeProfile: true);
+      caps[0] = 64;
+      caps[1] = 1;
+      caps[5] = 1;
+      caps.addAll([64, 1]);
+      connection.sendDevicePacket(MkMessage.caps, caps);
+      expect(controller.attached, isTrue);
+      expect(controller.capabilities!.width, 320);
+      expect(controller.capabilities!.height, 320);
+      final bitmap = Uint8List(12800);
+      bitmap[12799] = 128;
+      connection.sendDevicePacket(
+        MkMessage.frameBegin,
+        _frameBegin(1, keyframe: true, rects: 1),
+      );
+      connection.sendDevicePacket(MkMessage.rect, [
+        1,
+        0,
+        160,
+        39,
+        160,
+        MkCodec.raw,
+        ...bitmap.sublist(12640),
+      ]);
+      connection.sendDevicePacket(MkMessage.frameEnd, _frameEnd(1, bitmap));
+      expect(controller.framebuffer, bitmap);
+    },
+  );
+
   test(
     'PicoCalc discovery activates with a frame and syncs only an unset RTC',
     () async {
@@ -285,10 +337,7 @@ void main() {
 
       expect(controller.terminalAvailable, isTrue);
       expect(controller.sendTerminalLine('ver'), isTrue);
-      expect(
-        utf8.decode(connection.hostTerminalBytes),
-        'uscreen\rver\r',
-      );
+      expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\rver\r');
       connection.sendDeviceTerminal('ver\r\nMK61> ');
       expect(controller.terminalText, contains('ver'));
       expect(controller.terminalText, contains('MK61> '));
@@ -514,10 +563,7 @@ void main() {
     final connection = transport.connection;
 
     await Future<void>.delayed(const Duration(milliseconds: 450));
-    expect(
-      utf8.decode(connection.hostTerminalBytes),
-      'uscreen\ruscreen\r',
-    );
+    expect(utf8.decode(connection.hostTerminalBytes), 'uscreen\ruscreen\r');
 
     _attach(controller, connection);
     final bytesAfterAttach = connection.hostTerminalBytes.length;
@@ -683,10 +729,7 @@ void main() {
       // дескрипторов которой нет в автоматическом списке разрешённых.
       await controller.connectSelected();
       expect(transport.openCount, 1);
-      expect(
-        utf8.decode(transport.connection.hostTerminalBytes),
-        'uscreen\r',
-      );
+      expect(utf8.decode(transport.connection.hostTerminalBytes), 'uscreen\r');
     },
   );
 

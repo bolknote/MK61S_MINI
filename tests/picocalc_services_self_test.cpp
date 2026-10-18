@@ -7,6 +7,8 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 void picocalc_host_fail_write(int);
 bool picocalc_host_make_exfat();
@@ -60,6 +62,42 @@ void picocalc_services_test(const char* preview) {
     const char* crlf = "\xEF\xBB\xBF" "A\r\nB\rC\n";
     assert(files::write("/Sources/crlf.txt", (const u8*)crlf, (unsigned)std::strlen(crlf)));
     assert(files::read_text("/Sources/crlf.txt", text, sizeof(text), size) && std::strcmp(text, "A\nB\nC\n") == 0);
+    std::string utf8="\xEF\xBB\xBF",logical;
+    for(unsigned i=0;i<1000;++i) { utf8+="Ёж→A\r\n";logical+=M8("Ёж→A\r\n"); }
+    assert(files::write("/Sources/window.txt",(const u8*)utf8.data(),utf8.size()));
+    unsigned decoded=0;assert(files::text_size("/Sources/window.txt",decoded) && decoded==logical.size());
+    std::vector<u8> window(900);
+    for(unsigned offset: {0U,1U,510U,511U,512U,513U,4999U,5000U,6000U}) {
+        for(unsigned count: {0U,1U,31U,512U,800U}) {
+            unsigned used=0;assert(files::read_text_range("/Sources/window.txt",offset,window.data(),count,used));
+            const unsigned expected=offset<logical.size()?std::min(count,(unsigned)logical.size()-offset):0;
+            assert(used==expected && !std::memcmp(window.data(),logical.data()+std::min(offset,(unsigned)logical.size()),used));
+        }
+    }
+    assert(files::mkdir("/Sources/preserved"));
+    assert(!files::write_text("/Sources/preserved","X",1));
+    files::Entry preserved{};assert(files::stat("/Sources/preserved",preserved) && preserved.directory);
+    assert(files::write_text("/Sources/staged.txt","OLD",3));
+    auto* upload=files::begin_write("/Sources/staged.txt",true);assert(upload);
+    assert(!files::begin_write("/Sources/second.txt"));
+    assert(files::append_write(upload,(const u8*)M8("Ёж"),2));
+    assert(files::read_text("/Sources/staged.txt",text,sizeof(text),size) && !std::strcmp(text,"OLD"));
+    files::cancel_write(upload);assert(!upload);
+    upload=files::begin_write("/Sources/staged.txt",true);assert(upload);
+    assert(files::append_write(upload,(const u8*)M8("Ёж"),2) && files::commit_write(upload) && !upload);
+    assert(files::read_text("/Sources/staged.txt",text,sizeof(text),size) && !std::strcmp(text,M8("Ёж")));
+    upload=files::begin_write("/Sources/staged.txt",true);assert(upload);
+    assert(files::append_write(upload,(const u8*)"NO",2));
+    assert(files::write_text("/Sources/unrelated.txt","UPDATE",6));
+    assert(!files::commit_write(upload) && !upload);
+    assert(files::read_text("/Sources/staged.txt",text,sizeof(text),size) && !std::strcmp(text,M8("Ёж")));
+    upload=files::begin_write("/Sources/staged.txt");assert(upload);
+    assert(files::append_write(upload,(const u8*)"NO",2) && files::begin_usb());
+    assert(!files::append_write(upload,(const u8*)"MORE",4));
+    files::usb_eject();assert(files::end_usb());
+    assert(!files::commit_write(upload) && !upload);
+    assert(files::read_text("/Sources/staged.txt",text,sizeof(text),size) && !std::strcmp(text,M8("Ёж")));
+    for(const char* path:{"/Sources/window.txt","/Sources/preserved","/Sources/staged.txt","/Sources/unrelated.txt"}) assert(files::remove(path));
     const u8 invalid[] = {0xC0, 0xAF};
     assert(files::write("/Sources/invalid.txt", invalid, sizeof(invalid)));
     assert(!files::read_text("/Sources/invalid.txt", text, sizeof(text), size));
@@ -95,6 +133,23 @@ void picocalc_services_test(const char* preview) {
     assert(!s.dirty() && s.source_size() == std::strlen(replacement));
     const unsigned before = s.source_size();
     assert(!s.load_document("/Sources/invalid.txt") && s.source_size() == before);
+    // Loading the largest M8 source must not require a second 64-KiB buffer;
+    // its UTF-8 representation can occupy twice as many bytes on the card.
+    const std::string full_source(65534,(char)0xC6);
+    assert(files::write_text("/Sources/full.txt",full_source.data(),full_source.size()));
+    assert(s.load_document("/Sources/full.txt") && s.source_size()==65534);
+    assert(s.save_document("/Sources/full-copy.txt"));
+    std::vector<char> full_copy(65535);unsigned full_used=0;
+    assert(files::read_text("/Sources/full-copy.txt",full_copy.data(),full_copy.size(),full_used));
+    assert(full_used==full_source.size() && !std::memcmp(full_copy.data(),full_source.data(),full_used));
+    assert(s.load_document("/Sources/editor.bas"));
+    std::string invalid_large(4096,'Z');invalid_large.append("\xC0\xAF");
+    assert(files::write("/Sources/invalid-large.txt",(const u8*)invalid_large.data(),invalid_large.size()));
+    assert(!s.load_document("/Sources/invalid-large.txt") && s.source_size()==before);
+    assert(s.save_document("/Sources/recovered.bas"));
+    assert(files::read_text("/Sources/recovered.bas",text,sizeof(text),size) && !std::strcmp(text,replacement));
+    for(const char* path:{"/Sources/full.txt","/Sources/full-copy.txt","/Sources/invalid-large.txt","/Sources/recovered.bas"})
+        assert(files::remove(path));
     assert(files::write_text("/existing.bas", "ORIGINAL", 8));
     s.new_document(Document::BASIC); type(s, replacement); s.input(0x81);
     for(unsigned i = 0; i < 100; ++i) s.input(8);
@@ -117,7 +172,12 @@ void picocalc_services_test(const char* preview) {
         Screen screen; Ui ui; screen.render(calc.snapshot(), true, &ui, &s);
         unsigned pixels = 0;
         for(unsigned y = 157; y < 270; ++y) for(unsigned x = 0; x < 320; ++x) pixels += screen.pixel(x, y);
-        assert(pixels > 100); // Console text, independently of the graphics canvas/header/footer.
+        assert(pixels > 100); // Native GRAPH curve crosses the lower half of the panel.
+        assert(s.native_graphics());
+        assert(s.native_graphics()[20/8*320+10]&(1U<<(20%8)));
+        const auto* native=s.native_graphics();
+        for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
+            assert(screen.pixel(x,y)==bool(native[y/8*320+x]&(1U<<(y&7))));
     }
     if(preview) {
         Screen screen; Ui ui; screen.render(calc.snapshot(), true, &ui, &s);

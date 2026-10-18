@@ -69,7 +69,7 @@ def main():
         status = query()
         if 'MK61S PICOCALC PICO-H' not in status or 'UI=CALCULATOR' not in status or 'SERVICE=CLOSED' not in status:
             raise RuntimeError('Start on PicoCalc calculator screen')
-        step(b'\t'+bytes([0xB5])*6+bytes([0xB6])+b'\n', 'SERVICE=USB_DISK')
+        step(b'\t'+bytes([0xB5])*20+bytes([0xB6])+b'\n', 'SERVICE=USB_DISK')
         whole = None
         end = time.monotonic()+45
         while time.monotonic()<end and not whole:
@@ -109,7 +109,19 @@ def main():
             file.write(returned)
             file.flush()
             os.fsync(file.fileno())
-        subprocess.run(['diskutil', 'eject', whole], check=True)
+        # macOS may briefly hold a newly mounted FAT volume for metadata work.
+        # Retry normal safe eject; never force unmount or return SD ownership
+        # to firmware while the computer still owns it.
+        eject_attempts = []
+        for attempt in range(3):
+            result = subprocess.run(['diskutil', 'eject', whole], timeout=30)
+            eject_attempts.append(result.returncode)
+            if result.returncode == 0:
+                break
+            if attempt < 2:
+                read_for(2)
+        if result.returncode:
+            raise RuntimeError('Safe SD eject failed; leave USB disk active')
         step(b'\n', 'SERVICE=CLOSED')
         step(bytes([0xB6])*2+b'\n', 'SERVICE=BROWSER')  # USB item 1 -> Explorer 3.
         step(b'/', 'SERVICE=PROMPT')
@@ -127,6 +139,7 @@ def main():
         final = step(b'\t', 'UI=CALCULATOR')
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(dict(passed=True, disk=whole, checked_files=checked,
+            safe_eject_attempts=eject_attempts,
             returned_file=name, returned_source=returned, final_status=final, transcript=transcript),
             ensure_ascii=False, indent=2)+'\n')
         print('PicoCalc USB disk / Explorer round trip passed')

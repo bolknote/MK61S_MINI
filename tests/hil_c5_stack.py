@@ -15,8 +15,8 @@ from hil_portable_apps import ScreenPort
 from hil_usb_disk_transaction import listing_entries, posix_cksum, require_file_contents
 
 
-def read_file(port, path):
-    report = port.command(f'fsget "{path}"', timeout=15)
+def read_file(port, path, *, m8=False):
+    report = port.command(f'fsget "{path}"'+(' m8' if m8 else ''), timeout=15)
     data = bytearray()
     for offset, block in re.findall(r'(?m)^@MKC:DATA (\d+) ([0-9A-Fa-f]+)\r?$', report):
         assert int(offset) == len(data), report

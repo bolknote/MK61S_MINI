@@ -77,7 +77,9 @@ COMMAND("disa", CMD_DISASM, "включить или выключить диза
 #if MK61_ENABLE_USB_SCREEN
 COMMAND("uscreen", CMD_USB_SCREEN, "запустить режим USB-экрана")
 #endif
-#if MK61_DWT_PROFILER_SUPPORTED
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|save [путь.txt]] — профиль по таймеру")
+#elif MK61_DWT_PROFILER_SUPPORTED
   #if MK61_DEEP_IDLE_SUPPORTED
     #if MK61_ENABLE_PROFILE_SAVE
 COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core|deep <1..5> [циклы]|save] — профиль")
@@ -92,14 +94,18 @@ COMMAND("prof", CMD_PROFILE, "prof [start|stop|reset|core [шаги]] — про
     #endif
   #endif
 #endif
-#if MK61_CRASH_DUMP_SUPPORTED
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("crash", CMD_CRASH, "crash [show|clear|save [путь.txt]] — отчёт о сбое")
+#elif MK61_CRASH_DUMP_SUPPORTED
   #if MK61_ENABLE_FAULT_INJECTION
 COMMAND("crash", CMD_CRASH, "crash [show|clear|save [путь.txt]|test <сбой>] — сбои")
   #else
 COMMAND("crash", CMD_CRASH, "crash [show|clear|save [путь.txt]] — сбои")
   #endif
 #endif
-#if MK61_INDEPENDENT_WATCHDOG_SUPPORTED
+#if defined(MK61_CORE_STANDALONE)
+COMMAND("wdog", CMD_WATCHDOG, "wdog [status] — сторожевой таймер и причина перезапуска")
+#elif MK61_INDEPENDENT_WATCHDOG_SUPPORTED
   #if MK61_ENABLE_WATCHDOG_TEST
 COMMAND("wdog", CMD_WATCHDOG, "wdog [status|test <starve|hang>] — сторожевой таймер")
   #else

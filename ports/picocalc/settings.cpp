@@ -21,8 +21,10 @@ bool valid_settings(const Settings &s) {
   return s.volume <= 10 && s.idle_signal <= 1 && s.classic_speed <= 1 &&
          s.memory <= 2 && s.random <= 1 && s.russian <= 1 &&
          s.calculator_font <= 1 &&
-         (s.ui_font_size == 12 || s.ui_font_size == 14 ||
-          s.ui_font_size == 16) &&
+         (((s.ui_font_family==0 || s.ui_font_family==1 || (s.ui_font_family==3 && s.ui_font_key!=0)) &&
+           (s.ui_font_size==12 || s.ui_font_size==14 || s.ui_font_size==16)) ||
+          (s.ui_font_family==4 && s.ui_font_size==16) ||
+          (s.ui_font_family==5 && s.ui_font_size==5)) &&
          s.lcd_backlight >= 16 && s.lcd_backlight <= 240 &&
          s.lcd_backlight % 16 == 0 && s.key_backlight <= 240 &&
          (s.sleep_minutes == 0 || s.sleep_minutes == 1 ||
@@ -38,7 +40,7 @@ void encode_settings(const Settings &s, u32 sequence,
                      u8 out[SETTINGS_PAGE_BYTES]) {
   std::memset(out, 0xFF, SETTINGS_PAGE_BYTES);
   std::memcpy(out, "M61P", 4);
-  out[4] = 4;
+  out[4] = 5;
   put32(out + 8, sequence);
   const u8 values[] = {s.volume,          s.idle_signal,  s.classic_speed,
                        s.memory,          s.random,       s.russian,
@@ -52,10 +54,11 @@ void encode_settings(const Settings &s, u32 sequence,
   put32(out + 26, s.alarm_epoch[0]);
   put32(out + 30, s.alarm_epoch[1]);
   out[34]=s.text_rows;out[35]=s.text_width;out[36]=s.text_height;out[37]=s.text_gap;
+  out[38]=s.ui_font_family;put32(out+40,s.ui_font_key);
   put32(out + 64, checksum(out, 64));
 }
 bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
-  if (std::memcmp(page, "M61P", 4) || page[4] < 1 || page[4] > 4)
+  if (std::memcmp(page, "M61P", 4) || page[4] < 1 || page[4] > 5)
     return false;
   const unsigned crc_offset = page[4] >= 3 ? 64 : 32;
   if (get32(page + crc_offset) != checksum(page, crc_offset))
@@ -72,6 +75,7 @@ bool decode_settings(const u8 *page, Settings &value, u32 &sequence) {
     next.alarm_epoch[1] = get32(page + 30);
   }
   if(page[4]>=4) { next.text_rows=page[34];next.text_width=page[35];next.text_height=page[36];next.text_gap=page[37]; }
+  if(page[4]>=5) { next.ui_font_family=page[38];next.ui_font_key=get32(page+40); }
   if (!valid_settings(next))
     return false;
   value = next;

@@ -90,10 +90,21 @@ def main():
             raise ValueError("Install CMake and Ninja and put them on PATH")
         build = args.build_path.expanduser().resolve()
         output = args.output_dir.expanduser().resolve()
+        source_hash = hashlib.sha256()
+        for source in sorted([ROOT / 'tools/build_picocalc.py', ROOT / 'tools/seal_picocalc.py',
+                              *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs')
+                                for p in (ROOT / folder).rglob('*')
+                                if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld')
+                                                    or p.name == 'CMakeLists.txt'))]):
+            source_hash.update(str(source.relative_to(ROOT)).encode() + b'\0')
+            source_hash.update(source.read_bytes())
+        source_digest = source_hash.hexdigest()
+        build_id = '0x' + source_digest[:8] + 'U'
         run([cmake, "-S", ROOT / "ports/picocalc", "-B", build, "-G", "Ninja",
              "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
              f"-DCMAKE_MAKE_PROGRAM={ninja}", f"-DPICO_SDK_PATH={sdk}",
-             f"-DPICO_TOOLCHAIN_PATH={toolchain}", f"-DPython3_EXECUTABLE={sys.executable}"])
+             f"-DPICO_TOOLCHAIN_PATH={toolchain}", f"-DPython3_EXECUTABLE={sys.executable}",
+             f"-DMK61_PICOCALC_BUILD_ID={build_id}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
         attributes = run([toolchain / ("arm-none-eabi-readelf" + suffix), "-A", build / (TARGET + ".elf")],
@@ -103,19 +114,32 @@ def main():
         image = (build / (TARGET + ".bin")).read_bytes()
         if len(image) > 2 * 1024 * 1024 - 8192:
             raise ValueError("Firmware overlaps the PicoCalc settings journal")
+        from seal_picocalc import seal, verify, FOOTER, BASE
+        symbols=run([toolchain / ("arm-none-eabi-nm" + suffix),"--defined-only",build / (TARGET + ".elf")],capture_output=True,text=True).stdout
+        match=re.search(r'^([0-9a-fA-F]+) [A-Za-z] mk61_picocalc_firmware_footer$',symbols,re.M)
+        if not match:raise ValueError('required firmware footer was discarded by the linker')
+        footer_offset=int(match[1],16)-BASE
+        image=seal(image,footer_offset)
+        integrity=verify(image,footer_offset)
         sys.path.insert(0, str(ROOT / "ports/picocalc"))
         from uf2 import encode, validate
         transport = encode(image)
         validate(transport, image)
         output.mkdir(parents=True, exist_ok=True)
-        for extension in (".bin", ".elf", ".elf.map"):
-            shutil.copy2(build / (TARGET + extension), output / (TARGET + extension))
+        shutil.copy2(build / (TARGET + ".elf.map"), output / (TARGET + ".elf.map"))
+        footer_file=build/'sealed-footer.bin'
+        footer_file.write_bytes(image[footer_offset:footer_offset+FOOTER.size])
+        run([toolchain / ("arm-none-eabi-objcopy"+suffix),'--update-section',
+             f'.mk61_fw_footer={footer_file}',build/(TARGET+'.elf'),output/(TARGET+'.elf')])
+        run([toolchain / ("arm-none-eabi-objcopy"+suffix),'-O','binary',output/(TARGET+'.elf'),output/(TARGET+'.bin')])
+        if (output/(TARGET+'.bin')).read_bytes()!=image:
+            raise ValueError('sealed ELF and BIN differ')
         (output / (TARGET + ".uf2")).write_bytes(transport)
         sizes = run([toolchain / ("arm-none-eabi-size" + suffix), "-B", build / (TARGET + ".elf")],
                     capture_output=True, text=True).stdout
         fields = sizes.splitlines()[-1].split()
         metadata = {
-            "profile": args.profile, "prototype_version": "0.5.0", "mcu": "RP2040",
+            "profile": args.profile, "prototype_version": "0.8.0", "mcu": "RP2040",
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + GCC IEEE float/double helpers",
             "pico_sdk": SDK_VERSION, "pico_sdk_commit": sdk_revision,
@@ -132,6 +156,8 @@ def main():
             "bin_sha256": hashlib.sha256(image).hexdigest(),
             "uf2_sha256": hashlib.sha256(transport).hexdigest(),
             "hardware_verified": False,
+            "source_sha256": source_digest, "build_id": source_digest[:8],
+            "firmware_integrity": integrity,
         }
         (output / "manifest.json").write_text(json.dumps(metadata, indent=2) + "\n")
         print(sizes, end="")

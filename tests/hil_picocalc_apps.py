@@ -74,10 +74,12 @@ def main():
     parser.add_argument('--port',required=True)
     parser.add_argument('--uid',required=True)
     parser.add_argument('--apps',type=Path,default=ROOT/'binary/picocalc-pico-h/apps')
-    parser.add_argument('--directory',default='/MK61S-PicoCalc-0.5')
+    parser.add_argument('--firmware-directory',type=Path,default=ROOT/'binary/picocalc-pico-h')
+    parser.add_argument('--directory',default='/MK61S-PicoCalc-0.6')
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--install',action='store_true',required=True)
     parser.add_argument('--resume',action='store_true')
+    parser.add_argument('--native-display',action='store_true')
     args=parser.parse_args()
     assert re.fullmatch(r'/MK61S-PicoCalc-[A-Za-z0-9.-]+',args.directory)
     assert re.fullmatch(r'[0-9A-F]{16}',args.uid)
@@ -88,7 +90,7 @@ def main():
     names=[*(name+'.APP' for name in APPS),*ASSETS,'manifest.json']
     payloads={name:(args.apps/name).read_bytes() for name in names}
     hashes={name:hashlib.sha256(data).hexdigest() for name,data in payloads.items()}
-    build=json.loads((ROOT/'binary/picocalc-pico-h/manifest.json').read_text())
+    build=json.loads((args.firmware_directory/'manifest.json').read_text())
     work=ROOT/'.build/picocalc-apps-hil';work.mkdir(parents=True,exist_ok=True)
     wrapper=work/'WBMPCHK.cpp'
     wrapper.write_text(f'#define PICO_APPS_DIRECTORY "{args.directory}"\n#include "{ROOT}/tests/picocalc_wbmp_handler_probe.cpp"\n')
@@ -100,9 +102,10 @@ def main():
     cases=[];screens={};probe_written=False
     def passed(message):cases.append(message);print('PASS '+message,flush=True)
     with AppsPort(args.port,keyboard_layout=0) as p:
+        p.native_display=args.native_display
         p.commands();identity=p.command('identity')
         assert f'UID={args.uid}' in identity,identity
-        initial=p.expect('SERVICE=CLOSED','USB_DISK=0','RUN=0','DIRTY=0')
+        initial=p.expect('SERVICE=CLOSED','USB_DISK=0','RUN=0','DIRTY=0','BUILD='+build['build_id'].upper())
         assert f'PICO-H {build["prototype_version"]} ' in initial,initial
         if 'SLEEP=1' in initial:p.command('display on')
         p.pump(.2)
@@ -137,9 +140,10 @@ def main():
                 p.pump(.4);start=len(p.frames);p.send(0x16)
                 deadline=time.monotonic()+15
                 while time.monotonic()<deadline:
-                    if len(p.frames)>start and any(p.frames[-1]):break
+                    if len(p.frames)>=start+(2 if args.native_display else 1) and any(p.frames[-1]):break
                     p.pump(.05)
                 assert len(p.frames)>start and any(p.frames[-1]),name
+                assert len(p.frames[-1])==(12800 if args.native_display else 1536),name
                 png(p.frames[-1],args.output/(name+'.png'))
                 screens[name]=hashlib.sha256(p.frames[-1]).hexdigest()
 
@@ -170,11 +174,12 @@ def main():
                 passed(name+': two successful launches, expected text and clean exit')
             start=open_app('ELIZA.APP','RUNTIME=APP')
             os.write(p.fd,b'\r');p.pump(.4);os.write(p.fd,b'\r');p.pump(.4)
+            p.expect('RUNTIME=APP','TEXT=[>')
             os.write(p.fd,b'hello\r');reply=p.expect('TEXT=[HOW DO YOU DO.')
             picture('ELIZA-reply',0)
             os.write(p.fd,b'\x1b');returned(start)
             passed('ELIZA.APP: graphical intro, QWERTY HELLO input, expected DOCTOR reply and exit')
-            for document in ('SHEET.APP','BUDGET.sheet','CYCLE.sheet'):
+            for document in ('SHEET.APP','BUDGET.mks','CYCLE.mks'):
                 start=open_app(document,'RUNTIME=APP');frame=p.frames[-1]
                 os.write(p.fd,b'\xb7');until=time.monotonic()+5
                 while time.monotonic()<until and p.frames[-1]==frame:p.pump(.05)
@@ -183,14 +188,34 @@ def main():
             passed('SHEET.APP: new book, Russian/formula document, cycle document, navigation and exit')
             write_file(p,probe_path,probe);probe_written=True
             start=len(p.text);frames=len(p.frames);p.open(probe_path)
-            expected=bytearray(1536)
-            for y in range(64):
-                for x in range(192):
-                    if (x*3+y*5)%11<5:expected[(y//8)*192+x]|=1<<(y%8)
+            width,height=(320,320) if args.native_display else (192,64)
+            expected=bytearray(width*height//8)
+            for y in range(height):
+                for x in range(width):
+                    if (x*3+y*5)%11<5:expected[(y//8)*width+x]|=1<<(y%8)
             p.expect_frame(bytes(expected),frames,timeout=20);picture('WBMP-file-handler',frames)
             os.write(p.fd,b'\x1b');p.wait_text(b'PICO WBMP FILE_OPEN PASS',start);returned(start)
             assert 'ERROR' not in p.command('rm '+probe_path);probe_written=False
-            passed('installed WBMP.APP FILE_OPEN through APP_FLOW DIRECT; exact 192x64 pixel oracle')
+            passed(f'installed WBMP.APP FILE_OPEN through APP_FLOW DIRECT; exact {width}x{height} pixel oracle')
+            def steady_chip8_frame():
+                until=time.monotonic()+20;changed=time.monotonic();last=None
+                while time.monotonic()<until:
+                    p.pump(.05)
+                    if not p.frames:continue
+                    frame=p.frames[-1]
+                    if frame!=last:last=frame;changed=time.monotonic()
+                    elif any(frame) and time.monotonic()-changed>.7:return frame
+                raise AssertionError('CHIP-8 did not finish drawing its page')
+            start=len(p.text);frames=len(p.frames);p.open(args.directory+'/ECHO8.ch8')
+            p.expect('RUNTIME=CHIP8');title=steady_chip8_frame();picture('ECHO8-title',frames)
+            p.key(16);until=time.monotonic()+10
+            while time.monotonic()<until and p.frames[-1]==title:p.pump(.05)
+            assert p.frames[-1]!=title,'CHIP-8 did not advance from its title after a key'
+            assert steady_chip8_frame()!=title
+            picture('ECHO8-intro',frames)
+            os.write(p.fd,b'\x1b');p.wait_text(b'CHIP8_RESULT=0',start);p.wait_text(b'mk61> ',start)
+            p.calculator()
+            passed('installed ECHO8.ch8: physical RP2040 interpreter, title/intro raster, Fx0A key and clean Escape exit')
             after={command:p.command(command) for command in before}
             assert before==after,('calculator or terminal directory changed',before,after)
             for name,digest in hashes.items():

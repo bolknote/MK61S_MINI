@@ -16,11 +16,11 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     -DMK61_USE_COMPACT_LIBM=1 -DMK61_MATH_BACKEND=0 \
     -I"$root/code" -I"$root/ports/picocalc" -I"$root/third_party/fatfs" \
     "$root/tests/picocalc_self_test.cpp" "$root/ports/picocalc/calculator.cpp" \
-    "$root/ports/picocalc/screen.cpp" "$root/ports/picocalc/math_probe.cpp" "$root/ports/picocalc/markdown.cpp" "$root/ports/picocalc/terminal.cpp" \
-    "$root/ports/picocalc/input.cpp" "$root/ports/picocalc/clock.cpp" \
+    "$root/ports/picocalc/screen.cpp" "$root/ports/picocalc/math_probe.cpp" "$root/ports/picocalc/markdown.cpp" "$root/ports/picocalc/terminal.cpp" "$root/ports/picocalc/fonts.cpp" "$root/ports/picocalc/native_display.cpp" "$root/ports/picocalc/canvas.cpp" \
+    "$root/ports/picocalc/input.cpp" "$root/ports/picocalc/clock.cpp" "$root/ports/picocalc/diagnostics.cpp" "$root/ports/picocalc/firmware.cpp" "$root/code/crash_dump_format.cpp" \
     "$root/ports/picocalc/chip8_runtime.cpp" "$root/ports/picocalc/native_app.cpp" \
     "$root/ports/picocalc/usb_screen.cpp" "$root/code/chip8.cpp" \
-    "$root/code/usb_screen_protocol.cpp" "$root/code/loadable_module_format.cpp" \
+    "$root/code/usb_screen_protocol.cpp" "$root/code/usb_screen_surface.cpp" "$root/code/ui_text_renderer.cpp" "$root/code/loadable_module_format.cpp" \
     "$root/ports/picocalc/ui.cpp" "$root/ports/picocalc/settings.cpp" \
     "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
     "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" \
@@ -29,13 +29,15 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/code/terminal_script_runtime.cpp" "$root/code/terminal_catalog.cpp" \
     "$root/code/terminal_key_sequence.cpp" "$root/code/calculator_control.cpp" \
     "$root/code/program_load.cpp" "$root/code/zx0_stream.cpp" \
-    "$root/code/markdown_document.cpp" "$root/code/wbmp.cpp" \
-    "$root/tests/picocalc_m61_self_test.cpp" "$root/tests/picocalc_runtime_self_test.cpp" "$root/tests/picocalc_parity_self_test.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
+    "$root/code/markdown_document.cpp" "$root/code/wbmp.cpp" "$root/code/explorer_autoexec.cpp" \
+    "$root/tests/picocalc_m61_self_test.cpp" "$root/tests/picocalc_runtime_self_test.cpp" "$root/tests/picocalc_parity_self_test.cpp" "$root/tests/picocalc_software_self_test.cpp" "$root/tests/picocalc_contract_self_test.cpp" "$root/tests/picocalc_firmware_self_test.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" "$root/code/app_flow.cpp" \
     "$root/code/calculator_face.cpp" "$root/code/text_screen.cpp" \
-    "$root/code/builtin_font.cpp" "$root/code/ui_font.cpp" "$root/code/fmk_font.cpp" "$root/code/prepared_font.cpp" \
+    "$root/code/builtin_font.cpp" "$root/code/ui_font.cpp" "$root/code/fmk_font.cpp" "$root/code/prepared_font.cpp" "$root/code/fmk_prepare.cpp" \
     "$root/code/mk61emu_core.cpp" "$root/code/ERM19264_graphics_font.cpp" \
     "$root/code/compact_math.cpp" "$build_dir/ff.o" "$build_dir/ffunicode.o" -o "$build_dir/self-test"
 cd "$root"
+if [[ -n "${MK61_TEST_BINARY:-}" ]]; then cp "$build_dir/self-test" "$MK61_TEST_BINARY"; fi
 "$build_dir/self-test" "$@"
 python3 "$root/tests/picocalc_uf2_self_test.py"
+python3 "$root/tests/picocalc_seal_self_test.py"

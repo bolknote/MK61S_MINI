@@ -1,6 +1,7 @@
 #include "usb_screen_surface.hpp"
 
 #include "display_symbols.hpp"
+#include "mk8_codec.hpp"
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_text_renderer.hpp"
 #endif
@@ -194,8 +195,10 @@ void Surface::setTextProfile(TextProfile profile) {
 }
 
 void Surface::setTextLayout(TextProfile profile, u8 cols) {
+  applyTextLayout(normalizeProfile(profile),cols);
+}
+void Surface::applyTextLayout(TextProfile next,u8 cols) {
   if(!active_) return;
-  const TextProfile next = normalizeProfile(profile);
   if(next.rows == profile_.rows &&
      next.glyph_width == profile_.glyph_width &&
      next.glyph_height == profile_.glyph_height &&
@@ -391,6 +394,54 @@ void Surface::setFont(const prepared_font::Face* font) {
 }
 
 #if MK61_PROPORTIONAL_UI_FONTS
+bool Surface::setUiTextLayout(TextProfile profile,u8 cols) {
+  // UI envelopes differ from cell font settings: Ark Pixel 16 is 17 px
+  // high and occupies three rows. Do not clamp it to four 16 px cell rows.
+  if(!profile.rows || profile.rows>text_screen::MAX_ROWS || !profile.glyph_height ||
+     profile.glyph_height>32 || profile.line_gap>4 || !cols || cols>text_screen::MAX_COLS ||
+     (u16)profile.rows*profile.glyph_height+(profile.rows-1U)*profile.line_gap>HEIGHT) return false;
+  applyTextLayout(profile,cols);return true;
+}
+u16 Surface::measureUiText(const char* text,u16 length) const {
+  if(!text) return 0;
+  const ui_text_renderer::Style style={ui_font_enabled_,ui_classic_10x16_,ui_compact_3x5_,ui_face_,
+      font_,custom_glyphs_,custom_valid_,0,0,0,0,false,false};
+  u32 width=0;
+  for(u16 i=0;i<length;++i) {
+    width+=ui_text_renderer::glyphAdvance(style,mk8::codepoint((u8)text[i]));
+    if(width>=0xFFFF) return 0xFFFF;
+  }
+  return (u16)width;
+}
+u16 Surface::uiTextWidth() const { return ui_text_active_?WIDTH-(ui_classic_10x16_?0U:4U):0; }
+void Surface::printUiLine(u8 row,const char* text,char marker,u16 trailing) {
+  if(!ui_text_active_ || row>=rows() || !text) return;
+  beginUpdate();setUiLineDecorations(row,marker!=0,trailing!=0);
+  setCursor(0,row);for(u8 i=0;i<cols();++i) writeCodepoint(' ');
+  u8 col=marker?1:0;
+  if(marker) { setCursor(0,row);writeCodepoint((u8)marker); }
+  const u8 end_col=trailing?cols()-1:cols();
+  const u16 width=uiTextWidth()-(marker?12:0)-(trailing?12:0);
+  u16 length=(u16)strlen(text);while(length && text[length-1]==' ') --length;
+  u16 at=0,used=0;setCursor(col,row);
+  while(at<length && col<end_col) {
+    const u16 advance=measureUiText(text+at,1);
+    if(used+advance>width) break;
+    writeCodepoint(mk8::codepoint((u8)text[at++]));used+=advance;++col;
+  }
+  if(at<length) {
+    u8 encoded_ellipsis='?';(void)mk8::from_codepoint(0x2026,encoded_ellipsis);
+    const char ellipsis=(char)encoded_ellipsis;
+    const u16 advance=measureUiText(&ellipsis,1);
+    while(col>(marker?1:0) && (col>=end_col || used+advance>width)) {
+      --col;u16 previous=grid_.cell(col,row);u8 byte='?';(void)mk8::from_codepoint(previous,byte);
+      const char value=(char)byte;used-=measureUiText(&value,1);setCursor(col,row);writeCodepoint(' ');
+    }
+    setCursor(col,row);writeCodepoint(0x2026);
+  }
+  if(trailing) { setCursor(cols()-1,row);writeCodepoint(trailing); }
+  setCursor(0,row);endUpdate();
+}
 void Surface::setUiTextStyle(bool active, bool font_enabled,
                              bool classic_10x16, bool compact_3x5,
                              ui_font::Face face) {

@@ -1,4 +1,6 @@
 #include "screen.hpp"
+#include "canvas.hpp"
+#include "display_symbols.hpp"
 #include "ui_font.hpp"
 #include "mk8_codec.hpp"
 #include "mk8_literal.hpp"
@@ -7,10 +9,29 @@
 #include "builtin_font.hpp"
 #include "m61_text.hpp"
 #include "script.hpp"
+#include "fonts.hpp"
+#include "clock.hpp"
+#include "rtc_idle_clock_core.hpp"
+#include "diagnostics.hpp"
+#include "version.hpp"
 #include <cstdio>
 #include <cstring>
 
 namespace picocalc {
+namespace {
+const char* key_label(const char* label,bool russian) {
+    if(!russian) return label;
+    static const struct { const char* en; const char* ru; } labels[] = {
+        {"READY",M8("ГОТОВ")},{"DIGIT",M8("ЦИФРА")},{"ENTER",M8("В↑")},
+        {"EXP",M8("ВП")},{"S/P",M8("С/П")},{"GOTO",M8("БП")},
+        {"CALL",M8("ПП")},{"RETURN",M8("В/О")},{"RECALL",M8("ИП")},
+        {"STORE",M8("П")},{"STEP <",M8("ШАГ ←")},{"STEP >",M8("ШАГ →")},
+        {"DEG",M8("Г")},{"RAD",M8("Р")},{"GRAD",M8("ГРД")}
+    };
+    for(const auto& item:labels) if(!std::strcmp(label,item.en)) return item.ru;
+    return label;
+}
+} // namespace
 void Screen::logical_frame(const Ui& ui,const Services& services,u8 out[1536]) const {
     if(services.active() && services.graphics()) { std::memcpy(out,services.graphics(),1536);return; }
     if(!services.active() && ui.page()==Page::CALCULATOR) {
@@ -40,18 +61,38 @@ void Screen::set_pixel(unsigned x, unsigned y) {
     if(x < WIDTH && y < HEIGHT) pixels_[y * STRIDE + x / 8] |= (u8)(0x80U >> (x % 8));
 }
 void Screen::text(unsigned x, unsigned y, const char* value, unsigned height) {
-    const ui_font::Face font{ui_font::Family::PIXEL,
-        height == 16 ? ui_font::Size::PX16 : height == 12 ? ui_font::Size::PX12 : ui_font::Size::PX14};
-    const unsigned baseline = y + ui_font::metrics(font).ascent;
+    auto choice=font_settings_?*font_settings_:Settings{};
+    if(choice.ui_font_family==1) choice.ui_font_size=(u8)height;
+    const auto info=fonts::info(choice);
+    const unsigned baseline = y + info.ascent;
     for(; *value && x < WIDTH - 8; ++value) {
-        const auto glyph = ui_font::glyph(font, mk8::codepoint((u8)*value));
+        mk61_service_ui_glyph glyph{};
+        if(!fonts::glyph(choice,mk8::codepoint((u8)*value),glyph)) continue;
         for(u8 gy = 0; gy < glyph.height; ++gy) for(u8 gx = 0; gx < glyph.width; ++gx) {
             const int px = (int)x + glyph.bearing_x + gx;
             const int py = (int)baseline - glyph.bearing_y + gy;
-            if(px >= 0 && py >= 0 && font_glyph::pixel(glyph, gx, gy)) set_pixel(px, py);
+            const unsigned offset=gy*((glyph.width+7U)/8U)+gx/8U;
+            if(px >= 0 && py >= 0 && (glyph.pixels[offset] & (0x80U>>(gx%8U)))) set_pixel(px, py);
         }
         x += glyph.advance;
     }
+}
+void Screen::status_field(unsigned left,unsigned width,const char* value) {
+    auto choice=font_settings_?*font_settings_:Settings{};
+    if(choice.ui_font_family==1) choice.ui_font_size=16;
+    char label[7]{};unsigned length=0,advance=0;
+    for(;*value && length<sizeof(label)-1;++value) {
+        mk61_service_ui_glyph glyph{};
+        if(!fonts::glyph(choice,mk8::codepoint((u8)*value),glyph)) continue;
+        if(advance+glyph.advance>width) break;
+        label[length++]=*value;advance+=glyph.advance;
+    }
+    text(left+(width-advance)/2,40,label,16);
+    for(unsigned x=left;x<left+width;++x) set_pixel(x,63);
+}
+void Screen::bitmap(const u8* frame,unsigned width,unsigned height,unsigned left,unsigned top) {
+    for(unsigned y=0;y<height && top+y<HEIGHT;++y) for(unsigned x=0;x<width && left+x<WIDTH;++x)
+        if(frame[y/8*width+x]&(1U<<(y&7))) set_pixel(left+x,top+y);
 }
 void Screen::line(unsigned y) {
     for(unsigned x = 8; x < WIDTH - 8; ++x) set_pixel(x, y);
@@ -59,10 +100,15 @@ void Screen::line(unsigned y) {
 void Screen::calculator(const Snapshot& model, const Ui& ui) {
     face_grid_.reset(2);
     char status[40];
-    const char* mode = model.running ? "RUN" : model.programming ? "PRG" : "AUTO";
-    const char* angle = model.angle == DEGREE ? "DEG" : model.angle == RADIAN ? "RAD" : "GRD";
-    std::snprintf(status, sizeof(status), "%-5.5s %-3.3s %-6.6s", mode, angle, model.last_key);
-    for(const char* p = status; *p; ++p) face_grid_.writeCodepoint((u8)*p);
+    const bool russian=ui.settings().russian;
+    const char* mode = model.running ? (russian?M8("СЧЁТ"):"RUN") :
+        model.programming ? (russian?M8("ПРГ"):"PRG") : (russian?M8("АВТ"):"AUTO");
+    // Use the original MK-61 switch names: Г = degrees, Р = radians, ГРД = gradians.
+    const char* angle = model.angle == DEGREE ? (russian?M8("Г"):"DEG") :
+        model.angle == RADIAN ? (russian?M8("Р"):"RAD") : (russian?M8("ГРД"):"GRD");
+    const char* last_key=key_label(model.last_key,russian);
+    std::snprintf(status, sizeof(status), "%-5.5s %-3.3s %-6.6s", mode, angle, last_key);
+    for(const char* p = status; *p; ++p) face_grid_.writeCodepoint(mk8::codepoint((u8)*p));
     face_grid_.setCursor(0, 1);
     for(const char* p = model.face_indicator; *p; ++p) {
         const u8 token = (u8)*p;
@@ -72,9 +118,54 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     calculator_face::setSegmentFrame(model.segmented ? model.segments : nullptr);
     calculator_face::renderFrame(face_grid_, face_);
     calculator_face::setSegmentFrame(nullptr);
-    for(unsigned y = 0; y < 107; ++y) for(unsigned x = 0; x < WIDTH; ++x) {
-        const unsigned sx = x * 3 / 5, sy = y * 3 / 5;
-        if(face_[(sy / 8) * calculator_face::WIDTH + sx] & (1U << (sy % 8))) set_pixel(x, y + 38);
+    // Twelve 26-pixel slots fit the original 16x35 strike with no resampling.
+    const auto digit=[&](unsigned slot,u8 mask,u16 token) {
+        const unsigned left=4+slot*26+5,top=91;
+        if(token==display_symbol::uc1609::RT_ARROW) {
+            for(unsigned x=0;x<10;++x) for(unsigned y=0;y<9;++y)
+                if(calculator_face::sourceArrowColumn(x)&(1U<<y)) set_pixel(left+3+x,top+12+y);
+            return;
+        }
+        if(ui.settings().calculator_font==1 && (token || mask==128)) {
+            builtin_font::Raster glyph{},large{};
+            if(builtin_font::decode(builtin_font::FaceId::FONT_5X8,token,glyph) && builtin_font::scale2x(glyph,large))
+                for(unsigned y=0;y<large.height;++y) for(unsigned x=0;x<large.width;++x)
+                    if(large.data[y*((large.width+7)/8)+x/8]&(0x80U>>(x&7))) set_pixel(left+x,top+9+y);
+            if(mask&128) for(unsigned y=0;y<2;++y) for(unsigned x=0;x<2;++x) set_pixel(left+18+x,top+23+y);
+        } else for(unsigned y=0;y<35;++y) {
+            const u16 bits=calculator_face::sourceRow(mask,y);
+            for(unsigned x=0;x<16;++x) if(bits&(0x8000U>>x)) set_pixel(left+x,top+y);
+        }
+    };
+    if(model.segmented) for(unsigned slot=0;slot<12;++slot)
+        digit(slot,model.segments[slot],calculator_face::sourceToken(model.segments[slot]&127));
+    else {
+        unsigned slot=0;
+        for(unsigned col=0;col<face_grid_.cols();++col) {
+            const u16 token=face_grid_.cell(col,1);
+            if(token=='.') { if(slot) digit(slot-1,128,0); }
+            else if(slot<12) { digit(slot++,calculator_face::sourceSegments(token),token); }
+        }
+    }
+    status_field(8,96,mode);
+    status_field(112,96,angle);
+    status_field(216,96,last_key);
+    if(model.idle && !model.running && !model.programming && clock::configured()) {
+        const auto now=clock::get();
+        u32 rows[rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT];
+        if(rtc_idle_clock::build_graphic_clock(now.hour,now.minute,rows)) {
+            constexpr unsigned left=192-rtc_idle_clock::GRAPHIC_CLOCK_WIDTH-2;
+            // USB Screen's 192x64 frame has no title row. Keep its clock in
+            // the empty row below the status rails; the LCD uses its header.
+            constexpr unsigned top=18;
+            for(unsigned y=0;y<rtc_idle_clock::GRAPHIC_CLOCK_HEIGHT;++y)
+                for(unsigned x=0;x<rtc_idle_clock::GRAPHIC_CLOCK_WIDTH;++x)
+                    if(rows[y] & (1U<<x)) {
+                        face_[((top+y)/8)*192+left+x]|=(u8)(1U<<((top+y)%8));
+                        for(unsigned dy=0;dy<2;++dy) for(unsigned dx=0;dx<2;++dx)
+                            set_pixel(WIDTH-10-rtc_idle_clock::GRAPHIC_CLOCK_WIDTH*2+x*2+dx,10+y*2+dy);
+                    }
+        }
     }
     const unsigned font_size = ui.settings().ui_font_size;
     line(147);
@@ -103,68 +194,82 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
             text(18, 154 + row * 20, status, font_size);
         }
     } else {
-        const char* help[] = {"F1/F: F  F2/K: K  F3/R: S/P", "F4/G: GOTO  F5/C: CALL  B: RET",
+        const char* help_en[] = {"F1/F: F  F2/K: K  F3/R: S/P", "F4/G: GOTO  F5/C: CALL  B: RET",
             "E: EXP  N: +/-  X: X<>Y", "L: RECALL  S: STORE  Enter: B^",
             "F E: PRG   F N: AUTO", "D: DEG   A: RAD   T: GRAD"};
-        for(unsigned row = 0; row < 6; ++row) text(10, 154 + row * 20, help[row], 12);
+        const char* help_ru[] = {M8("F1/F: F  F2/K: K  F3/R: С/П"),M8("F4/G: БП  F5/C: ПП  B: В/О"),
+            M8("E: ВП  N: +/-  X: X<>Y"),M8("L: ИП  S: П  Enter: В↑"),
+            M8("F E: ПРГ   F N: АВТ"),M8("D: Г   A: Р   T: ГРД")};
+        for(unsigned row = 0; row < 6; ++row) text(10, 154 + row * 20, russian?help_ru[row]:help_en[row], 12);
     }
-    std::snprintf(status, sizeof(status), "IP %02X  %u %s", model.ip,
-        (unsigned)core_61::program_steps(), ui.settings().russian ? M8("шагов") : "steps");
+    std::snprintf(status, sizeof(status), russian?M8("ШАГ %02X  %u шагов"):"IP %02X  %u steps", model.ip,
+        (unsigned)core_61::program_steps());
     text(10, 280, status, 12);
     text(10, 301, ui.footer(), 12);
 }
 void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services) {
+    diagnostics::Scope measure(diagnostics::Point::DISPLAY);
     static const Ui default_ui;
     if(!ui) ui = &default_ui;
+    font_settings_=&ui->settings();
     std::memset(pixels_, 0, sizeof(pixels_));
     char heading[64];
     if(services && services->active()) services->heading(heading);
     else std::snprintf(heading, sizeof(heading), "%s", ui->title());
     text(10, 9, heading, 16);
-    if(!keyboard_online) text(242, 10, "KBD?", 12);
+    if(!keyboard_online) text(190, 10, "KBD?", 12);
     line(32);
     if(services && services->active()) {
         const u8* graphics = services->graphics();
         unsigned first = 0, rows = Services::ROWS, top = 42;
         if(graphics) {
-            for(unsigned y = 0; y < 107; ++y) for(unsigned x = 0; x < WIDTH; ++x) {
-                const unsigned sx = x * 3 / 5, sy = y * 3 / 5;
-                if(graphics[(sy / 8) * 192 + sx] & (1U << (sy % 8))) set_pixel(x, y + 38);
+            if(const auto native=services->native_graphics()) {
+                if(services->graphical_document()) {
+                    bitmap(native,320,240,0,40);
+                    line(282);text(8,297,services->footer(),12);
+                } else {
+                    std::memset(pixels_,0,sizeof(pixels_));
+                    bitmap(native,320,320);
+                }
+                return;
             }
-            rows = 7; first = services->first_console_row(rows); top = 157;
-        }
-        if(services->custom_console()) {
-            text(10,185,services->running()?"BASIC / FOCAL":"M61",14);
+            // Legacy APP bitmaps have explicit 192x64 geometry: 1:1 centred.
+            bitmap(graphics,192,64,64,96);
             line(282);text(8,297,services->footer(),12);return;
         }
         for(unsigned row = 0; row < rows; ++row) {
             char value[Services::COLS + 1]; services->row(first + row, value);
             if(!services->fixed_text()) { text(10, top + row * 17, value, ui->settings().ui_font_size); continue; }
-            for(unsigned column = 0; value[column] && column < Services::COLS; ++column) {
-                u8 glyph[8];
-                if(builtin_font::copyRows5x8(mk8::codepoint((u8)value[column]), glyph))
-                    for(unsigned y = 0; y < 16; ++y) for(unsigned x = 0; x < 7; ++x)
-                    if(((glyph[y / 2] & (1U << (4 - x * 5 / 7)))!=0) != services->selected_text(first+row,column))
-                        set_pixel(8 + column * 8 + x, top + row * 17 + y);
+            auto font=ui->settings();font.ui_font_family=1;font.ui_font_size=16;
+            const unsigned cursor=services->cursor_column(),visible=36;
+            const unsigned left=cursor>=visible?cursor-visible+1:0;
+            for(unsigned column=left;value[column] && column<left+visible;++column) {
+                mk61_service_ui_glyph glyph{};if(!fonts::glyph(font,mk8::codepoint((u8)value[column]),glyph)) continue;
+                const unsigned x=8+(column-left)*8,y=top+row*17;
+                const bool inverse=services->selected_text(first+row,column);
+                if(inverse) for(unsigned dy=0;dy<17;++dy) for(unsigned dx=0;dx<8;++dx) set_pixel(x+dx,y+dy);
+                for(unsigned dy=0;dy<glyph.height;++dy) for(unsigned dx=0;dx<glyph.width && dx<8;++dx) {
+                    const int py=(int)y+fonts::info(font).ascent-glyph.bearing_y+dy;
+                    if(py<0 || py>=320) continue;
+                    if(glyph.pixels[dy*((glyph.width+7)/8)+dx/8]&(0x80U>>(dx&7))) {
+                        const unsigned px=x+dx;
+                        if(inverse) pixels_[py*STRIDE+px/8]&=(u8)~(0x80U>>(px&7));else set_pixel(px,py);
+                    }
+                }
             }
         }
         if(services->editor_cursor()) {
-            const unsigned x = 8 + services->cursor_column() * 8, y = top + services->cursor_row() * 17 + 15;
-            for(unsigned n = 0; n < 6; ++n) set_pixel(x + n, y);
+            const unsigned column=services->cursor_column(),left=column>=36?column-35:0;
+            const unsigned x=8+(column-left)*8,y=top+services->cursor_row()*17+15;
+            for(unsigned n=0;n<7;++n) set_pixel(x+n,y);
         }
         line(282); text(8, 297, services->footer(), 12);
         return;
     }
     if(ui->page() == Page::CALCULATOR) {
         if(m61_text::display_owned()) {
-            const u8* frame=script::frame();
-            for(unsigned y=0;y<107;++y) for(unsigned x=0;x<WIDTH;++x) {
-                const unsigned sx=x*3/5,sy=y*3/5;
-                if(frame[(sy/8)*192+sx] & (1U<<(sy%8))) set_pixel(x,y+50);
-            }
-            line(169);text(10,186,"M61 / trap / bind",14);
-            text(10,213,m61_text::calculator_suspended()?"M61 WAIT":"M61 ACTIVE",14);
-            text(10,247,"Enter: OK binding",12);text(10,278,"Esc: STOP M61   Tab: menu",12);
+            if(const auto native=script::native_frame()) bitmap(native,320,320);
+            else bitmap(script::frame(),192,64,64,96);
         } else calculator(model,*ui);
         return;
     }
@@ -175,9 +280,10 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
         char label[64];
         ui->row(index, label);
         if((ui->page() == Page::INFO || ui->page() == Page::HARDWARE) && row < 6) {
-            const char* info[] = {"MK61S / PicoCalc 0.5.0", "Pico H / RP2040 / 125 MHz", "ST7365P / RGB565 / 320x320",
+            const char* info[] = {"MK61S / PicoCalc", "Pico H / RP2040 / 125 MHz", "ST7365P / RGB565 / 320x320",
                 "Shared MK61 core + compact math", "Pico SDK / soft float", "Micro-USB: CDC + SD disk + UF2"};
-            std::snprintf(label, sizeof(label), "%s", info[row]);
+            if(row==0) std::snprintf(label,sizeof(label),"%s %s",info[row],VERSION);
+            else std::snprintf(label, sizeof(label), "%s", info[row]);
         }
         if(index == ui->selected() && ui->count() && ui->page() != Page::INFO && ui->page() != Page::HARDWARE)
             text(10, 49 + row * 27, ">", ui->settings().ui_font_size);

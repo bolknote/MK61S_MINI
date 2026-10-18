@@ -2,8 +2,13 @@
 #include "eliza_engine.h"
 
 #define SMS_SHIFT_K 2U
+#if defined(MK61_TARGET_PICOCALC)
+#define HELP_WIDTH 320U
+#define HELP_HEIGHT 320U
+#else
 #define HELP_WIDTH 192U
 #define HELP_HEIGHT 64U
+#endif
 #define HELP_FRAME_BYTES (HELP_WIDTH * HELP_HEIGHT / 8U)
 #define HELP_FONT_FAMILY 1U
 #define HELP_FONT_SIZE 12U
@@ -14,7 +19,11 @@ enum help_result {
   HELP_DONE = 1
 };
 
+#if defined(MK61_TARGET_PICOCALC)
+static uint8_t* help_frame;
+#else
 static uint8_t help_frame[HELP_FRAME_BYTES];
+#endif
 
 static const char key_help[] =
   "ELIZA SMS KEYS\n"
@@ -176,6 +185,15 @@ static int help_draw_key_label(const mk61_app_services* services,
 
 static int help_render_keys(const mk61_app_services* services) {
   help_clear();
+#if defined(MK61_TARGET_PICOCALC)
+  return help_draw_header(services,"1/2  OK >") &&
+      help_draw_centered(services,60,"TAP KEY AGAIN TO CHANGE") &&
+      help_draw_key_label(services,8,110,"1","PQRS") && help_draw_key_label(services,113,110,"2","TUV") &&
+      help_draw_key_label(services,218,110,"3","WXYZ") && help_draw_key_label(services,8,170,"4","GHI") &&
+      help_draw_key_label(services,113,170,"5","JKL") && help_draw_key_label(services,218,170,"6","MNO") &&
+      help_draw_key_label(services,8,230,"7","SPACE") && help_draw_key_label(services,113,230,"8","ABC") &&
+      help_draw_key_label(services,218,230,"9","DEF");
+#else
   return help_draw_header(services, "1/2  OK >") &&
       help_draw_centered(services, 25, "TAP KEY AGAIN TO CHANGE") &&
       help_draw_key_label(services, 4, 38, "1", "PQRS") &&
@@ -187,10 +205,17 @@ static int help_render_keys(const mk61_app_services* services) {
       help_draw_key_label(services, 4, 62, "7", "SPACE") &&
       help_draw_key_label(services, 67, 62, "8", "ABC") &&
       help_draw_key_label(services, 130, 62, "9", "DEF");
+#endif
 }
 
 static int help_render_start(const mk61_app_services* services) {
   help_clear();
+#if defined(MK61_TARGET_PICOCALC)
+  return help_draw_header(services,"2/2  OK >") &&
+      help_draw_centered(services,65,"HOW DO YOU DO?") && help_draw_centered(services,100,"TELL ME YOUR PROBLEM") &&
+      help_draw_key_label(services,20,170,"0","ACCEPT") && help_draw_key_label(services,180,170,"CX","ERASE") &&
+      help_draw_key_label(services,20,230,"OK","SEND") && help_draw_key_label(services,180,230,"ESC","EXIT");
+#else
   return help_draw_header(services, "2/2  OK >") &&
       help_draw_centered(services, 26, "HOW DO YOU DO?") &&
       help_draw_centered(services, 38, "TELL ME YOUR PROBLEM") &&
@@ -198,6 +223,7 @@ static int help_render_start(const mk61_app_services* services) {
       help_draw_key_label(services, 104, 50, "CX", "ERASE") &&
       help_draw_key_label(services, 10, 62, "OK", "SEND") &&
       help_draw_key_label(services, 104, 62, "ESC", "EXIT");
+#endif
 }
 
 static int help_wait_for_ok(void) {
@@ -229,8 +255,16 @@ static int show_graphic_intro(const mk61_app_services* services) {
     mk61_api->graphics_end();
     return HELP_UNAVAILABLE;
   }
+#if defined(MK61_TARGET_PICOCALC)
+  mk61_service_framebuffer frame={0};
+  if(!services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(frame),0,&frame) ||
+      frame.width!=HELP_WIDTH || frame.height!=HELP_HEIGHT || frame.bytes!=HELP_FRAME_BYTES || !frame.pixels) {
+    mk61_api->graphics_end();return HELP_UNAVAILABLE;
+  }
+  help_frame=frame.pixels;
+#endif
   if(!help_render_keys(services) ||
-     !mk61_api->graphics_present(help_frame, sizeof(help_frame))) {
+     !mk61_api->graphics_present(help_frame, HELP_FRAME_BYTES)) {
     mk61_api->graphics_end();
     return HELP_UNAVAILABLE;
   }
@@ -239,7 +273,7 @@ static int show_graphic_intro(const mk61_app_services* services) {
     return HELP_EXIT;
   }
   if(!help_render_start(services) ||
-     !mk61_api->graphics_present(help_frame, sizeof(help_frame))) {
+     !mk61_api->graphics_present(help_frame, HELP_FRAME_BYTES)) {
     mk61_api->graphics_end();
     return HELP_UNAVAILABLE;
   }

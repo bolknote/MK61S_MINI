@@ -143,6 +143,28 @@ if parse_identity_line \
 fi
 parse_identity_line 'MK61s-Classic-V3 ver. Aug 02 2026(12:34:56)'
 test "$PROBE_KIND:$PROBE_PROFILE" = legacy:legacy
+parse_identity_line 'MK61S PicoCalc 0.7.0 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152'
+test "$PROBE_KIND:$PROBE_PUBLIC:$PROBE_SHORT:$PROBE_USB:$PROBE_PROFILE" = \
+  'identity:E6657CD423721C35:23721C35:E6657CD423721C35:picocalc-pico-h'
+if parse_identity_line 'MK61S PicoCalc 0.7.0 CPU=RP2350 UID=E6657CD423721C35 FLASH=2097152' ||
+   parse_identity_line 'MK61S PicoCalc 0.7.0 CPU=RP2040 UID=123 FLASH=2097152'; then
+  echo 'mkc: malformed Pico H identity accepted' >&2; exit 1
+fi
+(
+  ARDUINO_CLI="$work/arduino-ports"
+  cat > "$ARDUINO_CLI" <<'PORTS'
+#!/bin/sh
+cat <<'JSON'
+{"detected_ports":[
+ {"port":{"address":"/dev/cu.STM32","properties":{"vid":"0x0483","pid":"5740"}}},
+ {"port":{"address":"/dev/cu.PICO","properties":{"vid":"0xCAFE","pid":"0x4003"}}},
+ {"port":{"address":"/dev/cu.OTHER","properties":{"vid":"2341","pid":"0043"}}},
+ {"port":{"address":"/dev/cu.ROM","properties":{"vid":"2E8A","pid":"0003"}}}]}
+JSON
+PORTS
+  chmod +x "$ARDUINO_CLI"
+  test "$(list_cdc_ports)" = $'/dev/cu.STM32\n/dev/cu.PICO'
+)
 
 (
   list_cdc_ports() { printf '%s\n' /dev/cu.COM12 /dev/cu.COM16; }

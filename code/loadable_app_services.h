@@ -300,8 +300,16 @@ enum mk61_service_display_operation {
   MK61_SERVICE_DISPLAY_UI_LINE,
   MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT,
   MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH,
-  MK61_SERVICE_DISPLAY_BLINK_ON
+  MK61_SERVICE_DISPLAY_BLINK_ON,
+  /* Optional borrowed page-major bitmap, valid only until GRAPHICS_END.
+   * b=sizeof(mk61_service_framebuffer), payload=output; unsupported returns 0. */
+  MK61_SERVICE_DISPLAY_FRAMEBUFFER
 };
+typedef struct mk61_service_framebuffer {
+  uint8_t* pixels;
+  uint32_t bytes;
+  uint16_t width,height;
+} mk61_service_framebuffer;
 enum mk61_service_text_flow_flag {
   MK61_SERVICE_TEXT_FLOW_TAIL = 1U,
   MK61_SERVICE_TEXT_FLOW_EMPTY_LINE = 2U

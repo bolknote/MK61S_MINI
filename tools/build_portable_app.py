@@ -217,6 +217,8 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if pico_target and not getattr(args,"pico_legacy_display",False):
+        flags.append("-DMK61_TARGET_PICOCALC=1")
     if getattr(args,"focal_trace",False):
         if args.system not in ("focal", "language-vm"):
             raise ValueError("--focal-trace applies only to FOCAL or its shared VM")
@@ -374,6 +376,7 @@ def build(args: argparse.Namespace) -> dict:
     command = [packer]
     if pico_target and greedy_packer:
         command += ["--target", "picocalc-pico-h"]
+        if not getattr(args,"pico_legacy_display",False): command += ["--native-display"]
     command += ["--portable", "--kind", "app" if args.system in ("vm-file-cache", "source-editor") else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
@@ -388,11 +391,14 @@ def build(args: argparse.Namespace) -> dict:
     if pico_target:
         import zlib
         container = bytearray(app.read_bytes())
-        struct.pack_into("<I",container,16,struct.unpack_from("<I",container,16)[0] | 8)
+        struct.pack_into("<I",container,16,struct.unpack_from("<I",container,16)[0] | 8 | (0 if getattr(args,"pico_legacy_display",False) else 16))
         struct.pack_into("<I",container,60,zlib.crc32(container[:60]) & 0xffffffff)
         app.write_bytes(container)
     image_flags = struct.unpack_from("<I", app.read_bytes(), 16)[0]
     report = {"name": args.name, "target": getattr(args,"target","stm32"), "abi": 6, "load_address": base,
+              "native_display": bool(image_flags & 16),
+              "graphics_width": 320 if image_flags & 16 else 192,
+              "graphics_height": 320 if image_flags & 16 else 64,
               "relocations": len(offsets),
               "relocation_bytes": len(table),
               "entry_offset": entry_offset, "image_bytes": image.stat().st_size,
@@ -431,6 +437,7 @@ def build(args: argparse.Namespace) -> dict:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--pico-legacy-display", action="store_true", help="retain the 192x64 APP contract")
     parser.add_argument("--target", choices=("stm32","picocalc-pico-h"), default="stm32")
     parser.add_argument("--name")
     parser.add_argument("--source", type=Path, action="append", default=[])

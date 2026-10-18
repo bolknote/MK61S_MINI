@@ -242,3 +242,9 @@ Windows x64 и Linux x64. Artifacts хранятся 14 дней.
 
 Описание wire protocol и состояний firmware находится в
 [`../../doc/src/MK61s-mini-USB-Screen.md`](../../doc/src/MK61s-mini-USB-Screen.md).
+
+PicoCalc с прошивкой 0.8.0 передаёт родной кадр 320×320. Клиент выбирает
+его автоматически по возможности `CAP_NATIVE_320`. Со старыми прошивками и
+STM32 сохраняется 192×64. Экранное соотношение сторон следует выбранной геометрии.
+Для локальной сборки с Xcode 27 можно передать `MACOSX_DEPLOYMENT_TARGET=12.0`
+и `ARCHS=arm64 ONLY_ACTIVE_ARCH=YES` в xcodebuild; настройки проекта не меняются.

@@ -23,6 +23,83 @@ List<int> end(int id, List<int> framebuffer) {
 }
 
 void main() {
+  test(
+    'negotiates PicoCalc native geometry and assembles all 320x320 pixels',
+    () {
+      final caps = DeviceCapabilities.parse([
+        64,
+        1,
+        64,
+        8,
+        0x10,
+        1,
+        0xb8,
+        0xb,
+        0,
+        40,
+        18,
+        8,
+        16,
+        1,
+        64,
+        1,
+      ]);
+      expect(caps.validGeometry, isTrue);
+      expect(caps.width, 320);
+      expect(caps.height, 320);
+      final assembler = FrameAssembler()..configure(caps.width, caps.height);
+      final expected = Uint8List.fromList(
+        List.generate(12800, (i) => (i * 37 + 7) & 255),
+      );
+      assembler.consume(
+        packet(MkMessage.frameBegin, begin(42, keyframe: true, rects: 80)),
+      );
+      for (var page = 0; page < 40; page++) {
+        for (final x in [0, 160]) {
+          assembler.consume(
+            packet(MkMessage.rect, [
+              42,
+              0,
+              x,
+              page,
+              160,
+              MkCodec.raw,
+              ...expected.sublist(page * 320 + x, page * 320 + x + 160),
+            ]),
+          );
+        }
+      }
+      expect(
+        assembler.consume(packet(MkMessage.frameEnd, end(42, expected))),
+        isTrue,
+      );
+      expect(assembler.framebuffer, expected);
+      assembler.configure(192, 64);
+      expect(assembler.framebuffer.length, 1536);
+    },
+  );
+  test('rejects native geometry without the negotiated capability', () {
+    final caps = DeviceCapabilities.parse([
+      64,
+      1,
+      64,
+      8,
+      0x10,
+      0,
+      0xb8,
+      0xb,
+      0,
+      40,
+      18,
+      8,
+      16,
+      1,
+      64,
+      1,
+    ]);
+    expect(caps.validGeometry, isFalse);
+    expect(() => FrameAssembler().configure(640, 320), throwsFormatException);
+  });
   test('commits a complete atomic keyframe', () {
     final assembler = FrameAssembler();
     final expected = Uint8List(MkGeometry.frameBytes);

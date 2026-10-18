@@ -1,4 +1,5 @@
 #include "builtin_font.hpp"
+#include "canvas.hpp"
 #include "cross_hal.h"
 #include "fmk_font.hpp"
 #include "prepared_font.hpp"
@@ -40,12 +41,14 @@ Services *services = nullptr;
 u8 mode = 2;
 text_screen::Grid grid;
 u8 raster[1536]{};
+bool native_visible=true;
 m61_ansi::SavedCursor saved_cursor{};
 fmk::Face face;
 prepared_font::Face prepared;
 bool open_face(const u8* data,unsigned size) { face.reset();prepared.reset();return face.open(data,size) || prepared.open(data,size); }
 u8 *font_data = nullptr;
 unsigned font_size = 0;
+u32 font_generation = 1;
 text_screen::FontGeometry profile{8,5,8,0};
 struct SavedFont { u8* data; unsigned size; text_screen::FontGeometry profile; };
 SavedFont saved_fonts[4]{};
@@ -61,6 +64,12 @@ struct Effect {
 Effect sound[16]{}, light[16]{};
 u8 sound_count = 0, sound_index = 0, light_count = 0, light_index = 0;
 u32 sound_at = 0, light_at = 0;
+audio::Plan current_tone{};
+u32 tone_deadline=0;
+bool tone_pending=false;
+u64 tone_started=0;
+struct Blink { u32 left=0,at=0,on_ms=0,off_ms=0;bool on=false; } blinking;
+bool led_value=false;
 unsigned cell_width() {
   return prepared.valid()?prepared.metrics().default_advance:face.valid() ? face.metrics().default_advance : profile.width + 1;
 }
@@ -83,6 +92,15 @@ void paint(u8 x, u8 y, u16 cp) {
   for (unsigned gy = 0; gy < height; ++gy)
     for (unsigned gx = 0; gx < width; ++gx)
       pixel(left + gx, top + gy, false);
+  // M61 coordinates remain character cells. Paint a separate native strike,
+  // never an enlarged copy of the compact compatibility bitmap.
+  native_visible=true;
+  const bool default_face=!face.valid() && !prepared.valid() && profile.width==5 && profile.height==8;
+  const unsigned nw=default_face?9:width, nh=default_face?28:height;
+  const unsigned nx=8+x*nw, ny=36+y*nh;
+  canvas::rect(canvas::frame(),nx,ny,nw,nh);
+  if(default_face) { Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+    canvas::glyph(canvas::frame(),font,cp,nx,ny); }
   u8 byte = 0;
   fmk::Glyph glyph{};
   u8 bitmap[fmk::MAX_BITMAP_SIZE]{};
@@ -95,15 +113,20 @@ void paint(u8 x, u8 y, u16 cp) {
     for (unsigned gy = 0; gy < glyph.height; ++gy)
       for (unsigned gx = 0; gx < glyph.width; ++gx)
         if (fmk::bitmapPixel(bitmap, glyph.width, gx, gy))
-          pixel(left + gx, top + gy, true);
+          { pixel(left + gx, top + gy, true);
+            if(!default_face) canvas::pixel(canvas::frame(),nx+gx,ny+gy); }
   } else {
     builtin_font::Raster glyph{};
     if (builtin_font::decode(profile.width <= 3 && profile.height <= 5
-            ? builtin_font::FaceId::FONT_3X5 : builtin_font::FaceId::FONT_5X8, cp, glyph))
-      for (unsigned gy = 0; gy < profile.height; ++gy)
-        for (unsigned gx = 0; gx < profile.width; ++gx)
-          if (fmk::bitmapPixel(glyph.data,glyph.width,gx*glyph.width/profile.width,gy*glyph.height/profile.height))
-            pixel(left + gx, top + gy, true);
+            ? builtin_font::FaceId::FONT_3X5 : builtin_font::FaceId::FONT_5X8, cp, glyph)) {
+      // The old wire view keeps its historical cell metrics. The LCD uses
+      // the actual strike, including for custom cell envelopes.
+      for(unsigned gy=0;gy<profile.height;++gy) for(unsigned gx=0;gx<profile.width;++gx)
+        if(fmk::bitmapPixel(glyph.data,glyph.width,gx*glyph.width/profile.width,gy*glyph.height/profile.height))
+          pixel(left+gx,top+gy,true);
+      if(!default_face) for(unsigned gy=0;gy<glyph.height;++gy) for(unsigned gx=0;gx<glyph.width;++gx)
+        if(fmk::bitmapPixel(glyph.data,glyph.width,gx,gy)) canvas::pixel(canvas::frame(),nx+gx,ny+gy);
+    }
   }
 }
 bool put(u8 x, u8 y, u16 cp, void *) {
@@ -115,9 +138,11 @@ bool put(u8 x, u8 y, u16 cp, void *) {
 bool clear(void *) {
   grid.clear();
   std::memset(raster, 0, sizeof(raster));
+  canvas::clear();native_visible=true;
   return true;
 }
 void reshape() {
+  ++font_generation;
   unsigned columns = 192 / cell_width(), rows = 64 / cell_height();
   if (columns > text_screen::MAX_COLS)
     columns = text_screen::MAX_COLS;
@@ -126,6 +151,7 @@ void reshape() {
   if(!face.valid() && !prepared.valid() && rows>profile.rows) rows=profile.rows;
   grid.reshape((u8)(rows ? rows : 1), (u8)(columns ? columns : 1));
   std::memset(raster, 0, sizeof(raster));
+  canvas::clear();native_visible=true;
   for (u8 y = 0; y < grid.rows(); ++y)
     for (u8 x = 0; x < grid.cols(); ++x)
       paint(x, y, grid.cell(x, y));
@@ -203,6 +229,7 @@ bool pattern(const char *p, bool audio) {
     sound_index = 0;
     sound_at = millis();
   } else {
+    blinking={};
     std::memcpy(light, candidate, steps * sizeof(Effect));
     light_count = steps;
     light_index = 0;
@@ -344,6 +371,16 @@ bool print(const char *args) {
   return result.ok();
 }
 const u8 *frame() { return raster; }
+const u8* native_frame() { return native_visible?canvas::frame():nullptr; }
+void show_native_frame(const u8* bytes,bool compatibility_crop) {
+  if(bytes!=canvas::frame()) std::memcpy(canvas::frame(),bytes,canvas::BYTES);
+  native_visible=true;
+  // Old USB clients retain a 1:1 cropped view; new clients negotiate 320x320.
+  if(compatibility_crop) for(unsigned page=0;page<8;++page) std::memcpy(raster+page*192,bytes+page*320,192);
+  m61_text::claim_display();
+}
+const u8* active_font_data(unsigned& size) { size=font_size;return font_data; }
+u32 font_revision() { return font_generation; }
 void text_row(unsigned row, char *out, unsigned capacity) {
   unsigned used = 0;
   if (row < grid.rows())
@@ -358,6 +395,7 @@ void text_row(unsigned row, char *out, unsigned capacity) {
     out[used] = 0;
 }
 void show_frame(const u8 *bytes) {
+  native_visible=false;
   std::memcpy(raster, bytes, sizeof(raster));
   m61_text::claim_display();
 }
@@ -378,6 +416,10 @@ void write_text(unsigned column,unsigned row,const char* text,unsigned length) {
 void write_codepoint(unsigned column,unsigned row,u16 cp) {
   if(column<grid.cols() && row<grid.rows()) put((u8)column,(u8)row,cp,nullptr);
 }
+void record_codepoint(unsigned column,unsigned row,u16 cp) {
+  if(column<grid.cols() && row<grid.rows()) { grid.setCursor((u8)column,(u8)row);grid.writeCodepoint(cp); }
+}
+void clear_text_record() { grid.clear(); }
 int flow_text(const char* text,unsigned length,unsigned first,unsigned maximum,bool tail,bool empty) {
   if(!text || length>65535 || first>=grid.rows() || !maximum || !mk8::text_valid((const u8*)text,length)) return 0;
   if(maximum>grid.rows()-first) maximum=grid.rows()-first;
@@ -412,31 +454,36 @@ void show_lines(const char *lines, unsigned stride, unsigned count,
   grid.setCursor((u8)cursor_x, (u8)cursor_y);
   m61_text::claim_display();
 }
-void tone(unsigned frequency, unsigned) {
+audio::Plan tone_status() { return current_tone; }
+void tone(unsigned frequency, unsigned milliseconds, unsigned percent) {
+  const unsigned volume=services ? services->sound_volume() : 10;
+  tone_pending=frequency && milliseconds && volume && percent;
+  tone_deadline=millis()+milliseconds;
 #if defined(PICO_ON_DEVICE)
+  current_tone=audio::plan(clock_get_hz(clk_sys),frequency,volume,percent);
+  tone_started=time_us_64();
+  const unsigned slice = pwm_gpio_to_slice_num(26);
+  pwm_set_enabled(slice,false);
+  if(current_tone.software) {
+    for(unsigned pin=26;pin<=27;++pin) { gpio_init(pin);gpio_set_dir(pin,GPIO_OUT);gpio_put(pin,true); }
+    return;
+  }
   for (unsigned pin = 26; pin <= 27; ++pin)
     gpio_set_function(pin, GPIO_FUNC_PWM);
-  const unsigned slice = pwm_gpio_to_slice_num(26);
-  if (!frequency) {
+  if (!current_tone.wrap) {
     pwm_set_both_levels(slice, 0, 0);
     return;
   }
-  float divider = (float)clock_get_hz(clk_sys) / (frequency * 1000.0f);
-  if (divider < 1)
-    divider = 1;
-  if (divider > 255)
-    divider = 255;
-  const unsigned wrap =
-      (unsigned)((float)clock_get_hz(clk_sys) / (divider * frequency));
-  pwm_set_clkdiv(slice, divider);
-  pwm_set_wrap(slice, (u16)(wrap ? wrap - 1 : 0));
-  pwm_set_both_levels(slice, wrap / 4, wrap / 4);
+  pwm_set_clkdiv_int_frac4(slice,(u8)(current_tone.divider16>>4),(u8)(current_tone.divider16&15));
+  pwm_set_wrap(slice,(u16)(current_tone.wrap-1));
+  pwm_set_both_levels(slice,(u16)current_tone.level,(u16)current_tone.level);
   pwm_set_enabled(slice, true);
 #else
-  (void)frequency;
+  current_tone=audio::plan(125000000,frequency,volume,percent);
 #endif
 }
 void led(bool on) {
+  led_value=on;
 #if defined(PICO_ON_DEVICE)
   gpio_init(25);
   gpio_set_dir(25, GPIO_OUT);
@@ -445,8 +492,22 @@ void led(bool on) {
   (void)on;
 #endif
 }
+bool led_status() { return led_value; }
+bool led_blinking() { return blinking.left!=0; }
+void led_stop() { blinking={};light_count=0;led(false); }
+bool led_blink(unsigned count,unsigned on_ms,unsigned off_ms) {
+  if(!count || count>65535 || on_ms>60000 || off_ms>60000) return false;
+  light_count=0;blinking={count*2-1,millis()+on_ms,on_ms,off_ms,true};led(true);return true;
+}
 void service_effects() {
   const u32 now = millis();
+  if(tone_pending && (i32)(now-tone_deadline)>=0) tone(0,0);
+#if defined(PICO_ON_DEVICE)
+  if(current_tone.software) {
+    const bool high=(time_us_64()-tone_started)%current_tone.period_us<current_tone.on_us;
+    gpio_put(26,high);gpio_put(27,high);
+  }
+#endif
   if (sound_count && (i32)(now - sound_at) >= 0) {
     if (sound_index == sound_count) {
       sound_count = 0;
@@ -464,6 +525,10 @@ void service_effects() {
     if (light_index == light_count)
       light_count = 0;
   }
+  if(blinking.left && (i32)(now-blinking.at)>=0) {
+    blinking.on=!blinking.on;led(blinking.on);--blinking.left;
+    blinking.at=now+(blinking.on?blinking.on_ms:blinking.off_ms);
+  }
 }
 u8 open_entry(const program_store::Entry &entry) {
   const char *path = file_path(entry.id);
@@ -479,6 +544,9 @@ u8 open_entry(const program_store::Entry &entry) {
   }
   if (entry.type == program_store::ProgramType::IMAGE1)
     return services ? services->view_image(path) : 2;
+  if (entry.type == program_store::ProgramType::FONT)
+    return program_store_text_font_load_from(path, program_store::ROOT_ID) == 1 &&
+                   activate_font() ? 0 : 2;
   return services ? services->run_external(path) : 2;
 }
 void report_error(const m61_text::Error &error) {

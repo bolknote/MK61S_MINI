@@ -1,12 +1,14 @@
 #ifndef MK61_USB_SCREEN_SURFACE_HPP
 #define MK61_USB_SCREEN_SURFACE_HPP
 
-#include "config.h"
+#include "ui_build_config.hpp"
 #include "builtin_font.hpp"
 #include "prepared_font.hpp"
 #include "rust_types.h"
 #include "text_screen.hpp"
+#if !defined(MK61_CORE_STANDALONE)
 #include "disk_activity.hpp"
+#endif
 #if MK61_PROPORTIONAL_UI_FONTS
 #include "ui_font.hpp"
 #endif
@@ -120,6 +122,10 @@ class Surface {
                         bool compact_3x5, ui_font::Face face);
     void setUiLineDecorations(u8 row, bool leading_gutter,
                               bool trailing_gutter);
+    bool setUiTextLayout(TextProfile profile,u8 cols);
+    u16 measureUiText(const char* text,u16 length) const;
+    u16 uiTextWidth() const;
+    void printUiLine(u8 row,const char* text,char marker=0,u16 trailing=0);
     bool uiTextActive(void) const { return ui_text_active_; }
 #endif
 
@@ -188,6 +194,7 @@ class Surface {
 #endif
 
     void markDirty(void);
+    void applyTextLayout(TextProfile profile,u8 cols);
     bool cursorVisible(void) const;
     void updateCursorBlink(t_time_ms now);
     void render(void);

@@ -7,7 +7,7 @@ using namespace usb_screen_protocol;
 namespace {
 // Pico CDC accepts physical key bytes, not the STM32 terminal's `kbd` shell.
 // Desktop clients must use binary KEY_EVENT instead of emitting that command.
-constexpr u16 PICO_CAPABILITIES = (CAPABILITIES & ~CAP_TERMINAL_KBD) | CAP_CLOCK_SYNC;
+constexpr u16 PICO_CAPABILITIES = (CAPABILITIES & ~CAP_TERMINAL_KBD) | CAP_CLOCK_SYNC | CAP_NATIVE_320;
 void put16(u8 *p, u16 n) {
   p[0] = (u8)n;
   p[1] = (u8)(n >> 8);
@@ -15,7 +15,7 @@ void put16(u8 *p, u16 n) {
 u16 get16(const u8 *p) { return (u16)((u16)p[0] | (u16)p[1] << 8); }
 } // namespace
 void UsbScreen::disconnect() {
-  attached_ = caps_ = pong_ = false;
+  attached_ = caps_ = pong_ = native_ = false;
   stage_ = 0;
   force_ = true;
   keys_.abortPending();
@@ -75,7 +75,9 @@ int UsbScreen::receive(u8 value, u32 now) {
   if (!enabled_)
     return -1;
   if (p.type == MessageType::ATTACH) {
+    if(p.payload_size && (p.payload_size!=1 || p.payload[0]!=1)) { ++errors_;return -1; }
     disconnect();
+    native_=p.payload_size==1 && backend_.native_begin && backend_.native_page;
     attached_ = caps_ = true;
     force_ = true;
     last_seen_ = now;
@@ -128,7 +130,7 @@ bool UsbScreen::key(KeyEvent &event) {
     return false;
   const unsigned scan = (unsigned)raw & ~keyboard_core::RELEASE_MASK;
   event = {(u8)((raw & keyboard_core::RELEASE_MASK) ? 3 : 1),
-           controls::from_scan(scan)};
+           controls::from_scan(scan),(u8)scan};
   keys_.markFrontDelivered();
   return event.code != 0;
 }
@@ -183,8 +185,8 @@ void UsbScreen::tick(u32 now, bool connected) {
     return;
   }
   if (caps_) {
-    u8 p[14]{};
-    put16(p, 192);
+    u8 p[16]{};
+    put16(p, native_?320:192);
     p[2] = 64;
     p[3] = 8;
     put16(p + 4, PICO_CAPABILITIES);
@@ -195,7 +197,8 @@ void UsbScreen::tick(u32 now, bool connected) {
     p[11] = 6;
     p[12] = 8;
     p[13] = 0;
-    if (packet(MessageType::CAPS, p, sizeof(p)))
+    if(native_) put16(p+14,320);
+    if (packet(MessageType::CAPS, p, native_?16:14))
       caps_ = false;
     return;
   }
@@ -217,8 +220,9 @@ void UsbScreen::tick(u32 now, bool connected) {
     if ((i32)(now - next_frame_) < 0)
       return;
     next_frame_ = now + 80;
-    backend_.frame(backend_.context, frame_);
-    if (!force_ && !std::memcmp(frame_, previous_, sizeof(frame_)))
+    if(native_) { backend_.native_begin(backend_.context);native_crc_=0xFFFF; }
+    else backend_.frame(backend_.context, frame_);
+    if (!native_ && !force_ && !std::memcmp(frame_, previous_, sizeof(frame_)))
       return;
     force_ = false;
     ++frame_id_;
@@ -228,12 +232,25 @@ void UsbScreen::tick(u32 now, bool connected) {
     u8 p[4];
     put16(p, frame_id_);
     p[2] = 1;
-    p[3] = 8;
+    p[3] = native_?80:8;
     if (packet(MessageType::FRAME_BEGIN, p, 4))
       ++stage_;
     return;
   }
-  if (stage_ <= 9) {
+  if(native_ && stage_<=81) {
+    const unsigned chunk=stage_-2,x=(chunk&1)*160,page=chunk/2;
+    u8 p[166];put16(p,frame_id_);p[2]=(u8)x;p[3]=(u8)page;p[4]=160;p[5]=(u8)Codec::RAW;
+    backend_.native_page(backend_.context,x,page,p+6,160);
+    if(packet(MessageType::RECT,p,sizeof(p))) {
+      for(unsigned i=6;i<sizeof(p);++i) {
+        native_crc_^=(u16)p[i]<<8;
+        for(unsigned bit=0;bit<8;++bit) native_crc_=(native_crc_&0x8000)?(u16)((native_crc_<<1)^0x1021):(u16)(native_crc_<<1);
+      }
+      ++stage_;
+    }
+    return;
+  }
+  if (!native_ && stage_ <= 9) {
     u8 p[MAX_PAYLOAD_SIZE];
     usize size = 0;
     Codec codec;
@@ -246,9 +263,9 @@ void UsbScreen::tick(u32 now, bool connected) {
   }
   u8 p[4];
   put16(p, frame_id_);
-  put16(p + 2, crc16_ccitt(frame_, sizeof(frame_)));
+  put16(p + 2, native_?native_crc_:crc16_ccitt(frame_, sizeof(frame_)));
   if (packet(MessageType::FRAME_END, p, 4)) {
-    std::memcpy(previous_, frame_, sizeof(frame_));
+    if(!native_) std::memcpy(previous_, frame_, sizeof(frame_));
     stage_ = 0;
     ++frames_;
   }

@@ -1,0 +1,147 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-18T08:26:54.060329+00:00",
+  "version": "0.8.0",
+  "build_id": "8b2b72f5",
+  "uid": "E6657CD423721C35",
+  "uf2_sha256": "48bf489eda07d79db8b08b90437b2f9de45d69a8eeff748d3b0660d64879ee22",
+  "scope": "Native PicoCalc 320x320 LCD/USB rendering, geometry and glyphs; old M0 ABI geometry; complete native APP collection on SD; STM32 build compatibility",
+  "changes": [
+    "Original 16x35 numeric segment planes and native arrow; no fractional LCD bitmap scaling",
+    "Native UI/editor/script glyphs, 320x320 BASIC, 320x240 Markdown viewport, 1:1 WBMP and CHIP-8 virtual pixels drawn as uniform 5x5 blocks",
+    "Optional APP flag 16 selects 320x320; old M0 APP retain 192x64 geometry and unscaled display",
+    "Borrowed 12800-byte foreground canvas; ELIZA and SHEET reuse it and the collection uses the shared runtime",
+    "Optional USB Screen native negotiation and atomic 12800-byte snapshots; physical LCD updates before snapshot transmission",
+    "Foreground handoff releases a completed BASIC frame before APP allocation"
+  ],
+  "hardware": {
+    "native_report": "native-320-hil-0.8.0/result.json",
+    "native_cases": [
+      "idle calculator streams two complete native frames within five seconds",
+      "320x320 APP geometry, borrowed 12800-byte bitmap and every physical framebuffer pixel matched an independent oracle",
+      "native proportional text below row 64 and exact restoration after fullscreen graphics",
+      "old ABI 6 M0 APP still receives 192x64 and is displayed centred pixel-for-pixel",
+      "BASIC GW/GH are 320 and PSET reaches pixel 319,319",
+      "M61 native glyph rendering and 320x240 Markdown viewport with working scroll"
+    ],
+    "apps_report": "apps-hil-0.8.0/result.json",
+    "apps_cases": [
+      "all seven M0+ APPs and example assets read back byte-for-byte with POSIX CRC",
+      "HELLO.APP: two successful launches, expected text and clean exit",
+      "HELLO_CPP.APP: two successful launches, expected text and clean exit",
+      "HELLO_RS.APP: two successful launches, expected text and clean exit",
+      "SERVICES.APP: two successful launches, expected text and clean exit",
+      "WBMP.APP: two successful launches, expected text and clean exit",
+      "ELIZA.APP: graphical intro, QWERTY HELLO input, expected DOCTOR reply and exit",
+      "SHEET.APP: new book, Russian/formula document, cycle document, navigation and exit",
+      "installed WBMP.APP FILE_OPEN through APP_FLOW DIRECT; exact 320x320 pixel oracle",
+      "installed ECHO8.ch8: physical RP2040 interpreter, title/intro raster, Fx0A key and clean Escape exit",
+      "installed files unchanged after execution; registers, stack, program and terminal directory preserved"
+    ],
+    "sd_directory": "/MK61S-PicoCalc-0.8",
+    "files": {
+      "HELLO.APP": "a61d923580afddd549cc77122365fb35d55546ca001a29aeed76213af4863813",
+      "HELLO_CPP.APP": "c7573de5f5822a8badb3bafcf33d55d9a7eb09d5ba3b626660af1b61b8b2a29d",
+      "HELLO_RS.APP": "cdc6f3469e43368a6299708b894325bf2a917b84149287c25878f802098d59de",
+      "SERVICES.APP": "217535e75d47aa00f46eb6b2d5b91cdb0a7ae5abb10d89044de71e1668767e74",
+      "ELIZA.APP": "8ca39b331bdb0134c45621e183637567d55b56f23b50d30a6eb835fc56378aae",
+      "SHEET.APP": "c173714aa6278f95ac99e14efdd2af533c924d4be981bfdcf8b0ecbd864f5e51",
+      "WBMP.APP": "ecf39dbd1b23dbf335c371b320830b1bf428e136e06321296b8baff654c49428",
+      "README.txt": "859b743915c47c63bab865159a91b9c8f3741a872d4e64163db12fa3915df4f6",
+      "ECHO8.ch8": "d53d2f9b87cd27f22d631fe73acf07ad9eb6a467167b5c168df68c0bc7607227",
+      "PATTERN.wbmp": "9d38729153ca8d0b7f6d1929cbbe76c3749a0ccfb32031c22e40ff23f51d4960",
+      "BUDGET.mks": "5eec63dc5597268cde913aceaf753e8650298b46dadc989870a1bfb920379e83",
+      "CYCLE.mks": "e8a177281e7cf0ef63f8ae693c2c998fe6a1fd2362c320d3c93082ddb771e4ae",
+      "manifest.json": "0b912a43eef88d3ecac85b50cc954311afe1e2a0f7856ecfb0a4ac6512477994"
+    }
+  },
+  "checks": {
+    "pico-host-asan-ubsan": {
+      "passed": true,
+      "sha256": "efeada14e46b7eed1cfcfa061dccea5469433fc188467aff1263a80844098b06"
+    },
+    "basic-graphics": {
+      "passed": true,
+      "sha256": "f813ebbd59f83e55ff5ef1bd114b1bcbf74b7e90140c26e0dab1c8cbf0422e0f"
+    },
+    "markdown": {
+      "passed": true,
+      "sha256": "a203d8e6152310c2cd81b2bfac6aa54d749b48bf1546b4a695f207ee61a432ad"
+    },
+    "usb-protocol": {
+      "passed": true,
+      "sha256": "cdc666a15862d76f6df20c76ec601d2357c9ddddc050213c8abe8951f3aec126"
+    },
+    "usb-surface": {
+      "passed": true,
+      "sha256": "66fbcb956f4a575920efaa24e9c8b59751e05c4a2a7807aaa7c42c94ee8603d7"
+    },
+    "module-format": {
+      "passed": true,
+      "sha256": "939f7bd4bd38c3dc69da944c7b777ed8f2830420351e9169d9b449d1aa7e5015"
+    },
+    "seal": {
+      "passed": true,
+      "sha256": "fe008aab760eb03ccac7578e2b84665b1b50b0d7f855b17a0c7a8d039435b658"
+    },
+    "flutter": {
+      "passed": true,
+      "sha256": "0fde68c774a268124faf599ef02c6fd0a6e6da1be55aa4ad1fd8964dba624bd3"
+    },
+    "desktop-arm64": {
+      "passed": true,
+      "sha256": "d9e985aac4427d1ed5f54c988dff7e161c58c08c29db0c59752628f09868494b"
+    },
+    "sheet-ui": {
+      "passed": true,
+      "sha256": "28cced9a0cccb30d15ff48afcb1186c2d2a7bc6ad0326916c23d74a8ed5540c4"
+    },
+    "eliza-ui": {
+      "passed": true,
+      "sha256": "fc46bb7695ed83ec6da79d59f43e1237b8e9d8d10c57bef067c75ce916d172cc"
+    },
+    "wbmp": {
+      "passed": true,
+      "sha256": "fdfcfa2e372ddebd469dbfaeb35474a5cad2f749686b3d3b04589549e8c621ea"
+    },
+    "stm32-f401": {
+      "passed": true,
+      "sha256": "77c460676c35e1e8a390187bb6057e00d7090a4e7fd6c9b4c6b73986c668a90f"
+    },
+    "stm32-f411": {
+      "passed": true,
+      "sha256": "0177db31d57799fe79b006879288e93398ba74ff54383bbb85150c25e28b3241"
+    },
+    "stm32-f401-system-apps": {
+      "passed": true,
+      "sha256": "d0fbd6f3a6737bea18c3edda3098f33a012da411206a6fe9ef22f80ccfe2166a"
+    },
+    "stm32-f411-system-apps": {
+      "passed": true,
+      "sha256": "43d0568568376a47566610b5001e0d0cd4d5343ad2507c792c2a1c62fb6c6b71"
+    },
+    "stm32-user-apps-final": {
+      "passed": true,
+      "sha256": "ade1c83da57f99f9b0f680c50bd3a57e309239fadc4dbf4ed1ccddfeb75e096e"
+    },
+    "stm32-sheet": {
+      "passed": true,
+      "sha256": "093b765c50050a02cba23df1f2efe03e58b80a9ba028a52e04344828bb826553"
+    },
+    "stm32-wbmp": {
+      "passed": true,
+      "sha256": "220f3254e765efa573ab74c387dceda716a23864c428c4f848d63f09cd13f8af"
+    }
+  },
+  "flash_bytes": 674336,
+  "static_ram_bytes": 162036,
+  "calculator_state_restored": true,
+  "final": "RESET_REASON=00010001 BOOTS=35 CRASH=NONE BUILD=8B2B72F5\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=6253 MAX_GAP_MS=938 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=59668 PREVIOUS_GAP_MS=938\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=674336 FOOTER=583988 EXPECTED=D19C6747 ACTUAL=D19C6747 CHECK_US=372647\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nMK61S PICOCALC PICO-H 0.8.0 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 42,          ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=88\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=56 DIRTY=0 PATH=[/MK61S-PicoCalc-0.8/ECHO8.ch8] RESULT=[CHIP-8: Esc exit, F3 pause; 1234/QWER/ASDF/ZXCV]\r\nSTACK_USED=15692 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=938806\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=213 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T11:26:40 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "previous_full_qualification": {
+    "version": "0.7.0",
+    "build_id": "837b1415",
+    "uf2_sha256": "dc7d91e61f3917a10d9c98aafdc20f104789f71567465723dd9b968c2e3f7b0f",
+    "report": "doc/measurements/picocalc-pico-h-full-parity-20261018.json",
+    "note": "The earlier eight-suite qualification applies to its exact UF2; this release has the focused native display/APP hardware checks and the host/build checks listed here."
+  }
+}
