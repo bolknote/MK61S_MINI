@@ -15,6 +15,7 @@ bool start_source(const char *path, const char *source, u16 length,
 bool register_source(const char *path, const char *source, u16 length,
                      program_store::Entry &out);
 void reset_files();
+void prepare_files();
 bool register_file(const char *path, program_store::Entry &out);
 const char *file_path(u16 id);
 bool normalize_path(const char* base,const char* name,char out[384]);
@@ -26,6 +27,7 @@ bool input(u8 code);
 void output(const char *text);
 bool print(const char *arguments);
 const u8 *frame();
+u32 frame_revision();
 const u8* native_frame();
 void show_native_frame(const u8* frame,bool compatibility_crop=true);
 void show_frame(const u8 *frame);

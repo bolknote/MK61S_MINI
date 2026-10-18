@@ -45,7 +45,7 @@ public:
     void init(bool expanded = false);
     void set_memory_mode(u8 mode);
     bool input(u8 code);
-    void tick();
+    void tick(bool script_owns_display = false);
     bool idle() const { return count_ == 0 && press_steps_ == 0 && !releasing_; }
     Snapshot snapshot() const;
 

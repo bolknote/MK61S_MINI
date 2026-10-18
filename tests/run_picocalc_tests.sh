@@ -24,14 +24,14 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/ports/picocalc/ui.cpp" "$root/ports/picocalc/settings.cpp" \
     "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
     "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" \
-    "$root/ports/picocalc/script_files.cpp" "$root/ports/picocalc/script_runtime.cpp" \
+    "$root/ports/picocalc/script_files.cpp" "$root/ports/picocalc/script_runtime.cpp" "$root/ports/picocalc/language_cache.cpp" \
     "$root/code/m61_text.cpp" "$root/code/m61_ansi.cpp" "$root/code/m61_print.cpp" \
     "$root/code/terminal_script_runtime.cpp" "$root/code/terminal_catalog.cpp" \
     "$root/code/terminal_key_sequence.cpp" "$root/code/calculator_control.cpp" \
     "$root/code/program_load.cpp" "$root/code/zx0_stream.cpp" \
     "$root/code/markdown_document.cpp" "$root/code/wbmp.cpp" "$root/code/explorer_autoexec.cpp" \
-    "$root/tests/picocalc_m61_self_test.cpp" "$root/tests/picocalc_runtime_self_test.cpp" "$root/tests/picocalc_parity_self_test.cpp" "$root/tests/picocalc_software_self_test.cpp" "$root/tests/picocalc_contract_self_test.cpp" "$root/tests/picocalc_firmware_self_test.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
-    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" "$root/code/app_flow.cpp" \
+    "$root/tests/picocalc_m61_self_test.cpp" "$root/tests/picocalc_language_cache_self_test.cpp" "$root/tests/picocalc_runtime_self_test.cpp" "$root/tests/picocalc_parity_self_test.cpp" "$root/tests/picocalc_software_self_test.cpp" "$root/tests/picocalc_contract_self_test.cpp" "$root/tests/picocalc_firmware_self_test.cpp" "$root/code/zx0.cpp" "$root/code/zx0_encode.cpp" \
+    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" "$root/code/language_vm_file_cache.cpp" "$root/code/basic_graphics.cpp" "$root/code/basic_native_io.cpp" "$root/code/app_flow.cpp" \
     "$root/code/calculator_face.cpp" "$root/code/text_screen.cpp" \
     "$root/code/builtin_font.cpp" "$root/code/ui_font.cpp" "$root/code/fmk_font.cpp" "$root/code/prepared_font.cpp" "$root/code/fmk_prepare.cpp" \
     "$root/code/mk61emu_core.cpp" "$root/code/ERM19264_graphics_font.cpp" \

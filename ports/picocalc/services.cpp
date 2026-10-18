@@ -1,4 +1,5 @@
 #include "services.hpp"
+#include "language_cache.hpp"
 #include "text_input.hpp"
 #include "script.hpp"
 #include "m61_text.hpp"
@@ -103,6 +104,7 @@ void Services::parent_directory() {
     skip_ = selection_ = 0; refresh();
 }
 void Services::new_document(Document kind) {
+    language_cache::revoke(this);
     viewing_=image_viewing_=runtime_graphics_=false;
     document_ = kind; source_[0] = path_[0] = 0;
     length_ = cursor_ = top_ = horizontal_ = 0; dirty_ = false;
@@ -125,6 +127,7 @@ bool Services::load_document(const char* path,bool edit) {
     // can be decoded directly into that buffer without losing it on failure.
     files::Entry info;
     if(!files::stat(path,info)) { message(files::error(),ServicePage::BROWSER); return false; }
+    if(info.size>=CACHE_SOURCE_OFFSET) language_cache::revoke(this);
     const unsigned capacity=info.size>=SOURCE_CAPACITY-1?SOURCE_CAPACITY:info.size+1;
     const unsigned previous_size=length_+1;
     const bool backup=previous_size<capacity;
@@ -232,6 +235,7 @@ void Services::normalize_view() {
     if(column >= horizontal_ + COLS) horizontal_ = (u16)(column - COLS + 1);
 }
 bool Services::input(u8 code) {
+    if(page_==ServicePage::EDITOR) language_cache::revoke(this);
     if(!active()) return false;
     const bool cancel = back(code), accept = enter(code);
     if(page_ == ServicePage::USB_DISK) {
@@ -371,7 +375,7 @@ void Services::tick() {
     restore_script_editor();
     if(pending_run_) { pending_run_=false;run_document(); }
     restore_script_editor();
-    if(!m61_text::active() && !script_editor_.valid) script::reset_files();
+    if(!m61_text::active() && !script_editor_.valid) script::prepare_files();
 }
 const char* Services::page_name() const {
     if(viewing_ && active()) return "VIEWER";

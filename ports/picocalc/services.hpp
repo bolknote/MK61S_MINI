@@ -21,6 +21,7 @@ public:
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
     using Pump = bool (*)(void*, u8&);
     Services();
+    ~Services();
     void set_pump(Pump callback, void* context) { pump_ = callback; pump_context_ = context; }
     void set_ui(Ui& ui) { ui_ = &ui; }
     unsigned sound_volume() const { return ui_ ? ui_->settings().volume : 10; }
@@ -86,7 +87,8 @@ private:
     void accept_prompt();
     void leave_editor();
     void normalize_view();
-    void run_document();
+    void run_document(const language_vm::View* prepared=nullptr);
+    void bind_cache();
     void restore_script_editor();
     bool service();
     bool wait_key(u8& code);
@@ -98,6 +100,7 @@ private:
     void append(const char*, unsigned);
     void put(char ch);
     void clear_console();
+    void present_console(unsigned first) const;
     bool flush_print(bool newline);
     double math(language_vm::Function, double, double);
     bool export_program(const char* path);
@@ -135,13 +138,17 @@ private:
     unsigned selection_ = 0, skip_ = 0, used_ = 0, console_row_ = 0, console_col_ = 0;
     u16 length_ = 0, cursor_ = 0, top_ = 0, horizontal_ = 0;
     u16 prompt_length_ = 0;
-    char source_[SOURCE_CAPACITY] = {};
+    u32 console_revision_=1;
+    mutable u32 shown_console_revision_=0,shown_frame_revision_=0;
+    mutable unsigned shown_first_=0;
+    static constexpr unsigned CACHE_SOURCE_OFFSET=(SOURCE_CAPACITY-32768U)&~7U;
+    alignas(8) char source_[SOURCE_CAPACITY] = {};
     char path_[files::PATH_SIZE] = {}, directory_[files::PATH_SIZE] = "/";
     char selected_file_[files::PATH_SIZE] = {}, prompt_text_[256] = {};
     char filter_[64] = {};
     char status_[96] = {}, console_[ROWS][text_screen::MAX_COLS + 1] = {};
     files::Entry entries_[7] = {};
-    u8 image_[language_vm::MAX_MODULE] = {};
+    alignas(8) u8 image_[language_vm::MAX_MODULE] = {};
     language_vm::State state_{};
     language_vm::Value variables_[26]{}, array_[385]{}, stack_[language_vm::MAX_STACK]{};
     language_vm::Value focal_variables_[26]{}, focal_array_[385]{};

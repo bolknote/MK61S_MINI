@@ -189,6 +189,19 @@ void picocalc_m61_test() {
   char row[65];
   script::text_row(0, row, sizeof(row));
   assert(std::strstr(row, "FONT"));
+  // A completed BASIC part retains the full M61 display between parts.
+  // Zero bits must erase the calculator header as well as its separator.
+  assert(!services.active() && m61_text::display_owned());
+  Ui display_ui;
+  display_ui.init(Settings{});
+  Screen retained;
+  retained.render(calc.snapshot(), true, &display_ui, &services);
+  const u8 *expected_native = script::native_frame();
+  assert(expected_native);
+  for (unsigned y = 0; y < 320; ++y)
+    for (unsigned x = 0; x < 320; ++x)
+      assert(retained.pixel(x, y) ==
+             bool(expected_native[y / 8 * 320 + x] & (1U << (y % 8))));
   assert(script::input(0x1B) && !script::font_active());
 
   reset(calc, services);

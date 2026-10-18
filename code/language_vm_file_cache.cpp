@@ -2,6 +2,11 @@
 #include <string.h>
 namespace language_vm::file_cache {
 namespace {
+constexpr uint32_t CACHE_FLAGS=MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG
+#if defined(MK61_CORE_STANDALONE)
+    |MK61_APP_ARMV6M_FLAG
+#endif
+    ;
 uint16_t word(const uint8_t* p){return(uint16_t)(p[0]|((uint16_t)p[1]<<8));}
 void word(uint8_t* p,uint16_t n){p[0]=(uint8_t)n;p[1]=(uint8_t)(n>>8);}
 void dword(uint8_t* p,uint32_t n){for(unsigned i=0;i<4;++i)p[i]=(uint8_t)(n>>(8*i));}
@@ -64,7 +69,7 @@ bool pack(const Key& key,const uint8_t* image,uint16_t size,
   if(!w.bit(true)||!w.gamma(256,true))return false;
   loadable_module::Header h={};
   h.kind=loadable_module::Kind::APPLICATION;h.compression=loadable_module::Compression::ZX0;
-  h.flags=MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG;h.load_address=MK61_PORTABLE_APP_ADDRESS;
+  h.flags=CACHE_FLAGS;h.load_address=MK61_PORTABLE_APP_ADDRESS;
   h.stored_size=h.code_stored_size=w.position;h.image_size=h.memory_size=logical;
   h.entry_offset=entry_offset;h.stored_crc32=loadable_module::crc32(output+64,w.position);
   h.image_crc32=loadable_module::crc32_finish(crc);
@@ -78,7 +83,7 @@ bool header(const uint8_t* file,uint16_t size,loadable_module::Header& h) {
       loadable_module::decode_header(file,size,loadable_module::Kind::APPLICATION,h)==
         loadable_module::HeaderStatus::OK && !h.relocation_count &&
       h.compression==loadable_module::Compression::ZX0 && h.memory_size==h.image_size &&
-      h.flags==(MK61_PORTABLE_APP_FLAG|MK61_APP_RELOCATABLE_FLAG) &&
+      h.flags==CACHE_FLAGS &&
       h.stored_size==size-64U && h.code_stored_size==h.stored_size;
 }
 bool literal(Reader& r,const loadable_module::Header& h,

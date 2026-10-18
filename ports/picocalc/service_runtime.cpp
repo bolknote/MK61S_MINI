@@ -17,6 +17,7 @@
 #include "explorer_autoexec.hpp"
 #include "diagnostics.hpp"
 #include "language_resources.hpp"
+#include "language_cache.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -75,6 +76,12 @@ Services::Services() : graph_({this,
     [](void*, size_t count) { return std::malloc(count); },
     [](void*, void* memory) { std::free(memory); }}) {
     graphics_owner = this;
+    bind_cache();
+}
+Services::~Services() { language_cache::detach(this); }
+void Services::bind_cache() {
+    language_cache::bind(this,source_+CACHE_SOURCE_OFFSET,
+        length_<CACHE_SOURCE_OFFSET?SOURCE_CAPACITY-CACHE_SOURCE_OFFSET:0);
 }
 basic_graphics::Result Services::graph_request(basic_graphics::Request& request) {
     const auto result=graph_.apply(request);
@@ -85,8 +92,7 @@ bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 co
     auto& self = *(Services*)raw;
     if(bytes != self.graph_width_*self.graph_height_/8U) return false;
     const unsigned text_first=self.first_console_row(script::rows());
-    script::show_lines(self.console_[text_first],sizeof(self.console_[0]),self.rows()-text_first,
-        self.console_col_,self.console_row_-text_first);
+    self.present_console(text_first);
     const unsigned pages=self.graph_height_/8;
     const unsigned end=first+count<pages?first+count:pages;
     const u8* source=self.graph_width_==320?script::native_frame():script::frame();
@@ -95,10 +101,20 @@ bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 co
     return true;
 }
 void Services::clear_console() {
+    ++console_revision_;
     std::memset(console_, 0, sizeof(console_)); console_row_ = console_col_ = 0; console_scroll_=false;
+}
+void Services::present_console(unsigned first) const {
+    // Arithmetic-only BASIC parts retain the same screen. Decode glyphs
+    // only after text, geometry or another M61/APP frame has changed it.
+    if(shown_console_revision_!=console_revision_ || shown_frame_revision_!=script::frame_revision() || shown_first_!=first) {
+        script::show_lines(console_[first],sizeof(console_[0]),rows()-first,console_col_,console_row_-first);
+        shown_console_revision_=console_revision_;shown_frame_revision_=script::frame_revision();shown_first_=first;
+    } else m61_text::claim_display();
 }
 void Services::put(char ch) {
     if(ch == '\r') return;
+    ++console_revision_;
     const auto scroll=[&] {
         std::memmove(console_,console_+1,(rows()-1)*sizeof(console_[0]));
         console_row_=rows()-1;console_col_=0;std::memset(console_[console_row_],0,sizeof(console_[0]));
@@ -216,7 +232,7 @@ bool Services::read_number(const char* text, u16 length, double& value) {
             }
             append("Invalid number, retry: ", 23); used = 0; input[0] = 0;
         } else if(key == 8 || key == 0x7F || key == 0xD4) {
-            if(used) { input[--used] = 0; if(console_col_) console_[console_row_][--console_col_] = 0; }
+            if(used) { input[--used] = 0; if(console_col_) { console_[console_row_][--console_col_] = 0;++console_revision_; } }
         } else if(key >= 32 && key < 127 && used + 1 < sizeof(input)) {
             input[used++] = (char)key; input[used] = 0; put((char)key);
         }
@@ -292,17 +308,18 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
         default: return false;
     }
 }
-void Services::run_document() {
+void Services::run_document(const language_vm::View* prepared) {
+    bind_cache();
     diagnostics::Scope measure(diagnostics::Point::LANGUAGE);
     diagnostics::context(diagnostics::State::LANGUAGE);
     if(calculator_ && (!calculator_->idle() || core_61::is_RUN())) { message("Stop MK61 before running source", ServicePage::EDITOR); return; }
-    if(document_ == Document::TEXT) { message("Text file: use .bas, .foc or .m61 to run", ServicePage::EDITOR); return; }
+    if(!prepared && document_ == Document::TEXT) { message("Text file: use .bas, .foc or .m61 to run", ServicePage::EDITOR); return; }
     graph_.reset();
     if(!external_run_) clear_console();
     print_[0] = 0; print_cursor_ = 0; position_ = {};
     stopped_ = false; deferred_count_ = deferred_read_ = 0; last_error_ = language_vm::Error::NONE;
     page_ = ServicePage::CONSOLE; running_ = true; serial_output_ = true;
-    if(document_ == Document::MK61) {
+    if(!prepared && document_ == Document::MK61) {
         const bool keep_editor=dirty_;
         script_editor_.valid=false;
         if(keep_editor) {
@@ -321,30 +338,43 @@ void Services::run_document() {
         std::printf("M61_RESULT=%s ACTIVE=%u\n", ok ? "OK" : "ERROR", m61_text::active());
         return;
     }
-    language_ = document_ == Document::FOCAL ? language_vm::Language::FOCAL : language_vm::Language::BASIC;
-    // Page reads also keep the foreground device loop alive while a long
-    // source is compiled. They never return a mutable pointer to the editor.
-    language_vm::source::Reader source(language_vm::source::Input{this,
-        [](void* raw, u16 offset, u8* out, u16 count) {
-            auto& self = *(Services*)raw;
-            if(!self.service() || offset > self.length_ || count > self.length_ - offset) return false;
-            if(count && !out) return false;
-            if(count) std::memcpy(out, self.source_ + offset, count);
-            return true;
-        }, length_});
-    language_vm::ResourceSource resources{0, 0, language_vm::ResourceMode::EMBEDDED};
-    auto compiled = language_vm::compile_source(language_, source, image_, sizeof(image_), core_61::expanded_program_is_on(), &resources);
-    if(!stopped_ && compiled.error==language_vm::Error::FULL) {
-        resources.mode=language_vm::ResourceMode::SOURCE;
-        compiled=language_vm::compile_source(language_,source,image_,sizeof(image_),core_61::expanded_program_is_on(),&resources);
+    language_ = prepared ? prepared->language : document_ == Document::FOCAL ? language_vm::Language::FOCAL : language_vm::Language::BASIC;
+    language_vm::CompileResult compiled{language_vm::Error::NONE,0,0,0,0};
+    language_vm::View view{};
+    const auto revision=files::revision();
+    bool disk_loaded=false;
+    if(prepared) view=*prepared;
+    else {
+        // Borrow a bounded window only for a cold compile; a RAM hit does
+        // not load source or enter the compiler's device-service callbacks.
+        u8 source_window[1024];
+        language_vm::source::Reader source(language_vm::source::Input{this,
+            [](void* raw, u16 offset, u8* out, u16 count) {
+                auto& self = *(Services*)raw;
+                if(!self.service() || offset > self.length_ || count > self.length_ - offset) return false;
+                if(count && !out) return false;
+                if(count) std::memcpy(out,self.source_+offset,count);
+                return true;
+            },length_},source_window,sizeof(source_window));
+        language_vm::ResourceSource resources{0,0,language_vm::ResourceMode::EMBEDDED};
+        if(!dirty_ && *path_) disk_loaded=language_cache::load(path_,language_,core_61::expanded_program_is_on(),source_,length_,image_,view);
+        if(!disk_loaded) {
+            language_cache::compilation();
+            compiled=language_vm::compile_source(language_, source, image_, sizeof(image_), core_61::expanded_program_is_on(), &resources);
+            if(!stopped_ && compiled.error==language_vm::Error::FULL) {
+                resources.mode=language_vm::ResourceMode::SOURCE;
+                language_cache::compilation();
+                compiled=language_vm::compile_source(language_,source,image_,sizeof(image_),core_61::expanded_program_is_on(),&resources);
+            }
+        }
     }
     u32 line = compiled.line, steps = 0;
     last_error_ = compiled.error;
     if(stopped_) last_error_ = language_vm::Error::STOPPED;
     if(last_error_ == language_vm::Error::NONE) {
-        language_vm::View view{};
-        last_error_ = language_vm::inspect(image_, compiled.size, view);
+        if(!prepared && !disk_loaded) last_error_ = language_vm::inspect(image_, compiled.size, view);
         if(last_error_ == language_vm::Error::NONE) {
+            if(!prepared && !dirty_ && *path_) language_cache::remember(path_,core_61::expanded_program_is_on(),revision,source_,length_,view,!disk_loaded);
             state_ = {};
             state_.variables = active_variables(); state_.array = active_array(); state_.array_count = 385;
             state_.stack = stack_; state_.stack_capacity = language_vm::MAX_STACK;
@@ -362,8 +392,9 @@ void Services::run_document() {
 void Services::restore_script_editor() {
     if(!script_editor_.valid || m61_text::active()) return;
     program_store::Entry entry;u16 used=0;
-    if(!program_store::entry_by_id(script_editor_.id,entry) || entry.data_len>=SOURCE_CAPACITY ||
-        !program_store::read_range_id(script_editor_.id,0,(u8*)source_,entry.data_len,&used) || used!=entry.data_len) return;
+    if(!program_store::entry_by_id(script_editor_.id,entry) || entry.data_len>=SOURCE_CAPACITY) return;
+    if(entry.data_len>=CACHE_SOURCE_OFFSET) language_cache::revoke(this);
+    if(!program_store::read_range_id(script_editor_.id,0,(u8*)source_,entry.data_len,&used) || used!=entry.data_len) return;
     source_[used]=0;length_=used;document_=Document::MK61;dirty_=true;
     graph_.reset();graph_visible_=false;
     std::snprintf(path_,sizeof(path_),"%s",script_editor_.path);
@@ -408,6 +439,7 @@ bool Services::enter_directory(const char* path) {
     return true;
 }
 u8 Services::run_external(const char* path) {
+    bind_cache();
     using Type = program_store::ProgramType;
     switch(script::file_type(path)) {
     case Type::APP: return run_native(path);
@@ -422,8 +454,17 @@ u8 Services::run_external(const char* path) {
     }
     default: break;
     }
-    if(!load_document(path)) return 2;
-    if(document_ == Document::TEXT) {
+    const auto type=script::file_type(path);
+    language_cache::Prepared prepared;
+    if(type==Type::TINYBASIC || type==Type::FOCAL)
+        prepared=language_cache::find(path,type==Type::FOCAL?language_vm::Language::FOCAL:language_vm::Language::BASIC,core_61::expanded_program_is_on(),image_,sizeof(image_));
+    struct ReleasePrepared {
+        language_cache::Prepared& image;
+        ~ReleasePrepared() { language_cache::release(image); }
+    } release{prepared};
+    if(prepared) viewing_=image_viewing_=runtime_graphics_=false;
+    if(!prepared && !load_document(path)) return 2;
+    if(!prepared && document_ == Document::TEXT) {
         viewing_ = waiting_ = true;
         if(!pump_) { viewing_ = waiting_ = false; page_ = ServicePage::CLOSED; return 2; }
         for(;;) {
@@ -439,16 +480,16 @@ u8 Services::run_external(const char* path) {
         }
         viewing_ = waiting_ = false; page_ = ServicePage::CLOSED; return 0;
     }
-    if(document_ != Document::BASIC && document_ != Document::FOCAL) { page_ = ServicePage::CLOSED; return 2; }
+    if(!prepared && document_ != Document::BASIC && document_ != Document::FOCAL) { page_ = ServicePage::CLOSED; return 2; }
     external_run_=true;
-    run_document();
+    run_document(prepared?&prepared.view:nullptr);
     external_run_=false;
     const u8 result=last_error_==language_vm::Error::NONE?0:last_error_==language_vm::Error::STOPPED?1:2;
     if(result==0) {
         if(graph_visible_) script::show_native_frame(graph_.frame());
         else {
             const unsigned first=first_console_row(script::rows());
-            script::show_lines(console_[first],sizeof(console_[0]),rows()-first,console_col_,console_row_-first);
+            present_console(first);
         }
     }
     page_ = ServicePage::CLOSED; return result;
@@ -459,6 +500,7 @@ bool Services::selected_text(unsigned row,unsigned column) const {
 }
 u8 Services::view_markdown(const char* path) {
     if(markdown_ || !pump_) return 2;
+    language_cache::discard();
     std::unique_ptr<MarkdownView> document(new(std::nothrow) MarkdownView);
     if(!document || !document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
     if(ui_) document->set_font(ui_->settings());
@@ -511,9 +553,10 @@ const u8* Services::graphics() const {
     if(image_viewing_) return script::frame();
     if(graph_visible_) { if(graph_width_==320) { script::show_native_frame(graph_.frame());return script::frame(); }return graph_.frame(); }
     if(!custom_console()) return nullptr;
-    script::show_lines(console_[0],sizeof(console_[0]),rows(),console_col_,console_row_);return script::frame();
+    present_console(0);return script::frame();
 }
 u8 Services::view_image(const char* path) {
+    language_cache::discard();
     auto* bytes=(u8*)std::malloc(program_store::MAX_IMAGE1_SIZE);unsigned used=0;wbmp::Info info{};
     if(!bytes) return 2;
     if(!files::read(path,bytes,program_store::MAX_IMAGE1_SIZE,used) || wbmp::inspect(bytes,used,info)!=wbmp::Status::OK || !pump_) {std::free(bytes);return 2;}

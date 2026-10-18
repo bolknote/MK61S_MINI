@@ -139,7 +139,7 @@ def main():
                     capture_output=True, text=True).stdout
         fields = sizes.splitlines()[-1].split()
         metadata = {
-            "profile": args.profile, "prototype_version": "0.8.0", "mcu": "RP2040",
+            "profile": args.profile, "prototype_version": "0.8.1", "mcu": "RP2040",
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + GCC IEEE float/double helpers",
             "pico_sdk": SDK_VERSION, "pico_sdk_commit": sdk_revision,

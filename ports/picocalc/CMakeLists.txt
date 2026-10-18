@@ -24,7 +24,7 @@ set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
-    script_files.cpp script_runtime.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
+    script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
     "${MK61_ROOT}/code/mk61emu_core.cpp"
@@ -38,6 +38,7 @@ add_executable(mk61s-picocalc-pico-h
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/language_bytecode.cpp"
     "${MK61_ROOT}/code/language_vm.cpp"
+    "${MK61_ROOT}/code/language_vm_file_cache.cpp"
     "${MK61_ROOT}/code/basic_graphics.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/basic_native_io.cpp" "${MK61_ROOT}/code/app_flow.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE
@@ -77,8 +78,10 @@ target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
 target_compile_options(mk61s-picocalc-pico-h PRIVATE
     -fstack-usage
     $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wno-unused-parameter;-Wno-unused-variable>)
-# Keep the portable decoder for the first hardware qualification.
+# Both resident interpreters are hot code on RP2040. Keep IEEE semantics;
+# this changes optimization level only, without fast-math or M4 instructions.
 set_source_files_properties("${MK61_ROOT}/code/mk61emu_core.cpp"
+    "${MK61_ROOT}/code/language_vm.cpp"
     PROPERTIES COMPILE_OPTIONS "-O3")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
@@ -90,7 +93,7 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.8.0")
+pico_set_program_version(mk61s-picocalc-pico-h "0.8.1")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.

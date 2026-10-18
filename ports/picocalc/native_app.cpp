@@ -16,6 +16,7 @@
 #include "mk8_codec.hpp"
 #include "mk_math.hpp"
 #include "native_runtime.hpp"
+#include "language_cache.hpp"
 #include "number_format.hpp"
 #include "script.hpp"
 #include "services.hpp"
@@ -1150,6 +1151,23 @@ u8 Services::run_handled(const char *path, u16 magic) {
 u8 Services::run_native(const char *path, u16 file) {
   if (NativeHost::current || running_ || files::usb_active())
     return 3;
+  if(!path || !*path) return 4;
+  shown_frame_revision_=0; // A native APP may draw directly into the shared canvas.
+  language_cache::discard();
+  char application[files::PATH_SIZE],document[files::PATH_SIZE];
+  if(!m61_text::active()) {
+    std::snprintf(application,sizeof(application),"%s",path);
+    if(file!=0xFFFF) {
+      const char* name=script::file_path(file);if(!name) return 4;
+      std::snprintf(document,sizeof(document),"%s",name);
+    }
+    script::reset_files();path=application;
+    if(file!=0xFFFF) {
+      program_store::Entry entry;
+      if(!script::register_file(document,entry)) return 4;
+      file=entry.id;
+    }
+  }
   program_store::Entry root;
   if (!script::register_file(path, root))
     return 4;

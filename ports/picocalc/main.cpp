@@ -18,6 +18,7 @@
 #include "version.hpp"
 #include "diagnostics.hpp"
 #include "firmware.hpp"
+#include "language_cache.hpp"
 #include "m61_text.hpp"
 #include "tusb.h"
 #include "hardware/clocks.h"
@@ -105,6 +106,12 @@ void report(unsigned math_failures) {
     std::printf("%.*s",(int)firmware_size,diagnostic_status);
     std::printf("UI_FONT_FAMILY=%u UI_FONT_SIZE=%u UI_FONT_KEY=%08lX\n",
         ui.settings().ui_font_family,ui.settings().ui_font_size,(unsigned long)ui.settings().ui_font_key);
+    const auto cache=picocalc::language_cache::statistics();
+    std::printf("VM_CACHE=RAM+SD BYTES=%u USED=%u RAM_HIT=%lu RAM_MISS=%lu SD_HIT=%lu SD_MISS=%lu COMPILES=%lu STORES=%lu REJECTED=%lu PACKS=%lu THAWS=%lu PACKED=%u\n",
+        cache.allocated,cache.used,(unsigned long)cache.ram_hits,(unsigned long)cache.ram_misses,
+        (unsigned long)cache.disk_hits,(unsigned long)cache.disk_misses,(unsigned long)cache.compiles,
+        (unsigned long)cache.stores,(unsigned long)cache.rejected,
+        (unsigned long)cache.packs,(unsigned long)cache.thaws,cache.packed);
     const auto model = calculator.snapshot();
     std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
                 picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
@@ -253,7 +260,7 @@ int main() {
     services.set_pump(service_pump, nullptr);
     terminal.init({nullptr,
         [](void*,const char* text,unsigned n) { std::printf("%.*s",(int)n,text); },
-        [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(); },
+        [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(m61_text::active() && m61_text::display_owned()); },
         [](void*,u8 id,const char* args) {
             if(id==CMD_IDENTITY) {
                 char uid[2*PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1];pico_get_unique_board_id_string(uid,sizeof(uid));
@@ -411,7 +418,7 @@ int main() {
         } else if(current.classic_speed && core_61::is_RUN() && calculator.idle()) {
             if(!next_classic_step) next_classic_step = now + 1153846; // Shared CLASSIC cadence: 15/13 s.
             if(now >= next_classic_step) { calculator.tick(); next_classic_step = now + 1153846; }
-        } else { next_classic_step = 0; calculator.tick(); }
+        } else { next_classic_step = 0; calculator.tick(m61_text::active() && m61_text::display_owned()); }
         if(current.idle_signal && now - last_activity >= 300000000ULL) {
             tone(current.volume, 150);
             last_activity = now;

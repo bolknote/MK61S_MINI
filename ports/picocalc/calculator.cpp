@@ -71,7 +71,10 @@ bool Calculator::input(u8 code) {
     return true;
 }
 
-void Calculator::tick() {
+void Calculator::tick(bool script_owns_display) {
+    // An M61 screen needs no idle ROM scan between its commands. Pending
+    // presses/releases and a running MK61 program still advance normally.
+    if(script_owns_display && idle() && !core_61::is_RUN()) return;
     diagnostics::Scope measure(diagnostics::Point::CORE);
     if(!press_steps_ && !releasing_ && count_) {
         active_ = queue_[read_];

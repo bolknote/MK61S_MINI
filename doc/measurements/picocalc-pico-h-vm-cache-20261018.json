@@ -1,0 +1,137 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-18T16:35:40.351724+00:00",
+  "uid": "E6657CD423721C35",
+  "build_id": "69fdb3ee",
+  "uf2_sha256": "f3491904188616d92399e020864628edc5e072fd9504f71907336e5195fd8e96",
+  "source_sha256": "69fdb3ee823c8c4cab6ce2dc463276bf22cdc9dcddeb65e2a844f61293f72881",
+  "scope": "Focused 0.8.1 hardware qualification: BASIC RAM/SD and packed image cache, M61 scheduler/display and retained console raster, SHEET/BUDGET/ELIZA after cache use, and one complete chess move. Earlier full feature qualification remains tied to its original UF2.",
+  "hardware": {
+    "cache": [
+      "Second execution uses the immutable RAM image without compilation",
+      "After a normal MCU reset the verified SD image runs with zero compiles and zero cache writes",
+      "A same-length source edit invalidates RAM and SD bytecode and executes the new result"
+    ],
+    "packed_cache": {
+      "programs": 16,
+      "cold": {
+        "BYTES": 32768,
+        "USED": 29600,
+        "RAM_HIT": 4,
+        "RAM_MISS": 23,
+        "SD_HIT": 3,
+        "SD_MISS": 20,
+        "COMPILES": 20,
+        "STORES": 20,
+        "REJECTED": 1,
+        "PACKS": 7,
+        "THAWS": 0,
+        "PACKED": 4
+      },
+      "warm": {
+        "BYTES": 32768,
+        "USED": 28968,
+        "RAM_HIT": 17,
+        "RAM_MISS": 26,
+        "SD_HIT": 6,
+        "SD_MISS": 20,
+        "COMPILES": 20,
+        "STORES": 20,
+        "REJECTED": 1,
+        "PACKS": 12,
+        "THAWS": 4,
+        "PACKED": 3
+      },
+      "driver_sha256": "8ba684346708cb5e966fe40d9ea11c735929d0ee6c486577812b5c727ab27fb5"
+    },
+    "display": [
+      {
+        "label": "FRAME ONE",
+        "native_frames": 25,
+        "frame_sha256": "4e371c965aed80664bb2c3cf04c048e89c7e5c95f20b433a740c726aa851f732",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      },
+      {
+        "label": "FRAME TWO",
+        "native_frames": 25,
+        "frame_sha256": "67bfbca17117306a7e31125d49c8609aed3edd2a45f1d68d3d18fd80de898f6b",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      },
+      {
+        "label": "FRAME ONE",
+        "native_frames": 25,
+        "frame_sha256": "4e371c965aed80664bb2c3cf04c048e89c7e5c95f20b433a740c726aa851f732",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      }
+    ],
+    "native_apps": [
+      {
+        "name": "SHEET.APP",
+        "clean_exit": true
+      },
+      {
+        "name": "BUDGET.mks",
+        "clean_exit": true
+      },
+      {
+        "name": "ELIZA.APP",
+        "clean_exit": true
+      }
+    ],
+    "native_app_files": {
+      "SHEET.APP": "c173714aa6278f95ac99e14efdd2af533c924d4be981bfdcf8b0ecbd864f5e51",
+      "ELIZA.APP": "8ca39b331bdb0134c45621e183637567d55b56f23b50d30a6eb835fc56378aae",
+      "BUDGET.mks": "5eec63dc5597268cde913aceaf753e8650298b46dadc989870a1bfb920379e83"
+    },
+    "scheduler_profile_before": "prof stop\r\nPROFILE=STOPPED TIMER=US ELAPSED_US=3938336 (inclusive)\r\ncore     calls=63 total_us=2347815 max_us=37488 mean_us=37266\r\nusb      calls=63 total_us=5506 max_us=258 mean_us=87\r\ndisplay  calls=23 total_us=162636 max_us=7451 mean_us=7071\r\nstorage  calls=9 total_us=37608 max_us=6991 mean_us=4178\r\nlanguage calls=0 total_us=0 max_us=0 mean_us=0\r\napp      calls=0 total_us=0 max_us=0 mean_us=0\r\nmk61> ",
+    "scheduler_profile_after": "prof stop\r\nPROFILE=STOPPED TIMER=US ELAPSED_US=3795936 (inclusive)\r\ncore     calls=13 total_us=485633 max_us=37484 mean_us=37356\r\nusb      calls=1454 total_us=27003 max_us=312 mean_us=18\r\ndisplay  calls=29 total_us=203078 max_us=7247 mean_us=7002\r\nstorage  calls=9 total_us=37473 max_us=6951 mean_us=4163\r\nlanguage calls=0 total_us=0 max_us=0 mean_us=0\r\napp      calls=0 total_us=0 max_us=0 mean_us=0\r\nmk61> "
+  },
+  "checks": {
+    "pico-asan-ubsan": {
+      "passed": true,
+      "log_sha256": "87fb8ad623176d4b8d9dcaff648638fa1cb814aa806760d0b6c649506b1cb354"
+    },
+    "stm32-cache-four-math-usb-variants": {
+      "passed": true,
+      "log_sha256": "bd63298f4893ffcd0e6315ba18e4a47cbebeda96c7ef186de5a55170d7129f4d"
+    },
+    "f401-product-a00-build": {
+      "passed": true,
+      "log_sha256": "fc109997541a4f7f6dbc2e27853a3dd1cd40723bc36920ad70ed7925a156c967"
+    },
+    "f411-classic-v3-build": {
+      "passed": true,
+      "log_sha256": "140ea709a2dc71c1510098fdefafe4405d77376d1237673e9af83ddb07ed534f"
+    },
+    "f401-system-apps": {
+      "passed": true,
+      "log_sha256": "8794675650ab4ac2068926e3ee2c48844353bf14ba3de926fbf981cc2f5c70b7"
+    },
+    "f411-system-apps": {
+      "passed": true,
+      "log_sha256": "05520924fa807780d97ce53f9bea39b93692a62a58a8b26395c73977a8f6f295"
+    },
+    "stm32-app-memory-and-runtime-archive-gates": {
+      "passed": true,
+      "f401_bin_bytes": 231044,
+      "f411_bin_bytes": 388752,
+      "f401_system_apps": 9,
+      "f411_system_apps": 9,
+      "note": "Matching System bundles, full APP memory gates and no libgcc/libm/libstdc++/libc/libnosys archive members. No STM32 hardware test or write in this session."
+    }
+  },
+  "native_app_abi_changed": false,
+  "stm32_hardware_written": false,
+  "preservation": {
+    "calculator_restored": true,
+    "independent_re_read_matches_original_snapshot": true,
+    "probe_files_removed": true,
+    "game_files_unchanged": true
+  }
+}

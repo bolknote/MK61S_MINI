@@ -2,6 +2,7 @@
 #include "mk8_codec.hpp"
 #include "script.hpp"
 #include "storage.hpp"
+#include "language_cache.hpp"
 #include "storage_path.hpp"
 #include "terminal_core.hpp"
 #include <cstdio>
@@ -220,6 +221,7 @@ bool register_normalized(const char *path, program_store::Entry &out) {
 void reset_files() {
   if (m61_text::active())
     return;
+  language_cache::discard();
   for (u16 i = 0; i < node_count; ++i) {
     std::free(nodes[i].path);
     std::free(nodes[i].source);
@@ -228,6 +230,20 @@ void reset_files() {
   std::free(nodes);
   nodes = nullptr;
   node_count = node_capacity = 0;
+}
+void prepare_files() {
+  if(m61_text::active()) return;
+  // Physical file IDs remain stable for cached bytecode across top-level
+  // launches and idle ticks. Release editor snapshots immediately; bound
+  // the retained registry independently of the optional 32 KiB image cache.
+  unsigned names=0;
+  for(u16 i=0;i<node_count;++i) names+=(unsigned)std::strlen(nodes[i].path)+1;
+  if(node_count>64 || names>8192) { reset_files();return; }
+  for(u16 i=0;i<node_count;++i) if(nodes[i].virtual_source) {
+    std::free(nodes[i].source);nodes[i].source=nullptr;
+    nodes[i].virtual_source=false;nodes[i].revision=files::revision()-1;
+    nodes[i].length=0;nodes[i].type=type_of(nodes[i].path);
+  }
 }
 const char *file_path(u16 id) {
   return id == program_store::ROOT_ID ? "/"

@@ -302,7 +302,7 @@ int main() {
 #endif
   ImageCache<256,2> small;
   static_assert(sizeof(small)<=256,"cache metadata outside its budget");
-  ValidatedImage cert={VALIDATED_MAGIC,32,32,4,32,0,1,0,Language::BASIC};
+  ValidatedImage cert={VALIDATED_MAGIC,32,32,4,32,0,1,0,Language::BASIC,false};
   auto one=small.reserve({1,1,Language::BASIC,0},32);
   assert(one);memset(small.building(one),1,32);assert(small.publish(one,cert));assert(small.release(one));
   auto two=small.reserve({1,2,Language::BASIC,0},32);

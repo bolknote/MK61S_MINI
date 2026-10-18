@@ -1,0 +1,74 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-18T14:21:22.136535+00:00",
+  "version": "0.8.0",
+  "build_id": "b917b1d6",
+  "uid": "E6657CD423721C35",
+  "uf2_sha256": "07a950e51a98e65ca6384b7023d20feafd4d0859518e79a90a9b4b41fb665b6c",
+  "source_sha256": "b917b1d612b99328498ab9ef2576fc34a3f273210a678e93f7a9ca01955ccc65",
+  "scope": "PicoCalc M61 retained native frame between BASIC parts; focused hardware regression, host suite and STM32 build compatibility.",
+  "change": "Erase the generic calculator header and separator before copying the M61 bitmap, including its zero pixels.",
+  "regression": {
+    "before": "FAIL: retained native frame contains generic header pixels",
+    "after": "PASS: all 102400 native pixels match the retained M61 frame",
+    "baseline_log_sha256": "1e7c9d99caf63788c69bdb4c2fc8d236007f8cf2d15ace2f1defeffd964b8179"
+  },
+  "hardware": {
+    "phases": [
+      {
+        "label": "FRAME ONE",
+        "native_frames": 3,
+        "frame_sha256": "4e371c965aed80664bb2c3cf04c048e89c7e5c95f20b433a740c726aa851f732",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      },
+      {
+        "label": "FRAME TWO",
+        "native_frames": 3,
+        "frame_sha256": "67bfbca17117306a7e31125d49c8609aed3edd2a45f1d68d3d18fd80de898f6b",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      },
+      {
+        "label": "FRAME ONE",
+        "native_frames": 3,
+        "frame_sha256": "4e371c965aed80664bb2c3cf04c048e89c7e5c95f20b433a740c726aa851f732",
+        "all_102400_pixels_match": true,
+        "services_closed": true,
+        "m61_owns_display": true
+      }
+    ],
+    "native_frames_crc_verified": 41,
+    "test_driver_sha256": "59132c72c0cc4fea6dc040cc98767f3ba2837c3c8c9fd61920a7559130802ad2",
+    "report": "m61-display-hil-b917b1d6/display-result.json",
+    "probe_directory_removed": true,
+    "calculator_state_restored": true
+  },
+  "checks": {
+    "pico-host-asan-ubsan": {
+      "passed": true,
+      "log_sha256": "efeada14e46b7eed1cfcfa061dccea5469433fc188467aff1263a80844098b06"
+    },
+    "stm32-f401-product-a00": {
+      "passed": true,
+      "log_sha256": "6840730fa60f243714eb0ff4b897a8d56ceed4d00866bba0c8e8319318b1959d"
+    },
+    "stm32-f411-classic-v3": {
+      "passed": true,
+      "log_sha256": "34abca3b2644afe001403c7f635db9b1cdd541ff729052a5afc7d633cefbe5ac"
+    }
+  },
+  "flash_bytes": 674336,
+  "static_ram_bytes": 162036,
+  "stm32_sources_changed": false,
+  "native_app_abi_changed": false,
+  "previous_native_display_qualification": {
+    "report": "doc/measurements/picocalc-pico-h-native-320-20261018.json",
+    "build_id": "8b2b72f5",
+    "uf2_sha256": "48bf489eda07d79db8b08b90437b2f9de45d69a8eeff748d3b0660d64879ee22",
+    "note": "Earlier display and APP hardware coverage belongs to its exact UF2. The new build has the focused M61 hardware regression and checks listed above."
+  },
+  "final": "RESET_REASON=00010001 BOOTS=36 CRASH=NONE BUILD=B917B1D6\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=2594 MAX_GAP_MS=938 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=1268108 PREVIOUS_GAP_MS=938\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=674336 FOOTER=583988 EXPECTED=C068CEAC ACTUAL=C068CEAC CHECK_US=372562\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nMK61S PICOCALC PICO-H 0.8.0 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=8\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=29 DIRTY=0 PATH=[/MK61S-M61-DISPLAY-20261018/one.tbi] RESULT=[OK  line 30  7 steps]\r\nSTACK_USED=8324 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=938869\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=41 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T17:17:48 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[FRAME ONE                       ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n"
+}

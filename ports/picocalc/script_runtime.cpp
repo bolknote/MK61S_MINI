@@ -42,6 +42,7 @@ u8 mode = 2;
 text_screen::Grid grid;
 u8 raster[1536]{};
 bool native_visible=true;
+u32 frame_generation=1;
 m61_ansi::SavedCursor saved_cursor{};
 fmk::Face face;
 prepared_font::Face prepared;
@@ -130,18 +131,21 @@ void paint(u8 x, u8 y, u16 cp) {
   }
 }
 bool put(u8 x, u8 y, u16 cp, void *) {
+  ++frame_generation;
   grid.setCursor(x, y);
   grid.writeCodepoint(cp);
   paint(x, y, cp);
   return true;
 }
 bool clear(void *) {
+  ++frame_generation;
   grid.clear();
   std::memset(raster, 0, sizeof(raster));
   canvas::clear();native_visible=true;
   return true;
 }
 void reshape() {
+  ++frame_generation;
   ++font_generation;
   unsigned columns = 192 / cell_width(), rows = 64 / cell_height();
   if (columns > text_screen::MAX_COLS)
@@ -275,7 +279,7 @@ bool start(const char *path) {
   if (!calculator)
     return false;
   if (!m61_text::active())
-    reset_files();
+    prepare_files();
   program_store::Entry entry;
   return register_file(path, entry) &&
          entry.type == program_store::ProgramType::MK61 &&
@@ -288,7 +292,7 @@ bool start_source(const char *path, const char *source, u16 length,
   if (!calculator)
     return false;
   if (!m61_text::active())
-    reset_files();
+    prepare_files();
   program_store::Entry entry;
   if (!register_source(path, source, length, entry))
     return false;
@@ -371,8 +375,10 @@ bool print(const char *args) {
   return result.ok();
 }
 const u8 *frame() { return raster; }
+u32 frame_revision() { return frame_generation; }
 const u8* native_frame() { return native_visible?canvas::frame():nullptr; }
 void show_native_frame(const u8* bytes,bool compatibility_crop) {
+  ++frame_generation;
   if(bytes!=canvas::frame()) std::memcpy(canvas::frame(),bytes,canvas::BYTES);
   native_visible=true;
   // Old USB clients retain a 1:1 cropped view; new clients negotiate 320x320.
@@ -395,6 +401,7 @@ void text_row(unsigned row, char *out, unsigned capacity) {
     out[used] = 0;
 }
 void show_frame(const u8 *bytes) {
+  ++frame_generation;
   native_visible=false;
   std::memcpy(raster, bytes, sizeof(raster));
   m61_text::claim_display();

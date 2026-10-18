@@ -268,6 +268,8 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
     }
     if(ui->page() == Page::CALCULATOR) {
         if(m61_text::display_owned()) {
+            // M61 owns every pixel between BASIC parts, including blank ones.
+            std::memset(pixels_,0,sizeof(pixels_));
             if(const auto native=script::native_frame()) bitmap(native,320,320);
             else bitmap(script::frame(),192,64,64,96);
         } else calculator(model,*ui);

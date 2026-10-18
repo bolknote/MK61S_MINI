@@ -1,0 +1,363 @@
+{
+  "status": "PASS",
+  "recorded_at_utc": "2026-10-18T16:35:40.351724+00:00",
+  "device": {
+    "uid": "E6657CD423721C35",
+    "profile": "picocalc-pico-h",
+    "mcu": "RP2040 / Cortex-M0+",
+    "clock_hz": 125000000
+  },
+  "firmware": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.1",
+    "mcu": "RP2040",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + GCC IEEE float/double helpers",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 691808,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 162140,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 1383936,
+    "bin_sha256": "cfa628b7c0d2ca9a0a58f79642714a620e62dbcb710601eda371e6cf36e79be1",
+    "uf2_sha256": "f3491904188616d92399e020864628edc5e072fd9504f71907336e5195fd8e96",
+    "hardware_verified": false,
+    "source_sha256": "69fdb3ee823c8c4cab6ce2dc463276bf22cdc9dcddeb65e2a844f61293f72881",
+    "build_id": "69fdb3ee",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 691808,
+      "footer_offset": 601164,
+      "profile_id": "50434831",
+      "crc32": "374ff3b9"
+    }
+  },
+  "scenario": {
+    "game": "Turochamp",
+    "opening_book": false,
+    "human": "Black",
+    "computer": "White",
+    "level": 2,
+    "maximum_depth": 8,
+    "expected_nodes": 420,
+    "game_files": 29,
+    "game_m8_bytes": 35741,
+    "package": {
+      "Turochamp.FMK": {
+        "bytes": 985,
+        "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+      },
+      "algorithm.md": {
+        "bytes": 746,
+        "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+      },
+      "autoexec.m61": {
+        "bytes": 697,
+        "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+      },
+      "board.tbi": {
+        "bytes": 2570,
+        "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+      },
+      "castle.tbi": {
+        "bytes": 1184,
+        "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+      },
+      "claim.tbi": {
+        "bytes": 663,
+        "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+      },
+      "claims.tbi": {
+        "bytes": 734,
+        "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+      },
+      "ep.tbi": {
+        "bytes": 1023,
+        "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+      },
+      "eval.tbi": {
+        "bytes": 1478,
+        "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+      },
+      "game.tbi": {
+        "bytes": 1668,
+        "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+      },
+      "help.tbi": {
+        "bytes": 701,
+        "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+      },
+      "history.tbi": {
+        "bytes": 2195,
+        "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+      },
+      "init.tbi": {
+        "bytes": 707,
+        "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+      },
+      "legal.tbi": {
+        "bytes": 4647,
+        "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+      },
+      "make.tbi": {
+        "bytes": 1030,
+        "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+      },
+      "manual.md": {
+        "bytes": 818,
+        "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+      },
+      "menu.tbi": {
+        "bytes": 1634,
+        "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+      },
+      "mobility.tbi": {
+        "bytes": 310,
+        "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+      },
+      "node.tbi": {
+        "bytes": 2262,
+        "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+      },
+      "promote.tbi": {
+        "bytes": 408,
+        "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+      },
+      "repeat.tbi": {
+        "bytes": 1096,
+        "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+      },
+      "rkey.tbi": {
+        "bytes": 575,
+        "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+      },
+      "rstep.tbi": {
+        "bytes": 416,
+        "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+      },
+      "rules.md": {
+        "bytes": 830,
+        "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+      },
+      "search.tbi": {
+        "bytes": 1775,
+        "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+      },
+      "status.tbi": {
+        "bytes": 1619,
+        "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+      },
+      "threat.tbi": {
+        "bytes": 1862,
+        "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+      },
+      "turn.tbi": {
+        "bytes": 455,
+        "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+      },
+      "unmake.tbi": {
+        "bytes": 653,
+        "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+      }
+    }
+  },
+  "measurement": {
+    "runs": 1,
+    "seconds": 138.77980299998308,
+    "move": "e2e3",
+    "nodes": 420,
+    "progress": [
+      {
+        "nodes": 0,
+        "seconds": 2.4498812910169363
+      },
+      {
+        "nodes": 21,
+        "seconds": 14.089617000019643
+      },
+      {
+        "nodes": 42,
+        "seconds": 20.30270316603128
+      },
+      {
+        "nodes": 63,
+        "seconds": 26.81219525000779
+      },
+      {
+        "nodes": 84,
+        "seconds": 33.07156495802337
+      },
+      {
+        "nodes": 105,
+        "seconds": 39.372971791017335
+      },
+      {
+        "nodes": 126,
+        "seconds": 45.310357541020494
+      },
+      {
+        "nodes": 147,
+        "seconds": 51.63523404102307
+      },
+      {
+        "nodes": 168,
+        "seconds": 57.96923887502635
+      },
+      {
+        "nodes": 189,
+        "seconds": 64.3019764579949
+      },
+      {
+        "nodes": 210,
+        "seconds": 70.67465987498872
+      },
+      {
+        "nodes": 231,
+        "seconds": 77.53044449997833
+      },
+      {
+        "nodes": 252,
+        "seconds": 84.43852516601328
+      },
+      {
+        "nodes": 273,
+        "seconds": 91.49363633303437
+      },
+      {
+        "nodes": 294,
+        "seconds": 98.52587020798819
+      },
+      {
+        "nodes": 315,
+        "seconds": 104.83552720799344
+      },
+      {
+        "nodes": 336,
+        "seconds": 111.16845016600564
+      },
+      {
+        "nodes": 357,
+        "seconds": 117.50637237500632
+      },
+      {
+        "nodes": 378,
+        "seconds": 123.81802529102424
+      },
+      {
+        "nodes": 399,
+        "seconds": 129.99722087499686
+      },
+      {
+        "nodes": 420,
+        "seconds": 136.32934975001263
+      }
+    ],
+    "complete_eight_rank_board": true,
+    "canonical_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+    "menu_seconds": 2.2845647080102935,
+    "terminal_complete_seconds": 138.43547941598808,
+    "timing_start": "OK on Black selection",
+    "timing_end": "CRC-checked complete eight-rank e2-e3 board",
+    "usb_screen_during_computation": false,
+    "usb_terminal": true,
+    "physical_lcd": true,
+    "profiling": false,
+    "game_prewarms": 0,
+    "reset_before": false,
+    "native_geometry": [
+      320,
+      320
+    ],
+    "frames_crc_verified": 29
+  },
+  "cache_counters": {
+    "initial": {
+      "BYTES": 32768,
+      "USED": 28968,
+      "RAM_HIT": 17,
+      "RAM_MISS": 26,
+      "SD_HIT": 6,
+      "SD_MISS": 20,
+      "COMPILES": 20,
+      "STORES": 20,
+      "REJECTED": 1,
+      "PACKS": 12,
+      "THAWS": 4,
+      "PACKED": 3
+    },
+    "after_move": {
+      "BYTES": 32768,
+      "USED": 31024,
+      "RAM_HIT": 7724,
+      "RAM_MISS": 42,
+      "SD_HIT": 6,
+      "SD_MISS": 36,
+      "COMPILES": 36,
+      "STORES": 36,
+      "REJECTED": 14,
+      "PACKS": 17,
+      "THAWS": 5,
+      "PACKED": 3
+    },
+    "delta": {
+      "RAM_HIT": 7707,
+      "RAM_MISS": 16,
+      "SD_HIT": 0,
+      "SD_MISS": 16,
+      "COMPILES": 16,
+      "STORES": 16,
+      "REJECTED": 13,
+      "PACKS": 5,
+      "THAWS": 1
+    },
+    "scope": "Game menu preparation plus one complete search"
+  },
+  "comparison": {
+    "original_seconds": 5664.655606415996,
+    "flicker_fixed_seconds": 3139.9895882089622,
+    "cache_and_scheduler_845068a0_seconds": 336.93247412500205,
+    "optimized_seconds": 138.77980299998308,
+    "original_speedup": 40.817579243981825,
+    "flicker_fixed_speedup": 22.625695672801506,
+    "same_driver": true,
+    "same_device": true,
+    "same_game_files": true,
+    "sample_sizes": {
+      "original": 1,
+      "flicker_fixed": 1,
+      "cache_and_scheduler": 1,
+      "optimized": 1
+    }
+  },
+  "hardware_report": "doc/measurements/picocalc-pico-h-vm-cache-20261018.json",
+  "preservation": {
+    "calculator_registers_five_stack_values_program_and_directory_restored": true,
+    "game_files_unchanged": true,
+    "filesystem_writes_by_harness": 0,
+    "derived_cache_stores_by_firmware": 16,
+    "stm32_hardware_written": false
+  },
+  "limits": [
+    "One complete first computer move per final firmware; 420 searched positions are not 420 played moves.",
+    "End-to-end time includes remaining cold compilation, VM, M61 dispatch, LCD and final CRC-checked frame; menu is excluded.",
+    "The stopped 275C239C intermediate run is diagnostic evidence, not a completed chess timing.",
+    "Earlier Classic 25/29-second and 59-second results use other firmware configurations and warm-cache conditions."
+  ],
+  "driver_sha256": "79a12d8feedd6dcd652c657185b45405831e0097f1e1ca3b8595dc52dbfe5b42",
+  "raw_report_sha256": "4233fb2ad11bd0475afef9434539efed3f5fadcc016700ccb825cdbe17f1a265",
+  "initial": "RESET_REASON=00010001 BOOTS=46 CRASH=NONE BUILD=69FDB3EE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=7671 MAX_GAP_MS=939 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=3142 PREVIOUS_GAP_MS=939\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=691808 FOOTER=601164 EXPECTED=374FF3B9 ACTUAL=374FF3B9 CHECK_US=382206\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=28968 RAM_HIT=17 RAM_MISS=26 SD_HIT=6 SD_MISS=20 COMPILES=20 STORES=20 REJECTED=1 PACKS=12 THAWS=4 PACKED=3\r\nMK61S PICOCALC PICO-H 0.8.1 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=104\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=1784 DIRTY=0 PATH=[/MK61S-PACK-20261018-192535/part00.bas] RESULT=[OK  line 40  6 steps]\r\nSTACK_USED=16572 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1326753\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=309 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T19:29:26 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[FRAME ONE                       ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "final": "RESET_REASON=00010001 BOOTS=46 CRASH=NONE BUILD=69FDB3EE\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=20875 MAX_GAP_MS=939 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=3142 PREVIOUS_GAP_MS=939\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=691808 FOOTER=601164 EXPECTED=374FF3B9 ACTUAL=374FF3B9 CHECK_US=382206\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=31024 RAM_HIT=7724 RAM_MISS=42 SD_HIT=6 SD_MISS=36 COMPILES=36 STORES=36 REJECTED=14 PACKS=17 THAWS=5 PACKED=3\r\nMK61S PICOCALC PICO-H 0.8.1 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=162\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2195 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Turochamp/history.tbi] RESULT=[STOPPED  line 16  4471 steps]\r\nSTACK_USED=16572 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=1326753\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=338 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T19:33:58 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[ hgfedcba  ��������             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+  "raw_artifacts": ".build/picocalc-flicker-20261018",
+  "restored_state_sha256": "49f206dd76f239e8293541b282a7fd90b32ab5c83e8cf78863ad8f4752b44ffc"
+}

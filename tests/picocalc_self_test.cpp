@@ -6,6 +6,7 @@
 #include "menu_model.hpp"
 #include "ui_font.hpp"
 #include "mk8_codec.hpp"
+#include "diagnostics.hpp"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -26,10 +27,10 @@ double x_value() {
     *out++ = value[12]; *out++ = value[13]; *out = 0;
     return std::strtod(number, nullptr);
 }
-void feed(picocalc::Calculator& calc, const char* text) {
+void feed(picocalc::Calculator& calc, const char* text, bool script_owns_display=false) {
     for(; *text; ++text) require(calc.input((u8)*text), "input rejected");
     for(unsigned i = 0; i < 4096; ++i) {
-        calc.tick();
+        calc.tick(script_owns_display);
         if(calc.idle() && !core_61::is_RUN()) return;
     }
     require(false, "calculator did not settle");
@@ -166,9 +167,20 @@ void picocalc_firmware_test();
 int main(int argc, char** argv) {
     picocalc::Calculator calc;
     calc.init();
+    picocalc::diagnostics::profile_reset();
+    picocalc::diagnostics::profile_start();
+    for(unsigned i=0;i<128;++i) calc.tick(true);
+    require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls==0,
+        "M61 foreground must not perform idle MK61 ROM scans");
+    calc.tick();
+    require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls==1,
+        "calculator foreground must still scan the ROM");
     // A burst of FIFO key presses must neither repeat nor lose a digit.
-    feed(calc, "12\n34+");
+    feed(calc, "12\n34+",true);
     equal_x(46);
+    require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls>1,
+        "M61 foreground must service queued keys and their release");
+    picocalc::diagnostics::profile_stop();
     feed(calc, "\x08" "9f-"); // F minus = the original MK-61 square root.
     equal_x(3);
     feed(calc, "\x08" "90f7"); // DEG sin(90).
@@ -186,7 +198,7 @@ int main(int argc, char** argv) {
     require(calc.snapshot().programming, "F EXP enters program mode");
     feed(calc, "1\n2+r");
     require(core_61::get_code(core_61::get_ring_address(0)) == 1, "program entry");
-    feed(calc, "fng00r");
+    feed(calc, "fng00r",true);
     require(!calc.snapshot().programming, "F +/- returns to AUTO");
     equal_x(3);
 
@@ -215,6 +227,8 @@ int main(int argc, char** argv) {
     ui_test(calc, argc == 2 ? argv[1] : nullptr);
     picocalc_services_test(argc == 2 ? argv[1] : nullptr);
     picocalc_m61_test();
+    extern void picocalc_language_cache_test();
+    picocalc_language_cache_test();
     picocalc_runtime_test();
     picocalc_parity_test();
     picocalc_software_test(argc == 2 ? argv[1] : nullptr);

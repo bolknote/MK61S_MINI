@@ -230,7 +230,7 @@ extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
   }
   memcpy(stage.transfer.image,image,bytes);
   stage.file_validated={VALIDATED_MAGIC,view.size,view.code,view.source_size,view.end,
-      (uint8_t)view.lines,view.stack,(uint8_t)((view.requires_rf?2:0)|(image[7]&12)),view.language};
+      (uint8_t)view.lines,view.stack,(uint8_t)((view.requires_rf?2:0)|(image[7]&12)),view.language,false};
   stage.values->selected[c.language==Language::BASIC?0:1]=c.source_id;
   stage.transfer.next=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,
       flow->current.file_id,file_cache::START_LOADED);
