@@ -1,0 +1,4413 @@
+{
+  "schema": "mk61-picocalc-owned-m0-eabi-v1",
+  "recorded_at_utc": "2026-10-18T17:54:05.572359+00:00",
+  "scope": "Separate ARMv6-M arithmetic runtime; no libgcc.a members in the owned firmware. Physical qualification runs local SRAM APPs without flashing.",
+  "implementation": {
+    "portable": "Independent integer binary32/binary64 nearest-even kernels with gradual underflow, conversions, integer multiply/divide, CLZ and shifts.",
+    "rp2040": "Normal binary64 kernels adapted from BSD-3-Clause Pico SDK 2.2.0; project IEEE fallback guards, chunked cancellation normalization, exact power-of-two multiplication/division and rational reciprocal seeds.",
+    "sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "sdk_upstream_path": "src/rp2_common/pico_double/double_v1_rom_shim_rp2040.S",
+    "qfplib": "External, separately linked comparison APP only; no GPL-2.0 Qfplib source or tables are included in the product.",
+    "qfplib_source": {
+      "commit": "ec814ad1f17934ac777f9e042efacfae5b15210d",
+      "sha256": {
+        "qfplib-m0-full_gcc.S": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+        "qfplib-m0-full.h": "a2b0cec50d84fc529d772066490a28bac08a83036359fcbf612442bcee2a9754",
+        "LICENCE": "ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6",
+        "README.md": "7953c1fca78d056a57386c5236aedcf0771b29b2d741e662573fa6b5c6dd1d5c"
+      }
+    },
+    "source_sha256": {
+      "code/native_eabi_m0.hpp": "77c492f016cded32df00293742ee4ab13110015e137bced9553d88d643eedf79",
+      "code/native_eabi_m0.cpp": "906a6b41bfa675248e0735b0679446bad35135a578074cdad99d5d4a7c5723c6",
+      "code/native_eabi_m0.S": "e3b4dc2a19a315584d5deeab6c68330cf7299c8c0d759f1e00cd1fa54cc8f930",
+      "code/native_eabi_m0_rp2040.S": "afea4827ad4aad9a17d7956fd63d553873da1e9716537ce8b6c02f4d50bb8cb2",
+      "code/compact_math.cpp": "b62378e379bc242cca3bfc96f47a63c12cb33bd13a0ea78f52872a5042a2f0f8"
+    }
+  },
+  "build_comparison": {
+    "source_snapshot": ".build/m0-eabi-final-source",
+    "same_source_files": true,
+    "note": "Manifest source hashes include a compiler-runtime configuration marker; both builds use the same frozen source tree.",
+    "owned": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.2",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + owned ARMv6-M IEEE runtime",
+      "arithmetic_runtime": "owned-m0",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 648840,
+      "flash_limit": 2097152,
+      "static_ram_bytes": 166340,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 1297920,
+      "bin_sha256": "e66e857bfaeae358cffd24f04fc5afa83c52d22f147fecdfbbfb9a8fdbff21b1",
+      "uf2_sha256": "97da376e082d14b73218f1f95c34d8ffa57688ab4700060135ec11fa9558908b",
+      "hardware_verified": false,
+      "source_sha256": "4d4bec2df46750bff7b97fae3eee09cd1ab4314dc7c054a84620826e182bec44",
+      "build_id": "4f8989e2",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 648840,
+        "footer_offset": 582936,
+        "profile_id": "50434831",
+        "crc32": "e1351eff"
+      }
+    },
+    "gcc_control": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.2",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + GCC IEEE float/double helpers",
+      "arithmetic_runtime": "gcc",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 699736,
+      "flash_limit": 2097152,
+      "static_ram_bytes": 166380,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 1399808,
+      "bin_sha256": "4d9f64b0fc59bc46071f3877bd3cd95a1be8c88f82851ca868210e29007d355e",
+      "uf2_sha256": "bae4fcf6f4fb139d14ab0a2e57efa766d34450c36b52fb1d50c6076d87094ef6",
+      "hardware_verified": false,
+      "source_sha256": "0460b9656f6fb4e90bf7091d03e78255a5e964fad967e9705f1bbcee74d66b8f",
+      "build_id": "9b67ed19",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 699736,
+        "footer_offset": 608436,
+        "profile_id": "50434831",
+        "crc32": "31b2cbc9"
+      }
+    },
+    "flash_delta_bytes": -50896,
+    "static_ram_delta_bytes": -40,
+    "archive_gate": "Owned map has no libgcc.a members; GCC control is rejected by the same gate."
+  },
+  "tests": {
+    "host_arithmetic": {
+      "status": "PASS",
+      "checks": 100184111,
+      "samples": 2000000,
+      "sanitizers": [
+        "ASan",
+        "UBSan"
+      ],
+      "oracle": "Host IEEE binary32/binary64, integer arithmetic and sqrt; no target runtime used as the oracle."
+    },
+    "host_compact_math": {
+      "status": "PASS",
+      "cases_per_backend": 2443149,
+      "backends": 2,
+      "sanitizers": [
+        "ASan",
+        "UBSan"
+      ]
+    },
+    "host_picocalc": {
+      "status": "PASS",
+      "sanitizers": [
+        "ASan",
+        "UBSan"
+      ],
+      "log": ".build/m0-eabi-picocalc-host.log"
+    },
+    "armv6m": {
+      "generic": {
+        "status": "PASS",
+        "elf_sha256": "72e2b5cec9d5e9cdea28a823414eed690b2c47359bc64d553243ed007eb0850a",
+        "actual_arm_calls": 691978,
+        "math_vectors": 1897,
+        "math_worst_ulp": {
+          "sin": 0,
+          "cos": 1,
+          "tan": 1,
+          "asin": 1,
+          "acos": 1,
+          "atan": 0,
+          "ln": 0,
+          "log10": 1,
+          "exp": 1,
+          "sqrt": 0,
+          "pow": 0
+        },
+        "sample_instructions": {
+          "dadd": 97,
+          "dsub": 105,
+          "dmul": 181,
+          "ddiv": 544
+        },
+        "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack only",
+        "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles."
+      },
+      "rp2040": {
+        "status": "PASS",
+        "elf_sha256": "ac61255f794b7b2febf09409ef6b71f271bf112d6fa7925fdc4b994d7ab0118f",
+        "actual_arm_calls": 691981,
+        "math_vectors": 1897,
+        "math_worst_ulp": {
+          "sin": 0,
+          "cos": 1,
+          "tan": 1,
+          "asin": 1,
+          "acos": 1,
+          "atan": 0,
+          "ln": 0,
+          "log10": 1,
+          "exp": 1,
+          "sqrt": 0,
+          "pow": 0
+        },
+        "sample_instructions": {
+          "dadd": 74,
+          "dsub": 97,
+          "dmul": 138,
+          "ddiv": 160
+        },
+        "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+        "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles."
+      }
+    },
+    "production_elf_math": {
+      "status": "PASS",
+      "elf_sha256": "3926bf701334c2cc6c483290e73e6129c1532eeecd24a7b8ef3ac8250958c8a6",
+      "actual_arm_calls": 1904,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 74,
+        "dsub": 97,
+        "dmul": 138,
+        "ddiv": 160
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles.",
+      "sdk_rom_intrinsic_models": [
+        "__wrap___clzsi2",
+        "__wrap___clzdi2",
+        "__wrap_memcpy",
+        "__wrap_memset"
+      ]
+    },
+    "stm32_control_builds": {
+      "f411-lcd1602-a00": "PASS",
+      "f401-product-a00": "PASS"
+    }
+  },
+  "benchmark": {
+    "mean_microseconds_per_call": {
+      "OWN": {
+        "dadd": 0.7994791666666666,
+        "dsub": 0.9711100260416666,
+        "dmul": 1.055419921875,
+        "ddiv": 1.2106119791666667
+      },
+      "GCC": {
+        "dadd": 1.277587890625,
+        "dsub": 1.6121419270833333,
+        "dmul": 2.7098795572916665,
+        "ddiv": 3.74072265625
+      },
+      "QFP": {
+        "dadd": 0.7098795572916666,
+        "dsub": 1.2647298177083333,
+        "dmul": 1.228515625,
+        "ddiv": 1.469970703125
+      }
+    },
+    "equal_weight_total_latency_vs_qfplib_percent": -13.619978057572746,
+    "method": "RP2040 TIMERAWL, 125 MHz, median of nine paired 1024-call batches minus identity; interrupts enabled.",
+    "local_code_location": "OWN and QFP execute in SRAM; GCC control is the resident Flash runtime.",
+    "inputs": "Twelve fixed normal pairs per operation, including close cancellation and powers of two. This is not a general speed claim over arbitrary input distributions.",
+    "raw": {
+      "status": "PASS",
+      "identity": "identity\r\nMK61S PicoCalc 0.8.2 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152\r\nmk61> ",
+      "initial": "RESET_REASON=00010001 BOOTS=50 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=4816 MAX_GAP_MS=850 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=28180 PREVIOUS_GAP_MS=850\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=1 SD_HIT=0 SD_MISS=1 COMPILES=1 STORES=1 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=97\r\nIO_CORE=1 I2C_TRANSACTIONS=2461 UART_BYTES=253926 LCD_PENDING=0 LCD_FRAME_CRC=888C7AC9\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=56 DIRTY=0 PATH=[/MK61S-NATIVE320-20261018-202719/native.md] RESULT=[OK  line 50  21 steps]\r\nSTACK_USED=12764 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=849974\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=78 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:30:41 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[Native M61 / Ё                  ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+      "final": "RESET_REASON=00010001 BOOTS=50 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=6005 MAX_GAP_MS=850 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=28180 PREVIOUS_GAP_MS=850\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=1 SD_HIT=0 SD_MISS=1 COMPILES=1 STORES=1 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=104\r\nIO_CORE=1 I2C_TRANSACTIONS=2835 UART_BYTES=342852 LCD_PENDING=0 LCD_FRAME_CRC=376F761A\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=56 DIRTY=0 PATH=[/MK61S-M0-ALU-20261018/QFP.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSTACK_USED=14868 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=849974\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=78 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:31:32 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+      "results": {
+        "OWN": {
+          "dadd": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "4000000000000000",
+              "us_per_call": 0.76953125,
+              "raw_us": [
+                976,
+                1018,
+                1017,
+                984,
+                979,
+                1018,
+                1019,
+                1019,
+                1016
+              ],
+              "control_us": [
+                213,
+                218,
+                229,
+                229,
+                214,
+                230,
+                225,
+                228,
+                230
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 0.740234375,
+              "raw_us": [
+                987,
+                987,
+                987,
+                984,
+                987,
+                987,
+                987,
+                984,
+                987
+              ],
+              "control_us": [
+                229,
+                227,
+                225,
+                229,
+                229,
+                225,
+                227,
+                229,
+                229
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.8115234375,
+              "raw_us": [
+                1019,
+                1018,
+                1060,
+                1060,
+                1027,
+                1019,
+                1063,
+                1062,
+                1063
+              ],
+              "control_us": [
+                215,
+                214,
+                214,
+                229,
+                229,
+                213,
+                230,
+                226,
+                225
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "40177082EFAC4240",
+              "us_per_call": 0.8134765625,
+              "raw_us": [
+                1062,
+                1060,
+                1059,
+                1062,
+                1063,
+                1063,
+                1063,
+                1060,
+                1060
+              ],
+              "control_us": [
+                229,
+                229,
+                230,
+                229,
+                229,
+                225,
+                226,
+                229,
+                230
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFE3333333333334",
+              "us_per_call": 0.8974609375,
+              "raw_us": [
+                1124,
+                1115,
+                1139,
+                1149,
+                1126,
+                1119,
+                1149,
+                1149,
+                1148
+              ],
+              "control_us": [
+                229,
+                213,
+                214,
+                230,
+                229,
+                213,
+                229,
+                229,
+                229
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "4016000000000000",
+              "us_per_call": 0.943359375,
+              "raw_us": [
+                1195,
+                1196,
+                1195,
+                1196,
+                1196,
+                1195,
+                1195,
+                1196,
+                1173
+              ],
+              "control_us": [
+                229,
+                229,
+                229,
+                229,
+                229,
+                229,
+                229,
+                229,
+                229
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FFFFFFFFFFFFFFE",
+              "us_per_call": 0.8125,
+              "raw_us": [
+                1019,
+                1049,
+                1062,
+                1031,
+                1017,
+                1062,
+                1063,
+                1062,
+                1060
+              ],
+              "control_us": [
+                214,
+                213,
+                230,
+                230,
+                213,
+                228,
+                225,
+                227,
+                229
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4024666666666666",
+              "us_per_call": 0.7392578125,
+              "raw_us": [
+                984,
+                987,
+                988,
+                985,
+                983,
+                987,
+                987,
+                986,
+                983
+              ],
+              "control_us": [
+                230,
+                229,
+                225,
+                229,
+                230,
+                230,
+                225,
+                229,
+                230
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "439FF2147AE147AE",
+              "us_per_call": 0.7705078125,
+              "raw_us": [
+                1002,
+                986,
+                1002,
+                1028,
+                994,
+                986,
+                1032,
+                1031,
+                1034
+              ],
+              "control_us": [
+                229,
+                213,
+                213,
+                230,
+                229,
+                232,
+                230,
+                241,
+                226
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FF65D4C3B2A19",
+              "us_per_call": 0.7548828125,
+              "raw_us": [
+                1003,
+                1001,
+                1001,
+                1003,
+                1003,
+                1000,
+                1000,
+                1003,
+                1003
+              ],
+              "control_us": [
+                229,
+                230,
+                230,
+                230,
+                225,
+                230,
+                229,
+                229,
+                226
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 0.705078125,
+              "raw_us": [
+                965,
+                929,
+                920,
+                935,
+                963,
+                935,
+                920,
+                966,
+                963
+              ],
+              "control_us": [
+                230,
+                229,
+                213,
+                213,
+                230,
+                230,
+                213,
+                216,
+                230
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 0.8359375,
+              "raw_us": [
+                1085,
+                1086,
+                1086,
+                1085,
+                1086,
+                1082,
+                1082,
+                1083,
+                1085
+              ],
+              "control_us": [
+                229,
+                229,
+                226,
+                226,
+                227,
+                229,
+                229,
+                230,
+                229
+              ]
+            }
+          ],
+          "dsub": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "BFE3333333333334",
+              "us_per_call": 0.96875,
+              "raw_us": [
+                1222,
+                1222,
+                1195,
+                1183,
+                1215,
+                1222,
+                1188,
+                1200,
+                1224
+              ],
+              "control_us": [
+                230,
+                229,
+                230,
+                213,
+                213,
+                230,
+                230,
+                213,
+                226
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "BFF0000000000000",
+              "us_per_call": 0.9892578125,
+              "raw_us": [
+                1243,
+                1242,
+                1243,
+                1243,
+                1242,
+                1243,
+                1215,
+                1215,
+                1215
+              ],
+              "control_us": [
+                229,
+                229,
+                230,
+                230,
+                230,
+                229,
+                229,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3CB0000000000000",
+              "us_per_call": 1.3359375,
+              "raw_us": [
+                1586,
+                1588,
+                1582,
+                1581,
+                1606,
+                1581,
+                1581,
+                1581,
+                1581
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FDB1786497EAD78",
+              "us_per_call": 0.9921875,
+              "raw_us": [
+                1229,
+                1229,
+                1229,
+                1229,
+                1229,
+                1229,
+                1229,
+                1231,
+                1231
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "C000000000000000",
+              "us_per_call": 0.8486328125,
+              "raw_us": [
+                1081,
+                1084,
+                1083,
+                1082,
+                1081,
+                1081,
+                1081,
+                1082,
+                1082
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "403C800000000000",
+              "us_per_call": 0.728515625,
+              "raw_us": [
+                958,
+                959,
+                959,
+                959,
+                958,
+                958,
+                959,
+                960,
+                959
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3CA0000000000000",
+              "us_per_call": 1.3359375,
+              "raw_us": [
+                1581,
+                1581,
+                1605,
+                1581,
+                1581,
+                1581,
+                1581,
+                1630,
+                1629
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                226,
+                230
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "C02399999999999A",
+              "us_per_call": 0.84375,
+              "raw_us": [
+                1093,
+                1091,
+                1091,
+                1089,
+                1090,
+                1091,
+                1091,
+                1090,
+                1091
+              ],
+              "control_us": [
+                229,
+                230,
+                228,
+                217,
+                213,
+                216,
+                228,
+                229,
+                213
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "C39FE982D82D82D8",
+              "us_per_call": 0.837890625,
+              "raw_us": [
+                1086,
+                1087,
+                1087,
+                1087,
+                1088,
+                1088,
+                1088,
+                1088,
+                1086
+              ],
+              "control_us": [
+                230,
+                230,
+                230,
+                229,
+                230,
+                225,
+                225,
+                227,
+                229
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FE53A06D3A06D",
+              "us_per_call": 0.7763671875,
+              "raw_us": [
+                1024,
+                1026,
+                1026,
+                986,
+                986,
+                1019,
+                1026,
+                1003,
+                985
+              ],
+              "control_us": [
+                229,
+                229,
+                229,
+                220,
+                213,
+                214,
+                230,
+                230,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 0.931640625,
+              "raw_us": [
+                1179,
+                1180,
+                1179,
+                1179,
+                1179,
+                1179,
+                1179,
+                1179,
+                1180
+              ],
+              "control_us": [
+                216,
+                226,
+                225,
+                225,
+                225,
+                225,
+                226,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 1.064453125,
+              "raw_us": [
+                1322,
+                1320,
+                1319,
+                1289,
+                1284,
+                1321,
+                1319,
+                1293,
+                1299
+              ],
+              "control_us": [
+                225,
+                228,
+                229,
+                230,
+                213,
+                219,
+                228,
+                229,
+                213
+              ]
+            }
+          ],
+          "dmul": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FED1EB851EB851E",
+              "us_per_call": 1.37109375,
+              "raw_us": [
+                1634,
+                1634,
+                1634,
+                1633,
+                1633,
+                1633,
+                1633,
+                1615,
+                1617
+              ],
+              "control_us": [
+                225,
+                230,
+                227,
+                230,
+                230,
+                225,
+                228,
+                229,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.4072265625,
+              "raw_us": [
+                648,
+                642,
+                615,
+                616,
+                646,
+                646,
+                646,
+                650,
+                646
+              ],
+              "control_us": [
+                229,
+                225,
+                214,
+                213,
+                221,
+                229,
+                229,
+                227,
+                226
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 0.4072265625,
+              "raw_us": [
+                646,
+                646,
+                646,
+                646,
+                646,
+                647,
+                646,
+                646,
+                646
+              ],
+              "control_us": [
+                230,
+                230,
+                225,
+                230,
+                229,
+                230,
+                225,
+                229,
+                229
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "402114580B45D474",
+              "us_per_call": 1.3681640625,
+              "raw_us": [
+                1630,
+                1630,
+                1587,
+                1609,
+                1631,
+                1584,
+                1629,
+                1631,
+                1631
+              ],
+              "control_us": [
+                225,
+                229,
+                214,
+                214,
+                230,
+                221,
+                214,
+                230,
+                225
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFED1EB851EB851E",
+              "us_per_call": 1.37109375,
+              "raw_us": [
+                1633,
+                1634,
+                1633,
+                1633,
+                1634,
+                1633,
+                1634,
+                1611,
+                1622
+              ],
+              "control_us": [
+                230,
+                229,
+                229,
+                230,
+                225,
+                230,
+                230,
+                225,
+                213
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "C068700000000000",
+              "us_per_call": 1.4169921875,
+              "raw_us": [
+                1680,
+                1634,
+                1678,
+                1680,
+                1681,
+                1680,
+                1680,
+                1680,
+                1681
+              ],
+              "control_us": [
+                230,
+                225,
+                213,
+                229,
+                228,
+                227,
+                230,
+                230,
+                226
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FEFFFFFFFFFFFFD",
+              "us_per_call": 1.4033203125,
+              "raw_us": [
+                1666,
+                1666,
+                1666,
+                1635,
+                1649,
+                1666,
+                1634,
+                1664,
+                1666
+              ],
+              "control_us": [
+                229,
+                230,
+                226,
+                229,
+                214,
+                229,
+                228,
+                213,
+                229
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 1.369140625,
+              "raw_us": [
+                1632,
+                1631,
+                1631,
+                1632,
+                1632,
+                1632,
+                1631,
+                1631,
+                1594
+              ],
+              "control_us": [
+                225,
+                229,
+                229,
+                228,
+                230,
+                225,
+                229,
+                229,
+                225
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "46A1198588DF4473",
+              "us_per_call": 1.3671875,
+              "raw_us": [
+                1607,
+                1630,
+                1584,
+                1626,
+                1630,
+                1630,
+                1630,
+                1630,
+                1629
+              ],
+              "control_us": [
+                213,
+                229,
+                229,
+                213,
+                230,
+                228,
+                230,
+                225,
+                230
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "2991198588DF4473",
+              "us_per_call": 1.369140625,
+              "raw_us": [
+                1631,
+                1631,
+                1630,
+                1631,
+                1589,
+                1603,
+                1630,
+                1589,
+                1621
+              ],
+              "control_us": [
+                229,
+                227,
+                229,
+                225,
+                229,
+                214,
+                226,
+                229,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.4072265625,
+              "raw_us": [
+                646,
+                646,
+                646,
+                647,
+                646,
+                646,
+                645,
+                649,
+                646
+              ],
+              "control_us": [
+                225,
+                229,
+                229,
+                230,
+                226,
+                230,
+                229,
+                226,
+                228
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3C90000000000000",
+              "us_per_call": 0.4072265625,
+              "raw_us": [
+                645,
+                646,
+                646,
+                646,
+                646,
+                648,
+                646,
+                645,
+                646
+              ],
+              "control_us": [
+                229,
+                229,
+                225,
+                229,
+                229,
+                229,
+                226,
+                230,
+                230
+              ]
+            }
+          ],
+          "ddiv": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FE13B13B13B13B1",
+              "us_per_call": 1.5419921875,
+              "raw_us": [
+                1765,
+                1770,
+                1812,
+                1751,
+                1810,
+                1808,
+                1808,
+                1809,
+                1811
+              ],
+              "control_us": [
+                228,
+                214,
+                225,
+                230,
+                213,
+                229,
+                230,
+                229,
+                229
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "3FE0000000000000",
+              "us_per_call": 0.396484375,
+              "raw_us": [
+                631,
+                631,
+                631,
+                634,
+                631,
+                631,
+                632,
+                634,
+                632
+              ],
+              "control_us": [
+                225,
+                229,
+                230,
+                228,
+                225,
+                229,
+                230,
+                227,
+                225
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 0.384765625,
+              "raw_us": [
+                619,
+                607,
+                607,
+                613,
+                631,
+                631,
+                608,
+                608,
+                627
+              ],
+              "control_us": [
+                230,
+                213,
+                213,
+                213,
+                229,
+                229,
+                222,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FF27DDBF6271DBE",
+              "us_per_call": 1.4990234375,
+              "raw_us": [
+                1811,
+                1800,
+                1749,
+                1749,
+                1747,
+                1745,
+                1745,
+                1745,
+                1751
+              ],
+              "control_us": [
+                226,
+                229,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFFDB6DB6DB6DB6F",
+              "us_per_call": 1.7763671875,
+              "raw_us": [
+                2034,
+                2032,
+                2039,
+                2031,
+                2032,
+                2032,
+                2032,
+                2032,
+                2032
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "BFF7A6F4DE9BD37A",
+              "us_per_call": 1.775390625,
+              "raw_us": [
+                2031,
+                2038,
+                2032,
+                2041,
+                2031,
+                2031,
+                2032,
+                2031,
+                2032
+              ],
+              "control_us": [
+                213,
+                214,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FF0000000000001",
+              "us_per_call": 1.81640625,
+              "raw_us": [
+                2073,
+                2072,
+                2076,
+                2073,
+                2072,
+                2074,
+                2072,
+                2073,
+                2072
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "3F947AE147AE147B",
+              "us_per_call": 1.3125,
+              "raw_us": [
+                1556,
+                1557,
+                1557,
+                1557,
+                1557,
+                1556,
+                1556,
+                1557,
+                1561
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "3F412D0AD53D01B5",
+              "us_per_call": 1.4716796875,
+              "raw_us": [
+                1720,
+                1721,
+                1720,
+                1720,
+                1721,
+                1720,
+                1720,
+                1720,
+                1721
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "408DCF230DCF230F",
+              "us_per_call": 1.7841796875,
+              "raw_us": [
+                2047,
+                2040,
+                2040,
+                2046,
+                2040,
+                2040,
+                2040,
+                2040,
+                2040
+              ],
+              "control_us": [
+                214,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.384765625,
+              "raw_us": [
+                607,
+                607,
+                607,
+                607,
+                606,
+                606,
+                606,
+                608,
+                609
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "4350000000000000",
+              "us_per_call": 0.3837890625,
+              "raw_us": [
+                607,
+                606,
+                606,
+                607,
+                606,
+                606,
+                606,
+                606,
+                606
+              ],
+              "control_us": [
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213
+              ]
+            }
+          ]
+        },
+        "GCC": {
+          "dadd": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "4000000000000000",
+              "us_per_call": 1.419921875,
+              "raw_us": [
+                1647,
+                1642,
+                1681,
+                1646,
+                1668,
+                1682,
+                1682,
+                1682,
+                1683
+              ],
+              "control_us": [
+                227,
+                214,
+                228,
+                228,
+                214,
+                228,
+                228,
+                226,
+                227
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 1.2255859375,
+              "raw_us": [
+                1482,
+                1483,
+                1483,
+                1483,
+                1483,
+                1451,
+                1452,
+                1483,
+                1445
+              ],
+              "control_us": [
+                228,
+                224,
+                228,
+                228,
+                226,
+                228,
+                214,
+                228,
+                226
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.9716796875,
+              "raw_us": [
+                1219,
+                1223,
+                1222,
+                1224,
+                1222,
+                1223,
+                1223,
+                1222,
+                1222
+              ],
+              "control_us": [
+                214,
+                228,
+                228,
+                224,
+                228,
+                228,
+                228,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "40177082EFAC4240",
+              "us_per_call": 0.970703125,
+              "raw_us": [
+                1222,
+                1193,
+                1191,
+                1224,
+                1224,
+                1204,
+                1216,
+                1223,
+                1222
+              ],
+              "control_us": [
+                228,
+                228,
+                214,
+                214,
+                224,
+                220,
+                214,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFE3333333333334",
+              "us_per_call": 1.646484375,
+              "raw_us": [
+                1914,
+                1914,
+                1915,
+                1914,
+                1915,
+                1914,
+                1889,
+                1890,
+                1913
+              ],
+              "control_us": [
+                228,
+                228,
+                228,
+                228,
+                228,
+                228,
+                228,
+                214,
+                228
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "4016000000000000",
+              "us_per_call": 1.646484375,
+              "raw_us": [
+                1880,
+                1911,
+                1914,
+                1914,
+                1914,
+                1914,
+                1914,
+                1914,
+                1914
+              ],
+              "control_us": [
+                228,
+                214,
+                228,
+                228,
+                228,
+                228,
+                228,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FFFFFFFFFFFFFFE",
+              "us_per_call": 0.970703125,
+              "raw_us": [
+                1223,
+                1195,
+                1191,
+                1223,
+                1224,
+                1204,
+                1215,
+                1222,
+                1222
+              ],
+              "control_us": [
+                228,
+                228,
+                214,
+                214,
+                227,
+                224,
+                214,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4024666666666666",
+              "us_per_call": 1.3720703125,
+              "raw_us": [
+                1633,
+                1633,
+                1633,
+                1633,
+                1633,
+                1632,
+                1608,
+                1606,
+                1633
+              ],
+              "control_us": [
+                228,
+                225,
+                228,
+                228,
+                224,
+                228,
+                228,
+                214,
+                228
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "439FF2147AE147AE",
+              "us_per_call": 1.3740234375,
+              "raw_us": [
+                1632,
+                1626,
+                1633,
+                1636,
+                1636,
+                1632,
+                1632,
+                1633,
+                1632
+              ],
+              "control_us": [
+                229,
+                214,
+                226,
+                228,
+                227,
+                227,
+                228,
+                225,
+                228
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FF65D4C3B2A19",
+              "us_per_call": 1.2978515625,
+              "raw_us": [
+                1557,
+                1558,
+                1535,
+                1531,
+                1557,
+                1526,
+                1556,
+                1558,
+                1557
+              ],
+              "control_us": [
+                228,
+                227,
+                228,
+                215,
+                228,
+                220,
+                215,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 1.1484375,
+              "raw_us": [
+                1404,
+                1404,
+                1404,
+                1403,
+                1403,
+                1404,
+                1403,
+                1404,
+                1374
+              ],
+              "control_us": [
+                228,
+                228,
+                228,
+                225,
+                228,
+                228,
+                224,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 1.287109375,
+              "raw_us": [
+                1513,
+                1545,
+                1513,
+                1544,
+                1545,
+                1546,
+                1546,
+                1545,
+                1545
+              ],
+              "control_us": [
+                214,
+                229,
+                220,
+                214,
+                227,
+                228,
+                227,
+                228,
+                226
+              ]
+            }
+          ],
+          "dsub": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "BFE3333333333334",
+              "us_per_call": 1.826171875,
+              "raw_us": [
+                2096,
+                2096,
+                2038,
+                2070,
+                2098,
+                2049,
+                2092,
+                2097,
+                2096
+              ],
+              "control_us": [
+                229,
+                226,
+                228,
+                214,
+                225,
+                227,
+                214,
+                227,
+                224
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "BFF0000000000000",
+              "us_per_call": 1.8232421875,
+              "raw_us": [
+                2095,
+                2096,
+                2096,
+                2097,
+                2097,
+                2038,
+                2038,
+                2034,
+                2028
+              ],
+              "control_us": [
+                228,
+                228,
+                228,
+                224,
+                228,
+                213,
+                214,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3CB0000000000000",
+              "us_per_call": 1.4560546875,
+              "raw_us": [
+                1704,
+                1712,
+                1704,
+                1704,
+                1704,
+                1704,
+                1704,
+                1704,
+                1704
+              ],
+              "control_us": [
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FDB1786497EAD78",
+              "us_per_call": 1.6240234375,
+              "raw_us": [
+                1876,
+                1876,
+                1883,
+                1876,
+                1876,
+                1879,
+                1876,
+                1876,
+                1876
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "C000000000000000",
+              "us_per_call": 1.5439453125,
+              "raw_us": [
+                1736,
+                1811,
+                1811,
+                1740,
+                1779,
+                1809,
+                1749,
+                1798,
+                1811
+              ],
+              "control_us": [
+                213,
+                225,
+                225,
+                225,
+                214,
+                228,
+                228,
+                215,
+                228
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "403C800000000000",
+              "us_per_call": 1.37109375,
+              "raw_us": [
+                1631,
+                1630,
+                1632,
+                1631,
+                1632,
+                1632,
+                1631,
+                1631,
+                1587
+              ],
+              "control_us": [
+                226,
+                228,
+                228,
+                224,
+                228,
+                228,
+                228,
+                228,
+                217
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3CA0000000000000",
+              "us_per_call": 1.517578125,
+              "raw_us": [
+                1749,
+                1781,
+                1727,
+                1769,
+                1784,
+                1785,
+                1782,
+                1781,
+                1784
+              ],
+              "control_us": [
+                214,
+                228,
+                228,
+                214,
+                224,
+                224,
+                228,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "C02399999999999A",
+              "us_per_call": 1.474609375,
+              "raw_us": [
+                1740,
+                1740,
+                1738,
+                1690,
+                1702,
+                1739,
+                1686,
+                1737,
+                1738
+              ],
+              "control_us": [
+                227,
+                224,
+                228,
+                228,
+                214,
+                224,
+                228,
+                215,
+                228
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "C39FE982D82D82D8",
+              "us_per_call": 1.474609375,
+              "raw_us": [
+                1739,
+                1740,
+                1738,
+                1738,
+                1739,
+                1740,
+                1681,
+                1714,
+                1737
+              ],
+              "control_us": [
+                228,
+                225,
+                228,
+                228,
+                228,
+                228,
+                218,
+                214,
+                228
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FE53A06D3A06D",
+              "us_per_call": 1.4912109375,
+              "raw_us": [
+                1704,
+                1740,
+                1755,
+                1755,
+                1753,
+                1755,
+                1755,
+                1755,
+                1753
+              ],
+              "control_us": [
+                228,
+                214,
+                224,
+                228,
+                228,
+                228,
+                225,
+                225,
+                228
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 1.8388671875,
+              "raw_us": [
+                2112,
+                2043,
+                2092,
+                2112,
+                2049,
+                2114,
+                2112,
+                2112,
+                2112
+              ],
+              "control_us": [
+                228,
+                228,
+                214,
+                229,
+                228,
+                216,
+                227,
+                229,
+                228
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 1.904296875,
+              "raw_us": [
+                2177,
+                2177,
+                2177,
+                2178,
+                2144,
+                2164,
+                2177,
+                2145,
+                2178
+              ],
+              "control_us": [
+                224,
+                228,
+                228,
+                225,
+                228,
+                214,
+                224,
+                228,
+                219
+              ]
+            }
+          ],
+          "dmul": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FED1EB851EB851E",
+              "us_per_call": 2.75,
+              "raw_us": [
+                3044,
+                3044,
+                3044,
+                3044,
+                2970,
+                3044,
+                2988,
+                3044,
+                3044
+              ],
+              "control_us": [
+                228,
+                226,
+                228,
+                226,
+                228,
+                228,
+                228,
+                228,
+                225
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 2.6181640625,
+              "raw_us": [
+                2909,
+                2909,
+                2908,
+                2845,
+                2910,
+                2908,
+                2860,
+                2908,
+                2909
+              ],
+              "control_us": [
+                228,
+                226,
+                227,
+                228,
+                215,
+                228,
+                228,
+                225,
+                228
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 2.6181640625,
+              "raw_us": [
+                2909,
+                2908,
+                2909,
+                2841,
+                2909,
+                2908,
+                2860,
+                2909,
+                2908
+              ],
+              "control_us": [
+                228,
+                225,
+                228,
+                228,
+                226,
+                228,
+                228,
+                228,
+                228
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "402114580B45D474",
+              "us_per_call": 2.869140625,
+              "raw_us": [
+                3167,
+                3167,
+                3094,
+                3166,
+                3118,
+                3166,
+                3166,
+                3165,
+                3166
+              ],
+              "control_us": [
+                225,
+                226,
+                229,
+                228,
+                218,
+                225,
+                228,
+                228,
+                225
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFED1EB851EB851E",
+              "us_per_call": 2.6875,
+              "raw_us": [
+                3044,
+                2976,
+                3026,
+                2968,
+                2966,
+                2958,
+                2958,
+                2957,
+                2957
+              ],
+              "control_us": [
+                228,
+                215,
+                228,
+                214,
+                214,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "C068700000000000",
+              "us_per_call": 2.560546875,
+              "raw_us": [
+                2834,
+                2834,
+                2835,
+                2840,
+                2834,
+                2838,
+                2834,
+                2835,
+                2835
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FEFFFFFFFFFFFFD",
+              "us_per_call": 2.8955078125,
+              "raw_us": [
+                3179,
+                3188,
+                3178,
+                3183,
+                3179,
+                3178,
+                3178,
+                3178,
+                3178
+              ],
+              "control_us": [
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 2.7998046875,
+              "raw_us": [
+                3087,
+                3080,
+                3084,
+                3080,
+                3080,
+                3080,
+                3080,
+                3080,
+                3088
+              ],
+              "control_us": [
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "46A1198588DF4473",
+              "us_per_call": 2.7998046875,
+              "raw_us": [
+                3080,
+                3084,
+                3080,
+                3080,
+                3080,
+                3080,
+                3088,
+                3081,
+                3084
+              ],
+              "control_us": [
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "2991198588DF4473",
+              "us_per_call": 2.7998046875,
+              "raw_us": [
+                3080,
+                3080,
+                3080,
+                3081,
+                3080,
+                3088,
+                3080,
+                3084,
+                3080
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 2.560546875,
+              "raw_us": [
+                2835,
+                2835,
+                2835,
+                2834,
+                2834,
+                2840,
+                2834,
+                2838,
+                2834
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3C90000000000000",
+              "us_per_call": 2.5595703125,
+              "raw_us": [
+                2834,
+                2834,
+                2835,
+                2841,
+                2834,
+                2838,
+                2835,
+                2834,
+                2834
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                214,
+                213,
+                213,
+                213
+              ]
+            }
+          ],
+          "ddiv": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FE13B13B13B13B1",
+              "us_per_call": 3.759765625,
+              "raw_us": [
+                4065,
+                4065,
+                4119,
+                4063,
+                4102,
+                4063,
+                4063,
+                4063,
+                4063
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "3FE0000000000000",
+              "us_per_call": 3.7919921875,
+              "raw_us": [
+                4171,
+                4096,
+                4136,
+                4096,
+                4096,
+                4096,
+                4172,
+                4096,
+                4135
+              ],
+              "control_us": [
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                214,
+                213,
+                215
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 3.751953125,
+              "raw_us": [
+                4055,
+                4055,
+                4055,
+                4055,
+                4124,
+                4055,
+                4107,
+                4055,
+                4055
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FF27DDBF6271DBE",
+              "us_per_call": 3.8798828125,
+              "raw_us": [
+                4186,
+                4186,
+                4226,
+                4186,
+                4228,
+                4186,
+                4186,
+                4186,
+                4227
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFFDB6DB6DB6DB6F",
+              "us_per_call": 3.671875,
+              "raw_us": [
+                3973,
+                4009,
+                3973,
+                3973,
+                3973,
+                3973,
+                4039,
+                3973,
+                4009
+              ],
+              "control_us": [
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "BFF7A6F4DE9BD37A",
+              "us_per_call": 3.671875,
+              "raw_us": [
+                3973,
+                3973,
+                3974,
+                3973,
+                4038,
+                3974,
+                4009,
+                3973,
+                3973
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FF0000000000001",
+              "us_per_call": 3.728515625,
+              "raw_us": [
+                4030,
+                4030,
+                4099,
+                4030,
+                4076,
+                4031,
+                4030,
+                4031,
+                4031
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "3F947AE147AE147B",
+              "us_per_call": 3.6884765625,
+              "raw_us": [
+                4055,
+                3989,
+                4021,
+                3990,
+                3990,
+                3990,
+                3989,
+                4054,
+                4045
+              ],
+              "control_us": [
+                214,
+                213,
+                215,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "3F412D0AD53D01B5",
+              "us_per_call": 3.671875,
+              "raw_us": [
+                3973,
+                3973,
+                3976,
+                3974,
+                4039,
+                3974,
+                4009,
+                3973,
+                3973
+              ],
+              "control_us": [
+                216,
+                213,
+                213,
+                216,
+                214,
+                213,
+                214,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "408DCF230DCF230F",
+              "us_per_call": 3.6884765625,
+              "raw_us": [
+                3989,
+                3990,
+                4056,
+                3989,
+                4022,
+                3990,
+                3990,
+                3989,
+                3989
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 3.7919921875,
+              "raw_us": [
+                4171,
+                4096,
+                4136,
+                4096,
+                4096,
+                4096,
+                4096,
+                4171,
+                4096
+              ],
+              "control_us": [
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "4350000000000000",
+              "us_per_call": 3.7919921875,
+              "raw_us": [
+                4136,
+                4096,
+                4096,
+                4096,
+                4096,
+                4173,
+                4096,
+                4136,
+                4096
+              ],
+              "control_us": [
+                214,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214,
+                213
+              ]
+            }
+          ]
+        },
+        "QFP": {
+          "dadd": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "4000000000000000",
+              "us_per_call": 0.68359375,
+              "raw_us": [
+                926,
+                924,
+                926,
+                926,
+                925,
+                926,
+                926,
+                926,
+                926
+              ],
+              "control_us": [
+                221,
+                225,
+                226,
+                223,
+                225,
+                226,
+                222,
+                225,
+                226
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 0.654296875,
+              "raw_us": [
+                896,
+                896,
+                895,
+                894,
+                895,
+                870,
+                871,
+                884,
+                895
+              ],
+              "control_us": [
+                223,
+                225,
+                223,
+                225,
+                225,
+                220,
+                214,
+                214,
+                225
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 0.732421875,
+              "raw_us": [
+                954,
+                946,
+                976,
+                974,
+                975,
+                976,
+                976,
+                973,
+                976
+              ],
+              "control_us": [
+                226,
+                214,
+                221,
+                225,
+                225,
+                225,
+                223,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "40177082EFAC4240",
+              "us_per_call": 0.7314453125,
+              "raw_us": [
+                977,
+                976,
+                976,
+                974,
+                951,
+                945,
+                956,
+                974,
+                954
+              ],
+              "control_us": [
+                222,
+                225,
+                222,
+                225,
+                225,
+                214,
+                214,
+                225,
+                226
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFE3333333333334",
+              "us_per_call": 0.759765625,
+              "raw_us": [
+                970,
+                1004,
+                1004,
+                1001,
+                1003,
+                1004,
+                1004,
+                1002,
+                1003
+              ],
+              "control_us": [
+                214,
+                222,
+                223,
+                225,
+                225,
+                224,
+                222,
+                226,
+                225
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "4016000000000000",
+              "us_per_call": 0.8134765625,
+              "raw_us": [
+                1060,
+                1060,
+                1060,
+                1058,
+                1058,
+                1061,
+                1037,
+                1019,
+                1033
+              ],
+              "control_us": [
+                224,
+                222,
+                225,
+                225,
+                225,
+                225,
+                224,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FFFFFFFFFFFFFFE",
+              "us_per_call": 0.7314453125,
+              "raw_us": [
+                974,
+                954,
+                947,
+                976,
+                975,
+                974,
+                976,
+                976,
+                974
+              ],
+              "control_us": [
+                225,
+                225,
+                214,
+                221,
+                225,
+                225,
+                225,
+                223,
+                225
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4024666666666666",
+              "us_per_call": 0.6552734375,
+              "raw_us": [
+                896,
+                896,
+                894,
+                895,
+                896,
+                896,
+                895,
+                894,
+                896
+              ],
+              "control_us": [
+                226,
+                223,
+                225,
+                225,
+                224,
+                225,
+                223,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "439FF2147AE147AE",
+              "us_per_call": 0.69921875,
+              "raw_us": [
+                911,
+                911,
+                931,
+                942,
+                912,
+                911,
+                942,
+                943,
+                941
+              ],
+              "control_us": [
+                221,
+                214,
+                214,
+                222,
+                225,
+                214,
+                225,
+                223,
+                225
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FF65D4C3B2A19",
+              "us_per_call": 0.6787109375,
+              "raw_us": [
+                920,
+                920,
+                918,
+                920,
+                920,
+                919,
+                920,
+                919,
+                919
+              ],
+              "control_us": [
+                225,
+                222,
+                225,
+                225,
+                223,
+                225,
+                225,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4008000000000000",
+              "us_per_call": 0.6279296875,
+              "raw_us": [
+                874,
+                872,
+                851,
+                846,
+                850,
+                874,
+                865,
+                847,
+                864
+              ],
+              "control_us": [
+                223,
+                226,
+                225,
+                214,
+                214,
+                225,
+                222,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 0.7509765625,
+              "raw_us": [
+                994,
+                992,
+                994,
+                994,
+                994,
+                992,
+                994,
+                994,
+                994
+              ],
+              "control_us": [
+                223,
+                225,
+                225,
+                225,
+                223,
+                225,
+                225,
+                224,
+                222
+              ]
+            }
+          ],
+          "dsub": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "BFE3333333333334",
+              "us_per_call": 0.8017578125,
+              "raw_us": [
+                1061,
+                1059,
+                1036,
+                1035,
+                1036,
+                1035,
+                1034,
+                1034,
+                1033
+              ],
+              "control_us": [
+                225,
+                225,
+                213,
+                214,
+                214,
+                214,
+                214,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "BFF0000000000000",
+              "us_per_call": 0.83203125,
+              "raw_us": [
+                1065,
+                1070,
+                1067,
+                1065,
+                1065,
+                1065,
+                1065,
+                1065,
+                1065
+              ],
+              "control_us": [
+                213,
+                215,
+                215,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3CB0000000000000",
+              "us_per_call": 3.5927734375,
+              "raw_us": [
+                3892,
+                3892,
+                3904,
+                3892,
+                3895,
+                3891,
+                3891,
+                3891,
+                3891
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FDB1786497EAD78",
+              "us_per_call": 0.861328125,
+              "raw_us": [
+                1095,
+                1084,
+                1097,
+                1109,
+                1084,
+                1096,
+                1109,
+                1108,
+                1107
+              ],
+              "control_us": [
+                223,
+                214,
+                214,
+                222,
+                223,
+                214,
+                224,
+                226,
+                225
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "C000000000000000",
+              "us_per_call": 0.7900390625,
+              "raw_us": [
+                1032,
+                1034,
+                1034,
+                1033,
+                1032,
+                1032,
+                1034,
+                1033,
+                1033
+              ],
+              "control_us": [
+                225,
+                225,
+                225,
+                222,
+                226,
+                225,
+                225,
+                224,
+                222
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "403C800000000000",
+              "us_per_call": 0.6708984375,
+              "raw_us": [
+                887,
+                887,
+                901,
+                916,
+                897,
+                888,
+                918,
+                917,
+                918
+              ],
+              "control_us": [
+                226,
+                214,
+                214,
+                225,
+                225,
+                214,
+                214,
+                225,
+                224
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3CA0000000000000",
+              "us_per_call": 3.6259765625,
+              "raw_us": [
+                3938,
+                3938,
+                3938,
+                3938,
+                3918,
+                3937,
+                3918,
+                3938,
+                3938
+              ],
+              "control_us": [
+                225,
+                225,
+                225,
+                223,
+                225,
+                225,
+                225,
+                223,
+                224
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "C02399999999999A",
+              "us_per_call": 0.8349609375,
+              "raw_us": [
+                1079,
+                1078,
+                1085,
+                1084,
+                1085,
+                1019,
+                1018,
+                1084,
+                1080
+              ],
+              "control_us": [
+                225,
+                225,
+                225,
+                225,
+                223,
+                215,
+                214,
+                214,
+                225
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "C39FE982D82D82D8",
+              "us_per_call": 0.7744140625,
+              "raw_us": [
+                986,
+                982,
+                1018,
+                1018,
+                1019,
+                1016,
+                1016,
+                1019,
+                1019
+              ],
+              "control_us": [
+                225,
+                214,
+                225,
+                222,
+                223,
+                225,
+                225,
+                225,
+                222
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "350FE53A06D3A06D",
+              "us_per_call": 0.6962890625,
+              "raw_us": [
+                938,
+                939,
+                939,
+                939,
+                938,
+                939,
+                911,
+                912,
+                927
+              ],
+              "control_us": [
+                225,
+                225,
+                224,
+                224,
+                225,
+                225,
+                223,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 0.79296875,
+              "raw_us": [
+                1040,
+                1004,
+                1012,
+                1037,
+                1040,
+                1039,
+                1039,
+                1037,
+                1037
+              ],
+              "control_us": [
+                223,
+                225,
+                214,
+                226,
+                226,
+                224,
+                222,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3FF0000000000000",
+              "us_per_call": 0.9033203125,
+              "raw_us": [
+                1150,
+                1150,
+                1150,
+                1150,
+                1151,
+                1151,
+                1134,
+                1134,
+                1151
+              ],
+              "control_us": [
+                225,
+                225,
+                225,
+                225,
+                225,
+                224,
+                214,
+                214,
+                225
+              ]
+            }
+          ],
+          "dmul": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FED1EB851EB851E",
+              "us_per_call": 1.240234375,
+              "raw_us": [
+                1462,
+                1495,
+                1495,
+                1495,
+                1495,
+                1495,
+                1495,
+                1495,
+                1496
+              ],
+              "control_us": [
+                214,
+                214,
+                224,
+                225,
+                223,
+                225,
+                223,
+                225,
+                226
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 1.240234375,
+              "raw_us": [
+                1495,
+                1496,
+                1459,
+                1472,
+                1496,
+                1470,
+                1495,
+                1495,
+                1495
+              ],
+              "control_us": [
+                223,
+                225,
+                219,
+                214,
+                222,
+                225,
+                225,
+                225,
+                222
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 1.2412109375,
+              "raw_us": [
+                1496,
+                1496,
+                1495,
+                1496,
+                1495,
+                1496,
+                1459,
+                1474,
+                1495
+              ],
+              "control_us": [
+                225,
+                222,
+                226,
+                225,
+                225,
+                225,
+                216,
+                214,
+                222
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "402114580B45D474",
+              "us_per_call": 1.2177734375,
+              "raw_us": [
+                1445,
+                1458,
+                1472,
+                1472,
+                1471,
+                1472,
+                1471,
+                1472,
+                1472
+              ],
+              "control_us": [
+                225,
+                214,
+                225,
+                225,
+                224,
+                225,
+                223,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFED1EB851EB851E",
+              "us_per_call": 1.240234375,
+              "raw_us": [
+                1496,
+                1495,
+                1459,
+                1472,
+                1495,
+                1469,
+                1481,
+                1495,
+                1495
+              ],
+              "control_us": [
+                225,
+                225,
+                217,
+                214,
+                222,
+                225,
+                214,
+                225,
+                225
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "C068700000000000",
+              "us_per_call": 1.240234375,
+              "raw_us": [
+                1495,
+                1495,
+                1495,
+                1496,
+                1495,
+                1496,
+                1495,
+                1470,
+                1459
+              ],
+              "control_us": [
+                225,
+                225,
+                222,
+                225,
+                222,
+                226,
+                225,
+                225,
+                214
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FEFFFFFFFFFFFFD",
+              "us_per_call": 1.255859375,
+              "raw_us": [
+                1512,
+                1511,
+                1485,
+                1511,
+                1512,
+                1511,
+                1511,
+                1511,
+                1512
+              ],
+              "control_us": [
+                222,
+                225,
+                219,
+                214,
+                222,
+                225,
+                225,
+                225,
+                223
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 1.2177734375,
+              "raw_us": [
+                1471,
+                1473,
+                1472,
+                1440,
+                1446,
+                1473,
+                1439,
+                1469,
+                1473
+              ],
+              "control_us": [
+                225,
+                223,
+                225,
+                225,
+                214,
+                225,
+                218,
+                215,
+                222
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "46A1198588DF4473",
+              "us_per_call": 1.2177734375,
+              "raw_us": [
+                1473,
+                1473,
+                1471,
+                1471,
+                1472,
+                1472,
+                1472,
+                1472,
+                1473
+              ],
+              "control_us": [
+                226,
+                225,
+                224,
+                225,
+                223,
+                225,
+                225,
+                222,
+                225
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "2991198588DF4473",
+              "us_per_call": 1.19921875,
+              "raw_us": [
+                1440,
+                1449,
+                1472,
+                1438,
+                1458,
+                1442,
+                1442,
+                1440,
+                1433
+              ],
+              "control_us": [
+                222,
+                214,
+                225,
+                214,
+                214,
+                214,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 1.2158203125,
+              "raw_us": [
+                1458,
+                1458,
+                1459,
+                1458,
+                1458,
+                1458,
+                1460,
+                1459,
+                1458
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "3C90000000000000",
+              "us_per_call": 1.2158203125,
+              "raw_us": [
+                1463,
+                1458,
+                1458,
+                1459,
+                1458,
+                1459,
+                1458,
+                1458,
+                1459
+              ],
+              "control_us": [
+                214,
+                215,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            }
+          ],
+          "ddiv": [
+            {
+              "a": "3FE6666666666666",
+              "b": "3FF4CCCCCCCCCCCD",
+              "result": "3FE13B13B13B13B1",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1622,
+                1626,
+                1624,
+                1622,
+                1628,
+                1622,
+                1622,
+                1622,
+                1622
+              ],
+              "control_us": [
+                213,
+                214,
+                214,
+                213,
+                215,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "4000000000000000",
+              "result": "3FE0000000000000",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1625,
+                1623,
+                1622
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000001",
+              "b": "3FF0000000000000",
+              "result": "3FF0000000000001",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1628,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622
+              ],
+              "control_us": [
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "400921FB54442D18",
+              "b": "4005BF0A8B145769",
+              "result": "3FF27DDBF6271DBE",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1622,
+                1622,
+                1625,
+                1624,
+                1622,
+                1628,
+                1622,
+                1622,
+                1622
+              ],
+              "control_us": [
+                213,
+                213,
+                214,
+                214,
+                213,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "BFF4CCCCCCCCCCCD",
+              "b": "3FE6666666666666",
+              "result": "BFFDB6DB6DB6DB6F",
+              "us_per_call": 1.65625,
+              "raw_us": [
+                1909,
+                1909,
+                1909,
+                1909,
+                1914,
+                1910,
+                1908,
+                1917,
+                1909
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                214,
+                213,
+                214,
+                213
+              ]
+            },
+            {
+              "a": "4031000000000000",
+              "b": "C027000000000000",
+              "result": "BFF7A6F4DE9BD37A",
+              "us_per_call": 1.6396484375,
+              "raw_us": [
+                1892,
+                1892,
+                1892,
+                1892,
+                1892,
+                1893,
+                1892,
+                1897,
+                1893
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                214
+              ]
+            },
+            {
+              "a": "3FEFFFFFFFFFFFFF",
+              "b": "3FEFFFFFFFFFFFFE",
+              "result": "3FF0000000000001",
+              "us_per_call": 1.6962890625,
+              "raw_us": [
+                1950,
+                1956,
+                1949,
+                1950,
+                1950,
+                1950,
+                1949,
+                1950,
+                1950
+              ],
+              "control_us": [
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FC999999999999A",
+              "b": "4024000000000000",
+              "result": "3F947AE147AE147B",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1622,
+                1626,
+                1624,
+                1622,
+                1628,
+                1622,
+                1623,
+                1622,
+                1622
+              ],
+              "control_us": [
+                213,
+                214,
+                214,
+                213,
+                214,
+                214,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "42F123456789ABCD",
+              "b": "439FEDCBA9876543",
+              "result": "3F412D0AD53D01B5",
+              "us_per_call": 1.3515625,
+              "raw_us": [
+                1597,
+                1597,
+                1597,
+                1597,
+                1598,
+                1597,
+                1601,
+                1606,
+                1598
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "350FEDCBA9876543",
+              "b": "347123456789ABCD",
+              "result": "408DCF230DCF230F",
+              "us_per_call": 1.6640625,
+              "raw_us": [
+                1917,
+                1917,
+                1917,
+                1917,
+                1917,
+                1917,
+                1917,
+                1917,
+                1926
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213,
+                214
+              ]
+            },
+            {
+              "a": "4000000000000000",
+              "b": "3FF0000000000000",
+              "result": "4000000000000000",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1623,
+                1622,
+                1628,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622,
+                1622
+              ],
+              "control_us": [
+                214,
+                213,
+                214,
+                213,
+                213,
+                213,
+                213,
+                213,
+                213
+              ]
+            },
+            {
+              "a": "3FF0000000000000",
+              "b": "3C90000000000000",
+              "result": "4350000000000000",
+              "us_per_call": 1.3759765625,
+              "raw_us": [
+                1622,
+                1622,
+                1622,
+                1622,
+                1626,
+                1623,
+                1622,
+                1628,
+                1622
+              ],
+              "control_us": [
+                213,
+                213,
+                213,
+                213,
+                214,
+                214,
+                213,
+                214,
+                214
+              ]
+            }
+          ]
+        }
+      },
+      "temporary_directory_removed": true,
+      "calculator_and_cwd_preserved": true,
+      "method": "RP2040 TIMERAWL, 125 MHz, median of nine paired 1024-call batches minus identity; interrupts enabled.",
+      "build": {
+        "directory": "/MK61S-M0-ALU-20261018",
+        "apps": {
+          "OWN": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/OWN/OWN.APP",
+            "bytes": 4559,
+            "sha256": "b7ca0b3af1dd7765175796136cc6b65a8af4afc6204c29b534772054789958f1"
+          },
+          "GCC": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/GCC/GCC.APP",
+            "bytes": 766,
+            "sha256": "3e7712be833e2a5f35d83d1e48b7b81c3afde1bc929f0aa58a3e35d5c3e2ca0f"
+          },
+          "QFP": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/QFP/QFP.APP",
+            "bytes": 5938,
+            "sha256": "1c5f21738214a421d6be9256143079aaa82776ae821dcc1a878bc871e3ed25c3"
+          }
+        },
+        "code_location": "All local implementations execute in SRAM; GCC control uses resident Flash.",
+        "qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+      }
+    }
+  },
+  "physical_math": {
+    "status": "PASS",
+    "identity": "identity\r\nMK61S PicoCalc 0.8.2 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152\r\nmk61> ",
+    "initial": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=25032 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=15424 RAM_MISS=24 SD_HIT=7 SD_MISS=17 COMPILES=17 STORES=17 REJECTED=17 PACKS=14 THAWS=7 PACKED=0\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=110\r\nIO_CORE=1 I2C_TRANSACTIONS=14281 UART_BYTES=1262868 LCD_PENDING=0 LCD_FRAME_CRC=42C9378E\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2262 DIRTY=0 PATH=[/MK61S-M0-ALU-20261018/QFP.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSTACK_USED=14868 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=60 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:44:05 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "final": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=28704 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=15424 RAM_MISS=24 SD_HIT=7 SD_MISS=17 COMPILES=17 STORES=17 REJECTED=17 PACKS=14 THAWS=7 PACKED=0\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=116\r\nIO_CORE=1 I2C_TRANSACTIONS=15200 UART_BYTES=1623850 LCD_PENDING=0 LCD_FRAME_CRC=60325717\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2262 DIRTY=0 PATH=[/MK61S-M0-ALU-20261018/MATHLOCAL.APP] RESULT=[APP finished; Enter / Esc: files]\r\nSTACK_USED=14964 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=60 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:47:30 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "results": {},
+    "local_math": {
+      "cases": 1897,
+      "failures": 0,
+      "worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "location": "Local compact_math and owned arithmetic execute in SRAM; no resident math imports."
+    },
+    "temporary_directory_removed": true,
+    "calculator_and_cwd_preserved": true,
+    "method": "RP2040 TIMERAWL, 125 MHz, median of nine paired 1024-call batches minus identity; interrupts enabled.",
+    "build": {
+      "directory": "/MK61S-M0-ALU-20261018",
+      "apps": {
+        "OWN": {
+          "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/OWN/OWN.APP",
+          "bytes": 4559,
+          "sha256": "b7ca0b3af1dd7765175796136cc6b65a8af4afc6204c29b534772054789958f1"
+        },
+        "GCC": {
+          "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/GCC/GCC.APP",
+          "bytes": 766,
+          "sha256": "3e7712be833e2a5f35d83d1e48b7b81c3afde1bc929f0aa58a3e35d5c3e2ca0f"
+        },
+        "QFP": {
+          "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/QFP/QFP.APP",
+          "bytes": 5938,
+          "sha256": "1c5f21738214a421d6be9256143079aaa82776ae821dcc1a878bc871e3ed25c3"
+        }
+      },
+      "code_location": "All local implementations execute in SRAM; GCC control uses resident Flash.",
+      "qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+      "math_probe": {
+        "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-eabi-benchmark/MATHLOCAL/MATHLOCAL.APP",
+        "sha256": "87c1cb8b4b0579e5f235d392dbd45921e70e50664721e8886eacd142c43e96fe"
+      }
+    }
+  },
+  "limits": [
+    "Full replacement firmware was built and its math executed from its ELF, but it was not flashed in this task.",
+    "Performance comparison is binary64 only; no claim is made that binary32 kernels outperform Qfplib.",
+    "Addition remains slower than Qfplib on this corpus; subtraction, multiplication and division have lower mean latency.",
+    "ROM bit operations and C memory intrinsics are modeled in production ELF emulation; bare ARMv6-M tests and physical local APPs execute actual arithmetic code."
+  ]
+}

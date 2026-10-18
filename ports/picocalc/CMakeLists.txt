@@ -21,6 +21,7 @@ if(NOT PICO_RP2040 OR NOT PICO_BOARD STREQUAL "mk61_picocalc_pico_h")
 endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
+option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
@@ -29,6 +30,9 @@ add_executable(mk61s-picocalc-pico-h
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
     "${MK61_ROOT}/code/mk61emu_core.cpp"
     "${MK61_ROOT}/code/compact_math.cpp"
+    "${MK61_ROOT}/code/native_eabi_m0.cpp"
+    "${MK61_ROOT}/code/native_eabi_m0.S"
+    "${MK61_ROOT}/code/native_eabi_m0_rp2040.S"
     "${MK61_ROOT}/code/ERM19264_graphics_font.cpp"
     "${MK61_ROOT}/code/calculator_face.cpp"
     "${MK61_ROOT}/code/text_screen.cpp"
@@ -67,6 +71,8 @@ target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_ENABLE_USB_SCREEN=1
     MK61_M61_READ_CACHE_BYTES=1024
     MK61_USE_COMPACT_LIBM=1 MK61_MATH_BACKEND=0 MK61_USE_NATIVE_EABI=0
+    MK61_USE_M0_EABI=$<BOOL:${MK61_PICOCALC_M0_EABI}>
+    MK61_M0_RP2040_EABI=$<BOOL:${MK61_PICOCALC_M0_EABI}>
     PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=0
     PICO_STDIO_USB_ENABLE_RESET_VIA_BAUD_RATE=1
     PICO_STDIO_USB_ENABLE_IRQ_BACKGROUND_TASK=0
@@ -83,13 +89,17 @@ target_compile_options(mk61s-picocalc-pico-h PRIVATE
 set_source_files_properties("${MK61_ROOT}/code/mk61emu_core.cpp"
     "${MK61_ROOT}/code/language_vm.cpp"
     PROPERTIES COMPILE_OPTIONS "-O3")
+# Keep the typed arithmetic ABI separate from the APP table's erased function
+# declarations, including in builds where the user enables global LTO.
+set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
+    PROPERTIES COMPILE_OPTIONS "-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
 pico_enable_stdio_uart(mk61s-picocalc-pico-h 1)
 pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
-# SDK/bootrom arithmetic does not promise full IEEE subnormal semantics.
-# The shared math kernels and native APP ABI require gradual underflow.
+# Disable SDK/bootrom float wrappers. Our runtime (or the explicit GCC control)
+# implements IEEE gradual underflow; keep SDK's interrupt-safe SIO divider.
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
@@ -110,3 +120,9 @@ string(REPLACE ".rodata : {"
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld" "${MK61_MEMMAP}")
 pico_set_linker_script(mk61s-picocalc-pico-h "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld")
 pico_add_extra_outputs(mk61s-picocalc-pico-h)
+if(MK61_PICOCALC_M0_EABI)
+    add_custom_command(TARGET mk61s-picocalc-pico-h POST_BUILD
+        COMMAND "${Python3_EXECUTABLE}" "${MK61_ROOT}/tests/check_picocalc_runtime.py"
+            "$<TARGET_FILE:mk61s-picocalc-pico-h>.map"
+        VERBATIM)
+endif()

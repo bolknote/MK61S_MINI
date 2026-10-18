@@ -21,6 +21,9 @@
 #include "mk_math.hpp"
 #include "compact_math.hpp"
 #include "compact_math_tables.hpp"
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
+#include "native_eabi_m0.hpp"
+#endif
 
 #if MK61_USE_COMPACT_LIBM && MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM
 
@@ -255,6 +258,8 @@ double evaluate(double x) {
   float fs;
 #if defined(__arm__) && defined(__ARM_FP) && (__ARM_FP & 4)
   __asm__("vsqrt.f32 %0, %1" : "=t"(fs) : "t"(fm));
+#elif defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
+  fs=mk61_m0_sqrtf(fm);
 #else
   fs=__builtin_sqrtf(fm);
 #endif

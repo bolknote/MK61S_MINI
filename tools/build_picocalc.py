@@ -77,6 +77,8 @@ def main():
     parser.add_argument("--build-path", type=Path, default=ROOT / ".build/picocalc-pico-h")
     parser.add_argument("--output-dir", type=Path, default=ROOT / "binary/picocalc-pico-h")
     parser.add_argument("--jobs", type=int, default=4)
+    parser.add_argument("--compiler-runtime", action="store_true",
+                        help="Control build using GCC arithmetic instead of the owned M0 runtime")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
@@ -98,12 +100,17 @@ def main():
                                                     or p.name == 'CMakeLists.txt'))]):
             source_hash.update(str(source.relative_to(ROOT)).encode() + b'\0')
             source_hash.update(source.read_bytes())
+        if args.compiler_runtime:
+            source_hash.update(b'picocalc-compiler-runtime=1\0')
         source_digest = source_hash.hexdigest()
-        build_id = '0x' + source_digest[:8] + 'U'
+        build_digest = hashlib.sha256((source_digest + '\0' + (
+            'gcc' if args.compiler_runtime else 'owned-m0')).encode()).hexdigest()
+        build_id = '0x' + build_digest[:8] + 'U'
         run([cmake, "-S", ROOT / "ports/picocalc", "-B", build, "-G", "Ninja",
              "-DCMAKE_BUILD_TYPE=Release", "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
              f"-DCMAKE_MAKE_PROGRAM={ninja}", f"-DPICO_SDK_PATH={sdk}",
              f"-DPICO_TOOLCHAIN_PATH={toolchain}", f"-DPython3_EXECUTABLE={sys.executable}",
+             f"-DMK61_PICOCALC_M0_EABI={'OFF' if args.compiler_runtime else 'ON'}",
              f"-DMK61_PICOCALC_BUILD_ID={build_id}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
@@ -141,7 +148,9 @@ def main():
         metadata = {
             "profile": args.profile, "prototype_version": "0.8.1", "mcu": "RP2040",
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
-            "float_abi": "soft", "math": "compact_math + GCC IEEE float/double helpers",
+            "float_abi": "soft", "math": "compact_math + " + (
+                "GCC IEEE float/double helpers" if args.compiler_runtime else "owned ARMv6-M IEEE runtime"),
+            "arithmetic_runtime": "gcc" if args.compiler_runtime else "owned-m0",
             "pico_sdk": SDK_VERSION, "pico_sdk_commit": sdk_revision,
             "compiler": run([toolchain / ("arm-none-eabi-gcc" + suffix), "-dumpfullversion"],
                             capture_output=True, text=True).stdout.strip(),
@@ -156,7 +165,7 @@ def main():
             "bin_sha256": hashlib.sha256(image).hexdigest(),
             "uf2_sha256": hashlib.sha256(transport).hexdigest(),
             "hardware_verified": False,
-            "source_sha256": source_digest, "build_id": source_digest[:8],
+            "source_sha256": source_digest, "build_id": build_digest[:8],
             "firmware_integrity": integrity,
         }
         (output / "manifest.json").write_text(json.dumps(metadata, indent=2) + "\n")

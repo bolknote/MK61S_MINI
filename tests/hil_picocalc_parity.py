@@ -82,7 +82,8 @@ def main():
         identity=p.command('identity');assert 'UID=E6657CD423721C35' in identity,identity
         build=json.loads((args.firmware_directory/'manifest.json').read_text())
         initial=status();assert ('PICO-H '+build['prototype_version']).encode() in initial and ('BUILD='+build['build_id'].upper()).encode() in initial and b'SERVICE=CLOSED' in initial and b'USB_DISK=0' in initial,initial
-        assert b'MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0' in initial,initial
+        runtime=b'owned-M0-IEEE' if build.get('arithmetic_runtime')=='owned-m0' else b'GCC-IEEE-softfloat'
+        assert b'MATH=compact-binary64/'+runtime+b' MATH_TEST=OK failures=0' in initial,initial
         if b'SLEEP=1' in initial: p.command('display on')
         assert 'fsput' in p.command('help')
         p.command('reinit');p.command('kbd 15');p.pump(.2);assert b'X_RAW=[ 1.0000000  00]' in status()

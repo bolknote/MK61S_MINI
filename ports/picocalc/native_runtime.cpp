@@ -1,8 +1,19 @@
 #include "native_runtime.hpp"
 #include <cstddef>
-// The compiler provides IEEE ARMv6-M EABI helpers. Export their original calling
+// Export the selected IEEE ARMv6-M EABI helpers with their original calling
 // conventions, including uldivmod's four-register result, without wrappers.
 #if defined(PICO_ON_DEVICE)
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
+#include <cstdlib>
+#include <new>
+// Pico SDK's ordinary new/delete use malloc/free with exceptions disabled.
+// The standard nothrow overloads otherwise pull in libstdc++ exception handlers
+// and libgcc's unwinder even though this firmware cannot throw an exception.
+void* operator new(std::size_t n,const std::nothrow_t&) noexcept {return std::malloc(n);}
+void* operator new[](std::size_t n,const std::nothrow_t&) noexcept {return std::malloc(n);}
+void operator delete(void* p,const std::nothrow_t&) noexcept {std::free(p);}
+void operator delete[](void* p,const std::nothrow_t&) noexcept {std::free(p);}
+#endif
 namespace picocalc {
 #define MK61_RUNTIME(name) extern "C" void pico_service_##name() asm(#name);
 #define MK61_RUNTIME_ISO_C(name, result, ...)                                  \

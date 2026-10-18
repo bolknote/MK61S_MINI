@@ -116,7 +116,11 @@ void report(unsigned math_failures) {
     std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
                 picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
     std::printf("TERMINAL=%s\n",terminal.raw()?"RAW":"COMMAND");
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
+    std::printf("CORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=%s failures=%u\n",
+#else
     std::printf("CORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=%s failures=%u\n",
+#endif
                 math_failures ? "FAIL" : "OK", math_failures);
     std::printf("KBD=%s errors=%lu dropped=%lu X=[%s] IP=%02u RUN=%u BUSY=%u\n",
                 keyboard.online() ? "OK" : "WAIT", (unsigned long)keyboard.errors(),
