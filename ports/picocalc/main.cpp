@@ -16,6 +16,7 @@
 #include "terminal.hpp"
 #include "terminal_command_ids.hpp"
 #include "version.hpp"
+#include "io_worker.hpp"
 #include "diagnostics.hpp"
 #include "firmware.hpp"
 #include "language_cache.hpp"
@@ -133,6 +134,10 @@ void report(unsigned math_failures) {
     std::printf("LCD_BKL=%d KBD_BKL=%d\n", keyboard.lcd_backlight(), keyboard.key_backlight());
     std::printf("LCD=ST7365P RGB565 SPI_HZ=%lu FRAMES=%lu\n",
                 (unsigned long)panel.spi_hz(), (unsigned long)panel.frames());
+    const auto io=picocalc::io_worker::statistics();
+    std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
+        io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
+        picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
     std::printf("SD=%s SECTORS=%lu USB_DISK=%u FS_ERROR=[%s]\n", picocalc::files::ready() ? "OK" : "WAIT",
         (unsigned long)picocalc::sd::sectors(), picocalc::files::usb_active(), picocalc::files::error());
     const auto& settings = ui.settings();
@@ -194,6 +199,13 @@ bool key_event(picocalc::KeyEvent& event) {
     return false;
 }
 bool service_pump(void*, u8& key) {
+    const u64 entered=time_us_64();
+    static u64 next_service=0;
+    // The VM offers a poll every 32 instructions. Device work needs a
+    // bounded wall-clock cadence, not another full USB pass each time.
+    if(entered<next_service) return false;
+    next_service=entered+1000;
+    picocalc::diagnostics::Scope measure(picocalc::diagnostics::Point::PUMP);
     usb_service();
     picocalc::script::service_effects();
     const u64 now = time_us_64();
@@ -430,7 +442,10 @@ int main() {
         if(settings_dirty && now >= save_at && calculator.idle() && !core_61::is_RUN() && !picocalc::files::usb_active()) save_settings();
         services.tick();
         if(services.take_calculator_request()) ui.calculator_page();
-        if(!picocalc::files::usb_active() && !services.active()) m61_text::service();
+        if(!picocalc::files::usb_active() && !services.active()) {
+            picocalc::diagnostics::Scope measure(picocalc::diagnostics::Point::M61);
+            m61_text::service();
+        }
         static bool script_was_active = false;
         if(m61_text::active() && !script_was_active && !services.active()) ui.calculator_page();
         script_was_active = m61_text::active();

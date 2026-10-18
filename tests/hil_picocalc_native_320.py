@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import zlib
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from hil_picocalc_software import connect, calculator, restore, raw
@@ -53,6 +54,22 @@ def main():
         assert len(p.frames)>start,(name,p.status())
         frame=p.frames[-1]
         assert len(frame)==12800 and (expected is None or frame==expected),(name,hashlib.sha256(frame).hexdigest())
+        if expected is not None:
+            # The worker scans an immutable horizontal MSB bitmap. Verify
+            # the completed physical transfer against this independent
+            # conversion of the CRC-checked native USB frame.
+            rows=bytearray(12800)
+            for y in range(320):
+                for x in range(320):
+                    if frame[y//8*320+x]&(1<<(y&7)):rows[y*40+x//8]|=0x80>>(x&7)
+            wanted=f'{zlib.crc32(rows):08X}'
+            deadline=time.monotonic()+8
+            while time.monotonic()<deadline:
+                status=p.status()
+                if 'IO_CORE=1 ' not in status:break
+                if 'LCD_PENDING=0 ' in status and 'LCD_FRAME_CRC='+wanted in status:break
+                p.pump(.05)
+            else:raise AssertionError(('LCD worker transfer differs',wanted,status))
         png(frame,args.output/(name+'.png'));screens[name]=hashlib.sha256(frame).hexdigest();return frame
     before=None;initial=None
     try:

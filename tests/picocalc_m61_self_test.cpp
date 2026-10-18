@@ -202,6 +202,20 @@ void picocalc_m61_test() {
     for (unsigned x = 0; x < 320; ++x)
       assert(retained.pixel(x, y) ==
              bool(expected_native[y / 8 * 320 + x] & (1U << (y % 8))));
+  // Exercise every tile, orientation and zero overwrite with unrelated
+  // canvases, rather than accepting only one text-shaped bitmap.
+  std::vector<u8> noise(Screen::BYTES);
+  u32 word=0x713519B3U;
+  for(unsigned pass=0;pass<4;++pass) {
+    for(auto& byte:noise) {
+      word^=word<<13;word^=word>>17;word^=word<<5;
+      byte=pass==0?0:pass==1?255:(u8)word;
+    }
+    script::show_native_frame(noise.data());
+    retained.render(calc.snapshot(),true,&display_ui,&services);
+    for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
+      assert(retained.pixel(x,y)==bool(noise[y/8*320+x]&(1U<<(y%8))));
+  }
   assert(script::input(0x1B) && !script::font_active());
 
   reset(calc, services);

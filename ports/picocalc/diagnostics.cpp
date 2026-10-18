@@ -15,6 +15,12 @@
 #include "hardware/watchdog.h"
 #include "hardware/structs/watchdog.h"
 #include "hardware/structs/vreg_and_chip_reset.h"
+#if defined(MK61_PICOCALC_SAMPLE_PROFILE) && MK61_PICOCALC_SAMPLE_PROFILE
+#include "hardware/clocks.h"
+#include "hardware/exception.h"
+#include "hardware/structs/systick.h"
+#include "hardware/sync.h"
+#endif
 #else
 #include <chrono>
 #endif
@@ -41,6 +47,46 @@ u32 reset_reason=0,profile_generation=1;
 bool enabled=false;
 Sample samples[(unsigned)Point::COUNT];
 volatile u32 current_state=0,current_detail=0,current_uptime=0;
+#if defined(PICO_ON_DEVICE) && defined(MK61_PICOCALC_SAMPLE_PROFILE) && MK61_PICOCALC_SAMPLE_PROFILE
+struct PcBucket { u32 address,count; };
+PcBucket pc_buckets[1024]{};
+volatile u32 pc_samples=0,pc_dropped=0;
+exception_handler_t previous_systick=nullptr;
+bool sampling=false;
+extern "C" __attribute__((used,noinline)) void mk61_picocalc_sample_pc(const u32* frame) {
+  const u32 address=frame[6]&~63U;
+  ++pc_samples;
+  const unsigned start=(address>>6)*2654435761U>>22;
+  for(unsigned i=0;i<32;++i) {
+    auto& bucket=pc_buckets[(start+i)&1023];
+    if(!bucket.address || bucket.address==address) { bucket.address=address;++bucket.count;return; }
+  }
+  ++pc_dropped;
+}
+__attribute__((naked)) void sample_interrupt() {
+  __asm__ volatile("mov r0, lr\nmovs r1, #4\ntst r0, r1\nbeq 1f\nmrs r0, psp\nb 2f\n1: mrs r0, msp\n2: b mk61_picocalc_sample_pc");
+}
+void sample_start() {
+  if(sampling) return;
+  previous_systick=exception_set_exclusive_handler(SYSTICK_EXCEPTION,sample_interrupt);
+  systick_hw->rvr=clock_get_hz(clk_sys)/1000-1;systick_hw->cvr=0;
+  sampling=true;systick_hw->csr=7;
+}
+void sample_stop() {
+  if(!sampling) return;
+  systick_hw->csr=0;sampling=false;
+  exception_restore_handler(SYSTICK_EXCEPTION,previous_systick);
+}
+void sample_reset() {
+  const u32 irq=save_and_disable_interrupts();
+  std::memset(pc_buckets,0,sizeof(pc_buckets));pc_samples=pc_dropped=0;
+  restore_interrupts(irq);
+}
+#else
+void sample_start() {}
+void sample_stop() {}
+void sample_reset() {}
+#endif
 u64 now() {
   if(clock_source) return clock_source();
 #if defined(PICO_ON_DEVICE)
@@ -115,9 +161,10 @@ Watchdog watchdog_status() { return watchdog; }
 void context(State state,u32 detail) {
   current_state=(u32)state;current_detail=detail;current_uptime=(u32)(now()/1000);
 }
-void profile_start() { if(!enabled) { profile_since=now();enabled=true;++profile_generation; } }
-void profile_stop() { if(enabled) { profile_elapsed+=now()-profile_since;enabled=false;++profile_generation; } }
+void profile_start() { if(!enabled) { profile_since=now();enabled=true;++profile_generation;sample_start(); } }
+void profile_stop() { if(enabled) { sample_stop();profile_elapsed+=now()-profile_since;enabled=false;++profile_generation; } }
 void profile_reset() {
+  sample_reset();
   for(auto& item:samples) item={};
   profile_elapsed=0;profile_since=now();++profile_generation;
 }
@@ -184,7 +231,7 @@ unsigned profile_report(char* out,unsigned capacity,bool core_only) {
   Text text{out,capacity};
   text.print("PROFILE=%s TIMER=US ELAPSED_US=%llu (inclusive)\r\n",enabled?"RUNNING":"STOPPED",
       (unsigned long long)(profile_elapsed+(enabled?now()-profile_since:0)));
-  const char* names[]={"core","usb","display","storage","language","app"};
+  const char* names[]={"core","usb","display","storage","language","app","pump","lcd","keyboard","m61"};
   for(unsigned i=0;i<(unsigned)Point::COUNT;++i) {
     if(core_only && i!=(unsigned)Point::CORE) continue;
     const auto value=samples[i];
@@ -236,6 +283,18 @@ bool command(u8 id,const char* arguments,const char* cwd,Writer write,void* raw)
       size=crash_report(report,sizeof(report));
     } else return false;
   } else if(id==CMD_PROFILE) {
+#if defined(PICO_ON_DEVICE) && defined(MK61_PICOCALC_SAMPLE_PROFILE) && MK61_PICOCALC_SAMPLE_PROFILE
+    if(!std::strcmp(args,"samples")) {
+      if(enabled || !write) return false;
+      size=std::snprintf(report,sizeof(report),"PC_SAMPLES=%lu DROPPED=%lu HZ=1000 BUCKET_BYTES=64\r\n",
+          (unsigned long)pc_samples,(unsigned long)pc_dropped);write(raw,report,size);
+      for(const auto& bucket:pc_buckets) if(bucket.count) {
+        size=std::snprintf(report,sizeof(report),"PC=%08lX COUNT=%lu\r\n",(unsigned long)bucket.address,(unsigned long)bucket.count);
+        write(raw,report,size);
+      }
+      return true;
+    }
+#endif
     if(!std::strcmp(args,"start")) profile_start();
     else if(!std::strcmp(args,"stop")) profile_stop();
     else if(!std::strcmp(args,"reset")) profile_reset();

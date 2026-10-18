@@ -22,8 +22,9 @@ endif()
 
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
+option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
 add_executable(mk61s-picocalc-pico-h
-    main.cpp hardware.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
+    main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
@@ -64,12 +65,13 @@ target_include_directories(mk61s-picocalc-pico-h PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}" "${MK61_ROOT}/code" "${MK61_ROOT}/third_party/fatfs")
 target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_CORE_STANDALONE=1
+    MK61_PICOCALC_SAMPLE_PROFILE=$<BOOL:${MK61_PICOCALC_SAMPLE_PROFILE}>
     # Allocation failures are handled by the resident/APP ABI. The SDK's
     # default panic would turn a recoverable exhausted lease into HardFault.
     PICO_MALLOC_PANIC=0
     MK61_ENABLE_RTC_ALARM_TERMINAL=1
     MK61_ENABLE_USB_SCREEN=1
-    MK61_M61_READ_CACHE_BYTES=1024
+    MK61_M61_READ_CACHE_BYTES=2048
     MK61_USE_COMPACT_LIBM=1 MK61_MATH_BACKEND=0 MK61_USE_NATIVE_EABI=0
     MK61_USE_M0_EABI=$<BOOL:${MK61_PICOCALC_M0_EABI}>
     MK61_M0_RP2040_EABI=$<BOOL:${MK61_PICOCALC_M0_EABI}>
@@ -80,6 +82,7 @@ target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=0
     PICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=0
     PICO_STACK_SIZE=32768
+    PICO_CORE1_STACK_SIZE=2048
     PICO_STDIO_DEFAULT_CRLF=1)
 target_compile_options(mk61s-picocalc-pico-h PRIVATE
     -fstack-usage
@@ -94,8 +97,11 @@ set_source_files_properties("${MK61_ROOT}/code/mk61emu_core.cpp"
 set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
     PROPERTIES COMPILE_OPTIONS "-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
-    pico_stdlib hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
+    pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
+if(MK61_PICOCALC_SAMPLE_PROFILE)
+    target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_exception)
+endif()
 pico_enable_stdio_uart(mk61s-picocalc-pico-h 1)
 pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 # Disable SDK/bootrom float wrappers. Our runtime (or the explicit GCC control)
@@ -103,7 +109,7 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.8.1")
+pico_set_program_version(mk61s-picocalc-pico-h "0.8.2")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.

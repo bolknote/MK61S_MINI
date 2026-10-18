@@ -828,7 +828,7 @@ RunResult run(const View& v, State& s, const Services& host, uint32_t limit,
   return run(v, static_cast<Continuation&>(s), static_cast<const Bindings&>(s),
              host, limit, resume);
 }
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && !defined(__clang__) && !defined(MK61_CORE_STANDALONE)
 __attribute__((optimize("no-inline-functions-called-once")))
 #endif
 RunResult run(const View& v, Continuation& s, const Bindings& data,

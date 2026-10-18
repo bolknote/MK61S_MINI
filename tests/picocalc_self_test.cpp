@@ -234,6 +234,8 @@ int main(int argc, char** argv) {
     picocalc_software_test(argc == 2 ? argv[1] : nullptr);
     picocalc_contract_test();
     picocalc_firmware_test();
+    extern void picocalc_io_test();
+    picocalc_io_test();
 
     calc.init();
     for(unsigned i = 0; i < 32; ++i) require(calc.input('1'), "queue capacity");

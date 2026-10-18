@@ -91,6 +91,27 @@ void Screen::status_field(unsigned left,unsigned width,const char* value) {
     for(unsigned x=left;x<left+width;++x) set_pixel(x,63);
 }
 void Screen::bitmap(const u8* frame,unsigned width,unsigned height,unsigned left,unsigned top) {
+    if(width==WIDTH && height==HEIGHT && !left && !top) {
+        static constexpr auto reverse=[] {
+            struct Bytes { u8 value[256]; } table{};
+            for(unsigned n=0;n<256;++n) for(unsigned bit=0;bit<8;++bit)
+                table.value[n]|=(u8)(((n>>bit)&1U)<<(7-bit));
+            return table;
+        }();
+        // Native canvases are vertical LSB pages, the LCD buffer horizontal
+        // MSB rows. Transpose whole 8x8 tiles; overwrite zero pixels too.
+        for(unsigned page=0;page<HEIGHT/8;++page) for(unsigned block=0;block<WIDTH/8;++block) {
+            u64 bits;std::memcpy(&bits,frame+page*WIDTH+block*8,sizeof(bits));
+            u64 t=(bits^(bits>>7))&0x00AA00AA00AA00AAULL;bits^=t^(t<<7);
+            t=(bits^(bits>>14))&0x0000CCCC0000CCCCULL;bits^=t^(t<<14);
+            t=(bits^(bits>>28))&0x00000000F0F0F0F0ULL;bits^=t^(t<<28);
+            u8 transposed[8];std::memcpy(transposed,&bits,sizeof(bits));
+            for(unsigned row=0;row<8;++row) {
+                pixels_[(page*8+row)*STRIDE+block]=reverse.value[transposed[row]];
+            }
+        }
+        return;
+    }
     for(unsigned y=0;y<height && top+y<HEIGHT;++y) for(unsigned x=0;x<width && left+x<WIDTH;++x)
         if(frame[y/8*width+x]&(1U<<(y&7))) set_pixel(left+x,top+y);
 }
@@ -212,6 +233,13 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
     static const Ui default_ui;
     if(!ui) ui = &default_ui;
     font_settings_=&ui->settings();
+    const bool service_active=services && services->active();
+    const u8* graphics=service_active?services->graphics():nullptr;
+    const u8* native=graphics?services->native_graphics():nullptr;
+    if(native && !services->graphical_document()) { bitmap(native,320,320);return; }
+    if(!service_active && ui->page()==Page::CALCULATOR && m61_text::display_owned()) {
+        if(const auto frame=script::native_frame()) { bitmap(frame,320,320);return; }
+    }
     std::memset(pixels_, 0, sizeof(pixels_));
     char heading[64];
     if(services && services->active()) services->heading(heading);
@@ -220,10 +248,9 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
     if(!keyboard_online) text(190, 10, "KBD?", 12);
     line(32);
     if(services && services->active()) {
-        const u8* graphics = services->graphics();
         unsigned first = 0, rows = Services::ROWS, top = 42;
         if(graphics) {
-            if(const auto native=services->native_graphics()) {
+            if(native) {
                 if(services->graphical_document()) {
                     bitmap(native,320,240,0,40);
                     line(282);text(8,297,services->footer(),12);

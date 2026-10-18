@@ -1,0 +1,485 @@
+{
+  "status": "PASS",
+  "recorded_at_utc": "2026-10-18T17:56:39.287908+00:00",
+  "source_commit": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+  "feature": "PicoCalc core 1 peripheral I/O, native tile conversion and resident RAM VM decoding",
+  "firmware": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.2",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + GCC IEEE float/double helpers",
+    "arithmetic_runtime": "gcc",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 684888,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 166380,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 1370112,
+    "bin_sha256": "c7951900b43a209b24390b7e839a0540ccfcb2914761a36d4f1aa97520782806",
+    "uf2_sha256": "dc4d85421b5a966314069efda8d717dfb63157b4f8dc6d32df4089b4003a4468",
+    "hardware_verified": false,
+    "source_sha256": "64bfb1ece8992edd9951d89b02d9a7e99e841021d4dfe56eb3c67e5a1205954f",
+    "build_id": "64bfb1ec",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 684888,
+      "footer_offset": 593588,
+      "profile_id": "50434831",
+      "crc32": "9ff1def8"
+    }
+  },
+  "uid": "E6657CD423721C35",
+  "cpu_hz": 125000000,
+  "core0": "Calculator, M61, BASIC/FOCAL, USB, FatFs",
+  "core1": "I2C keyboard transactions, complete LCD transfers, lossless queued UART TX",
+  "baseline_0_8_1_seconds": 138.77980299998308,
+  "first_search_seconds": 74.89629416697426,
+  "repeat_seconds": 68.5415662919986,
+  "first_search_speedup": 1.8529595428391494,
+  "repeat_vs_profiled_warm_baseline_speedup": 1.9279383510004584,
+  "instrumentation_free_final": {
+    "result": "PASS",
+    "recorded_at_utc": "2026-10-18T17:32:34.491237+00:00",
+    "uid": "E6657CD423721C35",
+    "build": "64BFB1EC",
+    "game_directory": "/MK61S-M61-20261017-185043/Turochamp",
+    "source_commit": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "profiling": false,
+    "reset_before": false,
+    "native_geometry": [
+      320,
+      320
+    ],
+    "screen_mode": "completion",
+    "timing_start": "OK on Black selection",
+    "timing_end": "CRC-checked complete eight-rank e2-e3 board",
+    "filesystem_writes": 0,
+    "firmware_writes": 0,
+    "runs": [
+      {
+        "repeat": 0,
+        "temperature": "session-first",
+        "menu_seconds": 1.7545272079878487,
+        "seconds": 74.89629416697426,
+        "nodes": 420,
+        "nodes_per_second": 5.607754090791855,
+        "move": "e2e3",
+        "complete_eight_rank_board": true,
+        "progress": [
+          {
+            "nodes": 0,
+            "seconds": 2.277056041988544
+          },
+          {
+            "nodes": 21,
+            "seconds": 10.162874125002418
+          },
+          {
+            "nodes": 42,
+            "seconds": 13.375564666988794
+          },
+          {
+            "nodes": 63,
+            "seconds": 16.802513416972943
+          },
+          {
+            "nodes": 84,
+            "seconds": 20.056295417016372
+          },
+          {
+            "nodes": 105,
+            "seconds": 23.141975416976493
+          },
+          {
+            "nodes": 126,
+            "seconds": 26.410956832987722
+          },
+          {
+            "nodes": 147,
+            "seconds": 29.662265082995873
+          },
+          {
+            "nodes": 168,
+            "seconds": 32.92947437497787
+          },
+          {
+            "nodes": 189,
+            "seconds": 36.16543295799056
+          },
+          {
+            "nodes": 210,
+            "seconds": 39.49357795796823
+          },
+          {
+            "nodes": 231,
+            "seconds": 43.09876525000436
+          },
+          {
+            "nodes": 252,
+            "seconds": 46.73484250000911
+          },
+          {
+            "nodes": 273,
+            "seconds": 50.38376529200468
+          },
+          {
+            "nodes": 294,
+            "seconds": 54.1224154579686
+          },
+          {
+            "nodes": 315,
+            "seconds": 57.32816716696834
+          },
+          {
+            "nodes": 336,
+            "seconds": 60.583640124998055
+          },
+          {
+            "nodes": 357,
+            "seconds": 63.83473654201953
+          },
+          {
+            "nodes": 378,
+            "seconds": 67.14803012501216
+          },
+          {
+            "nodes": 399,
+            "seconds": 70.32002195797395
+          },
+          {
+            "nodes": 420,
+            "seconds": 73.6167638329789
+          }
+        ],
+        "screen_mode": "completion",
+        "terminal_complete_seconds": 74.79360249999445,
+        "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+        "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e"
+      },
+      {
+        "repeat": 1,
+        "temperature": "repeat",
+        "menu_seconds": 0.8559355000033975,
+        "seconds": 68.5415662919986,
+        "nodes": 420,
+        "nodes_per_second": 6.127668548027183,
+        "move": "e2e3",
+        "complete_eight_rank_board": true,
+        "progress": [
+          {
+            "nodes": 0,
+            "seconds": 0.08153199998196214
+          },
+          {
+            "nodes": 21,
+            "seconds": 4.661847834009677
+          },
+          {
+            "nodes": 42,
+            "seconds": 7.965696249972098
+          },
+          {
+            "nodes": 63,
+            "seconds": 11.319205041974783
+          },
+          {
+            "nodes": 84,
+            "seconds": 14.576966708991677
+          },
+          {
+            "nodes": 105,
+            "seconds": 17.698220958991442
+          },
+          {
+            "nodes": 126,
+            "seconds": 20.934352041978855
+          },
+          {
+            "nodes": 147,
+            "seconds": 24.21439991699299
+          },
+          {
+            "nodes": 168,
+            "seconds": 27.505665458971635
+          },
+          {
+            "nodes": 189,
+            "seconds": 30.81121004198212
+          },
+          {
+            "nodes": 210,
+            "seconds": 34.08269041700987
+          },
+          {
+            "nodes": 231,
+            "seconds": 37.70786954200594
+          },
+          {
+            "nodes": 252,
+            "seconds": 41.2937191670062
+          },
+          {
+            "nodes": 273,
+            "seconds": 44.997796749987174
+          },
+          {
+            "nodes": 294,
+            "seconds": 48.70344675000524
+          },
+          {
+            "nodes": 315,
+            "seconds": 51.93914441700326
+          },
+          {
+            "nodes": 336,
+            "seconds": 55.18542679201346
+          },
+          {
+            "nodes": 357,
+            "seconds": 58.447117708972655
+          },
+          {
+            "nodes": 378,
+            "seconds": 61.69734499999322
+          },
+          {
+            "nodes": 399,
+            "seconds": 64.86666391696781
+          },
+          {
+            "nodes": 420,
+            "seconds": 68.13239116698969
+          }
+        ],
+        "screen_mode": "completion",
+        "terminal_complete_seconds": 68.43519049999304,
+        "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+        "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e"
+      }
+    ],
+    "identity": "identity\r\nMK61S PicoCalc 0.8.2 CPU=RP2040 UID=E6657CD423721C35 FLASH=2097152\r\nmk61> ",
+    "initial": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=658 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=56 RAM_HIT=0 RAM_MISS=2 SD_HIT=1 SD_MISS=1 COMPILES=1 STORES=1 REJECTED=1 PACKS=0 THAWS=0 PACKED=0\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=21\r\nIO_CORE=1 I2C_TRANSACTIONS=277 UART_BYTES=108098 LCD_PENDING=0 LCD_FRAME_CRC=11F33083\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=17 DIRTY=0 PATH=[/MK61S-CACHE-20261018-203152/part.bas] RESULT=[OK  line 20  5 steps]\r\nSTACK_USED=7956 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=1 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:32:36 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[                                ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "game_package": {
+      "Turochamp.FMK": {
+        "bytes": 985,
+        "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+      },
+      "algorithm.md": {
+        "bytes": 746,
+        "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+      },
+      "autoexec.m61": {
+        "bytes": 697,
+        "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+      },
+      "board.tbi": {
+        "bytes": 2570,
+        "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+      },
+      "castle.tbi": {
+        "bytes": 1184,
+        "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+      },
+      "claim.tbi": {
+        "bytes": 663,
+        "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+      },
+      "claims.tbi": {
+        "bytes": 734,
+        "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+      },
+      "ep.tbi": {
+        "bytes": 1023,
+        "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+      },
+      "eval.tbi": {
+        "bytes": 1478,
+        "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+      },
+      "game.tbi": {
+        "bytes": 1668,
+        "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+      },
+      "help.tbi": {
+        "bytes": 701,
+        "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+      },
+      "history.tbi": {
+        "bytes": 2195,
+        "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+      },
+      "init.tbi": {
+        "bytes": 707,
+        "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+      },
+      "legal.tbi": {
+        "bytes": 4647,
+        "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+      },
+      "make.tbi": {
+        "bytes": 1030,
+        "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+      },
+      "manual.md": {
+        "bytes": 818,
+        "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+      },
+      "menu.tbi": {
+        "bytes": 1634,
+        "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+      },
+      "mobility.tbi": {
+        "bytes": 310,
+        "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+      },
+      "node.tbi": {
+        "bytes": 2262,
+        "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+      },
+      "promote.tbi": {
+        "bytes": 408,
+        "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+      },
+      "repeat.tbi": {
+        "bytes": 1096,
+        "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+      },
+      "rkey.tbi": {
+        "bytes": 575,
+        "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+      },
+      "rstep.tbi": {
+        "bytes": 416,
+        "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+      },
+      "rules.md": {
+        "bytes": 830,
+        "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+      },
+      "search.tbi": {
+        "bytes": 1775,
+        "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+      },
+      "status.tbi": {
+        "bytes": 1619,
+        "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+      },
+      "threat.tbi": {
+        "bytes": 1862,
+        "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+      },
+      "turn.tbi": {
+        "bytes": 455,
+        "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+      },
+      "unmake.tbi": {
+        "bytes": 653,
+        "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+      }
+    },
+    "health_run_1": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=7869 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=31024 RAM_HIT=7707 RAM_MISS=18 SD_HIT=1 SD_MISS=17 COMPILES=17 STORES=17 REJECTED=17 PACKS=5 THAWS=1 PACKED=3\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=57\r\nIO_CORE=1 I2C_TRANSACTIONS=5340 UART_BYTES=446927 LCD_PENDING=0 LCD_FRAME_CRC=A38BCBF8\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2195 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Turochamp/history.tbi] RESULT=[STOPPED  line 16  4471 steps]\r\nSTACK_USED=8876 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=ATTACHED SCREEN_FRAMES=28 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:34:39 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[ hgfedcba  ��������             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "health_run_2": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=14042 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=31056 RAM_HIT=15424 RAM_MISS=24 SD_HIT=7 SD_MISS=17 COMPILES=17 STORES=17 REJECTED=17 PACKS=14 THAWS=7 PACKED=4\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=91\r\nIO_CORE=1 I2C_TRANSACTIONS=10286 UART_BYTES=703915 LCD_PENDING=0 LCD_FRAME_CRC=7246DCDA\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2262 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Turochamp/node.tbi] RESULT=[STOPPED  line 16  4471 steps]\r\nSTACK_USED=8876 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=ATTACHED SCREEN_FRAMES=51 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:35:52 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[ hgfedcba  ��������             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "median_seconds": 71.71893022948643,
+    "repeat_median_seconds": 68.5415662919986,
+    "game_files_unchanged": true,
+    "calculator_state_restored": true,
+    "final": "RESET_REASON=00010001 BOOTS=52 CRASH=NONE BUILD=64BFB1EC\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=15021 MAX_GAP_MS=3425 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=321 PREVIOUS_GAP_MS=699\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=684888 FOOTER=593588 EXPECTED=9FF1DEF8 ACTUAL=9FF1DEF8 CHECK_US=378383\r\nFIRMWARE_LAST_FAILURE=crc-mismatch EXPECTED=CB2F1EA5 ACTUAL=CB2F1EA4\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=32768 USED=31056 RAM_HIT=15424 RAM_MISS=24 SD_HIT=7 SD_MISS=17 COMPILES=17 STORES=17 REJECTED=17 PACKS=14 THAWS=7 PACKED=4\r\nMK61S PICOCALC PICO-H 0.8.2 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/GCC-IEEE-softfloat MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=00 RUN=0 BUSY=0\r\nX_RAW=[ 4.2000000  01] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=8928571 FRAMES=95\r\nIO_CORE=1 I2C_TRANSACTIONS=10390 UART_BYTES=799941 LCD_PENDING=0 LCD_FRAME_CRC=21131EA3\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=2262 DIRTY=0 PATH=[/MK61S-M61-20261017-185043/Turochamp/node.tbi] RESULT=[STOPPED  line 16  4471 steps]\r\nSTACK_USED=8876 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=3425393\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=3 BATTERY_SLEEPS=0\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=60 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-18T20:36:40 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=32 ROWS=8 FONT=0 TEXT=[ hgfedcba  ��������             ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+    "frames_crc_verified": 59,
+    "pc_sampling": false,
+    "uf2_sha256": "dc4d85421b5a966314069efda8d717dfb63157b4f8dc6d32df4089b4003a4468"
+  },
+  "inclusive_profile_stages": [
+    {
+      "label": "Original cached firmware, inclusive scopes",
+      "build": "69FDB3EE",
+      "seconds": 132.1439142919844,
+      "profile": "prof stop\nPROFILE=STOPPED TIMER=US ELAPSED_US=138101200 (inclusive)\ncore     calls=19 total_us=708946 max_us=37523 mean_us=37312\nusb      calls=241299 total_us=4774548 max_us=253871 mean_us=19\ndisplay  calls=2556 total_us=19231988 max_us=21697 mean_us=7524\nstorage  calls=18 total_us=217652 max_us=28775 mean_us=12091\nlanguage calls=7723 total_us=102445639 max_us=3283610 mean_us=13265\napp      calls=0 total_us=0 max_us=0 mean_us=0\nmk61> ",
+      "profiling": true
+    },
+    {
+      "label": "Core 0 PC sampling",
+      "build": "651B2397",
+      "seconds": 139.08530545799294,
+      "profile": "prof stop\nPROFILE=STOPPED TIMER=US ELAPSED_US=146568975 (inclusive)\ncore     calls=23 total_us=859154 max_us=37564 mean_us=37354\nusb      calls=239133 total_us=4687259 max_us=259348 mean_us=19\ndisplay  calls=2627 total_us=19718404 max_us=21643 mean_us=7506\nstorage  calls=40 total_us=440516 max_us=28785 mean_us=11012\nlanguage calls=7723 total_us=111284730 max_us=4223521 mean_us=14409\napp      calls=0 total_us=0 max_us=0 mean_us=0\npump     calls=226079 total_us=43823372 max_us=262265 mean_us=193\nlcd      calls=43 total_us=10206090 max_us=237364 mean_us=237350\nkeyboard calls=10884 total_us=26886727 max_us=2898 mean_us=2470\nm61      calls=13054 total_us=119740459 max_us=4243032 mean_us=9172\nmk61> ",
+      "profiling": true
+    },
+    {
+      "label": "Core 1 I/O and native tiles",
+      "build": "F505B246",
+      "seconds": 99.89884974999586,
+      "profile": "prof stop\nPROFILE=STOPPED TIMER=US ELAPSED_US=105171886 (inclusive)\ncore     calls=20 total_us=750695 max_us=38346 mean_us=37534\nusb      calls=264479 total_us=5683312 max_us=13906 mean_us=21\ndisplay  calls=2010 total_us=10968459 max_us=19703 mean_us=5456\nstorage  calls=40 total_us=441020 max_us=28788 mean_us=11025\nlanguage calls=7723 total_us=86332708 max_us=2764356 mean_us=11178\napp      calls=0 total_us=0 max_us=0 mean_us=0\npump     calls=251428 total_us=15673479 max_us=20251 mean_us=62\nlcd      calls=43 total_us=4152 max_us=104 mean_us=96\nkeyboard calls=7352 total_us=109676 max_us=45 mean_us=14\nm61      calls=13051 total_us=95378717 max_us=2783928 mean_us=7308\nmk61> ",
+      "profiling": true
+    },
+    {
+      "label": "RAM VM and bounded service cadence",
+      "build": "7F28E232",
+      "seconds": 75.56211362499744,
+      "profile": "prof stop\nPROFILE=STOPPED TIMER=US ELAPSED_US=80721835 (inclusive)\ncore     calls=20 total_us=752388 max_us=39238 mean_us=37619\nusb      calls=41161 total_us=3031557 max_us=11529 mean_us=73\ndisplay  calls=1640 total_us=5347018 max_us=17367 mean_us=3260\nstorage  calls=40 total_us=439485 max_us=28826 mean_us=10987\nlanguage calls=7723 total_us=64637683 max_us=2685839 mean_us=8369\napp      calls=0 total_us=0 max_us=0 mean_us=0\npump     calls=28110 total_us=6628122 max_us=17691 mean_us=235\nlcd      calls=37 total_us=3625 max_us=104 mean_us=97\nkeyboard calls=5088 total_us=65165 max_us=42 mean_us=12\nm61      calls=13051 total_us=73106179 max_us=2705346 mean_us=5601\nmk61> ",
+      "profiling": true
+    }
+  ],
+  "classic_context": {
+    "report": "chess-flash-vm-followup-20261018.json",
+    "warm_seconds": 59.55847243752214,
+    "all_29_game_files_identical": true,
+    "historical_29_seconds_is_not_paired_current_configuration": true,
+    "difference_to_current_classic_seconds": 8.983093854476465
+  },
+  "qualification_report": "picocalc-pico-h-dual-core-20261018.json",
+  "pc_sampling": {
+    "hz": 1000,
+    "bucket_bytes": 64,
+    "samples": 146568,
+    "dropped": 4184,
+    "scope": "Menu plus one complete first search; function attribution is approximate across 64-byte buckets"
+  },
+  "memory": {
+    "main_stack_bytes": 32768,
+    "core1_stack_bytes": 2048,
+    "m61_read_cache_bytes": 2048,
+    "editor_capacity_bytes": 65534,
+    "main_sram_end": "20038000",
+    "heap_begin": "2002F3D4",
+    "heap_free_bytes": 35884,
+    "core0_stack": [
+      "20039000",
+      "20041000"
+    ],
+    "core1_stack": [
+      "20041800",
+      "20042000"
+    ]
+  },
+  "stm32": {
+    "f401_build": true,
+    "f411_build": true,
+    "system_app_counts": [
+      9,
+      9
+    ],
+    "app_memory_gates": true,
+    "native_runtime_archive_gates": true,
+    "hardware_flashed": false
+  },
+  "limits": [
+    "Sleep was checked on USB power; batteries are not installed.",
+    "UART queue ordering is checked under host concurrency and real device load; no external UART receiver was attached.",
+    "STM32 checks are builds/APPs/memory/runtime gates, without STM32 hardware flashing.",
+    "The measured firmware keeps GCC IEEE arithmetic; separate owned-M0 runtime development is not included."
+  ]
+}

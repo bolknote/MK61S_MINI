@@ -1,4 +1,5 @@
 #include "power.hpp"
+#include "io_worker.hpp"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
 #include "hardware/pll.h"
@@ -26,6 +27,7 @@ void SleepClocks::init() {
 }
 void SleepClocks::enter() {
   if (active_) return;
+  io_worker::drain();
   usb_ = usb_power();
   sys_hz_ = clock_get_hz(clk_sys);
   peri_hz_ = clock_get_hz(clk_peri);
@@ -72,6 +74,7 @@ void SleepClocks::enter() {
 }
 void SleepClocks::leave() {
   if (!active_) return;
+  io_worker::drain();
   // set_sys_clock_hz briefly uses PLL_USB while restarting PLL_SYS.
   if (!usb_) pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ,
                      PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);

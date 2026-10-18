@@ -250,6 +250,9 @@ struct View {
   bool (*lookup)(void*,uint32_t,bool,uint32_t*) = nullptr;
   flash::Cursor at(uint32_t n) const {return {bytes,reader,n};}
   uint8_t byte(uint32_t n) const {return *at(n);}
+#if defined(MK61_CORE_STANDALONE)
+  __attribute__((always_inline))
+#endif
   bool wide_code() const {
 #if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
     // Shipping APPs accept LBV2 programs and branch-free LBV1 INPUT recipes.

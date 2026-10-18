@@ -4,7 +4,7 @@
 #include "crash_dump_format.hpp"
 
 namespace picocalc { namespace diagnostics {
-enum class Point : u8 { CORE, USB, DISPLAY, STORAGE, LANGUAGE, APP, COUNT };
+enum class Point : u8 { CORE, USB, DISPLAY, STORAGE, LANGUAGE, APP, PUMP, LCD, KEYBOARD, M61, COUNT };
 enum class State : u32 { BOOT, CALCULATOR, MENU, M61, USB_DISK, SLEEP, APP, LANGUAGE };
 struct Sample { u64 total_us=0;u32 calls=0,maximum_us=0; };
 struct Watchdog {

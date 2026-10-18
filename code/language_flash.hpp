@@ -112,14 +112,31 @@ public:
 // images use the same decoder without copying their operands.
 class Cursor {
   const uint8_t* bytes_;const Reader* reader_;uint32_t offset_;
+#if defined(MK61_CORE_STANDALONE)
+  __attribute__((noinline)) uint8_t indirect(uint32_t n) const {return reader_->at(offset_+n);}
+  __attribute__((noinline)) bool indirect_read(void* out,uint16_t n) const {return reader_->read(offset_,out,n);}
+#endif
 public:
   Cursor(const uint8_t* bytes,const Reader* reader,uint32_t offset):bytes_(bytes),reader_(reader),offset_(offset) {}
+#if defined(MK61_CORE_STANDALONE)
+  // Pico's resident VM normally executes RAM images. Keep that load inline;
+  // an occasional paged reader retains its own cold, checked decoder.
+  __attribute__((always_inline)) uint8_t operator[](uint32_t n) const {return reader_?indirect(n):bytes_[offset_+n];}
+#else
   __attribute__((noinline)) uint8_t operator[](uint32_t n) const {return reader_?reader_->at(offset_+n):bytes_[offset_+n];}
+#endif
   uint8_t operator*() const {return (*this)[0];}
   Cursor operator+(uint32_t n) const {return {bytes_,reader_,offset_+n};}
   const uint8_t* raw() const {return reader_?nullptr:bytes_+offset_;}
+#if defined(MK61_CORE_STANDALONE)
+  __attribute__((always_inline))
+#endif
   bool read(void* out,uint16_t n) const {
+#if defined(MK61_CORE_STANDALONE)
+    if(reader_)return indirect_read(out,n);
+#else
     if(reader_)return reader_->read(offset_,out,n);
+#endif
     memcpy(out,bytes_+offset_,n);return true;
   }
 };

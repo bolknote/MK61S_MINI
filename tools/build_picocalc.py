@@ -79,6 +79,7 @@ def main():
     parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument("--compiler-runtime", action="store_true",
                         help="Control build using GCC arithmetic instead of the owned M0 runtime")
+    parser.add_argument("--sampling-profile", action="store_true", help="Build diagnostic-only core 0 PC sampling")
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
@@ -100,6 +101,8 @@ def main():
                                                     or p.name == 'CMakeLists.txt'))]):
             source_hash.update(str(source.relative_to(ROOT)).encode() + b'\0')
             source_hash.update(source.read_bytes())
+        if args.sampling_profile:
+            source_hash.update(b'picocalc-sampling-profile=1\0')
         if args.compiler_runtime:
             source_hash.update(b'picocalc-compiler-runtime=1\0')
         source_digest = source_hash.hexdigest()
@@ -111,7 +114,8 @@ def main():
              f"-DCMAKE_MAKE_PROGRAM={ninja}", f"-DPICO_SDK_PATH={sdk}",
              f"-DPICO_TOOLCHAIN_PATH={toolchain}", f"-DPython3_EXECUTABLE={sys.executable}",
              f"-DMK61_PICOCALC_M0_EABI={'OFF' if args.compiler_runtime else 'ON'}",
-             f"-DMK61_PICOCALC_BUILD_ID={build_id}"])
+             f"-DMK61_PICOCALC_BUILD_ID={build_id}",
+             f"-DMK61_PICOCALC_SAMPLE_PROFILE={'ON' if args.sampling_profile else 'OFF'}"])
         run([cmake, "--build", build, "--parallel", args.jobs])
         suffix = ".exe" if os.name == "nt" else ""
         attributes = run([toolchain / ("arm-none-eabi-readelf" + suffix), "-A", build / (TARGET + ".elf")],
@@ -146,7 +150,8 @@ def main():
                     capture_output=True, text=True).stdout
         fields = sizes.splitlines()[-1].split()
         metadata = {
-            "profile": args.profile, "prototype_version": "0.8.1", "mcu": "RP2040",
+            "profile": args.profile, "prototype_version": "0.8.2", "mcu": "RP2040",
+            "sampling_profile": args.sampling_profile,
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + " + (
                 "GCC IEEE float/double helpers" if args.compiler_runtime else "owned ARMv6-M IEEE runtime"),
