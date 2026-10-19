@@ -57,6 +57,7 @@ constexpr ReciprocalSeeds reciprocal_seeds;
 #if defined(__arm__) || defined(__thumb__)
 #include "native_eabi_m0_exp_table.inc"
 #include "native_eabi_m0_trig_table.inc"
+#include "native_eabi_m0_log_table.inc"
 #endif
 inline U low_product(U a,U b) {
   return wide32(uint32_t(a),uint32_t(b))+
@@ -294,26 +295,42 @@ MK61_SOFT_PCS int __aeabi_##letter##cmple(type a,type b) {return format::compare
 MK61_SOFT_PCS int __aeabi_##letter##cmpge(type a,type b) {const int c=format::compare(bits(a),bits(b));return c==0 || c==1;} \
 MK61_SOFT_PCS int __aeabi_##letter##cmpgt(type a,type b) {return format::compare(bits(a),bits(b))==1;} \
 MK61_SOFT_PCS int __aeabi_##letter##cmpun(type a,type b) {return format::compare(bits(a),bits(b))==2;}
+#if !defined(__arm__) && !defined(__thumb__)
 COMPARES(d,double,D)
+#endif
 COMPARES(f,float,S)
 #undef COMPARES
 #if !defined(__arm__) && !defined(__thumb__)
 MK61_SOFT_PCS double __aeabi_i2d(int32_t x) {return real(D::from_integer(x<0?U(0)-U(int64_t(x)):U(x),x<0?D::Sign:0));}
 MK61_SOFT_PCS double __aeabi_ui2d(uint32_t x) {return real(D::from_integer(x));}
-#endif
 MK61_SOFT_PCS double __aeabi_l2d(int64_t x) {return real(D::from_integer(integer_magnitude(x),x<0?D::Sign:0));}
 MK61_SOFT_PCS double __aeabi_ul2d(U x) {return real(D::from_integer(x));}
+#endif
 MK61_SOFT_PCS float __aeabi_i2f(int32_t x) {return single(S::from_integer(x<0?U(0)-U(int64_t(x)):U(x),x<0?S::Sign:0));}
 MK61_SOFT_PCS float __aeabi_ui2f(uint32_t x) {return single(S::from_integer(x));}
+#if defined(__arm__) || defined(__thumb__)
+MK61_SOFT_PCS int32_t mk61_m0_d2iz_slow(double x) {return D::signed32(bits(x));}
+#else
 MK61_SOFT_PCS int32_t __aeabi_d2iz(double x) {return D::signed32(bits(x));}
+#endif
 MK61_SOFT_PCS uint32_t __aeabi_d2uiz(double x) {return D::unsigned32(bits(x));}
 MK61_SOFT_PCS int32_t __aeabi_f2iz(float x) {return S::signed32(bits(x));}
 MK61_SOFT_PCS uint32_t __aeabi_f2uiz(float x) {return S::unsigned32(bits(x));}
+#if defined(__arm__) || defined(__thumb__)
+MK61_SOFT_PCS int64_t mk61_m0_d2lz_slow(double x) {const U a=bits(x),m=D::magnitude_integer(a);return copy<int64_t>(a&D::Sign?U(0)-m:m);}
+#else
 MK61_SOFT_PCS int64_t __aeabi_d2lz(double x) {const U a=bits(x),m=D::magnitude_integer(a);return copy<int64_t>(a&D::Sign?U(0)-m:m);}
+#endif
 MK61_SOFT_PCS U __aeabi_d2ulz(double x) {const U a=bits(x);return a&D::Sign?0:D::magnitude_integer(a);}
+#if defined(__arm__) || defined(__thumb__)
+MK61_SOFT_PCS float mk61_m0_d2f_slow(double x) {return single(narrow(bits(x)));}
+MK61_SOFT_PCS double mk61_m0_f2d_slow(float x) {return real(extend(bits(x)));}
+#else
 MK61_SOFT_PCS float __aeabi_d2f(double x) {return single(narrow(bits(x)));}
 MK61_SOFT_PCS double __aeabi_f2d(float x) {return real(extend(bits(x)));}
+#endif
 #if defined(__arm__) || defined(__thumb__)
+#include "native_eabi_m0_kernels.inc"
 struct Trig192 {U low,middle,high;};
 __attribute__((always_inline)) inline Trig192 trig_negate(Trig192 a) {
   a.low=U(0)-a.low;
@@ -327,6 +344,36 @@ __attribute__((always_inline)) inline Trig192 trig_difference(Trig192 a,Trig192 
   const U middle=a.middle-b.middle-U(borrow);
   borrow=a.middle<b.middle || (borrow && a.middle==b.middle);
   return {low,middle,a.high-b.high-U(borrow)};
+}
+__attribute__((always_inline)) inline U trig_relative(Trig192 a,int &e) {
+  U first,second,third;unsigned leading;
+  if(a.high) {first=a.high;second=a.middle;third=a.low;leading=0;}
+  else if(a.middle) {first=a.middle;second=a.low;third=0;leading=64;}
+  else {first=a.low;second=third=0;leading=128;}
+  if(!first) {e=-192;return 0;}
+  const unsigned shift=clz64(first);leading+=shift;e=1-int(leading);
+  const U top=shift?(first<<shift)|(second>>(64-shift)):first;
+  const bool sticky=(shift?second<<shift:second)||third;
+  return (top>>1)+U((top&1) && (sticky||((top>>1)&1)));
+}
+__attribute__((optimize("Os"))) static int trig_small_relative(U relative,int e,unsigned flags,double* out) {
+  const unsigned op=flags&3,n=(flags>>2)&3;
+  const unsigned selected=op==0?(n&1):op==1?((n&1)^1U):0;
+  U value;
+  if(op==2) {
+    const double t=math62_tan_small(relative,e,(flags&32)?D::Sign:0);
+    value=bits(n&1?-1.0/t:t)^((flags&16)?D::Sign:0);
+  }
+  else {
+    math62_sincos_small(relative,e,(flags&32)?D::Sign:0,out,1U<<selected);
+    const unsigned flip=op==0?((n>>1)&1)^((flags>>4)&1):((n+1)>>1)&1;
+    value=bits(out[selected])^(U(flip)<<63);
+  }
+  out[0]=real(value);return 1;
+}
+__attribute__((optimize("Os"))) static int trig_small_result(const Trig192* r,unsigned flags,double* out) {
+  int e;const U relative=trig_relative(*r,e);
+  return e<-99?0:trig_small_relative(relative,e,flags,out);
 }
 __attribute__((always_inline)) inline U trig_pack192(Trig192 a,U sign,unsigned &leading) {
   if(!(a.low|a.middle|a.high)) {leading=192;return sign;}
@@ -479,13 +526,30 @@ __attribute__((optimize("Os"))) int mk61_m0_trig_medium(double x,double* out,uns
   negative=(high>>63)!=0;
   if(negative) {low=0U-low;high=~high+U(!low);}
   U q=(high>>1)+U((high&1) && (low||((high>>1)&1)));
-  if(q<(U(1)<<56) || low<=n || uint32_t(~low)<=n) {
+  if(q<(U(1)<<56)) {
+    const unsigned leading=clz64(high);
+    if(leading<33) {
+      const unsigned shift=33-leading;
+      const uint32_t half=1U<<(shift-1),tail=low&((half<<1)-1);
+      const uint32_t distance=tail>=half?tail-half:half-tail;
+      if(distance>n) {
+        // Certify the relative 63-bit rounding against the entire pi/2
+        // truncation interval. This avoids the Q191 product for most small
+        // residuals while retaining exactly the same normalized guard bits.
+        const U truncated=(high<<(leading-1))|(low>>shift);
+        const U relative=truncated+U(tail>half || (tail==half && (truncated&1)));
+        return trig_small_relative(relative,1-int(leading),
+          op|((n&3)<<2)|(unsigned(b>>63)<<4)|(unsigned(negative)<<5),out);
+      }
+    }
+    const Trig192 r=trig_remainder(b,n,negative);
+    return trig_small_result(&r,op|((n&3)<<2)|(unsigned(b>>63)<<4)|(unsigned(negative)<<5),out);
+  }
+  if(low<=n || uint32_t(~low)<=n) {
     const Trig192 r=trig_remainder(b,n,negative);
     q=(r.high>>1)+U((r.high&1) && ((r.low|r.middle)||((r.high>>1)&1)));
     if(q<(U(1)<<56)) {
-      if(!trig_remainder_pair(r,(b&D::Sign)^(negative?D::Sign:0),out)) return 0;
-      const unsigned quadrant=(b&D::Sign?0U-n:n)&3U;
-      return 2|int(quadrant<<2);
+      return trig_small_result(&r,op|((n&3)<<2)|(unsigned(b>>63)<<4)|(unsigned(negative)<<5),out);
     }
   }
   const unsigned selected=op==0?(n&1):op==1?((n&1)^1U):0;

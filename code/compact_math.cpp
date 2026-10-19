@@ -144,6 +144,7 @@ double sine(double x,double tail) {
   if((hi_word(x)&0x7FFFFFFFU)>=0x3F900000U) {
     double output[2];mk61_m0_sincos_reduced(x,tail,output,1);return output[0];
   }
+  double output[2];mk61_m0_sincos_small(x,tail,output,1);return output[0];
 #endif
   int exponent;const uint64_t q=normalized(x,tail,exponent);
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
@@ -163,6 +164,7 @@ double cosine(double x,double tail) {
   if((hi_word(x)&0x7FFFFFFFU)>=0x3F900000U) {
     double output[2];mk61_m0_sincos_reduced(x,tail,output,2);return output[1];
   }
+  double output[2];mk61_m0_sincos_small(x,tail,output,2);return output[1];
 #endif
   int exponent;const uint64_t q=normalized(x,tail,exponent);
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
@@ -201,11 +203,11 @@ using tables::angle_table;
 using tables::atan_coefficients;
 using tables::half_pi;
 inline uint64_t reduced(double x,int &e) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_atan_reduced(x,&e);
+#else
   const uint64_t q=fixed_kernel::normalized(x,0.0,e);
   const uint64_t factor=fixed_kernel::polynomial(fixed_kernel::square(q,e),atan_coefficients,5);
-#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
-  return mk61_m0_mul_q62(q,factor);
-#else
   return fixed_kernel::rounded_shift62(fixed_kernel::multiply(q,factor));
 #endif
 }
@@ -660,6 +662,10 @@ __attribute__((noinline)) double polynomial(double z) {
 }
 double evaluate(double x)
 {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+        const uint32_t high=hi_word(x);
+        if(high>=0x00100000U && high<0x7FF00000U) return mk61_m0_ln(x);
+#endif
         double hfsq,f,s,z,R,dk;
         int32_t k,hx,i,j;
         uint32_t lx;
@@ -1010,7 +1016,7 @@ double tan(double x) {
   if((hi_word(r[0])&0x7FFFFFFFU)>=0x3F900000U) {
     double output[2];mk61_m0_sincos_reduced(r[0],r[1],output,3);s=output[0];c=output[1];
   } else {
-    s=sine::evaluate(r[0],r[1],r[1]!=0.0);c=cosine::evaluate(r[0],r[1]);
+    const double t=mk61_m0_tan_small(r[0],r[1]);return n&1?-1.0/t:t;
   }
 #else
   const int n = h <= 0x3FE921FBU ? 0 : argument::reduce(x,r);
@@ -1020,6 +1026,10 @@ double tan(double x) {
   return n & 1 ? -c/s : s/c;
 }
 double ln(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const uint32_t high=hi_word(x);
+  if(high>=0x00100000U && high<0x7FF00000U) return mk61_m0_ln(x);
+#endif
   return natural_log::evaluate(x);
 }
 double log10(double x) {

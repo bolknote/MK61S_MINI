@@ -70,6 +70,8 @@ __aeabi_ui2d:
 .ltorg
 end __aeabi_i2d
 
+#include "native_eabi_m0_convert.inc"
+
 // Positive Q62 in [sin(1/64),1], sign in R3. The quotient discards only
 // 3..10 bits, so all rounding bits are in R0. Exact nearest-even packing.
 function mk61_m0_trig_pack

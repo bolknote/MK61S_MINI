@@ -68,6 +68,19 @@ def corpora():
     wide_rng=random.Random(0x61401024)
     wide=[bits(wide_rng.uniform(-QFP_TRIG_LIMIT,QFP_TRIG_LIMIT)) for _ in range(128)]
     groups += [(op,'qfplib_range',wide) for op in ('sin','cos','tan')]
+    small_rng=random.Random(0x61405A11)
+    small=[bits(small_rng.uniform(-1/64,1/64)) for _ in range(128)]
+    with localcontext() as context:
+        context.prec=100
+        medium=[]
+        for _ in range(128):
+            n=small_rng.choice((-1,1))*small_rng.randrange(1,650)
+            r=math.ldexp(small_rng.uniform(-1,1),-small_rng.randrange(7,25))
+            medium.append(bits(float(Decimal(n)*PI/2+Decimal(r))))
+    groups += [(op,'small_reduced',small) for op in ('sin','cos','tan')]
+    groups += [(op,'small_medium_remainder',medium) for op in ('sin','cos','tan')]
+    known=[bits(x) for x in (-292.1616184080913,622.0231347074398,-0.011395614473797)]
+    groups += [(op,'previous_slow_cases',known) for op in ('sin','cos','tan')]
     groups += [('i2d','random',[rng.getrandbits(32) for _ in range(512)]),
                ('i2d','small',[(i&0xFFFFFFFF) for i in range(-128,129)])]
     return groups
@@ -96,7 +109,7 @@ def qualification(samples):
             a=bits((i+offset)/1024)
             inputs += [v for v in range(a-1,a+2)]
             inputs += [(v|SIGN) for v in range(a-1,a+2)]
-    for a in (bits(1/64),bits(2.**-27),bits(math.pi/4),bits(2.**20),bits(-1/64)):
+    for a in (bits(1/64),bits(2.**-14),bits(2.**-27),bits(math.pi/4),bits(2.**20),bits(-1/64)):
         inputs+=list(range(a-8,a+9))
     inputs += [0,SIGN,1,2,3,SIGN|1,0xFFFFFFFFFFFFF,0x10000000000000,
                INF-1,SIGN|(INF-1),INF,SIGN|INF,INF|1,INF|(1<<51)|13,SIGN|INF|123]
@@ -146,6 +159,9 @@ def main():
         print(op,name,{k:round(v['mean'],3) for k,v in stats.items()},flush=True)
         if args.require_fewer_instructions and not outside:
             assert stats['OWN']['mean']<stats['QFP']['mean'],(op,name,stats)
+            if name=='previous_slow_cases':
+                for row in rows:
+                    assert row['implementations']['OWN']['instructions']<=row['implementations']['QFP']['instructions'],(op,name,row)
     result={}
     owned=machines['OWN']
     if args.qualification:

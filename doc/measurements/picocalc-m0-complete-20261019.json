@@ -1,0 +1,6219 @@
+{
+  "schema": 1,
+  "status": "INSTRUCTION_QUALIFIED_HARDWARE_PENDING",
+  "recorded_at": "2026-10-19T20:10:28.932036+03:00",
+  "scope": "Close remaining resident M0+ instruction-count deficits: ln, atan, 64-bit integer conversions, signed float-to-integer conversions, IEEE comparisons, float/double conversions, and small reduced trig. Cortex-M4 is unchanged.",
+  "baseline": {
+    "commit": "77c9e4724",
+    "elf_sha256": "8bb636f3a7e615a066f598de487479bc09f9cb40b8969ee8283b440d62d64bb1",
+    "flash_bytes": 683200,
+    "static_ram_bytes": 166340
+  },
+  "qfplib": {
+    "source": {
+      "commit": "ec814ad1f17934ac777f9e042efacfae5b15210d",
+      "sha256": {
+        "qfplib-m0-full_gcc.S": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+        "qfplib-m0-full.h": "a2b0cec50d84fc529d772066490a28bac08a83036359fcbf612442bcee2a9754",
+        "LICENCE": "ab15fd526bd8dd18a9e77ebc139656bf4d33e97fc7238cd11bf60e2b9b8666c6",
+        "README.md": "7953c1fca78d056a57386c5236aedcf0771b29b2d741e662573fa6b5c6dd1d5c"
+      }
+    },
+    "reference_adapters": ".syntax unified\n.cpu cortex-m0plus\n.thumb\n.text\n.global audit_dcmpeq\n.type audit_dcmpeq,%function\n.thumb_func\naudit_dcmpeq:\npush {r4,lr}\nbl qfp_dcmp\ncmp r0,#0\nbeq 1f\nmovs r0,#0\npop {r4,pc}\n1: movs r0,#1\npop {r4,pc}\n.size audit_dcmpeq,.-audit_dcmpeq\n.global audit_dcmplt\n.type audit_dcmplt,%function\n.thumb_func\naudit_dcmplt:\npush {r4,lr}\nbl qfp_dcmp\ncmp r0,#0\nblt 1f\nmovs r0,#0\npop {r4,pc}\n1: movs r0,#1\npop {r4,pc}\n.size audit_dcmplt,.-audit_dcmplt\n.global audit_dcmple\n.type audit_dcmple,%function\n.thumb_func\naudit_dcmple:\npush {r4,lr}\nbl qfp_dcmp\ncmp r0,#0\nble 1f\nmovs r0,#0\npop {r4,pc}\n1: movs r0,#1\npop {r4,pc}\n.size audit_dcmple,.-audit_dcmple\n.global audit_dcmpge\n.type audit_dcmpge,%function\n.thumb_func\naudit_dcmpge:\npush {r4,lr}\nbl qfp_dcmp\ncmp r0,#0\nbge 1f\nmovs r0,#0\npop {r4,pc}\n1: movs r0,#1\npop {r4,pc}\n.size audit_dcmpge,.-audit_dcmpge\n.global audit_dcmpgt\n.type audit_dcmpgt,%function\n.thumb_func\naudit_dcmpgt:\npush {r4,lr}\nbl qfp_dcmp\ncmp r0,#0\nbgt 1f\nmovs r0,#0\npop {r4,pc}\n1: movs r0,#1\npop {r4,pc}\n.size audit_dcmpgt,.-audit_dcmpgt\n.global audit_atan\n.type audit_atan,%function\n.thumb_func\naudit_atan:\npush {r4,lr}\nmovs r2,#0\nldr r3,=0x3ff00000\nbl qfp_datan2\npop {r4,pc}\n.size audit_atan,.-audit_atan\n.ltorg\n.section .note.GNU-stack,\"\",%progbits\n",
+    "domain_notes": [
+      "Executed ARM instructions, not RP2040 cycles; the accepted Machine harness models ROM CLZ/memory intrinsics.",
+      "Integer speed comparisons use common finite ranges: nonnegative fractional values or signed integral values. Qfplib rounds negative fractions toward -infinity; EABI truncates toward zero.",
+      "Thumb-1 adapters for boolean comparisons and atan(x)=atan2(x,1) execute in the reference ELF; their overhead is included.",
+      "Atan outside the documented Qfplib trig range \u00b11024 is diagnostic only.",
+      "Qfplib has no direct asin, acos, log10 or pow equivalents. Resident float arithmetic is absent; float/double conversions remain."
+    ],
+    "trig_domain": "README.md: double-precision trigonometric functions require -1024 <= x <= 1024. Wider streams are diagnostics only and excluded from the speed gate."
+  },
+  "implementation": {
+    "source_sha256": {
+      "code/compact_math.cpp": "69a46fd977e650a595c74c1b312ca9efe32e66d724de9e279e2143d660191092",
+      "code/native_eabi_m0.cpp": "141ca0679032690fe3633fd54317b87f4422ae977049063efd60f398c2eabfc3",
+      "code/native_eabi_m0.hpp": "1ff5d86c7d8ddf4f22cc3af8f273c485c4eeb50a9eab728950d1810a54b9d47f",
+      "code/native_eabi_m0.S": "78add5dc7b05f762ff93995fe3b2c622684098b0a3e454553ab1fd0fb69dc8ae",
+      "code/native_eabi_m0_convert.inc": "36b1d819a36f8b98475259ef7d530a895cab5625c4d69fc4022fe6f04955c69f",
+      "code/native_eabi_m0_kernels.inc": "25cff32ace9ce238c291455eb070f0be38d2129f6b54de42f90d0b2ac361d32b",
+      "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "tools/generate_m0_log_table.py": "c2ab1ec80540d0b90df1beafe7d175b9eb2475a952a7b8e6c2ae49144b263b8c",
+      "tests/profile_m0_remaining.py": "3e9b991966f25665826f61ada2391c34706d5faec08e4c476f876e3ccc9bbc1c",
+      "tests/m0_remaining_oracle.py": "b3152725f459b6b2eb0b01805d7df4d00caa5716ef00bccbf95aff38fc1b624a",
+      "tests/profile_m0_trig.py": "1f00163d7d9d8f60825a423b571be9fd61f34277192bc706dda3ddacdc642033"
+    },
+    "conversions": "Thumb-1 leaf routines normalize signed/unsigned 64-bit magnitudes, round nearest-even, and reuse the exact 32-bit normalizer for small magnitudes. Normal float/double conversion uses 13/21 instructions; IEEE special values retain the existing complete slow paths. Signed double-to-integer paths truncate toward zero and preserve the original out-of-range behavior.",
+    "comparisons": "Thumb-1 IEEE comparisons handle NaNs, infinities and opposite zero signs. Ordered comparisons reverse negative magnitude order and reject NaNs before testing signs.",
+    "ln": "Normalize to [1,2), use 256 certified Q63 reciprocals and Q62 logarithms, reconstruct a small log1p correction, and combine exponent*ln(2) in 96 bits. Around one, a separate 256-row Q62-reciprocal/Q70-log table retains relative accuracy; a normalized short series handles |x-1| < 2^-14. Subnormal and exceptional inputs keep the shared original path.",
+    "atan": "Keep existing table reduction and inversion, replace the relative small-argument polynomial with a guarded Q62 kernel and short coefficient products.",
+    "small_trig": "Normalize the remainder once, use shortened relative sin/cos polynomials and a direct tan polynomial. A second Q95 interval certificate proves 63-bit relative rounding for small remainders; uncertain cases still recompute the Q191 product. Avoid primary/tail packing and a second normalization on the certified path.",
+    "license": "Independently derived project-owned code and rationally generated constants. Qfplib code/data are not incorporated in firmware.",
+    "log_tables": {
+      "status": "PASS",
+      "bitwise_reproducible": true,
+      "certified_reciprocals": 512,
+      "certified_logarithms": 513,
+      "tables": [
+        {
+          "table": "log_table",
+          "bytes": 4096,
+          "rows": 256,
+          "sha256": "fa76cadc774762780114e3c4a2329b7eff0fc05bfe755162410ebeecab7a9b7a"
+        },
+        {
+          "table": "log_near_table",
+          "bytes": 4096,
+          "rows": 256,
+          "sha256": "93e938f0f5b76ec40c21a1a9942a4a4e0bcc706c358872fed2eb625192a69b3f"
+        }
+      ],
+      "log_two_q62": "3196577161300663915",
+      "generator_sha256": "c2ab1ec80540d0b90df1beafe7d175b9eb2475a952a7b8e6c2ae49144b263b8c",
+      "proof": "Exact Fraction positive atanh series, 100 terms with geometric tail; both bounds lie strictly inside one nearest-integer cell. Reciprocals use exact rational nearest-even division. Both tables in the linked production ELF match every generated word; the inline log(2) constant matches the certified source."
+    }
+  },
+  "performance": {
+    "new_or_extended_comparable_streams": 51,
+    "strict_wins": 50,
+    "ties": [
+      {
+        "operation": "f2d",
+        "stream": "normal",
+        "instructions": 13
+      }
+    ],
+    "summary": [
+      {
+        "suite": "remaining",
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 25.32421875,
+          "QFP": 46.03125,
+          "BASE": 25.32421875
+        },
+        "instruction_reduction_vs_qfplib_percent": 44.984725050916495,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 25.32421875,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 46.03125,
+            "min": 42,
+            "max": 74,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 25.32421875,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "f91b9471237db332a1b85664b443f8a18a021de03d6fdcfc1414bb12d9c2d0df"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ui2d",
+        "stream": "random",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21.21875,
+          "QFP": 38.953125,
+          "BASE": 21.21875
+        },
+        "instruction_reduction_vs_qfplib_percent": 45.52747693541917,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 21.21875,
+            "min": 20,
+            "max": 24,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 38.953125,
+            "min": 35,
+            "max": 71,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 21.21875,
+            "min": 20,
+            "max": 24,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "9fe0d76cbf8173394268ca0ad5e7162503cc623c2433fda9d934ae235a3d1780"
+      },
+      {
+        "suite": "remaining",
+        "operation": "l2d",
+        "stream": "random",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 39.572265625,
+          "QFP": 41.818359375,
+          "BASE": 127.02734375
+        },
+        "instruction_reduction_vs_qfplib_percent": 5.371070944841438,
+        "reduction_factor_vs_baseline": 3.2100093776220326,
+        "stats": {
+          "OWN": {
+            "mean": 39.572265625,
+            "min": 30,
+            "max": 62,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 41.818359375,
+            "min": 38,
+            "max": 70,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 127.02734375,
+            "min": 113,
+            "max": 133,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "2d24d54042fa7d0727e43ef77a44b4bff0b87098d5aed991f3c620879872686c"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ul2d",
+        "stream": "random",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 28.689453125,
+          "QFP": 35.189453125,
+          "BASE": 110.833984375
+        },
+        "instruction_reduction_vs_qfplib_percent": 18.471443636565464,
+        "reduction_factor_vs_baseline": 3.8632309891755736,
+        "stats": {
+          "OWN": {
+            "mean": 28.689453125,
+            "min": 23,
+            "max": 53,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 35.189453125,
+            "min": 31,
+            "max": 74,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 110.833984375,
+            "min": 97,
+            "max": 118,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "29b86088d57a8da946826e12ae4a349ee78050c43d8ea9a1d0a95e75dcfc9a4c"
+      },
+      {
+        "suite": "remaining",
+        "operation": "l2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 31.1171875,
+          "QFP": 43.4765625,
+          "BASE": 107.541015625
+        },
+        "instruction_reduction_vs_qfplib_percent": 28.42767295597485,
+        "reduction_factor_vs_baseline": 3.45600050213407,
+        "stats": {
+          "OWN": {
+            "mean": 31.1171875,
+            "min": 27,
+            "max": 38,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 43.4765625,
+            "min": 39,
+            "max": 71,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 107.541015625,
+            "min": 101,
+            "max": 111,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "80c1720fc3ff7a898e5f80ca2f0e8bcf9b138785b5b0a3a484e08fc91f500ce3"
+      },
+      {
+        "suite": "remaining",
+        "operation": "l2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 45.673828125,
+          "QFP": 67.435546875,
+          "BASE": 112.37890625
+        },
+        "instruction_reduction_vs_qfplib_percent": 32.27039708054566,
+        "reduction_factor_vs_baseline": 2.460466110754757,
+        "stats": {
+          "OWN": {
+            "mean": 45.673828125,
+            "min": 25,
+            "max": 70,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 67.435546875,
+            "min": 22,
+            "max": 126,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 112.37890625,
+            "min": 101,
+            "max": 133,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "6ba0c80ef9e8e0971b0ab4a6d0609f2aaee1f13078c8e405d1f1e3591c0afe3a"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ul2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 24.2109375,
+          "QFP": 36.0546875,
+          "BASE": 89.759765625
+        },
+        "instruction_reduction_vs_qfplib_percent": 32.84940411700975,
+        "reduction_factor_vs_baseline": 3.707405614714424,
+        "stats": {
+          "OWN": {
+            "mean": 24.2109375,
+            "min": 23,
+            "max": 27,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 36.0546875,
+            "min": 32,
+            "max": 56,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 89.759765625,
+            "min": 89,
+            "max": 94,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "686e57aa15e7ad46921f18480a69ae9748f9c797055448c35a74535cc56625a5"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ul2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 39.875,
+          "QFP": 64.23828125,
+          "BASE": 96.689453125
+        },
+        "instruction_reduction_vs_qfplib_percent": 37.92642140468227,
+        "reduction_factor_vs_baseline": 2.4248138714733543,
+        "stats": {
+          "OWN": {
+            "mean": 39.875,
+            "min": 23,
+            "max": 61,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 64.23828125,
+            "min": 19,
+            "max": 123,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 96.689453125,
+            "min": 86,
+            "max": 118,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "2520342d33c0ba0d8aa0bfdc0217ef149a0677e6739bd8219860a547649a5c51"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2iz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 15.693359375,
+          "QFP": 47,
+          "BASE": 35.970703125
+        },
+        "instruction_reduction_vs_qfplib_percent": 66.60987367021276,
+        "reduction_factor_vs_baseline": 2.292097075295582,
+        "stats": {
+          "OWN": {
+            "mean": 15.693359375,
+            "min": 7,
+            "max": 26,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 47,
+            "min": 47,
+            "max": 47,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 35.970703125,
+            "min": 27,
+            "max": 50,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "840f1d472ba9e80a1aec6bb968909e0609c1a9a95fa39d3adb4124e25f2b7b13"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2iz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 26.5078125,
+          "QFP": 48.5390625,
+          "BASE": 52.0234375
+        },
+        "instruction_reduction_vs_qfplib_percent": 45.3887011105746,
+        "reduction_factor_vs_baseline": 1.9625699970527557,
+        "stats": {
+          "OWN": {
+            "mean": 26.5078125,
+            "min": 25,
+            "max": 27,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 48.5390625,
+            "min": 47,
+            "max": 51,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 52.0234375,
+            "min": 44,
+            "max": 54,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "74b69e479835a52b95458b06ae4dc21a5cd2d8dd46b7a9723e95d73e558292de"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2uiz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 23.28515625,
+          "QFP": 43,
+          "BASE": 23.28515625
+        },
+        "instruction_reduction_vs_qfplib_percent": 45.848473837209305,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 23.28515625,
+            "min": 14,
+            "max": 37,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 43,
+            "min": 43,
+            "max": 43,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 23.28515625,
+            "min": 14,
+            "max": 37,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "2ef0bf6b3b884a30b2f0dda23e2635917d862d4b246353d8f2d0eb6fdb1382b8"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2lz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 23.984375,
+          "QFP": 41.8203125,
+          "BASE": 34.091796875
+        },
+        "instruction_reduction_vs_qfplib_percent": 42.648981879320004,
+        "reduction_factor_vs_baseline": 1.421416938110749,
+        "stats": {
+          "OWN": {
+            "mean": 23.984375,
+            "min": 8,
+            "max": 33,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 41.8203125,
+            "min": 41,
+            "max": 42,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 34.091796875,
+            "min": 19,
+            "max": 43,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "cf622c66bda0265396199e37c25f9e79badc47e6bfc1f97c4861c548f26bc14b"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2lz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 30.90625,
+          "QFP": 43.4296875,
+          "BASE": 45.859375
+        },
+        "instruction_reduction_vs_qfplib_percent": 28.836121604605147,
+        "reduction_factor_vs_baseline": 1.4838220424671384,
+        "stats": {
+          "OWN": {
+            "mean": 30.90625,
+            "min": 29,
+            "max": 33,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 43.4296875,
+            "min": 42,
+            "max": 45,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 45.859375,
+            "min": 43,
+            "max": 49,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "36a8b66f66a75772dbcd488334109735af24b79d0e811e46b0beea7b72f70bed"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2ulz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 28.5703125,
+          "QFP": 37.810546875,
+          "BASE": 28.5703125
+        },
+        "instruction_reduction_vs_qfplib_percent": 24.438245777157906,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 28.5703125,
+            "min": 15,
+            "max": 37,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 37.810546875,
+            "min": 37,
+            "max": 38,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 28.5703125,
+            "min": 15,
+            "max": 37,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "4e7772fd712516c1c9a8a6fdf26fd29c47d8f7283155fcd86e93d04595422456"
+      },
+      {
+        "suite": "remaining",
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 13,
+          "QFP": 13,
+          "BASE": 40
+        },
+        "instruction_reduction_vs_qfplib_percent": 0.0,
+        "reduction_factor_vs_baseline": 3.076923076923077,
+        "stats": {
+          "OWN": {
+            "mean": 13,
+            "min": 13,
+            "max": 13,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 13,
+            "min": 13,
+            "max": 13,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 40,
+            "min": 40,
+            "max": 40,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "43f4ecd0bde10e408765cba9f0635406b234043003af741112b4a861b6cbec12"
+      },
+      {
+        "suite": "remaining",
+        "operation": "d2f",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21,
+          "QFP": 21.03515625,
+          "BASE": 69.412109375
+        },
+        "instruction_reduction_vs_qfplib_percent": 0.16713091922005985,
+        "reduction_factor_vs_baseline": 3.3053385416666665,
+        "stats": {
+          "OWN": {
+            "mean": 21,
+            "min": 21,
+            "max": 21,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 21.03515625,
+            "min": 20,
+            "max": 22,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 69.412109375,
+            "min": 67,
+            "max": 72,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "10c5235e74616e2354073aa874faec8e5441b5409a4aa34664041d76ac35990f"
+      },
+      {
+        "suite": "remaining",
+        "operation": "dcmpeq",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 7.5,
+          "QFP": 30.955078125,
+          "BASE": 36.5
+        },
+        "instruction_reduction_vs_qfplib_percent": 75.77134204050728,
+        "reduction_factor_vs_baseline": 4.866666666666666,
+        "stats": {
+          "OWN": {
+            "mean": 7.5,
+            "min": 6,
+            "max": 12,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 30.955078125,
+            "min": 28,
+            "max": 34,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 36.5,
+            "min": 32,
+            "max": 38,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "8082bc244cecd3ed7ea6b6065d48d88c6eb3a6c66932d61c87d4547ed66598d8"
+      },
+      {
+        "suite": "remaining",
+        "operation": "dcmplt",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21.890625,
+          "QFP": 30.955078125,
+          "BASE": 39.87890625
+        },
+        "instruction_reduction_vs_qfplib_percent": 29.28260458073064,
+        "reduction_factor_vs_baseline": 1.8217344753747324,
+        "stats": {
+          "OWN": {
+            "mean": 21.890625,
+            "min": 20,
+            "max": 23,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 30.955078125,
+            "min": 28,
+            "max": 34,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 39.87890625,
+            "min": 30,
+            "max": 48,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "f5b6289d4f9726c098085f86f19355880fedf9d3b2fb919a7e5ca0de83a253c8"
+      },
+      {
+        "suite": "remaining",
+        "operation": "dcmple",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21.890625,
+          "QFP": 30.955078125,
+          "BASE": 39.87890625
+        },
+        "instruction_reduction_vs_qfplib_percent": 29.28260458073064,
+        "reduction_factor_vs_baseline": 1.8217344753747324,
+        "stats": {
+          "OWN": {
+            "mean": 21.890625,
+            "min": 20,
+            "max": 23,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 30.955078125,
+            "min": 28,
+            "max": 34,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 39.87890625,
+            "min": 30,
+            "max": 48,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "226114b9e70dc24347e4cd853985b5b943fb449bab21f18b13a712f38a75937c"
+      },
+      {
+        "suite": "remaining",
+        "operation": "dcmpge",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21.890625,
+          "QFP": 30.955078125,
+          "BASE": 39.6015625
+        },
+        "instruction_reduction_vs_qfplib_percent": 29.28260458073064,
+        "reduction_factor_vs_baseline": 1.8090649536045682,
+        "stats": {
+          "OWN": {
+            "mean": 21.890625,
+            "min": 20,
+            "max": 23,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 30.955078125,
+            "min": 28,
+            "max": 34,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 39.6015625,
+            "min": 30,
+            "max": 45,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "98353fe252bba62a8c02d2669979589ee6f66610fde367ef6a6a7a3dac807669"
+      },
+      {
+        "suite": "remaining",
+        "operation": "dcmpgt",
+        "stream": "normal",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 21.890625,
+          "QFP": 30.955078125,
+          "BASE": 39.6015625
+        },
+        "instruction_reduction_vs_qfplib_percent": 29.28260458073064,
+        "reduction_factor_vs_baseline": 1.8090649536045682,
+        "stats": {
+          "OWN": {
+            "mean": 21.890625,
+            "min": 20,
+            "max": 23,
+            "mismatches": 0
+          },
+          "QFP": {
+            "mean": 30.955078125,
+            "min": 28,
+            "max": 34,
+            "mismatches": 0
+          },
+          "BASE": {
+            "mean": 39.6015625,
+            "min": 30,
+            "max": 45,
+            "mismatches": 0
+          }
+        },
+        "case_sha256": "fc5ad64b53166ff3c86a9fa32913811ce593d1912b0337e1316332cc5591bbe1"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ln",
+        "stream": "normal_exponents",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 766.517578125,
+          "QFP": 796.75,
+          "BASE": 2550.8984375
+        },
+        "instruction_reduction_vs_qfplib_percent": 3.7944677596485676,
+        "reduction_factor_vs_baseline": 3.327905987152733,
+        "stats": {
+          "OWN": {
+            "mean": 766.517578125,
+            "min": 743,
+            "max": 791,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 796.75,
+            "min": 743,
+            "max": 869,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 2550.8984375,
+            "min": 2363,
+            "max": 2839,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "04dd31c933afe835abcc3bacb33814753ed4fec1dbf22730a7dcbd978902807d"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ln",
+        "stream": "normalized",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 714.71484375,
+          "QFP": 776.125,
+          "BASE": 2312.8203125
+        },
+        "instruction_reduction_vs_qfplib_percent": 7.912405379288135,
+        "reduction_factor_vs_baseline": 3.236004306787563,
+        "stats": {
+          "OWN": {
+            "mean": 714.71484375,
+            "min": 577,
+            "max": 793,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 776.125,
+            "min": 733,
+            "max": 824,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 2312.8203125,
+            "min": 2100,
+            "max": 2654,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "1a2afad17a9932fd6dd91295d4216d007d88bdef2c060d3afd1ac0548226bec1"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ln",
+        "stream": "near_one",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 367.00390625,
+          "QFP": 702.26171875,
+          "BASE": 660.02734375
+        },
+        "instruction_reduction_vs_qfplib_percent": 47.73972488444145,
+        "reduction_factor_vs_baseline": 1.7984204868391642,
+        "stats": {
+          "OWN": {
+            "mean": 367.00390625,
+            "min": 86,
+            "max": 379,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 702.26171875,
+            "min": 680,
+            "max": 745,
+            "worst_ulp": 137438953504
+          },
+          "BASE": {
+            "mean": 660.02734375,
+            "min": 138,
+            "max": 724,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "7f1c948e36e0ea152b2a32cc9a6268cc55b2bfbbd3948f52e7e7ed7e2025ed2a"
+      },
+      {
+        "suite": "remaining",
+        "operation": "ln",
+        "stream": "near_one_interval",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 588.12890625,
+          "QFP": 791.400390625,
+          "BASE": 2189.275390625
+        },
+        "instruction_reduction_vs_qfplib_percent": 25.6850371547667,
+        "reduction_factor_vs_baseline": 3.722441402488028,
+        "stats": {
+          "OWN": {
+            "mean": 588.12890625,
+            "min": 566,
+            "max": 607,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 791.400390625,
+            "min": 708,
+            "max": 859,
+            "worst_ulp": 47
+          },
+          "BASE": {
+            "mean": 2189.275390625,
+            "min": 2061,
+            "max": 2279,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "0dcdcd0b2ac163ab15bbc09596e6567a5a747e28765697a5dbe233da71e268d3"
+      },
+      {
+        "suite": "remaining",
+        "operation": "atan",
+        "stream": "ordinary",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1567.966796875,
+          "QFP": 1808.001953125,
+          "BASE": 2193.625
+        },
+        "instruction_reduction_vs_qfplib_percent": 13.276266424110695,
+        "reduction_factor_vs_baseline": 1.3990251607189346,
+        "stats": {
+          "OWN": {
+            "mean": 1567.966796875,
+            "min": 1361,
+            "max": 1653,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1808.001953125,
+            "min": 1782,
+            "max": 1833,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 2193.625,
+            "min": 1988,
+            "max": 2284,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "fea71a21e59c06317f9e5d4e1d33b58c7c9613373c74328b4daecedb13650f8d"
+      },
+      {
+        "suite": "remaining",
+        "operation": "atan",
+        "stream": "reduced",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1415.525390625,
+          "QFP": 1790.6953125,
+          "BASE": 2045.572265625
+        },
+        "instruction_reduction_vs_qfplib_percent": 20.951075219559446,
+        "reduction_factor_vs_baseline": 1.445097544115273,
+        "stats": {
+          "OWN": {
+            "mean": 1415.525390625,
+            "min": 858,
+            "max": 1483,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1790.6953125,
+            "min": 1757,
+            "max": 1823,
+            "worst_ulp": 66
+          },
+          "BASE": {
+            "mean": 2045.572265625,
+            "min": 1503,
+            "max": 2120,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "369783fbb1e5627c5077af03466c0d9e9dc4d1798d1dec6bd2c07c501791d407"
+      },
+      {
+        "suite": "remaining",
+        "operation": "atan",
+        "stream": "normal_exponents",
+        "cases": 512,
+        "comparable": false,
+        "mean_instructions": {
+          "OWN": 209.810546875,
+          "QFP": 1803.685546875,
+          "BASE": 830.736328125
+        },
+        "instruction_reduction_vs_qfplib_percent": null,
+        "reduction_factor_vs_baseline": 3.959459333662251,
+        "stats": {
+          "OWN": {
+            "mean": 209.810546875,
+            "min": 24,
+            "max": 1561,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1803.685546875,
+            "min": 1755,
+            "max": 1864,
+            "worst_ulp": 4290825961475944009
+          },
+          "BASE": {
+            "mean": 830.736328125,
+            "min": 22,
+            "max": 2194,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "bc7bebf0081ab89a2f273ec602dfe7bcd7568ced73bbe6c917dd77d29a9fd612"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "legacy",
+        "cases": 32,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 844.125,
+          "BASE": 1009.84375,
+          "QFP": 1352.78125
+        },
+        "instruction_reduction_vs_qfplib_percent": 37.60077617870591,
+        "reduction_factor_vs_baseline": 1.1963201540056272,
+        "stats": {
+          "OWN": {
+            "mean": 844.125,
+            "min": 223,
+            "max": 1011,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 1009.84375,
+            "min": 249,
+            "max": 1355,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1352.78125,
+            "min": 1334,
+            "max": 1386,
+            "worst_ulp": 6761135496199
+          }
+        },
+        "case_sha256": "fdfa815ed3d9815d09a60e1854d6dc55daf3a4329dbbeaac420b8d3a5c830119"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "legacy",
+        "cases": 32,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 816.4375,
+          "BASE": 969.90625,
+          "QFP": 1350.1875
+        },
+        "instruction_reduction_vs_qfplib_percent": 39.53154654446141,
+        "reduction_factor_vs_baseline": 1.1879736660797673,
+        "stats": {
+          "OWN": {
+            "mean": 816.4375,
+            "min": 214,
+            "max": 1006,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 969.90625,
+            "min": 241,
+            "max": 1335,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1350.1875,
+            "min": 1327,
+            "max": 1391,
+            "worst_ulp": 24353321540615
+          }
+        },
+        "case_sha256": "4d76d9dfd89e7b71d15d26e6f36dc66e482c3bf10bd71c4b15faf0e5a0307db9"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "legacy",
+        "cases": 32,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1056.34375,
+          "BASE": 1281.71875,
+          "QFP": 1591.875
+        },
+        "instruction_reduction_vs_qfplib_percent": 33.641539065567336,
+        "reduction_factor_vs_baseline": 1.2133538443333431,
+        "stats": {
+          "OWN": {
+            "mean": 1056.34375,
+            "min": 427,
+            "max": 1421,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 1281.71875,
+            "min": 438,
+            "max": 1537,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1591.875,
+            "min": 1562,
+            "max": 1638,
+            "worst_ulp": 40227331280229
+          }
+        },
+        "case_sha256": "cd4c95987541a868b5da81a3559fc668c06e15bfb3aead4b70fe5bfc33623569"
+      },
+      {
+        "suite": "trig",
+        "operation": "i2d",
+        "stream": "legacy",
+        "cases": 32,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 25.4375,
+          "BASE": 25.4375,
+          "QFP": 45.625
+        },
+        "instruction_reduction_vs_qfplib_percent": 44.24657534246575,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 25.4375,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 25.4375,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 45.625,
+            "min": 42,
+            "max": 66,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "1ea08c46a0b1294da3c88773a89ae91f1a635810bc56583ac14c526c47d63dd6"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 734.2578125,
+          "BASE": 763.171875,
+          "QFP": 1342.2421875
+        },
+        "instruction_reduction_vs_qfplib_percent": 45.29617535956044,
+        "reduction_factor_vs_baseline": 1.0393786242485503,
+        "stats": {
+          "OWN": {
+            "mean": 734.2578125,
+            "min": 719,
+            "max": 780,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 763.171875,
+            "min": 745,
+            "max": 1179,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1342.2421875,
+            "min": 1334,
+            "max": 1353,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "5eadb0fc4d36653aebdf398fe3d20e63ca452602d29e2f2c8adc033cb91a4067"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 717.75,
+          "BASE": 747.578125,
+          "QFP": 1337.984375
+        },
+        "instruction_reduction_vs_qfplib_percent": 46.355875792645186,
+        "reduction_factor_vs_baseline": 1.041557819575061,
+        "stats": {
+          "OWN": {
+            "mean": 717.75,
+            "min": 608,
+            "max": 729,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 747.578125,
+            "min": 736,
+            "max": 997,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1337.984375,
+            "min": 1327,
+            "max": 1347,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "f91c32c6c23a313afc67e0da7c9fb0f7b62bdd619ad6822d51b6db65df2c7f27"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1227.1328125,
+          "BASE": 1250.3671875,
+          "QFP": 1577.9453125
+        },
+        "instruction_reduction_vs_qfplib_percent": 22.232234363318593,
+        "reduction_factor_vs_baseline": 1.0189338715119722,
+        "stats": {
+          "OWN": {
+            "mean": 1227.1328125,
+            "min": 751,
+            "max": 1264,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 1250.3671875,
+            "min": 1210,
+            "max": 2328,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1577.9453125,
+            "min": 1554,
+            "max": 1606,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "a69d829f5e6c4acab37908e6c6b062a6e2f3c74388e176ae3c429841d706cc57"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "ordinary",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 898.8984375,
+          "BASE": 901.0625,
+          "QFP": 1345.4375
+        },
+        "instruction_reduction_vs_qfplib_percent": 33.18913457518465,
+        "reduction_factor_vs_baseline": 1.0024074605202549,
+        "stats": {
+          "OWN": {
+            "mean": 898.8984375,
+            "min": 728,
+            "max": 930,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 901.0625,
+            "min": 754,
+            "max": 931,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1345.4375,
+            "min": 1338,
+            "max": 1363,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "fc5ee1ff4f039bd546a9b8b2a7f69f1642eb5bfaab8ea4f098e1074b61412870"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "ordinary",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 888.8671875,
+          "BASE": 894.890625,
+          "QFP": 1345.6796875
+        },
+        "instruction_reduction_vs_qfplib_percent": 33.94659994078272,
+        "reduction_factor_vs_baseline": 1.0067765326301912,
+        "stats": {
+          "OWN": {
+            "mean": 888.8671875,
+            "min": 713,
+            "max": 921,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 894.890625,
+            "min": 740,
+            "max": 926,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1345.6796875,
+            "min": 1327,
+            "max": 1364,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "562b510201dbb8237d03b1d08a4a1d790b6f5c84982f0728d63debfe96cb6f0c"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "ordinary",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1397.375,
+          "BASE": 1409.3203125,
+          "QFP": 1584.0390625
+        },
+        "instruction_reduction_vs_qfplib_percent": 11.784056777324581,
+        "reduction_factor_vs_baseline": 1.0085483943107612,
+        "stats": {
+          "OWN": {
+            "mean": 1397.375,
+            "min": 1215,
+            "max": 1447,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 1409.3203125,
+            "min": 1226,
+            "max": 1459,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1584.0390625,
+            "min": 1558,
+            "max": 1621,
+            "worst_ulp": 1
+          }
+        },
+        "case_sha256": "4e4dfaf105187739dc8b4d8fd0d640cf0af56419171a7ea9c92853fbabca5fb8"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "medium",
+        "cases": 128,
+        "comparable": false,
+        "mean_instructions": {
+          "OWN": 911.2578125,
+          "BASE": 953.65625,
+          "QFP": 1358.9140625
+        },
+        "instruction_reduction_vs_qfplib_percent": null,
+        "reduction_factor_vs_baseline": 1.0465273788804965,
+        "stats": {
+          "OWN": {
+            "mean": 911.2578125,
+            "min": 886,
+            "max": 1267,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 953.65625,
+            "min": 887,
+            "max": 2364,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1358.9140625,
+            "min": 1348,
+            "max": 1359,
+            "worst_ulp": 9202061846802396049
+          }
+        },
+        "case_sha256": "b657655a644a5a3b456245e8e34eb9b970cbb632038d162f238f5f8359ea9ff7"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "medium",
+        "cases": 128,
+        "comparable": false,
+        "mean_instructions": {
+          "OWN": 906.9296875,
+          "BASE": 953.3125,
+          "QFP": 1350.5390625
+        },
+        "instruction_reduction_vs_qfplib_percent": null,
+        "reduction_factor_vs_baseline": 1.0511426774746526,
+        "stats": {
+          "OWN": {
+            "mean": 906.9296875,
+            "min": 878,
+            "max": 1258,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 953.3125,
+            "min": 883,
+            "max": 2466,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1350.5390625,
+            "min": 1345,
+            "max": 1352,
+            "worst_ulp": 9214250897833845163
+          }
+        },
+        "case_sha256": "9fe74d5a8e096ba53aaae6558286d8708fda05a18ab65467df08f437166b6cb2"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "medium",
+        "cases": 128,
+        "comparable": false,
+        "mean_instructions": {
+          "OWN": 1403.8125,
+          "BASE": 1493.5703125,
+          "QFP": 1616.6171875
+        },
+        "instruction_reduction_vs_qfplib_percent": null,
+        "reduction_factor_vs_baseline": 1.0639386046925783,
+        "stats": {
+          "OWN": {
+            "mean": 1403.8125,
+            "min": 1053,
+            "max": 1750,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 1493.5703125,
+            "min": 1382,
+            "max": 3756,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1616.6171875,
+            "min": 1568,
+            "max": 1617,
+            "worst_ulp": 9241202978746418466
+          }
+        },
+        "case_sha256": "b17dc471b27a4b869676e71a3ca2d6fe18cb203e22ce5e4e952c9b42804dd82a"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 908.875,
+          "BASE": 930.375,
+          "QFP": 1346.375
+        },
+        "instruction_reduction_vs_qfplib_percent": 32.494661591310006,
+        "reduction_factor_vs_baseline": 1.0236556182093248,
+        "stats": {
+          "OWN": {
+            "mean": 908.875,
+            "min": 886,
+            "max": 1110,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 930.375,
+            "min": 887,
+            "max": 2432,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1346.375,
+            "min": 1340,
+            "max": 1372,
+            "worst_ulp": 19
+          }
+        },
+        "case_sha256": "555df3686c0e4eda8e5b37831a58e42e9dadfb94e644dc47a5634fb78ee3b58d"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 897.96875,
+          "BASE": 923.203125,
+          "QFP": 1346.7734375
+        },
+        "instruction_reduction_vs_qfplib_percent": 33.324438617761196,
+        "reduction_factor_vs_baseline": 1.028101618235601,
+        "stats": {
+          "OWN": {
+            "mean": 897.96875,
+            "min": 878,
+            "max": 940,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 923.203125,
+            "min": 883,
+            "max": 2246,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1346.7734375,
+            "min": 1341,
+            "max": 1363,
+            "worst_ulp": 5
+          }
+        },
+        "case_sha256": "442686770fd398236e3ddfd4c97fe5715a02acef1ccdd505307c6519c9f1529d"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1402.8125,
+          "BASE": 1455.0546875,
+          "QFP": 1588.4609375
+        },
+        "instruction_reduction_vs_qfplib_percent": 11.68731525700486,
+        "reduction_factor_vs_baseline": 1.0372410336377813,
+        "stats": {
+          "OWN": {
+            "mean": 1402.8125,
+            "min": 1070,
+            "max": 1451,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 1455.0546875,
+            "min": 1378,
+            "max": 3673,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1588.4609375,
+            "min": 1561,
+            "max": 1620,
+            "worst_ulp": 20
+          }
+        },
+        "case_sha256": "ca4e0b4beb4266dbd9a2ce6810b86752b8e996d222769af806d05bb4bc19162a"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "small_reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 780.8515625,
+          "BASE": 1186.5703125,
+          "QFP": 1349.390625
+        },
+        "instruction_reduction_vs_qfplib_percent": 42.13302300807077,
+        "reduction_factor_vs_baseline": 1.5195849883440555,
+        "stats": {
+          "OWN": {
+            "mean": 780.8515625,
+            "min": 772,
+            "max": 789,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 1186.5703125,
+            "min": 1163,
+            "max": 1212,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1349.390625,
+            "min": 1306,
+            "max": 1364,
+            "worst_ulp": 26
+          }
+        },
+        "case_sha256": "6d49220df8e837c2aa555b777df289a7f3f087622ba6a6d2aaee901f43c28bcf"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "small_reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 611.53125,
+          "BASE": 993.140625,
+          "QFP": 1328.5703125
+        },
+        "instruction_reduction_vs_qfplib_percent": 53.97072746196863,
+        "reduction_factor_vs_baseline": 1.6240226889468037,
+        "stats": {
+          "OWN": {
+            "mean": 611.53125,
+            "min": 603,
+            "max": 626,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 993.140625,
+            "min": 972,
+            "max": 1014,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1328.5703125,
+            "min": 1327,
+            "max": 1330,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "c1698114de33bd3e564e5dc841ffcdf992609b3ed74043170cb87cc555374f7a"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "small_reduced",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 749.9921875,
+          "BASE": 2349.078125,
+          "QFP": 1586.734375
+        },
+        "instruction_reduction_vs_qfplib_percent": 52.733601835530905,
+        "reduction_factor_vs_baseline": 3.1321367930915947,
+        "stats": {
+          "OWN": {
+            "mean": 749.9921875,
+            "min": 743,
+            "max": 757,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 2349.078125,
+            "min": 2295,
+            "max": 2394,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1586.734375,
+            "min": 1529,
+            "max": 1619,
+            "worst_ulp": 25
+          }
+        },
+        "case_sha256": "dd2a041d38764efee01e9aa882d5d68cc80bcc0d462d276b25fc4b14ea0242e3"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 928.265625,
+          "BASE": 2293.703125,
+          "QFP": 1353.5234375
+        },
+        "instruction_reduction_vs_qfplib_percent": 31.418577670547354,
+        "reduction_factor_vs_baseline": 2.4709555791210085,
+        "stats": {
+          "OWN": {
+            "mean": 928.265625,
+            "min": 646,
+            "max": 1390,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 2293.703125,
+            "min": 1184,
+            "max": 2489,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1353.5234375,
+            "min": 1321,
+            "max": 1401,
+            "worst_ulp": 13963976
+          }
+        },
+        "case_sha256": "e153038556249d96cd35851946fac7fba90cc0631608c831721901c368c60874"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 938.1796875,
+          "BASE": 2307.1171875,
+          "QFP": 1355.1640625
+        },
+        "instruction_reduction_vs_qfplib_percent": 30.77002899787272,
+        "reduction_factor_vs_baseline": 2.4591421219615777,
+        "stats": {
+          "OWN": {
+            "mean": 938.1796875,
+            "min": 638,
+            "max": 1387,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 2307.1171875,
+            "min": 1262,
+            "max": 2487,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1355.1640625,
+            "min": 1321,
+            "max": 1419,
+            "worst_ulp": 53314671
+          }
+        },
+        "case_sha256": "ea960017af95377e550ee6d72b8c31184934c3758350372418cd1f54e430284e"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 1101.5859375,
+          "BASE": 3627.34375,
+          "QFP": 1599.8046875
+        },
+        "instruction_reduction_vs_qfplib_percent": 31.142473446465637,
+        "reduction_factor_vs_baseline": 3.292837741040971,
+        "stats": {
+          "OWN": {
+            "mean": 1101.5859375,
+            "min": 828,
+            "max": 1535,
+            "worst_ulp": 1
+          },
+          "BASE": {
+            "mean": 3627.34375,
+            "min": 1464,
+            "max": 3785,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1599.8046875,
+            "min": 1541,
+            "max": 1670,
+            "worst_ulp": 53153676
+          }
+        },
+        "case_sha256": "e1020a3936149681bf73beb29cd79ec3a0a0e06fcf46ab33ddebf9fd2ae84fcf"
+      },
+      {
+        "suite": "trig",
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 996,
+          "BASE": 2004.3333333333333,
+          "QFP": 1363.3333333333333
+        },
+        "instruction_reduction_vs_qfplib_percent": 26.943765281173594,
+        "reduction_factor_vs_baseline": 2.012382864792503,
+        "stats": {
+          "OWN": {
+            "mean": 996,
+            "min": 780,
+            "max": 1110,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 2004.3333333333333,
+            "min": 1179,
+            "max": 2432,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1363.3333333333333,
+            "min": 1353,
+            "max": 1372,
+            "worst_ulp": 19
+          }
+        },
+        "case_sha256": "5702f88c138858611ecc6b4ccbaeac1ec29269b72aa424f13b26edc5dc3e14e1"
+      },
+      {
+        "suite": "trig",
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 826.3333333333334,
+          "BASE": 1822.6666666666667,
+          "QFP": 1340
+        },
+        "instruction_reduction_vs_qfplib_percent": 38.33333333333333,
+        "reduction_factor_vs_baseline": 2.2057281161758775,
+        "stats": {
+          "OWN": {
+            "mean": 826.3333333333334,
+            "min": 608,
+            "max": 940,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 1822.6666666666667,
+            "min": 997,
+            "max": 2246,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 1340,
+            "min": 1330,
+            "max": 1348,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "a96f90752cc972acb1c7975361e77f8febedaed3b8d0e941201e7e911aa46b40"
+      },
+      {
+        "suite": "trig",
+        "operation": "tan",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 965,
+          "BASE": 3215.6666666666665,
+          "QFP": 1594
+        },
+        "instruction_reduction_vs_qfplib_percent": 39.46047678795483,
+        "reduction_factor_vs_baseline": 3.3322970639032814,
+        "stats": {
+          "OWN": {
+            "mean": 965,
+            "min": 751,
+            "max": 1074,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 3215.6666666666665,
+            "min": 2328,
+            "max": 3673,
+            "worst_ulp": 1
+          },
+          "QFP": {
+            "mean": 1594,
+            "min": 1573,
+            "max": 1617,
+            "worst_ulp": 20
+          }
+        },
+        "case_sha256": "376fa5a4f2aede032e0c910511a3bd378ca842ef7a270d1b678c22b07b09ceda"
+      },
+      {
+        "suite": "trig",
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 25.16015625,
+          "BASE": 25.16015625,
+          "QFP": 45.669921875
+        },
+        "instruction_reduction_vs_qfplib_percent": 44.90869435059659,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 25.16015625,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 25.16015625,
+            "min": 23,
+            "max": 31,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 45.669921875,
+            "min": 29,
+            "max": 74,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "4388f84b5d6f273ca1aa2ddb1c12ea2d2948b8d9269c21b21d363a9621558966"
+      },
+      {
+        "suite": "trig",
+        "operation": "i2d",
+        "stream": "small",
+        "cases": 257,
+        "comparable": true,
+        "mean_instructions": {
+          "OWN": 29.260700389105057,
+          "BASE": 29.260700389105057,
+          "QFP": 103.3112840466926
+        },
+        "instruction_reduction_vs_qfplib_percent": 71.67714963654853,
+        "reduction_factor_vs_baseline": 1.0,
+        "stats": {
+          "OWN": {
+            "mean": 29.260700389105057,
+            "min": 4,
+            "max": 35,
+            "worst_ulp": 0
+          },
+          "BASE": {
+            "mean": 29.260700389105057,
+            "min": 4,
+            "max": 35,
+            "worst_ulp": 0
+          },
+          "QFP": {
+            "mean": 103.3112840466926,
+            "min": 17,
+            "max": 129,
+            "worst_ulp": 0
+          }
+        },
+        "case_sha256": "38508e1e6ee58bbd031a18f047997c5da3390bb1433bb0b66728387fe90d987f"
+      }
+    ],
+    "precision_comparisons_do_not_assume_equal_qfplib_accuracy": true,
+    "known_slow_trig_cases": [
+      {
+        "operation": "sin",
+        "cases": [
+          {
+            "input": "C0724295FD2F12F0",
+            "reference": "BF7A9DFE2ED7CB86",
+            "implementations": {
+              "OWN": {
+                "result": "BF7A9DFE2ED7CB86",
+                "instructions": 1098,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BF7A9DFE2ED7CB86",
+                "instructions": 2432,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "BF7A9DFE2ED7CB75",
+                "instructions": 1372,
+                "ulp": 17
+              }
+            }
+          },
+          {
+            "input": "4083702F613FDEDA",
+            "reference": "BF8901C42208BE24",
+            "implementations": {
+              "OWN": {
+                "result": "BF8901C42208BE24",
+                "instructions": 1110,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BF8901C42208BE24",
+                "instructions": 2402,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "BF8901C42208BE11",
+                "instructions": 1365,
+                "ulp": 19
+              }
+            }
+          },
+          {
+            "input": "BF8756957BDCBD00",
+            "reference": "BF875674617605D1",
+            "implementations": {
+              "OWN": {
+                "result": "BF875674617605D1",
+                "instructions": 780,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BF875674617605D1",
+                "instructions": 1179,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "BF875674617605D1",
+                "instructions": 1353,
+                "ulp": 0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "operation": "cos",
+        "cases": [
+          {
+            "input": "C0724295FD2F12F0",
+            "reference": "BFEFFFD3B84F28C2",
+            "implementations": {
+              "OWN": {
+                "result": "BFEFFFD3B84F28C2",
+                "instructions": 931,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BFEFFFD3B84F28C2",
+                "instructions": 2246,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "BFEFFFD3B84F28C2",
+                "instructions": 1348,
+                "ulp": 0
+              }
+            }
+          },
+          {
+            "input": "4083702F613FDEDA",
+            "reference": "3FEFFF63A86DA38F",
+            "implementations": {
+              "OWN": {
+                "result": "3FEFFF63A86DA38F",
+                "instructions": 940,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "3FEFFF63A86DA38F",
+                "instructions": 2225,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "3FEFFF63A86DA38F",
+                "instructions": 1342,
+                "ulp": 0
+              }
+            }
+          },
+          {
+            "input": "BF8756957BDCBD00",
+            "reference": "3FEFFF77D5575030",
+            "implementations": {
+              "OWN": {
+                "result": "3FEFFF77D5575030",
+                "instructions": 608,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "3FEFFF77D5575030",
+                "instructions": 997,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "3FEFFF77D5575030",
+                "instructions": 1330,
+                "ulp": 0
+              }
+            }
+          }
+        ]
+      },
+      {
+        "operation": "tan",
+        "cases": [
+          {
+            "input": "C0724295FD2F12F0",
+            "reference": "3F7A9E2303E9E763",
+            "implementations": {
+              "OWN": {
+                "result": "3F7A9E2303E9E763",
+                "instructions": 1074,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "3F7A9E2303E9E763",
+                "instructions": 3646,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "3F7A9E2303E9E752",
+                "instructions": 1592,
+                "ulp": 17
+              }
+            }
+          },
+          {
+            "input": "4083702F613FDEDA",
+            "reference": "BF89023E516906ED",
+            "implementations": {
+              "OWN": {
+                "result": "BF89023E516906ED",
+                "instructions": 1070,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BF89023E516906EC",
+                "instructions": 3673,
+                "ulp": 1
+              },
+              "QFP": {
+                "result": "BF89023E516906D9",
+                "instructions": 1617,
+                "ulp": 20
+              }
+            }
+          },
+          {
+            "input": "BF8756957BDCBD00",
+            "reference": "BF8756D7B1A7BC1A",
+            "implementations": {
+              "OWN": {
+                "result": "BF8756D7B1A7BC1A",
+                "instructions": 751,
+                "ulp": 0
+              },
+              "BASE": {
+                "result": "BF8756D7B1A7BC1A",
+                "instructions": 2328,
+                "ulp": 0
+              },
+              "QFP": {
+                "result": "BF8756D7B1A7BC1A",
+                "instructions": 1573,
+                "ulp": 0
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "limits": "Every comparable stream mean passes. This is not a claim that every IEEE input or every hardware timing beats Qfplib. The harness models ROM CLZ/memory intrinsics, and executed instruction counts are not RP2040 cycles."
+  },
+  "qualification": {
+    "remaining": {
+      "__aeabi_l2d": {
+        "cases": 100554,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "fa68b29f9fcccf0cfcaa9eefe1b9a25a5c2548b5361feb0e58ff249a199d263f"
+      },
+      "__aeabi_ul2d": {
+        "cases": 100554,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "225df4baa33a4a3b0c800ca39cd367b560dbec7ca787b57584f57415c7bf0db6"
+      },
+      "__aeabi_f2d": {
+        "cases": 100126,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "ca51268c7c0c85dd6f61ec482c50ab023fbabc2ae0027f106d8309ac548895dd"
+      },
+      "__aeabi_d2f": {
+        "cases": 100302,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "6341a35bdcebc28702ae96d39a95364fff021af97fbeca799ab9cbd2e689fc04"
+      },
+      "__aeabi_d2iz": {
+        "cases": 100302,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "4e9952b4a2baf3086d473264da0504f6649b88deb4e722a0192e5c6984a97b16"
+      },
+      "__aeabi_d2lz": {
+        "cases": 100302,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "9332cf06da9c0e62fb60609aba3555076e5dcd15510ef0e3792bba3d19283a7f"
+      },
+      "__aeabi_dcmpeq": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "c745777fea5095651e46038d9aab30e93e3105b3f0f393e90afc200a881b6139"
+      },
+      "__aeabi_dcmplt": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "7bf4da757e405c12d9d585d2974ecfe40a2863a6ca700214176c0de6570f5e8a"
+      },
+      "__aeabi_dcmple": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "d2d136d53ffa7513134019ebaa057017297a01bd15b3c35ef7b018124fba7a98"
+      },
+      "__aeabi_dcmpge": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "2efcd590052a63ecfcca9f2289770960f49284c61475e83830ad68f11c84df49"
+      },
+      "__aeabi_dcmpgt": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "2bbbdbea2ed91c2b19ac5b9b9334fd6346dbdb7a839a085332fffbc25829fc45"
+      },
+      "__aeabi_dcmpun": {
+        "cases": 100256,
+        "worst_error": 0,
+        "worst_example": null,
+        "sha256": "ca47c026bd826feb781a00128245776f0f8680dff127f6bdb62d0daa84d79ec6"
+      },
+      "_ZN12compact_math2lnEd": {
+        "cases": 132542,
+        "worst_error": 1,
+        "worst_example": {
+          "input": "077A6A4A18AEA89B",
+          "reference": "C08390D460FBD5B2",
+          "result": "C08390D460FBD5B3"
+        },
+        "sha256": "bcc27a64385445291c8bda12b3e1fe795e1c707f9396c64707d5e2256464b1b7"
+      },
+      "_ZN12compact_math5log10Ed": {
+        "cases": 10000,
+        "worst_error": 1,
+        "worst_example": {
+          "input": "3E32F0E092753D7F",
+          "reference": "C020B60BC823205F",
+          "result": "C020B60BC823205E"
+        },
+        "sha256": "0b1c2e34cf2e9c31cdac04bcff9ebf0071d26908456076559face2c7956e76b8"
+      },
+      "_ZN12compact_math4atanEd": {
+        "cases": 151894,
+        "worst_error": 1,
+        "worst_example": {
+          "input": "BF9588085A3AB506",
+          "reference": "BF95873873462F98",
+          "result": "BF95873873462F99"
+        },
+        "sha256": "eab2b264b51f77274954d23e5fc793839697527d37d7f038c8c7483c6f79aec9"
+      }
+    },
+    "trig": {
+      "sin": {
+        "cases": 223148,
+        "worst_ulp": 1,
+        "worst_example": {
+          "input": "C11CD715B934EC3E",
+          "reference": "BFB86183FD99D2BC",
+          "result": "BFB86183FD99D2BD",
+          "baseline_result": "BFB86183FD99D2BD",
+          "baseline_ulp": 1
+        },
+        "sha256": "285da89a1e00d5f7796b1be2994b6b7853e51926b66e380dfa21d6b58dc6c5cd"
+      },
+      "cos": {
+        "cases": 223148,
+        "worst_ulp": 1,
+        "worst_example": {
+          "input": "C12230A33561804A",
+          "reference": "3FAD6EBA108FEE2F",
+          "result": "3FAD6EBA108FEE30",
+          "baseline_result": "3FAD6EBA108FEE30",
+          "baseline_ulp": 1
+        },
+        "sha256": "81fb001e6628d100a3052408cd693753fcd2c222c4fc95587dedc5a0a04ee5ef"
+      },
+      "tan": {
+        "cases": 223148,
+        "worst_ulp": 2,
+        "worst_example": {
+          "input": "C116FF782B958D2A",
+          "reference": "401E1BBC37CA12A0",
+          "result": "401E1BBC37CA12A2",
+          "baseline_result": "401E1BBC37CA12A2",
+          "baseline_ulp": 2
+        },
+        "sha256": "9f6c285f83958002a67b55e449b6be8ed80f276dd69c92fe2f82edb7e4fdffa9"
+      },
+      "integer_conversion": {
+        "cases": 400394,
+        "bitwise_exact": true
+      },
+      "q62_product": {
+        "cases": 100000,
+        "bitwise_exact": true
+      },
+      "q62_pack": {
+        "cases": 200416,
+        "bitwise_exact": true
+      }
+    },
+    "conversion_and_comparison_exact_checks": 1203676,
+    "transcendental_oracles": "Independent Decimal 110-digit ln/log10, half-angle/Taylor atan with Machin pi; trig uses 100/400-digit reduction and Taylor sin/cos with 430-digit Machin pi. Directed tables, thresholds, signed zeros, infinities, subnormals and NaNs are included.",
+    "contract": "Exact conversions/comparisons, <=1 ULP for ln/atan on this independent corpus, <=2 ULP for dependent log10; existing trig 4-ULP contract preserved with observed maxima 1/1/2. This qualification is not exhaustive correct-rounding proof."
+  },
+  "tests": {
+    "arm_runtime": {
+      "status": "PASS",
+      "elf_sha256": "14d7b4f6a3f7e4d73a40547bb1cc9cb5fac8efb96832ea21ba51d0b834230a4a",
+      "actual_arm_calls": 1003613,
+      "nearby_addition_calls": 30732,
+      "multiplication_division_calls": 216448,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 60,
+        "dsub": 54,
+        "dmul": 124,
+        "ddiv": 144
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles."
+    },
+    "portable_runtime": {
+      "status": "PASS",
+      "elf_sha256": "d25b2a5aaa3366d9f90b7a6a5df5ba269af350ac832ce4738d1b098177a66476",
+      "actual_arm_calls": 351498,
+      "nearby_addition_calls": 30732,
+      "multiplication_division_calls": 72448,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 97,
+        "dsub": 105,
+        "dmul": 181,
+        "ddiv": 544
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles."
+    },
+    "production_math": {
+      "status": "PASS",
+      "elf_sha256": "820939d72031b601e4e50ffb4713d2b0b5df5f8dc23ab5b994dd0815edc14a7f",
+      "actual_arm_calls": 1904,
+      "nearby_addition_calls": 0,
+      "multiplication_division_calls": 0,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 60,
+        "dsub": 54,
+        "dmul": 124,
+        "ddiv": 144
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles.",
+      "sdk_rom_intrinsic_models": [
+        "__wrap___clzsi2",
+        "__wrap___clzdi2",
+        "__wrap_memcpy",
+        "__wrap_memset"
+      ]
+    },
+    "integration_math": {
+      "status": "PASS",
+      "elf_sha256": "31ed3b592f6e85e864db3031e50a21c0b2f75df6b5c7ccfc3e1e6fe26d64a095",
+      "actual_arm_calls": 1904,
+      "nearby_addition_calls": 0,
+      "multiplication_division_calls": 0,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 60,
+        "dsub": 54,
+        "dmul": 124,
+        "ddiv": 144
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles.",
+      "sdk_rom_intrinsic_models": [
+        "__wrap___clzsi2",
+        "__wrap___clzdi2",
+        "__wrap_memcpy",
+        "__wrap_memset"
+      ]
+    },
+    "portable_remaining": {
+      "status": "PASS",
+      "elf_sha256": "d25b2a5aaa3366d9f90b7a6a5df5ba269af350ac832ce4738d1b098177a66476",
+      "qualification": {
+        "__aeabi_l2d": {
+          "cases": 1554,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "7b3077dc16e7a1d50825dcbfb3f7f9a6aa4be3df6c238d0d80173726a5f09316"
+        },
+        "__aeabi_ul2d": {
+          "cases": 1554,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "09fb7760a4f1de3750807004a5ef8bc61880292b27b93f0c226d07805e47f650"
+        },
+        "__aeabi_f2d": {
+          "cases": 1126,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "3407cb4ae8c740920e7b8a97e669d6a8927799bcbb44b527b81292d901c4c76a"
+        },
+        "__aeabi_d2f": {
+          "cases": 1302,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "b3a83a47bb959ac29344608991bb075d93b8489be62f230ebc42df539cb0a671"
+        },
+        "__aeabi_d2iz": {
+          "cases": 1302,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "6d245c2ea7beb20718ecf39f47113e74530ef22a915efc70d0d288cd88a10937"
+        },
+        "__aeabi_d2lz": {
+          "cases": 1302,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "a348a19cbe5b4ed040ea6684404163e42c79441669abe2c4d5b8ac818217840a"
+        },
+        "__aeabi_dcmpeq": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "ce0f54c1052e48fc956d440b165326829d4228129230fa123311ffa025b7db22"
+        },
+        "__aeabi_dcmplt": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "68dbb8e88574058ea68001d7da161510b38d25eefb0f035ca4954bfcec615a82"
+        },
+        "__aeabi_dcmple": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "0ed978342e23ba40066bfb450868f7fa35f8771f8b843e1ca4d8fb2bf6650956"
+        },
+        "__aeabi_dcmpge": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "d602d22bb305df419dac0b0f8a6b96b80894aa98716e26be1dc8fd329fc8f8dc"
+        },
+        "__aeabi_dcmpgt": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "80cc325c6ff8560fbde1f419ac994ccbbf626367af6c8c07b4750069a6f340e4"
+        },
+        "__aeabi_dcmpun": {
+          "cases": 1256,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "de4d799666167860b8e7d24d48af58401dd2fb4b3b2d5580f38f45683b229bb5"
+        },
+        "_ZN12compact_math2lnEd": {
+          "cases": 8792,
+          "worst_error": 1,
+          "worst_example": {
+            "input": "3FEFFF21181F1EA5",
+            "reference": "BF1BDD5D296C1A63",
+            "result": "BF1BDD5D296C1A62"
+          },
+          "sha256": "9c9fa7caec24af4720e878c3510cb33980d08a0c3826616c29b71e8c35d7240e"
+        },
+        "_ZN12compact_math5log10Ed": {
+          "cases": 100,
+          "worst_error": 0,
+          "worst_example": null,
+          "sha256": "200462331d67b95f994cca3d9d52a62929c0da46fb9368551ae799ee0fd910a3"
+        },
+        "_ZN12compact_math4atanEd": {
+          "cases": 3394,
+          "worst_error": 1,
+          "worst_example": {
+            "input": "BFF17D7D08805E1E",
+            "reference": "BFEA8E414BD631E3",
+            "result": "BFEA8E414BD631E4"
+          },
+          "sha256": "aa2eaad2edc28049d6eeed47dd2c0195fe5e95301b5c0f647296c2d4a2a08db3"
+        }
+      }
+    },
+    "portable_trig": {
+      "status": "PASS",
+      "elf_sha256": {
+        "OWN": "d25b2a5aaa3366d9f90b7a6a5df5ba269af350ac832ce4738d1b098177a66476"
+      },
+      "qualification": {
+        "sin": {
+          "cases": 12773,
+          "worst_ulp": 1,
+          "worst_example": {
+            "input": "C11CD715B934EC3E",
+            "reference": "BFB86183FD99D2BC",
+            "result": "BFB86183FD99D2BD"
+          },
+          "sha256": "6fec35e5f86418f47dc6ef85f1386bdd4c20bb298334cc673dc5cfba6cd3d80e"
+        },
+        "cos": {
+          "cases": 12773,
+          "worst_ulp": 1,
+          "worst_example": {
+            "input": "C12230A33561804A",
+            "reference": "3FAD6EBA108FEE2F",
+            "result": "3FAD6EBA108FEE30"
+          },
+          "sha256": "699f92e918e94e0c757f80f3d5f07aaa63c776cf04803006aa348944b71e4b36"
+        },
+        "tan": {
+          "cases": 12773,
+          "worst_ulp": 2,
+          "worst_example": {
+            "input": "C116FF782B958D2A",
+            "reference": "401E1BBC37CA12A0",
+            "result": "401E1BBC37CA12A2"
+          },
+          "sha256": "f12b4621e74d33de5c0f5cfc5b9a0fae494fd0b30e6720b85d9008a24ee1bbd2"
+        },
+        "integer_conversion": {
+          "cases": 4394,
+          "bitwise_exact": true
+        },
+        "q62_product": {
+          "cases": 1000,
+          "bitwise_exact": true
+        },
+        "q62_pack": {
+          "cases": 2416,
+          "bitwise_exact": true
+        }
+      }
+    },
+    "m4_isolation": {
+      "status": "PASS",
+      "baseline_commit": "77c9e4724",
+      "preprocessed_identical": [
+        {
+          "source": "code/native_eabi_m0.cpp",
+          "abi": "soft",
+          "preprocessed_bytes": 4531,
+          "sha256": "cb87e3568af14c2cfe26d19236bd4de306d1a4a2ba8c2b11a8f204e76ba93f67"
+        },
+        {
+          "source": "code/native_eabi_m0.S",
+          "abi": "soft",
+          "preprocessed_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "source": "code/compact_math.cpp",
+          "abi": "soft",
+          "preprocessed_bytes": 49163,
+          "sha256": "2b2e1f8697a6a31c0b506d8a79ea154b5709b9c5d1246b34db27e6c288edbb5d"
+        },
+        {
+          "source": "code/native_eabi_m0.hpp",
+          "abi": "soft",
+          "preprocessed_bytes": 4531,
+          "sha256": "cb87e3568af14c2cfe26d19236bd4de306d1a4a2ba8c2b11a8f204e76ba93f67"
+        },
+        {
+          "source": "code/native_eabi_m0.cpp",
+          "abi": "hard",
+          "preprocessed_bytes": 4531,
+          "sha256": "cb87e3568af14c2cfe26d19236bd4de306d1a4a2ba8c2b11a8f204e76ba93f67"
+        },
+        {
+          "source": "code/native_eabi_m0.S",
+          "abi": "hard",
+          "preprocessed_bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "source": "code/compact_math.cpp",
+          "abi": "hard",
+          "preprocessed_bytes": 49189,
+          "sha256": "44de1b8998a13585fe0c29b2c772b3af9ad78eeb880ac547e51cf6ff8c6cff07"
+        },
+        {
+          "source": "code/native_eabi_m0.hpp",
+          "abi": "hard",
+          "preprocessed_bytes": 4531,
+          "sha256": "cb87e3568af14c2cfe26d19236bd4de306d1a4a2ba8c2b11a8f204e76ba93f67"
+        }
+      ],
+      "unchanged_sources": [
+        "code/native_eabi.cpp",
+        "code/native_eabi_arm.S",
+        "code/native_eabi_fixed.S",
+        "code/native_eabi_m0_rp2040.S"
+      ]
+    },
+    "addition_bytes_preserved": {
+      "status": "PASS",
+      "production_elf_sha256": "820939d72031b601e4e50ffb4713d2b0b5df5f8dc23ab5b994dd0815edc14a7f",
+      "tested_elf_sha256": "14d7b4f6a3f7e4d73a40547bb1cc9cb5fac8efb96832ea21ba51d0b834230a4a",
+      "regions": {
+        "subtraction_entry": {
+          "bytes": 10,
+          "sha256": "71a0a613732c487970c1b358388c852a2b977db0a878ae25402f0bd42b005602"
+        },
+        "complete_addition_fast_paths": {
+          "bytes": 744,
+          "sha256": "6b22d764e4799dfdc4a713c57e7775e9de4bfe71941621e803e135800dba82b0"
+        }
+      },
+      "scope": "Read-only byte comparison: subtraction entry and all addition fast paths in the production ELF exactly match the independently tested ARM binary. No ELF execution or external fallback relocation check is performed."
+    },
+    "sqrt_exp_profiles_preserved": {
+      "status": "PASS",
+      "groups": [
+        {
+          "operation": "sqrt",
+          "name": "legacy",
+          "stats": {
+            "OWN": {
+              "mean": 147.33333333333334,
+              "min": 141,
+              "max": 165,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 147.33333333333334,
+              "min": 141,
+              "max": 165,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 155.83333333333334,
+              "min": 139,
+              "max": 167,
+              "worst_ulp": 0
+            }
+          }
+        },
+        {
+          "operation": "exp",
+          "name": "legacy",
+          "stats": {
+            "OWN": {
+              "mean": 596.6315789473684,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 596.6315789473684,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 648.4736842105264,
+              "min": 604,
+              "max": 684,
+              "worst_ulp": 0
+            }
+          }
+        },
+        {
+          "operation": "sqrt",
+          "name": "normal_exponents",
+          "stats": {
+            "OWN": {
+              "mean": 144.72265625,
+              "min": 141,
+              "max": 148,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 144.72265625,
+              "min": 141,
+              "max": 148,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 152.375,
+              "min": 139,
+              "max": 170,
+              "worst_ulp": 0
+            }
+          }
+        },
+        {
+          "operation": "sqrt",
+          "name": "normalized",
+          "stats": {
+            "OWN": {
+              "mean": 144.70703125,
+              "min": 141,
+              "max": 159,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 144.70703125,
+              "min": 141,
+              "max": 159,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 153.5859375,
+              "min": 139,
+              "max": 170,
+              "worst_ulp": 0
+            }
+          }
+        },
+        {
+          "operation": "exp",
+          "name": "small_range",
+          "stats": {
+            "OWN": {
+              "mean": 596.33984375,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 596.33984375,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 634.5625,
+              "min": 549,
+              "max": 707,
+              "worst_ulp": 0
+            }
+          }
+        },
+        {
+          "operation": "exp",
+          "name": "normal_exponents",
+          "stats": {
+            "OWN": {
+              "mean": 596.7109375,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 596.7109375,
+              "min": 590,
+              "max": 603,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 638.19921875,
+              "min": 562,
+              "max": 717,
+              "worst_ulp": 1
+            }
+          }
+        },
+        {
+          "operation": "sqrt",
+          "name": "segment_edges",
+          "stats": {
+            "OWN": {
+              "mean": 144.6953125,
+              "min": 141,
+              "max": 165,
+              "worst_ulp": 0
+            },
+            "BASE": {
+              "mean": 144.6953125,
+              "min": 141,
+              "max": 165,
+              "worst_ulp": 0
+            },
+            "QFP": {
+              "mean": 152.46875,
+              "min": 139,
+              "max": 173,
+              "worst_ulp": 0
+            }
+          }
+        }
+      ]
+    },
+    "muldiv_profiles_preserved": {
+      "status": "PASS",
+      "cases": 768,
+      "full": {
+        "dmul": [
+          {
+            "name": "full_random",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 124.25,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.5,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 124.78125,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.5,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 124.25,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.5,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "mantissa_product_below_two",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 128.5,
+                  "min": 124,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 4.8125,
+                  "min": 4,
+                  "max": 5
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 128.5,
+                  "min": 124,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 7.8125,
+                  "min": 7,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 128.5,
+                  "min": 124,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 4.8125,
+                  "min": 4,
+                  "max": 5
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "mantissa_product_above_two",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 122.9375,
+                  "min": 119,
+                  "max": 128
+                },
+                "taken_transfers": {
+                  "mean": 5.875,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 123.9375,
+                  "min": 120,
+                  "max": 129
+                },
+                "taken_transfers": {
+                  "mean": 8.875,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 122.9375,
+                  "min": 119,
+                  "max": 128
+                },
+                "taken_transfers": {
+                  "mean": 5.875,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "low_word_boundaries",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 124.78125,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.53125,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 125.375,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.53125,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 124.78125,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.53125,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "normal_exponent_range",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 124.28125,
+                  "min": 119,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 5.53125,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 124.84375,
+                  "min": 120,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 8.53125,
+                  "min": 7,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 124.28125,
+                  "min": 119,
+                  "max": 133
+                },
+                "taken_transfers": {
+                  "mean": 5.53125,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "near_rounding_midpoints",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 122.84375,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.59375,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 123.5625,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.59375,
+                  "min": 7,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 122.84375,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.59375,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          }
+        ],
+        "ddiv": [
+          {
+            "name": "full_random",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 163.5,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.5625,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.1875,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 167.5,
+                  "min": 146,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 7.03125,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.5625,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.1875,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 163.5,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.5625,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.1875,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "mantissa_ratio_below_one",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 162.9375,
+                  "min": 142,
+                  "max": 177
+                },
+                "taken_transfers": {
+                  "mean": 5.9375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.75,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.25,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 166.9375,
+                  "min": 146,
+                  "max": 181
+                },
+                "taken_transfers": {
+                  "mean": 6.9375,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.75,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.25,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 162.9375,
+                  "min": 142,
+                  "max": 177
+                },
+                "taken_transfers": {
+                  "mean": 5.9375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.75,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.25,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "mantissa_ratio_above_one",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 158.625,
+                  "min": 144,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.4375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.8125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 162.625,
+                  "min": 148,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 7,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 20.4375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 7.8125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 158.625,
+                  "min": 144,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.4375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.8125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "low_word_boundaries",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 158.96875,
+                  "min": 142,
+                  "max": 180
+                },
+                "taken_transfers": {
+                  "mean": 5.90625,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.8125,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 162.96875,
+                  "min": 146,
+                  "max": 184
+                },
+                "taken_transfers": {
+                  "mean": 6.90625,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 20.8125,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 158.96875,
+                  "min": 142,
+                  "max": 180
+                },
+                "taken_transfers": {
+                  "mean": 5.90625,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.8125,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "normal_exponent_range",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 162,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 166,
+                  "min": 146,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 7.03125,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 162,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "near_rounding_midpoints",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 177.09375,
+                  "min": 174,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.4375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 21,
+                  "min": 21,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 181.09375,
+                  "min": 178,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 7.4375,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 24,
+                  "min": 24,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 177.09375,
+                  "min": 174,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.4375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 21,
+                  "min": 21,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          }
+        ]
+      },
+      "legacy": {
+        "dmul": [
+          {
+            "name": "full_precision",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 123.125,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.625,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 123.84375,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.625,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 123.125,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.625,
+                  "min": 5,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "short_operand",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 100.8125,
+                  "min": 93,
+                  "max": 107
+                },
+                "taken_transfers": {
+                  "mean": 7.5625,
+                  "min": 7,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 8,
+                  "min": 8,
+                  "max": 8
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 125.875,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.5625,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 100.8125,
+                  "min": 93,
+                  "max": 107
+                },
+                "taken_transfers": {
+                  "mean": 7.5625,
+                  "min": 7,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 8,
+                  "min": 8,
+                  "max": 8
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "both_short",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 85.40625,
+                  "min": 84,
+                  "max": 89
+                },
+                "taken_transfers": {
+                  "mean": 6.71875,
+                  "min": 6,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 4,
+                  "min": 4,
+                  "max": 4
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 121.125,
+                  "min": 120,
+                  "max": 124
+                },
+                "taken_transfers": {
+                  "mean": 8.71875,
+                  "min": 8,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 85.40625,
+                  "min": 84,
+                  "max": 89
+                },
+                "taken_transfers": {
+                  "mean": 6.71875,
+                  "min": 6,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 4,
+                  "min": 4,
+                  "max": 4
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "powers_of_two",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 28.5,
+                  "min": 27,
+                  "max": 30
+                },
+                "taken_transfers": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "multiplies": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "stack_reads": {
+                  "mean": 5,
+                  "min": 5,
+                  "max": 5
+                },
+                "stack_writes": {
+                  "mean": 5,
+                  "min": 5,
+                  "max": 5
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 124,
+                  "min": 124,
+                  "max": 124
+                },
+                "taken_transfers": {
+                  "mean": 8,
+                  "min": 8,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 28.5,
+                  "min": 27,
+                  "max": 30
+                },
+                "taken_transfers": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "multiplies": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "stack_reads": {
+                  "mean": 5,
+                  "min": 5,
+                  "max": 5
+                },
+                "stack_writes": {
+                  "mean": 5,
+                  "min": 5,
+                  "max": 5
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "rounding_ties",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 107.5,
+                  "min": 106,
+                  "max": 109
+                },
+                "taken_transfers": {
+                  "mean": 6,
+                  "min": 6,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 8,
+                  "min": 8,
+                  "max": 8
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 132,
+                  "min": 132,
+                  "max": 132
+                },
+                "taken_transfers": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 107.5,
+                  "min": 106,
+                  "max": 109
+                },
+                "taken_transfers": {
+                  "mean": 6,
+                  "min": 6,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 8,
+                  "min": 8,
+                  "max": 8
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "normal_exponent_range",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 123.96875,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.46875,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 124.5,
+                  "min": 120,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 8.46875,
+                  "min": 7,
+                  "max": 9
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "stack_writes": {
+                  "mean": 10,
+                  "min": 10,
+                  "max": 10
+                },
+                "constant_reads": {
+                  "mean": 1,
+                  "min": 1,
+                  "max": 1
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 123.96875,
+                  "min": 119,
+                  "max": 130
+                },
+                "taken_transfers": {
+                  "mean": 5.46875,
+                  "min": 4,
+                  "max": 6
+                },
+                "multiplies": {
+                  "mean": 16,
+                  "min": 16,
+                  "max": 16
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          }
+        ],
+        "ddiv": [
+          {
+            "name": "full_precision",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 162.40625,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 5.96875,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 166.40625,
+                  "min": 146,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 6.96875,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 162.40625,
+                  "min": 142,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 5.96875,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "short_operand",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 161,
+                  "min": 144,
+                  "max": 182
+                },
+                "taken_transfers": {
+                  "mean": 5.9375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.8125,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 163,
+                  "min": 146,
+                  "max": 184
+                },
+                "taken_transfers": {
+                  "mean": 6.9375,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 20.8125,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 161,
+                  "min": 144,
+                  "max": 182
+                },
+                "taken_transfers": {
+                  "mean": 5.9375,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 17.8125,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 7.9375,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "both_short",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 163.78125,
+                  "min": 144,
+                  "max": 182
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 165.78125,
+                  "min": 146,
+                  "max": 184
+                },
+                "taken_transfers": {
+                  "mean": 7.03125,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 163.78125,
+                  "min": 144,
+                  "max": 182
+                },
+                "taken_transfers": {
+                  "mean": 6.03125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "dyadic_seeds",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 126.25,
+                  "min": 29,
+                  "max": 162
+                },
+                "taken_transfers": {
+                  "mean": 6.28125,
+                  "min": 1,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 13.8125,
+                  "min": 0,
+                  "max": 19
+                },
+                "stack_reads": {
+                  "mean": 7.5625,
+                  "min": 5,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 6.75,
+                  "min": 5,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 160.375,
+                  "min": 146,
+                  "max": 184
+                },
+                "taken_transfers": {
+                  "mean": 7.03125,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 20.4375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 7.8125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 126.25,
+                  "min": 29,
+                  "max": 162
+                },
+                "taken_transfers": {
+                  "mean": 6.28125,
+                  "min": 1,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 13.8125,
+                  "min": 0,
+                  "max": 19
+                },
+                "stack_reads": {
+                  "mean": 7.5625,
+                  "min": 5,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 6.75,
+                  "min": 5,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              }
+            }
+          },
+          {
+            "name": "near_rounding_midpoints",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 177.09375,
+                  "min": 174,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.3125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 21,
+                  "min": 21,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 181.09375,
+                  "min": 178,
+                  "max": 187
+                },
+                "taken_transfers": {
+                  "mean": 7.3125,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 24,
+                  "min": 24,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 177.09375,
+                  "min": 174,
+                  "max": 183
+                },
+                "taken_transfers": {
+                  "mean": 6.3125,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 21,
+                  "min": 21,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 9,
+                  "min": 9,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          },
+          {
+            "name": "normal_exponent_range",
+            "trace": {
+              "OWN": {
+                "instructions": {
+                  "mean": 162.5625,
+                  "min": 142,
+                  "max": 180
+                },
+                "taken_transfers": {
+                  "mean": 6.15625,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              },
+              "QFP": {
+                "instructions": {
+                  "mean": 166.5625,
+                  "min": 146,
+                  "max": 184
+                },
+                "taken_transfers": {
+                  "mean": 7.15625,
+                  "min": 6,
+                  "max": 8
+                },
+                "multiplies": {
+                  "mean": 21.375,
+                  "min": 18,
+                  "max": 24
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 3,
+                  "min": 3,
+                  "max": 3
+                },
+                "sio_reads": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                },
+                "sio_writes": {
+                  "mean": 0,
+                  "min": 0,
+                  "max": 0
+                }
+              },
+              "BASE": {
+                "instructions": {
+                  "mean": 162.5625,
+                  "min": 142,
+                  "max": 180
+                },
+                "taken_transfers": {
+                  "mean": 6.15625,
+                  "min": 5,
+                  "max": 7
+                },
+                "multiplies": {
+                  "mean": 18.375,
+                  "min": 15,
+                  "max": 21
+                },
+                "stack_reads": {
+                  "mean": 8.125,
+                  "min": 7,
+                  "max": 9
+                },
+                "stack_writes": {
+                  "mean": 7,
+                  "min": 7,
+                  "max": 7
+                },
+                "constant_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_reads": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                },
+                "sio_writes": {
+                  "mean": 2,
+                  "min": 2,
+                  "max": 2
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "host_runtime": {
+      "status": "PASS",
+      "independent_checks": 6143265,
+      "sanitizers": [
+        "address",
+        "undefined"
+      ]
+    },
+    "host_math": {
+      "status": "PASS",
+      "final_profile_checks": 2443149,
+      "sanitizers": [
+        "address",
+        "undefined"
+      ]
+    },
+    "sio_pending_state_preserved": true,
+    "no_libgcc_archive_members": "PASS: independent ARM ELF has no undefined symbols, both full firmware link maps passed check_picocalc_runtime.py."
+  },
+  "firmware": {
+    "isolated_math": {
+      "manifest": {
+        "profile": "picocalc-pico-h",
+        "prototype_version": "0.8.2",
+        "mcu": "RP2040",
+        "sampling_profile": false,
+        "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+        "cpu": "cortex-m0plus",
+        "float_abi": "soft",
+        "math": "compact_math + owned ARMv6-M IEEE runtime",
+        "arithmetic_runtime": "owned-m0",
+        "pico_sdk": "2.2.0",
+        "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+        "compiler": "14.2.1",
+        "flash_bytes": 692736,
+        "flash_limit": 2097152,
+        "static_ram_bytes": 166340,
+        "main_ram_region_bytes": 229376,
+        "stack_reserved_bytes": 32768,
+        "source_editor_capacity_bytes": 65534,
+        "settings_flash_offset": 2088960,
+        "settings_flash_bytes": 8192,
+        "uf2_bytes": 1385472,
+        "bin_sha256": "f0fc158eafe2fc2db4b6c14cd723222f7998c19b07460a4af5958232895e3532",
+        "uf2_sha256": "b6d47334be42bb63561ccd48fd7a425120d6669e893efdc51b2e4e92d373c536",
+        "hardware_verified": false,
+        "source_sha256": "89bb11b85a56ddeec6eb43d8a566d6bbf87b23c2c88380eddaeb2cae4919808e",
+        "build_id": "cf9c5082",
+        "firmware_integrity": {
+          "required": true,
+          "format_version": 1,
+          "image_start": 268435456,
+          "image_size": 692736,
+          "footer_offset": 601816,
+          "profile_id": "50434831",
+          "crc32": "34dc3334"
+        }
+      },
+      "elf_sha256": "820939d72031b601e4e50ffb4713d2b0b5df5f8dc23ab5b994dd0815edc14a7f",
+      "flash_delta": 9536,
+      "ram_delta": 0,
+      "construction": "git archive 77c9e4724, overlay the seven current production math source/include files. Frozen production source hashes match the working tree."
+    },
+    "integrated_current_tree": {
+      "base_commit": "cdd344071d695efd6fc16040f7e83ac4ef35799e",
+      "manifest": {
+        "profile": "picocalc-pico-h",
+        "prototype_version": "0.8.3",
+        "mcu": "RP2040",
+        "sampling_profile": false,
+        "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+        "cpu": "cortex-m0plus",
+        "float_abi": "soft",
+        "math": "compact_math + owned ARMv6-M IEEE runtime",
+        "arithmetic_runtime": "owned-m0",
+        "pico_sdk": "2.2.0",
+        "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+        "compiler": "14.2.1",
+        "flash_bytes": 693288,
+        "flash_limit": 2097152,
+        "static_ram_bytes": 178720,
+        "static_ram_data_bss_bytes": 166360,
+        "main_ram_region_bytes": 229376,
+        "stack_reserved_bytes": 32768,
+        "source_editor_capacity_bytes": 65534,
+        "settings_flash_offset": 2088960,
+        "settings_flash_bytes": 8192,
+        "uf2_bytes": 1387008,
+        "bin_sha256": "9c7730d0c01f179682d41f25d2aedd7c32c295e7c27d57e421c8049f1156b78f",
+        "uf2_sha256": "9dc6aab25d35ac1264ec4437022edc9dcfbf1b59824658899388eaab494bc4aa",
+        "hardware_verified": false,
+        "source_sha256": "fbe79529050895ded3a896f73a3721bf1556b1f234bf676d82c5274630423ba3",
+        "build_id": "5a63ca04",
+        "firmware_integrity": {
+          "required": true,
+          "format_version": 1,
+          "image_start": 268435456,
+          "image_size": 693288,
+          "footer_offset": 599320,
+          "profile_id": "50434831",
+          "crc32": "b06d3885"
+        }
+      },
+      "elf_sha256": "31ed3b592f6e85e864db3031e50a21c0b2f75df6b5c7ccfc3e1e6fe26d64a095",
+      "note": "Includes independent PicoCalc console/display/VM changes. Their RAM placement/accounting change explains the different whole-firmware RAM figure; the math change itself adds no static RAM."
+    },
+    "hardware": "No flashing, physical-device benchmark, or release-binary replacement performed in this task. Hardware timing of these new math paths is pending."
+  },
+  "reproduce": {
+    "commands": [
+      "python3 tools/generate_m0_log_table.py",
+      ".build/picocalc-apps-arm-venv/bin/python tests/profile_m0_remaining.py --owned-elf .build/m0-complete-20261019/firmware-output/mk61s-picocalc-pico-h.elf --baseline-elf .build/m0-complete-20261019/baseline.elf --qfplib-source .build/m0-eabi-qfplib/qfplib-m0-full_gcc.S --output-dir .build/m0-complete-20261019/reference --require-no-gaps --qualification --samples 100000 --json .build/m0-complete-20261019/accepted-remaining.json",
+      ".build/picocalc-apps-arm-venv/bin/python tests/profile_m0_trig.py --owned-elf .build/m0-complete-20261019/firmware-output/mk61s-picocalc-pico-h.elf --baseline-elf .build/m0-complete-20261019/baseline.elf --qfplib-elf .build/m0-eabi-qfplib/qfplib.elf --require-fewer-instructions --qualification --samples 100000 --json .build/m0-complete-20261019/accepted-trig.json",
+      ".build/picocalc-apps-arm-venv/bin/python tests/native_eabi_m0_arm_self_test.py --rp2040 --samples 10000 --output-dir .build/m0-complete-20261019/accepted-arm --json .build/m0-complete-20261019/accepted-arm.json",
+      ".build/picocalc-apps-arm-venv/bin/python tests/native_eabi_m0_arm_self_test.py --samples 1000 --output-dir .build/m0-complete-20261019/accepted-portable --json .build/m0-complete-20261019/accepted-portable.json",
+      "MK61_TEST_SANITIZERS=1 bash tests/run_native_eabi_m0_tests.sh",
+      "MK61_TEST_SANITIZERS=1 bash tests/run_compact_math_tests.sh"
+    ],
+    "raw_artifacts": {
+      "accepted-remaining": {
+        "path": ".build/m0-complete-20261019/accepted-remaining.json",
+        "sha256": "f7db8d777e208763487f4150218c795023187373f5e2a44acfa21e0cfa69e4ac"
+      },
+      "accepted-trig": {
+        "path": ".build/m0-complete-20261019/accepted-trig.json",
+        "sha256": "b7208b7cee925bd127501f00b90c0ab15f6a64ceadc9d0d127c461faaa1a6123"
+      },
+      "previous-math-profile": {
+        "path": ".build/m0-complete-20261019/previous-math-profile.json",
+        "sha256": "813adc10c5ae4edec7b2cc806e31fbbb7cf7fbca5b03e9f709a62abc4ceac0be"
+      },
+      "full-streams": {
+        "path": ".build/m0-complete-20261019/full-streams.json",
+        "sha256": "9dea6bde5a553380b19bd0a650f36c46920baefe5776fec0e90b191ca1e1b301"
+      },
+      "legacy-streams": {
+        "path": ".build/m0-complete-20261019/legacy-streams.json",
+        "sha256": "a507dc795082718d33dfe1ed1b5c5192beedeea6f10de39311840688060dff73"
+      },
+      "accepted-portable-trig": {
+        "path": ".build/m0-complete-20261019/accepted-portable-trig.json",
+        "sha256": "3522d2f0b350c7e87bd4dcf98bb505bfb092b7f45f42520b009c910c0ac656f3"
+      }
+    },
+    "profile_script_and_case_digests": "Each profile group stores a digest of its full input/result/count records; seeds and corpora are committed in the profiling scripts."
+  }
+}
