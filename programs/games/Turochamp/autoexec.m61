@@ -1,5 +1,11 @@
 reinit
+open display.tbi
+if re==0 run :compact
+loadfont Turochamp320 Turochamp
+run :ready
+:compact
 loadfont Turochamp
+:ready
 open init.tbi
 :dispatch
 if re==1 open init.tbi

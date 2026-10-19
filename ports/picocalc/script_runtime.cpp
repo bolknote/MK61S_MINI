@@ -77,6 +77,9 @@ unsigned cell_width() {
 unsigned cell_height() {
   return prepared.valid()?prepared.metrics().height+prepared.metrics().line_gap:face.valid() ? face.metrics().height + face.metrics().line_gap : profile.height + profile.line_gap;
 }
+bool native_font_geometry() {
+  return (face.valid() || prepared.valid()) && (cell_width()>7 || cell_height()>8);
+}
 void pixel(unsigned x, unsigned y, bool on) {
   if (x >= 192 || y >= 64)
     return;
@@ -98,7 +101,9 @@ void paint(u8 x, u8 y, u16 cp) {
   native_visible=true;
   const bool default_face=!face.valid() && !prepared.valid() && profile.width==5 && profile.height==8;
   const unsigned nw=default_face?9:width, nh=default_face?28:height;
-  const unsigned nx=8+x*nw, ny=36+y*nh;
+  const bool native_font=native_font_geometry();
+  const unsigned nx=(native_font?(canvas::WIDTH-grid.cols()*nw)/2:8)+x*nw;
+  const unsigned ny=(native_font?(canvas::HEIGHT-grid.rows()*nh)/2:36)+y*nh;
   canvas::rect(canvas::frame(),nx,ny,nw,nh);
   if(default_face) { Settings font{};font.ui_font_family=1;font.ui_font_size=16;
     canvas::glyph(canvas::frame(),font,cp,nx,ny); }
@@ -147,7 +152,9 @@ bool clear(void *) {
 void reshape() {
   ++frame_generation;
   ++font_generation;
-  unsigned columns = 192 / cell_width(), rows = 64 / cell_height();
+  const bool native_font=native_font_geometry();
+  unsigned columns = (native_font?canvas::WIDTH:192) / cell_width();
+  unsigned rows = (native_font?canvas::HEIGHT:64) / cell_height();
   if (columns > text_screen::MAX_COLS)
     columns = text_screen::MAX_COLS;
   if (rows > text_screen::MAX_ROWS)

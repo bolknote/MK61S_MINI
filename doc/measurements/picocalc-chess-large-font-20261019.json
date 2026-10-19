@@ -1,0 +1,386 @@
+{
+  "passed": true,
+  "version": "0.8.7",
+  "build_id": "a270ff58",
+  "uf2_sha256": "34e599a93efbeaa2a5ca700f98cfb70656805e84f0f706f620d08b7bbf6a8bcd",
+  "source_sha256": "2d5235d09bc6c4612c6c543f4140d145aa2993fae427eeed15c9bee9f8af0799",
+  "source_base": "3f2d53856f9d0ccf06b0d91acdf599cdfe19febc",
+  "uid": "E6657CD423721C35",
+  "recorded_at_utc": "2026-10-19T20:49:21.532563+00:00",
+  "text_cell": [
+    12,
+    24
+  ],
+  "chess_cell": [
+    24,
+    24
+  ],
+  "text_grid": [
+    26,
+    10
+  ],
+  "text_origin": [
+    4,
+    40
+  ],
+  "compact_font_sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916",
+  "native_font_sha256": "bd12288a8c293155abe9047a87d77695655f12507423ec0cbb176dcf1c07f371",
+  "native_font_bytes": 7466,
+  "static_ram_bytes": 194640,
+  "heap_bytes": 34736,
+  "flash_bytes": 692456,
+  "checks": [
+    "Pico host ASan/UBSan including complete game with large font and missing-font fallback",
+    "All 64 starting squares and native envelope checked against decoded FMK pixels on host",
+    "Compact chess rules, perft, promotions, castling, en passant, undo, repetition, evaluation, search, keyboard, screen and opening-book tests on interpreter and VM",
+    "FMK decoder, prepared-font/stream tests, generated assets, source/line quotas and bundle checksum/CRC tests",
+    "STM32 F401 product A00 and F411 Classic V3 clean snapshot builds with existing memory/stack gates",
+    "Exact Pico UID firmware CRC, MATH_TEST, CRASH=NONE and two same e2-e3/420-node moves",
+    "All 64 resulting squares plus all eight rank labels checked in both native USB frames",
+    "Both physical LCD transfer CRC values match independent row-major conversion: A2944C6F"
+  ],
+  "game_directory": "/MK61S-M61-20261017-185043/Turochamp",
+  "game_files": {
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "Turochamp320.FMK": {
+      "bytes": 7466,
+      "sha256": "bd12288a8c293155abe9047a87d77695655f12507423ec0cbb176dcf1c07f371"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "autoexec.m61": {
+      "bytes": 795,
+      "sha256": "e892f43ed9ad8ae4cdec6b87d5c55cc3867069030ad7a0d7aeff21126764fca8"
+    },
+    "board.tbi": {
+      "bytes": 4224,
+      "sha256": "84b3ba1cbe74bf1bd7540367a3e268506887ef1d915f42ff06da397c6a55c704"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "display.tbi": {
+      "bytes": 36,
+      "sha256": "d2c1cb1407fae06309e6099bf732ec126d070cfb52ab46fb84decaa12f953bbe"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "manual.md": {
+      "bytes": 877,
+      "sha256": "ff9bb8a3b2b49bb3bee690d89e9e552fabb1f7f41432bbb5ea7bdfde3edf6695"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    }
+  },
+  "game_files_readback": "All 31 files reread after upload, before chess series; no second source readback after this series",
+  "clock_hz": 125000000,
+  "opening_book": false,
+  "level": 2,
+  "maximum_depth": 8,
+  "runs": [
+    {
+      "repeat": 0,
+      "temperature": "session-first",
+      "menu_seconds": 1.9939040830358863,
+      "seconds": 29.090793292038143,
+      "nodes": 420,
+      "nodes_per_second": 14.437557469941865,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 2.360758417053148
+        },
+        {
+          "nodes": 21,
+          "seconds": 7.301126459031366
+        },
+        {
+          "nodes": 42,
+          "seconds": 8.35923483397346
+        },
+        {
+          "nodes": 63,
+          "seconds": 9.410780749982223
+        },
+        {
+          "nodes": 84,
+          "seconds": 10.469706875039265
+        },
+        {
+          "nodes": 105,
+          "seconds": 11.486892084009014
+        },
+        {
+          "nodes": 126,
+          "seconds": 12.502801791997626
+        },
+        {
+          "nodes": 147,
+          "seconds": 13.563092416967265
+        },
+        {
+          "nodes": 168,
+          "seconds": 14.660854542045854
+        },
+        {
+          "nodes": 189,
+          "seconds": 15.720206542056985
+        },
+        {
+          "nodes": 210,
+          "seconds": 16.776210292009637
+        },
+        {
+          "nodes": 231,
+          "seconds": 17.91292441706173
+        },
+        {
+          "nodes": 252,
+          "seconds": 19.09111691697035
+        },
+        {
+          "nodes": 273,
+          "seconds": 20.314371917047538
+        },
+        {
+          "nodes": 294,
+          "seconds": 21.500956334057264
+        },
+        {
+          "nodes": 315,
+          "seconds": 22.55708645901177
+        },
+        {
+          "nodes": 336,
+          "seconds": 23.61256208398845
+        },
+        {
+          "nodes": 357,
+          "seconds": 24.675816750037484
+        },
+        {
+          "nodes": 378,
+          "seconds": 25.735956292017363
+        },
+        {
+          "nodes": 399,
+          "seconds": 26.75588275003247
+        },
+        {
+          "nodes": 420,
+          "seconds": 27.81477812502999
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 28.946024292032234,
+      "board_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "native_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "lcd_transfer_crc": "A2944C6F",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "adf3d57ad7143d4f0be60e2a49c8dfbe41c2c4b1eecb20c14c091968c6b0ea17"
+    },
+    {
+      "repeat": 1,
+      "temperature": "repeat",
+      "menu_seconds": 1.0213311250554398,
+      "seconds": 22.966603207984008,
+      "nodes": 420,
+      "nodes_per_second": 18.28742353392482,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 0.041577916010282934
+        },
+        {
+          "nodes": 21,
+          "seconds": 1.7025055829435587
+        },
+        {
+          "nodes": 42,
+          "seconds": 2.7523187909973785
+        },
+        {
+          "nodes": 63,
+          "seconds": 3.929860165924765
+        },
+        {
+          "nodes": 84,
+          "seconds": 4.939545374945737
+        },
+        {
+          "nodes": 105,
+          "seconds": 5.951291624922305
+        },
+        {
+          "nodes": 126,
+          "seconds": 7.007512332987972
+        },
+        {
+          "nodes": 147,
+          "seconds": 8.064305415959097
+        },
+        {
+          "nodes": 168,
+          "seconds": 9.164323915960267
+        },
+        {
+          "nodes": 189,
+          "seconds": 10.226861457922496
+        },
+        {
+          "nodes": 210,
+          "seconds": 11.329461749992333
+        },
+        {
+          "nodes": 231,
+          "seconds": 12.505468750023283
+        },
+        {
+          "nodes": 252,
+          "seconds": 13.681395957944915
+        },
+        {
+          "nodes": 273,
+          "seconds": 14.906494624912739
+        },
+        {
+          "nodes": 294,
+          "seconds": 16.088904249947518
+        },
+        {
+          "nodes": 315,
+          "seconds": 17.151489957934245
+        },
+        {
+          "nodes": 336,
+          "seconds": 18.169502291013487
+        },
+        {
+          "nodes": 357,
+          "seconds": 19.271447999984957
+        },
+        {
+          "nodes": 378,
+          "seconds": 20.331247999914922
+        },
+        {
+          "nodes": 399,
+          "seconds": 21.442097374936566
+        },
+        {
+          "nodes": 420,
+          "seconds": 22.501875499961898
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 22.834702165913768,
+      "board_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "native_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "lcd_transfer_crc": "A2944C6F",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "5dcb942b758cc3d0a69b4b5f7dd881f716a52c76110e517b1582b296e3221d62"
+    }
+  ],
+  "calculator_state_restored": true,
+  "previous_warm_reference_seconds": 21.996788042015396,
+  "previous_reference_note": "0.8.6 compact display, previous session; not a same-session A/B control",
+  "hardware_power": "USB; no batteries installed"
+}

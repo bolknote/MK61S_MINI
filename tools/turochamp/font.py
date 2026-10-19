@@ -98,11 +98,14 @@ def preview(path:Path):
 def main():
     ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--check',action='store_true')
     ap.add_argument('--preview',type=Path);args=ap.parse_args()
-    path=ROOT/'programs/games/Turochamp/Turochamp.FMK';data=build()
-    if args.check:
-        if not path.is_file() or path.read_bytes()!=data:raise SystemExit('stale Turochamp.FMK')
-    else:path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+    from large_font import build as large_build
+    for name,data in (('Turochamp.FMK',build()),('Turochamp320.FMK',large_build(glyphs()))):
+        path=ROOT/'programs/games/Turochamp'/name
+        if args.check:
+            if not path.is_file() or path.read_bytes()!=data:raise SystemExit('stale '+name)
+        else:path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(data)
+        print(f'{name}: {len(data)} bytes')
     if args.preview:preview(args.preview)
-    print(f'Turochamp.FMK: {len(data)} bytes; 7x7 board cells, 52 piece/cursor variants')
+    print('7x7 compact cells; 12x24 native text with paired 24x24 piece/cursor tiles')
 
 if __name__=='__main__':main()

@@ -41,6 +41,9 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(reader.read(prefix+name)).hexdigest(),digest,name)
                 for font in ('DejaVu-12.FMK','DejaVu-14.FMK'):
                     self.assertEqual(reader.read(prefix+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
+                for source in (ROOT/'programs/games/Turochamp').iterdir():
+                    if source.is_file():
+                        self.assertEqual(reader.read(prefix+'games/Turochamp/'+source.name),source.read_bytes())
             report=target/'hardware-software-summary.json'
             build=json.loads((target/'manifest.json').read_text())
             # An updated SHA-256 manifest cannot legitimize a broken resident CRC.

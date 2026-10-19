@@ -34,6 +34,14 @@ def aliases(code: str) -> str:
 
 
 def assemble(name: str, template: str) -> str:
+    if name == 'board':
+        from large_font import pair
+        def large_pair(match):
+            c = match[1]
+            selected = ord(c) >= 0x430
+            index = ord(c)-(0x430 if selected else ord('A'))
+            return f'IF V P."{pair(index,selected)}"; ELSE P."{c}";\nR.'
+        template = re.sub(r'^P\."([A-Zа-щ])";:R\.$', large_pair, template, flags=re.M)
     module = MODULES[name]
     statements: list[tuple[list[str], str]] = []
     labels: list[str] = []
@@ -197,7 +205,9 @@ def assemble_cluster(root: str) -> str:
 
 
 def driver() -> str:
-    commands = ["reinit", "loadfont Turochamp", "open init.tbi", ":dispatch"]
+    commands = ["reinit", "open display.tbi", "if re==0 run :compact",
+                "loadfont Turochamp320 Turochamp", "run :ready", ":compact",
+                "loadfont Turochamp", ":ready", "open init.tbi", ":dispatch"]
     commands += [f"if re=={i} open {PACKAGES[name]}.tbi" for name, i in MODULES.items()]
     commands += ["if re==99 ret", "run :dispatch"]
     result = "\n".join(commands) + "\n"
@@ -229,6 +239,7 @@ def main() -> None:
                assemble(name, (TEMPLATES / f"{name}.bas").read_text())
                for name in dict.fromkeys(PACKAGES.values())}
     outputs[DEST / "autoexec.m61"] = driver()
+    outputs[DEST / "display.tbi"] = "1 .RE=(GW>=320) AND (GH>=320)\n2 END\n"
     outputs[Path(__file__).parent / "layout.hpp"] = header()
     obsolete = set(DEST.glob("*.tbi")) - outputs.keys()
     if args.check and obsolete:

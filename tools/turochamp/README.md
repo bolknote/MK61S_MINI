@@ -18,6 +18,22 @@ used. Search descent and traversal share node.tbi
 and use local GOTOs; the result dialog shares game.tbi. Attack and pawn
 services remain shared source templates, embedded only where needed.
 Assembly emits the runtime module registry and removes obsolete TBI parts.
+An initial arithmetic-only `display.tbi` probes GW/GH. The M61 launcher then
+loads the native `Turochamp320.FMK` on displays at least 320x320, with a
+fallback to the unchanged compact `Turochamp.FMK`. The native face uses
+12x24 text cells; two adjacent glyphs form each original 24x24 chess tile.
+Its 26x10 grid keeps the board and eight-character status column together.
+For a PicoCalc hardware benchmark with this face, add `--large-font` to
+`tests/hil_picocalc_turochamp.py`; this checks native glyph pixels and all
+eight ranks rather than the compact-font translation.
+The board checks both the selected geometry and GH before using paired tiles;
+the old 26/27-column 192x64 layouts retain their single-glyph squares.
+
+Native text copies the reviewed Ark Pixel 12px bitmap strike without
+resampling; chess silhouettes are original artwork. Ark Pixel Font is
+Copyright (c) 2021, TakWolf, SIL Open Font License 1.1. The complete notice
+is in `tools/.fmk-font/ui-atlases/LICENSE-Ark-Pixel.txt` and the PicoCalc
+bundle's `licenses/ui-fonts/LICENSE-Ark-Pixel.txt`.
 Legal-move testing embeds both make and unmake. Positions with fewer than
 four reversible plies skip repetition scans, since a cycle needs two moves
 by each side. During computer search the original board is refreshed after

@@ -15,12 +15,13 @@ import re
 import statistics
 import subprocess
 import time
+import zlib
 
 from hil_c5_stack import read_file
 from hil_picocalc_apps import AppsPort
 from hil_picocalc_software import calculator, restore
 from hil_portable_system_apps import png
-from hil_turochamp_performance import Font, ROOT, board_pixels, completed_board
+from hil_turochamp_performance import Font, ROOT, board_pixels as compact_board_pixels, completed_board
 from m8_codec import encode
 
 
@@ -39,19 +40,28 @@ def canonical_frame(native):
     return bytes(frame)
 
 
+def board_pixels(frame):
+    if len(frame)==1536:return compact_board_pixels(frame)
+    assert len(frame)==12800
+    pixels=bytearray(frame)
+    for page in range(2):pixels[page*320+304:(page+1)*320]=bytes(16)
+    return bytes(pixels)
+
+
 class ChessPort(AppsPort):
-    def __init__(self, path):
+    def __init__(self, path, large_font=False):
         super().__init__(path, keyboard_layout=0)
         self.native_display = True
         self.frame_times = []
         self.boards = []
+        self.large_font = large_font
 
     def receive_packet(self, encoded):
         count = len(self.frames)
         super().receive_packet(encoded)
         if len(self.frames) > count:
             self.frame_times.append(time.monotonic())
-            self.boards.append(canonical_frame(self.frames[-1]))
+            self.boards.append(self.frames[-1] if self.large_font else canonical_frame(self.frames[-1]))
 
 
 def healthy(status, build):
@@ -148,7 +158,8 @@ def search(p, font, args, index, destination):
                 if nodes not in seen:
                     seen.add(nodes)
                     progress.append(dict(nodes=nodes, seconds=time.monotonic() - started))
-            board = serial[serial.rfind(b' hgfedcba'):]
+            heading = b'  h g f e d c b a' if p.large_font else b' hgfedcba'
+            board = serial[serial.rfind(heading):]
             if (encode('ВАШ ХОД') in board and b'e2-e3' in board and
                 all(re.search(rb'(?m)^' + str(rank).encode() + rb'[^\r\n]*\r?\n', board)
                     for rank in range(1, 9)) and
@@ -161,7 +172,7 @@ def search(p, font, args, index, destination):
             cursor = len(p.frames)
         for i in range(cursor, len(p.frames)):
             frame, stamp = p.boards[i], p.frame_times[i]
-            if args.screen_mode == 'continuous' and font.has(frame, 'ДУМАЕТ...'):
+            if args.screen_mode == 'continuous' and font.has(frame, 'ПОИСК...' if p.large_font else 'ДУМАЕТ...'):
                 nodes = font.number_after(frame, 'ПОЗ ')
                 if nodes is not None and nodes not in seen:
                     seen.add(nodes)
@@ -183,6 +194,19 @@ def search(p, font, args, index, destination):
                               terminal_complete_seconds=serial_finished,
                               board_frame_sha256=hashlib.sha256(board_pixels(frame)).hexdigest(),
                               native_frame_sha256=hashlib.sha256(p.frames[i]).hexdigest())
+                if p.large_font:
+                    rows=bytearray(12800)
+                    for y in range(320):
+                        for x in range(320):
+                            if frame[y//8*320+x]&(1<<(y&7)):rows[y*40+x//8]|=0x80>>(x&7)
+                    wanted=f'{zlib.crc32(rows):08X}'
+                    deadline=time.monotonic()+8
+                    while time.monotonic()<deadline:
+                        status=p.status()
+                        if 'LCD_PENDING=0 ' in status and 'LCD_FRAME_CRC='+wanted in status:break
+                        p.pump(.05)
+                    else:raise AssertionError(('LCD transfer differs from native chess frame',wanted,status))
+                    result['lcd_transfer_crc']=wanted
                 (destination / 'run.json').write_text(json.dumps(result, indent=2) + '\n')
                 print(f'Run {index + 1}: e2-e3, 420 nodes, {elapsed:.3f}s PASS', flush=True)
                 stop(p)
@@ -214,6 +238,7 @@ def main():
     parser.add_argument('--game-dir', required=True)
     parser.add_argument('--output-dir', required=True, type=Path)
     parser.add_argument('--runs', default=3, type=int)
+    parser.add_argument('--large-font', action='store_true', help='Validate native 12x24 text and paired 24x24 chess tiles')
     parser.add_argument('--timeout', default=900, type=float)
     parser.add_argument('--screen-mode', choices=('continuous', 'completion'), default='continuous',
                         help='Mirror throughout, or attach only after the complete terminal board')
@@ -223,18 +248,21 @@ def main():
     assert re.fullmatch(r'[0-9A-Fa-f]{8}', args.build_id)
     args.uid, args.build_id = args.uid.upper(), args.build_id.upper()
     args.output_dir.mkdir(parents=True, exist_ok=False)
-    font = Font((ROOT / 'programs/games/Turochamp/Turochamp.FMK').read_bytes())
+    font = (Font((ROOT/'programs/games/Turochamp/Turochamp320.FMK').read_bytes(),
+                 width=12,height=24,left=4,top=40,columns=26,rows=10,frame_width=320) if args.large_font
+            else Font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes()))
     report = dict(result='RUNNING', recorded_at_utc=datetime.now(timezone.utc).isoformat(),
                   uid=args.uid, build=args.build_id, game_directory=args.game_dir,
                   source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                   opening_book=False, level=2, maximum_depth=8, profiling=False,
                   reset_before=False, native_geometry=[320, 320],
                   screen_mode=args.screen_mode,
+                  text_cell=[12,24] if args.large_font else [7,7],
                   timing_start='OK on Black selection',
                   timing_end='CRC-checked complete eight-rank e2-e3 board',
                   filesystem_writes=0, firmware_writes=0, runs=[])
     before = None
-    with ChessPort(args.port) as p:
+    with ChessPort(args.port,args.large_font) as p:
         p.drain()
         p.commands()
         identity = p.command('identity')

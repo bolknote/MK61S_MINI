@@ -67,6 +67,22 @@ for x,y in ((176,0),(191,0),(176,15),(191,15)):
 for x,y in ((175,0),(176,16),(191,16),(0,7)):
     changed=bytearray(frame);changed[y//8*192+x]^=1<<(y%8)
     assert board_pixels(changed)!=stable, 'non-disk pixel ignored'
+large=Font((ROOT/'programs/games/Turochamp/Turochamp320.FMK').read_bytes(),
+           width=12,height=24,left=4,top=40,columns=26,rows=10,frame_width=320)
+native=bytearray(12800)
+def put_large(text,row,col):
+    for y,line in enumerate(large.pattern(text)):
+        for x,bit in enumerate(line):
+            if bit:
+                px,py=4+12*col+x,40+24*row+y
+                native[py//8*320+px]|=1<<(py%8)
+put_large('ВАШ ХОД',2,18);put_large('e2-e3',6,18)
+for rank in range(1,8):put_large(str(rank),rank,0)
+put_large('С/П МЕНЮ',7,18);put_large('ОК ВЫБОР',8,18)
+assert not completed_board(large,native)
+put_large('8',8,0)
+assert completed_board(large,native)
+assert large.matches(native,'ОК ВЫБОР',8,18) and not large.matches(native,'ОК ВЫБОР',8,19)
 try:profile('invalid')
 except AssertionError:pass
 else:raise AssertionError('missing profile clock accepted')

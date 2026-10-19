@@ -18,7 +18,7 @@ README='''MK61S / PicoCalc / Pico H
 
 Copy mk61s-picocalc-pico-h.uf2 to the RPI-RP2 ROM bootloader volume.
 Use the native Micro-USB connector on Pico H. The case USB-C is UART.
-Copy apps/ to a new directory on microSD; copy Fonts/ to the card root.
+Copy apps/ and games/ to microSD; copy Fonts/ to the card root.
 APP images in this bundle target Cortex-M0+ and cannot replace STM32 APPs.
 See README.md for controls, supported formats, clock and power limitations.
 '''
@@ -78,18 +78,24 @@ def main():
     font_files=[]
     for source in sorted((ROOT/'programs/Fonts').glob('*.FMK')):
         target=directory/'Fonts'/source.name;shutil.copy2(source,target);font_files.append(target)
+    game_files=[]
+    for source in sorted((ROOT/'programs/games/Turochamp').iterdir()):
+        if not source.is_file():continue
+        target=directory/'games/Turochamp'/source.name
+        target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(source,target);game_files.append(target)
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
     shutil.copy2(ROOT/'tools/sync_picocalc_clock.py',directory/'sync_picocalc_clock.py')
     files=[firmware,directory/'manifest.json',directory/'README.txt',directory/'README.md',directory/'sync_picocalc_clock.py',
-        *font_files,*(directory/name for name in licenses.FILES),
+        *font_files,*game_files,*(directory/name for name in licenses.FILES),
         apps/'manifest.json',*[apps/(name+'.APP') for name in APPS],*[apps/name for name in ASSETS]]
     for report_name in ('hardware-parity-summary.json','hardware-apps-summary.json',
                         'hardware-software-summary.json','hardware-power-summary.json',
                         'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',
                         'hardware-usb-disk-summary.json','hardware-full-parity-summary.json',
-                        'hardware-performance-summary.json'):
+                        'hardware-performance-summary.json','hardware-font-summary.json'):
         report=directory/report_name
         if not report.exists():continue
         evidence=json.loads(report.read_text())

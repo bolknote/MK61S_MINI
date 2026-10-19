@@ -27,27 +27,30 @@ from m8_codec import encode
 
 
 class Font:
-    def __init__(self,data):
-        self.glyphs=decode_font(data)
+    def __init__(self,data,*,width=7,height=7,left=2,top=0,columns=26,rows=9,frame_width=192):
+        self.glyphs=decode_font(data,width,height)
         self.patterns={}
+        self.width,self.height=width,height
+        self.left,self.top=left,top
+        self.columns,self.rows,self.frame_width=columns,rows,frame_width
 
     def pattern(self,text):
         if text not in self.patterns:
             glyphs=[self.glyphs[c] for c in encode(text)]
-            self.patterns[text]=tuple(tuple((g[y]>>(6-x))&1 for g in glyphs for x in range(7))
-                                      for y in range(7))
+            self.patterns[text]=tuple(tuple((g[y]>>(self.width-1-x))&1 for g in glyphs for x in range(self.width))
+                                      for y in range(self.height))
         return self.patterns[text]
 
     def matches(self,frame,text,row,col):
         pattern=self.pattern(text)
-        x0,y0=2+7*col,7*row
-        if x0+len(pattern[0])>190 or y0+7>64:return False
-        return all(((frame[(y0+y)//8*192+x0+x]>>((y0+y)%8))&1)==value
+        x0,y0=self.left+self.width*col,self.top+self.height*row
+        if x0+len(pattern[0])>self.frame_width-self.left or y0+self.height>len(frame)*8//self.frame_width:return False
+        return all(((frame[(y0+y)//8*self.frame_width+x0+x]>>((y0+y)%8))&1)==value
                    for y,line in enumerate(pattern) for x,value in enumerate(line))
 
     def find(self,frame,text):
-        for row in range(9):
-            for col in range(27-len(encode(text))):
+        for row in range(self.rows):
+            for col in range(self.columns+1-len(encode(text))):
                 if self.matches(frame,text,row,col):return row,col
         return None
 
@@ -57,7 +60,7 @@ class Font:
         found=self.find(frame,text)
         if found is None:return None
         row,col=found;col+=len(encode(text));digits=''
-        while col<26:
+        while col<self.columns:
             digit=next((str(n) for n in range(10) if self.matches(frame,str(n),row,col)),None)
             if digit is None:break
             digits+=digit;col+=1

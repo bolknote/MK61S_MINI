@@ -15,6 +15,7 @@
 #include "zx0.hpp"
 #include <cassert>
 #include <chrono>
+#include <cstdlib>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -269,6 +270,7 @@ void picocalc_m61_test() {
           ("/M61 Tests/Turochamp/" + file.path().filename().string()).c_str());
   struct Game {
     Services *services;
+    unsigned columns=26;
     bool menu = false, board = false;
     std::chrono::steady_clock::time_point deadline =
         std::chrono::steady_clock::now() + std::chrono::seconds(10);
@@ -288,12 +290,27 @@ void picocalc_m61_test() {
             key = '\n';
             return true;
           }
-          if (game.menu && std::strstr(heading, "abcdefgh") &&
+          if (game.menu && std::strstr(heading,game.columns==26?" a b c d e f g h":"abcdefgh") &&
               std::strstr(game.services->path(), "board.tbi") &&
-              std::strstr(row, M8("ОК "))) {
+              std::strstr(row, M8("ОК ВЫБОР"))) {
             game.board = true;
             const u8 *frame = game.services->graphics();
             assert(frame);
+            assert(script::columns()==game.columns && script::rows()==(game.columns==26?10:9));
+            if(game.columns==26) {
+              const auto profile=script::text_profile();
+              assert(profile.width==12 && profile.height==24 && profile.line_gap==0);
+              char line[65];script::text_row(1,line,sizeof(line));
+              // Two independently decoded glyphs form every square.
+              assert(std::strlen(line)>=26 && (u8)line[2]>=0x80);
+              const u8* native=script::native_frame();assert(native);
+              unsigned ink=0;for(unsigned i=16*320;i<35*320;++i) ink+=native[i]!=0;
+              assert(ink>500);
+              if(const char* path=std::getenv("MK61_TEST_CHESS_FRAME")) {
+                std::ofstream out(path,std::ios::binary);
+                out.write((const char*)native,320*320/8);assert(out.good());
+              }
+            }
             unsigned ink = 0;
             for (unsigned i = 0; i < 1536; ++i)
               ink += frame[i] != 0;
@@ -305,6 +322,14 @@ void picocalc_m61_test() {
         return false;
       },
       &game);
+  assert(script::start("/M61 Tests/Turochamp/autoexec.m61"));
+  until(calc, [] { return !m61_text::active(); });
+  assert(game.menu && game.board && !script::font_active());
+  // Optional high-resolution font missing: use the original 7x7 face and
+  // original BASIC board without retaining a partial font session.
+  assert(files::remove("/M61 Tests/Turochamp/Turochamp320.FMK"));
+  game.menu=game.board=false;game.columns=27;
+  game.deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
   assert(script::start("/M61 Tests/Turochamp/autoexec.m61"));
   until(calc, [] { return !m61_text::active(); });
   assert(game.menu && game.board && !script::font_active());

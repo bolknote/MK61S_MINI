@@ -1,20 +1,22 @@
-C.
-IF UI_VIEW=1 P." abcdefgh  ТУРОЧЕМП" ELSE P." hgfedcba  ТУРОЧЕМП"
-FOR Y=0 TO 7
-R=8-Y;IF UI_VIEW=-1 R=Y+1
+C.:V=(COLS=26) AND (GH>=320):IF V GOS.:large_heading ELSE GOS.:small_heading
+FOR Y=0 TO 7:R=8-Y;IF UI_VIEW=-1 R=Y+1
 P.#0,R;
 FOR X=1 TO 8
 F=X;IF UI_VIEW=-1 F=9-X
-W=10*(R+1)+F;T=13*((F+R+1) MOD 2)+@(W)+6
-H=(W=CUR) OR (W=SEL)
+W=10*(R+1)+F;T=13*((F+R+1) MOD 2)+@(W)+6;H=(W=CUR) OR (W=SEL)
 GOS.:glyph
 NEXT X
 P." ";
-ON Y+1 GOS.:side,:state,:counter,:from,:to,:last,:menu_hint,:ok_hint
-P.
+ON Y+1 GOS.:side,:state,:counter,:from,:to,:last,:menu_hint,:ok_hint:P.
 NEXT Y
 IF UI_MESSAGE#1 UI_KEY=INP.()
 RET
+:large_heading
+IF UI_VIEW=1 P."  a b c d e f g h ТУРОЧЕМП" ELSE P."  h g f e d c b a ТУРОЧЕМП"
+R.
+:small_heading
+IF UI_VIEW=1 P." abcdefgh  ТУРОЧЕМП" ELSE P." hgfedcba  ТУРОЧЕМП"
+R.
 :from
 P."ОТ ";:W=SEL:GOS.:coord:R.
 :to
@@ -32,25 +34,43 @@ B=RESULT
 IF B<3 IF DRAW_REASON=9 P."СДАЧА";:R.
 IF B<3 P."МАТ";:R.
 IF B=3 P."ПАТ";:R.
-IF B=4 P."НЕТ МАТЕРИАЛА";:R.
-IF B=5 P."5 ПОВТОРОВ";:R.
+IF B=4 G.:material
+IF B=5 G.:five
 IF B=6 P."75 ХОДОВ";:R.
-IF B=7 P."3 ПОВТОРА";:R.
+IF B=7 G.:three
 IF B=8 P."50 ХОДОВ";:R.
-P."ПО СОГЛАСИЮ";:R.
+IF V P."СОГЛАСИЕ"; ELSE P."ПО СОГЛАСИЮ";
+R.
+:material
+IF V P."МАТЕРИАЛ"; ELSE P."НЕТ МАТЕРИАЛА";
+R.
+:five
+IF V P."5 ПОВТ."; ELSE P."5 ПОВТОРОВ";
+R.
+:three
+IF V P."3 ПОВТ."; ELSE P."3 ПОВТОРА";
+R.
 :side
 IF SIDE=1 P."БЕЛЫЕ";:R.
 P."ЧЁРНЫЕ";:R.
 :state
-IF UI_MESSAGE=1 P."ДУМАЕТ...";:R.
+IF UI_MESSAGE=1 G.:thinking
 IF UI_MESSAGE=2 G.:piece
 IF UI_MESSAGE=3 P."НЕЛЬЗЯ";:R.
 IF UI_MESSAGE=4 G.:result
 IF CHECK=1 P."ШАХ";:R.
 P."ВАШ ХОД";:R.
+:thinking
+IF V P."ПОИСК..."; ELSE P."ДУМАЕТ...";
+R.
 :result
+IF V G.:large_result
 IF RESULT=1 P."БЕЛЫЕ ВЫИГРАЛИ";:R.
 IF RESULT=2 P."ЧЁРНЫЕ ПОБЕДИЛИ";:R.
+P."НИЧЬЯ";:R.
+:large_result
+IF RESULT=1 P."БЕЛЫЕ +";:R.
+IF RESULT=2 P."ЧЁРНЫЕ +";:R.
 P."НИЧЬЯ";:R.
 :piece
 IF PROMO=5 P."ФЕРЗЬ";:R.
@@ -58,18 +78,21 @@ IF PROMO=4 P."ЛАДЬЯ";:R.
 IF PROMO=3 P."СЛОН";:R.
 P."КОНЬ";:R.
 :hint
+IF V G.:large_hint
 IF UI_MESSAGE=4 P."НОВАЯ ИГРА";:R.
 IF UI_MESSAGE=2 P."ГОТОВО";:R.
 P."ВЫБОР";:R.
+:large_hint
+IF UI_MESSAGE=4 P."НОВАЯ";:R.
+IF UI_MESSAGE=2 P."ГОТОВ";:R.
+P."ВЫБОР";:R.
 :coord
 IF W=0 P."-";:R.
-F=W MOD 10
-ON F GOS.:file_a,:file_b,:file_c,:file_d,:file_e,:file_f,:file_g,:file_h
+F=W MOD 10:ON F GOS.:file_a,:file_b,:file_c,:file_d,:file_e,:file_f,:file_g,:file_h
 P.#0,INT(W/10)-1;:R.
 :last
 IF LAST=0 P."ХОД -";:R.
-W=LAST MOD 128:GOS.:coord
-P."-";:W=INT(LAST/128) MOD 128:GOS.:coord
+W=LAST MOD 128:GOS.:coord:P."-";:W=INT(LAST/128) MOD 128:GOS.:coord
 R.
 :file_a
 P."a";:R.
