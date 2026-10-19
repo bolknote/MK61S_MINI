@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "uid": "E6657CD423721C35",
+  "build_id": "c572e6cf",
+  "uf2_sha256": "f428dfa8d40935d3f10633880ad9fa9b72d1d3408a81b50401c7f53c403b7b07",
+  "recorded_at_utc": "2026-10-19T22:15:10.142786+00:00",
+  "app_sha256": "b034e451dc0b499de4c5dd78f783c4b875f8f7736cbf9963c2c05568bc0a20ab",
+  "directory": "/MK61S-PicoCalc-0.8",
+  "firmware_writes": 0,
+  "font_family": "Ark Pixel",
+  "font_size": 16,
+  "native_geometry": [
+    320,
+    320
+  ],
+  "text_width": 304,
+  "line_pitch": 24,
+  "text_rows": 11,
+  "resampling": false,
+  "input_bytes": 511,
+  "reply_pages": 2,
+  "frames_crc_verified": 109,
+  "cases": [
+    "native help, QWERTY edit/backspace/arrows and complete HELLO response",
+    "511-byte wide-letter input, cursor scrolling and every reply page matched native pixels",
+    "goodbye and clean return with graphics/workspace released",
+    "second launch and Escape during text input"
+  ],
+  "calculator_state_restored": true,
+  "font_settings_restored": true,
+  "classic_control_before_sha256": "ec1ffc0ecc30b556a40484735f6a27cc23da3e3b7417b6b77c553edb01445b53",
+  "classic_control_after_sha256": "ec1ffc0ecc30b556a40484735f6a27cc23da3e3b7417b6b77c553edb01445b53",
+  "classic_control_byte_identical": true,
+  "existing_classic_binary_unchanged": true,
+  "other_six_pico_apps_byte_identical": true,
+  "app_memory_bytes": 16800,
+  "previous_app_memory_bytes": 15668,
+  "pixel_oracle": "Independent Ark JSON composition: complete input/reply body, cursor and every page; CRC-checked USB frames and LCD source snapshot",
+  "lcd_crc_scope": "Immutable monochrome source snapshot, not panel GRAM readback",
+  "host": "Exact DOCTOR transcripts, Classic and Pico UI, 511-byte input and 1151-byte pagination under ASan/UBSan",
+  "evidence_sha256": {
+    "host.log": "7352b8fe49a42f3900c6cad65181024db75e10db52cbcbc54831cbb0080d6869",
+    "hil/result.json": "c5ac3bcb6a818fa9106d3c6f306ed7a076c3ca92bceb13972d019ee5e8e31a5b",
+    "hil/terminal.bin": "f05b3da9d746f02869dd88294054522f0191739d8ff371ac706e78c4f1352eaa",
+    "classic-before/ELIZA.APP": "ec1ffc0ecc30b556a40484735f6a27cc23da3e3b7417b6b77c553edb01445b53",
+    "classic-after/ELIZA.APP": "ec1ffc0ecc30b556a40484735f6a27cc23da3e3b7417b6b77c553edb01445b53"
+  }
+}

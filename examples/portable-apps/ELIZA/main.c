@@ -5,13 +5,14 @@
 #if defined(MK61_TARGET_PICOCALC)
 #define HELP_WIDTH 320U
 #define HELP_HEIGHT 320U
+#define HELP_FONT_SIZE 16U
 #else
 #define HELP_WIDTH 192U
 #define HELP_HEIGHT 64U
+#define HELP_FONT_SIZE 12U
 #endif
 #define HELP_FRAME_BYTES (HELP_WIDTH * HELP_HEIGHT / 8U)
 #define HELP_FONT_FAMILY 1U
-#define HELP_FONT_SIZE 12U
 
 enum help_result {
   HELP_UNAVAILABLE = -1,
@@ -165,9 +166,15 @@ static int help_draw_right(const mk61_app_services* services,
 
 static int help_draw_header(const mk61_app_services* services,
                             const char* page) {
+#if defined(MK61_TARGET_PICOCALC)
+  if(!help_draw_text(services, 8, 20, "ELIZA / DOCTOR") ||
+     !help_draw_right(services, 20, page)) return 0;
+  help_horizontal_line(7, 30, HELP_WIDTH - 14U);
+#else
   if(!help_draw_text(services, 4, 10, "ELIZA / DOCTOR") ||
      !help_draw_right(services, 10, page)) return 0;
   help_horizontal_line(3, 13, HELP_WIDTH - 6U);
+#endif
   return 1;
 }
 
@@ -178,7 +185,11 @@ static int help_draw_key_label(const mk61_app_services* services,
   uint32_t box_width;
   if(!help_measure(services, key, &key_width)) return 0;
   box_width = key_width + 6U;
+#if defined(MK61_TARGET_PICOCALC)
+  help_rectangle(x, baseline - 15, box_width, 20);
+#else
   help_rectangle(x, baseline - 10, box_width, 12);
+#endif
   return help_draw_text(services, x + 3, baseline, key) &&
       help_draw_text(services, x + (int32_t) box_width + 3, baseline, label);
 }
@@ -187,7 +198,7 @@ static int help_render_keys(const mk61_app_services* services) {
   help_clear();
 #if defined(MK61_TARGET_PICOCALC)
   return help_draw_header(services,"1/2  OK >") &&
-      help_draw_centered(services,60,"TAP KEY AGAIN TO CHANGE") &&
+      help_draw_centered(services,60,"QWERTY OR SMS NUMBER KEYS") &&
       help_draw_key_label(services,8,110,"1","PQRS") && help_draw_key_label(services,113,110,"2","TUV") &&
       help_draw_key_label(services,218,110,"3","WXYZ") && help_draw_key_label(services,8,170,"4","GHI") &&
       help_draw_key_label(services,113,170,"5","JKL") && help_draw_key_label(services,218,170,"6","MNO") &&
@@ -294,6 +305,10 @@ static const char* skip_separators(const char* text) {
   return text;
 }
 
+#if defined(MK61_TARGET_PICOCALC)
+#include "pico_view.h"
+#endif
+
 /* Draw one word-wrapped page and return the first byte of the next page. */
 static const char* draw_page(const char* text, uint32_t columns, uint32_t rows) {
   char line[MK61_APP_MAX_TEXT_BYTES + 1U];
@@ -329,12 +344,24 @@ static const char* draw_page(const char* text, uint32_t columns, uint32_t rows) 
 }
 
 static int show_pages(const char* text, uint32_t columns, uint32_t rows) {
+#if defined(MK61_TARGET_PICOCALC)
+  if(pico_view_services) {
+    text = pico_draw_page(text);
+    if(!text) return 0;
+  } else
+#endif
   text = draw_page(text, columns, rows);
   for(;;) {
     const int32_t key = (int32_t) mk61_api->key_wait();
     if(key == MK61_APP_KEY_ESC) return 0;
     if(key != MK61_APP_KEY_OK) continue;
     if(*text == 0) return 1;
+#if defined(MK61_TARGET_PICOCALC)
+    if(pico_view_services) {
+      text = pico_draw_page(text);
+      if(!text) return 0;
+    } else
+#endif
     text = draw_page(text, columns, rows);
   }
 }
@@ -349,6 +376,9 @@ static int sms_letter_key(const mk61_service_keyboard* keys, int32_t key) {
 }
 
 static void end_editor_view(const mk61_app_services* services) {
+#if defined(MK61_TARGET_PICOCALC)
+  if(pico_view_services) return;
+#endif
   services->call(MK61_SERVICE_DISPLAY, MK61_SERVICE_DISPLAY_CURSOR_OFF,
                  0, 0, NULL);
   services->call(MK61_SERVICE_DISPLAY, MK61_SERVICE_DISPLAY_END_VIEWPORT,
@@ -396,12 +426,20 @@ static int read_sms_line(const mk61_app_services* services,
       dirty = 1;
     }
     if(dirty) {
+#if defined(MK61_TARGET_PICOCALC)
+      if(pico_view_services) {
+        if(!pico_draw_editor(&editor)) return 0;
+      } else {
+#endif
       mk61_service_editor view = {
         source, editor.length, editor.cursor, editor.top, editor.sms_active
       };
       services->call(MK61_SERVICE_EDITOR_SCROLL, 0, 0, 0, &view);
       editor.top = view.top;
       services->call(MK61_SERVICE_EDITOR_DRAW, 0, 0, 0, &view);
+#if defined(MK61_TARGET_PICOCALC)
+      }
+#endif
       dirty = 0;
     }
 
@@ -470,10 +508,16 @@ int main(void) {
     if(!show_pages(control_help, columns, rows)) return MK61_APP_OK;
     if(!show_pages(greeting, columns, rows)) return MK61_APP_OK;
   }
+#if defined(MK61_TARGET_PICOCALC)
+  (void)pico_view_begin(services);
+#endif
   if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE, MK61_SERVICE_WORKSPACE,
                      MK61_SERVICE_OWNER_APP, ELIZA_MEMORY_WORKSPACE_BYTES,
                      &memory)) {
     show_pages(memory_error, columns, rows);
+#if defined(MK61_TARGET_PICOCALC)
+    pico_view_end();
+#endif
     return MK61_APP_BUSY;
   }
   eliza_init(&state, memory.data, memory.size);
@@ -487,5 +531,8 @@ int main(void) {
   }
   services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_WORKSPACE,
                  0, 0, &memory);
+#if defined(MK61_TARGET_PICOCALC)
+  pico_view_end();
+#endif
   return MK61_APP_OK;
 }

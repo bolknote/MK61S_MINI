@@ -36,10 +36,6 @@ struct App {
 App app;
 #if defined(MK61_TARGET_PICOCALC)
 constexpr unsigned FRAME_WIDTH=320,FRAME_HEIGHT=320,FRAME_BYTES=12800;
-// Layout uses table column/row units. Glyphs are drawn from native 16/12 px
-// strikes at these positions; no 192x64 bitmap is constructed or enlarged.
-int layout_x(int x) { return x*5/3; }
-int layout_y(int y) { return y*5; }
 #else
 constexpr unsigned FRAME_WIDTH=192,FRAME_HEIGHT=64,FRAME_BYTES=1536;
 int layout_x(int x) { return x; }
@@ -81,6 +77,7 @@ void pixel(int x,int y,bool ink=true) {
   uint8_t& byte=app.frame[(y/8)*FRAME_WIDTH+x]; const uint8_t bit=(uint8_t)(1U<<(y%8));
   if(ink) byte|=bit; else byte&=(uint8_t)~bit;
 }
+#if !defined(MK61_TARGET_PICOCALC)
 void rectangle(int x,int y,int w,int h,bool fill=true) {
   const int right=layout_x(x+w),bottom=layout_y(y+h);x=layout_x(x);y=layout_y(y);w=right-x;h=bottom-y;
   for(int row=0;row<h;++row) for(int col=0;col<w;++col)
@@ -90,24 +87,15 @@ int advance(bool compact=false) { return compact?4:6; }
 void text(int x,int y,const char* value,bool inverse=false,bool compact=false,int maximum=192) {
   const int step=advance(compact);
   for(;*value && x+step<=maximum; ++value,x+=step) {
-#if defined(MK61_TARGET_PICOCALC)
-    mk61_service_ui_glyph glyph={};glyph.family=1;glyph.size=compact?12:16;
-    if(!app.services->call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_GLYPH,
-        mk8::codepoint((uint8_t)*value),sizeof(glyph),&glyph)) continue;
-    const int left=layout_x(x),top=layout_y(y)+(compact?7:10);
-    for(unsigned gy=0;gy<glyph.height;++gy) for(unsigned gx=0;gx<glyph.width;++gx)
-      if(glyph.pixels[gy*((glyph.width+7)/8)+gx/8]&(0x80U>>(gx&7)))
-        pixel(left+glyph.bearing_x+gx,top+(compact?10:14)-glyph.bearing_y+gy,!inverse);
-#else
     mk61_service_glyph glyph={};
     if(!app.services->call(MK61_SERVICE_FONT,compact?1U:0U,mk8::codepoint((uint8_t)*value),sizeof(glyph),&glyph) ||
        glyph.width>8 || glyph.height>8) continue;
     for(uint32_t gy=0;gy<glyph.height;++gy) for(uint32_t gx=0;gx<glyph.width;++gx)
       if(glyph.pixels[gy] & (uint8_t)(0x80U>>gx)) pixel(x+(int)gx,y+(int)gy,!inverse);
-#endif
   }
 }
 void band(int y,const char* value) { rectangle(0,y,192,8); text(2,y,value,true); }
+#endif
 const char* angle_label() { return app.book.angle==0?"DEG":(app.book.angle==1?"RAD":"GRD"); }
 const char* op_label(Op op) {
   switch(op) {
@@ -134,12 +122,20 @@ void formula_text(const char* source,uint16_t size,char* out,uint16_t capacity) 
   out[used]=0;
 }
 void visible() {
+#if defined(MK61_TARGET_PICOCALC)
+  const uint16_t rows=app.book.compact?11:8, columns=app.book.compact?4:3;
+#else
   const uint16_t rows=app.book.compact?7:5, columns=app.book.compact?4:3;
+#endif
   const uint16_t row=app.selected/sheet::COLUMNS, col=app.selected%sheet::COLUMNS;
   if(row<app.top_row) app.top_row=row;
   if(row>=app.top_row+rows) app.top_row=(uint16_t)(row-rows+1);
   if(col<app.left_column) app.left_column=col;
   if(col>=app.left_column+columns) app.left_column=(uint16_t)(col-columns+1);
+#if defined(MK61_TARGET_PICOCALC)
+  if(app.top_row>sheet::ROWS-rows) app.top_row=(uint16_t)(sheet::ROWS-rows);
+  if(app.left_column>sheet::COLUMNS-columns) app.left_column=(uint16_t)(sheet::COLUMNS-columns);
+#endif
 }
 void value_text(uint16_t position,char* output,uint16_t capacity) {
   output[0]=0; const int index=sheet::find(app.book,position); if(index<0) return;
@@ -148,6 +144,7 @@ void value_text(uint16_t position,char* output,uint16_t capacity) {
   if(cell.dirty || cell.error) { copy_text(output,cell.dirty?"...":error_label((Error)cell.error),capacity); return; }
   sheet::format(cell.value,output,capacity);
 }
+#if !defined(MK61_TARGET_PICOCALC)
 void table() {
   visible(); const bool compact=app.book.compact!=0;
   const int step=compact?6:8, cols=compact?4:3, rows=compact?7:5;
@@ -213,6 +210,7 @@ void table() {
   if(app.io_error) footer=M8("ОШИБКА ЧТЕНИЯ/ЗАПИСИ");
   text(0,56,footer);
 }
+#endif
 double math(void*,Op op,double x,double y) {
   uint32_t operation;
   switch(op) {
@@ -279,6 +277,7 @@ void commit() {
   if(app.message!=Error::OK) { app.undo_size=0; return; }
   app.modified=true; recalc(); app.mode=Mode::TABLE;
 }
+#if !defined(MK61_TARGET_PICOCALC)
 void editor() {
   char addr[8]; sheet::address(app.selected,0,addr); band(0,addr);
   text(24,0,app.edit_kind==Kind::TEXT?M8("ПОДПИСЬ"):M8("ФОРМУЛА"),true);
@@ -331,6 +330,7 @@ void editor() {
   }
   band(56,app.message==Error::OK?M8("OK:ЗАПИСАТЬ ESC:ОТМЕНА"):error_label(app.message));
 }
+#endif
 const char* menu_label(Mode mode,uint8_t index) {
   if(mode==Mode::FUNCTIONS) return op_label((Op)(index+(uint8_t)Op::ENTER));
   if(mode==Mode::ACTIONS) switch(index) {
@@ -339,7 +339,13 @@ const char* menu_label(Mode mode,uint8_t index) {
   }
   if(mode==Mode::SHEET) switch(index) {
     case 0:return M8("СОХРАНИТЬ"); case 1:return M8("СОХРАНИТЬ КАК..."); case 2:return M8("ОТКРЫТЬ...");
-    case 3:return M8("НОВЫЙ ЛИСТ"); case 4:return M8("ОБЗОР 3×5 / 5×8"); case 5:return M8("УГЛЫ DEG/RAD/GRD");
+    case 3:return M8("НОВЫЙ ЛИСТ");
+#if defined(MK61_TARGET_PICOCALC)
+    case 4:return M8("ОБЗОР 3×8 / 4×11");
+#else
+    case 4:return M8("ОБЗОР 3×5 / 5×8");
+#endif
+    case 5:return M8("УГЛЫ DEG/RAD/GRD");
     case 6:return M8("ПЕРЕСЧИТАТЬ"); default:return M8("СПРАВКА");
   }
   if(mode==Mode::TYPE) return index==0?M8("ЧИСЛО"):(index==1?M8("ПОДПИСЬ"):M8("ФОРМУЛА"));
@@ -349,6 +355,7 @@ uint8_t menu_count() {
   if(app.mode==Mode::FUNCTIONS) return (uint8_t)Op::PI-(uint8_t)Op::ENTER+1;
   return app.mode==Mode::ACTIONS?7:(app.mode==Mode::SHEET?8:3);
 }
+#if !defined(MK61_TARGET_PICOCALC)
 void menu_draw() {
   band(0,app.mode==Mode::FUNCTIONS?M8("ОПЕРАЦИИ"):app.mode==Mode::CONFIRM?M8("ЛИСТ ИЗМЕНЁН"):
       (app.mode==Mode::SHEET?M8("ЛИСТ / SHEET"):(app.mode==Mode::TYPE?M8("ТИП ЯЧЕЙКИ"):M8("ДЕЙСТВИЯ"))));
@@ -360,6 +367,7 @@ void menu_draw() {
   }
   band(56,M8("OK:ВЫБОР ESC:НАЗАД"));
 }
+#endif
 bool save(bool choose) {
   char name[32]; copy_text(name,app.file_name,sizeof(name));
   uint32_t parent=app.parent, preferred=app.file_id;
@@ -528,6 +536,13 @@ void calculator_key(int key) {
   (void)insert(sheet::op_text(op),true);
 }
 void key(int value) {
+#if defined(MK61_TARGET_PICOCALC)
+  // ABI 6 Pico hosts expose Tab as a literal and up/down as step keys.
+  // Normalize the physical menu/navigation keys for the shared commands.
+  if(value==MK61_APP_KEY_RAW_BASE+'\t') value=MK61_APP_KEY_USER;
+  if(value==MK61_APP_KEY_BACKWARD) value=MK61_APP_KEY_SHIFT_LEFT;
+  if(value==MK61_APP_KEY_FORWARD) value=MK61_APP_KEY_SHIFT_RIGHT;
+#endif
   app.message=Error::OK; app.io_error=false; app.redraw=true;
   if(app.mode==Mode::TABLE) {
     if(value==MK61_APP_KEY_ESC) request(Pending::EXIT);
@@ -598,6 +613,7 @@ void key(int value) {
   else if((value==MK61_APP_KEY_LEFT || value==MK61_APP_KEY_SHIFT_LEFT) && app.menu) --app.menu;
   else if((value==MK61_APP_KEY_RIGHT || value==MK61_APP_KEY_SHIFT_RIGHT) && app.menu+1<menu_count()) ++app.menu;
 }
+#if !defined(MK61_TARGET_PICOCALC)
 void help() {
   band(0,app.mode==Mode::DETAILS?M8("ЯЧЕЙКА / ЗНАЧЕНИЕ"):M8("SHEET / СПРАВКА"));
   if(app.mode==Mode::DETAILS) {
@@ -628,6 +644,9 @@ void help() {
   }
   band(56,app.mode==Mode::DETAILS?M8("OK/ESC:НАЗАД"):M8("OK:СТРАНИЦА ESC:НАЗАД"));
 }
+#else
+#include "pico_view.hpp"
+#endif
 uint32_t run(uint32_t file_id) {
   memset(&app,0,sizeof(app)); app.api=mk61_api;
   const uint32_t caps=MK61_APP_CAP_TIME|MK61_APP_CAP_KEYBOARD|MK61_APP_CAP_FILES|MK61_APP_CAP_GRAPHICS;
@@ -636,6 +655,10 @@ uint32_t run(uint32_t file_id) {
       MK61_SERVICE_CAP_DIALOGS|MK61_SERVICE_CAP_FONT|MK61_SERVICE_CAP_MATH|
       MK61_SERVICE_CAP_NUMBER_IO|MK61_SERVICE_CAP_MEMORY);
   if(!app.services || !app.services->keyboard_mapping) return MK61_APP_RUNTIME_ERROR;
+#if defined(MK61_TARGET_PICOCALC)
+  if(!(app.services->call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr)&MK61_SERVICE_CAP_UI_FONT))
+    return MK61_APP_UNSUPPORTED_DISPLAY;
+#endif
   sheet::number_io(parse_number,format_number);
   app.file_id=MK61_SERVICE_INVALID_ID; app.parent=MK61_SERVICE_ROOT_ID;
   copy_text(app.file_name,"SHEET",sizeof(app.file_name));
@@ -655,7 +678,7 @@ uint32_t run(uint32_t file_id) {
 #if defined(MK61_TARGET_PICOCALC)
       mk61_service_framebuffer borrowed={};
       if(!app.services->call(MK61_SERVICE_DISPLAY,MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(borrowed),0,&borrowed) ||
-          borrowed.width!=FRAME_WIDTH || borrowed.height!=FRAME_HEIGHT || borrowed.bytes!=FRAME_BYTES) {
+          !borrowed.pixels || borrowed.width!=FRAME_WIDTH || borrowed.height!=FRAME_HEIGHT || borrowed.bytes!=FRAME_BYTES) {
         result=MK61_APP_UNSUPPORTED_DISPLAY;break;
       }
       app.frame=borrowed.pixels;

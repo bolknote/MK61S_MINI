@@ -25,6 +25,10 @@ class MK61DisplayUpdate {
 
 #include <string>
 #include <vector>
+#if defined(MK61_TARGET_PICOCALC)
+#include "ui_font.hpp"
+static uint8_t borrowed_frame[320*320/8];
+#endif
 
 #define main eliza_app_entry
 #include "../examples/portable-apps/ELIZA/main.c"
@@ -128,6 +132,15 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
     assert(c == sizeof(*glyph));
     assert(glyph->family == HELP_FONT_FAMILY);
     assert(glyph->size == HELP_FONT_SIZE);
+#if defined(MK61_TARGET_PICOCALC)
+    const auto source=ui_font::glyph({ui_font::Family::PIXEL,ui_font::Size::PX16},b);
+    glyph->bearing_x=source.bearing_x;glyph->bearing_y=source.bearing_y;
+    glyph->advance=source.advance;glyph->width=source.width;glyph->height=source.height;
+    const unsigned stride=(source.width+7)/8;
+    assert(stride*source.height<=sizeof(glyph->pixels));
+    for(unsigned y=0;y<source.height;++y) for(unsigned x=0;x<source.width;++x)
+      if(font_glyph::pixel(source,x,y)) glyph->pixels[y*stride+x/8]|=0x80>>(x%8);
+#else
     glyph->bearing_x = 0;
     glyph->bearing_y = 5;
     glyph->advance = b == ' ' ? 3 : 4;
@@ -135,6 +148,7 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
     glyph->height = b == ' ' ? 0 : 5;
     for(unsigned row = 0; row < glyph->height; ++row)
       glyph->pixels[row] = 0xe0;
+#endif
     return 1;
   }
   if(operation == MK61_SERVICE_KEYBOARD) {
@@ -192,7 +206,15 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
     request->sms_deadline = editor.sms.deadline_ms;
     return (uint32_t) result;
   }
-  if(operation == MK61_SERVICE_DISPLAY) return 1;
+  if(operation == MK61_SERVICE_DISPLAY) {
+#if defined(MK61_TARGET_PICOCALC)
+    if(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER) {
+      assert(b==sizeof(mk61_service_framebuffer));
+      *(mk61_service_framebuffer*)payload={borrowed_frame,sizeof(borrowed_frame),320,320};
+    }
+#endif
+    return 1;
+  }
   assert(!"unexpected service call");
   return 0;
 }
@@ -210,6 +232,9 @@ static void reset_mocks(void) {
   memory_active = false;
   memory_acquires = 0;
   memory_releases = 0;
+#if defined(MK61_TARGET_PICOCALC)
+  pico_view_services=NULL;help_frame=borrowed_frame;
+#endif
 }
 
 static const void* mock_query_service(uint32_t service_id,
@@ -317,7 +342,16 @@ static void test_graphic_help(void) {
   assert(graphics_begins == 1);
   assert(graphics_ends == 1);
   assert(graphic_frames.size() == 2);
-  for(unsigned x = 3; x < HELP_WIDTH - 3; ++x) {
+  for(unsigned x =
+#if defined(MK61_TARGET_PICOCALC)
+      7; x < HELP_WIDTH - 7; ++x) {
+    assert(frame_pixel(graphic_frames[0], x, 30));
+    assert(frame_pixel(graphic_frames[1], x, 30));
+  }
+  assert(frame_pixel(graphic_frames[0],8,95));
+  assert(frame_pixel(graphic_frames[0],8,114));
+#else
+      3; x < HELP_WIDTH - 3; ++x) {
     assert(frame_pixel(graphic_frames[0], x, 13));
     assert(frame_pixel(graphic_frames[1], x, 13));
   }
@@ -325,6 +359,7 @@ static void test_graphic_help(void) {
   assert(frame_pixel(graphic_frames[0], 4, 39));
   assert(frame_pixel(graphic_frames[1], 10, 40));
   assert(frame_pixel(graphic_frames[1], 10, 51));
+#endif
 
   reset_mocks();
   input_keys = {MK61_APP_KEY_OK, MK61_APP_KEY_ESC};
@@ -370,6 +405,35 @@ static void test_app_memory_lifecycle(void) {
   assert(!memory_active);
 }
 
+#if defined(MK61_TARGET_PICOCALC)
+static void test_native_pages_and_editor(void) {
+  reset_mocks();assert(pico_view_begin(&app_services));
+  const char* text="WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW";
+  const char* rest=pico_draw_page(text);assert(rest && *rest==0);
+  assert(graphic_frames.size()==1);
+  // W is wider than I. Wrapping follows actual native advances and retains
+  // every byte, including a word wider than a complete display row.
+  uint32_t take=0;
+  rest=pico_wrap(text,&take);assert(rest>text && take<40);
+  uint32_t width=0;
+  for(unsigned i=0;i<take;++i) width+=ui_font::glyph({ui_font::Family::PIXEL,ui_font::Size::PX16},'W').advance;
+  assert(width<=304 && width+ui_font::glyph({ui_font::Family::PIXEL,ui_font::Size::PX16},'W').advance>304);
+  char long_text[1152];memset(long_text,'W',1151);long_text[1151]=0;
+  const char* at=long_text;unsigned pages=0;
+  while(*at) {const char* next=pico_draw_page(at);assert(next && next>at);at=next;++pages;}
+  assert(at==long_text+1151 && pages>1);
+  char input[512];memset(input,'W',511);input[511]=0;
+  mk61_service_edit_key editor={};editor.source=input;editor.length=511;editor.cursor=511;
+  uint32_t col,row,advance;
+  assert(pico_editor_position(&editor,511,&col,&row,&advance) && row>=PICO_VIEW_ROWS);
+  assert(col+advance<=PICO_VIEW_WIDTH && pico_draw_editor(&editor));
+  editor.cursor=0;assert(pico_draw_editor(&editor));
+  editor.cursor=255;editor.sms_active=1;assert(pico_draw_editor(&editor));
+  pico_view_end();assert(!pico_view_services && !help_frame);
+  assert(graphics_begins==1 && graphics_ends==1);
+}
+#endif
+
 int main(void) {
   app_api.millis_ms = mock_millis;
   app_api.service = mock_service;
@@ -406,6 +470,9 @@ int main(void) {
   test_graphic_help();
   test_frame_clipping();
   test_app_memory_lifecycle();
+#if defined(MK61_TARGET_PICOCALC)
+  test_native_pages_and_editor();
+#endif
   puts("eliza APP UI tests passed");
   return 0;
 }

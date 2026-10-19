@@ -41,9 +41,10 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(reader.read(prefix+name)).hexdigest(),digest,name)
                 for font in ('DejaVu-12.FMK','DejaVu-14.FMK'):
                     self.assertEqual(reader.read(prefix+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
-                for source in (ROOT/'programs/games/Turochamp').iterdir():
-                    if source.is_file():
-                        self.assertEqual(reader.read(prefix+'games/Turochamp/'+source.name),source.read_bytes())
+                for game in ('Turochamp','High Noon'):
+                    for source in (ROOT/'programs/games'/game).iterdir():
+                        if source.is_file():
+                            self.assertEqual(reader.read(prefix+'games/'+game+'/'+source.name),source.read_bytes())
             report=target/'hardware-software-summary.json'
             build=json.loads((target/'manifest.json').read_text())
             # An updated SHA-256 manifest cannot legitimize a broken resident CRC.
@@ -74,6 +75,31 @@ class PackageTests(unittest.TestCase):
                 self.assertIn(message,rejected.stderr)
                 self.assertEqual(archive.read_bytes(),before)
             report.unlink()
+            eliza_report=target/'hardware-eliza-summary.json'
+            records=json.loads((target/'apps/manifest.json').read_text())
+            eliza=next(r for r in records if r['name']=='ELIZA')
+            evidence={'passed':True,'uf2_sha256':build['uf2_sha256'],'app_sha256':eliza['app_sha256']}
+            eliza_report.write_text(json.dumps(evidence))
+            subprocess.run(command,check=True,capture_output=True,text=True)
+            before=archive.read_bytes()
+            eliza_report.write_text(json.dumps({**evidence,'app_sha256':'0'*64}))
+            rejected=subprocess.run(command,capture_output=True,text=True)
+            self.assertNotEqual(rejected.returncode,0)
+            self.assertIn('ELIZA hardware verification belongs to another APP',rejected.stderr)
+            self.assertEqual(archive.read_bytes(),before)
+            eliza_report.unlink()
+            sheet_report=target/'hardware-sheet-summary.json'
+            sheet=next(r for r in records if r['name']=='SHEET')
+            evidence={'passed':True,'uf2_sha256':build['uf2_sha256'],'app_sha256':sheet['app_sha256']}
+            sheet_report.write_text(json.dumps(evidence))
+            subprocess.run(command,check=True,capture_output=True,text=True)
+            before=archive.read_bytes()
+            sheet_report.write_text(json.dumps({**evidence,'app_sha256':'0'*64}))
+            rejected=subprocess.run(command,capture_output=True,text=True)
+            self.assertNotEqual(rejected.returncode,0)
+            self.assertIn('SHEET hardware verification belongs to another APP',rejected.stderr)
+            self.assertEqual(archive.read_bytes(),before)
+            sheet_report.unlink()
             app=target/'apps/HELLO.APP';encoded=bytearray(app.read_bytes())
             flags=struct.unpack_from('<I',encoded,16)[0]
             struct.pack_into('<I',encoded,16,flags&~8)

@@ -1,0 +1,108 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-19T21:58:42.725167+00:00",
+  "uid": "E6657CD423721C35",
+  "build_id": "c572e6cf",
+  "uf2_sha256": "f428dfa8d40935d3f10633880ad9fa9b72d1d3408a81b50401c7f53c403b7b07",
+  "firmware_writes": 0,
+  "directory": "/games/High Noon",
+  "files": {
+    "HighNoon.FMK": {
+      "bytes": 234,
+      "sha256": "628d237301d2b2247d92faf0388a69d7e17bea00e17ff927f88c999d4d66ae12"
+    },
+    "HighNoon320.FMK": {
+      "bytes": 1591,
+      "sha256": "9e81a325a65e887cb26de903d1d2008a447a551b624625104a85c27a9c83f358"
+    },
+    "autoexec.m61": {
+      "bytes": 341,
+      "sha256": "964c1f518177f9754b59b212fb9505ff3618af7f6aeaf306164d7d125e98137a"
+    },
+    "bart.tbi": {
+      "bytes": 1922,
+      "sha256": "562f4672f5a7aa31a5b3901ecacff8df41bc30a0cddbccbe54009ec48647ba2a"
+    },
+    "display.tbi": {
+      "bytes": 36,
+      "sha256": "d2c1cb1407fae06309e6099bf732ec126d070cfb52ab46fb84decaa12f953bbe"
+    },
+    "intro.tbi": {
+      "bytes": 1922,
+      "sha256": "b1ec84d32d52b915ae8306aa0ae7da8482d9e093b5e57a93c31b25dfcb859eee"
+    },
+    "manual.md": {
+      "bytes": 1281,
+      "sha256": "fa7e85d81ce874973dade2e0a5f178715117f84f0403c153752977e3072307eb"
+    },
+    "player.tbi": {
+      "bytes": 3313,
+      "sha256": "29eb03356a3feeef18b651b046e6b1722a8e4fe133ee316614538afa2bdc3464"
+    },
+    "reward.tbi": {
+      "bytes": 926,
+      "sha256": "9ca50f9faf90f03f2c2a4923d4c18395c6586afae04093b6bc74abdb3389ad51"
+    }
+  },
+  "checks": [
+    "complete-game-installed-and-read-back-byte-for-byte",
+    "instructions-invalid-input-player-bart-surrender-font-return",
+    "escape-ending",
+    "ESC-at-player-INPUT",
+    "natural-RNG-M61-victory-reward-receipt-font-return",
+    "game-files-unchanged-after-play"
+  ],
+  "victory": {
+    "attempt": 3,
+    "turn": 9,
+    "shots": 2
+  },
+  "native_geometry": [
+    320,
+    320
+  ],
+  "text_cell": [
+    8,
+    24
+  ],
+  "columns": 40,
+  "font": "Native Ark Pixel 12px strike, seven hand-fitted wide capitals; no resampling",
+  "receipt": {
+    "number": 96,
+    "day": 10,
+    "lines": [
+      "****************************************",
+      "ЧЕК НОМЕР 96 ОТ 10 АВГУСТА 1889",
+      "КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ",
+      "ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ",
+      "СУММУ",
+      "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ----------$20,000",
+      "****************************************"
+    ],
+    "amount_right": 320
+  },
+  "receipt_frame_sha256": "36a81a2b91c80594e944ea950f54bcc64e14683313d97a1f187e1c9e7bbed339",
+  "receipt_png_sha256": "19b16798e8d3c67bad77c7d7564a290403a72254388c9afd93cc39519efcbd80",
+  "receipt_lcd_source_crc": "966EA423",
+  "lcd_crc_scope": "Immutable transmitted monochrome snapshot, not panel GRAM readback",
+  "frames_crc_verified": 795,
+  "rng_seeded": false,
+  "calculator_state_restored": true,
+  "compact_font_byte_identical_to": "1660d7816",
+  "host_tests": [
+    "PicoCalc M61/font selection, exact native receipt and missing-font fallback: ASan/UBSan",
+    "TinyBASIC + VM, original compact font and all display/font profile tests: ASan/UBSan",
+    "24624 old/new game equivalence cases: text, pauses, registers, RNG, cancellation",
+    "Independent compact/native receipt pixel oracle and clipped/incorrect-date cases",
+    "Pico bundle CRC/SHA-256, full game inclusion and incompatible APP rejection"
+  ],
+  "stm32": "Firmware source unchanged; compact font preserved byte-for-byte; legacy BASIC/font tests passed",
+  "evidence_sha256": {
+    "host-pico.log": "6994a7e75c2bdfd3ff88ff0cdf6693ae8e77cb0a8faf34ebb2f07d2a758500ee",
+    "host-tinybasic.log": "4deb70c5e95354774d0f0738a9b7a4603a24c462a3d9cdc18183d344fe8413dc",
+    "fonts.log": "bb2bcbb086f594faf1868241352021cfc1d1648566784e9599402c0b5d8e002d",
+    "equivalence.log": "8a257b269b4253109b212f7adc7370c3b199d3465815a49f499b895e75ea9416",
+    "hil-v2/result.json": "9fcb17372bede7619924f3df4accc3a3781ae05ed85bc247b923ded97f46f5c0",
+    "hil-v2/terminal.bin": "12c12305d5c54b2e088692cdc340edcdee427421fb17268d52ee5b7e8d3ab2dd"
+  }
+}

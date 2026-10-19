@@ -335,6 +335,60 @@ void picocalc_m61_test() {
   assert(game.menu && game.board && !script::font_active());
 
   reset(calc, services);
+  assert(files::mkdir("/M61 Tests/High Noon"));
+  for(const auto& file:std::filesystem::directory_iterator("programs/games/High Noon"))
+    asset(file.path().string().c_str(),("/M61 Tests/High Noon/"+file.path().filename().string()).c_str());
+  struct Noon {
+    Services* services;
+    unsigned columns=40,pauses=0;
+    bool intro=false,receipt=false;
+  } noon{&services};
+  services.set_pump([](void* raw,u8& key) {
+    auto& g=*(Noon*)raw;char line[65];
+    if(!g.services->display_deferred()) for(unsigned row=0;row<10;++row) {
+      g.services->row(row,line);
+      if(!g.intro && std::strstr(line,M8("ПОКАЗАТЬ ИНСТРУКЦИЮ?"))) {
+        assert(script::columns()==g.columns && script::rows()==10);
+        g.intro=true;key=0x1B;return true;
+      }
+      if(std::strstr(g.services->path(),"reward.tbi") && g.pauses<3) {
+        const char* label=g.pauses==0?M8("ЧЕК НА 20 000 ДОЛЛАРОВ."):
+                          g.pauses==1?M8("ЧЕК НОМЕР "):M8("НЕ ТРАТЬТЕ ВСЁ СРАЗУ.");
+        if(!std::strstr(line,label)) continue;
+        if(g.pauses==1) {
+          (void)g.services->graphics();
+          const char* lines[]={"****************************************",nullptr,
+            M8("КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ"),M8("ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ"),M8("СУММУ"),
+            M8("ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ----------$20,000"),"****************************************"};
+          for(unsigned y=0;y<7;++y) if(lines[y]) {
+            std::string expected=lines[y];expected.resize(40,' ');
+            script::text_row(y,line,sizeof(line));assert(line==expected);
+          }
+          const u8* frame=script::native_frame();assert(frame);
+          if(const char* path=std::getenv("MK61_TEST_NOON_FRAME")) {
+            std::ofstream out(path,std::ios::binary);out.write((const char*)frame,12800);assert(out.good());
+          }
+          g.receipt=true;
+        }
+        ++g.pauses;key='\n';return true;
+      }
+    }
+    return false;
+  },&noon);
+  assert(script::start("/M61 Tests/High Noon/autoexec.m61"));
+  until(calc,[]{return !m61_text::active();});
+  assert(noon.intro && !script::font_active());
+  source("/M61 Tests/High Noon/check.m61","loadfont HighNoon320\nopen reward.tbi\nret\n");
+  assert(script::start("/M61 Tests/High Noon/check.m61"));
+  until(calc,[]{return !m61_text::active();});
+  assert(noon.receipt && noon.pauses==3 && reg(14)==99 && !script::font_active());
+  assert(files::remove("/M61 Tests/High Noon/HighNoon320.FMK"));
+  noon.intro=false;noon.columns=48;
+  assert(script::start("/M61 Tests/High Noon/autoexec.m61"));
+  until(calc,[]{return !m61_text::active();});
+  assert(noon.intro && !script::font_active());
+
+  reset(calc, services);
   // A real CRC32+ZX0 image crosses bank zero, using the production decoder.
   std::vector<u8> plain = {1, 2, 3, 4, 5, 0x50};
   u32 crc = mk61_crc32::calculate(plain.data(), plain.size());

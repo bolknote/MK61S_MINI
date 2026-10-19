@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the compact proportional Russian face used by High Noon."""
+"""Build High Noon's compact face and native 320px Russian face."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from m8_codec import encode as encode_m8
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "code/ERM19264_graphics_font.cpp"
 DEFAULT_OUTPUT = ROOT / "programs/games/High Noon/HighNoon.FMK"
+LARGE_OUTPUT = DEFAULT_OUTPUT.with_name("HighNoon320.FMK")
 HEADER_SIZE = 16
 
 
@@ -182,20 +183,81 @@ def encode() -> bytes:
     return bytes(writer.data)
 
 
+# Native 12px Ark capitals normally fit a seven-pixel ink box. These seven
+# wider letters are hand fitted to the same baseline, retaining a blank eighth
+# column even for adjacent ШЩ/ЖЮ. No raster is downsampled or stretched.
+NARROW_CAPITALS = {
+    "Ж": ("#..#..#", "#..#..#", ".#.#.#.", "..###..", "...#...",
+          "..###..", ".#.#.#.", "#..#..#", "#..#..#"),
+    "Ф": ("...#...", ".#####.", "#..#..#", "#..#..#", "#..#..#",
+          "#..#..#", "#..#..#", ".#####.", "...#..."),
+    "Ш": ("#..#..#",) * 8 + ("#######",),
+    "Щ": ("#..#..#",) * 8 + ("#######", "......#", "......#"),
+    "Ъ": ("###....", "..#....", "..#....", "..#....", "..####.",
+          "..#...#", "..#...#", "..#...#", "..####."),
+    "Ы": ("#.....#",) * 4 + ("####..#", "#...#.#", "#...#.#", "#...#.#", "####..#"),
+    "Ю": ("#...##.", "#..#..#", "#.#...#", "#.#...#", "###...#",
+          "#.#...#", "#.#...#", "#..#..#", "#...##."),
+}
+
+
+def large_glyphs() -> dict[int, list[list[int]]]:
+    from generate_ui_fonts import load_atlases
+    atlas = load_atlases()[0][1]  # Reviewed native Ark 12px strike, 14px envelope.
+    result = {}
+    for cp in source_codepoints():
+        glyph = atlas["by_codepoint"][cp]
+        rows = NARROW_CAPITALS.get(chr(cp))
+        if rows is None:
+            rows = glyph["rows"]
+        else:
+            rows = [row.replace(".", "0").replace("#", "1") for row in rows]
+        width = len(rows[0])
+        assert width <= 7 and len(rows) == glyph["height"], chr(cp)
+        left = (8-width)//2
+        top = (24-atlas["height"])//2 + atlas["ascent"] - glyph["bearing_y"]
+        pixels = [[0]*8 for _ in range(24)]
+        for y, row in enumerate(rows):
+            for x, bit in enumerate(row):
+                pixels[top+y][left+x] = int(bit)
+        result[encode_m8(chr(cp))[0]] = pixels
+    return result
+
+
+def encode_large() -> bytes:
+    glyphs = large_glyphs()
+    prefix = bytearray(HEADER_SIZE)
+    prefix[:4] = b"FMK2"
+    prefix[4:8] = bytes((1, 8, 24, 0x70))  # 40 columns, ten 24px rows on PicoCalc.
+    put_le16(prefix, 8, len(glyphs))
+    prefix[10] = 3
+    prefix += bytes((0x20, 0x1F, 0xA8, 0, 0xC0, 0x1F))
+    writer = BitWriter(prefix)
+    for code in sorted(glyphs):
+        writer.write(0, 1)
+        for row in glyphs[code]:
+            for pixel in row:
+                writer.write(pixel, 1)
+    put_le16(writer.data, 12, len(writer.data))
+    put_le16(writer.data, 14, crc16(writer.data))
+    return bytes(writer.data)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--large-output", type=Path, default=LARGE_OUTPUT)
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
-    expected = encode()
-    if args.check:
-        if not args.output.is_file() or args.output.read_bytes() != expected:
-            raise SystemExit(f"{args.output}: generated HighNoon FMK differs")
-    else:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_bytes(expected)
-    print(f"{args.output}: {len(expected)} bytes, "
-          f"{len(source_codepoints())} glyphs, proportional 3-5x5")
+    for path, expected, geometry in ((args.output, encode(), "proportional 3-5x5"),
+                                     (args.large_output, encode_large(), "native 8x24")):
+        if args.check:
+            if not path.is_file() or path.read_bytes() != expected:
+                raise SystemExit(f"{path}: generated HighNoon FMK differs")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(expected)
+        print(f"{path}: {len(expected)} bytes, {len(source_codepoints())} glyphs, {geometry}")
 
 
 def source_codepoints() -> tuple[int, ...]:

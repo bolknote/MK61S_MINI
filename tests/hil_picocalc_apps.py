@@ -172,13 +172,30 @@ def main():
                     if wait:os.write(p.fd,b'\r')
                     returned(start)
                 passed(name+': two successful launches, expected text and clean exit')
-            start=open_app('ELIZA.APP','RUNTIME=APP')
+            from hil_picocalc_eliza import ElizaFont
+            eliza_font=ElizaFont();previous_native=p.native_display
+            if not p.native_display:
+                p.send(0x13);p.attached=False;p.pump(.2)
+                p.native_display=True;p.attach_waiting()
+            start=len(p.text);p.open(args.directory+'/ELIZA.APP');p.expect('RUNTIME=APP')
             os.write(p.fd,b'\r');p.pump(.4);os.write(p.fd,b'\r');p.pump(.4)
-            p.expect('RUNTIME=APP','TEXT=[>')
-            os.write(p.fd,b'hello\r');reply=p.expect('TEXT=[HOW DO YOU DO.')
-            picture('ELIZA-reply',0)
+            def eliza_picture(name,predicate):
+                p.pump(.2);first=len(p.frames);p.send(0x16);deadline=time.monotonic()+15
+                while time.monotonic()<deadline:
+                    p.pump(.05)
+                    if len(p.frames)>first and predicate(p.frames[-1]):break
+                else:raise AssertionError('Missing native ELIZA frame: '+name)
+                png(p.frames[-1],args.output/(name+'.png'))
+                screens[name]=hashlib.sha256(p.frames[-1]).hexdigest()
+            eliza_picture('ELIZA-input',lambda f:eliza_font.editor(f,''))
+            os.write(p.fd,b'hello\r')
+            eliza_picture('ELIZA-reply',lambda f:eliza_font.page(f,
+                eliza_font.wrap('HOW DO YOU DO. PLEASE STATE YOUR PROBLEM')))
             os.write(p.fd,b'\x1b');returned(start)
-            passed('ELIZA.APP: graphical intro, QWERTY HELLO input, expected DOCTOR reply and exit')
+            if not previous_native:
+                p.send(0x13);p.attached=False;p.pump(.2)
+                p.native_display=False;p.attach_waiting()
+            passed('ELIZA.APP: native large-font QWERTY input, exact DOCTOR reply pixels and exit')
             for document in ('SHEET.APP','BUDGET.mks','CYCLE.mks'):
                 start=open_app(document,'RUNTIME=APP');frame=p.frames[-1]
                 os.write(p.fd,b'\xb7');until=time.monotonic()+5

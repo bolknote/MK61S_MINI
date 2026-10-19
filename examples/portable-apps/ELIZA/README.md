@@ -45,6 +45,16 @@ On the 192x64 display, the two opening help cards use the resident compact
 Pixel font and clearly boxed key labels.  Older or character-only firmware
 automatically receives the fixed-grid text version instead.
 
+The native PicoCalc build uses the resident Ark Pixel 16px strike for help,
+input and replies. It draws at 1:1 pixels into the host's borrowed 320x320
+bitmap. Replies wrap at actual glyph advances in a 304px text area; long words
+and responses continue over as many pages as necessary. The input viewport
+follows the cursor through all 511 accepted bytes, including wide letters.
+Editing, SMS timing and DOCTOR rules still use the shared editor and engine.
+Enter sends input or advances a page; Escape exits. The APP's font choice
+does not change the calculator's saved font settings. The STM32 presentation
+keeps its existing text and graphical layouts.
+
 ## Build and test
 
 ```sh

@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "uid": "E6657CD423721C35",
+  "build_id": "c572e6cf",
+  "uf2_sha256": "f428dfa8d40935d3f10633880ad9fa9b72d1d3408a81b50401c7f53c403b7b07",
+  "app_sha256": "e923612e86123dd68dba8a99f7893e570e9ad8163d69ba9951d43d40c263bb41",
+  "recorded_at_utc": "2026-10-19T22:38:16.215588+00:00",
+  "directory": "/MK61S-PicoCalc-0.8",
+  "firmware_writes": 0,
+  "native_geometry": [
+    320,
+    320
+  ],
+  "normal_grid": [
+    3,
+    8
+  ],
+  "overview_grid": [
+    4,
+    11
+  ],
+  "fonts": {
+    "normal": "Ark Pixel 16",
+    "overview": "Ark Pixel 12"
+  },
+  "resampling": false,
+  "editor_source_bytes": 95,
+  "physical_keys_normalized": [
+    "Tab",
+    "Up",
+    "Down"
+  ],
+  "grid_pixel_oracle": "Independent Ark JSON full-frame composition; normal, overview, P32, saved/reopened S1 and existing BUDGET/CYCLE",
+  "lcd_crc_scope": "Immutable monochrome source snapshot, not panel GRAM readback",
+  "frames_crc_verified": 238,
+  "cases": [
+    "native 3x8 pixels, Russian/long labels, formula preview, anchored reference and cursor/delete",
+    "native 4x11 overview, P32 scrolling and density change clamp without cells beyond the sheet",
+    "eight visible sheet menu items, details/help, valid S1 save and reopen with values/sources preserved",
+    "existing BUDGET/CYCLE documents: exact native pixels, calculated values/errors and unchanged S1 files"
+  ],
+  "calculator_state_restored": true,
+  "font_settings_restored": true,
+  "temporary_sheet_removed": true,
+  "classic_control_before_sha256": "096cb5429946f3fbc359d7bc3058fdc2a7ead890a5bddaf774b6de89e16b1571",
+  "classic_control_after_sha256": "096cb5429946f3fbc359d7bc3058fdc2a7ead890a5bddaf774b6de89e16b1571",
+  "classic_control_byte_identical": true,
+  "existing_classic_binary_unchanged": true,
+  "other_six_pico_apps_byte_identical": true,
+  "app_memory_bytes": 22128,
+  "previous_app_memory_bytes": 21640,
+  "host": "Engine, phone input, Classic/Mini and native Pico UI under ASan/UBSan, clipping and density switch at P32",
+  "evidence_sha256": {
+    "host.log": "186685511472466e931875abbdecdf8a106c26335b2cc24c55834a4a85e278bf",
+    "hil/result.json": "105c544c3d6135fc25bfbbe1afbdc5e0069f6fb1b515f3c9a1c49a9bb71ef644",
+    "hil/terminal.bin": "0d558bdb3e788adf965a1330a013a7dcbe306262851dbd74dc73edd21e2e172b",
+    "hil/sd-metadata.json": "6dc409b7ec10e909ee26e9b6f5c2c7f0df9817dd1b8074099f2d566fa6c860cc",
+    "classic-before/SHEET.APP": "096cb5429946f3fbc359d7bc3058fdc2a7ead890a5bddaf774b6de89e16b1571",
+    "classic-after/SHEET.APP": "096cb5429946f3fbc359d7bc3058fdc2a7ead890a5bddaf774b6de89e16b1571"
+  }
+}

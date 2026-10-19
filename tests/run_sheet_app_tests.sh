@@ -22,4 +22,12 @@ for keyboard in MINI CLASSIC; do
     -o "$work/ui-$keyboard"
   "$work/ui-$keyboard"
 done
+clang++ "${flags[@]}" -DMK61_CORE_STANDALONE=1 -DMK61_TARGET_PICOCALC=1 \
+  -DMK61_PROPORTIONAL_UI_FONTS=1 -DMK61_KEYBOARD_MINI -DMK61_DISPLAY_UC1609 \
+  -DARDUINO=100 -I"$root/tests/mk_math_shim" \
+  "$root/tests/sheet_app_ui_self_test.cpp" \
+  "$root/examples/portable-apps/SHEET/sheet_engine.cpp" \
+  "$root/code/builtin_font.cpp" "$root/code/ERM19264_graphics_font.cpp" \
+  "$root/code/ui_font.cpp" -o "$work/ui-PICO"
+"$work/ui-PICO"
 python3 "$root/tests/sheet_package_self_test.py"

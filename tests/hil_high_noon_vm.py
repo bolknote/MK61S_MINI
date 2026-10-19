@@ -36,9 +36,14 @@ def folder_index(report,name):
 
 
 class GameFont:
-    """Independent FMK2 raw-glyph oracle for the 47-column, ten-row game face."""
-    def __init__(self,data):
-        assert data[:4]==b"FMK2" and data[5:8]==bytes((5,5,0x31))
+    """Independent raw FMK2 oracle for compact and native game faces."""
+    def __init__(self,data,*,frame_width=192,left=2,top=2,columns=47,rows=10):
+        assert data[:4]==b"FMK2" and data[4] in (0,1)
+        self.frame_width,self.left,self.top=frame_width,left,top
+        self.columns,self.rows=columns,rows
+        self.height=data[6];self.pitch=self.height+(data[7]&15)
+        self.advance=(data[7]>>4)+1
+        self.right=left+columns*self.advance
         bit=(16+data[10]*2)*8
         def read(n):
             nonlocal bit
@@ -49,39 +54,39 @@ class GameFont:
         self.glyphs={};self.cache={}
         for start,count in zip(data[16:16+data[10]*2:2],data[17:17+data[10]*2:2]):
             for code in range(start,start+count+1):
-                width,advance=read(4)+1,read(4)+1
-                assert read(1)==0 and advance==width+1
-                rows=tuple(read(width) for _ in range(5))
-                self.glyphs[code]=(width,advance,rows)
+                width,advance=(data[5],self.advance) if data[4] else (read(4)+1,read(4)+1)
+                assert read(1)==0
+                pixels=tuple(read(width) for _ in range(self.height))
+                self.glyphs[code]=(width,advance,pixels)
 
-    @staticmethod
-    def pixel(frame,x,y):return (frame[y//8*192+x]>>(y%8))&1
+    def pixel(self,frame,x,y):return (frame[y//8*self.frame_width+x]>>(y%8))&1
 
     def pattern(self,text):
         if text not in self.cache:
-            rows=[[] for _ in range(5)]
+            rows=[[] for _ in range(self.height)]
             for code in encode(text):
                 width,advance,bits=self.glyphs[code]
-                for y in range(5):
+                for y in range(self.height):
                     rows[y].extend((bits[y]>>(width-1-x))&1 for x in range(width))
                     rows[y].extend([0]*(advance-width))
             self.cache[text]=tuple(tuple(row) for row in rows)
         return self.cache[text]
 
-    def matches(self,frame,text,row,x=2):
+    def matches(self,frame,text,row,x=None):
         pattern=self.pattern(text)
-        if not pattern[0] or x+len(pattern[0])>190:return False
-        return all(self.pixel(frame,x+dx,2+row*6+y)==value
+        if x is None:x=self.left
+        if not pattern[0] or x+len(pattern[0])>self.right:return False
+        return all(self.pixel(frame,x+dx,self.top+row*self.pitch+y)==value
                    for y,line in enumerate(pattern) for dx,value in enumerate(line))
 
-    def has(self,frame,text):return any(self.matches(frame,text,row) for row in range(10))
+    def has(self,frame,text):return any(self.matches(frame,text,row,self.left) for row in range(self.rows))
     def contains(self,frame,text):
         width=len(self.pattern(text)[0])
-        return any(self.matches(frame,text,row,x) for row in range(10) for x in range(2,191-width))
+        return any(self.matches(frame,text,row,x) for row in range(self.rows) for x in range(self.left,self.right-width+1))
     def number_after(self,frame,prefix):
-        for row in range(10):
+        for row in range(self.rows):
             if not self.matches(frame,prefix,row):continue
-            x=2+len(self.pattern(prefix)[0]);digits=""
+            x=self.left+len(self.pattern(prefix)[0]);digits=""
             for _ in range(4):
                 found=next((str(n) for n in range(10) if self.matches(frame,str(n),row,x)),None)
                 if found is None:break
@@ -89,10 +94,32 @@ class GameFont:
             if digits:return int(digits)
         return None
 
+    def receipt(self,frame):
+        number=self.number_after(frame,"ЧЕК НОМЕР ")
+        assert number is not None and 0<=number<=999,"receipt number missing"
+        day=10+number//100
+        # Compact text has wider Д/Ы/Я/Л/$; its thirteen dashes occupy exactly
+        # 188px. The native 40-cell face fits ten dashes and a right-aligned sum.
+        fill=10 if self.columns==40 else 13
+        lines=("*"*self.columns,f"ЧЕК НОМЕР {number} ОТ {day} АВГУСТА 1889",
+               "КВИТАНЦИЯ КАССИРА - БАНК ДОДЖ-СИТИ","ВЫПЛАТИТЬ ПРЕДЪЯВИТЕЛЮ",
+               "СУММУ","ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ"+"-"*fill+"$20,000","*"*self.columns)
+        for row,text in enumerate(lines):
+            pattern=self.pattern(text);width=len(pattern[0])
+            assert width<=self.right-self.left,("receipt line overflow",row,text)
+            assert all(self.pixel(frame,self.left+x,self.top+row*self.pitch+y)==
+                       (line[x] if x<width else 0)
+                       for y,line in enumerate(pattern) for x in range(self.right-self.left)),("receipt line differs",row,text)
+        assert len(self.pattern(lines[5])[0])==self.right-self.left,"receipt amount is not right aligned"
+        return dict(number=number,day=day,lines=list(lines),amount_right=self.right)
+
 
 class Game:
     def __init__(self,port,font,directory,output,result):
         self.port,self.font,self.directory,self.output,self.result=port,font,directory,output,result
+        mini=port.keyboard_layout==0
+        self.digits=(20,21,16,11,22,17,12,23,18,13) if mini else DIGITS
+        self.ok,self.run=(29,30) if mini else (OK,RUN)
         self.index=0
     def wait(self,*labels,timeout=8):
         self.port.pump(.5);self.port.send(0x16)
@@ -114,13 +141,13 @@ class Game:
         self.result["screens"].append({"name":name,"file":filename+".png",
             "sha256":hashlib.sha256(frame).hexdigest(),"frames":len(self.port.frames)})
     def number(self,value):
-        for c in str(value):self.port.key(DIGITS[int(c)])
-        self.port.key(OK)
-    def key(self):self.port.key(OK)
+        for c in str(value):self.port.key(self.digits[int(c)])
+        self.port.key(self.ok)
+    def key(self):self.port.key(self.ok)
     def start(self):
         self.port.open(self.directory+"/autoexec.m61")
         self.wait("ПОКАЗАТЬ ИНСТРУКЦИЮ?");self.save("intro")
-        self.port.key(RUN);self.wait("ВАША СТРАТЕГИЯ?")
+        self.port.key(self.run);self.wait("ВАША СТРАТЕГИЯ?")
     def start_from_explorer(self):
         assert self.directory.startswith("/")
         components=self.directory.strip("/").split("/")
@@ -207,8 +234,7 @@ class Game:
                 if won:
                     self.wait("КАК МЭР ДОДЖ-СИТИ");self.save("reward-announcement");self.key()
                     self.wait("ЧЕК НОМЕР ");frame=self.port.frames[-1]
-                    assert self.font.contains(frame,"$20,000"),"receipt amount absent/clipped"
-                    assert sum(self.font.matches(frame,"*"*47,row) for row in range(10))==2,"receipt borders"
+                    self.result["receipt"]=self.font.receipt(frame)
                     self.save("reward-receipt");self.key()
                     self.wait("НЕ ТРАТЬТЕ ВСЁ СРАЗУ.");self.save("reward-final");self.key();self.final(3)
                     self.result["checks"].append("natural-RNG-M61-victory-reward-receipt-font-return")
@@ -248,7 +274,7 @@ def main():
             for path in sorted(local.iterdir()):
                 data=path.read_bytes() if path.suffix.lower()==".fmk" else encode(path.read_text())
                 read_file(port,args.directory+"/"+path.name,data)
-            result["checks"].append("all-seven-installed-files-byte-identical")
+            result["checks"].append("all-installed-files-byte-identical")
             result["before"]=health(port);port.attach();port.pump(.2);game.save("before-game")
             game.instructions_surrender(args.explorer_start);game.escape();game.victory(args.attempts)
             result["after"]=health(port);result["CRC_checked_frames"]=len(port.frames);result["status"]="PASS"

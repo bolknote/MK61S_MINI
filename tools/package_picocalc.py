@@ -79,11 +79,12 @@ def main():
     for source in sorted((ROOT/'programs/Fonts').glob('*.FMK')):
         target=directory/'Fonts'/source.name;shutil.copy2(source,target);font_files.append(target)
     game_files=[]
-    for source in sorted((ROOT/'programs/games/Turochamp').iterdir()):
-        if not source.is_file():continue
-        target=directory/'games/Turochamp'/source.name
-        target.parent.mkdir(parents=True,exist_ok=True)
-        shutil.copy2(source,target);game_files.append(target)
+    for game in ('Turochamp','High Noon'):
+        for source in sorted((ROOT/'programs/games'/game).iterdir()):
+            if not source.is_file():continue
+            target=directory/'games'/game/source.name
+            target.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(source,target);game_files.append(target)
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
@@ -96,7 +97,8 @@ def main():
                         'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',
                         'hardware-usb-disk-summary.json','hardware-full-parity-summary.json',
                         'hardware-performance-summary.json','hardware-font-summary.json',
-                        'hardware-display-summary.json'):
+                        'hardware-display-summary.json','hardware-high-noon-summary.json',
+                        'hardware-eliza-summary.json','hardware-sheet-summary.json'):
         report=directory/report_name
         if not report.exists():continue
         evidence=json.loads(report.read_text())
@@ -108,6 +110,11 @@ def main():
             expected={r['name']+'.APP':r['app_sha256'] for r in records}
             if any(evidence['files'].get(name)!=digest for name,digest in expected.items()):
                 raise ValueError('APP hardware verification belongs to another collection')
+        if report_name in ('hardware-eliza-summary.json','hardware-sheet-summary.json'):
+            name='ELIZA' if report_name=='hardware-eliza-summary.json' else 'SHEET'
+            expected=next(r['app_sha256'] for r in records if r['name']==name)
+            if not evidence.get('passed') or evidence.get('app_sha256')!=expected:
+                raise ValueError(name+' hardware verification belongs to another APP')
         files.append(report)
     checksum_file=directory/f'bundle-sha256-{version}.json'
     hashes={str(path.relative_to(directory)):sha256(path) for path in files}

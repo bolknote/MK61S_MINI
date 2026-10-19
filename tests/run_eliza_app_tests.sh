@@ -34,3 +34,9 @@ clang++ "${ui_flags[@]}" \
   "$work/eliza-engine.o" \
   -o "$work/eliza-ui"
 "$work/eliza-ui"
+clang++ "${ui_flags[@]}" -DMK61_TARGET_PICOCALC=1 -DMK61_CORE_STANDALONE=1 \
+  -I"$root/code" -I"$root/sdk/portable/include" \
+  -I"$root/examples/portable-apps/ELIZA" \
+  "$root/tests/eliza_app_ui_self_test.cpp" "$root/code/ui_font.cpp" \
+  "$work/eliza-engine.o" -o "$work/eliza-ui-pico"
+"$work/eliza-ui-pico"

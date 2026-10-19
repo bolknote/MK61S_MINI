@@ -26,7 +26,7 @@ sys.path.insert(0, str(root / "tools"))
 from m8_codec import encode as encode_m8
 
 game = root / "programs" / "games" / "High Noon"
-parts = [game / name for name in ("intro.tbi", "player.tbi", "bart.tbi", "reward.tbi")]
+parts = [game / name for name in ("intro.tbi", "player.tbi", "bart.tbi", "reward.tbi", "display.tbi")]
 driver = game / "autoexec.m61"
 manual = game / "manual.md"
 font = game / "HighNoon.FMK"
@@ -98,6 +98,12 @@ for path in parts:
             f"{path.name} would exceed the quota after LF-to-CRLF conversion")
 
 driver_text = driver.read_text(encoding="utf-8")
+require(driver_text.startswith('reinit\nopen display.tbi\nif re==0 run :compact\n'
+                              'loadfont HighNoon320 HighNoon\nrun :ready\n'
+                              ':compact\nloadfont HighNoon\n:ready\nopen intro.tbi\n'),
+        "High Noon must select a native font by geometry with a compact fallback")
+require((game/'display.tbi').read_text() == '1 .RE=(GW>=320) AND (GH>=320)\n2 END\n',
+        "High Noon must probe the display before loading its font")
 for line in (
     "reinit",
     "loadfont HighNoon",
@@ -232,8 +238,8 @@ require("8000 FOR I=1 TO COLS" in reward and '8010 P."*";' in reward,
         "High Noon receipt border must follow the active font viewport width")
 require(not re.search(r'"\*{2,}"', reward),
         "High Noon receipt restored a hard-coded split border")
-require("265 FOR I=1 TO COLS-34" in reward,
-        "High Noon receipt amount line must fill the active viewport")
+require("261 J=34:IF COLS=40 J=30" in reward and "265 FOR I=1 TO COLS-J" in reward,
+        "High Noon receipt must account for the compact proportional and native fixed advances")
 amount = "ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ" + "-" * (47 - 34) + "$20,000"
 amount_width = sum(font_advances[encode_m8(char)[0]] for char in amount)
 require(amount_width <= 188,
@@ -243,8 +249,21 @@ for stale in ("WALKM", "BETER", "RECEIT", "DODsGE", "THATS", "YOUT", "BURT"):
 for path in parts:
     for line_number, source_line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         for literal in re.findall(r'"([^"]*)"', source_line):
-            require(len(literal) <= 47,
-                    f"{path.name}:{line_number} exceeds the 47-cell High Noon viewport")
+            require(len(literal) <= 40,
+                    f"{path.name}:{line_number} exceeds the 40-cell native High Noon viewport")
+
+from hil_high_noon_vm import GameFont
+large=GameFont((game/'HighNoon320.FMK').read_bytes(),frame_width=320,left=0,top=40,columns=40)
+require((large.height,large.pitch,large.advance,large.right)==(24,24,8,320),
+        "High Noon native font must provide 40x10 cells at 1:1 pixels")
+require(set(large.glyphs)==set(font_widths),"High Noon native font lost Russian or currency glyphs")
+for code,(width,advance,rows) in large.glyphs.items():
+    require(width==advance==8 and len(rows)==24,"High Noon native glyph metrics differ")
+    require(all(not row&1 for row in rows),f"High Noon native {code:02X} has no inter-letter gap")
+require(large.glyphs[0xA8]!=large.glyphs[0xC5],"High Noon native Ё must differ from Е")
+require(large.glyphs[0xC9]!=large.glyphs[0xC8],"High Noon native Й must differ from И")
+require(len(large.pattern("ДВАДЦАТЬ ТЫСЯЧ ДОЛЛАРОВ"+"-"*10+"$20,000")[0])==320,
+        "High Noon native receipt amount must fill exactly one row")
 
 player = (game / "player.tbi").read_text(encoding="utf-8")
 bart = (game / "bart.tbi").read_text(encoding="utf-8")
