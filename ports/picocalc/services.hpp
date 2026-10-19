@@ -32,7 +32,11 @@ public:
     const char* title() const;
     void heading(char out[64]) const;
     bool fixed_text() const { return page_ == ServicePage::EDITOR || page_ == ServicePage::CONSOLE || page_ == ServicePage::PROMPT; }
-    unsigned first_console_row(unsigned visible) const { return !markdown_ && console_row_ >= visible ? console_row_ + 1 - visible : 0; }
+    unsigned first_console_row(unsigned visible) const {
+        const unsigned row=console_frame_open_?front_console_row_:console_row_;
+        return !markdown_ && row>=visible?row+1-visible:0;
+    }
+    bool display_deferred() const { return page_==ServicePage::CONSOLE && console_frame_open_ && !graph_visible_; }
     const char* footer() const;
     const char* page_name() const;
     void row(unsigned index, char out[COLS + 1]) const;
@@ -100,6 +104,8 @@ private:
     void append(const char*, unsigned);
     void put(char ch);
     void clear_console();
+    void begin_console_frame();
+    void publish_console();
     void present_console(unsigned first) const;
     bool flush_print(bool newline);
     double math(language_vm::Function, double, double);
@@ -139,6 +145,10 @@ private:
     u16 length_ = 0, cursor_ = 0, top_ = 0, horizontal_ = 0;
     u16 prompt_length_ = 0;
     u32 console_revision_=1;
+    bool console_frame_open_=false;
+    unsigned front_console_row_=0;
+    u32 front_console_revision_=0;
+    char (*front_console_)[text_screen::MAX_COLS+1]=nullptr;
     mutable u32 shown_console_revision_=0,shown_frame_revision_=0;
     mutable unsigned shown_first_=0;
     static constexpr unsigned CACHE_SOURCE_OFFSET=(SOURCE_CAPACITY-32768U)&~7U;

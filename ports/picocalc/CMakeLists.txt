@@ -98,7 +98,7 @@ set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
     PROPERTIES COMPILE_OPTIONS "-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
-    hardware_flash pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
+    hardware_flash hardware_dma pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
 if(MK61_PICOCALC_SAMPLE_PROFILE)
     target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_exception)
 endif()
@@ -109,7 +109,7 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.8.7")
+pico_set_program_version(mk61s-picocalc-pico-h "0.8.8")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.
@@ -123,6 +123,10 @@ string(REPLACE "SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k"
 string(REPLACE ".rodata : {"
     ".mk61_fw_footer : { KEEP(*(.mk61_fw_footer)) } > FLASH\n\n    .rodata : {"
     MK61_MEMMAP "${MK61_MEMMAP}")
+string(REPLACE "    .scratch_y : {"
+    "    .lcd_dma (NOLOAD) : { *(.lcd_dma.*) . = ALIGN(4); __lcd_dma_end__ = .; } > SCRATCH_X :NONE\n\n    .scratch_y : {"
+    MK61_MEMMAP "${MK61_MEMMAP}")
+string(APPEND MK61_MEMMAP "\nASSERT(__lcd_dma_end__ <= __StackOneBottom, \"LCD DMA buffers overlap core 1 stack\")\n")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld" "${MK61_MEMMAP}")
 pico_set_linker_script(mk61s-picocalc-pico-h "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld")
 pico_add_extra_outputs(mk61s-picocalc-pico-h)

@@ -2,6 +2,7 @@
 #define MK61_PICOCALC_HARDWARE_HPP
 
 #include "screen.hpp"
+#include "lcd_update.hpp"
 #include <atomic>
 
 namespace picocalc {
@@ -34,11 +35,22 @@ public:
     u32 spi_hz() const { return spi_hz_; }
     u32 frames() const { return frames_.load(std::memory_order_relaxed); }
     u32 frame_crc() const { return frame_crc_.load(std::memory_order_relaxed); }
+    u32 last_bytes() const { return last_bytes_.load(std::memory_order_relaxed); }
+    u32 last_rectangles() const { return last_rectangles_.load(std::memory_order_relaxed); }
+    u32 last_us() const { return last_us_.load(std::memory_order_relaxed); }
+    u32 full_frames() const { return full_frames_.load(std::memory_order_relaxed); }
+    bool dma() const { return dma_tx_>=0 && dma_rx_>=0; }
 private:
     u8 previous_[Screen::BYTES] = {};
     bool valid_ = false;
     u32 spi_hz_ = 0;
     std::atomic<u32> frames_{0},frame_crc_{0};
+    std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
+    lcd::Update update_;
+    u8 discard_=0;
+    int dma_tx_=-1,dma_rx_=-1;
+    void start_scanline(const u8* bytes,unsigned count);
+    void finish_scanline();
     void transfer();
 };
 

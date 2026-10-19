@@ -433,7 +433,8 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         const u16 end = text_editor::line_end_for_start(source_, at, length_);
         at = (u16)(at + (horizontal_ < end - at ? horizontal_ : end - at));
         unsigned n = 0; while(at < end && n < COLS) out[n++] = source_[at++]; out[n] = 0;
-    } else if(page_ == ServicePage::CONSOLE) std::snprintf(out, COLS + 1, "%s", console_[index % ROWS]);
+    } else if(page_ == ServicePage::CONSOLE) std::snprintf(out, COLS + 1, "%s",
+        (console_frame_open_?front_console_:console_)[index % ROWS]);
     else if(page_ == ServicePage::BROWSER) {
         if(index == 0) label(directory_, out, COLS + 1);
         else if(index == 1 && filter_[0]) { char value[COLS-2];label(filter_,value,sizeof(value));std::snprintf(out,COLS+1,"? %s",value); }

@@ -95,7 +95,8 @@ def main():
                         'hardware-software-summary.json','hardware-power-summary.json',
                         'hardware-contract-summary.json','hardware-integrity-summary.json','hardware-mkc-summary.json',
                         'hardware-usb-disk-summary.json','hardware-full-parity-summary.json',
-                        'hardware-performance-summary.json','hardware-font-summary.json'):
+                        'hardware-performance-summary.json','hardware-font-summary.json',
+                        'hardware-display-summary.json'):
         report=directory/report_name
         if not report.exists():continue
         evidence=json.loads(report.read_text())

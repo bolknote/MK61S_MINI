@@ -3,12 +3,14 @@
 #include "mk61_ref.hpp"
 #include "mk8_literal.hpp"
 #include "sd_crc.hpp"
+#include "markdown.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <array>
 
 void picocalc_host_fail_write(int);
 bool picocalc_host_make_exfat();
@@ -166,6 +168,64 @@ void picocalc_services_test(const char* preview) {
     double number = 0;
     assert(mk61_ref::read({mk61_ref::Kind::X, 0}, number) && number == 4);
     assert(mk61_ref::read({mk61_ref::Kind::R, 0}, number) && number == 42);
+    {
+        std::string document="# Native PicoCalc\n\n";
+        for(unsigned i=0;i<30;++i) {
+            char line[80];std::snprintf(line,sizeof(line),M8("Строка %02u: родной шрифт 320x320."),i);
+            if(i) document+="\n\n";
+            document+=line;
+        }
+        document+='\n';
+        assert(files::write_text("/Sources/long-russian.md",document.data(),document.size()));
+        MarkdownView view;assert(view.open("/Sources/long-russian.md"));
+        assert(files::remove("/Sources/long-russian.md"));
+        std::printf("PicoCalc long Russian Markdown: parsing PASS; view=%zu bytes\n",sizeof(view));
+    }
+    {
+        // Poll in the middle of a deliberately slow CLS/PRINT sequence. Both
+        // the LCD bitmap and public console rows must retain the prior frame.
+        struct Frames {
+            Services* services;Calculator* calculator;Screen screen;Ui ui;
+            std::array<u8,Screen::BYTES> ready{};
+            unsigned stage=0,held=0,calls=0;
+        } frames{};
+        frames.services=&s;frames.calculator=&calc;
+        s.set_pump([](void* raw,u8& key) {
+            auto& f=*(Frames*)raw;assert(++f.calls<100000);
+            char first[Services::COLS+1]{},second[Services::COLS+1]{};
+            f.services->row(0,first);f.services->row(1,second);
+            f.screen.render(f.calculator->snapshot(),true,&f.ui,f.services);
+            if(f.stage==1 && f.services->display_deferred()) {
+                assert(!std::strcmp(first,"READY") && !second[0]);
+                assert(!std::memcmp(f.ready.data(),f.screen.data(),Screen::BYTES));++f.held;
+            } else if(!f.services->display_deferred() && f.stage==0 && !std::strcmp(first,"READY")) {
+                std::memcpy(f.ready.data(),f.screen.data(),Screen::BYTES);
+                f.stage=1;key=' ';return true;
+            } else if(!f.services->display_deferred() && f.stage==1 && !std::strcmp(first,"PARTIAL") && !std::strcmp(second,"COMPLETE")) {
+                assert(f.held && std::memcmp(f.ready.data(),f.screen.data(),Screen::BYTES));
+                f.stage=2;key=' ';return true;
+            }
+            return false;
+        },&frames);
+        run(s,Document::BASIC,"10 CLS\n20 PRINT \"READY\"\n30 A=INPUT()\n40 CLS\n50 PRINT \"PARTIAL\"\n60 FOR I=1 TO 1000\n70 NEXT I\n80 PRINT \"COMPLETE\"\n90 B=INPUT()\n100 END\n");
+        assert(frames.stage==2 && frames.held && !s.display_deferred());
+        s.set_pump(nullptr,nullptr);
+        std::puts("PicoCalc complete console frames: retained LCD/rows during construction, publication before input PASS");
+    }
+    {
+        struct Publication { Services* services=nullptr;bool seen=false; } publication;
+        publication.services=&s;
+        s.set_pump([](void* raw,u8&) {
+            auto& p=*(Publication*)raw;
+            char line[Services::COLS+1]{};p.services->row(0,line);
+            if(!p.services->display_deferred() && !std::strcmp(line,"EARLY")) p.seen=true;
+            return false;
+        },&publication);
+        run(s,Document::BASIC,"10 CLS\n20 PRINT \"EARLY\"\n30 SHOW\n40 FOR I=1 TO 1000\n50 NEXT I\n60 CLS\n70 PRINT \"LATE\"\n80 END\n");
+        assert(publication.seen && !s.display_deferred());
+        s.set_pump(nullptr,nullptr);
+        std::puts("PicoCalc SHOW publishes a text frame before a long calculation PASS");
+    }
     run(s, Document::BASIC, "10 PSET 10,20\n20 PRINT POINT(10,20)\n30 GRAPH X,-1,1,-1,1\n40 END\n");
     assert(s.graphics());
     {

@@ -238,6 +238,9 @@ void Screen::native_bitmap(const u8* frame) {
     native_revision_=revision;native_valid_=published;
 }
 void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services) {
+    // CLS begins a BASIC/FOCAL frame. Keep the previous complete picture while
+    // the VM builds its replacement; input, WAIT and module completion publish it.
+    if(services && services->display_deferred()) return;
     diagnostics::Scope measure(diagnostics::Point::DISPLAY);
     static const Ui default_ui;
     if(!ui) ui = &default_ui;

@@ -92,6 +92,7 @@ basic_graphics::Result Services::graph_request(basic_graphics::Request& request)
 bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 count) {
     auto& self = *(Services*)raw;
     if(bytes != self.graph_width_*self.graph_height_/8U) return false;
+    self.publish_console();
     const unsigned text_first=self.first_console_row(script::rows());
     self.present_console(text_first);
     const unsigned pages=self.graph_height_/8;
@@ -102,15 +103,27 @@ bool Services::graph_capture(void* raw, u8* frame, size_t bytes, u8 first, u8 co
     return true;
 }
 void Services::clear_console() {
+    if(running_) begin_console_frame();
     ++console_revision_;
     std::memset(console_, 0, sizeof(console_)); console_row_ = console_col_ = 0; console_scroll_=false;
 }
+void Services::begin_console_frame() {
+    if(console_frame_open_ || !front_console_) return;
+    std::memcpy(front_console_,console_,sizeof(console_));
+    front_console_row_=console_row_;front_console_revision_=console_revision_;
+    console_frame_open_=true;
+}
+void Services::publish_console() { console_frame_open_=false; }
 void Services::present_console(unsigned first) const {
     // Arithmetic-only BASIC parts retain the same screen. Decode glyphs
     // only after text, geometry or another M61/APP frame has changed it.
-    if(shown_console_revision_!=console_revision_ || shown_frame_revision_!=script::frame_revision() || shown_first_!=first) {
-        script::show_lines(console_[first],sizeof(console_[0]),rows()-first,console_col_,console_row_-first);
-        shown_console_revision_=console_revision_;shown_frame_revision_=script::frame_revision();shown_first_=first;
+    const u32 revision=console_frame_open_?front_console_revision_:console_revision_;
+    const auto* lines=console_frame_open_?front_console_:console_;
+    const unsigned row=console_frame_open_?front_console_row_:console_row_;
+    if(shown_console_revision_!=revision || shown_frame_revision_!=script::frame_revision() || shown_first_!=first) {
+        const bool incremental=shown_frame_revision_==script::frame_revision();
+        script::show_lines(lines[first],sizeof(console_[0]),rows()-first,console_col_,row>=first?row-first:0,incremental);
+        shown_console_revision_=revision;shown_frame_revision_=script::frame_revision();shown_first_=first;
     } else m61_text::claim_display();
 }
 void Services::put(char ch) {
@@ -151,6 +164,8 @@ bool Services::service() {
     return true;
 }
 bool Services::wait_key(u8& key) {
+    if(print_[0] && !flush_print(false)) return false;
+    publish_console();
     if(deferred_count_) {
         key = deferred_keys_[deferred_read_]; deferred_read_ = (deferred_read_ + 1) % sizeof(deferred_keys_); --deferred_count_; return true;
     }
@@ -291,12 +306,17 @@ bool Services::event(language_vm::Event event, const char* text, u16 length, dou
         case Event::CLEAR: clear_console(); return true;
         case Event::FINISH: {
             if(print_[0] && !flush_print(false)) return false;
+            publish_console();
             basic_graphics::Request request{}; request.operation = basic_graphics::Operation::SHOW;
             return graph_.apply(request) == basic_graphics::Result::OK;
         }
         case Event::GRAPHICS: {
             if(!text || length != sizeof(basic_graphics::Request)) return false;
             auto request = *(const basic_graphics::Request*)text;
+            if(request.operation==basic_graphics::Operation::SHOW) {
+                if(print_[0] && !flush_print(false)) return false;
+                publish_console();
+            }
             const auto result = graph_.apply(request); value = request.value;
             if(result != basic_graphics::Result::OK) last_error_ = basic_graphics::error(result);
             return result == basic_graphics::Result::OK;
@@ -315,8 +335,16 @@ void Services::run_document(const language_vm::View* prepared) {
     diagnostics::context(diagnostics::State::LANGUAGE);
     if(calculator_ && (!calculator_->idle() || core_61::is_RUN())) { message("Stop MK61 before running source", ServicePage::EDITOR); return; }
     if(!prepared && document_ == Document::TEXT) { message("Text file: use .bas, .foc or .m61 to run", ServicePage::EDITOR); return; }
+    // A console transaction exists only during this synchronous VM invocation.
+    // Borrow the reserved main stack instead of reducing the APP/viewer heap.
+    char front_console[ROWS][text_screen::MAX_COLS+1];
+    front_console_=front_console;
+    struct ReleaseFrame {
+        Services& owner;
+        ~ReleaseFrame() { owner.publish_console();owner.front_console_=nullptr; }
+    } release_frame{*this};
     graph_.reset();
-    if(!external_run_) clear_console();
+    if(!external_run_) { begin_console_frame();clear_console(); }
     print_[0] = 0; print_cursor_ = 0; position_ = {};
     stopped_ = false; deferred_count_ = deferred_read_ = 0; last_error_ = language_vm::Error::NONE;
     page_ = ServicePage::CONSOLE; running_ = true; serial_output_ = true;
@@ -330,6 +358,7 @@ void Services::run_document(const language_vm::View* prepared) {
         }
         char name[files::PATH_SIZE];
         std::snprintf(name, sizeof(name), "%s", path_[0] ? path_ : "/untitled.m61");
+        publish_console();
         page_ = ServicePage::CLOSED; running_ = serial_output_ = false;
         calculator_requested_ = true;
         const bool ok = script::start_source(name, source_, length_,&script_editor_.id);
@@ -384,6 +413,7 @@ void Services::run_document(const language_vm::View* prepared) {
             line = result.line; steps = result.steps;
         }
     }
+    publish_console();
     running_ = false;
     std::snprintf(status_, sizeof(status_), "%s  line %lu  %lu steps", language_vm::error_name(last_error_), (unsigned long)line, (unsigned long)steps);
     if(!external_run_) { append("\n", 1); append(status_, (unsigned)std::strlen(status_)); append("\n", 1); }
@@ -507,7 +537,8 @@ u8 Services::view_markdown(const char* path) {
     if(markdown_ || !pump_) return 2;
     language_cache::discard();
     std::unique_ptr<MarkdownView> document(new(std::nothrow) MarkdownView);
-    if(!document || !document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
+    if(!document) { message("Not enough memory for Markdown",ServicePage::BROWSER);return 2; }
+    if(!document->open(path)) { message("Cannot open Markdown",ServicePage::BROWSER);return 2; }
     if(ui_) document->set_font(ui_->settings());
     struct History { char path[files::PATH_SIZE];u16 top,selection; } history[8]{};
     unsigned depth=0;

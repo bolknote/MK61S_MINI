@@ -34,7 +34,7 @@ void show_frame(const u8 *frame);
 void show_text(const char *text);
 void write_text(unsigned column, unsigned row, const char* text, unsigned length);
 void show_lines(const char *lines, unsigned stride, unsigned count,
-                unsigned cursor_x, unsigned cursor_y);
+                unsigned cursor_x, unsigned cursor_y,bool incremental=false);
 u8 open_entry(const program_store::Entry &entry);
 void text_row(unsigned row, char *out, unsigned capacity);
 void tone(unsigned frequency, unsigned milliseconds, unsigned percent=100);

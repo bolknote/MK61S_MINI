@@ -1,0 +1,406 @@
+{
+  "passed": true,
+  "version": "0.8.8",
+  "build_id": "c572e6cf",
+  "source_sha256": "afb7ad338e22221f23acef0d566bc8665af2c1220634f3e17615a4168b8c1ba6",
+  "uf2_sha256": "f428dfa8d40935d3f10633880ad9fa9b72d1d3408a81b50401c7f53c403b7b07",
+  "source_base": "479e8fbc5b9ac9a2bd70dd15ab1b31d406c0c434",
+  "uid": "E6657CD423721C35",
+  "recorded_at_utc": "2026-10-19T21:33:59.068165+00:00",
+  "baseline_build": "A270FF58",
+  "baseline_basic": {
+    "frames": 23,
+    "incomplete_frames": 21,
+    "retained_frames": 1
+  },
+  "ready_frame": {
+    "frames": 23,
+    "incomplete_frames": 0,
+    "retained_frames": 22
+  },
+  "spi_hz": 8928571,
+  "clock_hz": 125000000,
+  "lcd": [
+    {
+      "stage": 0,
+      "host_settle_seconds": 0.8921372919576243,
+      "lcd_crc": "20191370",
+      "bytes": 204800,
+      "rectangles": 1,
+      "microseconds": 227726,
+      "frames": 4
+    },
+    {
+      "stage": 1,
+      "host_settle_seconds": 0.5352088749641553,
+      "lcd_crc": "D6BCC5BA",
+      "bytes": 204800,
+      "rectangles": 1,
+      "microseconds": 232312,
+      "frames": 5
+    },
+    {
+      "stage": 2,
+      "host_settle_seconds": 0.30524779204279184,
+      "lcd_crc": "7F6CE1B7",
+      "bytes": 2304,
+      "rectangles": 2,
+      "microseconds": 7633,
+      "frames": 6
+    },
+    {
+      "stage": 3,
+      "host_settle_seconds": 0.30353591695893556,
+      "lcd_crc": "82F04F2B",
+      "bytes": 768,
+      "rectangles": 2,
+      "microseconds": 3946,
+      "frames": 7
+    },
+    {
+      "stage": 4,
+      "host_settle_seconds": 0.3022537080105394,
+      "lcd_crc": "49BAFD5D",
+      "bytes": 256,
+      "rectangles": 2,
+      "microseconds": 3377,
+      "frames": 8
+    },
+    {
+      "stage": 5,
+      "host_settle_seconds": 0.5519659999990836,
+      "lcd_crc": "1667F0E9",
+      "bytes": 202496,
+      "rectangles": 7,
+      "microseconds": 232152,
+      "frames": 9
+    },
+    {
+      "stage": 6,
+      "host_settle_seconds": 0.5522246670443565,
+      "lcd_crc": "20191370",
+      "bytes": 204800,
+      "rectangles": 1,
+      "microseconds": 233776,
+      "frames": 10
+    },
+    {
+      "stage": 7,
+      "host_settle_seconds": 0.3099171669455245,
+      "lcd_crc": "20191370",
+      "bytes": 204800,
+      "rectangles": 1,
+      "microseconds": 233776,
+      "frames": 10
+    }
+  ],
+  "baseline_host_settle": [
+    {
+      "stage": 0,
+      "host_settle_seconds": 0.9350242499494925,
+      "lcd_crc": "20191370",
+      "frames": 16
+    },
+    {
+      "stage": 1,
+      "host_settle_seconds": 0.5320416670292616,
+      "lcd_crc": "D6BCC5BA",
+      "frames": 17
+    },
+    {
+      "stage": 2,
+      "host_settle_seconds": 0.5423598340712488,
+      "lcd_crc": "7F6CE1B7",
+      "frames": 18
+    },
+    {
+      "stage": 3,
+      "host_settle_seconds": 0.5398839579429477,
+      "lcd_crc": "82F04F2B",
+      "frames": 19
+    },
+    {
+      "stage": 4,
+      "host_settle_seconds": 0.5405310420319438,
+      "lcd_crc": "49BAFD5D",
+      "frames": 20
+    },
+    {
+      "stage": 5,
+      "host_settle_seconds": 0.5506874590646476,
+      "lcd_crc": "1667F0E9",
+      "frames": 21
+    },
+    {
+      "stage": 6,
+      "host_settle_seconds": 0.5467937499051914,
+      "lcd_crc": "20191370",
+      "frames": 22
+    },
+    {
+      "stage": 7,
+      "host_settle_seconds": 0.30150483397301286,
+      "lcd_crc": "20191370",
+      "frames": 22
+    }
+  ],
+  "lcd_time_definition": "Window setup, RGB565 row conversion, DMA and interleaved I/O until final CS high; excludes following whole-snapshot CRC",
+  "lcd_crc_definition": "CRC of immutable monochrome source snapshot; not panel RAM readback or optical measurement",
+  "static_main_ram": 194964,
+  "static_main_ram_delta": 324,
+  "initial_heap": 34412,
+  "dma_scratch": [
+    537137152,
+    537138432
+  ],
+  "core1_stack_bottom": 537139200,
+  "full_frame_limit": "No TE connection or hardware page swap; full 320x320 writes still take about 230 ms",
+  "visual_uniformity": {
+    "user_confirmed": true,
+    "answer": "Да, изображение ровное, полос нет",
+    "confirmed_on_build": "c6dfc4d7",
+    "final_driver": "Same initialization, SPI windows and DMA; final changes skip identical frames and hidden calculator snapshots"
+  },
+  "markdown_regression": "Initial implementation reduced main heap by 2508 bytes and failed the native Markdown sequence. DMA rows moved to unused scratch X and temporary console copy to the reserved VM stack. Exact long Russian Markdown and scroll passed again.",
+  "tests": [
+    "LCD tile plans reconstructed exact independent pixels over sparse/dense/edge/fragmentation cases",
+    "Complete CLS/PRINT frames and explicit SHOW under ASan/UBSan; long Russian Markdown parser",
+    "Exact-UID DMA/changed byte counts/native snapshots and retained BASIC frames on final firmware",
+    "idle calculator streams two complete native frames within five seconds",
+    "320x320 APP geometry, borrowed 12800-byte bitmap and every physical framebuffer pixel matched an independent oracle",
+    "native proportional text below row 64 and exact restoration after fullscreen graphics",
+    "old ABI 6 M0 APP still receives 192x64 and is displayed centred pixel-for-pixel",
+    "BASIC GW/GH are 320 and PSET reaches pixel 319,319",
+    "M61 native glyph rendering and 320x240 Markdown viewport with working scroll",
+    "Core 1 UART/I2C plus persistent font settings, live Flash write and reset",
+    "Three USB-powered sleep/wake cycles with DMA drain, full repaint and unchanged calculator data",
+    "STM32 F401 product A00 and F411 Classic V3 frozen source builds with existing memory/stack gates",
+    "Two first moves e2-e3, book off, level 2, depth 8, 420 nodes; all 64 squares and rank labels matched"
+  ],
+  "chess_runs": [
+    {
+      "repeat": 0,
+      "temperature": "session-first",
+      "menu_seconds": 2.420431707985699,
+      "seconds": 30.498516209074296,
+      "nodes": 420,
+      "nodes_per_second": 13.771161754913061,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 2.695201834081672
+        },
+        {
+          "nodes": 21,
+          "seconds": 8.726801041979343
+        },
+        {
+          "nodes": 42,
+          "seconds": 9.737618334009312
+        },
+        {
+          "nodes": 63,
+          "seconds": 10.82889604207594
+        },
+        {
+          "nodes": 84,
+          "seconds": 11.883105417015031
+        },
+        {
+          "nodes": 105,
+          "seconds": 12.855786625063047
+        },
+        {
+          "nodes": 126,
+          "seconds": 13.912348042009398
+        },
+        {
+          "nodes": 147,
+          "seconds": 15.005015209084377
+        },
+        {
+          "nodes": 168,
+          "seconds": 16.017955083982088
+        },
+        {
+          "nodes": 189,
+          "seconds": 17.07389762508683
+        },
+        {
+          "nodes": 210,
+          "seconds": 18.16807354206685
+        },
+        {
+          "nodes": 231,
+          "seconds": 19.301248209085315
+        },
+        {
+          "nodes": 252,
+          "seconds": 20.517676417017356
+        },
+        {
+          "nodes": 273,
+          "seconds": 21.69350233406294
+        },
+        {
+          "nodes": 294,
+          "seconds": 22.91321583406534
+        },
+        {
+          "nodes": 315,
+          "seconds": 23.93093629204668
+        },
+        {
+          "nodes": 336,
+          "seconds": 24.98866541706957
+        },
+        {
+          "nodes": 357,
+          "seconds": 26.052520667086355
+        },
+        {
+          "nodes": 378,
+          "seconds": 27.07112091698218
+        },
+        {
+          "nodes": 399,
+          "seconds": 28.088490167050622
+        },
+        {
+          "nodes": 420,
+          "seconds": 29.14801141701173
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 30.406313625047915,
+      "board_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "native_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "lcd_transfer_crc": "A2944C6F",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "adf3d57ad7143d4f0be60e2a49c8dfbe41c2c4b1eecb20c14c091968c6b0ea17"
+    },
+    {
+      "repeat": 1,
+      "temperature": "repeat",
+      "menu_seconds": 1.0794440420577303,
+      "seconds": 22.519654875039123,
+      "nodes": 420,
+      "nodes_per_second": 18.650374631874563,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 0.04173854202963412
+        },
+        {
+          "nodes": 21,
+          "seconds": 1.794658500002697
+        },
+        {
+          "nodes": 42,
+          "seconds": 2.844894167035818
+        },
+        {
+          "nodes": 63,
+          "seconds": 3.9325873750494793
+        },
+        {
+          "nodes": 84,
+          "seconds": 4.945763083989732
+        },
+        {
+          "nodes": 105,
+          "seconds": 5.961495624971576
+        },
+        {
+          "nodes": 126,
+          "seconds": 7.012953417026438
+        },
+        {
+          "nodes": 147,
+          "seconds": 8.067333459039219
+        },
+        {
+          "nodes": 168,
+          "seconds": 9.126742791966535
+        },
+        {
+          "nodes": 189,
+          "seconds": 10.178133749985136
+        },
+        {
+          "nodes": 210,
+          "seconds": 11.232639124966227
+        },
+        {
+          "nodes": 231,
+          "seconds": 12.410645709023811
+        },
+        {
+          "nodes": 252,
+          "seconds": 13.59182354202494
+        },
+        {
+          "nodes": 273,
+          "seconds": 14.808353208936751
+        },
+        {
+          "nodes": 294,
+          "seconds": 15.987135833944194
+        },
+        {
+          "nodes": 315,
+          "seconds": 17.04163712495938
+        },
+        {
+          "nodes": 336,
+          "seconds": 18.09703724994324
+        },
+        {
+          "nodes": 357,
+          "seconds": 19.11467595899012
+        },
+        {
+          "nodes": 378,
+          "seconds": 20.176608999958262
+        },
+        {
+          "nodes": 399,
+          "seconds": 21.198175166966394
+        },
+        {
+          "nodes": 420,
+          "seconds": 22.26005974994041
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 22.423951084027067,
+      "board_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "native_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+      "lcd_transfer_crc": "A2944C6F",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "5dcb942b758cc3d0a69b4b5f7dd881f716a52c76110e517b1582b296e3221d62"
+    }
+  ],
+  "previous_warm_reference_seconds": 22.966603208,
+  "previous_reference_note": "0.8.7 large font, previous session; not a same-session A/B",
+  "intermediate_warm_seconds": 25.608576292,
+  "intermediate_note": "c6dfc4d7, before fast unchanged-frame path and skipping hidden calculator snapshots",
+  "calculator_state_restored": true,
+  "game_files_unchanged": true,
+  "sd_game_directory": "/MK61S-M61-20261017-185043/Turochamp",
+  "hardware_power": "USB only; no battery check in this task",
+  "evidence_sha256": {
+    "host-asan-markdown.log": "f4e052af88b2cf7a64eb28944407863ce1f6e0e850e58d02c47d5541a0bd021e",
+    "stm32-f401.log": "5a95d10539f5542a10a3e19728a7d6b822868ef1620cd1cfa2822816ca1371ad",
+    "stm32-f411.log": "057efd83ec28bf570d372f5a6247f94753e565f51e6eb26307fa8ad84536bc67",
+    "accelerated-verified-hil/result.json": "73e95038dc2b89271b6938c2f4ce4bc9b8df7ceb5e5b6e6d4d4b7f2e5577214f",
+    "native320-verified-hil/result.json": "c6576b8edcfa693410e192400cd0ef6f5dfa64cf09e78795509991593a87eb6c",
+    "io-verified-hil/result.json": "565008636b9ddd4e557348aa78dacffd9c4769eb201571ce6e379e3f2669e4e4",
+    "sleep-result.json": "09b3ac77630059fc7cadb53c8795e3de2fab33020efcedfc546c04a311ec0e98",
+    "chess-final/report.json": "7f766ef93a88290480de4c01a73633abdaff5ccfced6843a8fbe3a60ab84a9a5"
+  }
+}

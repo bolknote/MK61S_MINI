@@ -57,7 +57,16 @@ u64 save_at = 0, last_activity = 0;
 u64 last_usb_service = 0;
 u32 max_usb_gap = 0;
 unsigned math_failures = 0;
+constexpr u32 FRAME_INTERVAL_US=20000;
 constexpr u32 STACK_PATTERN = 0xD52AC37E;
+bool calculator_visible() {
+    return !services.active() && ui.page()==picocalc::Page::CALCULATOR && !m61_text::display_owned();
+}
+picocalc::Snapshot display_snapshot() {
+    // Text/graphics pages own their entire raster. Reading and formatting all
+    // five calculator values cannot change those pixels and stalls the VM.
+    return calculator_visible()?calculator.snapshot():picocalc::Snapshot{};
+}
 void mark_stack() {
     uintptr_t sp;
     __asm volatile("mrs %0, msp" : "=r"(sp));
@@ -135,6 +144,9 @@ void report(unsigned math_failures) {
     std::printf("LCD_BKL=%d KBD_BKL=%d\n", keyboard.lcd_backlight(), keyboard.key_backlight());
     std::printf("LCD=ST7365P RGB565 SPI_HZ=%lu FRAMES=%lu\n",
                 (unsigned long)panel.spi_hz(), (unsigned long)panel.frames());
+    std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu\n",
+        panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
+        (unsigned long)panel.last_us(),(unsigned long)panel.full_frames());
     const auto io=picocalc::io_worker::statistics();
     std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
         io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
@@ -213,8 +225,8 @@ bool service_pump(void*, u8& key) {
     picocalc::script::service_effects();
     const u64 now = time_us_64();
     static u64 next = 0;
-    if(panel_ready && !remote_screen.holds_frame() && now >= next) {
-        screen.render(calculator.snapshot(), keyboard.online(), &ui, &services); panel.flush(screen); next = time_us_64() + 80000;
+    if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending() && now >= next) {
+        screen.render(display_snapshot(), keyboard.online(), &ui, &services); panel.flush(screen); next = time_us_64() + FRAME_INTERVAL_US;
     }
     picocalc::KeyEvent event{};
     if(key_event(event) && event.pressed()) {
@@ -253,9 +265,9 @@ int main() {
     remote_screen.init({nullptr,
         [](void*) { return (unsigned)tud_cdc_write_available(); },
         [](void*,const u8* data,unsigned size) { const unsigned n=tud_cdc_write(data,size);tud_cdc_write_flush();return n; },
-        [](void*,u8* frame) { screen.render(calculator.snapshot(),keyboard.online(),&ui,&services);screen.logical_frame(ui,services,frame); },
+        [](void*,u8* frame) { screen.render(display_snapshot(),keyboard.online(),&ui,&services);screen.logical_frame(ui,services,frame); },
         [](void*) {
-            screen.render(calculator.snapshot(),keyboard.online(),&ui,&services);
+            screen.render(display_snapshot(),keyboard.online(),&ui,&services);
             if(panel_ready && !power.asleep()) panel.flush(screen);
         },
         [](void*,unsigned x,unsigned page,u8* out,unsigned count) {
@@ -480,18 +492,20 @@ int main() {
             // The USB instructions are static. Redraw only on a key or eject,
             // leaving the CPU and bus budget for mass-storage transfers.
             if(!usb || !drawn_usb || ejected != drawn_ejected || last_activity != drawn_activity) {
-                const auto model = calculator.snapshot();
-                if(std::strcmp(previous_indicator, model.indicator) != 0) {
+                const auto model = display_snapshot();
+                if(calculator_visible() && std::strcmp(previous_indicator, model.indicator) != 0) {
                     std::memcpy(previous_indicator, model.indicator, sizeof(previous_indicator));
                     std::printf("X=[%s]\n", model.indicator);
                 }
-                if(panel_ready && !remote_screen.holds_frame()) {
+                if(panel_ready && !remote_screen.holds_frame() && !picocalc::io_worker::frame_pending()) {
                     screen.render(model, keyboard.online(), &ui, &services);
                     panel.flush(screen);
                 }
-                drawn_usb = usb; drawn_ejected = ejected; drawn_activity = last_activity;
+                if(!panel_ready || !picocalc::io_worker::frame_pending()) {
+                    drawn_usb = usb; drawn_ejected = ejected; drawn_activity = last_activity;
+                }
             }
-            next_frame = time_us_64() + 80000;
+            next_frame = time_us_64() + FRAME_INTERVAL_US;
         }
         tight_loop_contents();
     }

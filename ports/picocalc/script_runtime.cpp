@@ -460,11 +460,18 @@ int flow_text(const char* text,unsigned length,unsigned first,unsigned maximum,b
   return (int)row;
 }
 void show_lines(const char *lines, unsigned stride, unsigned count,
-                unsigned cursor_x, unsigned cursor_y) {
-  clear(nullptr);
-  for (unsigned y = 0; y < count && y < grid.rows(); ++y)
-    for (unsigned x = 0; x < grid.cols() && lines[y * stride + x]; ++x)
-      put((u8)x, (u8)y, mk8::codepoint((u8)lines[y * stride + x]), nullptr);
+                unsigned cursor_x, unsigned cursor_y,bool incremental) {
+  if(!incremental) clear(nullptr);
+  for(unsigned y=0;y<grid.rows();++y) {
+    const char* line=y<count?lines+y*stride:nullptr;
+    unsigned length=0;
+    if(line) while(length<stride && line[length]) ++length;
+    for(unsigned x=0;x<grid.cols();++x) {
+      const u16 cp=x<length?mk8::codepoint((u8)line[x]):' ';
+      if(incremental?grid.cell(x,y)!=cp:cp!=' ')
+        put((u8)x,(u8)y,cp,nullptr);
+    }
+  }
   grid.setCursor((u8)cursor_x, (u8)cursor_y);
   m61_text::claim_display();
 }
