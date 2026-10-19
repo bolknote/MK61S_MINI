@@ -331,7 +331,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
         operands=copied;
       }
     }
-    const Op op=Op(operands[0]);
+    Op op=Op(operands[0]);
     if(op==Op::SOURCE_POS) {
       // Ordinary instructions fetch exactly once. Only a diagnostic prefix
       // needs lookahead; leave PC at its first byte on a truncated tail/HALT,
@@ -352,6 +352,13 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
       } while(next_op==Op::SOURCE_POS);
       if(next_op==Op::HALT)goto done;
       pc=following;
+#if !defined(LANGUAGE_VM_TRACE)
+      if(raw) {
+        // No callback or write occurs after lookahead. Reuse its opcode and
+        // raw operand address instead of fetching the same instruction again.
+        operands=raw+pc;op=next_op;
+      } else
+#endif
       continue;
     }
     // Only supported fixed-width handlers advance PC. Multi-byte handlers
@@ -361,9 +368,10 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     const uint8_t* p=operands+1;
     Value result;
     int32_t x,y,z;
-    if(op>=Op::CONST_0 && op<=Op::CONST_15) {
+    const uint8_t small=uint8_t(uint8_t(op)-uint8_t(Op::CONST_0));
+    if(small<16) {
       if(top>=ceiling)break;
-      result=int32_t((uint8_t)op-(uint8_t)Op::CONST_0);
+      result=small;
       SPAN_TRACE();*top++=result;
     } else switch(op) {
       case Op::CONST_I8: case Op::CONST_I16: case Op::BLOCK_INDEX: case Op::CONST_I32:
