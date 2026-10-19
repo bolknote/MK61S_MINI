@@ -89,6 +89,8 @@ def main():
     parser.add_argument('--generator-runtime-elf',type=Path,
         help='ELF with integer helpers for input generation; defaults to --owned-elf (firmware may remove unused helpers)')
     parser.add_argument('--baseline-elf',type=Path)
+    parser.add_argument('--require-no-instruction-regression',action='store_true',
+        help='Require OWN to execute no more instructions than BASE on every input; not a hardware timing check')
     parser.add_argument('--qfplib-elf',type=Path,required=True)
     parser.add_argument('--legacy-streams',action='store_true')
     parser.add_argument('--legacy-report',type=Path,help='Verify every legacy input/result against a previous acceptance report')
@@ -96,6 +98,8 @@ def main():
     parser.add_argument('--output-dir',type=Path,required=True)
     parser.add_argument('--json',type=Path,required=True)
     args=parser.parse_args()
+    if args.require_no_instruction_regression and not args.baseline_elf:
+        parser.error('--require-no-instruction-regression requires --baseline-elf')
     assert not args.legacy_report or args.legacy_streams
     sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
     owned=args.owned_elf.resolve();full=not args.legacy_streams
@@ -123,6 +127,10 @@ def main():
                     got,counters=trace_call(machine,symbol,a,b)
                     assert got==expected,(op,group['name'],name,pair,hex(got))
                     traces[name].append(counters);pair['trace'][name]=counters
+                if args.require_no_instruction_regression:
+                    now,baseline=(pair['trace'][name]['instructions'] for name in ('OWN','BASE'))
+                    assert now<=baseline,(op,group['name'],pair['a'],pair['b'],
+                        'instruction regression',now,baseline)
             stats.append({'name':group['name'],'trace':{name:{key:{
                 'mean':statistics.mean(row[key] for row in values),
                 'min':min(row[key] for row in values),'max':max(row[key] for row in values)}
@@ -134,6 +142,7 @@ def main():
         'input_generator':inputs,'cases_per_implementation':384,
         'elf_sha256':{name:hashlib.sha256(path.read_bytes()).hexdigest() for name,path in paths.items()},
         'legacy_inputs_and_results_unchanged':True if args.legacy_report else None,
+        'no_instruction_regression_against_baseline':True if args.require_no_instruction_regression else None,
         'groups':rows,'summary':summary,
         'abi':'All generator and arithmetic calls verify R4-R11/SP preservation and bounded writes.',
         'timing_note':'Executed ARM instructions, taken transfers (including the final return), MULs and data words accessed. Not RP2040 cycles, microseconds, or evidence of a hardware speed ordering.'}

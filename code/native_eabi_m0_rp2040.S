@@ -658,36 +658,28 @@ l\@_1:
 .endm
 
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
-.Lrp_mul_short_a:
- lsls r7,r1,#12
- beq 1f
- b .Lrp_mul_short
-1:
- mov r0,r2
- mov r7,r1
- mov r1,r3
- mov r3,r7
- b .Lrp_mul_scale_a
 .Lrp_mul_short_b:
  lsls r7,r3,#12
- beq .Lrp_mul_scale_a
+ beq .Lrp_mul_scale
  mov r2,r0
  movs r0,#0
  mov r7,r1
  mov r1,r3
  mov r3,r7
  b .Lrp_mul_short
-.Lrp_mul_scale_a:
- mov r7,r1
- eors r7,r3
- lsrs r7,#31
- lsls r7,#31
- lsls r1,#12
- lsrs r1,#12
- adds r6,#1
- lsls r6,#20
- orrs r1,r6
- orrs r1,r7
+.Lrp_mul_short_a:
+ lsls r7,r1,#12
+ beq 1f
+ b .Lrp_mul_short
+1:
+ mov r0,r2
+.Lrp_mul_scale:
+ // One high word is a signed power of two. Adding both packed high
+ // words and subtracting the bias preserves the other fraction and
+ // XORs the signs modulo 2^32. The guard proves a normal result.
+ ldr r7,=0x3ff00000
+ adds r1,r3
+ subs r1,r7
  pop {r4-r7,pc}
 .Lrp_mul_slow:
  sub sp,#4
@@ -870,6 +862,31 @@ l\@_1:
 @ and so 1ulp is 2^-53 and so the calculation above suffices.
 
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
+.Lrp2040_small_divisor:
+ // R7 is index<<29; R6 is the guarded biased exponent addend.
+ lsls r6,#2
+ mov r12,r6
+ mov r6,r1
+ eors r6,r3
+ lsrs r6,#31
+ add r12,r6
+ lsls r1,#12
+ lsrs r1,#12
+ // The three-bit dyadic index is the entire divisor fraction.
+ lsrs r3,r7,#12
+ lsrs r7,#27
+ movs r6,#1
+ lsls r6,#20
+ orrs r1,r6
+ orrs r3,r6
+ adr r6,.Lrp2040_small_reciprocals
+ ldr r6,[r6,r7]
+ push {r2,r3}
+ lsls r4,r1,#11
+ lsrs r5,r0,#21
+ orrs r4,r5
+ b .Lrp2040_quotient_refine
+
 .Lrp2040_div_slow:
  sub sp,#4
  bl mk61_m0_ddiv_slow
@@ -904,20 +921,13 @@ ddiv0:                         @ entry point from dtan
  lsls r7, r3, #15
  bne 88f
  lsls r7, r3, #12
- bne .Lrp2040_small_divisor_entry
- mov r7, r1
- eors r7, r3
- lsrs r7, r7, #31
- lsls r7, r7, #31
- lsls r1, r1, #12
- lsrs r1, r1, #12
- adds r6, #2
- lsls r6, r6, #20
- orrs r1, r6
- orrs r1, r7
+ bne .Lrp2040_small_divisor
+ // Subtract the packed power-of-two divisor and restore the bias;
+ // its sign bit subtracts exactly like XOR, with no rounding needed.
+ ldr r7,=0x3ff00000
+ subs r1,r3
+ adds r1,r7
  pop {r4-r7,pc}
-.Lrp2040_small_divisor_entry:
- b .Lrp2040_small_divisor
 88:
  // Respect an in-flight divider operation, including an interrupted caller.
  ldr r7, =0xd0000078
@@ -1118,31 +1128,6 @@ dd_2:
  adds r1,r2                    @ pack exponent
  adds r1,r7                    @ pack sign
  pop {r4-r7,r15}
-
-.Lrp2040_small_divisor:
- // R7 is index<<29; R6 is the guarded biased exponent addend.
- lsrs r7,#27
- lsls r6,#2
- mov r12,r6
- mov r6,r1
- eors r6,r3
- lsrs r6,#31
- add r12,r6
- lsls r1,#12
- lsrs r1,#12
- lsls r3,#12
- lsrs r3,#12
- movs r6,#1
- lsls r6,#20
- orrs r1,r6
- orrs r3,r6
- ldr r6,=.Lrp2040_small_reciprocals
- ldr r6,[r6,r7]
- push {r2,r3}
- lsls r4,r1,#11
- lsrs r5,r0,#21
- orrs r4,r5
- b .Lrp2040_quotient_refine
 
 .align 2
 // Nearest-even values of 2^33/(8+i), generated from exact integers.

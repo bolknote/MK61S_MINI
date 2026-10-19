@@ -1,0 +1,6746 @@
+{
+  "schema": 1,
+  "status": "INSTRUCTION_REGRESSION_REMOVED_HARDWARE_PENDING",
+  "recorded_at": "2026-10-19T14:28:29.027345+03:00",
+  "scope": "Remove the added ARM instruction cost on RP2040 powers-of-two multiplication and dyadic-seed division without changing Cortex-M4 or full-significand profiles.",
+  "baseline": {
+    "immediate_commit": "f1010d60d",
+    "before_full_significand_commit": "7d65ccf4f",
+    "immediate_assembly_sha256": "a5ebe5c217198d336be15bc77c36fa8f85b6677e8ee36236800acbf95c178234",
+    "previous_report": "doc/measurements/picocalc-m0-full-mantissas-20261019.json",
+    "legacy_input_report": "doc/measurements/picocalc-m0-muldiv-20261019.json"
+  },
+  "implementation": {
+    "power_multiply": "For a guarded normal product with one exact power-of-two operand, high_result = high_a + high_b - 0x3ff00000 modulo 2^32. The exponent range proves that the final magnitude does not spill into the sign. Modulo arithmetic XORs the signs and preserves the other operand fraction. Only the low result word is moved when the first operand is the power of two; no high-word swap or mantissa unpacking is needed.",
+    "power_divide": "For a guarded normal quotient by a power of two, high_result = high_a - high_b + 0x3ff00000 modulo 2^32. The low dividend word is unchanged. No rounding is needed.",
+    "dyadic_seed": "Move the seed helper before the division entry so a Thumb-1 conditional branch reaches it directly. The three-bit index already contains the entire divisor fraction; form its normal high word directly. Use ADR for the reciprocal table, avoiding the address-literal read. The reciprocal values and exact quotient/refinement/rounding core are unchanged.",
+    "sio": "The nine-ALU-instruction SIO latency block is unchanged. Power/seed shortcuts do not access the divider; the existing dirty-divider preservation checks pass.",
+    "license": "Existing BSD-3-Clause foundation and project changes; external Qfplib is never copied or linked into firmware.",
+    "source_sha256": {
+      "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+      "tests/profile_m0_eabi_full.py": "a770505a8db0abef457e21690f465599c0af139df60965ee7429d6a8045a08f5",
+      "tests/native_eabi_m0_arm_self_test.py": "894bd99f6a5dca9c59668acc37ab9510d341a97a63ee251584cd3b035fd79e2f",
+      "tests/fixtures/m0_eabi_muldiv_benchmark.c": "9e8423d949d5a2457034039289cabc318bde8d0bf1691454ee63929998d58b7b",
+      "tests/check_m0_eabi_elf.py": "54c4b6d957516336688602a852355337547cc00f2b62c8f4f7d813fcd2b04634",
+      "tests/build_m0_eabi_benchmark.py": "d3e493e7643d38549060c018070b3a18e365b3f9bb5e2bf3e95504266f6ccb51",
+      "tests/hil_m0_eabi_benchmark.py": "62750d20ef92bc21537d56dad25f0492e5d3b603df3c8b0bcc4bcfd20e6425e9"
+    }
+  },
+  "instruction_acceptance": {
+    "status": "PASS",
+    "legacy_cases": 384,
+    "full_significand_cases": 384,
+    "per_case_no_instruction_increase_vs_7d65ccf4f_on_legacy_inputs": true,
+    "per_case_no_instruction_increase_vs_f1010d60d_on_legacy_inputs": true,
+    "all_full_significand_trace_counters_identical_to_f1010d60d": true,
+    "production_and_standalone_results_and_traces_identical": true,
+    "negative_control": {
+      "status": "PASS",
+      "previous_commit_with_regression_rejected": true,
+      "tested_commit": "f1010d60d",
+      "ceiling_commit": "7d65ccf4f",
+      "expected_failure": "AssertionError: ('dmul', 'powers_of_two', 'BE70000000000000', '405BBE96556B06F2', 'instruction regression', 41, 40)",
+      "command": [
+        "tests/profile_m0_eabi_full.py",
+        "--owned-elf",
+        ".build/m0-full-20261019/arm/runtime.elf",
+        "--baseline-elf",
+        ".build/m0-muldiv-20261019/arm/runtime.elf",
+        "--qfplib-elf",
+        ".build/m0-eabi-qfplib/qfplib.elf",
+        "--legacy-streams",
+        "--legacy-report",
+        "doc/measurements/picocalc-m0-muldiv-20261019.json",
+        "--require-no-instruction-regression",
+        "--output-dir",
+        ".build/m0-special-20261019/negative-generator",
+        "--json",
+        ".build/m0-special-20261019/negative-unexpected-pass.json"
+      ]
+    },
+    "note": "These are executed ARM instruction/branch/MUL/data-access counts, not RP2040 cycles or microseconds."
+  },
+  "special_streams": [
+    {
+      "operation": "dmul",
+      "name": "powers_of_two",
+      "mean_instructions": {
+        "OWN": 28.5,
+        "QFP": 124,
+        "BASE": 37,
+        "F101": 37.5
+      },
+      "label_meaning": {
+        "BASE": "7d65ccf4f",
+        "F101": "f1010d60d",
+        "OWN": "current",
+        "QFP": "external Qfplib"
+      },
+      "pairs": [
+        {
+          "a": "4017890A7DEE56B1",
+          "b": "4180000000000000",
+          "result": "41A7890A7DEE56B1",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C1EB3EDB83B8C463",
+          "b": "40D0000000000000",
+          "result": "C2CB3EDB83B8C463",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE70000000000000",
+          "b": "405BBE96556B06F2",
+          "result": "BEDBBE96556B06F2",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE00000000000000",
+          "b": "BED4E86403806520",
+          "result": "3CE4E86403806520",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3E557C072F3B8B65",
+          "b": "4120000000000000",
+          "result": "3F857C072F3B8B65",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE2B754466636EED",
+          "b": "4140000000000000",
+          "result": "BF7B754466636EED",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C000000000000000",
+          "b": "41CEE2B1B439CE85",
+          "result": "C1DEE2B1B439CE85",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C130000000000000",
+          "b": "C140EA58DE754E7D",
+          "result": "4280EA58DE754E7D",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3E9F90FA8E5E889A",
+          "b": "4020000000000000",
+          "result": "3ECF90FA8E5E889A",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF1191EAEC071AA4",
+          "b": "4090000000000000",
+          "result": "BFB191EAEC071AA4",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BFE0000000000000",
+          "b": "4013AB1D61AC586D",
+          "result": "C003AB1D61AC586D",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE30000000000000",
+          "b": "BEE001CC8FBC7F88",
+          "result": "3D2001CC8FBC7F88",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3E8821F1364824F2",
+          "b": "4170000000000000",
+          "result": "400821F1364824F2",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BEBAC17F62F7BFF5",
+          "b": "40A0000000000000",
+          "result": "BF6AC17F62F7BFF5",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF90000000000000",
+          "b": "3EA86B32A8EB9905",
+          "result": "BE486B32A8EB9905",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF00000000000000",
+          "b": "C164F2552EE08F82",
+          "result": "4074F2552EE08F82",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3EB5018DAE034727",
+          "b": "4060000000000000",
+          "result": "3F25018DAE034727",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BEF1F4483C37E35C",
+          "b": "41C0000000000000",
+          "result": "C0C1F4483C37E35C",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C090000000000000",
+          "b": "3EB39F2F0583180C",
+          "result": "BF539F2F0583180C",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF20000000000000",
+          "b": "C027069BBD086B79",
+          "result": "3F57069BBD086B79",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3E6066E2CA031FA4",
+          "b": "4080000000000000",
+          "result": "3EF066E2CA031FA4",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C1B2211996F1E951",
+          "b": "40D0000000000000",
+          "result": "C292211996F1E951",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BEF0000000000000",
+          "b": "3E8F94326C6B645E",
+          "result": "BD8F94326C6B645E",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C0F0000000000000",
+          "b": "C17CF719525F1D0E",
+          "result": "427CF719525F1D0E",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3F2A28860BFA7DB3",
+          "b": "4180000000000000",
+          "result": "40BA28860BFA7DB3",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C0F77F532BC0E0C5",
+          "b": "4140000000000000",
+          "result": "C2477F532BC0E0C5",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF40000000000000",
+          "b": "414C3738071D53A5",
+          "result": "C09C3738071D53A5",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF60000000000000",
+          "b": "C07047FA1D8EF66D",
+          "result": "3FE047FA1D8EF66D",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40E809B31957D37C",
+          "b": "3FF0000000000000",
+          "result": "40E809B31957D37C",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C15349BFE1486EF5",
+          "b": "3FD0000000000000",
+          "result": "C13349BFE1486EF5",
+          "trace": {
+            "OWN": {
+              "instructions": 27,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 34,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C1B0000000000000",
+          "b": "3E1B3A0D466FF890",
+          "result": "BFDB3A0D466FF890",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C010000000000000",
+          "b": "BE3F4FCDB1534ECE",
+          "result": "3E5F4FCDB1534ECE",
+          "trace": {
+            "OWN": {
+              "instructions": 30,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 124,
+              "taken_transfers": 8,
+              "multiplies": 16,
+              "stack_reads": 10,
+              "stack_writes": 10,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 40,
+              "taken_transfers": 3,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 41,
+              "taken_transfers": 4,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "operation": "ddiv",
+      "name": "dyadic_seeds",
+      "mean_instructions": {
+        "OWN": 126.25,
+        "QFP": 160.375,
+        "BASE": 127,
+        "F101": 128.875
+      },
+      "label_meaning": {
+        "BASE": "7d65ccf4f",
+        "F101": "f1010d60d",
+        "OWN": "current",
+        "QFP": "external Qfplib"
+      },
+      "pairs": [
+        {
+          "a": "3EEFCF21442CA90C",
+          "b": "41B0000000000000",
+          "result": "3D2FCF21442CA90C",
+          "trace": {
+            "OWN": {
+              "instructions": 29,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 35,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 36,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF994AB1C3575D2E",
+          "b": "3DF2000000000000",
+          "result": "C1967B48ADA2FD7E",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3F5A4906FC5E57E3",
+          "b": "BF34000000000000",
+          "result": "C0150738C9E5131C",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF25A10F605FD0C5",
+          "b": "C156000000000000",
+          "result": "3DBF75E7D1FFBB4D",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "409DAC81EFAAEB6F",
+          "b": "3EB8000000000000",
+          "result": "41D3C8569FC7479F",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF8A519F1D628CD3",
+          "b": "3F2A000000000000",
+          "result": "C050323A883CA56E",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40C1D689DD4D4901",
+          "b": "C12C000000000000",
+          "result": "BF8462E6B3C60A4A",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BFD034CA27697E2E",
+          "b": "C09E000000000000",
+          "result": "3F2149602A0A2031",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "41AC2F279F40646B",
+          "b": "4130000000000000",
+          "result": "406C2F279F40646B",
+          "trace": {
+            "OWN": {
+              "instructions": 29,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 35,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 36,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BEB1DDF1E74F306E",
+          "b": "3E22000000000000",
+          "result": "C07FC37529705619",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40E2D760F84CC74F",
+          "b": "BE14000000000000",
+          "result": "C2BE2567F3AE0BB2",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 7,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE8FCABC19401198",
+          "b": "BF46000000000000",
+          "result": "3F371F146F7469E3",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40A274C0B098348D",
+          "b": "3FE8000000000000",
+          "result": "40A89BAB96204611",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BDF37B9B2055F8D3",
+          "b": "3F3A000000000000",
+          "result": "BEA7FA978A426D52",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3F7061D879F5E635",
+          "b": "C1AC000000000000",
+          "result": "BDB2B8F766CFE286",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 7,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C1766A5479031C5A",
+          "b": "C17E000000000000",
+          "result": "3FE7E8E2A33684A4",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "4012FAF82682B6A6",
+          "b": "40C0000000000000",
+          "result": "3F42FAF82682B6A6",
+          "trace": {
+            "OWN": {
+              "instructions": 29,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 35,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 36,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C124462ED48929B6",
+          "b": "4062000000000000",
+          "result": "C0B2057EF5CF4185",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3FE78B004FC04CFB",
+          "b": "BE44000000000000",
+          "result": "C192D599D966A3FC",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BFF179B865D17C53",
+          "b": "C016000000000000",
+          "result": "3FC96B3AC2A511ED",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40497C0E3AE720B2",
+          "b": "40D8000000000000",
+          "result": "3F60FD5ED1EF6B21",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C1C43CAB7D4FF77B",
+          "b": "418A000000000000",
+          "result": "C028E8358689CE21",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "40D848A0E7062F26",
+          "b": "BF0C000000000000",
+          "result": "C1BBC0B7E374C82B",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BE1801CEF5D502FE",
+          "b": "C01E000000000000",
+          "result": "3DE99B876C9EF220",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "4047E9F495311DF8",
+          "b": "3F60000000000000",
+          "result": "40D7E9F495311DF8",
+          "trace": {
+            "OWN": {
+              "instructions": 29,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 35,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 36,
+              "taken_transfers": 1,
+              "multiplies": 0,
+              "stack_reads": 5,
+              "stack_writes": 5,
+              "constant_reads": 1,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C0096C577E51B986",
+          "b": "3DF2000000000000",
+          "result": "C206993153D6DDCC",
+          "trace": {
+            "OWN": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 181,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 159,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 161,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3E19C69E52097C5B",
+          "b": "BF34000000000000",
+          "result": "BED49EE50E6DFD16",
+          "trace": {
+            "OWN": {
+              "instructions": 162,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 184,
+              "taken_transfers": 7,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 162,
+              "taken_transfers": 7,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 164,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "C02009E7B90F0989",
+          "b": "BE46000000000000",
+          "result": "41C75439C75BB0C7",
+          "trace": {
+            "OWN": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 178,
+              "taken_transfers": 8,
+              "multiplies": 24,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 156,
+              "taken_transfers": 8,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 158,
+              "taken_transfers": 9,
+              "multiplies": 19,
+              "stack_reads": 9,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "3EFBCD71773078D3",
+          "b": "4158000000000000",
+          "result": "3D9288F64F75A5E2",
+          "trace": {
+            "OWN": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 148,
+              "taken_transfers": 7,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 128,
+              "taken_transfers": 8,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF07866B7CF2957E",
+          "b": "3EDA000000000000",
+          "result": "C01CF4358616DF60",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "41D2634E33855353",
+          "b": "BE3C000000000000",
+          "result": "C38503C7164F3AA8",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        },
+        {
+          "a": "BF303291317D5808",
+          "b": "BEAE000000000000",
+          "result": "4071470145DB0891",
+          "trace": {
+            "OWN": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 2,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "QFP": {
+              "instructions": 146,
+              "taken_transfers": 6,
+              "multiplies": 18,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "BASE": {
+              "instructions": 124,
+              "taken_transfers": 6,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 5,
+              "sio_reads": 0,
+              "sio_writes": 0
+            },
+            "F101": {
+              "instructions": 126,
+              "taken_transfers": 7,
+              "multiplies": 13,
+              "stack_reads": 7,
+              "stack_writes": 7,
+              "constant_reads": 3,
+              "sio_reads": 0,
+              "sio_writes": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "legacy_profile": {
+    "input_generator": {
+      "elf_sha256": "a1299bcd17f7345e1bebb9729008948eb84df87e5a5a6786c1af60662292cd86",
+      "integer_runtime_elf_sha256": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "source_sha256": "9e8423d949d5a2457034039289cabc318bde8d0bf1691454ee63929998d58b7b",
+      "seed": 1296314432,
+      "actual_arm_generator_calls": 385,
+      "writes": "Caller-provided state/output in the bounded test stack only."
+    },
+    "elf_sha256": {
+      "OWN": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "QFP": "bac9745ae4dba8329dc59fdfc884094e14abddf106c308cee2b5c5ccd20eb654",
+      "BASE": "46cc54f75c5806bf3f12ee2f2aa19f08ccfb79b759fcf2b414d68db83f528f78"
+    },
+    "inputs_and_results_unchanged": true,
+    "no_instruction_regression_against_baseline": true,
+    "summary": {
+      "dmul": [
+        {
+          "name": "full_precision",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 123.125,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.625,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 123.84375,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.625,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 128.40625,
+                "min": 124,
+                "max": 136
+              },
+              "taken_transfers": {
+                "mean": 9.625,
+                "min": 9,
+                "max": 10
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "short_operand",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 100.8125,
+                "min": 93,
+                "max": 107
+              },
+              "taken_transfers": {
+                "mean": 7.5625,
+                "min": 7,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 8,
+                "min": 8,
+                "max": 8
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 125.875,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.5625,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 103.75,
+                "min": 95,
+                "max": 111
+              },
+              "taken_transfers": {
+                "mean": 7.0625,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 8,
+                "min": 8,
+                "max": 8
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "both_short",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 85.40625,
+                "min": 84,
+                "max": 89
+              },
+              "taken_transfers": {
+                "mean": 6.71875,
+                "min": 6,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 121.125,
+                "min": 120,
+                "max": 124
+              },
+              "taken_transfers": {
+                "mean": 8.71875,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 88.6875,
+                "min": 87,
+                "max": 93
+              },
+              "taken_transfers": {
+                "mean": 5.71875,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "powers_of_two",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 28.5,
+                "min": 27,
+                "max": 30
+              },
+              "taken_transfers": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "multiplies": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "stack_reads": {
+                "mean": 5,
+                "min": 5,
+                "max": 5
+              },
+              "stack_writes": {
+                "mean": 5,
+                "min": 5,
+                "max": 5
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 124,
+                "min": 124,
+                "max": 124
+              },
+              "taken_transfers": {
+                "mean": 8,
+                "min": 8,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 37,
+                "min": 34,
+                "max": 40
+              },
+              "taken_transfers": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "multiplies": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "stack_reads": {
+                "mean": 5,
+                "min": 5,
+                "max": 5
+              },
+              "stack_writes": {
+                "mean": 5,
+                "min": 5,
+                "max": 5
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "rounding_ties",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 107.5,
+                "min": 106,
+                "max": 109
+              },
+              "taken_transfers": {
+                "mean": 6,
+                "min": 6,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 8,
+                "min": 8,
+                "max": 8
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 132,
+                "min": 132,
+                "max": 132
+              },
+              "taken_transfers": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 111,
+                "min": 109,
+                "max": 113
+              },
+              "taken_transfers": {
+                "mean": 5.5,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 8,
+                "min": 8,
+                "max": 8
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "normal_exponent_range",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 123.96875,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.46875,
+                "min": 4,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 124.5,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.46875,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 129.4375,
+                "min": 124,
+                "max": 136
+              },
+              "taken_transfers": {
+                "mean": 9.46875,
+                "min": 8,
+                "max": 10
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        }
+      ],
+      "ddiv": [
+        {
+          "name": "full_precision",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 162.40625,
+                "min": 142,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 5.96875,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 166.40625,
+                "min": 146,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 6.96875,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 166.40625,
+                "min": 146,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7.96875,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "short_operand",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 161,
+                "min": 144,
+                "max": 182
+              },
+              "taken_transfers": {
+                "mean": 5.9375,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 17.8125,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 163,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 6.9375,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 20.8125,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 165,
+                "min": 148,
+                "max": 186
+              },
+              "taken_transfers": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 17.8125,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "both_short",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 163.78125,
+                "min": 144,
+                "max": 182
+              },
+              "taken_transfers": {
+                "mean": 6.03125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 165.78125,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 7.03125,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 167.78125,
+                "min": 148,
+                "max": 186
+              },
+              "taken_transfers": {
+                "mean": 8.03125,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "dyadic_seeds",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 126.25,
+                "min": 29,
+                "max": 162
+              },
+              "taken_transfers": {
+                "mean": 6.28125,
+                "min": 1,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 13.8125,
+                "min": 0,
+                "max": 19
+              },
+              "stack_reads": {
+                "mean": 7.5625,
+                "min": 5,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 6.75,
+                "min": 5,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 160.375,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 7.03125,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 20.4375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 7.8125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 127,
+                "min": 35,
+                "max": 162
+              },
+              "taken_transfers": {
+                "mean": 6.28125,
+                "min": 1,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 13.8125,
+                "min": 0,
+                "max": 19
+              },
+              "stack_reads": {
+                "mean": 7.5625,
+                "min": 5,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 6.75,
+                "min": 5,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4.75,
+                "min": 3,
+                "max": 5
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "near_rounding_midpoints",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 177.09375,
+                "min": 174,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.3125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 21,
+                "min": 21,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 181.09375,
+                "min": 178,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7.3125,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 24,
+                "min": 24,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 181.09375,
+                "min": 178,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 8.3125,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 21,
+                "min": 21,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "normal_exponent_range",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 162.5625,
+                "min": 142,
+                "max": 180
+              },
+              "taken_transfers": {
+                "mean": 6.15625,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 166.5625,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 7.15625,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 166.5625,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 8.15625,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 4,
+                "min": 4,
+                "max": 4
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "full_significand_profile": {
+    "input_generator": {
+      "elf_sha256": "521aca006251c658c7e83c5c8ed5679ee138d1b55a0023e4d808045770b8e94b",
+      "integer_runtime_elf_sha256": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "source_sha256": "9e8423d949d5a2457034039289cabc318bde8d0bf1691454ee63929998d58b7b",
+      "seed": 4027670848,
+      "actual_arm_generator_calls": 385,
+      "writes": "Caller-provided state/output in the bounded test stack only."
+    },
+    "elf_sha256": {
+      "OWN": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "QFP": "bac9745ae4dba8329dc59fdfc884094e14abddf106c308cee2b5c5ccd20eb654",
+      "BASE": "4fa0d0764898a1ad1af40769c6da76f3bab976bac41edd2cd172013d885dafba"
+    },
+    "summary": {
+      "dmul": [
+        {
+          "name": "full_random",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 124.25,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.5,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 124.78125,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.5,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 124.25,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.5,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "mantissa_product_below_two",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 128.5,
+                "min": 124,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 4.8125,
+                "min": 4,
+                "max": 5
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 128.5,
+                "min": 124,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 7.8125,
+                "min": 7,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 128.5,
+                "min": 124,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 4.8125,
+                "min": 4,
+                "max": 5
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "mantissa_product_above_two",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 122.9375,
+                "min": 119,
+                "max": 128
+              },
+              "taken_transfers": {
+                "mean": 5.875,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 123.9375,
+                "min": 120,
+                "max": 129
+              },
+              "taken_transfers": {
+                "mean": 8.875,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 122.9375,
+                "min": 119,
+                "max": 128
+              },
+              "taken_transfers": {
+                "mean": 5.875,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "low_word_boundaries",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 124.78125,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.53125,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 125.375,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.53125,
+                "min": 8,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 124.78125,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.53125,
+                "min": 5,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "normal_exponent_range",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 124.28125,
+                "min": 119,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 5.53125,
+                "min": 4,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 124.84375,
+                "min": 120,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 8.53125,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 124.28125,
+                "min": 119,
+                "max": 133
+              },
+              "taken_transfers": {
+                "mean": 5.53125,
+                "min": 4,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        },
+        {
+          "name": "near_rounding_midpoints",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 122.84375,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.59375,
+                "min": 4,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 123.5625,
+                "min": 120,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 8.59375,
+                "min": 7,
+                "max": 9
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "stack_writes": {
+                "mean": 10,
+                "min": 10,
+                "max": 10
+              },
+              "constant_reads": {
+                "mean": 1,
+                "min": 1,
+                "max": 1
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 122.84375,
+                "min": 119,
+                "max": 130
+              },
+              "taken_transfers": {
+                "mean": 5.59375,
+                "min": 4,
+                "max": 6
+              },
+              "multiplies": {
+                "mean": 16,
+                "min": 16,
+                "max": 16
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            }
+          }
+        }
+      ],
+      "ddiv": [
+        {
+          "name": "full_random",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 163.5,
+                "min": 142,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.03125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.5625,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.1875,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 167.5,
+                "min": 146,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7.03125,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.5625,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.1875,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 163.5,
+                "min": 142,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.03125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.5625,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.1875,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "mantissa_ratio_below_one",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 162.9375,
+                "min": 142,
+                "max": 177
+              },
+              "taken_transfers": {
+                "mean": 5.9375,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.75,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.25,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 166.9375,
+                "min": 146,
+                "max": 181
+              },
+              "taken_transfers": {
+                "mean": 6.9375,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.75,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.25,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 162.9375,
+                "min": 142,
+                "max": 177
+              },
+              "taken_transfers": {
+                "mean": 5.9375,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.75,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.25,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "mantissa_ratio_above_one",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 158.625,
+                "min": 144,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 17.4375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.8125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 162.625,
+                "min": 148,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 20.4375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 7.8125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 158.625,
+                "min": 144,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 17.4375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.8125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "low_word_boundaries",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 158.96875,
+                "min": 142,
+                "max": 180
+              },
+              "taken_transfers": {
+                "mean": 5.90625,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 17.8125,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 162.96875,
+                "min": 146,
+                "max": 184
+              },
+              "taken_transfers": {
+                "mean": 6.90625,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 20.8125,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 158.96875,
+                "min": 142,
+                "max": 180
+              },
+              "taken_transfers": {
+                "mean": 5.90625,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 17.8125,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 7.9375,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "normal_exponent_range",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 162,
+                "min": 142,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.03125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 166,
+                "min": 146,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7.03125,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 21.375,
+                "min": 18,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 162,
+                "min": 142,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.03125,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 18.375,
+                "min": 15,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 8.125,
+                "min": 7,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        },
+        {
+          "name": "near_rounding_midpoints",
+          "trace": {
+            "OWN": {
+              "instructions": {
+                "mean": 177.09375,
+                "min": 174,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.4375,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 21,
+                "min": 21,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            },
+            "QFP": {
+              "instructions": {
+                "mean": 181.09375,
+                "min": 178,
+                "max": 187
+              },
+              "taken_transfers": {
+                "mean": 7.4375,
+                "min": 6,
+                "max": 8
+              },
+              "multiplies": {
+                "mean": 24,
+                "min": 24,
+                "max": 24
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 3,
+                "min": 3,
+                "max": 3
+              },
+              "sio_reads": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              },
+              "sio_writes": {
+                "mean": 0,
+                "min": 0,
+                "max": 0
+              }
+            },
+            "BASE": {
+              "instructions": {
+                "mean": 177.09375,
+                "min": 174,
+                "max": 183
+              },
+              "taken_transfers": {
+                "mean": 6.4375,
+                "min": 5,
+                "max": 7
+              },
+              "multiplies": {
+                "mean": 21,
+                "min": 21,
+                "max": 21
+              },
+              "stack_reads": {
+                "mean": 9,
+                "min": 9,
+                "max": 9
+              },
+              "stack_writes": {
+                "mean": 7,
+                "min": 7,
+                "max": 7
+              },
+              "constant_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_reads": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              },
+              "sio_writes": {
+                "mean": 2,
+                "min": 2,
+                "max": 2
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "tests": {
+    "armv6m": {
+      "status": "PASS",
+      "elf_sha256": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "actual_arm_calls": 1003613,
+      "nearby_addition_calls": 30732,
+      "multiplication_division_calls": 216448,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 60,
+        "dsub": 54,
+        "dmul": 124,
+        "ddiv": 144
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles."
+    },
+    "production_math": {
+      "status": "PASS",
+      "elf_sha256": "65440c6fa8fa96ce5f315c2d5469374f251e4c9e684d247143eff3d3a36d6215",
+      "actual_arm_calls": 1904,
+      "nearby_addition_calls": 0,
+      "multiplication_division_calls": 0,
+      "math_vectors": 1897,
+      "math_worst_ulp": {
+        "sin": 0,
+        "cos": 1,
+        "tan": 1,
+        "asin": 1,
+        "acos": 1,
+        "atan": 0,
+        "ln": 0,
+        "log10": 1,
+        "exp": 1,
+        "sqrt": 0,
+        "pow": 0
+      },
+      "sample_instructions": {
+        "dadd": 60,
+        "dsub": 54,
+        "dmul": 124,
+        "ddiv": 144
+      },
+      "abi": "Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes stack and SIO divider only",
+      "timing_note": "Instruction counts are emulator diagnostics, not measured RP2040 cycles.",
+      "sdk_rom_intrinsic_models": [
+        "__wrap___clzsi2",
+        "__wrap___clzdi2",
+        "__wrap_memcpy",
+        "__wrap_memset"
+      ]
+    },
+    "addition_vs_f1010d60d": {
+      "status": "PASS",
+      "production_elf_sha256": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "tested_elf_sha256": "4fa0d0764898a1ad1af40769c6da76f3bab976bac41edd2cd172013d885dafba",
+      "regions": {
+        "subtraction_entry": {
+          "bytes": 10,
+          "sha256": "71a0a613732c487970c1b358388c852a2b977db0a878ae25402f0bd42b005602"
+        },
+        "complete_addition_fast_paths": {
+          "bytes": 744,
+          "sha256": "6b22d764e4799dfdc4a713c57e7775e9de4bfe71941621e803e135800dba82b0"
+        }
+      },
+      "scope": "Read-only byte comparison: subtraction entry and all addition fast paths in the production ELF exactly match the independently tested ARM binary. No ELF execution or external fallback relocation check is performed."
+    },
+    "production_addition": {
+      "status": "PASS",
+      "production_elf_sha256": "65440c6fa8fa96ce5f315c2d5469374f251e4c9e684d247143eff3d3a36d6215",
+      "tested_elf_sha256": "eb1cae6a89abc36910f0a222d1eb71665bef692ecf8291c5c1efa893062970d7",
+      "regions": {
+        "subtraction_entry": {
+          "bytes": 10,
+          "sha256": "71a0a613732c487970c1b358388c852a2b977db0a878ae25402f0bd42b005602"
+        },
+        "complete_addition_fast_paths": {
+          "bytes": 744,
+          "sha256": "6b22d764e4799dfdc4a713c57e7775e9de4bfe71941621e803e135800dba82b0"
+        }
+      },
+      "scope": "Read-only byte comparison: subtraction entry and all addition fast paths in the production ELF exactly match the independently tested ARM binary. No ELF execution or external fallback relocation check is performed."
+    },
+    "m4_isolation": {
+      "status": "PASS",
+      "baseline_commit": "f1010d60d",
+      "preprocessed_bytes": 38,
+      "preprocessed_sha256": "7566b832c297181d9cfa453f324808b9925cdbffef3abba75e4ed8a3105d747c",
+      "shared_and_m4_implementation_unchanged": [
+        "code/native_eabi.cpp",
+        "code/native_eabi_arm.S",
+        "code/native_eabi_fixed.S",
+        "code/native_eabi_m0.cpp",
+        "code/native_eabi_m0.S",
+        "code/compact_math.cpp"
+      ]
+    },
+    "no_libgcc": {
+      "status": "PASS",
+      "link_map_sha256": "cedd0499f52f9c9b6530c664a58f2c49a5fb573a96cbb5f2268f1b925366c566"
+    },
+    "frozen_firmware_source": {
+      "status": "PASS",
+      "files_compared": 529,
+      "changed_files": [
+        "code/native_eabi_m0_rp2040.S"
+      ]
+    },
+    "external_qfplib_matches_prepared_app": {
+      "status": "PASS",
+      "regions": {
+        "qfp_dmul": {
+          "bytes": 348,
+          "sha256": "1aa3106697e982f25ee1c28d7a8bbbfc352aeecfeb9a887559051881c20afc76"
+        },
+        "qfp_ddiv": {
+          "bytes": 460,
+          "sha256": "bfea708ae10d55b591ef19734b27d115312e9bf592269abac734951ae6ba913a"
+        }
+      }
+    }
+  },
+  "raw_profile_artifacts": {
+    ".build/m0-special-20261019/legacy-profile.json": "be98681feaca3b597e11d0ed42d5673b453bb04d59a9b1cab2e0f8fda92ad0cb",
+    ".build/m0-special-20261019/full-profile.json": "d285fc109014bed166da40ffa03926a87f228c9067cbcf607394af499590002a",
+    ".build/m0-special-20261019/production-legacy-profile.json": "b1f7403396095d56f2d90b9689bfe18522db5f370b24698efb1c29c76b126702",
+    ".build/m0-special-20261019/production-full-profile.json": "ee65162ea725e8ae44e876c5b9511cfd9fb037f046bc4e84c69cb5cf4a5fd12d"
+  },
+  "firmware": {
+    "manifest": {
+      "profile": "picocalc-pico-h",
+      "prototype_version": "0.8.2",
+      "mcu": "RP2040",
+      "sampling_profile": false,
+      "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+      "cpu": "cortex-m0plus",
+      "float_abi": "soft",
+      "math": "compact_math + owned ARMv6-M IEEE runtime",
+      "arithmetic_runtime": "owned-m0",
+      "pico_sdk": "2.2.0",
+      "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+      "compiler": "14.2.1",
+      "flash_bytes": 649152,
+      "flash_limit": 2097152,
+      "static_ram_bytes": 166340,
+      "main_ram_region_bytes": 229376,
+      "stack_reserved_bytes": 32768,
+      "source_editor_capacity_bytes": 65534,
+      "settings_flash_offset": 2088960,
+      "settings_flash_bytes": 8192,
+      "uf2_bytes": 1298432,
+      "bin_sha256": "eee2bb8b65da304d9467ef28f2f86606169577f29ed2e5909b87ab36e72e3fde",
+      "uf2_sha256": "e78fb8ac51be8b0f5a3bc6cd0194873f75c9961f15a900c42995bdf687921aa1",
+      "hardware_verified": false,
+      "source_sha256": "9d6756fc3729796db705f03e41c141d8431937263e90ac78a47ded05c55933f6",
+      "build_id": "7ce5416e",
+      "firmware_integrity": {
+        "required": true,
+        "format_version": 1,
+        "image_start": 268435456,
+        "image_size": 649152,
+        "footer_offset": 583248,
+        "profile_id": "50434831",
+        "crc32": "fa8ca2ac"
+      }
+    },
+    "elf_sha256": "65440c6fa8fa96ce5f315c2d5469374f251e4c9e684d247143eff3d3a36d6215",
+    "flash_delta_vs_f1010d60d": -40,
+    "static_ram_delta_vs_f1010d60d": 0,
+    "flashed": false
+  },
+  "prepared_hardware_apps": {
+    "full-apps": {
+      "build": {
+        "directory": "/MK61S-M0-ALU-SPECIAL-FULL-20261019",
+        "apps": {
+          "OWN": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/full-apps/OWN/OWN.APP",
+            "bytes": 6324,
+            "sha256": "6251cd850cdeed892ef8eb1c68ee02483815977b83ad86eae5d89631fd539b7b"
+          },
+          "BASE": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/full-apps/BASE/BASE.APP",
+            "bytes": 6339,
+            "sha256": "0490a23143bc36680aae81c65b3b026bdcdc77fc17746285bfc5878d970e98f0"
+          },
+          "GCC": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/full-apps/GCC/GCC.APP",
+            "bytes": 2467,
+            "sha256": "5107e06938208376fd33b0922183f95f58cc18522fcb88b891ac2e17020f0a6c"
+          },
+          "QFP": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/full-apps/QFP/QFP.APP",
+            "bytes": 7606,
+            "sha256": "9d413a5d96076753787d2e92cdb47c300a3892bb2c23036c56125bd84ca70f9d"
+          }
+        },
+        "code_location": "All local implementations execute in SRAM; GCC control uses resident Flash.",
+        "corpus": "full-mantissa-streams",
+        "baseline_library_sha256": "190f023d25ccbbc78be8d9eb7014ab46d725f001005b867dae8c36010342cb9e",
+        "qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+        "math_probe": {
+          "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/full-apps/MATHLOCAL/MATHLOCAL.APP",
+          "sha256": "f1ac43f3c2156786d3cfb02c68badb7e14924d5a60c5ddccad845b50458a94da"
+        }
+      },
+      "app_metadata": {
+        "OWN": {
+          "name": "OWN",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 15,
+          "relocation_bytes": 19,
+          "entry_offset": 0,
+          "image_bytes": 6768,
+          "bss_bytes": 10116,
+          "memory_bytes": 16884,
+          "app_bytes": 6324,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "BASE": {
+          "name": "BASE",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 16,
+          "relocation_bytes": 21,
+          "entry_offset": 0,
+          "image_bytes": 6808,
+          "bss_bytes": 10116,
+          "memory_bytes": 16924,
+          "app_bytes": 6339,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "GCC": {
+          "name": "GCC",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 11,
+          "relocation_bytes": 14,
+          "entry_offset": 0,
+          "image_bytes": 2592,
+          "bss_bytes": 10116,
+          "memory_bytes": 12708,
+          "app_bytes": 2467,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "QFP": {
+          "name": "QFP",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 15,
+          "relocation_bytes": 19,
+          "entry_offset": 0,
+          "image_bytes": 8376,
+          "bss_bytes": 10116,
+          "memory_bytes": 18492,
+          "app_bytes": 7606,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "MATHLOCAL": {
+          "name": "MATHLOCAL",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 19,
+          "relocation_bytes": 29,
+          "entry_offset": 0,
+          "image_bytes": 19760,
+          "bss_bytes": 548,
+          "memory_bytes": 20308,
+          "app_bytes": 15656,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        }
+      }
+    },
+    "legacy-apps": {
+      "build": {
+        "directory": "/MK61S-M0-ALU-SPECIAL-LEGACY-20261019",
+        "apps": {
+          "OWN": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/legacy-apps/OWN/OWN.APP",
+            "bytes": 5724,
+            "sha256": "99b59ad8b2f9479909fb04da9440a72ba682531149780944e2f49f7e8be853e0"
+          },
+          "BASE": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/legacy-apps/BASE/BASE.APP",
+            "bytes": 5743,
+            "sha256": "62682a8ffd183b721943c3103f3b9871e8f3082f4774ed9b220e4c46f26bd066"
+          },
+          "GCC": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/legacy-apps/GCC/GCC.APP",
+            "bytes": 1853,
+            "sha256": "a0804231dbf38889ab25778192b67acbcd0adff641ccae3da25153f5aba3afbb"
+          },
+          "QFP": {
+            "file": "/Users/bolk/Projects/MK61S_MINI/.build/m0-special-20261019/legacy-apps/QFP/QFP.APP",
+            "bytes": 7010,
+            "sha256": "035d92c1baa0edefecb36b051b8c38f1476ed66450aa5226a494c2cc3f08e44b"
+          }
+        },
+        "code_location": "All local implementations execute in SRAM; GCC control uses resident Flash.",
+        "corpus": "muldiv-streams",
+        "baseline_library_sha256": "190f023d25ccbbc78be8d9eb7014ab46d725f001005b867dae8c36010342cb9e",
+        "qfplib_source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+      },
+      "app_metadata": {
+        "OWN": {
+          "name": "OWN",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 13,
+          "relocation_bytes": 17,
+          "entry_offset": 0,
+          "image_bytes": 6144,
+          "bss_bytes": 10116,
+          "memory_bytes": 16260,
+          "app_bytes": 5724,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "BASE": {
+          "name": "BASE",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 14,
+          "relocation_bytes": 19,
+          "entry_offset": 0,
+          "image_bytes": 6184,
+          "bss_bytes": 10116,
+          "memory_bytes": 16300,
+          "app_bytes": 5743,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "GCC": {
+          "name": "GCC",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 9,
+          "relocation_bytes": 12,
+          "entry_offset": 0,
+          "image_bytes": 1968,
+          "bss_bytes": 10116,
+          "memory_bytes": 12084,
+          "app_bytes": 1853,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        },
+        "QFP": {
+          "name": "QFP",
+          "target": "picocalc-pico-h",
+          "abi": 6,
+          "load_address": 536870912,
+          "native_display": true,
+          "graphics_width": 320,
+          "graphics_height": 320,
+          "relocations": 13,
+          "relocation_bytes": 17,
+          "entry_offset": 0,
+          "image_bytes": 7752,
+          "bss_bytes": 10116,
+          "memory_bytes": 17868,
+          "app_bytes": 7010,
+          "compression": "ZX0+BCJ",
+          "zx0_parser": "greedy",
+          "resident_imports": 0,
+          "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+        }
+      }
+    }
+  },
+  "hardware": {
+    "status": "PENDING_DEVICE_CONNECTION",
+    "note": "User previously authorized continuing without the disconnected device. No physical timing is claimed.",
+    "full_command": "python3 tests/hil_m0_eabi_benchmark.py --port /dev/cu.usbmodem1401 --uid E6657CD423721C35 --build .build/m0-special-20261019/full-apps --output .build/m0-special-20261019/full-hil",
+    "legacy_command": "python3 tests/hil_m0_eabi_benchmark.py --port /dev/cu.usbmodem1401 --uid E6657CD423721C35 --build .build/m0-special-20261019/legacy-apps --output .build/m0-special-20261019/legacy-hil",
+    "method": "Local implementations execute in SRAM; GCC control requires the existing compiler-runtime resident firmware. UID, exclusive serial ownership and calculator-state checks are unchanged; no reflashing."
+  },
+  "reproduction": {
+    "qualification": ".build/picocalc-apps-arm-venv/bin/python tests/native_eabi_m0_arm_self_test.py --rp2040 --samples 10000 --output-dir .build/m0-special-20261019/arm --json .build/m0-special-20261019/arm.json",
+    "legacy": ".build/picocalc-apps-arm-venv/bin/python tests/profile_m0_eabi_full.py --owned-elf .build/m0-special-20261019/arm/runtime.elf --baseline-elf .build/m0-muldiv-20261019/arm/runtime.elf --qfplib-elf .build/m0-eabi-qfplib/qfplib.elf --legacy-streams --legacy-report doc/measurements/picocalc-m0-muldiv-20261019.json --require-no-instruction-regression --output-dir .build/m0-special-20261019/legacy-generator --json .build/m0-special-20261019/legacy-profile.json",
+    "full": ".build/picocalc-apps-arm-venv/bin/python tests/profile_m0_eabi_full.py --owned-elf .build/m0-special-20261019/arm/runtime.elf --baseline-elf .build/m0-full-20261019/arm/runtime.elf --qfplib-elf .build/m0-eabi-qfplib/qfplib.elf --require-no-instruction-regression --output-dir .build/m0-special-20261019/full-generator --json .build/m0-special-20261019/full-profile.json"
+  }
+}
