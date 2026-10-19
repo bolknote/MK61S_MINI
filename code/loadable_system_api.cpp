@@ -4,6 +4,10 @@
 #include "tinybasic_diagnostic.hpp"
 #include "config.h"
 #include "dwt_profiler.hpp"
+#include "key_wait_benchmark.hpp"
+#if MK61_KEY_WAIT_BENCHMARK
+#include "usb_screen.hpp"
+#endif
 
 #if MK61_ANY_LOADABLE_MODULE
 #include "loadable_system_api.hpp"
@@ -195,7 +199,17 @@ static u32 key_call(u32 operation, u32 value) {
     case MK61_SYS_KEY_POLL: return (u32) kbd::poll_event().code();
     case MK61_SYS_KEY_GET: return (u32) (value == 0xFFFFFFFFU
         ? kbd::get_key() : kbd::get_key((key_state) value));
-    case MK61_SYS_KEY_WAIT: return (u32) kbd::get_key_wait();
+    case MK61_SYS_KEY_WAIT: {
+#if MK61_KEY_WAIT_BENCHMARK
+      key_wait_benchmark::enter(micros(),usb_screen::attached());
+      const i32 key=kbd::get_key_wait();
+      if(key_wait_benchmark::take_detach()) usb_screen::benchmarkDetachAfterKey();
+      key_wait_benchmark::returned(micros(),key,usb_screen::attached());
+      return (u32)key;
+#else
+      return (u32) kbd::get_key_wait();
+#endif
+    }
     case MK61_SYS_KEY_PRESSED: return kbd::is_key_pressed((i32) value);
     case MK61_SYS_KEY_IMMEDIATE: return kbd::take_immediate_press((i32) value);
     case MK61_SYS_KEY_CLEAR_IMMEDIATE: kbd::clear_immediate_presses(); break;

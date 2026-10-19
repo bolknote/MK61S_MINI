@@ -26,6 +26,9 @@ void service(void);
 State state(void);
 bool active(void);
 bool attached(void);
+#if defined(MK61_KEY_WAIT_BENCHMARK) && MK61_KEY_WAIT_BENCHMARK
+void benchmarkDetachAfterKey(void);
+#endif
 bool wireBusy(void);
 bool idleWorkPending(void);
 bool takeTerminalByte(u8& value);
@@ -37,6 +40,9 @@ inline void service(void) {}
 inline State state(void) { return State::IDLE; }
 inline bool active(void) { return false; }
 inline bool attached(void) { return false; }
+#if defined(MK61_KEY_WAIT_BENCHMARK) && MK61_KEY_WAIT_BENCHMARK
+inline void benchmarkDetachAfterKey(void) {}
+#endif
 inline bool wireBusy(void) { return false; }
 inline bool idleWorkPending(void) { return false; }
 inline bool takeTerminalByte(u8&) { return false; }

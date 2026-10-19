@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-19",
+  "status": "HIL_A_B_A_PASS_EXACTLY_RESTORED_POC_NOT_DEFAULT",
+  "branch": "feature/vm-linked-program",
+  "source_base": "5c81048863851ca89bf0a499e66495f98dfbbdaa",
+  "worktree": "/Users/bolk/.codex/worktrees/vm-linked-program/MK61S_MINI",
+  "committed": false,
+  "enabled_by_default": false,
+  "limits_weakened": false,
+  "device": "Classic AEB505B6E0067623 / USB 2068336B4731",
+  "change": {
+    "cold_APP": "/System/VMCache/VMSTORE.APP",
+    "cold_work": "Fragment discovery, LVP CRC/directory parsing, per-member inspect_flash using the existing VMSTORE verify, resource/size checks and publication of caller-owned certificates.",
+    "resident_work": "Immutable fragment reads via the existing page cache, numeric/UI bindings and the linked loop invoking one pinned LANGVM kernel.",
+    "handoff": "A private size/magic-checked APP flow phase; only resident-owned callbacks and plain certificates survive APP return. No Reader or APP-local function pointer escapes the cold call.",
+    "retained_checks": "Complete container and member CRCs, common opcode/control-target verifier, GRAPH exclusion, epoch checks before/after reads and callbacks, existing 8-KiB loan and catalog/workspace bounds.",
+    "ELF_evidence": "No language_vm::verify, inspect_flash, linked::inspect or VM run in the resident image. VMSTORE has one shared verify and no VM run.",
+    "scope": "The same experimental whole-member linked execution as the first PoC, not production INPUT/editor/dependency-refresh integration. No public ABI version or shipping default changed."
+  },
+  "sizes": {
+    "resident_baseline_same_tree_bytes": 371316,
+    "resident_previous_PoC_bytes": 381800,
+    "resident_new_bytes": 375624,
+    "resident_growth_vs_baseline_bytes": 4308,
+    "resident_shrink_vs_previous_PoC_bytes": 6176,
+    "resident_free_Flash_bytes": 148664,
+    "minimum_Flash_headroom_bytes": 131072,
+    "VMSTORE_baseline_memory_bytes": 10932,
+    "VMSTORE_new_memory_bytes": 14020,
+    "VMSTORE_loaded_growth_bytes": 3088,
+    "VMSTORE_baseline_stored_bytes": 8569,
+    "VMSTORE_new_stored_bytes": 10935,
+    "VMSTORE_external_NOR_growth_bytes": 2366,
+    "LANGVM_unchanged_memory_bytes": 20476,
+    "LANGVM_remaining_bytes": 4,
+    "APP_memory_limit_bytes": 20480,
+    "resident_globals_bytes": 21568,
+    "resident_globals_growth_bytes": 0,
+    "resident_globals_limit_bytes": 49152,
+    "APP_effective_pool_bytes": 34880,
+    "native_max_frame_bytes": 1928,
+    "native_max_frame_growth_bytes": 0,
+    "native_frame_limit_bytes": 3072,
+    "linked_entry_frame_bytes": 1592,
+    "linked_entry_previous_frame_bytes": 1560,
+    "peak_APP_note": "VMSTORE replaces the cold APP before LANGVM is pinned; its 14020 bytes are below the already-required 20476-byte LANGVM peak. Existing fixed prefix/cache and worst-case APP/stage/MSC/FS coexistence budgets are unchanged.",
+    "baseline_note": "Fresh same-tree baseline is 4 bytes larger than the older 371312-byte baseline; report the current matched 4308-byte delta, not 4312."
+  },
+  "experiment": {
+    "stages": ["ordinary M61/OPEN", "linked, cold loader in VMSTORE", "ordinary M61/OPEN control"],
+    "same_resident_all_stages": true,
+    "same_LANGVM_all_stages": true,
+    "same_VMSTORE_all_stages": true,
+    "same_game_sources": true,
+    "byte_identical_used_images": "PASS: 16 ordinary cached modules byte-identical to LVP members, full image CRC and SHA checked.",
+    "page_cache_budget_bytes": 32768,
+    "package_bytes": 45625,
+    "package_sha256": "2657c658846f1d7ae7ede7ee5b88f4c129324e6c9f9edc918dc328fa0d71bc3d",
+    "LANGVM_sha256": "99fdae8534277ba35c4ce4f2db4c50fe97e989bb8eab75c8f54173396cf6a831",
+    "profiling": false,
+    "USB_Screen": "Continuously attached; every packet/frame CRC and complete eight-rank board required, unchanged timing driver.",
+    "scenario": "e2e3, 420 nodes, level 2, depth 8, book off; time from OK on Black selection to complete board.",
+    "warm_comparison": "Three searches per stage; exclude first in every stage, use median of repeats 1 and 2. Ordinary first search creates the file cache; linked image is prebuilt, so first-search difference is not an execution-speed claim."
+  },
+  "firmware": {
+    "candidate_build": "D4C16639",
+    "candidate_sha256": "dc411ce7c0bbc6f81d2bb46f8c2f572a700ec9d2b7badbf4b3d70aa22d035738",
+    "original_build": "3AB3DD45",
+    "original_sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635"
+  },
+  "validation": {
+    "loader_ASan_UBSan_both_arithmetics": "PASS: fragment discovery, CRC/opcode validation, malformed ABI, I/O/epoch failures, post-cold-call execution via resident-owned callbacks.",
+    "linked_VM_ASan_UBSan": "PASS: both arithmetics, host/wide-only variants, continuation/budget/INPUT/ESC/invalidation.",
+    "actual_ARM": "PASS: 8 raw/paged/aligned/unaligned/unlimited/budget configurations, same immutable images, relocated continuation; max total fixture stack 2480 bytes.",
+    "ARM_environment": "Initial Unicorn JIT run was terminated by the macOS sandbox; identical test passed outside the sandbox, without any code, count or timeout change.",
+    "real_host_chess_both_arithmetics": "PASS: exact numeric banks/tags, arrays, references, events/routes/polls, 7662 calls, e2e3/54/420.",
+    "ordinary_file_cache_ASan_UBSan": "PASS: both arithmetic/USB modes, publication/load, CRC/key/epoch/quota/OOM/INPUT/ESC and FOCAL.",
+    "builder_and_cached_image_comparer": "PASS",
+    "native_runtime_archives_resident_and_APP": "PASS: no libgcc/libm/libstdc++/libc/libnosys archive members.",
+    "resident_stack_gate": "PASS: matched baseline and candidate max frame 1928 <= 3072.",
+    "APP_RAM_coexistence_gate": "PASS: effective pool 34880, maximum APP 20476, USBDISK 20468, full stage index 2560, MSC session 8264, filesystem temporary 824.",
+    "USB_CDC_RX_ELF": "PASS",
+    "HIL_driver_offline_guards": "PASS",
+    "hardware": "PASS: nine complete searches with identical golden board, 420 nodes and e2e3; every USB Screen CRC checked. Original firmware, all files and calculator state exactly restored."
+  },
+  "results": {
+    "steady_seconds": [
+      25.110553249483928,
+      22.916988062497694,
+      25.100869770976715
+    ],
+    "reference_seconds": 25.10571151023032,
+    "candidate_seconds": 22.916988062497694,
+    "speedup": 1.0955065928281538,
+    "elapsed_reduction_percent": 8.718029946455585,
+    "control_drift_percent": -0.03856338174234031,
+    "saved_seconds": 2.1887234477326274,
+    "all_search_seconds": {
+      "baseline": [
+        40.71782995807007,
+        25.072147457976826,
+        25.14895904099103
+      ],
+      "candidate": [
+        22.930352165945806,
+        22.929122249945067,
+        22.90485387505032
+      ],
+      "control": [
+        40.25027425005101,
+        25.059156582923606,
+        25.142582959029824
+      ]
+    },
+    "frames_crc_checked": {
+      "baseline": 1247,
+      "candidate": 1118,
+      "control": 1233
+    },
+    "golden_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "conclusion": "Hot speed is retained after removing the resident cold parser/verifier. Same continuously active USB Screen and matched kernel/images; first-search differences are not a matched execution-speed claim."
+  },
+  "restoration": {
+    "status": "PASS_EXACT",
+    "build": "3AB3DD45",
+    "files": 24,
+    "directories": 2,
+    "files_byte_identical": true,
+    "calculator_state_identical": true,
+    "owned_test_entries_removed": {
+      "FLASHCHESS": 30,
+      "System/VMCache/Pages": 125
+    },
+    "mini_touched": false,
+    "pico_touched": false,
+    "evidence": "hil-aba/report.json and restore-flash.json; final fingerprint and canonical reg/stk/dump/pwd checked by the original HIL finalizer."
+  },
+  "PicoCalc_comparison": {
+    "source": "chess-picocalc-specialized-20261019.json on main",
+    "warm_seconds": 21.996788042015396,
+    "cpu_hz": 125000000,
+    "Classic_cpu_hz": 96000000,
+    "USB_mode": "Pico completion mode stops screen transmission during search; Classic A/B/A keeps it continuously attached.",
+    "storage_note": "Earlier Pico dispatch optimization moved code from XIP Flash to SRAM at a cost of 16368 additional static bytes. Classic LANGVM already runs from SRAM.",
+    "STM32_effect": "The three newer main commits guard their optimizations to Pico; their report confirms byte-identical STM32 LANGVM and no STM32 hardware flashing.",
+    "conclusion": "Same search/result, but different hardware and USB conditions. No cross-device speedup or claim that USB explains the entire time difference."
+  },
+  "local_evidence": "/private/tmp/mk61-linked-cold.ECjf2m",
+  "raw_HIL_report": "/private/tmp/mk61-linked-cold.ECjf2m/hil-aba/report.json",
+  "previous_report": "chess-linked-program-20261019.json"
+}

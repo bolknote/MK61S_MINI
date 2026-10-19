@@ -21,6 +21,11 @@ bool cache_diagnostics(CacheDiagnostics&);
 // No source compilation or language-state initialization; OOM keeps the usual
 // uncached execution fallback available.
 bool prepare_image_cache();
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+namespace flash {class ReadCache;}
+flash::ReadCache* linked_page_cache();
+bool run_linked_program(uint16_t directory);
+#endif
 // Routes one existing frontend command, transfers pointer-free values around
 // its workspace, and executes a requested image. F411 retains verified M61
 // BASIC images without retaining compiler/executor pointers or mutable values.

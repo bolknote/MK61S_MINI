@@ -14,6 +14,7 @@
 #include "usb_screen_protocol.hpp"
 #include "usb_screen_virtual_keys.hpp"
 #include "dwt_profiler.hpp"
+#include "key_wait_benchmark.hpp"
 
 #include <Arduino.h>
 #include <new>
@@ -286,6 +287,10 @@ static void handlePacket(const usb_screen_protocol::PacketView& packet,
       break;
     case MessageType::PING:
       if(packet.payload_size == usb_screen_protocol::PING_PAYLOAD_SIZE) {
+#if MK61_KEY_WAIT_BENCHMARK
+        if(packet.payload[0]=='K' && packet.payload[1]=='W')
+          key_wait_benchmark::arm_detach();
+#endif
         queueResponse(MessageType::PONG, packet.payload, packet.payload_size);
       }
       break;
@@ -448,6 +453,14 @@ static void serviceEscapeHold(t_time_ms now) {
 }
 
 } // безымянное пространство имён
+
+#if MK61_KEY_WAIT_BENCHMARK
+void benchmarkDetachAfterKey(void) {
+  if(session == nullptr || session->state != State::ATTACHED) return;
+  notifyHostDetach();
+  restorePhysicalAndWait(Event::CONNECTION_LOST);
+}
+#endif
 
 bool start(void) {
   if(session != nullptr) return true;

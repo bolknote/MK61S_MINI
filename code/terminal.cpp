@@ -63,6 +63,7 @@ extern void release_segment_ws_graphics(void);
 #include "usb_mass_storage.hpp"
 #include "rtc_clock.hpp"
 #include "dwt_profiler.hpp"
+#include "key_wait_benchmark.hpp"
 #if (MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES) || \
     (MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES && (MK61_LANGUAGE_VM_CACHE_MIXED || MK61_DWT_SERVICE_GAPS))
 #include "language_vm_resident.hpp"
@@ -1534,6 +1535,14 @@ void class_terminal::print_u64(u64 value) {
     }
 
 void class_terminal::print_profile_statistics(void) {
+#if MK61_KEY_WAIT_BENCHMARK
+      const auto wait=key_wait_benchmark::sample();
+      terminal_output::field(Serial,"KEYWAIT sequence=",wait.sequence);
+      terminal_output::field(Serial," us=",wait.microseconds);
+      terminal_output::field(Serial," key=",wait.key);
+      terminal_output::field(Serial," screen_begin=",wait.screen_begin?1:0);
+      terminal_output::line(Serial," screen_end=",wait.screen_end?1:0);
+#endif
 #if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
       language_vm::CacheDiagnostics flash_cache={};
       (void)language_vm::cache_diagnostics(flash_cache);

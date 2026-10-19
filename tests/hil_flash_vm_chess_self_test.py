@@ -4,12 +4,28 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import patch
+import struct
+import zlib
 
 import hil_flash_vm_chess as hil
 
 original=dict(sha256='a'*64,bytes=370064,build='3AB3DD45')
 assert hil.same_firmware(original,dict(original))
 assert hil.vm_stage_plan(b'old',b'new')==[('baseline',b'old'),('candidate',b'new'),('control',b'old')]
+assert hil.qualification_apps()==('BASIC.APP','FOCAL.APP','LANGVM.APP','LANGIN.APP','SRCEDIT.APP')
+assert hil.qualification_apps(True)==hil.qualification_apps()+('VMCache/VMSTORE.APP',)
+assert [hil.linked_stage_script(name,b'ordinary') for name in ('baseline','candidate','control')]==[
+    b'ordinary',b'reinit\nloadfont Turochamp\nvm-linked\n',b'ordinary']
+image=bytearray(32+9000);image[:4]=b'LVP1';struct.pack_into('<I',image,8,len(image))
+struct.pack_into('<I',image,24,zlib.crc32(image[32:]));struct.pack_into('<I',image,28,zlib.crc32(image[:28]))
+chunks=hil.linked_chunks(bytes(image))
+assert list(chunks)==['LVP00.bin','LVP01.bin','LVP02.bin']
+assert b''.join(chunks.values())==image and all(0<len(data)<=4096 for data in chunks.values())
+bad=bytearray(image);bad[-1]^=1
+for damaged in (b'',bytes(image[:31]),bytes(image[:-1]),bytes(bad)):
+    try:hil.linked_chunks(damaged)
+    except AssertionError:pass
+    else:raise AssertionError('accepted corrupt/truncated linked transport')
 hil.require_no_firmware_write(original,dict(original),original['build'])
 hil.require_cache_activity({'hits':1})
 hil.require_cache_activity({'hits':0,'loan_hits':1})
