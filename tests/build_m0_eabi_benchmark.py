@@ -19,6 +19,7 @@ def main():
     corpus=parser.add_mutually_exclusive_group()
     corpus.add_argument('--addition-streams',action='store_true',help='Time six streams of varied addition operands')
     corpus.add_argument('--mixed-streams',action='store_true',help='Time nearby opposite signs, cancellation and rounding ties')
+    corpus.add_argument('--muldiv-streams',action='store_true',help='Time six varied streams each of multiplication and division')
     parser.add_argument('--directory',default='MK61S-M0-ALU-20261018')
     parser.add_argument('--toolchain',type=Path)
     parser.add_argument('--math-probe',action='store_true',help='Also build all eleven local binary64 functions for hardware qualification')
@@ -47,6 +48,7 @@ def main():
     for name,define in variants:
         wrapper=out/(name+'.c')
         fixture=ROOT/'tests/fixtures'/('m0_eabi_add_benchmark.c' if args.addition_streams or args.mixed_streams else 'm0_eabi_benchmark.c')
+        if args.muldiv_streams:fixture=ROOT/'tests/fixtures/m0_eabi_muldiv_benchmark.c'
         mode='#define M0_BENCH_MIXED_STREAMS 1\n' if args.mixed_streams else ''
         wrapper.write_text(mode+define+f'#define M0_BENCH_OUTPUT "{name}"\n#define M0_BENCH_MARKER "/{args.directory}/marker.bin"\n#include "{fixture}"\n')
         cmd=[sys.executable,str(ROOT/'tools/build_portable_app.py'),'--target','picocalc-pico-h','--name',name,
@@ -58,7 +60,7 @@ def main():
         app=out/name/(name+'.APP');results[name]={'file':str(app),'bytes':app.stat().st_size,'sha256':hashlib.sha256(app.read_bytes()).hexdigest()}
         print(name,results[name],flush=True)
     metadata={'directory':'/'+args.directory,'apps':results,'code_location':'All local implementations execute in SRAM; GCC control uses resident Flash.',
-        'corpus':'mixed-sign-streams' if args.mixed_streams else 'addition-streams' if args.addition_streams else 'four-operations',
+        'corpus':'muldiv-streams' if args.muldiv_streams else 'mixed-sign-streams' if args.mixed_streams else 'addition-streams' if args.addition_streams else 'four-operations',
         'baseline_library_sha256':hashlib.sha256(args.baseline_library.read_bytes()).hexdigest() if args.baseline_library else None,
         'qfplib_source_sha256':hashlib.sha256(args.qfplib_source.read_bytes()).hexdigest() if args.qfplib_source else None}
     if args.math_probe:

@@ -10,7 +10,8 @@
  *
  * Project changes: full IEEE C++ fallback guards, normal-only unpacking,
  * unsigned equal-sign addition, chunked cancellation normalization,
- * power-of-two multiplication/division, rational reciprocal seeds, and
+ * short-mantissa products, bounded quotient correction, exact exponent
+ * scaling, rational reciprocal seeds, and
  * fallback while SIO's divider is dirty.
  * No Qfplib GPL-2.0 source is linked or copied into this firmware.
  */
@@ -51,6 +52,25 @@
  adds \rb,#1
 1:
  lsrs \re,#21
+.endm
+.macro mul_unpack_normal
+ // R6 is the guarded exponent sum minus 1024. Save its packed addend
+ // for a product in [2,4); normalization subtracts one exponent unit.
+ mov r7,r1
+ eors r7,r3
+ lsrs r7,#31
+ lsls r7,#31
+ adds r6,#1
+ lsls r6,#20
+ orrs r6,r7
+ movs r7,#1
+ lsls r7,#20
+ lsls r1,#12
+ lsrs r1,#12
+ orrs r1,r7
+ lsls r3,#12
+ lsrs r3,#12
+ orrs r3,r7
 .endm
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
 
@@ -523,7 +543,9 @@ da_xmgty:                      @ result is just x
 @ can have rzl==rx
 @ can have rzh==ry
 @ can have rzl,rzh==rt3,rt4
-.macro mul32_32_64 rx,ry,rzl,rzh,rt0,rt1,rt2,rt3,rt4
+@ cross_fit=1 requires xh*yl+xl*yh < 2^32; two 21-bit inputs
+@ satisfy this because their high halves are at most 31.
+.macro mul32_32_64 rx,ry,rzl,rzh,rt0,rt1,rt2,rt3,rt4,cross_fit=0
                                @   t0   t1   t2   t3   t4
                                @                  (x)  (y)
  uxth \rt0,\rx                 @   xl
@@ -536,11 +558,13 @@ da_xmgty:                      @ result is just x
  uxth \rt3,\rx                 @                   xl
  muls \rt3,\rt4                @                  xlyh=M1
  adds \rt1,\rt3                @      M0+M1=M
+.if !\cross_fit
  bcc l\@_1                     @ addition of the two cross terms can overflow, so add carry into H
  movs \rt3,#1                  @                   1
  lsls \rt3,#16                 @                0x10000
  adds \rt2,\rt3                @             H'
 l\@_1:
+.endif
                                @   t0   t1   t2   t3   t4
                                @                 (zl) (zh)
  lsls \rzl,\rt1,#16            @                  ML
@@ -549,7 +573,10 @@ l\@_1:
  adcs \rzh,\rt2                @                       ZH
 .endm
 
-@ SUMULL: x signed, y unsigned
+@ SUMULL for |x|<2^30 and 0<=y<=2^30, as in quotient correction.
+@ The signed sum xh*yl+xl*yh fits in int32_t: its maximum is
+@ 32767*65535 < 2^31. Its arithmetic high half includes the sign extension,
+@ so no separate signed-cross-term carry correction is needed.
 @ in table below ¯ means signed variable
 @ needs five temporary registers
 @ can have rt3==rx, in which case rx trashed
@@ -569,17 +596,12 @@ l\@_1:
  muls \rt2,\rt4                @          ¯xhyh=H
  uxth \rt3,\rx                 @                   xl
  muls \rt3,\rt4                @                 xlyh=M1
- asrs \rt4,\rt1,#31            @                      M0sx   (M1 sign extension is zero)
  adds \rt1,\rt3                @      M0+M1=M
- movs \rt3,#0                  @                    0
- adcs \rt4,\rt3                @                      ¯Msx
- lsls \rt4,#16                 @                    ¯Msx<<16
- adds \rt2,\rt4                @             H'
 
                                @   t0   t1   t2   t3   t4
                                @                 (zl) (zh)
  lsls \rzl,\rt1,#16            @                  M~
- lsrs \rzh,\rt1,#16            @                       M~
+ asrs \rzh,\rt1,#16            @                      ¯M~
  adds \rzl,\rt0                @                  ZL
  adcs \rzh,\rt2                @                      ¯ZH
 .endm
@@ -669,11 +691,18 @@ l\@_1:
  bne 87f
  lsls r7,r3,#12
  beq .Lrp_mul_scale_a
+ // Multiplication is commutative. The short product always has XL=0.
+ mov r2,r0
+ movs r0,#0
+ mov r7,r1
+ mov r1,r3
+ mov r3,r7
+ b .Lrp_mul_short
 87:
  cmp r0,#0
  bne .Lrp_mul_general
  lsls r7,r1,#12
- bne .Lrp_mul_general
+ bne .Lrp_mul_short
  mov r0,r2
  mov r7,r1
  mov r1,r3
@@ -691,18 +720,14 @@ l\@_1:
  orrs r1,r7
  pop {r4-r7,pc}
 .Lrp_mul_general:
- mdunpack r0,r1,r4,r6,r5
- mov r12,r4
- mdunpack r2,r3,r4,r7,r5
- eors r7,r6                    @ sign of result
- add r4,r12                    @ exponent of result
- push {r0-r2,r4,r7}
+ mul_unpack_normal
+ push {r0-r2,r6}
 
 @ accumulate full product in r12:r5:r6:r7
  mul32_32_64 r0,r2, r0,r5, r4,r6,r7,r0,r5    @ XL*YL
  mov r12,r0                    @ save LL bits
 
- mul32_32_64 r1,r3, r6,r7, r0,r2,r4,r6,r7    @ XH*YH
+ mul32_32_64 r1,r3, r6,r7, r0,r2,r4,r6,r7,1  @ XH*YH, both at most 21 bits
 
  pop {r0}                      @ XL
  mul32_32_64 r0,r3, r0,r3, r1,r2,r4,r0,r3    @ XL*YH
@@ -719,7 +744,35 @@ l\@_1:
  adcs r7,r0
 
 @ here r5:r6:r7 holds the product [1..4) in Q(104-32)=Q72, with extra LSBs in r12
- pop {r3,r4}                   @ exponent in r3, sign in r4
+ pop {r3}                      @ guarded packed exponent and sign
+ b .Lrp_mul_pack
+
+.Lrp_mul_short:
+ // If either low word is zero, two 32x32 products suffice instead of four.
+ // This includes ordinary integers and short dyadic fractions, without
+ // restricting the other operand or sacrificing any rounding/sticky bits.
+ mul_unpack_normal
+ push {r3,r6}
+ cmp r2,#0
+ bne 1f
+ movs r5,#0
+ movs r6,#0
+ b 2f
+1:
+ mul32_32_64 r1,r2, r5,r6, r0,r3,r4,r5,r6    @ XH*YL; XH remains in R1
+2:
+ push {r5,r6}
+ ldr r3,[sp,#8]
+ mul32_32_64 r1,r3, r6,r7, r0,r2,r4,r6,r7,1  @ XH*YH
+ pop {r0,r1}
+ movs r5,r0
+ adds r6,r1
+ movs r0,#0
+ adcs r7,r0
+ mov r12,r0                    @ the bottom 32 product bits are exactly zero
+ add sp,#4
+ pop {r3}
+.Lrp_mul_pack:
  lsls r1,r7,#11
  lsrs r2,r6,#21
  orrs r1,r2
@@ -732,13 +785,13 @@ l\@_1:
  adds r5,r5                    @ shift up so always [2..4) Q83, i.e. [1..2) Q84=Q(52+32)
  adcs r0,r0
  adcs r1,r1
- subs r3,#1                    @ correct exponent
+ movs r6,#1
+ lsls r6,#20
+ subs r3,r6                    @ correct the already packed exponent
 1:
- ldr r6,=0x3ff
- subs r3,r6                    @ correct for exponent bias
- lsls r6,#1                    @ 0x7fe
- cmp r3,r6
- bhs dm_0                      @ exponent over- or underflow
+ // The entry guard proves that either normalization and any rounding
+ // carry produce a finite normal result; retain the full IEEE slow path
+ // for all other inputs instead of checking the same bounds twice.
  lsls r5,#1                    @ rounding bit to carry
  bcc 1f                        @ result is correctly rounded
  adds r0,#1
@@ -750,36 +803,8 @@ l\@_1:
  lsrs r0,#1
  lsls r0,#1                    @ round to even
 1:
- lsls r3,#20
  adds r1,r3
-dm_2:
- lsls r4,#31
- add r1,r4
  pop {r4-r7,r15}
-
-@ here for exponent over- or underflow
-dm_0:
- bge dm_1                      @ overflow?
- adds r3,#1                    @ would-be zero exponent?
- bne 1f
- adds r0,#1
- bne 1f                        @ all-ones mantissa?
- adds r1,#1
- lsrs r7,r1,#21
- beq 1f
- lsrs r1,#1
- b dm_2
-1:
- lsls r1,r4,#31
- movs r0,#0
- pop {r4-r7,r15}
-
-@ here for exponent overflow
-dm_1:
- adds r6,#1                    @ 0x7ff
- lsls r1,r6,#20
- movs r0,#0
- b dm_2
 
 .ltorg
 
@@ -883,9 +908,9 @@ ddiv0:                         @ entry point from dtan
  pop {r4-r7,pc}
 88:
  // Respect an in-flight divider operation, including an interrupted caller.
- ldr r6, =0xd0000078
- ldr r6, [r6]
- lsrs r6, r6, #2
+ ldr r7, =0xd0000078
+ ldr r7, [r7]
+ lsrs r7, r7, #2
  bcs 90f
  b 91f
 90:
@@ -898,7 +923,7 @@ ddiv0:                         @ entry point from dtan
 .Lrp2040_small_divisor:
  // R4/R5 still hold the original biased exponents, R7 is index<<29.
  lsrs r7, r7, #27
- subs r6, r4, r5
+ // R6 already holds the guarded exponent addend, including its bias.
  lsls r6, r6, #2
  mov r12, r6
  mov r6, r1
@@ -917,7 +942,15 @@ ddiv0:                         @ entry point from dtan
  ldr r6, [r6, r7]
  b .Lrp2040_quotient_refine
 .Lrp2040_general_divisor:
- mdunpack r2,r3,r4,r7,r6       @ unpack divisor
+ mov r7,r1
+ eors r7,r3
+ lsrs r7,#31                  @ result sign
+ mov r12,r6                   @ retain the guarded biased exponent
+ movs r4,#1
+ lsls r4,#20
+ lsls r3,#12
+ lsrs r3,#12
+ orrs r3,r4                   @ normal divisor significand
 
 .if use_hw_div
 
@@ -933,19 +966,18 @@ ddiv0:                         @ entry point from dtan
 
 .endif
 
-@ unpack dividend by hand to save on register use
- lsrs r6,r1,#31
- adds r6,r7
- mov r12,r6                    @ result sign in r12b0; r12b1 trashed
- lsls r1,#1
- lsrs r7,r1,#21
- subs r6,r7,r4
+@ Pack the exponent and unpack the dividend while the divider is working.
+ mov r6,r12
  lsls r6,#2
- add r12,r12,r6                @ (signed) exponent in r12[31..8]
- subs r7,#1                    @ implied 1
- lsls r7,#21
- subs r1,r7
- lsrs r1,#1
+ adds r6,r7
+ mov r12,r6                    @ biased exponent in [31:2], sign in bit 0
+ lsls r1,#12
+ lsrs r1,#12
+ orrs r1,r4                    @ normal dividend significand
+ // Keep at least eight independent ALU instructions between starting the
+ // SIO divide and reading its result, which is undefined while busy.
+ lsls r4,r3,#10
+ lsrs r7,r2,#22
 
 .if use_hw_div
 
@@ -971,10 +1003,9 @@ ddiv0:                         @ entry point from dtan
 @ r0:r1 y mantissa
 @ r2:r3 x mantissa
 @ r6    u0, first approximation to 1/x Q15
-@ r12: result sign, exponent
+@ r12: result sign, biased exponent addend
 
- lsls r4,r3,#10
- lsrs r5,r2,#22
+ movs r5,r7
  orrs r5,r4                    @ x1=(q30)x
  muls r5,r6                    @ u0*x1 Q45
  asrs r5,#15                   @ v=u0*x1-1 Q30
@@ -1102,29 +1133,11 @@ dd_2:
  add r13,#8
  mov r2,r12
  lsls r7,r2,#31                @ result sign
- asrs r2,#2                    @ result exponent
- ldr r3,=0x3fd
- adds r2,r3
- ldr r3,=0x7fe
- cmp r2,r3
- bhs dd_3                      @ over- or underflow?
+ lsrs r2,#2                    @ guarded biased exponent addend
  lsls r2,#20
  adds r1,r2                    @ pack exponent
-dd_5:
  adds r1,r7                    @ pack sign
  pop {r4-r7,r15}
-
-dd_3:
- movs r0,#0
- cmp r2,#0
- bgt dd_4                      @ overflow?
- movs r1,r7
- pop {r4-r7,r15}
-
-dd_4:
- adds r3,#1                    @ 0x7ff
- lsls r1,r3,#20
- b dd_5
 
 .align 2
 // Nearest-even values of 2^33/(8+i), generated from exact integers.

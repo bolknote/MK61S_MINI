@@ -21,6 +21,7 @@ def decode(raw):
     assert len(raw)>=24
     magic,version,cases,samples,rounds=struct.unpack_from('<5I',raw)
     if version in (2,3):return decode_addition_streams(raw)
+    if version==4:return decode_muldiv_streams(raw)
     assert (magic,version,cases,samples,rounds)==(0x30414C55,1,12,1024,9)
     assert len(raw)==24+4*cases*96
     result={}
@@ -62,6 +63,35 @@ def decode_addition_streams(raw):
             'us_per_call':statistics.median(x-y for x,y in zip(elapsed,control))/1024,
             'raw_us':list(elapsed),'control_us':list(control)})
     return {'dadd_streams' if version==2 else 'dadd_mixed_streams':rows}
+
+def decode_muldiv_streams(raw):
+    magic,version,cases,samples,rounds,groups=struct.unpack_from('<6I',raw)
+    assert (magic,version,cases,samples,rounds,groups)==(0x30414C55,4,32,1024,9,12)
+    assert len(raw)==24+groups*(cases*24+rounds*8)
+    result={}
+    for op in ('dmul','ddiv'):
+        names=('full_precision','short_operand','both_short',
+               'dyadic_seeds' if op=='ddiv' else 'powers_of_two',
+               'near_rounding_midpoints' if op=='ddiv' else 'rounding_ties',
+               'normal_exponent_range')
+        rows=[]
+        for group,name in enumerate(names):
+            index=group+(6 if op=='ddiv' else 0)
+            offset=24+index*(cases*24+rounds*8);pairs=[]
+            for case in range(cases):
+                a,b,value=struct.unpack_from('<3Q',raw,offset+case*24)
+                x,y=struct.unpack('<2d',struct.pack('<2Q',a,b))
+                expected=struct.unpack('<Q',struct.pack('<d',x*y if op=='dmul' else x/y))[0]
+                assert 0<((expected>>52)&0x7FF)<0x7FF,(op,name,'not normal')
+                assert value==expected,(op,name,case,hex(a),hex(b),hex(value),hex(expected))
+                pairs.append({'a':f'{a:016X}','b':f'{b:016X}','result':f'{value:016X}'})
+            elapsed=struct.unpack_from('<9I',raw,offset+cases*24)
+            control=struct.unpack_from('<9I',raw,offset+cases*24+rounds*4)
+            rows.append({'name':name,'pairs':pairs,
+                'us_per_call':statistics.median(x-y for x,y in zip(elapsed,control))/samples,
+                'raw_us':list(elapsed),'control_us':list(control)})
+        result[op+'_streams']=rows
+    return result
 
 def operands(result):
     return {name:[[(pair['a'],pair['b']) for pair in row.get('pairs',[row])] for row in rows]
