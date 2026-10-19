@@ -457,5 +457,144 @@ end __aeabi_idiv0
 function __aeabi_ldiv0
  bx lr
 end __aeabi_ldiv0
+
+// Normal binary32 square root. Independent midpoint Taylor coefficients
+// estimate sqrt(N)*256 to less than four integer units, for N in [2^30,2^32).
+// Only the low square word is needed: the exact residual then fits int32_t.
+// Comparing it to +/-root selects nearest-even (an integer radicand cannot
+// equal the square of a half-integer). No divider, FPU or 64-bit helper calls.
+function mk61_m0_sqrtf
+ lsrs r1,r0,#23
+ subs r2,r1,#1
+ cmp r2,#253
+ bhi .Lsqrtf_special             // zero, subnormal, negative, Inf or NaN
+.Lsqrtf_normal:
+ push {r4-r7,lr}
+ lsls r2,r0,#8
+ lsrs r7,r2,#25                 // exponent parity and six fraction bits
+ movs r3,#1
+ lsls r3,#31
+ orrs r2,r3
+ adds r1,#125
+ lsrs r1,#1                     // result exponent minus one; C is input parity
+ bcs 1f
+ lsrs r2,#1                     // normalized radicand N, in Q30
+1:
+ lsls r1,#23
+ mov r12,r1                     // addend includes the implicit result bit
+ lsls r0,#15
+ eors r0,r3
+ asrs r0,#15                    // exact centered segment coordinate t, Q17
+ lsls r7,#4
+ adr r4,.Lsqrtf_coefficients
+ adds r7,r4
+ ldmia r7!,{r3-r5}              // c0, c1, c2
+ muls r5,r0
+ asrs r5,#17
+ adds r4,r5
+ // Signed (r4*r0)>>17, using three bounded 16-bit partial products.
+ uxth r7,r4
+ uxth r5,r0
+ muls r5,r7
+ lsrs r5,#16
+ asrs r6,r0,#16
+ muls r6,r7
+ adds r5,r6
+ lsrs r4,#16
+ muls r4,r0
+ adds r5,r4
+ asrs r5,#1
+ adds r0,r3,r5                  // integer root estimate, Q23
+ uxth r1,r0
+ lsrs r3,r0,#16
+ muls r3,r1
+ lsls r3,#17
+ muls r1,r1
+ adds r1,r3                    // root^2 modulo 2^32
+ lsls r2,#16
+ subs r2,r1                    // exact signed radicand-root^2, |r|<2^28
+.Lsqrtf_round:
+ // -root < residual <= root is exactly the nearest-integer interval.
+ subs r1,r0,r2
+ lsls r3,r0,#1
+ cmp r1,r3
+ blo .Lsqrtf_pack
+ bmi .Lsqrtf_below
+ adds r2,r0
+ subs r0,#1
+ adds r2,r0
+ b .Lsqrtf_round
+.Lsqrtf_below:
+ subs r2,r0
+ adds r0,#1
+ subs r2,r0
+ b .Lsqrtf_round
+.Lsqrtf_pack:
+ mov r1,r12
+ adds r0,r1
+ pop {r4-r7,pc}
+.Lsqrtf_special:
+ lsls r2,r0,#1
+ beq .Lsqrtf_return              // retain both zero signs
+ lsrs r2,#24
+ cmp r2,#255
+ beq .Lsqrtf_nonfinite
+ cmp r1,#0
+ beq .Lsqrtf_subnormal           // all other rejected finite inputs are negative
+.Lsqrtf_negative:
+ ldr r0,=0x7fc00000
+ bx lr
+.Lsqrtf_nonfinite:
+ lsls r2,r0,#9
+ bne .Lsqrtf_nan
+ cmp r0,#0
+ bmi .Lsqrtf_negative
+.Lsqrtf_return:
+ bx lr
+.Lsqrtf_nan:
+ movs r1,#1
+ lsls r1,#22
+ orrs r0,r1                     // quiet NaN, retaining its sign and payload
+ bx lr
+.Lsqrtf_subnormal:
+ movs r1,#1
+ lsrs r2,r0,#8
+ bne 1f
+ lsls r0,#16
+ subs r1,#16
+1:
+ lsrs r2,r0,#16
+ bne 1f
+ lsls r0,#8
+ subs r1,#8
+1:
+ lsrs r2,r0,#20
+ bne 1f
+ lsls r0,#4
+ subs r1,#4
+1:
+ lsrs r2,r0,#22
+ bne 1f
+ lsls r0,#2
+ subs r1,#2
+1:
+ lsrs r2,r0,#23
+ bne 1f
+ lsls r0,#1
+ subs r1,#1
+1:
+ // R1 is the effective biased exponent, possibly negative. Recreate
+ // just its parity in the raw word; the normal kernel needs no other bits.
+ lsls r0,#9
+ lsrs r0,#9
+ lsls r2,r1,#31
+ lsrs r2,#8
+ orrs r0,r2
+ b .Lsqrtf_normal
+.ltorg
+.align 2
+.Lsqrtf_coefficients:
+#include "native_eabi_m0_sqrt_table.inc"
+end mk61_m0_sqrtf
 .section .note.GNU-stack,"",%progbits
 #endif

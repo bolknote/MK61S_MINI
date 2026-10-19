@@ -58,7 +58,7 @@ class Machine:
             self.rom_models.append(symbol)
             address=self.elf.symbols[symbol]&~1
             self.uc.hook_add(UC_HOOK_CODE,self.rom_intrinsic,operation,begin=address,end=address)
-        self.uc.hook_add(UC_HOOK_MEM_WRITE,self.write)
+        self.write_hook=self.uc.hook_add(UC_HOOK_MEM_WRITE,self.write)
         self.uc.hook_add(UC_HOOK_MEM_READ,self.read_sio,begin=0xD0000070,end=0xD0000073)
         self.calls=0
     def rom_intrinsic(self,uc,address,size,operation):

@@ -227,6 +227,7 @@ U narrow(U a) {
   if(!m) return sign;
   int e;const U sig=D::normalize(a,e);return S::pack(sign,e,jam(sig,26));
 }
+#if !defined(__arm__) && !defined(__thumb__)
 U sqrt_single(U a) {
   const U magnitude=a&S::Magnitude;
   if(!magnitude) return a;
@@ -247,6 +248,7 @@ U sqrt_single(U a) {
   if(root>=S::Hidden+S::Hidden) {root>>=1;++out;}
   return (U(out+S::Bias)<<23)|(root&S::Fraction);
 }
+#endif
 } // namespace m0_eabi
 using namespace m0_eabi;
 extern "C" {
@@ -296,7 +298,9 @@ MK61_SOFT_PCS int64_t __aeabi_d2lz(double x) {const U a=bits(x),m=D::magnitude_i
 MK61_SOFT_PCS U __aeabi_d2ulz(double x) {const U a=bits(x);return a&D::Sign?0:D::magnitude_integer(a);}
 MK61_SOFT_PCS float __aeabi_d2f(double x) {return single(narrow(bits(x)));}
 MK61_SOFT_PCS double __aeabi_f2d(float x) {return real(extend(bits(x)));}
+#if !defined(__arm__) && !defined(__thumb__)
 MK61_SOFT_PCS float mk61_m0_sqrtf(float x) {return single(sqrt_single(bits(x)));}
+#endif
 MK61_SOFT_PCS U __aeabi_lmul(U a,U b) {
   return low_product(a,b);
 }
