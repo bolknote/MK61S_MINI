@@ -55,7 +55,7 @@ def main():
     args = parser.parse_args()
     elf = Elf(args.resident_elf)
     if args.vm_profile=="core":
-        elf.require_libm_math(args.resident_elf)
+        elf.require_binary64_math(args.resident_elf)
     with tempfile.TemporaryDirectory(prefix="mk61-language-arm-") as directory:
         work = Path(directory)
         reader = work / "reader"
@@ -113,7 +113,7 @@ def main():
                 actual=struct.unpack("<i",struct.pack("<I",low))[0] if high==0x7FFC0001 else struct.unpack("<d",m.uc.mem_read(variables,8))[0]
                 assert error == 0 and abs(actual - expected) < 1e-12, (
                     kind, address_index, error, actual, expected, m.lines, m.trace[-12:])
-        math_kind="LIBM" if args.vm_profile=="core" else "local float + real conversion bridge"
+        math_kind="BINARY64" if args.vm_profile=="core" else "local float + real conversion bridge"
         print(f"language_vm ARM ({args.vm_profile}): compiler eviction, 2 languages, 3 addresses, {math_kind}/EABI PASS")
 
 

@@ -4,7 +4,7 @@
 // Единый математический интерфейс для интерпретаторов FOCAL/TinyBASIC.
 //
 // Трансцендентные функции предоставляют две выбираемые реализации:
-//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM  -> binary64: своё ядро в native, <math.h> в контрольной сборке
+//   MK61_MATH_BACKEND == MK61_MATH_BACKEND_BINARY64 -> своё ядро в native, <math.h> в контрольной сборке
 //   MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE  -> вычисление на ядре МК-61
 //
 // Реализация CORE повторно использует уже скомпонованный с прошивкой движок
@@ -14,20 +14,20 @@
 // Приведённые ниже «чистые вспомогательные функции»
 // (fabs/floor/ceil/frac/round/pow10_int/log10_floor и разбор числа) никогда
 // не вызывают libm: на них опираются функции форматирования чисел, поэтому
-// образ компонуется без libm независимо от выбранной реализации.
+// сами эти вспомогательные функции не создают зависимость от libm.
 
 #include <stdint.h>
 #include <float.h>
 #include <string.h>
 
-#ifndef MK61_MATH_BACKEND_LIBM
-  #define MK61_MATH_BACKEND_LIBM 0
+#ifndef MK61_MATH_BACKEND_BINARY64
+  #define MK61_MATH_BACKEND_BINARY64 0
 #endif
 #ifndef MK61_MATH_BACKEND_CORE
   #define MK61_MATH_BACKEND_CORE 1
 #endif
 #ifndef MK61_MATH_BACKEND
-  #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+  #define MK61_MATH_BACKEND MK61_MATH_BACKEND_BINARY64
 #endif
 
 #ifndef MK61_USE_COMPACT_LIBM
@@ -41,7 +41,7 @@
   #error "MK61_USE_COMPACT_LIBM must be 0 or 1"
 #endif
 
-#if MK61_MATH_BACKEND != MK61_MATH_BACKEND_LIBM && \
+#if MK61_MATH_BACKEND != MK61_MATH_BACKEND_BINARY64 && \
     MK61_MATH_BACKEND != MK61_MATH_BACKEND_CORE
   #error "Unsupported MK61_MATH_BACKEND"
 #endif
@@ -298,7 +298,7 @@ inline double exp(double x) { return compact_math::exp(x); }
 inline double sqrt(double x) { return compact_math::sqrt(x); }
 inline double pow(double x, double y) { return compact_math::pow(x,y); }
 
-#else // MK61_MATH_BACKEND_LIBM
+#else // BINARY64 через системную libm в Arduino/контрольной сборке
 
 } // пространство имён mk_math
 #include <math.h>

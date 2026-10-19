@@ -218,14 +218,14 @@ def main():
     parser.add_argument("--report-file", type=Path)
     parser.add_argument("--user-app", type=Path)
     parser.add_argument("--legacy-app", type=Path)
-    parser.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
+    parser.add_argument("--vm-profile", choices=("core", "local", "binary64"), default="core")
     parser.add_argument("--compiler-context", choices=(240, 312), type=int, default=240)
     parser.add_argument("--specialized", action="store_true")
     args = parser.parse_args()
     COMPILER_CONTEXT_SIZE = args.compiler_context
     elf = Elf(args.resident_elf)
-    if args.vm_profile == "libm":
-        elf.require_libm_math(args.resident_elf)
+    if args.vm_profile == "binary64":
+        elf.require_binary64_math(args.resident_elf)
     with tempfile.TemporaryDirectory(prefix="mk61-flow-arm-") as directory:
         work = Path(directory); reader = work / "reader"
         run(["c++", "-std=c++17", "-O2", "-I" + str(ROOT / "code"),
@@ -262,10 +262,10 @@ def main():
                 (1, b'10 PRINT #8:3,CALL(100);END\n100 PRINT "x"\n110 RETURN PI\n', [], 0)]
             # The fixture does not model the calculator's CORE numeric CPU.
             # Ordinary double arithmetic is real ARM code; transcendental
-            # probes require real resident LIBM or the APP's local float math.
+            # probes require real resident BINARY64 or the APP's local float math.
             if args.vm_profile != "core":
                 cases.append((2, b"1.10 S A=SQRT(2)\n1.20 E\n", [],
-                              math.sqrt(2) if args.vm_profile == "libm" else
+                              math.sqrt(2) if args.vm_profile == "binary64" else
                               struct.unpack("<f", struct.pack("<f", math.sqrt(2)))[0]))
             for language, source, answers, expected in cases:
                 machine = OverlayMachine(args.resident_elf, True, address)

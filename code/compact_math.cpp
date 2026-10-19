@@ -25,7 +25,7 @@
 #include "native_eabi_m0.hpp"
 #endif
 
-#if MK61_USE_COMPACT_LIBM && MK61_MATH_BACKEND == MK61_MATH_BACKEND_LIBM
+#if MK61_USE_COMPACT_LIBM && MK61_MATH_BACKEND == MK61_MATH_BACKEND_BINARY64
 
 static_assert(DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024,
               "compact math requires IEEE binary64");

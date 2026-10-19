@@ -122,7 +122,7 @@ def main() -> None:
         "notes": ["Compiler APPs retain the existing editors.",
                   "VM APP includes expression input, verifier, rendering and BSS.",
                   "RAM savings describe replacement of the loaded APP only, not whole-device peaks.",
-                  "Resident LIBM/CORE share the same service-based APP; arithmetic behavior is tested separately.",
+                  "Resident BINARY64/CORE share the same service-based APP; arithmetic behavior is tested separately.",
                   "Source and bytecode compression use the existing bounded ZX0 encoder."]}
     (out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
     print(json.dumps({"comparisons": comparisons, "programs": len(programs)}, indent=2))

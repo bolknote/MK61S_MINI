@@ -4,7 +4,7 @@
 Only hardware/C5 and workspace backing are mocked. The resident's actual
 arithmetic, printf, font decoder and editor key handler execute as ARM code.
 
-Use test-only residents built with MK61_MATH_BACKEND=0 (LIBM), unless the
+Use test-only residents built with MK61_MATH_BACKEND=0 (BINARY64), unless the
 FOCAL and TinyBASIC packages use local float math.  In that hybrid mode the
 APPs execute their own libm and use the resident only for the stable double /
 float conversion service, so the exact product CORE resident is supported.
@@ -54,7 +54,7 @@ class Elf:
             'mk61_lazy_basic_graphics_bytes'))
         return (self.symbol('__mk61_dynamic_begin') + retained + 7) & ~7
 
-    def require_libm_math(self, path):
+    def require_binary64_math(self, path):
         # This is the CORE implementation's MatrixKey evaluator, including
         # GCC/LTO clone suffixes. Checking symbols avoids hard-coded addresses
         # and does not require running any firmware in Unicorn first.
@@ -63,7 +63,7 @@ class Elf:
                 f'{path}: MK61_MATH_BACKEND=1 (CORE) is unsupported by this '
                 'ARM fixture: the calculator core and STM32 bit-band are not '
                 'modeled. Build test-only residents with MK61_MATH_BACKEND=0 '
-                '(LIBM); run tests/run_mk_math_tests.sh for real CORE math. '
+                '(BINARY64); run tests/run_mk_math_tests.sh for real CORE math. '
                 'Do not change the product configuration.')
         # Fail closed if a stripped or otherwise incompatible ELF does not
         # positively identify the math implementation exercised by this suite.
@@ -78,7 +78,7 @@ class Elf:
                       for kernels in compact_kernel_sets)
         if not required.issubset(self.symbols) and not compact:
             raise ValueError(
-                f'{path}: cannot confirm LIBM or compact binary64 math in the resident ELF; '
+                f'{path}: cannot confirm GNU or compact binary64 math in the resident ELF; '
                 'provide an unstripped test-only MK61_MATH_BACKEND=0 build.')
     def load(self, uc):
         for s in self.sections:
@@ -821,7 +821,7 @@ def main():
     elif not args.local_float_math:
         for resident in args.resident_elf:
             try:
-                Elf(resident).require_libm_math(resident)
+                Elf(resident).require_binary64_math(resident)
             except ValueError as error:
                 parser.error(str(error))
     with tempfile.TemporaryDirectory(prefix='mk61-system-arm-') as temp:

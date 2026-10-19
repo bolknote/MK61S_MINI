@@ -122,7 +122,7 @@ Assert-True ($helpText -match '-Lto 0\|1\s+default 1') `
     'help does not enable LTO by default'
 Assert-True ($helpText -match '-ProductBuild 0\|1') `
     'help does not expose the constrained product-resident policy'
-Assert-True ($helpText -match '-MathBackend 0\|1\s+LIBM \| CORE') `
+Assert-True ($helpText -match '-MathBackend 0\|1\s+BINARY64 \| CORE') `
     'help does not expose all math backends'
 Assert-True ($helpText -match '-LocalFloatMath 0\|1\s+local float ln/lg/exp/sqrt') `
     'help does not expose selective local APP float math'

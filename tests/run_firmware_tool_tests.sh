@@ -83,6 +83,7 @@ if command -v expect >/dev/null 2>&1; then
   cp "$config_file" "$pty_config"
   nested_config="$installer_root/nested.conf"
   cp "$config_file" "$nested_config"
+  binary64_config="$installer_root/binary64.conf"
   detect_config="$installer_root/detect.conf"
   detect_log="$installer_root/detect.tty"
   fake_dfu="$installer_root/dfu-util"
@@ -95,6 +96,7 @@ if command -v expect >/dev/null 2>&1; then
   chmod +x "$fake_dfu" "$fake_arduino"
   MK61_CONFIG_FILE="$pty_config" MK61_TEST_LAUNCHER="$launcher" \
   MK61_TEST_NESTED_CONFIG="$nested_config" \
+  MK61_TEST_BINARY64_CONFIG="$binary64_config" \
   MK61_TEST_DETECT_CONFIG="$detect_config" \
   MK61_TEST_DETECT_LOG="$detect_log" \
   MK61_TEST_ARDUINO_CLI="$fake_arduino" expect <<'EXPECT'
@@ -184,6 +186,30 @@ expect {
   }
 }
 
+# The renamed binary64 selection must still persist the original numeric
+# backend and turn off the hybrid APP override.
+file copy -force $env(MK61_TEST_NESTED_CONFIG) $env(MK61_TEST_BINARY64_CONFIG)
+set env(MK61_CONFIG_FILE) $env(MK61_TEST_BINARY64_CONFIG)
+spawn $env(MK61_TEST_LAUNCHER)
+after 900
+send -- "7"
+expect "Enter переключает ключ"
+send -- "\033OF\033OA\r"
+expect "Выберите точность и размер математической библиотеки"
+send -- "\033OF\r"
+expect "Математика: BINARY64"
+send -- "\033OF\r"
+expect "MATH BINARY64"
+send -- q
+set timeout 2
+expect {
+  eof {}
+  timeout {
+    send_user "firmware menu did not exit after binary64 selection\n"
+    exit 1
+  }
+}
+
 # Keys pressed while detection owns the foreground used to be echoed by the
 # tty as literal ^[[B/^[[A and remained painted over the menu.
 set env(MK61_CONFIG_FILE) $env(MK61_TEST_DETECT_CONFIG)
@@ -217,6 +243,8 @@ log_file
 EXPECT
   grep -q '^MK61_MATH_BACKEND=1$' "$nested_config"
   grep -q '^MK61_APP_LOCAL_FLOAT_MATH=1$' "$nested_config"
+  grep -q '^MK61_MATH_BACKEND=0$' "$binary64_config"
+  grep -q '^MK61_APP_LOCAL_FLOAT_MATH=0$' "$binary64_config"
   if grep -Eq '\^\[\[[AB]' "$detect_log"; then
     printf 'arrow escape sequence was echoed during device detection\n' >&2
     exit 1

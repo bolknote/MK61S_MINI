@@ -10,6 +10,11 @@
 #include <fstream>
 #include <string>
 
+static_assert(MK61_MATH_BACKEND_BINARY64 == 0, "saved BINARY64 setting changed");
+static_assert(MK61_MATH_BACKEND_CORE == 1, "saved CORE setting changed");
+static_assert(MK61_MATH_BACKEND == MK61_MATH_BACKEND_BINARY64,
+              "this suite must exercise the BINARY64 backend");
+
 using Unary = double(*)(double);
 struct Function {
   const char* name;

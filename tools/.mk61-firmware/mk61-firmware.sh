@@ -1494,7 +1494,7 @@ math_option_state_for() {
   local backend=$2
   local app_float=$3
   case "$choice" in
-    libm) [ "$backend" -eq 0 ] ;;
+    binary64) [ "$backend" -eq 0 ] ;;
     core) [ "$backend" -eq 1 ] && [ "$app_float" -eq 0 ] ;;
     hybrid) [ "$backend" -eq 1 ] && [ "$app_float" -eq 1 ] ;;
     *) return 1 ;;
@@ -1509,7 +1509,7 @@ math_backend_label_for() {
   local backend=$1
   local app_float=$2
   case "$backend" in
-    0) printf 'LIBM' ;;
+    0) printf 'BINARY64' ;;
     1)
       if [ "$app_float" -eq 1 ]; then
         printf 'CORE + APP FLOAT'
@@ -1797,10 +1797,10 @@ choose_compile_options() {
             "$(math_option_state_for core "$math_backend" "$app_float")" \
           hybrid 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC' \
             "$(math_option_state_for hybrid "$math_backend" "$app_float")" \
-          libm   'LIBM · полная double-точность, больше Flash' \
-            "$(math_option_state_for libm "$math_backend" "$app_float")") || continue
+          binary64 'BINARY64 · полная double-точность, больше Flash' \
+            "$(math_option_state_for binary64 "$math_backend" "$app_float")") || continue
         case "$math_choice" in
-          libm) math_backend=0; app_float=0 ;;
+          binary64) math_backend=0; app_float=0 ;;
           core) math_backend=1; app_float=0 ;;
           hybrid) math_backend=1; app_float=1 ;;
         esac

@@ -42,7 +42,7 @@ def main():
     if args.preview_only and not args.preview_dir:
         parser.error('--preview-only requires --preview-dir')
     elf = Elf(args.resident_elf)
-    elf.require_libm_math(args.resident_elf)
+    elf.require_binary64_math(args.resident_elf)
     with tempfile.TemporaryDirectory(prefix='mk61-focal-graphics-arm-') as directory:
         work = Path(directory); reader = work / 'reader'
         run(['c++', '-std=c++17', '-O2', '-I'+str(ROOT/'code'),

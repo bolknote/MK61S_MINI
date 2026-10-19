@@ -61,7 +61,7 @@ def main():
         run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'),ROOT/'tests/portable_app_format_self_test.cpp',
              ROOT/'code/loadable_module_format.cpp',ROOT/'code/zx0.cpp','-o',reader])
         for resident in args.resident_elf:
-            elf=Elf(resident); elf.require_libm_math(resident)
+            elf=Elf(resident); elf.require_binary64_math(resident)
             packed=package(reader,args.app,elf,work)
             for address in ([args.address] if args.address is not None else range(3)):
                 machine=SheetMachine(resident,True,address)

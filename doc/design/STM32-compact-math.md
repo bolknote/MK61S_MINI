@@ -3,7 +3,10 @@
 Первый этап замены оставшихся библиотек — 11 функций `mk_math`: `sin`, `cos`,
 `tan`, `asin`, `acos`, `atan`, `ln`, `log10`, `exp`, `sqrt`, `pow`.
 В самостоятельной сборке `MK61_USE_COMPACT_LIBM=1` включён по умолчанию.
-`MK61_USE_COMPACT_LIBM=0` оставляет контрольную GNU libm. Backend CORE, внешний
+Математический backend называется `BINARY64` (`MK61_MATH_BACKEND=0`,
+`MK61_MATH_BACKEND_BINARY64`); прежнее имя режима `LIBM` больше не используется
+в коде и меню. Отдельный переключатель реализации `MK61_USE_COMPACT_LIBM`
+сохранён: значение `0` оставляет контрольную GNU libm. Backend CORE, внешний
 Arduino backend и ABI System/ordinary APP сохраняются. В окончательных ELF
 Classic и mini нет стандартных функций libm; базовая арифметика `double`
 пока остаётся в libgcc и относится к отдельному следующему этапу.

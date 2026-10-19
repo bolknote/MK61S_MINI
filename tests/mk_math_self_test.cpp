@@ -20,6 +20,11 @@
 #include "shared_memory.hpp"
 #include "workspace_swap.hpp"
 
+static_assert(MK61_MATH_BACKEND_BINARY64 == 0, "saved BINARY64 setting changed");
+static_assert(MK61_MATH_BACKEND_CORE == 1, "saved CORE setting changed");
+static_assert(MK61_MATH_BACKEND == MK61_MATH_BACKEND_CORE,
+              "this suite must exercise the CORE backend");
+
 static int g_failures = 0;
 
 #if MK61_CORE_BODY_PROFILE

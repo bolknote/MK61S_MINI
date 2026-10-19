@@ -475,16 +475,16 @@
 #endif
 
 // Математический бэкенд языков (FOCAL/TinyBASIC).
-//  LIBM — трансцендентные функции через <math.h> (по умолчанию, кроме F401+FOCAL).
-//  CORE             — вычисление на ядре МК-61; убирает libm из прошивки
-//                     ценой ~8 значащих цифр и меньшей скорости.
-#define MK61_MATH_BACKEND_LIBM 0
+//  BINARY64 — double-точность; своё compact_math в native runtime,
+//             <math.h> в Arduino и контрольных сборках (кроме F401+FOCAL по умолчанию).
+//  CORE     — вычисление на ядре МК-61: ~8 значащих цифр и меньшая скорость.
+#define MK61_MATH_BACKEND_BINARY64 0
 #define MK61_MATH_BACKEND_CORE 1
 #ifndef MK61_MATH_BACKEND
   #if MK61_ENABLE_FOCAL && (defined(STM32F401xC) || defined(STM32F401xE) || defined(ARDUINO_BLACKPILL_F401CC))
     #define MK61_MATH_BACKEND MK61_MATH_BACKEND_CORE
   #else
-    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_LIBM
+    #define MK61_MATH_BACKEND MK61_MATH_BACKEND_BINARY64
   #endif
 #endif
 

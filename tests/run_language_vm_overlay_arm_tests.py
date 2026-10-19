@@ -301,7 +301,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--resident-elf", type=Path, required=True)
     p.add_argument("--apps-dir", type=Path, default=ROOT/"tmp/language-vm-screen")
-    p.add_argument("--vm-profile", choices=("core", "local", "libm"), default="core")
+    p.add_argument("--vm-profile", choices=("core", "local", "binary64"), default="core")
     p.add_argument("--poison-state", action="store_true",
                    help="v14: leave inactive continuation slots poisoned through cold validation")
     p.add_argument("--focal-trace",action="store_true")
@@ -322,7 +322,7 @@ def main():
             name = "BASIC" if kind == 2 else "FOCAL"
             layouts[name] = max(layouts.get(name,0),size)
     elf = Elf(args.resident_elf)
-    if args.vm_profile != "local": elf.require_libm_math(args.resident_elf)
+    if args.vm_profile != "local": elf.require_binary64_math(args.resident_elf)
     with tempfile.TemporaryDirectory(prefix="mk61-overlay-arm-") as directory:
         work = Path(directory); reader = work/"reader"
         run(["c++", "-std=c++17", "-O2", "-I"+str(ROOT/"code"),

@@ -129,7 +129,7 @@ Firmware options:
   -Ws0010Graphics 0|1  WEH001602A 100x16 Markdown/WBMP qualification
   -ExtendedFontSettings 0|1
   -UserExplorer 0|1
-  -MathBackend 0|1    LIBM | CORE
+  -MathBackend 0|1    BINARY64 | CORE
   -LocalFloatMath 0|1 local float ln/lg/exp/sqrt in FOCAL/BASIC APP
   -Lto 0|1          default 1
   -ProductBuild 0|1 omit qualification-only resident diagnostics; default 0

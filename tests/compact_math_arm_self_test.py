@@ -19,7 +19,7 @@ def distance(a,b): return abs(ordered(a)-ordered(b))
 
 class MathMachine:
     def __init__(self,path):
-        elf=Elf(path);elf.require_libm_math(path)
+        elf=Elf(path);elf.require_binary64_math(path)
         self.uc=Uc(UC_ARCH_ARM,UC_MODE_MCLASS|UC_MODE_THUMB)
         self.uc.mem_map(0x08000000,0x100000)
         self.uc.mem_map(0x20000000,0x20000)

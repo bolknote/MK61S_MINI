@@ -446,6 +446,10 @@ try {
     Assert-True ((Get-Checkbox 0) -eq '[ ]' -and (Get-Checkbox 1) -eq '[x]') 'Windows option summary still uses unsupported checkbox glyphs'
     Assert-True ((Get-MathBackendLabelFor 1 1) -eq 'CORE + APP FLOAT') `
         'staged math selection has the wrong label'
+    Assert-True ((Get-MathBackendLabelFor 0 0) -eq 'BINARY64') `
+        'binary64 math still uses the obsolete library label'
+    Assert-True ((Get-MathBackendLabelFor 1 0) -eq 'CORE') `
+        'CORE math label changed'
     Assert-True ((Get-CompileOptionsDetails) -notmatch '[☐☑]') 'Windows option details still contain unsupported checkbox glyphs'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_ENABLE_USB_SCREEN') 'USB Screen is missing from Windows option details'
     Assert-True ((Get-CompileOptionsDetails) -match 'MK61_EXTERNALIZE_USBDISK') `

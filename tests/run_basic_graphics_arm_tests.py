@@ -23,7 +23,7 @@ def main():
     parser.add_argument('--native-basic',type=Path,required=True)
     args=parser.parse_args()
     elf=Elf(args.resident_elf)
-    elf.require_libm_math(args.resident_elf)
+    elf.require_binary64_math(args.resident_elf)
     with tempfile.TemporaryDirectory(prefix='mk61-basic-graphics-arm-') as directory:
         work=Path(directory);reader=work/'reader'
         run(['c++','-std=c++17','-O2','-I'+str(ROOT/'code'),

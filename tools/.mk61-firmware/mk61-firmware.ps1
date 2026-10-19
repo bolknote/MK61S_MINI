@@ -412,7 +412,7 @@ function Get-MathBackendLabel {
 function Get-MathBackendLabelFor {
     param([int]$MathBackend, [int]$AppLocalFloat)
     switch ($MathBackend) {
-        0 { return 'LIBM' }
+        0 { return 'BINARY64' }
         1 {
             if ($AppLocalFloat -eq 1) { return 'CORE + APP FLOAT' }
             return 'CORE'
@@ -2081,11 +2081,11 @@ function Choose-CompileOptions {
                 $mathItems = @(
                     [pscustomobject]@{ Tag = 'core'; Label = 'CORE · ядро МК-61, около 8 цифр'; State = if ($mathBackend -eq 1 -and $appLocalFloat -eq 0) { 'on' } else { 'off' } }
                     [pscustomobject]@{ Tag = 'hybrid'; Label = 'CORE + APP FLOAT · быстрые ln/lg/exp/sqrt в FOCAL/BASIC'; State = if ($mathBackend -eq 1 -and $appLocalFloat -eq 1) { 'on' } else { 'off' } }
-                    [pscustomobject]@{ Tag = 'libm'; Label = 'LIBM · полная double-точность, больше Flash'; State = if ($mathBackend -eq 0) { 'on' } else { 'off' } }
+                    [pscustomobject]@{ Tag = 'binary64'; Label = 'BINARY64 · полная double-точность, больше Flash'; State = if ($mathBackend -eq 0) { 'on' } else { 'off' } }
                 )
                 $mathChoice = Show-RadioList 'Математика' 'Выберите точность и размер математической библиотеки:' $mathItems
                 if (-not [string]::IsNullOrEmpty($mathChoice)) {
-                    $mathBackend = if ($mathChoice -eq 'libm') { 0 } else { 1 }
+                    $mathBackend = if ($mathChoice -eq 'binary64') { 0 } else { 1 }
                     $appLocalFloat = if ($mathChoice -eq 'hybrid') { 1 } else { 0 }
                 }
             }

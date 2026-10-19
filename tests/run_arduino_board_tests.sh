@@ -218,10 +218,16 @@ core_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.core=' \
 core_app_float_math_line="$(grep -n \
   '^mk61_f401_app\.menu\.mk61_math\.core_app_float=' \
   "$target/boards.txt" | cut -d: -f1)"
-libm_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.libm=' \
+binary64_math_line="$(grep -n '^mk61_f401_app\.menu\.mk61_math\.binary64=' \
   "$target/boards.txt" | cut -d: -f1)"
 test "$core_math_line" -lt "$core_app_float_math_line"
-test "$core_app_float_math_line" -lt "$libm_math_line"
+test "$core_app_float_math_line" -lt "$binary64_math_line"
+for board in mk61_f401_app mk61_f411; do
+  grep -q "^$board.menu.mk61_math.binary64=BINARY64$" "$target/boards.txt"
+  grep -q "^$board.menu.mk61_math.binary64.build.mk61_math=0$" "$target/boards.txt"
+  grep -q "^$board.menu.mk61_math.binary64.build.mk61_app_math=0$" "$target/boards.txt"
+  ! grep -q "^$board.menu.mk61_math.libm=" "$target/boards.txt"
+done
 ! grep -q '^mk61_f401_app.menu.mk61_math.float=' "$target/boards.txt"
 grep -q '^mk61_f401_app.menu.mk61_math.core_app_float.build.mk61_math=1$' \
   "$target/boards.txt"

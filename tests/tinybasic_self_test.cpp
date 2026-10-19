@@ -724,7 +724,7 @@ static void test_format_number(void) {
 }
 
 // Трансцендентные функции теперь направляются через mk_math:: (здесь подсистема
-// LIBM); это подтверждает, что подключение даёт ожидаемые значения.
+// BINARY64); это подтверждает, что подключение даёт ожидаемые значения.
 static void test_mk_math_dispatch(void) {
   TinyBasicTestReset();
   const int slot = TinyBasicTestAddProgram(
