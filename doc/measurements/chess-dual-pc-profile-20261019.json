@@ -1,0 +1,1605 @@
+{
+  "date": "2026-10-19",
+  "status": "PASS_DIAGNOSTIC_ONLY_GOAL_25_SECONDS_NOT_MET",
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "firmware": {
+    "path": "/private/tmp/mk61-native-samples.4Iw8wm/hil-profile/images/current.bin",
+    "bytes": 375072,
+    "footer": 373016,
+    "build": "2DCD8785",
+    "sha256": "75dde0938edde15f7cfa93c2f460d5c24a7df2b301d0e9c278ff19b75324c875",
+    "source": "/private/tmp/mk61-native-samples.4Iw8wm/native/resident.bin"
+  },
+  "profile_seconds": 34.49318516708445,
+  "shipping_performance_statistics_excluded": true,
+  "current_shipping_reference_seconds": 31.80259772896534,
+  "profile": {
+    "status": "PASS",
+    "warmup_searches": 2,
+    "profile_stage": {
+      "name": "profile-warm",
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "repeat",
+          "seconds": 34.49318516708445,
+          "nodes": 420,
+          "nodes_per_second": 12.176318248533054,
+          "move": "e2e3",
+          "final_frame_sha256": "cc0dd9f848d2ec37ea93b284a4afe8fb2383c6dc3f06e367a7cb17fb84bb3d92",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.08971879200544208
+            },
+            {
+              "nodes": 21,
+              "seconds": 2.220312917022966
+            },
+            {
+              "nodes": 42,
+              "seconds": 3.8007728341035545
+            },
+            {
+              "nodes": 63,
+              "seconds": 5.508521917043254
+            },
+            {
+              "nodes": 84,
+              "seconds": 7.172085459111258
+            },
+            {
+              "nodes": 105,
+              "seconds": 8.740855917101726
+            },
+            {
+              "nodes": 126,
+              "seconds": 10.334501417004503
+            },
+            {
+              "nodes": 147,
+              "seconds": 12.00754941708874
+            },
+            {
+              "nodes": 168,
+              "seconds": 13.6755510000512
+            },
+            {
+              "nodes": 189,
+              "seconds": 15.358942750026472
+            },
+            {
+              "nodes": 210,
+              "seconds": 17.036160292103887
+            },
+            {
+              "nodes": 231,
+              "seconds": 18.819382334011607
+            },
+            {
+              "nodes": 252,
+              "seconds": 20.620528375031427
+            },
+            {
+              "nodes": 273,
+              "seconds": 22.437704542069696
+            },
+            {
+              "nodes": 294,
+              "seconds": 24.261068875086494
+            },
+            {
+              "nodes": 315,
+              "seconds": 25.937213709112257
+            },
+            {
+              "nodes": 336,
+              "seconds": 27.598052959074266
+            },
+            {
+              "nodes": 357,
+              "seconds": 29.288363334024325
+            },
+            {
+              "nodes": 378,
+              "seconds": 30.950868750107475
+            },
+            {
+              "nodes": 399,
+              "seconds": 32.591997042065486
+            },
+            {
+              "nodes": 420,
+              "seconds": 34.26954729203135
+            }
+          ],
+          "profile": {
+            "clock_hz": 96000000,
+            "points": {
+              "core.step": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.fetch": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ticks.00-26": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ticks.27-35": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ticks.36-41": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.finish": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ik1302": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ik1303": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "core.ik1306": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "idle.main": {
+                "calls": 226244,
+                "total_cycles": 571426065,
+                "total_seconds": 5.95235484375,
+                "maximum_cycles": 150011,
+                "self_cycles": 388357132,
+                "self_seconds": 4.045386791666667
+              },
+              "display.update": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "usb.service": {
+                "calls": 226245,
+                "total_cycles": 183070855,
+                "total_seconds": 1.9069880729166666,
+                "maximum_cycles": 144702,
+                "self_cycles": 183070855,
+                "self_seconds": 1.9069880729166666
+              },
+              "flash.read": {
+                "calls": 5037,
+                "total_cycles": 48797943,
+                "total_seconds": 0.50831190625,
+                "maximum_cycles": 35018,
+                "self_cycles": 48797943,
+                "self_seconds": 0.50831190625
+              },
+              "flash.write": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "flash.verify": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "flash.erase": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.decode": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.load.basic": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.load.focal": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.load.vm": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.load.input": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.load.other": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.entry.basic": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.entry.focal": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.entry.vm": {
+                "calls": 15441,
+                "total_cycles": 2793286058,
+                "total_seconds": 29.096729770833335,
+                "maximum_cycles": 8659201,
+                "self_cycles": 2287746747,
+                "self_seconds": 23.83069528125
+              },
+              "app.entry.input": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "app.entry.other": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "file.source": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "file.font": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "file.other": {
+                "calls": 479,
+                "total_cycles": 45413512,
+                "total_seconds": 0.4730574166666667,
+                "maximum_cycles": 99914,
+                "self_cycles": 5146215,
+                "self_seconds": 0.05360640625
+              },
+              "zx0.app.basic": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.app.focal": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.app.vm": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.app.input": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.app.other": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.source": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.font": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.swap": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "zx0.other": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "font.activate": {
+                "calls": 7721,
+                "total_cycles": 22339668,
+                "total_seconds": 0.232704875,
+                "maximum_cycles": 5569,
+                "self_cycles": 22339668,
+                "self_seconds": 0.232704875
+              },
+              "vm.cache.lookup": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "vm.prepare": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "vm.cache.pack": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "vm.cache.thaw": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0,
+                "self_cycles": 0,
+                "self_seconds": 0
+              },
+              "m61.runner": {
+                "calls": 13028,
+                "total_cycles": 3225145193,
+                "total_seconds": 33.595262427083334,
+                "maximum_cycles": 9403414,
+                "self_cycles": 79530919,
+                "self_seconds": 0.8284470729166666
+              },
+              "vm.invoke": {
+                "calls": 7720,
+                "total_cycles": 2994780604,
+                "total_seconds": 31.19563129166667,
+                "maximum_cycles": 9379580,
+                "self_cycles": 116091917,
+                "self_seconds": 1.2092908020833333
+              },
+              "m61.operand": {
+                "calls": 7744,
+                "total_cycles": 4058747,
+                "total_seconds": 0.04227861458333333,
+                "maximum_cycles": 1247,
+                "self_cycles": 4058747,
+                "self_seconds": 0.04227861458333333
+              },
+              "m61.open": {
+                "calls": 7720,
+                "total_cycles": 3003848649,
+                "total_seconds": 31.29009009375,
+                "maximum_cycles": 9380245,
+                "self_cycles": 6222448,
+                "self_seconds": 0.06481716666666666
+              },
+              "terminal.lookup": {
+                "calls": 11583,
+                "total_cycles": 24861977,
+                "total_seconds": 0.2589789270833333,
+                "maximum_cycles": 5488,
+                "self_cycles": 24861977,
+                "self_seconds": 0.2589789270833333
+              },
+              "m61.read.line": {
+                "calls": 7733,
+                "total_cycles": 3943819,
+                "total_seconds": 0.041081447916666666,
+                "maximum_cycles": 2083,
+                "self_cycles": 3943819,
+                "self_seconds": 0.041081447916666666
+              },
+              "m61.command": {
+                "calls": 104235,
+                "total_cycles": 3141755466,
+                "total_seconds": 32.7266194375,
+                "maximum_cycles": 9384705,
+                "self_cycles": 108993745,
+                "self_seconds": 1.1353515104166667
+              }
+            },
+            "vm_cache": [],
+            "vm_cache_dropped": 0,
+            "vm_cache_order": {
+              "count": 0,
+              "fnv64": 14695981039346655000
+            }
+          },
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 26624,
+            "lookups": 2675,
+            "hits": 856,
+            "misses": 1819,
+            "invalidations": 168,
+            "loan_hits": 22561,
+            "loan_misses": 592
+          }
+        }
+      ],
+      "profiling": true,
+      "cache_before": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2188,
+        "hits": 852,
+        "misses": 1336,
+        "invalidations": 168,
+        "loan_hits": 15032,
+        "loan_misses": 398
+      },
+      "cache_after": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2675,
+        "hits": 856,
+        "misses": 1819,
+        "invalidations": 168,
+        "loan_hits": 22561,
+        "loan_misses": 592
+      },
+      "health": {
+        "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 181 used, 843 free, 1024 total\r\nVisible: 129 files, 52 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=436/18 raw(v/t/b)=1492/952/1020 val(mV/dC/mV)=3331/326/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=375072 footer=373016 expected=0x2DCD8785 build=0x2DCD8785 actual=0x2DCD8785 backend=hardware cycles=1104909\r\n/> ",
+        "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+        "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005E88 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC30 observed_low=0x2001FC30 sampled_remaining=15408 watermark=1 watermark_remaining=8408 observed_remaining=8408 sram_xn=1\r\n/> ",
+        "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  3.0000000  00\r\nIP: 0\r\n/> ",
+        "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+        "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+        "pwd": "pwd\r\n/\r\n/> "
+      },
+      "manifests": [
+        {
+          "path": "/System/VMCache/Pages/0010/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2463,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/001F/Manifest.bin",
+          "language": 1,
+          "lines": 12,
+          "bytecode_bytes": 667,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0021/Manifest.bin",
+          "language": 1,
+          "lines": 18,
+          "bytecode_bytes": 940,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/000F/Manifest.bin",
+          "language": 1,
+          "lines": 77,
+          "bytecode_bytes": 3321,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002C/Manifest.bin",
+          "language": 1,
+          "lines": 44,
+          "bytecode_bytes": 1779,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002E/Manifest.bin",
+          "language": 1,
+          "lines": 34,
+          "bytecode_bytes": 1514,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0028/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2688,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0029/Manifest.bin",
+          "language": 1,
+          "lines": 9,
+          "bytecode_bytes": 469,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0031/Manifest.bin",
+          "language": 1,
+          "lines": 51,
+          "bytecode_bytes": 2125,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0037/Manifest.bin",
+          "language": 1,
+          "lines": 47,
+          "bytecode_bytes": 2433,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0016/Manifest.bin",
+          "language": 1,
+          "lines": 125,
+          "bytecode_bytes": 4014,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0020/Manifest.bin",
+          "language": 1,
+          "lines": 158,
+          "bytecode_bytes": 6589,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0013/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2377,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002F/Manifest.bin",
+          "language": 1,
+          "lines": 57,
+          "bytecode_bytes": 2447,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0012/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2283,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002A/Manifest.bin",
+          "language": 1,
+          "lines": 19,
+          "bytecode_bytes": 885,
+          "bank": 0
+        }
+      ],
+      "frames_crc_checked": 417
+    },
+    "warm_no_compilation_or_nor_writes": true,
+    "proof": {
+      "status": "PASS",
+      "gates_pass": true,
+      "irq_cases": 8,
+      "cases": [
+        {
+          "psp": false,
+          "extended": false,
+          "native": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": false,
+          "extended": true,
+          "native": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": false,
+          "extended": false,
+          "native": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": false,
+          "extended": true,
+          "native": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": false,
+          "native": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": true,
+          "native": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": false,
+          "native": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": true,
+          "native": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        }
+      ],
+      "firmware_sha256": "75dde0938edde15f7cfa93c2f460d5c24a7df2b301d0e9c278ff19b75324c875",
+      "app_sha256": "44a0eb422ef620ad1f4d7723331dd9d51045e37477d71eb0584bc1eb8f57351e"
+    },
+    "counters": {
+      "anchor": 536957952,
+      "total": 29324,
+      "app": 19351,
+      "native": 9973,
+      "other": 0,
+      "invalid": 0,
+      "nested": 0,
+      "relocated": 0,
+      "overflow": 0,
+      "basic": 0,
+      "extended": 29324
+    },
+    "app_buckets": [
+      [
+        0,
+        7
+      ],
+      [
+        128,
+        3
+      ],
+      [
+        256,
+        4
+      ],
+      [
+        384,
+        1
+      ],
+      [
+        512,
+        160
+      ],
+      [
+        640,
+        92
+      ],
+      [
+        768,
+        47
+      ],
+      [
+        896,
+        38
+      ],
+      [
+        1024,
+        6
+      ],
+      [
+        1152,
+        38
+      ],
+      [
+        1280,
+        24
+      ],
+      [
+        1408,
+        22
+      ],
+      [
+        1536,
+        50
+      ],
+      [
+        1664,
+        26
+      ],
+      [
+        1792,
+        29
+      ],
+      [
+        1920,
+        182
+      ],
+      [
+        2176,
+        88
+      ],
+      [
+        2304,
+        21
+      ],
+      [
+        2432,
+        39
+      ],
+      [
+        2560,
+        455
+      ],
+      [
+        2688,
+        250
+      ],
+      [
+        2816,
+        46
+      ],
+      [
+        2944,
+        2
+      ],
+      [
+        3072,
+        8
+      ],
+      [
+        3200,
+        58
+      ],
+      [
+        3328,
+        15
+      ],
+      [
+        3456,
+        123
+      ],
+      [
+        3584,
+        126
+      ],
+      [
+        3712,
+        3
+      ],
+      [
+        4224,
+        6
+      ],
+      [
+        4352,
+        3
+      ],
+      [
+        4480,
+        255
+      ],
+      [
+        4608,
+        2
+      ],
+      [
+        4736,
+        543
+      ],
+      [
+        4864,
+        1187
+      ],
+      [
+        4992,
+        5
+      ],
+      [
+        5120,
+        1831
+      ],
+      [
+        5248,
+        1690
+      ],
+      [
+        5376,
+        1279
+      ],
+      [
+        5504,
+        118
+      ],
+      [
+        5632,
+        397
+      ],
+      [
+        5760,
+        2059
+      ],
+      [
+        5888,
+        623
+      ],
+      [
+        6016,
+        155
+      ],
+      [
+        6144,
+        42
+      ],
+      [
+        6272,
+        371
+      ],
+      [
+        6400,
+        338
+      ],
+      [
+        6528,
+        59
+      ],
+      [
+        6656,
+        197
+      ],
+      [
+        6784,
+        511
+      ],
+      [
+        6912,
+        122
+      ],
+      [
+        7040,
+        56
+      ],
+      [
+        7168,
+        63
+      ],
+      [
+        7296,
+        12
+      ],
+      [
+        8448,
+        22
+      ],
+      [
+        8576,
+        5
+      ],
+      [
+        9600,
+        4
+      ],
+      [
+        9728,
+        9
+      ],
+      [
+        9856,
+        10
+      ],
+      [
+        9984,
+        387
+      ],
+      [
+        10112,
+        561
+      ],
+      [
+        10240,
+        1376
+      ],
+      [
+        10368,
+        813
+      ],
+      [
+        10496,
+        336
+      ],
+      [
+        10752,
+        464
+      ],
+      [
+        10880,
+        1
+      ],
+      [
+        11008,
+        5
+      ],
+      [
+        11392,
+        3
+      ],
+      [
+        11520,
+        10
+      ],
+      [
+        11648,
+        106
+      ],
+      [
+        11776,
+        77
+      ],
+      [
+        11904,
+        7
+      ],
+      [
+        12032,
+        27
+      ],
+      [
+        12160,
+        165
+      ],
+      [
+        12288,
+        100
+      ],
+      [
+        13312,
+        21
+      ],
+      [
+        13440,
+        57
+      ],
+      [
+        13568,
+        149
+      ],
+      [
+        13696,
+        76
+      ],
+      [
+        13824,
+        16
+      ],
+      [
+        13952,
+        9
+      ],
+      [
+        14080,
+        12
+      ],
+      [
+        14208,
+        16
+      ],
+      [
+        14336,
+        29
+      ],
+      [
+        14464,
+        94
+      ],
+      [
+        14592,
+        70
+      ],
+      [
+        14720,
+        9
+      ],
+      [
+        14976,
+        2
+      ],
+      [
+        15232,
+        13
+      ],
+      [
+        15616,
+        18
+      ],
+      [
+        15872,
+        3
+      ],
+      [
+        16000,
+        7
+      ],
+      [
+        16128,
+        1
+      ],
+      [
+        16384,
+        3
+      ],
+      [
+        16512,
+        10
+      ],
+      [
+        16640,
+        33
+      ],
+      [
+        16768,
+        52
+      ],
+      [
+        16896,
+        49
+      ],
+      [
+        17024,
+        21
+      ],
+      [
+        18560,
+        1
+      ],
+      [
+        19072,
+        3
+      ],
+      [
+        19200,
+        9
+      ],
+      [
+        19328,
+        6
+      ],
+      [
+        19456,
+        10
+      ],
+      [
+        19584,
+        11
+      ],
+      [
+        19968,
+        2
+      ],
+      [
+        20096,
+        164
+      ]
+    ],
+    "native_buckets": [
+      [
+        0,
+        46
+      ],
+      [
+        4096,
+        592
+      ],
+      [
+        8192,
+        335
+      ],
+      [
+        12288,
+        43
+      ],
+      [
+        16384,
+        46
+      ],
+      [
+        24576,
+        10
+      ],
+      [
+        28672,
+        308
+      ],
+      [
+        32768,
+        897
+      ],
+      [
+        36864,
+        25
+      ],
+      [
+        40960,
+        641
+      ],
+      [
+        45056,
+        971
+      ],
+      [
+        49152,
+        165
+      ],
+      [
+        53248,
+        284
+      ],
+      [
+        57344,
+        89
+      ],
+      [
+        61440,
+        400
+      ],
+      [
+        65536,
+        18
+      ],
+      [
+        69632,
+        7
+      ],
+      [
+        73728,
+        5
+      ],
+      [
+        77824,
+        5
+      ],
+      [
+        81920,
+        237
+      ],
+      [
+        86016,
+        3
+      ],
+      [
+        94208,
+        212
+      ],
+      [
+        102400,
+        203
+      ],
+      [
+        110592,
+        18
+      ],
+      [
+        114688,
+        132
+      ],
+      [
+        122880,
+        1233
+      ],
+      [
+        172032,
+        91
+      ],
+      [
+        192512,
+        180
+      ],
+      [
+        208896,
+        345
+      ],
+      [
+        212992,
+        1
+      ],
+      [
+        237568,
+        759
+      ],
+      [
+        241664,
+        568
+      ],
+      [
+        245760,
+        67
+      ],
+      [
+        253952,
+        26
+      ],
+      [
+        266240,
+        617
+      ],
+      [
+        270336,
+        224
+      ],
+      [
+        323584,
+        110
+      ],
+      [
+        327680,
+        60
+      ]
+    ],
+    "app_resolution": 128,
+    "native_resolution": 4096,
+    "histogram_bytes": 684,
+    "statistics_excluded_from_shipping_timing": true
+  },
+  "points": {
+    "idle.main": {
+      "calls": 226244,
+      "inclusive_seconds": 5.95235484375,
+      "self_seconds": 4.045386791666667
+    },
+    "usb.service": {
+      "calls": 226245,
+      "inclusive_seconds": 1.9069880729166666,
+      "self_seconds": 1.9069880729166666
+    },
+    "flash.read": {
+      "calls": 5037,
+      "inclusive_seconds": 0.50831190625,
+      "self_seconds": 0.50831190625
+    },
+    "app.entry.vm": {
+      "calls": 15441,
+      "inclusive_seconds": 29.096729770833335,
+      "self_seconds": 23.83069528125
+    },
+    "file.other": {
+      "calls": 479,
+      "inclusive_seconds": 0.4730574166666667,
+      "self_seconds": 0.05360640625
+    },
+    "font.activate": {
+      "calls": 7721,
+      "inclusive_seconds": 0.232704875,
+      "self_seconds": 0.232704875
+    },
+    "m61.runner": {
+      "calls": 13028,
+      "inclusive_seconds": 33.595262427083334,
+      "self_seconds": 0.8284470729166666
+    },
+    "vm.invoke": {
+      "calls": 7720,
+      "inclusive_seconds": 31.19563129166667,
+      "self_seconds": 1.2092908020833333
+    },
+    "m61.operand": {
+      "calls": 7744,
+      "inclusive_seconds": 0.04227861458333333,
+      "self_seconds": 0.04227861458333333
+    },
+    "m61.open": {
+      "calls": 7720,
+      "inclusive_seconds": 31.29009009375,
+      "self_seconds": 0.06481716666666666
+    },
+    "terminal.lookup": {
+      "calls": 11583,
+      "inclusive_seconds": 0.2589789270833333,
+      "self_seconds": 0.2589789270833333
+    },
+    "m61.read.line": {
+      "calls": 7733,
+      "inclusive_seconds": 0.041081447916666666,
+      "self_seconds": 0.041081447916666666
+    },
+    "m61.command": {
+      "calls": 104235,
+      "inclusive_seconds": 32.7266194375,
+      "self_seconds": 1.1353515104166667
+    }
+  },
+  "gaps": {
+    "keyboard.poll": {
+      "calls": 239066,
+      "max_ms": 16.742364583333334,
+      "over30": 0
+    },
+    "keyboard.sample": {
+      "calls": 29966,
+      "max_ms": 17.748916666666666,
+      "over30": 0
+    },
+    "keyboard.row0": {
+      "calls": 5993,
+      "max_ms": 28.332520833333334,
+      "over30": 0
+    },
+    "keyboard.row1": {
+      "calls": 5993,
+      "max_ms": 28.280166666666666,
+      "over30": 0
+    },
+    "keyboard.row2": {
+      "calls": 5992,
+      "max_ms": 29.9503125,
+      "over30": 0
+    },
+    "keyboard.row3": {
+      "calls": 5992,
+      "max_ms": 28.242822916666668,
+      "over30": 0
+    },
+    "keyboard.row4": {
+      "calls": 5992,
+      "max_ms": 28.209947916666668,
+      "over30": 0
+    },
+    "usb.service": {
+      "calls": 226244,
+      "max_ms": 15.501958333333333,
+      "over30": 0
+    }
+  },
+  "APP_interpretation": {
+    "integer_span_certain_samples": 7328,
+    "integer_span_possible_samples": 9670,
+    "certain_percent_all": 24.98976947210476,
+    "possible_percent_all": 32.97640158232165,
+    "scalar_run_certain_samples": 5219,
+    "span_hot_ranges": [
+      "0x20001480..0x2000157f",
+      "0x20001680..0x200016ff"
+    ],
+    "note": "128-byte buckets crossing functions are bounds, not exact attribution; 0x1400 spans Reader::at, View::byte and span prologue."
+  },
+  "native_interpretation": "4096-byte buckets identify candidate ranges only. Hottest range includes both ZX0 prepare and diagnostic DWT bookkeeping; no single-function or shipping cost is asserted.",
+  "zero_work_in_warm_profile": [
+    "flash.write",
+    "flash.verify",
+    "flash.erase",
+    "zx0.decode",
+    "app.load.basic",
+    "app.load.focal",
+    "app.load.input"
+  ],
+  "resource_gates": {
+    "histogram_bytes": 684,
+    "F411_firmware_bytes": 375072,
+    "free_flash": 149216,
+    "minimum_free_flash": 131072,
+    "globals": 24200,
+    "global_limit": 49152,
+    "native_frame": 1928,
+    "frame_limit": 3072,
+    "combined_APP_pool": 32256,
+    "combined_required": 32128,
+    "cache_budget": 32768,
+    "cache_payload": 29696,
+    "limits_weakened": false,
+    "sampler_in_main": false
+  },
+  "tests": {
+    "histogram": "ASan/UBSan PASS",
+    "actual_IRQ": "8 MSP/PSP x basic/FP x APP/native cases; frame, SP, R4-R11 and D8-D15 preserved; one tick PASS",
+    "qualified_APP_sha256": "44a0eb422ef620ad1f4d7723331dd9d51045e37477d71eb0584bc1eb8f57351e"
+  },
+  "restoration": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "original_files": 24,
+    "original_directories": 2,
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "firmware_writes": 2,
+  "ordinary_and_diagnostic_searches": 4,
+  "artifacts": {
+    "report": "/private/tmp/mk61-native-samples.4Iw8wm/hil-profile/report.json",
+    "profile": "/private/tmp/mk61-native-samples.4Iw8wm/hil-profile/profile-warm/run-0/prof.txt",
+    "sampler_source": "/private/tmp/mk61-native-samples.4Iw8wm",
+    "irq_proof": "/private/tmp/mk61-native-samples.4Iw8wm/pc-irq-checked.json",
+    "build_log": "/private/tmp/mk61-native-samples.4Iw8wm/build.log",
+    "APP_symbols": "/private/tmp/mk61-control-span.aLRPlo/build-control-span-checked/LANGVM.elf"
+  },
+  "next_action": "Completed by selected C in chess-span-loop-20261019.json. Follow-up profile still selects the integer loop: qualify eliminating its duplicate opcode fetch and the first INTEGER_SPAN operand decode, preserving all limits and the original service cadence.",
+  "followup_C": {
+    "status": "PASS_DIAGNOSTIC_ONLY",
+    "report": "/private/tmp/mk61-const-span.LXl5qa/hil-profile-C/report.json",
+    "profile": "/private/tmp/mk61-const-span.LXl5qa/hil-profile-C/profile-warm/run-0/prof.txt",
+    "APP_symbols": "/private/tmp/mk61-const-span.LXl5qa/build-const-box/LANGVM.elf",
+    "APP_sha256": "59a639c86abfaa8f0db25defb2a267b6bf02eb0616949fa00a0cfb0c401d5520",
+    "diagnostic_resident": "2DCD8785; same separately qualified 684-byte histogram and eight actual IRQ cases",
+    "shipping_APP_unchanged": true,
+    "diagnostic_seconds_excluded_from_shipping_performance": 30.154,
+    "samples": {
+      "total": 25015,
+      "APP": 15321,
+      "native": 9694,
+      "other_invalid_nested_relocated_overflow": 0
+    },
+    "integer_span": {
+      "begin_offset": 5124,
+      "end_exclusive_offset": 6720,
+      "certain_samples": 6742,
+      "possible_samples": 9441,
+      "percent_of_all_samples_bounds": [26.951828902658402, 37.741355186887866],
+      "boundary_note": "128-byte buckets overlap adjacent functions; do not attribute all boundary samples to integer_span",
+      "hot_bins": [[5248,1366],[5632,2433],[6656,1443]],
+      "inspection": "Repeated raw fetch and common loop tail remain hot. Offset 6656 also overlaps instruction_end/block_next."
+    },
+    "DWT_seconds": {
+      "VM_entry_self": 19.54431896875,
+      "VM_entry_inclusive": 24.756858145833334,
+      "idle_main_inclusive": 5.912632291666666,
+      "idle_main_self": 4.056672385416666,
+      "USB_service_inclusive": 1.8559799270833333,
+      "Flash_read": 0.5082292916666666,
+      "VM_invoke_self": 1.2088451041666666,
+      "note": "Scopes overlap; inclusive and self values are not added together. Diagnostic VM self fell from 23.830695 seconds in A; this is not a separate shipping A/B claim."
+    },
+    "warm_search_no_NOR_writes_or_compile": true,
+    "latency": {
+      "all_gap_over30_counters": 0,
+      "max_keyboard_row_ms": 28.964416666666665,
+      "max_USB_service_ms": 15.485291666666667,
+      "diagnostic_only": true
+    },
+    "all_four_searches_golden_420_e2e3_full_board": true,
+    "restoration": {
+      "status": "PASS",
+      "firmware": "3AB3DD45",
+      "files_preserved": true,
+      "calculator_preserved": true,
+      "Mini_or_Pico_touched": false
+    }
+  }
+}

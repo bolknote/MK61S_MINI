@@ -20,6 +20,7 @@ struct Snapshot {
 Snapshot* recording;
 const View* executing_view;
 unsigned comparisons=0,spans=0,multiple=0,short_blocks=0;
+bool aliased_code_fixture=false;
 struct Fixture {
   uint8_t image[MAX_IMAGE]; View view={};
   Value variables[26],array[385],stack[MAX_STACK]; State state={};
@@ -106,8 +107,11 @@ void trace_instruction(const View& v,uint16_t pc,uint32_t steps) {
 void integer_span_applied(uint16_t first,uint8_t count) {
   ++spans;multiple+=count>1;
   assert(executing_view);
-  assert((Op)executing_view->bytes[first]==Op::INTEGER_SPAN ||
-         (Op)executing_view->bytes[first]==Op::INTEGER_SHORT);
+  // The hook runs after the span: a code/value alias can have overwritten
+  // its original marker already. The reference and full bytes are compared.
+  if(!aliased_code_fixture)
+    assert((Op)executing_view->bytes[first]==Op::INTEGER_SPAN ||
+           (Op)executing_view->bytes[first]==Op::INTEGER_SHORT);
 }
 void integer_short_block_applied(uint16_t) {++short_blocks;}
 }
@@ -196,6 +200,26 @@ int main() {
     }
     equal(fast,reference,limit);
   }
+  // Raw code may share storage with a value bank. A span must consume the
+  // current operands before its first write; later fetches see the same
+  // modified bytes as the ordinary evaluator.
+  static_assert(std::is_trivially_copyable<Value>::value,"value representation fixture");
+  for(unsigned program:{0U,7U})for(unsigned bank=0;bank<3;++bank)
+      for(unsigned shift:{0U,8U,16U})for(unsigned limit:{1U,2U,5U,31U,32U,33U,128U}) {
+    Fixture fast(basic[program],Language::BASIC,3,5),reference(basic[program],Language::BASIC,3,5);
+    Value first[MAX_IMAGE/sizeof(Value)],second[MAX_IMAGE/sizeof(Value)];
+    Value* images[]={first,second};Fixture* fixtures[]={&fast,&reference};
+    for(unsigned which=0;which<2;++which) {
+      auto& f=*fixtures[which];auto* cells=images[which];
+      std::memcpy(cells,f.image,f.view.size);f.view.bytes=reinterpret_cast<const uint8_t*>(cells);
+      cells+=(f.view.code+7U+shift)/8U;
+      if(bank==0){f.state.stack=cells;f.state.stack_capacity=32;}
+      if(bank==1)f.state.variables=cells;
+      if(bank==2){f.state.array=cells;f.state.array_count=32;}
+    }
+    aliased_code_fixture=true;equal(fast,reference,limit);aliased_code_fixture=false;
+    assert(!std::memcmp(first,second,sizeof(first)));
+  }
   // The existing hint retains every instruction width and scalar fallback.
   // Changed compiler APP CRC automatically invalidates its old file cache.
   Fixture short_chain(basic[17],Language::BASIC,-17,3);
@@ -274,6 +298,23 @@ int main() {
     fast.state.stack_capacity=reference.state.stack_capacity=1;
     equal(fast,reference,limit);assert(a[0].representation()==b[0].representation());
   }
+  // Inactive cells and aliased variable/array banks may contain fractions,
+  // signed zero or NaNs. All overlapping/dead cells and load fallbacks must
+  // remain bit-exact, even around the original 32-step service boundary.
+  for(unsigned program:{0U,6U,7U,20U,21U})for(unsigned offset:{0U,1U,4U})
+    for(unsigned bank=0;bank<3;++bank)
+      for(Value poison:{Value(0),Value(.25),Value::floating_bits(UINT64_C(0x8000000000000000)),
+                        Value::floating_bits(UINT64_C(0x7FF8000000000000))})
+        for(unsigned limit:{0U,2U,31U,32U,33U,65U}) {
+          Fixture fast(basic[program],Language::BASIC,3,5),reference(basic[program],Language::BASIC,3,5);
+          for(Fixture* f:{&fast,&reference}) {
+            for(auto& cell:f->stack)cell=poison;
+            f->stack[offset+2]=Value(3);
+            if(bank!=1)f->state.variables=f->stack+offset;
+            if(bank!=0){f->state.array=f->stack+offset;f->state.array_count=MAX_STACK-offset;}
+          }
+          equal(fast,reference,limit);
+        }
   assert(marked>1000 && spans>1000 && multiple>1000 && short_blocks>1000);
   std::printf("integer spans: %u exact reference comparisons; %u spans, %u multi-op, %u short blocks; trace/steps/dead cells/polls/errors/INPUT/ESC/resume PASS\n",comparisons,spans,multiple,short_blocks);
 }

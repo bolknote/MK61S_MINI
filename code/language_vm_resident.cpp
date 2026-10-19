@@ -587,6 +587,9 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
       context.vm.program_validated=certificate;
       View view;if(!validated_view(context.vm.program,view))return RuntimeStatus::CORRUPT_MODULE;
       initialize_validated_state(r,certificate,*context.vm.program.state);
+      const uint8_t* image;
+      if(!store.materialize(image))return RuntimeStatus::CORRUPT_MODULE;
+      if(image){r.image=image;r.paged={};}
       values->selected[language==Language::BASIC?0:1]=flash_id;
       (void)program_store_text_font_activate();
       first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
@@ -805,6 +808,7 @@ bool cache_diagnostics(CacheDiagnostics& out) {
     const auto& s=cache->statistics();
     out={MK61_FLASH_VM_PAGE_CACHE_BYTES,cache->payload(),cache->used(),
         s.lookups,s.hits,s.misses,0,0,s.publications,s.evictions,s.invalidations};
+    out.loan_hits=s.loan_hits;out.loan_misses=s.loan_misses;
   }
   return true;
 #elif MK61_OVERLAY_LANGUAGE_VM && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES

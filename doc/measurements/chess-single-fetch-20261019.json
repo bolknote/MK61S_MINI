@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-19",
+  "status": "PROGRESS_TARGET_25_SECONDS_NOT_MET",
+  "objective": "возвращай к прежним цифрам по скорости шахмат",
+  "target_warm_seconds": 25,
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "code_in_working_main": true,
+  "committed": false,
+  "limits_weakened": false,
+  "device": "Classic AEB505B6E0067623 / USB 2068336B4731",
+  "experiment": "A/B/F/B/A, same shipping resident 4BFA1D4A, profiler stopped",
+  "timing": "Complete eight-rank board, level 2, depth 8, book off, 420 nodes, e2-e3",
+  "changes": {
+    "B_over_A": "Hoist the raw image pointer, construct small span constants explicitly as int32, enter INTEGER_SPAN before the generic operand decoder/tag check",
+    "F_over_B": "Fetch each useful opcode once inside the span; scan SOURCE_POS only when encountered; preserve prefix-tail/HALT diagnostics and the exact 32-step service/limit boundary"
+  },
+  "warm_medians_seconds": [27.519259853987023,26.481108833511826,25.8120755830314,26.48657262447523,27.512571354047395],
+  "matched_comparisons": {
+    "B_vs_A": {
+      "reference_seconds": 27.51591560401721,
+      "candidate_seconds": 26.481108833511826,
+      "elapsed_reduction_percent": 3.760757175582796,
+      "A_control_drift_percent": -0.024304795896101794
+    },
+    "F_vs_B": {
+      "reference_seconds": 26.483840728993528,
+      "candidate_seconds": 25.8120755830314,
+      "elapsed_reduction_percent": 2.536509537405207,
+      "B_control_drift_percent": 0.02063278768935639
+    },
+    "F_vs_A_elapsed_reduction_percent": 6.192198164530838
+  },
+  "selected_F": {
+    "warm_seconds": [25.761792415985838,25.862358750076964],
+    "median_seconds": 25.8120755830314,
+    "compile_cold_seconds": 41.06368683301844,
+    "ram_cold_ready_file_cache_seconds": 25.879693749942817,
+    "memory_bytes": 20428,
+    "BSS_bytes": 20,
+    "stored_bytes": 13800,
+    "memory_change_vs_A_bytes": -24,
+    "stored_change_vs_A_bytes": -38,
+    "APP_sha256": "f86f528ecbcaf6f517c68732415841cac68323a277eafe214a12a8a2bceabb06",
+    "source_sha256": "c384092a46aa1c287c75406b4c33f72442df874569fd14a5cf82981cc026c3cc",
+    "Value_header_sha256": "217f171ccfbbc6442310050ed49db914a6b91a83aa36701b6df2a69474d571aa",
+    "fresh_main_APP_byte_identical": true
+  },
+  "correctness": {
+    "ordinary_searches": 17,
+    "all_420_e2e3_complete_eight_rank_golden_boards": true,
+    "golden_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frame_mask": "Only the original 16x16 disk indicator; no board crop",
+    "ASan_UBSan_full_main_VM_suite": "PASS, both arithmetic backends",
+    "control_raw_paged_full_state_comparisons": 425760,
+    "integer_span_comparisons_per_arithmetic_per_trace_configuration": 140198,
+    "opcode_profile_configurations_exact_counts": 32,
+    "prefix_tail_cases": "Repeated/truncated SOURCE_POS, empty tails, invalid opcode, failing HALT, limits and ESC around the original 32-step boundary; narrow/wide addresses and raw/paged readers",
+    "actual_ARM": "PASS, real BASIC/FOCAL frontends, 66225-byte paged and 225-byte raw/paged images, three APP relocation addresses, poison/replacement and INPUT/resume",
+    "numeric_wire_format_precision_or_request_ABI_changed": false,
+    "service_cadence_changed": false
+  },
+  "strict_main_builds": {
+    "F411": {
+      "status": "PASS_BUILD_AND_SEAL",
+      "build": "6930EFCF",
+      "BIN_bytes": 371316,
+      "Flash_free_bytes": 152972,
+      "Flash_minimum_headroom_bytes": 131072,
+      "globals_bytes": 21568,
+      "globals_limit_bytes": 49152,
+      "native_frame_bytes": 1928,
+      "native_frame_limit_bytes": 3072,
+      "effective_APP_pool_bytes": 34880,
+      "LANGVM_limit_bytes": 20480,
+      "note": "Matched timing above uses fixed shipping resident 4BFA1D4A; rebuilt LANGVM is byte-identical, not a claim that these resident BINs are identical."
+    },
+    "F401_WS0010": {
+      "status": "PASS_BUILD_AND_SEAL_ONLY_NO_BOARD_ACCESS",
+      "build": "6DE88765",
+      "BIN_bytes": 240004,
+      "Flash_free_bytes": 22140,
+      "Flash_minimum_headroom_bytes": 8192,
+      "globals_bytes": 27300,
+      "globals_limit_bytes": 52428,
+      "native_frame_bytes": 1304,
+      "native_frame_limit_bytes": 2048
+    },
+    "native_runtime_archive_gate": "PASS, no libgcc/libm/libstdc++/libc/libnosys",
+    "global_RAM_growth_bytes": 0,
+    "minimum_observed_stack_remaining_bytes": 8752,
+    "F_ready_cache_observed_stack_remaining_bytes": 11200,
+    "stack_budget_bytes": 16384,
+    "stack_guard_bytes": 256
+  },
+  "restoration": {
+    "status": "PASS",
+    "firmware": "3AB3DD45",
+    "original_files": 24,
+    "original_directories": 2,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "Mini_or_Pico_touched": false
+  },
+  "artifacts": {
+    "HIL_report": "/private/tmp/mk61-span-loop.9JBdBI/hil-aba-checked/report.json",
+    "F_local_qualification": "/private/tmp/mk61-single-fetch.SjtigV/qualified.json",
+    "main_full_VM_log": "/private/tmp/mk61-single-fetch.SjtigV/main-full.log",
+    "main_F411_build_log": "/private/tmp/mk61-single-fetch.SjtigV/main-F-f411.log",
+    "main_F401_build_log": "/private/tmp/mk61-single-fetch.SjtigV/main-F-f401.log"
+  },
+  "remaining": "About 0.8 seconds remain to the 25-second target. A separate qualified G prototype moves constant/comparison starts before generic operand decoding; it is not yet measured or adopted by this report."
+}

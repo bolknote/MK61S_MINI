@@ -4,12 +4,14 @@
 namespace language_vm { namespace flash {
 // Fixed page frames, shared across RUN/APP replacement. Identity includes the
 // complete C9 mutation epoch: inode reuse, GC, edits and derived-cache eviction
-// invalidate every old frame. No image-sized allocation or exported pointer.
+// invalidate every old key. Small images may borrow adjacent frames for one
+// RUN; a live loan survives key invalidation and cannot be overwritten.
 class ReadCache {
 public:
   struct Slot {uint32_t chunk,age;uint16_t directory;};
   struct Statistics {
     uint32_t lookups=0,hits=0,misses=0,publications=0,evictions=0,invalidations=0;
+    uint32_t loan_hits=0,loan_misses=0;
   };
   struct Image {
     uint32_t fingerprint,stamp,age;
@@ -19,6 +21,7 @@ public:
   };
 private:
   Slot* slots_;uint8_t* bytes_;uint16_t count_;
+  uint16_t pinned_start_=0,pinned_count_=0;
   uint32_t revision_=0,clock_=0;
   Image images_[32];
   uint32_t fingerprints_[2];
@@ -41,7 +44,8 @@ public:
   const Statistics& statistics() const {return statistics_;}
   uint32_t payload() const {return uint32_t(count_)*WRITE_BYTES;}
   uint32_t used() const {
-    uint32_t result=0;for(unsigned i=0;i<count_;++i)if(slots_[i].directory!=UINT16_MAX)result+=WRITE_BYTES;
+    uint32_t result=0;for(unsigned i=0;i<count_;++i)
+      if(slots_[i].directory!=UINT16_MAX || (i>=pinned_start_ && i-pinned_start_<pinned_count_))result+=WRITE_BYTES;
     return result;
   }
   bool fingerprint(uint32_t revision,Language language,uint32_t& value) {
@@ -80,16 +84,69 @@ public:
   }
   void put(uint32_t revision,uint16_t directory,uint32_t chunk,const uint8_t* bytes) {
     synchronize(revision);if(directory==UINT16_MAX)return;
-    unsigned selected=0;
+    unsigned selected=count_;
     for(unsigned i=0;i<count_;++i) {
+      if(i>=pinned_start_ && i-pinned_start_<pinned_count_)continue;
       if(slots_[i].directory==directory && slots_[i].chunk==chunk){selected=i;break;}
       if(slots_[i].directory==UINT16_MAX){selected=i;break;}
-      if(slots_[i].age<slots_[selected].age)selected=i;
+      if(selected==count_ || slots_[i].age<slots_[selected].age)selected=i;
     }
+    if(selected==count_)return;
     if(slots_[selected].directory!=UINT16_MAX)++statistics_.evictions;
     ++statistics_.publications;
     memcpy(bytes_+selected*WRITE_BYTES,bytes,WRITE_BYTES);
     slots_[selected]={chunk,++clock_,directory};
+  }
+  // Optional whole-image fast lane, backed by the very same page frames.
+  // True with a null result means ineligible/busy: use the paged VM. False
+  // is a backing I/O/service failure, not a reason to silently retry it.
+  bool borrow(uint32_t revision,uint16_t directory,uint32_t size,const IO& io,const uint8_t*& image) {
+    image=nullptr;synchronize(revision);
+    const unsigned n=(size+WRITE_BYTES-1)/WRITE_BYTES;
+    if(!size || size>8192 || n>count_ || directory==UINT16_MAX || pinned_count_)return true;
+    unsigned selected=0;uint32_t oldest=UINT32_MAX;
+    for(unsigned i=0;i+n<=count_;++i) {
+      bool ready=true;uint32_t newest=0;
+      for(unsigned j=0;j<n;++j) {
+        const auto& slot=slots_[i+j];
+        if(slot.directory!=directory || slot.chunk!=j)ready=false;
+        if(slot.directory!=UINT16_MAX && slot.age>newest)newest=slot.age;
+      }
+      if(ready) {
+        ++statistics_.loan_hits;
+        const uint32_t age=++clock_;
+        for(unsigned j=0;j<n;++j)slots_[i+j].age=age;
+        pinned_start_=uint16_t(i);pinned_count_=uint16_t(n);
+        image=bytes_+i*WRITE_BYTES;return true;
+      }
+      if(newest<oldest){oldest=newest;selected=i;}
+    }
+    ++statistics_.loan_misses;
+    pinned_start_=uint16_t(selected);pinned_count_=uint16_t(n);
+    for(unsigned j=0;j<n;++j) {
+      if(slots_[selected+j].directory!=UINT16_MAX)++statistics_.evictions;
+      slots_[selected+j].directory=UINT16_MAX;
+    }
+    // Include physical tail padding: get() promises a complete 1-KiB page.
+    // Reads may populate other frames, but never the reserved destination.
+    auto* destination=bytes_+selected*WRITE_BYTES;
+    for(unsigned j=0;j<n;++j)if(!io.read ||
+        !io.read(io.context,IMAGE,j*WRITE_BYTES,destination+j*WRITE_BYTES,WRITE_BYTES) ||
+        (io.service && !io.service(io.context))) {
+      pinned_count_=0;return false;
+    }
+    if(revision_!=revision){pinned_count_=0;return false;}
+    synchronize(revision);const uint32_t age=++clock_;
+    for(unsigned i=0;i<count_;++i)
+      if((i<selected || i>=selected+n) && slots_[i].directory==directory && slots_[i].chunk<n)
+        slots_[i].directory=UINT16_MAX;
+    for(unsigned j=0;j<n;++j) {
+      slots_[selected+j]={j,age,directory};++statistics_.publications;
+    }
+    image=destination;return true;
+  }
+  void release(const uint8_t* image) {
+    if(pinned_count_ && image==bytes_+pinned_start_*WRITE_BYTES)pinned_count_=0;
   }
 };
 template<unsigned Capacity> class PageCache final:public ReadCache {

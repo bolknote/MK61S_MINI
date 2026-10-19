@@ -33,8 +33,11 @@ static void test_language_flash_store() {
   }
   program_store::init();assert(program_store::ready());
   auto verify=[&](u8 expected) {
-    lf::Store store(&source_id,12345);ValidatedImage certificate;
+    lf::PageCache<32768> cache;
+    lf::Store store(&source_id,12345,nullptr,nullptr,&cache);ValidatedImage certificate;
     assert(store.load(certificate) && certificate.size==200000);
+    const auto reads=SPIFlash::readOperations();const u8* contiguous=nullptr;
+    assert(store.materialize(contiguous) && !contiguous && SPIFlash::readOperations()==reads);
     lf::Reader image(store.input(certificate.size));u8 bytes[257];
     for(u32 at:{255U,1021U,65533U,170000U,199743U}) {
       assert(image.read(at,bytes,sizeof(bytes)));
@@ -132,9 +135,14 @@ static void test_language_flash_repeated_run_io() {
   }
   lf::PageCache<8192> cache;
   auto measure=[&](lf::ReadCache* shared) {
-    // Materialize C9's lazily rebuilt FAT directory chains outside the
-    // read-only RUN interval, including after the unrelated write below.
+    // Loading an existing manifest/image must already be read-only,
+    // including after the unrelated write below invalidated FAT scratch.
+    SPIFlash::resetOperationCounts();
     {lf::Store warm(&id,789,nullptr,nullptr,shared);ValidatedImage image;assert(warm.load(image));}
+    // Opening an existing derived image is a read, even after an unrelated
+    // C9 write invalidated USB's projection. Never rebuild writable FAT
+    // scratch just to find Manifest/an image page.
+    assert(SPIFlash::mutationOperations()==0);
     SPIFlash::resetOperationCounts();
     for(unsigned run=0;run<20;++run) {
       lf::Store store(&id,789,nullptr,nullptr,shared);ValidatedImage image;assert(store.load(image));
@@ -168,6 +176,40 @@ static void test_language_flash_repeated_run_io() {
   page[7400%sizeof(page)]=0xA7;
   assert(program_store::write_file(entry.parent_id,entry.id,ProgramType::MK61_BINARY,entry.name,page,sizeof(page)));
   assert(io.read(io.context,lf::IMAGE,7400,&value,1) && value==0xA7);
+  // A whole small image is an optional loan from the existing resident
+  // frames, not another allocation. Its map/code/prompts are one immutable
+  // RUN snapshot even across INPUT callbacks and unrelated C9 mutations.
+  lf::PageCache<32768> loan_cache;
+  static_assert(sizeof(loan_cache)<=32768,"small-image loans use the same page-cache budget");
+  {
+    lf::Store snapshot(&id,789,nullptr,nullptr,&loan_cache);ValidatedImage c;assert(snapshot.load(c));
+    const u8* image=nullptr;assert(snapshot.materialize(image) && image && image[7400]==0xA7);
+    const auto reads=SPIFlash::readOperations();
+    auto snapshot_io=snapshot.io();u32 number=lf::dword(image+32),pc=0;
+    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+36));
+    auto in=snapshot.input(c.size);u8 bytes[13];
+    assert(in.read(in.context,8180,bytes,12) && !memcmp(bytes,image+8180,12));
+    assert(!in.read(in.context,8180,bytes,13));
+    assert(SPIFlash::readOperations()==reads);
+    page[7400%sizeof(page)]=0xC9;
+    assert(program_store::write_file(entry.parent_id,entry.id,ProgramType::MK61_BINARY,entry.name,page,sizeof(page)));
+    for(unsigned i=0;i<80;++i)loan_cache.put(program_store::media_revision(),u16(400+i),i,page);
+    assert(image[7400]==0xA7 && in.read(in.context,7400,&value,1) && value==0xA7);
+    assert(snapshot_io.lookup(snapshot_io.context,number,true,&pc) && pc==lf::dword(image+36));
+  }
+  {
+    lf::Store next(&id,789,nullptr,nullptr,&loan_cache);ValidatedImage c;assert(next.load(c));
+    const u8* image=nullptr;assert(next.materialize(image) && image && image[7400]==0xC9);
+  }
+  // An I/O failure while constructing a loan is reported; no partial image
+  // is published, and retry after recovery must refill all its bytes.
+  {
+    lf::PageCache<32768> failed_cache;
+    lf::Store failing(&id,789,nullptr,nullptr,&failed_cache);ValidatedImage c;assert(failing.load(c));
+    const u8* image=nullptr;failing.invalidate();SPIFlash::failReadsAfterOperations(0);
+    assert(!failing.materialize(image) && !image);SPIFlash::clearFailure();
+    assert(failing.materialize(image) && image && image[7400]==0xC9);
+  }
   // An epoch-valid descriptor may skip metadata reads. Source edits and a
   // different compiler identity must therefore reject that descriptor too.
   {lf::Store changed_compiler(&id,790,nullptr,nullptr,&cache);
@@ -177,5 +219,5 @@ static void test_language_flash_repeated_run_io() {
       "RUN",replacement,sizeof(replacement)-1));
   {lf::Store changed_source(&id,789,nullptr,nullptr,&cache);
    ValidatedImage stale;assert(!changed_source.load(stale));}
-  puts("C9 Flash RUN: bounded pages survive Store replacement; source/compiler/epoch invalidation, exact bytes, no writes PASS");
+  puts("C9 Flash RUN: bounded pages and same-pool small images; source/compiler/epoch invalidation, immutable RUN loans, exact bytes, I/O recovery PASS");
 }

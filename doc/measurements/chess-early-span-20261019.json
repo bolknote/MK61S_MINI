@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-19",
+  "status": "PASS_PROGRESS_HISTORICAL_SPEED_NOT_YET_RESTORED",
+  "objective": "возвращай к прежним цифрам по скорости шахмат",
+  "historical_warm_seconds": 25.16137514600996,
+  "historical_report": "chess-source-window-20261017.json",
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "accepted_variant": "G, working main, uncommitted",
+  "limits_weakened": false,
+  "experiment": "Shipping F/G/H/G/F on fixed resident 6930EFCF, profiler stopped",
+  "device": "Classic AEB505B6E0067623 / USB 2068336B4731",
+  "workload": "Unchanged 29-file Turochamp, level 2, depth 8, book off; 420 nodes; e2-e3; complete eight-rank board",
+  "warm_medians_F_G_H_G_F_seconds": [25.809681666549295,25.630440082983114,25.760201145953033,25.635405353968963,25.80389154201839],
+  "accepted_G": {
+    "change": "Move all supported span starts ahead of generic operand decoding: constants, comparison/index hints and INTEGER_SPAN. Disabled hints retain scalar fallback.",
+    "reference_F_seconds": 25.806786604283843,
+    "candidate_G_seconds": 25.63292271847604,
+    "elapsed_reduction_percent": 0.6737138120828434,
+    "F_control_drift_percent": -0.022433924624531976,
+    "APP_memory_bytes": 20380,
+    "APP_stored_bytes": 13800,
+    "APP_BSS_bytes": 20,
+    "APP_memory_change_vs_F_bytes": -48,
+    "APP_sha256": "2db99db64366095d804d7c65d0003a02733bf57617a7f3a32957129bfe26dd0a",
+    "source_sha256": "ca3f59e9eea0a08dc96c14f5517b3cd47aee809aa1f45ddc54adcaf7d671e360",
+    "fresh_main_APP_byte_identical": true,
+    "other_system_APPs_unchanged_vs_F": true
+  },
+  "rejected_H": {
+    "change": "Skip repeated input tag checks only in a non-traced raw integer span with an initially empty stack; all loaded values remain checked, no assumptions across spans.",
+    "local_semantics": "PASS, both arithmetic backends, 141278 scalar-reference comparisons per backend/trace mode including shifted aliased banks poisoned with fractions, signed zero and NaNs",
+    "candidate_seconds": 25.760201145953033,
+    "elapsed_reduction_vs_G_percent": -0.4965427816206569,
+    "G_control_drift_percent": 0.019372554547536502,
+    "decision": "Not adopted: safe and within original limits, but slower and larger than G",
+    "APP_memory_bytes": 20460,
+    "source_in_main": false
+  },
+  "functional_evidence": {
+    "ordinary_searches": 17,
+    "all_420_e2e3_full_eight_rank_golden_boards": true,
+    "golden_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "board_mask": "Only the original 16x16 disk indicator",
+    "both_arithmetic_full_ASan_UBSan_suites": "PASS",
+    "real_ARM_Basic_Focal_64KB_raw_paged_relocation_INPUT_resume": "PASS",
+    "reader_cache_loans_IO_failure_epoch_cancel_full_pool": "PASS",
+    "opcode_profile_exact_count_configurations": 32,
+    "bytecode_format_request_ABI_or_service_cadence_changed": false,
+    "minimum_observed_stack_remaining_bytes": 8752,
+    "stack_budget_bytes": 16384,
+    "guard_bytes": 256
+  },
+  "separate_G_diagnostic": {
+    "status": "PASS, timings excluded from shipping comparisons",
+    "resident": "2DCD8785; GAP/runtime-detail enabled and verified before flash",
+    "keyboard_row_max_ms": 29.402552083333333,
+    "USB_service_max_ms": 15.479697916666666,
+    "all_gap_over30_counters": 0,
+    "warm_NOR_writes_verifies_erases_decodes_and_APP_loads": 0,
+    "all_four_searches_golden": true,
+    "restored": true
+  },
+  "strict_main_builds": {
+    "F411": {"build":"E584365C","BIN_bytes":371316,"Flash_free_bytes":152972,"Flash_minimum_headroom_bytes":131072,"globals_bytes":21568,"globals_limit_bytes":49152,"max_frame_bytes":1928,"frame_limit_bytes":3072,"APP_effective_pool_bytes":34880,"LANGVM_limit_bytes":20480,"status":"PASS, sealed"},
+    "F401_WS0010": {"build":"89C654E1","BIN_bytes":240004,"Flash_free_bytes":22140,"Flash_minimum_headroom_bytes":8192,"globals_bytes":27300,"globals_limit_bytes":52428,"max_frame_bytes":1304,"frame_limit_bytes":2048,"status":"PASS, sealed, no board access"},
+    "global_RAM_growth_bytes": 0,
+    "native_runtime_library_gate": "PASS, no libgcc/libm/libstdc++/libc/libnosys"
+  },
+  "restoration": {"status":"PASS","firmware":"3AB3DD45","original_files":24,"original_directories":2,"files_preserved":true,"calculator_preserved":true,"Mini_or_Pico_touched":false},
+  "artifacts": {
+    "shipping_report": "/private/tmp/mk61-span-known.wIxpI8/hil-aba/report.json",
+    "G_diagnostic_report": "/private/tmp/mk61-early-spans.sAqd0r/hil-diagnostic-checked/report.json",
+    "G_qualification": "/private/tmp/mk61-early-spans.sAqd0r/qualified.json",
+    "H_qualification": "/private/tmp/mk61-span-known.wIxpI8/qualified.json",
+    "main_F411_build": "/private/tmp/mk61-early-spans.sAqd0r/main-G-f411.log",
+    "main_F401_build": "/private/tmp/mk61-early-spans.sAqd0r/main-G-f401.log"
+  },
+  "next": "J reuses the looked-ahead raw opcode after SOURCE_POS and constructs small literals from uint8. It retains all tag checks and passed local qualification. Separate four-search G/J/G is required; no performance claim yet."
+}

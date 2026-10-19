@@ -64,7 +64,7 @@ uint32_t dword(const uint8_t* p) {
 // Keep the variable ON-table fetch outside the hot dispatch frame. Only the
 // selected two-byte line number is read, regardless of table/image length.
 __attribute__((noinline)) uint16_t image_word(const View& v,uint32_t at) {
-  return word(v.at(at));
+  uint8_t bytes[2]={};(void)v.read(at,bytes,sizeof(bytes));return word(bytes);
 }
 uint8_t stride(const View& v) { return v.wide_code()?8:v.language == Language::BASIC ? 4 : 6; }
 uint32_t record_pc(const View& v, uint16_t i) {
@@ -117,7 +117,7 @@ bool constant_value(const View& v,uint32_t pc,Value& value) {
   uint8_t bytes[9];
   if(pc>=v.end)return false;
   const uint16_t n=uint16_t(v.end-pc<sizeof(bytes)?v.end-pc:sizeof(bytes));
-  return v.at(pc).read(bytes,n) && decode_constant(Op(bytes[0]),bytes+1,value);
+  return v.read(pc,bytes,n) && decode_constant(Op(bytes[0]),bytes+1,value);
 }
 bool data_value(const View& v,uint32_t at,uint32_t end,Value& value,uint32_t& following) {
   following=next(v,at);
@@ -183,18 +183,19 @@ uint32_t block_next(const View& v,uint32_t pc) {
 // Bounded runtime checks retain scalar fallback for nonmatching/truncated
 // views and invalid local IDs.
 __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
-    const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
+    const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit,
+    Op hint,const uint8_t* operands) {
   const uint32_t first=instruction;
-  const bool short_value=(Op)v.byte(first)==Op::INTEGER_SHORT;
+  const bool short_value=hint==Op::INTEGER_SHORT;
   if(data.stack_capacity-s.sp<(short_value?1:2))return 0;
   uint32_t after,last;
   uint8_t count=3,dst=255,delta;
   Value a,b;
-  const bool compare=(Op)v.byte(first)==Op::BLOCK_COMPARE;
+  const bool compare=hint==Op::BLOCK_COMPARE;
   if(short_value) {
 #if MK61_VM_INTEGER_SPAN
-    if(v.end-first<2 || v.byte(first+1)>=26)return 0;
-    a=data.variables[v.byte(first+1)];if(!a.finite())return 0;
+    if(v.end-first<2 || *operands>=26)return 0;
+    a=data.variables[*operands];if(!a.finite())return 0;
     const uint32_t middle=block_next(v,(first+2));
     if(!middle || middle>=v.end)return 0;
     const Op op=(Op)v.byte(middle);
@@ -216,13 +217,13 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 #endif
   } else if(compare) {
 #if MK61_VM_COMPARE_BLOCK
-    if(v.end-first<5U+v.address_bytes() || v.byte(first+1)>=26)return 0;
+    if(v.end-first<5U+v.address_bytes() || *operands>=26)return 0;
     const uint8_t rhs=v.byte(first+2);
     if(rhs<(uint8_t)Op::CONST_0 || rhs>(uint8_t)Op::CONST_15 ||
        (Op)v.byte(first+3)!=Op::COMPARE_FALSE)return 0;
     b=(uint8_t)(rhs-(uint8_t)Op::CONST_0);
     last=(first+3);after=(first+5+v.address_bytes());
-    a=data.variables[v.byte(first+1)];
+    a=data.variables[*operands];
     if(!a.integer())return 0;
     delta=2;
 #else
@@ -230,10 +231,12 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 #endif
   } else {
 #if MK61_VM_INTEGER_BLOCK
-    if(v.end-first<6 || v.byte(first+4)>=26)return 0;
-    b=data.variables[v.byte(first+4)];
+    if(v.end-first<6)return 0;
+    const uint8_t index=v.byte(first+4);
+    if(index>=26)return 0;
+    b=data.variables[index];
     int32_t sum;
-    if(!b.integer() || __builtin_add_overflow((int32_t)(int16_t)word(v.at(first+1)),
+    if(!b.integer() || __builtin_add_overflow((int32_t)(int16_t)word(operands),
                                              b.integer_value(),&sum))return 0;
     a=sum;after=(first+6);last=(first+5);
     uint32_t candidate=block_next(v,after);
@@ -288,6 +291,9 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 // counted and traced. No span crosses the next service/limit/call boundary.
 __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
+#if defined(LANGUAGE_VM_TEST_INTEGER_SPAN) || defined(LANGUAGE_VM_TEST_INTEGER_BLOCK) || defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
+  [[maybe_unused]] const Op first_hint=Op(v.byte(instruction));
+#endif
   uint32_t budget=32U-((steps-1U)&31U);
   if(limit && budget>limit-steps+1U)budget=limit-steps+1U;
   if(budget<2)return 0;
@@ -298,17 +304,56 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
   Value* const bottom=data.stack;
   Value* const ceiling=bottom+data.stack_capacity;
   Value* top=bottom+s.sp;
-  uint8_t count=0;
+  uint32_t remaining=budget;
+#if !defined(LANGUAGE_VM_TRACE)
+  const uint8_t* const raw=v.reader?nullptr:v.bytes;
+#endif
 #if defined(LANGUAGE_VM_TRACE)
-#define SPAN_TRACE() do {if(count)trace_instruction(v,pc,steps+count);} while(false)
+#define SPAN_TRACE() do {if(remaining!=budget)trace_instruction(v,pc,steps+budget-remaining);} while(false)
 #else
 #define SPAN_TRACE() ((void)0)
 #endif
-  while(count<budget && pc<end) {
-    uint8_t operands[5];
-    const uint16_t available=uint16_t(end-pc<sizeof(operands)?end-pc:sizeof(operands));
-    if(!v.at(pc).read(operands,available))goto done;
+  while(remaining && pc<end) {
+    uint8_t copied[6];
+#if defined(LANGUAGE_VM_TRACE)
+    // A diagnostic callback may perform another reader operation.
+    const uint8_t* operands=nullptr;
+#else
+    const uint8_t* operands=raw?raw+pc:nullptr;
+#endif
+    if(!operands) {
+      const uint16_t available=uint16_t(end-pc<sizeof(copied)?end-pc:sizeof(copied));
+#if !defined(LANGUAGE_VM_TRACE)
+      if(v.reader)operands=v.reader->cached(pc,available);
+#endif
+      if(!operands) {
+        if(!v.read(pc,copied,available))goto done;
+        operands=copied;
+      }
+    }
     const Op op=Op(operands[0]);
+    if(op==Op::SOURCE_POS) {
+      // Ordinary instructions fetch exactly once. Only a diagnostic prefix
+      // needs lookahead; leave PC at its first byte on a truncated tail/HALT,
+      // matching the old post-instruction scan and scalar error location.
+      uint32_t following=pc;
+      Op next_op;
+      do {
+        if(end-following<3)goto done;
+        following+=3;
+        if(following>=end)goto done;
+        next_op=Op(
+#if defined(LANGUAGE_VM_TRACE)
+            v.byte(following)
+#else
+            raw?raw[following]:v.byte(following)
+#endif
+            );
+      } while(next_op==Op::SOURCE_POS);
+      if(next_op==Op::HALT)goto done;
+      pc=following;
+      continue;
+    }
     // Only supported fixed-width handlers advance PC. Multi-byte handlers
     // check their operands before reading; unsupported/variable records leave
     // the stream untouched for the scalar decoder.
@@ -318,16 +363,17 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     int32_t x,y,z;
     if(op>=Op::CONST_0 && op<=Op::CONST_15) {
       if(top>=ceiling)break;
-      result=(uint8_t)op-(uint8_t)Op::CONST_0;
+      result=int32_t((uint8_t)op-(uint8_t)Op::CONST_0);
       SPAN_TRACE();*top++=result;
     } else switch(op) {
-      case Op::CONST_I8: case Op::CONST_I16: case Op::CONST_I32:
-        width=op==Op::CONST_I8?2:op==Op::CONST_I16?3:5;
+      case Op::CONST_I8: case Op::CONST_I16: case Op::BLOCK_INDEX: case Op::CONST_I32:
+        width=op==Op::CONST_I8?2:op==Op::CONST_I32?5:3;
         if(width>(unsigned)(end-pc) || top>=ceiling)goto done;
         result=op==Op::CONST_I8?(int32_t)(int8_t)*p:
-            op==Op::CONST_I16?(int32_t)(int16_t)word(p):(int32_t)dword(p);
+            op!=Op::CONST_I32?(int32_t)(int16_t)word(p):(int32_t)dword(p);
         SPAN_TRACE();*top++=result;break;
-      case Op::LOAD: case Op::INTEGER_SPAN: case Op::LOAD_ARRAY_FIXED:
+      case Op::LOAD: case Op::INTEGER_SPAN: case Op::INTEGER_SHORT:
+      case Op::BLOCK_COMPARE: case Op::LOAD_ARRAY_FIXED:
         width=op==Op::LOAD_ARRAY_FIXED?3:2;
         if(width>(unsigned)(end-pc) || top>=ceiling)goto done;
         if(op!=Op::LOAD_ARRAY_FIXED) {
@@ -362,6 +408,38 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
           if(!x || __builtin_sub_overflow(0,x,&z))goto done;
         } else z=!x;
         SPAN_TRACE();top[-1]=z;break;
+      case Op::FUNCTION:
+        width=2;
+        if(end-pc<2 || Function(*p)!=Function::ABS || top==bottom || !top[-1].integer())goto done;
+        x=top[-1].integer_value();if(x==INT32_MIN)goto done;
+        SPAN_TRACE();top[-1]=x<0?-x:x;break;
+      case Op::LINE: {
+        const uint8_t base=s.call_count
+            ?uint8_t(s.calls[s.call_count-1].base+s.calls[s.call_count-1].arguments):0;
+        if(unsigned(top-bottom)!=base)goto done;
+        SPAN_TRACE();break;
+      }
+      case Op::JUMP: case Op::GOTO_DIRECT: case Op::JUMP_FALSE: case Op::COMPARE_FALSE: {
+        const bool compare=op==Op::COMPARE_FALSE,conditional=op==Op::JUMP_FALSE || compare;
+        width=1U+v.address_bytes()+unsigned(compare);
+        if(width>end-pc)goto done;
+        unsigned consumed=conditional?(compare?2:1):0;
+        if(unsigned(top-bottom)<consumed || (consumed && !top[-1].integer()) ||
+           (compare && !top[-2].integer()))goto done;
+        bool taken=true;
+        if(compare) {
+          x=top[-2].integer_value();y=top[-1].integer_value();
+          taken=!(p[0]&(x<y?1:x==y?2:4));
+        } else if(conditional)taken=!top[-1].integer_value();
+        if(taken) {
+          const uint32_t to=v.address(p+unsigned(compare));
+          if(to<v.code || to>=v.end)goto done;
+          // Unsigned advance also represents backward/self branches. Bounds
+          // are checked before committing; the shared tail retains old PC.
+          width=to-pc;
+        }
+        SPAN_TRACE();top-=consumed;break;
+      }
       case Op::ADD: case Op::SUB: case Op::MUL: case Op::DIV:
       case Op::FLOOR_DIV: case Op::MOD:
       case Op::EQ: case Op::NE: case Op::LT: case Op::LE: case Op::GT: case Op::GE:
@@ -394,23 +472,20 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
         SPAN_TRACE();top[-2]=z;--top;break;
       default:goto done;
     }
-    last=pc;pc=(pc+width);++count;
-    uint32_t following=pc;
-    while(following<end && (Op)v.byte(following)==Op::SOURCE_POS) {
-      if(end-following<3)goto done;
-      following=(following+3);
-    }
-    if(following>=end)break;
-    if(count<budget) {
-      const Op next_op=(Op)v.byte(following);
-      if(next_op==Op::LINE || next_op==Op::HALT)break;
-      pc=following;
-    }
+    last=pc;pc=(pc+width);--remaining;
   }
 done:
+  const uint8_t count=uint8_t(budget-remaining);
   if(count) {
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN)
-    integer_span_applied(instruction,count);
+    if(first_hint==Op::INTEGER_SPAN || first_hint==Op::INTEGER_SHORT)
+      integer_span_applied(instruction,count);
+#endif
+#if defined(LANGUAGE_VM_TEST_INTEGER_BLOCK) && MK61_VM_INTEGER_BLOCK
+    if(first_hint==Op::BLOCK_INDEX && count>=3)integer_block_applied(instruction,3);
+#endif
+#if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK) && MK61_VM_COMPARE_BLOCK
+    if(first_hint==Op::BLOCK_COMPARE && count>=3)compare_block_applied(instruction);
 #endif
     s.sp=(uint8_t)(top-bottom);s.pc=pc;instruction=last;steps+=count-1U;
   }
@@ -423,22 +498,31 @@ done:
 uint16_t trace_following(const View& v,uint16_t pc) {return uint16_t(next(v,pc));}
 #endif
 
-uint32_t instruction_end(const View& v,uint32_t pc) {
+namespace {
+uint32_t instruction_after(const View& v,uint32_t pc,uint8_t op) {
   if(pc>=v.end)return 0;
-  const uint8_t op=v.byte(pc);
   if(op>=sizeof(wire_widths))return 0;
+  static_assert([]() constexpr {
+    for(uint8_t width:wire_widths)if(width>14 && width!=255)return false;
+    return true;
+  }(),"fixed instruction width exceeds its packed nibble");
   static constexpr auto wide_widths=[]() constexpr {
-    struct Table {uint8_t bytes[sizeof(wire_widths)];} table={};
-    for(unsigned i=0;i<sizeof(wire_widths);++i)table.bytes[i]=wire_widths[i];
-    for(Op code:{Op::JUMP,Op::JUMP_FALSE,Op::GOTO_DIRECT,Op::GOSUB_DIRECT,Op::GRAPH_BEGIN,Op::GRAPH_NEXT})table.bytes[unsigned(code)]=5;
-    table.bytes[unsigned(Op::COMPARE_FALSE)]=6;table.bytes[unsigned(Op::DO_FOCAL)]=9;
-    table.bytes[unsigned(Op::BRANCH)]=13;table.bytes[unsigned(Op::CALL_PARAMS)]=11;
-    table.bytes[unsigned(Op::FOR_FOCAL)]=7;
+    uint8_t widths[sizeof(wire_widths)]={};
+    for(unsigned i=0;i<sizeof(wire_widths);++i)widths[i]=wire_widths[i];
+    for(Op code:{Op::JUMP,Op::JUMP_FALSE,Op::GOTO_DIRECT,Op::GOSUB_DIRECT,Op::GRAPH_BEGIN,Op::GRAPH_NEXT})widths[unsigned(code)]=5;
+    widths[unsigned(Op::COMPARE_FALSE)]=6;widths[unsigned(Op::DO_FOCAL)]=9;
+    widths[unsigned(Op::BRANCH)]=13;widths[unsigned(Op::CALL_PARAMS)]=11;
+    widths[unsigned(Op::FOR_FOCAL)]=7;
+    // Widths are 0..13; 15 denotes a variable record. Two per byte recover
+    // space for hot-path guards without changing any bytecode encoding.
+    struct Table {uint8_t bytes[(sizeof(wire_widths)+1)/2];} table={};
+    for(unsigned i=0;i<sizeof(wire_widths);++i)
+      table.bytes[i>>1]|=uint8_t((widths[i]==255?15:widths[i])<<((i&1)*4));
     return table;
   }();
-  const unsigned width=v.wide_code()?wide_widths.bytes[op]:wire_widths[op];
+  const unsigned width=v.wide_code()?((wide_widths.bytes[op>>1]>>((op&1)*4))&15):wire_widths[op];
   const uint32_t remaining=v.end-pc;
-  if(width!=255)return width && width<=remaining?pc+width:0;
+  if(width!=(v.wide_code()?15:255))return width && width<=remaining?pc+width:0;
   const unsigned prefix=v.wide && Op(op)==Op::DATA?5:3;
   if(remaining<prefix)return 0;
   const uint32_t count=prefix==5?dword(v.at(pc+1)):word(v.at(pc+1));
@@ -447,23 +531,29 @@ uint32_t instruction_end(const View& v,uint32_t pc) {
   if(Op(op)==Op::DATA && !count)return 0;
   return count<=remaining-prefix?pc+prefix+count:0;
 }
+}
+uint32_t instruction_end(const View& v,uint32_t pc) {
+  return pc<v.end?instruction_after(v,pc,v.byte(pc)):0;
+}
 namespace {
 class Boundaries {
   union Storage {
-    uint8_t raw[(MAX_IMAGE+7)/8];
+    // The paged Writer already owns a full 1-KiB page. Reuse the same union
+    // footprint as a bitmap for small LBV2 images, not NOR scratch files.
+    uint8_t raw[flash::WRITE_BYTES];
     flash::Writer output;
     Storage():raw{} {}
     ~Storage() {}
   } storage_;
   flash::IO io_;
-  bool wide_,good_=true;
+  bool wide_,good_=true,output_=false;
 public:
-  Boundaries(bool wide,flash::IO io):io_(io),wide_(wide) {
-    if(wide_)new(&storage_.output) flash::Writer(io,flash::BOUNDARIES);
-  }
-  ~Boundaries(){if(wide_)storage_.output.~Writer();}
+  Boundaries(bool wide,flash::IO io):io_(io),wide_(wide) {}
+  ~Boundaries(){if(output_)storage_.output.~Writer();}
   bool prepare(uint32_t end) {
     if(!wide_)return true;
+    if(end<=sizeof(storage_.raw)*8U){wide_=false;return true;}
+    new(&storage_.output) flash::Writer(io_,flash::BOUNDARIES);output_=true;
     if(!io_.truncate(io_.context,flash::BOUNDARIES,0))return false;
     // Fill skipped DATA/string pages too. Corrupt targets into them must be
     // rejected as non-boundaries, never read as uninitialized Flash.
@@ -940,7 +1030,8 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     // bytes remain available to source_column() even after a jump/resume.
     // Skip it before dispatch/service accounting; useful instructions still
     // poll at most 32 apart, and this bounded scan never follows a branch.
-    while(s.pc<v.end && (Op)v.byte(s.pc)==Op::SOURCE_POS) {
+    Op op=Op::HALT;
+    while(s.pc<v.end && (op=Op(v.reader?v.byte(s.pc):v.bytes[s.pc]))==Op::SOURCE_POS) {
       instruction=s.pc;
       if(v.end-s.pc<3) {error=Error::INVALID_IMAGE;break;}
       s.pc=(s.pc+3);
@@ -956,11 +1047,15 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       error = Error::LIMIT;
       break;
     }
-    if ((steps++ & 31U) == 0 && host.service && !host.service(host.context)) {
-      error = Error::STOPPED;
-      break;
+    if ((steps++ & 31U) == 0 && host.service) {
+      if(!host.service(host.context)) {
+        error = Error::STOPPED;
+        break;
+      }
+      // A service callback can modify a raw image through shared banks.
+      // Otherwise the prefix scan has already fetched this opcode.
+      op=Op(v.byte(s.pc));
     }
-    const Op op = (Op)v.byte(s.pc);
     VM_OPCODE_SAMPLE(scalar_op(op), s, data);
 #if defined(LANGUAGE_VM_TRACE)
     trace_instruction(v, s.pc, steps);
@@ -981,14 +1076,28 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
       if(s.sp!=base) error=Error::STACK;
       continue;
     }
+#if MK61_VM_INTEGER_SPAN
+    // The span validates every supported start itself, before the generic
+    // operand decoder/snapshot. Keep disabled hints on their scalar fallback.
+    if(op==Op::INTEGER_SPAN || op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
+       (op>=Op::CONST_0 && op<=Op::CONST_15)
+#if MK61_VM_INTEGER_BLOCK
+       || op==Op::BLOCK_INDEX
+#endif
+#if MK61_VM_COMPARE_BLOCK
+       || op==Op::BLOCK_COMPARE
+#endif
+       ) {
+      const uint8_t count=integer_span(v,s,data,steps,instruction,limit);
+      if(count) {VM_OPCODE_FUSED(count);continue;}
+    }
+#endif
     if(op>=Op::CONST_0 && op<=Op::CONST_15) {
       ++s.pc;push(Value((uint8_t)op-(uint8_t)Op::CONST_0));continue;
     }
-    // The opcode is already loaded. Fixed-width instructions need neither a
-    // second opcode fetch nor a call to the cold/variable-record decoder.
-    const uint8_t width=(unsigned)op<sizeof(wire_widths) ? wire_widths[(unsigned)op] : 0;
-    const uint32_t after=v.wide_code() || width==255 ? next(v,s.pc) :
-        width && width<=v.end-s.pc ? (s.pc+width) : 0;
+    // Share width/bounds checks with the cold verifier, but reuse the opcode
+    // already fetched by dispatch. Only variable records decode their count.
+    const uint32_t after=instruction_after(v,s.pc,uint8_t(op));
     if (!after) {
       error = Error::INVALID_IMAGE;
       break;
@@ -997,15 +1106,21 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
     // variable records need just their two-byte count here.
     alignas(4) uint8_t operands[12];
     const uint8_t operand_bytes=uint8_t(after-instruction-1<=sizeof(operands)?after-instruction-1:2);
-    if(!v.at(instruction+1).read(operands,operand_bytes)){error=Error::IO;break;}
+    if(operand_bytes) {
+      // Copy a bounded raw snapshot with a compile-time size. Near the code
+      // end and for paged images retain the original exact-sized I/O.
+      if(!v.reader && v.end-instruction-1>=sizeof(operands))
+        __builtin_memcpy(operands,v.bytes+instruction+1,sizeof(operands));
+      else if(!v.read(instruction+1,operands,operand_bytes)){error=Error::IO;break;}
+    }
     const uint8_t* p=operands;
     s.pc = after;
     Value a = 0, b = 0, value = 0;
     switch (op) {
-#if MK61_VM_INTEGER_BLOCK
+#if MK61_VM_INTEGER_BLOCK && !MK61_VM_INTEGER_SPAN
       case Op::BLOCK_INDEX:
         {
-          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit);
+          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit,op,p);
           if(count) {
             VM_OPCODE_FUSED(count);
             break;
@@ -1013,12 +1128,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         }
         [[fallthrough]];
 #endif
-      case Op::CONST_I8:
-#if !MK61_VM_INTEGER_BLOCK
+      case Op::CONST_I8:case Op::CONST_I16:case Op::CONST_I32:
+#if !MK61_VM_INTEGER_BLOCK || MK61_VM_INTEGER_SPAN
       case Op::BLOCK_INDEX:
 #endif
-      case Op::CONST_I16:
-      case Op::CONST_I32:
       case Op::CONST_F64:
         (void)decode_constant(op,p,value);push(value);
         break;
@@ -1107,17 +1220,11 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::INTEGER_SPAN:
-#if MK61_VM_INTEGER_SPAN
-        if(*p<26 && data.variables[*p].integer()) {
-          const uint8_t count=integer_span(v,s,data,steps,instruction,limit);
-          if(count) {VM_OPCODE_FUSED(count);break;}
-        }
-#endif
         [[fallthrough]];
       case Op::INTEGER_SHORT:
 #if MK61_VM_INTEGER_SPAN
         if(op==Op::INTEGER_SHORT) {
-          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit);
+          const uint8_t count=compiled_block(v,s,data,steps,instruction,limit,op,p);
           if(count) {VM_OPCODE_FUSED_VALUE(count);break;}
         }
 #endif
@@ -1324,10 +1431,10 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         break;
       }
       case Op::BLOCK_COMPARE:
-#if MK61_VM_COMPARE_BLOCK
-        if(compiled_block(v,s,data,steps,instruction,limit)) {
+#if MK61_VM_COMPARE_BLOCK && !MK61_VM_INTEGER_SPAN
+        if(compiled_block(v,s,data,steps,instruction,limit,op,p)) {
           VM_OPCODE_FUSED(3);
-          if(!v.at(instruction+1).read(operands,uint16_t(1+v.address_bytes()))){error=Error::IO;break;}
+          if(!v.read(instruction+1,operands,uint16_t(1+v.address_bytes()))){error=Error::IO;break;}
           p=operands;
         } else
 #endif
@@ -1655,7 +1762,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
           if(!length)event(Event::TEXT,text,0,value);
           for(uint32_t at=0;at<length && error==Error::NONE;) {
             const uint16_t n=uint16_t(length-at<sizeof(text)?length-at:sizeof(text));
-            if(!v.at(instruction+3+at).read(text,n)){error=Error::IO;break;}
+            if(!v.read(instruction+3+at,text,n)){error=Error::IO;break;}
             event(at?Event::TEXT_CONTINUE:Event::TEXT,text,n,value);at+=n;
           }
         }
@@ -1694,7 +1801,7 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
         char text[96];
         const uint16_t length=word(p);
         if(v.reader) {
-          if(length>95 || !v.at(instruction+3).read(text,length)){error=Error::IO;break;}
+          if(length>95 || !v.read(instruction+3,text,length)){error=Error::IO;break;}
           event(Event::READ_INPUT,text,length,value);
         } else event(resource?Event::RESOURCE_INPUT:Event::READ_INPUT,
             (const char*)prompt+(resource?0:2),word(prompt),value);

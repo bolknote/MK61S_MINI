@@ -1,0 +1,319 @@
+{
+  "date": "2026-10-19",
+  "status": "PROGRESS_TARGET_25_SECONDS_NOT_MET",
+  "target_warm_seconds": 25,
+  "objective": "возвращай к прежним цифрам по скорости шахмат",
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "change": "reuse fetched opcode except across service; outline paged Reader::at so raw View::byte has no push/pop",
+  "code_in_working_main": true,
+  "committed": false,
+  "limits_weakened": false,
+  "bytecode_format_changed": false,
+  "resident": {
+    "path": "/private/tmp/mk61-scalar-fetch.q3kIXL/hil-aba/images/current.bin",
+    "bytes": 371316,
+    "footer": 369668,
+    "build": "FD1433B6",
+    "sha256": "a086ae1b049e61af44cb327c41e4671d2a333b758fc6750629a976a139ba47f1",
+    "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-ship/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+  },
+  "restore_firmware": {
+    "path": "/private/tmp/mk61-scalar-fetch.q3kIXL/hil-aba/images/original.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "3AB3DD45",
+    "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+    "source": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "timing": "USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes",
+  "profiling": false,
+  "experiment": {
+    "kind": "LANGVM-only A/B/A, fixed FD1433B6, profiler stopped",
+    "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+    "source_sha256": {
+      "code/language_vm.cpp": "58a62db626961e4d6177cf4a20bbc81024ffb8c09210d939adce5ab562d22e2f",
+      "code/language_flash.hpp": "25c7aed234bb7e6a3894d4bfee246ab509881d14540c82aa38567272eca5eddc",
+      "code/language_bytecode.hpp": "7c0620ad967691f73c2b641e7a0f8343c8ee2133dbeb3a04fe0c5415cab5124f"
+    },
+    "variants": {
+      "baseline": {
+        "bytes": 13836,
+        "sha256": "7a00125f44c029392e7377edc703cfc8c0d2fd5f336f1d0e9ed3a8ae0202dfa9",
+        "memory_bytes": 20452
+      },
+      "candidate": {
+        "bytes": 13847,
+        "sha256": "6405a31b0a9df0f90def1e6eebdec2b05fb3ddec4762d58f627846f844cadb7d",
+        "memory_bytes": 20452
+      },
+      "control": {
+        "bytes": 13836,
+        "sha256": "7a00125f44c029392e7377edc703cfc8c0d2fd5f336f1d0e9ed3a8ae0202dfa9",
+        "memory_bytes": 20452
+      }
+    },
+    "vm_aba": {
+      "steady_seconds": [
+        36.94702179147862,
+        33.77113593753893,
+        36.988080687471665
+      ],
+      "reference_seconds": 36.96755123947514,
+      "candidate_seconds": 33.77113593753893,
+      "speedup": 1.094649327397459,
+      "elapsed_reduction_percent": 8.646543237959936,
+      "control_drift_percent": 0.11112910865935799
+    }
+  },
+  "runs": [
+    {
+      "stage": "first-compile",
+      "seconds": 53.23177733295597,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1594,
+        "hits": 731,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "first-compile",
+      "seconds": 36.92367862502579,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2136,
+        "hits": 767,
+        "misses": 1369,
+        "invalidations": 183,
+        "loan_hits": 15026,
+        "loan_misses": 402
+      }
+    },
+    {
+      "stage": "first-compile",
+      "seconds": 36.97036495793145,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2591,
+        "hits": 769,
+        "misses": 1822,
+        "invalidations": 183,
+        "loan_hits": 22570,
+        "loan_misses": 581
+      }
+    },
+    {
+      "stage": "ready-file-cache",
+      "seconds": 37.0690986670088,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 513,
+        "hits": 16,
+        "misses": 497,
+        "invalidations": 1,
+        "loan_hits": 7532,
+        "loan_misses": 191
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 48.82317983300891,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1594,
+        "hits": 731,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 33.73295808304101,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2084,
+        "hits": 748,
+        "misses": 1336,
+        "invalidations": 168,
+        "loan_hits": 15032,
+        "loan_misses": 398
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 33.809313792036846,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2571,
+        "hits": 752,
+        "misses": 1819,
+        "invalidations": 168,
+        "loan_hits": 22561,
+        "loan_misses": 592
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 52.77162545803003,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1594,
+        "hits": 731,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 36.95088629098609,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2084,
+        "hits": 748,
+        "misses": 1336,
+        "invalidations": 168,
+        "loan_hits": 15032,
+        "loan_misses": 398
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 37.02527508395724,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2571,
+        "hits": 752,
+        "misses": 1819,
+        "invalidations": 168,
+        "loan_hits": 22561,
+        "loan_misses": 592
+      }
+    }
+  ],
+  "board_golden": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "board_mask": "only existing 16x16 disk icon",
+  "ordinary_searches": 10,
+  "all_nodes": 420,
+  "all_moves": "e2-e3",
+  "complete_ranks": 8,
+  "minimum_observed_remaining_stack": 8752,
+  "firmware_writes": 2,
+  "restoration": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "original_files": 24,
+    "original_directories": 2,
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "app_builds": {
+    "build-split-byte": {
+      "name": "LANGVM",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 53,
+      "relocation_bytes": 64,
+      "entry_offset": 0,
+      "image_bytes": 20432,
+      "bss_bytes": 20,
+      "memory_bytes": 20452,
+      "app_bytes": 13847,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "vm_integer_block": true
+    },
+    "main-replica": {
+      "name": "LANGVM",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 53,
+      "relocation_bytes": 64,
+      "entry_offset": 0,
+      "image_bytes": 20432,
+      "bss_bytes": 20,
+      "memory_bytes": 20452,
+      "app_bytes": 13847,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "optimal",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "vm_integer_block": true
+    }
+  },
+  "main_replica_byte_identical_to_measured_app": true,
+  "codegen": {
+    "previous_View_byte_bytes": 70,
+    "outlined_View_byte_bytes": 16,
+    "paged_Reader_at_bytes": 60
+  },
+  "tests": {
+    "fetch_four_configurations": "250 cases each, ASan/UBSan, both arithmetic backends, raw/paged/service mutation/limits/tails PASS",
+    "span_no_trace_and_trace": "140198 exact comparisons per backend/configuration PASS",
+    "arm": "66225-byte paged + 225-byte raw/paged BASIC/FOCAL, three load addresses, INPUT poisoning/reload PASS",
+    "main_flash_suite": "PASS",
+    "app_ci_and_archive_and_stack_gates": "PASS"
+  },
+  "artifacts": {
+    "report": "/private/tmp/mk61-scalar-fetch.q3kIXL/hil-aba/report.json",
+    "wrapper": "/private/tmp/mk61-scalar-fetch.q3kIXL/hil_fetch_aba.py",
+    "wrapper_sha256": "0d5c8f63a86fa49288fe30463a05a2e9054258c64d18bfc80abae2219c1ed027",
+    "main_flash_log": "/private/tmp/mk61-scalar-fetch.q3kIXL/main-fetch-flash.log",
+    "arm_log": "/private/tmp/mk61-scalar-fetch.q3kIXL/arm-flash.log"
+  }
+}

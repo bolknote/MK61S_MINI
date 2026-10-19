@@ -1,0 +1,130 @@
+{
+  "date": "2026-10-19",
+  "status": "PROGRESS_TARGET_25_SECONDS_NOT_MET",
+  "objective": "возвращай к прежним цифрам по скорости шахмат",
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "code_in_working_main": true,
+  "committed": false,
+  "limits_weakened": false,
+  "device": "Classic AEB505B6E0067623 / USB 2068336B4731",
+  "experiment": "A/B/C/B/A, fixed shipping resident FAB616D8, profiler stopped",
+  "timing": "Complete eight-rank board wall clock; level 2, depth 8, book off; 420 nodes; e2-e3",
+  "baseline_A": {
+    "warm_before_seconds": [31.772177042090334, 31.843446167069487],
+    "warm_after_seconds": [31.757036207942292, 31.848222250002436],
+    "reference_seconds": 31.805220416776137,
+    "control_drift_percent": -0.016292776353088456,
+    "compile_cold_seconds": [47.466250958968885, 47.43631949997507],
+    "ram_cold_ready_file_cache_seconds": 31.879717124975286,
+    "app_memory_bytes": 20460,
+    "app_stored_bytes": 13852,
+    "app_sha256": "44a0eb422ef620ad1f4d7723331dd9d51045e37477d71eb0584bc1eb8f57351e"
+  },
+  "intermediate_B": {
+    "changes": [
+      "32-bit remaining-step counter instead of incrementing an 8-bit counter",
+      "Direct raw operand and SOURCE_POS fetch; paged and trace-safe fallback retained",
+      "Bounded fixed 12-byte raw operand snapshot; exact-width reads at tail and for paged images"
+    ],
+    "warm_before_seconds": [29.14910937496461, 29.239131500013173],
+    "warm_after_seconds": [29.153294540941715, 29.24127908295486],
+    "reference_seconds": 29.19570362471859,
+    "elapsed_reduction_vs_A_percent": 8.204680734364977,
+    "control_drift_percent": 0.010845932029956984,
+    "compile_cold_seconds": [45.17099833395332, 45.07018349994905],
+    "app_memory_bytes": 20460,
+    "app_stored_bytes": 13846,
+    "app_sha256": "7ff34ffad8dfe5720d8c59ad124c623ab4af3a166fa705ce92b53ba0c13abbca"
+  },
+  "selected_C": {
+    "changes_over_B": [
+      "Start integer spans at small and immediate integer constants, not only compiler hints",
+      "Bit-exact Value boxing with 32-bit significand limbs; same IEEE doubles, int32 tag, NaN and signed-zero behavior"
+    ],
+    "warm_seconds": [27.469297457952052, 27.574296458042227],
+    "median_seconds": 27.52179695799714,
+    "elapsed_reduction_vs_B_percent": 5.733400668255295,
+    "elapsed_reduction_vs_A_percent": 13.467674182567968,
+    "speedup_vs_A": 1.1556374921781531,
+    "compile_cold_seconds": 43.21402545797173,
+    "ram_cold_ready_file_cache_seconds": 27.598397250054404,
+    "app_memory_bytes": 20452,
+    "app_stored_bytes": 13838,
+    "app_bss_bytes": 20,
+    "app_sha256": "59a639c86abfaa8f0db25defb2a267b6bf02eb0616949fa00a0cfb0c401d5520",
+    "new_main_build_byte_identical_to_measured_APP": true,
+    "source_sha256": {
+      "code/language_vm.cpp": "b042b3ab46f44335132b8b31123f29f453e201f25ce830c47db15d606b5bca99",
+      "code/language_value.hpp": "217f171ccfbbc6442310050ed49db914a6b91a83aa36701b6df2a69474d571aa"
+    }
+  },
+  "correctness": {
+    "ordinary_searches": 17,
+    "all_420_nodes": true,
+    "all_e2e3": true,
+    "all_complete_eight_rank_boards": true,
+    "golden_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "frame_mask": "Only the pre-existing 16x16 disk indicator; no rank or board crop",
+    "ASan_UBSan_full_VM_suite": "PASS, including both arithmetic configurations, control flow, inactive stack cells, limits, errors, INPUT/resume and ESC",
+    "opcode_profile_exact_accounting_configurations": 32,
+    "control_raw_paged_full_state_comparisons": 402720,
+    "integer_span_comparisons_per_arithmetic_per_trace_configuration": 140198,
+    "boxing_bit_exact_cases_per_arithmetic": 2381920,
+    "boxing_actual_ARM_AAPCS_VFP_bit_exact_cases": 104920,
+    "main_real_ARM_APP_suite": "PASS; real BASIC/FOCAL frontends, >64 KiB paged and small raw/paged LBV2, three relocation addresses, APP poisoning/replacement and INPUT/resume",
+    "bytecode_format_or_request_ABI_changed": false,
+    "service_cadence_changed": false
+  },
+  "strict_builds": {
+    "F411": {
+      "status": "PASS",
+      "BIN_bytes": 371312,
+      "Flash_free_bytes": 152976,
+      "Flash_minimum_headroom_bytes": 131072,
+      "globals_bytes": 21568,
+      "globals_limit_bytes": 49152,
+      "max_native_frame_bytes": 1928,
+      "native_frame_limit_bytes": 3072,
+      "effective_APP_pool_bytes": 34880,
+      "LANGVM_limit_bytes": 20480
+    },
+    "F401_WS0010": {
+      "status": "PASS_BUILD_ONLY_NO_BOARD_ACCESS",
+      "BIN_bytes": 240000,
+      "Flash_free_bytes": 22144,
+      "Flash_minimum_headroom_bytes": 8192,
+      "globals_bytes": 27300,
+      "globals_limit_bytes": 52428,
+      "max_native_frame_bytes": 1304,
+      "native_frame_limit_bytes": 2048
+    },
+    "native_runtime_archive_gate": "PASS, no libgcc/libm/libstdc++/libc/libnosys",
+    "global_RAM_growth_vs_A_bytes": 0,
+    "APP_memory_change_vs_A_bytes": -8,
+    "resident_BIN_change_vs_A_bytes": -4,
+    "measured_C_minimum_observed_stack_remaining_bytes": 8752,
+    "stack_budget_bytes": 16384,
+    "stack_guard_bytes": 256
+  },
+  "restoration": {
+    "status": "PASS",
+    "restored_build": "3AB3DD45",
+    "firmware_SHA_verified": true,
+    "original_files": 24,
+    "original_directories": 2,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "Mini_or_Pico_touched": false
+  },
+  "raw_artifacts": {
+    "nested_ABA_report": "/private/tmp/mk61-span-counter.soXJRf/hil-aba/report.json",
+    "C_local_qualification": "/private/tmp/mk61-const-span.LXl5qa/qualified-C.json",
+    "C_ARM_boxing_proof": "/private/tmp/mk61-const-span.LXl5qa/boxing-arm-proof.json",
+    "main_full_VM_log": "/private/tmp/mk61-const-span.LXl5qa/main-vm-full.log",
+    "main_opcode_profile_log": "/private/tmp/mk61-const-span.LXl5qa/main-opcode-profile.log",
+    "main_ARM_log": "/private/tmp/mk61-const-span.LXl5qa/main-arm.log",
+    "main_F411_build_log": "/private/tmp/mk61-const-span.LXl5qa/main-build-f411.log",
+    "main_F401_build_log": "/private/tmp/mk61-const-span.LXl5qa/main-build-f401.log"
+  },
+  "remaining": "Goal about 25 seconds is not met. Profile qualified C separately before choosing another hot-path optimization. Diagnostic resident timings are excluded from this shipping A/B/C/B/A."
+}

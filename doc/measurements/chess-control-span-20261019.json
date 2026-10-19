@@ -1,0 +1,385 @@
+{
+  "date": "2026-10-19",
+  "status": "PROGRESS_TARGET_25_SECONDS_NOT_MET",
+  "objective": "возвращай к прежним цифрам по скорости шахмат",
+  "target_warm_seconds": 25,
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "code_in_working_main": true,
+  "committed": false,
+  "limits_weakened": false,
+  "changes": [
+    "integer/control span supports comparison, conditional/direct/back/self branches and LINE without crossing the original 32-step service boundary",
+    "BLOCK_INDEX and BLOCK_COMPARE share the general integer executor; finite fractional short blocks keep their previous helper",
+    "ABS preserves int32 overflow/signed-zero/non-integer fallback; bytecode format and request ABI unchanged"
+  ],
+  "resident_measured": {
+    "path": "/private/tmp/mk61-control-span.aLRPlo/hil-aba/images/current.bin",
+    "bytes": 371316,
+    "footer": 369668,
+    "build": "FD1433B6",
+    "sha256": "a086ae1b049e61af44cb327c41e4671d2a333b758fc6750629a976a139ba47f1",
+    "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-ship/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "timing": "USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes",
+  "profiling": false,
+  "experiment": {
+    "kind": "Control-flow integer_span LANGVM-only A/B/A, fixed FD1433B6, profiler stopped",
+    "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+    "source_sha256": {
+      "code/language_vm.cpp": "98885927b0102af39099f840cf63e34d752e7b2c56952a639915b5f3911050da",
+      "code/language_flash.hpp": "25c7aed234bb7e6a3894d4bfee246ab509881d14540c82aa38567272eca5eddc",
+      "code/language_bytecode.hpp": "7c0620ad967691f73c2b641e7a0f8343c8ee2133dbeb3a04fe0c5415cab5124f"
+    },
+    "variants": {
+      "baseline": {
+        "bytes": 13847,
+        "sha256": "6405a31b0a9df0f90def1e6eebdec2b05fb3ddec4762d58f627846f844cadb7d",
+        "memory_bytes": 20452
+      },
+      "candidate": {
+        "bytes": 13852,
+        "sha256": "44a0eb422ef620ad1f4d7723331dd9d51045e37477d71eb0584bc1eb8f57351e",
+        "memory_bytes": 20460
+      },
+      "control": {
+        "bytes": 13847,
+        "sha256": "6405a31b0a9df0f90def1e6eebdec2b05fb3ddec4762d58f627846f844cadb7d",
+        "memory_bytes": 20452
+      }
+    },
+    "vm_aba": {
+      "steady_seconds": [
+        33.7744660419994,
+        31.80259772896534,
+        33.73245056247106
+      ],
+      "reference_seconds": 33.75345830223523,
+      "candidate_seconds": 31.80259772896534,
+      "speedup": 1.0613428057008398,
+      "elapsed_reduction_percent": 5.7797353853388795,
+      "control_drift_percent": -0.12440012960115432
+    }
+  },
+  "runs": [
+    {
+      "stage": "first-compile",
+      "seconds": 48.95089054200798,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1594,
+        "hits": 731,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "first-compile",
+      "seconds": 33.73267916706391,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2084,
+        "hits": 748,
+        "misses": 1336,
+        "invalidations": 168,
+        "loan_hits": 15032,
+        "loan_misses": 398
+      }
+    },
+    {
+      "stage": "first-compile",
+      "seconds": 33.8162529169349,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2571,
+        "hits": 752,
+        "misses": 1819,
+        "invalidations": 168,
+        "loan_hits": 22561,
+        "loan_misses": 592
+      }
+    },
+    {
+      "stage": "ready-file-cache",
+      "seconds": 33.85780712496489,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 513,
+        "hits": 16,
+        "misses": 497,
+        "invalidations": 1,
+        "loan_hits": 7532,
+        "loan_misses": 191
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 47.61593195900787,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1698,
+        "hits": 835,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 31.756642124964856,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2188,
+        "hits": 852,
+        "misses": 1336,
+        "invalidations": 168,
+        "loan_hits": 15032,
+        "loan_misses": 398
+      }
+    },
+    {
+      "stage": "candidate",
+      "seconds": 31.84855333296582,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 26624,
+        "lookups": 2675,
+        "hits": 856,
+        "misses": 1819,
+        "invalidations": 168,
+        "loan_hits": 22561,
+        "loan_misses": 592
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 49.40618900000118,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 18432,
+        "lookups": 1594,
+        "hits": 731,
+        "misses": 863,
+        "invalidations": 168,
+        "loan_hits": 7496,
+        "loan_misses": 211
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 33.686845082906075,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2117,
+        "hits": 762,
+        "misses": 1355,
+        "invalidations": 173,
+        "loan_hits": 15025,
+        "loan_misses": 404
+      }
+    },
+    {
+      "stage": "control",
+      "seconds": 33.77805604203604,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "flash_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 24576,
+        "lookups": 2604,
+        "hits": 779,
+        "misses": 1825,
+        "invalidations": 173,
+        "loan_hits": 22558,
+        "loan_misses": 594
+      }
+    }
+  ],
+  "reboot_measurement_note": "The final ready-file-cache run uses restored baseline LANGVM, not the control-span candidate.",
+  "board_golden": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "board_mask": "only existing 16x16 disk icon",
+  "ordinary_searches": 10,
+  "all_nodes": 420,
+  "all_moves": "e2-e3",
+  "complete_ranks": 8,
+  "prior_stage_report": "chess-fetch-dispatch-20261019.json",
+  "linked_two_aba_speedup": 1.1617981883985562,
+  "linked_two_aba_elapsed_reduction_percent": 13.926531304165813,
+  "linked_comparison_note": "Two consecutive matched A/B/A sessions, not one single final-vs-original A/B/A.",
+  "firmware_writes": 2,
+  "minimum_observed_remaining_stack": 8672,
+  "restoration": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "original_files": 24,
+    "original_directories": 2,
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "fresh_build": {
+    "source_snapshot": "/private/tmp/mk61-control-ship.sJlyQV",
+    "native_build": "FAB616D8",
+    "native_bytes": 371316,
+    "native_sha256": "d72e5305afc1d2ff6375542b0a451dad2cdf084d05caead326a273ba153cd9b1",
+    "installed_on_hardware": false,
+    "system_apps": {
+      "FOCAL.APP": {
+        "bytes": 12674,
+        "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a",
+        "memory_bytes": 17528,
+        "same_as_previous_system": true
+      },
+      "BASIC.APP": {
+        "bytes": 14140,
+        "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7",
+        "memory_bytes": 20060,
+        "same_as_previous_system": true
+      },
+      "USBDISK.APP": {
+        "bytes": 15303,
+        "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55",
+        "memory_bytes": 20468,
+        "same_as_previous_system": true
+      },
+      "LANGVM.APP": {
+        "bytes": 13852,
+        "sha256": "44a0eb422ef620ad1f4d7723331dd9d51045e37477d71eb0584bc1eb8f57351e",
+        "memory_bytes": 20460,
+        "same_as_previous_system": false
+      },
+      "LANGIN.APP": {
+        "bytes": 14083,
+        "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016",
+        "memory_bytes": 19180,
+        "same_as_previous_system": true
+      },
+      "SRCEDIT.APP": {
+        "bytes": 13483,
+        "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc",
+        "memory_bytes": 18180,
+        "same_as_previous_system": true
+      }
+    },
+    "LANGVM_byte_identical_to_measured": true,
+    "native_metadata_only_difference": {
+      "bytes": 32,
+      "regions": [
+        [
+          22808,
+          22812,
+          "build_id fallback literal"
+        ],
+        [
+          334872,
+          334889,
+          "FIRMWARE_VER symbol"
+        ],
+        [
+          369688,
+          369696,
+          "footer CRC and build ID"
+        ],
+        [
+          353412,
+          353424,
+          "NUL-terminated build date/time literal"
+        ],
+        [
+          353424,
+          353433,
+          "NUL-terminated build date/time literal"
+        ],
+        [
+          354098,
+          354107,
+          "NUL-terminated build date/time literal"
+        ]
+      ],
+      "normalized_sha256": "5888d307cf03d4867e1f9e85344663634b746e0216070ff1f1c927b93c0c69e3",
+      "profile_and_all_other_footer_fields_unchanged": true
+    },
+    "limits": {
+      "F411_flash_headroom": 152972,
+      "F411_flash_minimum": 131072,
+      "F411_global_ram_gate": 49152,
+      "F411_native_frame": 1928,
+      "F411_native_frame_gate": 3072,
+      "app_format_ceiling": 20480,
+      "LANGVM_memory_bytes": 20460,
+      "LANGVM_bss": 20,
+      "combined_app_pool": 34880,
+      "cache_budget": 32768,
+      "cache_payload": 29696,
+      "F401_flash_bytes": 240004,
+      "F401_flash_headroom": 22140,
+      "F401_flash_minimum": 8192,
+      "F401_native_frame": 1304,
+      "F401_native_frame_gate": 2048,
+      "mpu_guard": 256,
+      "stack_budget": 16384
+    }
+  },
+  "tests": {
+    "control_flow_full_state_comparisons": [
+      100664,
+      100696,
+      100664,
+      100696
+    ],
+    "control_flow_total": 402720,
+    "description": "ASan/UBSan, both arithmetic backends, raw/paged, all comparison masks, forward/back/self branches, limits/ESC/truncation, fully scalar reference",
+    "main_full_vm_suite": "PASS; exact trace/dead cells, INPUT/resume, BASIC/FOCAL graphics, source/editor 64 KiB",
+    "opcode_profile_configurations": 32,
+    "opcode_profile": "PASS, exact logical sums and partial-span counters, integer_span on/off",
+    "ARM_final_system": "PASS; real 66225-byte paged and 225-byte raw/paged BASIC/FOCAL, three load addresses, INPUT APP poisoning/replacement/resume",
+    "strict_native_and_app_gates": "PASS, no libgcc/libm/libstdc++/libc/libnosys archive members"
+  },
+  "artifacts": {
+    "report": "/private/tmp/mk61-control-span.aLRPlo/hil-aba/report.json",
+    "wrapper": "/private/tmp/mk61-control-span.aLRPlo/hil_control_aba.py",
+    "wrapper_sha256": "01d3095a797c8f1bfc4dcf92ac77683a63cc6f9360a94b4e4d7a8509ae91d789",
+    "main_vm_log": "/private/tmp/mk61-control-span.aLRPlo/main-vm-full.log",
+    "arm_log": "/private/tmp/mk61-control-span.aLRPlo/arm-final.log",
+    "control_flow_log": "/private/tmp/mk61-control-span.aLRPlo/control-spans.log",
+    "opcode_profile_log": "/private/tmp/mk61-control-span.aLRPlo/opcode-profile.log",
+    "build_log": "/private/tmp/mk61-control-span.aLRPlo/build-ship-checked.log",
+    "F401_build_log": "/private/tmp/mk61-control-span.aLRPlo/build-f401.log"
+  },
+  "next_evidence_needed": "Warm PC profile with native-Flash attribution as well as APP bins; the previous sampler aggregated 10451 native samples without function attribution. Goal remains 25 seconds, not this intermediate result."
+}

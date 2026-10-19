@@ -4291,6 +4291,27 @@ bool content_stamp(u16 id,u32& stamp) {
   return true;
 }
 
+bool find_child(u16 parent_id,bool directory,ProgramType type,const char* name,u16& output) {
+  output=NONE;
+  if(!g_ready || !valid_name(name) || !parent_valid(parent_id))return false;
+  u16 id=g_meta.root_head;
+  if(parent_id!=ROOT_ID) {
+    Inode parent;if(!get_inode(parent_id,parent))return false;id=parent.first_child;
+  }
+  const auto kind=directory?NodeKind::DIRECTORY:NodeKind::FILE;
+  const u16 hash=hash_name(name);
+  for(u16 guard=0;id!=NONE && guard<g_geometry.max_nodes;++guard) {
+    Inode inode;
+    if(!get_inode(id,inode) || !visible_inode(inode) || inode.parent_id!=parent_id)return false;
+    if(inode_kind(inode)==kind && (directory || inode_type(inode)==type) && inode.name_hash==hash) {
+      char stored[NAME_SIZE];if(!read_inode_name(id,inode,stored))return false;
+      if(fat_name::equal(stored,name)){output=id;return true;}
+    }
+    id=inode.next_sibling;
+  }
+  return id==NONE;
+}
+
 bool read_source_range_id(u16 id,u16 offset,u8* data,u16 len,u16* out_len) {
   return read_file_range(id,offset,data,len,out_len,nullptr,false);
 }

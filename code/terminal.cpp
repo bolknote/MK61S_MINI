@@ -1543,7 +1543,9 @@ void class_terminal::print_profile_statistics(void) {
       terminal_output::field(Serial," lookups=",flash_cache.lookups);
       terminal_output::field(Serial," hits=",flash_cache.hits);
       terminal_output::field(Serial," misses=",flash_cache.misses);
-      terminal_output::line(Serial," invalidations=",flash_cache.invalidations);
+      terminal_output::field(Serial," invalidations=",flash_cache.invalidations);
+      terminal_output::field(Serial," loan_hits=",flash_cache.loan_hits);
+      terminal_output::line(Serial," loan_misses=",flash_cache.loan_misses);
 #endif
 
       terminal_output::field(

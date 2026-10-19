@@ -249,7 +249,17 @@ struct View {
   void* lookup_context = nullptr;
   bool (*lookup)(void*,uint32_t,bool,uint32_t*) = nullptr;
   flash::Cursor at(uint32_t n) const {return {bytes,reader,n};}
-  uint8_t byte(uint32_t n) const {return *at(n);}
+#if defined(MK61_BUILD_LANGUAGE_VM_MODULE) || defined(MK61_BUILD_LANGUAGE_INPUT_MODULE)
+  __attribute__((noinline))
+#endif
+  uint8_t byte(uint32_t n) const {return reader?reader->at(n):bytes[n];}
+  // The span consumes operands before its first mutable-bank write. A trace
+  // callback keeps the copying path; a reader borrow also expires on refill.
+  const uint8_t* cached(uint32_t at,uint16_t n) const {return reader?reader->cached(at,n):bytes+at;}
+  bool read(uint32_t at,void* out,uint16_t n) const {
+    if(reader)return reader->read(at,out,n);
+    memcpy(out,bytes+at,n);return true;
+  }
 #if defined(MK61_CORE_STANDALONE)
   __attribute__((always_inline))
 #endif

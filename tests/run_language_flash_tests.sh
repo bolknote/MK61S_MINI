@@ -27,6 +27,25 @@ clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
   "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/native-vm"
 "$work/native-vm"
 
+for kind in HOST MK61_BUILD_LANGUAGE_VM_MODULE; do
+  clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
+    -fsanitize=address,undefined -fno-sanitize-recover=all -D"$kind" \
+    -I"$root/code" "$root/tests/language_vm_widths_self_test.cpp" \
+    "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" -o "$work/widths"
+  "$work/widths"
+done
+
+for backend in 0 1; do
+  for kind in HOST MK61_BUILD_LANGUAGE_VM_MODULE; do
+    clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
+      -fsanitize=address,undefined -fno-sanitize-recover=all \
+      -DMK61_MATH_BACKEND="$backend" -D"$kind" -I"$root/code" \
+      "$root/tests/language_vm_fetch_self_test.cpp" "$root/code/language_bytecode.cpp" \
+      "$root/code/language_vm.cpp" -o "$work/fetch"
+    "$work/fetch"
+  done
+done
+
 for kind in MK61_BUILD_LANGUAGE_VM_MODULE MK61_BUILD_LANGUAGE_INPUT_MODULE HOST; do
   clang++ -std=c++17 -O1 -Wall -Wextra -Werror \
     -fsanitize=address,undefined -fno-omit-frame-pointer -D"$kind" \

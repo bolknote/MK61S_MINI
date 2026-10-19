@@ -142,22 +142,29 @@ class Value {
   uint64_t bits_;
   __attribute__((noinline)) void set_number(double n) {
     const uint64_t bits=mk_math::bit_copy<uint64_t>(n);
-    const uint64_t magnitude=bits & UINT64_C(0x7FFFFFFFFFFFFFFF);
-    if(magnitude == 0) {
-      bits_ = bits ? bits : (uint64_t)INTEGER_TAG << 32; return;
+    const uint32_t low=uint32_t(bits),high=uint32_t(bits>>32);
+    if(((high&UINT32_C(0x7FFFFFFF))|low)==0) {
+      bits_=high?bits:uint64_t(INTEGER_TAG)<<32;return;
     }
-    const unsigned exponent=(unsigned)(magnitude >> 52);
+    const unsigned exponent=(high>>20)&2047U;
     if(exponent >= 1023 && exponent <= 1054) {
-      const unsigned shift=1075-exponent;
-      const uint64_t mantissa=(magnitude & UINT64_C(0x000FFFFFFFFFFFFF)) | (UINT64_C(1)<<52);
-      const uint64_t whole=mantissa >> shift;
-      if((mantissa & ((UINT64_C(1)<<shift)-1)) == 0 &&
-         whole <= ((bits >> 63) ? UINT64_C(2147483648) : UINT64_C(2147483647))) {
-        const uint32_t low=(bits >> 63) ? 0U-(uint32_t)whole : (uint32_t)whole;
-        bits_=((uint64_t)INTEGER_TAG << 32) | low; return;
+      const uint32_t significand=(high&UINT32_C(0xFFFFF))|UINT32_C(0x100000);
+      uint32_t whole;bool integral;
+      if(exponent<=1043) {
+        const unsigned shift=1043-exponent;
+        integral=!low && !(significand&((UINT32_C(1)<<shift)-1));
+        whole=significand>>shift;
+      } else {
+        const unsigned shift=1075-exponent;
+        integral=!(low&((UINT32_C(1)<<shift)-1));
+        whole=(significand<<(32-shift))|(low>>shift);
+      }
+      if(integral && whole<=((high>>31)?UINT32_C(2147483648):UINT32_C(2147483647))) {
+        const uint32_t payload=(high>>31)?0U-whole:whole;
+        bits_=(uint64_t(INTEGER_TAG)<<32)|payload;return;
       }
     }
-    bits_=(uint32_t)(bits >> 32) == INTEGER_TAG ? UINT64_C(0x7FF8000000000000) : bits;
+    bits_=high==INTEGER_TAG?UINT64_C(0x7FF8000000000000):bits;
   }
 };
 static_assert(sizeof(Value) == sizeof(double), "number cell must remain eight bytes");

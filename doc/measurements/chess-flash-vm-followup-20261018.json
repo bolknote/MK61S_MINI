@@ -1,0 +1,701 @@
+{
+  "status": "PASS",
+  "source_base": "4f3fa7173b7b4861adc91d7dc6c5f63abbb9eb53",
+  "original": {
+    "path": "/private/tmp/mk61-flash-vm-followup-20261018.My5k7S/hardware/images/original.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "3AB3DD45",
+    "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+    "source": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin"
+  },
+  "current": {
+    "path": "/private/tmp/mk61-flash-vm-followup-20261018.My5k7S/hardware/images/current.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "3AB3DD45",
+    "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+    "source": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "timing": "USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes",
+  "apps": {
+    "/System/BASIC.app": {
+      "bytes": 14140,
+      "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7",
+      "memory_bytes": 20060
+    },
+    "/System/FOCAL.app": {
+      "bytes": 12674,
+      "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a",
+      "memory_bytes": 17528
+    },
+    "/System/LANGVM.app": {
+      "bytes": 13801,
+      "sha256": "047bd94a7ef59f5dc03cdb197bc8c338eab016f3e63e52734aa35d0480e536f1",
+      "memory_bytes": 20468
+    },
+    "/System/LANGIN.app": {
+      "bytes": 14069,
+      "sha256": "08b9443b320a67b51563f9c04390c77f074096c9567ac2e15b3149e546b370d5",
+      "memory_bytes": 19180
+    },
+    "/System/SRCEDIT.app": {
+      "bytes": 13483,
+      "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc",
+      "memory_bytes": 18180
+    }
+  },
+  "package": {
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "board.tbi": {
+      "bytes": 2570,
+      "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    },
+    "autoexec.m61": {
+      "bytes": 697,
+      "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "manual.md": {
+      "bytes": 818,
+      "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    }
+  },
+  "first_compile_seconds": 223.64324554201448,
+  "warm_median_seconds": 59.55847243752214,
+  "ready_cache_reboot_seconds": 59.60697241598973,
+  "restored": true,
+  "firmware_writes": 0,
+  "no_firmware_write": true,
+  "files_preserved": true,
+  "calculator_preserved": true,
+  "original_files": 24,
+  "original_directories": 2,
+  "health_after": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=433/18 raw(v/t/b)=1492/954/1018 val(mV/dC/mV)=3331/333/3312 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089989\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14356 observed_remaining=14356 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  },
+  "mini_touched": false,
+  "pico_touched": false,
+  "stages": [
+    {
+      "name": "first-compile",
+      "profiling": false,
+      "cache_before": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 0,
+        "lookups": 0,
+        "hits": 0,
+        "misses": 0,
+        "invalidations": 0
+      },
+      "cache_after": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 29696,
+        "lookups": 620132,
+        "hits": 618601,
+        "misses": 1531,
+        "invalidations": 200
+      },
+      "frames_crc_checked": 1657,
+      "runs": [
+        {
+          "seconds": 223.64324554201448,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 54.645293042005505
+            },
+            {
+              "nodes": 21,
+              "seconds": 146.7028275000048
+            },
+            {
+              "nodes": 210,
+              "seconds": 172.34549708396662
+            },
+            {
+              "nodes": 420,
+              "seconds": 202.0469516669982
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 17408,
+            "lookups": 207075,
+            "hits": 206256,
+            "misses": 819,
+            "invalidations": 200
+          },
+          "profile": null,
+          "temperature": "empty-file-cache",
+          "cache_interval_delta": {
+            "lookups": 207075,
+            "hits": 206256,
+            "misses": 819,
+            "invalidations": 200
+          }
+        },
+        {
+          "seconds": 59.522332750028,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.11510433303192258
+            },
+            {
+              "nodes": 21,
+              "seconds": 3.7949990420020185
+            },
+            {
+              "nodes": 210,
+              "seconds": 29.466502625029534
+            },
+            {
+              "nodes": 420,
+              "seconds": 59.20074758300325
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 413609,
+            "hits": 412433,
+            "misses": 1176,
+            "invalidations": 200
+          },
+          "profile": null,
+          "temperature": "warm",
+          "cache_interval_delta": {
+            "lookups": 206534,
+            "hits": 206177,
+            "misses": 357,
+            "invalidations": 0
+          }
+        },
+        {
+          "seconds": 59.59461212501628,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.1259774169884622
+            },
+            {
+              "nodes": 21,
+              "seconds": 3.7974849169841036
+            },
+            {
+              "nodes": 210,
+              "seconds": 29.483887791982852
+            },
+            {
+              "nodes": 420,
+              "seconds": 59.28372725000372
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 620132,
+            "hits": 618601,
+            "misses": 1531,
+            "invalidations": 200
+          },
+          "profile": null,
+          "temperature": "warm",
+          "cache_interval_delta": {
+            "lookups": 206523,
+            "hits": 206168,
+            "misses": 355,
+            "invalidations": 0
+          }
+        }
+      ],
+      "stack_remaining_bytes": 8208,
+      "crash_none": true,
+      "mpu_layout_ok": true
+    },
+    {
+      "name": "ready-file-cache",
+      "profiling": false,
+      "cache_before": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 0,
+        "lookups": 0,
+        "hits": 0,
+        "misses": 0,
+        "invalidations": 0
+      },
+      "cache_after": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 29696,
+        "lookups": 413062,
+        "hits": 412335,
+        "misses": 727,
+        "invalidations": 1
+      },
+      "frames_crc_checked": 1062,
+      "runs": [
+        {
+          "seconds": 59.60697241598973,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.1572259580134414
+            },
+            {
+              "nodes": 21,
+              "seconds": 3.836384333029855
+            },
+            {
+              "nodes": 210,
+              "seconds": 29.52096170798177
+            },
+            {
+              "nodes": 420,
+              "seconds": 59.285453582997434
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          },
+          "profile": null,
+          "temperature": "RAM-cold-ready-file-cache",
+          "cache_interval_delta": {
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          }
+        },
+        {
+          "seconds": 59.53408075001789,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12550954200560227
+            },
+            {
+              "nodes": 21,
+              "seconds": 3.7828495419817045
+            },
+            {
+              "nodes": 210,
+              "seconds": 29.446348541998304
+            },
+            {
+              "nodes": 420,
+              "seconds": 59.21427058300469
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 413062,
+            "hits": 412335,
+            "misses": 727,
+            "invalidations": 1
+          },
+          "profile": null,
+          "temperature": "warm",
+          "cache_interval_delta": {
+            "lookups": 206523,
+            "hits": 206168,
+            "misses": 355,
+            "invalidations": 0
+          }
+        }
+      ],
+      "stack_remaining_bytes": 11208,
+      "crash_none": true,
+      "mpu_layout_ok": true
+    },
+    {
+      "name": "profile-repeat",
+      "profiling": true,
+      "cache_before": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 29696,
+        "lookups": 413062,
+        "hits": 412335,
+        "misses": 727,
+        "invalidations": 1
+      },
+      "cache_after": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 29696,
+        "lookups": 619585,
+        "hits": 618503,
+        "misses": 1082,
+        "invalidations": 1
+      },
+      "frames_crc_checked": 536,
+      "runs": [
+        {
+          "seconds": 60.03403745795367,
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "progress": [
+            {
+              "nodes": 0,
+              "seconds": 0.12701599998399615
+            },
+            {
+              "nodes": 21,
+              "seconds": 3.827394624997396
+            },
+            {
+              "nodes": 210,
+              "seconds": 29.721306832972914
+            },
+            {
+              "nodes": 420,
+              "seconds": 59.715585083002225
+            }
+          ],
+          "flash_cache": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 619585,
+            "hits": 618503,
+            "misses": 1082,
+            "invalidations": 1
+          },
+          "profile": {
+            "clock_hz": 96000000,
+            "points": {
+              "core.step": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.fetch": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ticks.00-26": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ticks.27-35": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ticks.36-41": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.finish": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ik1302": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ik1303": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "core.ik1306": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "idle.main": {
+                "calls": 227013,
+                "total_cycles": 527244440,
+                "total_seconds": 5.492129583333333,
+                "maximum_cycles": 149001
+              },
+              "display.update": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "usb.service": {
+                "calls": 227014,
+                "total_cycles": 205716682,
+                "total_seconds": 2.1428821041666666,
+                "maximum_cycles": 141532
+              },
+              "flash.read": {
+                "calls": 4572,
+                "total_cycles": 40739643,
+                "total_seconds": 0.42437128125,
+                "maximum_cycles": 34923
+              },
+              "flash.write": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "flash.verify": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "flash.erase": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              },
+              "zx0.decode": {
+                "calls": 0,
+                "total_cycles": 0,
+                "total_seconds": 0,
+                "maximum_cycles": 0
+              }
+            }
+          },
+          "temperature": "profiled-warm",
+          "cache_interval_delta": {
+            "lookups": 206523,
+            "hits": 206168,
+            "misses": 355,
+            "invalidations": 0
+          }
+        }
+      ],
+      "stack_remaining_bytes": 10396,
+      "crash_none": true,
+      "mpu_layout_ok": true
+    }
+  ],
+  "date": "2026-10-18",
+  "claim_scope": "Merged paged-VM regression fix requalified; current language APPs from clean 4f3fa7173, pinned known fixed resident 3AB3DD45. NOT a full latest-native-firmware measurement.",
+  "regression_fix": {
+    "code_commit": "c19c5f317",
+    "merge_commit": "fe36d17c4",
+    "cause": "Every RUN unloaded the hot LANGVM APP, repeatedly reading/verifying/ZX0-decoding it even for ready bytecode.",
+    "confirmed_profiled_warm_zx0_calls": 0
+  },
+  "rebuilt_native_not_installed": {
+    "build": "65DAB54B",
+    "bytes": 370272,
+    "flash_headroom": 154016,
+    "stack_max_frame": 1928,
+    "stack_frame_limit": 3072,
+    "effective_app_ram": 34880,
+    "system_max_app_memory": 20468,
+    "native_archive_gate": "PASS",
+    "hardware_measured": false
+  },
+  "limits": {
+    "weakened": false,
+    "app_memory_limit_bytes": 20480,
+    "resident_page_cache_total_budget": 32768,
+    "resident_page_cache_payload_bytes": 29696,
+    "instruction_window_bytes": 128,
+    "minimum_observed_stack_remaining_bytes": 8208
+  },
+  "notes": [
+    "Five ordinary searches are separate from the sixth profiled search; profiling is off for ordinary timings.",
+    "Profiled-repeat is warm; the original generic search row called index zero cold, a metadata issue corrected in the HIL driver after this session.",
+    "Base DWT points do not split VM execution from M61/OPEN/preparation or RAM cache-hit bookkeeping. Inclusive/overlapping scope times must not be added.",
+    "Cache interval deltas include the menu/reopen work between snapshots, not solely the timed search.",
+    "No whole-source/full-image RAM assumption; BASIC/FOCAL >64-KiB image and bounded-cache tests remain enabled.",
+    "Classic native firmware was not flashed due to the known macOS DFU enumeration problem; the pinned installed fixed resident was explicitly verified.",
+    "Main advanced to d8b23c262 during measurement. Its code/ changes add Pico ARMv6M cache flags and an explicit false aggregate member; measured APP source remains pinned to clean 4f3fa7173.",
+    "The historical 25.161-s warm result is a different configuration; no matched speedup against it is claimed."
+  ],
+  "local_experiments_not_installed": [
+    {
+      "variant": "wide fixed-width dispatch table",
+      "reason": "APP linker gate overflow",
+      "over_limit_bytes": 52
+    },
+    {
+      "variant": "packed narrow/wide width nibbles",
+      "reason": "APP linker gate overflow",
+      "over_limit_bytes": 60
+    },
+    {
+      "variant": "shared outlined width helper",
+      "reason": "APP linker gate overflow",
+      "over_limit_bytes": 52
+    }
+  ],
+  "verification": [
+    "ASan/UBSan tests/run_language_flash_tests.sh: reference and shipping VM, BASIC/FOCAL, both math configurations, >64-KiB images, INPUT replacement, long operands, sticky I/O PASS",
+    "MK61_TEST_SANITIZERS=1 tests/run_program_store_tests.sh --language-flash: real C9, invalidation/reboot/torn-write cases, 7540 -> 11 physical reads on hot-page replay PASS",
+    "MK61_TEST_SANITIZERS=1 tests/run_app_flow_tests.sh: 20 warm transfers keep APP, cold eviction and pin refusal PASS",
+    "Fresh clean-main Classic build: unchanged Flash/RAM/stack/APP gates and no native runtime archives PASS",
+    "Offline HIL no-DFU guards, profiler separation, complete-board oracle, and owned-path restoration tests PASS"
+  ],
+  "artifacts": "/private/tmp/mk61-flash-vm-followup-20261018.My5k7S/hardware"
+}

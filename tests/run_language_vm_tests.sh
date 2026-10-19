@@ -42,6 +42,10 @@ done
 for backend in 0 1; do
   clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
     -DMK61_MATH_BACKEND="$backend" -I"$root/code" \
+    "$root/tests/language_value_boxing_self_test.cpp" -o "$work/boxing-$backend"
+  "$work/boxing-$backend"
+  clang++ -std=c++17 -Wall -Wextra -Werror "${flags[@]}" \
+    -DMK61_MATH_BACKEND="$backend" -I"$root/code" \
     "$root/tests/language_vm_scalar_self_test.cpp" \
     "$root/code/language_bytecode.cpp" "$root/code/language_vm.cpp" \
     -o "$work/scalar-$backend"
@@ -56,6 +60,7 @@ done
 
 bash "$root/tests/run_language_vm_compiled_block_tests.sh"
 bash "$root/tests/run_language_vm_integer_span_tests.sh"
+bash "$root/tests/run_language_vm_control_span_tests.sh"
 
 # Arduino compiles every .cpp, including this experimental compiler when both
 # VM placements are off. Its unused APP-only frames must not enter resident

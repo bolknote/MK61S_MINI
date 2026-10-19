@@ -1,0 +1,2929 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "status": "PROGRESS_TARGET_25_SECONDS_NOT_MET",
+  "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+  "final_source_head": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "code_hashes": {
+    "language_bytecode.hpp": "7f96983275110320b72e32b38ea03f51f6781e911c7706321c2ebf93a47e29fe",
+    "language_flash.hpp": "03fb4c9965413bbe70d5ab7685f657c0acdd8ce649550dfb0328d1cab690806f",
+    "language_flash_cache.hpp": "fd860a6dfeeb164812ef8ad5f46aa2824217b4f4c8089f0c614a7c355d487e00",
+    "language_flash_store.hpp": "798b041cf77ea34dabfaf3efe075c5bfaa16f7828e9dac6c78b37e8897817550",
+    "language_vm.cpp": "4e76f5016c2b30611cc6e3dcd0d068a851632c373a80f1f7e428f696042fb769",
+    "language_vm_resident.cpp": "de5b9b7498ff03f7127ae92d3ee85d019719db3e8813f27c0416231f944f3dfb",
+    "language_vm_resident.hpp": "2ac5182afdc2cb625dd2d16b61e3ee708eb368e46396b5cf6474a6c828ed7791",
+    "program_store.cpp": "aa7b861f14b7e235872daa0f9b0a1eb9f7f9a377f30f91380569b0e8555ce714",
+    "program_store.hpp": "f7d3c0a908004da739fb0f6aa345138ff297b64853cea2d9f4aeffb679f9b81c",
+    "terminal.cpp": "0c5b13ce2f1d218ff45188474df6c37ba9f2c64b984d0a99ed6d46c4753dd0a5"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "timing": "USB complete eight-rank board wall clock, level 2, depth 8, book off, 420 nodes",
+  "ordinary_timing_runs": 30,
+  "diagnostic_searches": 5,
+  "total_searches": 35,
+  "golden_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "comparisons": {
+    "catalog_cold": {
+      "reference_seconds": 212.87933143699775,
+      "candidate_seconds": 65.53908272902481,
+      "speedup": 3.2481280264046393,
+      "elapsed_reduction_percent": 69.21303618974335
+    },
+    "small_image_warm": {
+      "reference_seconds": 45.723799510567915,
+      "candidate_seconds": 38.73088224994717,
+      "speedup": 1.1805514580197893,
+      "elapsed_reduction_percent": 15.293823644302584
+    },
+    "raw_operands_warm": {
+      "reference_seconds": 39.12560770846903,
+      "candidate_seconds": 37.41736908303574,
+      "speedup": 1.0456536273740256,
+      "elapsed_reduction_percent": 4.366037297520453
+    },
+    "final_warm": {
+      "reference_seconds": 45.74352232302772,
+      "candidate_seconds": 36.994654540962074,
+      "speedup": 1.2364900521608744,
+      "elapsed_reduction_percent": 19.12591627790189
+    },
+    "final_cold": {
+      "reference_seconds": 212.87933143699775,
+      "candidate_seconds": 52.269139208015986,
+      "speedup": 4.072753725478429,
+      "elapsed_reduction_percent": 75.44658804817546
+    }
+  },
+  "sessions": [
+    {
+      "name": "hil-lookup-a",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-a",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-a/images/current.bin",
+        "bytes": 370200,
+        "footer": 368552,
+        "build": "992B3158",
+        "sha256": "ebd9486530f4e39aa1494e04fcea8795358075f3982dc4c4100da1eeb37458ec",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-packed-known/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14066,
+          "sha256": "32513a23bab3c2c38693b9362d42ffc729a058a71917e0d2a418fdb1c5380f94"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 212.53111395798624,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 17408,
+                "lookups": 207075,
+                "hits": 206256,
+                "misses": 819,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.716232583043166,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 413609,
+                "hits": 412433,
+                "misses": 1176,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.77411470899824,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 620132,
+                "hits": 618601,
+                "misses": 1531,
+                "invalidations": 200
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 620132,
+            "hits": 618601,
+            "misses": 1531,
+            "invalidations": 200
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 45.83337191597093,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 206539,
+                "hits": 206167,
+                "misses": 372,
+                "invalidations": 1
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-lookup-b",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-b",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-b/images/current.bin",
+        "bytes": 370392,
+        "footer": 368744,
+        "build": "1CF1FC3D",
+        "sha256": "c977f9012645e740bab19f6876bc6aa7952284a4a985f97e75e16cedfba583be",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-lookup-only/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14066,
+          "sha256": "32513a23bab3c2c38693b9362d42ffc729a058a71917e0d2a418fdb1c5380f94"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 65.70482179103419,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 17408,
+                "lookups": 207075,
+                "hits": 206256,
+                "misses": 819,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.696064125048,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 413609,
+                "hits": 412433,
+                "misses": 1176,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.74835004203487,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 620132,
+                "hits": 618601,
+                "misses": 1531,
+                "invalidations": 200
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 620132,
+            "hits": 618601,
+            "misses": 1531,
+            "invalidations": 200
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 45.77391395904124,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 206539,
+                "hits": 206167,
+                "misses": 372,
+                "invalidations": 1
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-lookup-runtime-profile",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-runtime-profile",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-runtime-profile/images/current.bin",
+        "bytes": 373432,
+        "footer": 371376,
+        "build": "13E8200C",
+        "sha256": "669082e93bf681479ef1598570444078c032576c6d3825344cdb2245b005b253",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/native-lookup-profile/resident.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14066,
+          "sha256": "32513a23bab3c2c38693b9362d42ffc729a058a71917e0d2a418fdb1c5380f94"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "profile-ready-file-cache",
+          "profiling": true,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 71.73645016702358,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 17408,
+                "lookups": 207075,
+                "hits": 206256,
+                "misses": 819,
+                "invalidations": 200
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 17408,
+            "lookups": 207075,
+            "hits": 206256,
+            "misses": 819,
+            "invalidations": 200
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-compact-c",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-compact-c",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-compact-c/images/current.bin",
+        "bytes": 371316,
+        "footer": 369668,
+        "build": "2D28416F",
+        "sha256": "7ccf7cef390faef45ccfebccfb2c6b67d816f3d56f3a9d1c7844ab8727a3acd8",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-compact-instrumented/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 54.87729149998631,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            },
+            {
+              "seconds": 38.689487624913454,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            },
+            {
+              "seconds": 38.77227687498089,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 26624,
+                "lookups": 2571,
+                "hits": 752,
+                "misses": 1819,
+                "invalidations": 168,
+                "loan_hits": 22561,
+                "loan_misses": 592
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 26624,
+            "lookups": 2571,
+            "hits": 752,
+            "misses": 1819,
+            "invalidations": 168,
+            "loan_hits": 22561,
+            "loan_misses": 592
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 38.802763708052225,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 26624,
+                "lookups": 513,
+                "hits": 16,
+                "misses": 497,
+                "invalidations": 1,
+                "loan_hits": 7532,
+                "loan_misses": 191
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 26624,
+            "lookups": 513,
+            "hits": 16,
+            "misses": 497,
+            "invalidations": 1,
+            "loan_hits": 7532,
+            "loan_misses": 191
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-compact-runtime-profile",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-compact-runtime-profile",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-compact-runtime-profile/images/current.bin",
+        "bytes": 374372,
+        "footer": 372316,
+        "build": "8613524D",
+        "sha256": "3787c0602204e16f2f4df452f1ce0f8fdc6d90d981fa984516d4c939211cde9d",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/native-compact-profile/resident.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "compile-warmup",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 59.185008583939634,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 18432,
+            "lookups": 1594,
+            "hits": 731,
+            "misses": 863,
+            "invalidations": 168,
+            "loan_hits": 7496,
+            "loan_misses": 211
+          }
+        },
+        {
+          "name": "profile-warm",
+          "profiling": true,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 41.464828000054695,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 24576,
+            "lookups": 2084,
+            "hits": 748,
+            "misses": 1336,
+            "invalidations": 168,
+            "loan_hits": 15032,
+            "loan_misses": 398
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-raw-span-a",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-a",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-a/images/current.bin",
+        "bytes": 374372,
+        "footer": 372316,
+        "build": "8613524D",
+        "sha256": "3787c0602204e16f2f4df452f1ce0f8fdc6d90d981fa984516d4c939211cde9d",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/hil-compact-runtime-profile/images/current.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 0,
+      "stages": [
+        {
+          "name": "ordinary",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 55.63596883404534,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            },
+            {
+              "seconds": 39.107335624983534,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 24576,
+            "lookups": 2084,
+            "hits": 748,
+            "misses": 1336,
+            "invalidations": 168,
+            "loan_hits": 15032,
+            "loan_misses": 398
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-raw-span-b",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-b",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-b/images/current.bin",
+        "bytes": 374372,
+        "footer": 372316,
+        "build": "8613524D",
+        "sha256": "3787c0602204e16f2f4df452f1ce0f8fdc6d90d981fa984516d4c939211cde9d",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-a/images/current.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13836,
+          "sha256": "7a00125f44c029392e7377edc703cfc8c0d2fd5f336f1d0e9ed3a8ae0202dfa9"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 0,
+      "stages": [
+        {
+          "name": "ordinary",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 52.845617415965535,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            },
+            {
+              "seconds": 37.41736908303574,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 24576,
+            "lookups": 2084,
+            "hits": 748,
+            "misses": 1336,
+            "invalidations": 168,
+            "loan_hits": 15032,
+            "loan_misses": 398
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-raw-span-control",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-control",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-control/images/current.bin",
+        "bytes": 374372,
+        "footer": 372316,
+        "build": "8613524D",
+        "sha256": "3787c0602204e16f2f4df452f1ce0f8fdc6d90d981fa984516d4c939211cde9d",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/hil-raw-span-b/images/current.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 0,
+      "stages": [
+        {
+          "name": "ordinary",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 55.41526329203043,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            },
+            {
+              "seconds": 39.14387979195453,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 24576,
+            "lookups": 2084,
+            "hits": 748,
+            "misses": 1336,
+            "invalidations": 168,
+            "loan_hits": 15032,
+            "loan_misses": 398
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-lookup-b-control",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-b-control",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-b-control/images/current.bin",
+        "bytes": 370392,
+        "footer": 368744,
+        "build": "1CF1FC3D",
+        "sha256": "c977f9012645e740bab19f6876bc6aa7952284a4a985f97e75e16cedfba583be",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-lookup-only/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14066,
+          "sha256": "32513a23bab3c2c38693b9362d42ffc729a058a71917e0d2a418fdb1c5380f94"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 65.37334366701543,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 17408,
+                "lookups": 207075,
+                "hits": 206256,
+                "misses": 819,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.700038292095996,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 413609,
+                "hits": 412433,
+                "misses": 1176,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.750745583092794,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 620132,
+                "hits": 618601,
+                "misses": 1531,
+                "invalidations": 200
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 620132,
+            "hits": 618601,
+            "misses": 1531,
+            "invalidations": 200
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 45.77768266701605,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 206539,
+                "hits": 206167,
+                "misses": 372,
+                "invalidations": 1
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-lookup-a-control",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-a-control",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-lookup-a-control/images/current.bin",
+        "bytes": 370200,
+        "footer": 368552,
+        "build": "992B3158",
+        "sha256": "ebd9486530f4e39aa1494e04fcea8795358075f3982dc4c4100da1eeb37458ec",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-packed-known/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "d8b23c262c5defdaeb1ce4434bce1da9e0523a5a",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13830,
+          "sha256": "5bf89886d9967bfa5dd22e5198ef5e18c151ba268013d627783e6de520564f47"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14066,
+          "sha256": "32513a23bab3c2c38693b9362d42ffc729a058a71917e0d2a418fdb1c5380f94"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 1,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 213.22754891600925,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 17408,
+                "lookups": 207075,
+                "hits": 206256,
+                "misses": 819,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.703833500039764,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 413609,
+                "hits": 412433,
+                "misses": 1176,
+                "invalidations": 200
+              }
+            },
+            {
+              "seconds": 45.779908500029705,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 620132,
+                "hits": 618601,
+                "misses": 1531,
+                "invalidations": 200
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 620132,
+            "hits": 618601,
+            "misses": 1531,
+            "invalidations": 200
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 45.81095720897429,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 29696,
+                "lookups": 206539,
+                "hits": 206167,
+                "misses": 372,
+                "invalidations": 1
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 29696,
+            "lookups": 206539,
+            "hits": 206167,
+            "misses": 372,
+            "invalidations": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "hil-final-ship",
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-final-ship",
+      "firmware": {
+        "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-final-ship/images/current.bin",
+        "bytes": 371316,
+        "footer": 369668,
+        "build": "FD1433B6",
+        "sha256": "a086ae1b049e61af44cb327c41e4671d2a333b758fc6750629a976a139ba47f1",
+        "source": "/private/tmp/mk61-paged-return25.gtdeAC/bundle-ship/mk61s-M-classic-v3-uc1609-f411/mk61s-M-classic-v3-uc1609-f411.bin"
+      },
+      "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+      "apps": {
+        "/System/BASIC.app": {
+          "bytes": 14140,
+          "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+        },
+        "/System/FOCAL.app": {
+          "bytes": 12674,
+          "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+        },
+        "/System/LANGVM.app": {
+          "bytes": 13836,
+          "sha256": "7a00125f44c029392e7377edc703cfc8c0d2fd5f336f1d0e9ed3a8ae0202dfa9"
+        },
+        "/System/LANGIN.app": {
+          "bytes": 14083,
+          "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016"
+        },
+        "/System/SRCEDIT.app": {
+          "bytes": 13483,
+          "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+        }
+      },
+      "firmware_writes": 3,
+      "stages": [
+        {
+          "name": "first-compile",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 52.269139208015986,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            },
+            {
+              "seconds": 36.962868790957145,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            },
+            {
+              "seconds": 37.026440290967,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 26624,
+                "lookups": 2571,
+                "hits": 752,
+                "misses": 1819,
+                "invalidations": 168,
+                "loan_hits": 22561,
+                "loan_misses": 592
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 26624,
+            "lookups": 2571,
+            "hits": 752,
+            "misses": 1819,
+            "invalidations": 168,
+            "loan_hits": 22561,
+            "loan_misses": 592
+          }
+        },
+        {
+          "name": "ready-file-cache",
+          "profiling": false,
+          "diagnostic_variant": null,
+          "runs": [
+            {
+              "seconds": 37.062891375040635,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 26624,
+                "lookups": 513,
+                "hits": 16,
+                "misses": 497,
+                "invalidations": 1,
+                "loan_hits": 7532,
+                "loan_misses": 191
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 26624,
+            "lookups": 513,
+            "hits": 16,
+            "misses": 497,
+            "invalidations": 1,
+            "loan_hits": 7532,
+            "loan_misses": 191
+          }
+        },
+        {
+          "name": "pc-compile-warmup",
+          "profiling": false,
+          "diagnostic_variant": "88125006",
+          "runs": [
+            {
+              "seconds": 58.29062708397396,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 18432,
+                "lookups": 1594,
+                "hits": 731,
+                "misses": 863,
+                "invalidations": 168,
+                "loan_hits": 7496,
+                "loan_misses": 211
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 18432,
+            "lookups": 1594,
+            "hits": 731,
+            "misses": 863,
+            "invalidations": 168,
+            "loan_hits": 7496,
+            "loan_misses": 211
+          }
+        },
+        {
+          "name": "pc-profile-warm",
+          "profiling": true,
+          "diagnostic_variant": "88125006",
+          "runs": [
+            {
+              "seconds": 39.713568083010614,
+              "nodes": 420,
+              "move": "e2e3",
+              "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+              "complete_eight_rank_board": true,
+              "flash_cache": {
+                "budget": 32768,
+                "payload": 29696,
+                "used": 24576,
+                "lookups": 2084,
+                "hits": 748,
+                "misses": 1336,
+                "invalidations": 168,
+                "loan_hits": 15032,
+                "loan_misses": 398
+              }
+            }
+          ],
+          "cache_after": {
+            "budget": 32768,
+            "payload": 29696,
+            "used": 24576,
+            "lookups": 2084,
+            "hits": 748,
+            "misses": 1336,
+            "invalidations": 168,
+            "loan_hits": 15032,
+            "loan_misses": 398
+          }
+        }
+      ]
+    }
+  ],
+  "profiles": {
+    "hil-compact-runtime-profile": {
+      "stage": "profile-warm",
+      "points": {
+        "core.step": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.fetch": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.00-26": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.27-35": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.36-41": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.finish": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1302": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1303": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1306": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "idle.main": {
+          "calls": 226735,
+          "cycles": 584743858,
+          "self_cycles": 386330720,
+          "seconds": 6.091081854166666,
+          "self_seconds": 4.024278333333333
+        },
+        "display.update": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "usb.service": {
+          "calls": 226736,
+          "cycles": 198415055,
+          "self_cycles": 198415055,
+          "seconds": 2.0668234895833333,
+          "self_seconds": 2.0668234895833333
+        },
+        "flash.read": {
+          "calls": 5589,
+          "cycles": 57136957,
+          "self_cycles": 57136957,
+          "seconds": 0.5951766354166667,
+          "self_seconds": 0.5951766354166667
+        },
+        "flash.write": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "flash.verify": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "flash.erase": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.decode": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.vm": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.vm": {
+          "calls": 15441,
+          "cycles": 3455291524,
+          "self_cycles": 2942364487,
+          "seconds": 35.99262004166667,
+          "self_seconds": 30.64963007291667
+        },
+        "app.entry.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.source": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.font": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.other": {
+          "calls": 478,
+          "cycles": 44842996,
+          "self_cycles": 5217715,
+          "seconds": 0.46711454166666666,
+          "self_seconds": 0.05435119791666667
+        },
+        "zx0.app.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.vm": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.source": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.font": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.swap": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "font.activate": {
+          "calls": 7721,
+          "cycles": 22346017,
+          "self_cycles": 22346017,
+          "seconds": 0.23277101041666667,
+          "self_seconds": 0.23277101041666667
+        },
+        "vm.cache.lookup": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.prepare": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.cache.pack": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.cache.thaw": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "m61.runner": {
+          "calls": 13028,
+          "cycles": 3896443374,
+          "self_cycles": 78809503,
+          "seconds": 40.5879518125,
+          "self_seconds": 0.8209323229166666
+        },
+        "vm.invoke": {
+          "calls": 7720,
+          "cycles": 3666663624,
+          "self_cycles": 114687951,
+          "seconds": 38.19441275,
+          "self_seconds": 1.19466615625
+        },
+        "m61.operand": {
+          "calls": 7744,
+          "cycles": 4063626,
+          "self_cycles": 4063626,
+          "seconds": 0.0423294375,
+          "self_seconds": 0.0423294375
+        },
+        "m61.open": {
+          "calls": 7720,
+          "cycles": 3675718747,
+          "self_cycles": 6188370,
+          "seconds": 38.28873694791667,
+          "self_seconds": 0.0644621875
+        },
+        "terminal.lookup": {
+          "calls": 11583,
+          "cycles": 24847758,
+          "self_cycles": 24847758,
+          "seconds": 0.2588308125,
+          "self_seconds": 0.2588308125
+        },
+        "m61.read.line": {
+          "calls": 7733,
+          "cycles": 3951606,
+          "self_cycles": 3951606,
+          "seconds": 0.0411625625,
+          "self_seconds": 0.0411625625
+        },
+        "m61.command": {
+          "calls": 104235,
+          "cycles": 3813771154,
+          "self_cycles": 109148689,
+          "seconds": 39.726782854166665,
+          "self_seconds": 1.1369655104166667
+        }
+      },
+      "gaps": {
+        "keyboard.poll": {
+          "n": 239623,
+          "max": 1610729,
+          "total": 3992569370,
+          "over1": 599,
+          "over5": 250,
+          "over10": 25,
+          "over30": 0,
+          "max_ms": 16.778427083333334
+        },
+        "keyboard.sample": {
+          "n": 35514,
+          "max": 1611249,
+          "total": 3992512593,
+          "over1": 35514,
+          "over5": 258,
+          "over10": 27,
+          "over30": 0,
+          "max_ms": 16.78384375
+        },
+        "keyboard.row0": {
+          "n": 7102,
+          "max": 2753462,
+          "total": 3992115881,
+          "over1": 7102,
+          "over5": 7102,
+          "over10": 206,
+          "over30": 0,
+          "max_ms": 28.681895833333332
+        },
+        "keyboard.row1": {
+          "n": 7102,
+          "max": 2752483,
+          "total": 3992116142,
+          "over1": 7102,
+          "over5": 7102,
+          "over10": 211,
+          "over30": 0,
+          "max_ms": 28.671697916666666
+        },
+        "keyboard.row2": {
+          "n": 7102,
+          "max": 2792233,
+          "total": 3992114974,
+          "over1": 7102,
+          "over5": 7102,
+          "over10": 212,
+          "over30": 0,
+          "max_ms": 29.085760416666666
+        },
+        "keyboard.row3": {
+          "n": 7102,
+          "max": 2738431,
+          "total": 3992115831,
+          "over1": 7102,
+          "over5": 7102,
+          "over10": 205,
+          "over30": 0,
+          "max_ms": 28.525322916666667
+        },
+        "keyboard.row4": {
+          "n": 7102,
+          "max": 2748154,
+          "total": 3992115589,
+          "over1": 7102,
+          "over5": 7102,
+          "over10": 207,
+          "over30": 0,
+          "max_ms": 28.626604166666667
+        },
+        "usb.service": {
+          "n": 226735,
+          "max": 1496578,
+          "total": 3992567612,
+          "over1": 1050,
+          "over5": 31,
+          "over10": 22,
+          "over30": 0,
+          "max_ms": 15.589354166666666
+        }
+      },
+      "compilation_or_nor_writes": false
+    },
+    "hil-final-ship": {
+      "stage": "pc-profile-warm",
+      "points": {
+        "core.step": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.fetch": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.00-26": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.27-35": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ticks.36-41": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.finish": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1302": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1303": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "core.ik1306": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "idle.main": {
+          "calls": 226635,
+          "cycles": 577896684,
+          "self_cycles": 386621246,
+          "seconds": 6.019757125,
+          "self_seconds": 4.0273046458333335
+        },
+        "display.update": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "usb.service": {
+          "calls": 226636,
+          "cycles": 191277355,
+          "self_cycles": 191277355,
+          "seconds": 1.9924724479166667,
+          "self_seconds": 1.9924724479166667
+        },
+        "flash.read": {
+          "calls": 5573,
+          "cycles": 56804463,
+          "self_cycles": 56804463,
+          "seconds": 0.59171315625,
+          "self_seconds": 0.59171315625
+        },
+        "flash.write": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "flash.verify": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "flash.erase": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.decode": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.vm": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.load.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.vm": {
+          "calls": 15441,
+          "cycles": 3288651960,
+          "self_cycles": 2780992346,
+          "seconds": 34.25679125,
+          "self_seconds": 28.968670270833332
+        },
+        "app.entry.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "app.entry.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.source": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.font": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "file.other": {
+          "calls": 478,
+          "cycles": 44786445,
+          "self_cycles": 5176080,
+          "seconds": 0.46652546875,
+          "self_seconds": 0.0539175
+        },
+        "zx0.app.basic": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.focal": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.vm": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.input": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.app.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.source": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.font": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.swap": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "zx0.other": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "font.activate": {
+          "calls": 7721,
+          "cycles": 22359348,
+          "self_cycles": 22359348,
+          "seconds": 0.232909875,
+          "self_seconds": 0.232909875
+        },
+        "vm.cache.lookup": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.prepare": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.cache.pack": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "vm.cache.thaw": {
+          "calls": 0,
+          "cycles": 0,
+          "self_cycles": 0,
+          "seconds": 0,
+          "self_seconds": 0
+        },
+        "m61.runner": {
+          "calls": 13028,
+          "cycles": 3728626377,
+          "self_cycles": 78907922,
+          "seconds": 38.83985809375,
+          "self_seconds": 0.8219575208333333
+        },
+        "vm.invoke": {
+          "calls": 7720,
+          "cycles": 3498657446,
+          "self_cycles": 114688238,
+          "seconds": 36.44434839583333,
+          "self_seconds": 1.1946691458333334
+        },
+        "m61.operand": {
+          "calls": 7744,
+          "cycles": 4063587,
+          "self_cycles": 4063587,
+          "seconds": 0.04232903125,
+          "self_seconds": 0.04232903125
+        },
+        "m61.open": {
+          "calls": 7720,
+          "cycles": 3507721607,
+          "self_cycles": 6200522,
+          "seconds": 36.53876673958333,
+          "self_seconds": 0.06458877083333334
+        },
+        "terminal.lookup": {
+          "calls": 11583,
+          "cycles": 24861112,
+          "self_cycles": 24861112,
+          "seconds": 0.2589699166666667,
+          "self_seconds": 0.2589699166666667
+        },
+        "m61.read.line": {
+          "calls": 7733,
+          "cycles": 3947433,
+          "self_cycles": 3947433,
+          "seconds": 0.04111909375,
+          "self_seconds": 0.04111909375
+        },
+        "m61.command": {
+          "calls": 104235,
+          "cycles": 3645860224,
+          "self_cycles": 109221588,
+          "seconds": 37.97771066666667,
+          "self_seconds": 1.137724875
+        }
+      },
+      "gaps": {
+        "keyboard.poll": {
+          "n": 239565,
+          "max": 1611756,
+          "total": 3824258982,
+          "over1": 574,
+          "over5": 245,
+          "over10": 24,
+          "over30": 0,
+          "max_ms": 16.789125
+        },
+        "keyboard.sample": {
+          "n": 34352,
+          "max": 1611758,
+          "total": 3824233044,
+          "over1": 34352,
+          "over5": 257,
+          "over10": 26,
+          "over30": 0,
+          "max_ms": 16.789145833333333
+        },
+        "keyboard.row0": {
+          "n": 6869,
+          "max": 2904438,
+          "total": 3823536597,
+          "over1": 6869,
+          "over5": 6869,
+          "over10": 201,
+          "over30": 1,
+          "max_ms": 30.2545625
+        },
+        "keyboard.row1": {
+          "n": 6870,
+          "max": 2745143,
+          "total": 3824033324,
+          "over1": 6870,
+          "over5": 6870,
+          "over10": 195,
+          "over30": 0,
+          "max_ms": 28.595239583333335
+        },
+        "keyboard.row2": {
+          "n": 6870,
+          "max": 2890061,
+          "total": 3824033671,
+          "over1": 6870,
+          "over5": 6870,
+          "over10": 198,
+          "over30": 1,
+          "max_ms": 30.104802083333333
+        },
+        "keyboard.row3": {
+          "n": 6870,
+          "max": 2733240,
+          "total": 3824034421,
+          "over1": 6870,
+          "over5": 6870,
+          "over10": 204,
+          "over30": 0,
+          "max_ms": 28.47125
+        },
+        "keyboard.row4": {
+          "n": 6869,
+          "max": 2728912,
+          "total": 3823538459,
+          "over1": 6869,
+          "over5": 6869,
+          "over10": 196,
+          "over30": 0,
+          "max_ms": 28.426166666666667
+        },
+        "usb.service": {
+          "n": 226635,
+          "max": 1490728,
+          "total": 3824257224,
+          "over1": 1031,
+          "over5": 31,
+          "over10": 22,
+          "over30": 0,
+          "max_ms": 15.528416666666667
+        }
+      },
+      "compilation_or_nor_writes": false
+    }
+  },
+  "pc_sampling": {
+    "status": "PASS",
+    "firmware": {
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/native-pc-sample/resident.bin",
+      "bytes": 375036,
+      "footer": 372980,
+      "build": "88125006",
+      "sha256": "56b3bfbc654ae697d0652603a4e6fcafb96402921506badeba24c65b4dd7807d"
+    },
+    "proof": {
+      "status": "PASS",
+      "irq_cases": 4,
+      "cases": [
+        {
+          "psp": false,
+          "extended": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": false,
+          "extended": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": false,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        },
+        {
+          "psp": true,
+          "extended": true,
+          "frame_preserved": true,
+          "callee_saved_preserved": true,
+          "one_tick": true
+        }
+      ],
+      "firmware_sha256": "56b3bfbc654ae697d0652603a4e6fcafb96402921506badeba24c65b4dd7807d",
+      "app_sha256": "7a00125f44c029392e7377edc703cfc8c0d2fd5f336f1d0e9ed3a8ae0202dfa9",
+      "gates_pass": true,
+      "gates": {
+        "flash_min_headroom": 131072,
+        "global_ram_limit": 49152,
+        "resident_stack_frame_limit": 3072,
+        "app_stack_frame_limit": 5120,
+        "effective_app_pool": 32256,
+        "required_combined_pool": 32128
+      }
+    },
+    "ordinary_statistics_excluded": true,
+    "counters": {
+      "anchor": 536957952,
+      "total": 34424,
+      "app": 23973,
+      "native": 10451,
+      "other": 0,
+      "invalid": 0,
+      "nested": 0,
+      "relocated": 0,
+      "overflow": 0,
+      "basic": 0,
+      "extended": 34424
+    },
+    "rows": [
+      [
+        0,
+        8
+      ],
+      [
+        128,
+        6
+      ],
+      [
+        256,
+        1
+      ],
+      [
+        384,
+        1
+      ],
+      [
+        512,
+        161
+      ],
+      [
+        640,
+        101
+      ],
+      [
+        768,
+        66
+      ],
+      [
+        896,
+        36
+      ],
+      [
+        1024,
+        9
+      ],
+      [
+        1152,
+        25
+      ],
+      [
+        1280,
+        32
+      ],
+      [
+        1408,
+        31
+      ],
+      [
+        1536,
+        71
+      ],
+      [
+        1664,
+        43
+      ],
+      [
+        1792,
+        52
+      ],
+      [
+        1920,
+        206
+      ],
+      [
+        2176,
+        91
+      ],
+      [
+        2304,
+        31
+      ],
+      [
+        2432,
+        164
+      ],
+      [
+        2560,
+        728
+      ],
+      [
+        2688,
+        294
+      ],
+      [
+        2816,
+        120
+      ],
+      [
+        2944,
+        3
+      ],
+      [
+        3072,
+        8
+      ],
+      [
+        3200,
+        57
+      ],
+      [
+        3328,
+        20
+      ],
+      [
+        3456,
+        128
+      ],
+      [
+        3584,
+        129
+      ],
+      [
+        3712,
+        4
+      ],
+      [
+        4224,
+        9
+      ],
+      [
+        4352,
+        9
+      ],
+      [
+        4480,
+        424
+      ],
+      [
+        4608,
+        2
+      ],
+      [
+        4736,
+        3939
+      ],
+      [
+        4864,
+        1589
+      ],
+      [
+        4992,
+        820
+      ],
+      [
+        5120,
+        380
+      ],
+      [
+        5248,
+        885
+      ],
+      [
+        5376,
+        243
+      ],
+      [
+        5504,
+        58
+      ],
+      [
+        5632,
+        221
+      ],
+      [
+        5760,
+        84
+      ],
+      [
+        5888,
+        59
+      ],
+      [
+        6016,
+        390
+      ],
+      [
+        6144,
+        498
+      ],
+      [
+        6272,
+        125
+      ],
+      [
+        6400,
+        208
+      ],
+      [
+        6528,
+        426
+      ],
+      [
+        6656,
+        168
+      ],
+      [
+        6784,
+        42
+      ],
+      [
+        6912,
+        24
+      ],
+      [
+        7040,
+        1815
+      ],
+      [
+        7168,
+        4
+      ],
+      [
+        7936,
+        4
+      ],
+      [
+        8192,
+        1
+      ],
+      [
+        8448,
+        12
+      ],
+      [
+        8576,
+        3
+      ],
+      [
+        9216,
+        1
+      ],
+      [
+        9600,
+        1
+      ],
+      [
+        9728,
+        12
+      ],
+      [
+        9856,
+        645
+      ],
+      [
+        10112,
+        1746
+      ],
+      [
+        10240,
+        2146
+      ],
+      [
+        10368,
+        1511
+      ],
+      [
+        10752,
+        679
+      ],
+      [
+        10880,
+        2
+      ],
+      [
+        11008,
+        9
+      ],
+      [
+        11392,
+        6
+      ],
+      [
+        11520,
+        8
+      ],
+      [
+        11648,
+        219
+      ],
+      [
+        11776,
+        43
+      ],
+      [
+        11904,
+        10
+      ],
+      [
+        12032,
+        88
+      ],
+      [
+        12160,
+        236
+      ],
+      [
+        12288,
+        64
+      ],
+      [
+        13312,
+        43
+      ],
+      [
+        13440,
+        35
+      ],
+      [
+        13568,
+        196
+      ],
+      [
+        13696,
+        76
+      ],
+      [
+        13824,
+        4
+      ],
+      [
+        13952,
+        7
+      ],
+      [
+        14080,
+        21
+      ],
+      [
+        14208,
+        11
+      ],
+      [
+        14336,
+        41
+      ],
+      [
+        14464,
+        184
+      ],
+      [
+        14592,
+        277
+      ],
+      [
+        14720,
+        15
+      ],
+      [
+        14976,
+        1
+      ],
+      [
+        15232,
+        38
+      ],
+      [
+        15360,
+        3
+      ],
+      [
+        15616,
+        32
+      ],
+      [
+        15872,
+        1
+      ],
+      [
+        16000,
+        3
+      ],
+      [
+        16128,
+        1
+      ],
+      [
+        16384,
+        2
+      ],
+      [
+        16512,
+        6
+      ],
+      [
+        16640,
+        28
+      ],
+      [
+        16768,
+        48
+      ],
+      [
+        16896,
+        48
+      ],
+      [
+        17024,
+        20
+      ],
+      [
+        18176,
+        1
+      ],
+      [
+        19072,
+        10
+      ],
+      [
+        19200,
+        10
+      ],
+      [
+        19328,
+        8
+      ],
+      [
+        19456,
+        11
+      ],
+      [
+        19584,
+        3
+      ],
+      [
+        19968,
+        3
+      ],
+      [
+        20096,
+        292
+      ]
+    ],
+    "warm_profile_no_compilation_or_nor_writes": true
+  },
+  "c9_model_compile_only": {
+    "baseline": {
+      "modules": 11,
+      "source_window": 1488,
+      "totals": {
+        "nor_reads": 190394,
+        "nor_read_bytes": 9786759,
+        "nor_mutations": 89730,
+        "programmed_bytes": 836836,
+        "erases": 2025,
+        "source_reads": 66
+      },
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/chess-cold-io-f411.log"
+    },
+    "catalog_only": {
+      "modules": 11,
+      "source_window": 1488,
+      "totals": {
+        "nor_reads": 19696,
+        "nor_read_bytes": 1426937,
+        "nor_mutations": 3681,
+        "programmed_bytes": 333450,
+        "erases": 90,
+        "source_reads": 66
+      },
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/chess-cold-lookup-only.log"
+    },
+    "catalog_bitmap_lazy_dirs": {
+      "modules": 11,
+      "source_window": 1488,
+      "totals": {
+        "nor_reads": 16532,
+        "nor_read_bytes": 1153596,
+        "nor_mutations": 2967,
+        "programmed_bytes": 262199,
+        "erases": 70,
+        "source_reads": 66
+      },
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/chess-cold-direct-lookup.log"
+    }
+  },
+  "limits": {
+    "weakened": false,
+    "cache_budget": 32768,
+    "cache_payload": 29696,
+    "app_limit": 20480,
+    "langvm_memory": 20452,
+    "langvm_bss": 20,
+    "langin_memory": 19180,
+    "resident_bytes": 371316,
+    "resident_headroom": 152972,
+    "minimum_resident_headroom": 131072,
+    "global_ram_limit": 49152,
+    "resident_frame": 1928,
+    "resident_frame_limit": 3072,
+    "app_frame_max": 3264,
+    "app_frame_limit": 5120,
+    "effective_app_pool": 34880,
+    "f401_bytes": 240004,
+    "f401_headroom": 22140,
+    "f401_minimum_headroom": 8192,
+    "f401_frame": 1304,
+    "f401_frame_limit": 2048,
+    "minimum_observed_stack_remaining": 7752
+  },
+  "negative_experiments": [
+    {
+      "name": "O2 integer_span",
+      "module_limit": 20480,
+      "overflow_bytes": 636,
+      "installed": false,
+      "source_isolated": true
+    },
+    {
+      "name": "initial diagnostic profile after changed resident",
+      "seconds": 71.73645016702358,
+      "excluded_from_warm_profile": true,
+      "reason": "Resident build ID is part of compiler fingerprint; stale pages recompiled"
+    }
+  ],
+  "restoration": {
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "files": 24,
+    "directories": 2,
+    "firmware": {
+      "path": "/private/tmp/mk61-paged-return25.gtdeAC/hil-final-ship/images/original.bin",
+      "bytes": 370064,
+      "footer": 368416,
+      "build": "3AB3DD45",
+      "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+      "source": "/private/tmp/mk61-flash-perf-frozen-3ab3dd45.bin"
+    },
+    "health": {
+      "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=441/18 raw(v/t/b)=1493/950/1017 val(mV/dC/mV)=3329/316/3307 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089986\r\n/> ",
+      "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+      "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=14484 observed_remaining=14484 sram_xn=1\r\n/> ",
+      "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+      "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+      "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+      "pwd": "pwd\r\n/\r\n/> "
+    },
+    "mini_touched": false,
+    "pico_touched": false,
+    "cdc_closed": true
+  },
+  "flash_downloads_in_session": 11,
+  "artifact_root": "/private/tmp/mk61-paged-return25.gtdeAC",
+  "final_source_snapshot": "/private/tmp/mk61-paged-ship.RcxDu2",
+  "pc_sampler_source_isolated": "/private/tmp/mk61-paged-sample.MxLsqU"
+}

@@ -46,6 +46,13 @@ public:
   void fail() const {input_.read=nullptr;begin_=UINT32_MAX;}
   uint32_t size() const {return input_.size;}
   void invalidate() const {begin_=UINT32_MAX;}
+  // Synchronous borrow only: the next read/at/invalidate may replace it.
+  // A miss does no I/O; callers retain their bounded copying fallback.
+  const uint8_t* cached(uint32_t at,uint16_t n) const {
+    const uint32_t offset=at-begin_;
+    return at>=begin_ && n+offset<=WINDOW_BYTES &&
+        at<=size() && n<=size()-at?page_+offset:nullptr;
+  }
   __attribute__((noinline)) bool read(uint32_t at,void* output,size_t n) const {
     if(!good() || at>size() || n>size()-at || (!output && n))return false;
     if(!n)return true;
@@ -61,7 +68,9 @@ public:
     } while(n);
     return true;
   }
-  uint8_t at(uint32_t offset) const {
+  // Outline the paged decoder: View::byte can tail-call it without saving
+  // registers on the much hotter contiguous-image path.
+  __attribute__((noinline)) uint8_t at(uint32_t offset) const {
     if(offset>=size())return 0;
     const uint32_t begin=offset/WINDOW_BYTES*WINDOW_BYTES;
     if(begin_!=begin) {
@@ -87,6 +96,16 @@ public:
   void fail() const {good_=false;}
   uint32_t size() const {return input_.size;}
   void invalidate() const {begin_[0]=begin_[1]=UINT32_MAX;used_[0]=used_[1]=0;}
+  // Same synchronous-borrow contract as the shipping one-window reader.
+  const uint8_t* cached(uint32_t at,uint16_t n) const {
+    if(!good_ || at>size() || n>size()-at)return nullptr;
+    for(unsigned slot=0;slot<2;++slot)
+      if(begin_[slot]!=UINT32_MAX && at>=begin_[slot] && at-begin_[slot]<=used_[slot] &&
+          n<=used_[slot]-(at-begin_[slot])) {
+        recent_=uint8_t(slot);return page_[slot]+(at-begin_[slot]);
+      }
+    return nullptr;
+  }
   bool read(uint32_t at,void* out,size_t n) const {
     if(!good_ || at>size() || n>size()-at || (!out && n))return false;
     auto* bytes=static_cast<uint8_t*>(out);

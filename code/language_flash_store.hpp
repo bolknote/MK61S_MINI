@@ -25,6 +25,7 @@ class Store {
   bool (*service_)();
   uint8_t* cache_;
   ReadCache* shared_cache_;
+  const uint8_t* borrowed_=nullptr;
 #if !defined(ARDUINO_ARCH_STM32)
   uint8_t fallback_[WRITE_BYTES];
 #endif
@@ -32,8 +33,9 @@ class Store {
   Space cached_space_=IMAGE;
   static bool find(uint16_t parent,bool directory,Type type,const char* name,uint16_t& id) {
     id=INVALID;
-    // C9 reports a successful search with INVALID when no child exists.
-    return program_store::fat_find_child(parent,directory,type,name,id) && id!=INVALID;
+    // A native cache lookup must not rebuild the writable USB/FAT index
+    // after every generated page. C9 reports INVALID for a missing child.
+    return program_store::find_child(parent,directory,type,name,id) && id!=INVALID;
   }
   bool directory(uint16_t parent,const char* name,uint16_t& id) {
     return find(parent,true,Type::TEXT,name,id) ||
@@ -107,8 +109,20 @@ class Store {
       if(find(root_,true,Type::TEXT,old[4]?"Image1":"Image0",stale) && !erase(stale))return false;
     }
     const char* names[]={"IndexA","IndexB",bank_?"Image1":"Image0","Boundaries"};
-    for(unsigned i=0;i<4;++i)if(!directory(root_,names[i],dirs_[i]) || !erase(dirs_[i]))return false;
+    for(unsigned i=0;i<4;++i) {
+      // Sorted programs do not need IndexB; small verification can keep its
+      // boundary bitmap in the existing verifier frame. Reclaim abandoned
+      // scratch when present, but don't create unused C9 directories.
+      if(i==INDEX_B || i==BOUNDARIES) {
+        if(find(root_,true,Type::TEXT,names[i],dirs_[i]) && !erase(dirs_[i]))return false;
+      } else if(!directory(root_,names[i],dirs_[i]) || !erase(dirs_[i]))return false;
+    }
     building_=true;cached_=UINT32_MAX;return true;
+  }
+  bool ensure_space(Space space) {
+    if(dirs_[space]!=INVALID)return true;
+    const char* names[]={"IndexA","IndexB",bank_?"Image1":"Image0","Boundaries"};
+    return directory(root_,names[space],dirs_[space]) && erase(dirs_[space]);
   }
   bool evict_cache() {
     // Only positively identified generated caches are candidates. Scratch
@@ -134,6 +148,11 @@ class Store {
     return victim!=INVALID && program_store::remove_tree(victim);
   }
   bool read(Space space,uint32_t at,uint8_t* out,uint16_t n) {
+    if(space==IMAGE && borrowed_) {
+      if(at>size_ || n>size_-at)return false;
+      if(n)memcpy(out,borrowed_+at,n);
+      return true;
+    }
     if(!cache_ || space>BOUNDARIES || dirs_[space]==INVALID)return false;
     while(n) {
       const uint32_t chunk=at/WRITE_BYTES;
@@ -153,7 +172,7 @@ class Store {
     return true;
   }
   bool write(Space space,uint32_t at,const uint8_t* in,uint16_t n) {
-    if(space>BOUNDARIES || at%WRITE_BYTES || n!=WRITE_BYTES || !begin())return false;
+    if(space>BOUNDARIES || at%WRITE_BYTES || n!=WRITE_BYTES || !begin() || !ensure_space(space))return false;
     char text[16];name(at/WRITE_BYTES,text);uint16_t file=INVALID;
     (void)find(dirs_[space],false,Type::MK61_BINARY,text,file);
     while(!program_store::write_file(dirs_[space],file,Type::MK61_BINARY,text,in,n)) {
@@ -166,7 +185,7 @@ class Store {
     if(n || space>BOUNDARIES)return false;
     if(space==BOUNDARIES && !building_) {
       if(!root() || !directory(root_,"Boundaries",dirs_[space]))return false;
-    } else if(!begin())return false;
+    } else if(!begin() || !ensure_space(space))return false;
     cached_=UINT32_MAX;return erase(dirs_[space]);
   }
   bool lookup(uint32_t key,bool by_number,uint32_t* result) {
@@ -199,6 +218,7 @@ public:
   void invalidate(){cached_=UINT32_MAX;}
   Store(const Store&)=delete;
   ~Store() {
+    if(borrowed_)shared_cache_->release(borrowed_);
     // Best-effort rollback/temporary cleanup. Committed chunks and the old
     // manifest remain valid even when removal itself runs out of journal.
     if(opened_) {
@@ -207,6 +227,16 @@ public:
     }
   }
   uint32_t source_stamp() const {return stamp_;}
+  bool materialize(const uint8_t*& image) {
+    image=borrowed_;
+    if(image || !shared_cache_)return true;
+    const uint32_t revision=program_store::media_revision();
+    if(!shared_cache_->borrow(revision,dirs_[IMAGE],size_,io(),image))return false;
+    if(image && program_store::media_revision()!=revision) {
+      shared_cache_->release(image);image=nullptr;return false;
+    }
+    borrowed_=image;return true;
+  }
   IO io() {
     return {this,[](void* raw,Space s,uint32_t at,uint8_t* out,uint16_t n){return static_cast<Store*>(raw)->read(s,at,out,n);},
       [](void* raw,Space s,uint32_t at,const uint8_t* in,uint16_t n){return static_cast<Store*>(raw)->write(s,at,in,n);},

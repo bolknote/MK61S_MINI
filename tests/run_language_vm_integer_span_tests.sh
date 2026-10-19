@@ -3,7 +3,8 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-vm-integer-span.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
-flags=(-std=c++17 -O1 -Wall -Wextra -Werror -DLANGUAGE_VM_TRACE)
+flags=(-std=c++17 -O1 -Wall -Wextra -Werror)
+if [[ "${MK61_VM_TEST_NO_TRACE:-0}" != 1 ]];then flags+=(-DLANGUAGE_VM_TRACE);fi
 if [[ "${MK61_TEST_SANITIZERS:-0}" == 1 ]]; then
   flags+=(-fsanitize=address,undefined -fno-omit-frame-pointer)
 fi

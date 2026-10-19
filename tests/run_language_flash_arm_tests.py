@@ -100,10 +100,10 @@ class FlashMachine(OverlayMachine):
         self.put(address,0,stub('read'),stub('write'),stub('truncate'),stub('poll'),prepare,stub('lookup'))
         return address,stub('input')
 
-def compile_program(machine,packages,elf,language):
+def compile_program(machine,packages,elf,language,rows=4400):
     basic=language==1
     text='1 GOTO 30000\n' if basic else '1.0 G 9.0\n'
-    for i in range(4400):
+    for i in range(rows):
         text+=f'{i+2} A=1\n' if basic else f'{2+i//1000}.{i%1000} S A=1\n'
     text+=('30000 S=0;FOR I=1 TO 2;GOSUB 31000;NEXT I;ON 9 GOSUB '+','.join(['32000']*9)+'\n'
            '30010 ON 9 GOTO '+','.join(['32010']*9)+'\n31000 INPUT "value?",B;S=S+B;RETURN\n'
@@ -123,11 +123,11 @@ def compile_program(machine,packages,elf,language):
     wire=bytes(machine.uc.mem_read(request,52))
     assert result==(1 if basic else 0) and wire[16]==0 and wire[36]==1, (result,wire.hex(),machine.trace[-10:])
     size=struct.unpack_from('<I',wire,20)[0]
-    assert size>65536 and machine.pages[2][:4]==b'LBV2'
-    assert 256<machine.max_source_read<=MAX_SOURCE_WINDOW
+    assert (size>65536)==bool(rows) and machine.pages[2][:4]==b'LBV2'
+    assert 0<machine.max_source_read<=MAX_SOURCE_WINDOW
     return bytes(machine.pages[2][:size]),io,input_callback
 
-def execute(machine,packages,image,io,input_callback,language):
+def execute(machine,packages,image,io,input_callback,language,contiguous=False):
     machine.pages[2]=bytearray(image)+bytearray((-len(image))%1024)
     execution,overlay,entry,temporary,main_metadata,expr_metadata=[machine.input+x for x in (640,720,768,832,920,960)]
     variables=machine.input+128;state=machine.workspace
@@ -140,6 +140,13 @@ def execute(machine,packages,image,io,input_callback,language):
     machine.put(overlay,24,VERSION,execution,state,main_metadata,0)
     machine.load(packages['language-input']);assert machine.call(0x705,overlay)==1
     assert machine.uc.mem_read(execution+RESULT,1)==b'\0'
+    if contiguous:
+        # Model an already-verified resident loan. This storage is outside
+        # the poisoned APP pool and the live continuation/INPUT image.
+        loan=state+2048
+        assert loan>=state+STATE_SIZE and loan+len(image)<=state+4176
+        machine.uc.mem_write(loan,image);machine.put(execution+8,loan)
+        machine.put(execution+52,0,0,0,io)
     inputs=0
     while True:
         machine.load(packages['language-vm']);assert machine.call(0x700,overlay)==1
@@ -149,13 +156,14 @@ def execute(machine,packages,image,io,input_callback,language):
             assert machine.refs[4,10]==10,machine.refs
             return
         pc=machine.words(execution+RESULT+4,1)[0]
-        assert pc>65536 and image[pc]==48
+        assert (pc>65536)==(len(image)>65536) and image[pc]==48
         offset=machine.words(state+PROMPT_OFFSET,1)[0]
         length=struct.unpack('<H',machine.uc.mem_read(state+PROMPT_LENGTH,2))[0]
-        assert offset==pc+3 and length==6 and bytes(machine.uc.mem_read(state+PROMPT,6))==b'value?'
+        prompt=loan+offset if contiguous else state+PROMPT
+        assert offset==pc+3 and length==6 and bytes(machine.uc.mem_read(prompt,6))==b'value?'
         expression=state+STACK+512
         machine.load(packages['language-input']);machine.input_keys('2+3')
-        machine.uc.mem_write(entry,bytes(40));machine.put(entry,40,VERSION,state+PROMPT,expression)
+        machine.uc.mem_write(entry,bytes(40));machine.put(entry,40,VERSION,prompt,expression)
         machine.uc.mem_write(entry+24,struct.pack('<HHHBB',6,256,0,language,0))
         assert machine.call(0x703,entry)==1 and machine.uc.mem_read(entry+31,1)==b'\x02'
         length=struct.unpack('<H',machine.uc.mem_read(entry+28,2))[0]
@@ -185,5 +193,12 @@ def main():
                 machine.address_index=address;print('ARM run',language,address,flush=True);execute(machine,packages,image,io,input_callback,language)
             assert machine.max_write==1024 and machine.max_read<=1024
             print(json.dumps(dict(language=language,lines=struct.unpack_from('<H',image,18)[0],image_bytes=len(image),addresses=3,source_window=machine.max_source_read,counts=machine.counts)))
-    print('Flash ARM: real frontends + resident index service, >64-KB images, 3 APP addresses, INPUT eviction/resume PASS')
+            small=FlashMachine(args.resident_elf,language-1)
+            image,io,input_callback=compile_program(small,packages,elf,language,rows=0)
+            for contiguous in (False,True):
+                for address in range(3):
+                    small.address_index=address
+                    execute(small,packages,image,io,input_callback,language,contiguous=contiguous)
+            print(json.dumps(dict(language=language,small_image_bytes=len(image),contiguous_and_paged=True,addresses=3,counts=small.counts)))
+    print('Flash ARM: real frontends + resident index service, >64-KB paged and small contiguous LBV2, 3 APP addresses, INPUT eviction/resume PASS')
 if __name__=='__main__':main()

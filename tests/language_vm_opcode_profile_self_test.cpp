@@ -78,7 +78,9 @@ int main() {
   uint32_t total=0;for(const auto& row:rows)total+=row.count;
   assert(total==result.steps);
 #if MK61_VM_INTEGER_BLOCK
-  assert(applied==1 && rows[8].count==4 && rows[8].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?4U:0U));
+  // The variable span includes the trailing LINE; HALT stays scalar.
+  constexpr unsigned fused=MK61_VM_INTEGER_SPAN?5U:4U;
+  assert(applied==1 && rows[8].count==fused && rows[8].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?fused:0U));
   assert((rows[8].cycles!=0)==(MK61_VM_OPCODE_PROFILE_TIMING!=0));
   assert(!rows[0].count && !rows[1].count && !rows[3].count);
 #else
@@ -86,14 +88,18 @@ int main() {
   assert(rows[0].count==1 && rows[1].count==2 && rows[3].count==1);
   assert(rows[3].integers==(MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?1U:0U));
 #endif
-  // A limit before the block's last instruction must keep scalar semantics,
-  // not report an executed block which the VM had to reject.
+  // A limit keeps scalar state. A variable span may commit CONST/LOAD/ADD;
+  // the old fixed block (including STORE) must reject the whole group.
   reset();variables[0]=0;state={};state.variables=variables;state.stack=stack;state.stack_capacity=MAX_STACK;
   const auto limited=run(view,state,Services{},3);
-  assert(limited.error==Error::LIMIT && variables[0]==0 && !applied && !rows[8].count);
+  assert(limited.error==Error::LIMIT && variables[0]==0);
+  assert(applied==(MK61_VM_INTEGER_SPAN && MK61_VM_INTEGER_BLOCK?1U:0U));
+  assert(state.sp==1 && stack[0]==135 && stack[1]==7);
+  assert(rows[8].count==(MK61_VM_INTEGER_SPAN && MK61_VM_INTEGER_BLOCK?3U:0U));
   total=0;for(const auto& row:rows)total+=row.count;
   assert(total==limited.steps);
-  // A marked comparison keeps three logical counts. Floating values deopt
+  // A marked comparison keeps its logical counts, including the selected
+  // CONST/STORE/JUMP/LINE tail when integer spans continue. Floating values deopt
   // and must never be reported as an integer block by the diagnostic census.
   for(Value input:{Value(0),Value(.5)}) {
     const char conditional[]="10 IF I<1 A=3 ELSE A=4\n";
@@ -104,7 +110,11 @@ int main() {
     const auto r=run(view,state,Services{});
     assert(r.error==Error::NONE && variables[0]==3 && !applied);
     total=0;for(const auto& row:rows)total+=row.count;
-    assert(total==r.steps && rows[8].count==(input.integer()?3U:0U));
+    assert(total==r.steps && rows[8].count==(MK61_VM_INTEGER_SPAN?(input.integer()?7U:4U):(input.integer()?3U:0U)));
+    if(MK61_VM_INTEGER_SPAN) {
+      assert(rows[7].count==1); // HALT only; integer tail also fuses after a float comparison
+      assert(rows[6].count==(input.integer()?0U:1U) && !rows[6].integers);
+    }
   }
   // The same-width short block copies finite fractional cells and uses the
   // original ABS Value operation. It is fused work, not an integer census.
@@ -115,7 +125,8 @@ int main() {
   state.stack_capacity=MAX_STACK;state.array=array;state.array_count=2;
   const auto r=run(view,state,Services{});
   assert(r.error==Error::NONE && variables[0]==.25 && variables[1]==.25);
-  assert(rows[8].count==6 && rows[8].integers==0);
+  assert(rows[8].count==(MK61_VM_INTEGER_SPAN?9U:0U));
+  assert(rows[8].integers==(MK61_VM_INTEGER_SPAN && MK61_VM_OPCODE_PROFILE_INTEGER_COUNTS?3U:0U));
   total=0;for(const auto& row:rows)total+=row.count;assert(total==r.steps);
   std::puts("VM opcode profile: active block, logical counts, single elapsed attribution and limit fallback PASS");
 }

@@ -8,6 +8,9 @@ bool execute_resident(ExecuteRequest&);
 struct CacheDiagnostics {
   uint32_t budget,payload,used,lookups,hits,misses,reservations,reservation_failures,
            publications,evictions,invalidations;
+#if MK61_FLASH_LANGUAGE_VM
+  uint32_t loan_hits=0,loan_misses=0;
+#endif
 #if MK61_LANGUAGE_VM_CACHE_MIXED
   uint32_t packs=0,thaws=0,packed=0;
 #endif

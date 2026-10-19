@@ -4684,16 +4684,19 @@ static void test_source_draft_banks_on_small_flash() {
   }
   puts("Source draft banks: 256 pages on 512-KiB/1-MiB NOR, exclusive lock and reboot PASS");
 }
-#include "language_flash_store_cases.inc"
+#include "program_store_lookup_cases.inc"
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
+#include "language_flash_store_cases.inc"
 #include "language_flash_fs_cases.inc"
 #endif
 int main(int argc, char** argv) {
-  if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();
+  if(argc==2 && !strcmp(argv[1],"--catalog-lookup")){test_catalog_only_child_lookup();return 0;}
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
+  if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();
     test_language_flash_compiler_on_c9();
-#endif
     return 0;}
+#endif
+  test_catalog_only_child_lookup();
   test_streamed_language_sources();
   test_source_draft_banks_on_small_flash();
   test_catalog_sector_reference_checks_full_width();

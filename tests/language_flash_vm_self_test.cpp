@@ -60,6 +60,14 @@ struct Fixture {
 #endif
   }
   Bindings bindings() {return {variables,array,385,state.stack,MAX_STACK};}
+  std::vector<uint8_t> bytes() {
+    std::vector<uint8_t> raw(compiled.size);
+    for(uint32_t at=0;at<compiled.size;) {
+      const uint16_t n=uint16_t(std::min<uint32_t>(256,compiled.size-at));
+      assert(Disk::read(&disk,IMAGE,at,raw.data()+at,n));at+=n;
+    }
+    return raw;
+  }
   Services services(bool yield=false) {
     return {this,[](void*){return true;},
       [](void*,Function f,double a,double b){switch(f){case Function::ABS:return fabs(a);case Function::SQRT:return sqrt(a);default:return pow(a,b);}},
@@ -72,13 +80,34 @@ struct Fixture {
         return true;
       },yield,false};
   }
-  RunResult run() {
-    flash::Reader image(input());const View v=view(image);
+  RunResult run(bool contiguous=false) {
+    flash::Reader image(input());View v=view(image);std::vector<uint8_t> raw;
+    if(contiguous){raw=bytes();v.reader=nullptr;v.bytes=raw.data();}
     auto result=language_vm::run(v,state.control,bindings(),services(),100000);
     if(result.error!=Error::NONE)fprintf(stderr,"run: %s at %u/%u\n",error_name(result.error),result.line,result.pc);
     assert(result.error==Error::NONE);return result;
   }
 };
+static void small_contiguous() {
+  for(auto language:{Language::BASIC,Language::FOCAL}) {
+    const std::string text(1500,'x');
+    const std::string source=language==Language::BASIC
+      ? "10 DATA -.1,2,3;READ A;INPUT \"value?\",B;READ C;RESTORE 10;READ D\n"
+        "20 FOR I=1 TO 3;@(I)=I*2;S=S+@(I);NEXT I\n"
+        "30 S=S+CALL(100,4,5);IF S=21 .RA=S\n40 PRINT \""+text+"\";A;B;C;D;END\n100 RETURN ARG(1)+ARG(2)\n"
+      : "1.0 S S=0;F I=1,3;D 2\n1.1 S S=S+CALL(3,4,5);S .RA=S;P \""+text+"\";P S;E\n"
+        "2.0 A \"value?\",B;S S=S+B+I;R\n3.0 R ARG(1)+ARG(2)\n";
+    Fixture paged,raw;paged.compile(language,source);raw.compile(language,source);
+    assert(raw.compiled.size<=8192);
+    const auto a=paged.run(),b=raw.run(true);
+    assert(a.error==b.error && a.pc==b.pc && a.line==b.line && a.steps==b.steps);
+    assert(paged.printed==raw.printed && paged.numbers==raw.numbers && paged.inputs==raw.inputs);
+    for(unsigned i=0;i<26;++i)assert(paged.variables[i]==raw.variables[i]);
+    for(unsigned i=0;i<385;++i)assert(paged.array[i]==raw.array[i]);
+    assert(paged.refs[14]==(language==Language::BASIC?21:36) && raw.refs[14]==paged.refs[14]);
+  }
+  puts("Flash VM: small contiguous/paged LBV2 differential, arrays/CALL/DATA/INPUT/strings/steps PASS");
+}
 static std::string large(Language language,const char* tail) {
   const bool basic=language==Language::BASIC;
   std::string source=basic?"1 GOTO 30000\n":"1.0 G 9.0\n";
@@ -253,4 +282,4 @@ static void strings_data_and_failures() {
   Fixture duplicate;source::Reader source("2 A=1\n1 END\n2 END\n",18);
   assert(compile_flash_source(Language::BASIC,source,duplicate.disk.io()).error==Error::LINE);
 }
-int main(){storage_descriptor();controls();focal_if_paths();on_tables();input_resume();arithmetic_hints();wide_compare_layout();strings_data_and_failures();puts("Flash VM: >64-KB calls/FOR/IF/parameters, external sorting, INPUT APP replacement, DATA, long text and lost pages PASS");}
+int main(){small_contiguous();storage_descriptor();controls();focal_if_paths();on_tables();input_resume();arithmetic_hints();wide_compare_layout();strings_data_and_failures();puts("Flash VM: >64-KB calls/FOR/IF/parameters, external sorting, INPUT APP replacement, DATA, long text and lost pages PASS");}

@@ -209,6 +209,10 @@ u32 media_revision(void);
 u32 catalog_revision(void);
 u16 max_nodes(void);
 bool node_id_available(u16 id);
+// Catalog-only, case-insensitive lookup. Never builds the writable FAT
+// projection/index. True plus INVALID_ID means absent; false is a bad parent,
+// invalid name, I/O failure or corrupt sibling chain.
+bool find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
 bool fat_find_child(u16 parent, bool directory, ProgramType type, const char* name, u16& output);
 u8 format_version(void);
 u16 max_fat_clusters(void);

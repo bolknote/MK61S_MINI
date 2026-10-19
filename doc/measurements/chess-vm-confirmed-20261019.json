@@ -1,0 +1,241 @@
+{
+  "date": "2026-10-19",
+  "status": "PASS",
+  "accepted_through_variant": "G",
+  "source_base": "93e8f846de5896d467455060a2c05ae9827a1600",
+  "scope": "Commit only the fully qualified G and preceding accepted VM/C9 optimizations. J remains in the working tree until its separate latency qualification.",
+  "production_source_sha256": {
+    "code/language_bytecode.hpp": "7c0620ad967691f73c2b641e7a0f8343c8ee2133dbeb3a04fe0c5415cab5124f",
+    "code/language_flash.hpp": "087a12d5b3bd84a710b08b4960b9217e321934299e3d9a90569ebca0621f9ee9",
+    "code/language_flash_cache.hpp": "fd860a6dfeeb164812ef8ad5f46aa2824217b4f4c8089f0c614a7c355d487e00",
+    "code/language_flash_store.hpp": "798b041cf77ea34dabfaf3efe075c5bfaa16f7828e9dac6c78b37e8897817550",
+    "code/language_value.hpp": "217f171ccfbbc6442310050ed49db914a6b91a83aa36701b6df2a69474d571aa",
+    "code/language_vm.cpp": "ca3f59e9eea0a08dc96c14f5517b3cd47aee809aa1f45ddc54adcaf7d671e360",
+    "code/language_vm_resident.cpp": "de5b9b7498ff03f7127ae92d3ee85d019719db3e8813f27c0416231f944f3dfb",
+    "code/language_vm_resident.hpp": "2ac5182afdc2cb625dd2d16b61e3ee708eb368e46396b5cf6474a6c828ed7791",
+    "code/program_store.cpp": "aa7b861f14b7e235872daa0f9b0a1eb9f7f9a377f30f91380569b0e8555ce714",
+    "code/program_store.hpp": "f7d3c0a908004da739fb0f6aa345138ff297b64853cea2d9f4aeffb679f9b81c",
+    "code/terminal.cpp": "0c5b13ce2f1d218ff45188474df6c37ba9f2c64b984d0a99ed6d46c4753dd0a5"
+  },
+  "changes": [
+    "Read small LBV2 images using pinned adjacent frames of the original 32-KiB resident page cache; paged fallback for larger images, OOM/busy and F401",
+    "Use a catalog-only lookup for VM files; reading a compiled image does not rebuild or write the USB/FAT scratch index",
+    "Reuse the existing verifier union as a small-image boundary bitmap and create IndexB/Boundaries directories only when needed",
+    "Use direct raw/cache operand reads and bounded borrow lifetimes; retain copied operands for trace callbacks and mutable alias semantics",
+    "Reduce repeated fetch/dispatch work; preserve narrow/wide formats, bounds, exact errors, INPUT/resume and the original logical instruction count",
+    "Extend checked integer spans to control flow and constants while preserving tag/overflow checks and 32-instruction polling",
+    "Keep bit-exact Value boxing using 32-bit limbs; signed zero, NaN payloads and int32 wire tags unchanged",
+    "Add read-only loan counters and offline HIL guards; diagnostic-only timing remains separate from shipping comparisons"
+  ],
+  "device": "Classic V3 UC1609 / STM32F411CE 96 MHz / AEB505B6E0067623",
+  "workload": {
+    "package_files": 29,
+    "level": 2,
+    "maximum_depth": 8,
+    "opening_book": false,
+    "nodes": 420,
+    "move": "e2e3",
+    "board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "timing": "OK on Black selection to complete eight-rank USB board; menu/file installation excluded; profiler stopped"
+  },
+  "selected_G": {
+    "change": "Move all supported span starts ahead of generic operand decoding: constants, comparison/index hints and INTEGER_SPAN. Disabled hints retain scalar fallback.",
+    "reference_F_seconds": 25.806786604283843,
+    "candidate_G_seconds": 25.63292271847604,
+    "elapsed_reduction_percent": 0.6737138120828434,
+    "F_control_drift_percent": -0.022433924624531976,
+    "APP_memory_bytes": 20380,
+    "APP_stored_bytes": 13800,
+    "APP_BSS_bytes": 20,
+    "APP_memory_change_vs_F_bytes": -48,
+    "APP_sha256": "2db99db64366095d804d7c65d0003a02733bf57617a7f3a32957129bfe26dd0a",
+    "source_sha256": "ca3f59e9eea0a08dc96c14f5517b3cd47aee809aa1f45ddc54adcaf7d671e360",
+    "fresh_main_APP_byte_identical": true,
+    "other_system_APPs_unchanged_vs_F": true
+  },
+  "matched_comparison": {
+    "experiment": "Shipping F/G/H/G/F on fixed resident 6930EFCF, profiler stopped",
+    "warm_medians_seconds": [
+      25.809681666549295,
+      25.630440082983114,
+      25.760201145953033,
+      25.635405353968963,
+      25.80389154201839
+    ],
+    "ordinary_searches": 17,
+    "golden_boards": true,
+    "raw_report": "/private/tmp/mk61-span-known.wIxpI8/hil-aba/report.json",
+    "raw_report_sha256": "50107706ec0f14ba9e42d3007c73d887f4850f759405c92b83fbd36608044c01"
+  },
+  "latency": {
+    "status": "PASS, timings excluded from shipping comparisons",
+    "resident": "2DCD8785; GAP/runtime-detail enabled and verified before flash",
+    "keyboard_row_max_ms": 29.402552083333333,
+    "USB_service_max_ms": 15.479697916666666,
+    "all_gap_over30_counters": 0,
+    "warm_NOR_writes_verifies_erases_decodes_and_APP_loads": 0,
+    "all_four_searches_golden": true,
+    "restored": true
+  },
+  "latency_report": {
+    "path": "/private/tmp/mk61-early-spans.sAqd0r/hil-diagnostic-checked/report.json",
+    "sha256": "3bd17cfc7e0437fc572b94a34249198aee907e00b9f1c5ab2abd2b826c3d37e1"
+  },
+  "numeric_and_polling_contract": {
+    "format_changed": false,
+    "ABI_changed": false,
+    "precision_changed": false,
+    "type_checks_elided": false,
+    "logical_service_interval": 32
+  },
+  "strict_main_builds": {
+    "F411": {
+      "build": "E584365C",
+      "BIN_bytes": 371316,
+      "Flash_free_bytes": 152972,
+      "Flash_minimum_headroom_bytes": 131072,
+      "globals_bytes": 21568,
+      "globals_limit_bytes": 49152,
+      "max_frame_bytes": 1928,
+      "frame_limit_bytes": 3072,
+      "APP_effective_pool_bytes": 34880,
+      "LANGVM_limit_bytes": 20480,
+      "status": "PASS, sealed"
+    },
+    "F401_WS0010": {
+      "build": "89C654E1",
+      "BIN_bytes": 240004,
+      "Flash_free_bytes": 22140,
+      "Flash_minimum_headroom_bytes": 8192,
+      "globals_bytes": 27300,
+      "globals_limit_bytes": 52428,
+      "max_frame_bytes": 1304,
+      "frame_limit_bytes": 2048,
+      "status": "PASS, sealed, no board access"
+    },
+    "global_RAM_growth_bytes": 0,
+    "native_runtime_library_gate": "PASS, no libgcc/libm/libstdc++/libc/libnosys"
+  },
+  "native_builds": {
+    "F411": {
+      "path": "/private/tmp/mk61-single-fetch.SjtigV/main-G/f411/resident.bin",
+      "bytes": 371316,
+      "footer": 369668,
+      "build": "E584365C",
+      "sha256": "9b384c023109b41eafb398e0ee4c834ed284cb0eaf27c16d405fc4a4c5cf0453"
+    },
+    "F401": {
+      "path": "/private/tmp/mk61-single-fetch.SjtigV/main-G/f401/resident.bin",
+      "bytes": 240004,
+      "footer": 238640,
+      "build": "89C654E1",
+      "sha256": "e58cc8c0cf6d2cbc63e412d9040cde5937f093c81f250bc1a5f6c98ce659b501"
+    },
+    "F401_board_access": false
+  },
+  "langvm": {
+    "path": "/private/tmp/mk61-single-fetch.SjtigV/main-G/System/LANGVM.APP",
+    "sha256": "2db99db64366095d804d7c65d0003a02733bf57617a7f3a32957129bfe26dd0a",
+    "memory_bytes": 20380,
+    "limit_bytes": 20480
+  },
+  "validation": {
+    "status": "PASS",
+    "commit_snapshot": {
+      "status": "PASS",
+      "snapshot": "/tmp/mk61-confirmed-G-pq9qvhvz",
+      "language_vm_cpp_sha256": "ca3f59e9eea0a08dc96c14f5517b3cd47aee809aa1f45ddc54adcaf7d671e360",
+      "runs": [
+        {
+          "name": "G-full",
+          "exit_code": 0
+        },
+        {
+          "name": "G-flash",
+          "exit_code": 0
+        },
+        {
+          "name": "G-raw",
+          "exit_code": 0
+        },
+        {
+          "name": "G-opcode",
+          "exit_code": 0
+        }
+      ]
+    },
+    "logs": {
+      "/tmp/mk61-commit-confirmed-G-vm.log": {
+        "sha256": "ef14c0667e19440dd930407aa80850aaa1f649cb35a6a82e70cea2025f48f355",
+        "bytes": 4227
+      },
+      "/tmp/mk61-commit-confirmed-G-flash.log": {
+        "sha256": "ef40751aba029fdef3bee8cdb21680d531b36fcfe8eb546e465d5d66708f3ae6",
+        "bytes": 2340
+      },
+      "/tmp/mk61-commit-confirmed-G-span-raw.log": {
+        "sha256": "4c9ebf5dc5dbe5dabb63cef0f7208be91ebff9fbc126906e3a28ceb6452ada46",
+        "bytes": 316
+      },
+      "/tmp/mk61-commit-confirmed-G-opcode.log": {
+        "sha256": "a42fe6a720b4b9542b7ce9d91a37def1501f11efab61750ccbc7815560c5a5d9",
+        "bytes": 3200
+      },
+      "/tmp/mk61-commit-confirmed-store.log": {
+        "sha256": "e2e5ddb8cc3c60d3aa6ca567e5be4dcdc254a1cf193509eeb2fb9942020c1564",
+        "bytes": 1648
+      },
+      "/tmp/mk61-commit-confirmed-catalog.log": {
+        "sha256": "e076b64ff422a6657ca045cf9bad0dab74ef4086d28844bd08617887e01e7d6a",
+        "bytes": 417
+      },
+      "/tmp/mk61-commit-confirmed-hil-guards.log": {
+        "sha256": "45b93fdb17c594d390ab27e3d5b179ba9f7e69d8edadefbfbf322e5d1473faa5",
+        "bytes": 83
+      }
+    },
+    "full_ASan_UBSan_VM_suite": true,
+    "both_arithmetic_backends": true,
+    "raw_and_paged": true,
+    "INPUT_resume": true,
+    "opcode_profile_configurations": 32,
+    "catalog_lookup_zero_mutations": true,
+    "external_runtime_archives": false
+  },
+  "restoration": {
+    "status": "PASS",
+    "firmware": "3AB3DD45",
+    "original_files": 24,
+    "original_directories": 2,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "Mini_or_Pico_touched": false
+  },
+  "measurement_reports": {
+    "chess-flash-vm-followup-20261018.json": "af2913d8ca6d18b03d70896631a920be6347af3c5d32d063ab3a2fdb443d21f9",
+    "chess-flash-vm-followup-20261018.md": "2701916704793825035ee08f15683ff07ab29b63336c0c17f48faf35052c7f53",
+    "chess-flash-reader-fastpath-20261018.json": "e53f121eb5bdf07b3ff259245a0b1d013a5ba5fc864660097114e5678302aaf1",
+    "chess-flash-reader-fastpath-20261018.md": "ad41f6b3946b5b4982aad09c30bba5a9ce645f6b9414735bf2d23d76c779335e",
+    "chess-paged-recovery-20261018.json": "e49fe9930deb5cb9818b260a81bf1b1298d4e8bd36b6790e5f9c8702a7ced479",
+    "chess-paged-recovery-20261018.md": "6ce98f93f157d0df124bec5675445ed71e2f07201998b02ec40da22ae1f4ce3e",
+    "chess-fetch-dispatch-20261019.json": "2e0a92730d16c19f88adeef5504cf3d452fa7d44a06443928ac415bfdc9155ae",
+    "chess-control-span-20261019.json": "aea4789a3b7fa0675d228ac7663cba2b2ba841d7ab3593b15ce3a63ead50bcd4",
+    "chess-dual-pc-profile-20261019.json": "78926d33543683ae1800c92b488b2e131287a270a9453178adf1c6affd46379c",
+    "chess-span-loop-20261019.json": "b05f79d53c17640b6f462cec64d524fb07677ad1f0f116d8ede11dd0ddcf94fc",
+    "chess-single-fetch-20261019.json": "26615a7c54fba3071a0b81acd70b403311fe568bbb52b6982a8920d99097b3cc",
+    "chess-early-span-20261019.json": "70bb603aa7060e209d0e575b35a51f9ad24e7bbca80f44f5a9789e6627244fd2"
+  },
+  "excluded_J": {
+    "status": "PENDING_SEPARATE_LATENCY_CHECK",
+    "production_source_sha256": "893ad35e6e8f7d1d4a10dbda64e0978661baa6514a040746e8dfd211707a4296",
+    "report": "chess-prefix-dispatch-20261019.json",
+    "shipping_ABA_seconds": [
+      25.638194166996982,
+      25.110377999953926,
+      25.64075291651534
+    ],
+    "working_tree_preserved": true,
+    "reason": "Permission service overloaded twice; the J latency test did not start. Not included in the accepted code or performance claim."
+  },
+  "negative_experiments": "H and other variants without a positive completed return control were not adopted."
+}
