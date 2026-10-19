@@ -138,6 +138,38 @@ const char* open_arguments(const char* line) {
       terminal_core::is_space(line[4]) ? line+4 : nullptr;
 }
 
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+// Pico has room in Flash for a read-only index. Build it from the same
+// catalog, avoiding a scan through every preceding name/help string in M61.
+constexpr usize lookup_capacity() {
+  usize size=1;
+  while(size<TERMINAL_COMMAND_COUNT*2)size*=2;
+  return size;
+}
+constexpr u32 name_hash(const char* name,usize length) {
+  u32 hash=2166136261U;
+  for(usize i=0;i<length;++i)hash=(hash^(u8)name[i])*16777619U;
+  return hash;
+}
+struct LookupSlot { u16 offset;u8 length,id; };
+struct LookupIndex { LookupSlot slots[lookup_capacity()]{}; };
+#define COMMAND(name, id, desc) static_assert(sizeof(name)-1<=255,"command name exceeds lookup length");
+#include "terminal_commands.inc"
+#undef COMMAND
+constexpr LookupIndex make_lookup_index() {
+  LookupIndex index{};
+  for(usize i=0;i<TERMINAL_COMMAND_COUNT;++i) {
+    const auto command=entry(i);
+    usize length=0;while(command.name[length])++length;
+    usize slot=name_hash(command.name,length)&(lookup_capacity()-1);
+    while(index.slots[slot].length)slot=(slot+1)&(lookup_capacity()-1);
+    index.slots[slot]={(u16)(command.name-command_text.data()),(u8)length,command.id};
+  }
+  return index;
+}
+static constexpr auto lookup_index=make_lookup_index();
+#endif
+
 // Команда по первому слову строки: CMD_xxx или CMD_UNKNOWN.
 u8 lookup(const u8* line) {
 #if !defined(MK61_CORE_STANDALONE)
@@ -158,6 +190,15 @@ u8 lookup(const u8* line) {
      line[1] == (u8) conditional.name[1])
     return conditional.id;
 
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+  usize slot=name_hash((const char*)line,len)&(lookup_capacity()-1);
+  while(lookup_index.slots[slot].length) {
+    const auto& item=lookup_index.slots[slot];
+    if(item.length==len && std::memcmp(line,command_text.data()+item.offset,len)==0)
+      return item.id;
+    slot=(slot+1)&(lookup_capacity()-1);
+  }
+#else
   const char* name = command_text.data();
   for(usize index = 0; index < TERMINAL_COMMAND_COUNT; ++index) {
     if(strncmp((const char*) line, name, len) == 0 && name[len] == 0) {
@@ -168,6 +209,7 @@ u8 lookup(const u8* line) {
     while(*name++ != 0) {}
 #endif
   }
+#endif
   return CMD_UNKNOWN;
 }
 

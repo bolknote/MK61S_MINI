@@ -937,6 +937,11 @@ RunResult run(const View& v, State& s, const Services& host, uint32_t limit,
 #if defined(__GNUC__) && !defined(__clang__) && !defined(MK61_CORE_STANDALONE)
 __attribute__((optimize("no-inline-functions-called-once")))
 #endif
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+// Avoid XIP cache competition with the service loop. O2 saves 4 KiB of SRAM
+// against O3 here, retaining heap space for APPs and prepared text fonts.
+__attribute__((section(".time_critical.mk61_vm_run"),optimize("O2")))
+#endif
 RunResult run(const View& v, Continuation& s, const Bindings& data,
               const Services& host, uint32_t limit, bool resume) {
   if ((!v.bytes && !v.reader) || !data.variables || !data.stack || data.stack_capacity < v.stack ||

@@ -53,3 +53,17 @@ clang++ -std=c++17 -Wall -Wextra -Werror \
   "$root/tests/terminal_catalog_self_test.cpp" \
   "$root/code/terminal_catalog.cpp" -o "${out}_catalog_f401"
 "${out}_catalog_f401"
+
+# Exercise Pico's Flash-only index against the same independent linear oracle,
+# including collisions, token boundaries and both help-pool layouts.
+for external_help in 0 1; do
+  clang++ -std=c++17 -Wall -Wextra -Werror -fconstexpr-steps=10000000 \
+    "${sanitizer_flags[@]}" \
+    -DMK61_CORE_STANDALONE=1 -DPICO_ON_DEVICE=1 \
+    -DMK61_ENABLE_USB_SCREEN=1 -DMK61_ENABLE_RTC_ALARM_TERMINAL=1 \
+    -DMK61_TERMINAL_HELP_IS_EXTERNAL="$external_help" \
+    -I"$root/tests/mk_math_shim" -I"$root/code" \
+    "$root/tests/terminal_catalog_pico_self_test.cpp" \
+    "$root/code/terminal_catalog.cpp" -o "${out}_catalog_pico_$external_help"
+  "${out}_catalog_pico_$external_help"
+done
