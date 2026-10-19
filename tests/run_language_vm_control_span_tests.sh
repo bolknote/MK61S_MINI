@@ -4,6 +4,7 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/mk61-vm-control-span.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 flags=(-std=c++17 -O1 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-sanitize-recover=all)
+if [[ "${MK61_VM_TEST_PICO_ENTRY:-0}" == 1 ]];then flags+=(-DLANGUAGE_VM_TEST_PICO_ENTRY);fi
 for backend in 0 1; do
   for kind in HOST MK61_BUILD_LANGUAGE_VM_MODULE; do
     clang++ "${flags[@]}" -DMK61_MATH_BACKEND="$backend" -D"$kind" \

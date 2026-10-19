@@ -284,15 +284,25 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 }
 #endif
 #if MK61_VM_INTEGER_SPAN
+#if (defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE) || defined(LANGUAGE_VM_TEST_PICO_ENTRY)
+#define MK61_PICO_SPECIALIZED_SPAN 1
+#else
+#define MK61_PICO_SPECIALIZED_SPAN 0
+#endif
 // Execute the existing stream while its values are int32. PC and a stack
 // cursor stay local; every write still preserves inactive cells and aliases.
 // A rejected operation is
 // left untouched for the ordinary evaluator. Its first step is already polled,
 // counted and traced. No span crosses the next service/limit/call boundary.
-#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
-__attribute__((section(".time_critical.mk61_integer_span")))
+#if MK61_PICO_SPECIALIZED_SPAN
+// Select storage once per span. The raw loop stays in SRAM; paged reads use
+// the same guarded handlers in Flash. Trace builds retain per-op reads.
+template<bool Raw>
+__attribute__((always_inline)) inline uint8_t integer_span_loop
+#else
+__attribute__((noinline)) uint8_t integer_span
 #endif
-__attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
+    (const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN) || defined(LANGUAGE_VM_TEST_INTEGER_BLOCK) || defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)
   [[maybe_unused]] const Op first_hint=Op(v.byte(instruction));
@@ -309,7 +319,11 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
   Value* top=bottom+s.sp;
   uint32_t remaining=budget;
 #if !defined(LANGUAGE_VM_TRACE)
+#if MK61_PICO_SPECIALIZED_SPAN
+  const uint8_t* const raw=Raw?v.bytes:nullptr;
+#else
   const uint8_t* const raw=v.reader?nullptr:v.bytes;
+#endif
   const uintptr_t origin=reinterpret_cast<uintptr_t>(raw);
 #else
   constexpr uintptr_t origin=0;
@@ -327,9 +341,17 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     // A diagnostic callback may perform another reader operation.
     const uint8_t* operands=nullptr;
 #else
+#if MK61_PICO_SPECIALIZED_SPAN
+    const uint8_t* operands=Raw?reinterpret_cast<const uint8_t*>(pc):nullptr;
+#else
     const uint8_t* operands=raw?reinterpret_cast<const uint8_t*>(pc):nullptr;
 #endif
+#endif
+#if !defined(LANGUAGE_VM_TRACE) && MK61_PICO_SPECIALIZED_SPAN
+    if constexpr(!Raw) {
+#else
     if(!operands) {
+#endif
       const uint16_t available=uint16_t(end-pc<sizeof(copied)?end-pc:sizeof(copied));
 #if !defined(LANGUAGE_VM_TRACE)
       if(v.reader)operands=v.reader->cached(uint32_t(pc),available);
@@ -354,14 +376,22 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
 #if defined(LANGUAGE_VM_TRACE)
             v.byte(following)
 #else
+#if MK61_PICO_SPECIALIZED_SPAN
+            Raw?*reinterpret_cast<const uint8_t*>(following):v.byte(uint32_t(following))
+#else
             raw?*reinterpret_cast<const uint8_t*>(following):v.byte(uint32_t(following))
+#endif
 #endif
             );
       } while(next_op==Op::SOURCE_POS);
       if(next_op==Op::HALT)goto done;
       pc=following;
 #if !defined(LANGUAGE_VM_TRACE)
+#if MK61_PICO_SPECIALIZED_SPAN
+      if constexpr(Raw) {
+#else
       if(raw) {
+#endif
         // No callback or write occurs after lookahead. Reuse its opcode and
         // raw operand address instead of fetching the same instruction again.
         operands=reinterpret_cast<const uint8_t*>(pc);op=next_op;
@@ -508,6 +538,25 @@ done:
 #undef SPAN_TRACE
   return count;
 }
+#if MK61_PICO_SPECIALIZED_SPAN
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+__attribute__((section(".time_critical.mk61_integer_span")))
+#endif
+__attribute__((noinline)) uint8_t integer_span_raw(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
+  return integer_span_loop<true>(v,s,data,steps,instruction,limit);
+}
+__attribute__((noinline)) uint8_t integer_span_paged(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
+  return integer_span_loop<false>(v,s,data,steps,instruction,limit);
+}
+__attribute__((always_inline)) inline uint8_t integer_span(const View& v, Continuation& s,
+    const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
+  return !v.reader && v.bytes ? integer_span_raw(v,s,data,steps,instruction,limit)
+                            : integer_span_paged(v,s,data,steps,instruction,limit);
+}
+#endif
+#undef MK61_PICO_SPECIALIZED_SPAN
 #endif
 }  // namespace
 #if defined(LANGUAGE_VM_TRACE)

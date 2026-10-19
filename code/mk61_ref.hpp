@@ -264,6 +264,10 @@ namespace detail {
 // Physical R/stack words share this layout from their least significant digit.
 // Noncanonical words must use the caller's own formatter/parser: IF rejects
 // some strings that the historical general reference reader parses partially.
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+// Share one SRAM decoder across Pico's VM and terminal reference readers.
+__attribute__((noinline,section(".time_critical.mk61_read_decimal_word"),optimize("O2")))
+#endif
 inline bool try_read_decimal_word(const u8* word, double& out) {
 #if DBL_MANT_DIG != 53 || DBL_MAX_EXP != 1024
   (void) word;

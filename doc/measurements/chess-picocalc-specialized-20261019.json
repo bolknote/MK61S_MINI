@@ -1,0 +1,768 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-19T20:10:14.019392+00:00",
+  "profile": "picocalc-pico-h",
+  "version": "0.8.6",
+  "build": "686B6EC5",
+  "uid": "E6657CD423721C35",
+  "uf2_sha256": "c27b336df0608acd905562dcdacebf00a5599968329184eba98fe3a0adf5b92d",
+  "source_base_commit": "6aaad037c703c4d7b46e899c34a9367605590f2f",
+  "source_sha256": "13757c90dfec3080f663c180c26247258a565bc1d21c5f93a0b6ac041a175e98",
+  "source_files": {
+    "code/language_vm.cpp": "e7531e40561d5df5a5d137f358b752e99298c658d2d6e0f45a449cceddf20559",
+    "tests/run_language_vm_control_span_tests.sh": "888a44045ce630dd8f0db0669fb778f2f277f04bfeee765096c3fdf34696afc4",
+    "ports/picocalc/version.hpp": "50a5920a19fbf9344b87b3fb108e3e2fa9fc93807668434fc84ef0a0075b75ee",
+    "ports/picocalc/CMakeLists.txt": "afd5bb44c1afa6ec1a8a08f0e6e3ee600d7ed3dabe8ec8d5ce67e6f09c16aebc",
+    "tools/build_picocalc.py": "94107cabe13af727b6b6159451f234d85d21157f0f7ef84b983dc8ba63de9b0f",
+    "code/mk61_ref.hpp": "3547fa1da1d12f13c39a5ef7bc1fb94e08c537e75645a8d3f877ea2b5d3caeab",
+    "ports/picocalc/README.md": "d2cc0b917b386d5c0e46d35f3684e4cce80d69a3da3a06f578a9666a9bc09c40"
+  },
+  "source_patch_sha256": "93edb7d84492666ee7782118db1f118e647a66a90db50b727510d055ace34bf3",
+  "cpu_hz": 125000000,
+  "arithmetic_runtime": "owned-m0",
+  "profiling": false,
+  "first_after_flash_seconds": 28.321891415980645,
+  "repeat_seconds": [
+    22.08250949997455,
+    21.911066584056243
+  ],
+  "repeat_median_seconds": 21.996788042015396,
+  "control_build": "CF0C90F4",
+  "control_first_seconds": 29.571730667026713,
+  "control_repeat_seconds": 23.384762458037585,
+  "installed_control_seconds": [
+    24.196469333954155,
+    23.37293283303734
+  ],
+  "repeat_speedup": 1.0630989585102635,
+  "repeat_time_reduction_percent": 5.9353795810961,
+  "scenario": {
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "screen_mode": "completion",
+    "timing_start": "OK on Black selection",
+    "timing_end": "CRC-checked complete eight-rank e2-e3 board",
+    "same_initial_position_each_run": true
+  },
+  "move": "e2e3",
+  "positions_searched_per_run": 420,
+  "full_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "game_files": {
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "autoexec.m61": {
+      "bytes": 697,
+      "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+    },
+    "board.tbi": {
+      "bytes": 2570,
+      "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "manual.md": {
+      "bytes": 818,
+      "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    }
+  },
+  "game_files_unchanged": true,
+  "runs": [
+    {
+      "repeat": 0,
+      "temperature": "session-first",
+      "menu_seconds": 1.708011707989499,
+      "seconds": 28.321891415980645,
+      "nodes": 420,
+      "nodes_per_second": 14.829518051291403,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 2.1629296250175685
+        },
+        {
+          "nodes": 21,
+          "seconds": 7.031546875019558
+        },
+        {
+          "nodes": 42,
+          "seconds": 8.041623541037552
+        },
+        {
+          "nodes": 63,
+          "seconds": 9.095992333022878
+        },
+        {
+          "nodes": 84,
+          "seconds": 10.14788195793517
+        },
+        {
+          "nodes": 105,
+          "seconds": 11.122614915948361
+        },
+        {
+          "nodes": 126,
+          "seconds": 12.17584512499161
+        },
+        {
+          "nodes": 147,
+          "seconds": 13.228698665974662
+        },
+        {
+          "nodes": 168,
+          "seconds": 14.23990683304146
+        },
+        {
+          "nodes": 189,
+          "seconds": 15.294648207956925
+        },
+        {
+          "nodes": 210,
+          "seconds": 16.349640666041523
+        },
+        {
+          "nodes": 231,
+          "seconds": 17.48815279104747
+        },
+        {
+          "nodes": 252,
+          "seconds": 18.66460845794063
+        },
+        {
+          "nodes": 273,
+          "seconds": 19.885016832966357
+        },
+        {
+          "nodes": 294,
+          "seconds": 21.063581499969587
+        },
+        {
+          "nodes": 315,
+          "seconds": 22.083031874964945
+        },
+        {
+          "nodes": 336,
+          "seconds": 23.099602416041307
+        },
+        {
+          "nodes": 357,
+          "seconds": 24.157092374982312
+        },
+        {
+          "nodes": 378,
+          "seconds": 25.17644491593819
+        },
+        {
+          "nodes": 399,
+          "seconds": 26.197941040969454
+        },
+        {
+          "nodes": 420,
+          "seconds": 27.221275000018068
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 28.223607624997385,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "b549d48a4cdc1abd64a6bc6a2828ae5571c1dde49bab590f8eab19bdb1671eeb"
+    },
+    {
+      "repeat": 1,
+      "temperature": "repeat",
+      "menu_seconds": 0.8137838750844821,
+      "seconds": 22.08250949997455,
+      "nodes": 420,
+      "nodes_per_second": 19.019577462447558,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 0.042314124992117286
+        },
+        {
+          "nodes": 21,
+          "seconds": 1.6291249999776483
+        },
+        {
+          "nodes": 42,
+          "seconds": 2.6397505840286613
+        },
+        {
+          "nodes": 63,
+          "seconds": 3.7356771250488237
+        },
+        {
+          "nodes": 84,
+          "seconds": 4.750297417049296
+        },
+        {
+          "nodes": 105,
+          "seconds": 5.761242541950196
+        },
+        {
+          "nodes": 126,
+          "seconds": 6.774263791972771
+        },
+        {
+          "nodes": 147,
+          "seconds": 7.829798041959293
+        },
+        {
+          "nodes": 168,
+          "seconds": 8.884715749998577
+        },
+        {
+          "nodes": 189,
+          "seconds": 9.900610166951083
+        },
+        {
+          "nodes": 210,
+          "seconds": 10.957008042023517
+        },
+        {
+          "nodes": 231,
+          "seconds": 12.133629083982669
+        },
+        {
+          "nodes": 252,
+          "seconds": 13.31339762499556
+        },
+        {
+          "nodes": 273,
+          "seconds": 14.4927621249808
+        },
+        {
+          "nodes": 294,
+          "seconds": 15.709733000025153
+        },
+        {
+          "nodes": 315,
+          "seconds": 16.726856791996397
+        },
+        {
+          "nodes": 336,
+          "seconds": 17.744337667012587
+        },
+        {
+          "nodes": 357,
+          "seconds": 18.80026866705157
+        },
+        {
+          "nodes": 378,
+          "seconds": 19.860019834013656
+        },
+        {
+          "nodes": 399,
+          "seconds": 20.83775266702287
+        },
+        {
+          "nodes": 420,
+          "seconds": 21.89828079205472
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 21.98293154197745,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "a0e7243297ee4397d0fc7d681bfe8ca94cc498e8a346d3f2aed8cc841c702a0b"
+    },
+    {
+      "repeat": 2,
+      "temperature": "repeat",
+      "menu_seconds": 0.7507155830971897,
+      "seconds": 21.911066584056243,
+      "nodes": 420,
+      "nodes_per_second": 19.168395951368986,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 0.08129204204306006
+        },
+        {
+          "nodes": 21,
+          "seconds": 1.460728459060192
+        },
+        {
+          "nodes": 42,
+          "seconds": 2.4680832920130342
+        },
+        {
+          "nodes": 63,
+          "seconds": 3.560985584044829
+        },
+        {
+          "nodes": 84,
+          "seconds": 4.574652667040937
+        },
+        {
+          "nodes": 105,
+          "seconds": 5.584237250033766
+        },
+        {
+          "nodes": 126,
+          "seconds": 6.595590083976276
+        },
+        {
+          "nodes": 147,
+          "seconds": 7.650409291964024
+        },
+        {
+          "nodes": 168,
+          "seconds": 8.706044667051174
+        },
+        {
+          "nodes": 189,
+          "seconds": 9.723467417061329
+        },
+        {
+          "nodes": 210,
+          "seconds": 10.776681917021051
+        },
+        {
+          "nodes": 231,
+          "seconds": 11.952241083956324
+        },
+        {
+          "nodes": 252,
+          "seconds": 13.131792708998546
+        },
+        {
+          "nodes": 273,
+          "seconds": 14.314391375053674
+        },
+        {
+          "nodes": 294,
+          "seconds": 15.496051584021188
+        },
+        {
+          "nodes": 315,
+          "seconds": 16.511799874948338
+        },
+        {
+          "nodes": 336,
+          "seconds": 17.570048875059
+        },
+        {
+          "nodes": 357,
+          "seconds": 18.587199083995074
+        },
+        {
+          "nodes": 378,
+          "seconds": 19.64771508402191
+        },
+        {
+          "nodes": 399,
+          "seconds": 20.669599959044717
+        },
+        {
+          "nodes": 420,
+          "seconds": 21.6870547500439
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 21.81324329203926,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "a0e7243297ee4397d0fc7d681bfe8ca94cc498e8a346d3f2aed8cc841c702a0b"
+    }
+  ],
+  "module_output_verification": {
+    "passed": true,
+    "reports_after_init_menu_per_run": 7721,
+    "sha256": "aedac9a4b459ea891ee4d706fa6c58e0bbc3d5e206acdaaa087d4cb4bf10db2c",
+    "variants": {
+      "installed-control": {
+        "passed": true,
+        "runs": 2
+      },
+      "sampling": {
+        "passed": true,
+        "runs": 2
+      },
+      "register": {
+        "passed": true,
+        "runs": 3
+      },
+      "raw": {
+        "passed": true,
+        "runs": 3
+      },
+      "combined": {
+        "passed": true,
+        "runs": 3
+      },
+      "fold": {
+        "passed": true,
+        "runs": 2
+      },
+      "word": {
+        "passed": true,
+        "runs": 3
+      },
+      "control": {
+        "passed": true,
+        "runs": 2
+      },
+      "release-chess": {
+        "passed": true,
+        "runs": 3
+      }
+    },
+    "note": "Two initial/menu reports have timing-dependent step counts; remaining reports include deliberate cancellation after the completed move."
+  },
+  "diagnosis": {
+    "sampling_build": "B0CADA28",
+    "samples": 28462,
+    "dropped": 340,
+    "method": "64-byte PC buckets apportioned by symbol overlap, approximate estimates",
+    "top_functions": [
+      {
+        "function": "language_vm::(anonymous namespace)::integer_span(language_vm::View const&, language_vm::Continuation&, language_vm::Bindings const&, unsigned long&, unsigned long&, unsigned long)",
+        "estimated_samples": 5733.9375,
+        "estimated_percent": 20.145940200969715
+      },
+      {
+        "function": "language_vm::run(language_vm::View const&, language_vm::Continuation&, language_vm::Bindings const&, language_vm::Services const&, unsigned long, bool)",
+        "estimated_samples": 1957.5625,
+        "estimated_percent": 6.8778107652308345
+      },
+      {
+        "function": "<outside sized symbols>",
+        "estimated_samples": 1260.75,
+        "estimated_percent": 4.429590330967606
+      },
+      {
+        "function": "IK130X_Tick_All(unsigned long, unsigned int, unsigned long)",
+        "estimated_samples": 1040.125,
+        "estimated_percent": 3.654433982151641
+      },
+      {
+        "function": "_vsnprintf",
+        "estimated_samples": 863.0,
+        "estimated_percent": 3.0321129927622796
+      },
+      {
+        "function": "m61_text::service()",
+        "estimated_samples": 691.3125,
+        "estimated_percent": 2.428896423301244
+      },
+      {
+        "function": "picocalc::Services::vm_services()::{lambda(void*, bool, unsigned char, double&)#1}::_FUN(void*, bool, unsigned char, double&)",
+        "estimated_samples": 647.25,
+        "estimated_percent": 2.27408474457171
+      },
+      {
+        "function": "terminal_script::(anonymous namespace)::read_reference(unsigned char, double&)",
+        "estimated_samples": 604.0,
+        "estimated_percent": 2.1221277492797412
+      },
+      {
+        "function": "tud_task_ext",
+        "estimated_samples": 583.0,
+        "estimated_percent": 2.0483451619703463
+      },
+      {
+        "function": "picocalc::Services::run_document(language_vm::View const*)",
+        "estimated_samples": 581.0,
+        "estimated_percent": 2.041318248893261
+      },
+      {
+        "function": "main::{lambda(void*, unsigned int, unsigned int, unsigned char*, unsigned int)#1}::_FUN(void*, unsigned int, unsigned int, unsigned char*, unsigned int)",
+        "estimated_samples": 503.0,
+        "estimated_percent": 1.767268638886937
+      },
+      {
+        "function": "main",
+        "estimated_samples": 498.0,
+        "estimated_percent": 1.7497013561942238
+      },
+      {
+        "function": "(anonymous namespace)::service_pump(void*, unsigned char&)",
+        "estimated_samples": 489.75,
+        "estimated_percent": 1.7207153397512474
+      },
+      {
+        "function": "picocalc::UsbScreen::tick(unsigned long, bool)",
+        "estimated_samples": 481.3125,
+        "estimated_percent": 1.691070550207294
+      },
+      {
+        "function": "picocalc::io_worker::(anonymous namespace)::uart_flush()",
+        "estimated_samples": 376.875,
+        "estimated_percent": 1.3241339329632493
+      }
+    ],
+    "scopes": "prof stop\nPROFILE=STOPPED TIMER=US ELAPSED_US=28462656 (inclusive)\ncore     calls=21 total_us=791954 max_us=38802 mean_us=37712\nusb      calls=29345 total_us=2796012 max_us=12500 mean_us=95\ndisplay  calls=618 total_us=241738 max_us=17682 mean_us=391\nstorage  calls=18 total_us=217971 max_us=28844 mean_us=12109\nlanguage calls=7723 total_us=18297764 max_us=2274683 mean_us=2369\napp      calls=0 total_us=0 max_us=0 mean_us=0\npump     calls=16293 total_us=2655072 max_us=19964 mean_us=162\nlcd      calls=31 total_us=3005 max_us=102 mean_us=96\nkeyboard calls=2139 total_us=28970 max_us=38 mean_us=13\nm61      calls=13052 total_us=23960124 max_us=2294031 mean_us=1835\nmk61> ",
+    "note": "Separate diagnostic run includes menu and nested inclusive scopes. Approximate 64-byte PC buckets, not final performance timings."
+  },
+  "variants": {
+    "register": {
+      "build": "1E4E92C1",
+      "seconds": [
+        29.583669499959797,
+        22.953994292067364,
+        22.76395137491636
+      ],
+      "static_ram_bytes": 195184
+    },
+    "raw": {
+      "build": "3F1CC7AA",
+      "seconds": [
+        28.95714058307931,
+        22.346717749955133,
+        22.182741124997847
+      ],
+      "static_ram_bytes": 194320
+    },
+    "combined": {
+      "build": "46DE0BAD",
+      "seconds": [
+        29.38108291698154,
+        22.797939041047357,
+        22.617022416903637
+      ],
+      "static_ram_bytes": 194448
+    },
+    "fold": {
+      "build": "3DC6916D",
+      "seconds": [
+        29.256538624991663,
+        22.611139583052136
+      ],
+      "static_ram_bytes": 194448
+    },
+    "word": {
+      "build": "89A59813",
+      "seconds": [
+        28.72224387503229,
+        22.038058583973907,
+        21.887615166953765
+      ],
+      "static_ram_bytes": 194640
+    }
+  },
+  "selection": "Specialize the shared integer-span handlers for raw/paged storage on Pico; keep raw in SRAM and paged in Flash. Share one unchanged decimal-word decoder in SRAM at O2. Reject all numeric-cache variants after measured interaction with the faster VM.",
+  "flash_bytes": 692208,
+  "main_static_ram_bytes": 194640,
+  "data_bss_bytes": 166360,
+  "main_ram_region_bytes": 229376,
+  "main_static_ram_change_bytes": -416,
+  "initial_heap_region_bytes": 34736,
+  "sram_placement": {
+    "decimal_word": {
+      "address": "0x200005d0",
+      "text_bytes": 284,
+      "name": "mk61_ref::detail::try_read_decimal_word(unsigned char const*, double&)"
+    },
+    "raw": {
+      "address": "0x200006ec",
+      "text_bytes": 2064,
+      "name": "language_vm::(anonymous namespace)::integer_span_raw(language_vm::View const&, language_vm::Continuation&, language_vm::Bindings const&, unsigned long&, unsigned long&, unsigned long)"
+    },
+    "paged": {
+      "address": "0x10067664",
+      "text_bytes": 2808,
+      "name": "language_vm::(anonymous namespace)::integer_span_paged(language_vm::View const&, language_vm::Continuation&, language_vm::Bindings const&, unsigned long&, unsigned long&, unsigned long)"
+    },
+    "run": {
+      "address": "0x20000efc",
+      "text_bytes": 15772,
+      "name": "language_vm::run(language_vm::View const&, language_vm::Continuation&, language_vm::Bindings const&, language_vm::Services const&, unsigned long, bool)"
+    }
+  },
+  "control_span_comparisons": 425760,
+  "numeric_comparisons_per_backend": 8895936,
+  "main_stack_reserved_bytes": 32768,
+  "core1_stack_reserved_bytes": 2048,
+  "checks": {
+    "native": {
+      "passed": true,
+      "cases": [
+        "idle calculator streams two complete native frames within five seconds",
+        "320x320 APP geometry, borrowed 12800-byte bitmap and every physical framebuffer pixel matched an independent oracle",
+        "native proportional text below row 64 and exact restoration after fullscreen graphics",
+        "old ABI 6 M0 APP still receives 192x64 and is displayed centred pixel-for-pixel",
+        "BASIC GW/GH are 320 and PSET reaches pixel 319,319",
+        "M61 native glyph rendering and 320x240 Markdown viewport with working scroll"
+      ],
+      "report": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-hotpath4-20261019/release-native/result.json"
+    },
+    "io": {
+      "passed": true,
+      "cases": [],
+      "report": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-hotpath4-20261019/release-io/result.json"
+    },
+    "cache": {
+      "passed": true,
+      "cases": [
+        "Second execution uses the immutable RAM image without compilation",
+        "After a normal MCU reset the verified SD image runs with zero compiles and zero cache writes",
+        "A same-length source edit invalidates RAM and SD bytecode and executes the new result"
+      ],
+      "report": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-hotpath4-20261019/release-cache/result.json"
+    },
+    "power": {
+      "passed": true,
+      "cases": [
+        "CRC-framed RTC read/set; automatic sync preserves an already configured RTC and X=42",
+        "framed PicoCalc USB Screen activation, advertised clock capability and atomic keyframe",
+        "three real sleep/wake cycles: PLL_SYS off, USB alive at 48 MHz, full 125 MHz restoration, RAM/backlight/keypad preserved",
+        "RTC continuity from XOSC through repeated PLL changes"
+      ],
+      "report": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-hotpath4-20261019/release-power/result.json"
+    }
+  },
+  "apps": {
+    "passed": true,
+    "directory": "/MK61S-PicoCalc-0.8",
+    "cases": [
+      "HELLO.APP",
+      "HELLO_CPP.APP",
+      "HELLO_RS.APP",
+      "SERVICES.APP",
+      "WBMP.APP",
+      "ELIZA.APP",
+      "SHEET.APP",
+      "BUDGET.mks",
+      "CYCLE.mks"
+    ],
+    "files": {
+      "HELLO.APP": "a61d923580afddd549cc77122365fb35d55546ca001a29aeed76213af4863813",
+      "HELLO_CPP.APP": "c7573de5f5822a8badb3bafcf33d55d9a7eb09d5ba3b626660af1b61b8b2a29d",
+      "HELLO_RS.APP": "cdc6f3469e43368a6299708b894325bf2a917b84149287c25878f802098d59de",
+      "SERVICES.APP": "217535e75d47aa00f46eb6b2d5b91cdb0a7ae5abb10d89044de71e1668767e74",
+      "ELIZA.APP": "8ca39b331bdb0134c45621e183637567d55b56f23b50d30a6eb835fc56378aae",
+      "SHEET.APP": "c173714aa6278f95ac99e14efdd2af533c924d4be981bfdcf8b0ecbd864f5e51",
+      "WBMP.APP": "ecf39dbd1b23dbf335c371b320830b1bf428e136e06321296b8baff654c49428",
+      "BUDGET.mks": "5eec63dc5597268cde913aceaf753e8650298b46dadc989870a1bfb920379e83",
+      "CYCLE.mks": "e8a177281e7cf0ef63f8ae693c2c998fe6a1fd2362c320d3c93082ddb771e4ae"
+    }
+  },
+  "host_asan_ubsan": "PASS: full Pico suite; 4 x 141278 scalar-oracle int-span comparisons, 425760 raw/paged control comparisons, 8895936 numeric-reader and 806200 production IF cases per arithmetic backend.",
+  "stm32": {
+    "f401": "PASS: frozen final source, original stack/flash/RAM gates",
+    "f411": "PASS: frozen final source, original stack/flash/RAM gates",
+    "langvm_memory_bytes": 20412,
+    "langvm_app_identical_to_0_8_5": true,
+    "langvm_runtime_gate": "PASS",
+    "hardware_flashed": false
+  },
+  "calculator_state_restored": true,
+  "raw_chess_report": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-hotpath4-20261019/release-chess/report.json",
+  "limits": [
+    "Same first move in each run; not a complete game or broad position benchmark.",
+    "First after flash does not imply empty SD cache: persistent game caches retained.",
+    "Separate diagnostic sampling is approximate and includes menu time.",
+    "Power checks used USB; no batteries available.",
+    "Concurrent uncommitted math changes excluded from frozen source."
+  ]
+}
