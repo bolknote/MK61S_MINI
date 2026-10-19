@@ -17,6 +17,7 @@
 #include "terminal_command_ids.hpp"
 #include "version.hpp"
 #include "io_worker.hpp"
+#include "console.hpp"
 #include "diagnostics.hpp"
 #include "firmware.hpp"
 #include "language_cache.hpp"
@@ -138,6 +139,8 @@ void report(unsigned math_failures) {
     std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
         io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
         picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
+    std::printf("UART_WAIT_US=%lu UART_FLUSH_US=%lu UART_FLUSHES=%lu\n",
+        (unsigned long)io.uart_wait_us,(unsigned long)io.uart_flush_us,(unsigned long)io.uart_flushes);
     std::printf("SD=%s SECTORS=%lu USB_DISK=%u FS_ERROR=[%s]\n", picocalc::files::ready() ? "OK" : "WAIT",
         (unsigned long)picocalc::sd::sectors(), picocalc::files::usb_active(), picocalc::files::error());
     const auto& settings = ui.settings();
@@ -275,7 +278,7 @@ int main() {
     picocalc::clock::restore_alarms(settings.alarm_epoch,settings.alarm_flags);
     services.set_pump(service_pump, nullptr);
     terminal.init({nullptr,
-        [](void*,const char* text,unsigned n) { std::printf("%.*s",(int)n,text); },
+        [](void*,const char* text,unsigned n) { picocalc::console::write(text,n); },
         [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(m61_text::active() && m61_text::display_owned()); },
         [](void*,u8 id,const char* args) {
             if(id==CMD_IDENTITY) {

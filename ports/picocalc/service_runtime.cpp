@@ -16,6 +16,7 @@
 #include "wbmp.hpp"
 #include "explorer_autoexec.hpp"
 #include "diagnostics.hpp"
+#include "console.hpp"
 #include "language_resources.hpp"
 #include "language_cache.hpp"
 #include <cstdio>
@@ -136,7 +137,7 @@ void Services::put(char ch) {
 }
 void Services::append(const char* text, unsigned length) {
     for(unsigned i = 0; i < length; ++i) put(text[i]);
-    if(serial_output_ && length) std::printf("%.*s", (int)length, text);
+    if(serial_output_ && length) console::write(text,length);
 }
 bool Services::service() {
     if(stopped_) return false;
@@ -386,7 +387,11 @@ void Services::run_document(const language_vm::View* prepared) {
     running_ = false;
     std::snprintf(status_, sizeof(status_), "%s  line %lu  %lu steps", language_vm::error_name(last_error_), (unsigned long)line, (unsigned long)steps);
     if(!external_run_) { append("\n", 1); append(status_, (unsigned)std::strlen(status_)); append("\n", 1); }
-    std::printf("VM_RESULT=%s LINE=%lu STEPS=%lu\n", language_vm::error_name(last_error_), (unsigned long)line, (unsigned long)steps);
+    char result_line[96];
+    const int result_bytes=std::snprintf(result_line,sizeof(result_line),"VM_RESULT=%s LINE=%lu STEPS=%lu\n",
+        language_vm::error_name(last_error_),(unsigned long)line,(unsigned long)steps);
+    if(result_bytes>0) console::write(result_line,
+        (unsigned)result_bytes<sizeof(result_line)?(unsigned)result_bytes:sizeof(result_line)-1);
     serial_output_ = false;
 }
 void Services::restore_script_editor() {

@@ -228,6 +228,15 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
     text(10, 280, status, 12);
     text(10, 301, ui.footer(), 12);
 }
+void Screen::native_bitmap(const u8* frame) {
+    const bool published=frame==script::native_frame();
+    const u32 revision=script::frame_revision();
+    // The published canvas changes only through the script/display API.
+    // Preserve the already transposed LCD buffer between BASIC parts.
+    if(published && native_valid_ && revision==native_revision_) return;
+    bitmap(frame,WIDTH,HEIGHT);
+    native_revision_=revision;native_valid_=published;
+}
 void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, const Services* services) {
     diagnostics::Scope measure(diagnostics::Point::DISPLAY);
     static const Ui default_ui;
@@ -236,10 +245,11 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
     const bool service_active=services && services->active();
     const u8* graphics=service_active?services->graphics():nullptr;
     const u8* native=graphics?services->native_graphics():nullptr;
-    if(native && !services->graphical_document()) { bitmap(native,320,320);return; }
+    if(native && !services->graphical_document()) { native_bitmap(native);return; }
     if(!service_active && ui->page()==Page::CALCULATOR && m61_text::display_owned()) {
-        if(const auto frame=script::native_frame()) { bitmap(frame,320,320);return; }
+        if(const auto frame=script::native_frame()) { native_bitmap(frame);return; }
     }
+    native_valid_=false;
     std::memset(pixels_, 0, sizeof(pixels_));
     char heading[64];
     if(services && services->active()) services->heading(heading);

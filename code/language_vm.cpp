@@ -289,6 +289,9 @@ __attribute__((noinline)) uint8_t compiled_block(const View& v, Continuation& s,
 // A rejected operation is
 // left untouched for the ordinary evaluator. Its first step is already polled,
 // counted and traced. No span crosses the next service/limit/call boundary.
+#if defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE
+__attribute__((section(".time_critical.mk61_integer_span")))
+#endif
 __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     const Bindings& data, uint32_t& steps, uint32_t& instruction, uint32_t limit) {
 #if defined(LANGUAGE_VM_TEST_INTEGER_SPAN) || defined(LANGUAGE_VM_TEST_INTEGER_BLOCK) || defined(LANGUAGE_VM_TEST_COMPARE_BLOCK)

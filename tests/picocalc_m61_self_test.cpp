@@ -216,6 +216,16 @@ void picocalc_m61_test() {
     for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
       assert(retained.pixel(x,y)==bool(noise[y/8*320+x]&(1U<<(y%8))));
   }
+  // A menu replaces the LCD buffer without publishing another canvas.
+  // Returning to the same generation must restore every native pixel.
+  const u32 generation=script::frame_revision();
+  assert(display_ui.input('\t',calc) && display_ui.page()==Page::MAIN);
+  retained.render(calc.snapshot(),true,&display_ui,&services);
+  display_ui.calculator_page();
+  assert(script::frame_revision()==generation);
+  retained.render(calc.snapshot(),true,&display_ui,&services);
+  for(unsigned y=0;y<320;++y) for(unsigned x=0;x<320;++x)
+    assert(retained.pixel(x,y)==bool(noise[y/8*320+x]&(1U<<(y%8))));
   assert(script::input(0x1B) && !script::font_active());
 
   reset(calc, services);

@@ -186,6 +186,12 @@ def search(p, font, args, index, destination):
                 (destination / 'run.json').write_text(json.dumps(result, indent=2) + '\n')
                 print(f'Run {index + 1}: e2-e3, 420 nodes, {elapsed:.3f}s PASS', flush=True)
                 stop(p)
+                # Include the complete result stream through the final stop,
+                # so asynchronous output cannot silently lose module reports.
+                trace=re.findall(rb'(?m)^VM_RESULT=[^\r\n]*',bytes(p.text[serial_start:]))
+                result['module_result_count']=len(trace)
+                result['module_result_trace_sha256']=hashlib.sha256(b'\n'.join(trace)).hexdigest()
+                (destination / 'run.json').write_text(json.dumps(result, indent=2) + '\n')
                 return result
         cursor = len(p.frames)
         if time.monotonic() - last_notice >= 25:

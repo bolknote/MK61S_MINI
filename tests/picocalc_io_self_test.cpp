@@ -1,10 +1,42 @@
 #include "io_queue.hpp"
+#include "console.hpp"
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <thread>
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
+
+namespace {
+void console_text_test() {
+#if defined(_WIN32)
+    const auto descriptor=&_fileno;const auto duplicate=&_dup;
+    const auto redirect=&_dup2;const auto close_fd=&_close;
+#else
+    const auto descriptor=&fileno;const auto duplicate=&dup;
+    const auto redirect=&dup2;const auto close_fd=&close;
+#endif
+    std::fflush(stdout);
+    auto* capture=std::tmpfile();assert(capture);
+    const int output=descriptor(stdout),saved=duplicate(output);assert(saved>=0);
+    assert(redirect(descriptor(capture),output)>=0);
+    const char text[]={'A',0,'B'};
+    picocalc::console::write(nullptr,0);
+    picocalc::console::write(text,sizeof(text));
+    picocalc::console::write("%d\n",3);
+    std::fflush(stdout);
+    assert(redirect(saved,output)>=0);close_fd(saved);
+    std::rewind(capture);char bytes[8]{};
+    const auto count=std::fread(bytes,1,sizeof(bytes),capture);std::fclose(capture);
+    assert(count==4 && std::memcmp(bytes,"A%d\n",4)==0);
+}
+}
 
 void picocalc_io_test() {
+    console_text_test();
     picocalc::IoQueue<uint32_t,4> small;
     uint32_t value=17;
     assert(!small.pop(value) && value==17 && small.empty());

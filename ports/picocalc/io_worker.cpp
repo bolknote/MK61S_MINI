@@ -22,6 +22,7 @@ struct I2cJob {
 std::atomic<bool> ready{false},frame{false};
 std::atomic<bool> uart_active{false};
 std::atomic<u32> transactions{0},uart_bytes{0};
+std::atomic<u32> uart_wait_us{0},uart_flush_us{0},uart_flushes{0};
 void* frame_context=nullptr;
 void (*frame_transfer)(void*)=nullptr;
 IoQueue<char,1024> uart_queue;
@@ -39,15 +40,22 @@ void drain_uart() {
 }
 void uart_output(const char* bytes,int count) {
     for(int i=0;i<count;++i) {
-        while(!uart_queue.push(bytes[i])) { __sev();tight_loop_contents(); }
+        if(!uart_queue.push(bytes[i])) {
+            const u64 start=time_us_64();
+            while(!uart_queue.push(bytes[i])) { __sev();tight_loop_contents(); }
+            uart_wait_us.fetch_add((u32)(time_us_64()-start),std::memory_order_relaxed);
+        }
         __sev();
     }
 }
 void uart_flush() {
+    const u64 start=time_us_64();
     while(!uart_queue.empty() || uart_active.load(std::memory_order_acquire)) { __sev();tight_loop_contents(); }
 #if LIB_PICO_STDIO_UART
     uart_tx_wait_blocking(uart_default);
 #endif
+    uart_flush_us.fetch_add((u32)(time_us_64()-start),std::memory_order_relaxed);
+    uart_flushes.fetch_add(1,std::memory_order_relaxed);
 }
 void worker() {
     flash_safe_execute_core_init();
@@ -119,6 +127,7 @@ void drain() {
 }
 Statistics statistics() {
     return {ready.load(std::memory_order_acquire),transactions.load(std::memory_order_relaxed),
-        uart_bytes.load(std::memory_order_relaxed)};
+        uart_bytes.load(std::memory_order_relaxed),uart_wait_us.load(std::memory_order_relaxed),
+        uart_flush_us.load(std::memory_order_relaxed),uart_flushes.load(std::memory_order_relaxed)};
 }
 }

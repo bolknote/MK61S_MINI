@@ -1,0 +1,557 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-19T16:52:31.301340+00:00",
+  "profile": "picocalc-pico-h",
+  "version": "0.8.3",
+  "build": "8419E790",
+  "uf2_sha256": "491704fc4bcb140586ad960c66c5a85c364a06b39350cee92cd3896a9fe19890",
+  "source_base_commit": "77c9e47247552651503cac67c87ca97993a5350b",
+  "source_sha256": "7b13bade3d554fa61d433b40ad02453e20d5fdb63b2ff602eb5b4b85eec6c2ab",
+  "source_files": {
+    "ports/picocalc/screen.cpp": "19924e23908fd625ecff18fecc49f1b591d9e91fdafd46f559864461d40c901b",
+    "ports/picocalc/screen.hpp": "105d2351bea12ad9c9cdc419820df8cd6a968d13ed83ed948ba06bba2b3fda7a",
+    "ports/picocalc/service_runtime.cpp": "88592b315f0e3044745bffb7f89d745bc07b05537ef1e961565724ecea93665f",
+    "ports/picocalc/console.hpp": "59840945ddb6e0662f5529052be73fc2dcdb6e50ca787e6c2e8ad77beb79259e",
+    "ports/picocalc/main.cpp": "d748edb92a107028d7ccdabd951ba70ffb57a47bb232d68cfdeca2ccbc8df1d6",
+    "ports/picocalc/io_worker.cpp": "84f92ff4fb42c2bc55439ea3f4616643a6bdcff04bbf28dfdda0b46507ed127a",
+    "ports/picocalc/io_worker.hpp": "1532b602decf9f058c1a61d8e640fa3dbede412987319d8e48047ced0a4bf3e6",
+    "ports/picocalc/CMakeLists.txt": "a6d100352b72ca372113469928a871aa5e76de18db9b4634dbd24e757ce16483",
+    "ports/picocalc/version.hpp": "5583b7f064f107ea58b1ccf17a7d6fb399b1d4fd5324e2021036ea0a93f0fe03",
+    "tools/build_picocalc.py": "ee3976a0aaa83eb3b80b114e791e0308b39d0c856e8842c4db643a34e6b3f997",
+    "code/language_vm.cpp": "6d30612ab09ffcb1b994e87586544908bddcfcdaa50d15ed78da460f7180ed95"
+  },
+  "source_patch_sha256": "64e230a41c9829cad8642754e8010ebc94b92ef4ec137204c236d2e20d9da097",
+  "uid": "E6657CD423721C35",
+  "cpu_hz": 125000000,
+  "arithmetic_runtime": "owned-m0",
+  "profiling": false,
+  "first_after_flash_seconds": 38.223828834015876,
+  "repeat_seconds": 32.08368245896418,
+  "baseline_build": "D4BFF417",
+  "baseline_first_seconds": 71.83947475010063,
+  "baseline_repeat_seconds": 65.70652516698465,
+  "repeat_speedup": 2.0479733039068977,
+  "repeat_time_reduction_percent": 51.17123850724469,
+  "stream_without_sram_repeat_seconds": 38.62941795797087,
+  "sram_stage_time_reduction_percent": 16.944949846587154,
+  "scenario": {
+    "opening_book": false,
+    "level": 2,
+    "maximum_depth": 8,
+    "screen_mode": "completion",
+    "timing_start": "OK on Black selection",
+    "timing_end": "CRC-checked complete eight-rank e2-e3 board",
+    "same_initial_position_each_run": true
+  },
+  "move": "e2e3",
+  "positions_searched_per_run": 420,
+  "full_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+  "game_files": {
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "autoexec.m61": {
+      "bytes": 697,
+      "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+    },
+    "board.tbi": {
+      "bytes": 2570,
+      "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "manual.md": {
+      "bytes": 818,
+      "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    }
+  },
+  "game_files_unchanged": true,
+  "module_output_verification": {
+    "passed": true,
+    "search_reports_per_run": 7721,
+    "search_report_sha256": "aedac9a4b459ea891ee4d706fa6c58e0bbc3d5e206acdaaa087d4cb4bf10db2c",
+    "method": "Complete ordered result lines after the two init/menu modules; their steps depend on key arrival timing."
+  },
+  "runs": [
+    {
+      "repeat": 0,
+      "temperature": "session-first",
+      "menu_seconds": 1.70869037497323,
+      "seconds": 38.223828834015876,
+      "nodes": 420,
+      "nodes_per_second": 10.98791023326885,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 2.1552805840037763
+        },
+        {
+          "nodes": 21,
+          "seconds": 7.608315375051461
+        },
+        {
+          "nodes": 42,
+          "seconds": 9.150311375036836
+        },
+        {
+          "nodes": 63,
+          "seconds": 10.671588500030339
+        },
+        {
+          "nodes": 84,
+          "seconds": 12.201589125092141
+        },
+        {
+          "nodes": 105,
+          "seconds": 13.635328334057704
+        },
+        {
+          "nodes": 126,
+          "seconds": 15.143286917009391
+        },
+        {
+          "nodes": 147,
+          "seconds": 16.69983141706325
+        },
+        {
+          "nodes": 168,
+          "seconds": 18.1877717920579
+        },
+        {
+          "nodes": 189,
+          "seconds": 19.70206737506669
+        },
+        {
+          "nodes": 210,
+          "seconds": 21.258681334089488
+        },
+        {
+          "nodes": 231,
+          "seconds": 22.94912591704633
+        },
+        {
+          "nodes": 252,
+          "seconds": 24.603517375071533
+        },
+        {
+          "nodes": 273,
+          "seconds": 26.34081404202152
+        },
+        {
+          "nodes": 294,
+          "seconds": 28.022083917050622
+        },
+        {
+          "nodes": 315,
+          "seconds": 29.55707079207059
+        },
+        {
+          "nodes": 336,
+          "seconds": 31.046893374994397
+        },
+        {
+          "nodes": 357,
+          "seconds": 32.57349591702223
+        },
+        {
+          "nodes": 378,
+          "seconds": 34.105300459079444
+        },
+        {
+          "nodes": 399,
+          "seconds": 35.586874834029004
+        },
+        {
+          "nodes": 420,
+          "seconds": 37.10883691709023
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 38.12467033404391,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "b549d48a4cdc1abd64a6bc6a2828ae5571c1dde49bab590f8eab19bdb1671eeb"
+    },
+    {
+      "repeat": 1,
+      "temperature": "repeat",
+      "menu_seconds": 0.937356417067349,
+      "seconds": 32.08368245896418,
+      "nodes": 420,
+      "nodes_per_second": 13.090766639309262,
+      "move": "e2e3",
+      "complete_eight_rank_board": true,
+      "progress": [
+        {
+          "nodes": 0,
+          "seconds": 0.040387541987001896
+        },
+        {
+          "nodes": 21,
+          "seconds": 2.2937586669577286
+        },
+        {
+          "nodes": 42,
+          "seconds": 3.8331138339126483
+        },
+        {
+          "nodes": 63,
+          "seconds": 5.397484791930765
+        },
+        {
+          "nodes": 84,
+          "seconds": 6.867479166947305
+        },
+        {
+          "nodes": 105,
+          "seconds": 8.332796624978073
+        },
+        {
+          "nodes": 126,
+          "seconds": 9.83726024988573
+        },
+        {
+          "nodes": 147,
+          "seconds": 11.389966916991398
+        },
+        {
+          "nodes": 168,
+          "seconds": 12.880834374926053
+        },
+        {
+          "nodes": 189,
+          "seconds": 14.39826649997849
+        },
+        {
+          "nodes": 210,
+          "seconds": 15.967668375000358
+        },
+        {
+          "nodes": 231,
+          "seconds": 17.59865237493068
+        },
+        {
+          "nodes": 252,
+          "seconds": 19.330037124920636
+        },
+        {
+          "nodes": 273,
+          "seconds": 21.00834108388517
+        },
+        {
+          "nodes": 294,
+          "seconds": 22.752248666947708
+        },
+        {
+          "nodes": 315,
+          "seconds": 24.253724333946593
+        },
+        {
+          "nodes": 336,
+          "seconds": 25.785814708913676
+        },
+        {
+          "nodes": 357,
+          "seconds": 27.2823583339341
+        },
+        {
+          "nodes": 378,
+          "seconds": 28.80358616693411
+        },
+        {
+          "nodes": 399,
+          "seconds": 30.29855470894836
+        },
+        {
+          "nodes": 420,
+          "seconds": 31.82285533391405
+        }
+      ],
+      "screen_mode": "completion",
+      "terminal_complete_seconds": 31.994496624916792,
+      "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+      "native_frame_sha256": "edef18f6fab8d0d5dadc0ae4a56e5bafcad53cb234797edb92ba555690ee985e",
+      "module_result_count": 7722,
+      "module_result_trace_sha256": "a0e7243297ee4397d0fc7d681bfe8ca94cc498e8a346d3f2aed8cc841c702a0b"
+    }
+  ],
+  "diagnosis": {
+    "sampling_build": "DCB93749",
+    "samples": 77464,
+    "dropped": 2691,
+    "uart_function_estimated_percent": 28.575854590519466,
+    "sample_method": "64-byte buckets apportioned by sized-symbol byte overlap; estimates, not exact call timings",
+    "baseline_inclusive_scopes": {
+      "core": {
+        "calls": 21,
+        "total_us": 786492,
+        "max_us": 38315
+      },
+      "usb": {
+        "calls": 37659,
+        "total_us": 2682784,
+        "max_us": 18124
+      },
+      "display": {
+        "calls": 1543,
+        "total_us": 5089162,
+        "max_us": 17639
+      },
+      "storage": {
+        "calls": 6,
+        "total_us": 103700,
+        "max_us": 29008
+      },
+      "language": {
+        "calls": 7723,
+        "total_us": 54744216,
+        "max_us": 2025655
+      },
+      "app": {
+        "calls": 0,
+        "total_us": 0,
+        "max_us": 0
+      },
+      "pump": {
+        "calls": 24607,
+        "total_us": 6221062,
+        "max_us": 20386
+      },
+      "lcd": {
+        "calls": 37,
+        "total_us": 3679,
+        "max_us": 105
+      },
+      "keyboard": {
+        "calls": 4737,
+        "total_us": 42580,
+        "max_us": 34
+      },
+      "m61": {
+        "calls": 13052,
+        "total_us": 63051478,
+        "max_us": 2029504
+      }
+    },
+    "stream_inclusive_scopes": {
+      "core": {
+        "calls": 22,
+        "total_us": 831031,
+        "max_us": 42537
+      },
+      "usb": {
+        "calls": 38069,
+        "total_us": 3590707,
+        "max_us": 12283
+      },
+      "display": {
+        "calls": 1004,
+        "total_us": 299606,
+        "max_us": 17331
+      },
+      "storage": {
+        "calls": 40,
+        "total_us": 443587,
+        "max_us": 29013
+      },
+      "language": {
+        "calls": 7723,
+        "total_us": 36513107,
+        "max_us": 2669036
+      },
+      "app": {
+        "calls": 0,
+        "total_us": 0,
+        "max_us": 0
+      },
+      "pump": {
+        "calls": 25016,
+        "total_us": 3895046,
+        "max_us": 17759
+      },
+      "lcd": {
+        "calls": 40,
+        "total_us": 3871,
+        "max_us": 110
+      },
+      "keyboard": {
+        "calls": 3411,
+        "total_us": 53484,
+        "max_us": 58
+      },
+      "m61": {
+        "calls": 13053,
+        "total_us": 44783788,
+        "max_us": 2689000
+      }
+    },
+    "note": "Diagnostic scopes include the menu, are nested and must not be added. Sampling is separate from final unprofiled timing."
+  },
+  "flash_bytes": 677608,
+  "main_static_ram_bytes": 178720,
+  "data_bss_bytes": 166360,
+  "main_ram_region_bytes": 229376,
+  "main_stack_reserved_bytes": 32768,
+  "core1_stack_reserved_bytes": 2048,
+  "sram_span_bytes": 2956,
+  "main_static_sram_increase_for_span_bytes": 2992,
+  "checks": {
+    "native": {
+      "passed": true,
+      "cases": [
+        "idle calculator streams two complete native frames within five seconds",
+        "320x320 APP geometry, borrowed 12800-byte bitmap and every physical framebuffer pixel matched an independent oracle",
+        "native proportional text below row 64 and exact restoration after fullscreen graphics",
+        "old ABI 6 M0 APP still receives 192x64 and is displayed centred pixel-for-pixel",
+        "BASIC GW/GH are 320 and PSET reaches pixel 319,319",
+        "M61 native glyph rendering and 320x240 Markdown viewport with working scroll"
+      ],
+      "raw_report": ".build/picocalc-hotpath-20261019/release-native/result.json"
+    },
+    "io": {
+      "passed": true,
+      "cases": [],
+      "raw_report": ".build/picocalc-hotpath-20261019/release-io/result.json"
+    },
+    "cache": {
+      "passed": true,
+      "cases": [
+        "Second execution uses the immutable RAM image without compilation",
+        "After a normal MCU reset the verified SD image runs with zero compiles and zero cache writes",
+        "A same-length source edit invalidates RAM and SD bytecode and executes the new result"
+      ],
+      "raw_report": ".build/picocalc-hotpath-20261019/release-cache/result.json"
+    },
+    "power": {
+      "passed": true,
+      "cases": [
+        "CRC-framed RTC read/set; automatic sync preserves an already configured RTC and X=42",
+        "framed PicoCalc USB Screen activation, advertised clock capability and atomic keyframe",
+        "three real sleep/wake cycles: PLL_SYS off, USB alive at 48 MHz, full 125 MHz restoration, RAM/backlight/keypad preserved",
+        "RTC continuity from XOSC through repeated PLL changes"
+      ],
+      "raw_report": ".build/picocalc-hotpath-20261019/release-power/result.json"
+    }
+  },
+  "host_asan_ubsan": "PASS: queue, text/NUL protocol, native/menu restoration and complete Pico suite",
+  "stm32": {
+    "f401_product_a00": "PASS: exact frozen source, stack/flash/RAM gates",
+    "f411_classic_v3": "PASS: exact frozen source, stack/flash/RAM gates",
+    "langvm_app": "PASS: Cortex-M4/hard-float, 20412 memory bytes, runtime archive gate",
+    "hardware_flashed": false
+  },
+  "calculator_state_restored": true,
+  "removed_probe_cache": [
+    "/System/VMCache/Pico/8F1BD269-1-0.cache"
+  ],
+  "raw_chess_report": ".build/picocalc-hotpath-20261019/release-chess/report.json",
+  "limits": [
+    "Two repetitions of the same first move, not a full game or statistical study.",
+    "The first-after-flash run is not labelled fully cold; existing SD caches were not manually cleared.",
+    "Battery operation was not tested; no batteries were available.",
+    "UART ordering is checked in queue tests and the entire CDC module-result stream; no external UART receiver was attached.",
+    "Concurrent uncommitted math changes were excluded from the frozen source."
+  ]
+}

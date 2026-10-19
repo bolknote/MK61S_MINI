@@ -127,6 +127,14 @@ def main():
             raise ValueError("Firmware overlaps the PicoCalc settings journal")
         from seal_picocalc import seal, verify, FOOTER, BASE
         symbols=run([toolchain / ("arm-none-eabi-nm" + suffix),"--defined-only",build / (TARGET + ".elf")],capture_output=True,text=True).stdout
+        ram_end=re.search(r'^([0-9a-fA-F]+) [A-Za-z] __end__$',symbols,re.M)
+        if not ram_end:
+            raise ValueError('required SRAM end symbol is missing')
+        # GNU size classifies executable SRAM sections as text. Account for
+        # the vector table, RAM code and alignment as well as data/BSS.
+        static_ram_bytes=int(ram_end[1],16)-0x20000000
+        if not 0 < static_ram_bytes <= 224 * 1024:
+            raise ValueError('static SRAM overlaps the reserved stack region')
         match=re.search(r'^([0-9a-fA-F]+) [A-Za-z] mk61_picocalc_firmware_footer$',symbols,re.M)
         if not match:raise ValueError('required firmware footer was discarded by the linker')
         footer_offset=int(match[1],16)-BASE
@@ -150,7 +158,7 @@ def main():
                     capture_output=True, text=True).stdout
         fields = sizes.splitlines()[-1].split()
         metadata = {
-            "profile": args.profile, "prototype_version": "0.8.2", "mcu": "RP2040",
+            "profile": args.profile, "prototype_version": "0.8.3", "mcu": "RP2040",
             "sampling_profile": args.sampling_profile,
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + " + (
@@ -160,7 +168,8 @@ def main():
             "compiler": run([toolchain / ("arm-none-eabi-gcc" + suffix), "-dumpfullversion"],
                             capture_output=True, text=True).stdout.strip(),
             "flash_bytes": len(image), "flash_limit": 2 * 1024 * 1024,
-            "static_ram_bytes": int(fields[1]) + int(fields[2]),
+            "static_ram_bytes": static_ram_bytes,
+            "static_ram_data_bss_bytes": int(fields[1]) + int(fields[2]),
             "main_ram_region_bytes": 224 * 1024,
             "stack_reserved_bytes": 32 * 1024,
             "source_editor_capacity_bytes": 65534,
