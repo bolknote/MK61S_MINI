@@ -297,17 +297,22 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
   uint32_t budget=32U-((steps-1U)&31U);
   if(limit && budget>limit-steps+1U)budget=limit-steps+1U;
   if(budget<2)return 0;
-  uint32_t end=v.end;
-  if(s.call_count && s.calls[s.call_count-1].end && s.calls[s.call_count-1].end<end)
-    end=s.calls[s.call_count-1].end;
-  uint32_t pc=instruction,last=pc;
+  uint32_t end_offset=v.end;
+  if(s.call_count && s.calls[s.call_count-1].end && s.calls[s.call_count-1].end<end_offset)
+    end_offset=s.calls[s.call_count-1].end;
+  uintptr_t pc=instruction,last=pc;
   Value* const bottom=data.stack;
   Value* const ceiling=bottom+data.stack_capacity;
   Value* top=bottom+s.sp;
   uint32_t remaining=budget;
 #if !defined(LANGUAGE_VM_TRACE)
   const uint8_t* const raw=v.reader?nullptr:v.bytes;
+  const uintptr_t origin=reinterpret_cast<uintptr_t>(raw);
+#else
+  constexpr uintptr_t origin=0;
 #endif
+  const uintptr_t end=origin+end_offset;
+  pc+=origin;last+=origin;
 #if defined(LANGUAGE_VM_TRACE)
 #define SPAN_TRACE() do {if(remaining!=budget)trace_instruction(v,pc,steps+budget-remaining);} while(false)
 #else
@@ -319,15 +324,15 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     // A diagnostic callback may perform another reader operation.
     const uint8_t* operands=nullptr;
 #else
-    const uint8_t* operands=raw?raw+pc:nullptr;
+    const uint8_t* operands=raw?reinterpret_cast<const uint8_t*>(pc):nullptr;
 #endif
     if(!operands) {
       const uint16_t available=uint16_t(end-pc<sizeof(copied)?end-pc:sizeof(copied));
 #if !defined(LANGUAGE_VM_TRACE)
-      if(v.reader)operands=v.reader->cached(pc,available);
+      if(v.reader)operands=v.reader->cached(uint32_t(pc),available);
 #endif
       if(!operands) {
-        if(!v.read(pc,copied,available))goto done;
+        if(!v.read(uint32_t(pc),copied,available))goto done;
         operands=copied;
       }
     }
@@ -336,7 +341,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
       // Ordinary instructions fetch exactly once. Only a diagnostic prefix
       // needs lookahead; leave PC at its first byte on a truncated tail/HALT,
       // matching the old post-instruction scan and scalar error location.
-      uint32_t following=pc;
+      uintptr_t following=pc;
       Op next_op;
       do {
         if(end-following<3)goto done;
@@ -346,7 +351,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
 #if defined(LANGUAGE_VM_TRACE)
             v.byte(following)
 #else
-            raw?raw[following]:v.byte(following)
+            raw?*reinterpret_cast<const uint8_t*>(following):v.byte(uint32_t(following))
 #endif
             );
       } while(next_op==Op::SOURCE_POS);
@@ -356,7 +361,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
       if(raw) {
         // No callback or write occurs after lookahead. Reuse its opcode and
         // raw operand address instead of fetching the same instruction again.
-        operands=raw+pc;op=next_op;
+        operands=reinterpret_cast<const uint8_t*>(pc);op=next_op;
       } else
 #endif
       continue;
@@ -364,7 +369,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
     // Only supported fixed-width handlers advance PC. Multi-byte handlers
     // check their operands before reading; unsupported/variable records leave
     // the stream untouched for the scalar decoder.
-    unsigned width=1;
+    uintptr_t width=1;
     const uint8_t* p=operands+1;
     Value result;
     int32_t x,y,z;
@@ -444,7 +449,7 @@ __attribute__((noinline)) uint8_t integer_span(const View& v, Continuation& s,
           if(to<v.code || to>=v.end)goto done;
           // Unsigned advance also represents backward/self branches. Bounds
           // are checked before committing; the shared tail retains old PC.
-          width=to-pc;
+          width=(origin+to)-pc;
         }
         SPAN_TRACE();top-=consumed;break;
       }
@@ -495,7 +500,7 @@ done:
 #if defined(LANGUAGE_VM_TEST_COMPARE_BLOCK) && MK61_VM_COMPARE_BLOCK
     if(first_hint==Op::BLOCK_COMPARE && count>=3)compare_block_applied(instruction);
 #endif
-    s.sp=(uint8_t)(top-bottom);s.pc=pc;instruction=last;steps+=count-1U;
+    s.sp=(uint8_t)(top-bottom);s.pc=uint32_t(pc-origin);instruction=uint32_t(last-origin);steps+=count-1U;
   }
 #undef SPAN_TRACE
   return count;
