@@ -596,5 +596,186 @@ function mk61_m0_sqrtf
 .Lsqrtf_coefficients:
 #include "native_eabi_m0_sqrt_table.inc"
 end mk61_m0_sqrtf
+
+// Centered Q24 coordinate in R2; c0/c1/c2 in R0/R1/R3. The quadratic
+// term only needs Q16 coordinates; the final product retains all Q24 bits.
+.macro sqrt64_polynomial
+ asrs r4,r2,#8
+ muls r3,r4
+ asrs r3,#16
+ adds r1,r3
+ uxth r3,r1
+ uxth r4,r2
+ muls r4,r3
+ lsrs r4,#16
+ asrs r5,r2,#16
+ muls r5,r3
+ adds r4,r5
+ asrs r1,#16
+ muls r1,r2
+ adds r4,r1
+ asrs r4,#8
+ adds r0,r4
+.endm
+
+// Exact 32-bit square: R0 is retained, R4:R3 is the result.
+.macro sqrt64_square32
+ uxth r2,r0
+ lsrs r3,r0,#16
+ mov r4,r2
+ muls r4,r2
+ muls r2,r3
+ muls r3,r3
+ mov r5,r2
+ lsls r5,#17
+ lsrs r2,#15
+ adds r4,r5
+ adcs r3,r2
+.endm
+
+function mk61_m0_sqrt
+ lsrs r3,r1,#20
+ adds r2,r3,#1
+ lsrs r2,#11
+ bne .Lsqrt64_slow
+ cmp r3,#0
+ bne .Lsqrt64_normal
+.Lsqrt64_slow:
+ push {r4,lr}
+ bl mk61_m0_sqrt_slow
+ pop {r4,pc}
+.Lsqrt64_normal:
+ push {r4-r7,lr}
+ // N=m*2^62, 1 <= m < 4. Preserve its low/high words and exponent.
+ lsls r2,r1,#12
+ lsrs r5,r2,#1
+ movs r6,#1
+ lsls r6,#31
+ orrs r5,r6
+ lsrs r4,r0,#21
+ orrs r5,r4
+ lsls r4,r0,#11
+ lsrs r6,r3,#1
+ bcc 1f
+ lsls r6,r5,#31
+ lsrs r4,#1
+ orrs r4,r6
+ lsrs r5,#1
+1:
+ ldr r6,=1021
+ adds r6,r3
+ lsrs r6,#1
+ lsls r6,#20
+ push {r4-r6}
+ // Parity + eight leading fraction bits select the midpoint.
+ lsls r7,r1,#11
+ lsrs r7,#23
+ lsls r2,r1,#20
+ lsrs r3,r0,#12
+ orrs r2,r3
+ movs r3,#1
+ lsls r3,#31
+ eors r2,r3
+ asrs r2,#8
+ lsls r7,#5
+ adr r6,.Lsqrt64_coefficients
+ adds r7,r6
+ ldmia r7!,{r0,r1,r3}
+ sqrt64_polynomial
+ mov r6,r0                    // R ~= sqrt(m)*2^31
+ ldmia r7!,{r0,r1,r3}
+ sqrt64_polynomial
+ mov r7,r0                    // V ~= 2^31/sqrt(m)
+ mov r0,r6
+ lsls r4,r0,#21
+ lsrs r5,r0,#11
+ push {r4,r5}
+ sqrt64_square32
+ ldr r0,[sp,#8]
+ ldr r2,[sp,#12]
+ subs r0,r4
+ sbcs r2,r3
+ // The exact signed residual fits 36 bits. Dropping five low bits
+ // changes the refined root by less than 1/64 of an integer unit.
+ lsrs r0,#5
+ lsls r2,#27
+ orrs r0,r2
+ mov r2,r7
+ // Three partial products approximate the signed high word to less
+ // than two units (1/16 root unit after the following shift).
+ asrs r4,r0,#16
+ uxth r5,r0
+ lsrs r6,r2,#16
+ uxth r7,r2
+ muls r5,r6
+ lsrs r5,#16
+ muls r7,r4
+ asrs r7,#16
+ muls r4,r6
+ adds r4,r5
+ adds r4,r7
+ adds r4,#17                  // nearest, compensating omitted carries
+ asrs r2,r4,#5
+ pop {r0,r1}
+ asrs r3,r2,#31
+ adds r0,r2
+ adcs r1,r3
+ // q is already within two units of the exact root. Its signed
+ // 106-bit residual fits 64 bits, so only the low square is needed.
+ sqrt64_square32
+ mov r5,r0
+ muls r5,r1
+ lsls r5,#1
+ adds r3,r5
+ ldr r6,[sp,#0]
+ lsls r6,#10
+ movs r5,#0
+ subs r5,r4
+ sbcs r6,r3                   // R6:R5 = radicand-q*q
+.Lsqrt64_round:
+ cmp r6,#0
+ bmi .Lsqrt64_negative_residual
+ cmp r6,r1
+ blo .Lsqrt64_pack
+ bhi .Lsqrt64_increment
+ cmp r5,r0
+ bls .Lsqrt64_pack
+.Lsqrt64_increment:
+ // Increment q and update the residual by -(2*q+1).
+ subs r5,r0
+ sbcs r6,r1
+ movs r2,#0
+ adds r0,#1
+ adcs r1,r2
+ subs r5,r0
+ sbcs r6,r1
+ b .Lsqrt64_round
+.Lsqrt64_negative_residual:
+ adds r2,r5,r0
+ mov r3,r6
+ adcs r3,r1
+ bmi .Lsqrt64_decrement
+ bne .Lsqrt64_pack
+ cmp r2,#0
+ bne .Lsqrt64_pack
+.Lsqrt64_decrement:
+ adds r5,r0
+ adcs r6,r1
+ movs r2,#0
+ subs r0,#1
+ sbcs r1,r2
+ adds r5,r0
+ adcs r6,r1
+ b .Lsqrt64_round
+.Lsqrt64_pack:
+ ldr r2,[sp,#8]
+ adds r1,r2
+ add sp,#12
+ pop {r4-r7,pc}
+.ltorg
+.align 5
+.Lsqrt64_coefficients:
+#include "native_eabi_m0_sqrt64_table.inc"
+end mk61_m0_sqrt
 .section .note.GNU-stack,"",%progbits
 #endif

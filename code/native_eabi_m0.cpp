@@ -54,10 +54,22 @@ struct ReciprocalSeeds {
   }
 };
 constexpr ReciprocalSeeds reciprocal_seeds;
+#if defined(__arm__) || defined(__thumb__)
+#include "native_eabi_m0_exp_table.inc"
+#endif
 inline U low_product(U a,U b) {
   return wide32(uint32_t(a),uint32_t(b))+
     (U(uint32_t(a)*uint32_t(b>>32)+uint32_t(a>>32)*uint32_t(b))<<32);
 }
+#if defined(__arm__) || defined(__thumb__)
+// The omitted low partial product and cross-word carries contribute at
+// most two units to the exact high word. exp retains ten guard bits, so
+// this error is below 1/256 ULP even in its final table product.
+__attribute__((always_inline)) inline U exp_high_product(U a,U b) {
+  const uint32_t al=uint32_t(a),ah=uint32_t(a>>32),bl=uint32_t(b),bh=uint32_t(b>>32);
+  return wide32(ah,bh)+(wide32(al,bh)>>32)+(wide32(ah,bl)>>32);
+}
+#endif
 // Quotient estimate for 1 <= a/b < 2, followed by an exact remainder.
 // Refining 16 -> 32 -> 63 reciprocal bits avoids a 56-step restoring loop.
 // Once the estimate is within a few units, its signed residual fits in 64
@@ -298,6 +310,66 @@ MK61_SOFT_PCS int64_t __aeabi_d2lz(double x) {const U a=bits(x),m=D::magnitude_i
 MK61_SOFT_PCS U __aeabi_d2ulz(double x) {const U a=bits(x);return a&D::Sign?0:D::magnitude_integer(a);}
 MK61_SOFT_PCS float __aeabi_d2f(double x) {return single(narrow(bits(x)));}
 MK61_SOFT_PCS double __aeabi_f2d(float x) {return real(extend(bits(x)));}
+#if defined(__arm__) || defined(__thumb__)
+// On ARMv6-M, -O3 expands wide products into substantially more spills than
+// -Os. Keep this kernel's measured register allocation in release builds.
+__attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
+  const U a=bits(x),m=a&D::Magnitude;
+  if(m>=UINT64_C(0x4090000000000000)) {
+    if(m>D::Infinity) return real(a|D::Quiet);
+    return real(a&D::Sign?0:D::Infinity);
+  }
+  if(m<UINT64_C(0x3E30000000000000)) return 1.0+x;
+  const int e=int(m>>52)-1023;
+  const U significand=(m&D::Fraction)|D::Hidden;
+  uint32_t n=0;
+  if(e>=-11) {
+    const U p=wide32(uint32_t(significand>>21),0xB8AA3B29U);
+    n=e==-11?uint32_t(p>=(U(1)<<63)):uint32_t((p+(U(1)<<(52-e)))>>(53-e));
+  }
+  const int shift=e+12;
+  const U scaled=shift<0?significand>>unsigned(-shift):significand<<unsigned(shift);
+  const U reduction=wide32(uint32_t(exp_step_high),n)+
+    (U(uint32_t(exp_step_high>>32)*n)<<32);
+  U r=scaled-reduction-uint32_t(wide32(n,exp_step_low)>>32);
+  int k=int(n);
+  if(a&D::Sign) {r=U(0)-r;k=-k;}
+  const bool negative=(r>>63)!=0;
+  const U magnitude=negative?U(0)-r:r;
+  const U z=exp_high_product(magnitude,magnitude);
+  const uint32_t t=uint32_t(magnitude>>24); // |r| in Q40
+  // Thumb-1 GCC lowers even constant division to a software divider.
+  // Multiplication by ceil(2^34/6) supplies the exact unsigned quotients.
+  const uint32_t linear=uint32_t(wide32(t+3,0xAAAAAAABU)>>34);
+  const uint32_t quadratic=uint32_t(wide32(uint32_t(wide32(t,t)>>40)+12,0xAAAAAAABU)>>36);
+  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic);
+  const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
+  const U p=wide32(uint32_t(z),tail_magnitude);
+  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>8;
+  const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
+  const unsigned index=unsigned(k)&511U;
+  k=(k-int(index))/512;
+  U q=exp_table[index];
+  const bool below=(delta>>63)!=0;
+  const U correction=exp_high_product(q,below?U(0)-delta:delta);
+  q=below?q-correction:q+correction;
+  if(q<(U(1)<<62)) {q<<=1;--k;}
+  if(k>=-1022 && k<=1023) {
+    const U rounded=(q+511+((q>>10)&1))>>10;
+    return real((U(k+1022)<<52)+rounded);
+  }
+  return real(D::pack(0,k,(q>>7)|U((q&127)!=0)));
+}
+MK61_SOFT_PCS double mk61_m0_sqrt_slow(double x) {
+  const U a=bits(x),m=a&D::Magnitude;
+  if(!m) return x;
+  if(m>=D::Infinity) return m==D::Infinity && !(a&D::Sign)?x:real(a|D::Infinity|D::Quiet);
+  if(a&D::Sign) return real(D::Infinity|D::Quiet);
+  int e;const U s=D::normalize(a,e);const unsigned odd=unsigned(e)&1U;
+  const U root=bits(mk61_m0_sqrt(real((s&D::Fraction)|(U(D::Bias+odd)<<52))));
+  return real(root-(U(-(e-int(odd))/2)<<52));
+}
+#endif
 #if !defined(__arm__) && !defined(__thumb__)
 MK61_SOFT_PCS float mk61_m0_sqrtf(float x) {return single(sqrt_single(bits(x)));}
 #endif

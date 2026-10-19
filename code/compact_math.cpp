@@ -234,6 +234,9 @@ inline uint32_t short_divide(uint64_t numerator,uint32_t denominator) {
   return (q1<<16)|q0;
 }
 double evaluate(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_sqrt(x);
+#else
   const uint64_t b=bits(x),magnitude=b&UINT64_C(0x7FFFFFFFFFFFFFFF);
   if (!magnitude) return x;
   unsigned exponent=unsigned(magnitude>>52);
@@ -295,6 +298,7 @@ double evaluate(double x) {
   int output_e=(e-int(odd))/2;
   if (q==(UINT64_C(1)<<53)) {q>>=1;++output_e;}
   return value((uint64_t(output_e+1023)<<52)|(q&UINT64_C(0xFFFFFFFFFFFFF)));
+#endif
 }
 }
 
@@ -976,6 +980,9 @@ double log10(double x) {
      0x1.BCB7B1526E50Ep-2*natural_log::evaluate(x));
 }
 double exp(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_exp(x);
+#else
   if (!mk_math::is_finite(x)) return x < 0.0 ? 0.0 : x+x;
   if (x > 1024.0) return infinity();
   if (x < -1024.0) return 0.0;
@@ -990,6 +997,7 @@ double exp(double x) {
     tail = (h-r)-l;
   }
   return power::exponential_reduced(r,tail,n);
+#endif
 }
 } // namespace compact_math
 #undef GET_HIGH_WORD

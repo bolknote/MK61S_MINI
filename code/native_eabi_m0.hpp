@@ -25,7 +25,11 @@ MK61_SOFT_PCS uint64_t __aeabi_lmul(uint64_t, uint64_t);
 int __clzsi2(uint32_t);
 int __clzdi2(uint64_t);
 void mk61_m0_divmod64(uint64_t, uint64_t, mk61_eabi_divmod*);
-// Integer square root used only as compact_math's binary32 seed on M0+.
+// Correctly rounded integer kernels; float arithmetic is not needed by sqrt.
 MK61_SOFT_PCS float mk61_m0_sqrtf(float);
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
+MK61_SOFT_PCS double mk61_m0_sqrt(double);
+MK61_SOFT_PCS double mk61_m0_exp(double);
+#endif
 }
 #endif
