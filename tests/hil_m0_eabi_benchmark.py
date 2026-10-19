@@ -21,7 +21,7 @@ def decode(raw):
     assert len(raw)>=24
     magic,version,cases,samples,rounds=struct.unpack_from('<5I',raw)
     if version in (2,3):return decode_addition_streams(raw)
-    if version==4:return decode_muldiv_streams(raw)
+    if version in (4,5):return decode_muldiv_streams(raw)
     assert (magic,version,cases,samples,rounds)==(0x30414C55,1,12,1024,9)
     assert len(raw)==24+4*cases*96
     result={}
@@ -66,7 +66,7 @@ def decode_addition_streams(raw):
 
 def decode_muldiv_streams(raw):
     magic,version,cases,samples,rounds,groups=struct.unpack_from('<6I',raw)
-    assert (magic,version,cases,samples,rounds,groups)==(0x30414C55,4,32,1024,9,12)
+    assert (magic,cases,samples,rounds,groups)==(0x30414C55,32,1024,9,12) and version in (4,5)
     assert len(raw)==24+groups*(cases*24+rounds*8)
     result={}
     for op in ('dmul','ddiv'):
@@ -74,6 +74,9 @@ def decode_muldiv_streams(raw):
                'dyadic_seeds' if op=='ddiv' else 'powers_of_two',
                'near_rounding_midpoints' if op=='ddiv' else 'rounding_ties',
                'normal_exponent_range')
+        if version==5:names=('full_random','mantissa_ratio_below_one' if op=='ddiv' else 'mantissa_product_below_two',
+            'mantissa_ratio_above_one' if op=='ddiv' else 'mantissa_product_above_two',
+            'low_word_boundaries','normal_exponent_range','near_rounding_midpoints')
         rows=[]
         for group,name in enumerate(names):
             index=group+(6 if op=='ddiv' else 0)
@@ -82,6 +85,7 @@ def decode_muldiv_streams(raw):
                 a,b,value=struct.unpack_from('<3Q',raw,offset+case*24)
                 x,y=struct.unpack('<2d',struct.pack('<2Q',a,b))
                 expected=struct.unpack('<Q',struct.pack('<d',x*y if op=='dmul' else x/y))[0]
+                if version==5:assert a&1 and b&1,(op,name,'not a full 53-bit significand')
                 assert 0<((expected>>52)&0x7FF)<0x7FF,(op,name,'not normal')
                 assert value==expected,(op,name,case,hex(a),hex(b),hex(value),hex(expected))
                 pairs.append({'a':f'{a:016X}','b':f'{b:016X}','result':f'{value:016X}'})
@@ -90,7 +94,7 @@ def decode_muldiv_streams(raw):
             rows.append({'name':name,'pairs':pairs,
                 'us_per_call':statistics.median(x-y for x,y in zip(elapsed,control))/samples,
                 'raw_us':list(elapsed),'control_us':list(control)})
-        result[op+'_streams']=rows
+        result[op+('_full_streams' if version==5 else '_streams')]=rows
     return result
 
 def operands(result):

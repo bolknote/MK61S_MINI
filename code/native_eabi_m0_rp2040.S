@@ -54,23 +54,20 @@
  lsrs \re,#21
 .endm
 .macro mul_unpack_normal
- // R6 is the guarded exponent sum minus 1024. Save its packed addend
- // for a product in [2,4); normalization subtracts one exponent unit.
- mov r7,r1
- eors r7,r3
- lsrs r7,#31
- lsls r7,#31
- adds r6,#1
- lsls r6,#20
- orrs r6,r7
- movs r7,#1
- lsls r7,#20
- lsls r1,#12
- lsrs r1,#12
- orrs r1,r7
- lsls r3,#12
- lsrs r3,#12
- orrs r3,r7
+ // Each subtrahend is sign:(exponent-1):0. Their sum minus 1021
+ // exponent units packs both the result sign and the exponent addend
+ // for a product in [2,4), without separately extracting either sign.
+ lsrs r4,r1,#20
+ subs r4,#1
+ lsls r4,#20
+ subs r1,r4
+ lsrs r5,r3,#20
+ subs r5,#1
+ lsls r5,#20
+ subs r3,r5
+ adds r6,r4,r5
+ ldr r7,=0x3fd00000
+ subs r6,r7
 .endm
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
 
@@ -535,6 +532,7 @@ da_xmgty:                      @ result is just x
  b da_pack
 
 .ltorg
+mk61_m0_dadd_end:
 
 @ equivalent of UMULL
 @ needs five temporary registers
@@ -660,6 +658,43 @@ l\@_1:
 .endm
 
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
+.Lrp_mul_short_a:
+ lsls r7,r1,#12
+ beq 1f
+ b .Lrp_mul_short
+1:
+ mov r0,r2
+ mov r7,r1
+ mov r1,r3
+ mov r3,r7
+ b .Lrp_mul_scale_a
+.Lrp_mul_short_b:
+ lsls r7,r3,#12
+ beq .Lrp_mul_scale_a
+ mov r2,r0
+ movs r0,#0
+ mov r7,r1
+ mov r1,r3
+ mov r3,r7
+ b .Lrp_mul_short
+.Lrp_mul_scale_a:
+ mov r7,r1
+ eors r7,r3
+ lsrs r7,#31
+ lsls r7,#31
+ lsls r1,#12
+ lsrs r1,#12
+ adds r6,#1
+ lsls r6,#20
+ orrs r1,r6
+ orrs r1,r7
+ pop {r4-r7,pc}
+.Lrp_mul_slow:
+ sub sp,#4
+ bl mk61_m0_dmul_slow
+ add sp,#4
+ pop {r4-r7,pc}
+
  regular_func __aeabi_dmul
  push {r4-r7,r14}
  lsls r4, r1, #1
@@ -669,56 +704,22 @@ l\@_1:
  subs r6, r4, #1
  ldr r7, =2045
  cmp r6, r7
- bhi 90f
+ bhi .Lrp_mul_slow
  subs r6, r5, #1
  cmp r6, r7
- bhi 90f
+ bhi .Lrp_mul_slow
  adds r6, r4, r5
- ldr r7, =1024
- subs r6, r6, r7
- ldr r7, =2043
+ // Reuse the input bound 2045 instead of loading two more constants.
+ lsrs r4,r7,#1
+ adds r4,#2                    @ 1024
+ subs r6,r4
+ subs r7,#2                    @ 2043
  cmp r6, r7
- bhi 90f
- b 91f
-90:
- sub sp, #4
- bl mk61_m0_dmul_slow
- add sp, #4
- pop {r4-r7,pc}
-91:
- // Multiplication by a signed power of two is exact exponent scaling.
+ bhi .Lrp_mul_slow
  cmp r2,#0
- bne 87f
- lsls r7,r3,#12
- beq .Lrp_mul_scale_a
- // Multiplication is commutative. The short product always has XL=0.
- mov r2,r0
- movs r0,#0
- mov r7,r1
- mov r1,r3
- mov r3,r7
- b .Lrp_mul_short
-87:
+ beq .Lrp_mul_short_b
  cmp r0,#0
- bne .Lrp_mul_general
- lsls r7,r1,#12
- bne .Lrp_mul_short
- mov r0,r2
- mov r7,r1
- mov r1,r3
- mov r3,r7
-.Lrp_mul_scale_a:
- mov r7,r1
- eors r7,r3
- lsrs r7,r7,#31
- lsls r7,r7,#31
- lsls r1,r1,#12
- lsrs r1,r1,#12
- adds r6,#1
- lsls r6,r6,#20
- orrs r1,r6
- orrs r1,r7
- pop {r4-r7,pc}
+ beq .Lrp_mul_short_a
 .Lrp_mul_general:
  mul_unpack_normal
  push {r0-r2,r6}
@@ -745,7 +746,40 @@ l\@_1:
 
 @ here r5:r6:r7 holds the product [1..4) in Q(104-32)=Q72, with extra LSBs in r12
  pop {r3}                      @ guarded packed exponent and sign
- b .Lrp_mul_pack
+.Lrp_mul_pack:
+ lsls r1,r7,#11
+ lsrs r2,r6,#21
+ orrs r1,r2
+ lsls r0,r6,#11
+ lsrs r2,r5,#21
+ orrs r0,r2
+ lsls r5,#11                   @ now r5:r0:r1 Q83=Q(51+32), extra LSBs in r12
+ lsrs r2,r1,#20
+ bne 1f                        @ skip if in range [2..4)
+ adds r5,r5                    @ shift up so always [2..4) Q83, i.e. [1..2) Q84=Q(52+32)
+ adcs r0,r0
+ adcs r1,r1
+ // Removing the implicit bit here is equivalent to subtracting one
+ // exponent unit from R3, including a later rounding carry into R1.
+ lsls r1,#12
+ lsrs r1,#12
+1:
+ // The entry guard proves that either normalization and any rounding
+ // carry produce a finite normal result; retain the full IEEE slow path
+ // for all other inputs instead of checking the same bounds twice.
+ lsls r5,#1                    @ rounding bit to carry
+ bcc 1f                        @ result is correctly rounded
+ adds r0,#1
+ movs r6,#0
+ adcs r1,r6                    @ round up
+ mov r6,r12                    @ remaining sticky bits
+ orrs r5,r6
+ bne 1f                        @ some sticky bits set?
+ lsrs r0,#1
+ lsls r0,#1                    @ round to even
+1:
+ adds r1,r3
+ pop {r4-r7,r15}
 
 .Lrp_mul_short:
  // If either low word is zero, two 32x32 products suffice instead of four.
@@ -772,39 +806,8 @@ l\@_1:
  mov r12,r0                    @ the bottom 32 product bits are exactly zero
  add sp,#4
  pop {r3}
-.Lrp_mul_pack:
- lsls r1,r7,#11
- lsrs r2,r6,#21
- orrs r1,r2
- lsls r0,r6,#11
- lsrs r2,r5,#21
- orrs r0,r2
- lsls r5,#11                   @ now r5:r0:r1 Q83=Q(51+32), extra LSBs in r12
- lsrs r2,r1,#20
- bne 1f                        @ skip if in range [2..4)
- adds r5,r5                    @ shift up so always [2..4) Q83, i.e. [1..2) Q84=Q(52+32)
- adcs r0,r0
- adcs r1,r1
- movs r6,#1
- lsls r6,#20
- subs r3,r6                    @ correct the already packed exponent
-1:
- // The entry guard proves that either normalization and any rounding
- // carry produce a finite normal result; retain the full IEEE slow path
- // for all other inputs instead of checking the same bounds twice.
- lsls r5,#1                    @ rounding bit to carry
- bcc 1f                        @ result is correctly rounded
- adds r0,#1
- movs r6,#0
- adcs r1,r6                    @ round up
- mov r6,r12                    @ remaining sticky bits
- orrs r5,r6
- bne 1f                        @ some sticky bits set?
- lsrs r0,#1
- lsls r0,#1                    @ round to even
-1:
- adds r1,r3
- pop {r4-r7,r15}
+ b .Lrp_mul_pack
+
 
 .ltorg
 
@@ -867,6 +870,12 @@ l\@_1:
 @ and so 1ulp is 2^-53 and so the calculation above suffices.
 
 .section .text.mk61_rp2040_arithmetic,"ax",%progbits
+.Lrp2040_div_slow:
+ sub sp,#4
+ bl mk61_m0_ddiv_slow
+ add sp,#4
+ pop {r4-r7,pc}
+
  regular_func __aeabi_ddiv
  push {r4-r7,r14}
 ddiv0:                         @ entry point from dtan
@@ -877,16 +886,17 @@ ddiv0:                         @ entry point from dtan
  subs r6, r4, #1
  ldr r7, =2045
  cmp r6, r7
- bhi 90f
+ bhi .Lrp2040_div_slow
  subs r6, r5, #1
  cmp r6, r7
- bhi 90f
+ bhi .Lrp2040_div_slow
  subs r6, r4, r5
- ldr r7, =1021
- adds r6, r6, r7
- ldr r7, =2043
+ lsrs r5,r7,#1
+ subs r5,#1                    @ 1021
+ adds r6,r5
+ subs r7,#2                    @ 2043
  cmp r6, r7
- bhi 90f
+ bhi .Lrp2040_div_slow
  // Dyadic mantissas with at most three fraction bits use an exact
  // rational reciprocal seed. Powers of two reduce to exponent scaling.
  cmp r2, #0
@@ -894,7 +904,7 @@ ddiv0:                         @ entry point from dtan
  lsls r7, r3, #15
  bne 88f
  lsls r7, r3, #12
- bne .Lrp2040_small_divisor
+ bne .Lrp2040_small_divisor_entry
  mov r7, r1
  eors r7, r3
  lsrs r7, r7, #31
@@ -906,46 +916,21 @@ ddiv0:                         @ entry point from dtan
  orrs r1, r6
  orrs r1, r7
  pop {r4-r7,pc}
+.Lrp2040_small_divisor_entry:
+ b .Lrp2040_small_divisor
 88:
  // Respect an in-flight divider operation, including an interrupted caller.
  ldr r7, =0xd0000078
  ldr r7, [r7]
  lsrs r7, r7, #2
- bcs 90f
- b 91f
-90:
- sub sp, #4
- bl mk61_m0_ddiv_slow
- add sp, #4
- pop {r4-r7,pc}
-91:
- b .Lrp2040_general_divisor
-.Lrp2040_small_divisor:
- // R4/R5 still hold the original biased exponents, R7 is index<<29.
- lsrs r7, r7, #27
- // R6 already holds the guarded exponent addend, including its bias.
- lsls r6, r6, #2
- mov r12, r6
- mov r6, r1
- eors r6, r3
- lsrs r6, r6, #31
- add r12, r12, r6
- lsls r1, r1, #12
- lsrs r1, r1, #12
- lsls r3, r3, #12
- lsrs r3, r3, #12
- movs r6, #1
- lsls r6, r6, #20
- orrs r1, r6
- orrs r3, r6
- ldr r6, =.Lrp2040_small_reciprocals
- ldr r6, [r6, r7]
- b .Lrp2040_quotient_refine
+ bcs .Lrp2040_div_slow
 .Lrp2040_general_divisor:
+ lsls r6,#2
+ mov r12,r6
  mov r7,r1
  eors r7,r3
  lsrs r7,#31                  @ result sign
- mov r12,r6                   @ retain the guarded biased exponent
+ add r12,r7                   @ guarded biased exponent and sign
  movs r4,#1
  lsls r4,#20
  lsls r3,#12
@@ -954,34 +939,34 @@ ddiv0:                         @ entry point from dtan
 
 .if use_hw_div
 
- movs r5,#IOPORT>>24
- lsls r5,#24
+ movs r7,#IOPORT>>24
+ lsls r7,#24
  movs r6,#0
  mvns r6,r6
- str r6,[r5,#DIV_UDIVIDEND]
+ str r6,[r7,#DIV_UDIVIDEND]
  lsrs r6,r3,#4                 @ x0=(q16)x
- str r6,[r5,#DIV_UDIVISOR]
+ str r6,[r7,#DIV_UDIVISOR]
 @ if there are not enough cycles from now to the read of the quotient for
 @ the divider to do its stuff we need a busy-wait here
 
 .endif
 
-@ Pack the exponent and unpack the dividend while the divider is working.
- mov r6,r12
- lsls r6,#2
- adds r6,r7
- mov r12,r6                    @ biased exponent in [31:2], sign in bit 0
+@ Unpack the dividend and prepare both leading products during the divide.
  lsls r1,#12
  lsrs r1,#12
  orrs r1,r4                    @ normal dividend significand
  // Keep at least eight independent ALU instructions between starting the
  // SIO divide and reading its result, which is undefined while busy.
  lsls r4,r3,#10
- lsrs r7,r2,#22
+ lsrs r5,r2,#22
+ orrs r5,r4                    @ x1=(q30)x
+ lsls r4,r1,#11
+ lsrs r6,r0,#21
+ orrs r4,r6                    @ y0=(q31)y; nine ALU instructions since STR
 
 .if use_hw_div
 
- ldr r6,[r5,#DIV_QUOTIENT]
+ ldr r6,[r7,#DIV_QUOTIENT]
  adds r6,#1
  lsrs r6,#1
 
@@ -1005,8 +990,6 @@ ddiv0:                         @ entry point from dtan
 @ r6    u0, first approximation to 1/x Q15
 @ r12: result sign, biased exponent addend
 
- movs r5,r7
- orrs r5,r4                    @ x1=(q30)x
  muls r5,r6                    @ u0*x1 Q45
  asrs r5,#15                   @ v=u0*x1-1 Q30
  muls r5,r6                    @ u0*v Q45
@@ -1022,11 +1005,8 @@ ddiv0:                         @ entry point from dtan
 @ r6    u1, second approximation to 1/x Q30
 @ r12: result sign, exponent
 
-.Lrp2040_quotient_refine:
  push {r2,r3}
- lsls r4,r1,#11
- lsrs r5,r0,#21
- orrs r4,r5                    @ y0=(q31)y
+.Lrp2040_quotient_refine:
  mul32_32_64 r4,r6, r4,r5, r2,r3,r7,r4,r5  @ y0*u1 Q61
  adds r4,r4
  adcs r5,r5                    @ a0=(q30)(y0*u1)
@@ -1138,6 +1118,31 @@ dd_2:
  adds r1,r2                    @ pack exponent
  adds r1,r7                    @ pack sign
  pop {r4-r7,r15}
+
+.Lrp2040_small_divisor:
+ // R7 is index<<29; R6 is the guarded biased exponent addend.
+ lsrs r7,#27
+ lsls r6,#2
+ mov r12,r6
+ mov r6,r1
+ eors r6,r3
+ lsrs r6,#31
+ add r12,r6
+ lsls r1,#12
+ lsrs r1,#12
+ lsls r3,#12
+ lsrs r3,#12
+ movs r6,#1
+ lsls r6,#20
+ orrs r1,r6
+ orrs r3,r6
+ ldr r6,=.Lrp2040_small_reciprocals
+ ldr r6,[r6,r7]
+ push {r2,r3}
+ lsls r4,r1,#11
+ lsrs r5,r0,#21
+ orrs r4,r5
+ b .Lrp2040_quotient_refine
 
 .align 2
 // Nearest-even values of 2^33/(8+i), generated from exact integers.

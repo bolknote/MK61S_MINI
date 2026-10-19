@@ -8,6 +8,9 @@ from check_stm32_vectors import ElfImage
 
 
 def region(image, first, last):
+    # Multiply-only helpers can precede __aeabi_dmul in newer layouts.
+    if first=='__aeabi_dadd' and last=='__aeabi_dmul' and 'mk61_m0_dadd_end' in image.symbols:
+        last='mk61_m0_dadd_end'
     start, end = (image.symbols[name] & ~1 for name in (first, last))
     for section in image.sections:
         if (section[1] != 8 and section[2] & 2
