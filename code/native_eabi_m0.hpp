@@ -30,6 +30,14 @@ MK61_SOFT_PCS float mk61_m0_sqrtf(float);
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
 MK61_SOFT_PCS double mk61_m0_sqrt(double);
 MK61_SOFT_PCS double mk61_m0_exp(double);
+uint64_t mk61_m0_mul_q62(uint64_t,uint64_t);
+// Reduced input |x+tail| <= pi/4, |x| >= 1/64; mask 1=sin, 2=cos.
+void mk61_m0_sincos_reduced(double,double,double*,unsigned);
+MK61_SOFT_PCS double mk61_m0_trig_pack(uint64_t,uint64_t);
+int mk61_m0_reduce_pio2(double,double*);
+// 1: completed result in out[0]; 2|(quadrant<<2): small reduced pair;
+// 0: use the shared reducer. Caller supplies pi/4 < |x| < 2^20.
+int mk61_m0_trig_medium(double,double*,unsigned);
 #endif
 }
 #endif

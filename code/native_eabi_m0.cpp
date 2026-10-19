@@ -1,7 +1,7 @@
 // Project-owned ARMv6-M IEEE binary32/binary64 arithmetic.
 // Integer algorithms: nearest-even, gradual underflow, signed zero and NaNs.
-// No floating expressions, allocation, errno/fenv, division instructions,
-// 64-bit multiply instructions, or dependency on compiler runtime archives.
+// No allocation, errno/fenv, division instructions, 64-bit multiply
+// instructions, or dependency on compiler runtime archives.
 #include "native_eabi_m0.hpp"
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
 #include <float.h>
@@ -56,6 +56,7 @@ struct ReciprocalSeeds {
 constexpr ReciprocalSeeds reciprocal_seeds;
 #if defined(__arm__) || defined(__thumb__)
 #include "native_eabi_m0_exp_table.inc"
+#include "native_eabi_m0_trig_table.inc"
 #endif
 inline U low_product(U a,U b) {
   return wide32(uint32_t(a),uint32_t(b))+
@@ -296,8 +297,10 @@ MK61_SOFT_PCS int __aeabi_##letter##cmpun(type a,type b) {return format::compare
 COMPARES(d,double,D)
 COMPARES(f,float,S)
 #undef COMPARES
+#if !defined(__arm__) && !defined(__thumb__)
 MK61_SOFT_PCS double __aeabi_i2d(int32_t x) {return real(D::from_integer(x<0?U(0)-U(int64_t(x)):U(x),x<0?D::Sign:0));}
 MK61_SOFT_PCS double __aeabi_ui2d(uint32_t x) {return real(D::from_integer(x));}
+#endif
 MK61_SOFT_PCS double __aeabi_l2d(int64_t x) {return real(D::from_integer(integer_magnitude(x),x<0?D::Sign:0));}
 MK61_SOFT_PCS double __aeabi_ul2d(U x) {return real(D::from_integer(x));}
 MK61_SOFT_PCS float __aeabi_i2f(int32_t x) {return single(S::from_integer(x<0?U(0)-U(int64_t(x)):U(x),x<0?S::Sign:0));}
@@ -311,6 +314,206 @@ MK61_SOFT_PCS U __aeabi_d2ulz(double x) {const U a=bits(x);return a&D::Sign?0:D:
 MK61_SOFT_PCS float __aeabi_d2f(double x) {return single(narrow(bits(x)));}
 MK61_SOFT_PCS double __aeabi_f2d(float x) {return real(extend(bits(x)));}
 #if defined(__arm__) || defined(__thumb__)
+struct Trig192 {U low,middle,high;};
+__attribute__((always_inline)) inline Trig192 trig_negate(Trig192 a) {
+  a.low=U(0)-a.low;
+  a.middle=~a.middle+U(!a.low);
+  a.high=~a.high+U(!a.low&&!a.middle);
+  return a;
+}
+__attribute__((always_inline)) inline Trig192 trig_difference(Trig192 a,Trig192 b) {
+  const U low=a.low-b.low;
+  bool borrow=a.low<b.low;
+  const U middle=a.middle-b.middle-U(borrow);
+  borrow=a.middle<b.middle || (borrow && a.middle==b.middle);
+  return {low,middle,a.high-b.high-U(borrow)};
+}
+__attribute__((always_inline)) inline U trig_pack192(Trig192 a,U sign,unsigned &leading) {
+  if(!(a.low|a.middle|a.high)) {leading=192;return sign;}
+  U first,second,third;
+  unsigned n;
+  if(a.high) {first=a.high;second=a.middle;third=a.low;n=0;}
+  else if(a.middle) {first=a.middle;second=a.low;third=0;n=64;}
+  else {first=a.low;second=third=0;n=128;}
+  const unsigned shift=clz64(first);
+  leading=n+shift;
+  const U q=shift?(first<<shift)|(second>>(64-shift)):first;
+  const bool sticky=(shift?second<<shift:second)||third;
+  const uint32_t tail=uint32_t(q)&2047;
+  const U rounded=(q>>11)+(tail>1024 || (tail==1024 && (((q>>11)&1)||sticky)));
+  return sign+(U(1022-leading)<<52)+rounded;
+}
+__attribute__((always_inline)) inline Trig192 trig_remainder(U b,uint32_t &n,bool &negative) {
+  const U s=(b&D::Fraction)|D::Hidden;
+  const int e=int((b>>52)&0x7FFU)-1023;
+  const U estimate=wide32(uint32_t(s>>21),0xA2F9836EU);
+  n=e==-1?uint32_t(estimate>=(U(1)<<63)):
+    uint32_t((estimate+(U(1)<<(62-e)))>>unsigned(63-e));
+  U words[3],carry=0;
+  for(unsigned i=0;i<3;++i) {
+    const U lo=wide32(trig_pi2[2*i],n)+carry;
+    const U hi=wide32(trig_pi2[2*i+1],n)+(lo>>32);
+    words[i]=(hi<<32)|uint32_t(lo);carry=hi>>32;
+  }
+  const unsigned shift=unsigned(e+11);
+  Trig192 r=trig_difference({0,0,s<<shift},{words[0],words[1],words[2]});
+  negative=(r.high>>63)!=0;
+  if(negative) r=trig_negate(r);
+  return r;
+}
+__attribute__((always_inline)) inline bool trig_remainder_pair(Trig192 r,U sign,double* output) {
+  unsigned leading;
+  const U first=trig_pack192(r,sign,leading);
+  // Below this residual the original fdlibm cancellation refinements
+  // retain the shared implementation's full precision margin.
+  if(leading>100) return false;
+  output[0]=real(first);
+  const U significand=(first&D::Fraction)|D::Hidden;
+  const int scale=int((first>>52)&0x7FFU)-1023+139;
+  U expanded[3]={0,0,0};
+  const unsigned word=unsigned(scale)/64,bit=unsigned(scale)%64;
+  expanded[word]=significand<<bit;
+  if(word<2 && bit) expanded[word+1]=significand>>(64-bit);
+  Trig192 tail=trig_difference(r,{expanded[0],expanded[1],expanded[2]});
+  const bool below=(tail.high>>63)!=0;
+  if(below) tail=trig_negate(tail);
+  output[1]=real(trig_pack192(tail,sign^(below?D::Sign:0),leading));
+  return true;
+}
+__attribute__((optimize("Os"))) int mk61_m0_reduce_pio2(double x,double* output) {
+  const U b=bits(x);uint32_t n;bool negative;
+  const Trig192 r=trig_remainder(b,n,negative);
+  if(!n || !trig_remainder_pair(r,(b&D::Sign)^(negative?D::Sign:0),output)) return 0;
+  return b&D::Sign?-int(n):int(n);
+}
+U trig_fixed(U a) {
+  const unsigned raw=unsigned((a>>52)&0x7FFU);
+  if(!(a&D::Magnitude)) return 0;
+  const int shift=int(raw)-1023+10;
+  if(shift<=-54) return 0;
+  const U s=(a&D::Fraction)|D::Hidden;
+  U q;
+  if(shift>=0) q=s<<unsigned(shift);
+  else {
+    const unsigned right=unsigned(-shift);
+    if(right>32) {
+      const unsigned n=right-32;
+      const uint32_t high=uint32_t(s>>32),half=1U<<(n-1),tail=high&((half<<1)-1);
+      q=(high>>n)+(tail>half || (tail==half && (((high>>n)&1)||uint32_t(s))));
+    } else {
+      const U half=U(1)<<(right-1),tail=s&((half<<1)-1);
+      q=(s>>right)+(tail>half || (tail==half && ((s>>right)&1)));
+    }
+  }
+  return a&D::Sign?U(0)-q:q;
+}
+// cos(h)-1 is below 2^-23. Round it to Q54 before its final product;
+// the induced relative error in sin/cos stays below 2^-55.
+__attribute__((always_inline)) inline U trig_small_product(U a,U delta) {
+  const uint32_t d=uint32_t((delta+128)>>8);
+  const U lo=wide32(uint32_t(a),d);
+  const U hi=wide32(uint32_t(a>>32),d)+(lo>>32);
+  const U rounded=(hi+((U(1)<<21)-1)+U(((hi>>22)&1)||uint32_t(lo)))>>22;
+  const int32_t error=int32_t(uint32_t(delta)-(d<<8));
+  const int32_t correction=(int32_t(a>>47)*error+16384)>>15;
+  return rounded+U(int64_t(correction));
+}
+__attribute__((optimize("Os"))) void trig_sincos_fixed(U magnitude,U sign,double* out,unsigned mask) {
+  const unsigned j=unsigned((magnitude+(U(1)<<51))>>52);
+  const U h=magnitude-(U(j)<<52);
+  if(!h) {
+    if(mask&1) out[0]=mk61_m0_trig_pack(trig_table[j][0],sign);
+    if(mask&2) out[1]=mk61_m0_trig_pack(trig_table[j][1],0);
+    return;
+  }
+  const bool negative=(h>>63)!=0;
+  const U a=negative?U(0)-h:h;
+  const uint32_t t=uint32_t(a>>20); // Q42, |h| <= 1/2048, including endpoints
+  const U square=wide32(t,t);
+  // Two products recover the square to within 1+2^-22 Q62 units. The omitted
+  // low-limb square contributes less than 2^-22 of such a unit.
+  const U cross=wide32(t,uint32_t(a)&0xFFFFFU);
+  const U z=(square>>22)+(cross>>41)+1;
+  const U p=wide32(uint32_t(square),t);
+  const uint32_t cube=uint32_t((wide32(uint32_t(square>>32),t)+(p>>32))>>32);
+  const uint32_t third=uint32_t(wide32(cube+3,0xAAAAAAABU)>>34);
+  const uint32_t fourth=uint32_t(wide32(uint32_t(wide32(cube,t)>>42)+12,0xAAAAAAABU)>>36);
+  const U sh=a-third;
+  const U ch=((z+1)>>1)-fourth;
+  const U s=trig_table[j][0],c=trig_table[j][1];
+  if(mask&1) {
+    const U correction=mk61_m0_mul_q62(c,sh);
+    const U q=s-trig_small_product(s,ch)+(negative?U(0)-correction:correction);
+    out[0]=mk61_m0_trig_pack(q,sign);
+  }
+  if(mask&2) {
+    const U correction=mk61_m0_mul_q62(s,sh);
+    const U q=c-trig_small_product(c,ch)+(negative?correction:U(0)-correction);
+    out[1]=mk61_m0_trig_pack(q,0);
+  }
+}
+__attribute__((optimize("Os"))) void mk61_m0_sincos_reduced(double x,double tail,double* out,unsigned mask) {
+  const U xb=bits(x);
+  const U primary=((xb&D::Fraction)|D::Hidden)<<unsigned(int((xb>>52)&0x7FFU)-1013);
+  const U raw=(xb&D::Sign?U(0)-primary:primary)+trig_fixed(bits(tail));
+  const U sign=raw&D::Sign;
+  trig_sincos_fixed(sign?U(0)-raw:raw,sign,out,mask);
+}
+__attribute__((optimize("Os"))) int mk61_m0_trig_medium(double x,double* out,unsigned op) {
+  const U b=bits(x);uint32_t n;bool negative;
+  const U s=(b&D::Fraction)|D::Hidden;
+  const int e=int((b>>52)&0x7FFU)-1023;
+  const U estimate=wide32(uint32_t(s>>21),0xA2F9836EU);
+  n=e==-1?uint32_t(estimate>=(U(1)<<63)):
+    uint32_t((estimate+(U(1)<<(62-e)))>>unsigned(63-e));
+  if(!n) return 0;
+  // Q95 needs only two wide products and one low product. Truncating pi/2
+  // changes the signed remainder by less than n units in its low word.
+  // A low word within n of either boundary may straddle a Q62 rounding
+  // midpoint; certify the common path and recompute those cases in Q191.
+  const U lo=wide32(trig_pi2[3],n);
+  const U middle=wide32(trig_pi2[4],n)+(lo>>32);
+  const uint32_t top=trig_pi2[5]*n+uint32_t(middle>>32);
+  uint32_t low=0U-uint32_t(lo);
+  U high=(s<<unsigned(e+11))-((U(top)<<32)|uint32_t(middle))-U(low!=0);
+  negative=(high>>63)!=0;
+  if(negative) {low=0U-low;high=~high+U(!low);}
+  U q=(high>>1)+U((high&1) && (low||((high>>1)&1)));
+  if(q<(U(1)<<56) || low<=n || uint32_t(~low)<=n) {
+    const Trig192 r=trig_remainder(b,n,negative);
+    q=(r.high>>1)+U((r.high&1) && ((r.low|r.middle)||((r.high>>1)&1)));
+    if(q<(U(1)<<56)) {
+      if(!trig_remainder_pair(r,(b&D::Sign)^(negative?D::Sign:0),out)) return 0;
+      const unsigned quadrant=(b&D::Sign?0U-n:n)&3U;
+      return 2|int(quadrant<<2);
+    }
+  }
+  const unsigned selected=op==0?(n&1):op==1?((n&1)^1U):0;
+  trig_sincos_fixed(q,negative?D::Sign:0,out,op==2?3:1U<<selected);
+  U value;
+  if(op==2) {
+    value=bits(n&1?-out[1]/out[0]:out[0]/out[1])^(b&D::Sign);
+  } else {
+    const unsigned flip=op==0?((n>>1)&1)^unsigned(b>>63):((n+1)>>1)&1;
+    value=bits(out[selected])^(U(flip)<<63);
+  }
+  out[0]=real(value);return 1;
+}
+__attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
+  if(!uint32_t(b>>32)) {
+    const uint32_t y=uint32_t(b);
+    if(!y) return 0;
+    const U low=wide32(uint32_t(a),y);
+    const U upper=wide32(uint32_t(a>>32),y)+(low>>32);
+    const U q=upper>>30;
+    const uint32_t tail=uint32_t(upper)&0x3FFFFFFFU;
+    return q+(tail>0x20000000U || (tail==0x20000000U && (uint32_t(low)||(q&1))));
+  }
+  const Product p=multiply(a,b);
+  const U q=(p.high<<2)|(p.low>>62);
+  const U tail=p.low&((U(1)<<62)-1),half=U(1)<<61;
+  return q+(tail>half || (tail==half && (q&1)));
+}
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
 __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {

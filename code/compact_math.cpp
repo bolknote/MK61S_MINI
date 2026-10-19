@@ -91,7 +91,11 @@ inline uint64_t rounded_right(uint64_t q,unsigned shift) {
 inline int64_t scaled_product(uint64_t z,int64_t coefficient) {
   const bool negative=coefficient<0;
   const uint64_t magnitude=negative?uint64_t(-coefficient):uint64_t(coefficient);
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const int64_t p=int64_t(mk61_m0_mul_q62(z,magnitude));
+#else
   const int64_t p=int64_t(rounded_shift62(multiply(z,magnitude)));
+#endif
   return negative?-p:p;
 }
 inline uint64_t normalized(double x,double tail,int &e) {
@@ -136,14 +140,36 @@ inline uint64_t polynomial(uint64_t z,const int64_t *coefficients,unsigned count
 double sine(double x,double tail) {
   const uint64_t b=bits(x);
   if ((hi_word(x)&0x7FFFFFFFU)<0x3E400000U) return x+tail;
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  if((hi_word(x)&0x7FFFFFFFU)>=0x3F900000U) {
+    double output[2];mk61_m0_sincos_reduced(x,tail,output,1);return output[0];
+  }
+#endif
   int exponent;const uint64_t q=normalized(x,tail,exponent);
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const uint64_t factor=polynomial(square(q,exponent),sine_coefficients,4);
+#else
   const uint64_t factor=polynomial(square(q,exponent),sine_coefficients,9);
+#endif
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return pack(mk61_m0_mul_q62(q,factor),exponent,b&UINT64_C(0x8000000000000000));
+#else
   return pack(rounded_shift62(multiply(q,factor)),exponent,b&UINT64_C(0x8000000000000000));
+#endif
 }
 double cosine(double x,double tail) {
   if ((hi_word(x)&0x7FFFFFFFU)<0x3E400000U) return 1.0;
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  if((hi_word(x)&0x7FFFFFFFU)>=0x3F900000U) {
+    double output[2];mk61_m0_sincos_reduced(x,tail,output,2);return output[1];
+  }
+#endif
   int exponent;const uint64_t q=normalized(x,tail,exponent);
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return pack(polynomial(square(q,exponent),cosine_coefficients,4),1,0);
+#else
   return pack(polynomial(square(q,exponent),cosine_coefficients,10),1,0);
+#endif
 }
 using tables::exponential_coefficients;
 inline int64_t fixed_argument(double x) {
@@ -177,7 +203,11 @@ using tables::half_pi;
 inline uint64_t reduced(double x,int &e) {
   const uint64_t q=fixed_kernel::normalized(x,0.0,e);
   const uint64_t factor=fixed_kernel::polynomial(fixed_kernel::square(q,e),atan_coefficients,5);
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_mul_q62(q,factor);
+#else
   return fixed_kernel::rounded_shift62(fixed_kernel::multiply(q,factor));
+#endif
 }
 double evaluate(double x) {
   const uint64_t b=bits(x),sign=b&UINT64_C(0x8000000000000000);
@@ -387,6 +417,12 @@ int reduce(double x, double *y)
 
         GET_HIGH_WORD(hx,x);		/* high word of x */
         ix = hx&0x7fffffff;
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+        if(ix<0x41300000) {
+            const int reduced=mk61_m0_reduce_pio2(x,y);
+            if(reduced) return reduced;
+        }
+#endif
 if (ix <= 0x400f6a7a) {		/* |x| ~<= 5pi/4 */
             if ((ix & 0xfffff) == 0x921fb)  /* |x| ~= pi/2 or 2pi/2 */
                 goto medium;		/* cancellation -- use medium case */
@@ -923,7 +959,13 @@ double sin(double x) {
   if (h >= 0x7FF00000U) return x-x;
   if (h <= 0x3FE921FBU) return sine::evaluate(x,0.0,0);
   double r[2];
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const int mode=h<0x41300000U?mk61_m0_trig_medium(x,r,0):0;
+  if(mode==1) return r[0];
+  const int n=mode?mode>>2:argument::reduce(x,r);
+#else
   const int n = argument::reduce(x,r);
+#endif
   switch (n & 3) {
     case 0: return sine::evaluate(r[0],r[1],1);
     case 1: return cosine::evaluate(r[0],r[1]);
@@ -937,7 +979,13 @@ double cos(double x) {
   if (h >= 0x7FF00000U) return x-x;
   if (h <= 0x3FE921FBU) return cosine::evaluate(x,0.0);
   double r[2];
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const int mode=h<0x41300000U?mk61_m0_trig_medium(x,r,1):0;
+  if(mode==1) return r[0];
+  const int n=mode?mode>>2:argument::reduce(x,r);
+#else
   const int n = argument::reduce(x,r);
+#endif
   switch (n & 3) {
     case 0: return cosine::evaluate(r[0],r[1]);
     case 1: return -sine::evaluate(r[0],r[1],1);
@@ -949,10 +997,26 @@ double tan(double x) {
   const uint32_t h = hi_word(x) & 0x7FFFFFFFU;
   if (h < 0x3E400000U) return x;
   if (h >= 0x7FF00000U) return x-x;
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  double r[2]; r[0]=x; r[1]=0.0;
+#else
   double r[2] = {x,0.0};
+#endif
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  const int mode=h>0x3FE921FBU && h<0x41300000U?mk61_m0_trig_medium(x,r,2):0;
+  if(mode==1) return r[0];
+  const int n=mode?mode>>2:h<=0x3FE921FBU?0:argument::reduce(x,r);
+  double s,c;
+  if((hi_word(r[0])&0x7FFFFFFFU)>=0x3F900000U) {
+    double output[2];mk61_m0_sincos_reduced(r[0],r[1],output,3);s=output[0];c=output[1];
+  } else {
+    s=sine::evaluate(r[0],r[1],r[1]!=0.0);c=cosine::evaluate(r[0],r[1]);
+  }
+#else
   const int n = h <= 0x3FE921FBU ? 0 : argument::reduce(x,r);
   const double s = sine::evaluate(r[0],r[1],r[1]!=0.0);
   const double c = cosine::evaluate(r[0],r[1]);
+#endif
   return n & 1 ? -c/s : s/c;
 }
 double ln(double x) {

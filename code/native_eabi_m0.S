@@ -14,6 +14,117 @@
  .size \name, .-\name
 .endm
 
+// Every int32/uint32 is exactly representable in binary64. Normalize the
+// unsigned magnitude in chunks, then split its 32 bits between R1 and R0.
+function __aeabi_i2d
+ movs r1,#0
+ cmp r0,#0
+ beq .Li2d_return
+ bpl .Li2d_normalize
+ movs r1,#1
+ lsls r1,#31
+ rsbs r0,r0,#0
+ b .Li2d_normalize
+.global __aeabi_ui2d
+.type __aeabi_ui2d,%function
+.thumb_func
+__aeabi_ui2d:
+ movs r1,#0
+ cmp r0,#0
+ beq .Li2d_return
+.Li2d_normalize:
+ ldr r2,=1053
+ lsrs r3,r0,#16
+ bne 1f
+ lsls r0,#16
+ subs r2,#16
+1:
+ lsrs r3,r0,#24
+ bne 1f
+ lsls r0,#8
+ subs r2,#8
+1:
+ lsrs r3,r0,#28
+ bne 1f
+ lsls r0,#4
+ subs r2,#4
+1:
+ lsrs r3,r0,#30
+ bne 1f
+ lsls r0,#2
+ subs r2,#2
+1:
+ cmp r0,#0
+ bmi 1f
+ lsls r0,#1
+ subs r2,#1
+1:
+ lsrs r3,r0,#11
+ orrs r1,r3
+ lsls r2,#20
+ adds r1,r2
+ lsls r0,#21
+.Li2d_return:
+ bx lr
+.size __aeabi_ui2d,.-__aeabi_ui2d
+.ltorg
+end __aeabi_i2d
+
+// Positive Q62 in [sin(1/64),1], sign in R3. The quotient discards only
+// 3..10 bits, so all rounding bits are in R0. Exact nearest-even packing.
+function mk61_m0_trig_pack
+ push {r4,lr}
+ mov r12,r3
+ mov r2,r1
+ movs r3,#11
+ lsrs r4,r2,#24
+ bne 1f
+ lsls r2,#8
+ subs r3,#8
+1:
+ lsrs r4,r2,#28
+ bne 1f
+ lsls r2,#4
+ subs r3,#4
+1:
+ lsrs r4,r2,#30
+ bne 1f
+ lsls r2,#2
+ subs r3,#2
+1:
+ cmp r2,#0
+ bmi 1f
+ subs r3,#1
+1:
+ movs r2,#1
+ subs r4,r3,#1
+ lsls r2,r4
+ subs r2,#1
+ mov r4,r0
+ lsrs r4,r3
+ lsls r4,#31
+ lsrs r4,#31
+ adds r2,r4
+ adds r0,r2
+ movs r2,#0
+ adcs r1,r2
+ mov r4,r1
+ lsrs r1,r3
+ movs r2,#32
+ subs r2,r3
+ lsls r4,r2
+ lsrs r0,r3
+ orrs r0,r4
+ ldr r2,=1012
+ adds r2,r3
+ lsls r2,#20
+ adds r1,r2
+ mov r2,r12
+ orrs r1,r2
+ pop {r4,pc}
+.ltorg
+end mk61_m0_trig_pack
+
 // Normal finite operands use three exact rounding bits. Exceptional operands
 // and the extreme exponents enter the shared, fully IEEE integer fallback
 // before either significand is changed. This is independent project code.
