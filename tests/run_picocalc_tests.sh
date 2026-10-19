@@ -12,7 +12,7 @@ for unit in ff ffunicode; do
         -c "$root/third_party/fatfs/$unit.c" -o "$build_dir/$unit.o"
 done
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -fconstexpr-steps=10000000 \
-    -ffp-contract=off "${flags[@]}" -DMK61_CORE_STANDALONE=1 -DMK61_M61_READ_CACHE_BYTES=2048 -DMK61_ENABLE_RTC_ALARM_TERMINAL=1 -DMK61_ENABLE_USB_SCREEN=1 \
+    -ffp-contract=off "${flags[@]}" -DMK61_CORE_STANDALONE=1 -DLANGUAGE_VM_TEST_PICO_ENTRY -DMK61_M61_READ_CACHE_BYTES=2048 -DMK61_ENABLE_RTC_ALARM_TERMINAL=1 -DMK61_ENABLE_USB_SCREEN=1 \
     -DMK61_USE_COMPACT_LIBM=1 -DMK61_MATH_BACKEND=0 \
     -I"$root/code" -I"$root/ports/picocalc" -I"$root/third_party/fatfs" \
     "$root/tests/picocalc_self_test.cpp" "$root/ports/picocalc/calculator.cpp" \

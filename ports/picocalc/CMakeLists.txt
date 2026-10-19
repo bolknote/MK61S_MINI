@@ -109,7 +109,7 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.8.4")
+pico_set_program_version(mk61s-picocalc-pico-h "0.8.5")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.

@@ -1100,7 +1100,13 @@ RunResult run(const View& v, Continuation& s, const Bindings& data,
 #if MK61_VM_INTEGER_SPAN
     // The span validates every supported start itself, before the generic
     // operand decoder/snapshot. Keep disabled hints on their scalar fallback.
-    if(op==Op::INTEGER_SPAN || op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
+    if(op==Op::INTEGER_SPAN ||
+#if (defined(MK61_CORE_STANDALONE) && defined(PICO_ON_DEVICE) && PICO_ON_DEVICE) || defined(LANGUAGE_VM_TEST_PICO_ENTRY)
+       // Pico's SRAM span also handles these ordinary loads. Enter before
+       // operand decoding; its int32 guard retains the scalar fallback.
+       op==Op::LOAD || op==Op::INTEGER_SHORT || op==Op::LOAD_ARRAY_FIXED ||
+#endif
+       op==Op::CONST_I8 || op==Op::CONST_I16 || op==Op::CONST_I32 ||
        (op>=Op::CONST_0 && op<=Op::CONST_15)
 #if MK61_VM_INTEGER_BLOCK
        || op==Op::BLOCK_INDEX
