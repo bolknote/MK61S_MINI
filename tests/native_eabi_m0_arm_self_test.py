@@ -236,6 +236,34 @@ def addition_rounding(m):
             m.floating('__aeabi_dadd',y,x,expected)
             m.floating('__aeabi_dsub',x,y^SIGN,expected)
 
+def mixed_sign_nearby(m):
+    # Exact cancellation and every limb/normalization boundary, plus the
+    # one-bit rounding possible when opposite signs have adjacent exponents.
+    fractions=(0,1,2,3,0xFFFFFFFE,0xFFFFFFFF,0x100000000,0x100000001,
+        (1<<51)-1,1<<51,(1<<51)+(1<<32),(1<<52)-3,(1<<52)-2,(1<<52)-1)
+    def check(a,b):
+        for sign in (0,SIGN):
+            x,y=a|sign,b|(sign^SIGN)
+            expected=bits(real(x)+real(y))
+            m.floating('__aeabi_dadd',x,y,expected)
+            m.floating('__aeabi_dadd',y,x,expected)
+            m.floating('__aeabi_dsub',x,y^SIGN,expected)
+    for exponent in (1,2,53,54,55,56,1022,1023,1024,2044,2045,2046):
+        for delta in (0,1):
+            if exponent<=delta:continue
+            for af in fractions:
+                for bf in fractions:
+                    check((exponent<<52)|af,((exponent-delta)<<52)|bf)
+    for exponent in (55,56,1023,2045):
+        for bit in range(52):
+            check((exponent<<52)|(1<<bit),exponent<<52)
+            check(exponent<<52,((exponent-1)<<52)|((1<<52)-1-(1<<bit)))
+        for gap in (2,52,53,54,55,56,1074):
+            if exponent<=gap:continue
+            for af in (0,1,(1<<52)-1):
+                for bf in (0,1,(1<<52)-1):
+                    check((exponent<<52)|af,((exponent-gap)<<52)|bf)
+
 def build(toolchain,out,rp2040=False):
     out.mkdir(parents=True,exist_ok=True)
     flags=['-mcpu=cortex-m0plus','-mthumb','-mfloat-abi=soft','-Os','-ffunction-sections','-fdata-sections',
@@ -268,8 +296,10 @@ def main():
         sys.path.insert(0,str(ROOT/'tools'));from build_picocalc import compiler_bin
         elf=build(compiler_bin(a.toolchain),a.output_dir,a.rp2040)
     m=Machine(elf,a.rp2040)
+    nearby_calls=0
     if not a.math_only:
         arithmetic(m,a.samples);fast_path_boundaries(m);addition_rounding(m)
+        before=m.calls;mixed_sign_nearby(m);nearby_calls=m.calls-before
     worst=math_vectors(m)
     if a.rp2040:
         # A caller with pending divider state must get the full software path,
@@ -282,6 +312,7 @@ def main():
         m.uc.mem_write(0xD0000078,struct.pack('<I',1))
     counts={n:m.call('__aeabi_'+n,bits(.7),bits(1.3),count=True)[2] for n in ('dadd','dsub','dmul','ddiv')}
     report={'status':'PASS','elf_sha256':hashlib.sha256(elf.read_bytes()).hexdigest(),'actual_arm_calls':m.calls,
+        'nearby_addition_calls':nearby_calls,
         'math_vectors':1897,'math_worst_ulp':worst,'sample_instructions':counts,
         'abi':'Cortex-M0, soft EABI registers, R4-R11/SP preserved; writes '+('stack and SIO divider only' if a.rp2040 else 'stack only'),
         'timing_note':'Instruction counts are emulator diagnostics, not measured RP2040 cycles.'}

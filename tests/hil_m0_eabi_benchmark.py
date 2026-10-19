@@ -20,7 +20,7 @@ class BenchmarkShell(PicoShell):
 def decode(raw):
     assert len(raw)>=24
     magic,version,cases,samples,rounds=struct.unpack_from('<5I',raw)
-    if version==2:return decode_addition_streams(raw)
+    if version in (2,3):return decode_addition_streams(raw)
     assert (magic,version,cases,samples,rounds)==(0x30414C55,1,12,1024,9)
     assert len(raw)==24+4*cases*96
     result={}
@@ -41,10 +41,13 @@ def decode(raw):
     return result
 
 def decode_addition_streams(raw):
-    assert struct.unpack_from('<6I',raw)==(0x30414C55,2,32,1024,9,6)
+    magic,version,cases,samples,rounds,groups=struct.unpack_from('<6I',raw)
+    assert (magic,cases,samples,rounds,groups)==(0x30414C55,32,1024,9,6) and version in (2,3)
     assert len(raw)==24+6*(32*24+72)
-    names=('same_sign_positive','same_sign_negative','mixed_sign_close',
-           'wide_gap','same_exponent','full_exponent_range')
+    names=(('same_sign_positive','same_sign_negative','mixed_sign_close',
+            'wide_gap','same_exponent','full_exponent_range') if version==2 else
+           ('equal_exponents','adjacent_exponents','one_ulp_apart',
+            'binade_boundary','exact_cancellation','rounding_ties'))
     rows=[]
     for group,name in enumerate(names):
         offset=24+group*(32*24+72);pairs=[]
@@ -58,7 +61,7 @@ def decode_addition_streams(raw):
         rows.append({'name':name,'pairs':pairs,
             'us_per_call':statistics.median(x-y for x,y in zip(elapsed,control))/1024,
             'raw_us':list(elapsed),'control_us':list(control)})
-    return {'dadd_streams':rows}
+    return {'dadd_streams' if version==2 else 'dadd_mixed_streams':rows}
 
 def operands(result):
     return {name:[[(pair['a'],pair['b']) for pair in row.get('pairs',[row])] for row in rows]

@@ -1,6 +1,9 @@
 // Varied addition streams, with all operands/results exported for host checks.
 #include "mk61_app.h"
 #include <stdint.h>
+#ifndef M0_BENCH_MIXED_STREAMS
+#define M0_BENCH_MIXED_STREAMS 0
+#endif
 typedef double Binary(double,double);
 typedef union {double d;uint64_t u;} Bits;
 #if M0_BENCH_QFPLIB
@@ -41,12 +44,24 @@ int main(void) {
 #else
  Binary* f=LOCAL_ADD;
 #endif
- output.magic=0x30414C55;output.version=2;output.cases=CASES;
+ output.magic=0x30414C55;output.version=M0_BENCH_MIXED_STREAMS?3:2;output.cases=CASES;
  output.samples=SAMPLES;output.rounds=ROUNDS;output.groups=GROUPS;
  for(unsigned group=0;group<GROUPS;++group) {
   for(unsigned i=0;i<CASES;++i) {
    unsigned ea=1015+(random32()&15),eb=ea-(random32()&7);
    uint64_t sa=0,sb=0;
+#if M0_BENCH_MIXED_STREAMS
+   uint64_t af=fraction(),bf=fraction();
+   sa=(uint64_t)((i>>1)&1)<<63;sb=sa^(UINT64_C(1)<<63);
+   eb=ea;
+   if(group==1)eb=ea-1;
+   if(group==2) {af&=~UINT64_C(1);bf=af+1;}
+   if(group==3) {eb=ea-1;af=random32()&3;bf=UINT64_C(0xFFFFFFFFFFFFF)-(random32()&15);}
+   if(group==4)bf=af;
+   if(group==5) {eb=ea-1;af=(UINT64_C(1)<<51)+(UINT64_C(1)<<32)+((i&4)?UINT64_C(0xFFFFFFFF):0);bf=i&3;}
+   Pair* p=&output.rows[group].pairs[i];
+   p->a=sa|((uint64_t)ea<<52)|af;p->b=sb|((uint64_t)eb<<52)|bf;
+#else
    if(group==1)sa=sb=UINT64_C(1)<<63;
    if(group==2) {eb=ea-(random32()&1);sb=UINT64_C(1)<<63;}
    if(group==3) {eb=ea-32-(random32()&31);sb=(uint64_t)(random32()&1)<<63;}
@@ -57,6 +72,7 @@ int main(void) {
    }
    Pair* p=&output.rows[group].pairs[i];
    p->a=sa|((uint64_t)ea<<52)|fraction();p->b=sb|((uint64_t)eb<<52)|fraction();
+#endif
    // Both alignment directions occur in every stream.
    if(i&1) {uint64_t swap=p->a;p->a=p->b;p->b=swap;}
    Bits a,b,r;a.u=p->a;b.u=p->b;r.d=f(a.d,b.d);p->result=r.u;

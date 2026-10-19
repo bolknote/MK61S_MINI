@@ -214,6 +214,129 @@ da_entry:
  b .Lda_same_add
 
 .Lda_mixed_sign:
+ // Align the encoded signs before subtracting exponents. For gaps 0/1,
+ // the exact magnitude difference needs at most 54 bits, not a sticky limb.
+ movs r6,#1
+ lsls r6,#11
+ eors r6,r5
+ subs r6,r4,r6
+ adds r7,r6,#1
+ cmp r7,#2
+ bhi .Lda_mixed_general
+ subs r7,r4,#1
+ lsls r7,#20
+ subs r1,r7
+ subs r7,r5,#1
+ lsls r7,#20
+ subs r3,r7
+ cmp r6,#0
+ bmi .Lda_near_y
+ bne .Lda_near_x
+ // Equal exponents: the difference is exact. Only its magnitude and sign
+ // are needed; a zero difference returns +0 before an exponent is packed.
+ subs r0,r0,r2
+ sbcs r1,r3
+ bcs 1f
+ movs r4,r5
+ mvns r1,r1
+ negs r0,r0
+ bcc 1f
+ adds r1,#1
+1:
+ movs r6,r0
+ orrs r6,r1
+ beq .Lda_near_return
+ b .Lda_near_normalize
+.Lda_near_y:
+ adds r2,r2
+ adcs r3,r3
+ subs r2,r2,r0
+ sbcs r3,r1
+ movs r0,r2
+ movs r1,r3
+ movs r4,r5
+ b 1f
+.Lda_near_x:
+ adds r0,r0
+ adcs r1,r1
+ subs r0,r0,r2
+ sbcs r1,r3
+1:
+ // Use the smaller exponent with an exact integer difference. A result
+ // with 54 significant bits needs one nearest-even rounding step; every
+ // smaller result can be normalized and packed without losing any bit.
+ subs r4,#1
+ lsrs r5,r1,#21
+ bne .Lda_near_round
+.Lda_near_normalize:
+ lsrs r5,r1,#20
+ bne .Lda_near_pack
+ lsrs r5,r1,#16
+ bne .Lda_near_one
+.Lda_near_sixteen:
+ cmp r1,#16
+ bhs .Lda_near_eight
+ lsls r1,#16
+ lsrs r5,r0,#16
+ orrs r1,r5
+ lsls r0,#16
+ subs r4,#16
+ b .Lda_near_sixteen
+.Lda_near_eight:
+ lsrs r5,r1,#12
+ bne .Lda_near_four
+ lsls r1,#8
+ lsrs r5,r0,#24
+ orrs r1,r5
+ lsls r0,#8
+ subs r4,#8
+.Lda_near_four:
+ lsrs r5,r1,#16
+ bne .Lda_near_one
+ lsls r1,#4
+ lsrs r5,r0,#28
+ orrs r1,r5
+ lsls r0,#4
+ subs r4,#4
+.Lda_near_one:
+ adds r0,r0
+ adcs r1,r1
+ subs r4,#1
+ lsrs r5,r1,#20
+ beq .Lda_near_one
+.Lda_near_pack:
+ subs r4,#1
+ lsls r4,#20
+ adds r1,r4
+.Lda_near_return:
+ pop {r4-r7,pc}
+.Lda_near_round:
+ movs r5,#3
+ ands r5,r0
+ lsrs r0,#1
+ lsls r6,r1,#31
+ orrs r0,r6
+ lsrs r1,#1
+ adds r4,#1
+ cmp r5,#3                    @ exact half ULP with an odd retained LSB
+ bne .Lda_near_pack
+ adds r0,#1
+ bcc .Lda_near_pack
+ adds r1,#1
+ b .Lda_near_pack
+
+.Lda_far_return:
+ cmp r6,#0
+ bpl .Lda_near_return
+ movs r0,r2
+ movs r1,r3
+ pop {r4-r7,pc}
+.Lda_mixed_general:
+ // Reuse the decoded gap: with at least 55 exponent steps the smaller
+ // magnitude cannot change nearest-even, even below a power of two.
+ adds r7,#53                  @ delta + 54, using the earlier delta + 1
+ cmp r7,#108
+ bhi .Lda_far_return
  mdunpacks_normal r0,r1,r4,r6
  mdunpacks_normal r2,r3,r5,r6
  subs r7,r5,r4                 @ ye-xe
@@ -251,8 +374,7 @@ da_pack:
  adcs r1,r2
 1:
  mov r2,r12                    @ get exponent
- lsrs r5,r1,#21
- bne da_0                      @ shift down required?
+ // Opposite signs reduce magnitude, so a carry normalization is impossible.
  lsrs r5,r1,#20
  bne da_1                      @ normalised?
  cmp r0,#0
@@ -330,18 +452,6 @@ da_5:
  bne da_2
 @ inputs must have been of identical magnitude and opposite sign, so return +0
  pop {r4-r7,r15}
-
-da_0:
-@ here a shift down by one place is required for normalisation
- adds r2,#1                    @ adjust exponent
- lsls r6,r0,#31                @ save rounding bit
- lsrs r0,#1
- lsls r5,r1,#31
- orrs r0,r5
- lsrs r1,#1
- cmp r6,#0
- beq da_3
- b da_4
 
 da_xrgty:                      @ xe>ye and shift>=32 places
  cmp r6,#60
