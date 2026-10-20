@@ -1,0 +1,372 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "branch": "feature/vm-arm-compiler",
+  "base_sha": "9800654d238e19ba61fb3e796de6ca4f5729acb2",
+  "status": "BOUNDED_EXPERIMENT_COMPLETE_STOP_THIS_JIT_DIRECTION",
+  "production_changed": false,
+  "hardware_touched": false,
+  "production_limits_relaxed": false,
+  "changes_committed": false,
+  "criterion": {
+    "minimum_full_search_instruction_reduction_percent": 20,
+    "met": false
+  },
+  "method": {
+    "program_specific_selection": false,
+    "precomputed_runtime_profiles": false,
+    "bytecode_unchanged": true,
+    "stage1": "Ready generic leaves versus the actual integer_span with identical logical work/live state; excludes compiler, lookup and outer guards",
+    "stage2": "Optional ADAPTIVE_TRACE_POC: scalar forwarding/delayed stores in r8-r10, up to three destinations, LINE and BASIC static jumps; conservative outer alias/base/frame/service guards",
+    "trace_max_ops": 24,
+    "cache_budget_bytes": 1152,
+    "actual_cache_arm32_bytes": 1032,
+    "actual_cache_host64_bytes": 1064,
+    "code_bytes": 864,
+    "slots": 1,
+    "heat_entries": 8,
+    "hot_threshold": 8,
+    "atomic_failure": "all bank/control writes delayed until every guard succeeds"
+  },
+  "isolated": {
+    "short_binary64": {
+      "status": "PASS",
+      "backend": "BINARY64; integer-only execution, no math runtime needed",
+      "trace": false,
+      "trace_ops": null,
+      "package_sha256": "4158988a5ee7bd5e0791efa63862a2c061d7ed31a359dcd9d842e98cb7604cb5",
+      "elf_sha256": "ac54fa862e1964d0473a37a6913c0ffcf62d94ba734f7aa9af562fa20fda2452",
+      "eligible_compilable_blocks": 9,
+      "successful_samples": 24,
+      "unsupported_span_count": 0,
+      "denied_count": 3,
+      "equal_weight_summary": {
+        "native_instructions": 1568,
+        "span_instructions": 12275,
+        "reduction_percent": 87.22606924643584
+      },
+      "method": "Each successful leaf also checked against full VM; incomplete integer_span cases excluded from speed sum, not from semantic validation",
+      "manifest": "/Users/bolk/.codex/worktrees/vm-arm-compiler/MK61S_MINI/research/arm-aot/cases/kernels/manifest.json"
+    },
+    "short_core": {
+      "status": "PASS",
+      "backend": "CORE; integer-only execution, no math runtime needed",
+      "trace": false,
+      "trace_ops": null,
+      "package_sha256": "4158988a5ee7bd5e0791efa63862a2c061d7ed31a359dcd9d842e98cb7604cb5",
+      "elf_sha256": "ac54fa862e1964d0473a37a6913c0ffcf62d94ba734f7aa9af562fa20fda2452",
+      "eligible_compilable_blocks": 9,
+      "successful_samples": 24,
+      "unsupported_span_count": 0,
+      "denied_count": 3,
+      "equal_weight_summary": {
+        "native_instructions": 1568,
+        "span_instructions": 12275,
+        "reduction_percent": 87.22606924643584
+      },
+      "method": "Each successful leaf also checked against full VM; incomplete integer_span cases excluded from speed sum, not from semantic validation",
+      "manifest": "/Users/bolk/.codex/worktrees/vm-arm-compiler/MK61S_MINI/research/arm-aot/cases/kernels/manifest.json"
+    },
+    "trace_binary64": {
+      "status": "PASS",
+      "backend": "BINARY64; integer-only execution, no math runtime needed",
+      "trace": true,
+      "trace_ops": 24,
+      "package_sha256": "4158988a5ee7bd5e0791efa63862a2c061d7ed31a359dcd9d842e98cb7604cb5",
+      "elf_sha256": "6d387b84fe86ee6dbe94baa40be64927fa55dd4e75d546fadd8774dbec0f410f",
+      "eligible_compilable_blocks": 9,
+      "successful_samples": 24,
+      "unsupported_span_count": 0,
+      "denied_count": 3,
+      "equal_weight_summary": {
+        "native_instructions": 2140,
+        "span_instructions": 20935,
+        "reduction_percent": 89.77788392643897
+      },
+      "method": "Each successful leaf also checked against full VM; incomplete integer_span cases excluded from speed sum, not from semantic validation",
+      "manifest": "/Users/bolk/.codex/worktrees/vm-arm-compiler/MK61S_MINI/research/arm-aot/cases/kernels/manifest.json"
+    },
+    "trace_core": {
+      "status": "PASS",
+      "backend": "CORE; integer-only execution, no math runtime needed",
+      "trace": true,
+      "trace_ops": 24,
+      "package_sha256": "4158988a5ee7bd5e0791efa63862a2c061d7ed31a359dcd9d842e98cb7604cb5",
+      "elf_sha256": "6d387b84fe86ee6dbe94baa40be64927fa55dd4e75d546fadd8774dbec0f410f",
+      "eligible_compilable_blocks": 9,
+      "successful_samples": 24,
+      "unsupported_span_count": 0,
+      "denied_count": 3,
+      "equal_weight_summary": {
+        "native_instructions": 2140,
+        "span_instructions": 20935,
+        "reduction_percent": 89.77788392643897
+      },
+      "method": "Each successful leaf also checked against full VM; incomplete integer_span cases excluded from speed sum, not from semantic validation",
+      "manifest": "/Users/bolk/.codex/worktrees/vm-arm-compiler/MK61S_MINI/research/arm-aot/cases/kernels/manifest.json"
+    },
+    "all_chess_hints": {
+      "status": "PASS",
+      "backend": "BINARY64; integer-only execution, no math runtime needed",
+      "trace": true,
+      "trace_ops": 24,
+      "package_sha256": "f5747f5ab0723a3b4c188cbf3565ef4d47e263d5b5ddb3a9811428bdb7f0c1bf",
+      "elf_sha256": "03a8613ed9cb5f90d28278156ec3e478621df90c138ac50ca6f7ae926610548b",
+      "eligible_compilable_blocks": 241,
+      "successful_samples": 674,
+      "unsupported_span_count": 33,
+      "denied_count": 16,
+      "equal_weight_summary": {
+        "native_instructions": 51247,
+        "span_instructions": 394057,
+        "reduction_percent": 86.99502863798891
+      },
+      "method": "Each successful leaf also checked against full VM; incomplete integer_span cases excluded from speed sum, not from semantic validation",
+      "manifest": "tools/turochamp/linked_program.json"
+    },
+    "warning": "Equal-weight synthetic-input kernel summaries are NOT chess speedup estimates; all CORE rows here execute integer paths only"
+  },
+  "verification": {
+    "math_backends": [
+      "BINARY64",
+      "CORE"
+    ],
+    "sanitizers": "ASan+UBSan no recovery",
+    "differential_scenarios_each_backend": 6048,
+    "direct_leaf_cases_each_backend": 37596,
+    "extra_multi_store_trace_scenarios_each_backend": 5120,
+    "extra_native_successes_each_backend": 100,
+    "extra_atomic_denials_each_backend": 2460,
+    "extra_alias_fallbacks_each_backend": 2560,
+    "short_mode_regression_suite": "PASS for both arithmetic backends",
+    "host_chess_vm_trace_vm": "PASS for both backends, both retention modes; full banks/tags/events/routes/polls compared",
+    "unmodified_chess_golden": "e2e3/54/420, 7662 launches, 205013 service polls",
+    "arm_execution": "actual Thumb code executes from bounded SRAM; BINARY64 owned math, not CORE speed measurement"
+  },
+  "full_search": {
+    "kind": "adaptive runtime Thumb compilation, NOT hardware timing",
+    "trace": true,
+    "trace_ops": 24,
+    "sizes": {
+      "reference": {
+        "flash_and_readonly_bytes": 73784,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 25056,
+          ".rodata": 48728,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "2254246b9bfd670944d04b674845ce13310d5fcbd939c5925d7fd9d646f682c7"
+      },
+      "adaptive": {
+        "flash_and_readonly_bytes": 80052,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 31268,
+          ".rodata": 48784,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "8450d56ff477b40c5abf7fa4e62c3afe0d15158be2872ec224a17d5aa6c5d60b"
+      },
+      "retained": {
+        "flash_and_readonly_bytes": 80060,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 31276,
+          ".rodata": 48784,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "6a100160d6f2c7ff7738ae3b1082338c5e25a339ddf3233975f09c8d12b224bd"
+      }
+    },
+    "execution": {
+      "reference": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 0,
+          "hits": 0,
+          "compiles": 0,
+          "rejects": 0,
+          "evictions": 0,
+          "deopts": 0,
+          "operations": 0,
+          "cold": 0
+        },
+        "executed_instructions": 638165564,
+        "basic_blocks": 193886179,
+        "native_sram_instructions": 0,
+        "native_sram_basic_blocks": 0,
+        "touched_stack_watermark_bytes": 920,
+        "emulator_wall_seconds": 84.9146585840499
+      },
+      "adaptive": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 151104,
+          "hits": 29456,
+          "compiles": 1678,
+          "rejects": 537,
+          "evictions": 1067,
+          "deopts": 354,
+          "operations": 264955,
+          "cold": 118757
+        },
+        "executed_instructions": 658776643,
+        "basic_blocks": 199731616,
+        "native_sram_instructions": 1529847,
+        "native_sram_basic_blocks": 183279,
+        "touched_stack_watermark_bytes": 2304,
+        "emulator_wall_seconds": 85.72062212508172
+      },
+      "retained": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 149550,
+          "hits": 32843,
+          "compiles": 2005,
+          "rejects": 555,
+          "evictions": 2004,
+          "deopts": 489,
+          "operations": 308624,
+          "cold": 113053
+        },
+        "executed_instructions": 660175019,
+        "basic_blocks": 199161544,
+        "native_sram_instructions": 1781788,
+        "native_sram_basic_blocks": 219834,
+        "touched_stack_watermark_bytes": 2312,
+        "emulator_wall_seconds": 85.31310962501448
+      }
+    },
+    "status": "PASS"
+  },
+  "cost_attribution": {
+    "kind": "dynamic ARM cost attribution, NOT hardware timing",
+    "status": "PASS",
+    "elf_sha256": "8450d56ff477b40c5abf7fa4e62c3afe0d15158be2872ec224a17d5aa6c5d60b",
+    "execution": {
+      "launches": 7662,
+      "polls": 205013,
+      "nodes": 420,
+      "best": 5795,
+      "score": 54,
+      "event_hash": "f381ab0490f4347f",
+      "route_hash": "c2a82610ade4ef12",
+      "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+      "cache": {
+        "probes": 151104,
+        "hits": 29456,
+        "compiles": 1678,
+        "rejects": 537,
+        "evictions": 1067,
+        "deopts": 354,
+        "operations": 264955,
+        "cold": 118757
+      },
+      "executed_instructions": 658776643,
+      "basic_blocks": 199731616,
+      "native_sram_instructions": 1529847,
+      "native_sram_basic_blocks": 183279,
+      "touched_stack_watermark_bytes": 2304,
+      "compiler_instructions": 17122231,
+      "manager_instructions_excluding_compiler_and_native": 11816055,
+      "optimistic_fixed_coverage_without_compiler_or_manager": 629838357,
+      "emulator_wall_seconds": 96.21339137502946
+    },
+    "reference_instructions": 638165564,
+    "fixed_coverage_optimistic_reduction_percent": 1.3048662400091504,
+    "warning": "All guards/bookkeeping in attempt() hypothetically free; same native coverage, not a realizable implementation or perfect-cache bound"
+  },
+  "app_size": {
+    "reference": {
+      "name": "LANGVM",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 84,
+      "relocation_bytes": 96,
+      "entry_offset": 0,
+      "image_bytes": 20392,
+      "bss_bytes": 20,
+      "memory_bytes": 20412,
+      "app_bytes": 15704,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "vm_integer_block": true
+    },
+    "adaptive": null,
+    "kind": "dry monolithic APP size probe only",
+    "memory_limit_bytes": 20480,
+    "trace": true,
+    "trace_ops": 24,
+    "status": "DOES_NOT_FIT_UNCHANGED_20K_APP",
+    "diagnostic": "/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: address 0x200067e0 of /private/tmp/mk61-trace-app-size-01/adaptive/LANGVM.elf section `.module_image' is not within region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: /private/tmp/mk61-trace-app-size-01/adaptive/LANGVM.elf section `.module_bss' will not fit in region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: address 0x200067e0 of /private/tmp/mk61-trace-app-size-01/adaptive/LANGVM.elf section `.module_image' is not within region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: MK61 APP exceeds the target image limit\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: region `MODULE' overflowed by 6132 bytes\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: warning: /private/tmp/mk61-trace-app-size-01/adaptive/LANGVM.elf has a LOAD segment with RWX permissions\ncollect2: error: ld returned 1 exit status\n",
+    "loaded_bytes_from_rejected_linker_map": 26612,
+    "additional_bytes_vs_stock": 6200,
+    "overflow_bytes": 6132,
+    "deployable_app_produced": false
+  },
+  "decision": {
+    "reason": "No full-search gain. At current native coverage even hypothetically removing all dynamically attributed compiler/attempt cost gives only 1.30%, far below 20%; APP still fails unchanged limit.",
+    "do_not_generalize": "This does not prove all native compilation or a different/bigger-cache coverage policy cannot help. It rejects this resource-bounded approach and does not justify further size-packing work now.",
+    "next_action": "Keep sources and measurements as research; no main merge or device deployment."
+  },
+  "limitations": [
+    "Instruction counts, not hardware cycles or elapsed seconds",
+    "Raw precompiled code fixture excludes filesystem/first-load/real USB and screen latency",
+    "Hypothetical cost subtraction keeps the SAME executed block set; it is NOT an unlimited/perfect-cache bound",
+    "Touched-stack watermark grows to 2304/2312 bytes versus 920; not IRQ headroom qualification",
+    "Monolithic APP rejected at 26612 bytes versus unchanged 20480; no size-limit waiver",
+    "Source base is the experiment worktree, not latest main"
+  ],
+  "source_sha256": {
+    "jit.hpp": "9c80b3d85cfe9df74b4f22766c3569ec71feff74093bba234f1765f8803aa6c4",
+    "jit.cpp": "db5b635f7d4d8bdaa272a71706d7e25d75147e6dc3788bc9792225214cb343c5",
+    "jit_compile.cpp": "5a094017ae5922b3c54cb42cca9bb6f11dfedc0e010c6f1ab9b946aa770edfd4",
+    "thumb_emit.hpp": "0563584afdd3e910dd26777c85bbc6e40e3fee99ac0fd4ea61094a378aa4a223",
+    "jit_trace_test.cpp": "2f4de3dce07d162a6cbfd76dc34500ee2dc7f2f9efe4bade45cad71916083371",
+    "jit_isolated.py": "e88afaba2915500bb4d32a6a93bcccb453557c1bc4335a1f7504135b3ed59568",
+    "jit_cost_profile.py": "85d3ac9a6410b1cf21a919e637d1bce585c7516faad7ab56417cd07289f11f35"
+  }
+}
