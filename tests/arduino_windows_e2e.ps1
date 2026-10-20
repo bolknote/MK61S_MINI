@@ -116,14 +116,17 @@ try {
     }
     if (-not $Fixture) {
         if ([string]::IsNullOrEmpty($PublishedSystem)) { throw 'Missing published System directory' }
-        foreach ($file in @(Get-ChildItem -LiteralPath $system -Recurse -File)) {
-            $name = $file.FullName.Substring($system.Length + 1)
-            if ((Get-Mk61FileSha256 $file.FullName) -cne (Get-Mk61FileSha256 (Join-Path $PublishedSystem $name))) {
+        # Streaming VM builds omit VMSTORE on both MCUs. Compare the complete
+        # selected inventory instead of inferring cache policy from the MCU;
+        # nested VMSTORE remains covered by the fixture and bundle tests.
+        foreach ($name in $script:Mk61SystemFiles) {
+            $stagedFile = Join-Path $system $name
+            $publishedFile = Join-Path $PublishedSystem $name
+            $selected = [IO.File]::Exists($stagedFile)
+            if ($selected -ne [IO.File]::Exists($publishedFile) -or
+                ($selected -and (Get-Mk61FileSha256 $stagedFile) -cne (Get-Mk61FileSha256 $publishedFile))) {
                 throw "Published System differs from the staged Arduino output: $name"
             }
-        }
-        if ($mcu -eq 'f411' -and -not [IO.File]::Exists((Join-Path $system 'VMCache/VMSTORE.APP'))) {
-            throw 'Real language bundle did not exercise nested VMSTORE publication'
         }
     }
     foreach ($path in @($installer, $uploader, $manifestPath)) { $backups[$path] = [IO.File]::ReadAllBytes($path) }

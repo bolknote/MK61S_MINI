@@ -45,7 +45,7 @@ struct Loan {
   Cache::Scratch scratch(){return {prefix,sizeof(prefix)};}
 };
 ValidatedImage certificate(unsigned bytes,Language lang=Language::BASIC) {
-  return {VALIDATED_MAGIC,(uint16_t)bytes,32,4,(uint16_t)bytes,0,1,0,lang};
+  return {VALIDATED_MAGIC,(uint16_t)bytes,32,4,(uint16_t)bytes,0,1,0,lang,false};
 }
 template<class C>
 typename C::Handle publish(C& c,typename C::Key key,const std::vector<uint8_t>& bytes) {
@@ -61,8 +61,8 @@ typename C::Handle publish(C& c,typename C::Key key,const std::vector<uint8_t>& 
 int main() {
   static_assert(sizeof(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>)==24576);
   static_assert(sizeof(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>)==sizeof(ImageCache<24576>));
-  static_assert(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>::metadata_bytes()==688);
-  static_assert(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>::PAYLOAD_CAPACITY==23888);
+  static_assert(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>::metadata_bytes()==880);
+  static_assert(ImageCache<24576,16,CachePolicy::REUSE_DENSITY,true>::PAYLOAD_CAPACITY==23696);
   Loan loan;
   Cache c;
   const Cache::Key key={1,1,Language::BASIC,0};

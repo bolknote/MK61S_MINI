@@ -8,7 +8,7 @@ void test_handles() {
   using Cache=ImageCache<1024,8,Policy>;
   static_assert(sizeof(Cache)<=1024,"metadata is outside cache budget");
   Cache cache;
-  ValidatedImage certificate={VALIDATED_MAGIC,64,32,4,64,0,1,0,Language::BASIC};
+  ValidatedImage certificate={VALIDATED_MAGIC,64,32,4,64,0,1,0,Language::BASIC,false};
   auto first=cache.reserve({1,1,Language::BASIC,0},64);
   assert(first && !cache.find({1,1,Language::BASIC,0}));
   memset(cache.building(first),0xA1,64);

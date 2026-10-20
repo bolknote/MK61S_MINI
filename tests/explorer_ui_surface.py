@@ -26,7 +26,8 @@ def main():
     editor_source = editor.read_text()
     # Keep real SMS/search editing primitives; omit only display/editor UI.
     editor_start = editor_source.index("namespace text_editor {")
-    editor_end = editor_source.index("inline u8 visible_rows(")
+    # Exclude the display-only guard together with its UI implementations.
+    editor_end = editor_source.index("#if !defined(MK61_CORE_STANDALONE)", editor_start)
     (out / "explorer_editor.inc").write_text(
         editor_source[editor_start:editor_end] +
         functions(editor, ["inline bool replace_range(char* source, u16& len, u16& cursor, u16 capacity, u16 start,",

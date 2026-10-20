@@ -4,6 +4,10 @@
 #include "config.h"
 
 int main(void) {
+#if defined(MK61_CONFIG_EXPECT_FLASH_CACHE_BYTES)
+  static_assert(MK61_FLASH_VM_PAGE_CACHE_BYTES == MK61_CONFIG_EXPECT_FLASH_CACHE_BYTES,
+                "Flash page cache must retain the qualified board budget");
+#endif
 #if defined(MK61_CONFIG_EXPECT_VM_CACHE_BYTES)
   static_assert(MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES == MK61_CONFIG_EXPECT_VM_CACHE_BYTES,
                 "board cache budget must match its qualified default or explicit override");

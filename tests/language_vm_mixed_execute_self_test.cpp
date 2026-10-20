@@ -47,7 +47,7 @@ int main() {
     const Cache::Key key={1,42,lang,0};
     auto h=cache.reserve(key,raw.size());assert(h);
     memcpy(cache.building(h),raw.data(),raw.size());
-    ValidatedImage cert={VALIDATED_MAGIC,v.size,v.code,v.source_size,v.end,(uint8_t)v.lines,v.stack,raw[7],lang};
+    ValidatedImage cert={VALIDATED_MAGIC,v.size,v.code,v.source_size,v.end,(uint8_t)v.lines,v.stack,raw[7],lang,false};
     assert(cache.publish(h,cert) && cache.release(h));
     assert(ImageCacheTestAccess::pack(cache,h,{scratch,sizeof(scratch)}));
     for(unsigned repeat=0;repeat<4;++repeat) {
