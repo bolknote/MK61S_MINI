@@ -1,0 +1,1067 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "status": "PASS_TWO_ISOLATED_ABA_EXACTLY_RESTORED",
+  "production_source_modified": false,
+  "limits_weakened": false,
+  "source": {
+    "new_commit": "9180fbdc2fafc856c0121d8dd8cea7e80bd2c24c",
+    "source_capture": "Frozen git archive of pinned main, excluding all uncommitted parallel experiments",
+    "old_game_commit": "5c81048863851ca89bf0a499e66495f98dfbbdaa",
+    "old_software_provenance": "Exact 57CF459E resident and historical matching APP payloads, independently hash-matched to the valid ordinary cohort of the earlier headless HIL report; not rebuilt from current source",
+    "pinned_main_at_end": "9180fbdc2fafc856c0121d8dd8cea7e80bd2c24c"
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609",
+    "name": "Classic V3 UC1609 / STM32F411CE",
+    "clock_hz": 96000000
+  },
+  "scenario": {
+    "entry": "Ordinary autoexec.m61 / M61 OPEN, not linked execution or ARM JIT",
+    "level": 2,
+    "maximum_depth": 8,
+    "opening_book": false,
+    "playing": "Black",
+    "expected_move": "e2e3",
+    "expected_nodes": 420,
+    "arithmetic": "BINARY64 / owned M4 math",
+    "golden_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "all_36_searches_validated": true
+  },
+  "method": {
+    "factors": [
+      "files: new resident and matching APPs kept fixed; old/new/old game bytes",
+      "software: identical old game bytes kept fixed; old/new/old resident plus matching BASIC/FOCAL/LANGVM/LANGIN/SRCEDIT APPs"
+    ],
+    "stages": 6,
+    "searches_per_stage": 6,
+    "total_searches": 36,
+    "within_stage_sequence": [
+      "USB Screen on, first compilation warmup",
+      "USB Screen on, warmup",
+      "USB Screen on, sample",
+      "USB Screen off, sample",
+      "USB Screen off, sample",
+      "USB Screen on, sample"
+    ],
+    "statistics": "Exclude runs 0 and 1. Each stage/mode uses the median of its two samples. Reference = (first A median + control A median) / 2. Positive elapsed_change_percent means slower. Control drift = control A / first A - 1. No formal confidence interval is claimed.",
+    "timing": "MCU accepted OK on Black selection -> entry into next blocking APP key wait; frozen before user wait or USB Screen reattachment",
+    "headless": "USB cable stays connected and physical LCD active. Ordinary Screen detach then raw terminal OK injection, identical procedure for both residents. No Screen frames during the 45-second observation window; reattach only to verify the already-completed board.",
+    "headless_observation_seconds": 45,
+    "guards": "Profiler stopped; screen_begin/screen_end both 0 for detached or both 1 for continuous; key=37, expected wait sequence, timer/wall-clock sanity for continuous mode, 420 nodes and complete eight-rank golden board every run",
+    "independent_node_probe": "Unchanged __bench.tbi reads @(146) only after timed search and STOP. Probe and menu overhead are outside measured interval in every variant.",
+    "fixed_directory": "Same /FLASHCHESS path and same 33 filenames in every stage. Old set padded with inert new display/font files; old launcher never executes them. Common file inode identities preserved by overwrite.",
+    "cache_reset": "Fresh RAM reset, delete only this session's derived Pages cache, restore original sidecars before each stage; discard two warmups",
+    "cold_run_caveat": "Run 0 includes first compilation and is retained only as an observation, not a repeated cold-start performance estimate",
+    "VMSTORE": "The old matched VMCache/VMSTORE.APP is byte-identical in both software sets. Needed only by the old optional linked loader; not invoked by this ordinary-M61 scenario.",
+    "artifact_verification": "Every game/APP payload matched the earlier raw cohort hash before testing and was read back byte-for-byte after staging. Firmware CRC and board identity checked at each stage."
+  },
+  "firmware": {
+    "old": {
+      "path": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil-v2/images/old.bin",
+      "bytes": 375872,
+      "footer": 374192,
+      "build": "57CF459E",
+      "sha256": "e743b99e25967d9a0b8eca36d1cdee7bdf8cf1a1643ff564009f604b9c20de82",
+      "source": "/private/tmp/mk61-chess-headless.2PWNff/resident/sealed.bin"
+    },
+    "new": {
+      "path": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil-v2/images/new.bin",
+      "bytes": 377968,
+      "footer": 376248,
+      "build": "4D98A653",
+      "sha256": "61983e93f6819ada3dfc9450f39e3e4ec2c40f1d8a6b140d82f7e19e1ce3c133",
+      "source": "/private/tmp/mk61-chess-main-9180.a2k530/resident/sealed.bin"
+    }
+  },
+  "system_packages": {
+    "old": {
+      "BASIC.APP": {
+        "bytes": 14140,
+        "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7",
+        "loaded_memory_bytes": 20060
+      },
+      "FOCAL.APP": {
+        "bytes": 12674,
+        "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a",
+        "loaded_memory_bytes": 17528
+      },
+      "LANGVM.APP": {
+        "bytes": 13881,
+        "sha256": "99fdae8534277ba35c4ce4f2db4c50fe97e989bb8eab75c8f54173396cf6a831",
+        "loaded_memory_bytes": 20476
+      },
+      "LANGIN.APP": {
+        "bytes": 14083,
+        "sha256": "305313f858f5845a0dc1279e64cf00bb7ccf29fde62c54206f2cf6241274d016",
+        "loaded_memory_bytes": 19180
+      },
+      "SRCEDIT.APP": {
+        "bytes": 13483,
+        "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc",
+        "loaded_memory_bytes": 18180
+      },
+      "VMCache/VMSTORE.APP": {
+        "bytes": 10935,
+        "sha256": "4776273c93803d10f6a95a4783526f3475ce68ff213056c1f0d59b147075ff55"
+      }
+    },
+    "new": {
+      "BASIC.APP": {
+        "bytes": 14066,
+        "sha256": "26c0597490589b911d200bcbc4c254aeed3b16d51723b6061c179983c6d61650",
+        "loaded_memory_bytes": 19980
+      },
+      "FOCAL.APP": {
+        "bytes": 12652,
+        "sha256": "9ccd348442e62a08536cc87bcac4cf0916e914b3c266267440ae6b3e1c0cfaf8",
+        "loaded_memory_bytes": 17488
+      },
+      "LANGVM.APP": {
+        "bytes": 13843,
+        "sha256": "382ccf3e62693ee6806e5023494fa63fefc763231867cc7bfaa22ef0e58ff8a9",
+        "loaded_memory_bytes": 20372
+      },
+      "LANGIN.APP": {
+        "bytes": 14189,
+        "sha256": "f27a9dd5fb3a9d35306c313aa8a7a1fa9804ecfbb44250838d33849604786c45",
+        "loaded_memory_bytes": 19244
+      },
+      "SRCEDIT.APP": {
+        "bytes": 13483,
+        "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc",
+        "loaded_memory_bytes": 18180
+      },
+      "VMCache/VMSTORE.APP": {
+        "bytes": 10935,
+        "sha256": "4776273c93803d10f6a95a4783526f3475ce68ff213056c1f0d59b147075ff55"
+      }
+    }
+  },
+  "game_changes": [
+    {
+      "name": "Turochamp320.FMK",
+      "old": null,
+      "new": {
+        "bytes": 7466,
+        "sha256": "bd12288a8c293155abe9047a87d77695655f12507423ec0cbb176dcf1c07f371"
+      }
+    },
+    {
+      "name": "autoexec.m61",
+      "old": {
+        "bytes": 697,
+        "sha256": "1e1a6f2339c3e189ff8626716c28a1147d8357a5d879d65420c7ea5f0b3dd767"
+      },
+      "new": {
+        "bytes": 795,
+        "sha256": "e892f43ed9ad8ae4cdec6b87d5c55cc3867069030ad7a0d7aeff21126764fca8"
+      }
+    },
+    {
+      "name": "board.tbi",
+      "old": {
+        "bytes": 2570,
+        "sha256": "1e4113607202e63ed95f82909d58c922ed8a048989c118b805f54616268ba8c6"
+      },
+      "new": {
+        "bytes": 4224,
+        "sha256": "84b3ba1cbe74bf1bd7540367a3e268506887ef1d915f42ff06da397c6a55c704"
+      }
+    },
+    {
+      "name": "display.tbi",
+      "old": null,
+      "new": {
+        "bytes": 36,
+        "sha256": "d2c1cb1407fae06309e6099bf732ec126d070cfb52ab46fb84decaa12f953bbe"
+      }
+    },
+    {
+      "name": "manual.md",
+      "old": {
+        "bytes": 818,
+        "sha256": "842bdbf12018250117511df7d35eedfa5dd29876990cd2b03176eac597ac8c72"
+      },
+      "new": {
+        "bytes": 877,
+        "sha256": "ff9bb8a3b2b49bb3bee690d89e9e552fabb1f7f41432bbb5ea7bdfde3edf6695"
+      }
+    }
+  ],
+  "comparisons": {
+    "files": {
+      "stages": [
+        {
+          "name": "files-A-old",
+          "samples": {
+            "continuous": [
+              25.200613,
+              25.142718
+            ],
+            "headless": [
+              24.079962,
+              24.094405
+            ]
+          },
+          "continuous_seconds": 25.1716655,
+          "headless_seconds": 24.0871835,
+          "saved_seconds": 1.0844820000000013,
+          "elapsed_reduction_percent": 4.308344237293326
+        },
+        {
+          "name": "files-B-new",
+          "samples": {
+            "continuous": [
+              26.990667,
+              26.860364
+            ],
+            "headless": [
+              25.869429,
+              25.824345
+            ]
+          },
+          "continuous_seconds": 26.9255155,
+          "headless_seconds": 25.846887000000002,
+          "saved_seconds": 1.078628499999997,
+          "elapsed_reduction_percent": 4.005971584833712
+        },
+        {
+          "name": "files-A-control",
+          "samples": {
+            "continuous": [
+              25.178795,
+              25.142619
+            ],
+            "headless": [
+              24.087103,
+              24.096517
+            ]
+          },
+          "continuous_seconds": 25.160707000000002,
+          "headless_seconds": 24.09181,
+          "saved_seconds": 1.0688970000000033,
+          "elapsed_reduction_percent": 4.248278873880629
+        }
+      ],
+      "effect": {
+        "continuous": {
+          "A_seconds": 25.1716655,
+          "B_seconds": 26.9255155,
+          "A_control_seconds": 25.160707000000002,
+          "reference_seconds": 25.166186250000003,
+          "delta_seconds": 1.7593292499999968,
+          "elapsed_change_percent": 6.9908457027333615,
+          "control_drift_percent": -0.04353506127752205
+        },
+        "headless": {
+          "A_seconds": 24.0871835,
+          "B_seconds": 25.846887000000002,
+          "A_control_seconds": 24.09181,
+          "reference_seconds": 24.08949675,
+          "delta_seconds": 1.7573902500000038,
+          "elapsed_change_percent": 7.2952551406039845,
+          "control_drift_percent": 0.019207309978774845
+        }
+      }
+    },
+    "software": {
+      "stages": [
+        {
+          "name": "software-A-old",
+          "samples": {
+            "continuous": [
+              25.102922,
+              25.063482
+            ],
+            "headless": [
+              23.979431,
+              23.988787
+            ]
+          },
+          "continuous_seconds": 25.083202,
+          "headless_seconds": 23.984109,
+          "saved_seconds": 1.0990929999999999,
+          "elapsed_reduction_percent": 4.381789055480234
+        },
+        {
+          "name": "software-B-new",
+          "samples": {
+            "continuous": [
+              25.155082,
+              25.125355
+            ],
+            "headless": [
+              24.086276,
+              24.096603
+            ]
+          },
+          "continuous_seconds": 25.1402185,
+          "headless_seconds": 24.0914395,
+          "saved_seconds": 1.0487789999999997,
+          "elapsed_reduction_percent": 4.1717179188398905
+        },
+        {
+          "name": "software-A-control",
+          "samples": {
+            "continuous": [
+              25.107175,
+              25.048785
+            ],
+            "headless": [
+              23.979646,
+              23.988938
+            ]
+          },
+          "continuous_seconds": 25.07798,
+          "headless_seconds": 23.984292,
+          "saved_seconds": 1.0936880000000002,
+          "elapsed_reduction_percent": 4.361148704959494
+        }
+      ],
+      "effect": {
+        "continuous": {
+          "A_seconds": 25.083202,
+          "B_seconds": 25.1402185,
+          "A_control_seconds": 25.07798,
+          "reference_seconds": 25.080591,
+          "delta_seconds": 0.05962750000000128,
+          "elapsed_change_percent": 0.23774360022059682,
+          "control_drift_percent": -0.020818713655457177
+        },
+        "headless": {
+          "A_seconds": 23.984109,
+          "B_seconds": 24.0914395,
+          "A_control_seconds": 23.984292,
+          "reference_seconds": 23.9842005,
+          "delta_seconds": 0.10723899999999986,
+          "elapsed_change_percent": 0.44712351366476,
+          "control_drift_percent": 0.0007630052048179792
+        }
+      }
+    }
+  },
+  "all_runs": [
+    {
+      "name": "files-A-old",
+      "build": "4D98A653",
+      "software": "new",
+      "game": "old_padded",
+      "crc_checked_screen_frames": 1702,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 41.928422,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 41928422,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 25.084084,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 25084084,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.200613,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 25200613,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.079962,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 24079962,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.094405,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 24094405,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.142718,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 25142718,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "files-B-new",
+      "build": "4D98A653",
+      "software": "new",
+      "game": "new",
+      "crc_checked_screen_frames": 1723,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 45.847515,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 45847515,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 26.915677,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 26915677,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 26.990667,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 26990667,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 25.869429,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 25869429,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 25.824345,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 25824345,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 26.860364,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 26860364,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "files-A-control",
+      "build": "4D98A653",
+      "software": "new",
+      "game": "old_padded",
+      "crc_checked_screen_frames": 1694,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 42.265538,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 42265538,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 25.17896,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 25178960,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.178795,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 25178795,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.087103,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 24087103,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.096517,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 24096517,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.142619,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 25142619,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "software-A-old",
+      "build": "57CF459E",
+      "software": "old",
+      "game": "old_padded",
+      "crc_checked_screen_frames": 1705,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 42.188623,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 42188623,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 25.097104,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 25097104,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.102922,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 25102922,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 23.979431,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 23979431,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 23.988787,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 23988787,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.063482,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 25063482,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "software-B-new",
+      "build": "4D98A653",
+      "software": "new",
+      "game": "old_padded",
+      "crc_checked_screen_frames": 1680,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 42.830399,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 42830399,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 25.192094,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 25192094,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.155082,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 25155082,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.086276,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 24086276,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 24.096603,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 24096603,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.125355,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 25125355,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "software-A-control",
+      "build": "57CF459E",
+      "software": "old",
+      "game": "old_padded",
+      "crc_checked_screen_frames": 1692,
+      "profiling": false,
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 41.696963,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 8,
+            "us": 41696963,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "screen_mode": "continuous",
+          "seconds": 25.096065,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 17,
+            "us": 25096065,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.107175,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 26,
+            "us": 25107175,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 23.979646,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 35,
+            "us": 23979646,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "screen_mode": "headless",
+          "seconds": 23.988938,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 44,
+            "us": 23988938,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "screen_mode": "continuous",
+          "seconds": 25.048785,
+          "nodes": 420,
+          "keywait": {
+            "sequence": 53,
+            "us": 25048785,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    }
+  ],
+  "interpretation": {
+    "file_effect": "New game files add about 1.76 seconds in both Screen modes, +6.99% continuous and +7.30% detached. Changing files alone reproduces essentially all of the previously observed large slowdown.",
+    "software_effect": "Measured resident+APP effect is much smaller: +0.060 seconds/+0.24% continuous; +0.107 seconds/+0.45% detached. Small sample cohort; do not interpret these percentages as more precise than the raw timing spread.",
+    "architecture": "No change to M0+ APPs explains this comparison. New System APP builder explicitly selects Cortex-M4/hard-float; --system is rejected for the M0+ PicoCalc target. Old/new APP bytes are the exact previously tested STM32 payloads. Actual resident ELF attributes independently agree on v7E-M/Thumb-2/VFPv4-D16/SP-only/VFP-register arguments.",
+    "cause_qualification": "The host probe below establishes a generic M61 prepared-cache capacity cliff. Hardware A/B/A isolated the whole game package, NOT autoexec versus board.tbi separately; no claim that the full 1.76 seconds is solely the launcher cache.",
+    "next_diagnostic": "Isolate autoexec.m61 and board.tbi on the same new software before choosing a generic cache/dispatch change. Do not hard-code chess-specific cache policy."
+  },
+  "m61_prepared_cache_host_probe": {
+    "status": "PASS",
+    "scope": "Host mechanism probe, NOT a hardware chess timing or full VM run",
+    "production_source_commit": "9180fbdc2fafc856c0121d8dd8cea7e80bd2c24c",
+    "production_source_modified": false,
+    "production_m61_text_sha256": "f740ba99144724f24238b27ec90a748a1e9d934a8c3f08e91ebb599744983c8e",
+    "probe_source": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/m61_capacity_probe_padding.cpp",
+    "probe_source_sha256": "1614347110feb228546499996aa9ff1b6e0f0968abfc62dd649c4229c67af808",
+    "sanitizers": [
+      "address",
+      "undefined"
+    ],
+    "compiler": "clang++ -std=c++17 -O1 -Wall -Wextra -Werror",
+    "test_defines": {
+      "M61_TEXT_HOST_TEST": true,
+      "MK61_M61_READ_CACHE_BYTES": 1024,
+      "MK61_M61_PREPARED_CACHE": 1,
+      "MK61_SCOPED_RESIDENT_BUFFERS": 0
+    },
+    "method": "Existing M61 host fixture and unmodified production m61_text.cpp; exact old/new autoexec source; mock init selects RE=26, then 1000 mock node.tbi calls followed by RE=99. Count the final 900 calls. The third variant adds 98 blank lines AFTER the old script, changing occupancy but no executed command.",
+    "limitations": "Storage, BASIC execution and condition reads use existing host mocks. Proves a prepared-cache capacity/path-resolution mechanism, not the seconds attributable to autoexec versus the concurrently changed board.tbi on Classic.",
+    "entry_bytes": 12,
+    "header_bytes": 4,
+    "capacity_formula": "floor((1024 - source_bytes - 4) / 12)",
+    "variants": [
+      {
+        "variant": "old",
+        "source_bytes": 697,
+        "read_window_bytes": 1024,
+        "prepared_capacity": 26,
+        "measured_repeated_node_calls": 900,
+        "file_resolutions": 0,
+        "metadata_reads": 0,
+        "if_preparations": 901,
+        "condition_reads": 23403
+      },
+      {
+        "variant": "new",
+        "source_bytes": 795,
+        "read_window_bytes": 1024,
+        "prepared_capacity": 18,
+        "measured_repeated_node_calls": 900,
+        "file_resolutions": 900,
+        "metadata_reads": 900,
+        "if_preparations": 9903,
+        "condition_reads": 23403
+      },
+      {
+        "variant": "old_plus_98_blank_lines",
+        "source_bytes": 795,
+        "read_window_bytes": 1024,
+        "prepared_capacity": 18,
+        "measured_repeated_node_calls": 900,
+        "file_resolutions": 900,
+        "metadata_reads": 900,
+        "if_preparations": 8103,
+        "condition_reads": 23403
+      }
+    ]
+  },
+  "resource_qualification": {
+    "APP_cap_bytes": 20480,
+    "resident_minimum_Flash_headroom_bytes": 131072,
+    "resident_globals_limit_bytes": 49152,
+    "resident_static_frame_limit_bytes": 3072,
+    "APP_static_frame_limit_bytes": 5120,
+    "old_resident_image_bytes": 375872,
+    "new_resident_image_bytes": 377968,
+    "old_free_Flash_bytes": 148416,
+    "new_free_Flash_bytes": 146320,
+    "ram_check": "Both exact qualified ELFs PASS check_app_memory_elf.py using the stricter full 20480-byte APP and USBDISK ceiling, not a reduced tested-image size. New System directory is a five-module subset, so the full-bundle --system-dir check is not claimed for it.",
+    "old": {
+      "dynamic_free": 92824,
+      "lazy": 52560,
+      "scoped": 5184,
+      "placement": 224,
+      "effective": 34848
+    },
+    "new": {
+      "dynamic_free": 92648,
+      "lazy": 52564,
+      "scoped": 5184,
+      "placement": 224,
+      "effective": 34656
+    },
+    "full_stage_index_bytes": 2560,
+    "MSC_session_bytes": 8264,
+    "filesystem_temporaries_bytes": 824,
+    "dynamic_top": "0x2001bf00",
+    "new_foreground_stack_ELF_check": {
+      "main_bytes": 80,
+      "terminal_dispatch_bytes": 520,
+      "status": "PASS"
+    },
+    "no_limit_waivers": true
+  },
+  "floating_point": {
+    "STM32_flags": [
+      "-mcpu=cortex-m4",
+      "-mthumb",
+      "-mfpu=fpv4-sp-d16",
+      "-mfloat-abi=hard"
+    ],
+    "hard_ABI": "Calling convention for floating arguments/results, including double, not a switch to binary32 or a request to link libm. Resident and APPs must agree.",
+    "arithmetic": "F411 FPU supports single-precision arithmetic, not double arithmetic. Main language values remain 8-byte binary64/integer-tagged cells.",
+    "actual_float_use": "compact_math::sqrt normalizes input to [1,4), uses VSQRT.F32 only for an initial float32 seed, then integer refinements and an exact 106-bit residual decide the final nearest-even binary64 result.",
+    "documentation": "https://gcc.gnu.org/onlinedocs/gcc/ARM-Options.html"
+  },
+  "restoration": {
+    "original": {
+      "path": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil-v2/images/original.bin",
+      "bytes": 370064,
+      "footer": 368416,
+      "build": "3AB3DD45",
+      "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635",
+      "source": "/private/tmp/mk61-chess-main-9180.a2k530/hil/images/original.bin"
+    },
+    "firmware_writes": 5,
+    "APP_writes": 17,
+    "restored": true,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "original_files": 24,
+    "original_directories": 2,
+    "verification": "Exact full filesystem fingerprint equals the initial snapshot. Calculator reg/stk/dump/pwd canonical replies equal initial approved empty state. Original resident Flash CRC verified after restore.",
+    "owned_fixture_and_derived_cache_removed": true,
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "aborted_prior_attempt": {
+    "report": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil/report.json",
+    "included_in_results": false,
+    "reason": "Temporary host restore_cache helper rejected the session's own new fixture when transitioning A->B. Guard stopped the experiment; original firmware/files/state restored exactly. No firmware failure.",
+    "correction": "Temporary host driver admits only the already-owned /FLASHCHESS paths and retains their hashes; unrelated additions still rejected. Offline positive and negative cleanup-guard tests passed. The complete 36-search A/B/A was restarted from scratch in hil-v2."
+  },
+  "evidence": {
+    "raw_report": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil-v2/report.json",
+    "log": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil-v2.log",
+    "driver": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/measure_factors.py",
+    "manual_timer_driver": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/hil_chess_screen_mode_manual.py",
+    "host_probe_report": "/private/tmp/mk61-chess-factors-20261020.Mjio5G/m61-padding-probe.json",
+    "source_snapshot": "/private/tmp/mk61-chess-main-9180.a2k530/source",
+    "previous_ordinary_reference": "/private/tmp/mk61-chess-headless.2PWNff/hil/report.json",
+    "previous_current_main_reference": "/private/tmp/mk61-chess-main-9180.a2k530/hil/report.json"
+  }
+}
