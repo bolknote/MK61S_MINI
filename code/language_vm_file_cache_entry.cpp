@@ -4,6 +4,9 @@
 #include "mk61_app.h"
 #include "language_compiler_flow.hpp"
 #include "language_vm_file_cache.hpp"
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+#include "language_linked_program.hpp"
+#endif
 #include <string.h>
 #if defined(LANGUAGE_VM_HOST_TEST)
 namespace portable_system {bool bind(const mk61_app_api*,uint32_t,uint32_t);}
@@ -24,6 +27,15 @@ struct Buffer {
 bool entry(uint16_t id,mk61_service_file& out) {
   return call(MK61_SERVICE_FILE_ENTRY,0,id,0,&out)!=0;
 }
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+bool linked_fragment(void*,uint16_t directory,const char* name,linked::Fragment& out) {
+  mk61_service_file file={};
+  if(call(MK61_SERVICE_FILE_RESOLVE,directory,MK61_SERVICE_FILE_MK61_BINARY,
+      (uint32_t)(uintptr_t)name,&file)!=0 || file.kind || file.id>0xFFFF ||
+      file.type!=MK61_SERVICE_FILE_MK61_BINARY)return false;
+  out={(uint16_t)file.id,file.size};return true;
+}
+#endif
 bool resolve(const char* path,mk61_service_file& out) {
 #if defined(LANGUAGE_VM_HOST_TEST)
   return language_vm_file_cache_test::resolve(path,out);
@@ -98,7 +110,16 @@ extern "C" uint32_t mk61_app_initialize(const mk61_app_api* app,uint32_t crc,uin
   return api?0:MK61_APP_RUNTIME_ERROR;
 }
 extern "C" uint32_t mk61_app_flow_step(mk61_app_flow* flow) {
-  if(!api || !mk61_app_flow_compatible(flow) || flow->context_size!=sizeof(CompilerContext))return 0;
+  if(!api || !mk61_app_flow_compatible(flow))return 0;
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+  if(flow->current.phase==linked::LOAD_PHASE) {
+    if(flow->context_size!=sizeof(linked::LoadRequest) ||
+       !linked::load((linked::LoadRequest*)flow->context,nullptr,linked_fragment))return 0;
+    const auto& r=*(linked::LoadRequest*)flow->context;
+    mk61_app_flow_return(flow,r.error==Error::NONE,MK61_FLOW_OK);return 1;
+  }
+#endif
+  if(flow->context_size!=sizeof(CompilerContext))return 0;
   auto& c=*(CompilerContext*)flow->context;
   if(c.compile.magic!=FLOW_CONTEXT_MAGIC || (c.language!=Language::BASIC && c.language!=Language::FOCAL))return 0;
   if(flow->current.phase==file_cache::AFTER_DISCARD) {

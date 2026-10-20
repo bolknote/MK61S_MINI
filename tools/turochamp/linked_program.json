@@ -1,0 +1,30 @@
+{
+  "entry": 1,
+  "members": [
+    {"symbol": 1, "language": "basic", "path": "../../programs/games/Turochamp/init.tbi"},
+    {"symbol": 2, "language": "basic", "path": "../../programs/games/Turochamp/game.tbi"},
+    {"symbol": 3, "language": "basic", "path": "../../programs/games/Turochamp/board.tbi"},
+    {"symbol": 4, "language": "basic", "path": "../../programs/games/Turochamp/legal.tbi"},
+    {"symbol": 5, "language": "basic", "path": "../../programs/games/Turochamp/legal.tbi"},
+    {"symbol": 7, "language": "basic", "path": "../../programs/games/Turochamp/make.tbi"},
+    {"symbol": 8, "language": "basic", "path": "../../programs/games/Turochamp/unmake.tbi"},
+    {"symbol": 9, "language": "basic", "path": "../../programs/games/Turochamp/status.tbi"},
+    {"symbol": 10, "language": "basic", "path": "../../programs/games/Turochamp/repeat.tbi"},
+    {"symbol": 11, "language": "basic", "path": "../../programs/games/Turochamp/eval.tbi"},
+    {"symbol": 12, "language": "basic", "path": "../../programs/games/Turochamp/search.tbi"},
+    {"symbol": 13, "language": "basic", "path": "../../programs/games/Turochamp/turn.tbi"},
+    {"symbol": 14, "language": "basic", "path": "../../programs/games/Turochamp/history.tbi"},
+    {"symbol": 15, "language": "basic", "path": "../../programs/games/Turochamp/menu.tbi"},
+    {"symbol": 16, "language": "basic", "path": "../../programs/games/Turochamp/promote.tbi"},
+    {"symbol": 17, "language": "basic", "path": "../../programs/games/Turochamp/claim.tbi"},
+    {"symbol": 20, "language": "basic", "path": "../../programs/games/Turochamp/castle.tbi"},
+    {"symbol": 21, "language": "basic", "path": "../../programs/games/Turochamp/mobility.tbi"},
+    {"symbol": 22, "language": "basic", "path": "../../programs/games/Turochamp/threat.tbi"},
+    {"symbol": 23, "language": "basic", "path": "../../programs/games/Turochamp/ep.tbi"},
+    {"symbol": 24, "language": "basic", "path": "../../programs/games/Turochamp/rkey.tbi"},
+    {"symbol": 25, "language": "basic", "path": "../../programs/games/Turochamp/rstep.tbi"},
+    {"symbol": 26, "language": "basic", "path": "../../programs/games/Turochamp/node.tbi"},
+    {"symbol": 28, "language": "basic", "path": "../../programs/games/Turochamp/claims.tbi"},
+    {"symbol": 29, "language": "basic", "path": "../../programs/games/Turochamp/help.tbi"}
+  ]
+}

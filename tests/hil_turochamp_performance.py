@@ -81,11 +81,17 @@ def wait_screen(port,font,*labels,timeout=10):
     deadline=time.monotonic()+timeout
     while time.monotonic()<deadline:
         port.pump(.04)
-        if b'Open failed!' in port.text[port.open_text_start:]:raise AssertionError('Turochamp open failed')
+        require_launcher_ok(port)
         if port.frames:
             for label in labels:
                 if font.has(port.frames[-1],label):return label
     raise TimeoutError('Missing Turochamp screen '+repr(labels))
+
+
+def require_launcher_ok(port):
+    response=port.text[port.open_text_start:]
+    if b'Open failed!' in response or b'M61 error in ' in response:
+        raise AssertionError('Turochamp launcher failed: '+bytes(response[-1200:]).decode('cp1251','replace'))
 
 
 def profile(report):
@@ -160,8 +166,7 @@ def board_pixels(frame):
     return bytes(pixels)
 
 
-def search(port,font,args,index,out):
-    profiling = not getattr(args, 'no_profile', False)
+def prepare_search(port,font,args,out):
     port.open(args.game_dir+'/autoexec.m61')
     wait_screen(port,font,'ВЫБЕРИТЕ СТОРОНУ')
     for _ in range(4):port.key(36)
@@ -171,6 +176,11 @@ def search(port,font,args,index,out):
     png(port.frames[-1],out/'book-off.png')
     for _ in range(2):port.key(36) # book(4) -> White(0) -> Black(1)
     wait_screen(port,font,'ЧЁРНЫЕ')
+
+
+def search(port,font,args,index,out):
+    profiling = not getattr(args, 'no_profile', False)
+    prepare_search(port,font,args,out)
     if profiling:
         assert 'PROF started' in port.command('prof start')
     cursor=len(port.frames);started=time.monotonic();port.key(37)
@@ -195,7 +205,7 @@ def search(port,font,args,index,out):
             last=progress[-1] if progress else {'nodes':'?','seconds':time.monotonic()-started}
             print(f'{args.build_id} run {index}: {last["nodes"]} nodes, {time.monotonic()-started:.1f}s',flush=True)
             last_notice=time.monotonic()
-        assert b'Open failed!' not in port.text[port.open_text_start:],port.text[-600:]
+        require_launcher_ok(port)
     assert finished is not None,('search timeout',progress,port.text[-900:])
     assert progress and progress[-1]['nodes']==420,progress
     counters=port.command('prof stop',timeout=15) if profiling else None

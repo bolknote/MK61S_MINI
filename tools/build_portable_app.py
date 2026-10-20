@@ -143,6 +143,9 @@ def build(args: argparse.Namespace) -> dict:
             raise ValueError("--split-language-vm applies only to language-vm")
         system = ("LANGVM", "LANGUAGE_VM", ["language_vm.cpp",
                   "language_vm_overlay_entry.cpp", "language_vm_flow.cpp"], None)
+    if getattr(args,"linked_vm_poc",False) and not (args.system=="vm-file-cache" or
+            (args.system=="language-vm" and args.split_language_vm)):
+        raise ValueError("--linked-vm-poc requires the split language-vm or vm-file-cache")
     if args.text_only and args.system != "markdown-viewer":
         raise ValueError("--text-only applies to markdown-viewer")
     if args.no_ui_fonts and not system:
@@ -193,6 +196,8 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "sdk/portable/system/resource.cpp"]
     if args.system == "vm-file-cache":
         sources += [ROOT / "code/loadable_module_format.cpp", ROOT / "code/zx0.cpp"]
+        if getattr(args,"linked_vm_poc",False):
+            sources += [ROOT / "code/language_linked_program.cpp",ROOT / "code/language_linked_loader.cpp"]
     if args.system == "setup":
         sources += [ROOT / "sdk/portable/system/setup_compat.cpp"]
     if args.system in ("usbdisk", "source-editor"):
@@ -217,6 +222,7 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if getattr(args,"linked_vm_poc",False):flags.append("-DMK61_LINKED_VM_POC=1")
     if pico_target and not getattr(args,"pico_legacy_display",False):
         flags.append("-DMK61_TARGET_PICOCALC=1")
     if getattr(args,"focal_trace",False):
@@ -424,6 +430,7 @@ def build(args: argparse.Namespace) -> dict:
     if args.system in ("language-vm", "language-input"):
         report["vm_integer_block"] = (
             not args.local_float_math if integer_block is None else integer_block)
+    if getattr(args,"linked_vm_poc",False):report["linked_vm_poc"]=True
     if args.language_vm_compiler:
         report["language_vm_compiler"] = True
     if rust_compiler is not None:
@@ -455,6 +462,8 @@ def main() -> None:
                         help="experimental compiler-only BASIC/FOCAL; requires a VM-aware resident")
     parser.add_argument("--split-language-vm", action="store_true",
                         help="hot VM without editor/parser; INPUT is a separate LANGIN.APP")
+    parser.add_argument("--linked-vm-poc",action="store_true",
+                        help="experimental VM export or cold VMSTORE loader; stock APP limits unchanged")
     parser.add_argument("--shared-runtime", action="store_true",
                         help="use resident ARM EABI/string helpers; require runtime service at startup")
     parser.add_argument("--text-only", action="store_true",

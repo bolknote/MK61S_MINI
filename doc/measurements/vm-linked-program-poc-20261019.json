@@ -1,0 +1,111 @@
+{
+  "date": "2026-10-19",
+  "status": "WORKING_HOST_AND_ARM_POC_NOT_IN_STOCK_FIRMWARE",
+  "followup_hardware_report": "doc/measurements/chess-linked-program-20261019.json",
+  "objective": "Option 3: one linked BASIC/FOCAL program and a persistent VM session instead of repeated outer M61/OPEN dispatch",
+  "branch": "feature/vm-linked-program",
+  "worktree": "/Users/bolk/.codex/worktrees/vm-linked-program/MK61S_MINI",
+  "source_base": "5c81048863851ca89bf0a499e66495f98dfbbdaa",
+  "hardware_touched": false,
+  "limits_weakened": false,
+  "committed": false,
+  "implementation": {
+    "format": "LVP1 version 1, little-endian, header and payload CRC32",
+    "header_bytes": 32,
+    "directory_entry_bytes": 16,
+    "max_symbols": 64,
+    "members": "Original independently validated LBV2 images; local branch addresses are unchanged. Raw LBV1 is host-compatibility only, rejected by wide-only APP configurations.",
+    "resources": "Members must own their resource data; recipes requiring separately mutable source text are rejected.",
+    "execution": "One linked outer loop, caller-provided numeric banks and operand stack, pointer-free continuation, dynamic next-symbol selection. The existing VM kernel still runs separately for each member; there is no new language CALL/RETURN syntax.",
+    "continuation": "INPUT and step-budget yields resume in the current member, with fresh callbacks/readers. BASIC and FOCAL banks remain separate.",
+    "storage": "Raw immutable image or paged reads. A changing epoch invalidates the session before any subsequent image access. No heap or static storage is allocated by the device-side layer.",
+    "source_identity": "Bundle-local debug identity, not an installed C9 inode. Production editor integration requires an explicit manifest mapping.",
+    "unsupported": "GRAPH expressions are explicitly rejected: ordinary VM graph cleanup is not resumable at arbitrary step/INPUT boundaries. This does not change the stock graphics path.",
+    "integration": "No firmware entry point, C9 loader, M61 command or production cache policy has been changed. The offline container is an explicit compiled snapshot, not yet an automatically refreshed cache."
+  },
+  "chess": {
+    "sources_unchanged": true,
+    "source_files": 24,
+    "symbols": 25,
+    "manifest": "tools/turochamp/linked_program.json",
+    "package_bytes": 45625,
+    "metadata_bytes": 432,
+    "alias": "Symbols 4 and 5 share the legal.tbi image and source identity.",
+    "package_sha256": "2657c658846f1d7ae7ede7ee5b88f4c129324e6c9f9edc918dc328fa0d71bc3d",
+    "search": {"level": 2, "depth": 8, "book": false, "best_move": "e2e3", "evaluation": 54, "nodes": 420},
+    "equivalence": "A/B/A exactly matches all 26 variable representations, 385 array representations including tags, 20 references, module order, event hash, poll and VM-run counts.",
+    "vm_runs_per_search": 7662,
+    "polls_per_search": 205013,
+    "timing_scope": "Native host control with ASan/UBSan. Both routes use precompiled, prevalidated images; baseline does not recompile members. This does NOT measure M61, OPEN, device I/O, USB or hardware performance.",
+    "host_seconds": {
+      "BINARY64_host_control_math": {"A1": 0.0658506, "B": 0.0640255, "A2": 0.0624396},
+      "CORE_real_mk_math_core_and_calculator_core": {"A1": 49.505, "B": 50.3016, "A2": 49.6806}
+    },
+    "timing_conclusion": "No reproducible host speedup demonstrated. Hardware benefit remains unmeasured; the target overhead is absent from this control.",
+    "run_note": "The recorded chess run preceded the final cold-inspection epoch guard and builder overwrite protection. Accepted-member execution, VM arithmetic and chess sources were unchanged by these final safety-only changes."
+  },
+  "storage_accounting": {
+    "session_bytes": 1000,
+    "catalog_member_bytes": 40,
+    "chess_catalog_bytes": 1000,
+    "program_handle_bytes_arm": 48,
+    "operand_stack_bytes": 768,
+    "existing_numeric_banks_bytes": 4016,
+    "note": "These are separately accounted caller-owned objects, not a verified production RAM placement or measured RAM saving. Bindings, services, paged-I/O state and native stack also require storage."
+  },
+  "arm_object": {
+    "compiler": "arm-none-eabi GCC 14.2.1, Cortex-M4 hard-float, -Os, no LTO, MK61_BUILD_LANGUAGE_VM_MODULE",
+    "text_bytes": 4038,
+    "data_bytes": 0,
+    "bss_bytes": 0,
+    "largest_local_frames_bytes": {"inspect": 400, "execute": 368, "lookup": 64},
+    "note": "Standalone object containing cold validation and hot execution. NOT a linked APP/resident delta, not a production Flash/RAM/stack qualification."
+  },
+  "tests": {
+    "unit": "PASS: both arithmetic backends, host and wide-only APP configurations, ASan/UBSan. Raw/paged images, BASIC/FOCAL bank isolation, INPUT, budgets, ESC, errors/line mapping, callback forwarding, freed-image invalidation, malformed/truncated containers and >64 KiB member with dynamic jump.",
+    "strict_compiler_control": "PASS: the same four unit configurations with Homebrew Clang 18.1.8, -Wall -Wextra -Werror, sanitizers disabled.",
+    "builder": "PASS: BASIC/FOCAL, aliases, Cyrillic and quoted paths, CRC/layout, rejected manifests preserving the old output, source/manifest/symlink/hardlink overwrite protection.",
+    "chess": "PASS: actual unchanged 24-source search, both arithmetic backends, ordinary-member/linked/ordinary-member A/B/A.",
+    "actual_arm": {
+      "status": "PASS",
+      "configuration": "Actual Cortex-M4 code in Unicorn, wide-only VM, native EABI, -nostdlib, no external runtime libraries",
+      "cases": 8,
+      "matrix": "Raw/paged x aligned/+1 unaligned x unlimited/7-step budget",
+      "checks": "BASIC -> FOCAL -> BASIC, INPUT, dynamic GOTO, exact expected banks; continuation moved between addresses and old copy poisoned at every yield; image bytes unchanged; writes bounded to fixture globals and stack.",
+      "max_total_fixture_stack_bytes": {"raw": 2440, "paged": 2432},
+      "instruction_cap_unchanged": 500000000,
+      "emulation_timeout_us_unchanged": 180000000,
+      "note": "Bare fixture, not a production APP, keyboard/USB latency test or hardware timing."
+    },
+    "whole_repository_suite": "Not run; focused new-layer tests were run."
+  },
+  "production_constraints": {
+    "baseline_evidence": "doc/measurements/chess-span-cursor-20261019.json",
+    "baseline_LANGVM_memory_bytes": 20412,
+    "LANGVM_limit_bytes_unchanged": 20480,
+    "baseline_APP_headroom_bytes": 68,
+    "consequence": "Do not simply link the whole new layer into LANGVM. First separate cold container validation/loading from hot session execution and remove replaced M61/OPEN/setup paths; measure the final linked budgets."
+  },
+  "next": [
+    "Integrate the linked session with real M61/OPEN and overlay services without linking a second VM into resident firmware or silently changing arbitrary autoexec.m61 semantics.",
+    "Map bundle identities to source/editor records; define dependency fingerprints and rebuild/invalidation rules for changed BASIC/FOCAL sources.",
+    "Place catalog/session in existing reusable workspace and enforce the unchanged final APP, resident Flash, RAM and stack gates.",
+    "Run both arithmetic backends and physical Classic A/B/A, including complete board output, cold/warm behavior and keyboard/USB latency before deciding whether to ship."
+  ],
+  "reproduce": [
+    "MK61_TEST_SANITIZERS=1 bash tests/run_language_linked_program_tests.sh",
+    "python3 tests/vm_program_builder_self_test.py",
+    "MK61_TEST_SANITIZERS=1 bash tests/run_turochamp_linked_program_tests.sh",
+    "python3 tests/language_linked_program_arm_self_test.py --toolchain-bin /path/to/arm-none-eabi/bin",
+    "python3 tools/build_vm_program.py tools/turochamp/linked_program.json -o /tmp/turochamp.lvp --compiler clang++"
+  ],
+  "local_evidence": {
+    "directory": "/private/tmp/mk61-linked-program.FgYtSC",
+    "sha256": {
+      "unit-qualified.log": "7832b2e50a66d3188b259a3016f6ba4f24d4a8746dd4ecb5be6c2fa936e145aa",
+      "arm-final.log": "032d9d27d30c9980addb33a9d38d7f494466536e39abf92d2b9328568512f99a",
+      "chess-final.log": "5e18552d63f1723b01081d95ae3ab730865af4d4b68c438b560da2b0604a2140",
+      "builder.log": "9487c702a8c118253dbba355f6a981754d3b2839eefddfb9c994f7ffea8e31fc"
+    }
+  }
+}

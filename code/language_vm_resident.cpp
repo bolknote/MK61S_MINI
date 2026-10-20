@@ -261,6 +261,20 @@ app_flow::Status flow_invoke(void*, const app_flow::Target& target, app_flow::St
 #endif
 #endif
 }  // namespace
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+flash::ReadCache* linked_page_cache(){return flash_page_cache();}
+bool linked_poc_run(uint16_t,uint8_t*,PersistentValues&,flash::ReadCache&);
+bool run_linked_program(uint16_t directory) {
+  if(busy)return false;
+  struct BusyScope {BusyScope(){busy=true;}~BusyScope(){busy=false;}} scope;
+  auto* cache=flash_page_cache();if(!cache)return false;
+  shared_memory::Lease full;if(!workspace(full))return false;
+  auto* values=(Persistent*)(full.data()+COMPILER_WORKSPACE_SIZE);
+  if(full.fresh() || values->magic!=SESSION_MAGIC)initialize(*values);
+  basic_graphics::RunScope graphics_scope;
+  return linked_poc_run(directory,full.data(),*(PersistentValues*)values,*cache);
+}
+#endif
 #if MK61_OVERLAY_LANGUAGE_VM
 namespace {
 struct CompilerServices {

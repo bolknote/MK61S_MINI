@@ -9,6 +9,9 @@
 #include "loadable_module_abi.hpp"
 #include "mk_math.hpp"
 #include "basic_graphics_client.hpp"
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+#include "language_linked_program.hpp"
+#endif
 
 namespace {
 using namespace language_vm;
@@ -208,6 +211,14 @@ bool io(void*, Event event, const char* text, uint16_t length, double& value) {
 }
 const Services services = {nullptr, background, math, random,
                            dynamic_value, reference, io, true, true};
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+RunResult exported_kernel(const View& v,Continuation& c,const Bindings& b,
+                          const Services& h,uint32_t,bool resume) {
+  // The first resident experiment runs whole members. Keep the shipping
+  // unlimited kernel specialization instead of exporting a second copy.
+  return run(v,c,b,h,0,resume);
+}
+#endif
 
 __attribute__((noinline)) void evaluate_expression(const View& view) {
   const Bindings bindings = {request().variables, request().array, state().array_count,
@@ -266,6 +277,13 @@ extern "C" u32 mk61_app_initialize(const mk61_app_api* api, u32 crc, u32 kind) {
   return portable_system::bind(api, crc, kind) ? 0 : MK61_APP_RUNTIME_ERROR;
 }
 extern "C" u32 mk61_app_command(u32 command, u32 argument0, u32, u32, u32) {
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+  if(command==language_vm::linked::KERNEL_EXPORT_COMMAND) {
+    static const language_vm::linked::KernelExport api={language_vm::linked::KERNEL_EXPORT_MAGIC,exported_kernel,&services};
+    active=(language_vm::OverlayRequest*)(usize)argument0;
+    return (u32)(usize)&api;
+  }
+#endif
   if(command == MK61_APP_FLOW_INFO) return MK61_APP_FLOW_MAGIC;
   if(command == MK61_APP_FLOW_STEP)
     return flow_vm((mk61_app_flow*)(usize)argument0, execute);

@@ -8,6 +8,12 @@ from unittest.mock import patch
 import tempfile
 import hil_turochamp_performance as benchmark
 
+benchmark.require_launcher_ok(SimpleNamespace(text=b'old M61 error in ignored\nOK',open_text_start=25))
+for diagnostic in (b'Open failed!\n',b'M61 error in autoexec at line 9: TinyBASIC compile error\n'):
+    try:benchmark.require_launcher_ok(SimpleNamespace(text=diagnostic,open_text_start=0))
+    except AssertionError as error:assert 'launcher failed' in str(error)
+    else:raise AssertionError('launcher failure was not detected immediately')
+
 font=Font((ROOT/'programs/games/Turochamp/Turochamp.FMK').read_bytes())
 frame=bytearray(1536)
 def put(text,row,col):

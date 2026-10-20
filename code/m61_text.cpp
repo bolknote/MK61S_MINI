@@ -10,6 +10,9 @@
 #include "terminal_script.hpp"
 #include "terminal_catalog.hpp"
 #include "shared_memory.hpp"
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+#include "language_vm_resident.hpp"
+#endif
 
 #if defined(MK61_CORE_STANDALONE)
 #include "m61_platform.hpp"
@@ -1774,6 +1777,17 @@ static bool execute_script_line(const char* raw_line,
   const char* line = skip_spaces(raw_line);
   if(is_line_end(*line)) return true;
   if(*line == ':') return true; // Метка — точка перехода, сама по себе ничего не делает
+#if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
+  // Explicit experimental command; never recognize/rewrite arbitrary OPEN
+  // dispatch scripts. Package chunks are already installed beside the script.
+  if(const char* args=keyword_end(line,"vm-linked",9)) {
+    if(!is_line_end(*skip_spaces(args)) || trap_context_valid()) {
+      line_error_message="invalid vm-linked context";return false;
+    }
+    if(language_vm::run_linked_program(current_script_directory()))return true;
+    line_error_message="linked VM failed";return false;
+  }
+#endif
 
   const char* optional_path = optional_open_arguments(line);
   if(optional_path != NULL) {
