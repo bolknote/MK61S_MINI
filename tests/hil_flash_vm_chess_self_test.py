@@ -16,6 +16,17 @@ assert hil.qualification_apps()==('BASIC.APP','FOCAL.APP','LANGVM.APP','LANGIN.A
 assert hil.qualification_apps(True)==hil.qualification_apps()+('VMCache/VMSTORE.APP',)
 assert [hil.linked_stage_script(name,b'ordinary') for name in ('baseline','candidate','control')]==[
     b'ordinary',b'reinit\nloadfont Turochamp\nvm-linked\n',b'ordinary']
+assert [hil.linked_stage_script(name,b'ordinary',True) for name in ('baseline','candidate','control')]==[
+    b'reinit\nloadfont Turochamp\nvm-linked\n']*3
+stages=[dict(name=n,runs=[dict(seconds=t) for t in times]) for n,times in (
+    ('baseline',(99,25,25.2)),('candidate',(88,23,23.2)),('control',(77,25.2,25.4)))]
+comparison=hil.steady_comparison(stages)
+assert all(abs(a-b)<1e-12 for a,b in zip(comparison['steady_seconds'],(25.1,23.1,25.3)))
+assert abs(comparison['reference_seconds']-25.2)<1e-12
+assert comparison['candidate_seconds']==23.1
+try:hil.steady_comparison(stages[:2])
+except AssertionError:pass
+else:raise AssertionError('accepted an incomplete resident A/B/A')
 image=bytearray(32+9000);image[:4]=b'LVP1';struct.pack_into('<I',image,8,len(image))
 struct.pack_into('<I',image,24,zlib.crc32(image[32:]));struct.pack_into('<I',image,28,zlib.crc32(image[:28]))
 chunks=hil.linked_chunks(bytes(image))

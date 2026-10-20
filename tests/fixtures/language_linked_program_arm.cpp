@@ -30,13 +30,20 @@ extern "C" uint32_t linked_probe(uint32_t address,uint32_t size,uint32_t mode) {
   Services services={};services.service=[](void*){++polls;return true;};
   services.reference=[](void*,bool write,uint8_t ref,double& value){if(ref>=20)return false;if(write)refs[ref]=value;else value=refs[ref];return true;};
   services.event=[](void*,Event,const char*,uint16_t,double&){return true;};
-  auto result=linked::execute(program,*session,host,services,(mode&2)?7:0);
+  if((mode&4) && (mode&1)) {
+    host.borrow=[](void*,const linked::Member& m,const uint8_t*& out){out=image+m.offset;return true;};
+    host.release=[](void*,const uint8_t*){};
+  }
+  auto result=(mode&4)?linked::execute_whole_with(program,*session,host,services,language_vm::run):
+      linked::execute(program,*session,host,services,(mode&2)?7:0);
   const Value answer(13);
   for(unsigned calls=0;result.status==linked::Status::AWAIT_INPUT || result.status==linked::Status::BUDGET;++calls) {
     if(calls>2000)return 2;
     auto* next=session==sessions?sessions+1:sessions;
     memcpy(next,session,sizeof(*session));memset(session,0xA5,sizeof(*session));session=next;
-    result=linked::execute(program,*session,host,services,(mode&2)?7:0,
+    if((mode&4) && session->phase==linked::Phase::ENTER)
+      result=linked::execute_whole_with(program,*session,host,services,language_vm::run);
+    else result=linked::execute(program,*session,host,services,(mode&2)?7:(mode&4)?1:0,
         result.status==linked::Status::AWAIT_INPUT?&answer:nullptr);
   }
   if(result.status!=linked::Status::DONE)return 3+unsigned(result.status);

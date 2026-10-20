@@ -56,6 +56,20 @@ bool lookup(void* raw,uint32_t key,bool number,uint32_t* out) {
   *out=number?(low<v.lines && label(low)==key?address(low):v.missing()):(low?label(low-1):0);
   return v.good();
 }
+bool whole_lookup(void* raw,uint32_t key,bool number,uint32_t* out) {
+  const auto& context=*(MapContext*)raw;const auto& v=context.view;
+  // Even a raw immutable loan can be invalidated by an external callback.
+  // Do not touch its bytes while RUN is reporting the stopping source line.
+  if(!current(context.program)){*out=number?UINT32_MAX:0;return false;}
+  auto word=[&](unsigned i,bool address){return flash::dword(v.bytes+HEADER_SIZE+uint32_t(i)*8+(address?4:0));};
+  unsigned low=0,high=v.lines;
+  while(low<high) {
+    const unsigned middle=(low+high)/2;const uint32_t at=word(middle,!number);
+    if(at<key || (!number && at==key))low=middle+1;else high=middle;
+  }
+  *out=number?(low<v.lines && word(low,false)==key?word(low,true):UINT32_MAX):(low?word(low-1,false):0);
+  return true;
+}
 struct Bridge {
   const Program& program;const Services& services;bool stale=false;
   bool valid(){if(!current(program))stale=true;return !stale;}
@@ -160,14 +174,19 @@ bool start(const Program& p,Session& s,uint32_t entry) {
   s.identity=p.identity;s.epoch=p.epoch;s.symbol=entry;s.steps=s.members=0;
   s.index=uint16_t(index);s.phase=Phase::ENTER;return true;
 }
-Result execute_with(const Program& p,Session& s,const Host& host,const Services& services,Kernel kernel,uint32_t budget,const Value* input) {
+namespace {
+template<bool Whole>
+Result execute_impl(const Program& p,Session& s,const Host& host,const Services& services,Kernel kernel,uint32_t budget,const Value* input) {
   if(!current(p) || s.identity!=p.identity || s.epoch!=p.epoch) {
     s.phase=Phase::FAILED;return result(s,Status::INVALIDATED);
   }
   if(!kernel || !host.bind || !host.next || (host.borrow && !host.release) || s.phase==Phase::EMPTY || s.phase==Phase::FAILED || unsigned(s.phase)>unsigned(Phase::FAILED))
     return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0});
   if(s.phase==Phase::DONE)return result(s,Status::DONE);
-  uint32_t used=0;
+  if constexpr(Whole) {
+    if(s.phase!=Phase::ENTER)return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0});
+  }
+  [[maybe_unused]] uint32_t used=0;
   Bridge bridge{p,services};
   Services callbacks={&bridge,Bridge::poll,services.math?Bridge::math:nullptr,services.random?Bridge::random:nullptr,
       services.value?Bridge::value:nullptr,services.reference?Bridge::reference:nullptr,services.event?Bridge::event:nullptr,
@@ -179,6 +198,11 @@ Result execute_with(const Program& p,Session& s,const Host& host,const Services&
       s.index=uint16_t(index);
     }
     const auto& m=p.members[s.index];Bindings data={};
+    if constexpr(Whole) {
+      if(!m.validated.wide || m.validated.magic!=VALIDATED_MAGIC || (m.validated.flags&1)) {
+        s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0},m.source_id);
+      }
+    }
     if(!host.bind(host.context,m.validated.language,data)) {
       s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::VARIABLE,0,0,0},m.source_id);
     }
@@ -186,14 +210,17 @@ Result execute_with(const Program& p,Session& s,const Host& host,const Services&
        data.array_count>(m.validated.language==Language::BASIC?385:64) || (data.array_count && !data.array)) {
       s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0},m.source_id);
     }
-    if(s.phase==Phase::AWAIT_INPUT) {
-      if(!input)return result(s,Status::AWAIT_INPUT,{Error::YIELDED,s.control.pc,0,0},m.source_id);
-      if(!data.stack || s.control.sp>=data.stack_capacity) {
-        s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::STACK,s.control.pc,0,0},m.source_id);
-      }
-      data.stack[s.control.sp++]=*input;input=nullptr;s.phase=Phase::RUN;
-    } else if(input)return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0},m.source_id);
-    const bool resume=s.phase==Phase::RUN;
+    bool resume=false;
+    if constexpr(!Whole) {
+      if(s.phase==Phase::AWAIT_INPUT) {
+        if(!input)return result(s,Status::AWAIT_INPUT,{Error::YIELDED,s.control.pc,0,0},m.source_id);
+        if(!data.stack || s.control.sp>=data.stack_capacity) {
+          s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::STACK,s.control.pc,0,0},m.source_id);
+        }
+        data.stack[s.control.sp++]=*input;input=nullptr;s.phase=Phase::RUN;
+      } else if(input)return result(s,Status::ERROR,{Error::INVALID_IMAGE,0,0,0},m.source_id);
+      resume=s.phase==Phase::RUN;
+    }
     if(!resume && host.enter && !host.enter(host.context,s.symbol,m.source_id,m.validated.language)) {
       s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::IO,0,0,0},m.source_id);
     }
@@ -206,12 +233,22 @@ Result execute_with(const Program& p,Session& s,const Host& host,const Services&
       s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::IO,0,0,0},m.source_id);
     }
     if(!bridge.valid()){s.phase=Phase::FAILED;return result(s,Status::INVALIDATED,{},m.source_id);}
-    Slice slice{p.input,m.offset,m.validated.size,p.epoch};flash::Reader reader(slice.paged());
-    View v=view(m,p.input,p.input.bytes?nullptr:&reader);
-    if(loan.image){v.bytes=loan.image;v.reader=nullptr;}
-    MapContext map{v,p};v.lookup_context=&map;v.lookup=lookup;
-    const auto r=kernel(v,s.control,data,callbacks,budget?budget-used:0,resume);
-    used+=r.steps;
+    auto invoke=[&](View& v) {
+      MapContext map{v,p};v.lookup_context=&map;v.lookup=Whole?whole_lookup:lookup;
+      return kernel(v,s.control,data,callbacks,Whole?0:budget?budget-used:0,resume);
+    };
+    RunResult r;
+    if constexpr(Whole) {
+      View v=view(m,p.input,nullptr);
+      if(host.borrow)v.bytes=loan.image;
+      if(!v.bytes){s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::IO,0,0,0},m.source_id);}
+      r=invoke(v);
+    } else {
+      Slice slice{p.input,m.offset,m.validated.size,p.epoch};flash::Reader reader(slice.paged());
+      View v=view(m,p.input,p.input.bytes?nullptr:&reader);
+      if(loan.image){v.bytes=loan.image;v.reader=nullptr;}
+      r=invoke(v);used+=r.steps;
+    }
     if(s.steps>UINT32_MAX-r.steps){s.phase=Phase::FAILED;return result(s,Status::ERROR,{Error::LIMIT,r.pc,r.line,r.steps},m.source_id);}
     s.steps+=r.steps;
     if(!bridge.valid()){s.phase=Phase::FAILED;return result(s,Status::INVALIDATED,r,m.source_id);}
@@ -225,7 +262,16 @@ Result execute_with(const Program& p,Session& s,const Host& host,const Services&
     if(!bridge.valid()){s.phase=Phase::FAILED;return result(s,Status::INVALIDATED,r,m.source_id);}
     if(!next){s.phase=Phase::DONE;return result(s,Status::DONE,r,m.source_id);}
     s.symbol=next;s.index=UINT16_MAX;s.phase=Phase::ENTER;
-    if(budget && used>=budget)return result(s,Status::BUDGET,r,m.source_id);
+    if constexpr(!Whole) {
+      if(budget && used>=budget)return result(s,Status::BUDGET,r,m.source_id);
+    }
   }
+}
+}
+Result execute_with(const Program& p,Session& s,const Host& h,const Services& v,Kernel k,uint32_t budget,const Value* input) {
+  return execute_impl<false>(p,s,h,v,k,budget,input);
+}
+Result execute_whole_with(const Program& p,Session& s,const Host& h,const Services& v,Kernel k) {
+  return execute_impl<true>(p,s,h,v,k,0,nullptr);
 }
 }}

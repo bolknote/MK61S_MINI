@@ -82,6 +82,11 @@ bool start(const Program&,Session&,uint32_t entry=0);
 // only after a value has explicitly been supplied; it never restarts RUN.
 Result execute_with(const Program&,Session&,const Host&,const Services&,Kernel,
                     uint32_t budget=0,const Value* input=nullptr);
+// Unlimited, fresh whole-member LBV2 calls: raw container bytes or a mandatory
+// non-null immutable loan. Never constructs a paged Reader. INPUT/LIMIT still
+// publish their continuation, but only execute_with may resume it; this entry
+// rejects an already suspended session instead of silently restarting it.
+Result execute_whole_with(const Program&,Session&,const Host&,const Services&,Kernel);
 inline Result execute(const Program& p,Session& s,const Host& h,const Services& v,
                       uint32_t budget=0,const Value* input=nullptr) {
   return execute_with(p,s,h,v,run,budget,input);

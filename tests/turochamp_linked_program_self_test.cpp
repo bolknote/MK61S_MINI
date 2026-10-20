@@ -50,11 +50,12 @@ View plain_view(const linked::Program& p,const linked::Member& m) {
   return {p.input.bytes+m.offset,c.size,c.code,c.lines,c.source_size,c.stack,c.language,false,
       bool(c.flags&2),c.end,nullptr,c.wide};
 }
-uint32_t call(const linked::Program& p,Context& c,unsigned entry,bool fused) {
+uint32_t call(const linked::Program& p,Context& c,unsigned entry,bool fused,bool whole=false) {
   c.refs[18]=entry;
   if(fused) {
     linked::Session session{};if(!linked::start(p,session,entry))throw std::runtime_error("linked start");
-    const auto r=linked::execute(p,session,c.host(),c.services(),100000000);
+    const auto r=whole?linked::execute_whole_with(p,session,c.host(),c.services(),language_vm::run):
+        linked::execute(p,session,c.host(),c.services(),100000000);
     if(r.status!=linked::Status::DONE)throw std::runtime_error(std::string("linked execution ")+error_name(r.run.error)+" symbol="+std::to_string(r.symbol));
     return r.members;
   }
@@ -71,14 +72,14 @@ uint32_t call(const linked::Program& p,Context& c,unsigned entry,bool fused) {
   }
   if(id)throw std::runtime_error("reference loop limit");return count;
 }
-Context search(const linked::Program& p,bool fused,double& elapsed,uint32_t& launches) {
-  Context c;c.single=true;call(p,c,tc::M_INIT,fused);c.single=false;
+Context search(const linked::Program& p,bool fused,double& elapsed,uint32_t& launches,bool whole=false) {
+  Context c;c.single=true;call(p,c,tc::M_INIT,fused,whole);c.single=false;
   c.array[tc::LEVEL]=2;c.array[tc::BOOK_ENABLED]=0;
   c.order.clear();c.polls=0;
   const auto begin=std::chrono::steady_clock::now();launches=0;
   for(int part:{tc::M_STATUS,tc::M_SEARCH}) {
     c.array[tc::SP]=1;c.array[tc::RETURNS]=0;c.array[tc::PHASE]=0;
-    launches+=call(p,c,unsigned(part),fused);
+    launches+=call(p,c,unsigned(part),fused,whole);
   }
   elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-begin).count();
   if(c.array[tc::NODES]!=Value(420) || c.array[tc::BEST]!=Value(5795) || c.array[tc::ROOTVAL]!=Value(54))
@@ -107,17 +108,20 @@ int main(int argc,char** argv) {
     linked::Input in{};in.bytes=bytes.data();in.size=uint32_t(bytes.size());
     std::vector<linked::Member> members(source.size());linked::Program program;vm_program_builder::Disk disk;
     if(linked::inspect(in,members.data(),uint16_t(members.size()),program,disk.io())!=Error::NONE)throw std::runtime_error("bad chess package");
-    double times[3];uint32_t launches[3];auto a=search(program,false,times[0],launches[0]);
+    double times[4];uint32_t launches[4];auto a=search(program,false,times[0],launches[0]);
     auto b=search(program,true,times[1],launches[1]);auto c=search(program,false,times[2],launches[2]);
-    for(unsigned i=0;i<26;++i)if(a.variables[i].representation()!=b.variables[i].representation() || a.variables[i].representation()!=c.variables[i].representation())throw std::runtime_error("variable mismatch");
-    for(unsigned i=0;i<385;++i)if(a.array[i].representation()!=b.array[i].representation() || a.array[i].representation()!=c.array[i].representation())throw std::runtime_error("array mismatch");
-    if(memcmp(a.refs,b.refs,sizeof(a.refs)) || memcmp(a.refs,c.refs,sizeof(a.refs)) ||
-       a.order!=b.order || a.order!=c.order || a.events!=b.events || a.events!=c.events ||
-       a.polls!=b.polls || a.polls!=c.polls || launches[0]!=launches[1] || launches[0]!=launches[2])throw std::runtime_error("route/event/reference/poll mismatch");
+    auto d=search(program,true,times[3],launches[3],true);
+    for(const auto* candidate:{&b,&c,&d}) {
+      for(unsigned i=0;i<26;++i)if(a.variables[i].representation()!=candidate->variables[i].representation())throw std::runtime_error("variable mismatch");
+      for(unsigned i=0;i<385;++i)if(a.array[i].representation()!=candidate->array[i].representation())throw std::runtime_error("array mismatch");
+      if(memcmp(a.refs,candidate->refs,sizeof(a.refs)) || a.order!=candidate->order || a.events!=candidate->events ||
+         a.polls!=candidate->polls)throw std::runtime_error("route/event/reference/poll mismatch");
+    }
+    if(launches[0]!=launches[1] || launches[0]!=launches[2] || launches[0]!=launches[3])throw std::runtime_error("launch count mismatch");
     std::cout<<"linked chess backend="<<MK61_MATH_BACKEND<<" source_files="<<files.size()<<" symbols="<<members.size()
         <<" package="<<bytes.size()<<" directory="<<linked::HEADER_BYTES+members.size()*linked::ENTRY_BYTES
         <<" session="<<sizeof(linked::Session)<<" catalog="<<members.size()*sizeof(linked::Member)
         <<" vm_runs="<<launches[1]<<" polls="<<b.polls<<" e2e3/54/420, exact banks/tags/events/routes PASS\n";
-    std::cout<<"host-only A/B/A seconds="<<times[0]<<'/'<<times[1]<<'/'<<times[2]<<"; no device speed claim\n";
+    std::cout<<"host-only reference/generic/reference/whole seconds="<<times[0]<<'/'<<times[1]<<'/'<<times[2]<<'/'<<times[3]<<"; no device speed claim\n";
   } catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }

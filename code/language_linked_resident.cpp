@@ -9,6 +9,12 @@
 #include "tools.hpp"
 #include "mk_math.hpp"
 #include <new>
+#ifndef MK61_LINKED_VM_COMPACT
+#define MK61_LINKED_VM_COMPACT 1
+#endif
+#if MK61_LINKED_VM_COMPACT != 0 && MK61_LINKED_VM_COMPACT != 1
+#error "MK61_LINKED_VM_COMPACT must be 0 or 1"
+#endif
 extern void idle_main_process(void);
 
 namespace language_vm {
@@ -131,7 +137,11 @@ bool linked_poc_run(uint16_t directory,uint8_t* prefix,PersistentValues& values,
   c.services=api.services;
   if(!start(c.program,session))return false;
   const Host host={&c,Context::bind,Context::enter,Context::next,Context::borrow,Context::release};
+#if MK61_LINKED_VM_COMPACT
+  const auto result=execute_whole_with(c.program,session,host,*api.services,api.kernel);
+#else
   const auto result=execute_with(c.program,session,host,*api.services,api.kernel);
+#endif
   // INPUT expression/editor swaps need a separate cold handoff. Do not restart
   // or silently discard a yielded continuation in this chess-only experiment.
   return result.status==Status::DONE || (result.status==Status::ERROR && result.run.error==Error::STOPPED);

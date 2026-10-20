@@ -40,10 +40,11 @@ struct Fixture {
   Value variables[2][26]={},arrays[2][385]={},stack[MAX_STACK]={};
   double refs[20]={};uint32_t revision=1,polls=0,enters=0,transitions=0;
   unsigned invalidate_at=0,stop_at=0,math_calls=0,random_calls=0,value_calls=0;
+  unsigned loans=0,releases=0;bool whole_mode;
   bool free_on_reference=false,free_on_math=false;std::vector<unsigned> order;
   Disk scratch;
   static uint32_t epoch(void* p){return ((Fixture*)p)->revision;}
-  explicit Fixture(Bytes b,bool paged=false):bytes(std::move(b)) {
+  explicit Fixture(Bytes b,bool paged=false,bool whole=false):bytes(std::move(b)),whole_mode(whole) {
     linked::Input in{};in.bytes=paged?nullptr:bytes.data();in.size=uint32_t(bytes.size());
     in.epoch_context=this;in.epoch=epoch;
     if(paged)in.paged={this,[](void* p,uint32_t at,uint8_t* out,uint16_t n){auto& f=*(Fixture*)p;if(at>f.bytes.size() || n>f.bytes.size()-at)return false;memcpy(out,f.bytes.data()+at,n);return true;},in.size};
@@ -52,9 +53,14 @@ struct Fixture {
     assert(error==Error::NONE && linked::start(program,session));
   }
   linked::Host host() {
-    return {this,[](void* p,Language language,Bindings& b){auto& f=*(Fixture*)p;unsigned i=language==Language::BASIC?0:1;b={f.variables[i],f.arrays[i],uint16_t(i?64:385),f.stack,MAX_STACK};return true;},
+    linked::Host h={this,[](void* p,Language language,Bindings& b){auto& f=*(Fixture*)p;unsigned i=language==Language::BASIC?0:1;b={f.variables[i],f.arrays[i],uint16_t(i?64:385),f.stack,MAX_STACK};return true;},
       [](void* p,uint32_t symbol,uint16_t id,Language){auto& f=*(Fixture*)p;assert(id==99+symbol);++f.enters;f.order.push_back(symbol);return true;},
       [](void* p,uint32_t,uint32_t& next){auto& f=*(Fixture*)p;++f.transitions;next=uint32_t(f.refs[18]);return true;}};
+    if(whole_mode && !program.input.bytes) {
+      h.borrow=[](void* p,const linked::Member& m,const uint8_t*& image){auto& f=*(Fixture*)p;++f.loans;image=f.bytes.data()+m.offset;return true;};
+      h.release=[](void* p,const uint8_t* image){assert(image);++((Fixture*)p)->releases;};
+    }
+    return h;
   }
   Services services() {
     Services s={};s.context=this;
@@ -67,11 +73,16 @@ struct Fixture {
     s.value=[](void* p,Function fn){auto& f=*(Fixture*)p;++f.value_calls;assert(fn==Function::COLS);return 26.;};
     s.event=[](void*,Event,const char*,uint16_t,double&){return true;};return s;
   }
-  linked::Result run(uint32_t budget=0,const Value* input=nullptr){return linked::execute(program,session,host(),services(),budget,input);}
+  linked::Result run(uint32_t budget=0,const Value* input=nullptr){
+    if(!whole_mode)return linked::execute(program,session,host(),services(),budget,input);
+    assert(!budget && !input);
+    const auto r=linked::execute_whole_with(program,session,host(),services(),language_vm::run);
+    assert(loans==releases);return r;
+  }
 };
-void basics(bool wide,bool paged) {
+void basics(bool wide,bool paged,bool whole=false) {
   Fixture f(package({compile_image(Language::BASIC,"10 A=A+1;@(1)=@(1)+3;.RE=2;END\n",wide),
-    compile_image(Language::BASIC,"10 A=A+2;@(2)=@(1)+A;.RE=0;END\n",wide)}),paged);
+    compile_image(Language::BASIC,"10 A=A+2;@(2)=@(1)+A;.RE=0;END\n",wide)}),paged,whole);
   const auto r=f.run();assert(r.status==linked::Status::DONE && r.members==2 && f.enters==2);
   assert(f.variables[0][0]==Value(3) && f.arrays[0][1]==Value(3) && f.arrays[0][2]==Value(6));
   assert((f.order==std::vector<unsigned>{1,2}) && r.source_id==101 && f.polls>=2);
@@ -93,34 +104,34 @@ void input_and_limits(bool wide,bool paged) {
     assert(f.variables[0][0]==Value(24) && f.enters==2 && f.transitions==2 && r.steps==answer.steps);
   }
 }
-void isolation(bool wide,bool paged) {
+void isolation(bool wide,bool paged,bool whole=false) {
   Fixture f(package({compile_image(Language::BASIC,"10 A=9;@(1)=17;.RE=2;END\n",wide),
     compile_image(Language::FOCAL,"1.10 S A=4;S Z(1)=6;S B=Z(1);S .RE=3;E\n",wide),
-    compile_image(Language::BASIC,"10 B=A+@(1);.RE=0;END\n",wide)}),paged);
+    compile_image(Language::BASIC,"10 B=A+@(1);.RE=0;END\n",wide)}),paged,whole);
   assert(f.run().status==linked::Status::DONE);
   assert(f.variables[0][1]==Value(26) && f.variables[1][0]==Value(4) && f.variables[1][1]==Value(6));
 }
-void errors(bool wide,bool paged) {
+void errors(bool wide,bool paged,bool whole=false) {
   Bytes p=package({compile_image(Language::BASIC,"10 A=A+1;.RE=1;END\n",wide)});
-  Fixture f(p,paged);f.stop_at=3;assert(f.run().run.error==Error::STOPPED && f.enters==3);
-  Fixture changed(p,paged);changed.invalidate_at=2;
+  Fixture f(p,paged,whole);f.stop_at=3;assert(f.run().run.error==Error::STOPPED && f.enters==3);
+  Fixture changed(p,paged,whole);changed.invalidate_at=2;
   assert(changed.run().status==linked::Status::INVALIDATED && changed.enters==2);
-  Fixture stale(p,paged);++stale.revision;assert(stale.run().status==linked::Status::INVALIDATED && !stale.enters);
-  Fixture missing(package({compile_image(Language::BASIC,"10 .RE=9;END\n",wide)}),paged);
+  Fixture stale(p,paged,whole);++stale.revision;assert(stale.run().status==linked::Status::INVALIDATED && !stale.enters);
+  Fixture missing(package({compile_image(Language::BASIC,"10 .RE=9;END\n",wide)}),paged,whole);
   auto r=missing.run();assert(r.status==linked::Status::UNRESOLVED && r.symbol==9 && r.members==1);
-  Fixture runtime(package({compile_image(Language::BASIC,"10 A=1/0;END\n",wide)}),paged);
+  Fixture runtime(package({compile_image(Language::BASIC,"10 A=1/0;END\n",wide)}),paged,whole);
   r=runtime.run();assert(r.status==linked::Status::ERROR && r.run.error!=Error::NONE && r.source_id==100 && r.run.line==10);
-  Fixture evicted(package({compile_image(Language::BASIC,"10 .RE=0;END\n",wide)}),paged);
+  Fixture evicted(package({compile_image(Language::BASIC,"10 .RE=0;END\n",wide)}),paged,whole);
   evicted.free_on_reference=true;assert(evicted.run().status==linked::Status::INVALIDATED && evicted.bytes.empty());
-  Fixture math(package({compile_image(Language::BASIC,"10 A=SQRT(16);END\n",wide)}),paged);
+  Fixture math(package({compile_image(Language::BASIC,"10 A=SQRT(16);END\n",wide)}),paged,whole);
   math.free_on_math=true;assert(math.run().status==linked::Status::INVALIDATED && math.bytes.empty());
-  Fixture restarted(p,paged);assert(!linked::start(restarted.program,restarted.session,99));
+  Fixture restarted(p,paged,whole);assert(!linked::start(restarted.program,restarted.session,99));
   assert(restarted.run().status==linked::Status::ERROR && !restarted.enters);
-  Fixture bad_phase(p,paged);bad_phase.session.phase=linked::Phase(255);
+  Fixture bad_phase(p,paged,whole);bad_phase.session.phase=linked::Phase(255);
   assert(bad_phase.run().status==linked::Status::ERROR && !bad_phase.enters);
 }
-void callbacks(bool wide,bool paged) {
-  Fixture f(package({compile_image(Language::BASIC,"10 A=SQRT(16)+2^3+COLS;B=RND();.RE=0;END\n",wide)}),paged);
+void callbacks(bool wide,bool paged,bool whole=false) {
+  Fixture f(package({compile_image(Language::BASIC,"10 A=SQRT(16)+2^3+COLS;B=RND();.RE=0;END\n",wide)}),paged,whole);
   assert(f.run().status==linked::Status::DONE && f.variables[0][0]==Value(38) && f.variables[0][1]==Value(.25));
   assert(f.math_calls==2 && f.value_calls==1 && f.random_calls==1);
 }
@@ -149,6 +160,8 @@ void large_paged_and_failures() {
   assert(bytes.size()>65536);
   Fixture f(bytes,true);auto result=f.run();
   assert(result.status==linked::Status::DONE && f.variables[0][1]==Value(42) && result.run.pc>65536);
+  Fixture whole(bytes,false,true);result=whole.run();
+  assert(result.status==linked::Status::DONE && whole.variables[0][1]==Value(42) && result.run.pc>65536);
   Fixture io(std::move(bytes),true);
   io.program.input.paged.read=[](void*,uint32_t,uint8_t*,uint16_t){return false;};
   assert(io.run().status==linked::Status::ERROR);
@@ -218,6 +231,56 @@ void borrowed_external_kernel() {
   assert(linked::execute_with(stopped.program,stopped.session,host,stopped.services(),external_kernel).run.error==Error::STOPPED);
   assert(loan_calls==release_calls);
 }
+void whole_contract() {
+  auto image=package({compile_image(Language::BASIC,"10 INPUT A\n20 A=A+2;.RE=0;END\n",true)});
+  Fixture input(image,false,true);
+  assert(input.run().status==linked::Status::AWAIT_INPUT);
+  uint8_t suspended[sizeof(input.session)];memcpy(suspended,&input.session,sizeof(suspended));
+  const auto enters=input.enters;
+  assert(input.run().run.error==Error::INVALID_IMAGE && input.enters==enters);
+  assert(!memcmp(suspended,&input.session,sizeof(suspended)));
+  Value answer=5;
+  assert(linked::execute(input.program,input.session,input.host(),input.services(),0,&answer).status==linked::Status::DONE);
+  assert(input.variables[0][0]==Value(7) && input.enters==enters);
+
+  Fixture limit(package({compile_image(Language::BASIC,"10 .RE=0;END\n",true)}),true,true);
+  const auto limited=[](const View& v,Continuation& c,const Bindings& b,const Services& h,uint32_t budget,bool resume) {
+    assert(v.wide && v.bytes && !v.reader && !budget && !resume);
+    return language_vm::run(v,c,b,h,1,false);
+  };
+  assert(linked::execute_whole_with(limit.program,limit.session,limit.host(),limit.services(),limited).status==linked::Status::BUDGET);
+  assert(limit.session.phase==linked::Phase::RUN && limit.loans==limit.releases);
+  uint8_t cursor[sizeof(limit.session)];memcpy(cursor,&limit.session,sizeof(cursor));
+  assert(limit.run().run.error==Error::INVALID_IMAGE && !memcmp(cursor,&limit.session,sizeof(cursor)));
+  assert(linked::execute(limit.program,limit.session,limit.host(),limit.services()).status==linked::Status::DONE);
+
+  // No raw image means a real error, never an implicit paged fallback.
+  Fixture no_loan(image,true);
+  no_loan.program.input.paged.read=[](void*,uint32_t,uint8_t*,uint16_t)->bool{assert(false);return false;};
+  assert(linked::execute_whole_with(no_loan.program,no_loan.session,no_loan.host(),no_loan.services(),language_vm::run).run.error==Error::IO);
+  Fixture null_loan(image,true,true);auto host=null_loan.host();
+  host.borrow=[](void*,const linked::Member&,const uint8_t*& p){p=nullptr;return true;};
+  assert(linked::execute_whole_with(null_loan.program,null_loan.session,host,null_loan.services(),language_vm::run).run.error==Error::IO);
+  Fixture failed(image,true,true);host=failed.host();
+  host.borrow=[](void* p,const linked::Member& m,const uint8_t*& out){auto& f=*(Fixture*)p;++f.loans;out=f.bytes.data()+m.offset;return false;};
+  assert(linked::execute_whole_with(failed.program,failed.session,host,failed.services(),language_vm::run).run.error==Error::IO);
+  assert(failed.loans==1 && failed.releases==1);
+  Fixture stale(image,true,true);host=stale.host();
+  host.borrow=[](void* p,const linked::Member& m,const uint8_t*& out){auto& f=*(Fixture*)p;++f.loans;out=f.bytes.data()+m.offset;++f.revision;Bytes{}.swap(f.bytes);return true;};
+  assert(linked::execute_whole_with(stale.program,stale.session,host,stale.services(),language_vm::run).status==linked::Status::INVALIDATED);
+  assert(stale.loans==1 && stale.releases==1);
+
+  for(unsigned bad=0;bad<3;++bad) {
+    Fixture f(image,false,true);
+    if(bad==0)f.members[0].validated.wide=false;
+    if(bad==1)f.members[0].validated.magic=0;
+    if(bad==2)f.members[0].validated.flags|=1;
+    assert(f.run().run.error==Error::INVALID_IMAGE && !f.enters);
+  }
+  Fixture done(package({compile_image(Language::BASIC,"10 .RE=0;END\n",true)}),false,true);
+  assert(done.run().status==linked::Status::DONE);const auto count=done.enters;
+  assert(done.run().status==linked::Status::DONE && done.enters==count);
+}
 }
 int main() {
   for(bool wide:{false,true})for(bool paged:{false,true}) {
@@ -228,5 +291,9 @@ int main() {
     basics(wide,paged);input_and_limits(wide,paged);isolation(wide,paged);errors(wide,paged);callbacks(wide,paged);
   }
   invalid_images();large_paged_and_failures();invalidated_alias_directory();borrowed_external_kernel();
+  for(bool paged:{false,true}) {
+    basics(true,paged,true);isolation(true,paged,true);errors(true,paged,true);callbacks(true,paged,true);
+  }
+  whole_contract();
   std::puts("linked VM: unchanged LBV1/LBV2, shared banks, BASIC/FOCAL isolation, INPUT/budgets, epoch/ESC/errors and corrupt containers PASS");
 }
