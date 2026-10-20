@@ -436,13 +436,15 @@ void Ui::row(unsigned index, char out[64]) const {
   } else if (page_ == Page::FONTS) {
     if (index == 0)
       std::snprintf(out, 64, "%s: %s", text("Calculator", M8("Калькулятор")),
-                    settings_.calculator_font ? "Classic 10x16" : "MK61");
+                    settings_.calculator_font ? "Ark Pixel 16" : "MK61");
     else if(index==1) {
       fonts::Item item{};
       const bool found=fonts::describe(fonts::key(settings_),item);
       std::snprintf(out,64,"%s: %.43s",text("Interface",M8("Интерфейс")),found?item.name:"Ark Pixel");
     }
-    else if(index==2) std::snprintf(out,64,"%s: %ux%u / %u",text("Text",M8("Текст")),settings_.text_width,settings_.text_height,settings_.text_rows);
+    else if(index==2) std::snprintf(out,64,"%s: %ux10 / %ux%u",text("Text",M8("Текст")),
+        settings_.text_width<=3?32:20,settings_.text_width<=3?10:16,
+        settings_.text_width<=3?20:settings_.text_width>=10?32:28);
   } else if (page_ == Page::SYSTEM) {
     static const char *en[] = {"Restart",     "Information", "Hardware",
                                "Format disk", "Full reset",  "USB Screen",

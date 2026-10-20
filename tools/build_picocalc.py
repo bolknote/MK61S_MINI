@@ -158,7 +158,8 @@ def main():
                     capture_output=True, text=True).stdout
         fields = sizes.splitlines()[-1].split()
         metadata = {
-            "profile": args.profile, "prototype_version": "0.8.8", "mcu": "RP2040",
+            "profile": args.profile, "prototype_version": re.search(r'VERSION\[\]\s*=\s*"(\d+\.\d+\.\d+)"',
+                (ROOT / 'ports/picocalc/version.hpp').read_text())[1], "mcu": "RP2040",
             "sampling_profile": args.sampling_profile,
             "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H", "cpu": "cortex-m0plus",
             "float_abi": "soft", "math": "compact_math + " + (

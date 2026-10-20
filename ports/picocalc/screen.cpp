@@ -148,10 +148,14 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
             return;
         }
         if(ui.settings().calculator_font==1 && (token || mask==128)) {
-            builtin_font::Raster glyph{},large{};
-            if(builtin_font::decode(builtin_font::FaceId::FONT_5X8,token,glyph) && builtin_font::scale2x(glyph,large))
-                for(unsigned y=0;y<large.height;++y) for(unsigned x=0;x<large.width;++x)
-                    if(large.data[y*((large.width+7)/8)+x/8]&(0x80U>>(x&7))) set_pixel(left+x,top+9+y);
+            Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+            mk61_service_ui_glyph glyph{};
+            if(token && fonts::glyph(font,token,glyph)) {
+                const int x0=left+(16-glyph.advance)/2+glyph.bearing_x;
+                const int y0=top+9+fonts::info(font).ascent-glyph.bearing_y;
+                for(unsigned y=0;y<glyph.height;++y) for(unsigned x=0;x<glyph.width;++x)
+                    if(glyph.pixels[y*((glyph.width+7)/8)+x/8]&(0x80U>>(x&7))) set_pixel(x0+x,y0+y);
+            }
             if(mask&128) for(unsigned y=0;y<2;++y) for(unsigned x=0;x<2;++x) set_pixel(left+18+x,top+23+y);
         } else for(unsigned y=0;y<35;++y) {
             const u16 bits=calculator_face::sourceRow(mask,y);
@@ -183,10 +187,13 @@ void Screen::calculator(const Snapshot& model, const Ui& ui) {
                 for(unsigned x=0;x<rtc_idle_clock::GRAPHIC_CLOCK_WIDTH;++x)
                     if(rows[y] & (1U<<x)) {
                         face_[((top+y)/8)*192+left+x]|=(u8)(1U<<((top+y)%8));
-                        for(unsigned dy=0;dy<2;++dy) for(unsigned dx=0;dx<2;++dx)
-                            set_pixel(WIDTH-10-rtc_idle_clock::GRAPHIC_CLOCK_WIDTH*2+x*2+dx,10+y*2+dy);
                     }
         }
+        char time[6];std::snprintf(time,sizeof(time),"%02u:%02u",now.hour,now.minute);
+        Settings clock_font{};clock_font.ui_font_family=1;clock_font.ui_font_size=16;
+        const auto* saved=font_settings_;font_settings_=&clock_font;
+        text(WIDTH-10-fonts::text_width(clock_font,time,5),9,time,16);
+        font_settings_=saved;
     }
     const unsigned font_size = ui.settings().ui_font_size;
     line(147);
@@ -281,26 +288,28 @@ void Screen::render(const Snapshot& model, bool keyboard_online, const Ui* ui, c
             char value[Services::COLS + 1]; services->row(first + row, value);
             if(!services->fixed_text()) { text(10, top + row * 17, value, ui->settings().ui_font_size); continue; }
             auto font=ui->settings();font.ui_font_family=1;font.ui_font_size=16;
-            const unsigned cursor=services->cursor_column(),visible=36;
-            const unsigned left=cursor>=visible?cursor-visible+1:0;
-            for(unsigned column=left;value[column] && column<left+visible;++column) {
+            unsigned x=8;
+            for(unsigned column=0;value[column];++column) {
                 mk61_service_ui_glyph glyph{};if(!fonts::glyph(font,mk8::codepoint((u8)value[column]),glyph)) continue;
-                const unsigned x=8+(column-left)*8,y=top+row*17;
+                if(x+glyph.advance>312) break;
+                const unsigned y=top+row*17;
                 const bool inverse=services->selected_text(first+row,column);
-                if(inverse) for(unsigned dy=0;dy<17;++dy) for(unsigned dx=0;dx<8;++dx) set_pixel(x+dx,y+dy);
-                for(unsigned dy=0;dy<glyph.height;++dy) for(unsigned dx=0;dx<glyph.width && dx<8;++dx) {
+                if(inverse) for(unsigned dy=0;dy<17;++dy) for(unsigned dx=0;dx<glyph.advance;++dx) set_pixel(x+dx,y+dy);
+                for(unsigned dy=0;dy<glyph.height;++dy) for(unsigned dx=0;dx<glyph.width;++dx) {
                     const int py=(int)y+fonts::info(font).ascent-glyph.bearing_y+dy;
                     if(py<0 || py>=320) continue;
                     if(glyph.pixels[dy*((glyph.width+7)/8)+dx/8]&(0x80U>>(dx&7))) {
-                        const unsigned px=x+dx;
+                        const unsigned px=x+glyph.bearing_x+dx;
                         if(inverse) pixels_[py*STRIDE+px/8]&=(u8)~(0x80U>>(px&7));else set_pixel(px,py);
                     }
                 }
+                x+=glyph.advance;
             }
         }
         if(services->editor_cursor()) {
-            const unsigned column=services->cursor_column(),left=column>=36?column-35:0;
-            const unsigned x=8+(column-left)*8,y=top+services->cursor_row()*17+15;
+            char value[Services::COLS+1];services->row(services->cursor_row(),value);
+            Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+            const unsigned x=8+fonts::text_width(font,value,services->cursor_column()),y=top+services->cursor_row()*17+15;
             for(unsigned n=0;n<7;++n) set_pixel(x+n,y);
         }
         line(282); text(8, 297, services->footer(), 12);

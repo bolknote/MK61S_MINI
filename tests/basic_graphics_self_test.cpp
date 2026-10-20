@@ -56,6 +56,22 @@ static bool pixel(Session &s, double x, double y) {
   return r.value != 0;
 }
 int main() {
+  {
+    Screen panel;
+    auto backend=panel.backend();
+    backend.text=[](void*,uint8_t* frame,uint16_t width,uint16_t height,double x,double y,const char*,unsigned) -> unsigned {
+      assert(width==80 && height==16 && x==2 && y==2);
+      frame[width+7]^=4;return 12;
+    };
+    Session native(backend);run(native,Operation::PSET,{0,0});
+    run(native,Operation::CLEAR);run(native,Operation::SHOW);
+    assert(panel.presents==1 && !pixel(native,7,10));
+    auto text=request(Operation::TEXT,{2,2});text.text="A";text.length=1;
+    assert(native.apply(text)==Result::OK && text.value==12 && pixel(native,7,10));
+    run(native,Operation::SHOW);assert(panel.presents==2);
+    assert(native.apply(text)==Result::OK && !pixel(native,7,10));
+    run(native,Operation::SHOW);assert(panel.presents==3);
+  }
   Screen screen;
   Session s(screen.backend());
   assert(!pixel(s, 0, 0) && !s.active());

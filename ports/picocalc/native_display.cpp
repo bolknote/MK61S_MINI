@@ -48,7 +48,9 @@ void NativeDisplay::layout() {
     if(native_) { native_layout();return; }
     surface_.endFullscreenBitmap();bitmap_=false;
     if(ui_) {
-        const auto info=fonts::info(settings_);
+        auto info=fonts::info(settings_);
+        if(settings_.ui_font_family==4)
+            ui_font_service::call(4,16,MK61_UI_FONT_INFO,0,sizeof(info),&info);
         const unsigned pitch=info.height+info.line_gap;
         const u8 rows=(u8)((64U+info.line_gap)/pitch);
         unsigned cols=settings_.ui_font_family==4?16:settings_.ui_font_family==5?47:text_screen::MAX_COLS;
@@ -65,7 +67,9 @@ void NativeDisplay::layout() {
         const auto profile=script::text_profile();
         surface_.setFont(font_.valid()?&font_:nullptr);
         surface_.setUiTextStyle(false,false,false,false,ui_font_service::face(1,14));
-        surface_.setTextLayout({profile.rows,profile.width,profile.height,profile.line_gap},(u8)script::columns());
+        const unsigned width=font_.valid()?font_.metrics().default_advance:profile.width+1;
+        unsigned cols=width?192/width:1;if(cols>text_screen::MAX_COLS) cols=text_screen::MAX_COLS;
+        surface_.setTextLayout({profile.rows,profile.width,profile.height,profile.line_gap},(u8)(cols?cols:1));
     }
     font_revision_=script::font_revision();ui_font_revision_=fonts::revision();++revision_;surface_.clear();flush();
 }
@@ -192,8 +196,7 @@ void NativeDisplay::native_layout() {
     const auto info=fonts::info(settings_);
     const bool custom=!ui_ && font_.valid();
     npitch_=custom?font_.metrics().height+font_.metrics().line_gap:info.height+info.line_gap;
-    ncell_=custom?font_.metrics().default_advance:settings_.ui_font_family==4?12:
-        settings_.ui_font_family==5?4:settings_.ui_font_family==0?6:8;
+    ncell_=custom?font_.metrics().default_advance:fonts::cell_width(settings_);
     if(!npitch_) npitch_=1;if(!ncell_) ncell_=1;
     nrows_=320/npitch_;if(nrows_>20) nrows_=20;if(!nrows_) nrows_=1;
     ncols_=ui_?64:316/ncell_;if(ncols_>64) ncols_=64;if(!ncols_) ncols_=1;
@@ -210,7 +213,10 @@ unsigned NativeDisplay::native_measure(const char* text,unsigned length) const {
 void NativeDisplay::native_put(u16 cp) {
     if(cp=='\r') { nx_=0;return; }
     if(cp=='\n') { nx_=0;ny_=(ny_+1)%nrows_;return; }
-    if(nx_>=ncols_) { nx_=0;ny_=(ny_+1)%nrows_; }
+    unsigned width=0;
+    if(ui_) for(unsigned col=0;col<nx_ && col<ncols_;++col)
+        width+=native_advance(cells_[ny_][col]?cells_[ny_][col]:' ');
+    if(nx_>=ncols_ || (ui_ && nx_ && width+native_advance(cp)>316)) { nx_=0;ny_=(ny_+1)%nrows_; }
     cells_[ny_][nx_++]=cp;native_dirty_=true;
     script::record_codepoint(nx_-1,ny_,cp);
 }
@@ -227,14 +233,19 @@ void NativeDisplay::native_flush() {
         for(unsigned col=0;col<ncols_;++col) {
             const u16 cp=cells_[row][col]?cells_[row][col]:' ';
             const unsigned advance=native_advance(cp);
-            if(ui_ && (gutters_&(1U<<row)) && col==1) x=14;
-            if(ui_ && (tails_&(1U<<row)) && col==ncols_-1) x=306;
+            if(ui_ && (gutters_&(1U<<row)) && col==1) {
+                const unsigned marker=native_advance(cells_[row][0]);x=2+(marker>12?marker:12);
+            }
+            if(ui_ && (tails_&(1U<<row)) && col==ncols_-1) x=318-advance;
             if(x+advance<=320) {
                 prepared_font::Glyph g{};u8 bits[prepared_font::MAX_BITMAP_SIZE]{};
                 if(!ui_ && font_.valid() && prepared_font::glyphForCodepoint(font_,cp,g) && font_.decode(g,bits,sizeof(bits))) {
                     for(unsigned y=0;y<g.height;++y) for(unsigned dx=0;dx<g.width;++dx)
                         if(fmk::bitmapPixel(bits,g.width,dx,y)) canvas::pixel(canvas::frame(),x+dx,top+y);
-                } else canvas::glyph(canvas::frame(),settings_,cp,x,top);
+                } else {
+                    mk61_service_ui_glyph g{};fonts::glyph(settings_,cp,g);
+                    canvas::glyph(canvas::frame(),settings_,cp,x+(!ui_?(advance-g.advance)/2:0),top);
+                }
                 if(row==ny_ && col==nx_ && (native_cursor_ || (native_blink_ && native_phase_)))
                     canvas::rect(canvas::frame(),x,top+(native_blink_&&native_phase_?0:npitch_-2),advance,
                         native_blink_&&native_phase_?npitch_-1:1,true);
@@ -260,7 +271,8 @@ u32 NativeDisplay::native_call(u32 op,u32 b,u32 c,void* payload) {
         const char marker=(char)c;const u16 tail=c>>8;const unsigned end=tail?ncols_-1:ncols_;
         if(marker) { gutters_|=1U<<b;native_put((u8)marker); }else gutters_&=~(1U<<b);
         if(tail) tails_|=1U<<b;else tails_&=~(1U<<b);
-        unsigned used=0,limit=316-(marker?12:0)-(tail?12:0),i=0;
+        const unsigned marker_width=marker?native_advance((u8)marker):0;
+        unsigned used=0,limit=316-(marker?(marker_width>12?marker_width:12):0)-(tail?native_advance(tail):0),i=0;
         const char* text=(const char*)payload;
         while(i<n && nx_<end && used+native_advance(mk8::codepoint((u8)text[i]))<=limit) {
             const u16 cp=mk8::codepoint((u8)text[i++]);used+=native_advance(cp);native_put(cp);

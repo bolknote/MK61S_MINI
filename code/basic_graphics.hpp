@@ -15,6 +15,9 @@ struct Backend {
   int (*flow)(void *, uint8_t *, size_t, const char *, uint16_t, uint8_t, uint8_t, bool) = nullptr;
   void *(*allocate)(void *, size_t) = nullptr;
   void (*release)(void *, void *) = nullptr;
+  // Optional panel-native text painter. Zero retains the historical 5x8 path.
+  unsigned (*text)(void *, uint8_t *, uint16_t, uint16_t, double, double,
+                   const char *, unsigned) = nullptr;
 };
 
 // One foreground session lives outside APP/workspace storage. INPUT may evict

@@ -15,7 +15,7 @@ prepared_font::Face face;
 u32 active_key = 0;
 u32 generation = 1;
 constexpr Item builtins[] = {{12,1,12,"Ark Pixel 12"}, {14,1,14,"Ark Pixel 14"},
-    {16,1,16,"Ark Pixel 16"}, {0x10010,4,16,"Classic 10x16"},
+    {16,1,16,"Ark Pixel 16"}, {0x10010,4,16,"Ark Mono 16"},
     {0x10005,5,5,"Compact 3x5"}, {0,0,14,"5x8"}};
 constexpr unsigned builtin_count = sizeof(builtins)/sizeof(builtins[0]);
 bool external(const files::Entry& entry, Item& out, char* path) {
@@ -117,6 +117,23 @@ bool select(const Settings& s) {
     bytes=std::move(candidate);face=decoded;active_key=s.ui_font_key;++generation;return true;
 }
 u32 service(const Settings& s,u32 op,u32 cp,u32 size,void* out) {
+    if((op==MK61_UI_FONT_INFO && s.ui_font_family==4) ||
+       (out && op==MK61_UI_FONT_GLYPH && size==sizeof(mk61_service_ui_glyph) &&
+        ((mk61_service_ui_glyph*)out)->family==4 && ((mk61_service_ui_glyph*)out)->size==16)) {
+        // Keep the stored family/key, but use a native strike on this panel.
+        if(out && op==MK61_UI_FONT_GLYPH && size==sizeof(mk61_service_ui_glyph)) {
+            mk61_service_ui_glyph g{};g.family=1;g.size=16;
+            if(!ui_font_service::call(1,16,op,cp,size,&g)) return 0;
+            g.family=4;g.bearing_x+=(16-g.advance)/2;g.advance=16;
+            *(mk61_service_ui_glyph*)out=g;return 1;
+        }
+        if(out && op==MK61_UI_FONT_INFO && size==sizeof(mk61_service_ui_font_info)) {
+            const u32 result=ui_font_service::call(1,16,op,cp,size,out);
+            if(result) ((mk61_service_ui_font_info*)out)->family=4;
+            return result;
+        }
+        return 0;
+    }
     const bool loaded=s.ui_font_family==3 && active_key==s.ui_font_key && face.valid();
     const u8 family=s.ui_font_family==3 && !loaded ? 1 : s.ui_font_family;
     return ui_font_service::call(family,s.ui_font_size,op,cp,size,out,loaded?&face:nullptr);
@@ -139,6 +156,34 @@ bool glyph(const Settings& s,u32 cp,mk61_service_ui_glyph& out) {
 mk61_service_ui_font_info info(const Settings& s) {
     if(s.ui_font_family==0) return {0,8,8,0,0,8};
     mk61_service_ui_font_info out{};service(s,MK61_UI_FONT_INFO,0,sizeof(out),&out);return out;
+}
+unsigned cell_width(const Settings& s) {
+    unsigned width=1;
+    for(unsigned byte=mk8::BYTE_LEFT_ARROW;byte<256;++byte) {
+        if(!mk8::valid_byte((u8)byte)) continue;
+        mk61_service_ui_glyph g{};
+        if(glyph(s,mk8::codepoint((u8)byte),g)) {
+            const unsigned extent=g.bearing_x+(int)g.width>0?g.bearing_x+g.width:0;
+            if(g.advance>width) width=g.advance;
+            if(extent>width) width=extent;
+        }
+    }
+    return width;
+}
+unsigned text_width(const Settings& s,const char* text,unsigned length) {
+    unsigned width=0;
+    for(unsigned i=0;i<length;++i) {
+        mk61_service_ui_glyph g{};
+        if(glyph(s,mk8::codepoint((u8)text[i]),g)) width+=g.advance;
+    }
+    return width;
+}
+unsigned text_start(const Settings& s,const char* text,unsigned length,unsigned width) {
+    unsigned first=0,total=text_width(s,text,length);
+    while(first<length && total+8>width) {
+        total-=text_width(s,text+first,1);++first;
+    }
+    return first;
 }
 const prepared_font::Face* external_face(const Settings& s) {
     return s.ui_font_family==3 && active_key==s.ui_font_key && face.valid()?&face:nullptr;

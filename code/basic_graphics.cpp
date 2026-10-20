@@ -405,6 +405,11 @@ Result Session::apply(Request &r) {
   case Operation::TEXT: {
     for (unsigned i = 0; i < print_depth_; ++i)
       prints_[i].flags |= 4;
+    if (backend_.text) {
+      r.value = backend_.text(backend_.context, frame_, width_, height_, rounded(r.args[0]),
+                              rounded(r.args[1]), r.text, r.length);
+      if (r.value) { dirty_ = true; break; }
+    }
     double left = rounded(r.args[0]);
     const double top = rounded(r.args[1]);
     if (top <= -8 || top >= height_ || left >= width_)

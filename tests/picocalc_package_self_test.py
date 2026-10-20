@@ -41,10 +41,13 @@ class PackageTests(unittest.TestCase):
                     self.assertEqual(hashlib.sha256(reader.read(prefix+name)).hexdigest(),digest,name)
                 for font in ('DejaVu-12.FMK','DejaVu-14.FMK'):
                     self.assertEqual(reader.read(prefix+'Fonts/'+font),(ROOT/'programs/Fonts'/font).read_bytes())
-                for game in ('Turochamp','High Noon'):
-                    for source in (ROOT/'programs/games'/game).iterdir():
+                for game_dir in sorted((ROOT/'programs/games').iterdir()):
+                    if not game_dir.is_dir() or not (game_dir/'autoexec.m61').exists():continue
+                    for source in game_dir.iterdir():
                         if source.is_file():
-                            self.assertEqual(reader.read(prefix+'games/'+game+'/'+source.name),source.read_bytes())
+                            self.assertEqual(reader.read(prefix+'games/'+game_dir.name+'/'+source.name),source.read_bytes())
+                for name in ('Graphics.tbi','Graphics.foc','Graph.tbi'):
+                    self.assertEqual(reader.read(prefix+'examples/'+name),(ROOT/'programs/examples'/name).read_bytes())
             report=target/'hardware-software-summary.json'
             build=json.loads((target/'manifest.json').read_text())
             # An updated SHA-256 manifest cannot legitimize a broken resident CRC.
@@ -100,6 +103,27 @@ class PackageTests(unittest.TestCase):
             self.assertIn('SHEET hardware verification belongs to another APP',rejected.stderr)
             self.assertEqual(archive.read_bytes(),before)
             sheet_report.unlink()
+            native_report=target/'hardware-native-complete-summary.json'
+            wbmp=next(r for r in records if r['name']=='WBMP')
+            bee=ROOT/'programs/games/Bumblebee'
+            evidence={'passed':True,'uf2_sha256':build['uf2_sha256'],
+                'app_sha256':wbmp['app_sha256'],
+                'native_artwork_manifest_sha256':hashlib.sha256((ROOT/'doc/game-artwork/native/manifest.json').read_bytes()).hexdigest(),
+                'uploaded_files_sha256':{'Bumblebee/'+p.name:hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in bee.iterdir() if p.is_file()}}
+            native_report.write_text(json.dumps(evidence))
+            subprocess.run(command,check=True,capture_output=True,text=True)
+            before=archive.read_bytes()
+            for altered,message in (
+                ({**evidence,'app_sha256':'0'*64},'another WBMP APP'),
+                ({**evidence,'native_artwork_manifest_sha256':'0'*64},'another artwork manifest'),
+                ({**evidence,'uploaded_files_sha256':{'Bumblebee/autoexec.m61':'0'*64}},'another game file')):
+                native_report.write_text(json.dumps(altered))
+                rejected=subprocess.run(command,capture_output=True,text=True)
+                self.assertNotEqual(rejected.returncode,0)
+                self.assertIn(message,rejected.stderr)
+                self.assertEqual(archive.read_bytes(),before)
+            native_report.unlink()
             app=target/'apps/HELLO.APP';encoded=bytearray(app.read_bytes())
             flags=struct.unpack_from('<I',encoded,16)[0]
             struct.pack_into('<I',encoded,16,flags&~8)

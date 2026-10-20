@@ -4,6 +4,7 @@
 #include "storage_path.hpp"
 #include "markdown_graphic_layout.hpp"
 #include "fonts.hpp"
+#include "native_assets.hpp"
 #include <memory>
 #include <new>
 #include <cstdio>
@@ -12,6 +13,8 @@ namespace picocalc {
 namespace {
 struct GraphicPlatform {
   Settings settings;
+  bool native_assets=true;
+  u16 image_width(u16 normal) const { return native_assets?320:normal; }
   bool enabled() const { return settings.ui_font_family!=0; }
   mk61_service_ui_font_info info() const { return fonts::info(settings); }
   u8 height() const { return info().height; }
@@ -21,14 +24,18 @@ struct GraphicPlatform {
   struct Image {
     std::unique_ptr<u8[]> bytes;
     u16 length=0;
-    Image(const GraphicPlatform&,u16 parent,const char* path) {
+    Image(const GraphicPlatform& platform,u16 parent,const char* path) {
       program_store::Entry entry{};
       if(storage_path::resolve_file(parent,path,program_store::ProgramType::IMAGE1,entry)!=storage_path::Status::OK ||
          !entry.data_len || entry.data_len>program_store::MAX_IMAGE1_SIZE) return;
-      bytes.reset(new(std::nothrow) u8[entry.data_len]);unsigned used=0;
+      char native[files::PATH_SIZE];files::Entry info{};
+      const char* resolved=script::file_path(entry.id);unsigned size=entry.data_len;
+      if(platform.native_assets && native_assets::image(resolved,native,info)) { resolved=native;size=info.size; }
+      if(!size || size>program_store::MAX_IMAGE1_SIZE) return;
+      bytes.reset(new(std::nothrow) u8[size]);unsigned used=0;
       const u32 revision=files::revision();
-      if(!bytes || !files::read(script::file_path(entry.id),bytes.get(),entry.data_len,used) ||
-         used!=entry.data_len || revision!=files::revision()) { bytes.reset();return; }
+      if(!bytes || !files::read(resolved,bytes.get(),size,used) ||
+         used!=size || revision!=files::revision()) { bytes.reset();return; }
       length=(u16)used;
     }
     bool ok() const { return bytes!=nullptr; }
@@ -43,7 +50,7 @@ void MarkdownView::render() {
   if(!script::register_file(path_,entry)) { std::memset(frame_,0,sizeof(frame_));return; }
   markdown_scroll::Probe compatibility(top);
   markdown_graphics::Layout<GraphicPlatform> compact(frame_,192,64,top,64,
-      entry.parent_id,compatibility,selection,nullptr,GraphicPlatform{settings_});
+      entry.parent_id,compatibility,selection,nullptr,GraphicPlatform{settings_,false});
   (void)compact.render(compiled_,compiled_size_);
   markdown_scroll::Probe probe(top);
   markdown_graphics::Layout<GraphicPlatform> layout(canvas::frame(),320,240,top,240,

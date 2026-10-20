@@ -109,3 +109,15 @@ Wire version и номера причин заданы в `code/virtual_fat_diag
 
 Скомпилированные host-утилиты кэшируются в `.build/tools`, а не рядом с
 исходниками. Каталог `.build` можно удалить целиком без потери исходных данных.
+
+Родные иллюстрации PicoCalc и FMK демонстрации «Шмель» воспроизводятся командой
+`python3 tools/generate_picocalc_game_assets.py --check` (или без `--check`
+для записи). Нужны `rsvg-convert` и ImageMagick `magick`. Векторные схемы
+перерастеризуются, сканы только уменьшаются, надписи используют родные
+пиксели проверенного атласа Ark. Список источников, размеров и SHA-256 лежит
+в `doc/game-artwork/native/manifest.json`. Production-декодеры проверяет
+`python3 tests/picocalc_native_assets_self_test.py`.
+
+`package_picocalc.py` включает все папки игр с autoexec, оригинальные и
+родные WBMP, шрифты, графические примеры BASIC/FOCAL и manifest иллюстраций.
+Версия прошивки в `build_picocalc.py` читается из `ports/picocalc/version.hpp`.

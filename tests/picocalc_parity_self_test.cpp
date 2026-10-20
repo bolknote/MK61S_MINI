@@ -232,7 +232,7 @@ void picocalc_parity_test() {
   u32 sequence = 0;
   assert(decode_settings(page, decoded, sequence) && sequence == 42 &&
          decoded.text_width == 3 && decoded.text_rows == 10);
-  assert(script::text_profile({10, 3, 5, 0}) && script::columns() == 48 &&
+  assert(script::text_profile({10, 3, 5, 0}) && script::columns() == 32 &&
          script::rows() == 10);
   assert(script::flow_text("word word word", 14, 0, 2) == 1);
   assert(script::text_profile({8, 5, 8, 0}));

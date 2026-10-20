@@ -1,6 +1,10 @@
 #include "services.hpp"
 #include "native_display.hpp"
 #include "canvas.hpp"
+#include "screen.hpp"
+#include "ui_font.hpp"
+#include "ui_font_service.hpp"
+#include "basic_graphics.hpp"
 #include "script.hpp"
 #include "mk8_literal.hpp"
 #include "keyboard_layout.hpp"
@@ -116,11 +120,23 @@ void native_contract(void* context,const mk61_app_api& api,const mk61_app_servic
         CHECK(s.call(MK61_SERVICE_SETUP,MK61_SETUP_TEXT_MODE,1,0,nullptr));
         CHECK(display(MK61_SERVICE_DISPLAY_UI_TEXT_ACTIVE)==1);
         api.display_clear();
-        const auto info=fonts::info(settings);
+        auto info=fonts::info(settings);
+        if(choice.first==4) CHECK(ui_font_service::call(4,16,MK61_UI_FONT_INFO,0,sizeof(info),&info));
         const unsigned rows=(64+info.line_gap)/(info.height+info.line_gap);
         CHECK(api.display_rows()==rows);
         CHECK(display(MK61_SERVICE_DISPLAY_UI_TEXT_WIDTH)==(choice.first==4?192:188));
         mk61_service_ui_glyph glyph{};CHECK(fonts::glyph(settings,'A',glyph));
+        // Old APPs keep their original 192x64 Surface, including its retro face.
+        if(choice.first==4) { glyph={};glyph.family=4;glyph.size=16;
+            CHECK(ui_font_service::call(4,16,MK61_UI_FONT_GLYPH,'A',sizeof(glyph),&glyph)); }
+        if(choice.first==4) {
+            mk61_service_ui_font_info legacy_info{};
+            CHECK(s.call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_INFO,0,sizeof(legacy_info),&legacy_info));
+            CHECK(!std::memcmp(&legacy_info,&info,sizeof(info)));
+            mk61_service_ui_glyph wire{};wire.family=4;wire.size=16;
+            CHECK(s.call(MK61_SERVICE_UI_FONT,MK61_UI_FONT_GLYPH,'A',sizeof(wire),&wire));
+            CHECK(!std::memcmp(&wire,&glyph,sizeof(wire)));
+        }
         CHECK(display(MK61_SERVICE_DISPLAY_MEASURE_UI_TEXT,0,0,(void*)"A")==glyph.advance);
         CHECK(display(MK61_SERVICE_DISPLAY_UI_LINE,0,0,(void*)"A"));
         std::vector<u8> expected(1536);
@@ -223,8 +239,21 @@ void cancelled_filename_contract(void*,const mk61_app_api& base,const mk61_app_s
 void picocalc_contract_test() {
     {
         Settings settings{};settings.ui_font_family=1;settings.ui_font_size=16;
+        CHECK(script::text_profile({8,5,8,0}));
         NativeDisplay display(settings,true);
         CHECK(display.width()==320 && display.height()==320 && display.rows()>10);
+        if(display.columns()!=19 || fonts::cell_width(settings)!=16)
+            std::fprintf(stderr,"native mono cols=%u cell=%u\n",display.columns(),fonts::cell_width(settings));
+        CHECK(display.columns()==19 && fonts::cell_width(settings)==16);
+        const char* wide=M8("ЖЩЮ←");CHECK(display.write(0,0,wide,4));
+        const ui_font::Face ark{ui_font::Family::PIXEL,ui_font::Size::PX16};
+        std::vector<u8> mono(12800);
+        for(unsigned i=0;i<4;++i) {
+            const auto g=ui_font::glyph(ark,mk8::codepoint((u8)wide[i]));
+            for(unsigned y=0;y<g.height;++y) for(unsigned x=0;x<g.width;++x)
+                if(font_glyph::pixel(g,x,y)) canvas::pixel(mono.data(),2+i*16+(16-g.advance)/2+g.bearing_x+x,ui_font::metrics(ark).ascent-g.bearing_y+y);
+        }
+        CHECK(!std::memcmp(mono.data(),canvas::frame(),12800));
         CHECK(display.call(MK61_SERVICE_DISPLAY_BEGIN_UI_TEXT,0,0,nullptr));
         char label[16];std::strcpy(label,M8("ЯЁg"));CHECK(display.call(MK61_SERVICE_DISPLAY_UI_LINE,12,0,label));
         mk61_service_ui_glyph glyph{};CHECK(fonts::glyph(settings,0x042F,glyph));
@@ -242,6 +271,19 @@ void picocalc_contract_test() {
         CHECK(!display.bitmap_present(frame.pixels,1536));
         CHECK(script::native_frame()[39*320+319]==128);
         display.bitmap_end();CHECK(!std::memcmp(text.data(),canvas::frame(),12800));
+        display.clear();
+        std::string wrap(40,'W');CHECK(display.call(MK61_SERVICE_DISPLAY_PRINT,0,0,wrap.data()));
+        std::vector<u8> flowed(12800);unsigned x=2,y=0;
+        for(char cp:wrap) {
+            const auto g=ui_font::glyph(ark,cp);if(x+g.advance>318) {x=2;y+=19;}
+            canvas::glyph(flowed.data(),settings,cp,x,y);x+=g.advance;
+        }
+        CHECK(!std::memcmp(flowed.data(),canvas::frame(),12800));
+        CHECK(display.call(MK61_SERVICE_DISPLAY_UI_LINE,0,(0x2192U<<8)|'>',(void*)"A"));
+        mk61_service_ui_glyph arrow{};CHECK(fonts::glyph(settings,0x2192,arrow));
+        for(unsigned y=0;y<arrow.height;++y) for(unsigned x=0;x<arrow.width;++x)
+            CHECK(bool(canvas::frame()[(fonts::info(settings).ascent-arrow.bearing_y+y)/8*320+318-arrow.advance+arrow.bearing_x+x] &
+                (1U<<((fonts::info(settings).ascent-arrow.bearing_y+y)%8)))==bool(arrow.pixels[y*((arrow.width+7)/8)+x/8]&(0x80U>>(x&7))));
     }
 
     using namespace picocalc;
@@ -277,7 +319,36 @@ void picocalc_contract_test() {
     CHECK(files::read_text("/Contract/Find17.txt",bytes,sizeof(bytes),used) && !std::strcmp(bytes,"original"));
     CHECK(files::read_text("/Contract/target/Find17.txt",bytes,sizeof(bytes),used) && !std::strcmp(bytes,"Move me"));
     s.input(0x1B);s.input(0x1B);s.input(0x1B);
-    script::attach(calculator,s);CHECK(script::text_profile({8,5,8,0}));s.test_native_contract(native_contract,&ui);
+    script::attach(calculator,s);CHECK(script::text_profile({8,5,8,0}));
+    CHECK(script::columns()==20 && script::rows()==10);
+    const char* wide=M8("ЖЩЮ←");script::show_text(wide);
+    Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+    std::vector<u8> expected(12800);
+    for(unsigned i=0;i<4;++i) {
+        mk61_service_ui_glyph g{};CHECK(fonts::glyph(font,mk8::codepoint((u8)wide[i]),g));
+        canvas::glyph(expected.data(),font,mk8::codepoint((u8)wide[i]),i*16+(16-g.advance)/2,20);
+    }
+    CHECK(!std::memcmp(expected.data(),script::native_frame(),12800));
+    basic_graphics::Request graph{};graph.operation=basic_graphics::Operation::TEXT;
+    graph.count=2;graph.args[0]=8;graph.args[1]=100;graph.text=wide;graph.length=4;
+    CHECK(s.graph_request(graph)==basic_graphics::Result::OK && graph.value==19);
+    std::fill(expected.begin(),expected.end(),0);
+    canvas::text(expected.data(),font,wide,8,100);
+    CHECK(!std::memcmp(expected.data(),s.native_graphics(),12800));
+    s.new_document(Document::TEXT);
+    std::string long_line;for(unsigned i=0;i<30;++i) long_line+=M8("Щ");
+    CHECK(files::write_text("/Contract/wide.txt",long_line.c_str(),long_line.size()));
+    CHECK(s.load_document("/Contract/wide.txt",true));s.input(0xD5);
+    char visible[Services::COLS+1];s.row(0,visible);
+    CHECK(s.cursor_column()==std::strlen(visible) && fonts::text_width(font,visible,std::strlen(visible))+8<=304);
+    Screen screen;screen.render(calculator.snapshot(),true,&ui,&s);
+    for(unsigned i=0,x=8;i<std::strlen(visible);++i) {
+        mk61_service_ui_glyph g{};CHECK(fonts::glyph(font,mk8::codepoint((u8)visible[i]),g));
+        for(unsigned y=0;y<g.height;++y) for(unsigned dx=0;dx<g.width;++dx)
+            CHECK(screen.pixel(x+g.bearing_x+dx,42+fonts::info(font).ascent-g.bearing_y+y)==bool(g.pixels[y*((g.width+7)/8)+dx/8]&(0x80U>>(dx&7))));
+        x+=g.advance;
+    }
+    CHECK(script::text_profile({8,5,8,0}));s.test_native_contract(native_contract,&ui);
     const char* keys="\x08\x08\x88Ghbdtn\x88.txt\r";
     s.set_pump([](void* context,u8& code) { auto& next=*(const char**)context;if(!*next) return false;code=(u8)*next++;return true; },&keys);
     s.test_native_contract(filename_contract,nullptr);CHECK(!*keys);

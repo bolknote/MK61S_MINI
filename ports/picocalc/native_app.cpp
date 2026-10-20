@@ -426,6 +426,14 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
 #endif
         ;
   case MK61_SERVICE_UI_FONT:
+    // A legacy APP's 192x64 Surface keeps the old retro strike and metrics.
+    // Its glyph service must describe that same surface, even though the
+    // panel's native family 4 now uses Ark Mono.
+    if(host.display.width()==192 &&
+       ((a==MK61_UI_FONT_INFO && host.settings().ui_font_family==4) ||
+        (a==MK61_UI_FONT_GLYPH && payload && c==sizeof(mk61_service_ui_glyph) &&
+         ((mk61_service_ui_glyph*)payload)->family==4)))
+      return ui_font_service::call(4,16,a,b,c,payload);
     return fonts::service(host.settings(), a, b, c, payload);
   case MK61_SERVICE_TEXT_FONT:
     switch (a) {

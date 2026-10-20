@@ -1,4 +1,5 @@
 #include "services.hpp"
+#include "fonts.hpp"
 #include "language_cache.hpp"
 #include "text_input.hpp"
 #include "script.hpp"
@@ -105,6 +106,7 @@ void Services::parent_directory() {
 }
 void Services::new_document(Document kind) {
     language_cache::revoke(this);
+    graph_.reset();graph_visible_=false;
     viewing_=image_viewing_=runtime_graphics_=false;
     document_ = kind; source_[0] = path_[0] = 0;
     length_ = cursor_ = top_ = horizontal_ = 0; dirty_ = false;
@@ -137,6 +139,7 @@ bool Services::load_document(const char* path,bool edit) {
     unsigned used = 0;
     const bool ok = files::read_text(path, backup?source_:temporary, capacity, used);
     if(ok) {
+        graph_.reset();graph_visible_=false;
         viewing_=image_viewing_=runtime_graphics_=false;
         if(!backup) std::memcpy(source_, temporary, used + 1);
         length_ = (u16)used;
@@ -233,6 +236,8 @@ void Services::normalize_view() {
     const unsigned column = cursor_ - active;
     if(column < horizontal_) horizontal_ = (u16)column;
     if(column >= horizontal_ + COLS) horizontal_ = (u16)(column - COLS + 1);
+    Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+    horizontal_+=(u16)fonts::text_start(font,source_+active+horizontal_,column-horizontal_,304);
 }
 bool Services::input(u8 code) {
     if(page_==ServicePage::EDITOR) language_cache::revoke(this);
@@ -464,7 +469,10 @@ void Services::row(unsigned index, char out[COLS + 1]) const {
         if(index == 2) {
             char text[sizeof(prompt_text_)];label(prompt_text_,text,sizeof(text));
             const unsigned length=(unsigned)std::strlen(text);
-            std::snprintf(out,COLS+1,"%.38s",text+(length>=COLS?length-COLS+1:0));
+            Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+            unsigned first=length>=COLS?length-COLS+1:0;
+            first+=fonts::text_start(font,text+first,length-first,304);
+            std::snprintf(out,COLS+1,"%s",text+first);
         }
         if(index == 5) std::snprintf(out, COLS + 1, "Enter: OK   Esc: cancel");
     } else if(page_ == ServicePage::CONFIRM) {
@@ -491,8 +499,7 @@ unsigned Services::cursor_row() const {
 }
 unsigned Services::cursor_column() const {
     if(page_ == ServicePage::PROMPT) {
-        char text[sizeof(prompt_text_)];label(prompt_text_,text,sizeof(text));
-        const unsigned length=(unsigned)std::strlen(text);return length<COLS?length:COLS-1;
+        char text[COLS+1];row(2,text);return (unsigned)std::strlen(text);
     }
     return cursor_ - text_editor::line_start_for_cursor(source_, cursor_) - horizontal_;
 }

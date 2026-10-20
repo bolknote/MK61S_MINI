@@ -46,6 +46,7 @@ bool led_blinking();
 void led_stop();
 void service_effects();
 bool font_rows(u16 codepoint, u8 rows[8]);
+unsigned graphic_text(u8* frame,double x,double y,const char* text,unsigned length);
 bool font_active();
 unsigned columns();
 unsigned rows();

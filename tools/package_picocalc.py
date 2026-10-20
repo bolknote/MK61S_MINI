@@ -79,12 +79,20 @@ def main():
     for source in sorted((ROOT/'programs/Fonts').glob('*.FMK')):
         target=directory/'Fonts'/source.name;shutil.copy2(source,target);font_files.append(target)
     game_files=[]
-    for game in ('Turochamp','High Noon'):
-        for source in sorted((ROOT/'programs/games'/game).iterdir()):
+    for game in sorted((ROOT/'programs/games').iterdir()):
+        if not game.is_dir() or not any((game/name).exists() for name in ('autoexec.m61','autoexec.tbi')):continue
+        for source in sorted(game.iterdir()):
             if not source.is_file():continue
-            target=directory/'games'/game/source.name
+            target=directory/'games'/game.name/source.name
             target.parent.mkdir(parents=True,exist_ok=True)
             shutil.copy2(source,target);game_files.append(target)
+    for name in ('README.markdown','SOURCES.markdown'):
+        target=directory/'games'/name;shutil.copy2(ROOT/'programs/games'/name,target);game_files.append(target)
+    target=directory/'games/native-artwork.json'
+    shutil.copy2(ROOT/'doc/game-artwork/native/manifest.json',target);game_files.append(target)
+    for name in ('Graphics.tbi','Graphics.foc','Graph.tbi'):
+        target=directory/'examples'/name;target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(ROOT/'programs/examples'/name,target);game_files.append(target)
     spec=importlib.util.spec_from_file_location('pico_font_licenses',ROOT/'tools/.fmk-font/package_ui_font_licenses.py')
     licenses=importlib.util.module_from_spec(spec);spec.loader.exec_module(licenses)
     licenses.package(bundle=directory)
@@ -98,7 +106,7 @@ def main():
                         'hardware-usb-disk-summary.json','hardware-full-parity-summary.json',
                         'hardware-performance-summary.json','hardware-font-summary.json',
                         'hardware-display-summary.json','hardware-high-noon-summary.json',
-                        'hardware-eliza-summary.json','hardware-sheet-summary.json'):
+                        'hardware-eliza-summary.json','hardware-sheet-summary.json','hardware-native-complete-summary.json'):
         report=directory/report_name
         if not report.exists():continue
         evidence=json.loads(report.read_text())
@@ -115,6 +123,15 @@ def main():
             expected=next(r['app_sha256'] for r in records if r['name']==name)
             if not evidence.get('passed') or evidence.get('app_sha256')!=expected:
                 raise ValueError(name+' hardware verification belongs to another APP')
+        if report_name=='hardware-native-complete-summary.json':
+            expected=next(r['app_sha256'] for r in records if r['name']=='WBMP')
+            if not evidence.get('passed') or evidence.get('app_sha256')!=expected:
+                raise ValueError('native display hardware verification belongs to another WBMP APP')
+            if evidence.get('native_artwork_manifest_sha256')!=sha256(ROOT/'doc/game-artwork/native/manifest.json'):
+                raise ValueError('native display hardware verification belongs to another artwork manifest')
+            for name,digest in evidence.get('uploaded_files_sha256',{}).items():
+                if name.startswith('Bumblebee/') and sha256(ROOT/'programs/games'/name)!=digest:
+                    raise ValueError('Bumblebee hardware verification belongs to another game file')
         files.append(report)
     checksum_file=directory/f'bundle-sha256-{version}.json'
     hashes={str(path.relative_to(directory)):sha256(path) for path in files}

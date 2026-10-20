@@ -16,6 +16,11 @@ bool select(const Settings& settings);
 bool install(const u8* data, unsigned size, u32 key, unsigned expected_height);
 u32 service(const Settings& settings, u32 op, u32 cp, u32 size, void* out);
 bool glyph(const Settings& settings, u32 cp, mk61_service_ui_glyph& out);
+// Width of a fixed cell containing every MK8 glyph, including navigation arrows.
+unsigned cell_width(const Settings& settings);
+unsigned text_width(const Settings& settings,const char* text,unsigned length);
+// First byte of a suffix that leaves room for the insertion cursor.
+unsigned text_start(const Settings& settings,const char* text,unsigned length,unsigned width);
 mk61_service_ui_font_info info(const Settings& settings);
 const prepared_font::Face* external_face(const Settings& settings);
 u32 revision();

@@ -3,9 +3,10 @@ from hashlib import sha256
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "programs/games"
-# Startup/game lines before the OK-help change, excluding viewer setup and ret.
+# Launchers excluding viewer setup and ret. Bumblebee now has a native branch;
+# its original calculator bytes are independently pinned by the native asset test.
 STARTUP = {
-    'Bumblebee': '301914d37f3973906446e92922cefc2d894dfaca237bab301a9c6486699ae27b',
+    'Bumblebee': '3b5250762e3cc5721c45cbf525adcd38a6d7c03cfa55d40e55f9917cc5d0748e',
     'Bumblebee Fly': 'a5a66eb3e162e4009348d1b67ed241e7bdb68159986cbf5d2642c6837fc43f89',
     'Chase HQ': 'd2fe8985987e92a8836d55cc2a46e10e56f3ca68793f3f386736bd6cf613d112',
     'ELITE': '17b90407df36c0053989f3f764922e4962e970ad2de70057784920c3089eb08f',

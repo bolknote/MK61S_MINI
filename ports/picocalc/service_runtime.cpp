@@ -12,6 +12,7 @@
 #include "cross_hal.h"
 #include "markdown_document.hpp"
 #include "markdown.hpp"
+#include "native_assets.hpp"
 #include <memory>
 #include "wbmp.hpp"
 #include "explorer_autoexec.hpp"
@@ -75,7 +76,10 @@ Services::Services() : graph_({this,
         static u8 rows[8]; return script::font_rows(cp,rows) || builtin_font::copyRows5x8(cp, rows) ? rows : nullptr;
     }, nullptr,
     [](void*, size_t count) { return std::malloc(count); },
-    [](void*, void* memory) { std::free(memory); }}) {
+    [](void*, void* memory) { std::free(memory); },
+    [](void*,u8* out,u16 width,u16 height,double x,double y,const char* text,unsigned length) {
+        return width==320 && height==320?script::graphic_text(out,x,y,text,length):0;
+    }}) {
     graphics_owner = this;
     bind_cache();
 }
@@ -140,7 +144,11 @@ void Services::put(char ch) {
         if(ch=='\n') return;
         console_scroll_=false;
     }
-    if(ch == '\n' || console_col_ == columns()) {
+    Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+    const bool fixed_console=!external_run_ && !m61_text::active() && !script::font_active();
+    const bool pixel_wrap=fixed_console && ch!='\n' && console_col_ &&
+        fonts::text_width(font,console_[console_row_],console_col_)+fonts::text_width(font,&ch,1)>304;
+    if(ch == '\n' || console_col_ == columns() || pixel_wrap) {
         console_col_ = 0;
         if(console_row_+1>=rows()) {if(ch=='\n') console_scroll_=true;else scroll();}
         else ++console_row_;
@@ -593,9 +601,15 @@ const u8* Services::graphics() const {
 }
 u8 Services::view_image(const char* path) {
     language_cache::discard();
-    auto* bytes=(u8*)std::malloc(program_store::MAX_IMAGE1_SIZE);unsigned used=0;wbmp::Info info{};
-    if(!bytes) return 2;
-    if(!files::read(path,bytes,program_store::MAX_IMAGE1_SIZE,used) || wbmp::inspect(bytes,used,info)!=wbmp::Status::OK || !pump_) {std::free(bytes);return 2;}
+    char native[files::PATH_SIZE];files::Entry info_file{};
+    if(native_assets::image(path,native,info_file)) path=native;
+    else if(!files::stat(path,info_file)) return 2;
+    if(info_file.directory || !info_file.size || info_file.size>program_store::MAX_IMAGE1_SIZE) return 2;
+    auto* bytes=(u8*)std::malloc(info_file.size);unsigned used=0;wbmp::Info info{};
+    if(!bytes) {std::snprintf(status_,sizeof(status_),"Not enough memory for image (%lu B)",(unsigned long)info_file.size);return 2;}
+    if(!files::read(path,bytes,info_file.size,used)) {std::snprintf(status_,sizeof(status_),"Image read: %.100s",files::error());std::free(bytes);return 2;}
+    const auto inspected=wbmp::inspect(bytes,used,info);
+    if(inspected!=wbmp::Status::OK || !pump_) {std::snprintf(status_,sizeof(status_),"Image: %s",wbmp::status_text(inspected));std::free(bytes);return 2;}
     std::snprintf(path_,sizeof(path_),"%s",path);clear_console();page_=ServicePage::CONSOLE;running_=false;viewing_=image_viewing_=true;
     unsigned x=0,y=0;u8* frame=canvas::frame();
     for(;;) {
@@ -604,9 +618,9 @@ u8 Services::view_image(const char* path) {
         u8 key=0;while(!pump_(pump_context_,key)) {}
         if(key==0x1B || key==0xB1 || key=='\n' || key=='\r') {std::free(bytes);viewing_=image_viewing_=false;page_=ServicePage::CLOSED;return 0;}
         if(key==0xB4) x=x>8?x-8:0;
-        if(key==0xB7 && x+320<info.width) x+=8;
+        if(key==0xB7 && x+320<info.width) x+=info.width-x-320<8?info.width-x-320:8;
         if(key==0xB5) y=y>8?y-8:0;
-        if(key==0xB6 && y+320<info.height) y+=8;
+        if(key==0xB6 && y+320<info.height) y+=info.height-y-320<8?info.height-y-320:8;
     }
     std::free(bytes);viewing_=image_viewing_=false;page_=ServicePage::CLOSED;return 2;
 }

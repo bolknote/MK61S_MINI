@@ -96,11 +96,12 @@ void physical_face(const Screen& screen,const picocalc::Snapshot& model,bool cla
             for(unsigned x=0;x<10;++x) for(unsigned y=0;y<9;++y)
                 if(columns[x]&(1U<<y)) expected[12+y][left+3+x]=true;
         } else if(classic && token) {
-            builtin_font::Raster small{},glyph{};
-            assert(builtin_font::decode(builtin_font::FaceId::FONT_5X8,token,small));
-            assert(builtin_font::scale2x(small,glyph));
+            const ui_font::Face font{ui_font::Family::PIXEL,ui_font::Size::PX16};
+            const auto glyph=ui_font::glyph(font,token);
+            const int px=left+(16-glyph.advance)/2+glyph.bearing_x;
+            const int py=9+ui_font::metrics(font).ascent-glyph.bearing_y;
             for(unsigned y=0;y<glyph.height;++y) for(unsigned x=0;x<glyph.width;++x)
-                if(glyph.data[y*((glyph.width+7)/8)+x/8]&(0x80U>>(x&7))) expected[9+y][left+x]=true;
+                if(font_glyph::pixel(glyph,x,y)) expected[py+y][px+x]=true;
             if(mask&128) for(unsigned y=0;y<2;++y) for(unsigned x=0;x<2;++x) expected[23+y][left+18+x]=true;
         } else for(unsigned y=0;y<35;++y) {
             const auto bits=calculator_face::sourceRow(mask,y);
@@ -110,8 +111,20 @@ void physical_face(const Screen& screen,const picocalc::Snapshot& model,bool cla
     for(unsigned y=0;y<35;++y) for(unsigned x=0;x<320;++x) if(screen.pixel(x,91+y)!=expected[y][x]) { std::fprintf(stderr,"native digit mismatch x=%u y=%u classic=%u segmented=%u text=[%s] expected=%u\n",x,y,classic,model.segmented,model.face_indicator,expected[y][x]);std::abort(); }
 }
 void clock_header(const Screen& screen,const u32* rows=nullptr) {
-    for(unsigned y=0;y<14;++y) for(unsigned x=0;x<50;++x)
-        assert(screen.pixel(260+x,10+y)==(rows && (rows[y/2]&(1U<<(x/2)))));
+    bool expected[32][320]{};
+    if(rows) {
+        const ui_font::Face font{ui_font::Family::PIXEL,ui_font::Size::PX16};
+        unsigned width=0;for(char cp:std::string("12:34")) width+=ui_font::glyph(font,cp).advance;
+        int pen=310-width;
+        for(char cp:std::string("12:34")) {
+            const auto g=ui_font::glyph(font,cp);
+            for(unsigned y=0;y<g.height;++y) for(unsigned x=0;x<g.width;++x)
+                if(font_glyph::pixel(g,x,y)) expected[9+ui_font::metrics(font).ascent-g.bearing_y+y][pen+g.bearing_x+x]=true;
+            pen+=g.advance;
+        }
+    }
+    for(unsigned y=0;y<32;++y) for(unsigned x=240;x<320;++x)
+        assert(screen.pixel(x,y)==expected[y][x]);
 }
 void finish_script(Calculator& calculator) {
     for(unsigned i=0;i<2000 && m61_text::active();++i) { m61_text::service();calculator.tick(); }

@@ -71,6 +71,14 @@ struct GlyphCell {
   u16 link;
 };
 
+// A native panel may opt into edge-to-edge artwork; compact products keep
+// their existing prose margins and image geometry.
+template<class Platform>
+auto image_width(const Platform& platform,u16 normal,int) -> decltype(platform.image_width(normal)) {
+  return platform.image_width(normal);
+}
+template<class Platform> u16 image_width(const Platform&,u16 normal,...) { return normal; }
+
 template<class Platform>
 class Layout {
  public:
@@ -687,9 +695,10 @@ class Layout {
 
     u16 width = 0;
     u16 height = 0;
-    fit_image(info, available_width, display_height, width, height);
+    const u16 image_area=image_width(ui_font_source,available_width,0);
+    fit_image(info, image_area, display_height, width, height);
     record_anchor(y);
-    const i16 left = (i16) (content_x +
+    const i16 left = image_area==frame_width ? (frame_width-width)/2 : (i16) (content_x +
         (available_width > width ? (available_width - width) / 2U : 0));
     const i32 visible_begin = (i32) y > viewport_top ? y : viewport_top;
     const i32 image_end = (i32) y + height;

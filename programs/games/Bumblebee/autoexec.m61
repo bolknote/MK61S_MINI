@@ -4,23 +4,35 @@ print off
 hin 0000 0D400207021D5923600110400103115919270060155102600111400111591760155102
 trap 21 run :right
 trap 33 run :left
+RE= 0
+open? display.tbi
+if re==0 run :ready
+loadfont Bumblebee320
+:ready
 kbd 04
 run
 print on
 ret
 
 :right
-run :print
-print "-0008"
+if re==1 run :right320
+print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H-0008"
+wait 200
 ret
 
 :left
-run :print
-print "8000-"
+if re==1 run :left320
+print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H8000-"
+wait 200
 ret
 
-:print
-print "\x1B[2;1H\x1B[2K\x1B[2;{X:e}H"
+:right320
+print "\x1B[5;1H\x1B[2K\x1B[5;{X:e}H-0008"
+wait 200
+ret
+
+:left320
+print "\x1B[5;1H\x1B[2K\x1B[5;{X:e}H8000-"
 wait 200
 ret
 

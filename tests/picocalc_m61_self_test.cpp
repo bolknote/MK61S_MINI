@@ -389,6 +389,33 @@ void picocalc_m61_test() {
   assert(noon.intro && !script::font_active());
 
   reset(calc, services);
+  assert(files::mkdir("/M61 Tests/Bumblebee"));
+  for(const auto& file:std::filesystem::directory_iterator("programs/games/Bumblebee"))
+    asset(file.path().string().c_str(),("/M61 Tests/Bumblebee/"+file.path().filename().string()).c_str());
+  services.set_pump([](void* raw,u8& key) {
+    if(!std::strcmp(((Services*)raw)->page_name(),"VIEWER")) {key=0x1B;return true;}
+    return false;
+  },&services);
+  const auto bee_visible=[](unsigned row) {
+    char text[65];script::text_row(row,text,sizeof(text));
+    return std::strstr(text,"-0008") || std::strstr(text,"8000-");
+  };
+  assert(script::start("/M61 Tests/Bumblebee/autoexec.m61"));
+  until(calc,[&]{return script::font_active() && bee_visible(4);});
+  assert(script::columns()==20 && script::rows()==10 && script::text_profile().height==32);
+  assert(script::input(0x1B) && !script::font_active());
+  // The enhancement is optional: a machine without the BASIC bootstrap keeps
+  // the original pure-M61 game, ROM bytes and second-row sprite protocol.
+  reset(calc,services);assert(files::remove("/M61 Tests/Bumblebee/display.tbi"));
+  services.set_pump([](void* raw,u8& key) {
+    if(!std::strcmp(((Services*)raw)->page_name(),"VIEWER")) {key=0x1B;return true;}
+    return false;
+  },&services);
+  assert(script::start("/M61 Tests/Bumblebee/autoexec.m61"));
+  until(calc,[&]{return !script::font_active() && bee_visible(1);});
+  assert(script::input(0x1B));
+
+  reset(calc, services);
   // A real CRC32+ZX0 image crosses bank zero, using the production decoder.
   std::vector<u8> plain = {1, 2, 3, 4, 5, 0x50};
   u32 crc = mk61_crc32::calculate(plain.data(), plain.size());

@@ -108,7 +108,7 @@ inline Result flush_at(PrintPosition &position, char *output, uint8_t &cursor,
   output[0] = 0;
   cursor = 0;
   if (!finish) {
-    position.y += 8;
+    position.y += r.value > 0 ? r.value : 8;
     return result;
   }
   position.positioned = position.owns_context = false;

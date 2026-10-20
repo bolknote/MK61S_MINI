@@ -71,14 +71,19 @@ bool tone_pending=false;
 u64 tone_started=0;
 struct Blink { u32 left=0,at=0,on_ms=0,off_ms=0;bool on=false; } blinking;
 bool led_value=false;
+bool default_text_font() {
+  return !face.valid() && !prepared.valid();
+}
 unsigned cell_width() {
+  if(default_text_font()) return profile.width<=3?10:16;
   return prepared.valid()?prepared.metrics().default_advance:face.valid() ? face.metrics().default_advance : profile.width + 1;
 }
 unsigned cell_height() {
+  if(default_text_font()) return profile.width<=3?20:profile.width>=10?32:28;
   return prepared.valid()?prepared.metrics().height+prepared.metrics().line_gap:face.valid() ? face.metrics().height + face.metrics().line_gap : profile.height + profile.line_gap;
 }
 bool native_font_geometry() {
-  return (face.valid() || prepared.valid()) && (cell_width()>7 || cell_height()>8);
+  return default_text_font() || ((face.valid() || prepared.valid()) && (cell_width()>7 || cell_height()>8));
 }
 void pixel(unsigned x, unsigned y, bool on) {
   if (x >= 192 || y >= 64)
@@ -91,7 +96,8 @@ void pixel(unsigned x, unsigned y, bool on) {
     byte &= (u8)~mask;
 }
 void paint(u8 x, u8 y, u16 cp) {
-  const unsigned width = cell_width(), height = cell_height(), left = x * width,
+  const bool default_face=default_text_font();
+  const unsigned width = default_face?profile.width+1:cell_width(), height = default_face?profile.height+profile.line_gap:cell_height(), left = x * width,
                  top = y * height;
   for (unsigned gy = 0; gy < height; ++gy)
     for (unsigned gx = 0; gx < width; ++gx)
@@ -99,14 +105,14 @@ void paint(u8 x, u8 y, u16 cp) {
   // M61 coordinates remain character cells. Paint a separate native strike,
   // never an enlarged copy of the compact compatibility bitmap.
   native_visible=true;
-  const bool default_face=!face.valid() && !prepared.valid() && profile.width==5 && profile.height==8;
-  const unsigned nw=default_face?9:width, nh=default_face?28:height;
+  const unsigned nw=cell_width(), nh=cell_height();
   const bool native_font=native_font_geometry();
   const unsigned nx=(native_font?(canvas::WIDTH-grid.cols()*nw)/2:8)+x*nw;
   const unsigned ny=(native_font?(canvas::HEIGHT-grid.rows()*nh)/2:36)+y*nh;
   canvas::rect(canvas::frame(),nx,ny,nw,nh);
-  if(default_face) { Settings font{};font.ui_font_family=1;font.ui_font_size=16;
-    canvas::glyph(canvas::frame(),font,cp,nx,ny); }
+  if(default_face) { Settings font{};font.ui_font_family=1;font.ui_font_size=profile.width<=3?12:16;
+    mk61_service_ui_glyph glyph{};fonts::glyph(font,cp,glyph);
+    canvas::glyph(canvas::frame(),font,cp,nx+(nw-glyph.advance)/2,ny); }
   u8 byte = 0;
   fmk::Glyph glyph{};
   u8 bitmap[fmk::MAX_BITMAP_SIZE]{};
@@ -159,7 +165,7 @@ void reshape() {
     columns = text_screen::MAX_COLS;
   if (rows > text_screen::MAX_ROWS)
     rows = text_screen::MAX_ROWS;
-  if(!face.valid() && !prepared.valid() && rows>profile.rows) rows=profile.rows;
+  if(!face.valid() && !prepared.valid() && !default_text_font() && rows>profile.rows) rows=profile.rows;
   grid.reshape((u8)(rows ? rows : 1), (u8)(columns ? columns : 1));
   std::memset(raster, 0, sizeof(raster));
   canvas::clear();native_visible=true;
@@ -583,6 +589,37 @@ bool font_rows(u16 cp, u8 rows[8]) {
   fmk::Glyph glyph;
   return face.valid() && mk8::from_codepoint(cp, byte) &&
          face.glyph(byte, glyph) && fmk::scaleToLcd5x8(face, glyph, rows);
+}
+unsigned graphic_text(u8* out,double x,double y,const char* text,unsigned length) {
+  const bool custom=face.valid() || prepared.valid();
+  Settings font{};font.ui_font_family=1;font.ui_font_size=16;
+  const auto metrics=fonts::info(font);
+  const unsigned pitch=custom?cell_height():metrics.height+metrics.line_gap;
+  if(y<=-(double)pitch || y>=320 || x>=320) return pitch;
+  for(unsigned i=0;i<length && x<320;++i) {
+    const u16 cp=mk8::codepoint((u8)text[i]);
+    if(custom) {
+      prepared_font::Glyph pg{};fmk::Glyph g{};u8 bits[fmk::MAX_BITMAP_SIZE]{};
+      const bool ready=prepared.valid() && prepared_font::glyphForCodepoint(prepared,cp,pg) && prepared.decode(pg,bits,sizeof(bits));
+      if(ready) { g.width=pg.width;g.height=pg.height; }
+      u8 byte=0;
+      const bool found=ready || (face.valid() && mk8::from_codepoint(cp,byte) && face.glyph(byte,g) && face.decode(g,bits,sizeof(bits)));
+      const unsigned advance=cell_width();
+      if(x>-(double)advance) {
+        for(unsigned gy=0;gy<pitch;++gy) for(unsigned gx=0;gx<advance;++gx)
+          canvas::pixel(out,(int)x+gx,(int)y+gy,found && gx<g.width && gy<g.height && fmk::bitmapPixel(bits,g.width,gx,gy));
+      }
+      x+=advance;
+    } else {
+      mk61_service_ui_glyph g{};fonts::glyph(font,cp,g);
+      if(x>-(double)g.advance) {
+        canvas::rect(out,(int)x,(int)y,g.advance,pitch);
+        canvas::glyph(out,font,cp,(int)x,(int)y);
+      }
+      x+=g.advance;
+    }
+  }
+  return pitch;
 }
 bool font_active() { return face.valid() || prepared.valid(); }
 text_screen::FontGeometry text_profile() {

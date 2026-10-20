@@ -1,0 +1,152 @@
+[
+  {
+    "path": "programs/games/Bumblebee/scene-320.wbmp",
+    "source": "doc/game-artwork/bumblebee.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "1aaeefa10eeb3d11bfe2f534b8271d557eaa4a18b02386f6e51b3de1564b0418",
+    "sha256": "c441968b2892e2166f7d3982f76e92e54246ff6de4c63014e47b705fd12e95d8",
+    "source_sha256": "fa50a47df5663a74b74f0a46f4d686cd40d6c3d197a8183063f587760ae82e46"
+  },
+  {
+    "path": "programs/games/Bumblebee Fly/scene-320.wbmp",
+    "source": "doc/game-artwork/bumblebee-fly-tm1988-03.png",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 218,
+    "height": 224,
+    "compact_sha256": "95337a8f57f29addca2c4db5fe5836dd84ebe285fafcf74f60a6aa046b782de9",
+    "sha256": "2e4e4ba288c3f44da7d7b0cecea62e7eb68f066357134df763d69e74c6854176",
+    "source_sha256": "0f754b1d5fb6ca28fe811f37522d655ea649db3826fef0369e6b7cb7c3f199a7"
+  },
+  {
+    "path": "programs/games/Bumblebee Fly/plan-320.wbmp",
+    "source": "doc/game-artwork/bumblebee-plan-tm1988-03.png",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 162,
+    "height": 224,
+    "compact_sha256": "859fa3dc093a97e811baf1f817c8b1f5d180f1f3d2b30d9aa08a5494b0a32a1a",
+    "sha256": "93e69436ca9954898b7b360337d5dc0d996e09f885eec8e7e1bef644c2eb79d2",
+    "source_sha256": "17570107de14e21a71f48197ad46ed80e1e32a59300ddd761b1d2ad3888b3a66"
+  },
+  {
+    "path": "programs/games/Chase HQ/scene-320.wbmp",
+    "source": "doc/game-artwork/chase-hq.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "05f5279b2ee558d9ada961d03d55419d96fb43c6846272ef5876cd9fcb9c184c",
+    "sha256": "351028ae72842e4dde13b19ab8b08722888c91ac442f3a7cca9929c705ddf064",
+    "source_sha256": "55205a94665a9af2f29ea06e1b38f45ca16640ceb14fa3970bb0ddb8f477c1ed"
+  },
+  {
+    "path": "programs/games/Fox Hunting/scene-320.wbmp",
+    "source": "doc/game-artwork/fox-hunting-nizh1990-10.jpg",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 200,
+    "height": 216,
+    "compact_sha256": "7382ecf045e66affade121b2eb33e5dcb81896e7181b82de685d5aab76b2a890",
+    "sha256": "7d70545f6277749e520e2c0db9a83c60dcc4a77d3422786b700cb377b3cc0479",
+    "source_sha256": "102dd68c15e7807471b688a82f9e1f81444108919dc07427344f494a5b3e7060"
+  },
+  {
+    "path": "programs/games/Infinity Story/scene-320.wbmp",
+    "source": "doc/game-artwork/infinity-story-tm1988-01.png",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 320,
+    "height": 161,
+    "compact_sha256": "704fa8ccbcbabdd7ed462d4b5feb221ce00d31b0706c93856fb99503167d7122",
+    "sha256": "ba3afd3f960eb90dd44b34ab031348407e5bad7a0e50349e38bbd2a8147dbb73",
+    "source_sha256": "c8752e9859c4eeea7e39bc67cba699604c01d6437d2f3ed7794e2bd1322c570a"
+  },
+  {
+    "path": "programs/games/Lunolet 1/scene-320.wbmp",
+    "source": "doc/game-artwork/lunolet-1-tm1985-06.jpg",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 320,
+    "height": 172,
+    "compact_sha256": "dc8f0b6b9b6d48d2c1f3064323dde03a8bbe856d765ff536527cfd51139efad8",
+    "sha256": "1a1cb047fd474e912540379f45536ede93f1b13fb6cb60b2bb4b77e3e86699cb",
+    "source_sha256": "e30468e827fdb4e7418334f3b88fca9136d46995f811553affef71524b565948"
+  },
+  {
+    "path": "programs/games/Lunolet 1/thrust-320.wbmp",
+    "source": "doc/game-artwork/lunolet-1-thrust-tm1985-06.jpg",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 214,
+    "height": 224,
+    "compact_sha256": "a78cc56bda1a389446add3db52cdc8d7dbe993e0c9dc008dba90e3aefb9095d7",
+    "sha256": "88ebdd017916d9d7de8f14dd49bff4b14dcb04c148a68ec506eec749911048bd",
+    "source_sha256": "51314b6685d78e5593c5bc1890ec71dbeae9aa2fd6fe1daee337ced233a0e1e8"
+  },
+  {
+    "path": "programs/games/Mult Lunolet/scene-320.wbmp",
+    "source": "doc/game-artwork/mult-lunolet.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "85f5110604b5e35c3577285bd4636bd3a1d33fb378eeaca602d50f8104703b33",
+    "sha256": "4e52dc8878234809f04b60fab2166894158e88daa9773737006242b7199a5786",
+    "source_sha256": "9a25bd89703b9445c5311628dc882347dc2c81333606ed718d57202c06fb7d15"
+  },
+  {
+    "path": "programs/games/Naval Battle/scene-320.wbmp",
+    "source": "doc/game-artwork/naval-battle.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "697249c8b5de50474e66a808ae356d943605ce701dddc7d97e769bdcfd5d061b",
+    "sha256": "7d8b06a6987989dd3be48237ec1203a62cab61d353cc48f3cd969832f34380f0",
+    "source_sha256": "b24e38b7571b639c85ad044d2233ccd82c66bb0d81115fc472135452c1abba88"
+  },
+  {
+    "path": "programs/games/Pogonya/map-320.wbmp",
+    "source": "new explanatory vector; see SOURCES.markdown",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 208,
+    "compact_sha256": "5f6e00867abed84d4469e92f242ef5b95cee44a7c73c98417b9edb9bd5cdb2fc",
+    "sha256": "0d7a3cf14ec2ac51c78cd4424f49d042ec9f48c67194ef2a08731335fb8095f6",
+    "source_sha256": "101e49c7102b01b261ea35a3ff7d550199545f0ed8a0b0b8e800e1f61128df07"
+  },
+  {
+    "path": "programs/games/Pogonya/view-320.wbmp",
+    "source": "new explanatory vector; see SOURCES.markdown",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 208,
+    "compact_sha256": "c982b37794c7e068086e34baa1a9445c0c956a8a7e2357e8be4f4ba84bbcfbae",
+    "sha256": "dcc973901f9d4643c1e0002195410a03460821dcae9d70ba718102e58b04aa21",
+    "source_sha256": "c9814fad9b477e890ffd9afd90d98bc962e962475780defec75fd4d0da682266"
+  },
+  {
+    "path": "programs/games/Samurai/scene-320.wbmp",
+    "source": "doc/game-artwork/samurai.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "4bbb6dcce4bde0a507c147cd8fe19baf0bf1ab8a71675de2606c1f13c0fe4d83",
+    "sha256": "19a684f3bc856cbc655ca8085aca333d7d9687f877b39372c832414a7b874f2f",
+    "source_sha256": "461928b84481130432c7ee59a8b528de419731cf577f8b9ddd282010efdefdd7"
+  },
+  {
+    "path": "programs/games/Wumpus/exits-320.wbmp",
+    "source": "doc/game-artwork/wumpus-exits.svg",
+    "mode": "native vector geometry and native Ark 16px labels",
+    "width": 320,
+    "height": 107,
+    "compact_sha256": "db95c4723eaba0b5c16f3669f07abecdf910beb4a1f3b59c08bcce2d957531ce",
+    "sha256": "9f2722712c5e635146a729c8a802ad04ede1f09535387d080fcb3802d6530bc4",
+    "source_sha256": "73914b6b0f24174f3613d391ab6679fa7c411e9dd3cec2e9f3130bb420615995"
+  },
+  {
+    "path": "programs/games/Wumpus/scene-320.wbmp",
+    "source": "doc/game-artwork/wumpus-1976.jpg",
+    "mode": "original scan, reduced only; no enlargement",
+    "width": 101,
+    "height": 145,
+    "compact_sha256": "84926a42386d22cbb823000124f890ba78e81a8420e796bc58f393f57bd588e3",
+    "sha256": "f3b75ccce7f436a3fcfa9a3809b4660a52c4b03731417f77b0445fd6bdba69e3",
+    "source_sha256": "97e259b852c5400cf1b9ed32655e0bd470d8fbb157a84bcd07f0afd47b05c564"
+  }
+]

@@ -85,7 +85,13 @@ extern "C" uint32_t mk61_app_open_file(uint32_t file_id) {
       switch(key) {
         case MK61_APP_KEY_LEFT: x = backward(x, 8); break;
         case MK61_APP_KEY_RIGHT: x = forward(x, 8, max_x); break;
+#if defined(MK61_TARGET_PICOCALC)
+        case MK61_APP_KEY_BACKWARD:
+#endif
         case MK61_APP_KEY_SHIFT_LEFT: y = backward(y, height); break;
+#if defined(MK61_TARGET_PICOCALC)
+        case MK61_APP_KEY_FORWARD:
+#endif
         case MK61_APP_KEY_SHIFT_RIGHT: y = forward(y, height, max_y); break;
         default: break;
       }
