@@ -1,5 +1,6 @@
 // RAM-backed SD for the *real* FatFs adapter. Never opens a host disk/device.
 #include "storage.hpp"
+#include "storage_journal.hpp"
 #include <vector>
 #include <cstring>
 extern "C" {
@@ -48,12 +49,12 @@ DRESULT disk_read(BYTE drive, BYTE* out, LBA_t sector, UINT count) {
 }
 DRESULT disk_write(BYTE drive, const BYTE* data, LBA_t sector, UINT count) {
     if(drive || !count || sector + count > picocalc::sd::sectors()) return RES_PARERR;
-    for(UINT i = 0; i < count; ++i) if(!picocalc::sd::write((u32)sector + i, data + i * 512)) return RES_ERROR;
+    for(UINT i = 0; i < count; ++i) if(!picocalc::storage_journal::write((u32)sector + i, data + i * 512)) return RES_ERROR;
     return RES_OK;
 }
 DRESULT disk_ioctl(BYTE drive, BYTE op, void* out) {
     if(drive || !picocalc::sd::ready()) return RES_NOTRDY;
-    if(op == CTRL_SYNC) return RES_OK;
+    if(op == CTRL_SYNC) return picocalc::storage_journal::sync() ? RES_OK : RES_ERROR;
     if(op == GET_SECTOR_COUNT) *(LBA_t*)out = picocalc::sd::sectors();
     else if(op == GET_SECTOR_SIZE) *(WORD*)out = 512;
     else if(op == GET_BLOCK_SIZE) *(DWORD*)out = 1;

@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "storage_journal.hpp"
 #include "sd_crc.hpp"
 #include "diagnostics.hpp"
 #include "hardware/spi.h"
@@ -132,13 +133,13 @@ DRESULT disk_read(BYTE drive, BYTE* out, LBA_t sector, UINT count) {
 }
 DRESULT disk_write(BYTE drive, const BYTE* in, LBA_t sector, UINT count) {
     if(drive || !count || sector > UINT32_MAX || sector + count > picocalc::sd::sectors()) return RES_PARERR;
-    for(UINT i = 0; i < count; ++i) { picocalc::diagnostics::feed_watchdog(); if(!picocalc::sd::write((u32)sector + i, in + i * 512)) return RES_ERROR; }
+    for(UINT i = 0; i < count; ++i) { picocalc::diagnostics::feed_watchdog(); if(!picocalc::storage_journal::write((u32)sector + i, in + i * 512)) return RES_ERROR; }
     return RES_OK;
 }
 DRESULT disk_ioctl(BYTE drive, BYTE op, void* out) {
     if(drive || !picocalc::sd::ready()) return RES_NOTRDY;
     switch(op) {
-        case CTRL_SYNC: return picocalc::sd::sync() ? RES_OK : RES_ERROR;
+        case CTRL_SYNC: return picocalc::storage_journal::sync() ? RES_OK : RES_ERROR;
         case GET_SECTOR_COUNT: *(LBA_t*)out = picocalc::sd::sectors(); return RES_OK;
         case GET_SECTOR_SIZE: *(WORD*)out = 512; return RES_OK;
         case GET_BLOCK_SIZE: *(DWORD*)out = 1; return RES_OK;

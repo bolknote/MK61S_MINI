@@ -25,7 +25,7 @@ option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
-    settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp usb_device.cpp services.cpp service_runtime.cpp
+    settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
@@ -109,7 +109,13 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
-pico_set_program_version(mk61s-picocalc-pico-h "0.8.8")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/version.hpp")
+file(READ "${CMAKE_CURRENT_LIST_DIR}/version.hpp" MK61_VERSION_HEADER)
+string(REGEX MATCH "VERSION\\[\\] *= *\"([0-9]+\\.[0-9]+\\.[0-9]+)\"" MK61_VERSION_MATCH "${MK61_VERSION_HEADER}")
+if(NOT MK61_VERSION_MATCH)
+    message(FATAL_ERROR "version.hpp must define a semantic VERSION")
+endif()
+pico_set_program_version(mk61s-picocalc-pico-h "${CMAKE_MATCH_1}")
 # The SDK normally puts core 0's stack in the 4 KiB scratch bank. Source
 # compilers and FatFs need a larger, separately reserved stack. Keep the SDK
 # section layout and split the same 264 KiB SRAM into 224+4+36 KiB regions.

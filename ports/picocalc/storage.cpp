@@ -1,6 +1,7 @@
 #include "storage.hpp"
 #include "mk8_codec.hpp"
 #include "diagnostics.hpp"
+#include "storage_journal.hpp"
 #include <cstdio>
 #include <cstring>
 #include <new>
@@ -17,16 +18,19 @@ struct WriteSession {
 };
 namespace {
 FATFS filesystem;
-bool mounted = false, usb = false, ejected = false;
+bool mounted = false, usb = false, ejected = false, recovery_required=false;
 u32 generation = 1;
 u32 media_epoch = 1;
 char problem[64] = "No microSD mounted";
 WriteSession* writer=nullptr;
+bool finish_transaction(bool success);
 void abort_write(WriteSession* value) {
     if(!value || !value->open) return;
-    if(mounted && !usb) { (void)f_close(&value->file);(void)f_unlink(value->temporary); }
     value->open=false;
     if(writer==value) writer=nullptr;
+    // Discard the unsynced FatFs window too; closing it would flush an upload
+    // which the caller explicitly cancelled.
+    if(mounted && !usb) (void)finish_transaction(false);
 }
 struct TextCache {
     char path[PATH_SIZE]{};
@@ -48,6 +52,26 @@ bool available() {
     if(usb) { std::snprintf(problem, sizeof(problem), "USB owns the microSD"); return false; }
     if(!mounted) return mount();
     return true;
+}
+bool start_transaction() {
+    if(writer) abort_write(writer);
+    if(!available()) return false;
+    if(storage_journal::begin()) return true;
+    std::snprintf(problem,sizeof(problem),"%s",storage_journal::error());
+    recovery_required=true;mounted=false;(void)f_mount(nullptr,"",0);return false;
+}
+bool finish_transaction(bool success) {
+    if(success && storage_journal::commit()) return true;
+    char saved[sizeof(problem)];std::snprintf(saved,sizeof(saved),"%s",problem);
+    if(storage_journal::error()[0]) std::snprintf(saved,sizeof(saved),"%s",storage_journal::error());
+    const bool undone=storage_journal::rollback();
+    if(!undone) std::snprintf(saved,sizeof(saved),"%s",storage_journal::error());
+    recovery_required=true;mounted=false;(void)f_mount(nullptr,"",0);
+    // mount() retries a failed replay and also resolves an uncertain commit
+    // marker. No user filesystem operation is allowed before it completes.
+    if(undone && mount()) std::snprintf(problem,sizeof(problem),"%s",saved);
+    else if(!undone) std::snprintf(problem,sizeof(problem),"%s",saved);
+    return false;
 }
 bool private_name(const char* path, const char* suffix, char out[PATH_SIZE]) {
     const char* slash = std::strrchr(path, '/');
@@ -81,6 +105,19 @@ bool mount() {
     if(usb) return available();
     abort_write(writer);
     mounted = fail(f_mount(&filesystem, "", 1));
+    if(mounted) {
+        recovery_required=true;
+        if(!storage_journal::recover()) {
+            std::snprintf(problem,sizeof(problem),"%s",storage_journal::error());
+            mounted=false;(void)f_mount(nullptr,"",0);
+        } else {
+            // Replay bypasses FatFs. Throw away its cached metadata before
+            // letting readers or the USB host see the recovered filesystem.
+            (void)f_mount(nullptr,"",0);
+            mounted=fail(f_mount(&filesystem,"",1));
+            if(mounted) recovery_required=false;
+        }
+    }
     ++generation;
     ++media_epoch;
     return mounted;
@@ -160,7 +197,7 @@ bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsign
     if(result != FR_OK) return fail(result);
     FILINFO info;
     while((result = f_readdir(&directory, &info)) == FR_OK && info.fname[0]) {
-        if(info.fname[0] == '.') continue;
+        if(info.fname[0] == '.' || storage_journal::reserved(info.fname)) continue;
         if(!contains(info.fname,filter)) continue;
         if(skip) { --skip; continue; }
         if(used == capacity) { more = true; break; }
@@ -341,12 +378,13 @@ bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned
 }
 static bool write_impl(const char* path, const u8* data, unsigned size, bool text) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
-    if(!available()) return false;
+    if(!path || (size && !data) || storage_journal::reserved(path)) return fail(FR_INVALID_NAME);
+    if(!start_transaction()) return false;
     char temporary[PATH_SIZE];
-    if(!private_name(path, "TMP", temporary)) return false;
+    if(!private_name(path, "TMP", temporary)) return finish_transaction(false);
     FIL file;
     FRESULT result = f_open(&file, temporary, FA_WRITE | FA_CREATE_NEW);
-    if(result != FR_OK) return fail(result);
+    if(result != FR_OK) { fail(result);return finish_transaction(false); }
     for(unsigned at = 0; at < size && result == FR_OK;) {
         u8 chunk[768];
         unsigned count = 0;
@@ -365,19 +403,20 @@ static bool write_impl(const char* path, const u8* data, unsigned size, bool tex
     if(result == FR_OK) result = f_sync(&file);
     const FRESULT closed = f_close(&file);
     if(result == FR_OK) result = closed;
-    if(result != FR_OK) { f_unlink(temporary); return fail(result); }
-    return replace_file(path,temporary);
+    if(result != FR_OK) { fail(result);return finish_transaction(false); }
+    return finish_transaction(replace_file(path,temporary));
 }
 bool write(const char* path, const u8* data, unsigned size) { return write_impl(path, data, size, false); }
 bool write_text(const char* path, const char* data, unsigned size) { return write_impl(path, (const u8*)data, size, true); }
 WriteSession* begin_write(const char* path,bool m8) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);
-    if(!available() || writer || !path || std::strlen(path)>=PATH_SIZE) return nullptr;
+    if(!available() || writer || !path || std::strlen(path)>=PATH_SIZE || storage_journal::reserved(path)) return nullptr;
     auto* value=new(std::nothrow) WriteSession;
     if(!value) { std::snprintf(problem,sizeof(problem),"Not enough transfer memory");return nullptr; }
-    if(!private_name(path,"TMP",value->temporary)) { delete value;return nullptr; }
+    if(!start_transaction()) { delete value;return nullptr; }
+    if(!private_name(path,"TMP",value->temporary)) { finish_transaction(false);delete value;return nullptr; }
     const FRESULT result=f_open(&value->file,value->temporary,FA_WRITE|FA_CREATE_NEW);
-    if(result!=FR_OK) { delete value;fail(result);return nullptr; }
+    if(result!=FR_OK) { fail(result);finish_transaction(false);delete value;return nullptr; }
     std::strcpy(value->path,path);value->text=m8;value->open=true;value->revision=generation;writer=value;return value;
 }
 bool append_write(WriteSession* value,const u8* data,unsigned size) {
@@ -407,12 +446,25 @@ bool commit_write(WriteSession*& value) {
     value->open=false;writer=nullptr;
     bool ok=false;
     if(result==FR_OK) ok=replace_file(value->path,value->temporary);
-    else { (void)f_unlink(value->temporary);fail(result); }
+    else fail(result);
+    ok=finish_transaction(ok);
     delete value;value=nullptr;return ok;
 }
-bool mkdir(const char* path) { if(!available() || !fail(f_mkdir(path))) return false; ++generation; return true; }
-bool remove(const char* path) { if(!available() || !fail(f_unlink(path))) return false; ++generation; return true; }
-bool rename(const char* from, const char* to) { if(!available() || !fail(f_rename(from, to))) return false; ++generation; return true; }
+bool mkdir(const char* path) {
+    if(storage_journal::reserved(path)) return fail(FR_INVALID_NAME);
+    if(!start_transaction() || !finish_transaction(fail(f_mkdir(path)))) return false;
+    ++generation;return true;
+}
+bool remove(const char* path) {
+    if(storage_journal::reserved(path)) return fail(FR_DENIED);
+    if(!start_transaction() || !finish_transaction(fail(f_unlink(path)))) return false;
+    ++generation;return true;
+}
+bool rename(const char* from,const char* to) {
+    if(storage_journal::reserved(from) || storage_journal::reserved(to)) return fail(FR_DENIED);
+    if(!start_transaction() || !finish_transaction(fail(f_rename(from,to)))) return false;
+    ++generation;return true;
+}
 bool usb_active() { return usb; }
 bool usb_ejected() { return ejected; }
 void usb_eject() { if(usb) { (void)sd::sync(); ejected = true; } }
@@ -420,6 +472,7 @@ bool begin_usb() {
     if(usb) return true;
     if(!sd::ready() && !sd::init()) return fail(FR_NOT_READY);
     abort_write(writer);
+    if(recovery_required && !mount()) return false;
     if(!sd::sync()) return fail(FR_DISK_ERR);
     (void)f_mount(nullptr, "", 0);
     mounted = false; ejected = false; usb = true;
@@ -435,6 +488,7 @@ bool end_usb() {
 bool format() {
     if(usb || (!sd::ready() && !sd::init())) return fail(FR_NOT_READY);
     abort_write(writer);
+    storage_journal::reset();recovery_required=false;
     (void)f_mount(nullptr, "", 0); mounted = false;
     u8 workspace[4096];
     MKFS_PARM options{};

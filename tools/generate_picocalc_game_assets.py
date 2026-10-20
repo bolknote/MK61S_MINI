@@ -124,9 +124,26 @@ def pbm_to_wbmp(data):
     return bytes(b'\0\0'+mbuint(w)+mbuint(h)+pixels),(w,h)
 
 
+def recipe():
+    inputs={Path(__file__).resolve().relative_to(ROOT),Path('tools/generate_highnoon_font.py'),
+        Path('tools/generate_ui_fonts.py'),Path('tools/m8_codec.py'),
+        *(p.relative_to(ROOT) for p in (ROOT/'tools/.fmk-font/ui-atlases').glob('*.json')),
+        *(Path('doc/game-artwork')/source for source in SOURCES.values() if source)}
+    outputs=[Path('programs/games')/(name+'-320.wbmp') for name in SOURCES]
+    outputs += [Path('programs/games/Bumblebee/Bumblebee320.FMK'),Path('doc/game-artwork/native/manifest.json'),
+        Path('doc/game-artwork/native/pogonya-map.svg'),Path('doc/game-artwork/native/pogonya-view.svg')]
+    hashes=lambda paths:{p.as_posix():hashlib.sha256((ROOT/p).read_bytes()).hexdigest() for p in sorted(paths)}
+    return {'schema':1,'inputs_sha256':hashes(inputs),'outputs_sha256':hashes(outputs)}
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true')
+    parser.add_argument('--check-inputs',action='store_true',help='Verify the recorded source/output recipe without external rasterizers')
     args=parser.parse_args()
+    receipt=ART/'native/recipe.json'
+    if args.check_inputs:
+        if json.loads(receipt.read_text())!=recipe():raise SystemExit('Native game artwork recipe changed; regenerate and review assets')
+        print('Native artwork inputs and outputs match the reviewed recipe');return
     magick=shutil.which('magick');rsvg=shutil.which('rsvg-convert')
     if not magick or not rsvg:raise SystemExit('Requires ImageMagick and librsvg')
     atlas=load_atlases()[0][2] # Native Ark 16px, one source pixel per output pixel.
@@ -160,6 +177,7 @@ def main():
                 'source_sha256':hashlib.sha256((ART/source).read_bytes()).hexdigest() if source else hashlib.sha256(svg.encode()).hexdigest()})
     publish(ROOT/'programs/games/Bumblebee/Bumblebee320.FMK',bee_font())
     publish(ART/'native/manifest.json',(json.dumps(records,indent=2)+'\n').encode())
+    publish(receipt,(json.dumps(recipe(),indent=2)+'\n').encode())
     print(f'{len(records)} native illustrations and Bumblebee 16x32 font checked')
 
 

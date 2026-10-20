@@ -22,7 +22,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/ports/picocalc/usb_screen.cpp" "$root/code/chip8.cpp" \
     "$root/code/usb_screen_protocol.cpp" "$root/code/usb_screen_surface.cpp" "$root/code/ui_text_renderer.cpp" "$root/code/loadable_module_format.cpp" \
     "$root/ports/picocalc/ui.cpp" "$root/ports/picocalc/settings.cpp" \
-    "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
+    "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/storage_journal.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
     "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" "$root/tests/picocalc_io_self_test.cpp" \
     "$root/ports/picocalc/script_files.cpp" "$root/ports/picocalc/script_runtime.cpp" "$root/ports/picocalc/language_cache.cpp" \
     "$root/code/m61_text.cpp" "$root/code/m61_ansi.cpp" "$root/code/m61_print.cpp" \

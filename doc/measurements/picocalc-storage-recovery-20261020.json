@@ -1,0 +1,160 @@
+{
+  "passed": true,
+  "scope": "PicoCalc file recovery, native resource CI and single-source version; offline qualification",
+  "recorded_at_utc": "2026-10-20T17:49:23.474241+00:00",
+  "source_base_commit": "9180fbdc2fafc856c0121d8dd8cea7e80bd2c24c",
+  "frozen_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-storage-recovery-20261020/source",
+  "math_note": "Common/math sources are byte-identical to committed HEAD. Concurrent M0 math/linker experiments are excluded; their integration and hardware qualification belong to the other chat.",
+  "firmware": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.10",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 719744,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 195064,
+    "static_ram_data_bss_bytes": 154848,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 1439744,
+    "bin_sha256": "10cbaa9b89a18c5c53fae1eb99141f3ad57429e447093b47cd469d67af981ad3",
+    "uf2_sha256": "8a2d6013477c7aeb2ab40a3a40214fcc4260eef94f3916597b3f5d8fd625b503",
+    "hardware_verified": false,
+    "source_sha256": "1c957a4cfc9d8b35a45a242635c08a25602b1106f9c3dbd87eec7947b0643380",
+    "build_id": "812f336a",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 719744,
+      "footer_offset": 593792,
+      "profile_id": "50434831",
+      "crc32": "8622233b"
+    }
+  },
+  "sdk_embedded_version": "0.8.10",
+  "journal": {
+    "file": "/MK61JRN.SYS",
+    "file_bytes": 525312,
+    "record_capacity": 512,
+    "sector_bytes": 512,
+    "max_distinct_before_image_bytes": 262144,
+    "workspace": "About 6 KiB allocated only during a transaction/recovery",
+    "operations": [
+      "write",
+      "write_text",
+      "begin/append/commit/cancel_write",
+      "mkdir",
+      "remove",
+      "rename"
+    ],
+    "format": "Two CRC-checked generation headers; immutable transaction ID; durable count of CRC-checked old-sector records before filesystem writes; commit marker after sync",
+    "mount_policy": "Validate all records, replay an incomplete transaction before exposing files/USB, then invalidate FatFs caches. Repeated interruption replays again.",
+    "damaged_journal": "Fail closed; preserve bytes; no automatic deletion or formatting",
+    "initialization": "Lazy before first mutation. Interrupted initialization without a user transaction may be deferred; full cards keep reads and USB available.",
+    "boundary": "Firmware FatFs mutations only; raw host USB MSC writes and explicitly confirmed formatting are outside the journal. Sector durability/order follows SD sync; no claim about physical power-cut testing of this card."
+  },
+  "fault_injection": {
+    "passed": true,
+    "real_fatfs_formats": [
+      "FAT16",
+      "FAT32",
+      "exFAT"
+    ],
+    "power_cut_write_prefixes": 3870,
+    "interrupted_replay_prefixes": 176,
+    "every_raw_write_failure": true,
+    "every_sync_failure": true,
+    "additional_cases": [
+      "First-use provisioning interrupted at every write",
+      "Long UTF-8/LFN paths",
+      "Empty/new/replaced files",
+      "Streaming commit",
+      "mkdir/move/delete",
+      "Repeated mount is a fixed point",
+      "65534 M8 arrows =>196602 UTF-8 bytes",
+      "Capacity exhaustion rolls back",
+      "Damaged header/descriptor/transaction/payload preserves medium and blocks export",
+      "Reserved DOS path aliases rejected",
+      "Full card keeps old file/read/export; retry after freeing space"
+    ],
+    "oracle": "Compare every sector written by the operation or replay, excluding the reserved journal allocation, against the entire old or entire committed filesystem; untouched sectors cannot change in the RAM SD driver",
+    "sanitizers": [
+      "ASan",
+      "UBSan"
+    ]
+  },
+  "ci": {
+    "resource_triggers": [
+      "programs/games/**",
+      "programs/examples/**",
+      "doc/game-artwork/**",
+      "native generators and atlas inputs"
+    ],
+    "checks": [
+      "Native source/output recipe digests",
+      "Production WBMP/FMK decoding of 15 native images and Bumblebee font",
+      "Modified input/output rejection",
+      "Trigger coverage regression",
+      "CMake version execution with current/new/invalid header",
+      "Recovery with sanitizers",
+      "Basic graphics with sanitizers",
+      "M61"
+    ],
+    "native_resource_bytes_changed": false
+  },
+  "stm32": {
+    "stm32-classic-f411": {
+      "passed": true,
+      "flash_bytes": 377656,
+      "global_ram_bytes": 21752,
+      "max_stack_frame": 1928,
+      "stack_limit": 5120,
+      "elf_sha256": "84e728da8c5302009f36d286e1c3d8ee390c2338a1a3a03434af6e2ccdadbe9b"
+    },
+    "stm32-mini-f401": {
+      "passed": true,
+      "flash_bytes": 221108,
+      "global_ram_bytes": 26164,
+      "max_stack_frame": 1304,
+      "stack_limit": 2048,
+      "elf_sha256": "b1e0e257ec33cf2aae56cd90316882af328a9cf2ce772e69d99ffaa7e3a1b6a2"
+    }
+  },
+  "hardware": {
+    "tested_on_device": false,
+    "device_or_public_bundle_modified": false,
+    "reason": "PicoCalc reserved by the mathematical chat; no USB/serial/flash access from this task"
+  },
+  "bundle": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-storage-recovery-20261020/firmware/mk61s-picocalc-pico-h-0.8.10.zip",
+    "sha256": "a98c23db001597cc4676dde7a77e5dd4235867414cd6e18c125cb13a252bee11",
+    "files_checked": 132
+  },
+  "evidence_sha256": {
+    "recovery-final.log": "bc61b80448b20cf4964589806f7fd9441ea735b76f5b4317793b06e58534a62f",
+    "host-final.log": "e54bd5abce12dbd6fccbdbf7305a2556b55d5b898df55baef1c4cdbcb1d01e55",
+    "graphics.log": "f813ebbd59f83e55ff5ef1bd114b1bcbf74b7e90140c26e0dab1c8cbf0422e0f",
+    "m61.log": "acf69a498e68b8f7bbd56028af9e46be990962060e25cc8500bc3ec42bf7cdcc",
+    "resources-inputs.log": "88962506fb9e5ccbeb6c763d4606718e52957b9d40c367bb50777db3ad802a86",
+    "resources-test.log": "acfbdf9cd0ed868b5272ee4b266f1b3f38488291750281273dd88023ad466e9f",
+    "ci-test.log": "45c43bbb4519c90bfcacf3a59cae626c0eaa6871b8cb447a4d9b796059556e74",
+    "version-test.log": "353239c6a391a5fe2e900b988e30c68aa3a27170e16d3a962ba3592c634b44fa",
+    "package-test.log": "1aab5ec7947f449b0aec0f9ef85c8f178a2ccc67c362840b49ff822e5a2ed1db",
+    "pico-build.log": "c7394e70a5ed21dae864b5bbaca2599067cd2209f4696d473c235514c23520d8",
+    "sdk-version.log": "261a565f58d7c1db7b256cd536317c68eb171077fa86526c978107bb5994392f",
+    "stm32-classic-f411.log": "9e44854bcc239d7b0d1317975a0ccafcb790f3127c109661a4a39b5e27fea525",
+    "stm32-mini-f401.log": "6dd54396ad08f488d7d70b1cca27f95a74f6e8228ae89e5504845470891e7965"
+  }
+}
