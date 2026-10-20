@@ -23,6 +23,7 @@ for graphics in 0 1; do
     -DMK61_HAS_COMPILED_GRAPHICS="$graphics" \
     -DBASIC_GRAPHICS_REAL_SHARED_MEMORY -DMK61_SCOPED_RESIDENT_BUFFERS=1 \
     -DMK61_USE_NATIVE_LIBC=1 -DMK61_ENABLE_LOADABLE_MODULES=1 \
+    -DMK61_BASIC_GRAPHICS_DISK_EXCLUSIVE=1 \
     -DMK61_ENABLE_USB_SCREEN=1 -DMK61_TEST_RAM_SIZE="$pool" \
     -include "$root/tests/basic_graphics_runtime_fixture.hpp" -I"$root/code" \
     "$root/tests/basic_graphics_cold_usb_self_test.cpp" \

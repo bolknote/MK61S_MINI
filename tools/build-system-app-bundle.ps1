@@ -32,8 +32,11 @@ $Utf8NoBom = New-Object Text.UTF8Encoding($false)
 $Canonical = @(
     'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP',
     'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT',
-    'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP')
+    'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP',
+    'TERMINAL.APP', 'CLOCK.APP')
 $Modules = @(
+    [pscustomobject]@{ Key = 'terminal'; Name = 'TERMINAL.APP'; System = 'terminal' },
+    [pscustomobject]@{ Key = 'terminal-clock'; Name = 'CLOCK.APP'; System = 'terminal-clock' },
     [pscustomobject]@{ Key = 'setup'; Name = 'SETUP.APP'; System = 'setup' },
     [pscustomobject]@{ Key = 'focal'; Name = 'FOCAL.APP'; System = 'focal' },
     [pscustomobject]@{ Key = 'basic'; Name = 'BASIC.APP'; System = 'tinybasic' },
@@ -236,6 +239,22 @@ function Set-VmFileCachePolicy {
         throw 'VM file cache requires the matched overlay VM'
     }
     $Enabled['vm-file-cache'] = $mode -eq 1 -and $Enabled['language-vm']
+    $terminalMode = 0
+    if ($symbols -match '(?m)^([0-9a-fA-F]+)\s+A\s+mk61_terminal_commands_as_app\s*$') {
+        $terminalMode = [Convert]::ToInt32($Matches[1], 16)
+    }
+    if ($terminalMode -notin @(0, 1)) { throw 'invalid resident terminal APP policy' }
+    $Enabled['terminal'] = $terminalMode -eq 1
+    $Enabled['terminal-clock'] = $terminalMode -eq 1
+    if ($terminalMode -eq 1) {
+        $header = [IO.File]::ReadAllText((Join-Path $ProjectRoot 'code/terminal_command_driver.hpp'))
+        $expected = [int]([regex]::Match($header, 'VERSION\s*=\s*(\d+)').Groups[1].Value)
+        if ($symbols -notmatch '(?m)^([0-9a-fA-F]+)\s+A\s+mk61_terminal_command_abi\s*$' -or
+            [Convert]::ToInt32($Matches[1], 16) -ne $expected) {
+            throw 'resident terminal command ABI differs from project; rebuild the firmware before packaging /System'
+        }
+    }
+
 }
 
 function Get-SourceKey {
@@ -512,6 +531,7 @@ try {
             language_vm_compiler = $LanguageVmCompiler -eq '1'
             overlay_language_vm = $OverlayLanguageVm -eq '1'
             vm_file_cache = $Enabled['vm-file-cache']
+            terminal_commands_as_app = $Enabled['terminal']
             focal_trace = $FocalTrace -eq '1'
             catalog = $CatalogDirectory; catalog_hits = $hits.ToArray()
             builder = 'PowerShell'

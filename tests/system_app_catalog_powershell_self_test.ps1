@@ -130,6 +130,18 @@ Publish-Catalog '$($source.Replace("'", "''"))' `$module 'build-$index'
         Assert-Test ($Enabled['vm-file-cache'] -eq ($cacheMode -eq 1)) `
             'resident cache metadata selected the wrong helper policy'
     }
+    foreach ($mode in @(0, 1)) {
+        $script:residentSymbols = ('{0:x8} A mk61_terminal_commands_as_app' -f $mode) + "`n00000003 A mk61_terminal_command_abi"
+        Set-VmFileCachePolicy 'toolchain' 'resident.elf'
+        Assert-Test ($Enabled['terminal'] -eq ($mode -eq 1)) 'wrong terminal APP policy'
+        Assert-Test ($Enabled['terminal-clock'] -eq ($mode -eq 1)) 'wrong clock APP policy'
+    }
+    $script:residentSymbols = "00000001 A mk61_terminal_commands_as_app`n00000002 A mk61_terminal_command_abi"
+    $rejected = $false
+    try { Set-VmFileCachePolicy 'toolchain' 'resident.elf' }
+    catch { $rejected = $_.Exception.Message -like '*rebuild the firmware*' }
+    Assert-Test $rejected 'stale resident terminal ABI was packaged'
+    Assert-Test ('TERMINAL.APP' -in $Canonical -and 'CLOCK.APP' -in $Canonical) 'missing terminal helpers'
     Assert-Test ('VMCache/VMSTORE.APP' -in $Canonical) 'nested helper is not canonical'
     $LanguageVmCompiler = '0'
     Assert-Test ($compilerVariant -ne (Get-AppVariant 'tinybasic')) `

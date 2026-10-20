@@ -178,6 +178,8 @@ jobs:
             'System/BASIC.APP',
             'System/LANGVM.APP',
             'System/LANGIN.APP',
+            'System/TERMINAL.APP',
+            'System/CLOCK.APP',
             'System/MARKDOWN.APP',
             'System/CHIP8.APP',
             'System/SETUP.APP',
@@ -769,8 +771,14 @@ jobs:
           MK61_STOCK_LINKER_BUILD_ROOT="$RUNNER_TEMP/stock-linker" \
             tests/run_stock_linker_compile_check.sh
 
+      - name: Install ARM emulator for terminal and RTC APP qualification
+        run: |
+          python3 -m venv "$RUNNER_TEMP/terminal-arm-tests"
+          "$RUNNER_TEMP/terminal-arm-tests/bin/python" -m pip install unicorn==2.1.4
+
       - name: Compile-check F401 Classic V3 UC1609 through Arduino
         run: |
+          MK61_ARM_TEST_PYTHON="$RUNNER_TEMP/terminal-arm-tests/bin/python" \
           MK61_F401_UC1609_BUILD_ROOT="$RUNNER_TEMP/f401-arduino-uc1609" \
             tests/run_f401_uc1609_compile_check.sh
 

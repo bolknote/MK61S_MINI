@@ -150,9 +150,24 @@ fi
 if grep -aFq 'PROF state=' "$compile_path/mk61s-M.ino.elf"; then
   fail 'live profiler unexpectedly present in constrained F401 image'
 fi
-if ! grep -aFq 'RTC ALARM' "$compile_path/mk61s-M.ino.elf"; then
-  fail 'RTC alarm command unexpectedly missing from constrained F401 image'
-fi
+# Cold terminal commands are part of the matching System bundle. Check the
+# exact resident policy and execute both packed APPs, including RTC alarms.
+tool_bin="$(python3 - "$compile_path/compile_commands.json" "$root/tools" <<'PYTOOLS'
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[2])
+from release_contract import discover_binutils
+print(discover_binutils(Path(sys.argv[1]))[1].parent)
+PYTOOLS
+)"
+for module in terminal terminal-clock; do
+  python3 "$root/tools/build_portable_app.py" --system "$module" \
+    --arm-toolchain-bin "$tool_bin" --output-dir "$build_root/$module"
+done
+"${MK61_ARM_TEST_PYTHON:-python3}" "$root/tests/run_terminal_app_arm_tests.py" \
+  --resident-elf "$compile_path/mk61s-M.ino.elf" \
+  --terminal "$build_root/terminal/TERMINAL.APP" \
+  --clock "$build_root/terminal-clock/CLOCK.APP"
 "$root/tests/check_global_constructors.sh" \
   "$compile_path/mk61s-M.ino.elf"
 "$root/tests/check_early_dfu_elf.sh" \

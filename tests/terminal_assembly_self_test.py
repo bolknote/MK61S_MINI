@@ -24,6 +24,8 @@ def function(source, marker):
 
 
 terminal = (ROOT / 'code/terminal.cpp').read_text()
+terminal += (ROOT / 'code/terminal_command_functions.inc').read_text().replace(
+    'MK61_TERMINAL_COMMAND_CLASS', 'class_terminal')
 mnemonics = terminal[terminal.index('static constexpr char ISA_61[] ='):
                      terminal.index('#if MK61_DWT_PROFILER_SUPPORTED && MK61_ENABLE_PROFILE_SAVE')]
 prelude = r'''

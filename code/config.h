@@ -419,11 +419,10 @@
   (MK61_ENABLE_FOCAL && MK61_FOCAL_AS_APP)
 #define MK61_TINYBASIC_IS_LOADABLE \
   (MK61_ENABLE_TINYBASIC && MK61_TINYBASIC_AS_APP)
-// NUMBER_IO нужен штатным языковым APP. Сборка без обоих языков сохраняет
-// номера ABI-операций, но не объявляет capability и не держит реализацию в
-// резидентной Flash.
+// NUMBER_IO нужен языковым APP и внешним командам терминала. Без этих
+// потребителей номера ABI-операций сохраняются, а реализация не занимает Flash.
 #define MK61_NUMBER_IO_SERVICE_ENABLED \
-  (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC)
+  (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC || MK61_TERMINAL_COMMANDS_AS_APP)
 #define MK61_WBMP_VIEWER_IS_LOADABLE \
   (MK61_STANDALONE_WBMP_VIEWER_ENABLED && MK61_WBMP_VIEWER_AS_APP)
 #define MK61_MARKDOWN_VIEWER_IS_LOADABLE \
@@ -1439,6 +1438,19 @@ static constexpr usize  MAXIMUM_SERIAL_POLL_LOOPS =     4;   // Как част�
   static constexpr u8 PIN_GLCD_CS = PA1;
   static constexpr u8 GLCD_UC1609_BIAS = 0x1F;
   static constexpr u8 GLCD_UC1609_ADDRESS_SET = 0x02;
+#endif
+
+// F401 keeps the interactive bootstrap and M61 executor resident. Cold
+// programmer and diagnostic commands use the same 20-KiB System APP arena.
+#ifndef MK61_TERMINAL_COMMANDS_AS_APP
+  #define MK61_TERMINAL_COMMANDS_AS_APP \
+    (MK61_F401_PRODUCT_BUILD && MK61_ANY_LOADABLE_MODULE && \
+     !MK61_ENABLE_DWT_PROFILER && !MK61_ENABLE_READ_BENCHMARKS && \
+     !MK61_ENABLE_ANALOG_REPORT && !MK61_ENABLE_FAULT_INJECTION && \
+     !MK61_ENABLE_MPU_TEST && !MK61_ENABLE_WATCHDOG_TEST)
+#endif
+#if MK61_TERMINAL_COMMANDS_AS_APP != 0 && MK61_TERMINAL_COMMANDS_AS_APP != 1
+  #error "MK61_TERMINAL_COMMANDS_AS_APP must be 0 or 1"
 #endif
 
 #endif

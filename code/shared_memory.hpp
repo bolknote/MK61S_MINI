@@ -5,7 +5,8 @@
 #include "portable_app_config.h"
 
 #ifndef MK61_SCOPED_RESIDENT_BUFFERS
-#if defined(STM32F411xE) && defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME
+#if (defined(STM32F411xE) && defined(MK61_NATIVE_RUNTIME) && MK61_NATIVE_RUNTIME) || \
+    defined(STM32F401xC) || defined(STM32F401xE)
 #define MK61_SCOPED_RESIDENT_BUFFERS 1
 #else
 #define MK61_SCOPED_RESIDENT_BUFFERS 0

@@ -213,6 +213,9 @@ class class_terminal {
 
     bool input_can_append(void) const;
 
+#if MK61_TERMINAL_COMMANDS_AS_APP
+    terminal_protocol::Result exec_external(u8 command);
+#endif
     void list_mk61_code_page(void);
 
     void dump_mk61_code_page(void);
@@ -319,7 +322,6 @@ class class_terminal {
 
     bool scancode_to_kbd(i32& out);
 
-    static bool value_fits_mk61(double value);
 
     bool write_register_value(u8 reg, const char* args);
 

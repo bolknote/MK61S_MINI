@@ -125,7 +125,8 @@ PYTOOLS
         "$resident"
       for file in build.flags build.apps System/FOCAL.APP System/BASIC.APP \
           System/MARKDOWN.APP System/SETUP.APP System/USBDISK.APP \
-          System/EXPLORER.APP System/HELP0.TXT System/HELP1.TXT; do
+          System/EXPLORER.APP System/HELP0.TXT System/HELP1.TXT \
+          System/TERMINAL.APP System/CLOCK.APP; do
         [[ -s "$bundle_root/$file" ]] ||
           fail "missing product artifact: $artifact/$file"
       done
@@ -134,7 +135,8 @@ PYTOOLS
           fail "disabled APP was packaged: $artifact/$file"
       done
       for file in System/FOCAL.APP System/BASIC.APP System/MARKDOWN.APP \
-          System/SETUP.APP System/USBDISK.APP System/EXPLORER.APP; do
+          System/SETUP.APP System/USBDISK.APP System/EXPLORER.APP \
+          System/TERMINAL.APP System/CLOCK.APP; do
         local codec
         codec="$(od -An -tu1 -j15 -N1 "$bundle_root/$file" | tr -d '[:space:]')"
         [[ "$codec" == 1 ]] || fail "System APP is not ZX0: $artifact/$file"

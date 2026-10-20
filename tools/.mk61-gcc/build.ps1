@@ -303,7 +303,7 @@ function Remove-GeneratedBundleFiles {
     }
     $system = Join-Path $Directory 'System'
     foreach ($name in @(
-        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP', 'VMCache/VMSTORE.APP'
+        'FOCAL.APP', 'BASIC.APP', 'WBMP.APP', 'MARKDOWN.APP', 'CHIP8.APP', 'SETUP.APP', 'USBDISK.APP', 'EXPLORER.APP', 'HELP0.TXT', 'HELP1.TXT', 'LANGVM.APP', 'LANGIN.APP', 'SRCEDIT.APP', 'VMCache/VMSTORE.APP', 'TERMINAL.APP', 'CLOCK.APP'
     )) {
         $path = Join-Path $system $name
         if ([IO.File]::Exists($path)) {
@@ -701,7 +701,7 @@ try {
             ([IO.Path]::ChangeExtension($residentName, '.elf')))
     if ([IO.Directory]::Exists((Join-Path $stage 'System'))) {
         Copy-Item -LiteralPath (Join-Path $stage 'System') `
-            -Destination $outputBundle -Recurse
+            -Destination $outputBundle -Recurse -Force
     }
     if ($uiFonts -eq '1') {
         Invoke-GccTool $powerShell @(

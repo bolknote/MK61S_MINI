@@ -12,6 +12,15 @@
   #error "MK61_F401_PRODUCT_BUILD must be 0 or 1"
 #endif
 
+// Keep cold F401 product services compact without changing the emulator
+// translation unit or the standalone native arithmetic implementation.
+#if MK61_F401_PRODUCT_BUILD && defined(ARDUINO_ARCH_STM32) && \
+    (defined(STM32F401xC) || defined(STM32F401xE)) && \
+    defined(__GNUC__) && !defined(__clang__) && defined(__cplusplus) && \
+    !defined(MK61_CORE_TRANSLATION_UNIT)
+  #pragma GCC optimize ("no-caller-saves", "no-schedule-insns2", "ira-algorithm=priority", "ira-region=one", "no-partial-inlining")
+#endif
+
 // Applying -O2/-O3 to the entire firmware makes GCC clone and unroll cold
 // parsers, menus and diagnostic formatters.  Those copies cannot accelerate
 // calculator execution and can overflow even the 512-KiB F411 Flash.  Keep

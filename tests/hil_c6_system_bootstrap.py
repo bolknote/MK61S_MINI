@@ -39,6 +39,8 @@ OPTIONAL_FILES = (
     "LANGVM.APP",
     "LANGIN.APP",
     "SRCEDIT.APP",
+    "TERMINAL.APP",
+    "CLOCK.APP",
 )  # Optional roles follow the matched bundle; split VM always needs both APPs.
 CHUNK_SIZE = 48
 

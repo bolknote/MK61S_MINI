@@ -1,5 +1,5 @@
 name=MK61s F401/F411
-version=1.2.3
+version=1.2.4
 
 # DFU has no serial port before the resident starts. Keep this property
 # defined so Arduino CLI can launch the compound uploader without --port.

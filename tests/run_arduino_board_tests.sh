@@ -41,8 +41,8 @@ if [ "${MK61_RUN_ARDUINO_BOARD_INTEGRATION:-0}" = 1 ] &&
       -Sketchbook "$shell_sketchbook"
 fi
 grep -q 'Verified uploader: mk61Upload' "$work/install.txt"
-grep -Fq 'MK61s board package version: 1.2.3' "$work/install.txt"
-grep -Fq 'installed 1.2.3; project 1.2.3' "$work/check.txt"
+grep -Fq 'MK61s board package version: 1.2.4' "$work/install.txt"
+grep -Fq 'installed 1.2.4; project 1.2.4' "$work/check.txt"
 cmp "$platform/boards.txt" "$target/boards.txt"
 cmp "$platform/platform.txt" "$target/platform.txt"
 cmp "$platform/tools/mk61_module.ld" "$target/tools/mk61_module.ld"
@@ -101,12 +101,12 @@ grep -Fq \
   "$target/boards.local.txt"
 grep -q 'Accepted obsolete Arduino IDE font options' "$work/reinstall.txt"
 
-grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.3)' "$target/boards.txt"
+grep -Fxq 'mk61_f401_app.name=MK61s F401 + APP (1.2.4)' "$target/boards.txt"
 grep -q '^mk61_f401_app.build.core=STMicroelectronics:arduino$' \
   "$target/boards.txt"
 grep -q '^mk61_f401_app.upload.tool=mk61Upload$' "$target/boards.txt"
-grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.3)' "$target/boards.txt"
-grep -Fxq 'version=1.2.3' "$target/platform.txt"
+grep -Fxq 'mk61_f411.name=MK61s F411 + APP (1.2.4)' "$target/boards.txt"
+grep -Fxq 'version=1.2.4' "$target/platform.txt"
 grep -q '^mk61_f411.build.product_line=STM32F411xE$' "$target/boards.txt"
 grep -q '^mk61_f411.build.board=BLACKPILL_F411CE$' "$target/boards.txt"
 grep -q '^mk61_f411.upload.maximum_size=524288$' "$target/boards.txt"
@@ -335,7 +335,7 @@ if command -v pwsh >/dev/null 2>&1; then
     exit 1
   fi
   grep -q 'installed but stale' "$work/stale-check-ps.txt"
-  grep -Fq 'installed 1.2.3; project 1.2.3' "$work/stale-check-ps.txt"
+  grep -Fq 'installed 1.2.4; project 1.2.4' "$work/stale-check-ps.txt"
   if run_windows_powershell -NoLogo -NoProfile -File \
       "$ps_sketchbook/hardware/mk61/stm32/tools/mk61-app-postbuild.ps1" \
       check-profile -Platform mini-v3 -Display lcd1602-a00 -Sketch "$root/code" \

@@ -25,6 +25,13 @@ class Store {
   bool (*service_)();
   uint8_t* cache_;
   ReadCache* shared_cache_;
+  ReadCache* read_cache() const {
+#if defined(ARDUINO_ARCH_STM32) && MK61_FLASH_VM_PAGE_CACHE_BYTES == 0
+    return nullptr;
+#else
+    return shared_cache_;
+#endif
+  }
   const uint8_t* borrowed_=nullptr;
 #if !defined(ARDUINO_ARCH_STM32)
   uint8_t fallback_[WRITE_BYTES];
@@ -148,7 +155,7 @@ class Store {
     return victim!=INVALID && program_store::remove_tree(victim);
   }
   bool read(Space space,uint32_t at,uint8_t* out,uint16_t n) {
-    if(space==IMAGE && borrowed_) {
+    if(read_cache() && space==IMAGE && borrowed_) {
       if(at>size_ || n>size_-at)return false;
       if(n)memcpy(out,borrowed_+at,n);
       return true;
@@ -158,11 +165,11 @@ class Store {
       const uint32_t chunk=at/WRITE_BYTES;
       const uint32_t revision=program_store::media_revision();
       if(cached_!=chunk || cached_space_!=space || cache_revision_!=revision) {
-        if(!shared_cache_ || !shared_cache_->get(revision,dirs_[space],chunk,cache_)) {
+        if(!read_cache() || !read_cache()->get(revision,dirs_[space],chunk,cache_)) {
           char text[16];name(chunk,text);uint16_t file,copied=0;
           if(!find(dirs_[space],false,Type::MK61_BINARY,text,file) ||
              !program_store::read_source_range_id(file,0,cache_,WRITE_BYTES,&copied) || copied!=WRITE_BYTES)return false;
-          if(shared_cache_)shared_cache_->put(revision,dirs_[space],chunk,cache_);
+          if(read_cache())read_cache()->put(revision,dirs_[space],chunk,cache_);
         }
         cached_=chunk;cached_space_=space;cache_revision_=revision;
       }
@@ -218,7 +225,7 @@ public:
   void invalidate(){cached_=UINT32_MAX;}
   Store(const Store&)=delete;
   ~Store() {
-    if(borrowed_)shared_cache_->release(borrowed_);
+    if(read_cache() && borrowed_)read_cache()->release(borrowed_);
     // Best-effort rollback/temporary cleanup. Committed chunks and the old
     // manifest remain valid even when removal itself runs out of journal.
     if(opened_) {
@@ -228,12 +235,14 @@ public:
   }
   uint32_t source_stamp() const {return stamp_;}
   bool materialize(const uint8_t*& image) {
+    image=nullptr;
+    if(!read_cache())return true;
     image=borrowed_;
-    if(image || !shared_cache_)return true;
+    if(image)return true;
     const uint32_t revision=program_store::media_revision();
-    if(!shared_cache_->borrow(revision,dirs_[IMAGE],size_,io(),image))return false;
+    if(!read_cache()->borrow(revision,dirs_[IMAGE],size_,io(),image))return false;
     if(image && program_store::media_revision()!=revision) {
-      shared_cache_->release(image);image=nullptr;return false;
+      read_cache()->release(image);image=nullptr;return false;
     }
     borrowed_=image;return true;
   }
@@ -254,8 +263,8 @@ public:
   }
   bool load(ValidatedImage& certificate) {
     ReadCache::Image cached;
-    if(shared_cache_ && source_ && *source_!=INVALID &&
-       shared_cache_->image(program_store::media_revision(),*source_,fingerprint_,cached)) {
+    if(read_cache() && source_ && *source_!=INVALID &&
+       read_cache()->image(program_store::media_revision(),*source_,fingerprint_,cached)) {
       source_id_=*source_;stamp_=cached.stamp;parent_=cached.parent;root_=cached.root;
       dirs_[IMAGE]=cached.directory;bank_=cached.bank;opened_=true;
       certificate=cached.validated;size_=certificate.size;return true;
@@ -273,7 +282,7 @@ public:
     if(!read(IMAGE,0,h,sizeof(h)) || memcmp(h,m+16,sizeof(h)) || memcmp(h,"LBV2",4) || h[4]!=14)return false;
     size_=dword(h+8);
     certificate={VALIDATED_MAGIC,size_,dword(h+12),word(h+16),dword(h+28),word(h+18),h[6],h[7],Language(h[5]),true};
-    if(shared_cache_)shared_cache_->remember_image(program_store::media_revision(),
+    if(read_cache())read_cache()->remember_image(program_store::media_revision(),
         {fingerprint_,stamp_,0,source_id_,parent_,root_,dirs_[IMAGE],bank_,certificate});
     return true;
   }

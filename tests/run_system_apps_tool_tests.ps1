@@ -86,6 +86,8 @@ $budgetCases = @(
     @{ System = 'explorer'; app_bytes = 8000; memory_bytes = 10000 },
     @{ System = 'language-input'; app_bytes = 17000; memory_bytes = 20480 },
     @{ System = 'source-editor'; app_bytes = 14848; memory_bytes = 18304 },
+    @{ System = 'terminal'; app_bytes = 14000; memory_bytes = 18432 },
+    @{ System = 'terminal-clock'; app_bytes = 5500; memory_bytes = 6144 },
     @{ System = 'focal'; LocalFloatMath = $true;
         app_bytes = 15100; memory_bytes = 20000 },
     @{ System = 'tinybasic'; LocalFloatMath = $true;

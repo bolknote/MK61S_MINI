@@ -22,10 +22,34 @@ struct IO {
   bool poll() const {return !service || service(context);}
 };
 static constexpr unsigned READ_BYTES=256, WRITE_BYTES=1024;
-inline uint16_t word(const uint8_t* p) {return uint16_t(p[0]|uint16_t(p[1])<<8);}
-inline uint32_t dword(const uint8_t* p) {return word(p)|uint32_t(word(p+2))<<16;}
-inline void word(uint8_t* p,uint16_t n) {p[0]=uint8_t(n);p[1]=uint8_t(n>>8);}
-inline void dword(uint8_t* p,uint32_t n) {word(p,uint16_t(n));word(p+2,uint16_t(n>>16));}
+inline uint16_t word(const uint8_t* p) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  uint16_t value;__builtin_memcpy(&value,p,sizeof(value));return value;
+#else
+  return uint16_t(p[0]|uint16_t(p[1])<<8);
+#endif
+}
+inline uint32_t dword(const uint8_t* p) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  uint32_t value;__builtin_memcpy(&value,p,sizeof(value));return value;
+#else
+  return word(p)|uint32_t(word(p+2))<<16;
+#endif
+}
+inline void word(uint8_t* p,uint16_t n) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  __builtin_memcpy(p,&n,sizeof(n));
+#else
+  p[0]=uint8_t(n);p[1]=uint8_t(n>>8);
+#endif
+}
+inline void dword(uint8_t* p,uint32_t n) {
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+  __builtin_memcpy(p,&n,sizeof(n));
+#else
+  word(p,uint16_t(n));word(p+2,uint16_t(n>>16));
+#endif
+}
 struct Input {
   void* context;
   bool (*read)(void*,uint32_t,uint8_t*,uint16_t);

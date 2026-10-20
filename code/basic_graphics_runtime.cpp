@@ -47,7 +47,7 @@ int screen_flow(void *, uint8_t *pixels, size_t size, const char *text, uint16_t
 }
 constexpr size_t canvas_capacity = MK61_HAS_COMPILED_GRAPHICS ? 1536 : 160;
 Session *value = nullptr;
-#if MK61_SCOPED_RESIDENT_BUFFERS
+#if MK61_SCOPED_RESIDENT_BUFFERS || MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
 shared_memory::LifetimeBuffer session_storage;
 #endif
 Session *session() {
@@ -62,7 +62,7 @@ Session *session() {
                    "i" (sizeof(Session) + canvas_capacity +
                         (MK61_USE_NATIVE_LIBC ? 16 : 32)));
 #endif
-#if MK61_SCOPED_RESIDENT_BUFFERS
+#if MK61_SCOPED_RESIDENT_BUFFERS || MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
   if (!session_storage.acquire(shared_memory::Owner::BASIC_GRAPHICS,
                                sizeof(Session) + canvas_capacity))
     return nullptr;
@@ -83,6 +83,16 @@ Session *session() {
   return value;
 }
 } // namespace
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#endif
+bool prepare_disk_mode() {
+#if MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
+  return value == nullptr;
+#else
+  return true;
+#endif
+}
 Result dispatch(Request &request) {
   if (!value) {
     // Housekeeping and capability queries must remain usable under OOM.
@@ -134,7 +144,7 @@ Result dispatch(Request &request) {
   if (!current)
     return Result::FULL;
   const auto result = current->apply(request);
-#if MK61_SCOPED_RESIDENT_BUFFERS
+#if MK61_SCOPED_RESIDENT_BUFFERS || MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
   if (result == Result::OK && request.operation == Operation::END) {
     // Release only after the run has finished, never on INPUT/SUSPEND or an
     // invalid END. Otherwise the old VM-sized upper gap can obstruct a larger
@@ -149,6 +159,7 @@ Result dispatch(Request &request) {
 } // namespace basic_graphics
 #else
 namespace basic_graphics {
+bool prepare_disk_mode() { return true; }
 Result dispatch(Request &r) {
   r.value = 0;
   return r.operation == Operation::WIDTH || r.operation == Operation::HEIGHT ||

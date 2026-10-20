@@ -373,7 +373,7 @@ void* data(Owner owner);
 }
 namespace shared_scratch {
 static constexpr usize SIZE = 1600;
-enum class Owner : u8 { IMAGE_VIEWER = 3, MARKDOWN_VIEWER = 6, USB_CACHE = 8 };
+enum class Owner : u8 { IMAGE_VIEWER = 3, TERMINAL_TRANSFER = 4, MARKDOWN_VIEWER = 6, USB_CACHE = 8 };
 class Lease {
  public:
   constexpr Lease() : lease_{} {}

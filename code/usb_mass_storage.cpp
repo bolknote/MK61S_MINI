@@ -1,4 +1,5 @@
 #include "usb_mass_storage.hpp"
+#include "basic_graphics.hpp"
 
 #include "rust_types.h"
 #include "device_identity.hpp"
@@ -594,10 +595,13 @@ class PreparingScope {
 static u8 write_cache_blocks = 1;
 extern "C" u32 MK61_VirtualFatWriteCacheBlocks(void) { return write_cache_blocks; }
 
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noipa))
+#endif
 bool prepare(void) {
   if(is_initialized() ||
      (session_is_open() && !device_configured)) return true;
-  if(preparing) return false;
+  if(preparing || !basic_graphics::prepare_disk_mode()) return false;
   PreparingScope scope;
   startup_tracking = true;
   mark_startup_stage(1);
@@ -957,4 +961,12 @@ extern "C" int8_t MK61_MSC_DiskWrite(uint8_t*, uint32_t, uint16_t) { return USBD
 
 extern "C" u8 MK61_VirtualFatSync(void) { return 1U; }
 
+#endif
+
+#if defined(__arm__) || defined(__thumb__)
+#if MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
+asm(".global mk61_usbdisk_graphics_exclusive\n.set mk61_usbdisk_graphics_exclusive, 1");
+#else
+asm(".global mk61_usbdisk_graphics_exclusive\n.set mk61_usbdisk_graphics_exclusive, 0");
+#endif
 #endif

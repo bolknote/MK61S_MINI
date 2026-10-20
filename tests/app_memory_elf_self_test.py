@@ -29,6 +29,25 @@ class AppMemoryTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, 'standalone APP'):
             gate.check_pool(gate.APP_MAX_SIZE - 1, 1024)
 
+    def test_graphics_credit_requires_the_linked_disk_guard(self):
+        prepare = '_ZN16usb_mass_storage7prepareEv'
+        guard = '_ZN14basic_graphics17prepare_disk_modeEv'
+        symbols = {'mk61_usbdisk_graphics_exclusive': (1, 1),
+                   'mk61_lazy_basic_graphics_bytes': (3412, 1),
+                   prepare: (0x08001001, 1), guard: (0x08001021, 1)}
+        sections = [(0, 1, 6, 0x08001000, 0, 4, 0, 0, 2, 0)]
+        sizes = {prepare: 4}
+        with self.assertRaisesRegex(AssertionError, 'bypasses'):
+            gate.disk_graphics_credit(bytes(4), sections, symbols, sizes)
+        call = bytes.fromhex('00f00ef8')
+        self.assertEqual(gate.disk_graphics_credit(call, sections, symbols, sizes), 3412)
+        self.assertFalse(gate.thumb_calls(call, 0x08001000, 0x08001022))
+        symbols['mk61_usbdisk_graphics_exclusive'] = (0, 1)
+        self.assertEqual(gate.disk_graphics_credit(call, sections, symbols, sizes), 0)
+        gate.check_pool(20480, 20480, disk_credit=2560)
+        with self.assertRaisesRegex(AssertionError, 'standalone APP'):
+            gate.check_pool(20479, 20480, disk_credit=99999)
+
     def test_allocator_alignment_and_conservative_default(self):
         gate.check_pool(21184, 18624)
         with self.assertRaisesRegex(AssertionError, 'full stage index'):
@@ -74,8 +93,8 @@ class AppMemoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / 'USBDISK.APP').write_bytes(app(18624))
-            editor = root / 'SRCEDIT.APP'
-            editor.write_bytes(app(18316, kind=4))
+            for name in ('SRCEDIT.APP', 'TERMINAL.APP', 'CLOCK.APP'):
+                (root / name).write_bytes(app(18316, kind=4))
             self.assertEqual(gate.system_memory_sizes(root), (18624, 18624))
             (root / 'OTHER.APP').write_bytes(app(1024, kind=4))
             with self.assertRaises(AssertionError):

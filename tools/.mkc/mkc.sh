@@ -3556,7 +3556,7 @@ main_loop() {
 install_system_unattended() {
   local source=$LOCAL_PATH name kind size remote_name deadline reason
   local canonical=(USBDISK.APP SETUP.APP FOCAL.APP BASIC.APP LANGVM.APP LANGIN.APP SRCEDIT.APP WBMP.APP MARKDOWN.APP
-    CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT VMCache/VMSTORE.APP)
+    CHIP8.APP EXPLORER.APP HELP0.TXT HELP1.TXT VMCache/VMSTORE.APP TERMINAL.APP CLOCK.APP)
   if [ "$RESIDENT_USBDISK" -eq 0 ] && [ ! -s "$source/USBDISK.APP" ]; then
     STATUS_TEXT='нет обязательного USBDISK.APP'; return 1
   fi

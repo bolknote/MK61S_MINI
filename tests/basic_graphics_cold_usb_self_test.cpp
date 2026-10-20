@@ -24,6 +24,7 @@ static void bytes(const Lease &lease, uint8_t expected) {
 }
 int main(int argc, char **) {
   assert(argc == 1 || argc == 2);
+  assert(prepare_disk_mode());
   assert(prepare_retained_buffers());
   auto *heap = adjust_heap(0);
   const usize total = capacity(Arena::OVERLAY);
@@ -64,6 +65,9 @@ int main(int argc, char **) {
   apply(Operation::SHOW);
   assert(screen.shown[1] & 2);
   const usize live_graphics = capacity(Arena::OVERLAY);
+#if MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
+  assert(!prepare_disk_mode());
+#endif
   r = request(Operation::END); r.count = 1;
   r.args[0] = std::numeric_limits<double>::quiet_NaN();
   assert(dispatch(r) == Result::ARGUMENT && capacity(Arena::OVERLAY) == live_graphics);
@@ -75,6 +79,9 @@ int main(int argc, char **) {
   r.text = "outer"; r.length = 5; r.args[2] = 1;
   assert(dispatch(r) == Result::OK);
   apply(Operation::SUSPEND);
+#if MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
+  assert(!prepare_disk_mode());
+#endif
   app.reset();
   assert(app.acquire(Arena::APP, Owner::LOADABLE_MODULE, initial_app));
   std::memset(app.data(), 0xD4, app.size());
@@ -103,6 +110,7 @@ int main(int argc, char **) {
     if (repeat == 1) usb.reset(); // USB can end before the active canvas.
     apply(Operation::END);
     assert(capacity(Arena::OVERLAY) == without_graphics);
+    assert(prepare_disk_mode());
   }
   apply(Operation::END);
   assert(screen.begins == screen.ends);

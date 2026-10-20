@@ -127,6 +127,25 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
             with patch.object(bundle,"run",return_value=symbols),self.assertRaises(ValueError):
                 bundle.resolve_vm_file_cache(args,Path("toolchain"),Path("resident.elf"))
 
+    def test_terminal_policy_is_read_from_the_resident(self) -> None:
+        for enabled in (0, 1):
+            args = arguments(Path("catalog"))
+            args.overlay_language_vm = False
+            with patch.object(bundle, "run", return_value=
+                              f"{enabled:08x} A mk61_terminal_commands_as_app\n00000003 A mk61_terminal_command_abi\n"):
+                bundle.resolve_vm_file_cache(args, Path("tools"), Path("resident.elf"))
+            self.assertEqual(args.terminal_commands_as_app, bool(enabled))
+        with patch.object(bundle, "run", return_value=
+                          "00000002 A mk61_terminal_commands_as_app\n"), self.assertRaises(ValueError):
+            bundle.resolve_vm_file_cache(args, Path("tools"), Path("resident.elf"))
+        for metadata in ("", "00000002 A mk61_terminal_command_abi\n"):
+            with patch.object(bundle, "run", return_value=
+                              "00000001 A mk61_terminal_commands_as_app\n" + metadata), self.assertRaisesRegex(ValueError, "rebuild"):
+                bundle.resolve_vm_file_cache(args, Path("tools"), Path("resident.elf"))
+        for name, system in (("TERMINAL", "terminal"), ("CLOCK", "terminal-clock")):
+            self.assertIn(name + ".APP", bundle.CANONICAL)
+            self.assertIn((system, name + ".APP", system), bundle.MODULES)
+
     def test_nested_cache_helper_is_owned_but_cache_data_is_not(self) -> None:
         self.assertIn("VMCache/VMSTORE.APP",bundle.CANONICAL)
         self.assertIn(("vm-file-cache","VMCache/VMSTORE.APP","vm-file-cache"),bundle.MODULES)
@@ -143,12 +162,14 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
             enabled=1
             def fake_build(command,**_kwargs):
                 if Path(command[0]).name=="arm-none-eabi-nm":
-                    return f"{enabled:08x} A mk61_vm_file_cache_enabled\n"
+                    return (f"{enabled:08x} A mk61_vm_file_cache_enabled\n"
+                            f"{enabled:08x} A mk61_terminal_commands_as_app\n00000003 A mk61_terminal_command_abi\n")
                 target=Path(command[command.index("--output-dir")+1]);target.mkdir(parents=True,exist_ok=True)
                 if "--system" in command:
                     system=command[command.index("--system")+1]
                     names={"tinybasic":"BASIC","focal":"FOCAL","language-vm":"LANGVM",
-                           "language-input":"LANGIN","vm-file-cache":"VMSTORE","source-editor":"SRCEDIT"}
+                           "language-input":"LANGIN","vm-file-cache":"VMSTORE","source-editor":"SRCEDIT",
+                           "terminal":"TERMINAL", "terminal-clock":"CLOCK"}
                     (target/(names[system]+".APP")).write_bytes(app_payload(1))
                 else:
                     for name in ("HELP0.TXT","HELP1.TXT"):(target/name).write_bytes(b"help")
@@ -156,10 +177,14 @@ class SystemAppCatalogSelfTest(unittest.TestCase):
                 result=bundle.build(args)
                 self.assertTrue(result["vm_file_cache"])
                 self.assertTrue((output/"VMCache/VMSTORE.APP").is_file())
+                self.assertTrue((output/"TERMINAL.APP").is_file())
+                self.assertTrue((output/"CLOCK.APP").is_file())
                 owned_data=output/"VMCache/VMC-0042.APP";owned_data.write_bytes(b"keep cache data")
                 enabled=0;result=bundle.build(args)
             self.assertFalse(result["vm_file_cache"])
             self.assertFalse((output/"VMCache/VMSTORE.APP").exists())
+            self.assertFalse((output/"TERMINAL.APP").exists())
+            self.assertFalse((output/"CLOCK.APP").exists())
             self.assertEqual(owned_data.read_bytes(),b"keep cache data")
 
     def test_vm_variants_do_not_reuse_interpreter_or_math_packages(self) -> None:

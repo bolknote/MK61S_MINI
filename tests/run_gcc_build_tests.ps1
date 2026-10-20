@@ -418,3 +418,41 @@ Assert-True (-not (Test-Path -LiteralPath (
     'obsolete Arduino-CLI F401 worker is still present'
 
 [Console]::WriteLine('gcc_build_tests: ok')
+
+# Rebuild into an existing published bundle, including retained nested data.
+$cleanupAst = [Management.Automation.Language.Parser]::ParseFile(
+    $backend, [ref]$tokens, [ref]$parseErrors)
+$cleanupFunction = $cleanupAst.Find({ param($node)
+    $node -is [Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Remove-GeneratedBundleFiles'
+}, $true)
+$publication = $cleanupAst.Find({ param($node)
+    $node -is [Management.Automation.Language.IfStatementAst] -and
+        $node.Extent.Text.Contains("Copy-Item -LiteralPath (Join-Path `$stage 'System')")
+}, $true)
+Assert-True ($null -ne $cleanupFunction -and $null -ne $publication) 'missing System publication functions'
+. ([scriptblock]::Create($cleanupFunction.Extent.Text))
+$rebuildRoot = Join-Path ([IO.Path]::GetTempPath()) ('mk61-system-rebuild-' + [Guid]::NewGuid().ToString('N'))
+try {
+    $stage = Join-Path $rebuildRoot 'stage'
+    $outputBundle = Join-Path $rebuildRoot 'published'
+    [IO.Directory]::CreateDirectory((Join-Path $stage 'System/VMCache')) | Out-Null
+    [IO.Directory]::CreateDirectory((Join-Path $outputBundle 'System/VMCache')) | Out-Null
+    $retained = Join-Path $outputBundle 'System/VMCache/VMC-0042.APP'
+    [IO.File]::WriteAllText($retained, 'retained data')
+    foreach ($name in @('SRCEDIT.APP', 'TERMINAL.APP', 'CLOCK.APP', 'VMCache/VMSTORE.APP')) {
+        [IO.File]::WriteAllText((Join-Path $stage "System/$name"), 'new APP')
+        [IO.File]::WriteAllText((Join-Path $outputBundle "System/$name"), 'old APP')
+    }
+    for ($pass = 0; $pass -lt 2; ++$pass) {
+        Remove-GeneratedBundleFiles $outputBundle 'resident.bin'
+        . ([scriptblock]::Create($publication.Extent.Text))
+        foreach ($name in @('SRCEDIT.APP', 'TERMINAL.APP', 'CLOCK.APP', 'VMCache/VMSTORE.APP')) {
+            Assert-True ([IO.File]::ReadAllText((Join-Path $outputBundle "System/$name")) -eq 'new APP') 'rebuild retained a stale helper'
+        }
+        Assert-True ([IO.File]::ReadAllText($retained) -eq 'retained data') 'rebuild removed user cache data'
+    }
+} finally {
+    if ([IO.Directory]::Exists($rebuildRoot)) { Remove-Item -LiteralPath $rebuildRoot -Recurse -Force }
+}
+Write-Host 'System publication: repeat builds and retained VMCache data PASS'

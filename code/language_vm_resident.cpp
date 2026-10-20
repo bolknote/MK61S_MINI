@@ -350,6 +350,9 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
     return loadable_module::RuntimeStatus::OK;
   }
 #endif
+#if MK61_FLASH_LANGUAGE_VM
+  return loadable_module::RuntimeStatus::CORRUPT_MODULE;
+#else
   if(binding.context->prepared) return loadable_module::RuntimeStatus::CORRUPT_MODULE;
   auto& plan = binding.context->compile.transfer;
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
@@ -395,6 +398,7 @@ loadable_module::RuntimeStatus compiler_memory(void* raw, app_flow::Step& step) 
     mk61_app_flow_next(&step, plan.next);
   } else return loadable_module::RuntimeStatus::CORRUPT_MODULE;
   return loadable_module::RuntimeStatus::OK;
+#endif
 }
 #if defined(LANGUAGE_VM_HOST_TEST)
 app_flow::Status compiler_flow_invoke(void* raw, const app_flow::Target& target, app_flow::Step& step) {

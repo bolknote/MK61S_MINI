@@ -107,8 +107,8 @@ int main(void) {
                     (MK61_ENABLE_TINYBASIC && MK61_TINYBASIC_AS_APP),
                 "language placement must follow its independent APP flag");
   static_assert(MK61_NUMBER_IO_SERVICE_ENABLED ==
-                    (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC),
-                "NUMBER_IO must follow the packaged language APP set");
+                    (MK61_ENABLE_FOCAL || MK61_ENABLE_TINYBASIC || MK61_TERMINAL_COMMANDS_AS_APP),
+                "NUMBER_IO must follow the language and terminal APP set");
   static_assert(MK61_WBMP_VIEWER_IS_LOADABLE ==
                     (MK61_STANDALONE_WBMP_VIEWER_ENABLED &&
                      MK61_WBMP_VIEWER_AS_APP) &&
@@ -187,8 +187,8 @@ int main(void) {
                 !MK61_MARKDOWN_VIEWER_IS_BUILTIN &&
                 !MK61_CHIP8_IS_BUILTIN,
                 "disabled features must not leave builtin implementations");
-  static_assert(!MK61_NUMBER_IO_SERVICE_ENABLED,
-                "a language-free build must not retain NUMBER_IO");
+  static_assert(MK61_NUMBER_IO_SERVICE_ENABLED == MK61_TERMINAL_COMMANDS_AS_APP,
+                "only terminal APP can retain NUMBER_IO without languages");
 #endif
 #if defined(MK61_CONFIG_EXPECT_PORTABLE_SYSTEM_APPS)
   static_assert(MK61_SETUP_IS_LOADABLE == 1,

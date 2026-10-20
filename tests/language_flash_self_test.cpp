@@ -9,6 +9,18 @@
 using namespace language_vm::flash;
 
 int main() {
+  // Storage fields may begin at any byte offset, including unaligned chunks.
+  for(unsigned offset=0;offset<8;++offset) {
+    uint8_t wire[16];std::fill_n(wire,sizeof(wire),uint8_t(0xA5));
+    word(wire+offset,0xFEDC);assert(wire[offset]==0xDC && wire[offset+1]==0xFE);
+    assert(word(wire+offset)==0xFEDC);
+    dword(wire+offset,0xFEDCBA98U);
+    const uint8_t expected[]={0x98,0xBA,0xDC,0xFE};
+    assert(!memcmp(wire+offset,expected,4) && dword(wire+offset)==0xFEDCBA98U);
+    for(unsigned i=0;i<offset;++i)assert(wire[i]==0xA5);
+    for(unsigned i=offset+4;i<sizeof(wire);++i)assert(wire[i]==0xA5);
+  }
+
   static_assert(sizeof(Writer)<WRITE_BYTES+80 && sizeof(Reader)<READ_BYTES*2+64,"paging RAM must stay bounded");
   Disk disk;
   Writer image(disk.io(),IMAGE);

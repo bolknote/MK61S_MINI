@@ -17,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools/.mk61-app"))
 from app_relocations import extract
 SYSTEM_MODULES = {
+    "terminal-clock": ("CLOCK", "APPLICATION", ["terminal_command_module.cpp", "crash_dump_format.cpp", "virtual_fat_diagnostic.cpp"], None),
+    "terminal": ("TERMINAL", "APPLICATION", ["terminal_command_module.cpp", "crash_dump_format.cpp", "virtual_fat_diagnostic.cpp"], None),
     "source-editor": ("SRCEDIT", "SOURCE_EDITOR", ["language_source_editor_entry.cpp", "language_bytecode.cpp"], None),
     "vm-file-cache": ("VMSTORE", "VM_FILE_CACHE", ["language_vm_file_cache_entry.cpp",
         "language_vm_file_cache.cpp", "language_compiler_flow.cpp", "language_vm.cpp",
@@ -45,6 +47,8 @@ SYSTEM_MODULES = {
 # memory_bytes is the complete loaded image plus BSS; the editor/runtime
 # workspace leased by the firmware is accounted separately.
 SYSTEM_SIZE_BUDGETS = {
+    "terminal": {"app_bytes": 12_500, "memory_bytes": 18_432},
+    "terminal-clock": {"app_bytes": 5_000, "memory_bytes": 6_144},
     # SETUP owns all FMK validation and compilation.  Keep enough headroom in
     # the 20-KiB APP arena for that decoder plus its full 8-KiB source buffer.
     "setup": {"app_bytes": 10_000, "memory_bytes": 20_480},
@@ -63,6 +67,8 @@ LOCAL_FLOAT_SIZE_BUDGETS = {
 # can select it explicitly with --packer. Windows builds use PowerShell/.NET.
 # Keep separate measured storage ceilings, with the same memory_bytes limits.
 GREEDY_APP_SIZE_BUDGETS = {
+    (False, "terminal"): 14_000,
+    (False, "terminal-clock"): 5_500,
     (False, "focal"): 13_500,
     (True, "focal"): 15_100,
     (True, "tinybasic"): 13_000,
@@ -204,7 +210,7 @@ def build(args: argparse.Namespace) -> dict:
         sources += [ROOT / "sdk/portable/system/usbdisk_compat.cpp"]
     sources += [ROOT / "sdk/portable/memory.c"]
     shared_system_runtime = args.system in (
-        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer", "vm-file-cache", "source-editor")
+        "focal", "tinybasic", "language-vm", "language-input", "usbdisk", "setup", "markdown-viewer", "vm-file-cache", "source-editor", "terminal")
     if shared_system_runtime:
         sources += [ROOT / "sdk/portable/system/runtime.S"]
     if args.system in ("focal", "tinybasic", "language-vm", "language-input", "source-editor"):
@@ -222,6 +228,8 @@ def build(args: argparse.Namespace) -> dict:
     flags = [*cpu_flags, "-Oz" if system else "-Os", "-flto", "-fipa-pta",
              "-mword-relocations", "-fno-builtin", "-ffunction-sections", "-fdata-sections",
              "-Wall", "-Wextra", "-Werror"]
+    if args.system in ("terminal", "terminal-clock"): flags.append("-DMK61_BUILD_TERMINAL_MODULE=1")
+    if args.system == "terminal-clock": flags.append("-DMK61_TERMINAL_CLOCK_ONLY=1")
     if getattr(args,"linked_vm_poc",False):flags.append("-DMK61_LINKED_VM_POC=1")
     if pico_target and not getattr(args,"pico_legacy_display",False):
         flags.append("-DMK61_TARGET_PICOCALC=1")
@@ -383,7 +391,7 @@ def build(args: argparse.Namespace) -> dict:
     if pico_target and greedy_packer:
         command += ["--target", "picocalc-pico-h"]
         if not getattr(args,"pico_legacy_display",False): command += ["--native-display"]
-    command += ["--portable", "--kind", "app" if args.system in ("vm-file-cache", "source-editor") else args.system or "app", "--image", image,
+    command += ["--portable", "--kind", "app" if args.system in ("vm-file-cache", "source-editor", "terminal", "terminal-clock") else args.system or "app", "--image", image,
                "--memory-size", str(memory_size), "--entry-offset",
                str(entry_offset), "--output", app]
     offsets, table = extract(elf, base, image.stat().st_size, memory_size)

@@ -25,8 +25,11 @@ CANONICAL = (
     "FOCAL.APP", "BASIC.APP", "WBMP.APP", "MARKDOWN.APP", "CHIP8.APP",
     "SETUP.APP", "USBDISK.APP", "EXPLORER.APP", "HELP0.TXT", "HELP1.TXT",
     "LANGVM.APP", "LANGIN.APP", "SRCEDIT.APP", "VMCache/VMSTORE.APP",
+    "TERMINAL.APP", "CLOCK.APP",
 )
 MODULES = (
+    ("terminal", "TERMINAL.APP", "terminal"),
+    ("terminal-clock", "CLOCK.APP", "terminal-clock"),
     ("setup", "SETUP.APP", "setup"),
     ("focal", "FOCAL.APP", "focal"),
     ("basic", "BASIC.APP", "tinybasic"),
@@ -410,6 +413,22 @@ def resolve_vm_file_cache(args: argparse.Namespace, toolchain: Path,
     if enabled and not args.overlay_language_vm:
         raise ValueError("VM file cache requires the matched overlay VM")
     args.vm_file_cache = bool(enabled)
+    terminal = re.search(
+        r"^([0-9a-fA-F]+)\s+A\s+mk61_terminal_commands_as_app\s*$",
+        symbols, re.MULTILINE)
+    terminal_mode = int(terminal[1], 16) if terminal else 0
+    if terminal_mode not in (0, 1):
+        raise ValueError("invalid resident terminal APP policy")
+    args.terminal_commands_as_app = bool(terminal_mode)
+    if terminal_mode:
+        abi = re.search(r"^([0-9a-fA-F]+)\s+A\s+mk61_terminal_command_abi\s*$",
+                        symbols, re.MULTILINE)
+        header = (ROOT / "code/terminal_command_driver.hpp").read_text()
+        expected = int(re.search(r"VERSION\s*=\s*(\d+)", header)[1])
+        if abi is None or int(abi[1], 16) != expected:
+            raise ValueError("resident terminal command ABI differs from project; "
+                             "rebuild the firmware before packaging /System")
+
 
 
 def build(args: argparse.Namespace) -> dict:
@@ -441,6 +460,8 @@ def build(args: argparse.Namespace) -> dict:
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     enabled = {
+        "terminal": args.terminal_commands_as_app,
+        "terminal-clock": args.terminal_commands_as_app,
         "setup": args.setup,
         "focal": args.focal,
         "basic": args.basic,
@@ -531,6 +552,7 @@ def build(args: argparse.Namespace) -> dict:
         "language_vm_compiler": getattr(args,"language_vm_compiler",False),
         "overlay_language_vm": overlay_vm,
         "vm_file_cache": args.vm_file_cache,
+        "terminal_commands_as_app": args.terminal_commands_as_app,
         "catalog": str(args.catalog_dir.resolve()) if args.catalog_dir else None,
         "catalog_hits": catalog_hits,
     }

@@ -3,6 +3,14 @@
 #include "basic_graphics_protocol.hpp"
 #include <stddef.h>
 
+// A full graphics session and USB import are mutually exclusive on 64-KiB F401.
+#ifndef MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE
+#if defined(STM32F401xC) || defined(STM32F401xE)
+#define MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE 1
+#else
+#define MK61_BASIC_GRAPHICS_DISK_EXCLUSIVE 0
+#endif
+#endif
 namespace basic_graphics {
 struct Backend {
   void *context;
@@ -60,6 +68,8 @@ private:
   void circle(double x, double y, double radius, uint8_t mode);
 };
 
+// Does not allocate or discard a live canvas. The disk caller must stop if false.
+bool prepare_disk_mode();
 Result dispatch(Request &request);
 class RunScope {
 public:
