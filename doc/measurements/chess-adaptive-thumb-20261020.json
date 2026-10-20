@@ -1,0 +1,245 @@
+{
+  "experiment": "Program-independent adaptive runtime Thumb compiler",
+  "date": "2026-10-20",
+  "branch": "feature/vm-arm-compiler",
+  "base_sha": "9800654d238e19ba61fb3e796de6ca4f5729acb2",
+  "status": "EXPERIMENT_CORRECT_NO_SPEEDUP_NOT_DEPLOYABLE",
+  "production_modified": false,
+  "physical_devices_touched": false,
+  "budgets_relaxed": false,
+  "policy": {
+    "precomputed_profiles": false,
+    "program_specific_selection": false,
+    "native_sidecars": false,
+    "runtime_hotness": true,
+    "hot_threshold": 8,
+    "code_bytes_per_slot": 240,
+    "ways": 3,
+    "hotness_entries": 16,
+    "cache_budget_bytes": 1152,
+    "cache_actual_arm32_bytes": 1024,
+    "cache_actual_host64_bytes": 1112,
+    "cache_offset": 1992,
+    "workspace_bytes": 8192,
+    "default_revoke_each_entry": true,
+    "explicit_retention": "caller-owned unchanged loan and immutable raw LBV2 only",
+    "equality": "exact immutable image address; CRC/size hash is only for sampling",
+    "compiler_io": "already cached bytecode only; no speculative I/O"
+  },
+  "program": {
+    "kind": "ordinary unmodified linked LBV2",
+    "symbols": 25,
+    "unique_modules": 24,
+    "bytes": 48256,
+    "sha256": "f5747f5ab0723a3b4c188cbf3565ef4d47e263d5b5ddb3a9811428bdb7f0c1bf"
+  },
+  "validation": {
+    "backends": [
+      "BINARY64",
+      "CORE"
+    ],
+    "sanitizers": "ASan and UBSan, recovery disabled",
+    "differential_scenarios_per_backend": 6048,
+    "direct_leaf_tests_per_backend": 37596,
+    "successful_leaves_per_backend": 19134,
+    "atomic_denials_per_backend": 18462,
+    "policy_checks": "PASS: heat, budgets, service/frame boundaries, failed full-cache compilation, saturation, wrap, overlap, revocation, paged I/O/lifetime, equal-checksum different images",
+    "assembler_crosscheck_bytes": 114,
+    "assembler_crosscheck": "PASS",
+    "host_chess": "VM/adaptive/VM PASS for both arithmetic backends, both retention modes; no host speed claim",
+    "chess_golden": {
+      "move": "e2e3",
+      "score": 54,
+      "nodes": 420,
+      "launches": 7662,
+      "service_polls": 205013
+    },
+    "arm_backend": "BINARY64 using owned math; not a CORE speed measurement"
+  },
+  "instruction_delta_percent": {
+    "adaptive": 4.250488604388436,
+    "retained": 4.891088969960644
+  },
+  "arm": {
+    "kind": "adaptive runtime Thumb compilation, NOT hardware timing",
+    "sizes": {
+      "reference": {
+        "flash_and_readonly_bytes": 73792,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 25064,
+          ".rodata": 48728,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "a78accad836da19d1ff351eed835469a3d95416cd4085f89c67f1d173b047bcc"
+      },
+      "adaptive": {
+        "flash_and_readonly_bytes": 79524,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 30748,
+          ".rodata": 48776,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "3befb3099262b18f40a34fd324419e25c692b55ca98bfe2a16a29f4d5bffa32a"
+      },
+      "retained": {
+        "flash_and_readonly_bytes": 79532,
+        "static_ram_bytes": 8520,
+        "sections": {
+          ".text": 30756,
+          ".rodata": 48776,
+          ".bss": 8520
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "cc0eaaa10cd3e02ee5335818bcee8cd6cede1d38423f74f0bdd207d4cd3e38bd"
+      }
+    },
+    "execution": {
+      "reference": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 0,
+          "hits": 0,
+          "compiles": 0,
+          "rejects": 0,
+          "evictions": 0,
+          "deopts": 0,
+          "operations": 0,
+          "cold": 0
+        },
+        "executed_instructions": 638165574,
+        "basic_blocks": 194269814,
+        "native_sram_instructions": 0,
+        "native_sram_basic_blocks": 0,
+        "touched_stack_watermark_bytes": 920,
+        "emulator_wall_seconds": 92.74851554096676
+      },
+      "adaptive": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 186846,
+          "hits": 39358,
+          "compiles": 1558,
+          "rejects": 537,
+          "evictions": 309,
+          "deopts": 354,
+          "operations": 131654,
+          "cold": 144757
+        },
+        "executed_instructions": 665290729,
+        "basic_blocks": 202694684,
+        "native_sram_instructions": 1750630,
+        "native_sram_basic_blocks": 165088,
+        "touched_stack_watermark_bytes": 1648,
+        "emulator_wall_seconds": 93.31197212508414
+      },
+      "retained": {
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "cache": {
+          "probes": 187694,
+          "hits": 47597,
+          "compiles": 2121,
+          "rejects": 551,
+          "evictions": 2118,
+          "deopts": 434,
+          "operations": 174535,
+          "cold": 136143
+        },
+        "executed_instructions": 669378820,
+        "basic_blocks": 204609956,
+        "native_sram_instructions": 2207287,
+        "native_sram_basic_blocks": 219919,
+        "touched_stack_watermark_bytes": 1664,
+        "emulator_wall_seconds": 97.8559790418949
+      }
+    },
+    "status": "PASS"
+  },
+  "real_app_probe": {
+    "reference": {
+      "name": "LANGVM",
+      "target": "stm32",
+      "abi": 6,
+      "load_address": 536870912,
+      "native_display": false,
+      "graphics_width": 192,
+      "graphics_height": 64,
+      "relocations": 84,
+      "relocation_bytes": 96,
+      "entry_offset": 0,
+      "image_bytes": 20392,
+      "bss_bytes": 20,
+      "memory_bytes": 20412,
+      "app_bytes": 15704,
+      "compression": "ZX0+BCJ",
+      "zx0_parser": "greedy",
+      "resident_imports": 0,
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "vm_integer_block": true
+    },
+    "adaptive": null,
+    "kind": "dry monolithic APP size probe only",
+    "memory_limit_bytes": 20480,
+    "status": "DOES_NOT_FIT_UNCHANGED_20K_APP",
+    "diagnostic": "/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: address 0x20006548 of /private/tmp/mk61-adaptive-app-size-04/adaptive/LANGVM.elf section `.module_image' is not within region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: /private/tmp/mk61-adaptive-app-size-04/adaptive/LANGVM.elf section `.module_bss' will not fit in region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: address 0x20006548 of /private/tmp/mk61-adaptive-app-size-04/adaptive/LANGVM.elf section `.module_image' is not within region `MODULE'\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: MK61 APP exceeds the target image limit\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: region `MODULE' overflowed by 5468 bytes\n/private/tmp/stream-language-toolchain/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/bin/ld: warning: /private/tmp/mk61-adaptive-app-size-04/adaptive/LANGVM.elf has a LOAD segment with RWX permissions\ncollect2: error: ld returned 1 exit status\n",
+    "adaptive_loaded_bytes_from_rejected_linker_map": 25948,
+    "additional_loaded_bytes_vs_stock": 5536,
+    "overflow_bytes": 5468,
+    "deployable_app_produced": false
+  },
+  "limitations": [
+    "Not CPU cycles or device seconds",
+    "All precompiled bytecode is directly readable; excludes filesystem, cold source compilation and real USB/drawing costs",
+    "No hardware keyboard/USB latency or interrupt-stack qualification",
+    "Code cache is borrowed, but the emitter itself still increases loaded APP memory",
+    "Retained loan mode is an upper-bound fixture, not integrated resident ownership/APP-swap policy",
+    "The existing VM integer span already follows control flow; short native single-store leaves do not beat it plus adaptive overhead"
+  ],
+  "next_evidence_needed": [
+    "Larger useful generic traces with correct side exits and service boundaries",
+    "Cheaper self-adapting admission/retention on several BASIC/FOCAL workloads, not chess-trained selection",
+    "Only after a compute benefit: solve cold emitter placement within unchanged APP/RAM/Flash limits"
+  ],
+  "runtime_source_sha256": {
+    "research/arm-aot/jit.hpp": "6f858db87faa3ef185190755ddb5a6b8ef5feafa18f506aef0f700da55c6c781",
+    "research/arm-aot/jit.cpp": "64251d9970cce5f678939c71b0195a9cc2548d2df2a724b30d06e894a85d0af9",
+    "research/arm-aot/jit_compile.cpp": "570dcd4dfff52088c172a867980faf6ea948abb4a9671b12630089a40e045e74",
+    "research/arm-aot/thumb_emit.hpp": "83c10d267b19f0877300aa932d8d7ef4955269288a29da7191456f713e1c4253"
+  }
+}

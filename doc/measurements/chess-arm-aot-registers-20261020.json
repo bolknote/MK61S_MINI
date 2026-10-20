@@ -1,0 +1,581 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "status": "EXPERIMENT_COMPLETE_NOT_PRODUCTION",
+  "source_base": "9800654d238e19ba61fb3e796de6ca4f5729acb2",
+  "branch": "feature/vm-arm-compiler",
+  "changes_committed": false,
+  "hardware_touched": false,
+  "production_budgets_changed": false,
+  "scope": "Offline guarded int32 SSA AOT lowering; full native chess intentionally measured despite not fitting hardware. No on-device compiler, native loader or firmware integration.",
+  "target": "Cortex-M4 Thumb-2, GCC 14.2.1 -Os, hard-float ABI, owned BINARY64 arithmetic; target instruction count is NOT cycles/device time",
+  "previous_measurement": "chess-arm-aot-poc-20261020.json",
+  "method": {
+    "native_lowering": "side-effect-free expression plus at most one final store/compare; unboxed int32 SSA intermediates",
+    "guards": "one combined stack/service/budget/frame window, combined static input tags, checked arithmetic and dependent array guards before all writes",
+    "fallback": "all old specialized scalar native operations retained; denial replays from original first logical operation after its tick",
+    "max_logical_operations_per_block": 16,
+    "max_live_virtual_stack_values": 6,
+    "max_distinct_static_inputs": 6,
+    "service_polling": "blocks do not cross the existing <=32 logical operation service window",
+    "cold_bytecode_fallback_implemented": false,
+    "diagnostic_counters_in_timing_or_size_binaries": false
+  },
+  "verification": {
+    "math_backends": [
+      "BINARY64",
+      "CORE"
+    ],
+    "sanitizers": [
+      "ASan",
+      "UBSan with no recovery"
+    ],
+    "planner_unit_tests": 8,
+    "scenarios_per_backend": 5984,
+    "total_scenarios": 11968,
+    "codegen": "registers",
+    "checks": [
+      "exact error/PC/line/logical steps",
+      "scalar, array and live stack Value representations including tags",
+      "DATA/RESTORE, I/O events, reference registers",
+      "BASIC/FOCAL loops, group calls and parameter calls",
+      "INPUT/yield and relocated continuation",
+      "budgets 1/2/7/16/31/32/33",
+      "service cancellation and bank-mutating callbacks",
+      "array/eval-stack and variable/eval-stack overlap",
+      "late array failure without partial commit",
+      "int32 overflow, MIN/-1, NaN, fractions, signed zero and division by zero"
+    ],
+    "diagnostic_test_counts_each_backend": {
+      "attempts": 14880,
+      "hits": 2050,
+      "denials": {
+        "WINDOW": 1626,
+        "TYPE": 648,
+        "WIDE": 348,
+        "SEMANTIC": 344,
+        "RANGE": 20,
+        "ALIAS": 9844
+      }
+    },
+    "native_elf_contains_vm_run": false,
+    "native_elf_contains_reference_package": false,
+    "full_chess_golden": "e2e3 / score 54 / 420 nodes",
+    "full_chess_launches": 7662,
+    "full_chess_service_polls": 205013,
+    "full_arm_state_and_event_route_hashes_match": true
+  },
+  "program_representation": {
+    "lvp_bytes": 48256,
+    "unique_members": 24,
+    "static_register_blocks": 1121,
+    "static_register_operations": 5127,
+    "old_aot_total_bytes": 856905,
+    "code_bytes": 932284,
+    "readonly_bytes": 87609,
+    "total_bytes": 1019893,
+    "helper_count": 1121,
+    "helper_text_bytes": 136440,
+    "helper_max_text_bytes": 324,
+    "helper_max_static_frame_bytes": 64,
+    "helper_frame_catalog_bytes": [
+      8,
+      16,
+      24,
+      32,
+      40,
+      48,
+      64
+    ],
+    "growth_bytes": 162988,
+    "growth_percent": 19.020544867867507,
+    "native_to_lvp_ratio": 21.135050563660478,
+    "size_accounting": "object includes common native helpers and readonly metadata; it is not complete firmware or compiler size; per-member text below excludes metadata"
+  },
+  "instruction_comparison": {
+    "vm": 638045264,
+    "old_aot": 524685814,
+    "register_aot": 310509934,
+    "reduction_from_vm_percent": 51.33418402742035,
+    "reduction_from_old_aot_percent": 40.819834324699315,
+    "vm_over_registers": 2.0548304390158414,
+    "old_aot_over_registers": 1.6897553235768619,
+    "same_vm_elf_sha256_as_previous_measurement": true,
+    "not_cpu_cycles": true,
+    "not_hardware_elapsed_speedup": true
+  },
+  "arm_full_search": {
+    "kind": "ARM instruction experiment, NOT hardware timing",
+    "sizes": {
+      "vm": {
+        "flash_and_readonly_bytes": 85204,
+        "static_ram_bytes": 5268,
+        "sections": {
+          ".text": 31480,
+          ".data": 4056,
+          ".rodata": 49664,
+          ".init_array": 4,
+          ".bss": 1208
+        },
+        "member_text_bytes": {},
+        "max_static_frame_bytes": 1320,
+        "max_member_frame_bytes": 0,
+        "contains_vm_run": true,
+        "contains_reference_package": true,
+        "sha256": "1cc5b82d29a4330701475fea76a94bd474247edb49e70636614a6fddaf695f36"
+      },
+      "native": {
+        "flash_and_readonly_bytes": 1040392,
+        "static_ram_bytes": 5268,
+        "sections": {
+          ".text": 947492,
+          ".data": 4056,
+          ".rodata": 88840,
+          ".init_array": 4,
+          ".bss": 1208
+        },
+        "member_text_bytes": {
+          "0": 14180,
+          "1": 39848,
+          "2": 100022,
+          "3": 117172,
+          "4": 28136,
+          "5": 16504,
+          "6": 41512,
+          "7": 26172,
+          "8": 36040,
+          "9": 42840,
+          "10": 11064,
+          "11": 33258,
+          "12": 33280,
+          "13": 9108,
+          "14": 15664,
+          "15": 31344,
+          "16": 7140,
+          "17": 46068,
+          "18": 25776,
+          "19": 14336,
+          "20": 10636,
+          "21": 59608,
+          "22": 17736,
+          "23": 9176
+        },
+        "max_static_frame_bytes": 280,
+        "max_member_frame_bytes": 120,
+        "contains_vm_run": false,
+        "contains_reference_package": false,
+        "sha256": "c5d22d12497bf4013402e3eaa45890bc5559b361f1d8d7d6e68037004942c9b8"
+      }
+    },
+    "execution": {
+      "vm": {
+        "phase": 2,
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "executed_instructions": 638045264,
+        "basic_blocks": 193933727,
+        "emulator_wall_seconds": 79.26008570904378
+      },
+      "native": {
+        "phase": 2,
+        "launches": 7662,
+        "polls": 205013,
+        "nodes": 420,
+        "best": 5795,
+        "score": 54,
+        "event_hash": "f381ab0490f4347f",
+        "route_hash": "c2a82610ade4ef12",
+        "state_sha256": "34f73e22edca5ad403ee7407c57e83ea403d05ee25e3f270678d253648f6a967",
+        "executed_instructions": 310509934,
+        "basic_blocks": 94291939,
+        "emulator_wall_seconds": 44.0410417499952
+      }
+    },
+    "status": "PASS"
+  },
+  "host_checks": {
+    "BINARY64": {
+      "backend": 0,
+      "status": "PASS",
+      "golden": "e2e3/54/420",
+      "launches": 7662,
+      "polls_vm": 205013,
+      "polls_native": 205013,
+      "host_only_seconds": [
+        0.040746792,
+        0.019191,
+        0.040828334
+      ]
+    },
+    "CORE": {
+      "backend": 1,
+      "status": "PASS",
+      "golden": "e2e3/54/420",
+      "launches": 7662,
+      "polls_vm": 205013,
+      "polls_native": 205013,
+      "host_only_seconds": [
+        39.513609834,
+        39.027025416,
+        37.625134458
+      ]
+    },
+    "order": [
+      "VM",
+      "register AOT",
+      "VM"
+    ],
+    "not_device_timings": true,
+    "core_speedup_demonstrated": false,
+    "timing_note": "single host A/B/A samples, with other local benchmark processes active; do not infer device speed"
+  },
+  "members": [
+    {
+      "index": 0,
+      "name": "init.tbi",
+      "symbols": [
+        1
+      ],
+      "lbv2_bytes": 885,
+      "integer_blocks": 9,
+      "integer_operations": 34,
+      "native_control_text_bytes": 14180,
+      "native_integer_helper_text_bytes": 1052
+    },
+    {
+      "index": 1,
+      "name": "game.tbi",
+      "symbols": [
+        2
+      ],
+      "lbv2_bytes": 2447,
+      "integer_blocks": 51,
+      "integer_operations": 200,
+      "native_control_text_bytes": 39848,
+      "native_integer_helper_text_bytes": 6080
+    },
+    {
+      "index": 2,
+      "name": "board.tbi",
+      "symbols": [
+        3
+      ],
+      "lbv2_bytes": 6645,
+      "integer_blocks": 54,
+      "integer_operations": 201,
+      "native_control_text_bytes": 100022,
+      "native_integer_helper_text_bytes": 5368
+    },
+    {
+      "index": 3,
+      "name": "legal.tbi",
+      "symbols": [
+        4,
+        5
+      ],
+      "lbv2_bytes": 6589,
+      "integer_blocks": 216,
+      "integer_operations": 1029,
+      "native_control_text_bytes": 117172,
+      "native_integer_helper_text_bytes": 25704
+    },
+    {
+      "index": 4,
+      "name": "make.tbi",
+      "symbols": [
+        7
+      ],
+      "lbv2_bytes": 1514,
+      "integer_blocks": 50,
+      "integer_operations": 241,
+      "native_control_text_bytes": 28136,
+      "native_integer_helper_text_bytes": 6068
+    },
+    {
+      "index": 5,
+      "name": "unmake.tbi",
+      "symbols": [
+        8
+      ],
+      "lbv2_bytes": 940,
+      "integer_blocks": 33,
+      "integer_operations": 154,
+      "native_control_text_bytes": 16504,
+      "native_integer_helper_text_bytes": 4132
+    },
+    {
+      "index": 6,
+      "name": "status.tbi",
+      "symbols": [
+        9
+      ],
+      "lbv2_bytes": 2377,
+      "integer_blocks": 66,
+      "integer_operations": 293,
+      "native_control_text_bytes": 41512,
+      "native_integer_helper_text_bytes": 7332
+    },
+    {
+      "index": 7,
+      "name": "repeat.tbi",
+      "symbols": [
+        10
+      ],
+      "lbv2_bytes": 1520,
+      "integer_blocks": 36,
+      "integer_operations": 165,
+      "native_control_text_bytes": 26172,
+      "native_integer_helper_text_bytes": 4980
+    },
+    {
+      "index": 8,
+      "name": "eval.tbi",
+      "symbols": [
+        11
+      ],
+      "lbv2_bytes": 2125,
+      "integer_blocks": 60,
+      "integer_operations": 258,
+      "native_control_text_bytes": 36040,
+      "native_integer_helper_text_bytes": 7516
+    },
+    {
+      "index": 9,
+      "name": "search.tbi",
+      "symbols": [
+        12
+      ],
+      "lbv2_bytes": 2433,
+      "integer_blocks": 60,
+      "integer_operations": 283,
+      "native_control_text_bytes": 42840,
+      "native_integer_helper_text_bytes": 7884
+    },
+    {
+      "index": 10,
+      "name": "turn.tbi",
+      "symbols": [
+        13
+      ],
+      "lbv2_bytes": 667,
+      "integer_blocks": 14,
+      "integer_operations": 50,
+      "native_control_text_bytes": 11064,
+      "native_integer_helper_text_bytes": 1840
+    },
+    {
+      "index": 11,
+      "name": "history.tbi",
+      "symbols": [
+        14
+      ],
+      "lbv2_bytes": 2463,
+      "integer_blocks": 45,
+      "integer_operations": 254,
+      "native_control_text_bytes": 33258,
+      "native_integer_helper_text_bytes": 6192
+    },
+    {
+      "index": 12,
+      "name": "menu.tbi",
+      "symbols": [
+        15
+      ],
+      "lbv2_bytes": 2283,
+      "integer_blocks": 38,
+      "integer_operations": 163,
+      "native_control_text_bytes": 33280,
+      "native_integer_helper_text_bytes": 4424
+    },
+    {
+      "index": 13,
+      "name": "promote.tbi",
+      "symbols": [
+        16
+      ],
+      "lbv2_bytes": 575,
+      "integer_blocks": 11,
+      "integer_operations": 60,
+      "native_control_text_bytes": 9108,
+      "native_integer_helper_text_bytes": 1588
+    },
+    {
+      "index": 14,
+      "name": "claim.tbi",
+      "symbols": [
+        17
+      ],
+      "lbv2_bytes": 1062,
+      "integer_blocks": 19,
+      "integer_operations": 69,
+      "native_control_text_bytes": 15664,
+      "native_integer_helper_text_bytes": 1908
+    },
+    {
+      "index": 15,
+      "name": "castle.tbi",
+      "symbols": [
+        20
+      ],
+      "lbv2_bytes": 1779,
+      "integer_blocks": 58,
+      "integer_operations": 288,
+      "native_control_text_bytes": 31344,
+      "native_integer_helper_text_bytes": 6832
+    },
+    {
+      "index": 16,
+      "name": "mobility.tbi",
+      "symbols": [
+        21
+      ],
+      "lbv2_bytes": 469,
+      "integer_blocks": 9,
+      "integer_operations": 43,
+      "native_control_text_bytes": 7140,
+      "native_integer_helper_text_bytes": 1300
+    },
+    {
+      "index": 17,
+      "name": "threat.tbi",
+      "symbols": [
+        22
+      ],
+      "lbv2_bytes": 2688,
+      "integer_blocks": 76,
+      "integer_operations": 338,
+      "native_control_text_bytes": 46068,
+      "native_integer_helper_text_bytes": 9248
+    },
+    {
+      "index": 18,
+      "name": "ep.tbi",
+      "symbols": [
+        23
+      ],
+      "lbv2_bytes": 1531,
+      "integer_blocks": 43,
+      "integer_operations": 201,
+      "native_control_text_bytes": 25776,
+      "native_integer_helper_text_bytes": 5096
+    },
+    {
+      "index": 19,
+      "name": "rkey.tbi",
+      "symbols": [
+        24
+      ],
+      "lbv2_bytes": 864,
+      "integer_blocks": 23,
+      "integer_operations": 102,
+      "native_control_text_bytes": 14336,
+      "native_integer_helper_text_bytes": 2744
+    },
+    {
+      "index": 20,
+      "name": "rstep.tbi",
+      "symbols": [
+        25
+      ],
+      "lbv2_bytes": 617,
+      "integer_blocks": 19,
+      "integer_operations": 94,
+      "native_control_text_bytes": 10636,
+      "native_integer_helper_text_bytes": 2400
+    },
+    {
+      "index": 21,
+      "name": "node.tbi",
+      "symbols": [
+        26
+      ],
+      "lbv2_bytes": 3321,
+      "integer_blocks": 104,
+      "integer_operations": 496,
+      "native_control_text_bytes": 59608,
+      "native_integer_helper_text_bytes": 13152
+    },
+    {
+      "index": 22,
+      "name": "claims.tbi",
+      "symbols": [
+        28
+      ],
+      "lbv2_bytes": 1027,
+      "integer_blocks": 23,
+      "integer_operations": 95,
+      "native_control_text_bytes": 17736,
+      "native_integer_helper_text_bytes": 3052
+    },
+    {
+      "index": 23,
+      "name": "help.tbi",
+      "symbols": [
+        29
+      ],
+      "lbv2_bytes": 1003,
+      "integer_blocks": 4,
+      "integer_operations": 16,
+      "native_control_text_bytes": 9176,
+      "native_integer_helper_text_bytes": 548
+    }
+  ],
+  "limits": {
+    "whole_native_representation_exceeds_classic_internal_flash": true,
+    "static_fixture_ram_bytes": 5268,
+    "old_static_fixture_ram_bytes": 5268,
+    "new_helper_max_static_frame_bytes": 64,
+    "native_member_max_static_frame_bytes": 120,
+    "whole_call_chain_stack_high_water_measured": false,
+    "no_claim_of_unchanged_total_stack": true
+  },
+  "conclusion": "Register lowering substantially reduces BINARY64 executed instructions but full per-op AOT plus duplicate fast code does not fit Classic. Keep this as an isolated PoC, not a deployment.",
+  "next_direction": "Compact bytecode for cold code/deoptimization and a bounded selected-hot-block ARM working set; native cache/loader/emitter/relocation cost and hot-set coverage still unmeasured.",
+  "limitations": [
+    "all old cold native per-op labels retained; this is not a minimum-size typed compiler",
+    "fixed-address native research ELF, no relocatable native APP or on-device compilation",
+    "ARM target performance is BINARY64; CORE has host semantic/chess checks only and no demonstrated speedup",
+    "no source/filesystem/OPEN/decompression, USB or physical keyboard latency in this fixture",
+    "GRAPH expression plotting remains rejected; ordinary graphics events tested",
+    "unboxed SSA does not prohibit compiler spills; static frame sizes are not stack high-water"
+  ],
+  "hashes": {
+    "generated_cpp": "2cd004f8e0e0998aff8a86208ea7ef8ff7f4c1a5136b27c3c64a29972559d0c3",
+    "native_object": "4e837d04683cde166b50b4a2a0df94b6d1d1659126eb1914811abed773285b75",
+    "bytecode": "f5747f5ab0723a3b4c188cbf3565ef4d47e263d5b5ddb3a9811428bdb7f0c1bf",
+    "sources": {
+      "research/arm-aot/README.md": "89c1d3ffe4eab8f18cb4d84739e6a1e0b2797bcde95b6eaf3b5a02b7cd76f4f1",
+      "research/arm-aot/api.hpp": "0338c88b62f70d526f04955cb83927b76177328a883dbbe1fd149a9e97a5bddb",
+      "research/arm-aot/arm_bench.py": "17fb9d6222e38dbd4df61e5dedc75ccd2874231abc2e306f1f8d31a3b614a166",
+      "research/arm-aot/build.py": "ae02ee42517bfa1d6615f65c5b3b715575158fd25ce259749b317154dea598fd",
+      "research/arm-aot/cases/basic.tbi": "22d25d5222faaf07447c1141a6f19f89f67af5406fff037711443a87949a4a8d",
+      "research/arm-aot/cases/error.tbi": "b7a7b8b3afa144211d8d36d547231ffee6ac1a1c620f6b5e410b251860382ba7",
+      "research/arm-aot/cases/focal.foc": "73bf7e37f55f1215b1fe4298be020d10d96f3afc58a68d9cacfab01b3ae52e24",
+      "research/arm-aot/cases/graphics.tbi": "3a28507d2342c2778252d0a411520f431b6de531c0bea866c5b93672ca8ab698",
+      "research/arm-aot/cases/input.tbi": "ea5c2ebe1282dd8e97ef0c5b65c2e64e4598123082b4112f367ec7ef15539980",
+      "research/arm-aot/cases/int_alias.tbi": "775de8c4309828b665dd0f51362b06296cb0748c9508187696f8eb9e8190886b",
+      "research/arm-aot/cases/int_expr.foc": "12d1a6db8f8bdecd880f2f33ffa9e22eab102e0a34c16ee2c0358b35658f882a",
+      "research/arm-aot/cases/int_expr.tbi": "a6bca1f7439afd3bda0b9c8c058b21c891ecfb83a2e7588851195a22db03defc",
+      "research/arm-aot/cases/int_late.tbi": "b15a9447ce944785cbfbec5ca6169513d33a8c0e3f4bf5753914ea89f736e9f3",
+      "research/arm-aot/cases/int_zero.tbi": "1034a672cd7acea9099b194c98289323f144fd93499f29242715d390b44261ca",
+      "research/arm-aot/cases/manifest.json": "96f3e4f747fa223c89e995d59000a197c5be53f0493cd87c9088f5be6d2e9415",
+      "research/arm-aot/cases/outside.tbi": "04f2b4c86c9a5852813ab57ac8514facc005e1f1a75c2ed334d4624c2608fcd7",
+      "research/arm-aot/cases/params.foc": "2a31f73ff75865686db9b27a7c368d5c141725865a485f070c9ed048b57caa34",
+      "research/arm-aot/check.py": "d9e8d22f9c89c4257e34258000158d12714e53fd5b48080fa721f7bc3f11057e",
+      "research/arm-aot/chess.cpp": "6d86c50c4ce194b5f02379fe6319caf900d423ee17cd091146df98d7dae58c6c",
+      "research/arm-aot/chess_arm.cpp": "d3c9ca4e3e8e26d6ab2f8e6419598064404ad85edf6381cefb7713b1504bb39c",
+      "research/arm-aot/conformance.cpp": "12cd317fdf3ebc9b193eaa83e0820a5ae26c26af15354acafd81b9872a3a910a",
+      "research/arm-aot/integer_blocks.py": "0093d36882beda03a63298a6a68e86cdcf1792a489bea4ca6e6017f75f639bf4",
+      "research/arm-aot/planner_test.py": "32a365fd34d5b293cbe16c418c0fa8ce50024bf4ebe137a4b7ed459f7a2317d8",
+      "research/arm-aot/register_runtime.hpp": "7371c04361bc2cee5565080b1a8e6976f1682fa898006b41019f078d7281f4da",
+      "research/arm-aot/report.py": "ceb32fb2dc246047a83a090806e30db0301401acc8d731b08b6a06ebd77c26c7",
+      "research/arm-aot/runtime.hpp": "c3c826cceee8fa1c8fcd7c7954aeefdc8899f4448037c8f73769c25740f4e197"
+    }
+  }
+}
