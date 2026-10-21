@@ -1,6 +1,7 @@
 #ifndef MK61_LOADABLE_SYSTEM_EDITOR_HPP
 #define MK61_LOADABLE_SYSTEM_EDITOR_HPP
 #include "loadable_system_api.h"
+#include "firmware_optimization.hpp"
 #include "text_editor.hpp"
 
 namespace loadable_module { namespace system_editor {
@@ -42,6 +43,7 @@ static text_editor::KeyMap key_map(const mk61_system_edit_key& request) {
   return {k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7], k[8], k[9],
       k[10], k[11], k[12]};
 }
+MK61_F401_COLD_OUTLINE
 static u32 handle(mk61_system_edit_key& request, const char* literal = nullptr) {
   if(request.capacity > 0xFFFFU || request.length > 0xFFFFU ||
       request.cursor > 0xFFFFU || request.top > 0xFFFFU || request.shift > 2 ||

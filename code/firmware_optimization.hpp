@@ -18,7 +18,15 @@
     (defined(STM32F401xC) || defined(STM32F401xE)) && \
     defined(__GNUC__) && !defined(__clang__) && defined(__cplusplus) && \
     !defined(MK61_CORE_TRANSLATION_UNIT)
-  #pragma GCC optimize ("no-caller-saves", "no-schedule-insns2", "ira-algorithm=priority", "ira-region=one", "no-partial-inlining")
+  #pragma GCC optimize ("no-caller-saves", "no-schedule-insns2", "ira-algorithm=priority", "ira-region=one", "no-partial-inlining", "no-shrink-wrap")
+  // Keep large APP service handlers out of their common dispatcher. Smaller
+  // register lifetimes recover Flash without changing the service ABI.
+  #define MK61_F401_COLD_OUTLINE __attribute__((noinline, noclone))
+  // Match the native preset's cold-boot outlining policy in STM32duino too.
+  #define MK61_F401_COLD_BOOT __attribute__((optimize("no-inline-functions-called-once")))
+#else
+  #define MK61_F401_COLD_OUTLINE
+  #define MK61_F401_COLD_BOOT
 #endif
 
 // Applying -O2/-O3 to the entire firmware makes GCC clone and unroll cold

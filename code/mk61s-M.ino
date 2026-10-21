@@ -493,6 +493,7 @@ void inline lcd_stack_output(void) {
 // Keep cold boot scratch off main's frame for the entire foreground lifetime.
 __attribute__((noinline))
 #endif
+MK61_F401_COLD_BOOT
 void setup() {
   crash_dump::initialize();
   dwt_profiler::initialize();

@@ -49,10 +49,10 @@ cp -R "$root/code/." "$sketch/"
 # gates still run on the exact linked artifact.
 fqbn="STMicroelectronics:stm32:GenF4:pnum=BLACKPILL_F401CC,upload_method=dfuMethod,xserial=none,usb=CDCgen,opt=$optimization"
 platform_ram_flags='-DHAL_UART_MODULE_ONLY -DHAL_TIM_MODULE_ONLY -DUSBD_CLASS_USER_STRING_DESC=0'
-# Start with the direct GCC size policy for cold code, then override Arduino's
-# generic 500-insn threshold with the qualified 1000-insn policy. Check the
-# exact linked image; explicit core O3 attributes are retained.
-size_flags='-Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once -fno-partial-inlining --param=max-inline-insns-single=1000'
+# Match the direct GCC size policy for cold code, including its 500-insn
+# single-function inlining threshold. Check the exact linked image; explicit
+# core O3 attributes are retained.
+size_flags='-Oz -flto-partition=one -fipa-pta -fno-inline-functions-called-once -fno-partial-inlining --param=max-inline-insns-single=500'
 strict_flags="$size_flags $board_flags -DMK61_ENABLE_LOADABLE_MODULES=1 -DMK61_F401_PRODUCT_BUILD=$product -DMK61_REQUIRE_RESIDENT_CRC=1 -DMK61_REQUIRE_F401_SELECTIVE_O3=1 $platform_ram_flags -Werror -Wno-error=cpp"
 layout_properties="$build_root/layout.properties"
 "$arduino_cli" compile --fqbn "$fqbn" \

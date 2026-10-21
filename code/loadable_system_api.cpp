@@ -123,6 +123,7 @@ static bool display_write_m8_byte(MK61Display& lcd, u8 value) {
   return true;
 }
 
+MK61_F401_COLD_OUTLINE
 static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   MK61Display& lcd = main_lcd();
   switch(operation) {
@@ -194,6 +195,7 @@ static u32 display_call(u32 operation, u32 b, u32 c, void* payload) {
   return 1;
 }
 
+MK61_F401_COLD_OUTLINE
 static u32 key_call(u32 operation, u32 value) {
   switch(operation) {
     case MK61_SYS_KEY_POLL: return (u32) kbd::poll_event().code();
