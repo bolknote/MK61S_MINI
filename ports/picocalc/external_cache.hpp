@@ -2,10 +2,10 @@
 #define MK61_PICOCALC_EXTERNAL_CACHE_HPP
 #include "rust_types.h"
 namespace picocalc::external_cache {
-// Two disjoint 4 MiB partitions. Metadata lives in PSRAM as well: no hidden
-// SRAM allocation competes with the source editor or a loaded native APP.
+// Optional shared buffers, each up to 4 MiB. Required application buffers
+// may evict them; lazy cache rebuilding uses the remaining external memory.
 constexpr unsigned MODULE_SLOTS=256,SECTOR_SLOTS=4096;
-struct Statistics { bool ready;u32 module_hits,module_misses,sector_hits,sector_misses,rejected,stores; };
+struct Statistics { bool ready;u32 module_hits,module_misses,sector_hits,sector_misses,rejected,stores,evictions,module_bytes,sector_bytes; };
 bool init();
 void suspend();
 void invalidate_modules();

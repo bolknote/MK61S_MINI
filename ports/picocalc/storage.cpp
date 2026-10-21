@@ -1,4 +1,5 @@
 #include "storage.hpp"
+#include "shared_memory_buffer.hpp"
 #include "mk8_codec.hpp"
 #include "diagnostics.hpp"
 #include "storage_journal.hpp"
@@ -224,6 +225,25 @@ bool read(const char* path, u8* out, unsigned capacity, unsigned& used) {
     used = count;
     const FRESULT closed = f_close(&file);
     return fail(result == FR_OK ? closed : result);
+}
+bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used) {
+    if(out.data()) return read(path,out.data(),out.size(),used);
+    diagnostics::Scope measure(diagnostics::Point::STORAGE);
+    used=0;
+    if(!out.ok() || !available()) return false;
+    FIL file;FRESULT result=f_open(&file,path,FA_READ);
+    if(result!=FR_OK) return fail(result);
+    const auto size=f_size(&file);
+    if(size>out.size()) { f_close(&file);std::snprintf(problem,sizeof(problem),"File exceeds buffer capacity");return false; }
+    u8 chunk[1024];
+    while(used<size) {
+        UINT count=0;const unsigned remaining=(unsigned)(size-used);
+        result=f_read(&file,chunk,remaining<sizeof(chunk)?remaining:sizeof(chunk),&count);
+        if(result!=FR_OK || !count) { if(result==FR_OK) result=FR_INT_ERR;break; }
+        if(!out.write(used,chunk,count)) { result=FR_DISK_ERR;break; }
+        used+=count;diagnostics::feed_watchdog();
+    }
+    const auto closed=f_close(&file);return fail(result==FR_OK?closed:result);
 }
 bool read_text(const char* path, char* out, unsigned capacity, unsigned& used) {
     diagnostics::Scope measure(diagnostics::Point::STORAGE);

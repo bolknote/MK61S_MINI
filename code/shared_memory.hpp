@@ -332,4 +332,6 @@ void* adjust_heap(i32 increment);
 
 } // namespace shared_memory
 
+#include "shared_memory_buffer.hpp"
+
 #endif

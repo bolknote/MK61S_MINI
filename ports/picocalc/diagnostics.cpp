@@ -123,6 +123,7 @@ bool save_path(const char* args,const char* cwd,char out[files::PATH_SIZE]) {
   return script::normalize_path(cwd,(const char*)utf8,out);
 }
 }
+u64 timestamp() { return now(); }
 void initialize(u32 flags,bool from_watchdog,u64 (*clock)()) {
   clock_source=clock;
 #if defined(PICO_ON_DEVICE)

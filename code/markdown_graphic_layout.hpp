@@ -79,6 +79,23 @@ auto image_width(const Platform& platform,u16 normal,int) -> decltype(platform.i
 }
 template<class Platform> u16 image_width(const Platform&,u16 normal,...) { return normal; }
 
+template<class Image>
+auto inspect_image(Image& image,u16,wbmp::Info& info,int) -> decltype(image.inspect(info)) {
+  return image.inspect(info);
+}
+template<class Image>
+wbmp::Status inspect_image(Image& image,u16 length,wbmp::Info& info,...) {
+  return wbmp::inspect(image.data(),length,info);
+}
+template<class Image>
+auto image_dark(Image& image,u16,const wbmp::Info& info,u32 x,u32 y,int) -> decltype(image.dark_pixel(info,x,y)) {
+  return image.dark_pixel(info,x,y);
+}
+template<class Image>
+bool image_dark(Image& image,u16 length,const wbmp::Info& info,u32 x,u32 y,...) {
+  return wbmp::dark_pixel(image.data(),length,info,x,y);
+}
+
 template<class Platform>
 class Layout {
  public:
@@ -688,7 +705,7 @@ class Layout {
     const u16 length = image_file.size();
     wbmp::Info info = {};
     if(!image_file.ok() ||
-       wbmp::inspect(image_file.data(), length, info) != wbmp::Status::OK) {
+       inspect_image(image_file, length, info, 0) != wbmp::Status::OK) {
       draw_missing_image(event);
       return;
     }
@@ -712,12 +729,17 @@ class Layout {
       const u32 source_y = (u32) target_y * info.height / height;
       for(u16 target_x = 0; target_x < width; target_x++) {
         const u32 source_x = (u32) target_x * info.width / width;
-        if(wbmp::dark_pixel(image_file.data(), length, info,
-                            source_x, source_y)) {
+        if(image_dark(image_file, length, info, source_x, source_y, 0)) {
           set_global_pixel((i16) (left + target_x),
                            (i16) (y + target_y));
         }
       }
+    }
+    if(!image_file.ok()) {
+      for(u16 row=0;row<height;++row)
+        for(u16 column=0;column<width;++column)
+          set_global_pixel((i16)(left+column),(i16)(y+row),false);
+      draw_missing_image(event);return;
     }
     y = (u16) (y + height + 2U);
     first_visual_line = true;

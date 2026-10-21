@@ -23,10 +23,11 @@ endif()
 set(MK61_ROOT "${CMAKE_CURRENT_LIST_DIR}/../..")
 option(MK61_PICOCALC_M0_EABI "Use project-owned ARMv6-M arithmetic" ON)
 option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0" OFF)
+option(MK61_PICOCALC_PSRAM_QPI "Use four-bit PSRAM; OFF is the SPI timing control" ON)
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
-    dma_support.cpp psram.cpp external_cache.cpp
+    dma_support.cpp psram.cpp external_cache.cpp buffers.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
@@ -45,7 +46,8 @@ target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/language_bytecode.cpp"
     "${MK61_ROOT}/code/language_vm.cpp"
     "${MK61_ROOT}/code/language_vm_file_cache.cpp"
-    "${MK61_ROOT}/code/basic_graphics.cpp")
+    "${MK61_ROOT}/code/basic_graphics.cpp"
+    "${MK61_ROOT}/code/shared_memory_buffer.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE "${MK61_ROOT}/code/basic_native_io.cpp" "${MK61_ROOT}/code/app_flow.cpp")
 target_sources(mk61s-picocalc-pico-h PRIVATE
     "${MK61_ROOT}/code/m61_text.cpp" "${MK61_ROOT}/code/m61_print.cpp"
@@ -67,6 +69,7 @@ target_include_directories(mk61s-picocalc-pico-h PRIVATE
 target_compile_definitions(mk61s-picocalc-pico-h PRIVATE
     MK61_CORE_STANDALONE=1
     MK61_PICOCALC_SAMPLE_PROFILE=$<BOOL:${MK61_PICOCALC_SAMPLE_PROFILE}>
+    MK61_PICOCALC_PSRAM_QPI=$<BOOL:${MK61_PICOCALC_PSRAM_QPI}>
     # Allocation failures are handled by the resident/APP ABI. The SDK's
     # default panic would turn a recoverable exhausted lease into HardFault.
     PICO_MALLOC_PANIC=0
@@ -101,6 +104,7 @@ target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
 pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_spi.pio")
+pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_qpi.pio")
 if(MK61_PICOCALC_SAMPLE_PROFILE)
     target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_exception)
 endif()

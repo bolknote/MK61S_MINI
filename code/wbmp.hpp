@@ -33,9 +33,19 @@ enum class Status : u8 {
   INVALID_DATA_SIZE,
   INVALID_PADDING,
   OUTPUT_TOO_SMALL,
+  IO_ERROR,
 };
 
 Status inspect(const u8* data, usize size, Info& info);
+// Optional indirect source, e.g. a PSRAM buffer. The owner may cache reads;
+// the decoder never assumes that a device offset is a CPU pointer.
+struct Reader {
+  void* context;
+  usize size;
+  bool (*read)(void*,usize offset,u8* bytes,usize count);
+};
+Status inspect(const Reader& reader, Info& info);
+bool dark_pixel(const Reader& reader, const Info& info, u32 x, u32 y);
 
 // Reads one validated Type 0 source pixel. The returned boolean is true for a
 // dark pixel; false also covers invalid arguments and out-of-bounds coordinates.

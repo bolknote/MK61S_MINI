@@ -95,3 +95,4 @@ clang++ -std=c++17 -Wall -Wextra -Werror -DMK61_ENABLE_LOADABLE_MODULES=1 \
 "$lifetime_out"
 
 bash "$root/tests/run_storage_workspace_tests.sh"
+bash "$root/tests/run_shared_memory_buffer_tests.sh"

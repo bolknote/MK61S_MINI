@@ -1,0 +1,41 @@
+; Four data pins GPIO2..5, CE#/SCK GPIO20/21. 6 cycles per SCK.
+; TX is entirely preloaded (8 FIFO words); no DMA/CPU stall can extend CE#.
+.program mk61_psram_qpi_write
+.side_set 2
+.wrap_target
+write_nibble:
+    out pins, 4 side 0 [1]
+    nop side 2 [1]
+    jmp x-- write_nibble side 0 [1]
+    irq 0 rel side 1 [7]
+write_halt:
+    jmp write_halt side 1
+.wrap
+
+; Header is preloaded in OSR, X contains data nibbles-1. RX FIFO has eight
+; words, sufficient for all <=32 data bytes without any DMA service. The
+; final partial/empty push happens with CE# high, where it may safely stall.
+.program mk61_psram_qpi_read
+.side_set 2
+.wrap_target
+    set pindirs, 15 side 1 [7]
+    set y, 7 side 1
+read_header:
+    out pins, 4 side 0 [1]
+    nop side 2 [1]
+    jmp y-- read_header side 0 [1]
+    set pindirs, 0 side 0 [1]
+    set y, 5 side 0 [1]
+read_dummy:
+    nop side 2 [1]
+    jmp y-- read_dummy side 0 [3]
+read_nibble:
+    nop side 0 [1]
+    nop side 2 [1]
+    in pins, 4 side 2
+    jmp x-- read_nibble side 0
+    nop side 0 [7]
+    push block side 1 [7]
+read_halt:
+    jmp read_halt side 1
+.wrap

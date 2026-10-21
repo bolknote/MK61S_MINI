@@ -4,9 +4,11 @@
 #include <cstring>
 #if defined(PICO_ON_DEVICE)
 #include "psram_spi.pio.h"
+#include "psram_qpi.pio.h"
 #include "hardware/dma.h"
 #include "hardware/clocks.h"
 #include "hardware/pio.h"
+#include "hardware/irq.h"
 #include "pico/mutex.h"
 #include "pico/stdlib.h"
 #endif
@@ -17,8 +19,83 @@ Statistics state{};
 constexpr unsigned CS=20,SCK=21,MOSI=2,MISO=3;
 PIO bus=pio1;
 int sm=-1,tx=-1,rx=-1;
-unsigned program_offset=0;
+unsigned program_offset=UINT32_MAX;
+unsigned qpi_write_offset=UINT32_MAX,qpi_read_offset=UINT32_MAX;
+volatile bool qpi_write_done=false;
 auto_init_mutex(bus_mutex);
+void qpi_irq() {
+    if(sm>=0 && pio_interrupt_get(bus,(unsigned)sm)) {
+        pio_interrupt_clear(bus,(unsigned)sm);qpi_write_done=true;__sev();
+    }
+}
+void park_spi() {
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,1,true);
+    pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MISO,1,false);
+    pio_sm_set_pins_with_mask(bus,(unsigned)sm,(1U<<4)|(1U<<5),(1U<<4)|(1U<<5));
+    pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,4,2,true);
+    auto config=mk61_psram_spi_program_get_default_config(program_offset);
+    sm_config_set_out_pins(&config,MOSI,1);sm_config_set_in_pins(&config,MISO);
+    sm_config_set_sideset_pins(&config,CS);
+    sm_config_set_out_shift(&config,false,true,32);sm_config_set_in_shift(&config,false,true,32);
+    pio_sm_init(bus,(unsigned)sm,program_offset,&config);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+}
+bool quad_write(const u8* bytes,unsigned count) {
+    if(!count || count>32 || clock_get_hz(clk_sys)<100000000) return false;
+    u32 sent[8]{};
+    for(unsigned i=0;i<count;++i) sent[i/4]|=u32(bytes[i])<<(24-8*(i%4));
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    auto config=mk61_psram_qpi_write_program_get_default_config(qpi_write_offset);
+    sm_config_set_out_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
+    sm_config_set_out_shift(&config,false,true,32);sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_TX);
+    pio_sm_init(bus,(unsigned)sm,qpi_write_offset,&config);
+    pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,4,true);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    pio_sm_put(bus,(unsigned)sm,count*2-1);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
+    dma_channel_set_read_addr((unsigned)tx,sent,false);
+    dma_channel_set_trans_count((unsigned)tx,(count+3)/4,true);
+    if(!dma_support::wait((unsigned)tx)) return false;
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_out(pio_x,32)|pio_encode_sideset(2,1));
+    qpi_write_done=false;pio_interrupt_clear(bus,(unsigned)sm);
+    pio_sm_set_enabled(bus,(unsigned)sm,true);
+    const u64 limit=time_us_64()+1000000;
+    while(!qpi_write_done && time_us_64()<limit) best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    if(!qpi_write_done) pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    return qpi_write_done;
+}
+bool quad_read(u32 address,u8* bytes,unsigned count) {
+    if(!count || count>32 || clock_get_hz(clk_sys)<100000000) return false;
+    u32 received[9]{};
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
+    sm_config_set_out_pins(&config,MOSI,4);sm_config_set_in_pins(&config,MOSI);
+    sm_config_set_set_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
+    sm_config_set_out_shift(&config,false,false,32);sm_config_set_in_shift(&config,false,true,32);
+    pio_sm_init(bus,(unsigned)sm,qpi_read_offset,&config);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    pio_sm_put(bus,(unsigned)sm,count*2-1);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_out(pio_x,32)|pio_encode_sideset(2,1));
+    pio_sm_put(bus,(unsigned)sm,0xEB000000U|address);
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
+    // Joining RX clears the FIFOs, but preserves the preloaded OSR/header.
+    sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_RX);
+    pio_sm_set_config(bus,(unsigned)sm,&config);
+    dma_channel_set_write_addr((unsigned)rx,received,false);
+    dma_channel_set_trans_count((unsigned)rx,count/4+1,true);
+    pio_sm_set_enabled(bus,(unsigned)sm,true);
+    const bool ok=dma_support::wait((unsigned)rx);
+    pio_sm_set_enabled(bus,(unsigned)sm,false);
+    if(!ok) { pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false; }
+    for(unsigned i=0;i<count;++i) {
+        const unsigned bits=i/4<count/4?32:(count%4)*8;
+        bytes[i]=(u8)(received[i/4]>>(bits-8-8*(i%4)));
+    }
+    return true;
+}
 bool exchange(const u8* prefix,unsigned prefix_count,const u8* source,u8* target,unsigned count) {
     const unsigned total=prefix_count+count;
     if(!total || total>16 || clock_get_hz(clk_sys)<100000000) return false;
@@ -64,11 +141,16 @@ bool access(u32 address,void* data,unsigned count,bool writing) {
     // fit the preloaded PIO FIFO; CE# is released by PIO, never by the CPU.
     u8* bytes=(u8*)data;
     while(count) {
-        const unsigned maximum=writing?12:11;
+        const unsigned maximum=state.qpi?(writing?28:32):(writing?12:11);
         unsigned n=count<maximum?count:maximum;
         if(n>1024-(address&1023)) n=1024-(address&1023);
         u8 header[]={(u8)(writing?0x02:0x0B),(u8)(address>>16),(u8)(address>>8),(u8)address,0};
-        const bool ok=exchange(header,writing?4:5,writing?bytes:nullptr,writing?nullptr:bytes,n);
+        bool ok;
+        if(state.qpi && writing) {
+            u8 packet[32];std::memcpy(packet,header,4);std::memcpy(packet+4,bytes,n);
+            ok=quad_write(packet,n+4);
+        } else if(state.qpi) ok=quad_read(address,bytes,n);
+        else ok=exchange(header,writing?4:5,writing?bytes:nullptr,writing?nullptr:bytes,n);
         if(!ok) return false;
         bytes+=n;address+=n;count-=n;
     }
@@ -83,10 +165,29 @@ bool bounds(u32 address,const void* bytes,unsigned count) {
 }
 }
 bool ready() { return state.ready; }
+void prepare_reset() {
+#if defined(PICO_ON_DEVICE)
+    if(sm<0 || !state.qpi) return;
+    mutex_enter_blocking(&bus_mutex);
+    const u8 exit_quad=0xF5;
+    if(quad_write(&exit_quad,1)) { park_spi();state.qpi=false; }
+    mutex_exit(&bus_mutex);
+#endif
+}
 bool init() {
     state={};
 #if defined(PICO_ON_DEVICE)
     if(sm<0) {
+        const auto abandon=[]() {
+            if(qpi_read_offset!=UINT32_MAX) pio_remove_program(bus,&mk61_psram_qpi_read_program,qpi_read_offset);
+            if(qpi_write_offset!=UINT32_MAX) pio_remove_program(bus,&mk61_psram_qpi_write_program,qpi_write_offset);
+            if(program_offset!=UINT32_MAX) pio_remove_program(bus,&mk61_psram_spi_program,program_offset);
+            if(tx>=0) dma_channel_unclaim((unsigned)tx);
+            if(rx>=0) dma_channel_unclaim((unsigned)rx);
+            if(sm>=0) pio_sm_unclaim(bus,(unsigned)sm);
+            sm=tx=rx=-1;program_offset=qpi_read_offset=qpi_write_offset=UINT32_MAX;
+            return false;
+        };
         if(!pio_can_add_program(bus,&mk61_psram_spi_program)) return false;
         sm=pio_claim_unused_sm(bus,false);if(sm<0) return false;
         tx=dma_claim_unused_channel(false);rx=dma_claim_unused_channel(false);
@@ -97,13 +198,20 @@ bool init() {
         }
         dma_support::enable_irq((unsigned)tx);dma_support::enable_irq((unsigned)rx);
         program_offset=pio_add_program(bus,&mk61_psram_spi_program);
+        if(!pio_can_add_program(bus,&mk61_psram_qpi_write_program)) return abandon();
+        qpi_write_offset=pio_add_program(bus,&mk61_psram_qpi_write_program);
+        if(!pio_can_add_program(bus,&mk61_psram_qpi_read_program)) return abandon();
+        qpi_read_offset=pio_add_program(bus,&mk61_psram_qpi_read_program);
+        irq_add_shared_handler(PIO1_IRQ_0,qpi_irq,PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
+        pio_set_irq0_source_enabled(bus,(pio_interrupt_source)(pis_interrupt0+sm),true);
+        irq_set_enabled(PIO1_IRQ_0,true);
         auto config=mk61_psram_spi_program_get_default_config(program_offset);
         sm_config_set_out_pins(&config,MOSI,1);sm_config_set_in_pins(&config,MISO);
         sm_config_set_sideset_pins(&config,CS);
         sm_config_set_out_shift(&config,false,true,32);
         sm_config_set_in_shift(&config,false,true,32);
         sm_config_set_clkdiv(&config,1);
-        const unsigned pins[]={CS,SCK,MOSI,MISO};
+        const unsigned pins[]={CS,SCK,MOSI,MISO,4,5};
         for(unsigned pin : pins) pio_gpio_init(bus,pin);
         pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,CS,2,true);
         pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,1,true);
@@ -121,6 +229,11 @@ bool init() {
         channel_config_set_read_increment(&receive,false);channel_config_set_write_increment(&receive,true);
         dma_channel_configure((unsigned)rx,&receive,nullptr,&bus->rxf[sm],0,false);
     }
+    // Warm MCU reset can leave the chip in QPI. Exit in four-bit mode first;
+    // an SPI device ignores this incomplete two-clock SPI transaction.
+    const u8 exit_quad=0xF5;
+    if(!quad_write(&exit_quad,1)) return false;
+    park_spi();
     const u8 reset_enable=0x66,reset=0x99,id_command[]={0x9F,0,0,0};
     if(!command(&reset_enable,1) || !command(&reset,1)) return false;
     sleep_us(200);
@@ -129,22 +242,37 @@ bool init() {
     state.id=(u32(id[0])<<16)|(u32(id[1])<<8)|id[2];
     state.hz=clock_get_hz(clk_sys)/6;
     if(!identified || !id[0] || id[0]==0xFF || id[1]!=0x5D) return false;
+#if !defined(MK61_PICOCALC_PSRAM_QPI) || MK61_PICOCALC_PSRAM_QPI
+    const u8 enter_quad=0x35;
+    state.qpi=command(&enter_quad,1);
+#endif
     // Detect missing/address-aliased RAM before publishing a cache. Volatile
     // cache contents are ours; no SD or user file participates in this probe.
     u8 pattern[32],actual[32];
-    state.ready=true;
-    for(unsigned i=0;i<24;++i) {
+    const auto probe=[&]() {
+      state.ready=true;
+      for(unsigned i=0;i<24;++i) {
         const u32 at=i<23?(1U<<i):CAPACITY-32;
         for(unsigned j=0;j<sizeof(pattern);++j) pattern[j]=(u8)(i*37+j*13);
         if(!access(at,pattern,sizeof(pattern),true)) { state.ready=false;break; }
-    }
-    for(unsigned i=0;state.ready && i<24;++i) {
+      }
+      for(unsigned i=0;state.ready && i<24;++i) {
         const u32 at=i<23?(1U<<i):CAPACITY-32;
         // Small powers overlap; only the non-overlapping address probes
         // above bit 5 are checked after all writes.
         if(i<5) continue;
         for(unsigned j=0;j<sizeof(pattern);++j) pattern[j]=(u8)(i*37+j*13);
         if(!access(at,actual,sizeof(actual),false) || std::memcmp(pattern,actual,sizeof(actual))) state.ready=false;
+      }
+    };
+    probe();
+    if(!state.ready && state.qpi) {
+        // Fall back only during boot, before a caller can own live data.
+        ++state.qpi_fallbacks;
+        if(!quad_write(&exit_quad,1)) return false;
+        park_spi();state.qpi=false;
+        if(!command(&reset_enable,1) || !command(&reset,1)) return false;
+        sleep_us(200);probe();
     }
 #else
     state.ready=memory && memory_size>=CAPACITY;state.hz=31250000;state.id=0x0D5D00;

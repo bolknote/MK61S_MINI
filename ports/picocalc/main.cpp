@@ -12,6 +12,7 @@
 #include "input.hpp"
 #include "clock.hpp"
 #include "power.hpp"
+#include "buffers.hpp"
 #include "usb_screen.hpp"
 #include "terminal.hpp"
 #include "terminal_command_ids.hpp"
@@ -131,14 +132,21 @@ void report(unsigned math_failures) {
         (unsigned long)cache.packs,(unsigned long)cache.thaws,cache.packed);
     const auto psram=picocalc::psram::statistics();
     const auto external=picocalc::external_cache::statistics();
-    std::printf("PSRAM=%s BYTES=%lu ID=%06lX SPI_HZ=%lu READ_BYTES=%lu WRITE_BYTES=%lu ERRORS=%lu\n",
+    std::printf("PSRAM=%s BYTES=%lu ID=%06lX SPI_HZ=%lu READ_BYTES=%lu WRITE_BYTES=%lu ERRORS=%lu MODE=%s QPI_FALLBACKS=%lu\n",
         psram.ready?"OK":"UNAVAILABLE",(unsigned long)(psram.ready?picocalc::psram::CAPACITY:0),
         (unsigned long)psram.id,(unsigned long)psram.hz,(unsigned long)psram.read_bytes,
-        (unsigned long)psram.write_bytes,(unsigned long)psram.errors);
-    std::printf("EXT_CACHE=%s VM_HIT=%lu VM_MISS=%lu SD_HIT=%lu SD_MISS=%lu REJECTED=%lu STORES=%lu\n",
+        (unsigned long)psram.write_bytes,(unsigned long)psram.errors,psram.qpi?"QPI":"SPI",(unsigned long)psram.qpi_fallbacks);
+    std::printf("EXT_CACHE=%s VM_HIT=%lu VM_MISS=%lu SD_HIT=%lu SD_MISS=%lu REJECTED=%lu STORES=%lu VM_BYTES=%lu SD_BYTES=%lu EVICTIONS=%lu\n",
         external.ready?"PSRAM":"OFF",(unsigned long)cache.psram_hits,(unsigned long)cache.psram_misses,
         (unsigned long)external.sector_hits,(unsigned long)external.sector_misses,
-        (unsigned long)external.rejected,(unsigned long)external.stores);
+        (unsigned long)external.rejected,(unsigned long)external.stores,(unsigned long)external.module_bytes,
+        (unsigned long)external.sector_bytes,(unsigned long)external.evictions);
+    const auto buffers=shared_memory::buffer_statistics();
+    std::printf("BUFFERS=shared SRAM_USED=%lu PSRAM_USED=%lu PSRAM_CAPACITY=%lu LARGEST=%lu ACTIVE=%lu EXTERNAL=%lu PINNED=%lu RECLAIMS=%lu IO_ERRORS=%lu VALID=%u\n",
+        (unsigned long)buffers.internal_used,(unsigned long)buffers.external_used,(unsigned long)buffers.external_capacity,
+        (unsigned long)buffers.external_largest,(unsigned long)buffers.active,(unsigned long)buffers.external_active,
+        (unsigned long)buffers.pinned,(unsigned long)buffers.reclaims,(unsigned long)buffers.io_errors,
+        shared_memory::validate_buffer_invariants());
     const auto model = calculator.snapshot();
     std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
                 picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
@@ -312,7 +320,7 @@ int main() {
     const u64 enumerate_until = time_us_64() + 500000;
     while(time_us_64() < enumerate_until) { tud_task_ext(0, false); picocalc::diagnostics::feed_watchdog(); }
     keyboard.init();
-    if(picocalc::psram::init()) picocalc::external_cache::init();
+    picocalc::psram::init();picocalc::buffers::init();picocalc::external_cache::init();
     calculator.init();
     picocalc::Settings settings;
     if(picocalc::load_device_settings(settings)) settings_status = "LOADED";
@@ -339,16 +347,29 @@ int main() {
                     std::puts("BOOTLOADER=RP2040 ROM UF2");std::printf("%.*s",(int)n,text);return true;
                 }
                 if((id==CMD_DFU && *args) || (id==CMD_RESET && std::strcmp(args,"now")) || services.running() || picocalc::files::usb_active()) return false;
-                save_settings();stdio_flush();
+                save_settings();stdio_flush();picocalc::psram::prepare_reset();
                 if(id==CMD_DFU) reset_usb_boot(0,0);else watchdog_reboot(0,0,10);
                 for(;;) tight_loop_contents();
             }
             if(id==CMD_DISPLAY) {
+                if(!std::strcmp(args,"buffers")) {
+                    if(services.active() || m61_text::active() || picocalc::files::usb_active() ||
+                       remote_screen.attached() || !calculator.idle() || core_61::is_RUN()) return false;
+                    const auto result=picocalc::buffers::self_test(usb_service);
+                    std::printf("BUFFER_TEST=%s BYTES=%lu ALLOCATED=%lu WRITE_US=%lu READ_US=%lu MODE=%s\n",
+                        result.passed?"PASS":"FAIL",(unsigned long)result.bytes,(unsigned long)result.allocation,
+                        (unsigned long)result.write_us,(unsigned long)result.read_us,
+                        picocalc::psram::statistics().qpi?"QPI":"SPI");
+                    return result.passed;
+                }
                 if(!std::strcmp(args,"test")) {
                     if(services.active() || m61_text::active() || picocalc::files::usb_active() ||
                        remote_screen.attached() || !calculator.idle() || core_61::is_RUN()) return false;
                     picocalc::io_worker::drain();
                     picocalc::external_cache::suspend();picocalc::language_cache::discard();
+                    if(shared_memory::buffer_statistics().external_active) {
+                        picocalc::external_cache::init();return false;
+                    }
                     const u64 started=time_us_64();
                     const bool memory=picocalc::psram::self_test(usb_service);
                     const u32 crc=picocalc::dma_support::crc32((const u8*)"123456789",9);
@@ -434,7 +455,7 @@ int main() {
                 report(math_failures);
             } else if(c == '!' && terminal.raw() && !services.active()) {
                 std::puts("Entering RP2040 USB BOOTSEL");
-                stdio_flush();
+                stdio_flush();picocalc::psram::prepare_reset();
                 reset_usb_boot(0, 0);
             } else {
                 const int key=terminal.receive((u8)c);
@@ -537,6 +558,7 @@ int main() {
             if(picocalc::files::usb_active()) { max_usb_gap = 0; last_usb_service = time_us_64(); }
         } else if(action != picocalc::Action::NONE) {
             save_settings();
+            picocalc::psram::prepare_reset();
             if(action == picocalc::Action::BOOTLOADER) reset_usb_boot(0, 0);
             else watchdog_reboot(0, 0, 10);
             for(;;) tight_loop_contents();

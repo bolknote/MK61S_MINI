@@ -5,6 +5,7 @@
 #include "markdown_graphic_layout.hpp"
 #include "fonts.hpp"
 #include "native_assets.hpp"
+#include "buffers.hpp"
 #include <memory>
 #include <new>
 #include <cstdio>
@@ -22,8 +23,11 @@ struct GraphicPlatform {
   u8 line_gap() const { return info().line_gap; }
   bool glyph(u16 cp,mk61_service_ui_glyph& out) const { return fonts::glyph(settings,cp,out); }
   struct Image {
-    std::unique_ptr<u8[]> bytes;
+    shared_memory::Buffer bytes;
     u16 length=0;
+    mutable u8 cache[256]{};
+    mutable unsigned cache_at=UINT32_MAX,cache_size=0;
+    mutable bool failed=false;
     Image(const GraphicPlatform& platform,u16 parent,const char* path) {
       program_store::Entry entry{};
       if(storage_path::resolve_file(parent,path,program_store::ProgramType::IMAGE1,entry)!=storage_path::Status::OK ||
@@ -32,14 +36,36 @@ struct GraphicPlatform {
       const char* resolved=script::file_path(entry.id);unsigned size=entry.data_len;
       if(platform.native_assets && native_assets::image(resolved,native,info)) { resolved=native;size=info.size; }
       if(!size || size>program_store::MAX_IMAGE1_SIZE) return;
-      bytes.reset(new(std::nothrow) u8[size]);unsigned used=0;
+      if(!bytes.acquire(shared_memory::Owner::IMAGE_VIEWER,size,shared_memory::BufferAccess::BLOCK)) return;
+      unsigned used=0;
       const u32 revision=files::revision();
-      if(!bytes || !files::read(resolved,bytes.get(),size,used) ||
+      if(!files::read_buffer(resolved,bytes,used) ||
          used!=size || revision!=files::revision()) { bytes.reset();return; }
       length=(u16)used;
     }
-    bool ok() const { return bytes!=nullptr; }
-    const u8* data() const { return bytes.get(); }
+    bool ok() const { return bytes.ok() && !failed; }
+    bool read(usize at,u8* out,usize count) const {
+      if(!ok() || at>length || count>length-at) return false;
+      if(bytes.data()) return bytes.read(at,out,count);
+      while(count) {
+        if(cache_at==UINT32_MAX || at<cache_at || at>=cache_at+cache_size) {
+          cache_at=(at/sizeof(cache))*sizeof(cache);
+          cache_size=length-cache_at<sizeof(cache)?length-cache_at:sizeof(cache);
+          if(!bytes.read(cache_at,cache,cache_size)) { failed=true;return false; }
+        }
+        const unsigned available=cache_at+cache_size-at;
+        const unsigned n=count<available?count:available;
+        std::memcpy(out,cache+(at-cache_at),n);at+=n;out+=n;count-=n;
+      }
+      return true;
+    }
+    wbmp::Reader reader() const {
+      return {const_cast<Image*>(this),length,[](void* context,usize at,u8* out,usize n) {
+        return ((const Image*)context)->read(at,out,n);
+      }};
+    }
+    wbmp::Status inspect(wbmp::Info& info) const { return wbmp::inspect(reader(),info); }
+    bool dark_pixel(const wbmp::Info& info,u32 x,u32 y) const { return wbmp::dark_pixel(reader(),info,x,y); }
     u16 size() const { return length; }
   };
 };

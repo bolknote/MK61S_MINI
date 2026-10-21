@@ -2,12 +2,13 @@
 #include "external_cache.hpp"
 #include "lcd_update.hpp"
 #include "dma_support.hpp"
+#include "buffers.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
 #include <vector>
 #include <array>
-namespace picocalc::diagnostics { void feed_watchdog() {} }
+namespace picocalc::diagnostics { void feed_watchdog() {} u64 timestamp() { static u64 tick=0;return ++tick; } }
 int main() {
     using namespace picocalc;
     assert(!psram::ready() && !external_cache::init());
@@ -76,6 +77,26 @@ int main() {
     external_cache::store_module(0x20000,sector.data(),sector.size());
     assert(external_cache::module(0x20000,decoded.data(),decoded.size(),used));
     external_cache::store_module(19,image.data(),image.size());
+    // The full external chip belongs to one allocator. A required 6 MiB
+    // user buffer reclaims caches; rebuilding them cannot touch its bytes.
+    {
+        shared_memory::Buffer large;
+        assert(large.acquire(shared_memory::Owner::APPLICATION,6U*1024*1024,
+                             shared_memory::BufferAccess::EXTERNAL));
+        assert(large.fill(0x79));
+        external_cache::store_module(777,image.data(),image.size());
+        external_cache::store_sector(77,sector.data());
+        assert(external_cache::module(777,decoded.data(),decoded.size(),used) && decoded==image);
+        assert(external_cache::sector(77,read.data()) && read==sector);
+        assert(external_cache::statistics().evictions>=2);
+        std::array<u8,513> verify{};
+        for(unsigned at:{0U,1023U,4095U,6U*1024*1024-513}) {
+            assert(large.read(at,verify.data(),verify.size()));
+            for(u8 b:verify) assert(b==0x79);
+        }
+        assert(shared_memory::validate_buffer_invariants());
+    }
+    assert(buffers::self_test().passed);
     assert(external_cache::init()); // MCU reset with retained powered PSRAM.
     assert(!external_cache::module(19,decoded.data(),decoded.size(),used));
     assert(dma_support::crc32((const u8*)"123456789",9)==0xCBF43926U);

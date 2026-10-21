@@ -25,3 +25,8 @@ build_and_run() {
 
 build_and_run generic
 build_and_run bit_band -D__ARM_ARCH_7EM__ -DSTM32F411xE
+
+reader_out="${TMPDIR:-/tmp}/mk61_wbmp_reader_self_test"
+clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
+    -I"$root/code" "$root/code/wbmp.cpp" "$root/tests/wbmp_reader_self_test.cpp" -o "$reader_out"
+"$reader_out"

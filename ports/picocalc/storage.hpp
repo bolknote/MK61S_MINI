@@ -1,6 +1,7 @@
 #ifndef MK61_PICOCALC_STORAGE_HPP
 #define MK61_PICOCALC_STORAGE_HPP
 #include "rust_types.h"
+namespace shared_memory { class Buffer; }
 
 namespace picocalc {
 namespace sd {
@@ -25,6 +26,7 @@ const char* error();
 bool list(const char* path, unsigned skip, Entry* out, unsigned capacity, unsigned& used, bool& more,
           const char* filter=nullptr);
 bool read(const char* path, u8* out, unsigned capacity, unsigned& used);
+bool read_buffer(const char* path, shared_memory::Buffer& out, unsigned& used);
 bool read_text(const char* path, char* out, unsigned capacity, unsigned& used);
 bool text_size(const char* path,unsigned& size);
 bool read_text_range(const char* path,u32 offset,u8* out,unsigned count,unsigned& used);

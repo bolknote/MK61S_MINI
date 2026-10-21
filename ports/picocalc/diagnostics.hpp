@@ -12,6 +12,7 @@ struct Watchdog {
   u32 timeout_ms=0,reloads=0,maximum_gap_ms=0,previous_reloads=0,previous_gap_ms=0;
 };
 void initialize(u32 reset_flags=0,bool watchdog_reset=false,u64 (*clock)()=nullptr);
+u64 timestamp();
 void watchdog_started(u32 timeout_ms);
 void feed_watchdog();
 Watchdog watchdog_status();

@@ -70,14 +70,14 @@ usize viewport_bytes(u16 width, u16 height, Layout layout) {
   return 0;
 }
 
-Status inspect(const u8* data, usize size, Info& info) {
+static Status inspect_header(const u8* data, usize header_size, usize size, Info& info) {
   memset(&info, 0, sizeof(info));
   if(data == NULL) return Status::INVALID_ARGUMENT;
 
-  if(size == 0) return Status::TRUNCATED;
+  if(header_size == 0) return Status::TRUNCATED;
   // В Type 0 таблица 8-1 фиксирует TypeField ровно одним байтом.
   if(data[0] != 0) return Status::UNSUPPORTED_TYPE;
-  Cursor cursor = {data, size, 1};
+  Cursor cursor = {data, header_size, 1};
   if(cursor.offset >= cursor.size) return Status::TRUNCATED;
   const u8 fixed_header = cursor.data[cursor.offset++];
   // Для Type 0 bit 7 (наличие extension headers) и reserved bits 4..0
@@ -103,6 +103,12 @@ Status inspect(const u8* data, usize size, Info& info) {
     return Status::INVALID_DATA_SIZE;
   }
 
+  return Status::OK;
+}
+
+Status inspect(const u8* data, usize size, Info& info) {
+  const auto status=inspect_header(data,size,size,info);
+  if(status!=Status::OK) return status;
   // В неполном последнем байте строки WBMP требует нулевые хвостовые биты.
   const u8 used_bits = (u8) (info.width & 7U);
   if(used_bits != 0) {
@@ -116,6 +122,32 @@ Status inspect(const u8* data, usize size, Info& info) {
     }
   }
   return Status::OK;
+}
+
+Status inspect(const Reader& reader, Info& info) {
+  memset(&info,0,sizeof(info));
+  if(!reader.read) return Status::INVALID_ARGUMENT;
+  u8 header[12];const usize n=reader.size<sizeof(header)?reader.size:sizeof(header);
+  if(n && !reader.read(reader.context,0,header,n)) return Status::IO_ERROR;
+  const auto status=inspect_header(header,n,reader.size,info);
+  if(status!=Status::OK) return status;
+  const u8 used=(u8)(info.width&7U);
+  if(used) {
+    const u8 mask=(u8)((1U<<(8U-used))-1U);
+    for(u32 row=0;row<info.height;++row) {
+      u8 value;
+      if(!reader.read(reader.context,info.pixel_offset+(row+1)*info.row_bytes-1,&value,1)) return Status::IO_ERROR;
+      if(value&mask) return Status::INVALID_PADDING;
+    }
+  }
+  return Status::OK;
+}
+
+bool dark_pixel(const Reader& reader, const Info& info, u32 x, u32 y) {
+  if(!reader.read || !info_matches(info,reader.size) || x>=info.width || y>=info.height) return false;
+  u8 value;
+  return reader.read(reader.context,info.pixel_offset+y*info.row_bytes+x/8,&value,1) &&
+    !(value&(u8)(0x80U>>(x&7U)));
 }
 
 bool dark_pixel(const u8* data, usize size, const Info& info, u32 x, u32 y) {
@@ -202,6 +234,7 @@ const char* status_text(Status status) {
     case Status::INVALID_DATA_SIZE: return "invalid data size";
     case Status::INVALID_PADDING: return "invalid row padding";
     case Status::OUTPUT_TOO_SMALL: return "output buffer too small";
+    case Status::IO_ERROR: return "image read failed";
   }
   return "unknown WBMP error";
 }
