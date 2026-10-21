@@ -1,0 +1,164 @@
+{
+  "recorded_at": "2026-10-21T09:41:13.941978+00:00",
+  "status": "PRODUCTION_OFFLINE_QUALIFIED_PHYSICAL_PENDING",
+  "variant": "V58_sparse_Newton_tangent_inverse",
+  "root_promoted": false,
+  "m4_changed": false,
+  "source": ".build/m0-tan-recip-v58-20261021/source",
+  "elf_sha256": "d84c6d8685d531f065d5d67d8c45d6a2af96c583b00c3da5b4a5f2d64182afb2",
+  "change": "Exploit31 known zero seed bits: replace general64-bit products with an exact32-bit residual construction and one32x32 RNE correction product. No new lookup tables or writable storage.",
+  "analytic_certificate": {
+    "status": "PASS",
+    "domain": "2^62 <= denominator <2^63; d=2*denominator",
+    "seed": "s=floor(2^63/high32(d)); y=s*2^31",
+    "seed_relative_error_strictly_below": "1/2147483648",
+    "ideal_newton_error_strictly_below": "2",
+    "floor_residual_error_strictly_below": "2",
+    "correction_rounding_error_at_most": "1/2",
+    "result_absolute_Q62_error_strictly_below": "5/2",
+    "unchanged_caller_bound": 5,
+    "maximum_residual_magnitude": 2147483647,
+    "maximum_32x32_correction_product": 9223372030412324865,
+    "exact_identity": "floor(d*y/2^64)-2^62 = floor((floor(low32(d)*s/2^32)-r)/2)",
+    "endpoint": "high32(d)=2^31 uses s=2^32 and returns2^63-(low32(d)&~1).",
+    "scope": "Analytic all-domain bounds and width inequalities. ARM implementation, exact quotient seed and caller RNE intervals require separate execution checks."
+  },
+  "inverse": {
+    "cases": 296608,
+    "integer_model_mismatches": 0,
+    "maximum_Q62_error": "11448391458439593690/4635329916471083009",
+    "dirty_sio_checks": 22,
+    "sample_instructions": [
+      {
+        "denominator": "4000000000000000",
+        "new": 22,
+        "before": 164
+      },
+      {
+        "denominator": "61AB9347E1056C22",
+        "new": 172,
+        "before": 288
+      },
+      {
+        "denominator": "7FFFFFFFFFFFFFFF",
+        "new": 171,
+        "before": 286
+      }
+    ],
+    "path": ".build/m0-tan-recip-v58-20261021/inverse.json",
+    "sha256": "3162768e732b1ec1a72aacd49cc81dbb9d407a4e130d789f9937f7ce1ee6051f"
+  },
+  "all12": {
+    "cases": 265409,
+    "wrong_rounding": 0,
+    "path": ".build/m0-tan-recip-v58-20261021/all12.json",
+    "sha256": "722c9718f7fd84898ccff10a2b60312ff0aae34583f1b5f9d22c645c7c7c33cd"
+  },
+  "full_saved_tan_corpus": {
+    "status": "PASS",
+    "complete_saved_corpus": true,
+    "cases": 32107,
+    "wrong_rounding": 0,
+    "corpus_sha256": "1f467521ebda494f6a4981971a4d80d90c214806ee209a403b09be07b3b6728a",
+    "elf_sha256": "d84c6d8685d531f065d5d67d8c45d6a2af96c583b00c3da5b4a5f2d64182afb2",
+    "entries": {
+      "checked_trig_inverse": 4180,
+      "mk61_m0_cr_tan": 16450
+    },
+    "result_sha256": "2dcfc72a555577a243a8ae8240919318cf5c583c671de2996d0d18e234046cbf",
+    "mpfr": "4.2.2",
+    "scope": "Every saved CORE-MATH tan hard case through the public project entry, with directed MPFR RNE and saved-register/SP checks. Finite corpus, not a proof of universal corpus completeness."
+  },
+  "tan_instruction_profile": {
+    "status": "PASS_PROFILE",
+    "groups": [
+      {
+        "index": 2,
+        "stream": "legacy",
+        "cases": 32,
+        "mean_instructions": {
+          "before": 973.375,
+          "new": 928.96875
+        }
+      },
+      {
+        "index": 6,
+        "stream": "reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 914.34375,
+          "new": 914.34375
+        }
+      },
+      {
+        "index": 9,
+        "stream": "ordinary",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1253.9921875,
+          "new": 1205.4453125
+        }
+      },
+      {
+        "index": 12,
+        "stream": "qfplib_range",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1298.5,
+          "new": 1237.0546875
+        }
+      },
+      {
+        "index": 15,
+        "stream": "small_reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 867.4765625,
+          "new": 867.4765625
+        }
+      },
+      {
+        "index": 18,
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1264.171875,
+          "new": 1199.125
+        }
+      },
+      {
+        "index": 21,
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "mean_instructions": {
+          "before": 1053.0,
+          "new": 1053.0
+        }
+      }
+    ],
+    "elf_sha256": {
+      "before": "1984c2d0cc2cf368226e35b77090c6cd920753bdf6b31ce7d073986310e914b0",
+      "new": "d84c6d8685d531f065d5d67d8c45d6a2af96c583b00c3da5b4a5f2d64182afb2"
+    },
+    "scope": "Every prepared tan vector, actual ARM instruction counts; no physical timing claim."
+  },
+  "generic_m0_isolation": {
+    "status": "PASS",
+    "scope": "Non-RP2040 ARMv6-M normalized preprocessing and every allocated native_eabi_m0.cpp code/data byte identical.",
+    "preprocessed_sha256": "740531ab819b24735e7b402ab0099fc7cdacdd8f62bdefb73d312b5428833d3e",
+    "allocated_bytes": 247584
+  },
+  "m4_isolation": {
+    "status": "PASS",
+    "path": ".build/m0-tan-recip-v58-20261021/m4-check/m4-isolation.json"
+  },
+  "new_lookup_table_bytes": 0,
+  "additional_ram_bytes": 0,
+  "code_saving_bytes_against_v57": 96,
+  "physical_timing_pending": true,
+  "limitations": [
+    "Instruction improvements are not physical target timings.",
+    "The saved tan hard-case file and all12 suite are finite; the internal reciprocal error bound is analytic on its specified normalized domain.",
+    "Canonical pow final undecided trap remains; totality audit is separate."
+  ]
+}

@@ -1,0 +1,774 @@
+{
+  "recorded_at": "2026-10-21T12:06:21.913024+00:00",
+  "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
+  "production_elf_sha256": "4f40237eb8d14b2eb1ac3aeaa29ce6af4617a1750674566122ccca6b05a40454",
+  "source": ".build/m0-small-trig-v66-20261021/source",
+  "changes": [
+    "RP2040 small-trig callee returns the packed64bit result, replacing the intermediate16byte aggregate.",
+    "Tiny reduced sine uses a top16bit cubic correction with center error<1relativeQ63 unit.",
+    "An ambiguous small sine tries a relativeQ70 correction with center error<1relativeQ63 unit before the general refinement.",
+    "An ambiguous small cosine tries the certified Q70 decrement, whose error is<3Q70 units with a four-unit guard.",
+    "Every undecided result retains the existing general refinement. No new lookup table."
+  ],
+  "analysis": {
+    "targeted_slow_cos_cases": ".build/m0-cos70-v65-20261021/actual-slow-inputs.json",
+    "finding": "All three slowcos cases select the sine kernel after quadrant reduction; their reduced exponents are-27,-10,-15.",
+    "prior_candidate": "V65 cosine kernel passed all tests and helped other smallcos cases, but its dispatcher placement added broad instruction overhead. V66 integrates both sine/cosine refinements inside the packed small-trig path."
+  },
+  "footprint": {
+    "allocated_code_and_constants_delta_vs_V64_bytes": 1976,
+    "new_table_bytes": 0,
+    "main_ram_delta_bytes": 0,
+    "static_ram_bytes": 195680,
+    "scratch_y_bytes": 4096,
+    "small_secondary_code_bytes": 1792,
+    "hot_sin_cos_code_bytes": 7720,
+    "image_extent_bytes": 1525504,
+    "image_extent_delta_vs_V64_bytes": 4160
+  },
+  "accuracy": {
+    "all12_cases": 265409,
+    "pow_target_cases": 139211,
+    "full_saved_sin_cases": 40341,
+    "full_saved_cos_cases": 38507,
+    "full_saved_tan_cases": 32107,
+    "wrong_rounding": 0,
+    "quiet_nan_required": true,
+    "tiny_sine_center_cases": 131076,
+    "q70_sine_center_cases": 30735,
+    "sine_actual_arm_calls": 161879,
+    "cosine_interval_actual_arm_calls": 213368,
+    "inverse_cases": 296608,
+    "argument_relative_small_cases": 5765,
+    "argument_exponent_range": [
+      -30,
+      -6
+    ],
+    "rational_sine_error_bound": "347782387981902850725905139381472069949234194941029/517919642729138721638430812593832795090571094917120",
+    "rational_tiny_error_bound": "2144047674163201/4222124650659840"
+  },
+  "instructions": {
+    "status": "ALL21_PREPARED_TRIG_STREAMS_BELOW_QFPLIB_INSTRUCTION_COUNT",
+    "groups": [
+      {
+        "index": 0,
+        "operation": "sin",
+        "stream": "legacy",
+        "cases": 32,
+        "mean_instructions": {
+          "before": 863.28125,
+          "new": 860.03125,
+          "qfplib": 1352.78125
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 10,
+        "new_over_qfplib_instructions": 0.6357504215851602
+      },
+      {
+        "index": 1,
+        "operation": "cos",
+        "stream": "legacy",
+        "cases": 32,
+        "mean_instructions": {
+          "before": 857.78125,
+          "new": 854.90625,
+          "qfplib": 1350.1875
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 6,
+        "new_over_qfplib_instructions": 0.6331759477850298
+      },
+      {
+        "index": 2,
+        "operation": "tan",
+        "stream": "legacy",
+        "cases": 32,
+        "mean_instructions": {
+          "before": 953.84375,
+          "new": 954.84375,
+          "qfplib": 1591.875
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 19,
+        "new_over_qfplib_instructions": 0.5998233215547704
+      },
+      {
+        "index": 4,
+        "operation": "sin",
+        "stream": "reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 835.1484375,
+          "new": 831.109375,
+          "qfplib": 1342.2421875
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 5,
+        "new_over_qfplib_instructions": 0.6191947941585616
+      },
+      {
+        "index": 5,
+        "operation": "cos",
+        "stream": "reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 753.390625,
+          "new": 749.359375,
+          "qfplib": 1337.984375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 0,
+        "new_over_qfplib_instructions": 0.5600658639978513
+      },
+      {
+        "index": 6,
+        "operation": "tan",
+        "stream": "reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 906.46875,
+          "new": 907.46875,
+          "qfplib": 1577.9453125
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 45,
+        "new_over_qfplib_instructions": 0.5750951841051208
+      },
+      {
+        "index": 7,
+        "operation": "sin",
+        "stream": "ordinary",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1040.96875,
+          "new": 1036.796875,
+          "qfplib": 1345.4375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 2,
+        "new_over_qfplib_instructions": 0.7706020346541552
+      },
+      {
+        "index": 8,
+        "operation": "cos",
+        "stream": "ordinary",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 983.90625,
+          "new": 979.84375,
+          "qfplib": 1345.6796875
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 0,
+        "new_over_qfplib_instructions": 0.7281404030258872
+      },
+      {
+        "index": 9,
+        "operation": "tan",
+        "stream": "ordinary",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1212.828125,
+          "new": 1213.828125,
+          "qfplib": 1584.0390625
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 35,
+        "new_over_qfplib_instructions": 0.7662867373259616
+      },
+      {
+        "index": 10,
+        "operation": "sin",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1001.234375,
+          "new": 997.34375,
+          "qfplib": 1346.375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 30,
+        "new_over_qfplib_instructions": 0.7407622319190419
+      },
+      {
+        "index": 11,
+        "operation": "cos",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1011.84375,
+          "new": 1007.796875,
+          "qfplib": 1346.7734375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 32,
+        "new_over_qfplib_instructions": 0.7483046865482896
+      },
+      {
+        "index": 12,
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1244.9140625,
+          "new": 1245.9140625,
+          "qfplib": 1588.4609375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 73,
+        "new_over_qfplib_instructions": 0.7843529753151389
+      },
+      {
+        "index": 13,
+        "operation": "sin",
+        "stream": "small_reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 861.4375,
+          "new": 834.75,
+          "qfplib": 1349.390625
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 2,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 2,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 66,
+        "new_over_qfplib_instructions": 0.6186125681731337
+      },
+      {
+        "index": 14,
+        "operation": "cos",
+        "stream": "small_reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 799.53125,
+          "new": 677.890625,
+          "qfplib": 1328.5703125
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 8,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 8,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 0,
+        "new_over_qfplib_instructions": 0.5102406840059509
+      },
+      {
+        "index": 15,
+        "operation": "tan",
+        "stream": "small_reduced",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 876.296875,
+          "new": 877.296875,
+          "qfplib": 1586.734375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 1,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 1,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 79,
+        "new_over_qfplib_instructions": 0.5528946046813916
+      },
+      {
+        "index": 16,
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 834.8984375,
+          "new": 836.2421875,
+          "qfplib": 1353.5234375
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 57,
+        "new_over_qfplib_instructions": 0.6178261597335658
+      },
+      {
+        "index": 17,
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 903.9140625,
+          "new": 866.78125,
+          "qfplib": 1355.1640625
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 3,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 2,
+            "checked_trig_sin_tiny": 2
+          }
+        },
+        "qfplib_wrong_rounding": 71,
+        "new_over_qfplib_instructions": 0.6396135154299813
+      },
+      {
+        "index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "mean_instructions": {
+          "before": 1200.0625,
+          "new": 1201.0625,
+          "qfplib": 1599.8046875
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 5,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 5,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 128,
+        "new_over_qfplib_instructions": 0.7507557074838237
+      },
+      {
+        "index": 19,
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "mean_instructions": {
+          "before": 1043.3333333333333,
+          "new": 1050.3333333333333,
+          "qfplib": 1363.3333333333333
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 2,
+        "new_over_qfplib_instructions": 0.7704156479217604
+      },
+      {
+        "index": 20,
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "mean_instructions": {
+          "before": 877.0,
+          "new": 877.0,
+          "qfplib": 1340.0
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 0,
+        "new_over_qfplib_instructions": 0.6544776119402985
+      },
+      {
+        "index": 21,
+        "operation": "tan",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "mean_instructions": {
+          "before": 1055.0,
+          "new": 1056.0,
+          "qfplib": 1594.0
+        },
+        "entries": {
+          "before": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          },
+          "new": {
+            "checked_trig_refine": 0,
+            "checked_trig_cos70": 0,
+            "checked_trig_sin70": 0,
+            "checked_trig_sin_tiny": 0
+          }
+        },
+        "qfplib_wrong_rounding": 2,
+        "new_over_qfplib_instructions": 0.6624843161856964
+      }
+    ],
+    "maximum_new_over_qfplib": 0.7843529753151389,
+    "problem_cos": {
+      "index": 17,
+      "operation": "cos",
+      "stream": "small_medium_remainder",
+      "cases": 128,
+      "mean_instructions": {
+        "before": 903.9140625,
+        "new": 866.78125,
+        "qfplib": 1355.1640625
+      },
+      "entries": {
+        "before": {
+          "checked_trig_refine": 3,
+          "checked_trig_cos70": 0,
+          "checked_trig_sin70": 0,
+          "checked_trig_sin_tiny": 0
+        },
+        "new": {
+          "checked_trig_refine": 0,
+          "checked_trig_cos70": 0,
+          "checked_trig_sin70": 2,
+          "checked_trig_sin_tiny": 2
+        }
+      },
+      "qfplib_wrong_rounding": 71,
+      "new_over_qfplib_instructions": 0.6396135154299813
+    },
+    "reduced_cos": {
+      "index": 14,
+      "operation": "cos",
+      "stream": "small_reduced",
+      "cases": 128,
+      "mean_instructions": {
+        "before": 799.53125,
+        "new": 677.890625,
+        "qfplib": 1328.5703125
+      },
+      "entries": {
+        "before": {
+          "checked_trig_refine": 8,
+          "checked_trig_cos70": 0,
+          "checked_trig_sin70": 0,
+          "checked_trig_sin_tiny": 0
+        },
+        "new": {
+          "checked_trig_refine": 0,
+          "checked_trig_cos70": 8,
+          "checked_trig_sin70": 0,
+          "checked_trig_sin_tiny": 0
+        }
+      },
+      "qfplib_wrong_rounding": 0,
+      "new_over_qfplib_instructions": 0.5102406840059509
+    },
+    "note": "Instruction counts are not measured hardware cycles. Other prepared paths change by a few instructions; all rows are retained."
+  },
+  "cache_model": {
+    "path": ".build/m0-small-trig-v66-20261021/cache-trace.json",
+    "problem_cos_modeled_misses_per_call": 0.09375,
+    "hardware_claim": false
+  },
+  "isolation": {
+    "m4": "Both floatABIs: normalized preprocessing and all allocated code/data unchanged.",
+    "generic_m0": "Every allocated code/data section byte-identical to V60.",
+    "accepted_platform": "0.8.13/5F1E85DF withQPI",
+    "unchanged_platform_files": 546,
+    "canonical_math_files_unchanged": 44,
+    "root_promoted": false,
+    "commit_created": false,
+    "m0_layout_changes": ".build/m0-small-trig-v66-20261021/unaffected-math.json"
+  },
+  "proofs": {
+    "all12.json": {
+      "path": ".build/m0-small-trig-v66-20261021/all12.json",
+      "sha256": "34c6a0ae0b64f80f2175c41037415a844f00df39143a0b6c24fbdbd428ef9151"
+    },
+    "pow-targets.json": {
+      "path": ".build/m0-small-trig-v66-20261021/pow-targets.json",
+      "sha256": "45e14dad1e6a4c1b17606f24827c26ae287d7320207e547fdbcf068347410a6a"
+    },
+    "tan-worst.json": {
+      "path": ".build/m0-small-trig-v66-20261021/tan-worst.json",
+      "sha256": "52877808e480b3534fc6a2d84edd69e24b777cddabc9d55c4e4f196b81e67e89"
+    },
+    "sincos-worst.json": {
+      "path": ".build/m0-small-trig-v66-20261021/sincos-worst.json",
+      "sha256": "3b165f7311fdc3b16d1a237b0cf8c9937c5ffe97c512e3a5057fbcca2e8f51dc"
+    },
+    "cos70-arm.json": {
+      "path": ".build/m0-small-trig-v66-20261021/cos70-arm.json",
+      "sha256": "ae2c95ae6b771f7a16cdb46e28a367551e34dde432cda44193b4e124922f97be"
+    },
+    "sine-arm.json": {
+      "path": ".build/m0-small-trig-v66-20261021/sine-arm.json",
+      "sha256": "b7ca9a9ce361af744c5e1d4a59311bd4b5a5ed733709e72752638de53edba161"
+    },
+    "cos-certificate.json": {
+      "path": ".build/m0-small-trig-v66-20261021/cos-certificate.json",
+      "sha256": "8a7c53048ed256cf917ec54a24bae839627c91affde986a1648e7470d90a4341"
+    },
+    "sine-certificate.json": {
+      "path": ".build/m0-small-trig-v66-20261021/sine-certificate.json",
+      "sha256": "136e063e416543c730c729e283d3a6324511af973f80178ee2dae2384adddda1"
+    },
+    "argument-enclosure.json": {
+      "path": ".build/m0-small-trig-v66-20261021/argument-enclosure.json",
+      "sha256": "ade6ae5123a2f773e198a339faeb5272bae6ada018528179a6fb6d2e1eea896b"
+    },
+    "argument-identity.json": {
+      "path": ".build/m0-small-trig-v66-20261021/argument-identity.json",
+      "sha256": "e5eb61ccd41bc94086aa4eceeff6a9bfda9c84a6bf3451d104a31480af75cdfa"
+    },
+    "inverse.json": {
+      "path": ".build/m0-small-trig-v66-20261021/inverse.json",
+      "sha256": "55946c2bbc4ba8ed0dc350d38448932da50996cc1a7e793d36236f88fde71b8e"
+    },
+    "resource-proof.json": {
+      "path": ".build/m0-small-trig-v66-20261021/resource-proof.json",
+      "sha256": "39b2586342f5c296934283ebab86ce19967950dac0dc58f79ecc8e07f0824fdd"
+    },
+    "placement-proof.json": {
+      "path": ".build/m0-small-trig-v66-20261021/placement-proof.json",
+      "sha256": "5215407ff24192fb45d19bb313396da6f90be429a2685b5f61253dcacb1db49a"
+    },
+    "generic-m0-isolation.json": {
+      "path": ".build/m0-small-trig-v66-20261021/generic-m0-isolation.json",
+      "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+    },
+    "m4-check/m4-isolation.json": {
+      "path": ".build/m0-small-trig-v66-20261021/m4-check/m4-isolation.json",
+      "sha256": "aeed3f4004ac61a8edb6d83b8b46a3c0c64dd6367118b6153f495be9e37839a9"
+    }
+  },
+  "hardware_preparation": {
+    "path": ".build/m0-balanced-timing-v66-20261021",
+    "streams": 114,
+    "chunks": 116,
+    "rounds": 12,
+    "primary_estimator": "order_balanced_median",
+    "boot_crc": "PASS",
+    "app_all13_abi": "PASS",
+    "uf2_bounds": "PASS",
+    "diagnostic_elf_sha256": "d6d412566d1cb5387cb51037e6fdcacff25345269dd5b6ffce76191b4da9e43a",
+    "restore_pin": "5F1E85DF; rebase and update hashes before running after a newer accepted platform.",
+    "run_started": false
+  },
+  "limitations": [
+    "No V66 physical timing exists. The previous full V60 measurement retains21strict slower groups under its recorded estimator.",
+    "M0 layout outside changed trig functions can move; a full114stream hardware regression remains required.",
+    "Finite hard-case tests complement conditional error proofs. Universal pow totality remains unproved and its final1024bit undecided trap remains.",
+    "The hardware peer is repairing mixedQPI/USB short writes; its current test image is not an accepted handoff. No math USB access was made."
+  ]
+}

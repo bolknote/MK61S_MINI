@@ -34,6 +34,7 @@ add_executable(mk61s-picocalc-pico-h
     "${MK61_ROOT}/code/mk61emu_core.cpp"
     "${MK61_ROOT}/code/compact_math.cpp"
     "${MK61_ROOT}/code/native_eabi_m0.cpp"
+    "${MK61_ROOT}/code/native_eabi_m0_cr.cpp"
     "${MK61_ROOT}/code/native_eabi_m0.S"
     "${MK61_ROOT}/code/native_eabi_m0_rp2040.S"
     "${MK61_ROOT}/code/ERM19264_graphics_font.cpp"
@@ -98,8 +99,11 @@ set_source_files_properties("${MK61_ROOT}/code/mk61emu_core.cpp"
     PROPERTIES COMPILE_OPTIONS "-O3")
 # Keep the typed arithmetic ABI separate from the APP table's erased function
 # declarations, including in builds where the user enables global LTO.
+# On Thumb-1, -Os also avoids the extra spills seen in the -O3 runtime build.
 set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
-    PROPERTIES COMPILE_OPTIONS "-fno-lto")
+    PROPERTIES COMPILE_OPTIONS "-Os;-fno-lto")
+set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0_cr.cpp"
+    PROPERTIES COMPILE_OPTIONS "-Os;-ffp-contract=off;-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
     hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
@@ -151,6 +155,7 @@ string(REPLACE "    .scratch_y : {"
     "    .lcd_dma (NOLOAD) : { *(.lcd_dma.*) . = ALIGN(4); __lcd_dma_end__ = .; } > SCRATCH_X :NONE\n\n    .scratch_y : {"
     MK61_MEMMAP "${MK61_MEMMAP}")
 string(APPEND MK61_MEMMAP "\nASSERT(__lcd_dma_end__ <= __StackOneBottom, \"LCD DMA buffers overlap core 1 stack\")\n")
+string(APPEND MK61_MEMMAP "\nASSERT(__scratch_y_end__ <= __StackBottom, \"M0 scratch code overlaps core 0 stack\")\n")
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld" "${MK61_MEMMAP}")
 pico_set_linker_script(mk61s-picocalc-pico-h "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld")
 pico_add_extra_outputs(mk61s-picocalc-pico-h)
@@ -160,3 +165,7 @@ if(MK61_PICOCALC_M0_EABI)
             "$<TARGET_FILE:mk61s-picocalc-pico-h>.map"
         VERBATIM)
 endif()
+
+# Isolate new M0 kernels without shifting the previously timed math.
+target_link_options(mk61s-picocalc-pico-h PRIVATE "-Wl,-T,${CMAKE_CURRENT_SOURCE_DIR}/m0_math_extension.ld")
+set_property(TARGET mk61s-picocalc-pico-h APPEND PROPERTY LINK_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/m0_math_extension.ld")

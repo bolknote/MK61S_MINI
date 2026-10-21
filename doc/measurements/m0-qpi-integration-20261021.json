@@ -1,0 +1,1636 @@
+{
+  "recorded_at": "2026-10-21T09:59:15.113087+00:00",
+  "status": "FULL_PHYSICAL_QUALIFICATION_21_STRICT_GAPS_RESTORED_NOT_PROMOTED",
+  "variant": "V60_QPI_rebase_shared_tables_batched_log_ratio_narrow_trig_inverse_packed_pow",
+  "source": ".build/m0-qpi-integration-v60-20261021/source",
+  "firmware_integrated": false,
+  "m4_changed": false,
+  "source_integration": {
+    "path": ".build/m0-qpi-integration-v60-20261021/source-integration.json",
+    "sha256": "fa190f4c886a2ad8cbd37592bab6a22fe0842fa314ff0940f6370458d8f85a41",
+    "accepted_build": "5f1e85df",
+    "unchanged_platform_files": 546
+  },
+  "production_elf_sha256": "c7d020626a4a17efad1f54aca40200338a1543d09370c90d3203d6abe20be1db",
+  "comparison_elf_sha256": "68a96191dc95972e7308df65eafeb92f2722a2f6e2434d7ba1198671a067c168",
+  "footprint": {
+    "status": "PASS",
+    "elf_sha256": "c7d020626a4a17efad1f54aca40200338a1543d09370c90d3203d6abe20be1db",
+    "static_ram_bytes": 195680,
+    "additional_main_ram_bytes": 0,
+    "ram_boundaries_unchanged": [
+      "__data_start__",
+      "__data_end__",
+      "__bss_start__",
+      "__bss_end__",
+      "__end__",
+      "__HeapLimit",
+      "__StackBottom",
+      "__StackTop",
+      "__StackOneBottom",
+      "__StackOneTop",
+      "__lcd_dma_end__"
+    ],
+    "accepted_build": "5f1e85df",
+    "preserved_platform_implementation_files": 546
+  },
+  "offline_gates": {
+    "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
+    "elf_sha256": "c7d020626a4a17efad1f54aca40200338a1543d09370c90d3203d6abe20be1db",
+    "completed": [
+      "all12",
+      "pow targets",
+      "inverse exact model",
+      "tan saved hard corpus",
+      "M4 identity",
+      "flash trace"
+    ],
+    "started_at": "2026-10-21T09:36:49.824139+00:00",
+    "finished_at": "2026-10-21T09:39:09.649645+00:00"
+  },
+  "physical": {
+    "status": "PASS_NUMERIC_AND_MEASUREMENT_COMPLETE_PERFORMANCE_GOAL_NOT_MET",
+    "result": ".build/m0-qpi-integration-v60-timing-20261021/hil-01/timings/result.json",
+    "sha256": "e7b261863c5aa54e9fc46fd492c86e8113ef092dcc364b86fd42c20107f628c4",
+    "streams": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "own_wrong_rounding": 0,
+    "groups": [
+      {
+        "stream_index": 0,
+        "operation": "sin",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 14.6357421875,
+          "qfplib": 13.1259765625
+        },
+        "own_over_qfplib": 1.1150212037794807
+      },
+      {
+        "stream_index": 1,
+        "operation": "cos",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 14.59912109375,
+          "qfplib": 13.10693359375
+        },
+        "own_over_qfplib": 1.113847185485974
+      },
+      {
+        "stream_index": 2,
+        "operation": "tan",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 15.9638671875,
+          "qfplib": 15.36767578125
+        },
+        "own_over_qfplib": 1.0387951577542656
+      },
+      {
+        "stream_index": 3,
+        "operation": "i2d",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.2255859375,
+          "qfplib": 0.4541015625
+        },
+        "own_over_qfplib": 0.4967741935483871
+      },
+      {
+        "stream_index": 4,
+        "operation": "sin",
+        "stream": "reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 9.92626953125,
+          "qfplib": 13.0341796875
+        },
+        "own_over_qfplib": 0.7615569041732224
+      },
+      {
+        "stream_index": 5,
+        "operation": "cos",
+        "stream": "reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 8.88427734375,
+          "qfplib": 12.95654296875
+        },
+        "own_over_qfplib": 0.6856981345392877
+      },
+      {
+        "stream_index": 6,
+        "operation": "tan",
+        "stream": "reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 10.63232421875,
+          "qfplib": 15.240234375
+        },
+        "own_over_qfplib": 0.6976483403819044
+      },
+      {
+        "stream_index": 7,
+        "operation": "sin",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.08740234375,
+          "qfplib": 13.05712890625
+        },
+        "own_over_qfplib": 1.308664597434651
+      },
+      {
+        "stream_index": 8,
+        "operation": "cos",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 16.47314453125,
+          "qfplib": 13.06640625
+        },
+        "own_over_qfplib": 1.2607249626307921
+      },
+      {
+        "stream_index": 9,
+        "operation": "tan",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 19.36962890625,
+          "qfplib": 15.29248046875
+        },
+        "own_over_qfplib": 1.266611322200581
+      },
+      {
+        "stream_index": 10,
+        "operation": "sin",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.5966796875,
+          "qfplib": 13.03564453125
+        },
+        "own_over_qfplib": 1.3498895006929617
+      },
+      {
+        "stream_index": 11,
+        "operation": "cos",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.396484375,
+          "qfplib": 13.07763671875
+        },
+        "own_over_qfplib": 1.330246798342232
+      },
+      {
+        "stream_index": 12,
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 20.4638671875,
+          "qfplib": 15.30859375
+        },
+        "own_over_qfplib": 1.336756825720847
+      },
+      {
+        "stream_index": 13,
+        "operation": "sin",
+        "stream": "small_reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 9.509765625,
+          "qfplib": 13.10888671875
+        },
+        "own_over_qfplib": 0.7254441837076768
+      },
+      {
+        "stream_index": 14,
+        "operation": "cos",
+        "stream": "small_reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 9.087890625,
+          "qfplib": 12.89697265625
+        },
+        "own_over_qfplib": 0.704653011774505
+      },
+      {
+        "stream_index": 15,
+        "operation": "tan",
+        "stream": "small_reduced",
+        "cases": 128,
+        "us_per_call": {
+          "own": 9.88330078125,
+          "qfplib": 15.32666015625
+        },
+        "own_over_qfplib": 0.6448437350664246
+      },
+      {
+        "stream_index": 16,
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 16.75146484375,
+          "qfplib": 13.13916015625
+        },
+        "own_over_qfplib": 1.274926604481772
+      },
+      {
+        "stream_index": 17,
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 18.66552734375,
+          "qfplib": 13.15869140625
+        },
+        "own_over_qfplib": 1.4184941927344243
+      },
+      {
+        "stream_index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 23.3671875,
+          "qfplib": 15.44677734375
+        },
+        "own_over_qfplib": 1.5127548601232812
+      },
+      {
+        "stream_index": 19,
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 19.420821114369502,
+          "qfplib": 13.219941348973608
+        },
+        "own_over_qfplib": 1.4690550133096716
+      },
+      {
+        "stream_index": 20,
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 15.067937438905181,
+          "qfplib": 12.983870967741936
+        },
+        "own_over_qfplib": 1.1605119518162996
+      },
+      {
+        "stream_index": 21,
+        "operation": "tan",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 16.97605083088954,
+          "qfplib": 15.328445747800586
+        },
+        "own_over_qfplib": 1.1074867674255469
+      },
+      {
+        "stream_index": 22,
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.224609375,
+          "qfplib": 0.45458984375
+        },
+        "own_over_qfplib": 0.4940923737916219
+      },
+      {
+        "stream_index": 23,
+        "operation": "i2d",
+        "stream": "small",
+        "cases": 257,
+        "us_per_call": {
+          "own": 0.2679266259032796,
+          "qfplib": 0.9955530850472485
+        },
+        "own_over_qfplib": 0.26912339475153546
+      },
+      {
+        "stream_index": 24,
+        "operation": "sqrt",
+        "stream": "legacy",
+        "cases": 12,
+        "us_per_call": {
+          "own": 1.2392156862745098,
+          "qfplib": 1.373529411764706
+        },
+        "own_over_qfplib": 0.9022127052105637
+      },
+      {
+        "stream_index": 25,
+        "operation": "exp",
+        "stream": "legacy",
+        "cases": 19,
+        "us_per_call": {
+          "own": 5.658140678799803,
+          "qfplib": 6.543039842597147
+        },
+        "own_over_qfplib": 0.8647571793715231
+      },
+      {
+        "stream_index": 26,
+        "operation": "sqrt",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 1.23583984375,
+          "qfplib": 1.34375
+        },
+        "own_over_qfplib": 0.9196947674418605
+      },
+      {
+        "stream_index": 27,
+        "operation": "sqrt",
+        "stream": "normalized",
+        "cases": 256,
+        "us_per_call": {
+          "own": 1.2509765625,
+          "qfplib": 1.35302734375
+        },
+        "own_over_qfplib": 0.9245759653554674
+      },
+      {
+        "stream_index": 28,
+        "operation": "exp",
+        "stream": "small_range",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.53955078125,
+          "qfplib": 6.439453125
+        },
+        "own_over_qfplib": 1.0155444343342432
+      },
+      {
+        "stream_index": 29,
+        "operation": "exp",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 5.6533203125,
+          "qfplib": 6.58447265625
+        },
+        "own_over_qfplib": 0.8585836114200964
+      },
+      {
+        "stream_index": 30,
+        "operation": "sqrt",
+        "stream": "segment_edges",
+        "cases": 1536,
+        "us_per_call": {
+          "own": 1.2434895833333333,
+          "qfplib": 1.3434244791666667
+        },
+        "own_over_qfplib": 0.9256118245699054
+      },
+      {
+        "stream_index": 31,
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.2255859375,
+          "qfplib": 0.45849609375
+        },
+        "own_over_qfplib": 0.49201277955271566
+      },
+      {
+        "stream_index": 32,
+        "operation": "ui2d",
+        "stream": "random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.189453125,
+          "qfplib": 0.4091796875
+        },
+        "own_over_qfplib": 0.4630071599045346
+      },
+      {
+        "stream_index": 33,
+        "operation": "l2d",
+        "stream": "random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.28125,
+          "qfplib": 0.431640625
+        },
+        "own_over_qfplib": 0.6515837104072398
+      },
+      {
+        "stream_index": 34,
+        "operation": "ul2d",
+        "stream": "random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.2236328125,
+          "qfplib": 0.38720703125
+        },
+        "own_over_qfplib": 0.5775535939470365
+      },
+      {
+        "stream_index": 35,
+        "operation": "l2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.29150390625,
+          "qfplib": 0.44677734375
+        },
+        "own_over_qfplib": 0.6524590163934426
+      },
+      {
+        "stream_index": 36,
+        "operation": "l2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.33447265625,
+          "qfplib": 0.67626953125
+        },
+        "own_over_qfplib": 0.49458483754512633
+      },
+      {
+        "stream_index": 37,
+        "operation": "ul2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.23681640625,
+          "qfplib": 0.39453125
+        },
+        "own_over_qfplib": 0.6002475247524752
+      },
+      {
+        "stream_index": 38,
+        "operation": "ul2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.28955078125,
+          "qfplib": 0.658203125
+        },
+        "own_over_qfplib": 0.43991097922848665
+      },
+      {
+        "stream_index": 39,
+        "operation": "d2iz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.1376953125,
+          "qfplib": 0.57373046875
+        },
+        "own_over_qfplib": 0.24
+      },
+      {
+        "stream_index": 40,
+        "operation": "d2iz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.22412109375,
+          "qfplib": 0.57666015625
+        },
+        "own_over_qfplib": 0.388653683319221
+      },
+      {
+        "stream_index": 41,
+        "operation": "d2uiz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.43115234375,
+          "qfplib": 0.49267578125
+        },
+        "own_over_qfplib": 0.8751238850346879
+      },
+      {
+        "stream_index": 42,
+        "operation": "d2lz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.208984375,
+          "qfplib": 0.48779296875
+        },
+        "own_over_qfplib": 0.42842842842842843
+      },
+      {
+        "stream_index": 43,
+        "operation": "d2lz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.2685546875,
+          "qfplib": 0.48779296875
+        },
+        "own_over_qfplib": 0.5505505505505506
+      },
+      {
+        "stream_index": 44,
+        "operation": "d2ulz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.1708984375,
+          "qfplib": 0.408203125
+        },
+        "own_over_qfplib": 0.41866028708133973
+      },
+      {
+        "stream_index": 45,
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.0888671875,
+          "qfplib": 0.08837890625
+        },
+        "own_over_qfplib": 1.0055248618784531
+      },
+      {
+        "stream_index": 46,
+        "operation": "d2f",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.1689453125,
+          "qfplib": 0.171875
+        },
+        "own_over_qfplib": 0.9829545454545454
+      },
+      {
+        "stream_index": 47,
+        "operation": "dcmpeq",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.064453125,
+          "qfplib": 0.4150390625
+        },
+        "own_over_qfplib": 0.15529411764705883
+      },
+      {
+        "stream_index": 48,
+        "operation": "dcmplt",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.25927734375,
+          "qfplib": 0.41552734375
+        },
+        "own_over_qfplib": 0.6239717978848414
+      },
+      {
+        "stream_index": 49,
+        "operation": "dcmple",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.259765625,
+          "qfplib": 0.41748046875
+        },
+        "own_over_qfplib": 0.6222222222222222
+      },
+      {
+        "stream_index": 50,
+        "operation": "dcmpge",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.25927734375,
+          "qfplib": 0.41796875
+        },
+        "own_over_qfplib": 0.6203271028037384
+      },
+      {
+        "stream_index": 51,
+        "operation": "dcmpgt",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.25927734375,
+          "qfplib": 0.41552734375
+        },
+        "own_over_qfplib": 0.6239717978848414
+      },
+      {
+        "stream_index": 52,
+        "operation": "ln",
+        "stream": "normal_exponents",
+        "cases": 512,
+        "us_per_call": {
+          "own": 6.2529296875,
+          "qfplib": 7.33154296875
+        },
+        "own_over_qfplib": 0.8528804528804529
+      },
+      {
+        "stream_index": 53,
+        "operation": "ln",
+        "stream": "normalized",
+        "cases": 512,
+        "us_per_call": {
+          "own": 6.08056640625,
+          "qfplib": 7.16796875
+        },
+        "own_over_qfplib": 0.8482970027247957
+      },
+      {
+        "stream_index": 54,
+        "operation": "ln",
+        "stream": "near_one",
+        "cases": 512,
+        "us_per_call": {
+          "own": 4.64501953125,
+          "qfplib": 6.494140625
+        },
+        "own_over_qfplib": 0.7152631578947368
+      },
+      {
+        "stream_index": 55,
+        "operation": "ln",
+        "stream": "near_one_interval",
+        "cases": 512,
+        "us_per_call": {
+          "own": 6.6044921875,
+          "qfplib": 7.42724609375
+        },
+        "own_over_qfplib": 0.8892249030307015
+      },
+      {
+        "stream_index": 56,
+        "operation": "atan",
+        "stream": "ordinary",
+        "cases": 512,
+        "us_per_call": {
+          "own": 25.46826171875,
+          "qfplib": 17.61328125
+        },
+        "own_over_qfplib": 1.44596917276558
+      },
+      {
+        "stream_index": 57,
+        "operation": "atan",
+        "stream": "reduced",
+        "cases": 512,
+        "us_per_call": {
+          "own": 15.15576171875,
+          "qfplib": 17.4677734375
+        },
+        "own_over_qfplib": 0.8676413037401465
+      },
+      {
+        "stream_index": 58,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:full_random",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.18994140625,
+          "qfplib": 1.2265625
+        },
+        "own_over_qfplib": 0.9701433121019108
+      },
+      {
+        "stream_index": 59,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:mantissa_product_below_two",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.21826171875,
+          "qfplib": 1.2509765625
+        },
+        "own_over_qfplib": 0.9738485558157689
+      },
+      {
+        "stream_index": 60,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:mantissa_product_above_two",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.1826171875,
+          "qfplib": 1.22265625
+        },
+        "own_over_qfplib": 0.9672523961661342
+      },
+      {
+        "stream_index": 61,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:low_word_boundaries",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.19482421875,
+          "qfplib": 1.2314453125
+        },
+        "own_over_qfplib": 0.9702616970658208
+      },
+      {
+        "stream_index": 62,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:normal_exponent_range",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.1904296875,
+          "qfplib": 1.22705078125
+        },
+        "own_over_qfplib": 0.9701551929964186
+      },
+      {
+        "stream_index": 63,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:near_rounding_midpoints",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.1796875,
+          "qfplib": 1.21728515625
+        },
+        "own_over_qfplib": 0.9691135178499799
+      },
+      {
+        "stream_index": 64,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:full_random",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.48583984375,
+          "qfplib": 1.5478515625
+        },
+        "own_over_qfplib": 0.9599369085173501
+      },
+      {
+        "stream_index": 65,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:mantissa_ratio_below_one",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.4814453125,
+          "qfplib": 1.5419921875
+        },
+        "own_over_qfplib": 0.9607346421785941
+      },
+      {
+        "stream_index": 66,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:mantissa_ratio_above_one",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.443359375,
+          "qfplib": 1.50439453125
+        },
+        "own_over_qfplib": 0.9594287568971114
+      },
+      {
+        "stream_index": 67,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:low_word_boundaries",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.4462890625,
+          "qfplib": 1.50927734375
+        },
+        "own_over_qfplib": 0.9582659333549013
+      },
+      {
+        "stream_index": 68,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:normal_exponent_range",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.4736328125,
+          "qfplib": 1.53662109375
+        },
+        "own_over_qfplib": 0.9590085795996187
+      },
+      {
+        "stream_index": 69,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:near_rounding_midpoints",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.6044921875,
+          "qfplib": 1.6669921875
+        },
+        "own_over_qfplib": 0.9625073227885179
+      },
+      {
+        "stream_index": 70,
+        "operation": "dmul",
+        "stream": "dmul_streams:full_precision",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.18212890625,
+          "qfplib": 1.22021484375
+        },
+        "own_over_qfplib": 0.9687875150060024
+      },
+      {
+        "stream_index": 71,
+        "operation": "dmul",
+        "stream": "dmul_streams:short_operand",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.01953125,
+          "qfplib": 1.23583984375
+        },
+        "own_over_qfplib": 0.8249703674436981
+      },
+      {
+        "stream_index": 72,
+        "operation": "dmul",
+        "stream": "dmul_streams:both_short",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.8896484375,
+          "qfplib": 1.19873046875
+        },
+        "own_over_qfplib": 0.7421588594704684
+      },
+      {
+        "stream_index": 73,
+        "operation": "dmul",
+        "stream": "dmul_streams:powers_of_two",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.3408203125,
+          "qfplib": 1.2158203125
+        },
+        "own_over_qfplib": 0.28032128514056226
+      },
+      {
+        "stream_index": 74,
+        "operation": "dmul",
+        "stream": "dmul_streams:rounding_ties",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.060546875,
+          "qfplib": 1.27197265625
+        },
+        "own_over_qfplib": 0.8337811900191938
+      },
+      {
+        "stream_index": 75,
+        "operation": "dmul",
+        "stream": "dmul_streams:normal_exponent_range",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.18798828125,
+          "qfplib": 1.22412109375
+        },
+        "own_over_qfplib": 0.9704826485839649
+      },
+      {
+        "stream_index": 76,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:full_precision",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.47607421875,
+          "qfplib": 1.53857421875
+        },
+        "own_over_qfplib": 0.9593779752459537
+      },
+      {
+        "stream_index": 77,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:short_operand",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.46337890625,
+          "qfplib": 1.5087890625
+        },
+        "own_over_qfplib": 0.9699029126213592
+      },
+      {
+        "stream_index": 78,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:both_short",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.4873046875,
+          "qfplib": 1.53466796875
+        },
+        "own_over_qfplib": 0.9691377664651607
+      },
+      {
+        "stream_index": 79,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:dyadic_seeds",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.1826171875,
+          "qfplib": 1.4892578125
+        },
+        "own_over_qfplib": 0.7940983606557377
+      },
+      {
+        "stream_index": 80,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:near_rounding_midpoints",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.603515625,
+          "qfplib": 1.66650390625
+        },
+        "own_over_qfplib": 0.9622033401699385
+      },
+      {
+        "stream_index": 81,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:normal_exponent_range",
+        "cases": 32,
+        "us_per_call": {
+          "own": 1.47900390625,
+          "qfplib": 1.54052734375
+        },
+        "own_over_qfplib": 0.9600633914421554
+      },
+      {
+        "stream_index": 82,
+        "operation": "dadd",
+        "stream": "dadd_streams:same_sign_positive",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.55224609375,
+          "qfplib": 0.66748046875
+        },
+        "own_over_qfplib": 0.8273591806876371
+      },
+      {
+        "stream_index": 83,
+        "operation": "dadd",
+        "stream": "dadd_streams:same_sign_negative",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.54833984375,
+          "qfplib": 0.7490234375
+        },
+        "own_over_qfplib": 0.7320730117340287
+      },
+      {
+        "stream_index": 84,
+        "operation": "dadd",
+        "stream": "dadd_streams:mixed_sign_close",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.59326171875,
+          "qfplib": 0.78955078125
+        },
+        "own_over_qfplib": 0.75139146567718
+      },
+      {
+        "stream_index": 85,
+        "operation": "dadd",
+        "stream": "dadd_streams:wide_gap",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.6357421875,
+          "qfplib": 0.75
+        },
+        "own_over_qfplib": 0.84765625
+      },
+      {
+        "stream_index": 86,
+        "operation": "dadd",
+        "stream": "dadd_streams:same_exponent",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.51806640625,
+          "qfplib": 0.7333984375
+        },
+        "own_over_qfplib": 0.7063914780292943
+      },
+      {
+        "stream_index": 87,
+        "operation": "dadd",
+        "stream": "dadd_streams:full_exponent_range",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.43603515625,
+          "qfplib": 0.66357421875
+        },
+        "own_over_qfplib": 0.6571008094186902
+      },
+      {
+        "stream_index": 88,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:equal_exponents",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.63818359375,
+          "qfplib": 0.82666015625
+        },
+        "own_over_qfplib": 0.7720023626698169
+      },
+      {
+        "stream_index": 89,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:adjacent_exponents",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.53271484375,
+          "qfplib": 0.7314453125
+        },
+        "own_over_qfplib": 0.7283044058744993
+      },
+      {
+        "stream_index": 90,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:one_ulp_apart",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.99365234375,
+          "qfplib": 3.572265625
+        },
+        "own_over_qfplib": 0.2781574630945872
+      },
+      {
+        "stream_index": 91,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:binade_boundary",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.8994140625,
+          "qfplib": 3.4736328125
+        },
+        "own_over_qfplib": 0.2589260612876019
+      },
+      {
+        "stream_index": 92,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:exact_cancellation",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.44091796875,
+          "qfplib": 0.59228515625
+        },
+        "own_over_qfplib": 0.7444352844187964
+      },
+      {
+        "stream_index": 93,
+        "operation": "dadd",
+        "stream": "dadd_mixed_streams:rounding_ties",
+        "cases": 32,
+        "us_per_call": {
+          "own": 0.57470703125,
+          "qfplib": 0.69580078125
+        },
+        "own_over_qfplib": 0.8259649122807018
+      },
+      {
+        "stream_index": 94,
+        "operation": "dadd",
+        "stream": "dadd:fixed_cases",
+        "cases": 12,
+        "us_per_call": {
+          "own": 0.5294117647058824,
+          "qfplib": 0.690686274509804
+        },
+        "own_over_qfplib": 0.7665010645848118
+      },
+      {
+        "stream_index": 95,
+        "operation": "dsub",
+        "stream": "dsub:fixed_cases",
+        "cases": 12,
+        "us_per_call": {
+          "own": 0.753921568627451,
+          "qfplib": 1.2480392156862745
+        },
+        "own_over_qfplib": 0.6040848389630793
+      },
+      {
+        "stream_index": 96,
+        "operation": "dmul",
+        "stream": "dmul:fixed_cases",
+        "cases": 12,
+        "us_per_call": {
+          "own": 0.8529411764705882,
+          "qfplib": 1.2102941176470587
+        },
+        "own_over_qfplib": 0.7047387606318348
+      },
+      {
+        "stream_index": 97,
+        "operation": "ddiv",
+        "stream": "ddiv:fixed_cases",
+        "cases": 12,
+        "us_per_call": {
+          "own": 1.0735294117647058,
+          "qfplib": 1.4759803921568626
+        },
+        "own_over_qfplib": 0.7273331119229492
+      },
+      {
+        "stream_index": 98,
+        "operation": "asin",
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "us_per_call": {
+          "own": 22.296875,
+          "qfplib": 21.99267578125
+        },
+        "own_over_qfplib": 1.0138318420994206,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(x, sqrt(mul(sub(1,x), add(1,x))))",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 99,
+        "operation": "asin",
+        "stream": "composed_boundaries",
+        "cases": 40,
+        "us_per_call": {
+          "own": 18.019607843137255,
+          "qfplib": 22.517156862745097
+        },
+        "own_over_qfplib": 0.8002612387068685,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(x, sqrt(mul(sub(1,x), add(1,x))))",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 100,
+        "operation": "asin",
+        "stream": "composed_tiny_normal",
+        "cases": 16,
+        "us_per_call": {
+          "own": 2.79248046875,
+          "qfplib": 22.0419921875
+        },
+        "own_over_qfplib": 0.12668911435027247,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(x, sqrt(mul(sub(1,x), add(1,x))))",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 101,
+        "operation": "acos",
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "us_per_call": {
+          "own": 21.56787109375,
+          "qfplib": 21.98046875
+        },
+        "own_over_qfplib": 0.9812288963923939,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(sqrt(mul(sub(1,x), add(1,x))), x)",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 102,
+        "operation": "acos",
+        "stream": "composed_boundaries",
+        "cases": 40,
+        "us_per_call": {
+          "own": 18.112745098039216,
+          "qfplib": 22.599019607843136
+        },
+        "own_over_qfplib": 0.801483666652206,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(sqrt(mul(sub(1,x), add(1,x))), x)",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 103,
+        "operation": "acos",
+        "stream": "composed_tiny_normal",
+        "cases": 16,
+        "us_per_call": {
+          "own": 4.6787109375,
+          "qfplib": 21.88671875
+        },
+        "own_over_qfplib": 0.2137694092450473,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(sqrt(mul(sub(1,x), add(1,x))), x)",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 104,
+        "operation": "log10",
+        "stream": "composed_normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 12.93798828125,
+          "qfplib": 8.845703125
+        },
+        "own_over_qfplib": 1.4626297195848974,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "mul(ln(x), 0x1.bcb7b1526e50ep-2)",
+        "reference_domain": "positive finite input"
+      },
+      {
+        "stream_index": 105,
+        "operation": "log10",
+        "stream": "composed_near_one",
+        "cases": 257,
+        "us_per_call": {
+          "own": 6.64869371873263,
+          "qfplib": 7.878265703168427
+        },
+        "own_over_qfplib": 0.8439285966273901,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "mul(ln(x), 0x1.bcb7b1526e50ep-2)",
+        "reference_domain": "positive finite input"
+      },
+      {
+        "stream_index": 106,
+        "operation": "log10",
+        "stream": "composed_powers_of_ten",
+        "cases": 121,
+        "us_per_call": {
+          "own": 12.704028925619834,
+          "qfplib": 8.846590909090908
+        },
+        "own_over_qfplib": 1.4360366672505402,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "mul(ln(x), 0x1.bcb7b1526e50ep-2)",
+        "reference_domain": "positive finite input"
+      },
+      {
+        "stream_index": 107,
+        "operation": "pow",
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "us_per_call": {
+          "own": 13.73974609375,
+          "qfplib": 15.24853515625
+        },
+        "own_over_qfplib": 0.9010535079573473,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "exp(mul(y, ln(x)))",
+        "reference_domain": "positive finite base, finite exponent"
+      },
+      {
+        "stream_index": 108,
+        "operation": "pow",
+        "stream": "composed_wide_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 14.94921875,
+          "qfplib": 15.3818359375
+        },
+        "own_over_qfplib": 0.9718748015998985,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "exp(mul(y, ln(x)))",
+        "reference_domain": "positive finite base, finite exponent"
+      },
+      {
+        "stream_index": 109,
+        "operation": "pow",
+        "stream": "composed_near_one",
+        "cases": 48,
+        "us_per_call": {
+          "own": 10.87202380952381,
+          "qfplib": 13.814980158730158
+        },
+        "own_over_qfplib": 0.7869735377544793,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "exp(mul(y, ln(x)))",
+        "reference_domain": "positive finite base, finite exponent"
+      },
+      {
+        "stream_index": 110,
+        "operation": "pow",
+        "stream": "composed_negative_integer",
+        "cases": 256,
+        "us_per_call": {
+          "own": 10.4228515625,
+          "qfplib": 12.70361328125
+        },
+        "own_over_qfplib": 0.820463543067994,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "y=0:1; y=1:x; y=-1:div(1,x); y=2:mul(x,x); otherwise apply integer parity sign to exp(mul(y,ln(abs(x))))",
+        "reference_domain": "negative finite base, finite integer exponent"
+      },
+      {
+        "stream_index": 111,
+        "operation": "pow",
+        "stream": "composed_negative_wide",
+        "cases": 256,
+        "us_per_call": {
+          "own": 10.67626953125,
+          "qfplib": 15.32666015625
+        },
+        "own_over_qfplib": 0.6965816050208672,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "y=0:1; y=1:x; y=-1:div(1,x); y=2:mul(x,x); otherwise apply integer parity sign to exp(mul(y,ln(abs(x))))",
+        "reference_domain": "negative finite base, finite integer exponent"
+      },
+      {
+        "stream_index": 112,
+        "operation": "pow",
+        "stream": "composed_negative_near_one",
+        "cases": 64,
+        "us_per_call": {
+          "own": 11.20849609375,
+          "qfplib": 14.87255859375
+        },
+        "own_over_qfplib": 0.7536360353261762,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "y=0:1; y=1:x; y=-1:div(1,x); y=2:mul(x,x); otherwise apply integer parity sign to exp(mul(y,ln(abs(x))))",
+        "reference_domain": "negative finite base, finite integer exponent"
+      },
+      {
+        "stream_index": 113,
+        "operation": "pow",
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 1.5302734375,
+          "qfplib": 1.54248046875
+        },
+        "own_over_qfplib": 0.9920861031972144,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "y=1:x; y=-1:div(1,x); y=2:mul(x,x); y=0.5:sqrt(x); y=-0.5:div(1,sqrt(x)); otherwise exp(mul(y,ln(x)))",
+        "reference_domain": "positive finite base; exponent in {1,-1,2,0.5,-0.5}"
+      }
+    ],
+    "remaining_strict_slow_groups": [
+      {
+        "stream_index": 0,
+        "operation": "sin",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 14.6357421875,
+          "qfplib": 13.1259765625
+        },
+        "own_over_qfplib": 1.1150212037794807
+      },
+      {
+        "stream_index": 1,
+        "operation": "cos",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 14.59912109375,
+          "qfplib": 13.10693359375
+        },
+        "own_over_qfplib": 1.113847185485974
+      },
+      {
+        "stream_index": 2,
+        "operation": "tan",
+        "stream": "legacy",
+        "cases": 32,
+        "us_per_call": {
+          "own": 15.9638671875,
+          "qfplib": 15.36767578125
+        },
+        "own_over_qfplib": 1.0387951577542656
+      },
+      {
+        "stream_index": 7,
+        "operation": "sin",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.08740234375,
+          "qfplib": 13.05712890625
+        },
+        "own_over_qfplib": 1.308664597434651
+      },
+      {
+        "stream_index": 8,
+        "operation": "cos",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 16.47314453125,
+          "qfplib": 13.06640625
+        },
+        "own_over_qfplib": 1.2607249626307921
+      },
+      {
+        "stream_index": 9,
+        "operation": "tan",
+        "stream": "ordinary",
+        "cases": 128,
+        "us_per_call": {
+          "own": 19.36962890625,
+          "qfplib": 15.29248046875
+        },
+        "own_over_qfplib": 1.266611322200581
+      },
+      {
+        "stream_index": 10,
+        "operation": "sin",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.5966796875,
+          "qfplib": 13.03564453125
+        },
+        "own_over_qfplib": 1.3498895006929617
+      },
+      {
+        "stream_index": 11,
+        "operation": "cos",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 17.396484375,
+          "qfplib": 13.07763671875
+        },
+        "own_over_qfplib": 1.330246798342232
+      },
+      {
+        "stream_index": 12,
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "us_per_call": {
+          "own": 20.4638671875,
+          "qfplib": 15.30859375
+        },
+        "own_over_qfplib": 1.336756825720847
+      },
+      {
+        "stream_index": 16,
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 16.75146484375,
+          "qfplib": 13.13916015625
+        },
+        "own_over_qfplib": 1.274926604481772
+      },
+      {
+        "stream_index": 17,
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 18.66552734375,
+          "qfplib": 13.15869140625
+        },
+        "own_over_qfplib": 1.4184941927344243
+      },
+      {
+        "stream_index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "us_per_call": {
+          "own": 23.3671875,
+          "qfplib": 15.44677734375
+        },
+        "own_over_qfplib": 1.5127548601232812
+      },
+      {
+        "stream_index": 19,
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 19.420821114369502,
+          "qfplib": 13.219941348973608
+        },
+        "own_over_qfplib": 1.4690550133096716
+      },
+      {
+        "stream_index": 20,
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 15.067937438905181,
+          "qfplib": 12.983870967741936
+        },
+        "own_over_qfplib": 1.1605119518162996
+      },
+      {
+        "stream_index": 21,
+        "operation": "tan",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "us_per_call": {
+          "own": 16.97605083088954,
+          "qfplib": 15.328445747800586
+        },
+        "own_over_qfplib": 1.1074867674255469
+      },
+      {
+        "stream_index": 28,
+        "operation": "exp",
+        "stream": "small_range",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.53955078125,
+          "qfplib": 6.439453125
+        },
+        "own_over_qfplib": 1.0155444343342432
+      },
+      {
+        "stream_index": 45,
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "us_per_call": {
+          "own": 0.0888671875,
+          "qfplib": 0.08837890625
+        },
+        "own_over_qfplib": 1.0055248618784531
+      },
+      {
+        "stream_index": 56,
+        "operation": "atan",
+        "stream": "ordinary",
+        "cases": 512,
+        "us_per_call": {
+          "own": 25.46826171875,
+          "qfplib": 17.61328125
+        },
+        "own_over_qfplib": 1.44596917276558
+      },
+      {
+        "stream_index": 98,
+        "operation": "asin",
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "us_per_call": {
+          "own": 22.296875,
+          "qfplib": 21.99267578125
+        },
+        "own_over_qfplib": 1.0138318420994206,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "atan2(x, sqrt(mul(sub(1,x), add(1,x))))",
+        "reference_domain": "[-1,1]"
+      },
+      {
+        "stream_index": 104,
+        "operation": "log10",
+        "stream": "composed_normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 12.93798828125,
+          "qfplib": 8.845703125
+        },
+        "own_over_qfplib": 1.4626297195848974,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "mul(ln(x), 0x1.bcb7b1526e50ep-2)",
+        "reference_domain": "positive finite input"
+      },
+      {
+        "stream_index": 106,
+        "operation": "log10",
+        "stream": "composed_powers_of_ten",
+        "cases": 121,
+        "us_per_call": {
+          "own": 12.704028925619834,
+          "qfplib": 8.846590909090908
+        },
+        "own_over_qfplib": 1.4360366672505402,
+        "reference_kind": "qfplib_composition",
+        "reference_formula": "mul(ln(x), 0x1.bcb7b1526e50ep-2)",
+        "reference_domain": "positive finite input"
+      }
+    ],
+    "strict_slow_groups": 21,
+    "groups_at_or_faster_than_reference": 93,
+    "comparison_set": "all",
+    "method": "Owned code retains its production flash/SRAM placement; Qfplib executes from flash. Identical input order, nine alternating paired batches, TIMERAWL, typed soft-float calls and matching calibration leaves. Interrupts enabled. XIP hit/access counters sampled outside timing; include both cores, with paired control counts recorded. Owned math addresses and bytes match production; Qfplib is isolated at 0x10180000. Both libraries warm up inside the APP for at least 1000000 us before timing."
+  },
+  "restore": {
+    "status": "PASS_RESTORED",
+    "accepted_build": "5f1e85df",
+    "accepted_version": "0.8.13",
+    "uid": "E6657CD423721C35",
+    "uf2_sha256": "b2a1a83b86ac051d4f61aae67678729104441de59a674129491b6c253e02dc26",
+    "calculator_data_restored": true,
+    "ip": 24,
+    "rtc": {
+      "expected": "2026-10-21T12:57:14.959262",
+      "actual": "2026-10-21T12:57:15"
+    },
+    "serial_closed": true,
+    "qpi_without_fallback": true,
+    "buffer_io_errors": 0,
+    "buffer_valid": true,
+    "transaction": ".build/m0-qpi-integration-v60-timing-20261021/hil-01/transaction.json",
+    "transaction_sha256": "6e8094786ea1ecdbb6f5a14c3ad905e5921ed4ae7a3bed16bb24603e744d26ed"
+  },
+  "conclusion": "All prepared numerical results pass. Both former pow gaps now win; changed platform flash placement creates substantial trig,atan,log10 cache regressions. Static relocation alone is not a robust solution. No ROOT promotion.",
+  "limitations": [
+    "The21 strict slower groups include sub-percent f2d and near-parity cases; no statistical uncertainty model was fitted.",
+    "Finite streams and hard-case corpora do not prove universal rounding or latency parity.",
+    "The final1024-bit undecided pow trap remains; universal fallback totality is unproved.",
+    "Qfplib scientific results are approximate. Composed reference formulas are recorded per operation."
+  ]
+}

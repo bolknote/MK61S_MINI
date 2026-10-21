@@ -1,0 +1,401 @@
+{
+  "recorded_at": "2026-10-21T10:22:44.499926+00:00",
+  "status": "V64_OFFLINE_QUALIFIED_PHYSICAL_PENDING_NOT_PROMOTED",
+  "source": ".build/m0-trig-working-set-v64-20261021/source",
+  "production_elf_sha256": "a273fe867a4631c6cb9dd7c768a70c37ee13d7644c4fdf61e2fb201f4cd029d0",
+  "changes": [
+    "V61: replace general64bit argument shifts with exact32bit word operations on RP2040.",
+    "V62: move three unchanged30byte shift helpers into the remaining64bytes of scratch_y; two old veneers disappear.",
+    "V63/V64: group three unchanged logarithm leaf product bodies in a fixed506byte flash section.",
+    "V64: group shared argument/dispatcher and sin/cos hot code into one7520byte cache index span, and tangent code into a disjoint3264byte span.",
+    "Strengthen the all12 qualification to require quietNaN results; payload/sign choices remain unspecified."
+  ],
+  "platform": {
+    "accepted_build": "5F1E85DF",
+    "version": "0.8.13",
+    "psram": "QPI-with-SPI-fallback",
+    "preserved_implementation_files": 546
+  },
+  "footprint": {
+    "new_table_bytes": 0,
+    "main_ram_delta_bytes": 0,
+    "static_ram_bytes": 195680,
+    "scratch_y_before_bytes": 4032,
+    "scratch_y_after_bytes": 4096,
+    "scratch_y_delta_bytes": 64,
+    "allocated_text_and_constants_delta_vs_V60_bytes": 406,
+    "image_extent_bytes": 1521344,
+    "image_extent_delta_vs_V60_bytes": 37184,
+    "note": "Fixed flash section gaps enlarge binary/UF2 extent without adding lookup tables. Scratch_y is separate from the unchanged mainRAM/stack/heap region."
+  },
+  "accuracy": {
+    "all12_cases": 265409,
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "pow_target_cases": 139211,
+    "complete_saved_tan_cases": 32107,
+    "argument_field_identity_cases": 208276,
+    "inverse_integer_model_cases": 296608,
+    "wrong_rounding": 0,
+    "m4": "Both floatABIs: preprocessed input and all allocated code/data bytes unchanged.",
+    "generic_m0": "All allocated code/data sections byte-identical to V60."
+  },
+  "moved_leaf_bodies": [
+    {
+      "symbol": "__aeabi_llsl",
+      "bytes": 30,
+      "before": "0x1014d280",
+      "after": "0x20038d58",
+      "sha256": "6b4c5109a462f2cdd932368550029337707a3f1a7b539d665c6abbcf3ce8785a"
+    },
+    {
+      "symbol": "__aeabi_llsr",
+      "bytes": 30,
+      "before": "0x1014d2a0",
+      "after": "0x20038d78",
+      "sha256": "0af29bc141f3b3eb4d2f0f289a013beb9e2d1fbda4b6554c39aacc8ad2ba771b"
+    },
+    {
+      "symbol": "__aeabi_lasr",
+      "bytes": 30,
+      "before": "0x1014d2c0",
+      "after": "0x20038d98",
+      "sha256": "f46c8ea26243b364056ad9ff6e1ea7a42235a9a3d673756278779f1cbbb7b5a6"
+    },
+    {
+      "symbol": "mk61_m0_log_product46",
+      "bytes": 184,
+      "before": "0x1006afc8",
+      "after": "0x1014d800",
+      "sha256": "75729579767fb4b3269141b6c62b1ae4fad49ed8817158b0e7d4bedcc717ecc8"
+    },
+    {
+      "symbol": "mk61_m0_log_product54",
+      "bytes": 184,
+      "before": "0x1006b080",
+      "after": "0x1014d8b8",
+      "sha256": "81ad2d43fe44b6f9becccf332840205c0ff504dac4e944b7280f7f83afb4aa50"
+    },
+    {
+      "symbol": "mk61_m0_log_cube70",
+      "bytes": 138,
+      "before": "0x1006b138",
+      "after": "0x1014d970",
+      "sha256": "156e1430ffe1d792a0713eec5ed71cd72e316e7d20fd00a46fd44dff62b0c14a"
+    }
+  ],
+  "proofs": {
+    "all12.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/all12.json",
+      "sha256": "1a8e42847b1927e2f314b3f4845d2552efa65bd2b18816fc76e2d26a7d96bbdc"
+    },
+    "pow-targets.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/pow-targets.json",
+      "sha256": "2494c7677595dfaf5f914d2ecacd2f117c638b11310ac078302cbe6f35313b94"
+    },
+    "tan-worst.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/tan-worst.json",
+      "sha256": "099726ffcfd6935e4d6ff88730c0458178b4738361f4348a353c859678474d85"
+    },
+    "argument-identity.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/argument-identity.json",
+      "sha256": "f424550110a6a43127f81e0637fa4009a77f144e1479c67ab634e90b9dd565de"
+    },
+    "inverse.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/inverse.json",
+      "sha256": "034bfd8b99ad520418b393beff02ec8f24aa26e1f926f0aba489d68bb53458d8"
+    },
+    "resource-proof.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/resource-proof.json",
+      "sha256": "1a1dda48fc0d91ec20b2ddea79b56159a4c290a5fdb482a2f697c863083e99d3"
+    },
+    "placement-proof.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/placement-proof.json",
+      "sha256": "93c06681a5db5233a0816954a293aad0bf87776b9a4fd2102aff2601ea9259d2"
+    },
+    "m4-check/m4-isolation.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/m4-check/m4-isolation.json",
+      "sha256": "6bf93ed7b5a5e53361266b5b1a3ca0faa23482697e6f0bec3694f3dbf355fd1c"
+    },
+    "generic-m0-isolation.json": {
+      "path": ".build/m0-trig-working-set-v64-20261021/generic-m0-isolation.json",
+      "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+    }
+  },
+  "cache_model": {
+    "current_trace": ".build/m0-trig-working-set-v64-20261021/cache-trace.json",
+    "platform_prefix_sweep": ".build/m0-trig-working-set-v64-20261021/cache-phase.json",
+    "phase_results": {
+      "status": "PASS_MODEL_SWEEP",
+      "groups": [
+        {
+          "index": 12,
+          "operation": "tan",
+          "stream": "qfplib_range",
+          "cases": 128,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 163,
+              "minimum_misses": 163,
+              "maximum_misses": 163,
+              "sum_misses": 166912,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "8e50a088af468537504de9510998b581dda015be5b521ceb7120c4753460e313",
+              "initial_misses_per_call": 1.2734375,
+              "minimum_misses_per_call": 1.2734375,
+              "maximum_misses_per_call": 1.2734375,
+              "mean_misses_per_call": 1.2734375
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 91,
+              "minimum_misses": 65,
+              "maximum_misses": 213,
+              "sum_misses": 141963,
+              "worst_offset_bytes": 1192,
+              "trace_sha256": "264e510ae363d76644093d0ca0420b126edf55ea6af8f05334babcb128db498f",
+              "initial_misses_per_call": 0.7109375,
+              "minimum_misses_per_call": 0.5078125,
+              "maximum_misses_per_call": 1.6640625,
+              "mean_misses_per_call": 1.0830917358398438
+            }
+          }
+        },
+        {
+          "index": 16,
+          "operation": "sin",
+          "stream": "small_medium_remainder",
+          "cases": 128,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 0,
+              "minimum_misses": 0,
+              "maximum_misses": 0,
+              "sum_misses": 0,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "d02b5f737fe426872d76520b234286872cd22d39d28e159b7c03a547dadbb90d",
+              "initial_misses_per_call": 0.0,
+              "minimum_misses_per_call": 0.0,
+              "maximum_misses_per_call": 0.0,
+              "mean_misses_per_call": 0.0
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 0,
+              "minimum_misses": 0,
+              "maximum_misses": 0,
+              "sum_misses": 0,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "a475f81dcf8be926256a74164733129b5f1ba01c2a9c68da5b59216df0f80a79",
+              "initial_misses_per_call": 0.0,
+              "minimum_misses_per_call": 0.0,
+              "maximum_misses_per_call": 0.0,
+              "mean_misses_per_call": 0.0
+            }
+          }
+        },
+        {
+          "index": 17,
+          "operation": "cos",
+          "stream": "small_medium_remainder",
+          "cases": 128,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 165,
+              "minimum_misses": 165,
+              "maximum_misses": 165,
+              "sum_misses": 168960,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "32bc6b7e59b14b5e0fe8616d029287f636737fe3fec0f1488d9202c533622e86",
+              "initial_misses_per_call": 1.2890625,
+              "minimum_misses_per_call": 1.2890625,
+              "maximum_misses_per_call": 1.2890625,
+              "mean_misses_per_call": 1.2890625
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 455,
+              "minimum_misses": 21,
+              "maximum_misses": 773,
+              "sum_misses": 336616,
+              "worst_offset_bytes": 7232,
+              "trace_sha256": "c2db4c32cb891bfa8d437618c2db47933e9bc10b7e8e611eb391ecb45d06968d",
+              "initial_misses_per_call": 3.5546875,
+              "minimum_misses_per_call": 0.1640625,
+              "maximum_misses_per_call": 6.0390625,
+              "mean_misses_per_call": 2.56817626953125
+            }
+          }
+        },
+        {
+          "index": 19,
+          "operation": "sin",
+          "stream": "previous_slow_cases",
+          "cases": 3,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 0,
+              "minimum_misses": 0,
+              "maximum_misses": 0,
+              "sum_misses": 0,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "9270ed0ebf9daeb8e57daca58f047afffbc5df9afb36a4fb84210793e1c20b5c",
+              "initial_misses_per_call": 0.0,
+              "minimum_misses_per_call": 0.0,
+              "maximum_misses_per_call": 0.0,
+              "mean_misses_per_call": 0.0
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 0,
+              "minimum_misses": 0,
+              "maximum_misses": 0,
+              "sum_misses": 0,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "e770682e12a724622b7401adc9f5309269ef15f1fd08b1e7731705a7337d4f3d",
+              "initial_misses_per_call": 0.0,
+              "minimum_misses_per_call": 0.0,
+              "maximum_misses_per_call": 0.0,
+              "mean_misses_per_call": 0.0
+            }
+          }
+        },
+        {
+          "index": 58,
+          "operation": "atan",
+          "stream": "ordinary",
+          "cases": 512,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 2,
+              "minimum_misses": 2,
+              "maximum_misses": 2,
+              "sum_misses": 2048,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "20f6a95dc568dcdffbfedcd4d074c0c573f1de98c91a7dcf5d5e1ad8dc0d3b41",
+              "initial_misses_per_call": 0.00390625,
+              "minimum_misses_per_call": 0.00390625,
+              "maximum_misses_per_call": 0.00390625,
+              "mean_misses_per_call": 0.00390625
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 0,
+              "minimum_misses": 0,
+              "maximum_misses": 0,
+              "sum_misses": 0,
+              "worst_offset_bytes": 0,
+              "trace_sha256": "d75217027fb2aefb2c65169a7ff2bb21cb26f505fd60b736b31cfcab380fc6ab",
+              "initial_misses_per_call": 0.0,
+              "minimum_misses_per_call": 0.0,
+              "maximum_misses_per_call": 0.0,
+              "mean_misses_per_call": 0.0
+            }
+          }
+        },
+        {
+          "index": 106,
+          "operation": "log10",
+          "stream": "composed_normal_exponents",
+          "cases": 256,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 4314,
+              "minimum_misses": 8,
+              "maximum_misses": 6971,
+              "sum_misses": 1142045,
+              "worst_offset_bytes": 7544,
+              "trace_sha256": "af66c42d7135ae6c28bc9c0ee89992bc96927a752f8a0f5d3b0bcc4a0ce76cba",
+              "initial_misses_per_call": 16.8515625,
+              "minimum_misses_per_call": 0.03125,
+              "maximum_misses_per_call": 27.23046875,
+              "mean_misses_per_call": 4.356555938720703
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 8,
+              "minimum_misses": 8,
+              "maximum_misses": 37,
+              "sum_misses": 11243,
+              "worst_offset_bytes": 1600,
+              "trace_sha256": "9091ad2f97397c06e36e8dd330a3a087681f0646300fcde316a633572893cc08",
+              "initial_misses_per_call": 0.03125,
+              "minimum_misses_per_call": 0.03125,
+              "maximum_misses_per_call": 0.14453125,
+              "mean_misses_per_call": 0.042888641357421875
+            }
+          }
+        },
+        {
+          "index": 108,
+          "operation": "log10",
+          "stream": "composed_powers_of_ten",
+          "cases": 121,
+          "variants": {
+            "V62": {
+              "phases": 1024,
+              "initial_misses": 2024,
+              "minimum_misses": 14,
+              "maximum_misses": 3288,
+              "sum_misses": 546014,
+              "worst_offset_bytes": 7488,
+              "trace_sha256": "6c2573fc72e93593df99fdbbce89ec4aa1ac0639ed4a47c1def8b18e6c235895",
+              "initial_misses_per_call": 16.727272727272727,
+              "minimum_misses_per_call": 0.11570247933884298,
+              "maximum_misses_per_call": 27.173553719008265,
+              "mean_misses_per_call": 4.406750387396694
+            },
+            "V64": {
+              "phases": 1024,
+              "initial_misses": 14,
+              "minimum_misses": 14,
+              "maximum_misses": 26,
+              "sum_misses": 15569,
+              "worst_offset_bytes": 1168,
+              "trace_sha256": "2bce121d9fef483698be3afdf50ff25eafa127e2f5c9cb5fc3c609c39cf6852d",
+              "initial_misses_per_call": 0.11570247933884298,
+              "minimum_misses_per_call": 0.11570247933884298,
+              "maximum_misses_per_call": 0.21487603305785125,
+              "mean_misses_per_call": 0.1256537319214876
+            }
+          }
+        }
+      ],
+      "phases": 1024,
+      "offsets": "0..8184bytes in8byte steps",
+      "model": "Actual ARM flash fetch/read traces;16KiB2way8byte-line1024set assumedLRU. Main firmware trace addresses shift uniformly; explicit extension addresses remain fixed. Each complete stream warms once then measures once.",
+      "scope": "Sensitivity experiment for uniform platform-prefix growth. It does not relink each phase, model IRQ/core1/APP, validate actual replacement policy, or prove hardware latency/accuracy for a changed platform. Physical comparisons remain pending."
+    },
+    "physical_speedup_claim": false
+  },
+  "hardware_preparation": {
+    "path": ".build/m0-trig-working-set-v64-timing-20261021",
+    "streams": 114,
+    "chunks": 116,
+    "diagnostic_elf_sha256": "358fab93d537ef862353d7c9fcc85db597972e42c1061f641bc47de718582e6a",
+    "production_math_symbols_preserved": 380,
+    "production_ram_initializers_preserved": true,
+    "boot_crc": "PASS",
+    "app_all13_abi_kinds": "PASS",
+    "uf2_bounds": "PASS",
+    "usb_accessed": false,
+    "driver_restore": "5F1E85DF only; do not run after a new accepted peer build without rebasing."
+  },
+  "canonical_root": {
+    "math_files": 44,
+    "all_unchanged": true,
+    "promoted": false,
+    "commit_created": false
+  },
+  "limitations": [
+    "V60 is the latest actual full physical comparison:21 strict slower groups remain; V64 has no physical measurements.",
+    "The cache model assumesLRU and uniform main-firmware relocation; it omits IRQ/core1/APP and does not relink every phase.",
+    "Finite qualification does not establish universal rounding or latency parity. The final1024bit undecided pow trap remains.",
+    "No Qfplib or ROM dispatch has been integrated into the product. The diagnostic-only pinned Qfplib remains isolated from the production link."
+  ]
+}

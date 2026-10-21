@@ -41,6 +41,18 @@ __aeabi_ui2d:
 1:
  lsrs r3,r0,#24
  bne 1f
+ // The 19..21-bit band is already close to the binary64 high word.
+ // Pack it directly, including after the preceding 16-bit shift.
+ lsrs r3,r0,#20
+ cmp r3,#1
+ beq .Li2d_exact21
+ cmp r3,#0
+ bne .Li2d_byte
+ lsrs r3,r0,#19
+ bne .Li2d_exact20
+ lsrs r3,r0,#18
+ bne .Li2d_exact19
+.Li2d_byte:
  lsls r0,#8
  subs r2,#8
 1:
@@ -70,7 +82,24 @@ __aeabi_ui2d:
 .ltorg
 end __aeabi_i2d
 
+.macro i2d_middle width
+.Li2d_exact\width:
+ .if \width < 21
+ lsls r0,#(21-\width)
+ .endif
+ adds r1,r0
+ movs r0,#0
+ subs r2,#(32-\width)
+ lsls r2,#20
+ adds r1,r2
+ bx lr
+.endm
+i2d_middle 21
+i2d_middle 20
+i2d_middle 19
+
 #include "native_eabi_m0_convert.inc"
+#include "native_eabi_m0_product.inc"
 
 // Positive Q62 in [sin(1/64),1], sign in R3. The quotient discards only
 // 3..10 bits, so all rounding bits are in R0. Exact nearest-even packing.
@@ -466,7 +495,22 @@ function __aeabi_dmul
 end __aeabi_dmul
 #endif
 
-function __aeabi_llsl
+// Separate these small helpers from the trig argument/literal cache sets.
+// Only RP2040 changes placement; every instruction body stays unchanged.
+.macro math_shift_function name
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ .section .scratch_y.m0_shift_hot,"ax",%progbits
+ .align 2
+ .global \name
+ .type \name,%function
+ .thumb_func
+\name:
+#else
+ function \name
+#endif
+.endm
+
+math_shift_function __aeabi_llsl
  cmp r2, #32
  bhs 1f
  mov r3, r0
@@ -485,7 +529,7 @@ function __aeabi_llsl
  bx lr
 end __aeabi_llsl
 
-function __aeabi_llsr
+math_shift_function __aeabi_llsr
  cmp r2, #32
  bhs 1f
  mov r3, r1
@@ -504,7 +548,7 @@ function __aeabi_llsr
  bx lr
 end __aeabi_llsr
 
-function __aeabi_lasr
+math_shift_function __aeabi_lasr
  cmp r2, #32
  bhs 1f
  mov r3, r1
@@ -554,6 +598,36 @@ function __aeabi_uidiv
 end __aeabi_uidiv
 .global __aeabi_uidivmod
 .thumb_set __aeabi_uidivmod, __aeabi_uidiv
+
+// Math-only quotient seed. An interrupted caller's pending SIO operation
+// takes the ordinary EABI path; never consume or overwrite its result.
+function mk61_m0_math_udiv32
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ cmp r1,#0
+ beq 2f
+ ldr r2,=0xd0000078
+ ldr r3,[r2]
+ lsrs r3,#2
+ bcs 2f
+ subs r2,#24
+ str r0,[r2]
+ str r1,[r2,#4]
+ // Match Pico SDK's four-branch, eight-cycle hardware divider pause.
+ b 1f
+1: b 1f
+1: b 1f
+1: b 1f
+1: ldr r0,[r2,#16]
+ bx lr
+2:
+#endif
+ b __aeabi_uidiv
+end mk61_m0_math_udiv32
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#include "native_eabi_m0_log70_ratio.inc"
+#endif
+.ltorg
+
 function __aeabi_idiv
  push {r4, lr}
  bl mk61_m0_sdiv32
@@ -710,39 +784,35 @@ function mk61_m0_sqrtf
 #include "native_eabi_m0_sqrt_table.inc"
 end mk61_m0_sqrtf
 
-// Centered Q24 coordinate in R2; c0/c1/c2 in R0/R1/R3. The quadratic
-// term only needs Q16 coordinates; the final product retains all Q24 bits.
+// Centered Q20 coordinate in R2; c0/c1/c2 in R0/R1/R3. Both signed
+// partial products fit 32 bits; their separate floors lose <2 seed units.
 .macro sqrt64_polynomial
- asrs r4,r2,#8
+ asrs r4,r2,#4
  muls r3,r4
  asrs r3,#16
  adds r1,r3
- uxth r3,r1
- uxth r4,r2
- muls r4,r3
- lsrs r4,#16
- asrs r5,r2,#16
- muls r5,r3
- adds r4,r5
- asrs r1,#16
+ lsls r3,r1,#20
+ lsrs r3,#20
+ muls r3,r2
+ asrs r3,#20
+ asrs r1,#12
  muls r1,r2
- adds r4,r1
- asrs r4,#8
- adds r0,r4
+ asrs r1,#8
+ adds r1,r3
+ adds r0,r1
 .endm
 
 // Exact 32-bit square: R0 is retained, R4:R3 is the result.
-.macro sqrt64_square32
+.macro sqrt64_square32 scratch
  uxth r2,r0
  lsrs r3,r0,#16
  mov r4,r2
  muls r4,r2
  muls r2,r3
  muls r3,r3
- mov r5,r2
- lsls r5,#17
+ lsls \scratch,r2,#17
  lsrs r2,#15
- adds r4,r5
+ adds r4,\scratch
  adcs r3,r2
 .endm
 
@@ -760,26 +830,31 @@ function mk61_m0_sqrt
 .Lsqrt64_normal:
  push {r4-r7,lr}
  // N=m*2^62, 1 <= m < 4. Preserve its low/high words and exponent.
- lsls r2,r1,#12
- lsrs r5,r2,#1
- movs r6,#1
- lsls r6,#31
- orrs r5,r6
+ lsrs r6,r3,#1
+ bcc 2f
+ // The odd biased exponent already supplies the hidden bit.
+ lsls r5,r1,#11
+ lsrs r5,#1
+ lsrs r4,r0,#22
+ orrs r5,r4
+ lsls r4,r0,#10
+ b 1f
+2:
+ lsls r5,r1,#11
+ movs r4,#1
+ lsls r4,#31
+ orrs r5,r4
  lsrs r4,r0,#21
  orrs r5,r4
  lsls r4,r0,#11
- lsrs r6,r3,#1
- bcc 1f
- lsls r6,r5,#31
- lsrs r4,#1
- orrs r4,r6
- lsrs r5,#1
 1:
  ldr r6,=1021
  adds r6,r3
  lsrs r6,#1
  lsls r6,#20
- push {r4-r6}
+ // LR is available throughout this leaf path; keep N.low there.
+ mov lr,r4
+ // Both polynomials preserve N.high in R5 and the exponent in R6.
  // Parity + eight leading fraction bits select the midpoint.
  lsls r7,r1,#11
  lsrs r7,#23
@@ -789,106 +864,209 @@ function mk61_m0_sqrt
  movs r3,#1
  lsls r3,#31
  eors r2,r3
- asrs r2,#8
- lsls r7,#5
- adr r6,.Lsqrt64_coefficients
- adds r7,r6
- ldmia r7!,{r0,r1,r3}
+ asrs r2,#11
+ adds r2,#1
+ asrs r2,#1
+ // Four packed words per row. The larger seed bounds still permit
+ // one exact correction after Newton; the table occupies only 8 KiB.
+ lsls r7,#4
+ adr r4,.Lsqrt64_coefficients
+ adds r7,r4
+ ldmia r7!,{r0,r1}
+ asrs r3,r1,#21
+ lsls r3,#3
+ lsls r1,#11
+ lsrs r1,#9
  sqrt64_polynomial
- mov r6,r0                    // R ~= sqrt(m)*2^31
- ldmia r7!,{r0,r1,r3}
+ // A certified one-unit bias in the last cell keeps R within a word.
+ mov r12,r0                   // R ~= sqrt(m)*2^31
+ ldmia r7!,{r0,r1}
+ lsrs r3,r1,#21
+ lsls r3,#3
+ lsls r1,#11
+ asrs r1,#9
  sqrt64_polynomial
  mov r7,r0                    // V ~= 2^31/sqrt(m)
- mov r0,r6
- lsls r4,r0,#21
- lsrs r5,r0,#11
- push {r4,r5}
- sqrt64_square32
- ldr r0,[sp,#8]
- ldr r2,[sp,#12]
+ mov r0,r12
+ sqrt64_square32 r1
+ mov r0,lr
+ mov r2,r5
  subs r0,r4
  sbcs r2,r3
- // The exact signed residual fits 36 bits. Dropping five low bits
- // changes the refined root by less than 1/64 of an integer unit.
- lsrs r0,#5
- lsls r2,#27
+ // The signed residual fits 37 bits. Dropping six low bits contributes
+ // less than 63*(2^31+13)/2^42 to the Q52 root error.
+ lsrs r0,#6
+ lsls r2,#26
  orrs r0,r2
- mov r2,r7
- // Three partial products approximate the signed high word to less
- // than two units (1/16 root unit after the following shift).
+ // The three partial products undershoot the real high product by <3.
+ // Adding nine and shifting four places bounds the error below 5/8.
  asrs r4,r0,#16
  uxth r5,r0
- lsrs r6,r2,#16
- uxth r7,r2
- muls r5,r6
+ lsrs r3,r7,#16
+ uxth r7,r7
+ muls r5,r3
  lsrs r5,#16
  muls r7,r4
  asrs r7,#16
- muls r4,r6
+ muls r4,r3
  adds r4,r5
  adds r4,r7
- adds r4,#17                  // nearest, compensating omitted carries
- asrs r2,r4,#5
- pop {r0,r1}
+ adds r4,#9
+ asrs r2,r4,#4
+ mov r0,r12
+ lsrs r1,r0,#11
+ lsls r0,#21
  asrs r3,r2,#31
  adds r0,r2
  adcs r1,r3
- // q is already within two units of the exact root. Its signed
- // 106-bit residual fits 64 bits, so only the low square is needed.
- sqrt64_square32
+ // Certified polynomial errors (<11 root / <13 inverse Q31 units)
+ // bound q's error below one unit. A single exact correction suffices.
+ // Its signed 106-bit residual fits 64 bits; only the low square is needed.
+ sqrt64_square32 r7
  mov r5,r0
  muls r5,r1
  lsls r5,#1
  adds r3,r5
- ldr r6,[sp,#0]
- lsls r6,#10
+ mov r7,lr
+ lsls r7,#10
  movs r5,#0
  subs r5,r4
- sbcs r6,r3                   // R6:R5 = radicand-q*q
-.Lsqrt64_round:
- cmp r6,#0
+ sbcs r7,r3                   // R7:R5 = radicand-q*q
  bmi .Lsqrt64_negative_residual
- cmp r6,r1
+ cmp r7,r1
  blo .Lsqrt64_pack
  bhi .Lsqrt64_increment
  cmp r5,r0
  bls .Lsqrt64_pack
 .Lsqrt64_increment:
- // Increment q and update the residual by -(2*q+1).
- subs r5,r0
- sbcs r6,r1
  movs r2,#0
  adds r0,#1
  adcs r1,r2
- subs r5,r0
- sbcs r6,r1
- b .Lsqrt64_round
+ b .Lsqrt64_pack
 .Lsqrt64_negative_residual:
- adds r2,r5,r0
- mov r3,r6
- adcs r3,r1
+ adds r5,r0
+ adcs r7,r1
  bmi .Lsqrt64_decrement
  bne .Lsqrt64_pack
- cmp r2,#0
+ cmp r5,#0
  bne .Lsqrt64_pack
 .Lsqrt64_decrement:
- adds r5,r0
- adcs r6,r1
  movs r2,#0
  subs r0,#1
  sbcs r1,r2
- adds r5,r0
- adcs r6,r1
- b .Lsqrt64_round
 .Lsqrt64_pack:
- ldr r2,[sp,#8]
- adds r1,r2
- add sp,#12
+ adds r1,r6
  pop {r4-r7,pc}
 .ltorg
 .align 5
 .Lsqrt64_coefficients:
 #include "native_eabi_m0_sqrt64_table.inc"
 end mk61_m0_sqrt
+// Thin exact-power dispatch keeps trivial results out of the large frame.
+.section .m0_pow_dispatch_extension,"ax",%progbits
+.align 2
+ .global mk61_m0_pow_fast
+ .type mk61_m0_pow_fast,%function
+ .thumb_func
+mk61_m0_pow_fast:
+ cmp r2,#0
+ bne .Lpow_dispatch
+ ldr r2,=0x3ff00000
+ cmp r3,r2
+ beq .Lpow_identity
+ ldr r2,=0xbff00000
+ cmp r3,r2
+ beq .Lpow_reciprocal
+ ldr r2,=0x40000000
+ cmp r3,r2
+ beq .Lpow_square
+ ldr r2,=0x3fe00000
+ cmp r3,r2
+ beq .Lpow_square_root
+ ldr r2,=0xbfe00000
+ cmp r3,r2
+ beq .Lpow_inverse_root
+.Lpow_restore_low:
+ movs r2,#0
+.Lpow_dispatch:
+ b mk61_m0_pow_dispatch
+.Lpow_identity:
+ lsls r3,r1,#1
+ lsrs r3,#1
+ ldr r2,=0x7ff00000
+ cmp r3,r2
+ blo .Lpow_identity_return
+ bhi .Lpow_identity_quiet
+ cmp r0,#0
+ beq .Lpow_identity_return
+.Lpow_identity_quiet:
+ ldr r2,=0x00080000
+ orrs r1,r2
+.Lpow_identity_return:
+ bx lr
+.Lpow_reciprocal:
+ ldr r2,=__aeabi_ddiv
+ mov r12,r2
+ mov r3,r1
+ mov r2,r0
+ movs r0,#0
+ ldr r1,=0x3ff00000
+ bx r12
+.Lpow_square:
+ lsls r2,r1,#1
+ lsrs r2,#21
+ ldr r3,=484
+ cmp r2,r3
+ bls .Lpow_square_zero
+ ldr r3,=1535
+ cmp r2,r3
+ blo .Lpow_square_multiply
+ ldr r3,=2047
+ cmp r2,r3
+ blo .Lpow_square_infinity
+.Lpow_square_multiply:
+ ldr r2,=__aeabi_dmul
+ mov r12,r2
+ mov r2,r0
+ mov r3,r1
+ bx r12
+.Lpow_square_zero:
+ movs r0,#0
+ movs r1,#0
+ bx lr
+.Lpow_square_infinity:
+ movs r0,#0
+ ldr r1,=0x7ff00000
+ bx lr
+.Lpow_square_root:
+ cmp r1,#0
+ bmi .Lpow_restore_low
+ ldr r2,=mk61_m0_sqrt
+ bx r2
+.Lpow_inverse_root:
+ lsrs r2,r1,#20
+ cmp r2,#0
+ beq .Lpow_restore_low
+ ldr r3,=0x7ff
+ cmp r2,r3
+ bhs .Lpow_restore_negative_half
+ ldr r2,=pow_rsqrt
+ bx r2
+.Lpow_restore_negative_half:
+ ldr r3,=0xbfe00000
+ b .Lpow_restore_low
+.ltorg
+end mk61_m0_pow_fast
 .section .note.GNU-stack,"",%progbits
 #endif
+
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__))
+.global _ZN12compact_math4sqrtEd
+.thumb_set _ZN12compact_math4sqrtEd,mk61_m0_sqrt
+.global _ZN12compact_math3powEdd
+.thumb_set _ZN12compact_math3powEdd,mk61_m0_pow_fast
+#endif
+
+#include "native_eabi_m0_pow_argument.inc"
+
+#include "native_eabi_m0_pow_exp_product.inc"

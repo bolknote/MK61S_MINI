@@ -1,0 +1,149 @@
+{
+  "recorded_at": "2026-10-21T08:26:23.050912+00:00",
+  "status": "PRODUCTION_OFFLINE_QUALIFIED_PHYSICAL_PENDING",
+  "variant": "V57_shift_helper_flash_placement_on_V56",
+  "root_promoted": false,
+  "m4_changed": false,
+  "source": ".build/m0-shift-placement-v57-20261021/source",
+  "elf_sha256": "1984c2d0cc2cf368226e35b77090c6cd920753bdf6b31ce7d073986310e914b0",
+  "placement": {
+    "status": "PASS",
+    "unchanged_helpers": {
+      "__aeabi_llsl": {
+        "bytes": 30,
+        "sha256": "6b4c5109a462f2cdd932368550029337707a3f1a7b539d665c6abbcf3ce8785a",
+        "before": "0x10069c06",
+        "after": "0x1014d280"
+      },
+      "__aeabi_llsr": {
+        "bytes": 30,
+        "sha256": "0af29bc141f3b3eb4d2f0f289a013beb9e2d1fbda4b6554c39aacc8ad2ba771b",
+        "before": "0x10069c24",
+        "after": "0x1014d2a0"
+      },
+      "__aeabi_lasr": {
+        "bytes": 30,
+        "sha256": "f46c8ea26243b364056ad9ff6e1ea7a42235a9a3d673756278779f1cbbb7b5a6",
+        "before": "0x10069c42",
+        "after": "0x1014d2c0"
+      }
+    },
+    "ram_boundaries_unchanged": [
+      "__data_start__",
+      "__data_end__",
+      "__bss_start__",
+      "__bss_end__",
+      "__end__",
+      "__HeapLimit",
+      "__StackBottom",
+      "__StackTop",
+      "__StackOneBottom",
+      "__StackOneTop",
+      "__lcd_dma_end__"
+    ],
+    "generic_m0_assembly": "Every allocated section byte-identical",
+    "elf_sha256": "1984c2d0cc2cf368226e35b77090c6cd920753bdf6b31ce7d073986310e914b0"
+  },
+  "change": "Relocate the three30-byte64-bit shift helper bodies together to0x1014d280. Actual before/after function bytes are identical; generic ARMv6-M assembly and both M4 ABIs remain unchanged.",
+  "qualification": {
+    "all12_cases": 265409,
+    "all12_wrong_rounding": 0,
+    "all12_path": ".build/m0-shift-placement-v57-20261021/all12.json",
+    "all12_sha256": "8f9240cbaa78ceba23209eaadff30cd1488e43e3c8c3999b0e7829261efc1c99",
+    "pow_target_cases": 139211,
+    "exact_ratio_cases": 104846,
+    "latency_checks": 524245,
+    "m4_status": "PASS",
+    "gates_path": ".build/m0-shift-placement-v57-20261021/gates.json"
+  },
+  "cache_prediction": {
+    "trace": ".build/m0-shift-placement-v57-20261021/cache-trace.json",
+    "trace_sha256": "48337cc8231f6ee9c1bfe0bf1f728736adf7d51af3907137284d8be43ccb9a4a",
+    "model": "8byte lines,1024 sets,two ways,assumed LRU. Actual ARM instruction/data trace; simplified word prefetch. Core1/IRQ/APP fetches not modeled. Predictions guide placement, not replace target measurements.",
+    "comparison": [
+      {
+        "chunk": 12,
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "baseline_model_misses": 2.09375,
+        "new_model_misses": 1.75,
+        "baseline_hardware_misses": 4.576171875
+      },
+      {
+        "chunk": 16,
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "baseline_model_misses": 2.625,
+        "new_model_misses": 0.0,
+        "baseline_hardware_misses": 6.8154296875
+      },
+      {
+        "chunk": 17,
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "baseline_model_misses": 4.0390625,
+        "new_model_misses": 0.0,
+        "baseline_hardware_misses": 9.98876953125
+      },
+      {
+        "chunk": 19,
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "baseline_model_misses": 12.0,
+        "new_model_misses": 0.0,
+        "baseline_hardware_misses": 28.812316715542522
+      },
+      {
+        "chunk": 20,
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "baseline_model_misses": 0.0,
+        "new_model_misses": 0.0,
+        "baseline_hardware_misses": 0.05083088954056696
+      },
+      {
+        "chunk": 110,
+        "operation": "pow",
+        "stream": "composed_wide_exponents",
+        "baseline_model_misses": 1.31640625,
+        "new_model_misses": 1.4296875,
+        "baseline_hardware_misses": 3.19189453125
+      },
+      {
+        "chunk": 115,
+        "operation": "pow",
+        "stream": "composed_exact_exponents",
+        "baseline_model_misses": 0.14453125,
+        "new_model_misses": 0.16796875,
+        "baseline_hardware_misses": 0.41845703125
+      }
+    ],
+    "scope": "Inference from actual ARM traces under an assumed LRU/word-prefetch model. V55 hardware misses exceed its modeled values; core1/IRQ/APP are omitted. No V57 timing or cache-hit improvement has been physically verified.",
+    "reference": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=123"
+  },
+  "static_ram_added_bytes": 0,
+  "new_lookup_table_bytes": 0,
+  "physical_timing_pending": true,
+  "diagnostic": ".build/m0-shift-placement-v57-timing-20261021",
+  "hardware_lease": "Peer hardware-qpi-buffers owns USB; do not flash until explicit handoff and latest accepted restore is incorporated.",
+  "remaining": "Rebase and measure all affected streams; universal final pow fallback totality remains unresolved.",
+  "diagnostic_gates": {
+    "layout-proof.json": {
+      "status": "PASS",
+      "sha256": "4892db55f29b985a99416847c6edb2e771f39fe5bf5db4ad00f24517b3c2ce9f"
+    },
+    "reference-link-proof.json": {
+      "status": "PASS",
+      "sha256": "abda0ae0a1b9b47fd29c8c03ddeb320e1997468a72ebb553bd97d246d27aa736"
+    },
+    "firmware-self-test.json": {
+      "status": "PASS",
+      "sha256": "fd5683e6414e94ca76f0e5e0526b729151882b78cafaf104a10f9e6bea9e7c1e"
+    },
+    "app-self-test/result.json": {
+      "status": "PASS",
+      "sha256": "7f7ab21ef836fcd8a46d73e09883af6894cd4b5c715cce41e15a1d744e1246a0"
+    }
+  },
+  "canonical_root_math_files_unchanged": 44
+}

@@ -30,6 +30,14 @@
 static_assert(DBL_MANT_DIG == 53 && DBL_MAX_EXP == 1024,
               "compact math requires IEEE binary64");
 
+// RP2040 public entry points alias their native kernels below. The legacy
+// implementations remain available to the other targets.
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__))
+#define MK61_M0_UNUSED_FALLBACK __attribute__((unused))
+#else
+#define MK61_M0_UNUSED_FALLBACK
+#endif
+
 namespace compact_math {
 namespace {
 inline uint64_t bits(double x) { return mk_math::binary64_bits(x); }
@@ -211,7 +219,7 @@ inline uint64_t reduced(double x,int &e) {
   return fixed_kernel::rounded_shift62(fixed_kernel::multiply(q,factor));
 #endif
 }
-double evaluate(double x) {
+MK61_M0_UNUSED_FALLBACK double evaluate(double x) {
   const uint64_t b=bits(x),sign=b&UINT64_C(0x8000000000000000);
   const uint32_t h=hi_word(x)&0x7FFFFFFFU;
   if (h<0x3E400000U) return x;
@@ -265,7 +273,7 @@ inline uint32_t short_divide(uint64_t numerator,uint32_t denominator) {
   }
   return (q1<<16)|q0;
 }
-double evaluate(double x) {
+MK61_M0_UNUSED_FALLBACK double evaluate(double x) {
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
   return mk61_m0_sqrt(x);
 #else
@@ -556,7 +564,7 @@ __attribute__((noinline)) double ratio(double z) {
   const double q = one+z*(qS1+z*(qS2+z*(qS3+z*qS4)));
   return p/q;
 }
-double evaluate(double x)
+MK61_M0_UNUSED_FALLBACK double evaluate(double x)
 {
         double t=0.0,w,p,q,c,r,s;
         int32_t hx,ix;
@@ -597,7 +605,7 @@ double evaluate(double x)
         }
         if(hx>0) return t; else return -t;
 }
-double complement(double x)
+MK61_M0_UNUSED_FALLBACK double complement(double x)
 {
         double z,r,w,s,c,df;
         int32_t hx,ix;
@@ -660,7 +668,7 @@ __attribute__((noinline)) double polynomial(double z) {
   const double w = z*z;
   return w*(Lg2+w*(Lg4+w*Lg6)) + z*(Lg1+w*(Lg3+w*(Lg5+w*Lg7)));
 }
-double evaluate(double x)
+MK61_M0_UNUSED_FALLBACK double evaluate(double x)
 {
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
         const uint32_t high=hi_word(x);
@@ -832,7 +840,7 @@ double exponential_pair(double p_h, double p_l) {
         return exponential_reduced(z,w,n);
 
 }
-double evaluate(double x, double y)
+MK61_M0_UNUSED_FALLBACK double evaluate(double x, double y)
 {
         double z,ax,p_h,p_l;
         double y1,t1,t2,s,u;
@@ -953,13 +961,51 @@ double evaluate(double x, double y)
 
 } // private kernels
 
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
 double sqrt(double x) { return square_root::evaluate(x); }
-double atan(double x) { return arctangent::evaluate(x); }
-double asin(double x) { return arcsine::evaluate(x); }
-double acos(double x) { return arcsine::complement(x); }
-double pow(double x, double y) { return power::evaluate(x,y); }
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
+double atan(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_atan(x);
+#endif
+  return arctangent::evaluate(x);
+}
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
+double asin(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_asin(x);
+#endif
+  return arcsine::evaluate(x);
+}
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
+double acos(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_acos(x);
+#endif
+  return arcsine::complement(x);
+}
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
+double pow(double x, double y) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_pow_fast(x,y);
+#endif
+  return power::evaluate(x,y);
+}
+#endif
+
 
 double sin(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_trig(x,0);
+#endif
   const uint32_t h = hi_word(x) & 0x7FFFFFFFU;
   if (h < 0x3E400000U) return x;
   if (h >= 0x7FF00000U) return x-x;
@@ -980,6 +1026,9 @@ double sin(double x) {
   }
 }
 double cos(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_trig(x,1);
+#endif
   const uint32_t h = hi_word(x) & 0x7FFFFFFFU;
   if (h < 0x3E400000U) return 1.0;
   if (h >= 0x7FF00000U) return x-x;
@@ -1000,6 +1049,9 @@ double cos(double x) {
   }
 }
 double tan(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_trig(x,2);
+#endif
   const uint32_t h = hi_word(x) & 0x7FFFFFFFU;
   if (h < 0x3E400000U) return x;
   if (h >= 0x7FF00000U) return x-x;
@@ -1025,14 +1077,21 @@ double tan(double x) {
 #endif
   return n & 1 ? -c/s : s/c;
 }
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
 double ln(double x) {
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
-  const uint32_t high=hi_word(x);
-  if(high>=0x00100000U && high<0x7FF00000U) return mk61_m0_ln(x);
-#endif
+  return mk61_m0_ln(x);
+#else
   return natural_log::evaluate(x);
+#endif
 }
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
 double log10(double x) {
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
+  return mk61_m0_log10(x);
+#endif
   if (x == 0.0) return -infinity();
   if (x < 0.0) return nan(x);
   if (!mk_math::is_finite(x)) return x+x;
@@ -1053,6 +1112,9 @@ double log10(double x) {
     (k*3.69423907715893078616e-13 +
      0x1.BCB7B1526E50Ep-2*natural_log::evaluate(x));
 }
+#endif
+
+#if !(defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__)))
 double exp(double x) {
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && (defined(__arm__) || defined(__thumb__))
   return mk61_m0_exp(x);
@@ -1073,7 +1135,10 @@ double exp(double x) {
   return power::exponential_reduced(r,tail,n);
 #endif
 }
+#endif
+
 } // namespace compact_math
+#undef MK61_M0_UNUSED_FALLBACK
 #undef GET_HIGH_WORD
 #undef GET_LOW_WORD
 #undef EXTRACT_WORDS

@@ -1,0 +1,86 @@
+{
+  "recorded_at": "2026-10-21T09:41:13.941978+00:00",
+  "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
+  "variant": "V59_contiguous_hot_pow_code_and_inverse_root_seeds",
+  "root_promoted": false,
+  "m4_changed": false,
+  "source": ".build/m0-pow-packing-v59-20261021/source",
+  "elf_sha256": "6d6bc015ea7f9313beb94ed04152b65745f1e787399934b653e50979eaf568ff",
+  "change": "Linker-only packing after the preceding pow section, aligned16, instead of retaining the historical empty gap.",
+  "hot_start": "0x10160000",
+  "dispatch_start": "0x10160e30",
+  "hot_end": "0x10161c28",
+  "combined_span_bytes": 7208,
+  "source_implementation_files_unchanged": 1030,
+  "additional_ram_bytes": 0,
+  "new_tables_bytes": 0,
+  "all12_cases": 265409,
+  "pow_target_cases": 139211,
+  "cache_prediction_matched_actual_linked_trace": true,
+  "cache_model": {
+    "status": "PASS_MODEL",
+    "old": "0x10161a18",
+    "packed": "0x10160e30",
+    "pow_code_bytes": 3628,
+    "dispatch_and_table_bytes": 3576,
+    "combined_span_bytes": 7208,
+    "end": "0x10161c28",
+    "groups": [
+      {
+        "index": 109,
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "model_before": 0.1484375,
+        "model_packed": 0.15625
+      },
+      {
+        "index": 110,
+        "stream": "composed_wide_exponents",
+        "cases": 256,
+        "model_before": 1.3828125,
+        "model_packed": 1.33203125
+      },
+      {
+        "index": 111,
+        "stream": "composed_near_one",
+        "cases": 48,
+        "model_before": 9.520833333333334,
+        "model_packed": 6.708333333333333
+      },
+      {
+        "index": 112,
+        "stream": "composed_negative_integer",
+        "cases": 256,
+        "model_before": 1.07421875,
+        "model_packed": 1.0546875
+      },
+      {
+        "index": 113,
+        "stream": "composed_negative_wide",
+        "cases": 256,
+        "model_before": 1.19921875,
+        "model_packed": 1.1328125
+      },
+      {
+        "index": 114,
+        "stream": "composed_negative_near_one",
+        "cases": 64,
+        "model_before": 0.484375,
+        "model_packed": 0.421875
+      },
+      {
+        "index": 115,
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "model_before": 0.17578125,
+        "model_packed": 0.03125
+      }
+    ],
+    "scope": "Actual V58 address trace remapped as one section. Assumed2way LRU,8byte lines and simplified prefetch; this is not a target timing result."
+  },
+  "linked_cache_trace": ".build/m0-pow-packing-v59-20261021/cache-trace.json",
+  "model_scope": "Assumed2way LRU with8byte lines and simplified prefetch. This estimates the effect of the final linked placement; no V59 physical result exists yet.",
+  "physical_timing_pending": true,
+  "diagnostic": ".build/m0-pow-packing-v59-timing-20261021",
+  "note": "The final linked hot span is7208bytes; pre-link address remapping predicted7216 because of linker padding. Main RAM and allocated payload are unchanged."
+}

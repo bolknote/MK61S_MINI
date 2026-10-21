@@ -1,0 +1,2083 @@
+{
+  "recorded_at": "2026-10-21T07:38:07.165140+00:00",
+  "status": "V9_QUALIFIED_FULL_HARD_CORPUS_AND_SIX_PHYSICAL_WINS_RESTORED",
+  "entry": "qfp_dln_checked",
+  "variant": "compensated_Q82_relative_near66",
+  "firmware_integrated": false,
+  "m4_changed": false,
+  "standalone_code_and_constants_bytes": 11996,
+  "static_ram_bytes": 0,
+  "observed_stack_bytes": 532,
+  "additional_lookup_table_bytes": 1272,
+  "table_breakdown": {
+    "compensated_fast_bytes": 472,
+    "shared_refinement_bytes": 800
+  },
+  "standalone_qualification": {
+    "status": "PASS_RESEARCH_GATES",
+    "cases": 57698,
+    "wrong_rounding": 0,
+    "fast_interval_certificates": 52637,
+    "fast_interval_precision": 82,
+    "fast_Q62_interval_certificates": 0,
+    "fast_Q82_interval_certificates": 52637,
+    "integer_model_matches": 52637,
+    "forced_refinement_cases": 264,
+    "relative_seed_interval_certificates": 23581,
+    "forced_refinement_undecided": {
+      "4": 1,
+      "8": 1
+    },
+    "instructions": {
+      "normal_exponents": {
+        "cases": 256,
+        "original_mean": 799.25390625,
+        "checked_mean": 629.4765625,
+        "original_max": 851,
+        "checked_max": 710,
+        "checked_over_original": 0.7875802139690825
+      },
+      "ordinary_half_to_two": {
+        "cases": 256,
+        "original_mean": 777.6328125,
+        "checked_mean": 611.8515625,
+        "original_max": 821,
+        "checked_max": 691,
+        "checked_over_original": 0.7868129439303977
+      },
+      "near_one_tiny": {
+        "cases": 9,
+        "original_mean": 713.6666666666666,
+        "checked_mean": 101.33333333333333,
+        "original_max": 745,
+        "checked_max": 120,
+        "checked_over_original": 0.14198972442783747
+      },
+      "near_one_outer": {
+        "cases": 54,
+        "original_mean": 743.6111111111111,
+        "checked_mean": 606.2777777777778,
+        "original_max": 863,
+        "checked_max": 620,
+        "checked_over_original": 0.8153156518490848
+      },
+      "decimal_powers": {
+        "cases": 121,
+        "original_mean": 800.099173553719,
+        "checked_mean": 624.6528925619834,
+        "original_max": 853,
+        "checked_max": 726,
+        "checked_over_original": 0.7807193323141759
+      },
+      "near_one_random": {
+        "cases": 512,
+        "original_mean": 760.720703125,
+        "checked_mean": 648.13671875,
+        "original_max": 842,
+        "checked_max": 10401,
+        "checked_over_original": 0.8520035225641802
+      }
+    },
+    "checked_code_and_constants_bytes": 11996,
+    "additional_constant_table_bytes": 1272,
+    "static_ram_bytes": 0,
+    "observed_stack_bytes": 532,
+    "elf_sha256": "e3f9a597b5869bac1c4ec7357462561583b4ed62ef229f30e4a02a01960868b9",
+    "oracle": "MPFR directed bounds: exact RNE and direct containment of Q62 intervals",
+    "mpfr": "4.2.2",
+    "result_sha256": "cf9970de399097174b3bbdab0e3347016620902bb75bb84b41e14022cdc90594",
+    "build": {
+      "status": "PASS",
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "images": {
+        "original": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-near-v9-20261021/original.elf",
+          "elf_sha256": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+          "source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+        },
+        "modified": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-near-v9-20261021/modified.elf",
+          "elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+          "source_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7"
+        },
+        "checked": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-near-v9-20261021/checked.elf",
+          "variant": "compensated_Q82_relative_near66",
+          "elf_sha256": "e3f9a597b5869bac1c4ec7357462561583b4ed62ef229f30e4a02a01960868b9",
+          "sources_sha256": {
+            "src/qfplib-m0-full_gcc.S": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+            "src/ln_comp_constants.inc": "23b186937e4f26f44b131650c65adf9bd722ea1e7eaa6a9618db1d3a627d0be9",
+            "src/ln_comp96.inc": "fb672ff9cf2bfdb62c1dcb25f32989a57c8976eda053f31a15a6a98faad9b041",
+            "src/ln_checked.c": "35ca0510d47a5197e786fc4a1de772bfdd70fca9ece95ca0dfdfc4b593512371",
+            "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+          }
+        }
+      },
+      "firmware_linked": false
+    },
+    "synthetic_pack_certificates": {
+      "cases": 11026,
+      "accepted": 7975,
+      "power_boundary_regressions": 1026
+    },
+    "exact_integer_product_cases": 10049,
+    "qualification_script_sha256": "56ce68d909c87d15d2df5da4107601cbca6e457c2ecb18b974ab6fdb7dbbec2d",
+    "limitations": [
+      "Not integrated into firmware; M4 unchanged.",
+      "Finite qualification corpus; Q245 final undecided trap remains, all-input totality unproved.",
+      "Physical timing pending; instruction groups may still be slower than Qfplib.",
+      "Other Qfplib functions retain their previous limitations."
+    ],
+    "scope": "Research qualification of interval-certified ln only; does not establish completion of the whole runtime objective."
+  },
+  "diagnostic_qualification": {
+    "status": "PASS_RESEARCH_GATES",
+    "cases": 57698,
+    "wrong_rounding": 0,
+    "fast_interval_certificates": 52637,
+    "fast_interval_precision": 82,
+    "fast_Q62_interval_certificates": 0,
+    "fast_Q82_interval_certificates": 52637,
+    "integer_model_matches": 52637,
+    "forced_refinement_cases": 264,
+    "relative_seed_interval_certificates": 23581,
+    "forced_refinement_undecided": {
+      "4": 1,
+      "8": 1
+    },
+    "instructions": {
+      "normal_exponents": {
+        "cases": 256,
+        "original_mean": 799.25390625,
+        "checked_mean": 629.4765625,
+        "original_max": 851,
+        "checked_max": 710,
+        "checked_over_original": 0.7875802139690825
+      },
+      "ordinary_half_to_two": {
+        "cases": 256,
+        "original_mean": 777.6328125,
+        "checked_mean": 611.8515625,
+        "original_max": 821,
+        "checked_max": 691,
+        "checked_over_original": 0.7868129439303977
+      },
+      "near_one_tiny": {
+        "cases": 9,
+        "original_mean": 713.6666666666666,
+        "checked_mean": 101.33333333333333,
+        "original_max": 745,
+        "checked_max": 120,
+        "checked_over_original": 0.14198972442783747
+      },
+      "near_one_outer": {
+        "cases": 54,
+        "original_mean": 743.6111111111111,
+        "checked_mean": 606.2777777777778,
+        "original_max": 863,
+        "checked_max": 620,
+        "checked_over_original": 0.8153156518490848
+      },
+      "decimal_powers": {
+        "cases": 121,
+        "original_mean": 800.099173553719,
+        "checked_mean": 624.6528925619834,
+        "original_max": 853,
+        "checked_max": 726,
+        "checked_over_original": 0.7807193323141759
+      },
+      "near_one_random": {
+        "cases": 512,
+        "original_mean": 760.720703125,
+        "checked_mean": 648.13671875,
+        "original_max": 842,
+        "checked_max": 10401,
+        "checked_over_original": 0.8520035225641802
+      }
+    },
+    "checked_code_and_constants_bytes": 17780,
+    "additional_constant_table_bytes": 1272,
+    "static_ram_bytes": 0,
+    "observed_stack_bytes": 532,
+    "elf_sha256": "0cfc1841702c98112eb946f5cd270549568d2a7fc10869d6267bf889a25f0bad",
+    "oracle": "MPFR directed bounds: exact RNE and direct containment of Q62 intervals",
+    "mpfr": "4.2.2",
+    "result_sha256": "cf9970de399097174b3bbdab0e3347016620902bb75bb84b41e14022cdc90594",
+    "build": {
+      "status": "PASS",
+      "images": {
+        "checked": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-near-v9-0812-timing-20261021/checked.elf",
+          "elf_sha256": "0cfc1841702c98112eb946f5cd270549568d2a7fc10869d6267bf889a25f0bad",
+          "variant": "compensated_Q82_relative_near66",
+          "sources_sha256": {
+            "src/qfplib-m0-full_gcc.S": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+            "src/ln_comp_constants.inc": "23b186937e4f26f44b131650c65adf9bd722ea1e7eaa6a9618db1d3a627d0be9",
+            "src/ln_comp96.inc": "fb672ff9cf2bfdb62c1dcb25f32989a57c8976eda053f31a15a6a98faad9b041",
+            "src/ln_checked.c": "35ca0510d47a5197e786fc4a1de772bfdd70fca9ece95ca0dfdfc4b593512371",
+            "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+          }
+        }
+      },
+      "firmware_linked": false,
+      "scope": "Private diagnostic reference separately linked; resident firmware link and initializers preserved. No public firmware changed."
+    },
+    "synthetic_pack_certificates": {
+      "cases": 11026,
+      "accepted": 7975,
+      "power_boundary_regressions": 1026
+    },
+    "exact_integer_product_cases": 10049,
+    "qualification_script_sha256": "56ce68d909c87d15d2df5da4107601cbca6e457c2ecb18b974ab6fdb7dbbec2d",
+    "limitations": [
+      "Not integrated into firmware; M4 unchanged.",
+      "Finite qualification corpus; Q245 final undecided trap remains, all-input totality unproved.",
+      "Physical timing pending; instruction groups may still be slower than Qfplib.",
+      "Other Qfplib functions retain their previous limitations."
+    ],
+    "scope": "Research qualification of interval-certified ln only; does not establish completion of the whole runtime objective."
+  },
+  "full_hard_corpus": {
+    "status": "PASS",
+    "complete_corpus": true,
+    "cases": 134944,
+    "wrong_rounding": 0,
+    "elf_sha256": "e3f9a597b5869bac1c4ec7357462561583b4ed62ef229f30e4a02a01960868b9",
+    "corpus_sha256": "de06732b1a74e35ac34b36ce55c2ba7d8445bfe2d67d70bc79efb8ee62d3b8d9",
+    "corpus_headers": [
+      "# worst cases from",
+      "# https://www.vinc17.net/research/testlibm/hrcases/hrcases-explog.xz:",
+      "# extra worst cases with 47 identical bits or more after the round bit",
+      "# we should have all worst cases with 47 identical bits or more in this file",
+      "# special values"
+    ],
+    "mpfr": "4.2.2",
+    "result_sha256": "ba37cb7629855c278c85a77e99d0ae1e5626bb8a5b09a06b00009564d384cded",
+    "refinement_entries": {
+      "4": 66613,
+      "8": 4
+    },
+    "abi": "Every actual ARM call verifies R4-R11, SP and bounded stack writes.",
+    "scope": "Complete saved hard-case file, independently checked against directed MPFR bounds; not by itself a formal proof of all-input corpus completeness or Q245 termination."
+  },
+  "hard_corpus_source": {
+    "url": "https://raw.githubusercontent.com/mockingbirdnest/core-math/master/src/binary64/log/log.wc",
+    "sha256": "de06732b1a74e35ac34b36ce55c2ba7d8445bfe2d67d70bc79efb8ee62d3b8d9",
+    "bytes": 3071697,
+    "numeric_lines": 134942,
+    "headers": [
+      "# worst cases from",
+      "# https://www.vinc17.net/research/testlibm/hrcases/hrcases-explog.xz:",
+      "# extra worst cases with 47 identical bits or more after the round bit",
+      "# we should have all worst cases with 47 identical bits or more in this file",
+      "# special values"
+    ],
+    "nonstandard": [
+      [
+        134942,
+        "+snan"
+      ],
+      [
+        134943,
+        "-snan"
+      ]
+    ],
+    "cases_including_signaling_nan": 134944,
+    "format_validation": "PASS: numeric unary tokens plus2 explicit IEEE signaling-NaN spellings"
+  },
+  "compensated_bound": {
+    "status": "PASS",
+    "precision": 82,
+    "steps": 18,
+    "error": 65536,
+    "rational_error_upper_bound": "8764140282820890427549892770591417/159693655882537765254669096960",
+    "reciprocal_error_upper_bound": "891904/43",
+    "cubic_error_upper_bound": "201357313/6144",
+    "quartic_tail_upper_bound": "67108864/262143",
+    "accepted_minimum_Q62": 3458764513820540928,
+    "third_integer_cases": 81924,
+    "constants": {
+      "status": "PASS",
+      "greedy_steps": 18,
+      "precision": 82,
+      "embedded_log_rows_bytes": 216,
+      "reciprocal_table_bytes": 256,
+      "data_bytes": 472,
+      "reciprocal_error_bound": "871/396288",
+      "ln2_delta_Q20": 55410,
+      "log_rows": [
+        {
+          "index": 0,
+          "nearest_Q62": "0x2c5c85fdf473de6b",
+          "delta_Q20": 55410
+        },
+        {
+          "index": 1,
+          "nearest_Q62": "0x19f323ecbf984bf3",
+          "delta_Q20": 300841
+        },
+        {
+          "index": 2,
+          "nearest_Q62": "0xe47fbe3cd4d10d6",
+          "delta_Q20": -77504
+        },
+        {
+          "index": 3,
+          "nearest_Q62": "0x789c1db8abcb97a",
+          "delta_Q20": -502303
+        },
+        {
+          "index": 4,
+          "nearest_Q62": "0x3e14618022c54cc",
+          "delta_Q20": -194962
+        },
+        {
+          "index": 5,
+          "nearest_Q62": "0x1f829b0e7833005",
+          "delta_Q20": 198404
+        },
+        {
+          "index": 6,
+          "nearest_Q62": "0xfe054587e01f1e",
+          "delta_Q20": -511853
+        },
+        {
+          "index": 7,
+          "nearest_Q62": "0x7f80a9ac419e24",
+          "delta_Q20": 61990
+        },
+        {
+          "index": 8,
+          "nearest_Q62": "0x3fe01545621781",
+          "delta_Q20": 442099
+        },
+        {
+          "index": 9,
+          "nearest_Q62": "0x1ff802a9ab10e6",
+          "delta_Q20": -494200
+        },
+        {
+          "index": 10,
+          "nearest_Q62": "0xffe0055455888",
+          "delta_Q20": 139226
+        },
+        {
+          "index": 11,
+          "nearest_Q62": "0x7ff800aa9aac4",
+          "delta_Q20": -268702
+        },
+        {
+          "index": 12,
+          "nearest_Q62": "0x3ffe001554556",
+          "delta_Q20": -139639
+        },
+        {
+          "index": 13,
+          "nearest_Q62": "0x1fff8002aa9ab",
+          "delta_Q20": 323314
+        },
+        {
+          "index": 14,
+          "nearest_Q62": "0xfffe00055545",
+          "delta_Q20": -350344
+        },
+        {
+          "index": 15,
+          "nearest_Q62": "0x7fff8000aaaa",
+          "delta_Q20": 349500
+        },
+        {
+          "index": 16,
+          "nearest_Q62": "0x3fffe0001555",
+          "delta_Q20": -283990
+        },
+        {
+          "index": 17,
+          "nearest_Q62": "0x1ffff80002ab",
+          "delta_Q20": 353622
+        },
+        {
+          "index": 18,
+          "nearest_Q62": "0xffffe000055",
+          "delta_Q20": -349269
+        }
+      ],
+      "reciprocal_Q10": [
+        1364,
+        1360,
+        1357,
+        1353,
+        1350,
+        1346,
+        1343,
+        1339,
+        1336,
+        1332,
+        1329,
+        1326,
+        1322,
+        1319,
+        1316,
+        1312,
+        1309,
+        1306,
+        1303,
+        1299,
+        1296,
+        1293,
+        1290,
+        1287,
+        1283,
+        1280,
+        1277,
+        1274,
+        1271,
+        1268,
+        1265,
+        1262,
+        1259,
+        1256,
+        1253,
+        1250,
+        1247,
+        1244,
+        1241,
+        1238,
+        1235,
+        1232,
+        1229,
+        1226,
+        1224,
+        1221,
+        1218,
+        1215,
+        1212,
+        1209,
+        1207,
+        1204,
+        1201,
+        1198,
+        1196,
+        1193,
+        1190,
+        1188,
+        1185,
+        1182,
+        1180,
+        1177,
+        1174,
+        1172,
+        1169,
+        1166,
+        1164,
+        1161,
+        1159,
+        1156,
+        1154,
+        1151,
+        1148,
+        1146,
+        1143,
+        1141,
+        1139,
+        1136,
+        1134,
+        1131,
+        1129,
+        1126,
+        1124,
+        1121,
+        1119,
+        1117,
+        1114,
+        1112,
+        1110,
+        1107,
+        1105,
+        1103,
+        1100,
+        1098,
+        1096,
+        1093,
+        1091,
+        1089,
+        1087,
+        1084,
+        1082,
+        1080,
+        1078,
+        1075,
+        1073,
+        1071,
+        1069,
+        1067,
+        1065,
+        1062,
+        1060,
+        1058,
+        1056,
+        1054,
+        1052,
+        1050,
+        1048,
+        1045,
+        1043,
+        1041,
+        1039,
+        1037,
+        1035,
+        1033,
+        1031,
+        1029,
+        1027,
+        1025
+      ],
+      "sha256": "23b186937e4f26f44b131650c65adf9bd722ea1e7eaa6a9618db1d3a627d0be9"
+    },
+    "source_sha256": {
+      "src/ln_comp96.inc": "fb672ff9cf2bfdb62c1dcb25f32989a57c8976eda053f31a15a6a98faad9b041",
+      "src/ln_comp_constants.inc": "23b186937e4f26f44b131650c65adf9bd722ea1e7eaa6a9618db1d3a627d0be9",
+      "src/ln_checked.c": "35ca0510d47a5197e786fc4a1de772bfdd70fca9ece95ca0dfdfc4b593512371"
+    },
+    "scope": "Analytic all-mantissa error bounds and exact constants; ARM implementation and interval packing require separate execution qualification."
+  },
+  "relative_near_bound": {
+    "status": "PASS",
+    "maximum_abs_t": "2^-11",
+    "factor_precision": 66,
+    "relative_precision": 62,
+    "output_precision_base": 128,
+    "error": 1,
+    "rational_output_error_upper_bound": "372084361602592101507802322513686968313/446402530115673270535280891408368533504",
+    "centered_output_bounds": {
+      "positive": [
+        "-372077550040546514205267062061110147065/446402530115673270535280891408368533504",
+        "25410635328905199683884393897132033/31153781151208965771182977975320576"
+      ],
+      "negative": [
+        "-372084361602592101507802322513686968313/446402530115673270535280891408368533504",
+        "25410159959930003417394390376120321/31153781151208965771182977975320576"
+      ]
+    },
+    "cube_perturbation_bound": "17596481011713/8796093022208",
+    "fourth_perturbation_bound": "9223407289946865665/73786976294838206464",
+    "fifth_perturbation_bound": "356836367817898856636565946369/649037107316853453566312041152512",
+    "series_tail_bound": "2048/14329",
+    "exact_division_cases": {
+      "third_residual": 4099,
+      "fifth": 4194305,
+      "sixth": 2049
+    },
+    "product_construction": "Input normalized difference has low21 zero bits. Two16-bit products construct each low-limb cross term exactly; high64 plus offset2/3 then shift2 implements the stated biased product rounding. u<2^11 and deviation.high<2^23, so the cross requires34 bits and is explicitly represented in64 bits.",
+    "source_sha256": {
+      "src/ln_checked.c": "35ca0510d47a5197e786fc4a1de772bfdd70fca9ece95ca0dfdfc4b593512371"
+    },
+    "scope": "All-input near-domain error certificate. Exact ARM integer seed, interval packing and MPFR are qualified separately; final Q245 all-domain totality remains unproved."
+  },
+  "shared_refinement_bound": {
+    "status": "PASS",
+    "fast_steps": 20,
+    "fast_max_deficit": 4398042316804,
+    "quadratic_bins_checked": 524288,
+    "quadratic_absolute_error_bound": 9,
+    "fast_error_base": 64,
+    "fast_error_bound": "64+ceil(abs(e+1)/2) Q62",
+    "fast_base_rational_bound": "179855754718668128237/4611686018427387903",
+    "refinement": [
+      {
+        "words": 4,
+        "precision": 117,
+        "max_deficit": 9903519723987267024857333760,
+        "series_terms": 7,
+        "error_base_upper_bound": "4652826664569783577161683829888383855537751743593867603782313/83694684816563488094995231507524656039399637351839406489600",
+        "series_tail_upper_bound": "1/302231436889258784194560"
+      },
+      {
+        "words": 8,
+        "precision": 245,
+        "max_deficit": 3369993132526586414580291834085080529534754464940151078685541138400,
+        "series_terms": 12,
+        "error_base_upper_bound": "22965147774946089434025723049401663202497397197463865297273691185695506065025451731945460727313068663/375841915227205263817581613307710831454106918649778562420442728926924721574533588677659663427174400",
+        "series_tail_upper_bound": "1/1918461269316584079360"
+      }
+    ],
+    "refinement_error_bound": "96+abs(e+1) in Q117/Q245 units",
+    "ln2_exponent_products_checked": 2098,
+    "source_sha256": {
+      "src/ln_fast96.inc": "d63eb07acc625cb6188db13bd15c1b52785708de05371a1c9f30484edf3dc3a1",
+      "src/ln_checked.c": "35ca0510d47a5197e786fc4a1de772bfdd70fca9ece95ca0dfdfc4b593512371",
+      "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+    },
+    "scope": "Analytical bounds plus exact integer/rational checks; assembly/C execution is qualified separately. Final undecided Q245 interval remains a totality limitation."
+  },
+  "diagnostic_build": ".build/qfplib-ln-near-v9-0812-timing-20261021",
+  "diagnostic_layout_proof": {
+    "status": "PASS",
+    "production_elf": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-io-efficiency-20261021/verified-restore-0.8.12-be246af2/mk61s-picocalc-pico-h.elf",
+    "comparison_elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-near-v9-0812-timing-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "production_elf_sha256": "c9d31f64627a38306695b9a91868a54be9ea430e3b323bc393e374a0a95fe7b2",
+    "comparison_elf_sha256": "566b6cd650d75483108454745e6afe904f08914a7259c47703fad0afdab061c4",
+    "checked_symbols": 97,
+    "checked_bytes": 90590,
+    "sha256": "48042d7ea48a5818d75af92832a62dec966f94290e127e8a133e4c7eb36da44c",
+    "symbols": [
+      {
+        "symbol": "_ZN12compact_math12_GLOBAL__N_111natural_log10polynomialEd",
+        "address": 268749721,
+        "size": 192,
+        "sha256": "df64d605c2b1982f6fac9c76d9223749e49e5da5172916b39cd7073333c177bd"
+      },
+      {
+        "symbol": "_ZN12compact_math12_GLOBAL__N_111natural_log8evaluateEd",
+        "address": 268749913,
+        "size": 752,
+        "sha256": "ffefc66a0b73508b5404eac95585894741c3cccd4f8dd4f9b891c7c2de760063"
+      },
+      {
+        "symbol": "_ZN12compact_math12_GLOBAL__N_17arcsine5ratioEd",
+        "address": 268749457,
+        "size": 264,
+        "sha256": "cd9e75dba05a487fd4d7bc580002d18f05d863074459cca77d47201dd5847aad"
+      },
+      {
+        "symbol": "_ZN12compact_math12_GLOBAL__N_18argument6reduceEdPd",
+        "address": 268750665,
+        "size": 4554,
+        "sha256": "1c7b549f15cd69a94110ddf1bed00ff5132b0ac8e9065e8526c18b7bead424c9"
+      },
+      {
+        "symbol": "_ZN12compact_math2lnEd",
+        "address": 268764329,
+        "size": 756,
+        "sha256": "681654c9ebb69fd5c89e770e6013655a1e7eb9408dea69cde2b749d6e878866d"
+      },
+      {
+        "symbol": "_ZN12compact_math3cosEd",
+        "address": 268763581,
+        "size": 468,
+        "sha256": "dbb2bac3375f053997a119698260786263eb4dc369d49a0ef6d7e8a43dc03869"
+      },
+      {
+        "symbol": "_ZN12compact_math3expEd",
+        "address": 268765405,
+        "size": 8,
+        "sha256": "efc4e02cc9a506474d0b93c409f1b466ac73fd6e32eb7595e0dc64315ea48514"
+      },
+      {
+        "symbol": "_ZN12compact_math3powEdd",
+        "address": 268758317,
+        "size": 4740,
+        "sha256": "435c07139b29a46b5983f9a7291685c09f9745cc686bce50e0a7dcfc72a45aff"
+      },
+      {
+        "symbol": "_ZN12compact_math3sinEd",
+        "address": 268763057,
+        "size": 524,
+        "sha256": "3038b75a4fee9bd7620144a3c55c0494d430ef3ab9028bfcc0547aa6aaed85ab"
+      },
+      {
+        "symbol": "_ZN12compact_math3tanEd",
+        "address": 268764049,
+        "size": 280,
+        "sha256": "e7067bc64a41b6d5eeef00a9d85e868f558ea82559a3f6fed7679fbae8f7b89b"
+      },
+      {
+        "symbol": "_ZN12compact_math4acosEd",
+        "address": 268757897,
+        "size": 420,
+        "sha256": "6cc2157f419d3e418803359bbd5dada5370a20b4aa84840090acf77f528e288c"
+      },
+      {
+        "symbol": "_ZN12compact_math4asinEd",
+        "address": 268757353,
+        "size": 544,
+        "sha256": "3979c2f8da5b4de0546e310bad88252156ce09b325a5e604ff7dd0dfbd7e0dde"
+      },
+      {
+        "symbol": "_ZN12compact_math4atanEd",
+        "address": 268755229,
+        "size": 2122,
+        "sha256": "f15fa344af85d84fcadeda737442c70fe460752af2037fc4be6a2d64fb5833ce"
+      },
+      {
+        "symbol": "_ZN12compact_math4sqrtEd",
+        "address": 268755221,
+        "size": 8,
+        "sha256": "f1c890c465a3519844a746007916d0b4504cacb102fa316bad169242f1842555"
+      },
+      {
+        "symbol": "_ZN12compact_math5log10Ed",
+        "address": 268765085,
+        "size": 320,
+        "sha256": "a83f7660d6f79facf4b139184c1b9c1f4783a5e90c2dd8f578cfdc5f20ec76a3"
+      },
+      {
+        "symbol": "_ZN12compact_math6tablesL11angle_tableE",
+        "address": 269083056,
+        "size": 520,
+        "sha256": "74e848a6308c77ab580d9c86d8e906bca55370acb7e98ce341d68b1e42c7884c"
+      },
+      {
+        "symbol": "_ZN12compact_math6tablesL11two_over_piE",
+        "address": 269082852,
+        "size": 200,
+        "sha256": "f364c04f0c0b6af627d596492489902cc408dda19027fa77d4d4d6a9ce9690b4"
+      },
+      {
+        "symbol": "_ZN12compact_math6tablesL24exponential_coefficientsE",
+        "address": 269083576,
+        "size": 128,
+        "sha256": "468f1a95d37f38b647e91edba1355d1d67d708e6d332b9bebb1bc69e3b382823"
+      },
+      {
+        "symbol": "_ZN7core_6112_GLOBAL__N_1L20shared_context_ownerE",
+        "address": 537066356,
+        "size": 1,
+        "sha256": null
+      },
+      {
+        "symbol": "_ZN7core_6112_GLOBAL__N_1L21shared_context_bufferE",
+        "address": 537006896,
+        "size": 896,
+        "sha256": null
+      },
+      {
+        "symbol": "_ZN7core_6112edit_programE",
+        "address": 537066357,
+        "size": 1,
+        "sha256": null
+      },
+      {
+        "symbol": "_ZN7core_6112save_contextERNS_13ContextBufferE",
+        "address": 268734157,
+        "size": 1756,
+        "sha256": "cf01aadca64dfbf119592df858cfdf4272d216c9db6be10cb183e91b7f5b11fe"
+      },
+      {
+        "symbol": "_ZN7core_6113get_code_pageEPh",
+        "address": 268741065,
+        "size": 288,
+        "sha256": "7ae202b5ba754f3310bbd7cd3b7196b3547a15d3e36d941c41a1685ca381dced"
+      },
+      {
+        "symbol": "_ZN7core_6113program_stepsEv",
+        "address": 268733749,
+        "size": 24,
+        "sha256": "86fff5e0f21e1069b7e07a1d20d15d9dfaad98ec6e082497f3c3ce68630b9efa"
+      },
+      {
+        "symbol": "_ZN7core_6113set_code_pageEPKh",
+        "address": 268740765,
+        "size": 204,
+        "sha256": "424ed45b5c11fbc0a97a267b05d4102e6041f6bb91c54d250151f79267cf6ded"
+      },
+      {
+        "symbol": "_ZN7core_6113stack_addressE5stack",
+        "address": 268734005,
+        "size": 32,
+        "sha256": "44ecadd56215235840d063fc64ba87c82349d577b5a58693878f11baa589ee06"
+      },
+      {
+        "symbol": "_ZN7core_6115restore_contextERKNS_13ContextBufferE",
+        "address": 268735913,
+        "size": 1524,
+        "sha256": "2d7ac6ea0adb6689d5f1abc08f361202a0b92ea4bd156b3364b129055a2c3ae5"
+      },
+      {
+        "symbol": "_ZN7core_6116len_code_commandEh",
+        "address": 268734037,
+        "size": 28,
+        "sha256": "5d36b60bd115b6a3516cda8bdf53ec2f3c9ef04edd1c893ee420f7e1e1417d54"
+      },
+      {
+        "symbol": "_ZN7core_6116update_indicatorEPcPKc",
+        "address": 268738577,
+        "size": 2148,
+        "sha256": "568f3877f90f6a27792babd1b35a154cf5ae28963e7173f3b470089d2ca46939"
+      },
+      {
+        "symbol": "_ZN7core_6120owned_context_bufferENS_18ContextBufferOwnerE",
+        "address": 268734097,
+        "size": 28,
+        "sha256": "7a456f3a36f22c53ae3973353dbe92348b544f55b1e18a9ab18f39ce1a6d41fd"
+      },
+      {
+        "symbol": "_ZN7core_6121configure_random_seedEby",
+        "address": 268737437,
+        "size": 1140,
+        "sha256": "ea94a4c8bf93cb7d427ce81d2bff035b37e7e2ff6e330a11733014cf8e1f2975"
+      },
+      {
+        "symbol": "_ZN7core_6121read_absolute_programEtRh",
+        "address": 268733773,
+        "size": 204,
+        "sha256": "56558c90dd97ff70c9cad935067b8e499a83b75ef25ea55af93585664f69a8fe"
+      },
+      {
+        "symbol": "_ZN7core_6121segment_display_frameEv",
+        "address": 268740725,
+        "size": 40,
+        "sha256": "1ad826f9cba7af6f026326d40d1553f7fd0f7d5a101791f3fdce0e9c8720fe59"
+      },
+      {
+        "symbol": "_ZN7core_6122acquire_context_bufferENS_18ContextBufferOwnerE",
+        "address": 268734065,
+        "size": 32,
+        "sha256": "14bea74cfadae575cda2de50cb1048d89d491ce445fc9a4572756ed646ed2997"
+      },
+      {
+        "symbol": "_ZN7core_6122expanded_program_is_onEv",
+        "address": 268733725,
+        "size": 12,
+        "sha256": "39d03ba588517941207ce637fa9fb41ca14da2eae9b2e74b241bdb68790a393d"
+      },
+      {
+        "symbol": "_ZN7core_6122release_context_bufferENS_18ContextBufferOwnerE",
+        "address": 268734125,
+        "size": 32,
+        "sha256": "c5b27a286a5cdfd6515fc4809b7e95b8ba3b2cb515ba65e7bb61204917a7deb9"
+      },
+      {
+        "symbol": "_ZN7core_6122write_absolute_programEth",
+        "address": 268741353,
+        "size": 348,
+        "sha256": "645272c950353ce25f8b8c48147d08f236d8023845230d24af7eca17ad52b739"
+      },
+      {
+        "symbol": "_ZN7core_6125set_expanded_program_modeEb",
+        "address": 268733737,
+        "size": 12,
+        "sha256": "6b3dc13cd73d0cdc9cba3dbac731df973592fd59e20382c2e0de097b0f7dd5cd"
+      },
+      {
+        "symbol": "_ZN7core_6126register_mk61_command_hookEhNS_20Mk61CommandHookPhaseEPFvRNS_22Mk61CommandHookContextEPvES3_",
+        "address": 268731589,
+        "size": 524,
+        "sha256": "005a61c8b4e107773523561626f626228e24f8e461ea7825d3ec8da37104c76d"
+      },
+      {
+        "symbol": "_ZN7core_6128clear_extended_program_banksEv",
+        "address": 268740969,
+        "size": 96,
+        "sha256": "e1fc211e20d0b3a2680da5d861231afb4206d7b8175f94d04d2f83a7a157504f"
+      },
+      {
+        "symbol": "_ZN7core_6128unregister_mk61_command_hookEm",
+        "address": 268732113,
+        "size": 468,
+        "sha256": "84c3ae340971175f669019fdbcf50052a4e48696b178106de154ef474d061445"
+      },
+      {
+        "symbol": "_ZN7core_6130set_mk61_program_boundary_hookEPFbRKNS_26Mk61ProgramBoundaryContextEPvES3_",
+        "address": 268732581,
+        "size": 52,
+        "sha256": "a8724f7784b24857b89225cea3c1c9aa4d987b2395b4e5377eae31c3d9794394"
+      },
+      {
+        "symbol": "_ZN7core_6132clear_mk61_program_boundary_hookEv",
+        "address": 268732633,
+        "size": 40,
+        "sha256": "252898e4242ca5a55b345eb1586aa68fb765d7a960611274e14dd303e7d6881d"
+      },
+      {
+        "symbol": "_ZN7core_614stepEv",
+        "address": 268747869,
+        "size": 164,
+        "sha256": "ea18bff4f9ead7ab3686822e088fd2e2647bcc598715b38533400632a4b27c73"
+      },
+      {
+        "symbol": "_ZN7core_616enableEv",
+        "address": 268748033,
+        "size": 284,
+        "sha256": "cb454200443be72bbf0d207e3318a29ca7ce4642eccae88331e4b0444fe94033"
+      },
+      {
+        "symbol": "_ZN7core_618get_codeEl",
+        "address": 268748317,
+        "size": 60,
+        "sha256": "c7e217b1201564cff9b808f89b5bf4f8170a7b5dc99362dbd4586c79938c3625"
+      },
+      {
+        "symbol": "_ZN7core_619ring_sizeEv",
+        "address": 268733977,
+        "size": 28,
+        "sha256": "32ccd6d51d85db67bec9d570673a9a9a88dd5007e509b46776069ae70f37068b"
+      },
+      {
+        "symbol": "_ZN7core_61L23backstep_comma_positionE",
+        "address": 537033408,
+        "size": 4,
+        "sha256": null
+      },
+      {
+        "symbol": "_ZN7m0_eabi19divide_significandsEyyRy",
+        "address": 268765625,
+        "size": 972,
+        "sha256": "72c8db9cac60999f7229f283eeffcb65256ab889b230f54478f207ce4a0497c7"
+      },
+      {
+        "symbol": "_ZN7m0_eabi5clz32Em",
+        "address": 268765413,
+        "size": 72,
+        "sha256": "4dd293ab8f749a7a31a9bc399a2bed49a7c5bbaf8e49da86215d7491c814040c"
+      },
+      {
+        "symbol": "_ZN7m0_eabi5clz64Ey",
+        "address": 268765485,
+        "size": 140,
+        "sha256": "a9096e9c95d859cb8e0eb3d8cdd645175b88e6a6a5ce95173fdee7c7c4f89c93"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL10trig_tableE",
+        "address": 269091896,
+        "size": 12896,
+        "sha256": "fd056368bc02711036fc32f7a92dfb1dc475fe1d54b1cd23a27eea622ac63b62"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL14log_near_tableE",
+        "address": 269083704,
+        "size": 4096,
+        "sha256": "93e938f0f5b76ec40c21a1a9942a4a4e0bcc706c358872fed2eb625192a69b3f"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL16reciprocal_seedsE",
+        "address": 269108912,
+        "size": 256,
+        "sha256": "5ecc227655e9edee6cc3369626786393bc61ba69283b2d3b7886b8947721c07c"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL8trig_pi2E",
+        "address": 269104792,
+        "size": 24,
+        "sha256": "98e4cdaa1fabc49cfbfefad3e13dc9bf4ffb65298be8651db0e8f61bb09b2e87"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL9exp_tableE",
+        "address": 269104816,
+        "size": 4096,
+        "sha256": "9185ad8a13121c810de407f5eac695df9f3b394ee836d4829d0aa37f2fa5719e"
+      },
+      {
+        "symbol": "_ZN7m0_eabiL9log_tableE",
+        "address": 269087800,
+        "size": 4096,
+        "sha256": "fa76cadc774762780114e3c4a2329b7eff0fc05bfe755162410ebeecab7a9b7a"
+      },
+      {
+        "symbol": "__aeabi_d2f",
+        "address": 268791505,
+        "size": 64,
+        "sha256": "6b2d8ce680175c7dafb79ab3116d07449e0a2a9b2be8c43ca07e0262f083173d"
+      },
+      {
+        "symbol": "__aeabi_d2iz",
+        "address": 268792049,
+        "size": 80,
+        "sha256": "0ce02ee187aa51e4f46e73ce4b0fad4ec70edef806a65b790b7aa615f4225273"
+      },
+      {
+        "symbol": "__aeabi_d2lz",
+        "address": 268792129,
+        "size": 124,
+        "sha256": "29e0102d43798525d9533ab08688f3adbb2bb7f9b2f96ecab6a315a705111c68"
+      },
+      {
+        "symbol": "__aeabi_d2uiz",
+        "address": 268770993,
+        "size": 104,
+        "sha256": "7bb4ef28a5bd7887de08b6416b2244524b8dbe0697e5bbdad6b9cb6c493e648b"
+      },
+      {
+        "symbol": "__aeabi_d2ulz",
+        "address": 268771277,
+        "size": 148,
+        "sha256": "3677a30c058d1fd7e0fd7dac3fa92328193250cad29db46c7646c017dd49bfbb"
+      },
+      {
+        "symbol": "__aeabi_dcmpeq",
+        "address": 268791569,
+        "size": 52,
+        "sha256": "f47a271b1b5e201b8173ec48de18829894e67f6ab57d5eef3e5adfb1c0d0c38d"
+      },
+      {
+        "symbol": "__aeabi_dcmpge",
+        "address": 268791813,
+        "size": 96,
+        "sha256": "291edf5bff0b4d5debcabb502c9851262d5ccf8b12b60247c31bf0c54dc688f9"
+      },
+      {
+        "symbol": "__aeabi_dcmpgt",
+        "address": 268791909,
+        "size": 96,
+        "sha256": "23d5c175c12a4a9e5a389f0b28bcddb124495e476951cd0e22b9364a91764e1b"
+      },
+      {
+        "symbol": "__aeabi_dcmple",
+        "address": 268791717,
+        "size": 96,
+        "sha256": "facfbe6f68f214e9629e8c41cf3586b7da18b5c4acf414df85d32d82f418f6ca"
+      },
+      {
+        "symbol": "__aeabi_dcmplt",
+        "address": 268791621,
+        "size": 96,
+        "sha256": "2495f646f4b3ba26dff7a7a2ab7e377e877184b335d1a587b1ce4c03ede833e5"
+      },
+      {
+        "symbol": "__aeabi_dcmpun",
+        "address": 268792005,
+        "size": 44,
+        "sha256": "feb0630b1ca3b4ea3dc67168b3a0769a78500759b1cd940b07811ed771bcb5fe"
+      },
+      {
+        "symbol": "__aeabi_f2d",
+        "address": 268791465,
+        "size": 40,
+        "sha256": "13c66255d8af82bd9ccc694411b58b98ebfc246e7b5f44a3a30e801940c10ee7"
+      },
+      {
+        "symbol": "__aeabi_i2d",
+        "address": 268791209,
+        "size": 80,
+        "sha256": "10933a45d241122f4ea91e9154b9fcd25461afa32ad248e11fb273e64f0df6a5"
+      },
+      {
+        "symbol": "__aeabi_idiv0",
+        "address": 268792409,
+        "size": 2,
+        "sha256": "c7dfbb7d02759eacb64dbc916c1bb6f21eabaff1c1032ea5c9176abf7fd28df8"
+      },
+      {
+        "symbol": "__aeabi_l2d",
+        "address": 268791289,
+        "size": 166,
+        "sha256": "62c89bddcae9186fc960e09b534c006f45e4dde3c31ea0bf2d9991b6c618c662"
+      },
+      {
+        "symbol": "__aeabi_ldiv0",
+        "address": 268792411,
+        "size": 2,
+        "sha256": "c7dfbb7d02759eacb64dbc916c1bb6f21eabaff1c1032ea5c9176abf7fd28df8"
+      },
+      {
+        "symbol": "__aeabi_llsl",
+        "address": 268792349,
+        "size": 30,
+        "sha256": "6b4c5109a462f2cdd932368550029337707a3f1a7b539d665c6abbcf3ce8785a"
+      },
+      {
+        "symbol": "__aeabi_llsr",
+        "address": 268792379,
+        "size": 30,
+        "sha256": "0af29bc141f3b3eb4d2f0f289a013beb9e2d1fbda4b6554c39aacc8ad2ba771b"
+      },
+      {
+        "symbol": "__aeabi_lmul",
+        "address": 268791117,
+        "size": 92,
+        "sha256": "3a8180f350029df053948af3596b51739654ddce148177b8e1cb5ab54f3a773a"
+      },
+      {
+        "symbol": "__aeabi_ui2d",
+        "address": 268791225,
+        "size": 60,
+        "sha256": "ff48e7149aa1e615b636859990b3a787cc7fa52db05fd6647023bdc8532b2ac6"
+      },
+      {
+        "symbol": "__aeabi_ul2d",
+        "address": 268791309,
+        "size": 146,
+        "sha256": "0067e864b937b40b87900f9d68e197f3d6f8e175d929c21088e5d81bab27ab6a"
+      },
+      {
+        "symbol": "mk61_m0_atan_reduced",
+        "address": 268777345,
+        "size": 1332,
+        "sha256": "50393246fd07d7cb5468c976b83f530b6e1f0d1d7693601a8ac1d57cacbb2aba"
+      },
+      {
+        "symbol": "mk61_m0_d2f_slow",
+        "address": 268771425,
+        "size": 376,
+        "sha256": "c6abf9801ac75dafc48b2e2b2f086c5318ba94cb5fbad24775d23502e4b9b3ac"
+      },
+      {
+        "symbol": "mk61_m0_d2iz_slow",
+        "address": 268770789,
+        "size": 204,
+        "sha256": "31388c45d8ecf5c582c64d5c0355e12ce04e9695cbfe6a97052d39bd5db299d0"
+      },
+      {
+        "symbol": "mk61_m0_d2lz_slow",
+        "address": 268771097,
+        "size": 180,
+        "sha256": "2780f3a942a383e2d58364b9146b682d8ddc9a74caaecd367ca546f7d196bed7"
+      },
+      {
+        "symbol": "mk61_m0_dadd_slow",
+        "address": 268766597,
+        "size": 1412,
+        "sha256": "26a30719197c5a4095068444bbf3fd6ca69f0e7c78acc329a7f2b4a7d215cdf1"
+      },
+      {
+        "symbol": "mk61_m0_ddiv_slow",
+        "address": 268769473,
+        "size": 1316,
+        "sha256": "c38cf53835db47cbada8027b026e8cc35be5c570229bbfc5dbe214ea6f607f7d"
+      },
+      {
+        "symbol": "mk61_m0_dmul_slow",
+        "address": 268768009,
+        "size": 1464,
+        "sha256": "5d2244bb358a0a4ce512954b7faa42b7de5f3dfec5673957bbf84c82e9fdfb63"
+      },
+      {
+        "symbol": "mk61_m0_exp",
+        "address": 268789345,
+        "size": 1588,
+        "sha256": "795a688071032e54c838b6bb8e47938c610a211e36c8d3444e953e5f2147372b"
+      },
+      {
+        "symbol": "mk61_m0_f2d_slow",
+        "address": 268771801,
+        "size": 252,
+        "sha256": "541a5222a98d47a27c922aafc1627ff10ce08b8ed7c38c61aeac5508d7011834"
+      },
+      {
+        "symbol": "mk61_m0_ln",
+        "address": 268778677,
+        "size": 5076,
+        "sha256": "e5f8408e2b3fee379e11460f070cb8261517ab958829342d5dced1811dea64dd"
+      },
+      {
+        "symbol": "mk61_m0_mul_q62",
+        "address": 268785765,
+        "size": 500,
+        "sha256": "77498ecc10598749b06d6d0036f8a447fed4871e101907b6cd2ea088c291295a"
+      },
+      {
+        "symbol": "mk61_m0_reduce_pio2",
+        "address": 268783753,
+        "size": 1660,
+        "sha256": "bc63b781237b5b645c3e779afd06186feae7077dfa433e1741c49f7cd67b9815"
+      },
+      {
+        "symbol": "mk61_m0_sincos_reduced",
+        "address": 268787437,
+        "size": 136,
+        "sha256": "9a4135a1b92432765448ab955f290b9942aee57f958be8a6bfc438ceb291d194"
+      },
+      {
+        "symbol": "mk61_m0_sincos_small",
+        "address": 268774753,
+        "size": 392,
+        "sha256": "a2210a4311f4686078db1f2c922dbf13e93add22ac79c325f8a5a0a3086a2f84"
+      },
+      {
+        "symbol": "mk61_m0_sqrt",
+        "address": 268792417,
+        "size": 16736,
+        "sha256": "27946f46629b1120e26ca775f049e8b0c92d92f99508b12175ea8e69a85ccb0a"
+      },
+      {
+        "symbol": "mk61_m0_sqrt_slow",
+        "address": 268790933,
+        "size": 184,
+        "sha256": "ef488e396f0bb4149dc4b4050f7fcfbf545a12afacf4c954a1a1a7203af778f4"
+      },
+      {
+        "symbol": "mk61_m0_tan_small",
+        "address": 268776997,
+        "size": 348,
+        "sha256": "a15eef4a42d0709c2050f17021ed3b75986e7f79e082fd3131559d971f50c899"
+      },
+      {
+        "symbol": "mk61_m0_trig_medium",
+        "address": 268787573,
+        "size": 1772,
+        "sha256": "fed13727e2e183dd93d95f2b0ae2fc8e12becf5c2826975a2a5bc79447167022"
+      },
+      {
+        "symbol": "mk61_m0_trig_pack",
+        "address": 268792253,
+        "size": 96,
+        "sha256": "76d734a2dede1f49280d59d0ea345f2127c51fe6fc6641149843b574fc8ed21a"
+      }
+    ]
+  },
+  "boot_guard": {
+    "status": "PASS",
+    "elf_sha256": "9cd9e22c19b9c7d08a356e9c03c64abbe9fbf20a84e6e0858b91105211a767a2",
+    "manifest_sha256": "b5a817f8846a4406bab040875f3e303fe55fcdb91312b9270333e4115738e96a",
+    "image_bytes": 1590644,
+    "valid_boot_crc": "0x13299fb3",
+    "explicit_recheck_status": "valid",
+    "rejected": [
+      {
+        "case": "extent",
+        "status": 5
+      },
+      {
+        "case": "reference_crc",
+        "status": 9
+      }
+    ],
+    "scope": "Actual ARM enforce/report CRC code and compiled image bounds; valid full image accepted; excess range and damaged reference rejected. Timer and text formatting mocked."
+  },
+  "app_self_test": {
+    "status": "PASS",
+    "cases": [
+      {
+        "kind": 1,
+        "operation": "ln",
+        "negative": false,
+        "calls": [
+          38,
+          38
+        ]
+      },
+      {
+        "kind": 1,
+        "operation": "ln",
+        "negative": true,
+        "calls": [
+          38,
+          38
+        ]
+      }
+    ],
+    "cache_counters": true,
+    "warmup_tested": true,
+    "tested_kinds": [
+      1
+    ],
+    "all_abi_kinds_tested": false,
+    "scope": "Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark."
+  },
+  "physical_timing_pending": false,
+  "live_transaction": ".build/qfplib-ln-near-v9-0812-timing-20261021/hil-01/transaction.json",
+  "live_session": null,
+  "accepted_restore_at_diagnostic_build": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.12",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 735240,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 195496,
+    "static_ram_data_bss_bytes": 155136,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 1470976,
+    "bin_sha256": "5868182279e6fd248b2fc07db08413a791b87a35275eb3be66e88cf56a339362",
+    "uf2_sha256": "36612f3e58bd1958859e07992cc242bca3bd449fe65314c79b3d3dd17e4bdf4d",
+    "hardware_verified": true,
+    "source_sha256": "56761148c1acc4a5f2a9a6cefb3499fcf31f76a79a8148229d30208173eddbb6",
+    "build_id": "be246af2",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 735240,
+      "footer_offset": 608392,
+      "profile_id": "50434831",
+      "crc32": "382a22a5"
+    },
+    "hardware_verified_uid": "E6657CD423721C35",
+    "hardware_verified_at_utc": "2026-10-21T07:02:56.027247+00:00",
+    "hardware_evidence": "hardware-parity-summary.json"
+  },
+  "historical_v6": {
+    "status": "V6_PHYSICAL_FOUR_WINS_TWO_NEAR_ONE_GAPS_RESTORED",
+    "standalone_code_and_constants_bytes": 11964,
+    "physical_groups": [
+      {
+        "stream_index": 0,
+        "operation": "ln",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.5347900390625,
+          "qfplib": 7.343017578125
+        },
+        "own_over_qfplib": 0.8899325065664794
+      },
+      {
+        "stream_index": 1,
+        "operation": "ln",
+        "stream": "ordinary_half_to_two",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.3302001953125,
+          "qfplib": 7.161865234375
+        },
+        "own_over_qfplib": 0.8838759161411284
+      },
+      {
+        "stream_index": 2,
+        "operation": "ln",
+        "stream": "near_one_tiny",
+        "cases": 9,
+        "us_per_call": {
+          "own": 1.2166056166056165,
+          "qfplib": 6.553846153846154
+        },
+        "own_over_qfplib": 0.18563231239287575
+      },
+      {
+        "stream_index": 3,
+        "operation": "ln",
+        "stream": "near_one_outer",
+        "cases": 54,
+        "us_per_call": {
+          "own": 7.504292371842041,
+          "qfplib": 6.847559480009811
+        },
+        "own_over_qfplib": 1.0959075848482136
+      },
+      {
+        "stream_index": 4,
+        "operation": "ln",
+        "stream": "decimal_powers",
+        "cases": 121,
+        "us_per_call": {
+          "own": 6.484396200814112,
+          "qfplib": 7.351054644134697
+        },
+        "own_over_qfplib": 0.8821042033727665
+      },
+      {
+        "stream_index": 5,
+        "operation": "ln",
+        "stream": "near_one_random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 7.03125,
+          "qfplib": 7.0
+        },
+        "own_over_qfplib": 1.0044642857142858
+      }
+    ],
+    "physical_result": ".build/qfplib-ln-near-v6-timing-20261021/hil-01/timings/result.json",
+    "physical_result_sha256": "834aa0562dabf03540502c752610ecb97e43362304ae27484987b2904a41d87e",
+    "restore": {
+      "status": "PASS_RESTORED",
+      "accepted_build": "bbfc9129",
+      "uid": "E6657CD423721C35",
+      "port": "/dev/cu.usbmodem21301",
+      "calculator_data_restored": true,
+      "ip_restored": 24,
+      "rtc_restored": {
+        "expected": "2026-10-21T08:56:29.774859",
+        "actual": "2026-10-21T08:56:30"
+      },
+      "serial_closed": true,
+      "transaction": ".build/qfplib-ln-near-v6-timing-20261021/hil-01/transaction.json"
+    },
+    "remaining_physical_gaps": [
+      {
+        "stream_index": 3,
+        "operation": "ln",
+        "stream": "near_one_outer",
+        "cases": 54,
+        "us_per_call": {
+          "own": 7.504292371842041,
+          "qfplib": 6.847559480009811
+        },
+        "own_over_qfplib": 1.0959075848482136
+      },
+      {
+        "stream_index": 5,
+        "operation": "ln",
+        "stream": "near_one_random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 7.03125,
+          "qfplib": 7.0
+        },
+        "own_over_qfplib": 1.0044642857142858
+      }
+    ],
+    "actual_refinement_profile": {
+      "status": "PASS_PROFILE",
+      "elf_sha256": "e7ff308446cc615b34b56409e2a1132583c3c4e5dc3f05db2a5e72abcebd1534",
+      "qualification": ".build/qfplib-ln-near-v6-timing-20261021/result.json",
+      "qualification_sha256": "abcef1b3e6b2727dc135a3a04a1bf20b7bc70233ac26b1708a9e1f9cf8a687a0",
+      "groups": {
+        "normal_exponents": {
+          "cases": 256,
+          "original_mean": 799.25390625,
+          "checked_mean": 629.4765625,
+          "checked_over_original": 0.7875802139690825,
+          "checked_max": 710,
+          "refinement_entries": {
+            "4": 0,
+            "8": 0
+          },
+          "refine117_fraction": 0.0
+        },
+        "ordinary_half_to_two": {
+          "cases": 256,
+          "original_mean": 777.6328125,
+          "checked_mean": 611.8515625,
+          "checked_over_original": 0.7868129439303977,
+          "checked_max": 691,
+          "refinement_entries": {
+            "4": 0,
+            "8": 0
+          },
+          "refine117_fraction": 0.0
+        },
+        "near_one_tiny": {
+          "cases": 9,
+          "original_mean": 713.6666666666666,
+          "checked_mean": 101.33333333333333,
+          "checked_over_original": 0.14198972442783747,
+          "checked_max": 120,
+          "refinement_entries": {
+            "4": 0,
+            "8": 0
+          },
+          "refine117_fraction": 0.0
+        },
+        "near_one_outer": {
+          "cases": 54,
+          "original_mean": 743.6111111111111,
+          "checked_mean": 711.4074074074074,
+          "checked_over_original": 0.9566928153405554,
+          "checked_max": 7164,
+          "refinement_entries": {
+            "4": 1,
+            "8": 0
+          },
+          "refine117_fraction": 0.018518518518518517
+        },
+        "decimal_powers": {
+          "cases": 121,
+          "original_mean": 800.099173553719,
+          "checked_mean": 624.6528925619834,
+          "checked_over_original": 0.7807193323141759,
+          "checked_max": 726,
+          "refinement_entries": {
+            "4": 0,
+            "8": 0
+          },
+          "refine117_fraction": 0.0
+        },
+        "near_one_random": {
+          "cases": 512,
+          "original_mean": 760.720703125,
+          "checked_mean": 668.216796875,
+          "checked_over_original": 0.8783996467165953,
+          "checked_max": 10384,
+          "refinement_entries": {
+            "4": 4,
+            "8": 0
+          },
+          "refine117_fraction": 0.0078125
+        }
+      },
+      "physical_timing": false,
+      "scope": "Executed ARM instructions for every full call, including refinement. PC hooks observe actual Q117/Q245 entries; no runtime counters or mutable RAM added."
+    }
+  },
+  "changes_since_v6": [
+    "Relative polynomial deviation increased from Q62 to Q66 without new tables.",
+    "Certified relative output error decreased from five to one unit.",
+    "Near-domain extends through abs(x-1)<=2^-11, removing the slow outer-corpus case at1-2^-11.",
+    "Normalized-input low21 zero bits reduce exact high-product instruction cost."
+  ],
+  "limitations": [
+    "Final Q245 undecided interval still traps; finite corpora and error certificates do not prove all-input totality.",
+    "Other Qfplib functions retain upstream limitations.",
+    "Standalone GPL-2.0-only fork, not integrated into product.",
+    "Measured stream parity does not bound rare Q117/Q245 refinement latency; this fork is not integrated into firmware."
+  ],
+  "next_iteration": "Use per-operation/domain selection for the runtime. V9 closes both V6 near-one physical gaps on the six measured streams; final Q245 totality and combined-firmware licensing remain unresolved. Canonical owned math is unchanged.",
+  "actual_refinement_profile": {
+    "status": "PASS_PROFILE",
+    "elf_sha256": "e3f9a597b5869bac1c4ec7357462561583b4ed62ef229f30e4a02a01960868b9",
+    "qualification": ".build/qfplib-ln-near-v9-20261021/result.json",
+    "qualification_sha256": "2d2e9dd6462c2d7f190f457e8f50fd3b8fe78a365561b94fece6d2fd0739cb6d",
+    "groups": {
+      "normal_exponents": {
+        "cases": 256,
+        "original_mean": 799.25390625,
+        "checked_mean": 629.4765625,
+        "checked_over_original": 0.7875802139690825,
+        "checked_max": 710,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "ordinary_half_to_two": {
+        "cases": 256,
+        "original_mean": 777.6328125,
+        "checked_mean": 611.8515625,
+        "checked_over_original": 0.7868129439303977,
+        "checked_max": 691,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "near_one_tiny": {
+        "cases": 9,
+        "original_mean": 713.6666666666666,
+        "checked_mean": 101.33333333333333,
+        "checked_over_original": 0.14198972442783747,
+        "checked_max": 120,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "near_one_outer": {
+        "cases": 54,
+        "original_mean": 743.6111111111111,
+        "checked_mean": 606.2777777777778,
+        "checked_over_original": 0.8153156518490848,
+        "checked_max": 620,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "decimal_powers": {
+        "cases": 121,
+        "original_mean": 800.099173553719,
+        "checked_mean": 624.6528925619834,
+        "checked_over_original": 0.7807193323141759,
+        "checked_max": 726,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "near_one_random": {
+        "cases": 512,
+        "original_mean": 760.720703125,
+        "checked_mean": 648.13671875,
+        "checked_over_original": 0.8520035225641802,
+        "checked_max": 10401,
+        "refinement_entries": {
+          "4": 2,
+          "8": 0
+        },
+        "refine117_fraction": 0.00390625
+      }
+    },
+    "physical_timing": false,
+    "scope": "Executed ARM instructions for every full call, including refinement. PC hooks observe actual Q117/Q245 entries; no runtime counters or mutable RAM added."
+  },
+  "generated_constants": {
+    "status": "PASS",
+    "precision": 245,
+    "rows": 25,
+    "bytes": 800,
+    "certificates": [
+      {
+        "index": 0,
+        "terms": 76,
+        "value_Q245": "0x162e42fefa39ef35793c7673007e5ed5e81e6864ce5316c5b141a2eb71755f",
+        "upstream_Q62_nearest": "0x2c5c85fdf473de6b"
+      },
+      {
+        "index": 1,
+        "terms": 52,
+        "value_Q245": "0xcf991f65fcc25f95b46bb37a02910c0cfa41ff668a8faf856715af1d8b3c7",
+        "upstream_Q62_nearest": "0x19f323ecbf984bf3"
+      },
+      {
+        "index": 2,
+        "terms": 38,
+        "value_Q245": "0x723fdf1e6a6886b097607bcbfee6892b8ecbd4e8235b8362e1e267eac97f8",
+        "upstream_Q62_nearest": "0xe47fbe3cd4d10d6"
+      },
+      {
+        "index": 3,
+        "terms": 29,
+        "value_Q245": "0x3c4e0edc55e5cbd3d50fffc3fd3c2abb729d78802fedf2afba112f83ff22f",
+        "upstream_Q62_nearest": "0x789c1db8abcb97a"
+      },
+      {
+        "index": 4,
+        "terms": 24,
+        "value_Q245": "0x1f0a30c01162a6617cc9716eeb32f131a68e9a66eb6a4b2ce30a3e152ded3",
+        "upstream_Q62_nearest": "0x3e14618022c54cc"
+      },
+      {
+        "index": 5,
+        "terms": 20,
+        "value_Q245": "0xfc14d873c1980267c7e09e3de453f5d5df5c299bbe6b5a3bed8eb1fc6ce7",
+        "upstream_Q62_nearest": "0x1f829b0e7833005"
+      },
+      {
+        "index": 6,
+        "terms": 17,
+        "value_Q245": "0x7f02a2c3f00f8f3e7b69d34deaf55b7d6077d207bb8a66ba281fc0aee245",
+        "upstream_Q62_nearest": "0xfe054587e01f1e"
+      },
+      {
+        "index": 7,
+        "terms": 15,
+        "value_Q245": "0x3fc054d620cf11f86ed20723b8505a567b6587df340e750ece04f10d6af1",
+        "upstream_Q62_nearest": "0x7f80a9ac419e24"
+      },
+      {
+        "index": 8,
+        "terms": 13,
+        "value_Q245": "0x1ff00aa2b10bc04a086b569b4d4b769199a53badae4b0492374dc66b4346",
+        "upstream_Q62_nearest": "0x3fe01545621781"
+      },
+      {
+        "index": 9,
+        "terms": 12,
+        "value_Q245": "0xffc0154d588733c53c742a7c76356395b1d845d134023d8e66ad982559c",
+        "upstream_Q62_nearest": "0x1ff802a9ab10e6"
+      },
+      {
+        "index": 10,
+        "terms": 11,
+        "value_Q245": "0x7ff002aa2ac43ef013414649324d1d1c61ac2ec5de9d60dc698ac94dd6e",
+        "upstream_Q62_nearest": "0xffe0055455888"
+      },
+      {
+        "index": 11,
+        "terms": 10,
+        "value_Q245": "0x3ffc00554d56220ccf15b166319670a8bd71d3cbc1f93c9cb1146cb813a",
+        "upstream_Q62_nearest": "0x7ff800aa9aac4"
+      },
+      {
+        "index": 12,
+        "terms": 9,
+        "value_Q245": "0x1fff000aaa2ab110bbc04dc4e3dc0a93919a170005a1079365d2330445e",
+        "upstream_Q62_nearest": "0x3ffe001554556"
+      },
+      {
+        "index": 13,
+        "terms": 9,
+        "value_Q245": "0xfffc001554d558887333c57857e1ed521af29bc8c8f7c8d81152b8964d",
+        "upstream_Q62_nearest": "0x1fff8002aa9ab"
+      },
+      {
+        "index": 14,
+        "terms": 8,
+        "value_Q245": "0x7fff0002aaa2aac443eef0137d3821b9e86f41144f88fef702e1664517",
+        "upstream_Q62_nearest": "0xfffe00055545"
+      },
+      {
+        "index": 15,
+        "terms": 8,
+        "value_Q245": "0x3fffc0005554d5562220cccf15ed5f1d0dc4105849b70b054136318b5c",
+        "upstream_Q62_nearest": "0x7fff8000aaaa"
+      },
+      {
+        "index": 16,
+        "terms": 7,
+        "value_Q245": "0x1ffff0000aaaa2aab1110bbbc04e00e0519315fe62ceb5e3c96cc30ed5",
+        "upstream_Q62_nearest": "0x3fffe0001555"
+      },
+      {
+        "index": 17,
+        "terms": 7,
+        "value_Q245": "0xffffc00015554d555888873333c57c17c598c97fcc02913daf2da236a",
+        "upstream_Q62_nearest": "0x1ffff80002ab"
+      },
+      {
+        "index": 18,
+        "terms": 6,
+        "value_Q245": "0x7ffff00002aaaa2aaac4443eeef01380f8138f70f3dc3e7e0a9ebc242",
+        "upstream_Q62_nearest": "0xffffe000055"
+      },
+      {
+        "index": 19,
+        "terms": 6,
+        "value_Q245": "0x3ffffc000055554d555622220ccccf15f11f15f87b86ebaed2317d849",
+        "upstream_Q62_nearest": "0x7ffff80000b"
+      },
+      {
+        "index": 20,
+        "terms": 6,
+        "value_Q245": "0x1fffff00000aaaaa2aaab11110bbbbc04e04a04e086e86b53b569df55",
+        "upstream_Q62_nearest": "0x3ffffe00001"
+      },
+      {
+        "index": 21,
+        "terms": 6,
+        "value_Q245": "0xfffffc0000155554d555588888733333c57c53c57c743742a76a7c78",
+        "upstream_Q62_nearest": "0x1fffff80000"
+      },
+      {
+        "index": 22,
+        "terms": 5,
+        "value_Q245": "0x7fffff000002aaaaa2aaaac44443eeeef01381341381464c64931932",
+        "upstream_Q62_nearest": "0xfffffe0000"
+      },
+      {
+        "index": 23,
+        "terms": 5,
+        "value_Q245": "0x3fffffc00000555554d55556222220cccccf15f15b15f16632631965",
+        "upstream_Q62_nearest": "0x7fffff8000"
+      },
+      {
+        "index": 24,
+        "terms": 5,
+        "value_Q245": "0x1ffffff000000aaaaaa2aaaab111110bbbbbc04e04dc4e04e3dc3dc0",
+        "upstream_Q62_nearest": "0x3fffffe000"
+      }
+    ],
+    "sha256": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+  },
+  "generated_compensated_constants": {
+    "status": "PASS",
+    "greedy_steps": 18,
+    "precision": 82,
+    "embedded_log_rows_bytes": 216,
+    "reciprocal_table_bytes": 256,
+    "data_bytes": 472,
+    "reciprocal_error_bound": "871/396288",
+    "ln2_delta_Q20": 55410,
+    "log_rows": [
+      {
+        "index": 0,
+        "nearest_Q62": "0x2c5c85fdf473de6b",
+        "delta_Q20": 55410
+      },
+      {
+        "index": 1,
+        "nearest_Q62": "0x19f323ecbf984bf3",
+        "delta_Q20": 300841
+      },
+      {
+        "index": 2,
+        "nearest_Q62": "0xe47fbe3cd4d10d6",
+        "delta_Q20": -77504
+      },
+      {
+        "index": 3,
+        "nearest_Q62": "0x789c1db8abcb97a",
+        "delta_Q20": -502303
+      },
+      {
+        "index": 4,
+        "nearest_Q62": "0x3e14618022c54cc",
+        "delta_Q20": -194962
+      },
+      {
+        "index": 5,
+        "nearest_Q62": "0x1f829b0e7833005",
+        "delta_Q20": 198404
+      },
+      {
+        "index": 6,
+        "nearest_Q62": "0xfe054587e01f1e",
+        "delta_Q20": -511853
+      },
+      {
+        "index": 7,
+        "nearest_Q62": "0x7f80a9ac419e24",
+        "delta_Q20": 61990
+      },
+      {
+        "index": 8,
+        "nearest_Q62": "0x3fe01545621781",
+        "delta_Q20": 442099
+      },
+      {
+        "index": 9,
+        "nearest_Q62": "0x1ff802a9ab10e6",
+        "delta_Q20": -494200
+      },
+      {
+        "index": 10,
+        "nearest_Q62": "0xffe0055455888",
+        "delta_Q20": 139226
+      },
+      {
+        "index": 11,
+        "nearest_Q62": "0x7ff800aa9aac4",
+        "delta_Q20": -268702
+      },
+      {
+        "index": 12,
+        "nearest_Q62": "0x3ffe001554556",
+        "delta_Q20": -139639
+      },
+      {
+        "index": 13,
+        "nearest_Q62": "0x1fff8002aa9ab",
+        "delta_Q20": 323314
+      },
+      {
+        "index": 14,
+        "nearest_Q62": "0xfffe00055545",
+        "delta_Q20": -350344
+      },
+      {
+        "index": 15,
+        "nearest_Q62": "0x7fff8000aaaa",
+        "delta_Q20": 349500
+      },
+      {
+        "index": 16,
+        "nearest_Q62": "0x3fffe0001555",
+        "delta_Q20": -283990
+      },
+      {
+        "index": 17,
+        "nearest_Q62": "0x1ffff80002ab",
+        "delta_Q20": 353622
+      },
+      {
+        "index": 18,
+        "nearest_Q62": "0xffffe000055",
+        "delta_Q20": -349269
+      }
+    ],
+    "reciprocal_Q10": [
+      1364,
+      1360,
+      1357,
+      1353,
+      1350,
+      1346,
+      1343,
+      1339,
+      1336,
+      1332,
+      1329,
+      1326,
+      1322,
+      1319,
+      1316,
+      1312,
+      1309,
+      1306,
+      1303,
+      1299,
+      1296,
+      1293,
+      1290,
+      1287,
+      1283,
+      1280,
+      1277,
+      1274,
+      1271,
+      1268,
+      1265,
+      1262,
+      1259,
+      1256,
+      1253,
+      1250,
+      1247,
+      1244,
+      1241,
+      1238,
+      1235,
+      1232,
+      1229,
+      1226,
+      1224,
+      1221,
+      1218,
+      1215,
+      1212,
+      1209,
+      1207,
+      1204,
+      1201,
+      1198,
+      1196,
+      1193,
+      1190,
+      1188,
+      1185,
+      1182,
+      1180,
+      1177,
+      1174,
+      1172,
+      1169,
+      1166,
+      1164,
+      1161,
+      1159,
+      1156,
+      1154,
+      1151,
+      1148,
+      1146,
+      1143,
+      1141,
+      1139,
+      1136,
+      1134,
+      1131,
+      1129,
+      1126,
+      1124,
+      1121,
+      1119,
+      1117,
+      1114,
+      1112,
+      1110,
+      1107,
+      1105,
+      1103,
+      1100,
+      1098,
+      1096,
+      1093,
+      1091,
+      1089,
+      1087,
+      1084,
+      1082,
+      1080,
+      1078,
+      1075,
+      1073,
+      1071,
+      1069,
+      1067,
+      1065,
+      1062,
+      1060,
+      1058,
+      1056,
+      1054,
+      1052,
+      1050,
+      1048,
+      1045,
+      1043,
+      1041,
+      1039,
+      1037,
+      1035,
+      1033,
+      1031,
+      1029,
+      1027,
+      1025
+    ],
+    "sha256": "23b186937e4f26f44b131650c65adf9bd722ea1e7eaa6a9618db1d3a627d0be9"
+  },
+  "physical": {
+    "status": "PASS",
+    "result": ".build/qfplib-ln-near-v9-0812-timing-20261021/hil-01/timings/result.json",
+    "result_sha256": "42512a0614ba627ba881845833eca02da7cf06c3f725f5102df143b96ad4bfa9",
+    "groups": [
+      {
+        "stream_index": 0,
+        "operation": "ln",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.5338134765625,
+          "qfplib": 7.3426513671875
+        },
+        "own_over_qfplib": 0.8898438928696115
+      },
+      {
+        "stream_index": 1,
+        "operation": "ln",
+        "stream": "ordinary_half_to_two",
+        "cases": 256,
+        "us_per_call": {
+          "own": 6.3306884765625,
+          "qfplib": 7.16162109375
+        },
+        "own_over_qfplib": 0.8839742278584578
+      },
+      {
+        "stream_index": 2,
+        "operation": "ln",
+        "stream": "near_one_tiny",
+        "cases": 9,
+        "us_per_call": {
+          "own": 1.2157509157509157,
+          "qfplib": 6.554578754578754
+        },
+        "own_over_qfplib": 0.18548116687157706
+      },
+      {
+        "stream_index": 3,
+        "operation": "ln",
+        "stream": "near_one_outer",
+        "cases": 54,
+        "us_per_call": {
+          "own": 6.368776060829041,
+          "qfplib": 6.847436840814324
+        },
+        "own_over_qfplib": 0.9300963570584232
+      },
+      {
+        "stream_index": 4,
+        "operation": "ln",
+        "stream": "decimal_powers",
+        "cases": 121,
+        "us_per_call": {
+          "own": 6.484519551005304,
+          "qfplib": 7.35068459356112
+        },
+        "own_over_qfplib": 0.8821653913276951
+      },
+      {
+        "stream_index": 5,
+        "operation": "ln",
+        "stream": "near_one_random",
+        "cases": 512,
+        "us_per_call": {
+          "own": 6.8470458984375,
+          "qfplib": 7.0
+        },
+        "own_over_qfplib": 0.9781494140625
+      }
+    ],
+    "checked_wrong_rounding": 0,
+    "original_wrong_rounding": 550,
+    "remaining_measured_gaps": [],
+    "restore": {
+      "status": "PASS_RESTORED",
+      "transaction": ".build/qfplib-ln-near-v9-0812-timing-20261021/hil-01/transaction.json",
+      "transaction_sha256": "2bef6f06675676203ab754174d7e2e76df115e446edafa2c44de7dfd8c43fc93",
+      "accepted_build": "be246af2",
+      "accepted_version": "0.8.12",
+      "uid": "E6657CD423721C35",
+      "uf2_sha256": "36612f3e58bd1958859e07992cc242bca3bd449fe65314c79b3d3dd17e4bdf4d",
+      "calculator_data_restored": true,
+      "ip_restored": 24,
+      "rtc_restored": {
+        "expected": "2026-10-21T10:29:59.358377",
+        "actual": "2026-10-21T10:30:00"
+      },
+      "serial_closed": true,
+      "firmware_crc_verified": true,
+      "peripherals_ready": true
+    },
+    "method": "Pinned original Qfplib and checked fork both execute from the same isolated flash reference at0x10180000; all resident math addresses/bytes and RAM initializers retain accepted0.8.12/BE246AF2 layout. Identical vectors; nine alternating paired batches with typed calibration, TIMERAWL, interrupts enabled; at least1s paired warmup.8192calls/round approximately. XIP hit/access counters sampled outside timing.",
+    "scope": "Measured checked-ln fork versus pinned original Qfplib, both in isolated flash. Does not compare against the canonical owned ln or establish an all-input latency bound."
+  }
+}

@@ -1,0 +1,1063 @@
+{
+  "recorded_at": "2026-10-21T04:05:45.174122+00:00",
+  "description": "Standalone Qfplib fork: exact small ln kernel, redundant iteration removed, IEEE ln exceptional paths corrected.",
+  "firmware_integrated": false,
+  "m4_changed": false,
+  "additional_lookup_table_bytes": 0,
+  "upstream": {
+    "upstream_repository": "https://github.com/mysterywolf/Qfplib-M0-full",
+    "upstream_commit": "ec814ad1f17934ac777f9e042efacfae5b15210d",
+    "upstream_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+    "modified_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+    "license": "GPL-2.0-only",
+    "firmware_integration": false,
+    "scope": "Independent standalone evaluation; project GPLv3 integration requires license compatibility resolution.",
+    "changes": [
+      "ln: negative nonzero inputs return a quiet NaN",
+      "ln: either signed zero returns negative infinity",
+      "ln: positive infinity preserved and positive NaNs quieted",
+      "ln: positive subnormal significands normalized into the existing fixed-point kernel",
+      "ln: omitted greedy step32, whose Q62 x increment and logarithm contributions cancel exactly",
+      "ln: exact RNE near-one integer kernel for every 98,303 binary64 encoding from 1-65535*2^-53 through 1+32767*2^-52",
+      "No new lookup table; sampled ordinary paths have fewer instructions"
+    ]
+  },
+  "qualification": {
+    "status": "PASS_RESEARCH_GATES",
+    "mpfr": "4.2.2",
+    "groups": {
+      "ln_positive_normal_outside_new_kernel": {
+        "symbol": "qfp_dln",
+        "statistics": {
+          "original": {
+            "cases": 5075,
+            "wrong_rounding": 65,
+            "worst_ulp": 7340032
+          },
+          "modified": {
+            "cases": 5075,
+            "wrong_rounding": 65,
+            "worst_ulp": 7340032
+          }
+        },
+        "examples": [
+          {
+            "x": "0x43e81559685258c8",
+            "y": "0x0",
+            "got": "0x404609e1e5281cea",
+            "expected": "0x404609e1e5281ceb",
+            "ulp": 1
+          },
+          {
+            "x": "0x3cd1f58c0490e3c1",
+            "y": "0x0",
+            "got": "0xc041455b3e4f02bc",
+            "expected": "0xc041455b3e4f02bb",
+            "ulp": 1
+          },
+          {
+            "x": "0x7aa7f0f356256c75",
+            "y": "0x0",
+            "got": "0x40845a254e01a140",
+            "expected": "0x40845a254e01a141",
+            "ulp": 1
+          },
+          {
+            "x": "0x2dbbf5f1bb642af8",
+            "y": "0x0",
+            "got": "0xc0693ae78b8d06c8",
+            "expected": "0xc0693ae78b8d06c7",
+            "ulp": 1
+          },
+          {
+            "x": "0x12053d22ab80016f",
+            "y": "0x0",
+            "got": "0xc07fd2e104d60480",
+            "expected": "0xc07fd2e104d6047f",
+            "ulp": 1
+          },
+          {
+            "x": "0x39704a4b2125c3c6",
+            "y": "0x0",
+            "got": "0xc052046fec5c41ca",
+            "expected": "0xc052046fec5c41c9",
+            "ulp": 1
+          }
+        ]
+      },
+      "ln_near_one_exhaustive": {
+        "symbol": "qfp_dln",
+        "statistics": {
+          "original": {
+            "cases": 98303,
+            "wrong_rounding": 98301,
+            "worst_ulp": 137438953504
+          },
+          "modified": {
+            "cases": 98303,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "ln_positive_subnormal": {
+        "symbol": "qfp_dln",
+        "statistics": {
+          "original": {
+            "cases": 5153,
+            "wrong_rounding": 5153,
+            "worst_ulp": 4569426100614415150
+          },
+          "modified": {
+            "cases": 5153,
+            "wrong_rounding": 18,
+            "worst_ulp": 1
+          }
+        },
+        "examples": [
+          {
+            "x": "0x1fffffffff",
+            "y": "0x0",
+            "got": "0xc086765958b6e76c",
+            "expected": "0xc086765958b6e76b",
+            "ulp": 1
+          },
+          {
+            "x": "0x2000000000",
+            "y": "0x0",
+            "got": "0xc086765958b6e72c",
+            "expected": "0xc086765958b6e72b",
+            "ulp": 1
+          },
+          {
+            "x": "0x2000000001",
+            "y": "0x0",
+            "got": "0xc086765958b6e6ec",
+            "expected": "0xc086765958b6e6eb",
+            "ulp": 1
+          },
+          {
+            "x": "0x4fd0a1658ec2",
+            "y": "0x0",
+            "got": "0xc08642ad008d58dc",
+            "expected": "0xc08642ad008d58db",
+            "ulp": 1
+          },
+          {
+            "x": "0x2e62d506312fd",
+            "y": "0x0",
+            "got": "0xc08630d636ea316e",
+            "expected": "0xc08630d636ea316d",
+            "ulp": 1
+          },
+          {
+            "x": "0x375998a96bf4a",
+            "y": "0x0",
+            "got": "0xc0862f6c611949ca",
+            "expected": "0xc0862f6c611949c9",
+            "ulp": 1
+          }
+        ]
+      },
+      "ln_special_numeric_semantics": {
+        "symbol": "qfp_dln",
+        "statistics": {
+          "original": {
+            "cases": 12,
+            "wrong_rounding": 9,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 12,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "sqrt_normal": {
+        "symbol": "qfp_dsqrt",
+        "statistics": {
+          "original": {
+            "cases": 5000,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 5000,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "sin_documented_range": {
+        "symbol": "qfp_dsin",
+        "statistics": {
+          "original": {
+            "cases": 5007,
+            "wrong_rounding": 1442,
+            "worst_ulp": 6761135496199
+          },
+          "modified": {
+            "cases": 5007,
+            "wrong_rounding": 1442,
+            "worst_ulp": 6761135496199
+          }
+        },
+        "examples": [
+          {
+            "x": "0x408633d6cc67b4ee",
+            "y": "0x0",
+            "got": "0x3fdd8cf3c170ec7a",
+            "expected": "0x3fdd8cf3c170ec79",
+            "ulp": 1
+          },
+          {
+            "x": "0xc07be26bd5c2d510",
+            "y": "0x0",
+            "got": "0xbfa71e858b3c3589",
+            "expected": "0xbfa71e858b3c3586",
+            "ulp": 3
+          },
+          {
+            "x": "0x406f6eadf2ab8930",
+            "y": "0x0",
+            "got": "0x3fc0c2c9d0704524",
+            "expected": "0x3fc0c2c9d0704523",
+            "ulp": 1
+          },
+          {
+            "x": "0x40858149dfe74a24",
+            "y": "0x0",
+            "got": "0xbfc36aa9b0b7a20c",
+            "expected": "0xbfc36aa9b0b7a20a",
+            "ulp": 2
+          },
+          {
+            "x": "0xc083d37d0915bb78",
+            "y": "0x0",
+            "got": "0x3fc51baab335d75f",
+            "expected": "0x3fc51baab335d760",
+            "ulp": 1
+          },
+          {
+            "x": "0xc088ef182a6fa2c2",
+            "y": "0x0",
+            "got": "0x3fb3e14477a050a5",
+            "expected": "0x3fb3e14477a050a8",
+            "ulp": 3
+          }
+        ]
+      },
+      "cos_documented_range": {
+        "symbol": "qfp_dcos",
+        "statistics": {
+          "original": {
+            "cases": 5007,
+            "wrong_rounding": 1403,
+            "worst_ulp": 24353321540615
+          },
+          "modified": {
+            "cases": 5007,
+            "wrong_rounding": 1403,
+            "worst_ulp": 24353321540615
+          }
+        },
+        "examples": [
+          {
+            "x": "0x408cf7b632d6c8c4",
+            "y": "0x0",
+            "got": "0xbfef661e4a53a3a5",
+            "expected": "0xbfef661e4a53a3a6",
+            "ulp": 1
+          },
+          {
+            "x": "0xc07cd23dc0349f6c",
+            "y": "0x0",
+            "got": "0xbfe90070fa92ef29",
+            "expected": "0xbfe90070fa92ef28",
+            "ulp": 1
+          },
+          {
+            "x": "0xc071c326fbd472f4",
+            "y": "0x0",
+            "got": "0x3fbde9e31b6ab4bc",
+            "expected": "0x3fbde9e31b6ab4bd",
+            "ulp": 1
+          },
+          {
+            "x": "0xc089df023f29fac6",
+            "y": "0x0",
+            "got": "0x3fb0fe8a17138bbd",
+            "expected": "0x3fb0fe8a17138bba",
+            "ulp": 3
+          },
+          {
+            "x": "0xc07776b5c6865b48",
+            "y": "0x0",
+            "got": "0xbf4ee92a09a39610",
+            "expected": "0xbf4ee92a09a396cc",
+            "ulp": 188
+          },
+          {
+            "x": "0xc08137faec4196d8",
+            "y": "0x0",
+            "got": "0xbfd610a683b5a0f0",
+            "expected": "0xbfd610a683b5a0f1",
+            "ulp": 1
+          }
+        ]
+      },
+      "tan_documented_range": {
+        "symbol": "qfp_dtan",
+        "statistics": {
+          "original": {
+            "cases": 5007,
+            "wrong_rounding": 3007,
+            "worst_ulp": 40227331280229
+          },
+          "modified": {
+            "cases": 5007,
+            "wrong_rounding": 3007,
+            "worst_ulp": 40227331280229
+          }
+        },
+        "examples": [
+          {
+            "x": "0x406d172cac4cb300",
+            "y": "0x0",
+            "got": "0x3fd017d3822fee4c",
+            "expected": "0x3fd017d3822fee4d",
+            "ulp": 1
+          },
+          {
+            "x": "0xc08316629c18422e",
+            "y": "0x0",
+            "got": "0xc0103b3b31bbde23",
+            "expected": "0xc0103b3b31bbde22",
+            "ulp": 1
+          },
+          {
+            "x": "0x408cfb6ebf90fc08",
+            "y": "0x0",
+            "got": "0x3fe8cbed663c8486",
+            "expected": "0x3fe8cbed663c8485",
+            "ulp": 1
+          },
+          {
+            "x": "0x407172ce11babb10",
+            "y": "0x0",
+            "got": "0xbfdd137e41b00fcc",
+            "expected": "0xbfdd137e41b00fcd",
+            "ulp": 1
+          },
+          {
+            "x": "0xc075a8934cd7e028",
+            "y": "0x0",
+            "got": "0xbff6e426f3f9cc4a",
+            "expected": "0xbff6e426f3f9cc4b",
+            "ulp": 1
+          },
+          {
+            "x": "0x408672d38a394c96",
+            "y": "0x0",
+            "got": "0xbffd54ec8917c225",
+            "expected": "0xbffd54ec8917c226",
+            "ulp": 1
+          }
+        ]
+      },
+      "exp_finite_range": {
+        "symbol": "qfp_dexp",
+        "statistics": {
+          "original": {
+            "cases": 5000,
+            "wrong_rounding": 314,
+            "worst_ulp": 3447985920727436
+          },
+          "modified": {
+            "cases": 5000,
+            "wrong_rounding": 314,
+            "worst_ulp": 3447985920727436
+          }
+        },
+        "examples": [
+          {
+            "x": "0x4081f39934e018c2",
+            "y": "0x0",
+            "got": "0x73bb04ccdb6586d9",
+            "expected": "0x73bb04ccdb6586da",
+            "ulp": 1
+          },
+          {
+            "x": "0x40805e78da844bbe",
+            "y": "0x0",
+            "got": "0x6f29ee97e89c8098",
+            "expected": "0x6f29ee97e89c8099",
+            "ulp": 1
+          },
+          {
+            "x": "0xc0865a87e23fd170",
+            "y": "0x0",
+            "got": "0x0",
+            "expected": "0x40be2e290f3",
+            "ulp": 4449097650419
+          },
+          {
+            "x": "0xc073eed9129585dd",
+            "y": "0x0",
+            "got": "0x232d87f3cd204ae3",
+            "expected": "0x232d87f3cd204ae2",
+            "ulp": 1
+          },
+          {
+            "x": "0xc086d4734456fe4a",
+            "y": "0x0",
+            "got": "0x0",
+            "expected": "0x105648",
+            "ulp": 1070664
+          },
+          {
+            "x": "0xc0862d5054d55572",
+            "y": "0x0",
+            "got": "0x0",
+            "expected": "0x480d0261c8041",
+            "ulp": 1267531387797569
+          }
+        ]
+      },
+      "atan_composed": {
+        "symbol": "qfp_datan2",
+        "statistics": {
+          "original": {
+            "cases": 5000,
+            "wrong_rounding": 33,
+            "worst_ulp": 1
+          },
+          "modified": {
+            "cases": 5000,
+            "wrong_rounding": 33,
+            "worst_ulp": 1
+          }
+        },
+        "examples": [
+          {
+            "x": "0xc0ffe7cbeac5f118",
+            "y": "0x3ff0000000000000",
+            "got": "0xbff921f34e3290b5",
+            "expected": "0xbff921f34e3290b4",
+            "ulp": 1
+          },
+          {
+            "x": "0x4114b09c28b35cd8",
+            "y": "0x3ff0000000000000",
+            "got": "0x3ff921f83c61b690",
+            "expected": "0x3ff921f83c61b691",
+            "ulp": 1
+          },
+          {
+            "x": "0x412a06bccbbfa778",
+            "y": "0x3ff0000000000000",
+            "got": "0x3ff921fa19820c65",
+            "expected": "0x3ff921fa19820c66",
+            "ulp": 1
+          },
+          {
+            "x": "0xc0f5a4a99340fbd0",
+            "y": "0x3ff0000000000000",
+            "got": "0xbff921ef804001b0",
+            "expected": "0xbff921ef804001b1",
+            "ulp": 1
+          },
+          {
+            "x": "0xc12578bee254b9ec",
+            "y": "0x3ff0000000000000",
+            "got": "0xbff921f9d6bd7dbd",
+            "expected": "0xbff921f9d6bd7dbc",
+            "ulp": 1
+          },
+          {
+            "x": "0xc11735a8bf031764",
+            "y": "0x3ff0000000000000",
+            "got": "0xbff921f8925a0959",
+            "expected": "0xbff921f8925a0958",
+            "ulp": 1
+          }
+        ]
+      },
+      "add_ieee_audit": {
+        "symbol": "qfp_dadd",
+        "statistics": {
+          "original": {
+            "cases": 5121,
+            "wrong_rounding": 39,
+            "worst_ulp": 9007199254740990
+          },
+          "modified": {
+            "cases": 5121,
+            "wrong_rounding": 39,
+            "worst_ulp": 9007199254740990
+          }
+        },
+        "examples": [
+          {
+            "x": "0x0",
+            "y": "0x1",
+            "got": "0x0",
+            "expected": "0x1",
+            "ulp": 1
+          },
+          {
+            "x": "0x0",
+            "y": "0xfffffffffffff",
+            "got": "0x0",
+            "expected": "0xfffffffffffff",
+            "ulp": 4503599627370495
+          },
+          {
+            "x": "0x0",
+            "y": "0x7ff8000000000001",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x1",
+            "got": "0x0",
+            "expected": "0x1",
+            "ulp": 1
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0xfffffffffffff",
+            "got": "0x0",
+            "expected": "0xfffffffffffff",
+            "ulp": 4503599627370495
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x7ff8000000000001",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          }
+        ]
+      },
+      "add_normal_inputs_and_results": {
+        "symbol": "qfp_dadd",
+        "statistics": {
+          "original": {
+            "cases": 5013,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 5013,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "sub_ieee_audit": {
+        "symbol": "qfp_dsub",
+        "statistics": {
+          "original": {
+            "cases": 5121,
+            "wrong_rounding": 37,
+            "worst_ulp": 4503599627370496
+          },
+          "modified": {
+            "cases": 5121,
+            "wrong_rounding": 37,
+            "worst_ulp": 4503599627370496
+          }
+        },
+        "examples": [
+          {
+            "x": "0x0",
+            "y": "0x1",
+            "got": "0x0",
+            "expected": "0x8000000000000001",
+            "ulp": 2
+          },
+          {
+            "x": "0x0",
+            "y": "0xfffffffffffff",
+            "got": "0x0",
+            "expected": "0x800fffffffffffff",
+            "ulp": 4503599627370496
+          },
+          {
+            "x": "0x0",
+            "y": "0x7ff8000000000001",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x1",
+            "got": "0x8000000000000000",
+            "expected": "0x8000000000000001",
+            "ulp": 1
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0xfffffffffffff",
+            "got": "0x8000000000000000",
+            "expected": "0x800fffffffffffff",
+            "ulp": 4503599627370495
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x7ff8000000000001",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          }
+        ]
+      },
+      "sub_normal_inputs_and_results": {
+        "symbol": "qfp_dsub",
+        "statistics": {
+          "original": {
+            "cases": 5012,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 5012,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "mul_ieee_audit": {
+        "symbol": "qfp_dmul",
+        "statistics": {
+          "original": {
+            "cases": 5121,
+            "wrong_rounding": 96,
+            "worst_ulp": 4616189618054758397
+          },
+          "modified": {
+            "cases": 5121,
+            "wrong_rounding": 96,
+            "worst_ulp": 4616189618054758397
+          }
+        },
+        "examples": [
+          {
+            "x": "0x0",
+            "y": "0x7ff0000000000000",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x0",
+            "y": "0xfff0000000000000",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x0",
+            "y": "0x7ff8000000000001",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x7ff0000000000000",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0xfff0000000000000",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x7ff8000000000001",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000001",
+            "ulp": null
+          }
+        ]
+      },
+      "mul_normal_inputs_and_results": {
+        "symbol": "qfp_dmul",
+        "statistics": {
+          "original": {
+            "cases": 3769,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 3769,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      },
+      "div_ieee_audit": {
+        "symbol": "qfp_ddiv",
+        "statistics": {
+          "original": {
+            "cases": 5121,
+            "wrong_rounding": 113,
+            "worst_ulp": 9218868437227405312
+          },
+          "modified": {
+            "cases": 5121,
+            "wrong_rounding": 113,
+            "worst_ulp": 9218868437227405312
+          }
+        },
+        "examples": [
+          {
+            "x": "0x0",
+            "y": "0x0",
+            "got": "0x7ff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x0",
+            "y": "0x8000000000000000",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x0",
+            "y": "0x1",
+            "got": "0x7ff0000000000000",
+            "expected": "0x0",
+            "ulp": 9218868437227405312
+          },
+          {
+            "x": "0x0",
+            "y": "0xfffffffffffff",
+            "got": "0x7ff0000000000000",
+            "expected": "0x0",
+            "ulp": 9218868437227405312
+          },
+          {
+            "x": "0x0",
+            "y": "0x7ff8000000000001",
+            "got": "0x0",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          },
+          {
+            "x": "0x8000000000000000",
+            "y": "0x0",
+            "got": "0xfff0000000000000",
+            "expected": "0x7ff8000000000000",
+            "ulp": null
+          }
+        ]
+      },
+      "div_normal_inputs_and_results": {
+        "symbol": "qfp_ddiv",
+        "statistics": {
+          "original": {
+            "cases": 3779,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          },
+          "modified": {
+            "cases": 3779,
+            "wrong_rounding": 0,
+            "worst_ulp": 0
+          }
+        },
+        "examples": []
+      }
+    },
+    "normal_regression_cases_unchanged": 55580,
+    "normal_ln_instruction_counts": [
+      {
+        "input": "0x3fe0000000000000",
+        "original": 711,
+        "modified": 699
+      },
+      {
+        "input": "0x3fe8000000000000",
+        "original": 709,
+        "modified": 697
+      },
+      {
+        "input": "0x3ff0000000000000",
+        "original": 683,
+        "modified": 11
+      },
+      {
+        "input": "0x3ff0000000000001",
+        "original": 745,
+        "modified": 99
+      },
+      {
+        "input": "0x3fefffffffffffff",
+        "original": 720,
+        "modified": 98
+      },
+      {
+        "input": "0x3fefffffffff0001",
+        "original": 702,
+        "modified": 76
+      },
+      {
+        "input": "0x3fefffffffff0000",
+        "original": 698,
+        "modified": 690
+      },
+      {
+        "input": "0x3ff0000000007fff",
+        "original": 732,
+        "modified": 81
+      },
+      {
+        "input": "0x3ff0000000008000",
+        "original": 728,
+        "modified": 715
+      },
+      {
+        "input": "0x3ff8000000000000",
+        "original": 709,
+        "modified": 697
+      },
+      {
+        "input": "0x4000000000000000",
+        "original": 711,
+        "modified": 699
+      },
+      {
+        "input": "0x4059000000000000",
+        "original": 775,
+        "modified": 757
+      },
+      {
+        "input": "0x10000000000000",
+        "original": 755,
+        "modified": 743
+      },
+      {
+        "input": "0x7fefffffffffffff",
+        "original": 725,
+        "modified": 713
+      }
+    ],
+    "code_and_tables_bytes": {
+      "original": 5780,
+      "modified": 5948
+    },
+    "added_bytes": 168,
+    "static_ram_bytes": {
+      "original": 0,
+      "modified": 0
+    },
+    "maximum_stack_bytes": {
+      "original": 68,
+      "modified": 68
+    },
+    "elf_sha256": {
+      "original": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+      "modified": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4"
+    },
+    "build": {
+      "status": "PASS",
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "images": {
+        "original": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-m0-fork-near-20261020/original.elf",
+          "elf_sha256": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+          "source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+        },
+        "modified": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-m0-fork-near-20261020/modified.elf",
+          "elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+          "source_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7"
+        }
+      },
+      "firmware_linked": false
+    },
+    "result_sha256": "31cc44b508d6c782ac2e3bc9eb8d9d8425a76e2273f9e47db4d3b569ef75a902",
+    "firmware_integrated": false,
+    "remaining": [
+      "Scientific functions outside the new tiny ln kernel are not universally correctly rounded; relative error can grow near zeros.",
+      "Positive subnormal ln now has a numerical result but retains occasional one-ULP errors.",
+      "NaN/subnormal behavior of other Qfplib entries is unchanged.",
+      "asin/acos/log10/pow/fma have no native Qfplib entries.",
+      "GPL-2.0-only/GPLv3 distribution compatibility is unresolved."
+    ],
+    "scope": "Separate Qfplib fork. MPFR-directed RNE audit, actual ARM outputs and ABI, unchanged ordinary outputs outside the exact near-one kernel, and lower instruction counts. This PASS does not mean every Qfplib result is correctly rounded or that the main goal is complete."
+  },
+  "integer_rational_proof": {
+    "status": "PASS",
+    "source_sha256": {
+      "original": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+      "modified": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7"
+    },
+    "greedy_bounds": [
+      {
+        "step": 1,
+        "maximum_deficit": 1537228672809129301
+      },
+      {
+        "step": 2,
+        "maximum_deficit": 922337203685477581
+      },
+      {
+        "step": 3,
+        "maximum_deficit": 512409557603043100
+      },
+      {
+        "step": 4,
+        "maximum_deficit": 271275648142787524
+      },
+      {
+        "step": 5,
+        "maximum_deficit": 139748061164466300
+      },
+      {
+        "step": 6,
+        "maximum_deficit": 70949015668113660
+      },
+      {
+        "step": 7,
+        "maximum_deficit": 35749504018816960
+      },
+      {
+        "step": 8,
+        "maximum_deficit": 17944303573647424
+      },
+      {
+        "step": 9,
+        "maximum_deficit": 8989641361456896
+      },
+      {
+        "step": 10,
+        "maximum_deficit": 4499205871636476
+      },
+      {
+        "step": 11,
+        "maximum_deficit": 2250700838666368
+      },
+      {
+        "step": 12,
+        "maximum_deficit": 1125625096028164
+      },
+      {
+        "step": 13,
+        "maximum_deficit": 562881242332160
+      },
+      {
+        "step": 14,
+        "maximum_deficit": 281457797889984
+      },
+      {
+        "step": 15,
+        "maximum_deficit": 140733193519100
+      },
+      {
+        "step": 16,
+        "maximum_deficit": 70367670452224
+      },
+      {
+        "step": 17,
+        "maximum_deficit": 35184103655424
+      },
+      {
+        "step": 18,
+        "maximum_deficit": 17592118935808
+      },
+      {
+        "step": 19,
+        "maximum_deficit": 8796076245024
+      },
+      {
+        "step": 20,
+        "maximum_deficit": 4398042316804
+      },
+      {
+        "step": 21,
+        "maximum_deficit": 2199022206976
+      },
+      {
+        "step": 22,
+        "maximum_deficit": 1099511365632
+      },
+      {
+        "step": 23,
+        "maximum_deficit": 549755748352
+      },
+      {
+        "step": 24,
+        "maximum_deficit": 274877890560
+      },
+      {
+        "step": 25,
+        "maximum_deficit": 137438949376
+      },
+      {
+        "step": 26,
+        "maximum_deficit": 68719475712
+      },
+      {
+        "step": 27,
+        "maximum_deficit": 34359738112
+      },
+      {
+        "step": 28,
+        "maximum_deficit": 17179869120
+      },
+      {
+        "step": 29,
+        "maximum_deficit": 8589934576
+      },
+      {
+        "step": 30,
+        "maximum_deficit": 4294967292
+      },
+      {
+        "step": 31,
+        "maximum_deficit": 2147483647
+      }
+    ],
+    "omitted_step": 32,
+    "omitted_increment_and_table_entry": 1073741824,
+    "near_one_finite_input_count": 98303,
+    "counts": {
+      "positive": 32767,
+      "negative": 65535,
+      "exact_one": 1
+    },
+    "remainder_Q108_upper_bound": "375282789340500/9007199254675457",
+    "proof": "All Q62 mantissas bounded by monotone branch intervals; all 98,302 nonzero near-one encodings checked for exact integer assembly, positive remainder and sufficient rounding guard bits. One returns exact +0."
+  },
+  "reproducibility": {
+    "status": "PASS",
+    "identical_elf_bytes": {
+      "original": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+      "modified": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4"
+    }
+  },
+  "physical_measurements_pending": true,
+  "raw_result": ".build/qfplib-m0-fork-near-20261020/result.json",
+  "raw_result_sha256": "f1f48c7fbde21ec6fee4af2322d0d6f9569ee373fcecc717b118c883769fc8ac",
+  "scope": "Research result only. The complete scientific library still fails universal RNE and combined distributed firmware needs license compatibility resolution."
+}

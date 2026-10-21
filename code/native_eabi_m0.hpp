@@ -29,12 +29,31 @@ void mk61_m0_divmod64(uint64_t, uint64_t, mk61_eabi_divmod*);
 MK61_SOFT_PCS float mk61_m0_sqrtf(float);
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
 MK61_SOFT_PCS double mk61_m0_sqrt(double);
+MK61_SOFT_PCS double mk61_m0_fma(double,double,double);
+// Correctly rounded fallback (RNE), also used for ambiguous fast intervals.
+MK61_SOFT_PCS double mk61_m0_cr_sin(double);
+MK61_SOFT_PCS double mk61_m0_cr_cos(double);
+MK61_SOFT_PCS double mk61_m0_cr_tan(double);
+MK61_SOFT_PCS double mk61_m0_cr_atan(double);
+MK61_SOFT_PCS double mk61_m0_atan(double);
+MK61_SOFT_PCS double mk61_m0_trig(double,unsigned);
+MK61_SOFT_PCS double mk61_m0_cr_asin(double);
+MK61_SOFT_PCS double mk61_m0_asin(double);
+MK61_SOFT_PCS double mk61_m0_acos(double);
+MK61_SOFT_PCS double mk61_m0_cr_acos(double);
+MK61_SOFT_PCS double mk61_m0_cr_ln(double);
+MK61_SOFT_PCS double mk61_m0_cr_log10(double);
+MK61_SOFT_PCS double mk61_m0_cr_exp(double);
+MK61_SOFT_PCS double mk61_m0_cr_pow(double,double);
+MK61_SOFT_PCS double mk61_m0_pow_fast(double,double);
 MK61_SOFT_PCS double mk61_m0_exp(double);
 uint64_t mk61_m0_mul_q62(uint64_t,uint64_t);
+uint32_t mk61_m0_math_udiv32(uint32_t,uint32_t);
 void mk61_m0_sincos_small(double,double,double*,unsigned);
 MK61_SOFT_PCS double mk61_m0_tan_small(double,double);
 uint64_t mk61_m0_atan_reduced(double,int*);
 MK61_SOFT_PCS double mk61_m0_ln(double);
+MK61_SOFT_PCS double mk61_m0_log10(double);
 // Reduced input |x+tail| <= pi/4, |x| >= 1/64; mask 1=sin, 2=cos.
 void mk61_m0_sincos_reduced(double,double,double*,unsigned);
 MK61_SOFT_PCS double mk61_m0_trig_pack(uint64_t,uint64_t);

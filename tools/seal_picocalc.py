@@ -50,3 +50,42 @@ def seal(image,offset):
     result=bytes(out)
     verify(result,offset)
     return result
+
+
+def patch_elf_footer(elf,sealed_footer):
+    """Replace footer bytes without relaying out LOAD/NOLOAD RAM segments.
+
+    objcopy --update-section can move the LMA of a scratch RAM initializer
+    past a preceding NOLOAD heap. Startup still uses the link-time address.
+    The footer has fixed size, so no ELF header or segment needs to change.
+    """
+    header=struct.Struct('<16sHHIIIIIHHHHHH')
+    section=struct.Struct('<10I')
+    if len(elf)<header.size or len(sealed_footer)!=FOOTER.size:
+        raise ValueError('truncated ARM ELF/footer')
+    h=header.unpack_from(elf)
+    if h[0][:7]!=b'\x7fELF\x01\x01\x01' or h[1:4]!=(2,40,1) or h[11]!=section.size:
+        raise ValueError('expected linked little-endian ARM ELF32')
+    if not h[12] or h[13]>=h[12] or h[6]+h[12]*section.size>len(elf):
+        raise ValueError('invalid ARM ELF section table')
+    sections=[section.unpack_from(elf,h[6]+i*section.size) for i in range(h[12])]
+    names_section=sections[h[13]]
+    if names_section[1]!=3 or names_section[4]+names_section[5]>len(elf):
+        raise ValueError('invalid ARM ELF section names')
+    names=elf[names_section[4]:names_section[4]+names_section[5]]
+    matches=[]
+    for s in sections:
+        if s[0]>=len(names):raise ValueError('invalid ARM ELF section name')
+        end=names.find(b'\0',s[0])
+        if end<0:raise ValueError('unterminated ARM ELF section name')
+        if names[s[0]:end]==b'.mk61_fw_footer':matches.append(s)
+    if len(matches)!=1:raise ValueError('required ARM ELF footer is missing or duplicated')
+    s=matches[0];at=s[4]
+    if s[1]!=1 or not s[2]&2 or s[5]!=FOOTER.size or at+s[5]>len(elf):
+        raise ValueError('invalid ARM ELF footer section')
+    previous=elf[at:at+FOOTER.size]
+    if (previous[:16]!=sealed_footer[:16] or previous[28:]!=sealed_footer[28:] or
+            previous[16:28]!=bytes(12)):
+        raise ValueError('expected matching unsealed ARM ELF footer')
+    result=bytearray(elf);result[at:at+FOOTER.size]=sealed_footer
+    return bytes(result)

@@ -5,8 +5,16 @@
 #include "native_eabi_m0.hpp"
 #if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI
 #include <float.h>
+#if defined(__arm__) || defined(__thumb__)
+#include "compact_math_tables.hpp"
+#endif
 static_assert(sizeof(double)==8 && DBL_MANT_DIG==53 && sizeof(float)==4 && FLT_MANT_DIG==24,
               "M0 EABI requires IEEE binary64/binary32");
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#define MK61_M0_EXP_CORE __attribute__((section(".m0_exp_core")))
+#else
+#define MK61_M0_EXP_CORE
+#endif
 namespace m0_eabi {
 using U = uint64_t;
 template<class To, class From> inline To copy(From x) {
@@ -58,6 +66,9 @@ constexpr ReciprocalSeeds reciprocal_seeds;
 #include "native_eabi_m0_exp_table.inc"
 #include "native_eabi_m0_trig_table.inc"
 #include "native_eabi_m0_log_table.inc"
+#include "native_eabi_m0_refine_table.inc"
+#include "native_eabi_m0_log70_table.inc"
+#include "native_eabi_m0_trig_checked_table.inc"
 #endif
 inline U low_product(U a,U b) {
   return wide32(uint32_t(a),uint32_t(b))+
@@ -70,6 +81,13 @@ inline U low_product(U a,U b) {
 __attribute__((always_inline)) inline U exp_high_product(U a,U b) {
   const uint32_t al=uint32_t(a),ah=uint32_t(a>>32),bl=uint32_t(b),bh=uint32_t(b>>32);
   return wide32(ah,bh)+(wide32(al,bh)>>32)+(wide32(ah,bl)>>32);
+}
+// Square uses one cross product instead of two separately truncated copies.
+// The missing low square and the cross-product fraction sum to <2 units;
+// adding1 gives absolute error <=1, including zero ->1.
+__attribute__((always_inline)) inline U exp_high_square(U a) {
+  const uint32_t lo=uint32_t(a),hi=uint32_t(a>>32);
+  return wide32(hi,hi)+(wide32(lo,hi)>>31)+1;
 }
 #endif
 // Quotient estimate for 1 <= a/b < 2, followed by an exact remainder.
@@ -228,6 +246,7 @@ inline U bits(double x) {return copy<U>(x);}
 inline U bits(float x) {return copy<uint32_t>(x);}
 inline double real(U x) {return copy<double>(x);}
 inline float single(U x) {return copy<float>(uint32_t(x));}
+#include "native_eabi_m0_fma.inc"
 U integer_magnitude(int64_t x) {const U u=copy<U>(x);return x<0?U(0)-u:u;}
 U extend(U a) {
   const U sign=(a&S::Sign)<<32,m=a&S::Magnitude;
@@ -266,6 +285,7 @@ U sqrt_single(U a) {
 } // namespace m0_eabi
 using namespace m0_eabi;
 extern "C" {
+MK61_SOFT_PCS double mk61_m0_fma(double a,double b,double c) {return real(fused(bits(a),bits(b),bits(c)));}
 #if defined(__arm__) || defined(__thumb__)
 MK61_SOFT_PCS double mk61_m0_dadd_slow(double a,double b) {return real(D::add(bits(a),bits(b)));}
 #else
@@ -321,7 +341,11 @@ MK61_SOFT_PCS int64_t mk61_m0_d2lz_slow(double x) {const U a=bits(x),m=D::magnit
 #else
 MK61_SOFT_PCS int64_t __aeabi_d2lz(double x) {const U a=bits(x),m=D::magnitude_integer(a);return copy<int64_t>(a&D::Sign?U(0)-m:m);}
 #endif
+#if defined(__arm__) || defined(__thumb__)
+MK61_SOFT_PCS U mk61_m0_d2ulz_slow(double x) {const U a=bits(x);return a&D::Sign?0:D::magnitude_integer(a);}
+#else
 MK61_SOFT_PCS U __aeabi_d2ulz(double x) {const U a=bits(x);return a&D::Sign?0:D::magnitude_integer(a);}
+#endif
 #if defined(__arm__) || defined(__thumb__)
 MK61_SOFT_PCS float mk61_m0_d2f_slow(double x) {return single(narrow(bits(x)));}
 MK61_SOFT_PCS double mk61_m0_f2d_slow(float x) {return real(extend(bits(x)));}
@@ -331,6 +355,13 @@ MK61_SOFT_PCS double __aeabi_f2d(float x) {return real(extend(bits(x)));}
 #endif
 #if defined(__arm__) || defined(__thumb__)
 #include "native_eabi_m0_kernels.inc"
+#include "native_eabi_m0_refine.inc"
+#include "native_eabi_m0_log70_center.inc"
+#include "native_eabi_m0_log70.inc"
+#include "native_eabi_m0_log10.inc"
+#include "native_eabi_m0_atan_refine.inc"
+#include "native_eabi_m0_atan.inc"
+#include "native_eabi_m0_asin.inc"
 struct Trig192 {U low,middle,high;};
 __attribute__((always_inline)) inline Trig192 trig_negate(Trig192 a) {
   a.low=U(0)-a.low;
@@ -563,6 +594,7 @@ __attribute__((optimize("Os"))) int mk61_m0_trig_medium(double x,double* out,uns
   }
   out[0]=real(value);return 1;
 }
+#include "native_eabi_m0_trig_checked.inc"
 __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
   if(!uint32_t(b>>32)) {
     const uint32_t y=uint32_t(b);
@@ -580,19 +612,23 @@ __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
 }
 // On ARMv6-M, -O3 expands wide products into substantially more spills than
 // -Os. Keep this kernel's measured register allocation in release builds.
-__attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
+MK61_M0_EXP_CORE __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
   const U a=bits(x),m=a&D::Magnitude;
   if(m>=UINT64_C(0x4090000000000000)) {
     if(m>D::Infinity) return real(a|D::Quiet);
     return real(a&D::Sign?0:D::Infinity);
   }
-  if(m<UINT64_C(0x3E30000000000000)) return 1.0+x;
+  // At +/-2^-54 the exact exponential is still inside 1's RNE cell.
+  // Larger tiny inputs must retain x*x/2: 1+x alone misrounds midpoint x.
+  if(m<=UINT64_C(0x3C90000000000000)) return 1.0;
   const int e=int(m>>52)-1023;
   const U significand=(m&D::Fraction)|D::Hidden;
   uint32_t n=0;
   if(e>=-11) {
     const U p=wide32(uint32_t(significand>>21),0xB8AA3B29U);
-    n=e==-11?uint32_t(p>=(U(1)<<63)):uint32_t((p+(U(1)<<(52-e)))>>(53-e));
+    // -11 <= e <= 9: the rounding bit is in p's upper word. Round that
+    // word directly, avoiding two variable 64-bit shifts on ARMv6-M.
+    n=((uint32_t(p>>32)>>unsigned(20-e))+1U)>>1;
   }
   const int shift=e+12;
   const U scaled=shift<0?significand>>unsigned(-shift):significand<<unsigned(shift);
@@ -603,30 +639,45 @@ __attribute__((optimize("Os"))) MK61_SOFT_PCS double mk61_m0_exp(double x) {
   if(a&D::Sign) {r=U(0)-r;k=-k;}
   const bool negative=(r>>63)!=0;
   const U magnitude=negative?U(0)-r:r;
-  const U z=exp_high_product(magnitude,magnitude);
-  const uint32_t t=uint32_t(magnitude>>24); // |r| in Q40
-  // Thumb-1 GCC lowers even constant division to a software divider.
-  // Multiplication by ceil(2^34/6) supplies the exact unsigned quotients.
-  const uint32_t linear=uint32_t(wide32(t+3,0xAAAAAAABU)>>34);
-  const uint32_t quadratic=uint32_t(wide32(uint32_t(wide32(t,t)>>40)+12,0xAAAAAAABU)>>36);
-  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic);
+  // Protect the polynomial's certified domain independently of the segment
+  // estimate. Opposing truncations keep split reduction error below
+  // 1.001 Q64 units; certify_m0_exp_fast.py checks the complete interval.
+  if(magnitude>UINT64_C(12912720851596686)) return mk61_m0_cr_exp(x); // 0.0007
+  const U z=exp_high_square(magnitude)&((U(1)<<44)-1);
+  const uint32_t t=uint32_t((magnitude+(1U<<21))>>22); // |r| in Q42
+  // Evaluate r/6+r*r/24+r*r*r/120 in Q44; it still fits int32.
+  // The combined coefficient error is <3 Q44 units. Including the fifth
+  // term costs fewer wide products than the old Q40 fourth-degree path.
+  const uint32_t linear=uint32_t((wide32(t,0xAAAAAAABU)+(U(1)<<31))>>32);
+  const uint32_t square=uint32_t((z+(1U<<22))>>23);
+  const uint32_t quadratic=uint32_t(wide32(square+1,0xAAAAAAABU)>>33);
+  const uint32_t cubic=(uint32_t(z>>32)*(t>>16)+(1U<<16))>>17;
+  const uint32_t fifth=((cubic+7)*2185U)>>15;
+  const int32_t tail=(negative?-int32_t(linear):int32_t(linear))+int32_t(quadratic)+
+    (negative?-int32_t(fifth):int32_t(fifth));
   const uint32_t tail_magnitude=tail<0?uint32_t(-tail):uint32_t(tail);
   const U p=wide32(uint32_t(z),tail_magnitude);
-  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>8;
+  const U c=(wide32(uint32_t(z>>32),tail_magnitude)+(p>>32))>>12;
   const U delta=r+(z>>1)+(tail<0?U(0)-c:c);
   const unsigned index=unsigned(k)&511U;
   k=(k-int(index))/512;
   U q=exp_table[index];
   const bool below=(delta>>63)!=0;
-  const U correction=exp_high_product(q,below?U(0)-delta:delta);
+  const U correction=exp_high_product(q,below?U(0)-delta:delta)+1;
   q=below?q-correction:q+correction;
-  if(q<(U(1)<<62)) {q<<=1;--k;}
+  unsigned error=5;
+  if(q<(U(1)<<62)) {q<<=1;--k;error*=2;}
   if(k>=-1022 && k<=1023) {
+    // The complete interval [q-error,q+error] must lie in one rounding
+    // cell. Ambiguous results are evaluated by the correctly rounded path.
+    const uint32_t tail=uint32_t(q)&1023U;
+    if(uint32_t(tail-(512U-error))<=2*error) return exp_refine(x,n);
     const U rounded=(q+511+((q>>10)&1))>>10;
     return real((U(k+1022)<<52)+rounded);
   }
-  return real(D::pack(0,k,(q>>7)|U((q&127)!=0)));
+  return mk61_m0_cr_exp(x);
 }
+#include "native_eabi_m0_pow_fast.inc"
 MK61_SOFT_PCS double mk61_m0_sqrt_slow(double x) {
   const U a=bits(x),m=a&D::Magnitude;
   if(!m) return x;
@@ -685,4 +736,22 @@ void mk61_m0_sdivmod64(U n,U d,mk61_eabi_divmod* result) {
   if(negative_n) result->remainder=U(0)-result->remainder;
 }
 }
+#endif
+
+// Share the checked native entry points without an extra RP2040 forwarding call.
+#if defined(MK61_USE_M0_EABI) && MK61_USE_M0_EABI && defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI && (defined(__arm__) || defined(__thumb__))
+__asm__(
+  ".global _ZN12compact_math4atanEd\n"
+  ".thumb_set _ZN12compact_math4atanEd,mk61_m0_atan\n"
+  ".global _ZN12compact_math4asinEd\n"
+  ".thumb_set _ZN12compact_math4asinEd,mk61_m0_asin\n"
+  ".global _ZN12compact_math4acosEd\n"
+  ".thumb_set _ZN12compact_math4acosEd,mk61_m0_acos\n"
+  ".global _ZN12compact_math2lnEd\n"
+  ".thumb_set _ZN12compact_math2lnEd,mk61_m0_ln\n"
+  ".global _ZN12compact_math5log10Ed\n"
+  ".thumb_set _ZN12compact_math5log10Ed,mk61_m0_log10\n"
+  ".global _ZN12compact_math3expEd\n"
+  ".thumb_set _ZN12compact_math3expEd,mk61_m0_exp\n"
+);
 #endif

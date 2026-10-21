@@ -1,0 +1,565 @@
+{
+  "recorded_at": "2026-10-21T07:38:07.165140+00:00",
+  "status": "HYBRID_BACKENDS_EVALUATED_NOT_INTEGRATED",
+  "precision": "Correct binary64 RNE return values for all supported inputs; per-operation selection does not relax precision.",
+  "m4_changed": false,
+  "firmware_integrated": false,
+  "rom": {
+    "implementation": "MUFP assembly by Mark Owen, the author of Qfplib; do not assume byte identity with Qfplib-M0-full.",
+    "version": 3,
+    "revision": "5B0D9BCA",
+    "capture": ".build/m0-bootrom-baseline-20261020/bootrom.bin",
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "uid": "E6657CD423721C35",
+    "lookup": "Actual captured ARM lookup function and SD/SF tables executed; no synthetic arithmetic model.",
+    "license": "MUFP source permits use solely on RP2040 devices, or alternatively GPLv2. No ROM math source is copied into product firmware."
+  },
+  "qualification": {
+    "result": ".build/m0-bootrom-v3-evaluation-20261021/accuracy.json",
+    "sha256": "bcd538a70b6dcdb059b171a4e4a1816244fba843c5bb4b1a67ffe4db9f399568",
+    "cases": 52229,
+    "raw_rom_wrong_rounding": 729,
+    "proposed_guard_eligible_cases": 44655,
+    "guard_eligible_wrong_rounding": 0,
+    "operations": {
+      "dadd": {
+        "cases": 10553,
+        "raw_rom_wrong_rounding": 123,
+        "guard_eligible_cases": 9642,
+        "guard_eligible_wrong_rounding": 0,
+        "examples": [
+          {
+            "a": "0000000000000000",
+            "b": "0000000000000001",
+            "expected": "0000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "8000000000000001",
+            "expected": "8000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "000FFFFFFFFFFFFF",
+            "expected": "000FFFFFFFFFFFFF",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF0000000000001",
+            "expected": "7FF8000000000001",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF8000000001234",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "0000000000000001",
+            "expected": "0000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "8000000000000001",
+            "expected": "8000000000000001",
+            "rom": "8000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "000FFFFFFFFFFFFF",
+            "expected": "000FFFFFFFFFFFFF",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          }
+        ],
+        "result_sha256": "b8fb21b7bfc748e89c71613f141aabdc6eaf871984a187f6567117bf18351aad"
+      },
+      "dsub": {
+        "cases": 10553,
+        "raw_rom_wrong_rounding": 124,
+        "guard_eligible_cases": 9642,
+        "guard_eligible_wrong_rounding": 0,
+        "examples": [
+          {
+            "a": "0000000000000000",
+            "b": "0000000000000001",
+            "expected": "8000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "8000000000000001",
+            "expected": "0000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "000FFFFFFFFFFFFF",
+            "expected": "800FFFFFFFFFFFFF",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF0000000000001",
+            "expected": "7FF8000000000001",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF8000000001234",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "0000000000000001",
+            "expected": "8000000000000001",
+            "rom": "8000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "8000000000000001",
+            "expected": "0000000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "000FFFFFFFFFFFFF",
+            "expected": "800FFFFFFFFFFFFF",
+            "rom": "8000000000000000",
+            "guard_eligible": false
+          }
+        ],
+        "result_sha256": "6e755e27c726757fab8875d71c8daa1c789175cd71ee55543fb960f29749e33a"
+      },
+      "dmul": {
+        "cases": 10553,
+        "raw_rom_wrong_rounding": 218,
+        "guard_eligible_cases": 7536,
+        "guard_eligible_wrong_rounding": 0,
+        "examples": [
+          {
+            "a": "0000000000000000",
+            "b": "7FF0000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "FFF0000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF0000000000001",
+            "expected": "7FF8000000000001",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF8000000001234",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "7FF0000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "FFF0000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "7FF0000000000001",
+            "expected": "7FF8000000000001",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "7FF8000000001234",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          }
+        ],
+        "result_sha256": "769f7d93e26ce4b063bdab1a473a1a8b22ba279fef5a4eac6d071240e63e7372"
+      },
+      "ddiv": {
+        "cases": 10553,
+        "raw_rom_wrong_rounding": 257,
+        "guard_eligible_cases": 7828,
+        "guard_eligible_wrong_rounding": 0,
+        "examples": [
+          {
+            "a": "0000000000000000",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "8000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "0000000000000001",
+            "expected": "0000000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "8000000000000001",
+            "expected": "8000000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "000FFFFFFFFFFFFF",
+            "expected": "0000000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF0000000000001",
+            "expected": "7FF8000000000001",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "0000000000000000",
+            "b": "7FF8000000001234",
+            "expected": "7FF8000000000000",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000000",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          }
+        ],
+        "result_sha256": "3d6385a725b16125260d740aa75ddc03867e5c5450757225fc5731ef23583733"
+      },
+      "sqrt": {
+        "cases": 10017,
+        "raw_rom_wrong_rounding": 7,
+        "guard_eligible_cases": 10007,
+        "guard_eligible_wrong_rounding": 0,
+        "examples": [
+          {
+            "a": "0000000000000001",
+            "b": "0000000000000000",
+            "expected": "1E60000000000000",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "8000000000000001",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "8000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "000FFFFFFFFFFFFF",
+            "b": "0000000000000000",
+            "expected": "1FFFFFFFFFFFFFFF",
+            "rom": "0000000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "BFF0000000000000",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "FFF0000000000000",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "FFF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "7FF0000000000001",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000001",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          },
+          {
+            "a": "7FF8000000001234",
+            "b": "0000000000000000",
+            "expected": "7FF8000000000000",
+            "rom": "7FF0000000000000",
+            "guard_eligible": false
+          }
+        ],
+        "result_sha256": "b40a60c1de8dba67061630d4649b1c3a274adbb7b1fd77e596c24b8a2a8ee0a5"
+      }
+    },
+    "science_examples": [
+      {
+        "operation": "ln",
+        "input": "3FEFFFFFFFFFFF00",
+        "expected": "BD20000000000040",
+        "rom": "BD20000000000000",
+        "rne": false,
+        "ulp_error": 64
+      },
+      {
+        "operation": "ln",
+        "input": "4000000000000000",
+        "expected": "3FE62E42FEFA39EF",
+        "rom": "3FE62E42FEFA39EF",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "ln",
+        "input": "0000000000000001",
+        "expected": "C0874385446D71C3",
+        "rom": "FFF0000000000000",
+        "rne": false,
+        "ulp_error": 4569109057286344253
+      },
+      {
+        "operation": "ln",
+        "input": "0000000000000000",
+        "expected": "FFF0000000000000",
+        "rom": "FFF0000000000000",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "ln",
+        "input": "BFF0000000000000",
+        "expected": "7FF8000000000000",
+        "rom": "FFF0000000000000",
+        "rne": false,
+        "ulp_error": null
+      },
+      {
+        "operation": "exp",
+        "input": "C06DE95FB9E75672",
+        "expected": "2A5B58A115AD3327",
+        "rom": "2A5B58A115AD3328",
+        "rne": false,
+        "ulp_error": 1
+      },
+      {
+        "operation": "exp",
+        "input": "C087480000000000",
+        "expected": "0000000000000001",
+        "rom": "0000000000000000",
+        "rne": false,
+        "ulp_error": 1
+      },
+      {
+        "operation": "exp",
+        "input": "3FF0000000000000",
+        "expected": "4005BF0A8B145769",
+        "rom": "4005BF0A8B145769",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "sin",
+        "input": "3FF0000000000000",
+        "expected": "3FEAED548F090CEE",
+        "rom": "3FEAED548F090CEE",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "sin",
+        "input": "4090000000000000",
+        "expected": "BFC44AD2614E80AB",
+        "rom": "BFC44AD2614E80AA",
+        "rne": false,
+        "ulp_error": 1
+      },
+      {
+        "operation": "sin",
+        "input": "4415AF1D78B58C40",
+        "expected": "BFE4A5E605FD6450",
+        "rom": "BFC44AD2614E80AA",
+        "rne": false,
+        "ulp_error": 9107339180172198
+      },
+      {
+        "operation": "cos",
+        "input": "3FF0000000000000",
+        "expected": "3FE14A280FB5068C",
+        "rom": "3FE14A280FB5068C",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "cos",
+        "input": "4090000000000000",
+        "expected": "3FEF98669D7AEDB8",
+        "rom": "3FEF98669D7AEDB8",
+        "rne": true,
+        "ulp_error": 0
+      },
+      {
+        "operation": "cos",
+        "input": "4415AF1D78B58C40",
+        "expected": "3FE872720FC60D3D",
+        "rom": "3FEF98669D7AEDB8",
+        "rne": false,
+        "ulp_error": 2012057116663931
+      },
+      {
+        "operation": "tan",
+        "input": "3FF0000000000000",
+        "expected": "3FF8EB245CBEE3A6",
+        "rom": "3FF8EB245CBEE3A5",
+        "rne": false,
+        "ulp_error": 1
+      },
+      {
+        "operation": "tan",
+        "input": "4090000000000000",
+        "expected": "BFC48D5BE43ADA02",
+        "rom": "BFC48D5BE43ADA00",
+        "rne": false,
+        "ulp_error": 2
+      },
+      {
+        "operation": "tan",
+        "input": "4415AF1D78B58C40",
+        "expected": "BFEB06FBBE995394",
+        "rom": "BFC48D5BE43ADA00",
+        "rne": false,
+        "ulp_error": 10829776585390484
+      }
+    ],
+    "scope": "Actual captured ARM ROM bytes, not a recompiled approximation. Proposed guarded arithmetic domains pass this finite corpus; no all-input proof or physical timing claimed. Scientific ROM entry points fail RNE. Every call verifies saved registers, SP and bounded stack writes; memcpy/memset alone are functional models."
+  },
+  "proposed_guards": {
+    "dadd_dsub": "Both operands normal finite; min encoded exponent >=54, max <=2045.",
+    "dmul": "Both operands normal finite; encoded exponent sum in [1025,3067].",
+    "ddiv": "Both operands normal finite; encoded exponent difference in [-1020,1022].",
+    "sqrt": "Positive normal input."
+  },
+  "physical": {
+    "status": "PASS",
+    "result": ".build/qfplib-ln-near-v9-0812-timing-20261021/hil-01/rom-timings/result.json",
+    "result_sha256": "ae1e6eac103b8519b40d3a9425f7d2d5eda7e458d200fe784253a6b7bb1d076c",
+    "groups": [
+      {
+        "operation": "dadd",
+        "cases": 256,
+        "qfplib_flash_us": 0.6982421875,
+        "factory_rom_us": 0.6983642578125,
+        "rom_over_qfplib": 1.0001748251748253
+      },
+      {
+        "operation": "dsub",
+        "cases": 256,
+        "qfplib_flash_us": 0.7349853515625,
+        "factory_rom_us": 0.7349853515625,
+        "rom_over_qfplib": 1.0
+      },
+      {
+        "operation": "dmul",
+        "cases": 256,
+        "qfplib_flash_us": 1.224609375,
+        "factory_rom_us": 1.224609375,
+        "rom_over_qfplib": 1.0
+      },
+      {
+        "operation": "sqrt",
+        "cases": 256,
+        "qfplib_flash_us": 1.3397216796875,
+        "factory_rom_us": 1.3394775390625,
+        "rom_over_qfplib": 0.9998177676537585
+      }
+    ],
+    "conclusion": "Raw ROM and pinned Qfplib are at practical parity for these four warmed normal streams.",
+    "method": "Nine alternating paired batches, 8192 calls per batch, typed calibration, at least1s warmup, TIMERAWL, interrupts enabled; 125MHz RP2040 B2. Original Qfplib executes from isolated flash; factory ROM executes in place.",
+    "scope": "Raw kernels only. Does not include a dispatch guard, compare with the latest canonical owned runtime, or measure ddiv. Wire labels own=original Qfplib, qfplib=factory ROM are explicitly translated here."
+  },
+  "selection_contract": [
+    "Preserve one project API and the separate M4 implementation.",
+    "Choose ROM, Qfplib or owned code per operation and, if justified, per input domain.",
+    "Accept a backend only after correctness, call/guard overhead, code size and target timing are qualified.",
+    "Raw ROM scientific functions fail RNE and cannot be selected as unrestricted implementations.",
+    "Preserve SIO divider state when calling ROM ddiv; Pico SDK provides the DIRTY save/restore wrapper.",
+    "Finite guarded tests are evidence, not an all-input proof. No product dispatcher has been enabled."
+  ],
+  "sources": [
+    {
+      "url": "https://github.com/raspberrypi/pico-bootrom-rp2040/blob/master/bootrom/mufplib-double.S",
+      "role": "Primary MUFP implementation, license and arithmetic semantics."
+    },
+    {
+      "path": ".build/picocalc-deps/pico-sdk/src/rp2_common/pico_double/double_aeabi_rp2040.S",
+      "sha256": "855ac34d19cd0d1da277dc24769c5fda35de5561fc25560f9e9fa6bf38471365",
+      "role": "SDK direct table calls, exceptional-value wrappers and SIO divider preservation."
+    }
+  ],
+  "restore": {
+    "status": "PASS_RESTORED",
+    "transaction": ".build/qfplib-ln-near-v9-0812-timing-20261021/hil-01/transaction.json",
+    "transaction_sha256": "2bef6f06675676203ab754174d7e2e76df115e446edafa2c44de7dfd8c43fc93",
+    "accepted_build": "be246af2",
+    "accepted_version": "0.8.12",
+    "uid": "E6657CD423721C35",
+    "uf2_sha256": "36612f3e58bd1958859e07992cc242bca3bd449fe65314c79b3d3dd17e4bdf4d",
+    "calculator_data_restored": true,
+    "ip_restored": 24,
+    "rtc_restored": {
+      "expected": "2026-10-21T10:29:59.358377",
+      "actual": "2026-10-21T10:30:00"
+    },
+    "serial_closed": true,
+    "firmware_crc_verified": true,
+    "peripherals_ready": true
+  }
+}

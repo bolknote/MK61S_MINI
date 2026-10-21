@@ -96,7 +96,7 @@ def main():
         output = args.output_dir.expanduser().resolve()
         source_hash = hashlib.sha256()
         for source in sorted([ROOT / 'tools/build_picocalc.py', ROOT / 'tools/seal_picocalc.py',
-                              *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs')
+                              *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs', 'third_party/core_math')
                                 for p in (ROOT / folder).rglob('*')
                                 if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld', '.pio')
                                                     or p.name == 'CMakeLists.txt'))]):
@@ -129,7 +129,7 @@ def main():
         image = (build / (TARGET + ".bin")).read_bytes()
         if len(image) > 2 * 1024 * 1024 - 8192:
             raise ValueError("Firmware overlaps the PicoCalc settings journal")
-        from seal_picocalc import seal, verify, FOOTER, BASE
+        from seal_picocalc import seal, verify, FOOTER, BASE, patch_elf_footer
         symbols=run([toolchain / ("arm-none-eabi-nm" + suffix),"--defined-only",build / (TARGET + ".elf")],capture_output=True,text=True).stdout
         ram_end=re.search(r'^([0-9a-fA-F]+) [A-Za-z] __end__$',symbols,re.M)
         if not ram_end:
@@ -152,8 +152,8 @@ def main():
         shutil.copy2(build / (TARGET + ".elf.map"), output / (TARGET + ".elf.map"))
         footer_file=build/'sealed-footer.bin'
         footer_file.write_bytes(image[footer_offset:footer_offset+FOOTER.size])
-        run([toolchain / ("arm-none-eabi-objcopy"+suffix),'--update-section',
-             f'.mk61_fw_footer={footer_file}',build/(TARGET+'.elf'),output/(TARGET+'.elf')])
+        (output/(TARGET+'.elf')).write_bytes(patch_elf_footer(
+            (build/(TARGET+'.elf')).read_bytes(),footer_file.read_bytes()))
         run([toolchain / ("arm-none-eabi-objcopy"+suffix),'-O','binary',output/(TARGET+'.elf'),output/(TARGET+'.bin')])
         if (output/(TARGET+'.bin')).read_bytes()!=image:
             raise ValueError('sealed ELF and BIN differ')

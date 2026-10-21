@@ -37,7 +37,11 @@ def quotient(x,y):
     return x/y
 
 class Machine:
-    def __init__(self,path,rp2040=False):
+    def __init__(self,path,rp2040=False,stack_bytes=4096,instruction_budget=1000000):
+        assert 0<stack_bytes<=32768 and instruction_budget>0
+        self.stack_bytes=stack_bytes
+        self.instruction_budget=instruction_budget
+        self.stack_lowest=SP
         self.rp2040=rp2040
         self.elf=ElfImage(path)
         self.uc=Uc(UC_ARCH_ARM,UC_MODE_MCLASS|UC_MODE_THUMB)
@@ -60,6 +64,7 @@ class Machine:
             self.uc.hook_add(UC_HOOK_CODE,self.rom_intrinsic,operation,begin=address,end=address)
         self.write_hook=self.uc.hook_add(UC_HOOK_MEM_WRITE,self.write)
         self.uc.hook_add(UC_HOOK_MEM_READ,self.read_sio,begin=0xD0000070,end=0xD0000073)
+        self.divisor_write_pc=0
         self.calls=0
     def rom_intrinsic(self,uc,address,size,operation):
         del address,size
@@ -67,21 +72,42 @@ class Machine:
         if operation=='clz32':uc.reg_write(UC_ARM_REG_R0,32-a.bit_length())
         elif operation=='clz64':uc.reg_write(UC_ARM_REG_R0,64-(a|(b<<32)).bit_length())
         else:
-            assert SP-4096<=a and a+n<=SP,('ROM memory write outside stack',hex(a),n)
+            assert SP-self.stack_bytes<=a and a+n<=SP,('ROM memory write outside stack',hex(a),n)
+            if n:self.stack_lowest=min(self.stack_lowest,a)
             data=bytes([b&255])*n if operation=='memset' else bytes(uc.mem_read(b,n))
             if n:uc.mem_write(a,data)
         uc.reg_write(UC_ARM_REG_PC,uc.reg_read(UC_ARM_REG_LR))
     def write(self,uc,access,address,size,value,user):
         del access,user
-        if self.rp2040 and address in (0xD0000060,0xD0000064):
-            if address==0xD0000060:self.dividend=value
+        if self.rp2040 and address in (0xD0000060,0xD0000064,0xD0000068,0xD000006C):
+            assert size==4
+            value&=0xFFFFFFFF
+            # U/S operand addresses alias the same two internal words.
+            # Either operand write starts a calculation; its alias selects
+            # signedness. Result writes below implement SDK context restore.
+            base=0xD0000060+(address&4)
+            for alias in (base,base+8):uc.mem_write(alias,struct.pack('<I',value))
+            dividend,divisor=struct.unpack('<2I',uc.mem_read(0xD0000060,8))
+            if address&8:
+                dividend,divisor=signed(dividend,32),signed(divisor,32)
+                quotient=abs(dividend)//abs(divisor) if divisor else int(dividend!=0)
+                if (dividend<0)!=(divisor<0):quotient=-quotient
+                # SDK host hardware_divider emulation specifies -sign(n)
+                # for signed n/0; the AEABI wrapper has its own saturation.
+                if not divisor:quotient=-((dividend>0)-(dividend<0))
+                remainder=dividend-quotient*divisor
             else:
-                quotient=self.dividend//value if value else 0xFFFFFFFF
-                remainder=self.dividend%value if value else self.dividend
-                uc.mem_write(0xD0000070,struct.pack('<3I',quotient,remainder,3))
-                self.divisor_write_pc=uc.reg_read(UC_ARM_REG_PC)
+                quotient=dividend//divisor if divisor else 0xFFFFFFFF
+                remainder=dividend%divisor if divisor else dividend
+            uc.mem_write(0xD0000070,struct.pack('<3I',quotient&0xFFFFFFFF,remainder&0xFFFFFFFF,3))
+            self.divisor_write_pc=uc.reg_read(UC_ARM_REG_PC)
             return
-        assert SP-4096<=address and address+size<=SP,('non-stack write',hex(address),size)
+        if self.rp2040 and address in (0xD0000070,0xD0000074):
+            assert size==4
+            uc.mem_write(0xD0000078,struct.pack('<I',3))
+            return
+        assert SP-self.stack_bytes<=address and address+size<=SP,('non-stack write',hex(address),size)
+        self.stack_lowest=min(self.stack_lowest,address)
     def read_sio(self,uc,access,address,size,value,user):
         del access,address,size,value,user
         # Our reciprocal seed block is straight-line Thumb-1. Require eight
@@ -90,17 +116,22 @@ class Machine:
         # functional model does not count their cycles.
         start=self.elf.symbols.get('__aeabi_ddiv',0)&~1
         end=self.elf.symbols.get('dd_2',start)&~1
-        if start<=self.divisor_write_pc<end:
-            pc=uc.reg_read(UC_ARM_REG_PC)
+        pc=uc.reg_read(UC_ARM_REG_PC)
+        if start<=self.divisor_write_pc<end and start<=pc<end:
             block=bytes(uc.mem_read(self.divisor_write_pc+2,pc-self.divisor_write_pc-2))
             assert len(block)>=16,('SIO quotient read before eight ALU instructions',len(block)//2)
             for i in range(0,len(block),2):
                 instruction=int.from_bytes(block[i:i+2],'little')
                 alu=instruction<0x4400 or (instruction<0x4700 and instruction&0x87!=0x87)
                 assert alu,('non-ALU in SIO latency block',hex(instruction))
+        seed_start=self.elf.symbols.get('mk61_m0_math_udiv32',0)&~1
+        seed_end=seed_start+self.elf.sizes.get('mk61_m0_math_udiv32',0)
+        if seed_start<=self.divisor_write_pc<seed_end and seed_start<=pc<seed_end:
+            pause=bytes(uc.mem_read(self.divisor_write_pc+2,pc-self.divisor_write_pc-2))
+            assert pause==b'\xff\xe7'*4,('SIO seed pause must match Pico SDK four-branch delay',pause.hex())
         # Reading DIV_QUOTIENT acknowledges and clears DIRTY.
         uc.mem_write(0xD0000078,struct.pack('<I',1))
-    def call(self,name,a,b=0,width=64,count=False,shift=False):
+    def call(self,name,a,b=0,width=64,count=False,shift=False,c=None):
         uc=self.uc
         saved={r:(0xA75D184B+r*0x1321)&0xFFFFFFFF for r in range(UC_ARM_REG_R4,UC_ARM_REG_R11+1)}
         for r,v in saved.items():uc.reg_write(r,v)
@@ -108,11 +139,12 @@ class Machine:
         if shift:regs=(a&0xFFFFFFFF,a>>32,b,0)
         for r,v in zip((UC_ARM_REG_R0,UC_ARM_REG_R1,UC_ARM_REG_R2,UC_ARM_REG_R3),regs):uc.reg_write(r,v)
         uc.reg_write(UC_ARM_REG_SP,SP);uc.reg_write(UC_ARM_REG_LR,STOP|1);uc.reg_write(UC_ARM_REG_XPSR,0x01000000)
+        if c is not None:uc.mem_write(SP,struct.pack('<Q',c))
         instructions=[0]
         def tick(*unused):instructions[0]+=1
         hook=uc.hook_add(UC_HOOK_CODE,tick) if count else None
         if count:uc.ctl_remove_cache(0x08000000,0x10200000)
-        try:uc.emu_start(self.elf.symbols[name]|1,STOP,count=1000000)
+        try:uc.emu_start(self.elf.symbols[name]|1,STOP,count=self.instruction_budget)
         finally:
             if hook is not None:uc.hook_del(hook)
         assert uc.reg_read(UC_ARM_REG_PC)==STOP,(name,'did not return')
@@ -196,7 +228,7 @@ def math_vectors(m):
         if math.isnan(ref):assert math.isnan(value)
         elif ref==0 or math.isinf(ref):assert got==expected,(name,hex(a),hex(b),hex(got),hex(expected))
         else:
-            ulp=abs(ordered(got)-ordered(expected));assert math.isfinite(value) and ulp<=(0 if name=='sqrt' else 4),(name,hex(a),hex(b),hex(got),hex(expected),ulp)
+            ulp=abs(ordered(got)-ordered(expected));assert math.isfinite(value) and ulp==0,(name,hex(a),hex(b),hex(got),hex(expected),ulp)
             stats[name]=max(stats.get(name,0),ulp)
     return stats
 
@@ -313,7 +345,7 @@ def build(toolchain,out,rp2040=False):
         '-fno-lto','-fno-builtin','-DMK61_USE_M0_EABI=1','-DMK61_USE_NATIVE_EABI=0','-DMK61_USE_COMPACT_LIBM=1','-I'+str(ROOT/'code')]
     if rp2040:flags+=['-DMK61_M0_RP2040_EABI=1']
     objects=[]
-    for source in ('code/native_eabi_m0.cpp','code/native_eabi_m0.S','code/native_eabi_m0_rp2040.S','code/compact_math.cpp'):
+    for source in ('code/native_eabi_m0.cpp','code/native_eabi_m0_cr.cpp','code/native_eabi_m0.S','code/native_eabi_m0_rp2040.S','code/compact_math.cpp','tests/fixtures/m0_cr_memory.c'):
         p=ROOT/source;target=out/(p.name+'.o');objects.append(target)
         subprocess.run([str(toolchain/('arm-none-eabi-g++' if p.suffix=='.cpp' else 'arm-none-eabi-gcc')),*flags,
             *(['-std=c++17','-fno-exceptions','-fno-rtti','-Wall','-Wextra','-Werror'] if p.suffix=='.cpp' else []),'-c',str(p),'-o',str(target)],check=True)

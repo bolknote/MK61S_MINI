@@ -1,5 +1,13 @@
-// Project-owned relative Q62 kernels. Each approximate product below has
-// operands below 2^63 and differs from the real Q62 product by < 2.5 units.
+// Private tangent product with a separately certified <=6.5-unit enclosure.
+__attribute__((const)) U mk61_m0_product62(U a,U b);
+// Logarithm residual products: a <= 2^41 (Q46) or a <= 2^48 (Q54).
+// Enclosures are certified by generate_m0_log70_table.py.
+__attribute__((const)) U mk61_m0_log_product46(U a,U b);
+__attribute__((const)) U mk61_m0_log_product54(U a,U b);
+// Direct Q70 product with <35/64-unit error; a <2^59, b <2^48.
+__attribute__((const)) U mk61_m0_log_cube70(U a,U b);
+// Project-owned relative Q62 kernels. Each inline approximate product below has
+// operands below 2^63 and differs from the real Q62 product by <= 2.5 units.
 // Normalized results retain nine guard bits before binary64 rounding.
 __attribute__((always_inline)) inline U math62_product(U a,U b) {
   if(!a || !b) return 0;
@@ -34,7 +42,8 @@ __attribute__((always_inline)) inline U math62_scale32(U a,uint32_t b) {
 __attribute__((always_inline)) inline U math62_scale40(U a,uint32_t low_coefficient,unsigned high_coefficient) {
   const U low=wide32(uint32_t(a),low_coefficient);
   const U high=wide32(uint32_t(a>>32),low_coefficient)+(low>>32)+
-    (high_coefficient==2?(a<<1):(a<<3)+(a<<1));
+    (high_coefficient==2?(a<<1):high_coefficient==10?(a<<3)+(a<<1):
+     high_coefficient==34?(a<<5)+(a<<1):(a<<5)+(a<<4)+(a<<1)+a);
   const U q=high>>8;const unsigned tail=unsigned(high)&255;
   return q+U(tail>128 || (tail==128 && (uint32_t(low)||(q&1))));
 }
@@ -120,10 +129,10 @@ __attribute__((optimize("Os"))) U mk61_m0_atan_reduced(double x,int* exponent) {
   *exponent=e;
   if(!z) return q;
   const U z2=math62_product(z,z);
-  const uint32_t seventh=uint32_t(wide32(uint32_t(z>>30),613566756U)>>32);
-  const uint32_t ninth=uint32_t(wide32(uint32_t(z2>>30),477218588U)>>32);
+  const uint32_t seventh=uint32_t(wide32(uint32_t(z>>22)+3,2454267027U)>>34);
+  const uint32_t ninth=((uint32_t(z2>>22)+4)*7282U)>>16;
   const uint32_t coefficient=0x33333333U-seventh+ninth;
-  return math62_product(q,one-math62_third(z)+math62_scale32(z2,coefficient));
+  return math62_product(q,one-math62_third(z)+math62_scale40(z2,coefficient,51));
 }
 __attribute__((always_inline)) inline double math62_log_near_one(U b) {
   // Called only for |x-1| <= 2^-14; the first omitted relative term
@@ -216,7 +225,7 @@ __attribute__((always_inline)) inline double math62_log_interval(U b) {
   else low-=correction;
   return real(bits(math62_pack96(low,high,negative?D::Sign:0))-(U(8)<<52));
 }
-__attribute__((optimize("Os"))) double mk61_m0_ln(double x) {
+__attribute__((optimize("Os"))) double mk61_m0_ln_approx(double x) {
   const U b=bits(x);
   if(b>=UINT64_C(0x3FEF800000000000) && b<=UINT64_C(0x3FF0400000000000))
     return math62_log_interval(b);

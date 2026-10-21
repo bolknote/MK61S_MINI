@@ -1,0 +1,84 @@
+{
+  "recorded_at": "2026-10-21T08:26:23.050912+00:00",
+  "status": "PRODUCTION_OFFLINE_QUALIFIED_PHYSICAL_PENDING",
+  "root_promoted": false,
+  "m4_changed": false,
+  "variant": "V56_batched_exact_log70_residual",
+  "source": ".build/m0-log-ratio-batch-v56-20261021/source",
+  "elf_sha256": "2c84a2bfa55590c3d422c8a41d52fa15a58b8cdc2ca3f7464382af85a773842b",
+  "change": "Three radix2^20 divisions use each hardware quotient/remainder directly, checking pending SIO state once. Dirty SIO retains the unchanged software path. Integer residual and all error bounds are unchanged.",
+  "qualification": {
+    "exact_ratio_cases": 104846,
+    "latency_checks": 524245,
+    "dirty_sio_checks": 24,
+    "ratio_result": ".build/m0-log-ratio-batch-v56-20261021/production-ratio.json",
+    "ratio_sha256": "980e447a38b29809db83d2acbe0f3f9ff37aa70367f6907c6defc1022275d890",
+    "all12_cases": 265409,
+    "all12_wrong_rounding": 0,
+    "all12_path": ".build/m0-log-ratio-batch-v56-20261021/production-all12.json",
+    "all12_sha256": "dadea21473e452bd1e80e29d604f809d45ffe08761e4d2b35002fdebf3d9c708",
+    "pow_targets_cases": 139211,
+    "ln_boundary_cases": 48104,
+    "m4_isolation": "PASS"
+  },
+  "instruction_counts": {
+    "ratio_before": 78,
+    "ratio_after": 42,
+    "pow_groups": [
+      {
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "before": 1290.25390625,
+        "after": 1254.25390625,
+        "delta": -36.0
+      },
+      {
+        "stream": "composed_wide_exponents",
+        "cases": 256,
+        "before": 1306.6953125,
+        "after": 1270.6953125,
+        "delta": -36.0
+      },
+      {
+        "stream": "composed_near_one",
+        "cases": 48,
+        "before": 591.75,
+        "after": 591.75,
+        "delta": 0.0
+      },
+      {
+        "stream": "composed_negative_integer",
+        "cases": 256,
+        "before": 876.55078125,
+        "after": 861.08203125,
+        "delta": -15.46875
+      },
+      {
+        "stream": "composed_negative_wide",
+        "cases": 256,
+        "before": 885.3359375,
+        "after": 855.2421875,
+        "delta": -30.09375
+      },
+      {
+        "stream": "composed_negative_near_one",
+        "cases": 64,
+        "before": 971.921875,
+        "after": 971.921875,
+        "delta": 0.0
+      },
+      {
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "before": 151.046875,
+        "after": 151.046875,
+        "delta": 0.0
+      }
+    ],
+    "scope": "Actual ARM instructions for every prepared vector, not physical RP2040 cycles or latency."
+  },
+  "static_ram_added_bytes": 0,
+  "new_lookup_table_bytes": 0,
+  "physical_timing_pending": true,
+  "remaining": "Rebase to the next accepted platform and measure; canonical pow universal totality remains unresolved."
+}

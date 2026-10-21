@@ -1,0 +1,33 @@
+{
+  "recorded_at": "2026-10-21T09:12:24.261169+00:00",
+  "status": "POW_TOTALITY_NOT_PROVED",
+  "changed_runtime": false,
+  "current_implementation": {
+    "path": "code/native_eabi_m0_cr.cpp",
+    "sha256": "d84ab273d5f7c3cbf72121b97b460b555b3a3dd1812f8908b61b889dd01a3e3e",
+    "refinement": "Fixed512, then Fixed1024, followed by an explicit undecided trap.",
+    "interval_path": "code/native_eabi_m0_pow_interval.inc",
+    "interval_sha256": "bf360fe3ecfaf7cced686eb1bd58dd7bc7d392cb55c355abbf2e421173d8ef25",
+    "ln2_limit_bits": 1024
+  },
+  "findings": [
+    "A complete saved pow test file does not establish a precision bound over all binary64 input pairs.",
+    "The existing exact_boundary decomposition addresses the rational exact/midpoint cases. Its powers-of-two, repeated exact square roots and54-bit odd significand checks match the relevant boundary criteria; a dedicated implementation proof remains separate.",
+    "Unbounded Ziv refinement with a complete boundary test is a route to mathematical termination. Current fixed arrays, a1024-bit ln2 slice,16-bit series divisors and the MCU memory budget prevent simply removing the final trap."
+  ],
+  "sources": [
+    {
+      "url": "https://core-math.gitlabpages.inria.fr/worst.html",
+      "finding": "The project describes pow hard cases as concentrated on exponents allowing exact or midpoint results; the corpus is not a whole-domain precision proof."
+    },
+    {
+      "url": "https://core-math.gitlabpages.inria.fr/",
+      "finding": "For binary64 and multivariate functions the project checks known hard cases rather than exhaustive inputs."
+    },
+    {
+      "url": "https://www.vinc17.net/research/papers/ieeetc2009-powr.pdf",
+      "finding": "Lauter and Lefevre give efficient rounding-boundary detection for adaptive evaluation. Exact boundaries must be separated from cases settled by growing precision."
+    }
+  ],
+  "next": "Keep the final undecided condition explicit. Audit complete boundary detection and design a resource-safe adaptive last stage before claiming all-input pow completion. Do not substitute an approximate result or treat the saved corpus as exhaustive."
+}

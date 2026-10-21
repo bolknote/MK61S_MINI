@@ -1,0 +1,81 @@
+{
+  "recorded_at": "2026-10-21T10:42:28.202104+00:00",
+  "status": "BOUNDARY_PREDICATE_AUDIT_PASS_NONBOUNDARY_TOTALITY_OPEN",
+  "runtime_changed": false,
+  "production_elf_sha256": "a273fe867a4631c6cb9dd7c768a70c37ee13d7644c4fdf61e2fb201f4cd029d0",
+  "boundary_certificate": {
+    "path": ".build/m0-pow-boundary-audit-20261021/certificate.json",
+    "sha256": "5d3d580b5281bef120ada17ce1d822636d2f6e96cf31372d2cd3941d4e49844f",
+    "implementation_sha256": "bf360fe3ecfaf7cced686eb1bd58dd7bc7d392cb55c355abbf2e421173d8ef25",
+    "root_depth_limit": 5,
+    "maximum_nontrivial_odd_power": 34,
+    "scope": "Integer inequalities plus valuation/root argument; not machine-checked C++ control-flow proof."
+  },
+  "actual_arm": {
+    "path": ".build/m0-pow-boundary-audit-20261021/arm.json",
+    "sha256": "aae167d1a3cbec784b2b5ff3ce17ac770628340be431585d0091c2b8d889db69",
+    "cases": 249200,
+    "calls": 498464,
+    "precision_bits": [
+      512,
+      1024
+    ],
+    "classes": {
+      "not_precision54": 198862,
+      "power2": 42644,
+      "root_degree_1": 4071,
+      "root_degree_2": 1277,
+      "root_degree_4": 1035,
+      "root_degree_8": 782,
+      "root_degree_16": 393,
+      "root_degree_32": 136
+    },
+    "wrong_rounding": 0,
+    "classification_mismatches": 0,
+    "dirty_sio_checks": 64,
+    "reference": "Exact rational decomposition, direct integer nth-root search and arbitrary-size powers. Fraction conversion supplies RNE; no floating log/exp/pow reference is used."
+  },
+  "sio_model": {
+    "changed_test_model": true,
+    "model_sha256": "c0bebc0d1046100cc14f386539d43505ead615710f890596ab3da5d1996fb945",
+    "sdk_wrapper_test": ".build/m0-pow-boundary-audit-20261021/sio-model.json",
+    "sdk_wrapper_calls": 61734,
+    "added": [
+      "Signed operand aliases and truncating signed quotient/remainder.",
+      "Operand alias coherence, result-register writes and DIRTY handling for SDK context restoration.",
+      "Local latency checks remain attached to the issuing kernel; a later SDK save of an old pending result is handled separately."
+    ],
+    "initial_failure": "The first new boundary audit stopped on an unsupported signed SIO operand write. This was a verifier coverage gap; after extending and independently checking the model, the same firmware passed.",
+    "hardware_model_scope": "Functional model; own divider latency is separately checked. SDK wrapper IRQ injection is not modeled."
+  },
+  "requalification": {
+    "all12_cases": 265409,
+    "wrong_rounding": 0,
+    "quiet_nan_required": true,
+    "exact_ratio_cases": 104846,
+    "ratio_latency_checks": 524245,
+    "ratio_dirty_checks": 24,
+    "all12": ".build/m0-pow-boundary-audit-20261021/all12.json",
+    "ratio": ".build/m0-pow-boundary-audit-20261021/ratio-latency.json"
+  },
+  "sources": [
+    {
+      "url": "https://www.vinc17.net/research/papers/ieeetc2009-powr.pdf",
+      "finding": "The paper explains why exact values and midpoints must be separated from adaptive nonboundary evaluation."
+    },
+    {
+      "url": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf#page=32",
+      "finding": "SIO operand aliases, signed results, writable result registers and quotient-read DIRTY acknowledgement."
+    },
+    {
+      "path": ".build/picocalc-deps/pico-sdk/src/rp2_common/pico_divider/divider_hardware.S",
+      "sha256": "a358fbb27fa953a7ff6da8d953651b2e046eec9a830da52a2d09f2044a25e9e0"
+    }
+  ],
+  "limitations": [
+    "Finite actual ARM cases complement the mathematical detector argument; they are not exhaustive verification over all input pairs.",
+    "Boundary recognition is now directly exercised; it does not establish a precision bound for nonboundary pow results.",
+    "The owned512/1024bit refinement still ends with an explicit undecided trap. Universal pow totality and the overall goal remain open.",
+    "V64 has not been measured on hardware; the previous full V60 comparison retains21strict slower groups. No ROOT math promotion or commit."
+  ]
+}

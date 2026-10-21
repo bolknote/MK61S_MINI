@@ -1,0 +1,18 @@
+{
+  "upstream_repository": "https://github.com/mysterywolf/Qfplib-M0-full",
+  "upstream_commit": "ec814ad1f17934ac777f9e042efacfae5b15210d",
+  "upstream_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+  "modified_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+  "license": "GPL-2.0-only",
+  "firmware_integration": false,
+  "scope": "Independent standalone evaluation; project GPLv3 integration requires license compatibility resolution.",
+  "changes": [
+    "ln: negative nonzero inputs return a quiet NaN",
+    "ln: either signed zero returns negative infinity",
+    "ln: positive infinity preserved and positive NaNs quieted",
+    "ln: positive subnormal significands normalized into the existing fixed-point kernel",
+    "ln: omitted greedy step32, whose Q62 x increment and logarithm contributions cancel exactly",
+    "ln: exact RNE near-one integer kernel for every 98,303 binary64 encoding from 1-65535*2^-53 through 1+32767*2^-52",
+    "No new lookup table; sampled ordinary paths have fewer instructions"
+  ]
+}

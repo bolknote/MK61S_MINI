@@ -1,0 +1,562 @@
+{
+  "recorded_at": "2026-10-21T04:36:17.054618+00:00",
+  "status": "NUMERICAL_RESEARCH_GATES_PASS_SPEED_OBJECTIVE_NOT_MET",
+  "entry": "qfp_dln_checked",
+  "default_qfplib_entry_unchanged": true,
+  "firmware_integrated": false,
+  "m4_changed": false,
+  "device_touched": false,
+  "qualification": {
+    "status": "PASS_RESEARCH_GATES",
+    "cases": 34682,
+    "wrong_rounding": 0,
+    "fast_Q62_interval_certificates": 29621,
+    "forced_refinement_cases": 264,
+    "forced_refinement_undecided": {
+      "4": 1,
+      "8": 1
+    },
+    "instructions": {
+      "normal_exponents": {
+        "cases": 256,
+        "original_mean": 799.25390625,
+        "checked_mean": 707.87109375,
+        "original_max": 851,
+        "checked_max": 9986,
+        "checked_over_original": 0.8856648534521941
+      },
+      "ordinary_half_to_two": {
+        "cases": 256,
+        "original_mean": 777.6328125,
+        "checked_mean": 6600.66015625,
+        "original_max": 821,
+        "checked_max": 11640,
+        "checked_over_original": 8.488145111867949
+      },
+      "near_one_tiny": {
+        "cases": 9,
+        "original_mean": 713.6666666666666,
+        "checked_mean": 101.33333333333333,
+        "original_max": 745,
+        "checked_max": 120,
+        "checked_over_original": 0.14198972442783747
+      },
+      "near_one_outer": {
+        "cases": 54,
+        "original_mean": 743.6111111111111,
+        "checked_mean": 8876.74074074074,
+        "original_max": 863,
+        "checked_max": 11087,
+        "checked_over_original": 11.93734279666293
+      },
+      "decimal_powers": {
+        "cases": 121,
+        "original_mean": 800.099173553719,
+        "checked_mean": 665.9752066115702,
+        "original_max": 853,
+        "checked_max": 707,
+        "checked_over_original": 0.8323658224187084
+      }
+    },
+    "checked_code_and_constants_bytes": 9244,
+    "additional_constant_table_bytes": 800,
+    "static_ram_bytes": 0,
+    "observed_stack_bytes": 516,
+    "elf_sha256": "3c4264875077c85c82117f14db20a168a62ea81155f99c245694b7ac400650c6",
+    "oracle": "MPFR directed bounds: exact RNE and direct containment of Q62 intervals",
+    "mpfr": "4.2.2",
+    "result_sha256": "6b8b1f06b6bb4903703b45f9e2a23f185e25d4f94dfea636ce64e7147d719461",
+    "build": {
+      "status": "PASS",
+      "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+      "images": {
+        "original": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v3-20261021/original.elf",
+          "elf_sha256": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+          "source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+        },
+        "modified": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v3-20261021/modified.elf",
+          "elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+          "source_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7"
+        },
+        "checked": {
+          "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v3-20261021/checked.elf",
+          "elf_sha256": "3c4264875077c85c82117f14db20a168a62ea81155f99c245694b7ac400650c6",
+          "sources_sha256": {
+            "src/qfplib-m0-full_gcc.S": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+            "src/ln_fast96.inc": "d63eb07acc625cb6188db13bd15c1b52785708de05371a1c9f30484edf3dc3a1",
+            "src/ln_checked.c": "188bdc88c10d70252fa846f14c5c54786375b4897d504afcc04641853989c1c2",
+            "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+          }
+        }
+      },
+      "firmware_linked": false
+    },
+    "synthetic_pack_certificates": {
+      "cases": 11026,
+      "accepted": 6435,
+      "power_boundary_regressions": 1026
+    },
+    "exact_integer_product_cases": 10049,
+    "qualification_script_sha256": "fae13ba5f3f78ca32b38a0d01118f4f4d87ffde482f9cace16cbdb6d0f1d23c3",
+    "limitations": [
+      "Not integrated into firmware; M4 unchanged.",
+      "Finite qualification corpus; Q245 final undecided trap remains, all-input totality unproved.",
+      "Physical timing pending; instruction groups may still be slower than Qfplib.",
+      "Other Qfplib functions retain their previous limitations."
+    ],
+    "scope": "Research qualification of interval-certified ln only; does not establish completion of the whole runtime objective."
+  },
+  "analytical_integer_rational_proof": {
+    "status": "PASS",
+    "fast_steps": 20,
+    "fast_max_deficit": 4398042316804,
+    "quadratic_bins_checked": 524288,
+    "quadratic_absolute_error_bound": 9,
+    "fast_error_base": 64,
+    "fast_error_bound": "64+ceil(abs(e+1)/2) Q62",
+    "fast_base_rational_bound": "179855754718668128237/4611686018427387903",
+    "refinement": [
+      {
+        "words": 4,
+        "precision": 117,
+        "max_deficit": 9903519723987267024857333760,
+        "series_terms": 7,
+        "error_base_upper_bound": "4652826664569783577161683829888383855537751743593867603782313/83694684816563488094995231507524656039399637351839406489600",
+        "series_tail_upper_bound": "1/302231436889258784194560"
+      },
+      {
+        "words": 8,
+        "precision": 245,
+        "max_deficit": 3369993132526586414580291834085080529534754464940151078685541138400,
+        "series_terms": 12,
+        "error_base_upper_bound": "22965147774946089434025723049401663202497397197463865297273691185695506065025451731945460727313068663/375841915227205263817581613307710831454106918649778562420442728926924721574533588677659663427174400",
+        "series_tail_upper_bound": "1/1918461269316584079360"
+      }
+    ],
+    "refinement_error_bound": "96+abs(e+1) in Q117/Q245 units",
+    "ln2_exponent_products_checked": 2098,
+    "source_sha256": {
+      "src/ln_fast96.inc": "d63eb07acc625cb6188db13bd15c1b52785708de05371a1c9f30484edf3dc3a1",
+      "src/ln_checked.c": "188bdc88c10d70252fa846f14c5c54786375b4897d504afcc04641853989c1c2",
+      "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+    },
+    "scope": "Analytical bounds plus exact integer/rational checks; assembly/C execution is qualified separately. Final undecided Q245 interval remains a totality limitation."
+  },
+  "logarithm_constant_certificates": {
+    "status": "PASS",
+    "precision": 245,
+    "rows": 25,
+    "bytes": 800,
+    "certificates": [
+      {
+        "index": 0,
+        "terms": 76,
+        "value_Q245": "0x162e42fefa39ef35793c7673007e5ed5e81e6864ce5316c5b141a2eb71755f",
+        "upstream_Q62_nearest": "0x2c5c85fdf473de6b"
+      },
+      {
+        "index": 1,
+        "terms": 52,
+        "value_Q245": "0xcf991f65fcc25f95b46bb37a02910c0cfa41ff668a8faf856715af1d8b3c7",
+        "upstream_Q62_nearest": "0x19f323ecbf984bf3"
+      },
+      {
+        "index": 2,
+        "terms": 38,
+        "value_Q245": "0x723fdf1e6a6886b097607bcbfee6892b8ecbd4e8235b8362e1e267eac97f8",
+        "upstream_Q62_nearest": "0xe47fbe3cd4d10d6"
+      },
+      {
+        "index": 3,
+        "terms": 29,
+        "value_Q245": "0x3c4e0edc55e5cbd3d50fffc3fd3c2abb729d78802fedf2afba112f83ff22f",
+        "upstream_Q62_nearest": "0x789c1db8abcb97a"
+      },
+      {
+        "index": 4,
+        "terms": 24,
+        "value_Q245": "0x1f0a30c01162a6617cc9716eeb32f131a68e9a66eb6a4b2ce30a3e152ded3",
+        "upstream_Q62_nearest": "0x3e14618022c54cc"
+      },
+      {
+        "index": 5,
+        "terms": 20,
+        "value_Q245": "0xfc14d873c1980267c7e09e3de453f5d5df5c299bbe6b5a3bed8eb1fc6ce7",
+        "upstream_Q62_nearest": "0x1f829b0e7833005"
+      },
+      {
+        "index": 6,
+        "terms": 17,
+        "value_Q245": "0x7f02a2c3f00f8f3e7b69d34deaf55b7d6077d207bb8a66ba281fc0aee245",
+        "upstream_Q62_nearest": "0xfe054587e01f1e"
+      },
+      {
+        "index": 7,
+        "terms": 15,
+        "value_Q245": "0x3fc054d620cf11f86ed20723b8505a567b6587df340e750ece04f10d6af1",
+        "upstream_Q62_nearest": "0x7f80a9ac419e24"
+      },
+      {
+        "index": 8,
+        "terms": 13,
+        "value_Q245": "0x1ff00aa2b10bc04a086b569b4d4b769199a53badae4b0492374dc66b4346",
+        "upstream_Q62_nearest": "0x3fe01545621781"
+      },
+      {
+        "index": 9,
+        "terms": 12,
+        "value_Q245": "0xffc0154d588733c53c742a7c76356395b1d845d134023d8e66ad982559c",
+        "upstream_Q62_nearest": "0x1ff802a9ab10e6"
+      },
+      {
+        "index": 10,
+        "terms": 11,
+        "value_Q245": "0x7ff002aa2ac43ef013414649324d1d1c61ac2ec5de9d60dc698ac94dd6e",
+        "upstream_Q62_nearest": "0xffe0055455888"
+      },
+      {
+        "index": 11,
+        "terms": 10,
+        "value_Q245": "0x3ffc00554d56220ccf15b166319670a8bd71d3cbc1f93c9cb1146cb813a",
+        "upstream_Q62_nearest": "0x7ff800aa9aac4"
+      },
+      {
+        "index": 12,
+        "terms": 9,
+        "value_Q245": "0x1fff000aaa2ab110bbc04dc4e3dc0a93919a170005a1079365d2330445e",
+        "upstream_Q62_nearest": "0x3ffe001554556"
+      },
+      {
+        "index": 13,
+        "terms": 9,
+        "value_Q245": "0xfffc001554d558887333c57857e1ed521af29bc8c8f7c8d81152b8964d",
+        "upstream_Q62_nearest": "0x1fff8002aa9ab"
+      },
+      {
+        "index": 14,
+        "terms": 8,
+        "value_Q245": "0x7fff0002aaa2aac443eef0137d3821b9e86f41144f88fef702e1664517",
+        "upstream_Q62_nearest": "0xfffe00055545"
+      },
+      {
+        "index": 15,
+        "terms": 8,
+        "value_Q245": "0x3fffc0005554d5562220cccf15ed5f1d0dc4105849b70b054136318b5c",
+        "upstream_Q62_nearest": "0x7fff8000aaaa"
+      },
+      {
+        "index": 16,
+        "terms": 7,
+        "value_Q245": "0x1ffff0000aaaa2aab1110bbbc04e00e0519315fe62ceb5e3c96cc30ed5",
+        "upstream_Q62_nearest": "0x3fffe0001555"
+      },
+      {
+        "index": 17,
+        "terms": 7,
+        "value_Q245": "0xffffc00015554d555888873333c57c17c598c97fcc02913daf2da236a",
+        "upstream_Q62_nearest": "0x1ffff80002ab"
+      },
+      {
+        "index": 18,
+        "terms": 6,
+        "value_Q245": "0x7ffff00002aaaa2aaac4443eeef01380f8138f70f3dc3e7e0a9ebc242",
+        "upstream_Q62_nearest": "0xffffe000055"
+      },
+      {
+        "index": 19,
+        "terms": 6,
+        "value_Q245": "0x3ffffc000055554d555622220ccccf15f11f15f87b86ebaed2317d849",
+        "upstream_Q62_nearest": "0x7ffff80000b"
+      },
+      {
+        "index": 20,
+        "terms": 6,
+        "value_Q245": "0x1fffff00000aaaaa2aaab11110bbbbc04e04a04e086e86b53b569df55",
+        "upstream_Q62_nearest": "0x3ffffe00001"
+      },
+      {
+        "index": 21,
+        "terms": 6,
+        "value_Q245": "0xfffffc0000155554d555588888733333c57c53c57c743742a76a7c78",
+        "upstream_Q62_nearest": "0x1fffff80000"
+      },
+      {
+        "index": 22,
+        "terms": 5,
+        "value_Q245": "0x7fffff000002aaaaa2aaaac44443eeeef01381341381464c64931932",
+        "upstream_Q62_nearest": "0xfffffe0000"
+      },
+      {
+        "index": 23,
+        "terms": 5,
+        "value_Q245": "0x3fffffc00000555554d55556222220cccccf15f15b15f16632631965",
+        "upstream_Q62_nearest": "0x7fffff8000"
+      },
+      {
+        "index": 24,
+        "terms": 5,
+        "value_Q245": "0x1ffffff000000aaaaaa2aaaab111110bbbbbc04e04dc4e04e3dc3dc0",
+        "upstream_Q62_nearest": "0x3fffffe000"
+      }
+    ],
+    "sha256": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+  },
+  "actual_refinement_profile": {
+    "status": "PASS_PROFILE",
+    "elf_sha256": "3c4264875077c85c82117f14db20a168a62ea81155f99c245694b7ac400650c6",
+    "qualification": ".build/qfplib-ln-checked-v3-20261021/result.json",
+    "qualification_sha256": "cb07559e0ac134ee0bfb4ef8e20e0634759f69dd3e6457708e386a0f2bfe8fb7",
+    "groups": {
+      "normal_exponents": {
+        "cases": 256,
+        "original_mean": 799.25390625,
+        "checked_mean": 707.87109375,
+        "checked_over_original": 0.8856648534521941,
+        "checked_max": 9986,
+        "refinement_entries": {
+          "4": 1,
+          "8": 0
+        },
+        "refine117_fraction": 0.00390625
+      },
+      "ordinary_half_to_two": {
+        "cases": 256,
+        "original_mean": 777.6328125,
+        "checked_mean": 6600.66015625,
+        "checked_over_original": 8.488145111867949,
+        "checked_max": 11640,
+        "refinement_entries": {
+          "4": 152,
+          "8": 0
+        },
+        "refine117_fraction": 0.59375
+      },
+      "near_one_tiny": {
+        "cases": 9,
+        "original_mean": 713.6666666666666,
+        "checked_mean": 101.33333333333333,
+        "checked_over_original": 0.14198972442783747,
+        "checked_max": 120,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      },
+      "near_one_outer": {
+        "cases": 54,
+        "original_mean": 743.6111111111111,
+        "checked_mean": 8876.74074074074,
+        "checked_over_original": 11.93734279666293,
+        "checked_max": 11087,
+        "refinement_entries": {
+          "4": 54,
+          "8": 0
+        },
+        "refine117_fraction": 1.0
+      },
+      "decimal_powers": {
+        "cases": 121,
+        "original_mean": 800.099173553719,
+        "checked_mean": 665.9752066115702,
+        "checked_over_original": 0.8323658224187084,
+        "checked_max": 707,
+        "refinement_entries": {
+          "4": 0,
+          "8": 0
+        },
+        "refine117_fraction": 0.0
+      }
+    },
+    "physical_timing": false,
+    "scope": "Executed ARM instructions for every full call, including refinement. PC hooks observe actual Q117/Q245 entries; no runtime counters or mutable RAM added."
+  },
+  "isolation": {
+    "status": "PASS",
+    "baseline_allocated_sections_identical": [
+      ".text",
+      ".persistent",
+      ".noinit"
+    ],
+    "baseline_old_elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+    "baseline_new_elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+    "unchanged_root_math_files": 44,
+    "source_math_sha256": {
+      "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+      "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+      "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+      "code/native_eabi_m0.S": "69ca7619e0b5d70cbba739fc08e70efe3255e2af1159669ce6dcb97df00bd443",
+      "code/native_eabi_m0.cpp": "233a8b6f786988fd3e37d58997ac1318a843d907084c17f7bb5d2304b4953bfe",
+      "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+      "code/native_eabi_m0_asin.inc": "03194f8321059adc44a2f7590a967944cc99da6781abb98d333c18b73287d70e",
+      "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+      "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+      "code/native_eabi_m0_cr.cpp": "d84ab273d5f7c3cbf72121b97b460b555b3a3dd1812f8908b61b889dd01a3e3e",
+      "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+      "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+      "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+      "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+      "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+      "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+      "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+      "code/native_eabi_m0_log70.inc": "851778eff314287b371ef4c82e20e57ee015ab789a7b3553b2476433ba1d4287",
+      "code/native_eabi_m0_log70_table.inc": "4490017468bd368af72a94e7d0dc58a985388a70e90be1e3ffd07e910c2fafdd",
+      "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+      "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "code/native_eabi_m0_pow_fast.inc": "043ce9939fd717dccb23fee23b29268d62297838775638176a25e9adcf99b7d0",
+      "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+      "code/native_eabi_m0_pow_interval.inc": "bf360fe3ecfaf7cced686eb1bd58dd7bc7d392cb55c355abbf2e421173d8ef25",
+      "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+      "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+      "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+      "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+      "code/native_eabi_m0_product.inc": "5f75b0a237ce845015bec6d9fb53e4e05f0103f674114867158df7c51c561f56",
+      "code/native_eabi_m0_refine.inc": "64e7d47d3d7f1ff0fd7bc5aa25cdecd1dd331c3f44edf539ca32a5e1084453db",
+      "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+      "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+      "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+      "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+      "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+      "code/native_eabi_m0_trig_checked.inc": "4ee0f8b2b358df9a6eaab9930471d5860ffc3d4db609212a3a7aac0dfb1ae4e1",
+      "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+      "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+      "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+      "code/native_eabi_m0_trig_tan.inc": "8591bdfb5ecb94bee742e00917e55865f54fbcf81d55af1875ea54a8cd529388",
+      "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7"
+    },
+    "firmware_integration": false,
+    "device_touched": false
+  },
+  "previous_implementation": {
+    "path": ".build/qfplib-ln-checked-v2-20261021/strict-result.json",
+    "qualification": {
+      "status": "PASS_RESEARCH_GATES",
+      "cases": 34682,
+      "wrong_rounding": 0,
+      "fast_Q62_interval_certificates": 29621,
+      "forced_refinement_cases": 264,
+      "forced_refinement_undecided": {
+        "4": 1,
+        "8": 1
+      },
+      "instructions": {
+        "normal_exponents": {
+          "cases": 256,
+          "original_mean": 799.25390625,
+          "checked_mean": 721.08203125,
+          "original_max": 851,
+          "checked_max": 13368,
+          "checked_over_original": 0.9021939406379974
+        },
+        "ordinary_half_to_two": {
+          "cases": 256,
+          "original_mean": 777.6328125,
+          "checked_mean": 8504.86328125,
+          "original_max": 821,
+          "checked_max": 14824,
+          "checked_over_original": 10.93686267418146
+        },
+        "near_one_tiny": {
+          "cases": 9,
+          "original_mean": 713.6666666666666,
+          "checked_mean": 101.33333333333333,
+          "original_max": 745,
+          "checked_max": 120,
+          "checked_over_original": 0.14198972442783747
+        },
+        "near_one_outer": {
+          "cases": 54,
+          "original_mean": 743.6111111111111,
+          "checked_mean": 11438.222222222223,
+          "original_max": 863,
+          "checked_max": 14271,
+          "checked_over_original": 15.381994770265223
+        },
+        "decimal_powers": {
+          "cases": 121,
+          "original_mean": 800.099173553719,
+          "checked_mean": 665.9752066115702,
+          "original_max": 853,
+          "checked_max": 707,
+          "checked_over_original": 0.8323658224187084
+        }
+      },
+      "checked_code_and_constants_bytes": 9104,
+      "additional_constant_table_bytes": 800,
+      "static_ram_bytes": 0,
+      "observed_stack_bytes": 516,
+      "elf_sha256": "88d69c70eb03b9509ee2a358ce5b0e1480a6ea6a02a59fddd397ba056289b450",
+      "oracle": "MPFR directed bounds: exact RNE and direct containment of Q62 intervals",
+      "mpfr": "4.2.2",
+      "result_sha256": "6b8b1f06b6bb4903703b45f9e2a23f185e25d4f94dfea636ce64e7147d719461",
+      "build": {
+        "status": "PASS",
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "images": {
+          "original": {
+            "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v2-20261021/original.elf",
+            "elf_sha256": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+            "source_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654"
+          },
+          "modified": {
+            "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v2-20261021/modified.elf",
+            "elf_sha256": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+            "source_sha256": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7"
+          },
+          "checked": {
+            "elf": "/Users/bolk/Projects/MK61S_MINI/.build/qfplib-ln-checked-v2-20261021/checked.elf",
+            "elf_sha256": "88d69c70eb03b9509ee2a358ce5b0e1480a6ea6a02a59fddd397ba056289b450",
+            "sources_sha256": {
+              "src/qfplib-m0-full_gcc.S": "438ebaab6658d0379bf01bd1b3fdc8edf934782deffa76067f6dfe7d0a5d42a7",
+              "src/ln_fast96.inc": "d63eb07acc625cb6188db13bd15c1b52785708de05371a1c9f30484edf3dc3a1",
+              "src/ln_checked.c": "f9a268fa1adc23efcf53688d04b0ff72f18e4925e1bad8befbb5fc9d666a8f84",
+              "src/ln_constants.inc": "2b7fa8ccda98ec632a342a70cbb53affbe4bc5625252de7a3cabcfb861360312"
+            }
+          }
+        },
+        "firmware_linked": false
+      },
+      "synthetic_pack_certificates": {
+        "cases": 11026,
+        "accepted": 6435,
+        "power_boundary_regressions": 1026
+      },
+      "exact_integer_product_cases": 10049,
+      "qualification_script_sha256": "fae13ba5f3f78ca32b38a0d01118f4f4d87ffde482f9cace16cbdb6d0f1d23c3",
+      "limitations": [
+        "Not integrated into firmware; M4 unchanged.",
+        "Finite qualification corpus; Q245 final undecided trap remains, all-input totality unproved.",
+        "Physical timing pending; instruction groups may still be slower than Qfplib.",
+        "Other Qfplib functions retain their previous limitations."
+      ],
+      "scope": "Research qualification of interval-certified ln only; does not establish completion of the whole runtime objective."
+    }
+  },
+  "optimization": "Exact product loops omit zero high words; division by2/4/8 uses shifts, remaining small divisions skip zero digits. Ordinary-group mean fell8504.86->6600.66 instructions; still8.49x original.",
+  "next_actions": [
+    "Reduce the Q62 estimate error with compensated shift/table rounding and a more accurate residual, then measure rejection rate and total calls.",
+    "Provide a relative near-one fast path outside the existing exact tiny kernel.",
+    "Retain full RNE interval certification and investigate all-input termination beyond the finite Q245 refinement limit.",
+    "Only evaluate firmware integration after speed, accuracy, licensing and hardware gates are satisfied."
+  ],
+  "limitations": [
+    "Not integrated into firmware; M4 unchanged.",
+    "Finite qualification corpus; Q245 final undecided trap remains, all-input totality unproved.",
+    "Physical timing pending; instruction groups may still be slower than Qfplib.",
+    "Other Qfplib functions retain their previous limitations."
+  ],
+  "reproducibility": {
+    "status": "PASS",
+    "frozen_source_rebuild_byte_identical_elf_sha256": {
+      "original": "06f4623f189f6d0b52b109e85ff5ca750e98270091887c7242d32dba275344d0",
+      "modified": "bb82c3b7b8d77b361f511b3dd0db053981c1d456e0ad3ca13c26db7a350835a4",
+      "checked": "3c4264875077c85c82117f14db20a168a62ea81155f99c245694b7ac400650c6"
+    }
+  },
+  "frozen_source_snapshot": ".build/qfplib-ln-checked-v3-20261021/source-snapshot.json"
+}

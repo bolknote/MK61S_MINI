@@ -1,0 +1,94 @@
+{
+  "recorded_at": "2026-10-21T10:50:48.183142+00:00",
+  "status": "ORDER_BALANCED_TIMING_OFFLINE_QUALIFIED_HIL_PENDING",
+  "problem": "Nine alternating rounds give one library five first runs and the other four. With an order-dependent disturbance, per-library medians can show a false gap even for equal-cost kernels.",
+  "change": {
+    "rounds": 12,
+    "first_runs_per_library": 6,
+    "wire_versions": {
+      "no_counters": 3,
+      "with_counters": 4
+    },
+    "primary_estimator": "Median of six averages of adjacent rounds with opposite library order.",
+    "preserved": "Raw elapsed/control times, original per-library medians, and every observed numerical result.",
+    "secondary": "Per-pair differences and their empirical range. No confidence interval is claimed."
+  },
+  "verification": {
+    "synthetic_regression_checks": 32,
+    "legacy_actual_reports_decoded": 116,
+    "legacy_timing_and_numeric_fields_identical": true,
+    "all13_arm_abi_kinds_for_versions": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "firmware_crc": "PASS",
+    "uf2_bounds": "PASS",
+    "production_math_symbols_preserved": 380,
+    "production_ram_initializers_preserved": true,
+    "proofs": {
+      "layout-proof.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/layout-proof.json",
+        "sha256": "04d55c8dd802c2787329e34a8dad8ad0c1f86939b9f345a9560ce9f49aa69665"
+      },
+      "reference-link-proof.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/reference-link-proof.json",
+        "sha256": "32367592eee1309f613a47e1113d7c95c7bbca52b1f7bb86cf82a9432211cce1"
+      },
+      "firmware-self-test.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/firmware-self-test.json",
+        "sha256": "3fb31c06903e859ea07283b51184fa7a2d25e78890f76a25cbcb68810af7383a"
+      },
+      "app-self-test/result.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/app-self-test/result.json",
+        "sha256": "8992d89140e64547a50a5f88532ac8b306d534ff8f35c2dcf76fa29363bc5ccc"
+      },
+      "plain-self-test/result.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/plain-self-test/result.json",
+        "sha256": "19c4f7947e3035e86328cf1d9ec5a89881a2b584ffa0b7cbb64cc1ae34a0c980"
+      },
+      "legacy-cache-self-test/result.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/legacy-cache-self-test/result.json",
+        "sha256": "e2ffafda3d207f25c634f0e3fd18aeae8ad03e34c572a7a9b5d39caa4051ece4"
+      },
+      "legacy-plain-self-test/result.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/legacy-plain-self-test/result.json",
+        "sha256": "b0268fe39aacb334396e0d0eb86ebbde993c0b66723bb43312700254e16e3875"
+      },
+      "uf2-bounds.json": {
+        "path": ".build/m0-balanced-timing-v64-20261021/uf2-bounds.json",
+        "sha256": "6be4e7c26132eef662010c0508fed6a55c631b1d42586658febeb204f87b4513"
+      }
+    }
+  },
+  "identity": {
+    "production_elf_sha256": "a273fe867a4631c6cb9dd7c768a70c37ee13d7644c4fdf61e2fb201f4cd029d0",
+    "diagnostic_elf_sha256": "358fab93d537ef862353d7c9fcc85db597972e42c1061f641bc47de718582e6a",
+    "diagnostic_elf_unchanged": true,
+    "input_chunks": 116,
+    "input_hashes_unchanged": true,
+    "streams": 114,
+    "pinned_qfplib_sha256": "c9db54280a92c30e7c3b55adda24a8a540d33d52b7cba6185f9735c5efdd4654",
+    "app_sha256": "98334514bda80a44e588b2ee13030ffdca0ab7103f767a15b4509a45400d55d3",
+    "source_sha256": {
+      "tests/fixtures/m0_math_compare_benchmark.c": "0a91ef03943abcc1556f320a49ad8bcc17656cfc1ef13b4d8b30535fd45d38bb",
+      "tests/hil_m0_math_compare.py": "b62db4d575d4c6c729dba0bbdd0e52b7effc62f796901bff2ea85b6b267e71f0",
+      "tests/build_m0_math_compare.py": "e02675c38707eb85e104a5bb6ac420383697a4c7b1f174f0e51de43d67de8dbf",
+      "tests/m0_math_compare_app_self_test.py": "6447c7b89c4f91dfa6e4fbb0cf7e871dbee138a33ec9d0ed936a4bb165eccd38",
+      "tests/m0_math_compare_statistics_self_test.py": "c9f621c3f50fe5bb6e66cb3a639b22e747ab82ff1a3d87c7fedde0cc7afe98c4"
+    }
+  },
+  "hardware": {
+    "path": ".build/m0-balanced-timing-v64-20261021",
+    "run_started": false,
+    "ownership": "Peer hardware-throughput has the device; no USB access was made for this change.",
+    "restore_pin": "5F1E85DF; update/rebase after any newer accepted peer build before running."
+  },
+  "limitations": [
+    "The order-effect regression is synthetic; it demonstrates a possible estimator failure rather than attributing every previous timing difference to that mechanism.",
+    "Old full V60 results remain unchanged with21strict slower groups under their recorded estimator.",
+    "There is no new physical speed claim. V64 speed parity and the overall goal remain unverified.",
+    "This improves measurement fidelity and changes no production arithmetic or M4 code."
+  ]
+}
