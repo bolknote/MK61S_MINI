@@ -1,0 +1,84 @@
+
+.build/m0-memset-20261021/final/app/MEMBENCH.elf:     file format elf32-littlearm
+
+
+Disassembly of section .module_image:
+
+20000780 <memset>:
+20000780:	2a08      	cmp	r2, #8
+20000782:	d333      	bcc.n	200007ec <memset+0x6c>
+20000784:	4684      	mov	ip, r0
+20000786:	b2c9      	uxtb	r1, r1
+20000788:	020b      	lsls	r3, r1, #8
+2000078a:	4319      	orrs	r1, r3
+2000078c:	07c3      	lsls	r3, r0, #31
+2000078e:	d502      	bpl.n	20000796 <memset+0x16>
+20000790:	7001      	strb	r1, [r0, #0]
+20000792:	3001      	adds	r0, #1
+20000794:	3a01      	subs	r2, #1
+20000796:	0783      	lsls	r3, r0, #30
+20000798:	d502      	bpl.n	200007a0 <memset+0x20>
+2000079a:	8001      	strh	r1, [r0, #0]
+2000079c:	3002      	adds	r0, #2
+2000079e:	3a02      	subs	r2, #2
+200007a0:	ba0b      	rev	r3, r1
+200007a2:	4319      	orrs	r1, r3
+200007a4:	000b      	movs	r3, r1
+200007a6:	3a10      	subs	r2, #16
+200007a8:	d311      	bcc.n	200007ce <memset+0x4e>
+200007aa:	b430      	push	{r4, r5}
+200007ac:	000c      	movs	r4, r1
+200007ae:	000d      	movs	r5, r1
+200007b0:	2a30      	cmp	r2, #48	@ 0x30
+200007b2:	d308      	bcc.n	200007c6 <memset+0x46>
+200007b4:	3a30      	subs	r2, #48	@ 0x30
+200007b6:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+200007b8:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+200007ba:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+200007bc:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+200007be:	3a40      	subs	r2, #64	@ 0x40
+200007c0:	d2f9      	bcs.n	200007b6 <memset+0x36>
+200007c2:	3230      	adds	r2, #48	@ 0x30
+200007c4:	d302      	bcc.n	200007cc <memset+0x4c>
+200007c6:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+200007c8:	3a10      	subs	r2, #16
+200007ca:	d2fc      	bcs.n	200007c6 <memset+0x46>
+200007cc:	bc30      	pop	{r4, r5}
+200007ce:	0752      	lsls	r2, r2, #29
+200007d0:	d300      	bcc.n	200007d4 <memset+0x54>
+200007d2:	c00a      	stmia	r0!, {r1, r3}
+200007d4:	0052      	lsls	r2, r2, #1
+200007d6:	d300      	bcc.n	200007da <memset+0x5a>
+200007d8:	c002      	stmia	r0!, {r1}
+200007da:	d005      	beq.n	200007e8 <memset+0x68>
+200007dc:	0052      	lsls	r2, r2, #1
+200007de:	d302      	bcc.n	200007e6 <memset+0x66>
+200007e0:	8001      	strh	r1, [r0, #0]
+200007e2:	d001      	beq.n	200007e8 <memset+0x68>
+200007e4:	3002      	adds	r0, #2
+200007e6:	7001      	strb	r1, [r0, #0]
+200007e8:	4660      	mov	r0, ip
+200007ea:	4770      	bx	lr
+200007ec:	2a02      	cmp	r2, #2
+200007ee:	d806      	bhi.n	200007fe <memset+0x7e>
+200007f0:	2a00      	cmp	r2, #0
+200007f2:	d003      	beq.n	200007fc <memset+0x7c>
+200007f4:	7001      	strb	r1, [r0, #0]
+200007f6:	2a01      	cmp	r2, #1
+200007f8:	d000      	beq.n	200007fc <memset+0x7c>
+200007fa:	7041      	strb	r1, [r0, #1]
+200007fc:	4770      	bx	lr
+200007fe:	a306      	add	r3, pc, #24	@ (adr r3, 20000818 <memset+0x98>)
+20000800:	1a9b      	subs	r3, r3, r2
+20000802:	1a9b      	subs	r3, r3, r2
+20000804:	3301      	adds	r3, #1
+20000806:	4718      	bx	r3
+20000808:	46c0      	nop			@ (mov r8, r8)
+2000080a:	7181      	strb	r1, [r0, #6]
+2000080c:	7141      	strb	r1, [r0, #5]
+2000080e:	7101      	strb	r1, [r0, #4]
+20000810:	70c1      	strb	r1, [r0, #3]
+20000812:	7081      	strb	r1, [r0, #2]
+20000814:	7041      	strb	r1, [r0, #1]
+20000816:	7001      	strb	r1, [r0, #0]
+20000818:	4770      	bx	lr

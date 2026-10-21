@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "reproduced_app_sha256": "2ed451d5cb4fc0ce5b7105d81187c82cbd115a0b61264074d23ac510241c55eb",
+  "reproduced_app_bytes": 1986,
+  "identical_to_hardware_app": true
+}

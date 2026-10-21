@@ -1,0 +1,16 @@
+[
+  {
+    "lto": false,
+    "name": "memset",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": 154
+  },
+  {
+    "lto": true,
+    "name": "memset",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": 154
+  }
+]

@@ -13,6 +13,13 @@
 .thumb_func
 \name:
 #if defined(__ARM_ARCH_6M__)
+ .ifc \scratch,r3
+  /* ISO C services have at most three arguments, including on Thumb-1. */
+  ldr r3, =MK61_RUNTIME_POINTER
+  ldr r3, [r3]
+  ldr r3, [r3, #runtime_slot]
+  bx r3
+ .else
   push {r4}
   ldr r4, =MK61_RUNTIME_POINTER
   ldr r4, [r4]
@@ -20,6 +27,7 @@
   mov r12, r4
   pop {r4}
   bx r12
+ .endif
 #else
   ldr \scratch, =MK61_RUNTIME_POINTER
   ldr \scratch, [\scratch]

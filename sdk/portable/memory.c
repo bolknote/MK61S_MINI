@@ -9,9 +9,21 @@ void* memcpy(void* dst, const void* src, size_t size) {
   return mk61_memory_copy(dst, src, size);
 }
 
+#if defined(__ARM_ARCH_6M__) && defined(__GNUC__) && !defined(__clang__)
+/* Keep the measured M0+ function at the public entry: a C forwarding wrapper
+ * would add a saved LR and a BL/return on this Thumb-1 target. */
+__attribute__((naked, noipa, aligned(4)))
+void* memset(void* dst __attribute__((unused)),
+             int value __attribute__((unused)), size_t size __attribute__((unused))) {
+  __asm__(
+#include "memset_m0.inc"
+  );
+}
+#else
 void* memset(void* dst, int value, size_t size) {
   return mk61_memory_fill(dst, value, size);
 }
+#endif
 
 void* memmove(void* dst, const void* src, size_t size) {
   return mk61_memory_move(dst, src, size);

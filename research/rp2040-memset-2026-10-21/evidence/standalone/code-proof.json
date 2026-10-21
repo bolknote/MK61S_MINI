@@ -1,0 +1,11 @@
+{
+  "baseline_bytes": 22,
+  "baseline_sha256": "678cbd253c0de63276cb58bd967fb46e27588ca858ae23cd8bdee4be72d6044f",
+  "baseline_exact_match": true,
+  "selected_bytes": 154,
+  "selected_sha256": "2785002841720b464a5f94e9b9857ccf86edabd6b01ec881ea98fb2d735ace11",
+  "selected_exact_match": true,
+  "shared_thunk_instructions": "014b1b68db6d1847",
+  "shared_thunk_bytes": 12,
+  "shared_thunk_exact_instruction_match": true
+}

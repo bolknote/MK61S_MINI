@@ -1,0 +1,26 @@
+[
+  {
+    "name": "byte_fill",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": 22
+  },
+  {
+    "name": "own16",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": 132
+  },
+  {
+    "name": "own64",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": 154
+  },
+  {
+    "name": "bootrom_memset",
+    "cases": 10353,
+    "status": "PASS",
+    "bytes": null
+  }
+]

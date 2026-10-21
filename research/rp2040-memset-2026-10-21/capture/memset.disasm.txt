@@ -1,0 +1,67 @@
+
+research/rp2040-memset-2026-10-21/capture/bootrom.bin:     file format binary
+
+
+Disassembly of section .data:
+
+000026b8 <.data+0x26b8>:
+    26b8:	4684      	mov	ip, r0
+    26ba:	2a08      	cmp	r2, #8
+    26bc:	d32a      	bcc.n	0x2714
+    26be:	0843      	lsrs	r3, r0, #1
+    26c0:	d301      	bcc.n	0x26c6
+    26c2:	7001      	strb	r1, [r0, #0]
+    26c4:	3001      	adds	r0, #1
+    26c6:	b2c9      	uxtb	r1, r1
+    26c8:	020b      	lsls	r3, r1, #8
+    26ca:	4319      	orrs	r1, r3
+    26cc:	0883      	lsrs	r3, r0, #2
+    26ce:	d301      	bcc.n	0x26d4
+    26d0:	8001      	strh	r1, [r0, #0]
+    26d2:	3002      	adds	r0, #2
+    26d4:	4663      	mov	r3, ip
+    26d6:	1a1b      	subs	r3, r3, r0
+    26d8:	18d2      	adds	r2, r2, r3
+    26da:	ba0b      	rev	r3, r1
+    26dc:	4319      	orrs	r1, r3
+    26de:	1c0b      	adds	r3, r1, #0
+    26e0:	3a10      	subs	r2, #16
+    26e2:	d307      	bcc.n	0x26f4
+    26e4:	b430      	push	{r4, r5}
+    26e6:	1c0c      	adds	r4, r1, #0
+    26e8:	1c0d      	adds	r5, r1, #0
+    26ea:	46c0      	nop			@ (mov r8, r8)
+    26ec:	c03a      	stmia	r0!, {r1, r3, r4, r5}
+    26ee:	3a10      	subs	r2, #16
+    26f0:	d2fc      	bcs.n	0x26ec
+    26f2:	bc30      	pop	{r4, r5}
+    26f4:	0752      	lsls	r2, r2, #29
+    26f6:	d300      	bcc.n	0x26fa
+    26f8:	c00a      	stmia	r0!, {r1, r3}
+    26fa:	0052      	lsls	r2, r2, #1
+    26fc:	d300      	bcc.n	0x2700
+    26fe:	c002      	stmia	r0!, {r1}
+    2700:	d006      	beq.n	0x2710
+    2702:	0052      	lsls	r2, r2, #1
+    2704:	d302      	bcc.n	0x270c
+    2706:	8001      	strh	r1, [r0, #0]
+    2708:	d002      	beq.n	0x2710
+    270a:	3002      	adds	r0, #2
+    270c:	d000      	beq.n	0x2710
+    270e:	7001      	strb	r1, [r0, #0]
+    2710:	4660      	mov	r0, ip
+    2712:	4770      	bx	lr
+    2714:	a305      	add	r3, pc, #20	@ (adr r3, 0x272c)
+    2716:	1a9b      	subs	r3, r3, r2
+    2718:	1a9b      	subs	r3, r3, r2
+    271a:	3301      	adds	r3, #1
+    271c:	4718      	bx	r3
+    271e:	7181      	strb	r1, [r0, #6]
+    2720:	7141      	strb	r1, [r0, #5]
+    2722:	7101      	strb	r1, [r0, #4]
+    2724:	70c1      	strb	r1, [r0, #3]
+    2726:	7081      	strb	r1, [r0, #2]
+    2728:	7041      	strb	r1, [r0, #1]
+    272a:	7001      	strb	r1, [r0, #0]
+    272c:	4660      	mov	r0, ip
+    272e:	4770      	bx	lr
