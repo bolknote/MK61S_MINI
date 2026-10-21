@@ -1,0 +1,282 @@
+--- a/code/native_eabi_m0.S
++++ b/code/native_eabi_m0.S
+@@ -3,8 +3,8 @@
+ .syntax unified
+ .cpu cortex-m0plus
+ .thumb
+-.macro function name
+- .section .text.\name,"ax",%progbits
++.macro function name, group=.text
++ .section \group\().\name,"ax",%progbits
+  .global \name
+  .type \name,%function
+  .thumb_func
+@@ -816,7 +816,11 @@
+  adcs r3,r2
+ .endm
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++function mk61_m0_sqrt, .m0_sqrt64_fixed
++#else
+ function mk61_m0_sqrt
++#endif
+  lsrs r3,r1,#20
+  adds r2,r3,#1
+  lsrs r2,#11
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -12,8 +12,14 @@
+               "M0 EABI requires IEEE binary64/binary32");
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ #define MK61_M0_EXP_CORE __attribute__((section(".m0_exp_core")))
++#define MK61_M0_TRIG_REFINE_VALUES __attribute__((section(".m0_trig_refine_values_fixed")))
++#define MK61_M0_TRIG_REFINE __attribute__((section(".m0_trig_refine_fixed")))
++#define MK61_M0_TRIG_CACHE(name) __attribute__((section(".m0_trig_cache_" #name)))
+ #else
+ #define MK61_M0_EXP_CORE
++#define MK61_M0_TRIG_REFINE_VALUES
++#define MK61_M0_TRIG_REFINE
++#define MK61_M0_TRIG_CACHE(name)
+ #endif
+ namespace m0_eabi {
+ using U = uint64_t;
+@@ -21,7 +27,7 @@
+   static_assert(sizeof(To)==sizeof(From), "bit copy size");
+   To y; __builtin_memcpy(&y,&x,sizeof(y)); return y;
+ }
+-unsigned clz32(uint32_t x) {
++MK61_M0_TRIG_CACHE(clz32) unsigned clz32(uint32_t x) {
+   if(!x) return 32;
+   unsigned n=0;
+   if(!(x&0xFFFF0000U)) {n+=16;x<<=16;}
+@@ -30,7 +36,7 @@
+   if(!(x&0xC0000000U)) {n+=2;x<<=2;}
+   return n+unsigned(!(x&0x80000000U));
+ }
+-unsigned clz64(U x) {return uint32_t(x>>32)?clz32(uint32_t(x>>32)):32+clz32(uint32_t(x));}
++MK61_M0_TRIG_CACHE(clz64) unsigned clz64(U x) {return uint32_t(x>>32)?clz32(uint32_t(x>>32)):32+clz32(uint32_t(x));}
+ // Four 16x16 products, each fitting in a 32-bit MULS result. In particular,
+ // do not express this as uint64_t(a)*b: that would call our own __aeabi_lmul.
+ __attribute__((always_inline)) inline U wide32(uint32_t a,uint32_t b) {
+@@ -70,7 +76,7 @@
+ #include "native_eabi_m0_log70_table.inc"
+ #include "native_eabi_m0_trig_checked_table.inc"
+ #endif
+-inline U low_product(U a,U b) {
++MK61_M0_TRIG_CACHE(low_product) inline U low_product(U a,U b) {
+   return wide32(uint32_t(a),uint32_t(b))+
+     (U(uint32_t(a)*uint32_t(b>>32)+uint32_t(a>>32)*uint32_t(b))<<32);
+ }
+@@ -595,7 +601,7 @@
+   out[0]=real(value);return 1;
+ }
+ #include "native_eabi_m0_trig_checked.inc"
+-__attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
++MK61_M0_TRIG_CACHE(mulq62) __attribute__((optimize("Os"))) U mk61_m0_mul_q62(U a,U b) {
+   if(!uint32_t(b>>32)) {
+     const uint32_t y=uint32_t(b);
+     if(!y) return 0;
+--- a/code/native_eabi_m0_atan_refine.inc
++++ b/code/native_eabi_m0_atan_refine.inc
+@@ -19,7 +19,7 @@
+   while(!(r>>32) && wide32(q,low)>((r<<32)|next)) {--q;r+=d;}
+   return q;
+ }
+-__attribute__((optimize("Os"),noinline)) static U atan_ratio_words(U numerator,U lower,U denominator) {
++MK61_M0_TRIG_CACHE(atan_ratio) __attribute__((optimize("Os"),noinline)) static U atan_ratio_words(U numerator,U lower,U denominator) {
+   const unsigned shift=clz64(denominator);
+   const U d=denominator<<shift,n=shift?(numerator<<shift)|(lower>>(64-shift)):numerator;
+   const U low_n=lower<<shift;
+--- a/code/native_eabi_m0_convert.inc
++++ b/code/native_eabi_m0_convert.inc
+@@ -182,7 +182,28 @@
+ .size __aeabi_l2d,.-__aeabi_l2d
+ .ltorg
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++function __aeabi_f2d, .m0_conversion_fixed
++#else
+ function __aeabi_f2d
++#endif
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++ // R1 becomes 0x38000000 or 0xb8000000 without a literal load.
++ // For a negative input ASR gives -1: (-16+7)<<27 = 0xb8000000.
++ lsls r2,r0,#1
++ lsrs r3,r2,#24
++ subs r3,#1
++ cmp r3,#253
++ bhi .Lf2d_slow
++ asrs r1,r0,#31
++ lsls r1,#4
++ adds r1,#7
++ lsls r1,#27
++ lsrs r2,#4
++ adds r1,r2
++ lsls r0,#29
++ bx lr
++#else
+  asrs r1,r0,#31
+  lsls r1,#31
+  lsls r2,r0,#1
+@@ -196,6 +217,7 @@
+  adds r1,r2
+  lsls r0,#29
+  bx lr
++#endif
+ .Lf2d_slow:
+  push {r4,lr}
+  bl mk61_m0_f2d_slow
+--- a/code/native_eabi_m0_trig_refine.inc
++++ b/code/native_eabi_m0_trig_refine.inc
+@@ -17,7 +17,7 @@
+ __attribute__((always_inline)) inline Refine96 checked_trig_coefficient(unsigned op,unsigned i) {
+   const uint32_t* p=trig94_coefficients[op][i];return {(U(p[1])<<32)|p[0],p[2]};
+ }
+-__attribute__((optimize("Os"),noinline,cold)) static void checked_trig_refine_values(Trig192 r,unsigned mask,Refine96* output,int* scales,uint32_t &error) {
++MK61_M0_TRIG_REFINE_VALUES __attribute__((optimize("Os"),noinline,cold)) static void checked_trig_refine_values(Trig192 r,unsigned mask,Refine96* output,int* scales,uint32_t &error) {
+   const Refine96 one={0,1U<<30};
+   if(r.high<(U(1)<<57)) { // |r| < 1/64
+     int e;const Refine96 relative=checked_trig_relative94(r,e);
+@@ -74,7 +74,7 @@
+ // Compare the unshortened Q94 ratio with its nearest binary64 midpoint.
+ // Keeping the discarded numerator/denominator limbs avoids a second
+ // rounding ambiguity in the 63-bit division, especially close to poles.
+-__attribute__((optimize("Os"),noinline,cold)) static bool checked_trig_ratio_midpoint(
++MK61_M0_TRIG_CACHE(ratio) __attribute__((optimize("Os"),noinline,cold)) static bool checked_trig_ratio_midpoint(
+     Refine96 numerator,Refine96 denominator,unsigned shift,U midpoint,
+     uint32_t error,bool &above) {
+   const Product p=multiply(denominator.low,midpoint);
+@@ -100,7 +100,7 @@
+ __attribute__((optimize("Os"),noinline,cold)) static double checked_trig_backend(double x,unsigned op) {
+   return op==0?mk61_m0_cr_sin(x):op==1?mk61_m0_cr_cos(x):mk61_m0_cr_tan(x);
+ }
+-__attribute__((optimize("Os"),noinline,cold)) static double checked_trig_refine(double x,unsigned op) {
++MK61_M0_TRIG_REFINE __attribute__((optimize("Os"),noinline,cold)) static double checked_trig_refine(double x,unsigned op) {
+   const U b=bits(x),m=b&D::Magnitude;uint32_t n=0;bool negative=false;
+   Trig192 r;
+   if(m<=UINT64_C(0x3FE921FB54442D18)) r=checked_trig_input191(m);
+--- a/ports/picocalc/m0_math_extension.ld
++++ b/ports/picocalc/m0_math_extension.ld
+@@ -4,6 +4,26 @@
+  * Both code and tables execute/read directly from flash, with no RAM copy.
+  */
+ SECTIONS {
++    /* Existing numerical bodies and constants retain their V75 cache indices. */
++    .m0_math_cold_text 0x100e17c0 : {
++        *compact_math.cpp.o*(.text*)
++        *native_eabi_m0.cpp.o*(.text*)
++        *native_eabi_m0_cr.cpp.o*(.text*)
++        *native_eabi_m0.S.o*(.text*)
++        *native_eabi_m0_rp2040.S.o*(.text*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    .m0_math_cold_data 0x100fa070 : {
++        *native_eabi_m0.cpp.o*(.rodata*)
++        *native_eabi_m0_cr.cpp.o*(.rodata*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(LOADADDR(.data) + SIZEOF(.data) <= ADDR(.m0_math_cold_text),
++           "Platform firmware overlaps fixed math code")
++    ASSERT(ADDR(.m0_math_cold_text) + SIZEOF(.m0_math_cold_text) <= ADDR(.m0_math_cold_data),
++           "Fixed math code overlaps existing constants")
++    ASSERT(ADDR(.m0_math_cold_data) + SIZEOF(.m0_math_cold_data) <= 0x10140000,
++           "Fixed math constants overlap math hot sections")
+     .m0_math_extension 0x10140000 : {
+         *(.m0_math_extension)
+         *(.m0_math_extension_data)
+@@ -12,6 +32,34 @@
+     /* Keep these leaf product helpers disjoint from the fixed log10
+      * hot path in cache index space. Grouping the unchanged bodies also
+      * decouples their placement from future platform text growth. */
++    /* Stable indices for the rare tangent refinement, independent of platform text growth. */
++    .m0_trig_refine_fixed 0x10149a24 : {
++        *(.m0_trig_refine_values_fixed)
++        . = ALIGN(4);
++        *(.m0_trig_refine_fixed)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_math_extension) + SIZEOF(.m0_math_extension) <= ADDR(.m0_trig_refine_fixed),
++           "Math tables overlap stable tangent refinement")
++    ASSERT(ADDR(.m0_trig_refine_fixed) + SIZEOF(.m0_trig_refine_fixed) <= 0x1014d800,
++           "Stable tangent refinement overlaps log product helpers")
++    /* Preserve the successful old indices of the shared tangent helpers.
++     * One output section lets the linker append long-call veneers after
++     * the last helper without moving the following function entries. */
++    .m0_trig_support_fixed 0x1014d050 : {
++        *(.m0_trig_cache_ratio)
++        . = 0x3e6;
++        *(.m0_trig_cache_clz32)
++        . = 0x428;
++        *(.m0_trig_cache_clz64)
++        . = 0x47c;
++        *(.m0_trig_cache_low_product)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_trig_refine_fixed) + SIZEOF(.m0_trig_refine_fixed) <= ADDR(.m0_trig_support_fixed),
++           "Tangent refinement overlaps support functions")
++    ASSERT(ADDR(.m0_trig_support_fixed) + SIZEOF(.m0_trig_support_fixed) <= 0x1014d800,
++           "Tangent support overlaps log product helpers")
+     .m0_log_product_extension 0x1014d800 : {
+         *(.m0_log_product_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+@@ -36,6 +84,20 @@
+         *(.m0_asin_refine_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
++    .m0_trig_mulq62_fixed 0x1015a6f8 : {
++        *(.m0_trig_cache_mulq62)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    .m0_trig_ratio_fixed 0x1015d686 : {
++        *(.m0_trig_cache_atan_ratio)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_asin_refine_extension) + SIZEOF(.m0_asin_refine_extension) <= ADDR(.m0_trig_mulq62_fixed),
++           "Asin refinement overlaps shared multiplication")
++    ASSERT(ADDR(.m0_trig_mulq62_fixed) + SIZEOF(.m0_trig_mulq62_fixed) <= ADDR(.m0_trig_ratio_fixed),
++           "Shared multiplication overlaps tangent quotient")
++    ASSERT(ADDR(.m0_trig_ratio_fixed) + SIZEOF(.m0_trig_ratio_fixed) <= 0x10160000,
++           "Tangent quotient overlaps pow")
+     .m0_pow_extension 0x10160000 : {
+         *(.m0_pow_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+@@ -53,6 +115,20 @@
+         *(.m0_pow_refine_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
++    .m0_conversion_fixed 0x1016b99c : {
++        *(.m0_conversion_fixed.*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    .m0_sqrt64_fixed 0x1016bb00 : {
++        *(.m0_sqrt64_fixed.*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_pow_refine_extension) + SIZEOF(.m0_pow_refine_extension) <= ADDR(.m0_conversion_fixed),
++           "Pow refinement overlaps stable conversion")
++    ASSERT(ADDR(.m0_conversion_fixed) + SIZEOF(.m0_conversion_fixed) <= ADDR(.m0_sqrt64_fixed),
++           "Stable conversion overlaps square root")
++    ASSERT(ADDR(.m0_sqrt64_fixed) + SIZEOF(.m0_sqrt64_fixed) <= 0x10170000,
++           "Stable square root overlaps trig core")
+     /* Keep the shared argument/dispatcher below cache offset0xa00.
+      * Sin/cos then use the rest of this single8KiB index span. Tan
+      * instead uses its own code at offset0xa00, disjoint from the shared
+--- a/ports/picocalc/CMakeLists.txt
++++ b/ports/picocalc/CMakeLists.txt
+@@ -157,6 +157,16 @@
+     MK61_MEMMAP "${MK61_MEMMAP}")
+ string(APPEND MK61_MEMMAP "\nASSERT(__lcd_dma_end__ <= __StackOneBottom, \"LCD DMA buffers overlap core 1 stack\")\n")
+ string(APPEND MK61_MEMMAP "\nASSERT(__scratch_y_end__ <= __StackBottom, \"M0 scratch code overlaps core 0 stack\")\n")
++# Keep existing math code/data in dedicated flash sections. Exclude them
++# from both the flash catch-all and the SDK's remaining-text RAM catch-all.
++set(MK61_MATH_COLD_OBJECTS "*compact_math.cpp.o* *native_eabi_m0.cpp.o* *native_eabi_m0_cr.cpp.o* *native_eabi_m0.S.o* *native_eabi_m0_rp2040.S.o*")
++string(REPLACE "EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a:)"
++    "EXCLUDE_FILE(*libgcc.a: *libc.a:*lib_a-mem*.o *libm.a: ${MK61_MATH_COLD_OBJECTS})"
++    MK61_MEMMAP "${MK61_MEMMAP}")
++string(REPLACE "*(.text*)" "*(EXCLUDE_FILE(${MK61_MATH_COLD_OBJECTS}) .text*)"
++    MK61_MEMMAP "${MK61_MEMMAP}")
++string(REPLACE "*(.rodata*)" "*(EXCLUDE_FILE(${MK61_MATH_COLD_OBJECTS}) .rodata*)"
++    MK61_MEMMAP "${MK61_MEMMAP}")
+ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld" "${MK61_MEMMAP}")
+ pico_set_linker_script(mk61s-picocalc-pico-h "${CMAKE_CURRENT_BINARY_DIR}/picocalc-memmap.ld")
+ pico_add_extra_outputs(mk61s-picocalc-pico-h)

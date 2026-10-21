@@ -1,0 +1,5788 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T20:31:14.320779+00:00",
+  "status": "PASS_OFFLINE_STABLE_ARENA_PLATFORM_ACCEPTANCE_PENDING",
+  "previous_goal_turn": "PROGRESS_V75_HELPERS_AND_SQRT_OFFLINE_QUALIFIED",
+  "current_goal_turn": "PROGRESS_REBASED_IMMUTABLE_PLATFORM_AND_FIXED_ALL_OWNED_COLD_MATH_PLACEMENT",
+  "production_elf": {
+    "path": ".build/m0-stable-arena-v77-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6"
+  },
+  "manifest": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.16",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537008,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 198856,
+    "static_ram_data_bss_bytes": 158160,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074048,
+    "bin_sha256": "c265f678bcd8b6349b1ed7a056ed37d46eb14e133ee06502505226bfa6eed337",
+    "uf2_sha256": "fbbfbbaed0f1abe02412b492f5d8a0804555bc26eaa3bf15a7bb41552100e4f6",
+    "hardware_verified": false,
+    "source_sha256": "ea5813c6366c64d9cae4fae138fffe363fdf0232e6e661c2a8ed9501bb639490",
+    "build_id": "f6130a30",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537008,
+      "footer_offset": 572032,
+      "profile_id": "50434831",
+      "crc32": "2739d71d"
+    }
+  },
+  "platform_snapshot": {
+    "path": ".build/picocalc-render-i2c-sd-20261021/offline-rebase-7aea549e",
+    "manifest_sha256": "e5b67f5af6dcecf91323f747ddbfb55d49b1909196d66a18feb63909fcfbe693",
+    "elf_sha256": "a46497f2414108478d488f2e6a27d76c61a30f4bda37eca045aaf96a061672ca",
+    "source_sha256": "3bfc198d721e918faa8dfa78adf0cfb80f62fb9b85d3880f6e6d4e57d74e0121",
+    "acceptance": "NOT_ACCEPTED_OFFLINE_SNAPSHOT"
+  },
+  "platform_acceptance": "NOT_ACCEPTED",
+  "source_identity": {
+    "path": ".build/m0-stable-arena-v77-20261021/source-integration.json",
+    "sha256": "2452860f64afe36e94318b993f3597a273bdfdfaa7395866116c3eec695e2cc6"
+  },
+  "math_files_sha256": {
+    "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+    "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+    "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+    "code/native_eabi_m0.S": "9af2811c276782afa06d3f7e4225636f65127830343616fac9f136c841008ece",
+    "code/native_eabi_m0.cpp": "3d50eb7e09109e65782af3e7bae877d7d2daf150c5a5b80a05a15804ba4258b3",
+    "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+    "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+    "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+    "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+    "code/native_eabi_m0_atan_refine.inc": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1",
+    "code/native_eabi_m0_convert.inc": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3",
+    "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+    "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+    "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+    "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+    "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+    "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+    "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+    "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+    "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+    "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+    "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+    "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+    "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+    "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+    "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+    "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+    "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+    "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+    "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+    "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+    "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+    "code/native_eabi_m0_trig_refine.inc": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f",
+    "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+    "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+    "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+    "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+    "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+    "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+    "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+    "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+    "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+  },
+  "unchanged_platform_files": 553,
+  "arena_preparation": {
+    "status": "PREPARED_NOT_LINKED",
+    "platform_build": "7aea549e",
+    "reference_math": "V75",
+    "layout": {
+      ".text": {
+        "old_start": 268761024,
+        "span": 92300,
+        "input_bytes": 92264,
+        "order": [
+          "compact_math.cpp.o",
+          "native_eabi_m0.cpp.o",
+          "native_eabi_m0_cr.cpp.o",
+          "native_eabi_m0.S.o",
+          "native_eabi_m0_rp2040.S.o"
+        ],
+        "inputs": [
+          {
+            "address": 268761024,
+            "bytes": 12,
+            "section": ".text._ZN12compact_math3sinEd",
+            "file": "compact_math.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268761036,
+            "bytes": 12,
+            "section": ".text._ZN12compact_math3cosEd",
+            "file": "compact_math.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268761048,
+            "bytes": 12,
+            "section": ".text._ZN12compact_math3tanEd",
+            "file": "compact_math.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268761060,
+            "bytes": 138,
+            "section": ".text.unlikely.checked_trig_tan_sixth",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268761198,
+            "bytes": 28,
+            "section": ".text.unlikely.checked_trig_backend",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268761228,
+            "bytes": 884,
+            "section": ".text.unlikely.atan_inverse_correction.constprop.0",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268762112,
+            "bytes": 62,
+            "section": ".text._ZN7m0_eabi3jamEyj",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268762174,
+            "bytes": 524,
+            "section": ".text.atan_fast_reciprocal",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268762698,
+            "bytes": 64,
+            "section": ".text.atan_fast_ratio",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268762764,
+            "bytes": 6476,
+            "section": ".text.unlikely.ln_refine",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268769240,
+            "bytes": 1252,
+            "section": ".text.ln_near_one",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268770492,
+            "bytes": 912,
+            "section": ".text.ln_near_interval",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268771404,
+            "bytes": 2820,
+            "section": ".text.unlikely.atan_refine",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268774224,
+            "bytes": 1744,
+            "section": ".text.atan_fast",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268775968,
+            "bytes": 544,
+            "section": ".text.unlikely.checked_trig_tan_midpoint.isra.0",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268776512,
+            "bytes": 688,
+            "section": ".text._ZN7m0_eabi19divide_significandsEyyRy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268777200,
+            "bytes": 1264,
+            "section": ".text.mk61_m0_atan_reduced",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268778464,
+            "bytes": 1272,
+            "section": ".text.mk61_m0_ln",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268779736,
+            "bytes": 876,
+            "section": ".text.mk61_m0_atan",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268780612,
+            "bytes": 8,
+            "section": ".text.__aeabi_lmul",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268780620,
+            "bytes": 70,
+            "section": ".text.mk61_m0_udiv32",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268780692,
+            "bytes": 64,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268780756,
+            "bytes": 128,
+            "section": ".text.mk61_m0_sqrt_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268780884,
+            "bytes": 152,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268781036,
+            "bytes": 1316,
+            "section": ".text._ZN7m0_eabi5fusedEyyy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782352,
+            "bytes": 18,
+            "section": ".text.mk61_m0_fma",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782370,
+            "bytes": 60,
+            "section": ".text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782432,
+            "bytes": 84,
+            "section": ".text._ZN7m0_eabi6extendEy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782516,
+            "bytes": 10,
+            "section": ".text.mk61_m0_f2d_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782526,
+            "bytes": 154,
+            "section": ".text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782680,
+            "bytes": 116,
+            "section": ".text._ZN7m0_eabi6narrowEy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782796,
+            "bytes": 8,
+            "section": ".text.mk61_m0_d2f_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268782804,
+            "bytes": 368,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268783172,
+            "bytes": 8,
+            "section": ".text.mk61_m0_dadd_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268783180,
+            "bytes": 480,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268783660,
+            "bytes": 8,
+            "section": ".text.mk61_m0_dmul_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268783668,
+            "bytes": 328,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268783996,
+            "bytes": 8,
+            "section": ".text.mk61_m0_ddiv_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784004,
+            "bytes": 88,
+            "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784092,
+            "bytes": 26,
+            "section": ".text.__aeabi_d2uiz",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784118,
+            "bytes": 24,
+            "section": ".text.mk61_m0_d2ulz_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784142,
+            "bytes": 32,
+            "section": ".text.mk61_m0_d2lz_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784176,
+            "bytes": 48,
+            "section": ".text.mk61_m0_d2iz_slow",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784224,
+            "bytes": 216,
+            "section": ".text.unlikely._ZN8core_sinL12cmp_dint_absEPKN14core_m0_shared4TrigES3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784440,
+            "bytes": 30,
+            "section": ".text.unlikely._ZN8core_sinL7cp_dintEPN14core_m0_shared4TrigEPKS1_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784472,
+            "bytes": 484,
+            "section": ".text.unlikely._ZN8core_sinL8dint_todEPN14core_m0_shared4TrigE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268784956,
+            "bytes": 176,
+            "section": ".text.unlikely._ZN9core_asinL16as_asin_databaseEdd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785132,
+            "bytes": 34,
+            "section": ".text._ZN8core_logL7cp_dintEPN14core_m0_shared3LogEPKS1_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785166,
+            "bytes": 100,
+            "section": ".text._ZN8core_logL8cmp_dintEPKN14core_m0_shared3LogES3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785268,
+            "bytes": 164,
+            "section": ".text._ZN8core_logL8dint_todEPN14core_m0_shared3LogE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785432,
+            "bytes": 30,
+            "section": ".text._ZN8core_powL7cp_dintEPNS_8dint64_tEPKS0_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785462,
+            "bytes": 44,
+            "section": ".text._ZN8core_powL7cp_qintEPNS_8qint64_tEPKS0_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785508,
+            "bytes": 208,
+            "section": ".text.unlikely._ZN8core_expL15as_exp_databaseEdd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785716,
+            "bytes": 72,
+            "section": ".text._ZN8core_sinL5a_mulEPdS0_dd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785788,
+            "bytes": 68,
+            "section": ".text._ZN8core_sinL5d_mulEPdS0_dddd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785856,
+            "bytes": 50,
+            "section": ".text._ZN8core_sinL5s_mulEPdS0_ddd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268785908,
+            "bytes": 224,
+            "section": ".text._ZN8core_sinL10evalPSfastEPdS0_dddd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268786132,
+            "bytes": 188,
+            "section": ".text._ZN8core_sinL10evalPCfastEPdS0_dd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268786320,
+            "bytes": 158,
+            "section": ".text.unlikely._ZN9core_atanL9muldd_accEddddPd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268786480,
+            "bytes": 416,
+            "section": ".text._ZN8core_sinL6set_ddEPdS0_yy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268786896,
+            "bytes": 144,
+            "section": ".text.unlikely._ZN8core_sinL10dint_fromdEPN14core_m0_shared4TrigEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268787040,
+            "bytes": 154,
+            "section": ".text.unlikely._ZN8core_sinL9normalizeEPN14core_m0_shared4TrigE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268787194,
+            "bytes": 200,
+            "section": ".text._ZN8core_powL12cmp_dint_absEPKNS_8dint64_tES2_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268787396,
+            "bytes": 1632,
+            "section": ".text.unlikely._ZN9core_atanL15as_atan_refine2Edd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268789028,
+            "bytes": 44,
+            "section": ".text._Z14mk61_m0_wide32mm",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268789072,
+            "bytes": 174,
+            "section": ".text._Zml15mk61_m0_uint128S_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268789246,
+            "bytes": 502,
+            "section": ".text._ZN8core_logL8mul_dintEPN14core_m0_shared3LogEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268789748,
+            "bytes": 502,
+            "section": ".text._ZN10core_log10L8mul_dintEPN14core_m0_shared3LogEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268790250,
+            "bytes": 1436,
+            "section": ".text._ZN8core_powL8mul_qintEPNS_8qint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268791686,
+            "bytes": 680,
+            "section": ".text._ZN8core_powL11mul_qint_41EPNS_8qint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268792368,
+            "bytes": 1244,
+            "section": ".text.unlikely._ZN8core_sinL6reduceEPN14core_m0_shared4TrigE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268793612,
+            "bytes": 756,
+            "section": ".text._ZN8core_powL10mul_qint_2EPNS_8qint64_tExPKS0_.constprop.0",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268794368,
+            "bytes": 276,
+            "section": ".text._Z10core_rounddi",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268794644,
+            "bytes": 872,
+            "section": ".text._ZN8core_sinL11reduce_fastEPdS0_dS0_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268795516,
+            "bytes": 26,
+            "section": ".text._Z10core_ctzlly",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268795544,
+            "bytes": 128,
+            "section": ".text._ZN9core_asinL16roundeven_finiteEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268795672,
+            "bytes": 1996,
+            "section": ".text.unlikely._ZN9core_acosL14as_acos_refineEdd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268797668,
+            "bytes": 1344,
+            "section": ".text.unlikely._ZN8core_expL15as_exp_accurateEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268799012,
+            "bytes": 24,
+            "section": ".text._ZN8core_powL6is_intEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268799036,
+            "bytes": 1628,
+            "section": ".text.unlikely._ZN9core_asinL14as_asin_refineEdd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268800664,
+            "bytes": 148,
+            "section": ".text._ZlsIiLi0EE15mk61_m0_uint128S0_T_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268800812,
+            "bytes": 516,
+            "section": ".text._ZN8core_powL14mul_dint_int64EPNS_8dint64_tEPKS0_x.constprop.0",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268801328,
+            "bytes": 1044,
+            "section": ".text._ZN9core_atan7cr_atanEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268802372,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_atan",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268802380,
+            "bytes": 944,
+            "section": ".text._ZN9core_asin7cr_asinEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268803324,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_asin",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268803332,
+            "bytes": 1136,
+            "section": ".text._ZN9core_acos7cr_acosEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268804468,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_acos",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268804476,
+            "bytes": 852,
+            "section": ".text._ZN8core_exp6cr_expEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268805328,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_exp",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268805336,
+            "bytes": 144,
+            "section": ".text._ZrsIyLi0EE15mk61_m0_uint128S0_T_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268805480,
+            "bytes": 136,
+            "section": ".text._ZrsIiLi0EE15mk61_m0_uint128S0_T_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268805616,
+            "bytes": 156,
+            "section": ".text._ZlsIyLi0EE15mk61_m0_uint128S0_T_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268805772,
+            "bytes": 1012,
+            "section": ".text.unlikely._ZN8core_sinL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268806784,
+            "bytes": 1012,
+            "section": ".text.unlikely._ZN8core_cosL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268807796,
+            "bytes": 1012,
+            "section": ".text._ZN8core_tanL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268808808,
+            "bytes": 1012,
+            "section": ".text._ZN8core_powL8add_dintEPNS_8dint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268809820,
+            "bytes": 1108,
+            "section": ".text._ZN8core_powL11add_qint_22EPNS_8qint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268810928,
+            "bytes": 3084,
+            "section": ".text._ZN8core_powL8add_qintEPNS_8qint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268814012,
+            "bytes": 280,
+            "section": ".text.unlikely._ZN8core_sinL11mul_dint_21EPN14core_m0_shared4TrigEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268814292,
+            "bytes": 408,
+            "section": ".text.unlikely._ZN8core_sinL8mul_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268814700,
+            "bytes": 1748,
+            "section": ".text._ZN8core_cos6cr_cosEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268816448,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_cos",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268816456,
+            "bytes": 796,
+            "section": ".text._ZN8core_tanL8inv_dintEPN14core_m0_shared4TrigES2_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268817252,
+            "bytes": 908,
+            "section": ".text._ZN8core_tanL12tan_accurateEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268818160,
+            "bytes": 2268,
+            "section": ".text._ZN8core_tan6cr_tanEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268820428,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_tan",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268820436,
+            "bytes": 1804,
+            "section": ".text._ZN8core_sin6cr_sinEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268822240,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_sin",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268822248,
+            "bytes": 828,
+            "section": ".text._ZN8core_logL8add_dintEPN14core_m0_shared3LogEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268823076,
+            "bytes": 1832,
+            "section": ".text._ZN8core_log6cr_logEd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268824908,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_ln",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268824916,
+            "bytes": 828,
+            "section": ".text._ZN10core_log10L8add_dintEPN14core_m0_shared3LogEPKS1_S4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268825744,
+            "bytes": 1904,
+            "section": ".text._ZN10core_log108cr_log10Ed",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268827648,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_log10",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268827656,
+            "bytes": 174,
+            "section": ".text._ZN8core_powL11mul_dint_11EPNS_8dint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268827832,
+            "bytes": 572,
+            "section": ".text._ZN8core_powL11add_dint_11EPNS_8dint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268828404,
+            "bytes": 270,
+            "section": ".text._ZN8core_powL11mul_dint_21EPNS_8dint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268828674,
+            "bytes": 398,
+            "section": ".text._ZN8core_powL8mul_dintEPNS_8dint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829072,
+            "bytes": 182,
+            "section": ".text._ZN8core_powL11mul_qint_11EPNS_8qint64_tEPKS0_S3_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829256,
+            "bytes": 96,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE9normalizeEyRyRi",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829352,
+            "bytes": 128,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE5timesERKNS1_1BEy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829480,
+            "bytes": 48,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE3addERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829528,
+            "bytes": 34,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE7compareERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829562,
+            "bytes": 62,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE8subtractERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829624,
+            "bytes": 108,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE9shifted64ERKNS1_1BEj",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829732,
+            "bytes": 54,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE10differenceERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829788,
+            "bytes": 96,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9normalizeEyRyRi",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268829884,
+            "bytes": 128,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE5timesERKNS1_1BEy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830012,
+            "bytes": 48,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE3addERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830060,
+            "bytes": 34,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7compareERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830094,
+            "bytes": 62,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE8subtractERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830156,
+            "bytes": 108,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9shifted64ERKNS1_1BEj",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830264,
+            "bytes": 54,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE10differenceERKNS1_1BES4_",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830318,
+            "bytes": 44,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE12word_productEmm",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830362,
+            "bytes": 40,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE9incrementERKNS1_1BE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830402,
+            "bytes": 172,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE7productERKNS1_1BES4_b",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830576,
+            "bytes": 100,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE6divideERKNS1_1BEmb",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268830676,
+            "bytes": 432,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE12log_mantissaEy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268831108,
+            "bytes": 340,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE12exp_endpointERKNS1_1SE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268831448,
+            "bytes": 70,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE9any_belowERKNS1_1BEj",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268831518,
+            "bytes": 238,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE5shiftERKNS1_1BEib",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268831756,
+            "bytes": 204,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE7roundedERKNS1_1BEi",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268831960,
+            "bytes": 836,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE14exact_boundaryEyyRy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268832796,
+            "bytes": 1048,
+            "section": ".text._ZN15m0_pow_interval5FixedILj512EE8evaluateEyyRy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268833844,
+            "bytes": 44,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12word_productEmm",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268833888,
+            "bytes": 40,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9incrementERKNS1_1BE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268833928,
+            "bytes": 174,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7productERKNS1_1BES4_b",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268834104,
+            "bytes": 100,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE6divideERKNS1_1BEmb",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268834204,
+            "bytes": 488,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12log_mantissaEy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268834692,
+            "bytes": 368,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12exp_endpointERKNS1_1SE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268835060,
+            "bytes": 70,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9any_belowERKNS1_1BEj",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268835130,
+            "bytes": 238,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE5shiftERKNS1_1BEib",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268835368,
+            "bytes": 200,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7roundedERKNS1_1BEi",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268835568,
+            "bytes": 836,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE14exact_boundaryEyyRy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268836404,
+            "bytes": 1256,
+            "section": ".text._ZN15m0_pow_interval5FixedILj1024EE8evaluateEyyRy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268837660,
+            "bytes": 104,
+            "section": ".text.unlikely.mk61_m0_pow_rescue",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268837764,
+            "bytes": 11844,
+            "section": ".text._ZN8core_pow6cr_powEdd",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268849608,
+            "bytes": 8,
+            "section": ".text.mk61_m0_cr_pow",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 268849616,
+            "bytes": 876,
+            "section": ".text.__aeabi_i2d",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850492,
+            "bytes": 68,
+            "section": ".text.__aeabi_d2f",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850560,
+            "bytes": 52,
+            "section": ".text.__aeabi_dcmpeq",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850612,
+            "bytes": 96,
+            "section": ".text.__aeabi_dcmplt",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850708,
+            "bytes": 96,
+            "section": ".text.__aeabi_dcmple",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850804,
+            "bytes": 96,
+            "section": ".text.__aeabi_dcmpge",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850900,
+            "bytes": 96,
+            "section": ".text.__aeabi_dcmpgt",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268850996,
+            "bytes": 44,
+            "section": ".text.__aeabi_dcmpun",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851040,
+            "bytes": 80,
+            "section": ".text.__aeabi_d2iz",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851120,
+            "bytes": 124,
+            "section": ".text.__aeabi_d2lz",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851244,
+            "bytes": 104,
+            "section": ".text.__aeabi_d2ulz",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851348,
+            "bytes": 204,
+            "section": ".text.mk61_m0_product62",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851552,
+            "bytes": 8,
+            "section": ".text.__aeabi_uidiv",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851560,
+            "bytes": 36,
+            "section": ".text.mk61_m0_math_udiv32",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851596,
+            "bytes": 2,
+            "section": ".text.__aeabi_idiv0",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851598,
+            "bytes": 2,
+            "section": ".text.__aeabi_ldiv0",
+            "file": "native_eabi_m0.S.o",
+            "owned": true
+          },
+          {
+            "address": 268851600,
+            "bytes": 1724,
+            "section": ".text.mk61_rp2040_arithmetic",
+            "file": "native_eabi_m0_rp2040.S.o",
+            "owned": true
+          }
+        ]
+      },
+      ".rodata": {
+        "old_start": 269131888,
+        "span": 220144,
+        "input_bytes": 220134,
+        "order": [
+          "native_eabi_m0.cpp.o",
+          "native_eabi_m0_cr.cpp.o"
+        ],
+        "inputs": [
+          {
+            "address": 269131888,
+            "bytes": 96,
+            "section": ".rodata._ZN7m0_eabiL19trig94_coefficientsE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269131984,
+            "bytes": 25792,
+            "section": ".rodata._ZN7m0_eabiL14trig_tan_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269157776,
+            "bytes": 19344,
+            "section": ".rodata._ZN7m0_eabiL12trig94_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269177120,
+            "bytes": 1024,
+            "section": ".rodata._ZN7m0_eabiL10log70_highE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269178144,
+            "bytes": 8192,
+            "section": ".rodata._ZN7m0_eabiL9log70_lowE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269186336,
+            "bytes": 780,
+            "section": ".rodata._ZN7m0_eabiL17refine_atan_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269187116,
+            "bytes": 24576,
+            "section": ".rodata._ZN7m0_eabiL16refine_log_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269211692,
+            "bytes": 6144,
+            "section": ".rodata._ZN7m0_eabiL16refine_exp_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269217840,
+            "bytes": 4096,
+            "section": ".rodata._ZN7m0_eabiL14log_near_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269221936,
+            "bytes": 24,
+            "section": ".rodata._ZN7m0_eabiL8trig_pi2E",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269221960,
+            "bytes": 4096,
+            "section": ".rodata._ZN7m0_eabiL9exp_tableE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269226056,
+            "bytes": 256,
+            "section": ".rodata._ZN7m0_eabiL16reciprocal_seedsE",
+            "file": "native_eabi_m0.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269226312,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_pow6cr_powEddE3err",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269226328,
+            "bytes": 272,
+            "section": ".rodata._ZZN8core_powL8is_exactEddE4xmax",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269226600,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_powL5log_1EPdS0_dE2cm",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269226616,
+            "bytes": 1024,
+            "section": ".rodata._ZN8core_powL2T2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269227640,
+            "bytes": 1024,
+            "section": ".rodata._ZN8core_powL2T1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269228664,
+            "bytes": 2912,
+            "section": ".rodata._ZN8core_powL8_LOG_INVE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269231576,
+            "bytes": 1456,
+            "section": ".rodata._ZN8core_powL8_INVERSEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269233032,
+            "bytes": 720,
+            "section": ".rodata._ZN8core_powL3Q_3E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269233752,
+            "bytes": 864,
+            "section": ".rodata._ZN8core_powL3P_3E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269234616,
+            "bytes": 3072,
+            "section": ".rodata._ZN8core_powL4T2_3E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269237688,
+            "bytes": 3072,
+            "section": ".rodata._ZN8core_powL4T1_3E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269240760,
+            "bytes": 6192,
+            "section": ".rodata._ZN8core_powL12_LOG_INV_3_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269246952,
+            "bytes": 4416,
+            "section": ".rodata._ZN8core_powL12_LOG_INV_3_1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269251368,
+            "bytes": 6192,
+            "section": ".rodata._ZN8core_powL12_INVERSE_3_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269257560,
+            "bytes": 4416,
+            "section": ".rodata._ZN8core_powL12_INVERSE_3_1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269261976,
+            "bytes": 48,
+            "section": ".rodata._ZN8core_powL6ZERO_QE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262024,
+            "bytes": 48,
+            "section": ".rodata._ZN8core_powL10LOG2_INV_QE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262072,
+            "bytes": 48,
+            "section": ".rodata._ZN8core_powL6LOG2_QE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262120,
+            "bytes": 48,
+            "section": ".rodata._ZN8core_powL7M_ONE_QE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262168,
+            "bytes": 256,
+            "section": ".rodata._ZN8core_powL3Q_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262424,
+            "bytes": 288,
+            "section": ".rodata._ZN8core_powL3P_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269262712,
+            "bytes": 2048,
+            "section": ".rodata._ZN8core_powL4T2_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269264760,
+            "bytes": 2048,
+            "section": ".rodata._ZN8core_powL4T1_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269266808,
+            "bytes": 4128,
+            "section": ".rodata._ZN8core_powL12_LOG_INV_2_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269270936,
+            "bytes": 2944,
+            "section": ".rodata._ZN8core_powL12_LOG_INV_2_1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269273880,
+            "bytes": 4128,
+            "section": ".rodata._ZN8core_powL12_INVERSE_2_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269278008,
+            "bytes": 2944,
+            "section": ".rodata._ZN8core_powL12_INVERSE_2_1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269280952,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_powL4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269280984,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_powL8LOG2_INVE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269281016,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_powL5M_ONEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269281048,
+            "bytes": 128,
+            "section": ".rodata._ZN15m0_pow_intervalL8ln2_1024E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269281176,
+            "bytes": 112,
+            "section": ".rodata._ZZN8core_expL15as_exp_accurateEdE2ch",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269281288,
+            "bytes": 1024,
+            "section": ".rodata._ZN8core_expL2t1E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269282312,
+            "bytes": 1024,
+            "section": ".rodata._ZN8core_expL2t0E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269283336,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_expL15as_exp_databaseEddE2s2",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269283352,
+            "bytes": 408,
+            "section": ".rodata._ZN8core_expL2dbE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269283760,
+            "bytes": 256,
+            "section": ".rodata._ZZN10core_log108cr_log10EdE5pow10",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269284016,
+            "bytes": 5808,
+            "section": ".rodata._ZN10core_log10L8_LOG_INVE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269289824,
+            "bytes": 2904,
+            "section": ".rodata._ZN10core_log10L8_INVERSEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292728,
+            "bytes": 32,
+            "section": ".rodata._ZN10core_log10L4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292760,
+            "bytes": 32,
+            "section": ".rodata._ZN10core_log10L14ONE_OVER_LOG10E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292792,
+            "bytes": 32,
+            "section": ".rodata._ZN10core_log10L5M_ONEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292824,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cm",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292840,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cy",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269292856,
+            "bytes": 5808,
+            "section": ".rodata._ZN8core_logL8_LOG_INVE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269298664,
+            "bytes": 2904,
+            "section": ".rodata._ZN8core_logL8_INVERSEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269301568,
+            "bytes": 416,
+            "section": ".rodata._ZN8core_logL3P_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269301984,
+            "bytes": 7680,
+            "section": ".rodata._ZN8core_logL10_LOG_INV_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269309664,
+            "bytes": 7680,
+            "section": ".rodata._ZN8core_logL10_INVERSE_2E",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269317344,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_logL4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269317376,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_logL5M_ONEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269317408,
+            "bytes": 80,
+            "section": ".rodata._ZZN9core_acosL14as_acos_refineEddE1c",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269317488,
+            "bytes": 32,
+            "section": ".rodata._ZZN9core_acos7cr_acosEdE3off",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269317520,
+            "bytes": 2112,
+            "section": ".rodata._ZZN9core_acos7cr_acosEdE2cc",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269319632,
+            "bytes": 696,
+            "section": ".rodata._ZZN9core_asinL16as_asin_databaseEddE2db",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269320328,
+            "bytes": 80,
+            "section": ".rodata._ZZN9core_asinL14as_asin_refineEddE1c",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269320408,
+            "bytes": 528,
+            "section": ".rodata._ZZN9core_asinL14as_asin_refineEddE1s",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269320936,
+            "bytes": 32,
+            "section": ".rodata._ZZN9core_asin7cr_asinEdE3off",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269320968,
+            "bytes": 2112,
+            "section": ".rodata._ZZN9core_asin7cr_asinEdE2cc",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269323080,
+            "bytes": 288,
+            "section": ".rodata._ZZN9core_atanL15as_atan_refine2EddE2db",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269323368,
+            "bytes": 48,
+            "section": ".rodata._ZZN9core_atanL15as_atan_refine2EddE2ch",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269323416,
+            "bytes": 186,
+            "section": ".rodata._ZN9core_atanL1cE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269323608,
+            "bytes": 2064,
+            "section": ".rodata._ZN9core_atanL1AE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269325672,
+            "bytes": 48,
+            "section": ".rodata._ZZN8core_tanL12tan_accurateEdE10exceptions",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269325720,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_tanL2PCE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269325912,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_tanL2PSE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269326104,
+            "bytes": 2048,
+            "section": ".rodata._ZN8core_tanL4TinvE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328152,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_tanL5MAGICE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328184,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_tanL3ONEE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328216,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_tanL4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328248,
+            "bytes": 120,
+            "section": ".rodata._ZZN8core_cosL12cos_accurateEdE10exceptions",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328368,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_cosL2PCE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328560,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_cosL2PSE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328752,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_cosL5MAGICE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328784,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_cosL4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328816,
+            "bytes": 48,
+            "section": ".rodata._ZZN8core_sinL12sin_accurateEdE10exceptions",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328864,
+            "bytes": 16,
+            "section": ".rodata._ZZN8core_sinL8sin_fastEPdS0_dE3sgn",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269328880,
+            "bytes": 6144,
+            "section": ".rodata._ZN8core_sinL2SCE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269335024,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_sinL2PCE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269335216,
+            "bytes": 192,
+            "section": ".rodata._ZN8core_sinL2PSE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269335408,
+            "bytes": 8192,
+            "section": ".rodata._ZN8core_sinL1CE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269343600,
+            "bytes": 8192,
+            "section": ".rodata._ZN8core_sinL1SE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269351792,
+            "bytes": 160,
+            "section": ".rodata._ZN8core_sinL1TE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269351952,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_sinL5MAGICE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269351984,
+            "bytes": 32,
+            "section": ".rodata._ZN8core_sinL4ZEROE",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          },
+          {
+            "address": 269352016,
+            "bytes": 16,
+            "section": ".rodata",
+            "file": "native_eabi_m0_cr.cpp.o",
+            "owned": true
+          }
+        ]
+      }
+    },
+    "text_address": "0x100e17c0",
+    "data_address": "0x100fa070",
+    "cmake_before_sha256": "e8512c6eabba4bb5543fdda5d071be4494c27bb49320ae81c49dabfeb7e191a4",
+    "cmake_after_sha256": "24919466dd5b1288609cd72d6e9761e0c1099a5238e0b0695c6376f72043f973",
+    "linker_before_sha256": "8bcbaaf287f83314c312291af4c80b00cab7e9cd51a6f4c0039bacf32f8ea30e",
+    "linker_after_sha256": "2bcae537c0d480ffd54008bd0abc6a8bcc0ff67ed0dcffcf625353aa7ac1aa31",
+    "math_source_changes": false,
+    "new_tables": 0,
+    "root_changed": false,
+    "usb_opened": false,
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "arena_validation": {
+    "status": "PASS_OWNED_COLD_CACHE_INDICES_PRESERVED",
+    "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+    "checked_input_sections": 274,
+    "inputs": [
+      {
+        "file": "compact_math.cpp.o",
+        "section": ".text._ZN12compact_math3sinEd",
+        "bytes": 12,
+        "reference_address": "0x1004f7c0",
+        "address": "0x100e17c0",
+        "cache_index": "0x17c0"
+      },
+      {
+        "file": "compact_math.cpp.o",
+        "section": ".text._ZN12compact_math3cosEd",
+        "bytes": 12,
+        "reference_address": "0x1004f7cc",
+        "address": "0x100e17cc",
+        "cache_index": "0x17cc"
+      },
+      {
+        "file": "compact_math.cpp.o",
+        "section": ".text._ZN12compact_math3tanEd",
+        "bytes": 12,
+        "reference_address": "0x1004f7d8",
+        "address": "0x100e17d8",
+        "cache_index": "0x17d8"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.checked_trig_tan_sixth",
+        "bytes": 138,
+        "reference_address": "0x1004f7e4",
+        "address": "0x100e17e4",
+        "cache_index": "0x17e4"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.checked_trig_backend",
+        "bytes": 28,
+        "reference_address": "0x1004f86e",
+        "address": "0x100e186e",
+        "cache_index": "0x186e"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.atan_inverse_correction.constprop.0",
+        "bytes": 884,
+        "reference_address": "0x1004f88c",
+        "address": "0x100e188c",
+        "cache_index": "0x188c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi3jamEyj",
+        "bytes": 62,
+        "reference_address": "0x1004fc00",
+        "address": "0x100e1c00",
+        "cache_index": "0x1c00"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.atan_fast_reciprocal",
+        "bytes": 524,
+        "reference_address": "0x1004fc3e",
+        "address": "0x100e1c3e",
+        "cache_index": "0x1c3e"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.atan_fast_ratio",
+        "bytes": 64,
+        "reference_address": "0x1004fe4a",
+        "address": "0x100e1e4a",
+        "cache_index": "0x1e4a"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.ln_refine",
+        "bytes": 6476,
+        "reference_address": "0x1004fe8c",
+        "address": "0x100e1e8c",
+        "cache_index": "0x1e8c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.ln_near_one",
+        "bytes": 1252,
+        "reference_address": "0x100517d8",
+        "address": "0x100e37d8",
+        "cache_index": "0x17d8"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.ln_near_interval",
+        "bytes": 912,
+        "reference_address": "0x10051cbc",
+        "address": "0x100e3cbc",
+        "cache_index": "0x1cbc"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.atan_refine",
+        "bytes": 2820,
+        "reference_address": "0x1005204c",
+        "address": "0x100e404c",
+        "cache_index": "0x4c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.atan_fast",
+        "bytes": 1744,
+        "reference_address": "0x10052b50",
+        "address": "0x100e4b50",
+        "cache_index": "0xb50"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.unlikely.checked_trig_tan_midpoint.isra.0",
+        "bytes": 544,
+        "reference_address": "0x10053220",
+        "address": "0x100e5220",
+        "cache_index": "0x1220"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi19divide_significandsEyyRy",
+        "bytes": 688,
+        "reference_address": "0x10053440",
+        "address": "0x100e5440",
+        "cache_index": "0x1440"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_atan_reduced",
+        "bytes": 1264,
+        "reference_address": "0x100536f0",
+        "address": "0x100e56f0",
+        "cache_index": "0x16f0"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_ln",
+        "bytes": 1272,
+        "reference_address": "0x10053be0",
+        "address": "0x100e5be0",
+        "cache_index": "0x1be0"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_atan",
+        "bytes": 876,
+        "reference_address": "0x100540d8",
+        "address": "0x100e60d8",
+        "cache_index": "0xd8"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.__aeabi_lmul",
+        "bytes": 8,
+        "reference_address": "0x10054444",
+        "address": "0x100e6444",
+        "cache_index": "0x444"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_udiv32",
+        "bytes": 70,
+        "reference_address": "0x1005444c",
+        "address": "0x100e644c",
+        "cache_index": "0x44c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE9normalizeEyRi",
+        "bytes": 64,
+        "reference_address": "0x10054494",
+        "address": "0x100e6494",
+        "cache_index": "0x494"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_sqrt_slow",
+        "bytes": 128,
+        "reference_address": "0x100544d4",
+        "address": "0x100e64d4",
+        "cache_index": "0x4d4"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE4packEyiy",
+        "bytes": 152,
+        "reference_address": "0x10054554",
+        "address": "0x100e6554",
+        "cache_index": "0x554"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi5fusedEyyy",
+        "bytes": 1316,
+        "reference_address": "0x100545ec",
+        "address": "0x100e65ec",
+        "cache_index": "0x5ec"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_fma",
+        "bytes": 18,
+        "reference_address": "0x10054b10",
+        "address": "0x100e6b10",
+        "cache_index": "0xb10"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj23ELj8EE9normalizeEyRi",
+        "bytes": 60,
+        "reference_address": "0x10054b22",
+        "address": "0x100e6b22",
+        "cache_index": "0xb22"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6extendEy",
+        "bytes": 84,
+        "reference_address": "0x10054b60",
+        "address": "0x100e6b60",
+        "cache_index": "0xb60"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_f2d_slow",
+        "bytes": 10,
+        "reference_address": "0x10054bb4",
+        "address": "0x100e6bb4",
+        "cache_index": "0xbb4"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj23ELj8EE4packEyiy",
+        "bytes": 154,
+        "reference_address": "0x10054bbe",
+        "address": "0x100e6bbe",
+        "cache_index": "0xbbe"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6narrowEy",
+        "bytes": 116,
+        "reference_address": "0x10054c58",
+        "address": "0x100e6c58",
+        "cache_index": "0xc58"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_d2f_slow",
+        "bytes": 8,
+        "reference_address": "0x10054ccc",
+        "address": "0x100e6ccc",
+        "cache_index": "0xccc"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3addEyy",
+        "bytes": 368,
+        "reference_address": "0x10054cd4",
+        "address": "0x100e6cd4",
+        "cache_index": "0xcd4"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_dadd_slow",
+        "bytes": 8,
+        "reference_address": "0x10054e44",
+        "address": "0x100e6e44",
+        "cache_index": "0xe44"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3mulEyy",
+        "bytes": 480,
+        "reference_address": "0x10054e4c",
+        "address": "0x100e6e4c",
+        "cache_index": "0xe4c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_dmul_slow",
+        "bytes": 8,
+        "reference_address": "0x1005502c",
+        "address": "0x100e702c",
+        "cache_index": "0x102c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE3divEyy",
+        "bytes": 328,
+        "reference_address": "0x10055034",
+        "address": "0x100e7034",
+        "cache_index": "0x1034"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_ddiv_slow",
+        "bytes": 8,
+        "reference_address": "0x1005517c",
+        "address": "0x100e717c",
+        "cache_index": "0x117c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text._ZN7m0_eabi6BinaryILj52ELj11EE17magnitude_integerEy",
+        "bytes": 88,
+        "reference_address": "0x10055184",
+        "address": "0x100e7184",
+        "cache_index": "0x1184"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.__aeabi_d2uiz",
+        "bytes": 26,
+        "reference_address": "0x100551dc",
+        "address": "0x100e71dc",
+        "cache_index": "0x11dc"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_d2ulz_slow",
+        "bytes": 24,
+        "reference_address": "0x100551f6",
+        "address": "0x100e71f6",
+        "cache_index": "0x11f6"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_d2lz_slow",
+        "bytes": 32,
+        "reference_address": "0x1005520e",
+        "address": "0x100e720e",
+        "cache_index": "0x120e"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".text.mk61_m0_d2iz_slow",
+        "bytes": 48,
+        "reference_address": "0x10055230",
+        "address": "0x100e7230",
+        "cache_index": "0x1230"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL12cmp_dint_absEPKN14core_m0_shared4TrigES3_",
+        "bytes": 216,
+        "reference_address": "0x10055260",
+        "address": "0x100e7260",
+        "cache_index": "0x1260"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL7cp_dintEPN14core_m0_shared4TrigEPKS1_",
+        "bytes": 30,
+        "reference_address": "0x10055338",
+        "address": "0x100e7338",
+        "cache_index": "0x1338"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL8dint_todEPN14core_m0_shared4TrigE",
+        "bytes": 484,
+        "reference_address": "0x10055358",
+        "address": "0x100e7358",
+        "cache_index": "0x1358"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN9core_asinL16as_asin_databaseEdd",
+        "bytes": 176,
+        "reference_address": "0x1005553c",
+        "address": "0x100e753c",
+        "cache_index": "0x153c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_logL7cp_dintEPN14core_m0_shared3LogEPKS1_",
+        "bytes": 34,
+        "reference_address": "0x100555ec",
+        "address": "0x100e75ec",
+        "cache_index": "0x15ec"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_logL8cmp_dintEPKN14core_m0_shared3LogES3_",
+        "bytes": 100,
+        "reference_address": "0x1005560e",
+        "address": "0x100e760e",
+        "cache_index": "0x160e"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_logL8dint_todEPN14core_m0_shared3LogE",
+        "bytes": 164,
+        "reference_address": "0x10055674",
+        "address": "0x100e7674",
+        "cache_index": "0x1674"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL7cp_dintEPNS_8dint64_tEPKS0_",
+        "bytes": 30,
+        "reference_address": "0x10055718",
+        "address": "0x100e7718",
+        "cache_index": "0x1718"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL7cp_qintEPNS_8qint64_tEPKS0_",
+        "bytes": 44,
+        "reference_address": "0x10055736",
+        "address": "0x100e7736",
+        "cache_index": "0x1736"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_expL15as_exp_databaseEdd",
+        "bytes": 208,
+        "reference_address": "0x10055764",
+        "address": "0x100e7764",
+        "cache_index": "0x1764"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL5a_mulEPdS0_dd",
+        "bytes": 72,
+        "reference_address": "0x10055834",
+        "address": "0x100e7834",
+        "cache_index": "0x1834"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL5d_mulEPdS0_dddd",
+        "bytes": 68,
+        "reference_address": "0x1005587c",
+        "address": "0x100e787c",
+        "cache_index": "0x187c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL5s_mulEPdS0_ddd",
+        "bytes": 50,
+        "reference_address": "0x100558c0",
+        "address": "0x100e78c0",
+        "cache_index": "0x18c0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL10evalPSfastEPdS0_dddd",
+        "bytes": 224,
+        "reference_address": "0x100558f4",
+        "address": "0x100e78f4",
+        "cache_index": "0x18f4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL10evalPCfastEPdS0_dd",
+        "bytes": 188,
+        "reference_address": "0x100559d4",
+        "address": "0x100e79d4",
+        "cache_index": "0x19d4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN9core_atanL9muldd_accEddddPd",
+        "bytes": 158,
+        "reference_address": "0x10055a90",
+        "address": "0x100e7a90",
+        "cache_index": "0x1a90"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL6set_ddEPdS0_yy",
+        "bytes": 416,
+        "reference_address": "0x10055b30",
+        "address": "0x100e7b30",
+        "cache_index": "0x1b30"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL10dint_fromdEPN14core_m0_shared4TrigEd",
+        "bytes": 144,
+        "reference_address": "0x10055cd0",
+        "address": "0x100e7cd0",
+        "cache_index": "0x1cd0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL9normalizeEPN14core_m0_shared4TrigE",
+        "bytes": 154,
+        "reference_address": "0x10055d60",
+        "address": "0x100e7d60",
+        "cache_index": "0x1d60"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL12cmp_dint_absEPKNS_8dint64_tES2_",
+        "bytes": 200,
+        "reference_address": "0x10055dfa",
+        "address": "0x100e7dfa",
+        "cache_index": "0x1dfa"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN9core_atanL15as_atan_refine2Edd",
+        "bytes": 1632,
+        "reference_address": "0x10055ec4",
+        "address": "0x100e7ec4",
+        "cache_index": "0x1ec4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._Z14mk61_m0_wide32mm",
+        "bytes": 44,
+        "reference_address": "0x10056524",
+        "address": "0x100e8524",
+        "cache_index": "0x524"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._Zml15mk61_m0_uint128S_",
+        "bytes": 174,
+        "reference_address": "0x10056550",
+        "address": "0x100e8550",
+        "cache_index": "0x550"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_logL8mul_dintEPN14core_m0_shared3LogEPKS1_S4_",
+        "bytes": 502,
+        "reference_address": "0x100565fe",
+        "address": "0x100e85fe",
+        "cache_index": "0x5fe"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN10core_log10L8mul_dintEPN14core_m0_shared3LogEPKS1_S4_",
+        "bytes": 502,
+        "reference_address": "0x100567f4",
+        "address": "0x100e87f4",
+        "cache_index": "0x7f4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL8mul_qintEPNS_8qint64_tEPKS0_S3_",
+        "bytes": 1436,
+        "reference_address": "0x100569ea",
+        "address": "0x100e89ea",
+        "cache_index": "0x9ea"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11mul_qint_41EPNS_8qint64_tEPKS0_S3_",
+        "bytes": 680,
+        "reference_address": "0x10056f86",
+        "address": "0x100e8f86",
+        "cache_index": "0xf86"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL6reduceEPN14core_m0_shared4TrigE",
+        "bytes": 1244,
+        "reference_address": "0x10057230",
+        "address": "0x100e9230",
+        "cache_index": "0x1230"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL10mul_qint_2EPNS_8qint64_tExPKS0_.constprop.0",
+        "bytes": 756,
+        "reference_address": "0x1005770c",
+        "address": "0x100e970c",
+        "cache_index": "0x170c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._Z10core_rounddi",
+        "bytes": 276,
+        "reference_address": "0x10057a00",
+        "address": "0x100e9a00",
+        "cache_index": "0x1a00"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sinL11reduce_fastEPdS0_dS0_",
+        "bytes": 872,
+        "reference_address": "0x10057b14",
+        "address": "0x100e9b14",
+        "cache_index": "0x1b14"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._Z10core_ctzlly",
+        "bytes": 26,
+        "reference_address": "0x10057e7c",
+        "address": "0x100e9e7c",
+        "cache_index": "0x1e7c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN9core_asinL16roundeven_finiteEd",
+        "bytes": 128,
+        "reference_address": "0x10057e98",
+        "address": "0x100e9e98",
+        "cache_index": "0x1e98"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN9core_acosL14as_acos_refineEdd",
+        "bytes": 1996,
+        "reference_address": "0x10057f18",
+        "address": "0x100e9f18",
+        "cache_index": "0x1f18"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_expL15as_exp_accurateEd",
+        "bytes": 1344,
+        "reference_address": "0x100586e4",
+        "address": "0x100ea6e4",
+        "cache_index": "0x6e4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL6is_intEd",
+        "bytes": 24,
+        "reference_address": "0x10058c24",
+        "address": "0x100eac24",
+        "cache_index": "0xc24"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN9core_asinL14as_asin_refineEdd",
+        "bytes": 1628,
+        "reference_address": "0x10058c3c",
+        "address": "0x100eac3c",
+        "cache_index": "0xc3c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZlsIiLi0EE15mk61_m0_uint128S0_T_",
+        "bytes": 148,
+        "reference_address": "0x10059298",
+        "address": "0x100eb298",
+        "cache_index": "0x1298"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL14mul_dint_int64EPNS_8dint64_tEPKS0_x.constprop.0",
+        "bytes": 516,
+        "reference_address": "0x1005932c",
+        "address": "0x100eb32c",
+        "cache_index": "0x132c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN9core_atan7cr_atanEd",
+        "bytes": 1044,
+        "reference_address": "0x10059530",
+        "address": "0x100eb530",
+        "cache_index": "0x1530"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_atan",
+        "bytes": 8,
+        "reference_address": "0x10059944",
+        "address": "0x100eb944",
+        "cache_index": "0x1944"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN9core_asin7cr_asinEd",
+        "bytes": 944,
+        "reference_address": "0x1005994c",
+        "address": "0x100eb94c",
+        "cache_index": "0x194c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_asin",
+        "bytes": 8,
+        "reference_address": "0x10059cfc",
+        "address": "0x100ebcfc",
+        "cache_index": "0x1cfc"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN9core_acos7cr_acosEd",
+        "bytes": 1136,
+        "reference_address": "0x10059d04",
+        "address": "0x100ebd04",
+        "cache_index": "0x1d04"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_acos",
+        "bytes": 8,
+        "reference_address": "0x1005a174",
+        "address": "0x100ec174",
+        "cache_index": "0x174"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_exp6cr_expEd",
+        "bytes": 852,
+        "reference_address": "0x1005a17c",
+        "address": "0x100ec17c",
+        "cache_index": "0x17c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_exp",
+        "bytes": 8,
+        "reference_address": "0x1005a4d0",
+        "address": "0x100ec4d0",
+        "cache_index": "0x4d0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZrsIyLi0EE15mk61_m0_uint128S0_T_",
+        "bytes": 144,
+        "reference_address": "0x1005a4d8",
+        "address": "0x100ec4d8",
+        "cache_index": "0x4d8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZrsIiLi0EE15mk61_m0_uint128S0_T_",
+        "bytes": 136,
+        "reference_address": "0x1005a568",
+        "address": "0x100ec568",
+        "cache_index": "0x568"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZlsIyLi0EE15mk61_m0_uint128S0_T_",
+        "bytes": 156,
+        "reference_address": "0x1005a5f0",
+        "address": "0x100ec5f0",
+        "cache_index": "0x5f0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+        "bytes": 1012,
+        "reference_address": "0x1005a68c",
+        "address": "0x100ec68c",
+        "cache_index": "0x68c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_cosL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+        "bytes": 1012,
+        "reference_address": "0x1005aa80",
+        "address": "0x100eca80",
+        "cache_index": "0xa80"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_tanL8add_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+        "bytes": 1012,
+        "reference_address": "0x1005ae74",
+        "address": "0x100ece74",
+        "cache_index": "0xe74"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL8add_dintEPNS_8dint64_tEPKS0_S3_",
+        "bytes": 1012,
+        "reference_address": "0x1005b268",
+        "address": "0x100ed268",
+        "cache_index": "0x1268"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11add_qint_22EPNS_8qint64_tEPKS0_S3_",
+        "bytes": 1108,
+        "reference_address": "0x1005b65c",
+        "address": "0x100ed65c",
+        "cache_index": "0x165c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL8add_qintEPNS_8qint64_tEPKS0_S3_",
+        "bytes": 3084,
+        "reference_address": "0x1005bab0",
+        "address": "0x100edab0",
+        "cache_index": "0x1ab0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL11mul_dint_21EPN14core_m0_shared4TrigEPKS1_S4_",
+        "bytes": 280,
+        "reference_address": "0x1005c6bc",
+        "address": "0x100ee6bc",
+        "cache_index": "0x6bc"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely._ZN8core_sinL8mul_dintEPN14core_m0_shared4TrigEPKS1_S4_",
+        "bytes": 408,
+        "reference_address": "0x1005c7d4",
+        "address": "0x100ee7d4",
+        "cache_index": "0x7d4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_cos6cr_cosEd",
+        "bytes": 1748,
+        "reference_address": "0x1005c96c",
+        "address": "0x100ee96c",
+        "cache_index": "0x96c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_cos",
+        "bytes": 8,
+        "reference_address": "0x1005d040",
+        "address": "0x100ef040",
+        "cache_index": "0x1040"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_tanL8inv_dintEPN14core_m0_shared4TrigES2_",
+        "bytes": 796,
+        "reference_address": "0x1005d048",
+        "address": "0x100ef048",
+        "cache_index": "0x1048"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_tanL12tan_accurateEd",
+        "bytes": 908,
+        "reference_address": "0x1005d364",
+        "address": "0x100ef364",
+        "cache_index": "0x1364"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_tan6cr_tanEd",
+        "bytes": 2268,
+        "reference_address": "0x1005d6f0",
+        "address": "0x100ef6f0",
+        "cache_index": "0x16f0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_tan",
+        "bytes": 8,
+        "reference_address": "0x1005dfcc",
+        "address": "0x100effcc",
+        "cache_index": "0x1fcc"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_sin6cr_sinEd",
+        "bytes": 1804,
+        "reference_address": "0x1005dfd4",
+        "address": "0x100effd4",
+        "cache_index": "0x1fd4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_sin",
+        "bytes": 8,
+        "reference_address": "0x1005e6e0",
+        "address": "0x100f06e0",
+        "cache_index": "0x6e0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_logL8add_dintEPN14core_m0_shared3LogEPKS1_S4_",
+        "bytes": 828,
+        "reference_address": "0x1005e6e8",
+        "address": "0x100f06e8",
+        "cache_index": "0x6e8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_log6cr_logEd",
+        "bytes": 1832,
+        "reference_address": "0x1005ea24",
+        "address": "0x100f0a24",
+        "cache_index": "0xa24"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_ln",
+        "bytes": 8,
+        "reference_address": "0x1005f14c",
+        "address": "0x100f114c",
+        "cache_index": "0x114c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN10core_log10L8add_dintEPN14core_m0_shared3LogEPKS1_S4_",
+        "bytes": 828,
+        "reference_address": "0x1005f154",
+        "address": "0x100f1154",
+        "cache_index": "0x1154"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN10core_log108cr_log10Ed",
+        "bytes": 1904,
+        "reference_address": "0x1005f490",
+        "address": "0x100f1490",
+        "cache_index": "0x1490"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_log10",
+        "bytes": 8,
+        "reference_address": "0x1005fc00",
+        "address": "0x100f1c00",
+        "cache_index": "0x1c00"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11mul_dint_11EPNS_8dint64_tEPKS0_S3_",
+        "bytes": 174,
+        "reference_address": "0x1005fc08",
+        "address": "0x100f1c08",
+        "cache_index": "0x1c08"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11add_dint_11EPNS_8dint64_tEPKS0_S3_",
+        "bytes": 572,
+        "reference_address": "0x1005fcb8",
+        "address": "0x100f1cb8",
+        "cache_index": "0x1cb8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11mul_dint_21EPNS_8dint64_tEPKS0_S3_",
+        "bytes": 270,
+        "reference_address": "0x1005fef4",
+        "address": "0x100f1ef4",
+        "cache_index": "0x1ef4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL8mul_dintEPNS_8dint64_tEPKS0_S3_",
+        "bytes": 398,
+        "reference_address": "0x10060002",
+        "address": "0x100f2002",
+        "cache_index": "0x2"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_powL11mul_qint_11EPNS_8qint64_tEPKS0_S3_",
+        "bytes": 182,
+        "reference_address": "0x10060190",
+        "address": "0x100f2190",
+        "cache_index": "0x190"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE9normalizeEyRyRi",
+        "bytes": 96,
+        "reference_address": "0x10060248",
+        "address": "0x100f2248",
+        "cache_index": "0x248"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE5timesERKNS1_1BEy",
+        "bytes": 128,
+        "reference_address": "0x100602a8",
+        "address": "0x100f22a8",
+        "cache_index": "0x2a8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE3addERKNS1_1BES4_",
+        "bytes": 48,
+        "reference_address": "0x10060328",
+        "address": "0x100f2328",
+        "cache_index": "0x328"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE7compareERKNS1_1BES4_",
+        "bytes": 34,
+        "reference_address": "0x10060358",
+        "address": "0x100f2358",
+        "cache_index": "0x358"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE8subtractERKNS1_1BES4_",
+        "bytes": 62,
+        "reference_address": "0x1006037a",
+        "address": "0x100f237a",
+        "cache_index": "0x37a"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE9shifted64ERKNS1_1BEj",
+        "bytes": 108,
+        "reference_address": "0x100603b8",
+        "address": "0x100f23b8",
+        "cache_index": "0x3b8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE10differenceERKNS1_1BES4_",
+        "bytes": 54,
+        "reference_address": "0x10060424",
+        "address": "0x100f2424",
+        "cache_index": "0x424"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9normalizeEyRyRi",
+        "bytes": 96,
+        "reference_address": "0x1006045c",
+        "address": "0x100f245c",
+        "cache_index": "0x45c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE5timesERKNS1_1BEy",
+        "bytes": 128,
+        "reference_address": "0x100604bc",
+        "address": "0x100f24bc",
+        "cache_index": "0x4bc"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE3addERKNS1_1BES4_",
+        "bytes": 48,
+        "reference_address": "0x1006053c",
+        "address": "0x100f253c",
+        "cache_index": "0x53c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7compareERKNS1_1BES4_",
+        "bytes": 34,
+        "reference_address": "0x1006056c",
+        "address": "0x100f256c",
+        "cache_index": "0x56c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE8subtractERKNS1_1BES4_",
+        "bytes": 62,
+        "reference_address": "0x1006058e",
+        "address": "0x100f258e",
+        "cache_index": "0x58e"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9shifted64ERKNS1_1BEj",
+        "bytes": 108,
+        "reference_address": "0x100605cc",
+        "address": "0x100f25cc",
+        "cache_index": "0x5cc"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE10differenceERKNS1_1BES4_",
+        "bytes": 54,
+        "reference_address": "0x10060638",
+        "address": "0x100f2638",
+        "cache_index": "0x638"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE12word_productEmm",
+        "bytes": 44,
+        "reference_address": "0x1006066e",
+        "address": "0x100f266e",
+        "cache_index": "0x66e"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE9incrementERKNS1_1BE",
+        "bytes": 40,
+        "reference_address": "0x1006069a",
+        "address": "0x100f269a",
+        "cache_index": "0x69a"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE7productERKNS1_1BES4_b",
+        "bytes": 172,
+        "reference_address": "0x100606c2",
+        "address": "0x100f26c2",
+        "cache_index": "0x6c2"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE6divideERKNS1_1BEmb",
+        "bytes": 100,
+        "reference_address": "0x10060770",
+        "address": "0x100f2770",
+        "cache_index": "0x770"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE12log_mantissaEy",
+        "bytes": 432,
+        "reference_address": "0x100607d4",
+        "address": "0x100f27d4",
+        "cache_index": "0x7d4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE12exp_endpointERKNS1_1SE",
+        "bytes": 340,
+        "reference_address": "0x10060984",
+        "address": "0x100f2984",
+        "cache_index": "0x984"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE9any_belowERKNS1_1BEj",
+        "bytes": 70,
+        "reference_address": "0x10060ad8",
+        "address": "0x100f2ad8",
+        "cache_index": "0xad8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE5shiftERKNS1_1BEib",
+        "bytes": 238,
+        "reference_address": "0x10060b1e",
+        "address": "0x100f2b1e",
+        "cache_index": "0xb1e"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE7roundedERKNS1_1BEi",
+        "bytes": 204,
+        "reference_address": "0x10060c0c",
+        "address": "0x100f2c0c",
+        "cache_index": "0xc0c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE14exact_boundaryEyyRy",
+        "bytes": 836,
+        "reference_address": "0x10060cd8",
+        "address": "0x100f2cd8",
+        "cache_index": "0xcd8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj512EE8evaluateEyyRy",
+        "bytes": 1048,
+        "reference_address": "0x1006101c",
+        "address": "0x100f301c",
+        "cache_index": "0x101c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12word_productEmm",
+        "bytes": 44,
+        "reference_address": "0x10061434",
+        "address": "0x100f3434",
+        "cache_index": "0x1434"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9incrementERKNS1_1BE",
+        "bytes": 40,
+        "reference_address": "0x10061460",
+        "address": "0x100f3460",
+        "cache_index": "0x1460"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7productERKNS1_1BES4_b",
+        "bytes": 174,
+        "reference_address": "0x10061488",
+        "address": "0x100f3488",
+        "cache_index": "0x1488"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE6divideERKNS1_1BEmb",
+        "bytes": 100,
+        "reference_address": "0x10061538",
+        "address": "0x100f3538",
+        "cache_index": "0x1538"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12log_mantissaEy",
+        "bytes": 488,
+        "reference_address": "0x1006159c",
+        "address": "0x100f359c",
+        "cache_index": "0x159c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE12exp_endpointERKNS1_1SE",
+        "bytes": 368,
+        "reference_address": "0x10061784",
+        "address": "0x100f3784",
+        "cache_index": "0x1784"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE9any_belowERKNS1_1BEj",
+        "bytes": 70,
+        "reference_address": "0x100618f4",
+        "address": "0x100f38f4",
+        "cache_index": "0x18f4"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE5shiftERKNS1_1BEib",
+        "bytes": 238,
+        "reference_address": "0x1006193a",
+        "address": "0x100f393a",
+        "cache_index": "0x193a"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE7roundedERKNS1_1BEi",
+        "bytes": 200,
+        "reference_address": "0x10061a28",
+        "address": "0x100f3a28",
+        "cache_index": "0x1a28"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE14exact_boundaryEyyRy",
+        "bytes": 836,
+        "reference_address": "0x10061af0",
+        "address": "0x100f3af0",
+        "cache_index": "0x1af0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN15m0_pow_interval5FixedILj1024EE8evaluateEyyRy",
+        "bytes": 1256,
+        "reference_address": "0x10061e34",
+        "address": "0x100f3e34",
+        "cache_index": "0x1e34"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.unlikely.mk61_m0_pow_rescue",
+        "bytes": 104,
+        "reference_address": "0x1006231c",
+        "address": "0x100f431c",
+        "cache_index": "0x31c"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text._ZN8core_pow6cr_powEdd",
+        "bytes": 11844,
+        "reference_address": "0x10062384",
+        "address": "0x100f4384",
+        "cache_index": "0x384"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".text.mk61_m0_cr_pow",
+        "bytes": 8,
+        "reference_address": "0x100651c8",
+        "address": "0x100f71c8",
+        "cache_index": "0x11c8"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_i2d",
+        "bytes": 876,
+        "reference_address": "0x100651d0",
+        "address": "0x100f71d0",
+        "cache_index": "0x11d0"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_d2f",
+        "bytes": 68,
+        "reference_address": "0x1006553c",
+        "address": "0x100f753c",
+        "cache_index": "0x153c"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmpeq",
+        "bytes": 52,
+        "reference_address": "0x10065580",
+        "address": "0x100f7580",
+        "cache_index": "0x1580"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmplt",
+        "bytes": 96,
+        "reference_address": "0x100655b4",
+        "address": "0x100f75b4",
+        "cache_index": "0x15b4"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmple",
+        "bytes": 96,
+        "reference_address": "0x10065614",
+        "address": "0x100f7614",
+        "cache_index": "0x1614"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmpge",
+        "bytes": 96,
+        "reference_address": "0x10065674",
+        "address": "0x100f7674",
+        "cache_index": "0x1674"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmpgt",
+        "bytes": 96,
+        "reference_address": "0x100656d4",
+        "address": "0x100f76d4",
+        "cache_index": "0x16d4"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_dcmpun",
+        "bytes": 44,
+        "reference_address": "0x10065734",
+        "address": "0x100f7734",
+        "cache_index": "0x1734"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_d2iz",
+        "bytes": 80,
+        "reference_address": "0x10065760",
+        "address": "0x100f7760",
+        "cache_index": "0x1760"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_d2lz",
+        "bytes": 124,
+        "reference_address": "0x100657b0",
+        "address": "0x100f77b0",
+        "cache_index": "0x17b0"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_d2ulz",
+        "bytes": 104,
+        "reference_address": "0x1006582c",
+        "address": "0x100f782c",
+        "cache_index": "0x182c"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.mk61_m0_product62",
+        "bytes": 204,
+        "reference_address": "0x10065894",
+        "address": "0x100f7894",
+        "cache_index": "0x1894"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_uidiv",
+        "bytes": 8,
+        "reference_address": "0x10065960",
+        "address": "0x100f7960",
+        "cache_index": "0x1960"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.mk61_m0_math_udiv32",
+        "bytes": 36,
+        "reference_address": "0x10065968",
+        "address": "0x100f7968",
+        "cache_index": "0x1968"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_idiv0",
+        "bytes": 2,
+        "reference_address": "0x1006598c",
+        "address": "0x100f798c",
+        "cache_index": "0x198c"
+      },
+      {
+        "file": "native_eabi_m0.S.o",
+        "section": ".text.__aeabi_ldiv0",
+        "bytes": 2,
+        "reference_address": "0x1006598e",
+        "address": "0x100f798e",
+        "cache_index": "0x198e"
+      },
+      {
+        "file": "native_eabi_m0_rp2040.S.o",
+        "section": ".text.mk61_rp2040_arithmetic",
+        "bytes": 1724,
+        "reference_address": "0x10065990",
+        "address": "0x100f7990",
+        "cache_index": "0x1990"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL19trig94_coefficientsE",
+        "bytes": 96,
+        "reference_address": "0x100aa070",
+        "address": "0x100fa070",
+        "cache_index": "0x70"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL14trig_tan_tableE",
+        "bytes": 25792,
+        "reference_address": "0x100aa0d0",
+        "address": "0x100fa0d0",
+        "cache_index": "0xd0"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL12trig94_tableE",
+        "bytes": 19344,
+        "reference_address": "0x100b0590",
+        "address": "0x10100590",
+        "cache_index": "0x590"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL10log70_highE",
+        "bytes": 1024,
+        "reference_address": "0x100b5120",
+        "address": "0x10105120",
+        "cache_index": "0x1120"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL9log70_lowE",
+        "bytes": 8192,
+        "reference_address": "0x100b5520",
+        "address": "0x10105520",
+        "cache_index": "0x1520"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL17refine_atan_tableE",
+        "bytes": 780,
+        "reference_address": "0x100b7520",
+        "address": "0x10107520",
+        "cache_index": "0x1520"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL16refine_log_tableE",
+        "bytes": 24576,
+        "reference_address": "0x100b782c",
+        "address": "0x1010782c",
+        "cache_index": "0x182c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL16refine_exp_tableE",
+        "bytes": 6144,
+        "reference_address": "0x100bd82c",
+        "address": "0x1010d82c",
+        "cache_index": "0x182c"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL14log_near_tableE",
+        "bytes": 4096,
+        "reference_address": "0x100bf030",
+        "address": "0x1010f030",
+        "cache_index": "0x1030"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL8trig_pi2E",
+        "bytes": 24,
+        "reference_address": "0x100c0030",
+        "address": "0x10110030",
+        "cache_index": "0x30"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL9exp_tableE",
+        "bytes": 4096,
+        "reference_address": "0x100c0048",
+        "address": "0x10110048",
+        "cache_index": "0x48"
+      },
+      {
+        "file": "native_eabi_m0.cpp.o",
+        "section": ".rodata._ZN7m0_eabiL16reciprocal_seedsE",
+        "bytes": 256,
+        "reference_address": "0x100c1048",
+        "address": "0x10111048",
+        "cache_index": "0x1048"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_pow6cr_powEddE3err",
+        "bytes": 16,
+        "reference_address": "0x100c1148",
+        "address": "0x10111148",
+        "cache_index": "0x1148"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_powL8is_exactEddE4xmax",
+        "bytes": 272,
+        "reference_address": "0x100c1158",
+        "address": "0x10111158",
+        "cache_index": "0x1158"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_powL5log_1EPdS0_dE2cm",
+        "bytes": 16,
+        "reference_address": "0x100c1268",
+        "address": "0x10111268",
+        "cache_index": "0x1268"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL2T2E",
+        "bytes": 1024,
+        "reference_address": "0x100c1278",
+        "address": "0x10111278",
+        "cache_index": "0x1278"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL2T1E",
+        "bytes": 1024,
+        "reference_address": "0x100c1678",
+        "address": "0x10111678",
+        "cache_index": "0x1678"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL8_LOG_INVE",
+        "bytes": 2912,
+        "reference_address": "0x100c1a78",
+        "address": "0x10111a78",
+        "cache_index": "0x1a78"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL8_INVERSEE",
+        "bytes": 1456,
+        "reference_address": "0x100c25d8",
+        "address": "0x101125d8",
+        "cache_index": "0x5d8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL3Q_3E",
+        "bytes": 720,
+        "reference_address": "0x100c2b88",
+        "address": "0x10112b88",
+        "cache_index": "0xb88"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL3P_3E",
+        "bytes": 864,
+        "reference_address": "0x100c2e58",
+        "address": "0x10112e58",
+        "cache_index": "0xe58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL4T2_3E",
+        "bytes": 3072,
+        "reference_address": "0x100c31b8",
+        "address": "0x101131b8",
+        "cache_index": "0x11b8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL4T1_3E",
+        "bytes": 3072,
+        "reference_address": "0x100c3db8",
+        "address": "0x10113db8",
+        "cache_index": "0x1db8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_LOG_INV_3_2E",
+        "bytes": 6192,
+        "reference_address": "0x100c49b8",
+        "address": "0x101149b8",
+        "cache_index": "0x9b8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_LOG_INV_3_1E",
+        "bytes": 4416,
+        "reference_address": "0x100c61e8",
+        "address": "0x101161e8",
+        "cache_index": "0x1e8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_INVERSE_3_2E",
+        "bytes": 6192,
+        "reference_address": "0x100c7328",
+        "address": "0x10117328",
+        "cache_index": "0x1328"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_INVERSE_3_1E",
+        "bytes": 4416,
+        "reference_address": "0x100c8b58",
+        "address": "0x10118b58",
+        "cache_index": "0xb58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL6ZERO_QE",
+        "bytes": 48,
+        "reference_address": "0x100c9c98",
+        "address": "0x10119c98",
+        "cache_index": "0x1c98"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL10LOG2_INV_QE",
+        "bytes": 48,
+        "reference_address": "0x100c9cc8",
+        "address": "0x10119cc8",
+        "cache_index": "0x1cc8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL6LOG2_QE",
+        "bytes": 48,
+        "reference_address": "0x100c9cf8",
+        "address": "0x10119cf8",
+        "cache_index": "0x1cf8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL7M_ONE_QE",
+        "bytes": 48,
+        "reference_address": "0x100c9d28",
+        "address": "0x10119d28",
+        "cache_index": "0x1d28"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL3Q_2E",
+        "bytes": 256,
+        "reference_address": "0x100c9d58",
+        "address": "0x10119d58",
+        "cache_index": "0x1d58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL3P_2E",
+        "bytes": 288,
+        "reference_address": "0x100c9e58",
+        "address": "0x10119e58",
+        "cache_index": "0x1e58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL4T2_2E",
+        "bytes": 2048,
+        "reference_address": "0x100c9f78",
+        "address": "0x10119f78",
+        "cache_index": "0x1f78"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL4T1_2E",
+        "bytes": 2048,
+        "reference_address": "0x100ca778",
+        "address": "0x1011a778",
+        "cache_index": "0x778"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_LOG_INV_2_2E",
+        "bytes": 4128,
+        "reference_address": "0x100caf78",
+        "address": "0x1011af78",
+        "cache_index": "0xf78"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_LOG_INV_2_1E",
+        "bytes": 2944,
+        "reference_address": "0x100cbf98",
+        "address": "0x1011bf98",
+        "cache_index": "0x1f98"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_INVERSE_2_2E",
+        "bytes": 4128,
+        "reference_address": "0x100ccb18",
+        "address": "0x1011cb18",
+        "cache_index": "0xb18"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL12_INVERSE_2_1E",
+        "bytes": 2944,
+        "reference_address": "0x100cdb38",
+        "address": "0x1011db38",
+        "cache_index": "0x1b38"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100ce6b8",
+        "address": "0x1011e6b8",
+        "cache_index": "0x6b8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL8LOG2_INVE",
+        "bytes": 32,
+        "reference_address": "0x100ce6d8",
+        "address": "0x1011e6d8",
+        "cache_index": "0x6d8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_powL5M_ONEE",
+        "bytes": 32,
+        "reference_address": "0x100ce6f8",
+        "address": "0x1011e6f8",
+        "cache_index": "0x6f8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN15m0_pow_intervalL8ln2_1024E",
+        "bytes": 128,
+        "reference_address": "0x100ce718",
+        "address": "0x1011e718",
+        "cache_index": "0x718"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_expL15as_exp_accurateEdE2ch",
+        "bytes": 112,
+        "reference_address": "0x100ce798",
+        "address": "0x1011e798",
+        "cache_index": "0x798"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_expL2t1E",
+        "bytes": 1024,
+        "reference_address": "0x100ce808",
+        "address": "0x1011e808",
+        "cache_index": "0x808"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_expL2t0E",
+        "bytes": 1024,
+        "reference_address": "0x100cec08",
+        "address": "0x1011ec08",
+        "cache_index": "0xc08"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_expL15as_exp_databaseEddE2s2",
+        "bytes": 16,
+        "reference_address": "0x100cf008",
+        "address": "0x1011f008",
+        "cache_index": "0x1008"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_expL2dbE",
+        "bytes": 408,
+        "reference_address": "0x100cf018",
+        "address": "0x1011f018",
+        "cache_index": "0x1018"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN10core_log108cr_log10EdE5pow10",
+        "bytes": 256,
+        "reference_address": "0x100cf1b0",
+        "address": "0x1011f1b0",
+        "cache_index": "0x11b0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN10core_log10L8_LOG_INVE",
+        "bytes": 5808,
+        "reference_address": "0x100cf2b0",
+        "address": "0x1011f2b0",
+        "cache_index": "0x12b0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN10core_log10L8_INVERSEE",
+        "bytes": 2904,
+        "reference_address": "0x100d0960",
+        "address": "0x10120960",
+        "cache_index": "0x960"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN10core_log10L4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100d14b8",
+        "address": "0x101214b8",
+        "cache_index": "0x14b8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN10core_log10L14ONE_OVER_LOG10E",
+        "bytes": 32,
+        "reference_address": "0x100d14d8",
+        "address": "0x101214d8",
+        "cache_index": "0x14d8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN10core_log10L5M_ONEE",
+        "bytes": 32,
+        "reference_address": "0x100d14f8",
+        "address": "0x101214f8",
+        "cache_index": "0x14f8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cm",
+        "bytes": 16,
+        "reference_address": "0x100d1518",
+        "address": "0x10121518",
+        "cache_index": "0x1518"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_logL11cr_log_fastEPdS0_iNS_6d64u64EE2cy",
+        "bytes": 16,
+        "reference_address": "0x100d1528",
+        "address": "0x10121528",
+        "cache_index": "0x1528"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL8_LOG_INVE",
+        "bytes": 5808,
+        "reference_address": "0x100d1538",
+        "address": "0x10121538",
+        "cache_index": "0x1538"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL8_INVERSEE",
+        "bytes": 2904,
+        "reference_address": "0x100d2be8",
+        "address": "0x10122be8",
+        "cache_index": "0xbe8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL3P_2E",
+        "bytes": 416,
+        "reference_address": "0x100d3740",
+        "address": "0x10123740",
+        "cache_index": "0x1740"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL10_LOG_INV_2E",
+        "bytes": 7680,
+        "reference_address": "0x100d38e0",
+        "address": "0x101238e0",
+        "cache_index": "0x18e0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL10_INVERSE_2E",
+        "bytes": 7680,
+        "reference_address": "0x100d56e0",
+        "address": "0x101256e0",
+        "cache_index": "0x16e0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100d74e0",
+        "address": "0x101274e0",
+        "cache_index": "0x14e0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_logL5M_ONEE",
+        "bytes": 32,
+        "reference_address": "0x100d7500",
+        "address": "0x10127500",
+        "cache_index": "0x1500"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_acosL14as_acos_refineEddE1c",
+        "bytes": 80,
+        "reference_address": "0x100d7520",
+        "address": "0x10127520",
+        "cache_index": "0x1520"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_acos7cr_acosEdE3off",
+        "bytes": 32,
+        "reference_address": "0x100d7570",
+        "address": "0x10127570",
+        "cache_index": "0x1570"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_acos7cr_acosEdE2cc",
+        "bytes": 2112,
+        "reference_address": "0x100d7590",
+        "address": "0x10127590",
+        "cache_index": "0x1590"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_asinL16as_asin_databaseEddE2db",
+        "bytes": 696,
+        "reference_address": "0x100d7dd0",
+        "address": "0x10127dd0",
+        "cache_index": "0x1dd0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_asinL14as_asin_refineEddE1c",
+        "bytes": 80,
+        "reference_address": "0x100d8088",
+        "address": "0x10128088",
+        "cache_index": "0x88"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_asinL14as_asin_refineEddE1s",
+        "bytes": 528,
+        "reference_address": "0x100d80d8",
+        "address": "0x101280d8",
+        "cache_index": "0xd8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_asin7cr_asinEdE3off",
+        "bytes": 32,
+        "reference_address": "0x100d82e8",
+        "address": "0x101282e8",
+        "cache_index": "0x2e8"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_asin7cr_asinEdE2cc",
+        "bytes": 2112,
+        "reference_address": "0x100d8308",
+        "address": "0x10128308",
+        "cache_index": "0x308"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_atanL15as_atan_refine2EddE2db",
+        "bytes": 288,
+        "reference_address": "0x100d8b48",
+        "address": "0x10128b48",
+        "cache_index": "0xb48"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN9core_atanL15as_atan_refine2EddE2ch",
+        "bytes": 48,
+        "reference_address": "0x100d8c68",
+        "address": "0x10128c68",
+        "cache_index": "0xc68"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN9core_atanL1cE",
+        "bytes": 186,
+        "reference_address": "0x100d8c98",
+        "address": "0x10128c98",
+        "cache_index": "0xc98"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN9core_atanL1AE",
+        "bytes": 2064,
+        "reference_address": "0x100d8d58",
+        "address": "0x10128d58",
+        "cache_index": "0xd58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_tanL12tan_accurateEdE10exceptions",
+        "bytes": 48,
+        "reference_address": "0x100d9568",
+        "address": "0x10129568",
+        "cache_index": "0x1568"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL2PCE",
+        "bytes": 192,
+        "reference_address": "0x100d9598",
+        "address": "0x10129598",
+        "cache_index": "0x1598"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL2PSE",
+        "bytes": 192,
+        "reference_address": "0x100d9658",
+        "address": "0x10129658",
+        "cache_index": "0x1658"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL4TinvE",
+        "bytes": 2048,
+        "reference_address": "0x100d9718",
+        "address": "0x10129718",
+        "cache_index": "0x1718"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL5MAGICE",
+        "bytes": 32,
+        "reference_address": "0x100d9f18",
+        "address": "0x10129f18",
+        "cache_index": "0x1f18"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL3ONEE",
+        "bytes": 32,
+        "reference_address": "0x100d9f38",
+        "address": "0x10129f38",
+        "cache_index": "0x1f38"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_tanL4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100d9f58",
+        "address": "0x10129f58",
+        "cache_index": "0x1f58"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_cosL12cos_accurateEdE10exceptions",
+        "bytes": 120,
+        "reference_address": "0x100d9f78",
+        "address": "0x10129f78",
+        "cache_index": "0x1f78"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_cosL2PCE",
+        "bytes": 192,
+        "reference_address": "0x100d9ff0",
+        "address": "0x10129ff0",
+        "cache_index": "0x1ff0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_cosL2PSE",
+        "bytes": 192,
+        "reference_address": "0x100da0b0",
+        "address": "0x1012a0b0",
+        "cache_index": "0xb0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_cosL5MAGICE",
+        "bytes": 32,
+        "reference_address": "0x100da170",
+        "address": "0x1012a170",
+        "cache_index": "0x170"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_cosL4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100da190",
+        "address": "0x1012a190",
+        "cache_index": "0x190"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_sinL12sin_accurateEdE10exceptions",
+        "bytes": 48,
+        "reference_address": "0x100da1b0",
+        "address": "0x1012a1b0",
+        "cache_index": "0x1b0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZZN8core_sinL8sin_fastEPdS0_dE3sgn",
+        "bytes": 16,
+        "reference_address": "0x100da1e0",
+        "address": "0x1012a1e0",
+        "cache_index": "0x1e0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL2SCE",
+        "bytes": 6144,
+        "reference_address": "0x100da1f0",
+        "address": "0x1012a1f0",
+        "cache_index": "0x1f0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL2PCE",
+        "bytes": 192,
+        "reference_address": "0x100db9f0",
+        "address": "0x1012b9f0",
+        "cache_index": "0x19f0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL2PSE",
+        "bytes": 192,
+        "reference_address": "0x100dbab0",
+        "address": "0x1012bab0",
+        "cache_index": "0x1ab0"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL1CE",
+        "bytes": 8192,
+        "reference_address": "0x100dbb70",
+        "address": "0x1012bb70",
+        "cache_index": "0x1b70"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL1SE",
+        "bytes": 8192,
+        "reference_address": "0x100ddb70",
+        "address": "0x1012db70",
+        "cache_index": "0x1b70"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL1TE",
+        "bytes": 160,
+        "reference_address": "0x100dfb70",
+        "address": "0x1012fb70",
+        "cache_index": "0x1b70"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL5MAGICE",
+        "bytes": 32,
+        "reference_address": "0x100dfc10",
+        "address": "0x1012fc10",
+        "cache_index": "0x1c10"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata._ZN8core_sinL4ZEROE",
+        "bytes": 32,
+        "reference_address": "0x100dfc30",
+        "address": "0x1012fc30",
+        "cache_index": "0x1c30"
+      },
+      {
+        "file": "native_eabi_m0_cr.cpp.o",
+        "section": ".rodata",
+        "bytes": 16,
+        "reference_address": "0x100dfc50",
+        "address": "0x1012fc50",
+        "cache_index": "0x1c50"
+      }
+    ],
+    "scope": "All linked normal text/rodata inputs from the five owned math objects retain V75 input sizes/order and low 13 address bits. External SDK wrapper placement and other-core/IRQ cache traffic are not fixed by this check.",
+    "math_source_changed": false,
+    "physical_timing_available": false
+  },
+  "qualification": {
+    "resources": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/resources.json",
+        "sha256": "ca583c2739e9a0add87b484a6a7cfe40a388d47fa5ab0845b5c9bebb6f316ca2"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "platform_build": "7aea549e",
+        "platform_acceptance": "PROVISIONAL",
+        "static_ram_bytes": 198856,
+        "additional_main_ram_bytes": 0,
+        "ram_boundaries_unchanged": [
+          "__data_start__",
+          "__data_end__",
+          "__bss_start__",
+          "__bss_end__",
+          "__end__",
+          "__HeapLimit",
+          "__StackBottom",
+          "__StackTop",
+          "__StackOneBottom",
+          "__StackOneTop",
+          "__lcd_dma_end__"
+        ],
+        "scratch_y_reserved_bytes": 4096,
+        "scratch_y_code_bytes": 4096,
+        "platform_scratch_y_code_bytes": 0,
+        "additional_scratch_y_reserved_bytes": 0,
+        "new_tables": 0,
+        "allocated_flash_delta_vs_V76_bytes": 16,
+        "image_extent_delta_vs_V76_bytes": 0,
+        "fixed_sections": {
+          ".m0_math_cold_text": {
+            "address": "0x100e17c0",
+            "bytes": 92352
+          },
+          ".m0_math_cold_data": {
+            "address": "0x100fa070",
+            "bytes": 220144
+          },
+          ".m0_math_extension": {
+            "address": "0x10140000",
+            "bytes": 29240
+          },
+          ".m0_trig_refine_fixed": {
+            "address": "0x10149a24",
+            "bytes": 10044
+          },
+          ".m0_trig_support_fixed": {
+            "address": "0x1014d050",
+            "bytes": 1264
+          },
+          ".m0_log_product_extension": {
+            "address": "0x1014d800",
+            "bytes": 506
+          },
+          ".m0_pow_exact_extension": {
+            "address": "0x1014e000",
+            "bytes": 1408
+          },
+          ".m0_asin_extension": {
+            "address": "0x10150d00",
+            "bytes": 7200
+          },
+          ".m0_asin_refine_extension": {
+            "address": "0x10156000",
+            "bytes": 4336
+          },
+          ".m0_trig_mulq62_fixed": {
+            "address": "0x1015a6f8",
+            "bytes": 466
+          },
+          ".m0_trig_ratio_fixed": {
+            "address": "0x1015d686",
+            "bytes": 738
+          },
+          ".m0_pow_extension": {
+            "address": "0x10160000",
+            "bytes": 3664
+          },
+          ".m0_pow_dispatch_extension": {
+            "address": "0x10160e50",
+            "bytes": 3608
+          },
+          ".m0_pow_refine_extension": {
+            "address": "0x10168000",
+            "bytes": 9632
+          },
+          ".m0_conversion_fixed": {
+            "address": "0x1016b99c",
+            "bytes": 34
+          },
+          ".m0_sqrt64_fixed": {
+            "address": "0x1016bb00",
+            "bytes": 8544
+          },
+          ".m0_trig_core_extension": {
+            "address": "0x10170000",
+            "bytes": 7720
+          },
+          ".m0_trig_tangent_extension": {
+            "address": "0x10172a00",
+            "bytes": 3264
+          },
+          ".m0_trig_small_refine_extension": {
+            "address": "0x10174000",
+            "bytes": 1792
+          },
+          ".m0_exp_core_extension": {
+            "address": "0x10176000",
+            "bytes": 5104
+          }
+        },
+        "cold_input_code_bytes": 92264,
+        "cold_input_data_bytes": 220134
+      }
+    },
+    "object_identity": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/object-isolation.json",
+        "sha256": "53ce545a251747b2f608bdb6236557e6ec5338609d0c01dcb3890f95d3bdf965"
+      },
+      "result": {
+        "status": "PASS",
+        "reference_platform": "A7483AE6",
+        "current_platform": "7AEA549E_PROVISIONAL",
+        "scope": "Every allocated code/data payload of all five owned math objects is byte-identical before linking. Only link placement and relocation targets change; no new numerical instructions or coefficient data.",
+        "objects": [
+          {
+            "object": "compact_math.cpp.o",
+            "allocated_sections": 3,
+            "allocated_bytes": 36,
+            "payload_sha256": "3af641a95c4a8c47ff67c830b9a195931d4f27fe660e15930e301e6498fc451b"
+          },
+          {
+            "object": "native_eabi_m0.cpp.o",
+            "allocated_sections": 124,
+            "allocated_bytes": 241848,
+            "payload_sha256": "18fe04194af3c87bb684af24711934c36e7b522b5c6e8578dfc05d6233cea94d"
+          },
+          {
+            "object": "native_eabi_m0_cr.cpp.o",
+            "allocated_sections": 203,
+            "allocated_bytes": 192456,
+            "payload_sha256": "cd3adcfef80ccf43df1be72ce26fa39d4ccdaa83ad26a11ada646f51474058b4"
+          },
+          {
+            "object": "native_eabi_m0.S.o",
+            "allocated_sections": 28,
+            "allocated_bytes": 14396,
+            "payload_sha256": "dfb8904eaa29ffb9fec428572968aa458a792129f1d86a40ade207ecf07a668b"
+          },
+          {
+            "object": "native_eabi_m0_rp2040.S.o",
+            "allocated_sections": 1,
+            "allocated_bytes": 1724,
+            "payload_sha256": "9186e57b202b996e9a8d8518110f2bad36c9964955762696f843d95758b0faf1"
+          }
+        ]
+      }
+    },
+    "f2d_ARM": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/f2d-arm.json",
+        "sha256": "2a2143d040f0e9a969175f53990c61862871366ee0809e82ff0a60e70c9e3942"
+      },
+      "result": {
+        "status": "PASS",
+        "cases": 44816,
+        "current": {
+          "elf": ".build/m0-stable-arena-v77-20261021/firmware/mk61s-picocalc-pico-h.elf",
+          "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+          "calls": 44816,
+          "normal_cases": 44453,
+          "special_cases": 363,
+          "normal_paths": [
+            {
+              "instructions": 13,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 44453
+            }
+          ],
+          "special_paths": [
+            {
+              "instructions": 28,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 2
+            },
+            {
+              "instructions": 37,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 194
+            },
+            {
+              "instructions": 160,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 36
+            },
+            {
+              "instructions": 162,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 77
+            },
+            {
+              "instructions": 164,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 48
+            },
+            {
+              "instructions": 166,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 6
+            }
+          ],
+          "result_sha256": "0ddc0ede63531fe13aaa2a948e38191917f3f10aafbf6a498af7cf74fe19c58e",
+          "wrong_results": 0,
+          "ABI": "R0 binary32 input, R0/R1 binary64 output; R4-R11 and SP preserved"
+        },
+        "oracle": "Integer IEEE binary32 significand widening; every finite binary32 value is exactly representable as binary64. NaN sign/payload are preserved and signaling NaNs quieted.",
+        "scope": "Both signs, all 256 exponent encodings, significand bit boundaries and deterministic random encodings. This finite ARM test is not exhaustive over all 2^32 inputs, and instruction/read counts are not physical timings.",
+        "physical_timing_available": false,
+        "baseline": {
+          "elf": ".build/m0-fixed-tails-v73-20261021/firmware/mk61s-picocalc-pico-h.elf",
+          "elf_sha256": "06cc5bc85b72876df54e60e8e57136e45b0e2ed59fb7d51ca4629827cdad616d",
+          "calls": 44816,
+          "normal_cases": 44453,
+          "special_cases": 363,
+          "normal_paths": [
+            {
+              "instructions": 13,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 44453
+            }
+          ],
+          "special_paths": [
+            {
+              "instructions": 30,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 2
+            },
+            {
+              "instructions": 39,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 194
+            },
+            {
+              "instructions": 162,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 36
+            },
+            {
+              "instructions": 164,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 77
+            },
+            {
+              "instructions": 166,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 48
+            },
+            {
+              "instructions": 168,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 6
+            }
+          ],
+          "result_sha256": "0ddc0ede63531fe13aaa2a948e38191917f3f10aafbf6a498af7cf74fe19c58e",
+          "wrong_results": 0,
+          "ABI": "R0 binary32 input, R0/R1 binary64 output; R4-R11 and SP preserved"
+        }
+      }
+    },
+    "M4": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/m4-check/m4-isolation.json",
+        "sha256": "762b054ab5a7c1f3e97d2381298bf75fab4909b1a98b19f9573152fe7f252892"
+      },
+      "result": {
+        "status": "PASS",
+        "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+        "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-stable-arena-v77-20261021/source",
+        "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "soft",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+            "allocated_bytes": 19852,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          },
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "hard",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+            "allocated_bytes": 20524,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          }
+        ]
+      }
+    },
+    "generic_M0": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/generic-m0-isolation.json",
+        "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+      },
+      "result": {
+        "status": "PASS",
+        "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "allocated_bytes": 247584,
+            "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "allocated_bytes": 14468,
+            "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "allocated_bytes": 0,
+            "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+          },
+          {
+            "source": "compact_math.cpp",
+            "allocated_bytes": 94,
+            "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "allocated_bytes": 191042,
+            "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+          }
+        ]
+      }
+    },
+    "exact_pow": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/exact-arm.json",
+        "sha256": "90196e6ff10396ec3c04cc7c4a5f98eb27af69d56490b092c1446bac025651e3"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "cases": 24,
+        "actual_arm_calls": 70,
+        "wrong_rounding": 0,
+        "dirty_sio_checks": 4,
+        "unsupported_checks": 4,
+        "maximum_stack_bytes": 1972,
+        "maximum_bounded_write_depth": 15000,
+        "result_sha256": "d5ba4e23cb10666b73c2721cab77d54a9b68bfd67cc37da1a69e39e7d507d172",
+        "checked_hint_calls": 38,
+        "maximum_hint_comparisons": 2,
+        "mpfr": "4.2.2",
+        "scope": "Direct exact-stage ARM calls including all saved registers, SP, stack writes, signed exponents, subnormal/overflow output and a pending SIO divider. Finite implementation qualification; domain argument is separate."
+      }
+    },
+    "negative_layout": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/layout-self-test.json",
+        "sha256": "d0d4d175d46751e8581014a6700c4a308e3ed51325f1c28c10818b15cbe0d709"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "checked_symbols": 388,
+        "internal_exact_helpers": 9,
+        "altered_symbol": "_ZN12m0_pow_exactL8multiplyERNS_1BEy",
+        "altered_byte_rejected": true,
+        "scope": "The production layout passes unchanged; changing one instruction byte inside an internal exact-pow helper is rejected. No firmware execution or hardware access."
+      }
+    },
+    "operator_binding": {
+      "artifact": {
+        "path": ".build/m0-stable-arena-v77-20261021/binding-audit.json",
+        "sha256": "539a4896e898bbb8a6263d0f44f6648ba59423f17423b3f8f0a375d99a7e85b5"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "helper_addresses": {
+          "__aeabi_dadd": "0x100f79a4",
+          "__aeabi_dsub": "0x100f799a",
+          "__aeabi_dmul": "0x100f7cb6",
+          "__aeabi_ddiv": "0x100f7e88"
+        },
+        "call_site_counts": {
+          "__aeabi_dsub": 251,
+          "__aeabi_dmul": 330,
+          "__aeabi_dadd": 328,
+          "__aeabi_ddiv": 72
+        },
+        "VM_direct_call_sites": 46,
+        "VM_examples": [
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x1002440a",
+            "target": "__aeabi_dmul"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x1002441c",
+            "target": "__aeabi_dmul"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x1002442e",
+            "target": "__aeabi_dmul"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x10024444",
+            "target": "__aeabi_ddiv"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x10024456",
+            "target": "__aeabi_ddiv"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x10024468",
+            "target": "__aeabi_ddiv"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x100244c6",
+            "target": "__aeabi_dsub"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x100244e4",
+            "target": "__aeabi_dadd"
+          },
+          {
+            "caller": "picocalc::Services::vm_services()::{lambda(void*, language_vm::Function, double, double)#1}::_FUN(void*, language_vm::Function, double, double)",
+            "address": "0x10024504",
+            "target": "__aeabi_dsub"
+          },
+          {
+            "caller": "picocalc::Services::event(language_vm::Event, char const*, unsigned short, double&)",
+            "address": "0x10026a70",
+            "target": "__aeabi_dadd"
+          },
+          {
+            "caller": "picocalc::Services::event(language_vm::Event, char const*, unsigned short, double&)",
+            "address": "0x10026a84",
+            "target": "__aeabi_dsub"
+          },
+          {
+            "caller": "picocalc::Services::event(language_vm::Event, char const*, unsigned short, double&)",
+            "address": "0x10026bd2",
+            "target": "__aeabi_ddiv"
+          }
+        ],
+        "scope": "Static production BL/BLX calls to the owned EABI double helpers in fixed cold text; no wrapped alternatives for these four names. Does not enumerate indirect native-API calls or prove instruction timing."
+      }
+    },
+    "boot_CRC": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v77-20261021/firmware-self-test.json",
+        "sha256": "b0dcee9cc36899c7e190798da1822561a6a28de63c827b2debbe92f17f5745cb"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "60be71dbd85c56204fe4a88bfd13ce6e87f5cb8294cb2446c2be19dba88a0c9c",
+        "manifest_sha256": "a620038e8134ef100088d2ff199c9a189327a10b1458b63cdf0d2077fec11795",
+        "image_bytes": 1579228,
+        "valid_boot_crc": "0x462330a5",
+        "explicit_recheck_status": "valid",
+        "rejected": [
+          {
+            "case": "extent",
+            "status": 5
+          },
+          {
+            "case": "reference_crc",
+            "status": 9
+          }
+        ],
+        "scope": "Actual ARM enforce/report CRC code and compiled image bounds; valid full image accepted; excess range and damaged reference rejected. Timer and text formatting mocked."
+      }
+    },
+    "production_layout": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v77-20261021/layout-proof.json",
+        "sha256": "3232a70730b3b6b35b3278b3cd95d956b19380e1113f05623b30f3708b7b74ff"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-stable-arena-v77-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "comparison_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-balanced-timing-v77-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "production_elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "comparison_elf_sha256": "60be71dbd85c56204fe4a88bfd13ce6e87f5cb8294cb2446c2be19dba88a0c9c",
+        "checked_symbols": 392,
+        "checked_bytes": 432244,
+        "sha256": "9baefbfb0acbdfc5c892028da0faed8b89f5eca29ded6bd0fb4f49b46d987cee"
+      }
+    },
+    "reference_link": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v77-20261021/reference-link-proof.json",
+        "sha256": "cac9b092ad0dba2082e672a17b310d879886839245b90160728fc806ef28364a"
+      },
+      "result": {
+        "status": "PASS",
+        "mode": "independent_reference_joined_after_production_link",
+        "production_elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "reference_elf_sha256": "f6a6a1f2ba8613cf93a2cb73e47da6d5854777c567730d102a0d168e7492c540",
+        "reference_flash_address": 270008320,
+        "reference_bytes": 6364,
+        "reference_sha256": "8a71ababc3538394b49590350fb0b4602b1253736543dd80391514c84bf235f3",
+        "original_flash_bytes": 1537008,
+        "preserved_production_flash_bytes": 1536960,
+        "production_patches": [
+          {
+            "symbol": "_ZN8picocalc8firmware7enforceEv",
+            "offset": 92228,
+            "size": 4,
+            "before": "0x101773f0",
+            "after": "0x101818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "symbol": "_ZN8picocalc8firmware6reportEPcjb",
+            "offset": 93984,
+            "size": 4,
+            "before": "0x1773f0",
+            "after": "0x1818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "offset": 572032,
+            "size": 40,
+            "reason": "Integrity footer covers the diagnostic reference"
+          }
+        ],
+        "ram_initializers_preserved": true,
+        "production_program_headers_preserved": true,
+        "preserved_ram_sections": 11,
+        "reference_ram_bytes": 0,
+        "reference_entry_points": 81
+      }
+    },
+    "APP_ABI": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v77-20261021/app-self-test/result.json",
+        "sha256": "8992d89140e64547a50a5f88532ac8b306d534ff8f35c2dcf76fa29363bc5ccc"
+      },
+      "result": {
+        "status": "PASS",
+        "cases": [
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          }
+        ],
+        "cache_counters": true,
+        "warmup_tested": true,
+        "rounds": 12,
+        "wire_version": 4,
+        "tested_kinds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "all_abi_kinds_tested": true,
+        "scope": "Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark."
+      }
+    },
+    "UF2_bounds": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v77-20261021/uf2-bounds.json",
+        "sha256": "3180ec3192f884e188ce18199525b82cd3afef46217be01bd11bfa56a8d73d6b"
+      },
+      "result": {
+        "status": "PASS",
+        "blocks": 6169,
+        "start": "0x10000000",
+        "end": "0x10181900",
+        "uf2_sha256": "00ade3b7265453e8858b9fc258c239d9f4ebaa06a5383ea5b5163dd848555b99",
+        "settings_partition_untouched": true
+      }
+    }
+  },
+  "rounding": {
+    "status": "PASS",
+    "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "sqrt": {
+        "status": "PASS",
+        "cases": 10018,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+      },
+      "sin": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+      },
+      "cos": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+      },
+      "tan": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+      },
+      "atan": {
+        "status": "PASS",
+        "cases": 20401,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+      },
+      "asin": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+      },
+      "acos": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+      },
+      "ln": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+      },
+      "log10": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 20196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f070a86d557b1be82f622d73f11c5f501851b5045a723ca94937ff574eceb664"
+      },
+      "pow": {
+        "status": "PASS",
+        "cases": 20395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "e933dd37f4102e4fd3a3cf9531d04d2888f53bda81cd9daf8df287497e63ed77"
+      },
+      "fma": {
+        "status": "PASS",
+        "cases": 24553,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input."
+  },
+  "reproducible_patch": {
+    "status": "PASS_PATCHES_APPLY_WITHOUT_WRITING",
+    "patch": "research/m0-stable-arena-20261021/placement-and-arena.patch",
+    "patch_sha256": "893ed0488f367827597a2d986d7ea11d12defc3b36486854a207258cc6b0245e",
+    "qualification_cmake_patch": "research/m0-stable-arena-20261021/qualification-cmake.patch",
+    "qualification_cmake_patch_sha256": "3a906fc61260292a0e1a9c3264ce9ca1eed80e8d144099a9d11adf7709d394d5",
+    "baseline_math_commit": "45d320db78b63a7703c5154662613a64c61e6af9",
+    "files": {
+      "code/native_eabi_m0.S": {
+        "before_sha256": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+        "after_sha256": "9af2811c276782afa06d3f7e4225636f65127830343616fac9f136c841008ece"
+      },
+      "code/native_eabi_m0.cpp": {
+        "before_sha256": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+        "after_sha256": "3d50eb7e09109e65782af3e7bae877d7d2daf150c5a5b80a05a15804ba4258b3"
+      },
+      "code/native_eabi_m0_atan_refine.inc": {
+        "before_sha256": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+        "after_sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1"
+      },
+      "code/native_eabi_m0_convert.inc": {
+        "before_sha256": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+        "after_sha256": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3"
+      },
+      "code/native_eabi_m0_trig_refine.inc": {
+        "before_sha256": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+        "after_sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f"
+      },
+      "ports/picocalc/m0_math_extension.ld": {
+        "before_sha256": "42dbc292d5d1319d1cbc4f82421db8eb8aed3bc283b8660da5551b20451cb4cc",
+        "after_sha256": "2bcae537c0d480ffd54008bd0abc6a8bcc0ff67ed0dcffcf625353aa7ac1aa31"
+      },
+      "ports/picocalc/CMakeLists.txt": {
+        "before_sha256": "5725d90369daf325cb394f406cb61da4e11aebd327d75e3c942a4e58bc6f8acc",
+        "after_sha256": "9e6459f629d3772f09dbadcd7184c832cc2c610dbbd7e6cd2aad20bb2f88b424",
+        "scope": "Arena insertion only; preserve other current ROOT CMake changes"
+      }
+    },
+    "root_math_promoted": false,
+    "usb_opened": false
+  },
+  "instruction_profile": {
+    "artifact": {
+      "path": ".build/m0-stable-arena-v77-20261021/instruction-matrix.json",
+      "sha256": "17e41ac301394972a050f1c6bc1cb6472d4af0aa8e981c2ae955a7fcd46f9c8b"
+    },
+    "groups": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "fewer_instructions_than_Qfplib": 112,
+    "equal_instructions": 2,
+    "more_instructions": 0,
+    "owned_instruction_count_changes_vs_v72": 0,
+    "physical_timing_available": false
+  },
+  "cache_model": {
+    "artifact": {
+      "path": ".build/m0-stable-arena-v77-20261021/cache-probe-extended.json",
+      "sha256": "0071eabf54cf300683fde541a7c6aefe62645cc552513cef63a0634d67576c80"
+    },
+    "groups": [
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "mean_instructions": 1201.0625,
+        "flash_data_reads_per_call": 24.875,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-018.zlib",
+          "sha256": "7f0a3b9ec03c5463c874bdcea1393cc605a1e4f36d5701d3a188b214e5e0b9b3"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 153219,
+            "hits": 152892,
+            "misses": 327,
+            "misses_per_call": 2.5546875
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 153219,
+            "hits": 152579,
+            "misses": 640,
+            "misses_per_call": 5.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 153219,
+            "hits": 152847,
+            "misses": 372,
+            "misses_per_call": 2.90625
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 153219,
+            "hits": 152489,
+            "misses": 730,
+            "misses_per_call": 5.703125
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 47,
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "mean_instructions": 13.0,
+        "flash_data_reads_per_call": 0.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-047.zlib",
+          "sha256": "ec857d7d4ce408e6b00eaf6eb7c36611b3a60f0033d661e75be049d384a9944a"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 6656,
+            "hits": 6656,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 6656,
+            "hits": 6656,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 6656,
+            "hits": 6656,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 6656,
+            "hits": 6656,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 115,
+        "operation": "pow",
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "mean_instructions": 151.8671875,
+        "flash_data_reads_per_call": 7.54296875,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-115.zlib",
+          "sha256": "790be7216ec257d77cb627c60c447dcc926fd7d897aebdeeb48fb9bf888da5ae"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 40473,
+            "hits": 40473,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 40473,
+            "hits": 40473,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 40473,
+            "hits": 40473,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 40473,
+            "hits": 40473,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 24,
+        "operation": "sqrt",
+        "stream": "legacy",
+        "cases": 12,
+        "mean_instructions": 136.16666666666666,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-024.zlib",
+          "sha256": "7f2b5b5f072b838c6760f79e5128340dda35594d8aa164bb9b1e70f1594c68c8"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 1694,
+            "hits": 1694,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 1694,
+            "hits": 1694,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 1694,
+            "hits": 1694,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 1694,
+            "hits": 1694,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 26,
+        "operation": "sqrt",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "mean_instructions": 134.59765625,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-026.zlib",
+          "sha256": "5292de6b59cc8b243d94c8905ccfdf246d44e8f38d8fcd8e1ad350ec4c180505"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 35737,
+            "hits": 35737,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 35737,
+            "hits": 35737,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 35737,
+            "hits": 35737,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 35737,
+            "hits": 35737,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 27,
+        "operation": "sqrt",
+        "stream": "normalized",
+        "cases": 256,
+        "mean_instructions": 134.66015625,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-027.zlib",
+          "sha256": "89084ca276597012b68476d45981910b5111f2f33a11ac259a5cafaae135487a"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 35753,
+            "hits": 35753,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 35753,
+            "hits": 35753,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 35753,
+            "hits": 35753,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 35753,
+            "hits": 35753,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 30,
+        "operation": "sqrt",
+        "stream": "segment_edges",
+        "cases": 512,
+        "mean_instructions": 134.123046875,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-030.zlib",
+          "sha256": "0ccc901b3de8af7440f8bdc0d2b18c94182182167f339836977fb7ade0eaa915"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 71231,
+            "hits": 71231,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 71231,
+            "hits": 71231,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 71231,
+            "hits": 71231,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 71231,
+            "hits": 71231,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 31,
+        "operation": "sqrt",
+        "stream": "segment_edges",
+        "cases": 512,
+        "mean_instructions": 134.5546875,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-031.zlib",
+          "sha256": "97e3bf4d314a8feb39904d94ba572f72f742861bc40998e439502934ff8bc944"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 71452,
+            "hits": 71452,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 71452,
+            "hits": 71452,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 71452,
+            "hits": 71452,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 71452,
+            "hits": 71452,
+            "misses_per_call": 0.0
+          }
+        ]
+      },
+      {
+        "image": "V77",
+        "elf_sha256": "140f2adf0023c106d3f234245bbbe195e3ea6b367817ce07ff72c52d3cd1f1c6",
+        "index": 32,
+        "operation": "sqrt",
+        "stream": "segment_edges",
+        "cases": 512,
+        "mean_instructions": 135.072265625,
+        "flash_data_reads_per_call": 5.0,
+        "trace": {
+          "path": ".build/m0-stable-arena-v77-20261021/cache-trace-v77-032.zlib",
+          "sha256": "1b4c9004de8d1df2943a33a672d0ccc28f34ce9f16b4d063610f28e084358a09"
+        },
+        "models": [
+          {
+            "policy": "LRU",
+            "fill": "whole_8byte_line",
+            "accesses": 71717,
+            "hits": 71717,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "LRU",
+            "fill": "requested_4byte_word",
+            "accesses": 71717,
+            "hits": 71717,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "whole_8byte_line",
+            "accesses": 71717,
+            "hits": 71717,
+            "misses_per_call": 0.0
+          },
+          {
+            "policy": "FIFO",
+            "fill": "requested_4byte_word",
+            "accesses": 71717,
+            "hits": 71717,
+            "misses_per_call": 0.0
+          }
+        ]
+      }
+    ],
+    "assumptions": "LRU and FIFO replacement and whole-line and per-word fill are modeled separately; these four models are assumptions, not claims about undocumented replacement or prefetch behavior.",
+    "scope": "Exact owned ARM instruction/data traces and results for the three gaps; isolated owned function calls only. Excludes the other core, IRQ traffic, caller prefetch and Qfplib batches. The third corpus pass is modeled after two warm passes. Model miss counts are not measured XIP counters or timings.",
+    "architecture_reference": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf",
+    "no_modeled_regression_vs_V75": true,
+    "physical_timing_available": false
+  },
+  "comparison": {
+    "artifact": {
+      "path": ".build/m0-balanced-timing-v77-20261021/benchmark.json",
+      "sha256": "ef23f60f3a7fc8ffac1550ac7da9991bfee77a37b3719307875d3a2625db612b"
+    },
+    "groups": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "input_result_bits_identical_to_V75": true,
+    "production_link_preserved": true,
+    "physical_timing_available": false
+  },
+  "no_libgcc": {
+    "archive_members": 0,
+    "map": {
+      "path": ".build/m0-stable-arena-v77-20261021/build/mk61s-picocalc-pico-h.elf.map",
+      "sha256": "8c1b61a142c414d2909092e7bc982a3d2afe8fa28435a3ec089d1cd65417d347"
+    }
+  },
+  "root_math_promoted": false,
+  "math_hardware_image_flashed": false,
+  "hardware_driver_prepared": false,
+  "goal_complete": false,
+  "remains": [
+    "Wait for platform acceptance and the agreed memory-function window, then obtain explicit device release and the final immutable source/restore. The current 7AEA snapshot is unaccepted.",
+    "Rebase the arena onto that final platform, verify owned object payloads/addresses and resources, and qualify before hardware timing.",
+    "Measure the complete 114-group hardware matrix, including the three V72 speed gaps. Isolated cache models and instruction counts do not establish speed parity.",
+    "General binary64 pow totality outside the 224 exact-stage exponent values remains unproved; the final undecided trap is retained."
+  ]
+}

@@ -1,0 +1,140 @@
+--- a/code/native_eabi_m0.S
++++ b/code/native_eabi_m0.S
+@@ -3,8 +3,8 @@
+ .syntax unified
+ .cpu cortex-m0plus
+ .thumb
+-.macro function name
+- .section .text.\name,"ax",%progbits
++.macro function name, group=.text
++ .section \group\().\name,"ax",%progbits
+  .global \name
+  .type \name,%function
+  .thumb_func
+@@ -816,7 +816,11 @@
+  adcs r3,r2
+ .endm
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++function mk61_m0_sqrt, .m0_sqrt64_fixed
++#else
+ function mk61_m0_sqrt
++#endif
+  lsrs r3,r1,#20
+  adds r2,r3,#1
+  lsrs r2,#11
+--- a/code/native_eabi_m0_convert.inc
++++ b/code/native_eabi_m0_convert.inc
+@@ -182,7 +182,28 @@
+ .size __aeabi_l2d,.-__aeabi_l2d
+ .ltorg
+
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++function __aeabi_f2d, .m0_conversion_fixed
++#else
+ function __aeabi_f2d
++#endif
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++ // R1 becomes 0x38000000 or 0xb8000000 without a literal load.
++ // For a negative input ASR gives -1: (-16+7)<<27 = 0xb8000000.
++ lsls r2,r0,#1
++ lsrs r3,r2,#24
++ subs r3,#1
++ cmp r3,#253
++ bhi .Lf2d_slow
++ asrs r1,r0,#31
++ lsls r1,#4
++ adds r1,#7
++ lsls r1,#27
++ lsrs r2,#4
++ adds r1,r2
++ lsls r0,#29
++ bx lr
++#else
+  asrs r1,r0,#31
+  lsls r1,#31
+  lsls r2,r0,#1
+@@ -196,6 +217,7 @@
+  adds r1,r2
+  lsls r0,#29
+  bx lr
++#endif
+ .Lf2d_slow:
+  push {r4,lr}
+  bl mk61_m0_f2d_slow
+--- a/code/native_eabi_m0.cpp
++++ b/code/native_eabi_m0.cpp
+@@ -12,8 +12,12 @@
+               "M0 EABI requires IEEE binary64/binary32");
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+ #define MK61_M0_EXP_CORE __attribute__((section(".m0_exp_core")))
++#define MK61_M0_TRIG_REFINE_VALUES __attribute__((section(".m0_trig_refine_values_fixed")))
++#define MK61_M0_TRIG_REFINE __attribute__((section(".m0_trig_refine_fixed")))
+ #else
+ #define MK61_M0_EXP_CORE
++#define MK61_M0_TRIG_REFINE_VALUES
++#define MK61_M0_TRIG_REFINE
+ #endif
+ namespace m0_eabi {
+ using U = uint64_t;
+--- a/code/native_eabi_m0_trig_refine.inc
++++ b/code/native_eabi_m0_trig_refine.inc
+@@ -17,7 +17,7 @@
+ __attribute__((always_inline)) inline Refine96 checked_trig_coefficient(unsigned op,unsigned i) {
+   const uint32_t* p=trig94_coefficients[op][i];return {(U(p[1])<<32)|p[0],p[2]};
+ }
+-__attribute__((optimize("Os"),noinline,cold)) static void checked_trig_refine_values(Trig192 r,unsigned mask,Refine96* output,int* scales,uint32_t &error) {
++MK61_M0_TRIG_REFINE_VALUES __attribute__((optimize("Os"),noinline,cold)) static void checked_trig_refine_values(Trig192 r,unsigned mask,Refine96* output,int* scales,uint32_t &error) {
+   const Refine96 one={0,1U<<30};
+   if(r.high<(U(1)<<57)) { // |r| < 1/64
+     int e;const Refine96 relative=checked_trig_relative94(r,e);
+@@ -100,7 +100,7 @@
+ __attribute__((optimize("Os"),noinline,cold)) static double checked_trig_backend(double x,unsigned op) {
+   return op==0?mk61_m0_cr_sin(x):op==1?mk61_m0_cr_cos(x):mk61_m0_cr_tan(x);
+ }
+-__attribute__((optimize("Os"),noinline,cold)) static double checked_trig_refine(double x,unsigned op) {
++MK61_M0_TRIG_REFINE __attribute__((optimize("Os"),noinline,cold)) static double checked_trig_refine(double x,unsigned op) {
+   const U b=bits(x),m=b&D::Magnitude;uint32_t n=0;bool negative=false;
+   Trig192 r;
+   if(m<=UINT64_C(0x3FE921FB54442D18)) r=checked_trig_input191(m);
+--- a/ports/picocalc/m0_math_extension.ld
++++ b/ports/picocalc/m0_math_extension.ld
+@@ -12,6 +12,17 @@
+     /* Keep these leaf product helpers disjoint from the fixed log10
+      * hot path in cache index space. Grouping the unchanged bodies also
+      * decouples their placement from future platform text growth. */
++    /* Stable indices for the rare tangent refinement, independent of platform text growth. */
++    .m0_trig_refine_fixed 0x10149a24 : {
++        *(.m0_trig_refine_values_fixed)
++        . = ALIGN(4);
++        *(.m0_trig_refine_fixed)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_math_extension) + SIZEOF(.m0_math_extension) <= ADDR(.m0_trig_refine_fixed),
++           "Math tables overlap stable tangent refinement")
++    ASSERT(ADDR(.m0_trig_refine_fixed) + SIZEOF(.m0_trig_refine_fixed) <= 0x1014d800,
++           "Stable tangent refinement overlaps log product helpers")
+     .m0_log_product_extension 0x1014d800 : {
+         *(.m0_log_product_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+@@ -53,6 +64,20 @@
+         *(.m0_pow_refine_extension)
+         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+     } > FLASH
++    .m0_conversion_fixed 0x1016b99c : {
++        *(.m0_conversion_fixed.*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    .m0_sqrt64_fixed 0x1016be20 : {
++        *(.m0_sqrt64_fixed.*)
++        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
++    } > FLASH
++    ASSERT(ADDR(.m0_pow_refine_extension) + SIZEOF(.m0_pow_refine_extension) <= ADDR(.m0_conversion_fixed),
++           "Pow refinement overlaps stable conversion")
++    ASSERT(ADDR(.m0_conversion_fixed) + SIZEOF(.m0_conversion_fixed) <= ADDR(.m0_sqrt64_fixed),
++           "Stable conversion overlaps square root")
++    ASSERT(ADDR(.m0_sqrt64_fixed) + SIZEOF(.m0_sqrt64_fixed) <= 0x10170000,
++           "Stable square root overlaps trig core")
+     /* Keep the shared argument/dispatcher below cache offset0xa00.
+      * Sin/cos then use the rest of this single8KiB index span. Tan
+      * instead uses its own code at offset0xa00, disjoint from the shared

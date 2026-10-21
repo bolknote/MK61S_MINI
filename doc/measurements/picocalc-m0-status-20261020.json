@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "recorded_at": "2026-10-21T16:19:15.941897+00:00",
-  "status": "PASS_OFFLINE_PLACEMENT_EXPERIMENT_HIL_PENDING",
+  "recorded_at": "2026-10-21T20:31:14.320779+00:00",
+  "status": "PASS_OFFLINE_STABLE_ARENA_PLATFORM_ACCEPTANCE_PENDING",
   "objective": "M0+ speed at least Qfplib with correctly rounded binary64 results; M4 code unchanged.",
   "physical_v7": {
     "artifact": {
@@ -1577,10 +1577,10 @@
     ]
   },
   "remaining": [
-    "Rebase the five placement changes onto the next accepted frozen platform and measure the complete 114-group matrix; the current V73 prototype still uses accepted A7483AE6.",
-    "The three physical V72 speed gaps are not yet proven fixed. The prior V72 physical run completed only 87/116 chunks after an external interruption.",
-    "Use the tested UTC wall-clock helper in the next hardware transaction so host sleep is included in RTC restoration.",
-    "General binary64 pow totality remains unproved outside the 224 exact-stage exponent values; the final undecided trap remains for that domain."
+    "Wait for platform acceptance and the agreed memory-function window, then obtain explicit device release and the final immutable source/restore. The current 7AEA snapshot is unaccepted.",
+    "Rebase the arena onto that final platform, verify owned object payloads/addresses and resources, and qualify before hardware timing.",
+    "Measure the complete 114-group hardware matrix, including the three V72 speed gaps. Isolated cache models and instruction counts do not establish speed parity.",
+    "General binary64 pow totality outside the 224 exact-stage exponent values remains unproved; the final undecided trap is retained."
   ],
   "semantics": "RNE return values. errno and floating-point exception flags are not implemented.",
   "physical_v7_fixed_layout_probe": {
@@ -10491,18 +10491,18 @@
   },
   "device": {
     "owner": "picocalc-render-i2c-sd",
-    "state": "reserved",
-    "build": "A7483AE6",
+    "state": "awaiting_case_powercycle",
+    "build": "7AEA549E",
     "uid": "E6657CD423721C35",
     "port": "/dev/cu.usbmodem11301",
-    "updated_at": "2026-10-21T16:15:24.091068+00:00",
+    "updated_at": "2026-10-21T20:00:22.518536+00:00",
     "calculator_state_restored": true,
     "serial_port_open": false,
     "firmware_crc_verified": true,
-    "peripherals_ready": true,
-    "peripheral_state": "KBD=OK errors=0 SD=OK PANEL_INIT=1 PSRAM=OK MODE=QPI QPI_FALLBACKS=0 TAIL_TIMEOUTS=0 DMA_TIMEOUTS=0 CRC_ERRORS=0 LCD_ERRORS=0 APP_BUFFERS=0 VALID=1",
+    "peripherals_ready": false,
+    "peripheral_state": "Corrected firmware installed; case controller still NACK; needs full case power removal",
     "restore_build": "A7483AE6",
-    "uf2_sha256": "860258ec7bc59b0e74727a03d58cfd98b5ea8826ad53325d42129b37c0f7ca60",
+    "uf2_sha256": "5eabee8c05e1579b6ed59c32ea88336254229233c3b1e93a965825478aefdf6c",
     "restore_package": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/verified-restore-0.8.15-a7483ae6",
     "restore_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/verified-restore-0.8.15-a7483ae6/RESTORE.json",
     "verified_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/source",
@@ -10510,7 +10510,7 @@
     "hardware_result": "/Users/bolk/Projects/MK61S_MINI/doc/measurements/picocalc-apps-lcd-chain-20261021.json",
     "sd_result": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/sd-final/result.json",
     "session": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/session.json",
-    "purpose": "Event-driven rendering, interrupt I2C, safe qualified SD acceleration",
+    "purpose": "Recover case controller then qualify I2C sleep clock lease",
     "math_transaction": ".build/m0-balanced-timing-v72-20261021/hil-01/transaction.json",
     "usb_present": true,
     "math_usb_open": false,
@@ -10538,7 +10538,7 @@
       "reset_or_flash": false
     },
     "previous_accepted_restore": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/verified-restore-0.8.14-d26e5de0-r1",
-    "version": "0.8.15",
+    "version": "0.8.16",
     "restore_manifest_sha256": "75d0c8b2dfc950e3f57da6f6e81408eb29dd066a4a77d883b77ced489726e209",
     "owner_thread": "01a1497b-7c0c-7e41-ad22-793babfc1623",
     "last_memmove_window": {
@@ -10579,7 +10579,22 @@
       "reset_or_flash": false
     },
     "rtc_restored": true,
-    "rtc_restore_receipt": ".build/memmove-20261021/pico-finish.json"
+    "rtc_restore_receipt": ".build/memmove-20261021/pico-finish.json",
+    "calculator_state_backup_saved": true,
+    "last_accepted_build": "A7483AE6",
+    "queue_after_current_acceptance": [
+      {
+        "owner": "Memset M0+",
+        "thread": "01a15d77-6fe3-74d3-a025-dbf484687484",
+        "scope": "APP-only scout, SRAM/Flash memory comparison and integration; explicit handoff required",
+        "estimated_minutes": 15
+      },
+      {
+        "owner": "M0+ Math",
+        "thread": "01a14fdd-8514-7d33-b324-93b038e5f137",
+        "scope": "V75 rebased on final accepted frozen source/restore; explicit handoff required"
+      }
+    ]
   },
   "active_processes": [],
   "compact_pow_v45_20261020": {
@@ -10768,7 +10783,7 @@
       ]
     }
   },
-  "previous_goal_turn_assessment": "PROGRESS_COMMITTED_V72_PHYSICAL_PARTIAL_EVIDENCE",
+  "previous_goal_turn_assessment": "PROGRESS_V75_HELPERS_AND_SQRT_OFFLINE_QUALIFIED",
   "compact_log_v53_20261020": {
     "status": "PRODUCTION_NUMERIC_AND_RESOURCE_GATES_PASS_READY_FOR_HIL_NOT_PROMOTED",
     "source": ".build/m0-log-compact-v53-20261020/source",
@@ -12078,7 +12093,7 @@
       }
     ]
   },
-  "next_action": "After the platform peer finishes render/I2C/SD, rebase V73 onto its accepted frozen source, qualify and run the agreed math window; then pass the device for memcmp.",
+  "next_action": "After accepted platform and memory integration, rebase the fixed arena on the final frozen source, validate and perform the complete math hardware comparison.",
   "trig_word_normalization_v61_20261021": {
     "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
     "work": ".build/m0-trig-word-normalization-v61-20261021",
@@ -12158,7 +12173,7 @@
     "gates": ".build/m0-cos70-v65-20261021/gates.json",
     "reason": "Correct cosine kernel resolves other smallcos cases, but the three targeted slowcos inputs select sine after reduction. V66 moves secondary refinement into a packed small-trig callee, adds sine kernels and removes the broader dispatcher liveness penalty."
   },
-  "hardware_constraint": "The platform peer owns PicoCalc for render/I2C/SD. Math is queued next, followed by memcmp; no math USB access during this window.",
+  "hardware_constraint": "Platform acceptance is pending. The agreed sequence is platform, memory scout/SRAM-Flash integration, then math; no math USB access before explicit release.",
   "small_trig_v66_20261021": {
     "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
     "report": "doc/measurements/m0-small-trig-20261021.json",
@@ -12684,5 +12699,56 @@
     "M4": "PASS_BYTE_IDENTITY",
     "generic_M0": "PASS_BYTE_IDENTITY"
   },
-  "current_candidate": ".build/m0-fixed-tails-v73-20261021"
+  "current_candidate": ".build/m0-stable-arena-v77-20261021",
+  "f2d_no_literal_v74_20261021": {
+    "report": "doc/measurements/m0-f2d-no-literal-v74-20261021.json",
+    "root_promoted": false,
+    "patch": "research/m0-f2d-no-literal-20261021/placement-and-f2d.patch",
+    "rounding_cases": 265409,
+    "f2d_ARM_cases": 44816,
+    "normal_f2d_instructions": 13,
+    "normal_f2d_flash_data_reads": 0,
+    "allocated_flash_delta_vs_v73_bytes": -6,
+    "additional_main_ram_bytes": 0,
+    "new_tables": 0,
+    "physical_timing_available": false,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY",
+    "wall_clock_restore_test": "PASS_WITH_SIMULATED_USB"
+  },
+  "trig_support_v75_20261021": {
+    "report": "doc/measurements/m0-trig-support-v75-20261021.json",
+    "root_promoted": false,
+    "patch": "research/m0-trig-support-20261021/placement-and-f2d.patch",
+    "rounding_cases": 265409,
+    "f2d_ARM_cases": 44816,
+    "cache_trace_ARM_cases": 2956,
+    "instruction_count_changes_vs_v72": 0,
+    "allocated_flash_delta_vs_v72_bytes": 146,
+    "additional_main_ram_bytes": 0,
+    "new_tables": 0,
+    "physical_timing_available": false,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY"
+  },
+  "stable_arena_v77_20261021": {
+    "report": "doc/measurements/m0-stable-arena-v77-20261021.json",
+    "root_promoted": false,
+    "patch": "research/m0-stable-arena-20261021/placement-and-arena.patch",
+    "platform_build": "7AEA549E",
+    "platform_acceptance": "NOT_ACCEPTED",
+    "cold_sections_with_preserved_cache_indices": 274,
+    "math_object_payloads_byte_identical": true,
+    "rounding_cases": 265409,
+    "f2d_ARM_cases": 44816,
+    "cache_trace_ARM_cases": 2956,
+    "allocated_flash_delta_vs_V76_bytes": 16,
+    "new_tables": 0,
+    "additional_main_ram_reserved_bytes": 0,
+    "scratch_y_used_bytes": 4096,
+    "scratch_y_already_reserved_bytes": 4096,
+    "physical_timing_available": false,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY"
+  }
 }

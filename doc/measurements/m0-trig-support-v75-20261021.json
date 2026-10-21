@@ -1,0 +1,1459 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T19:11:18.664256+00:00",
+  "status": "PASS_OFFLINE_TRIG_SUPPORT_HIL_REBASE_PENDING",
+  "previous_goal_turn": "PROGRESS_V74_LITERAL_FREE_F2D_QUALIFIED_AND_RECOVERY_DRIVER_TESTED",
+  "current_goal_turn": "PROGRESS_SIX_HELPER_PLACEMENT_SELECTED_RELINKED_AND_FULLY_OFFLINE_QUALIFIED",
+  "accepted_base": "A7483AE6",
+  "production_elf": {
+    "path": ".build/m0-trig-support-v75-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6"
+  },
+  "manifest": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.15",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537008,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 198616,
+    "static_ram_data_bss_bytes": 157936,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074048,
+    "bin_sha256": "bf6f308d353ed9c768f1436ce4e7ec20e602b1e48362219d7a455e5c3af9d93d",
+    "uf2_sha256": "4b2d4ba26f78b914770f513e2826d04c519ab9da5be8ffd5c248018c26ba36c8",
+    "hardware_verified": false,
+    "source_sha256": "1af2d9879238027799594e80a4c0a2a68637535aefe47de3bd7b396c9d9e71f4",
+    "build_id": "7479d772",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537008,
+      "footer_offset": 656280,
+      "profile_id": "50434831",
+      "crc32": "89d45d3e"
+    }
+  },
+  "source_identity": {
+    "path": ".build/m0-trig-support-v75-20261021/source-integration.json",
+    "sha256": "02c20b541ed18000ddfb2cbbedf3b80eecbb9c9fcb75a4984739b81349c94d49"
+  },
+  "math_files_sha256": {
+    "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+    "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+    "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+    "code/native_eabi_m0.S": "9af2811c276782afa06d3f7e4225636f65127830343616fac9f136c841008ece",
+    "code/native_eabi_m0.cpp": "3d50eb7e09109e65782af3e7bae877d7d2daf150c5a5b80a05a15804ba4258b3",
+    "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+    "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+    "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+    "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+    "code/native_eabi_m0_atan_refine.inc": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1",
+    "code/native_eabi_m0_convert.inc": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3",
+    "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+    "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+    "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+    "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+    "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+    "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+    "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+    "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+    "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+    "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+    "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+    "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+    "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+    "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+    "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+    "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+    "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+    "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+    "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+    "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+    "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+    "code/native_eabi_m0_trig_refine.inc": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f",
+    "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+    "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+    "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+    "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+    "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+    "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+    "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+    "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+    "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+  },
+  "initial_preparation": {
+    "status": "PRIVATE_PROTOTYPE_NOT_PROMOTED",
+    "parent": ".build/m0-f2d-no-literal-v74-20261021",
+    "accepted_build": "a7483ae6",
+    "source_changes": {
+      "code/native_eabi_m0.cpp": {
+        "before_sha256": "7ce842654a3f179ea4170dd9826453dfffc1ae9d1f084a1a0620e67c5b098437",
+        "after_sha256": "3d50eb7e09109e65782af3e7bae877d7d2daf150c5a5b80a05a15804ba4258b3"
+      },
+      "code/native_eabi_m0_trig_refine.inc": {
+        "before_sha256": "abe29e5cd8697b6ad4783cb16db5fe0b8da329115cccac2759dbb225cfc538f5",
+        "after_sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f"
+      },
+      "code/native_eabi_m0_atan_refine.inc": {
+        "before_sha256": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+        "after_sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1"
+      },
+      "ports/picocalc/m0_math_extension.ld": {
+        "before_sha256": "3be44b0f88667d5188b59a2f63dba968dbef62e124173c05c1488cd6020dc7e3",
+        "after_sha256": "43cdab7b201a94dbf15553d8f0e63b0fc3f9d3c036b596889961d1ef61455d5c"
+      }
+    },
+    "functions": [
+      "checked_trig_ratio_midpoint",
+      "clz32",
+      "clz64",
+      "low_product",
+      "mk61_m0_mul_q62",
+      "atan_ratio_words"
+    ],
+    "reason": "V74 isolated ARM-trace cache models still show tangent conflicts in the ratio, CLZ and product helpers. Restore their old successful indices before hardware qualification.",
+    "arithmetic_changes": false,
+    "new_tables": 0,
+    "root_changed": false,
+    "usb_opened": false,
+    "physical_timing_available": false,
+    "goal_complete": false
+  },
+  "initial_image_snapshot": {
+    "path": ".build/m0-trig-support-v75-20261021/initial-placement/snapshot.json",
+    "sha256": "61822bd8b1e3a85a2097060b9018ed6cf9d3eee35857b108cf0d0e6fb35e2819"
+  },
+  "selected_placement": {
+    "status": "SELECTED_BEFORE_RELINK",
+    "chosen": {
+      ".m0_trig_support_fixed": "0x1014d050",
+      ".m0_trig_ratio_fixed": "0x1015d686",
+      ".m0_trig_mulq62_fixed": "0x1015a6f8",
+      ".m0_sqrt64_fixed": "0x1016bb00"
+    },
+    "screen_sha256": "8d7507a49e8eff12017f68f3d78c060fcafa6304408983a42e3ec66c7a2a6b40",
+    "initial_elf_sha256": "aa43e1aa775cee214ef07b6ddde16a7e0263487ebb323bbebdf551626a6d335d",
+    "before_ld_sha256": "43cdab7b201a94dbf15553d8f0e63b0fc3f9d3c036b596889961d1ef61455d5c",
+    "after_ld_sha256": "8bcbaaf287f83314c312291af4c80b00cab7e9cd51a6f4c0039bacf32f8ea30e",
+    "selected_trace_misses": {
+      "18": [
+        342,
+        665,
+        387,
+        755
+      ],
+      "47": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "115": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "24": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "26": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "27": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "30": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "31": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "32": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "physical_timing_available": false
+  },
+  "reproducible_patch": {
+    "status": "PASS_PATCH_APPLIES_WITHOUT_WRITING",
+    "patch": "research/m0-trig-support-20261021/placement-and-f2d.patch",
+    "patch_sha256": "0894c468db2a568471987328a2e9190bf059e0f0f9e8b746f052b4666bc4b524",
+    "baseline_math_commit": "45d320db78b63a7703c5154662613a64c61e6af9",
+    "files": {
+      "code/native_eabi_m0.S": {
+        "before_sha256": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+        "after_sha256": "9af2811c276782afa06d3f7e4225636f65127830343616fac9f136c841008ece"
+      },
+      "code/native_eabi_m0.cpp": {
+        "before_sha256": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+        "after_sha256": "3d50eb7e09109e65782af3e7bae877d7d2daf150c5a5b80a05a15804ba4258b3"
+      },
+      "code/native_eabi_m0_atan_refine.inc": {
+        "before_sha256": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+        "after_sha256": "35b099f5ebfc6219245329b285bb46696e8ca2186ebbeb97e5135e0efc66dbe1"
+      },
+      "code/native_eabi_m0_convert.inc": {
+        "before_sha256": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+        "after_sha256": "d4b15b0be7f54c9a67d4d7d4b1e8b60874ff054587b6c09d0ec0cd97338a4cc3"
+      },
+      "code/native_eabi_m0_trig_refine.inc": {
+        "before_sha256": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+        "after_sha256": "559094ec98ac8c01693fd65bec7b1212b22115026806bfdf3b96770f2b543e5f"
+      },
+      "ports/picocalc/m0_math_extension.ld": {
+        "before_sha256": "42dbc292d5d1319d1cbc4f82421db8eb8aed3bc283b8660da5551b20451cb4cc",
+        "after_sha256": "8bcbaaf287f83314c312291af4c80b00cab7e9cd51a6f4c0039bacf32f8ea30e"
+      }
+    },
+    "root_math_promoted": false,
+    "usb_opened": false
+  },
+  "rounding": {
+    "status": "PASS",
+    "elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+    "mpfr": "4.2.2",
+    "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+    "operations": {
+      "sqrt": {
+        "status": "PASS",
+        "cases": 10018,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+      },
+      "sin": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+      },
+      "cos": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+      },
+      "tan": {
+        "status": "PASS",
+        "cases": 26304,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+      },
+      "atan": {
+        "status": "PASS",
+        "cases": 20401,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+      },
+      "asin": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+      },
+      "acos": {
+        "status": "PASS",
+        "cases": 20070,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+      },
+      "ln": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+      },
+      "log10": {
+        "status": "PASS",
+        "cases": 25397,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+      },
+      "exp": {
+        "status": "PASS",
+        "cases": 20196,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "f070a86d557b1be82f622d73f11c5f501851b5045a723ca94937ff574eceb664"
+      },
+      "pow": {
+        "status": "PASS",
+        "cases": 20395,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "e933dd37f4102e4fd3a3cf9531d04d2888f53bda81cd9daf8df287497e63ed77"
+      },
+      "fma": {
+        "status": "PASS",
+        "cases": 24553,
+        "wrong_rounding": 0,
+        "examples": [],
+        "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+      }
+    },
+    "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+    "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+    "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+    "known_limitations": [
+      "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+    ],
+    "scope": "Finite corpus, not an exhaustive proof over every binary64 input."
+  },
+  "qualification": {
+    "f2d_ARM": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/f2d-arm.json",
+        "sha256": "03c6a20fb1163949bb3f4770702349df0dd53528d3e3e6718c5fc9cdfd9129df"
+      },
+      "result": {
+        "status": "PASS",
+        "cases": 44816,
+        "current": {
+          "elf": ".build/m0-trig-support-v75-20261021/firmware/mk61s-picocalc-pico-h.elf",
+          "elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+          "calls": 44816,
+          "normal_cases": 44453,
+          "special_cases": 363,
+          "normal_paths": [
+            {
+              "instructions": 13,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 44453
+            }
+          ],
+          "special_paths": [
+            {
+              "instructions": 28,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 2
+            },
+            {
+              "instructions": 37,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 194
+            },
+            {
+              "instructions": 160,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 36
+            },
+            {
+              "instructions": 162,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 77
+            },
+            {
+              "instructions": 164,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 48
+            },
+            {
+              "instructions": 166,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 6
+            }
+          ],
+          "result_sha256": "0ddc0ede63531fe13aaa2a948e38191917f3f10aafbf6a498af7cf74fe19c58e",
+          "wrong_results": 0,
+          "ABI": "R0 binary32 input, R0/R1 binary64 output; R4-R11 and SP preserved"
+        },
+        "oracle": "Integer IEEE binary32 significand widening; every finite binary32 value is exactly representable as binary64. NaN sign/payload are preserved and signaling NaNs quieted.",
+        "scope": "Both signs, all 256 exponent encodings, significand bit boundaries and deterministic random encodings. This finite ARM test is not exhaustive over all 2^32 inputs, and instruction/read counts are not physical timings.",
+        "physical_timing_available": false,
+        "baseline": {
+          "elf": ".build/m0-fixed-tails-v73-20261021/firmware/mk61s-picocalc-pico-h.elf",
+          "elf_sha256": "06cc5bc85b72876df54e60e8e57136e45b0e2ed59fb7d51ca4629827cdad616d",
+          "calls": 44816,
+          "normal_cases": 44453,
+          "special_cases": 363,
+          "normal_paths": [
+            {
+              "instructions": 13,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 44453
+            }
+          ],
+          "special_paths": [
+            {
+              "instructions": 30,
+              "flash_data_reads": 0,
+              "flash_data_bytes": 0,
+              "cases": 2
+            },
+            {
+              "instructions": 39,
+              "flash_data_reads": 1,
+              "flash_data_bytes": 4,
+              "cases": 194
+            },
+            {
+              "instructions": 162,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 36
+            },
+            {
+              "instructions": 164,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 77
+            },
+            {
+              "instructions": 166,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 48
+            },
+            {
+              "instructions": 168,
+              "flash_data_reads": 3,
+              "flash_data_bytes": 12,
+              "cases": 6
+            }
+          ],
+          "result_sha256": "0ddc0ede63531fe13aaa2a948e38191917f3f10aafbf6a498af7cf74fe19c58e",
+          "wrong_results": 0,
+          "ABI": "R0 binary32 input, R0/R1 binary64 output; R4-R11 and SP preserved"
+        }
+      }
+    },
+    "resources": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/resources.json",
+        "sha256": "295c9701003d594a1338d226cd5a5e304c1ed247c340aac865370ea5342a25aa"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+        "static_ram_bytes": 198616,
+        "additional_main_ram_bytes": 0,
+        "ram_boundaries_unchanged": [
+          "__data_start__",
+          "__data_end__",
+          "__bss_start__",
+          "__bss_end__",
+          "__end__",
+          "__HeapLimit",
+          "__StackBottom",
+          "__StackTop",
+          "__StackOneBottom",
+          "__StackOneTop",
+          "__lcd_dma_end__"
+        ],
+        "scratch_y_bytes": 4096,
+        "new_tables": 0,
+        "image_extent_delta_bytes": 0,
+        "allocated_flash_delta_bytes": 146,
+        "fixed_sections": {
+          ".m0_trig_refine_fixed": {
+            "address": "0x10149a24",
+            "bytes": 10044
+          },
+          ".m0_conversion_fixed": {
+            "address": "0x1016b99c",
+            "bytes": 34
+          },
+          ".m0_sqrt64_fixed": {
+            "address": "0x1016bb00",
+            "bytes": 8544
+          },
+          ".m0_trig_support_fixed": {
+            "address": "0x1014d050",
+            "bytes": 1264
+          },
+          ".m0_trig_mulq62_fixed": {
+            "address": "0x1015a6f8",
+            "bytes": 466
+          },
+          ".m0_trig_ratio_fixed": {
+            "address": "0x1015d686",
+            "bytes": 738
+          }
+        },
+        "allocated_flash_delta_vs_v74_bytes": 140,
+        "linked_support_helpers": {
+          "checked_trig_ratio_midpoint.isra.0": {
+            "address": "0x1014d050",
+            "bytes": 998,
+            "old_bytes": 998
+          },
+          "_ZN7m0_eabi5clz32Em": {
+            "address": "0x1014d436",
+            "bytes": 66,
+            "old_bytes": 66
+          },
+          "_ZN7m0_eabi5clz64Ey": {
+            "address": "0x1014d478",
+            "bytes": 22,
+            "old_bytes": 22
+          },
+          "_ZN7m0_eabi11low_productEyy": {
+            "address": "0x1014d4cc",
+            "bytes": 78,
+            "old_bytes": 78
+          },
+          "mk61_m0_mul_q62": {
+            "address": "0x1015a6f8",
+            "bytes": 466,
+            "old_bytes": 466
+          },
+          "atan_ratio_words": {
+            "address": "0x1015d686",
+            "bytes": 700,
+            "old_bytes": 700
+          }
+        }
+      }
+    },
+    "M4": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/m4-check/m4-isolation.json",
+        "sha256": "bc050d4e2f7d616fba32aa92a8c00e68e4aa390c2a3a9c30f4189ccbe5cb231d"
+      },
+      "result": {
+        "status": "PASS",
+        "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+        "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-trig-support-v75-20261021/source",
+        "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "soft",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+            "allocated_bytes": 19852,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          },
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "hard",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+            "allocated_bytes": 20524,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          }
+        ]
+      }
+    },
+    "generic_M0": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/generic-m0-isolation.json",
+        "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+      },
+      "result": {
+        "status": "PASS",
+        "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "allocated_bytes": 247584,
+            "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "allocated_bytes": 14468,
+            "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "allocated_bytes": 0,
+            "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+          },
+          {
+            "source": "compact_math.cpp",
+            "allocated_bytes": 94,
+            "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "allocated_bytes": 191042,
+            "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+          }
+        ]
+      }
+    },
+    "exact_pow": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/exact-arm.json",
+        "sha256": "fc5b8f6aceff35ad42716997f677c9630b9561334054ea1ae5ba0ef7538b2627"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+        "cases": 24,
+        "actual_arm_calls": 70,
+        "wrong_rounding": 0,
+        "dirty_sio_checks": 4,
+        "unsupported_checks": 4,
+        "maximum_stack_bytes": 1972,
+        "maximum_bounded_write_depth": 15000,
+        "result_sha256": "d5ba4e23cb10666b73c2721cab77d54a9b68bfd67cc37da1a69e39e7d507d172",
+        "checked_hint_calls": 38,
+        "maximum_hint_comparisons": 2,
+        "mpfr": "4.2.2",
+        "scope": "Direct exact-stage ARM calls including all saved registers, SP, stack writes, signed exponents, subnormal/overflow output and a pending SIO divider. Finite implementation qualification; domain argument is separate."
+      }
+    },
+    "negative_layout": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/layout-self-test.json",
+        "sha256": "c25fa08a60381bebc83c517c2d3d6ebc9fe360e9259ddf93705e8e59c1225dc1"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+        "checked_symbols": 388,
+        "internal_exact_helpers": 9,
+        "altered_symbol": "_ZN12m0_pow_exactL8multiplyERNS_1BEy",
+        "altered_byte_rejected": true,
+        "scope": "The production layout passes unchanged; changing one instruction byte inside an internal exact-pow helper is rejected. No firmware execution or hardware access."
+      }
+    },
+    "ROOT_math": {
+      "artifact": {
+        "path": ".build/m0-trig-support-v75-20261021/root-math-isolation.json",
+        "sha256": "9f3d69e044b23149ee0bd100c4d0ac0425c597655fa0bbfc690bb8252db2ab82"
+      },
+      "result": {
+        "status": "PASS",
+        "baseline": "45d320db78b63a7703c5154662613a64c61e6af9",
+        "files": {
+          "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+          "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+          "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+          "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+          "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+          "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+          "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+          "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+          "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+          "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+          "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+          "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+          "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+          "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+          "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+          "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+          "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+          "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+          "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+          "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+          "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+          "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+          "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+          "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+          "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+          "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+          "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+          "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+          "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+          "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+          "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+          "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+          "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+          "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+          "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+          "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+          "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+          "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+          "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+          "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+          "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+          "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+          "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+          "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+          "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+          "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+          "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+          "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+          "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+          "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+        },
+        "scope": "Current ROOT math source files are unchanged; the V75 prototype is private and its patch has not been applied."
+      }
+    },
+    "boot_CRC": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/firmware-self-test.json",
+        "sha256": "1e889a24a886e7f0ee858cddff13e545af4be470fd8986b5054d53121995dcba"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "cf9f0ed56c29414c1207dac0a26d679c578de7bb638502e0fb7ebfeeda0c5c6c",
+        "manifest_sha256": "e8404cb88040aa056fdb3ecca74a371361739c72c49d0945736618a1eb827c50",
+        "image_bytes": 1579228,
+        "valid_boot_crc": "0x5bc56cdb",
+        "explicit_recheck_status": "valid",
+        "rejected": [
+          {
+            "case": "extent",
+            "status": 5
+          },
+          {
+            "case": "reference_crc",
+            "status": 9
+          }
+        ],
+        "scope": "Actual ARM enforce/report CRC code and compiled image bounds; valid full image accepted; excess range and damaged reference rejected. Timer and text formatting mocked."
+      }
+    },
+    "production_layout": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/layout-proof.json",
+        "sha256": "e8fe77418940d8c26b907ed8242adbb0659f75ee4050e45c23f1d07406efc8ca"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-trig-support-v75-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "comparison_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-balanced-timing-v75-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "production_elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+        "comparison_elf_sha256": "cf9f0ed56c29414c1207dac0a26d679c578de7bb638502e0fb7ebfeeda0c5c6c",
+        "checked_symbols": 392,
+        "checked_bytes": 432244,
+        "sha256": "a173ff9aeed4db9ce43bc61b73b44b4c47b30604b6249ae55c7d4589187daa9b"
+      }
+    },
+    "reference_link": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/reference-link-proof.json",
+        "sha256": "3d0969ba4b320a02a35dbbca44ce0224954c00afc5c7d6d5d8a5cb9e2c4a7ea7"
+      },
+      "result": {
+        "status": "PASS",
+        "mode": "independent_reference_joined_after_production_link",
+        "production_elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+        "reference_elf_sha256": "ba0742e49ed5a44179b72ff009b5a43339242f9dc62499eabd0fefe7686ef0e1",
+        "reference_flash_address": 270008320,
+        "reference_bytes": 6364,
+        "reference_sha256": "8a71ababc3538394b49590350fb0b4602b1253736543dd80391514c84bf235f3",
+        "original_flash_bytes": 1537008,
+        "preserved_production_flash_bytes": 1536960,
+        "production_patches": [
+          {
+            "symbol": "_ZN8picocalc8firmware7enforceEv",
+            "offset": 84532,
+            "size": 4,
+            "before": "0x101773f0",
+            "after": "0x101818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "symbol": "_ZN8picocalc8firmware6reportEPcjb",
+            "offset": 86288,
+            "size": 4,
+            "before": "0x1773f0",
+            "after": "0x1818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "offset": 656280,
+            "size": 40,
+            "reason": "Integrity footer covers the diagnostic reference"
+          }
+        ],
+        "ram_initializers_preserved": true,
+        "production_program_headers_preserved": true,
+        "preserved_ram_sections": 11,
+        "reference_ram_bytes": 0,
+        "reference_entry_points": 81
+      }
+    },
+    "APP_ABI": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/app-self-test/result.json",
+        "sha256": "8992d89140e64547a50a5f88532ac8b306d534ff8f35c2dcf76fa29363bc5ccc"
+      },
+      "result": {
+        "status": "PASS",
+        "cases": [
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          }
+        ],
+        "cache_counters": true,
+        "warmup_tested": true,
+        "rounds": 12,
+        "wire_version": 4,
+        "tested_kinds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "all_abi_kinds_tested": true,
+        "scope": "Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark."
+      }
+    },
+    "UF2_bounds": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/uf2-bounds.json",
+        "sha256": "dafe8073ed52303411ec04d4264cb39f5a91989772f166c619d70a72704b54aa"
+      },
+      "result": {
+        "status": "PASS",
+        "blocks": 6169,
+        "start": "0x10000000",
+        "end": "0x10181900",
+        "uf2_sha256": "3ee332c637244b8a3925c586bacada66f22abe58568675fea25b7e2d6be94079",
+        "groups": 114,
+        "chunks": 116,
+        "cases": 23091,
+        "settings_partition_untouched": true
+      }
+    },
+    "restore_function": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v75-20261021/transaction-self-test.json",
+        "sha256": "d905aeba9f8b7d27af3f1c2a9ca61512d87569e12f928c27f4565babc8fb70c0"
+      },
+      "result": {
+        "status": "PASS",
+        "driver": ".build/m0-balanced-timing-v75-20261021/run-transaction.py",
+        "driver_sha256": "67da3259e41acad964cdfbc2f0dc569837da33ab9571e1ecb16f73bdbe127496",
+        "clock_restored_after_host_sleep": {
+          "expected_at_set": "2026-10-21T17:32:00",
+          "actual": "2026-10-21T17:32:00",
+          "expected_at_read": "2026-10-21T17:32:00",
+          "sampled_at_utc": "2026-10-21T14:00:00+00:00",
+          "read_at_utc": "2026-10-21T14:32:00+00:00",
+          "error_seconds": 0.0,
+          "method": "UTC wall elapsed including host sleep"
+        },
+        "failed_install_transcript_saved": true,
+        "original_install_exception_preserved": true,
+        "serial_closed_after_failure": true,
+        "unconfigured_RTC_not_set": true,
+        "hardware_opened": false,
+        "scope": "Only the actual prepared install function is compiled from its AST. USB, flash tool, health and data restoration callbacks are simulated; this proves RTC calculation and failure evidence handling, not physical device restoration."
+      }
+    }
+  },
+  "no_libgcc": {
+    "archive_members": 0,
+    "map": {
+      "path": ".build/m0-trig-support-v75-20261021/build/mk61s-picocalc-pico-h.elf.map",
+      "sha256": "58243b0897b99e9f2a2521023b0aef5ed512a7e0279b24c1ec39535ad043c079"
+    }
+  },
+  "instruction_profile": {
+    "artifact": {
+      "path": ".build/m0-trig-support-v75-20261021/instruction-matrix.json",
+      "sha256": "5a46df8332ef353c057388f619ca76fb6317e2a2bff5c5ae655065d5cfb43f06"
+    },
+    "groups": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "fewer_instructions_than_Qfplib": 112,
+    "equal_instructions": 2,
+    "more_instructions": 0,
+    "owned_instruction_count_changes_vs_v72": 0,
+    "physical_timing_available": false
+  },
+  "cache_model": {
+    "artifact": {
+      "path": ".build/m0-trig-support-v75-20261021/cache-probe-extended.json",
+      "sha256": "cea39df1c8c502fac3db6f92a464565fac1202472f092b481fcd3895dc5b7d9f"
+    },
+    "validation": {
+      "status": "PASS_RELINKED_ARM_TRACE_MATCHES_SCREEN",
+      "elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+      "screen_sha256": "8d7507a49e8eff12017f68f3d78c060fcafa6304408983a42e3ec66c7a2a6b40",
+      "probe_sha256": "cea39df1c8c502fac3db6f92a464565fac1202472f092b481fcd3895dc5b7d9f",
+      "groups": [
+        {
+          "index": 18,
+          "operation": "tan",
+          "stream": "small_medium_remainder",
+          "cases": 128,
+          "misses": [
+            342,
+            665,
+            387,
+            755
+          ],
+          "misses_per_call": [
+            2.671875,
+            5.1953125,
+            3.0234375,
+            5.8984375
+          ]
+        },
+        {
+          "index": 47,
+          "operation": "f2d",
+          "stream": "normal",
+          "cases": 512,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 115,
+          "operation": "pow",
+          "stream": "composed_exact_exponents",
+          "cases": 256,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 24,
+          "operation": "sqrt",
+          "stream": "legacy",
+          "cases": 12,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 26,
+          "operation": "sqrt",
+          "stream": "normal_exponents",
+          "cases": 256,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 27,
+          "operation": "sqrt",
+          "stream": "normalized",
+          "cases": 256,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 30,
+          "operation": "sqrt",
+          "stream": "segment_edges",
+          "cases": 512,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 31,
+          "operation": "sqrt",
+          "stream": "segment_edges",
+          "cases": 512,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "index": 32,
+          "operation": "sqrt",
+          "stream": "segment_edges",
+          "cases": 512,
+          "misses": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "misses_per_call": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "exact_ARM_cases": 2956,
+      "scope": "The newly linked ARM code reproduces the modeled miss counts of the virtual-address screen on all nine groups. This validates trace relocation assumptions, not hardware cache behavior or speed.",
+      "physical_timing_available": false
+    },
+    "screen": {
+      "path": ".build/m0-trig-support-v75-20261021/placement-screen.json",
+      "sha256": "8d7507a49e8eff12017f68f3d78c060fcafa6304408983a42e3ec66c7a2a6b40"
+    },
+    "model_source": {
+      "path": ".build/m0-trig-support-v75-20261021/cache-model.c",
+      "sha256": "7eac201479e0ca6e104fd0f27bbe07080ebe71971d026c87521f60cdd5e8fcc8"
+    },
+    "assumptions": "LRU and FIFO replacement and whole-line and per-word fill are modeled separately; these four models are assumptions, not claims about undocumented replacement or prefetch behavior.",
+    "scope": "Exact owned ARM instruction/data traces and results for the three gaps; isolated owned function calls only. Excludes the other core, IRQ traffic, caller prefetch and Qfplib batches. The third corpus pass is modeled after two warm passes. Model miss counts are not measured XIP counters or timings.",
+    "architecture_reference": "https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf",
+    "physical_timing_available": false
+  },
+  "comparison": {
+    "artifact": {
+      "path": ".build/m0-balanced-timing-v75-20261021/benchmark.json",
+      "sha256": "dcce2cb21b2e9b02782ae1cf2bc8980fb6017d120753c27dcd3f5fe641dd107f"
+    },
+    "groups": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "input_result_bits_identical_to_V74": true,
+    "production_link_preserved": true,
+    "physical_timing_available": false
+  },
+  "recovery": {
+    "preparation": {
+      "status": "PREPARED_NOT_RUN",
+      "recorded_at": "2026-10-21T19:01:08.265891+00:00",
+      "script_sha256": "67da3259e41acad964cdfbc2f0dc569837da33ab9571e1ecb16f73bdbe127496",
+      "helper_sha256": "d6d1e49f9b6389f64fadb5cb92d138a69c105f6a486be7c5f5ede7e002ef61e7",
+      "production_elf_sha256": "9d38695ca84d3cf2a641bf42618312a12f6c2358f23ed5bae5b8fb9950c2cdd6",
+      "diagnostic_elf_sha256": "cf9f0ed56c29414c1207dac0a26d679c578de7bb638502e0fb7ebfeeda0c5c6c",
+      "groups": 114,
+      "chunks": 116,
+      "cases": 23091,
+      "first_chunks": [
+        18,
+        47,
+        115
+      ],
+      "restore_build": "A7483AE6",
+      "handoff_must_be_explicitly_released_to_math": true,
+      "usb_opened": false,
+      "RTC": "UTC wall elapsed, status sample midpoint and duration recorded",
+      "failure_evidence": "HIL cleanup and both transaction install/preflight paths save transcripts after disconnect",
+      "platform_rebase_required_if_accepted_build_changes": true,
+      "physical_timing_available": false
+    },
+    "tests": {
+      "tests/m0_f2d_arm_self_test.py": "1599225fabc8531ef34c41e43ffa22f327770563c5c5ba22444346064bcd3d42",
+      "tests/m0_math_transaction_self_test.py": "f5b482bc7c3883f8bb8f89686e448ef1f5b53148d354f72de5483f845e87f162"
+    },
+    "original_used_V72_transaction_unchanged": true
+  },
+  "root_math_promoted": false,
+  "math_hardware_image_flashed": false,
+  "goal_complete": false,
+  "remains": [
+    "After the platform acceptance and short memcmp window, obtain explicit device release and the then-current accepted frozen source/restore. Rebase V75 and requalify before hardware timing.",
+    "Measure the complete 114-group matrix, starting with tangent small_medium_remainder, normal f2d and composed exact-exponent pow. The three physical V72 timing gaps remain unverified as fixed.",
+    "General binary64 pow totality remains unproved outside the 224 exact-stage exponent values; the final undecided trap remains for that domain."
+  ]
+}
