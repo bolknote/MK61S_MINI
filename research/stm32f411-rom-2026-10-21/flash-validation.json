@@ -1,0 +1,46 @@
+{
+  "payload_sha256": "3ddc4d65f7232fe83241585b3beffc39b138171a353ef0841ef0f6a199c91465",
+  "checks": "whole SRAM excluding exact stack save; return pointer; R4-R11 and SP",
+  "results": [
+    {
+      "name": "resident",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "rom",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "style",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "edges",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "loop",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "style4",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "edges4",
+      "cases": 4112,
+      "status": "PASS"
+    },
+    {
+      "name": "loop4",
+      "cases": 4112,
+      "status": "PASS"
+    }
+  ]
+}

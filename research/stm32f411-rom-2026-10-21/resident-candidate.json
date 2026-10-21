@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "resident": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32f411-rom-20261021/resident/resident.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "ACCFE6FD",
+    "sha256": "070f88e4ffab94cbf7ad5e3ab14b8a6a2a58a708e3dda9b1de62e0fda579307b"
+  },
+  "path": "/Users/bolk/Projects/MK61S_MINI/.build/stm32f411-rom-20261021/resident/full-flash.bin",
+  "build": "ACCFE6FD",
+  "helper_bytes": 82,
+  "helper_sha256": "80fed491ad7215983572676f94dd3bdde8bb134e4ae2fc09a0a4b35adccd5ebf",
+  "full_sha256": "99bf0b0f9e35dbc3950560b3eaaef1b5aa45cb6cfd1b93af61942b1ac4842fd2",
+  "full_crc32": 2512738953,
+  "patched_slot": "08008934..0800898B",
+  "method": "Actual production helper extracted from GCC object; fixed existing resident function slot; same short paths/dispatcher; sealed resident CRC/build; comparison extension outside resident image."
+}

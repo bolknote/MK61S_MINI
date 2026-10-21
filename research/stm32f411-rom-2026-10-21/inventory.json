@@ -1,0 +1,2943 @@
+[
+  {
+    "entry": "1FFF0188",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF0854": "200006D0"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF01A0",
+    "instructions": 163,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF0408",
+      "1FFF0444",
+      "1FFF047E",
+      "1FFF0492",
+      "1FFF04E6",
+      "1FFF0564",
+      "1FFF05D2",
+      "1FFF0680",
+      "1FFF06F0",
+      "1FFF0702",
+      "1FFF0798",
+      "1FFF0880",
+      "1FFF0928",
+      "1FFF0984",
+      "1FFF09A6",
+      "1FFF0B50",
+      "1FFF0B94",
+      "1FFF0C1C",
+      "1FFF0C50",
+      "1FFF1018",
+      "1FFF1028",
+      "20000308"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0858": "20000475",
+      "1FFF085C": "20001A50",
+      "1FFF0860": "40003000"
+    },
+    "indirect_sites": [
+      "1FFF02BE"
+    ]
+  },
+  {
+    "entry": "1FFF0368",
+    "instructions": 21,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF039E",
+    "instructions": 21,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF03D4",
+    "instructions": 20,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0408",
+    "instructions": 23,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0444",
+    "instructions": 22,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF047E",
+    "instructions": 30,
+    "calls": [
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0492",
+    "instructions": 31,
+    "calls": [
+      "1FFF0368",
+      "1FFF03D4",
+      "1FFF06F4",
+      "1FFF06FA",
+      "1FFF06FE"
+    ],
+    "literal_values": {
+      "1FFF086C": "20001454"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF04E6",
+    "instructions": 75,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF0492",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF06FE",
+      "1FFF0928",
+      "1FFF0BB8",
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0564",
+    "instructions": 81,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF0492",
+      "1FFF067A",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF0776",
+      "1FFF0782",
+      "1FFF0928",
+      "1FFF1004",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000",
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF05D2",
+    "instructions": 90,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF067A",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF06F8",
+      "1FFF06FE",
+      "1FFF0870",
+      "1FFF1004",
+      "20000108"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF067A",
+    "instructions": 22,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0680",
+    "instructions": 78,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF06FE",
+      "1FFF08FA",
+      "1FFF090A",
+      "1FFF0B1C",
+      "1FFF1004",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000",
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06D8",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06E4",
+    "instructions": 13,
+    "calls": [],
+    "literal_values": {
+      "1FFF086C": "20001454",
+      "1FFF0C40": "40023C14"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06F0",
+    "instructions": 32,
+    "calls": [
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06F4",
+    "instructions": 24,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06F8",
+    "instructions": 26,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06FA",
+    "instructions": 25,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF06FE",
+    "instructions": 23,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0702",
+    "instructions": 83,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF0492",
+      "1FFF067A",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF0776",
+      "1FFF0782",
+      "1FFF0928",
+      "1FFF0C1C",
+      "1FFF1004",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0858": "20000475",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000",
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0776",
+    "instructions": 86,
+    "calls": [
+      "1FFF0928",
+      "1FFF0A36",
+      "1FFF0A96",
+      "1FFF0BCA",
+      "2000019E",
+      "200003DE",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0782",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0798",
+    "instructions": 96,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF06F8",
+      "1FFF06FE",
+      "1FFF0870",
+      "1FFF0C1C",
+      "1FFF1004",
+      "20000108"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0858": "20000475",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0870",
+    "instructions": 20,
+    "calls": [
+      "2000005A",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0880",
+    "instructions": 80,
+    "calls": [
+      "1FFF0368",
+      "1FFF039E",
+      "1FFF03D4",
+      "1FFF06D8",
+      "1FFF06E4",
+      "1FFF06F0",
+      "1FFF06F4",
+      "1FFF06FE",
+      "1FFF08FA",
+      "1FFF090A",
+      "1FFF0B1C",
+      "1FFF0C1C",
+      "1FFF1004",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000",
+      "1FFF08DC": "20000475",
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF08FA",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF090A",
+    "instructions": 23,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0854": "200006D0",
+      "1FFF0860": "40003000",
+      "1FFF0864": "20001A30",
+      "1FFF0868": "0029D000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0928",
+    "instructions": 36,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C28": "DFFFD000",
+      "1FFF0C2C": "E0010000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0984",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C30": "2001FFFC"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0994",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C34": "40023C04",
+      "1FFF0C38": "45670123",
+      "1FFF0C3C": "CDEF89AB"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF09A6",
+    "instructions": 12,
+    "calls": [
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF09BE",
+    "instructions": 16,
+    "calls": [
+      "2000005A",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF09E0",
+    "instructions": 82,
+    "calls": [
+      "1FFF0928",
+      "1FFF0A36",
+      "1FFF0A96",
+      "1FFF0BCA",
+      "2000019E",
+      "200003DE",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0A36",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0A3E",
+    "instructions": 4,
+    "calls": [
+      "1FFF0A96",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0A4C",
+    "instructions": 15,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0A6E",
+    "instructions": 16,
+    "calls": [
+      "200003DE",
+      "2000043C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0A96",
+    "instructions": 59,
+    "calls": [
+      "1FFF0994",
+      "200001FC",
+      "20000224",
+      "2000025A",
+      "200002B6"
+    ],
+    "literal_values": {
+      "1FFF0C44": "20000818"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B1C",
+    "instructions": 30,
+    "calls": [
+      "1FFF0B68",
+      "20000000",
+      "20000018",
+      "20000382"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B3A",
+    "instructions": 18,
+    "calls": [
+      "1FFF0B68",
+      "20000000",
+      "20000018",
+      "20000382"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B50",
+    "instructions": 18,
+    "calls": [
+      "1FFF0B68",
+      "20000000",
+      "20000018",
+      "20000382"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B54",
+    "instructions": 17,
+    "calls": [
+      "1FFF0B68",
+      "20000000",
+      "20000018",
+      "20000382"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B68",
+    "instructions": 6,
+    "calls": [
+      "20000382"
+    ],
+    "literal_values": {
+      "1FFF0C48": "40023C0C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0B94",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C40": "40023C14"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0BA8",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C44": "20000818"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0BB8",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C44": "20000818"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0BCA",
+    "instructions": 22,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C44": "20000818"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0BFC",
+    "instructions": 15,
+    "calls": [
+      "1FFF0BCA"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0C1C",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C44": "20000818",
+      "1FFF0C4C": "AAAA0000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0C50",
+    "instructions": 27,
+    "calls": [
+      "1FFF0C94"
+    ],
+    "literal_values": {
+      "1FFF0FB4": "40023810",
+      "1FFF0FB8": "40023C00",
+      "1FFF0FBC": "E000E010"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0C94",
+    "instructions": 18,
+    "calls": [],
+    "literal_values": {
+      "1FFF0FC0": "40023800",
+      "1FFF0FC4": "FEF6FFFF",
+      "1FFF0FC8": "24003010"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0CC2",
+    "instructions": 78,
+    "calls": [
+      "1FFF0D76",
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0FB8": "40023C00",
+      "1FFF0FC0": "40023800",
+      "1FFF0FCC": "20000824",
+      "1FFF0FD0": "40013820",
+      "1FFF0FD4": "44013C10",
+      "1FFF0FD8": "03938700"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0D76",
+    "instructions": 23,
+    "calls": [],
+    "literal_values": {
+      "1FFF0FC0": "40023800",
+      "1FFF0FC4": "FEF6FFFF",
+      "1FFF0FC8": "24003010"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0D82",
+    "instructions": 115,
+    "calls": [
+      "1FFF0C94",
+      "1FFF0E92",
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0FB8": "40023C00",
+      "1FFF0FC0": "40023800",
+      "1FFF0FCC": "20000824",
+      "1FFF0FD0": "40013820",
+      "1FFF0FD8": "03938700",
+      "1FFF0FDC": "000186A0",
+      "1FFF0FE0": "00060AE0",
+      "1FFF0FE4": "45413C00",
+      "1FFF0FE8": "4247004C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0E8C",
+    "instructions": 3,
+    "calls": [],
+    "literal_values": {
+      "1FFF0FCC": "20000824"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0E92",
+    "instructions": 117,
+    "calls": [
+      "1FFF1004"
+    ],
+    "literal_values": {
+      "1FFF0FC0": "40023800",
+      "1FFF0FE0": "00060AE0",
+      "1FFF0FEC": "40014850",
+      "1FFF0FF0": "40014800"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF0FF4",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF100C": "E000E010"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1004",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1018",
+    "instructions": 2,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1020",
+    "instructions": 2,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1028",
+    "instructions": 2,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF102E",
+    "instructions": 13,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1050",
+    "instructions": 32,
+    "calls": [
+      "1FFF01A0",
+      "1FFF1004",
+      "1FFF1018",
+      "1FFF10A4",
+      "1FFF17D4",
+      "1FFF180C",
+      "1FFF1DB4",
+      "1FFF21DE"
+    ],
+    "literal_values": {
+      "1FFF1728": "2000075C",
+      "1FFF172C": "20001A28"
+    },
+    "indirect_sites": [
+      "1FFF109A"
+    ]
+  },
+  {
+    "entry": "1FFF10A4",
+    "instructions": 639,
+    "calls": [
+      "1FFF0188",
+      "1FFF0B94",
+      "1FFF0BA8",
+      "1FFF0CC2",
+      "1FFF0E8C",
+      "1FFF0FF4",
+      "1FFF1020",
+      "1FFF17A4",
+      "1FFF17B0",
+      "1FFF17BA",
+      "1FFF1DA0",
+      "1FFF21CC"
+    ],
+    "literal_values": {
+      "1FFF1730": "40003000",
+      "1FFF1734": "E000ED08",
+      "1FFF1738": "1FFF0000",
+      "1FFF173C": "200006B8",
+      "1FFF1740": "2001FFFC",
+      "1FFF1744": "20003000",
+      "1FFF1748": "E000E010",
+      "1FFF174C": "40023820",
+      "1FFF1750": "40020000",
+      "1FFF1754": "40020C00",
+      "1FFF1758": "40020400",
+      "1FFF175C": "00E2C000",
+      "1FFF1760": "40005400",
+      "1FFF1764": "FFCFFF3F",
+      "1FFF1768": "40005800",
+      "1FFF176C": "40005C00",
+      "1FFF1770": "55550000",
+      "1FFF1774": "40013000",
+      "1FFF1778": "40003800",
+      "1FFF177C": "40003C00",
+      "1FFF1780": "40020800",
+      "1FFF1784": "FFFFEFEF",
+      "1FFF1788": "FF3D3FFF",
+      "1FFF178C": "FF5D3FFF",
+      "1FFF1790": "FF9D3FFF",
+      "1FFF1794": "FF3D7FFF",
+      "1FFF1798": "FF3DBFFF",
+      "1FFF179C": "FF1D3FFF",
+      "1FFF17A0": "FF1F3FFF"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF17A4",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF17B0",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF0FCC": "20000824"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF17BA",
+    "instructions": 10,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF17D4",
+    "instructions": 28,
+    "calls": [
+      "1FFF1020"
+    ],
+    "literal_values": {
+      "1FFF1C30": "200006CC",
+      "1FFF1C34": "200006D8"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF180C",
+    "instructions": 363,
+    "calls": [
+      "1FFF0984",
+      "1FFF0A96",
+      "1FFF0B3A",
+      "1FFF0B54",
+      "1FFF0B94",
+      "1FFF0BB8",
+      "1FFF0BFC",
+      "1FFF0C50",
+      "1FFF1004",
+      "1FFF1018",
+      "1FFF1028",
+      "1FFF1BD8",
+      "1FFF1BE4",
+      "1FFF1BEC",
+      "1FFF1C02",
+      "1FFF1C06",
+      "1FFF1C20",
+      "1FFF1C44",
+      "1FFF1CEC",
+      "1FFF1CF4",
+      "20000000",
+      "20000018",
+      "2000005A",
+      "20000108",
+      "20000308",
+      "20000382",
+      "200003DE"
+    ],
+    "literal_values": {
+      "1FFF1C38": "40023C14",
+      "1FFF1C3C": "40003000",
+      "1FFF1C40": "1FFFC000"
+    },
+    "indirect_sites": [
+      "1FFF1994"
+    ]
+  },
+  {
+    "entry": "1FFF1BD8",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1BE4",
+    "instructions": 39,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C28": "DFFFD000",
+      "1FFF0C2C": "E0010000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1BEC",
+    "instructions": 42,
+    "calls": [
+      "1FFF1C06",
+      "1FFF1C20",
+      "1FFF1CEC"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1C02",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF1C30": "200006CC"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1C06",
+    "instructions": 12,
+    "calls": [],
+    "literal_values": {
+      "1FFF1C30": "200006CC",
+      "1FFF1C3C": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1C20",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF1C30": "200006CC"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1C44",
+    "instructions": 28,
+    "calls": [
+      "1FFF0B94",
+      "1FFF1C06",
+      "1FFF1C20"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1C94",
+    "instructions": 34,
+    "calls": [
+      "1FFF1C06",
+      "1FFF1C20",
+      "1FFF1CEC"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1CEC",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1CF4",
+    "instructions": 55,
+    "calls": [
+      "1FFF1C06",
+      "1FFF1C20",
+      "1FFF1D82"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1D82",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1DA0",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF21B0": "200006D4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1DB4",
+    "instructions": 127,
+    "calls": [
+      "1FFF0928",
+      "1FFF0984",
+      "1FFF09A6",
+      "1FFF0B50",
+      "1FFF0B94",
+      "1FFF0C50",
+      "1FFF1018",
+      "1FFF1028",
+      "1FFF1F04",
+      "1FFF1F3A",
+      "1FFF1FAE",
+      "1FFF203A",
+      "1FFF203E",
+      "1FFF2042",
+      "1FFF2110",
+      "1FFF2182",
+      "1FFF2192",
+      "20000308"
+    ],
+    "literal_values": {
+      "1FFF21B0": "200006D4",
+      "1FFF21B4": "20001044"
+    },
+    "indirect_sites": [
+      "1FFF1E94"
+    ]
+  },
+  {
+    "entry": "1FFF1F04",
+    "instructions": 24,
+    "calls": [
+      "1FFF203A"
+    ],
+    "literal_values": {
+      "1FFF21B4": "20001044"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1F3A",
+    "instructions": 51,
+    "calls": [
+      "1FFF0928",
+      "1FFF0BB8",
+      "1FFF1F04",
+      "1FFF2034",
+      "1FFF203A",
+      "1FFF203E",
+      "1FFF20F6",
+      "1FFF2104",
+      "1FFF2192"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF1FAE",
+    "instructions": 69,
+    "calls": [
+      "1FFF0928",
+      "1FFF09E0",
+      "1FFF1F04",
+      "1FFF203A",
+      "1FFF203E",
+      "1FFF20F6",
+      "1FFF2104",
+      "1FFF2192",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004",
+      "1FFF21B0": "200006D4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2034",
+    "instructions": 18,
+    "calls": [],
+    "literal_values": {
+      "1FFF21B0": "200006D4",
+      "1FFF21B8": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2038",
+    "instructions": 16,
+    "calls": [],
+    "literal_values": {
+      "1FFF21B0": "200006D4",
+      "1FFF21B8": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF203A",
+    "instructions": 15,
+    "calls": [],
+    "literal_values": {
+      "1FFF21B0": "200006D4",
+      "1FFF21B8": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF203E",
+    "instructions": 9,
+    "calls": [
+      "1FFF2192"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2042",
+    "instructions": 75,
+    "calls": [
+      "1FFF09BE",
+      "1FFF2038",
+      "1FFF203A",
+      "1FFF203E",
+      "1FFF20F6",
+      "1FFF2104",
+      "1FFF2192",
+      "20000108"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF20F6",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2104",
+    "instructions": 13,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C40": "40023C14",
+      "1FFF21B4": "20001044"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2110",
+    "instructions": 58,
+    "calls": [
+      "1FFF0B1C",
+      "1FFF2034",
+      "1FFF203A",
+      "1FFF203E",
+      "1FFF20F6",
+      "1FFF2104",
+      "1FFF2192",
+      "20000018"
+    ],
+    "literal_values": {
+      "1FFF0C40": "40023C14",
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004",
+      "1FFF21B0": "200006D4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2182",
+    "instructions": 7,
+    "calls": [
+      "1FFF2192"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2192",
+    "instructions": 13,
+    "calls": [],
+    "literal_values": {
+      "1FFF21B0": "200006D4",
+      "1FFF21B8": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF21CC",
+    "instructions": 15,
+    "calls": [
+      "1FFF2708",
+      "1FFF2756"
+    ],
+    "literal_values": {
+      "1FFF2834": "20001A00",
+      "1FFF2838": "2000078C",
+      "1FFF283C": "200006E8"
+    },
+    "indirect_sites": [
+      "1FFF2832"
+    ]
+  },
+  {
+    "entry": "1FFF21DE",
+    "instructions": 16,
+    "calls": [
+      "1FFF0C50",
+      "1FFF2840"
+    ],
+    "literal_values": {
+      "1FFF26D8": "200006E4",
+      "1FFF26DC": "40003000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF220A",
+    "instructions": 17,
+    "calls": [
+      "1FFF2762",
+      "1FFF2774",
+      "1FFF2924",
+      "1FFF2980"
+    ],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26E4": "20001A00",
+      "1FFF26E8": "20001A48"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF223A",
+    "instructions": 12,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E4": "20001A00",
+      "1FFF26E8": "20001A48",
+      "1FFF26EC": "20001A1C",
+      "1FFF26F0": "20000680"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF225A",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E4": "20001A00",
+      "1FFF26E8": "20001A48"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF226C",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E8": "20001A48"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2276",
+    "instructions": 1,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2278",
+    "instructions": 158,
+    "calls": [
+      "1FFF0928",
+      "1FFF0984",
+      "1FFF0B94",
+      "1FFF1004",
+      "1FFF23A4",
+      "1FFF284A",
+      "1FFF2862",
+      "20000108",
+      "20000308"
+    ],
+    "literal_values": {
+      "1FFF26D8": "200006E4",
+      "1FFF26E0": "20000740",
+      "1FFF26E4": "20001A00",
+      "1FFF26F4": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2284",
+    "instructions": 153,
+    "calls": [
+      "1FFF0928",
+      "1FFF0984",
+      "1FFF0B94",
+      "1FFF1004",
+      "1FFF23A4",
+      "1FFF284A",
+      "1FFF2862",
+      "20000108",
+      "20000308"
+    ],
+    "literal_values": {
+      "1FFF26D8": "200006E4",
+      "1FFF26E0": "20000740",
+      "1FFF26F4": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF23A4",
+    "instructions": 45,
+    "calls": [],
+    "literal_values": {
+      "1FFF0C28": "DFFFD000",
+      "1FFF0C2C": "E0010000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF23BE",
+    "instructions": 45,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26EC": "20001A1C"
+    },
+    "indirect_sites": [
+      "1FFF241C"
+    ]
+  },
+  {
+    "entry": "1FFF2422",
+    "instructions": 78,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26EC": "20001A1C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF24C0",
+    "instructions": 14,
+    "calls": [],
+    "literal_values": {
+      "1FFF26F8": "2000082C",
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF24C6",
+    "instructions": 14,
+    "calls": [],
+    "literal_values": {
+      "1FFF26FC": "20000760",
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF24CC",
+    "instructions": 22,
+    "calls": [],
+    "literal_values": {
+      "1FFF26EC": "20001A1C",
+      "1FFF2700": "20000640",
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF24E4",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF24F4",
+    "instructions": 94,
+    "calls": [
+      "1FFF0928",
+      "1FFF0B94",
+      "1FFF28B0"
+    ],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26E4": "20001A00",
+      "1FFF26EC": "20001A1C",
+      "1FFF26F4": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF25C4",
+    "instructions": 25,
+    "calls": [],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26E4": "20001A00",
+      "1FFF26EC": "20001A1C",
+      "1FFF26F4": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2610",
+    "instructions": 60,
+    "calls": [
+      "1FFF2908"
+    ],
+    "literal_values": {
+      "1FFF26E0": "20000740",
+      "1FFF26EC": "20001A1C",
+      "1FFF26F4": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF268C",
+    "instructions": 34,
+    "calls": [
+      "1FFF0B94"
+    ],
+    "literal_values": {
+      "1FFF26D8": "200006E4",
+      "1FFF26E0": "20000740"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2708",
+    "instructions": 30,
+    "calls": [],
+    "literal_values": {
+      "1FFF27A0": "40023830",
+      "1FFF27A4": "40020000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2756",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF27A8": "40023834"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2762",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF27AC": "E000ED0C",
+      "1FFF27B0": "E000E410",
+      "1FFF27B4": "E000E108"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2774",
+    "instructions": 35,
+    "calls": [
+      "1FFF27C0"
+    ],
+    "literal_values": {
+      "1FFF27B8": "1FFF7A10",
+      "1FFF27BC": "200007B0"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF27C0",
+    "instructions": 18,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF27E8",
+    "instructions": 20,
+    "calls": [
+      "1FFF0E8C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2840",
+    "instructions": 4,
+    "calls": [
+      "1FFF30F4"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF284A",
+    "instructions": 132,
+    "calls": [
+      "2000005A"
+    ],
+    "literal_values": {
+      "1FFF28DC": "20001A34",
+      "1FFF28E0": "1FFF30FF",
+      "1FFF330C": "08004000",
+      "1FFF3310": "08008000",
+      "1FFF3314": "0800C000",
+      "1FFF3318": "08010000",
+      "1FFF331C": "08020000",
+      "1FFF3320": "08040000",
+      "1FFF3324": "08060000",
+      "1FFF3328": "08080000",
+      "1FFF332C": "080A0000",
+      "1FFF3330": "080C0000",
+      "1FFF3334": "080E0000",
+      "1FFF3338": "08104000",
+      "1FFF333C": "08108000",
+      "1FFF3340": "0810C000",
+      "1FFF3344": "08110000",
+      "1FFF3348": "08120000",
+      "1FFF334C": "08140000",
+      "1FFF3350": "08160000",
+      "1FFF3354": "08180000",
+      "1FFF3358": "081A0000",
+      "1FFF335C": "081C0000",
+      "1FFF3360": "081E0000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2862",
+    "instructions": 35,
+    "calls": [
+      "1FFF0928"
+    ],
+    "literal_values": {
+      "1FFF28E4": "1FFF31FB",
+      "1FFF28E8": "20001A38",
+      "1FFF28EC": "1FFF3229",
+      "1FFF28F0": "1FFF3265",
+      "1FFF28F4": "1FFF32DB",
+      "1FFF28F8": "1FFF32FB"
+    },
+    "indirect_sites": [
+      "1FFF289A"
+    ]
+  },
+  {
+    "entry": "1FFF28B0",
+    "instructions": 17,
+    "calls": [
+      "1FFF0928"
+    ],
+    "literal_values": {
+      "1FFF28FC": "1FFF32BD",
+      "1FFF2900": "1FFF3227",
+      "1FFF2904": "20001A3C"
+    },
+    "indirect_sites": [
+      "1FFF28D8"
+    ]
+  },
+  {
+    "entry": "1FFF2908",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2924",
+    "instructions": 2,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2928",
+    "instructions": 1,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF292A",
+    "instructions": 37,
+    "calls": [
+      "1FFF3984",
+      "1FFF3992"
+    ],
+    "literal_values": {
+      "1FFF297C": "20001A4C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2980",
+    "instructions": 4,
+    "calls": [
+      "1FFF39C4"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF298C",
+    "instructions": 15,
+    "calls": [
+      "1FFF2ABE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": [
+      "1FFF299C"
+    ]
+  },
+  {
+    "entry": "1FFF29A4",
+    "instructions": 22,
+    "calls": [
+      "1FFF2ABE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C4": "2000083C"
+    },
+    "indirect_sites": [
+      "1FFF29CC"
+    ]
+  },
+  {
+    "entry": "1FFF29D6",
+    "instructions": 15,
+    "calls": [
+      "1FFF2ABE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": [
+      "1FFF29E6"
+    ]
+  },
+  {
+    "entry": "1FFF29F8",
+    "instructions": 32,
+    "calls": [
+      "1FFF2ABE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C8": "20001A20"
+    },
+    "indirect_sites": [
+      "1FFF2A0C",
+      "1FFF2A28"
+    ]
+  },
+  {
+    "entry": "1FFF2A3E",
+    "instructions": 51,
+    "calls": [
+      "1FFF2ABE",
+      "1FFF3A04",
+      "1FFF3A10"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30CC": "20001A44"
+    },
+    "indirect_sites": [
+      "1FFF2A84"
+    ]
+  },
+  {
+    "entry": "1FFF2ABE",
+    "instructions": 3,
+    "calls": [],
+    "literal_values": {
+      "1FFF30D0": "20001A24"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2AC6",
+    "instructions": 64,
+    "calls": [
+      "1FFF2ABE",
+      "1FFF30B2",
+      "1FFF3A04",
+      "1FFF3A10",
+      "1FFF3A44",
+      "1FFF3A5A"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C4": "2000083C"
+    },
+    "indirect_sites": [
+      "1FFF2B5C"
+    ]
+  },
+  {
+    "entry": "1FFF2B66",
+    "instructions": 40,
+    "calls": [
+      "1FFF2ABE",
+      "1FFF3A04",
+      "1FFF3A10",
+      "1FFF3A22",
+      "1FFF3A44"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C4": "2000083C"
+    },
+    "indirect_sites": [
+      "1FFF2BC2"
+    ]
+  },
+  {
+    "entry": "1FFF2BC8",
+    "instructions": 11,
+    "calls": [
+      "1FFF2ABE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C"
+    },
+    "indirect_sites": [
+      "1FFF2BDE"
+    ]
+  },
+  {
+    "entry": "1FFF2BFE",
+    "instructions": 57,
+    "calls": [
+      "1FFF3A5C",
+      "1FFF3B1C",
+      "1FFF3B5C"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40"
+    },
+    "indirect_sites": [
+      "1FFF2C20"
+    ]
+  },
+  {
+    "entry": "1FFF2C80",
+    "instructions": 65,
+    "calls": [
+      "1FFF3A5C",
+      "1FFF3B1C",
+      "1FFF3B5C"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40",
+      "1FFF30DC": "20001A52"
+    },
+    "indirect_sites": [
+      "1FFF2CE6"
+    ]
+  },
+  {
+    "entry": "1FFF2D1E",
+    "instructions": 93,
+    "calls": [
+      "1FFF29A4",
+      "1FFF29F8",
+      "1FFF2AC6",
+      "1FFF2B66",
+      "1FFF2BC8",
+      "1FFF3B5C",
+      "1FFF3B8E"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C8": "20001A20",
+      "1FFF30D4": "20001A42"
+    },
+    "indirect_sites": [
+      "1FFF2DDC"
+    ]
+  },
+  {
+    "entry": "1FFF2DEE",
+    "instructions": 238,
+    "calls": [
+      "1FFF2F68",
+      "1FFF3A04",
+      "1FFF3A10",
+      "1FFF3A5C",
+      "1FFF3B1C",
+      "1FFF3B5C"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C4": "2000083C",
+      "1FFF30C8": "20001A20",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40",
+      "1FFF30DC": "20001A52",
+      "1FFF30E0": "1FFF2A3F",
+      "1FFF30E4": "1FFF298D",
+      "1FFF30E8": "1FFF29D7"
+    },
+    "indirect_sites": [
+      "1FFF2CE6",
+      "1FFF2E62",
+      "1FFF2EF4"
+    ]
+  },
+  {
+    "entry": "1FFF2F68",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": [
+      "1FFF2F70"
+    ]
+  },
+  {
+    "entry": "1FFF2F72",
+    "instructions": 78,
+    "calls": [
+      "1FFF2D1E",
+      "1FFF2DEE",
+      "1FFF30B2",
+      "1FFF37AA",
+      "1FFF3A60",
+      "1FFF3BA0",
+      "1FFF3BAE"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF2FCA",
+    "instructions": 77,
+    "calls": [
+      "1FFF2ABE",
+      "1FFF2C80",
+      "1FFF30B2",
+      "1FFF37AA",
+      "1FFF3B8E",
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C8": "20001A20",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40"
+    },
+    "indirect_sites": [
+      "1FFF3002",
+      "1FFF300A"
+    ]
+  },
+  {
+    "entry": "1FFF3018",
+    "instructions": 69,
+    "calls": [
+      "1FFF2BFE",
+      "1FFF30B2",
+      "1FFF37AA",
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30C8": "20001A20",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40"
+    },
+    "indirect_sites": [
+      "1FFF3044"
+    ]
+  },
+  {
+    "entry": "1FFF3052",
+    "instructions": 42,
+    "calls": [
+      "1FFF30B2",
+      "1FFF37AA",
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF30C0": "20001A1C",
+      "1FFF30D4": "20001A42",
+      "1FFF30D8": "20001A40"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF30B2",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF30EC": "200006E8"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF30F0",
+    "instructions": 1,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF30F4",
+    "instructions": 4,
+    "calls": [
+      "1FFF0994"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF30FE",
+    "instructions": 123,
+    "calls": [
+      "2000005A"
+    ],
+    "literal_values": {
+      "1FFF330C": "08004000",
+      "1FFF3310": "08008000",
+      "1FFF3314": "0800C000",
+      "1FFF3318": "08010000",
+      "1FFF331C": "08020000",
+      "1FFF3320": "08040000",
+      "1FFF3324": "08060000",
+      "1FFF3328": "08080000",
+      "1FFF332C": "080A0000",
+      "1FFF3330": "080C0000",
+      "1FFF3334": "080E0000",
+      "1FFF3338": "08104000",
+      "1FFF333C": "08108000",
+      "1FFF3340": "0810C000",
+      "1FFF3344": "08110000",
+      "1FFF3348": "08120000",
+      "1FFF334C": "08140000",
+      "1FFF3350": "08160000",
+      "1FFF3354": "08180000",
+      "1FFF3358": "081A0000",
+      "1FFF335C": "081C0000",
+      "1FFF3360": "081E0000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF31FA",
+    "instructions": 18,
+    "calls": [
+      "1FFF0A96",
+      "1FFF325A"
+    ],
+    "literal_values": {
+      "1FFF3364": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3226",
+    "instructions": 1,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3228",
+    "instructions": 21,
+    "calls": [
+      "1FFF325A"
+    ],
+    "literal_values": {
+      "1FFF3364": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF325A",
+    "instructions": 43,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3264",
+    "instructions": 35,
+    "calls": [
+      "1FFF1004",
+      "20000000",
+      "20000018",
+      "20000382"
+    ],
+    "literal_values": {
+      "1FFF3364": "20000844",
+      "1FFF3368": "1FFFC000",
+      "1FFF336C": "40023C14"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF32BC",
+    "instructions": 14,
+    "calls": [
+      "1FFF0BB8"
+    ],
+    "literal_values": {
+      "1FFF3370": "20000834"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF32DA",
+    "instructions": 15,
+    "calls": [
+      "200003DE"
+    ],
+    "literal_values": {
+      "1FFF3364": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF32FA",
+    "instructions": 8,
+    "calls": [
+      "1FFF0BFC"
+    ],
+    "literal_values": {
+      "1FFF3364": "20000844"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3374",
+    "instructions": 16,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF339E",
+    "instructions": 14,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF33A2",
+    "instructions": 12,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF33C2",
+    "instructions": 27,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF340C",
+    "instructions": 20,
+    "calls": [
+      "1FFF27E8",
+      "1FFF3444"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3444",
+    "instructions": 32,
+    "calls": [
+      "1FFF27E8"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39A4": "00030D41"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF348E",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF349C",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF34AE",
+    "instructions": 23,
+    "calls": [
+      "1FFF27E8",
+      "1FFF350A"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF34DC",
+    "instructions": 19,
+    "calls": [
+      "1FFF27E8",
+      "1FFF350A"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF350A",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A4": "00030D41"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3516",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3528",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3536",
+    "instructions": 72,
+    "calls": [
+      "1FFF34AE",
+      "1FFF34DC",
+      "1FFF35E6"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39A8": "00400080",
+      "1FFF39AC": "004000C0",
+      "1FFF39B0": "00100100",
+      "1FFF39B4": "00100110"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF35E6",
+    "instructions": 12,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39B8": "800C3818"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3604",
+    "instructions": 12,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3620",
+    "instructions": 41,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39BC": "FC33F800"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3686",
+    "instructions": 119,
+    "calls": [
+      "1FFF3374"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39C0": "1FF80000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF37AA",
+    "instructions": 65,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39C0": "1FF80000"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF38A0",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF38AE",
+    "instructions": 9,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF38C2",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3914",
+    "instructions": 80,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3984",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3992",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF39C4",
+    "instructions": 21,
+    "calls": [
+      "1FFF348E",
+      "1FFF3686",
+      "1FFF3A6C",
+      "1FFF3ADA",
+      "1FFF3BAE",
+      "1FFF3BBE"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A04",
+    "instructions": 36,
+    "calls": [
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A10",
+    "instructions": 35,
+    "calls": [
+      "1FFF3BAE"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A22",
+    "instructions": 93,
+    "calls": [
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A44",
+    "instructions": 87,
+    "calls": [
+      "1FFF3BAE"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A5A",
+    "instructions": 94,
+    "calls": [
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A5C",
+    "instructions": 1,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A60",
+    "instructions": 4,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3A6C",
+    "instructions": 109,
+    "calls": [
+      "1FFF33C2",
+      "1FFF340C",
+      "1FFF349C",
+      "1FFF34AE",
+      "1FFF34DC",
+      "1FFF35E6",
+      "1FFF3ACC"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4",
+      "1FFF39A8": "00400080",
+      "1FFF39AC": "004000C0",
+      "1FFF39B0": "00100100",
+      "1FFF39B4": "00100110",
+      "1FFF3BC8": "2000185C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3ACC",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3ADA",
+    "instructions": 27,
+    "calls": [
+      "1FFF3620",
+      "1FFF3BA0",
+      "1FFF3BAE"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3B1C",
+    "instructions": 27,
+    "calls": [
+      "1FFF3686",
+      "1FFF37AA",
+      "1FFF3BAE"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3B5C",
+    "instructions": 20,
+    "calls": [
+      "1FFF3686",
+      "1FFF37AA",
+      "1FFF3BA0"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3B8E",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF3BCC": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3BA0",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF3BC8": "2000185C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3BAE",
+    "instructions": 7,
+    "calls": [],
+    "literal_values": {
+      "1FFF3BC8": "2000185C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3BBE",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF3BCC": "200019C4",
+      "1FFF3BD0": "60080018"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3BD4",
+    "instructions": 39,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3BF8",
+    "instructions": 19,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3C3C",
+    "instructions": 9,
+    "calls": [
+      "1FFF30F0"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3C48",
+    "instructions": 70,
+    "calls": [
+      "1FFF30F0",
+      "1FFF339E",
+      "1FFF3BAE"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4",
+      "1FFF3F30": "2000193C"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3CF8",
+    "instructions": 8,
+    "calls": [
+      "1FFF30F0"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3D0C",
+    "instructions": 45,
+    "calls": [
+      "1FFF30F0",
+      "1FFF34AE",
+      "1FFF3BBE"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4",
+      "1FFF3F34": "200006E8"
+    },
+    "indirect_sites": [
+      "1FFF3D6C"
+    ]
+  },
+  {
+    "entry": "1FFF3D76",
+    "instructions": 15,
+    "calls": [
+      "1FFF30F0",
+      "1FFF3604"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3D9E",
+    "instructions": 92,
+    "calls": [
+      "1FFF2FCA",
+      "1FFF30F0",
+      "1FFF38C2",
+      "1FFF3A04",
+      "1FFF3A22",
+      "1FFF3A44",
+      "1FFF3BA0",
+      "1FFF3F44"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4",
+      "1FFF3F38": "200007CC",
+      "1FFF3F3C": "20001A40"
+    },
+    "indirect_sites": [
+      "1FFF3DC0"
+    ]
+  },
+  {
+    "entry": "1FFF3E8C",
+    "instructions": 51,
+    "calls": [
+      "1FFF2F72",
+      "1FFF3018",
+      "1FFF30F0",
+      "1FFF38A0",
+      "1FFF38AE",
+      "1FFF3BAE",
+      "1FFF3F12"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4",
+      "1FFF3F3C": "20001A40",
+      "1FFF3F40": "200007E8"
+    },
+    "indirect_sites": [
+      "1FFF3EAA"
+    ]
+  },
+  {
+    "entry": "1FFF3F12",
+    "instructions": 96,
+    "calls": [
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF39A0": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3F1C",
+    "instructions": 9,
+    "calls": [
+      "1FFF30F0"
+    ],
+    "literal_values": {
+      "1FFF3F2C": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3F44",
+    "instructions": 46,
+    "calls": [
+      "1FFF3374",
+      "1FFF3BA0"
+    ],
+    "literal_values": {
+      "1FFF3F6C": "200019C4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3FB2",
+    "instructions": 20,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF3FDA",
+    "instructions": 126,
+    "calls": [
+      "1FFF3FB2",
+      "1FFF4118",
+      "1FFF411C"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4118",
+    "instructions": 22,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF411C",
+    "instructions": 8,
+    "calls": [],
+    "literal_values": {
+      "1FFF4134": "00020026"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4124",
+    "instructions": 6,
+    "calls": [],
+    "literal_values": {
+      "1FFF4134": "00020026"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4138",
+    "instructions": 58,
+    "calls": [
+      "1FFF0D82",
+      "1FFF2928",
+      "1FFF292A",
+      "1FFF3516",
+      "1FFF3528",
+      "1FFF3C3C",
+      "1FFF3C48",
+      "1FFF3CF8",
+      "1FFF3D0C",
+      "1FFF3D76",
+      "1FFF3D9E",
+      "1FFF3E8C",
+      "1FFF3F1C"
+    ],
+    "literal_values": {
+      "1FFF41C8": "20000840",
+      "1FFF41CC": "20001A53",
+      "1FFF41D0": "200006E4"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF41D4",
+    "instructions": 16,
+    "calls": [],
+    "literal_values": {
+      "1FFF41F4": "00000008",
+      "1FFF41F8": "00000030"
+    },
+    "indirect_sites": [
+      "1FFF41EA"
+    ]
+  },
+  {
+    "entry": "1FFF4228",
+    "instructions": 9,
+    "calls": [
+      "1FFF1050",
+      "1FFF41D4",
+      "1FFF423E",
+      "1FFF4242"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF423E",
+    "instructions": 2,
+    "calls": [],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4242",
+    "instructions": 5,
+    "calls": [
+      "1FFF4124"
+    ],
+    "literal_values": {},
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4252",
+    "instructions": 10,
+    "calls": [
+      "1FFF4228"
+    ],
+    "literal_values": {
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF425E",
+    "instructions": 5,
+    "calls": [],
+    "literal_values": {
+      "1FFF1010": "E000ED0C",
+      "1FFF1014": "05FA0004"
+    },
+    "indirect_sites": []
+  },
+  {
+    "entry": "1FFF4262",
+    "instructions": 59,
+    "calls": [
+      "1FFF0D82",
+      "1FFF2928",
+      "1FFF292A",
+      "1FFF3516",
+      "1FFF3528",
+      "1FFF3C3C",
+      "1FFF3C48",
+      "1FFF3CF8",
+      "1FFF3D0C",
+      "1FFF3D76",
+      "1FFF3D9E",
+      "1FFF3E8C",
+      "1FFF3F1C"
+    ],
+    "literal_values": {
+      "1FFF41C8": "20000840",
+      "1FFF41CC": "20001A53",
+      "1FFF41D0": "200006E4"
+    },
+    "indirect_sites": []
+  }
+]

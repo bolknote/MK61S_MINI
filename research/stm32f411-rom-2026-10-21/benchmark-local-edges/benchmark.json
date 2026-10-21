@@ -1,0 +1,1727 @@
+{
+  "status": "PASS",
+  "method": "DWT CYCCNT; actual resident bulk helper in internal Flash versus local assembly candidate in SRAM; 9-round medians of 128 calls minus common empty-call overhead; interrupts enabled; A/B/A per size/alignment. Legacy row keys rom and rom_over_resident refer to the local candidate.",
+  "test_app_sha256": "366c98d712be60e928a63989559ae276bfbccd9fe4e66708d3f3108224752798",
+  "identity": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "files_before": {
+    "files": {
+      "/System/SRCEDIT.app": {
+        "bytes": 13483,
+        "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+      },
+      "/System/EXPLORER.app": {
+        "bytes": 5738,
+        "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+      },
+      "/System/SETUP.app": {
+        "bytes": 9974,
+        "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+      },
+      "/System/MARKDOWN.app": {
+        "bytes": 13482,
+        "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+      },
+      "/System/USBDISK.app": {
+        "bytes": 15303,
+        "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+      },
+      "/System/LANGVM.app": {
+        "bytes": 13807,
+        "sha256": "822e2a6e0029c98226ad60d5843c53aaae787db8f82955e6c5b88f7c9ae43505"
+      },
+      "/System/LANGIN.app": {
+        "bytes": 14069,
+        "sha256": "08b9443b320a67b51563f9c04390c77f074096c9567ac2e15b3149e546b370d5"
+      },
+      "/System/HELP1.txt": {
+        "bytes": 1269,
+        "sha256": "36ee9aede6c0c6b0997355205a516593e681fa047cb5b159e3563cb5a45466b5"
+      },
+      "/System/HELP0.txt": {
+        "bytes": 1533,
+        "sha256": "595372a6e45f4e2ef3c26b021c59e5750145b5572629f97ad8b46ae7c3bc2d12"
+      },
+      "/System/FOCAL.app": {
+        "bytes": 12674,
+        "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+      },
+      "/System/BASIC.app": {
+        "bytes": 14140,
+        "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+      },
+      "/System/VMCache/VMC-0015.app": {
+        "bytes": 281,
+        "sha256": "68a82b855fdcf51452bea29eb7d4368c19217bb6a2f63a880732f0e2419058b1"
+      },
+      "/System/VMCache/VMC-0014.app": {
+        "bytes": 261,
+        "sha256": "f1566f4810e9c0271c1a1384839e75f23e9cba2f847f91bf17d8971b7d5f970b"
+      },
+      "/System/VMCache/VMC-0017.app": {
+        "bytes": 229,
+        "sha256": "96e4c37e393949174a4f36d4183fb54f33be39cda83dcf979056e0c155e3b74a"
+      },
+      "/System/VMCache/VMC-0023.app": {
+        "bytes": 184,
+        "sha256": "05ea13d011732d7f942bd42bea94700b611abd05292569ba8b8673c33a445d56"
+      },
+      "/System/VMCache/VMC-0020.app": {
+        "bytes": 184,
+        "sha256": "68c87dc8ae82690e784ad2ff0d09f6b34534a0dc32b52cf992e6c0057fc56456"
+      },
+      "/System/VMCache/VMC-0016.app": {
+        "bytes": 3794,
+        "sha256": "a6cfc680505122f9b4fd6d5d12c40dc77e12c0af9609313d2bf5d008043d8251"
+      },
+      "/System/VMCache/VMC-0010.app": {
+        "bytes": 213,
+        "sha256": "e9637fb84988fafa802a022fda78246bbdce3d134c07fb02684a5efc5b5bb699"
+      },
+      "/System/VMCache/VMC-0012.app": {
+        "bytes": 213,
+        "sha256": "9ee22d9a011c2e85eb47d761f7d556b3ec3f5754ff09f73f10b2bc806805b04c"
+      },
+      "/System/VMCache/VMC-0011.app": {
+        "bytes": 172,
+        "sha256": "98ab4f4f9ae8ae01df76199fcb3a139dd1275b11100a640a94e4cf0ba9025751"
+      },
+      "/System/VMCache/VMC-000f.app": {
+        "bytes": 172,
+        "sha256": "6d1eb84a4d016ba736828dad46aa3862e14f5a1a3ca4f4469f8ff6d67c802f1d"
+      },
+      "/System/VMCache/VMC-000e.app": {
+        "bytes": 233,
+        "sha256": "31c77338d9090d47692cc68031e25b4228287ab4c3507112f2783ced673ab90c"
+      },
+      "/System/VMCache/VMC-000d.app": {
+        "bytes": 213,
+        "sha256": "95494299ac11526a38e018929e282f2452376fc53cc7a5af180f2aade8efd86c"
+      },
+      "/System/VMCache/VMSTORE.app": {
+        "bytes": 7361,
+        "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+      }
+    },
+    "directories": [
+      "/System",
+      "/System/VMCache"
+    ]
+  },
+  "launch": "open \"/ROMBEN.APP\"\r\n/> ",
+  "measurements": {
+    "resident_pointer": "08008935",
+    "rom_pointer": "2001A5B5",
+    "candidate_kind": "local bulk, overlapping edge words",
+    "candidate_pointer": "2001A5B5",
+    "baseline_kind": "bulk helper only",
+    "rom_crc32": "9F8F7DED",
+    "snapshot_address": "08008700",
+    "snapshot_size": 1536,
+    "flash_acr": "00000703",
+    "samples_per_round": 128,
+    "rounds": 9,
+    "correctness_checks": 1776,
+    "rows": [
+      {
+        "bytes": 16,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 8579,
+          "rom": 8195,
+          "repeat": 8579
+        },
+        "cycles_per_call": {
+          "before": 46.0,
+          "rom": 43.0,
+          "repeat": 46.0
+        },
+        "rom_over_resident": 0.9347826086956522,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 16,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 9731,
+          "rom": 8963,
+          "repeat": 9731
+        },
+        "cycles_per_call": {
+          "before": 55.0,
+          "rom": 49.0,
+          "repeat": 55.0
+        },
+        "rom_over_resident": 0.8909090909090909,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 16,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 9219,
+          "rom": 8707,
+          "repeat": 9219
+        },
+        "cycles_per_call": {
+          "before": 51.0,
+          "rom": 47.0,
+          "repeat": 51.0
+        },
+        "rom_over_resident": 0.9215686274509803,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 16,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 9731,
+          "rom": 8963,
+          "repeat": 9731
+        },
+        "cycles_per_call": {
+          "before": 55.0,
+          "rom": 49.0,
+          "repeat": 55.0
+        },
+        "rom_over_resident": 0.8909090909090909,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 17,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 9475,
+          "rom": 8707,
+          "repeat": 9475
+        },
+        "cycles_per_call": {
+          "before": 53.0,
+          "rom": 47.0,
+          "repeat": 53.0
+        },
+        "rom_over_resident": 0.8867924528301887,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 17,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 10627,
+          "rom": 8835,
+          "repeat": 10627
+        },
+        "cycles_per_call": {
+          "before": 62.0,
+          "rom": 48.0,
+          "repeat": 62.0
+        },
+        "rom_over_resident": 0.7741935483870968,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 17,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 10115,
+          "rom": 8835,
+          "repeat": 10115
+        },
+        "cycles_per_call": {
+          "before": 58.0,
+          "rom": 48.0,
+          "repeat": 58.0
+        },
+        "rom_over_resident": 0.8275862068965517,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 17,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 10627,
+          "rom": 9859,
+          "repeat": 10627
+        },
+        "cycles_per_call": {
+          "before": 62.0,
+          "rom": 56.0,
+          "repeat": 62.0
+        },
+        "rom_over_resident": 0.9032258064516129,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 31,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 14339,
+          "rom": 10243,
+          "repeat": 14339
+        },
+        "cycles_per_call": {
+          "before": 91.0,
+          "rom": 59.0,
+          "repeat": 91.0
+        },
+        "rom_over_resident": 0.6483516483516484,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 31,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 16643,
+          "rom": 10243,
+          "repeat": 16643
+        },
+        "cycles_per_call": {
+          "before": 109.0,
+          "rom": 59.0,
+          "repeat": 109.0
+        },
+        "rom_over_resident": 0.5412844036697247,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 31,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 15747,
+          "rom": 10627,
+          "repeat": 15747
+        },
+        "cycles_per_call": {
+          "before": 102.0,
+          "rom": 62.0,
+          "repeat": 102.0
+        },
+        "rom_over_resident": 0.6078431372549019,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 31,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 16643,
+          "rom": 10627,
+          "repeat": 16643
+        },
+        "cycles_per_call": {
+          "before": 109.0,
+          "rom": 62.0,
+          "repeat": 109.0
+        },
+        "rom_over_resident": 0.5688073394495413,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 32,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 9987,
+          "rom": 9987,
+          "repeat": 9987
+        },
+        "cycles_per_call": {
+          "before": 57.0,
+          "rom": 57.0,
+          "repeat": 57.0
+        },
+        "rom_over_resident": 1.0,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 32,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 12291,
+          "rom": 10755,
+          "repeat": 12291
+        },
+        "cycles_per_call": {
+          "before": 75.0,
+          "rom": 63.0,
+          "repeat": 75.0
+        },
+        "rom_over_resident": 0.84,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 32,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 11267,
+          "rom": 10499,
+          "repeat": 11267
+        },
+        "cycles_per_call": {
+          "before": 67.0,
+          "rom": 61.0,
+          "repeat": 67.0
+        },
+        "rom_over_resident": 0.9104477611940298,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 32,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 12291,
+          "rom": 10755,
+          "repeat": 12291
+        },
+        "cycles_per_call": {
+          "before": 75.0,
+          "rom": 63.0,
+          "repeat": 75.0
+        },
+        "rom_over_resident": 0.84,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 33,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 10883,
+          "rom": 10499,
+          "repeat": 10883
+        },
+        "cycles_per_call": {
+          "before": 64.0,
+          "rom": 61.0,
+          "repeat": 64.0
+        },
+        "rom_over_resident": 0.953125,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 33,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 13187,
+          "rom": 10627,
+          "repeat": 13187
+        },
+        "cycles_per_call": {
+          "before": 82.0,
+          "rom": 62.0,
+          "repeat": 82.0
+        },
+        "rom_over_resident": 0.7560975609756098,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 33,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 12163,
+          "rom": 10627,
+          "repeat": 12163
+        },
+        "cycles_per_call": {
+          "before": 74.0,
+          "rom": 62.0,
+          "repeat": 74.0
+        },
+        "rom_over_resident": 0.8378378378378378,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 33,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 13187,
+          "rom": 11651,
+          "repeat": 13187
+        },
+        "cycles_per_call": {
+          "before": 82.0,
+          "rom": 70.0,
+          "repeat": 82.0
+        },
+        "rom_over_resident": 0.8536585365853658,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 63,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 17155,
+          "rom": 13827,
+          "repeat": 17155
+        },
+        "cycles_per_call": {
+          "before": 113.0,
+          "rom": 87.0,
+          "repeat": 113.0
+        },
+        "rom_over_resident": 0.7699115044247787,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 63,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 21763,
+          "rom": 13827,
+          "repeat": 21763
+        },
+        "cycles_per_call": {
+          "before": 149.0,
+          "rom": 87.0,
+          "repeat": 149.0
+        },
+        "rom_over_resident": 0.5838926174496645,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 63,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 19843,
+          "rom": 14211,
+          "repeat": 19843
+        },
+        "cycles_per_call": {
+          "before": 134.0,
+          "rom": 90.0,
+          "repeat": 134.0
+        },
+        "rom_over_resident": 0.6716417910447762,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 63,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 21763,
+          "rom": 14211,
+          "repeat": 21763
+        },
+        "cycles_per_call": {
+          "before": 149.0,
+          "rom": 90.0,
+          "repeat": 149.0
+        },
+        "rom_over_resident": 0.6040268456375839,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 64,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 12803,
+          "rom": 13571,
+          "repeat": 12803
+        },
+        "cycles_per_call": {
+          "before": 79.0,
+          "rom": 85.0,
+          "repeat": 79.0
+        },
+        "rom_over_resident": 1.0759493670886076,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 64,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 17411,
+          "rom": 14339,
+          "repeat": 17411
+        },
+        "cycles_per_call": {
+          "before": 115.0,
+          "rom": 91.0,
+          "repeat": 115.0
+        },
+        "rom_over_resident": 0.7913043478260869,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 64,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 15363,
+          "rom": 14083,
+          "repeat": 15363
+        },
+        "cycles_per_call": {
+          "before": 99.0,
+          "rom": 89.0,
+          "repeat": 99.0
+        },
+        "rom_over_resident": 0.898989898989899,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 64,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 17411,
+          "rom": 14339,
+          "repeat": 17411
+        },
+        "cycles_per_call": {
+          "before": 115.0,
+          "rom": 91.0,
+          "repeat": 115.0
+        },
+        "rom_over_resident": 0.7913043478260869,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 65,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 13699,
+          "rom": 14083,
+          "repeat": 13699
+        },
+        "cycles_per_call": {
+          "before": 86.0,
+          "rom": 89.0,
+          "repeat": 86.0
+        },
+        "rom_over_resident": 1.0348837209302326,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 65,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 18307,
+          "rom": 14211,
+          "repeat": 18307
+        },
+        "cycles_per_call": {
+          "before": 122.0,
+          "rom": 90.0,
+          "repeat": 122.0
+        },
+        "rom_over_resident": 0.7377049180327869,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 65,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 16259,
+          "rom": 14211,
+          "repeat": 16259
+        },
+        "cycles_per_call": {
+          "before": 106.0,
+          "rom": 90.0,
+          "repeat": 106.0
+        },
+        "rom_over_resident": 0.8490566037735849,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 65,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 18307,
+          "rom": 15235,
+          "repeat": 18307
+        },
+        "cycles_per_call": {
+          "before": 122.0,
+          "rom": 98.0,
+          "repeat": 122.0
+        },
+        "rom_over_resident": 0.8032786885245902,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 127,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 22787,
+          "rom": 20995,
+          "repeat": 22787
+        },
+        "cycles_per_call": {
+          "before": 157.0,
+          "rom": 143.0,
+          "repeat": 157.0
+        },
+        "rom_over_resident": 0.910828025477707,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 127,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 32003,
+          "rom": 20995,
+          "repeat": 32003
+        },
+        "cycles_per_call": {
+          "before": 229.0,
+          "rom": 143.0,
+          "repeat": 229.0
+        },
+        "rom_over_resident": 0.6244541484716157,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 127,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 28035,
+          "rom": 21379,
+          "repeat": 28035
+        },
+        "cycles_per_call": {
+          "before": 198.0,
+          "rom": 146.0,
+          "repeat": 198.0
+        },
+        "rom_over_resident": 0.7373737373737373,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 127,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 32003,
+          "rom": 21379,
+          "repeat": 32003
+        },
+        "cycles_per_call": {
+          "before": 229.0,
+          "rom": 146.0,
+          "repeat": 229.0
+        },
+        "rom_over_resident": 0.6375545851528385,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 128,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 18435,
+          "rom": 20739,
+          "repeat": 18435
+        },
+        "cycles_per_call": {
+          "before": 123.0,
+          "rom": 141.0,
+          "repeat": 123.0
+        },
+        "rom_over_resident": 1.146341463414634,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 128,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 27651,
+          "rom": 21507,
+          "repeat": 27651
+        },
+        "cycles_per_call": {
+          "before": 195.0,
+          "rom": 147.0,
+          "repeat": 195.0
+        },
+        "rom_over_resident": 0.7538461538461538,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 128,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 23555,
+          "rom": 21251,
+          "repeat": 23555
+        },
+        "cycles_per_call": {
+          "before": 163.0,
+          "rom": 145.0,
+          "repeat": 163.0
+        },
+        "rom_over_resident": 0.8895705521472392,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 128,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 27651,
+          "rom": 21507,
+          "repeat": 27651
+        },
+        "cycles_per_call": {
+          "before": 195.0,
+          "rom": 147.0,
+          "repeat": 195.0
+        },
+        "rom_over_resident": 0.7538461538461538,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 129,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 19331,
+          "rom": 21251,
+          "repeat": 19331
+        },
+        "cycles_per_call": {
+          "before": 130.0,
+          "rom": 145.0,
+          "repeat": 130.0
+        },
+        "rom_over_resident": 1.1153846153846154,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 129,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 28547,
+          "rom": 21379,
+          "repeat": 28547
+        },
+        "cycles_per_call": {
+          "before": 202.0,
+          "rom": 146.0,
+          "repeat": 202.0
+        },
+        "rom_over_resident": 0.7227722772277227,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 129,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 24451,
+          "rom": 21379,
+          "repeat": 24451
+        },
+        "cycles_per_call": {
+          "before": 170.0,
+          "rom": 146.0,
+          "repeat": 170.0
+        },
+        "rom_over_resident": 0.8588235294117647,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 129,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 28547,
+          "rom": 22403,
+          "repeat": 28547
+        },
+        "cycles_per_call": {
+          "before": 202.0,
+          "rom": 154.0,
+          "repeat": 202.0
+        },
+        "rom_over_resident": 0.7623762376237624,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 255,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 34051,
+          "rom": 35331,
+          "repeat": 34051
+        },
+        "cycles_per_call": {
+          "before": 245.0,
+          "rom": 255.0,
+          "repeat": 245.0
+        },
+        "rom_over_resident": 1.0408163265306123,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 255,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 52483,
+          "rom": 35331,
+          "repeat": 52548
+        },
+        "cycles_per_call": {
+          "before": 389.0,
+          "rom": 255.0,
+          "repeat": 389.5078125
+        },
+        "rom_over_resident": 0.6550993988901043,
+        "control_drift_cycles": 0.5078125
+      },
+      {
+        "bytes": 255,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 44484,
+          "rom": 35715,
+          "repeat": 44483
+        },
+        "cycles_per_call": {
+          "before": 326.5078125,
+          "rom": 258.0,
+          "repeat": 326.5
+        },
+        "rom_over_resident": 0.790189627325477,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 255,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 52547,
+          "rom": 35715,
+          "repeat": 52547
+        },
+        "cycles_per_call": {
+          "before": 389.5,
+          "rom": 258.0,
+          "repeat": 389.5
+        },
+        "rom_over_resident": 0.6623876765083441,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 256,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 29699,
+          "rom": 35075,
+          "repeat": 29699
+        },
+        "cycles_per_call": {
+          "before": 211.0,
+          "rom": 253.0,
+          "repeat": 211.0
+        },
+        "rom_over_resident": 1.1990521327014219,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 256,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 48195,
+          "rom": 35843,
+          "repeat": 48131
+        },
+        "cycles_per_call": {
+          "before": 355.5,
+          "rom": 259.0,
+          "repeat": 355.0
+        },
+        "rom_over_resident": 0.729064039408867,
+        "control_drift_cycles": 0.5
+      },
+      {
+        "bytes": 256,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 39939,
+          "rom": 35587,
+          "repeat": 39939
+        },
+        "cycles_per_call": {
+          "before": 291.0,
+          "rom": 257.0,
+          "repeat": 291.0
+        },
+        "rom_over_resident": 0.8831615120274914,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 256,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 48195,
+          "rom": 35843,
+          "repeat": 48131
+        },
+        "cycles_per_call": {
+          "before": 355.5,
+          "rom": 259.0,
+          "repeat": 355.0
+        },
+        "rom_over_resident": 0.729064039408867,
+        "control_drift_cycles": 0.5
+      },
+      {
+        "bytes": 257,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 30595,
+          "rom": 35587,
+          "repeat": 30595
+        },
+        "cycles_per_call": {
+          "before": 218.0,
+          "rom": 257.0,
+          "repeat": 218.0
+        },
+        "rom_over_resident": 1.1788990825688073,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 257,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 49027,
+          "rom": 35715,
+          "repeat": 49027
+        },
+        "cycles_per_call": {
+          "before": 362.0,
+          "rom": 258.0,
+          "repeat": 362.0
+        },
+        "rom_over_resident": 0.712707182320442,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 257,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 40900,
+          "rom": 35715,
+          "repeat": 40835
+        },
+        "cycles_per_call": {
+          "before": 298.5078125,
+          "rom": 258.0,
+          "repeat": 298.0
+        },
+        "rom_over_resident": 0.8650347727004832,
+        "control_drift_cycles": 0.5078125
+      },
+      {
+        "bytes": 257,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 49089,
+          "rom": 36739,
+          "repeat": 49091
+        },
+        "cycles_per_call": {
+          "before": 362.484375,
+          "rom": 266.0,
+          "repeat": 362.5
+        },
+        "rom_over_resident": 0.733808918295653,
+        "control_drift_cycles": 0.015625
+      },
+      {
+        "bytes": 511,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 56642,
+          "rom": 64072,
+          "repeat": 56644
+        },
+        "cycles_per_call": {
+          "before": 421.4921875,
+          "rom": 479.5390625,
+          "repeat": 421.5078125
+        },
+        "rom_over_resident": 1.1376964709371293,
+        "control_drift_cycles": 0.015625
+      },
+      {
+        "bytes": 511,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 93508,
+          "rom": 64070,
+          "repeat": 93509
+        },
+        "cycles_per_call": {
+          "before": 709.5078125,
+          "rom": 479.5234375,
+          "repeat": 709.515625
+        },
+        "rom_over_resident": 0.6758499187931841,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 511,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 77252,
+          "rom": 64459,
+          "repeat": 77252
+        },
+        "cycles_per_call": {
+          "before": 582.5078125,
+          "rom": 482.5625,
+          "repeat": 582.5078125
+        },
+        "rom_over_resident": 0.8284223655798608,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 511,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 93509,
+          "rom": 64454,
+          "repeat": 93508
+        },
+        "cycles_per_call": {
+          "before": 709.515625,
+          "rom": 482.5234375,
+          "repeat": 709.5078125
+        },
+        "rom_over_resident": 0.6800781787651058,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 512,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 52291,
+          "rom": 63816,
+          "repeat": 52291
+        },
+        "cycles_per_call": {
+          "before": 387.5,
+          "rom": 477.5390625,
+          "repeat": 387.5
+        },
+        "rom_over_resident": 1.232358870967742,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 512,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 89156,
+          "rom": 64583,
+          "repeat": 89157
+        },
+        "cycles_per_call": {
+          "before": 675.5078125,
+          "rom": 483.53125,
+          "repeat": 675.515625
+        },
+        "rom_over_resident": 0.7157999433299986,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 512,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 72771,
+          "rom": 64328,
+          "repeat": 72771
+        },
+        "cycles_per_call": {
+          "before": 547.5,
+          "rom": 481.5390625,
+          "repeat": 547.5
+        },
+        "rom_over_resident": 0.879523401826484,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 512,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 89157,
+          "rom": 64582,
+          "repeat": 89157
+        },
+        "cycles_per_call": {
+          "before": 675.515625,
+          "rom": 483.5234375,
+          "repeat": 675.515625
+        },
+        "rom_over_resident": 0.7157842388915875,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 513,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 53187,
+          "rom": 64326,
+          "repeat": 53187
+        },
+        "cycles_per_call": {
+          "before": 394.5,
+          "rom": 481.5234375,
+          "repeat": 394.5
+        },
+        "rom_over_resident": 1.220591730038023,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 513,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 90052,
+          "rom": 64459,
+          "repeat": 90053
+        },
+        "cycles_per_call": {
+          "before": 682.5078125,
+          "rom": 482.5625,
+          "repeat": 682.515625
+        },
+        "rom_over_resident": 0.7070391419561248,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 513,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 73668,
+          "rom": 64454,
+          "repeat": 73668
+        },
+        "cycles_per_call": {
+          "before": 554.5078125,
+          "rom": 482.5234375,
+          "repeat": 554.5078125
+        },
+        "rom_over_resident": 0.8701832988151091,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 513,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 90052,
+          "rom": 65478,
+          "repeat": 90053
+        },
+        "cycles_per_call": {
+          "before": 682.5078125,
+          "rom": 490.5234375,
+          "repeat": 682.515625
+        },
+        "rom_over_resident": 0.7187033189677375,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 1023,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 101700,
+          "rom": 121422,
+          "repeat": 101701
+        },
+        "cycles_per_call": {
+          "before": 773.5078125,
+          "rom": 927.5859375,
+          "repeat": 773.515625
+        },
+        "rom_over_resident": 1.1991879567112247,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 1023,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 175478,
+          "rom": 121422,
+          "repeat": 175480
+        },
+        "cycles_per_call": {
+          "before": 1349.8984375,
+          "rom": 927.5859375,
+          "repeat": 1349.9140625
+        },
+        "rom_over_resident": 0.687148413084242,
+        "control_drift_cycles": 0.015625
+      },
+      {
+        "bytes": 1023,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 142789,
+          "rom": 121798,
+          "repeat": 142789
+        },
+        "cycles_per_call": {
+          "before": 1094.515625,
+          "rom": 930.5234375,
+          "repeat": 1094.515625
+        },
+        "rom_over_resident": 0.8501691672971777,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1023,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 175480,
+          "rom": 121800,
+          "repeat": 175480
+        },
+        "cycles_per_call": {
+          "before": 1349.9140625,
+          "rom": 930.5390625,
+          "repeat": 1349.9140625
+        },
+        "rom_over_resident": 0.6893320755372159,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1024,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 97348,
+          "rom": 121163,
+          "repeat": 97348
+        },
+        "cycles_per_call": {
+          "before": 739.5078125,
+          "rom": 925.5625,
+          "repeat": 739.5078125
+        },
+        "rom_over_resident": 1.2515925922013162,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1024,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 171125,
+          "rom": 121927,
+          "repeat": 171127
+        },
+        "cycles_per_call": {
+          "before": 1315.890625,
+          "rom": 931.53125,
+          "repeat": 1315.90625
+        },
+        "rom_over_resident": 0.7079051266067029,
+        "control_drift_cycles": 0.015625
+      },
+      {
+        "bytes": 1024,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 138309,
+          "rom": 121672,
+          "repeat": 138309
+        },
+        "cycles_per_call": {
+          "before": 1059.515625,
+          "rom": 929.5390625,
+          "repeat": 1059.515625
+        },
+        "rom_over_resident": 0.877324543939595,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1024,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 171127,
+          "rom": 121928,
+          "repeat": 171127
+        },
+        "cycles_per_call": {
+          "before": 1315.90625,
+          "rom": 931.5390625,
+          "repeat": 1315.90625
+        },
+        "rom_over_resident": 0.707906860766107,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1025,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 98244,
+          "rom": 121672,
+          "repeat": 98245
+        },
+        "cycles_per_call": {
+          "before": 746.5078125,
+          "rom": 929.5390625,
+          "repeat": 746.515625
+        },
+        "rom_over_resident": 1.245176785779694,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 1025,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 172025,
+          "rom": 121798,
+          "repeat": 172024
+        },
+        "cycles_per_call": {
+          "before": 1322.921875,
+          "rom": 930.5234375,
+          "repeat": 1322.9140625
+        },
+        "rom_over_resident": 0.7033871029654498,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 1025,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 139205,
+          "rom": 121800,
+          "repeat": 139205
+        },
+        "cycles_per_call": {
+          "before": 1066.515625,
+          "rom": 930.5390625,
+          "repeat": 1066.515625
+        },
+        "rom_over_resident": 0.8725039190119694,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 1025,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 172022,
+          "rom": 122827,
+          "repeat": 172023
+        },
+        "cycles_per_call": {
+          "before": 1322.8984375,
+          "rom": 938.5625,
+          "repeat": 1322.90625
+        },
+        "rom_over_resident": 0.7094722482231599,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 2048,
+        "alignment": 0,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 187512,
+          "rom": 235966,
+          "repeat": 187511
+        },
+        "cycles_per_call": {
+          "before": 1443.9140625,
+          "rom": 1822.4609375,
+          "repeat": 1443.90625
+        },
+        "rom_over_resident": 1.2621705925479045,
+        "control_drift_cycles": 0.0078125
+      },
+      {
+        "bytes": 2048,
+        "alignment": 1,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 335068,
+          "rom": 236678,
+          "repeat": 335021
+        },
+        "cycles_per_call": {
+          "before": 2596.6953125,
+          "rom": 1828.0234375,
+          "repeat": 2596.328125
+        },
+        "rom_over_resident": 0.7040304976478358,
+        "control_drift_cycles": 0.3671875
+      },
+      {
+        "bytes": 2048,
+        "alignment": 2,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 269483,
+          "rom": 236415,
+          "repeat": 269417
+        },
+        "cycles_per_call": {
+          "before": 2084.3125,
+          "rom": 1825.96875,
+          "repeat": 2083.796875
+        },
+        "rom_over_resident": 0.8761616290359463,
+        "control_drift_cycles": 0.515625
+      },
+      {
+        "bytes": 2048,
+        "alignment": 3,
+        "value": 165,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 335068,
+          "rom": 236671,
+          "repeat": 335019
+        },
+        "cycles_per_call": {
+          "before": 2596.6953125,
+          "rom": 1827.96875,
+          "repeat": 2596.3125
+        },
+        "rom_over_resident": 0.704011553997638,
+        "control_drift_cycles": 0.3828125
+      },
+      {
+        "bytes": 4096,
+        "alignment": 0,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 367838,
+          "rom": 465448,
+          "repeat": 367838
+        },
+        "cycles_per_call": {
+          "before": 2852.7109375,
+          "rom": 3615.2890625,
+          "repeat": 2852.7109375
+        },
+        "rom_over_resident": 1.2673169983595647,
+        "control_drift_cycles": 0.0
+      },
+      {
+        "bytes": 4096,
+        "alignment": 1,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 662892,
+          "rom": 466220,
+          "repeat": 662903
+        },
+        "cycles_per_call": {
+          "before": 5157.8203125,
+          "rom": 3621.3203125,
+          "repeat": 5157.90625
+        },
+        "rom_over_resident": 0.7020969954097696,
+        "control_drift_cycles": 0.0859375
+      },
+      {
+        "bytes": 4096,
+        "alignment": 2,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 531779,
+          "rom": 465956,
+          "repeat": 531729
+        },
+        "cycles_per_call": {
+          "before": 4133.5,
+          "rom": 3619.2578125,
+          "repeat": 4133.109375
+        },
+        "rom_over_resident": 0.8756329586457567,
+        "control_drift_cycles": 0.390625
+      },
+      {
+        "bytes": 4096,
+        "alignment": 3,
+        "value": 0,
+        "raw_batch_cycles": {
+          "control": 2691,
+          "before": 662904,
+          "rom": 466220,
+          "repeat": 662905
+        },
+        "cycles_per_call": {
+          "before": 5157.9140625,
+          "rom": 3621.3203125,
+          "repeat": 5157.921875
+        },
+        "rom_over_resident": 0.7020895513345304,
+        "control_drift_cycles": 0.0078125
+      }
+    ]
+  },
+  "code_sha256": "6bf60a51ae46da5bc6320ddfb8879ba29886a35fa26268151d4dcc1a7c3970e5",
+  "files_unchanged": true,
+  "state_unchanged": true,
+  "identity_unchanged": true,
+  "health_after": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x14000000\r\nANALOG us/n=436/18 raw(v/t/b)=1492/974/1019 val(mV/dC/mV)=3331/398/3316 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089985\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x14000000 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=12352 observed_remaining=12352 sram_xn=1\r\n/> "
+  }
+}

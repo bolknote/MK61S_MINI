@@ -169,6 +169,37 @@ static MK61_MEMORY_TINY void* mk61_memory_move_small(void* destination,
 }
 // Separate bulk functions keep their register saves off the short paths at
 // -Os. Otherwise GCC reserves bulk-loop registers even for a one-byte clear.
+#if defined(__ARM_ARCH_7EM__) && defined(__GNUC__) && !defined(__clang__)
+// n >= 16. Align the end with byte/halfword stores, then fill backwards in
+// aligned 16-byte groups. Walking back through the exact tail restores r0
+// to the original destination. Only r4/r5 need saving; no ROM address or
+// peripheral state is used. Keep the measured four-byte code alignment.
+// Classic F411 Flash qualification: research/stm32f411-rom-2026-10-21.
+static __attribute__((naked, noipa, aligned(4)))
+void* mk61_memory_fill_bulk(void* destination __attribute__((unused)),
+                           int value __attribute__((unused)),
+                           size_t size __attribute__((unused))) {
+  __asm__(
+    "bfi r1,r1,#8,#8\n"
+    "bfi r1,r1,#16,#16\n"
+    "adds r0,r0,r2\n"
+    "ands r3,r0,#3\n"
+    "beq 1f\n"
+    "subs r2,r2,r3\n"
+    "lsls r3,r3,#31\n"
+    "it mi\nstrbmi r1,[r0,#-1]!\n"
+    "it cs\nstrhcs r1,[r0,#-2]!\n"
+    "1:\n"
+    "movs r3,r1\npush {r4,r5}\nmov r4,r1\nmov r5,r1\n"
+    "2:\nsubs r2,r2,#16\nit cs\nstmdbcs r0!,{r1,r3,r4,r5}\nbhi 2b\n"
+    "lsls r2,r2,#29\nit cs\nstmdbcs r0!,{r1,r3}\n"
+    "it mi\nstrmi r1,[r0,#-4]!\n"
+    "lsls r2,r2,#2\nit cs\nstrhcs r1,[r0,#-2]!\n"
+    "it mi\nstrbmi r1,[r0,#-1]!\n"
+    "pop {r4,r5}\nbx lr\n"
+  );
+}
+#else
 static MK61_MEMORY_BULK void* mk61_memory_fill_bulk(void* destination, int value,
                                                   size_t size) {
   unsigned char* out = (unsigned char*) destination;
@@ -189,6 +220,7 @@ static MK61_MEMORY_BULK void* mk61_memory_fill_bulk(void* destination, int value
   while(size != 0) { *out++ = (unsigned char) value; --size; }
   return destination;
 }
+#endif
 static MK61_MEMORY_BULK void* mk61_memory_move_backward_bulk(void* destination,
                                             const void* source, size_t size) {
   unsigned char* out = (unsigned char*) destination;

@@ -1,0 +1,16 @@
+[
+  {
+    "lto": false,
+    "cases": 10835,
+    "status": "PASS",
+    "bulk_bytes": 82,
+    "bulk_sha256": "80fed491ad7215983572676f94dd3bdde8bb134e4ae2fc09a0a4b35adccd5ebf"
+  },
+  {
+    "lto": true,
+    "cases": 10835,
+    "status": "PASS",
+    "bulk_bytes": 82,
+    "bulk_sha256": "80fed491ad7215983572676f94dd3bdde8bb134e4ae2fc09a0a4b35adccd5ebf"
+  }
+]

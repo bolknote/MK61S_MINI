@@ -1,0 +1,6 @@
+__pycache__/
+*/terminal.txt
+*/restore-terminal.txt
+flash-hil*/flash-original-*.bin
+flash-hil*/flash-test.bin
+flash-hil*/resident-original.bin

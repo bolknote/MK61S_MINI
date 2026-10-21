@@ -1,0 +1,136 @@
+{
+  "baseline": "Existing 88-byte bulk function, at its real address in Flash",
+  "decision_criterion": "User prioritizes speed. Code size is secondary when performance is comparable.",
+  "preferred_candidate": "Preserve existing 0..15-byte paths; factory ROM for larger blocks on the tested Classic, pending final integration measurements. No production change.",
+  "local_candidate_gate": "A local implementation must demonstrate better performance from actual Flash before being preferred; SRAM timings do not establish that.",
+  "units": "Cycles per call after common empty-call overhead; medians of 9 rounds x 128 calls",
+  "placement_limit": "Local candidates ran in SRAM. Their eventual Flash performance is unmeasured.",
+  "variants": [
+    {
+      "name": "bulk",
+      "description": "Factory ROM; adapter in SRAM",
+      "code_bytes": 16,
+      "code_saving_before_guards_and_link_layout": 72,
+      "faster_cases": 88,
+      "slower_cases": 0,
+      "equal_cases": 0,
+      "ratio_to_resident_range": [
+        0.42201834862385323,
+        0.8490566037735849
+      ]
+    },
+    {
+      "name": "local-style",
+      "description": "Local ROM-style bulk in SRAM",
+      "code_bytes": 82,
+      "code_saving_before_guards_and_link_layout": 6,
+      "faster_cases": 70,
+      "slower_cases": 16,
+      "equal_cases": 2,
+      "ratio_to_resident_range": [
+        0.5321100917431193,
+        1.2673132564600784
+      ]
+    },
+    {
+      "name": "local-edges",
+      "description": "Local overlapping edges in SRAM",
+      "code_bytes": 64,
+      "code_saving_before_guards_and_link_layout": 24,
+      "faster_cases": 72,
+      "slower_cases": 15,
+      "equal_cases": 1,
+      "ratio_to_resident_range": [
+        0.5412844036697247,
+        1.2673169983595647
+      ]
+    },
+    {
+      "name": "local-loop",
+      "description": "Local edges and unpredicated loop in SRAM",
+      "code_bytes": 66,
+      "code_saving_before_guards_and_link_layout": 22,
+      "faster_cases": 71,
+      "slower_cases": 16,
+      "equal_cases": 1,
+      "ratio_to_resident_range": [
+        0.5045871559633027,
+        1.1792773585396545
+      ]
+    }
+  ],
+  "representative_rows": [
+    {
+      "bytes": 16,
+      "alignment": 0,
+      "resident": 46.0,
+      "bulk": 38.0,
+      "local-style": 43.0,
+      "local-edges": 43.0,
+      "local-loop": 47.0
+    },
+    {
+      "bytes": 17,
+      "alignment": 0,
+      "resident": 53.0,
+      "bulk": 45.0,
+      "local-style": 52.0,
+      "local-edges": 47.0,
+      "local-loop": 51.0
+    },
+    {
+      "bytes": 32,
+      "alignment": 0,
+      "resident": 57.0,
+      "bulk": 47.0,
+      "local-style": 57.0,
+      "local-edges": 57.0,
+      "local-loop": 60.0
+    },
+    {
+      "bytes": 64,
+      "alignment": 0,
+      "resident": 79.0,
+      "bulk": 65.0,
+      "local-style": 85.0,
+      "local-edges": 85.0,
+      "local-loop": 86.0
+    },
+    {
+      "bytes": 256,
+      "alignment": 0,
+      "resident": 211.0,
+      "bulk": 173.0,
+      "local-style": 253.0,
+      "local-edges": 253.0,
+      "local-loop": 242.0
+    },
+    {
+      "bytes": 1024,
+      "alignment": 0,
+      "resident": 739.5078125,
+      "bulk": 605.5,
+      "local-style": 925.5390625,
+      "local-edges": 925.5625,
+      "local-loop": 866.5390625
+    },
+    {
+      "bytes": 4096,
+      "alignment": 0,
+      "resident": 2852.7109375,
+      "bulk": 2334.296875,
+      "local-style": 3615.2734375,
+      "local-edges": 3615.2890625,
+      "local-loop": 3364.1328125
+    },
+    {
+      "bytes": 4096,
+      "alignment": 1,
+      "resident": 5157.8203125,
+      "bulk": 2339.3125,
+      "local-style": 3625.296875,
+      "local-edges": 3621.3203125,
+      "local-loop": 3363.21875
+    }
+  ]
+}

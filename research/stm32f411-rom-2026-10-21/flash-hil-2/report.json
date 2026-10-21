@@ -1,0 +1,232 @@
+{
+  "status": "FAIL",
+  "layout": {
+    "base": 134619136,
+    "bytes": 728,
+    "crc32": 194267646,
+    "sha256": "3ddc4d65f7232fe83241585b3beffc39b138171a353ef0841ef0f6a199c91465",
+    "entries": [
+      {
+        "name": "resident",
+        "address": 134253089,
+        "bulk_address": 134252853,
+        "bulk_bytes": 88
+      },
+      {
+        "name": "rom",
+        "address": 134619137,
+        "bytes": 24,
+        "bulk_address": 134619169,
+        "bulk_bytes": 16
+      },
+      {
+        "name": "style",
+        "address": 134619185,
+        "bytes": 24,
+        "bulk_address": 134619217,
+        "bulk_bytes": 82
+      },
+      {
+        "name": "edges",
+        "address": 134619313,
+        "bytes": 24,
+        "bulk_address": 134619345,
+        "bulk_bytes": 64
+      },
+      {
+        "name": "loop",
+        "address": 134619409,
+        "bytes": 24,
+        "bulk_address": 134619441,
+        "bulk_bytes": 66
+      },
+      {
+        "name": "style4",
+        "address": 134619521,
+        "bytes": 24,
+        "bulk_address": 134619557,
+        "bulk_bytes": 82
+      },
+      {
+        "name": "edges4",
+        "address": 134619649,
+        "bytes": 24,
+        "bulk_address": 134619685,
+        "bulk_bytes": 64
+      },
+      {
+        "name": "loop4",
+        "address": 134619761,
+        "bytes": 24,
+        "bulk_address": 134619797,
+        "bulk_bytes": 66
+      }
+    ]
+  },
+  "runs": [],
+  "app_sha256": "acd24be9cf64f360c7eb70a467174f6cc335c22a898a50ca4078be4343965e77",
+  "method": "Actual internal Flash and factory ROM; identical short helpers; full dispatcher on every call; 9-round medians of 128 calls minus common empty-call baseline; candidate order rotated; original A/B/A; interrupts enabled; three complete runs.",
+  "identity_before": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "files_before": {
+    "files": {
+      "/System/SRCEDIT.app": {
+        "bytes": 13483,
+        "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+      },
+      "/System/EXPLORER.app": {
+        "bytes": 5738,
+        "sha256": "a3d386d54c1fde4314f0fa1b1cd2f57cac0021087719187ed95b7d9b0d163bae"
+      },
+      "/System/SETUP.app": {
+        "bytes": 9974,
+        "sha256": "8ec6ece5f70db4a20456553ad29941c1c1736c58b24e5127b88936f52d48b803"
+      },
+      "/System/MARKDOWN.app": {
+        "bytes": 13482,
+        "sha256": "dfefa169501c1c265324f44bcc8f9f69e152759d6725237024fe58966bfae738"
+      },
+      "/System/USBDISK.app": {
+        "bytes": 15303,
+        "sha256": "eb5eb28ad3db89fd7377f5cbba5173b9012d60114d2d90bb44c15cb6850c1f55"
+      },
+      "/System/LANGVM.app": {
+        "bytes": 13807,
+        "sha256": "822e2a6e0029c98226ad60d5843c53aaae787db8f82955e6c5b88f7c9ae43505"
+      },
+      "/System/LANGIN.app": {
+        "bytes": 14069,
+        "sha256": "08b9443b320a67b51563f9c04390c77f074096c9567ac2e15b3149e546b370d5"
+      },
+      "/System/HELP1.txt": {
+        "bytes": 1269,
+        "sha256": "36ee9aede6c0c6b0997355205a516593e681fa047cb5b159e3563cb5a45466b5"
+      },
+      "/System/HELP0.txt": {
+        "bytes": 1533,
+        "sha256": "595372a6e45f4e2ef3c26b021c59e5750145b5572629f97ad8b46ae7c3bc2d12"
+      },
+      "/System/FOCAL.app": {
+        "bytes": 12674,
+        "sha256": "45cb698aac3f6d19654ebf08ea732ffb8c93c3c2327d99e5b9bbf7b340504a6a"
+      },
+      "/System/BASIC.app": {
+        "bytes": 14140,
+        "sha256": "d1267166b84d6ee85b0a98372eb85ace79eda91bc915b61001a17e5d100e5cb7"
+      },
+      "/System/VMCache/VMC-0015.app": {
+        "bytes": 281,
+        "sha256": "68a82b855fdcf51452bea29eb7d4368c19217bb6a2f63a880732f0e2419058b1"
+      },
+      "/System/VMCache/VMC-0014.app": {
+        "bytes": 261,
+        "sha256": "f1566f4810e9c0271c1a1384839e75f23e9cba2f847f91bf17d8971b7d5f970b"
+      },
+      "/System/VMCache/VMC-0017.app": {
+        "bytes": 229,
+        "sha256": "96e4c37e393949174a4f36d4183fb54f33be39cda83dcf979056e0c155e3b74a"
+      },
+      "/System/VMCache/VMC-0023.app": {
+        "bytes": 184,
+        "sha256": "05ea13d011732d7f942bd42bea94700b611abd05292569ba8b8673c33a445d56"
+      },
+      "/System/VMCache/VMC-0020.app": {
+        "bytes": 184,
+        "sha256": "68c87dc8ae82690e784ad2ff0d09f6b34534a0dc32b52cf992e6c0057fc56456"
+      },
+      "/System/VMCache/VMC-0016.app": {
+        "bytes": 3794,
+        "sha256": "a6cfc680505122f9b4fd6d5d12c40dc77e12c0af9609313d2bf5d008043d8251"
+      },
+      "/System/VMCache/VMC-0010.app": {
+        "bytes": 213,
+        "sha256": "e9637fb84988fafa802a022fda78246bbdce3d134c07fb02684a5efc5b5bb699"
+      },
+      "/System/VMCache/VMC-0012.app": {
+        "bytes": 213,
+        "sha256": "9ee22d9a011c2e85eb47d761f7d556b3ec3f5754ff09f73f10b2bc806805b04c"
+      },
+      "/System/VMCache/VMC-0011.app": {
+        "bytes": 172,
+        "sha256": "98ab4f4f9ae8ae01df76199fcb3a139dd1275b11100a640a94e4cf0ba9025751"
+      },
+      "/System/VMCache/VMC-000f.app": {
+        "bytes": 172,
+        "sha256": "6d1eb84a4d016ba736828dad46aa3862e14f5a1a3ca4f4469f8ff6d67c802f1d"
+      },
+      "/System/VMCache/VMC-000e.app": {
+        "bytes": 233,
+        "sha256": "31c77338d9090d47692cc68031e25b4228287ab4c3507112f2783ced673ab90c"
+      },
+      "/System/VMCache/VMC-000d.app": {
+        "bytes": 213,
+        "sha256": "95494299ac11526a38e018929e282f2452376fc53cc7a5af180f2aade8efd86c"
+      },
+      "/System/VMCache/VMSTORE.app": {
+        "bytes": 7361,
+        "sha256": "ea32741a10a7e43b931dcf05a88af82b608632339dc4660a842568a79314d1c8"
+      }
+    },
+    "directories": [
+      "/System",
+      "/System/VMCache"
+    ]
+  },
+  "state_before": {
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/>",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/>",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/>",
+    "pwd": "pwd\r\n/\r\n/>"
+  },
+  "health_before": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=433/18 raw(v/t/b)=1492/979/1020 val(mV/dC/mV)=3331/415/3319 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089975\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=12368 observed_remaining=12368 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  },
+  "dfu_listing": "dfu-util 0.11\n\nCopyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.\nCopyright 2010-2021 Tormod Volden and Stefan Schmidt\nThis program is Free Software and has ABSOLUTELY NO WARRANTY\nPlease report bugs to http://sourceforge.net/p/dfu-util/tickets/\n\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"2-1.2\", alt=3, name=\"@Device Feature/0xFFFF0000/01*004 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"2-1.2\", alt=2, name=\"@OTP Memory /0x1FFF7800/01*512 e,01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"2-1.2\", alt=1, name=\"@Option Bytes  /0x1FFFC000/01*016 e\", serial=\"2068336B4731\"\nFound DFU: [0483:df11] ver=2200, devnum=3, cfg=1, intf=0, path=\"2-1.2\", alt=0, name=\"@Internal Flash  /0x08000000/04*016Kg,01*064Kg,03*128Kg\", serial=\"2068336B4731\"\n",
+  "original_firmware": {
+    "path": "/Users/bolk/Projects/MK61S_MINI/research/stm32f411-rom-2026-10-21/flash-hil-2/resident-original.bin",
+    "bytes": 370064,
+    "footer": 368416,
+    "build": "3AB3DD45",
+    "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635"
+  },
+  "backup_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "test_sha256": "b148215d110757653bf9869abcd1018c19833bea1c291adb991d5b50afd5e68b",
+  "error": "TypeError('read_file() takes 2 positional arguments but 3 were given')",
+  "restore_check_launch": "open \"/FLREAD.APP\"\r\n/> ",
+  "full_flash_restored": {
+    "bytes": 524288,
+    "crc32": "61CCEBFC",
+    "status": "PASS"
+  },
+  "health_after": {
+    "df": "df\r\nFilesystem: C9\r\nFlash: 524288 bytes\r\nNodes: 26 used, 998 free, 1024 total\r\nVisible: 24 files, 2 directories\r\nFAT12 cluster: 512 bytes (virtual)\r\nSettings: 4080 bytes reserved\r\nNOR JEDEC=0xEF3013 SFDP=0 probe=524288 page=256 erase=0x20 address-bytes=3 opcodes=legacy status=00/00/00\r\nSPI1 requested_hz=24000000 pclk_hz=96000000 prescaler=4 actual_hz=24000000\r\nPOWER PVD6 fall=2850-2990 rise=2960-3100 state=stable gate=1 wait=0 event=0/0 last=none@0 prev=0@0 reject=0/0/0 reset_flags=0x0\r\nANALOG us/n=440/18 raw(v/t/b)=1493/982/1021 val(mV/dC/mV)=3329/425/3320 bat=unknown/no-detector\r\nFIRMWARE CRC state=valid required=1 image=370064 footer=368416 expected=0x3AB3DD45 build=0x3AB3DD45 actual=0x3AB3DD45 backend=hardware cycles=1089978\r\n/> ",
+    "crash show": "crash show\r\nCRASH none reset=0x0 layout=ok\r\n/> ",
+    "mpu status": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005438 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=12368 observed_remaining=12368 sram_xn=1\r\n/> ",
+    "reg": "reg\r\nR0 =  0.0000000  00\r\nR1 =  0.0000000  00\r\nR2 =  0.0000000  00\r\nR3 =  0.0000000  00\r\nR4 =  0.0000000  00\r\nR5 =  0.0000000  00\r\nR6 =  0.0000000  00\r\nR7 =  0.0000000  00\r\nR8 =  0.0000000  00\r\nR9 =  0.0000000  00\r\nRA =  0.0000000  00\r\nRB =  0.0000000  00\r\nRC =  0.0000000  00\r\nRD =  0.0000000  00\r\nRE =  0.0000000  00\r\nIP: 0\r\n/> ",
+    "stk": "stk\r\nX1 =  0.0000000  00\r\nT  =  0.0000000  00\r\nZ  =  0.0000000  00\r\nY  =  0.0000000  00\r\nX  =  0.0000000  00\r\nIP =  0\r\n/> ",
+    "dump": "dump\r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  00  \r\n00  00  00  00  00  00  00  00  00  \r\n/> ",
+    "pwd": "pwd\r\n/\r\n/> "
+  },
+  "identity_after": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "files_unchanged": true,
+  "state_unchanged": true
+}

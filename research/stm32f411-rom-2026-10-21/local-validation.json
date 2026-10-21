@@ -1,0 +1,29 @@
+[
+  {
+    "symbol": "local_bulk_style",
+    "bytes": 82,
+    "sha256": "80fed491ad7215983572676f94dd3bdde8bb134e4ae2fc09a0a4b35adccd5ebf",
+    "cases": 12712,
+    "status": "PASS",
+    "contract": "n >= 16, ordinary writable memory",
+    "checks": "whole SRAM except 8 stack bytes; return pointer; callee-saved registers"
+  },
+  {
+    "symbol": "local_bulk_edges",
+    "bytes": 64,
+    "sha256": "4201f0e08f58dd864c93a080225094a084e66f5a5335a7684676d9f5a860c23a",
+    "cases": 12712,
+    "status": "PASS",
+    "contract": "n >= 16, ordinary writable memory",
+    "checks": "whole SRAM except 8 stack bytes; return pointer; callee-saved registers"
+  },
+  {
+    "symbol": "local_bulk_edges_loop",
+    "bytes": 66,
+    "sha256": "ed099ddeba910e3d3381356da25d8557f99d91babd643801c6c1fc4594d20ae2",
+    "cases": 12712,
+    "status": "PASS",
+    "contract": "n >= 16, ordinary writable memory",
+    "checks": "whole SRAM except 8 stack bytes; return pointer; callee-saved registers"
+  }
+]

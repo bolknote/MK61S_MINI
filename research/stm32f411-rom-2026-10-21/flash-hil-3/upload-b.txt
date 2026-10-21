@@ -1,0 +1,46 @@
+dfu-util 0.11
+
+Copyright 2005-2009 Weston Schmidt, Harald Welte and OpenMoko Inc.
+Copyright 2010-2021 Tormod Volden and Stefan Schmidt
+This program is Free Software and has ABSOLUTELY NO WARRANTY
+Please report bugs to http://sourceforge.net/p/dfu-util/tickets/
+
+Opening DFU capable USB device...
+Device ID 0483:df11
+Device DFU version 011a
+Claiming USB DFU Interface...
+Setting Alternate Interface #0 ...
+Determining device status...
+DFU state(2) = dfuIDLE, status(0) = No error condition is present
+DFU mode device DFU version 011a
+Device returned transfer size 2048
+DfuSe interface name: "Internal Flash  "
+
+Upload	[                         ]   0%            0 bytes
+Upload	[=                        ]   4%        22528 bytes
+Upload	[==                       ]   8%        43008 bytes
+Upload	[===                      ]  12%        63488 bytes
+Upload	[====                     ]  16%        83968 bytes
+Upload	[=====                    ]  20%       106496 bytes
+Upload	[======                   ]  24%       126976 bytes
+Upload	[=======                  ]  28%       147456 bytes
+Upload	[========                 ]  32%       167936 bytes
+Upload	[=========                ]  36%       190464 bytes
+Upload	[==========               ]  40%       210944 bytes
+Upload	[===========              ]  44%       231424 bytes
+Upload	[============             ]  48%       251904 bytes
+Upload	[=============            ]  52%       274432 bytes
+Upload	[==============           ]  56%       294912 bytes
+Upload	[===============          ]  60%       315392 bytes
+Upload	[================         ]  64%       335872 bytes
+Upload	[=================        ]  68%       358400 bytes
+Upload	[==================       ]  72%       378880 bytes
+Upload	[===================      ]  76%       399360 bytes
+Upload	[====================     ]  80%       419840 bytes
+Upload	[====================     ]  83%       438272 bytes
+Upload	[=====================    ]  84%       442368 bytes
+Upload	[======================   ]  88%       462848 bytes
+Upload	[=======================  ]  92%       483328 bytes
+Upload	[======================== ]  96%       503808 bytes
+Upload	[=========================] 100%       524288 bytes
+Upload done.
