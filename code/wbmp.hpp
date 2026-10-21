@@ -57,6 +57,9 @@ Status decode_viewport(const u8* data, usize size, const Info& info,
                        u32 view_x, u32 view_y,
                        u16 view_width, u16 view_height,
                        Layout layout, u8* output, usize output_size);
+Status decode_viewport(const Reader& reader, const Info& info,
+                       u32 view_x, u32 view_y, u16 view_width, u16 view_height,
+                       Layout layout, u8* output, usize output_size);
 
 usize viewport_bytes(u16 width, u16 height, Layout layout);
 const char* status_text(Status status);

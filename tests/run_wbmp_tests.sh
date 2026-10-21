@@ -30,3 +30,8 @@ reader_out="${TMPDIR:-/tmp}/mk61_wbmp_reader_self_test"
 clang++ -std=c++17 -Wall -Wextra -Werror "${sanitizer_flags[@]}" \
     -I"$root/code" "$root/code/wbmp.cpp" "$root/tests/wbmp_reader_self_test.cpp" -o "$reader_out"
 "$reader_out"
+app_out="${TMPDIR:-/tmp}/mk61_wbmp_app_self_test"
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror -DMK61_TARGET_PICOCALC=1 "${sanitizer_flags[@]}" \
+    -I"$root/code" -I"$root/sdk/portable/include" "$root/code/wbmp.cpp" \
+    "$root/tests/wbmp_app_ui_self_test.cpp" -o "$app_out"
+"$app_out"

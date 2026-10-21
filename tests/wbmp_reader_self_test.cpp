@@ -29,6 +29,17 @@ static void compare(Source& source,bool pixels) {
         for(unsigned y=0;y<=a.height;++y) for(unsigned x=0;x<=a.width;++x)
             assert(wbmp::dark_pixel(source.bytes.data(),source.bytes.size(),a,x,y)==
                    wbmp::dark_pixel(source.reader(),b,x,y));
+    if(sa==wbmp::Status::OK && pixels) {
+      for(auto layout:{wbmp::Layout::PAGE_MAJOR_LSB,wbmp::Layout::ROW_MAJOR_MSB})
+        for(unsigned x:{0U,1U,7U,8U,a.width-1,a.width})
+          for(unsigned y:{0U,1U,a.height-1,a.height}) {
+            const unsigned size=wbmp::viewport_bytes(33,17,layout);
+            std::vector<u8> direct(size+2,0xA7),indirect(size+2,0xA7);
+            assert(wbmp::decode_viewport(source.bytes.data(),source.bytes.size(),a,x,y,33,17,layout,direct.data()+1,size)==wbmp::Status::OK);
+            assert(wbmp::decode_viewport(source.reader(),b,x,y,33,17,layout,indirect.data()+1,size)==wbmp::Status::OK);
+            assert(direct==indirect && direct.front()==0xA7 && direct.back()==0xA7);
+          }
+    }
 }
 int main() {
     std::mt19937 rng(0x57424D50);
@@ -55,5 +66,7 @@ int main() {
     source.fail_at=0;assert(wbmp::inspect(source.reader(),info)==wbmp::Status::IO_ERROR);
     source.fail_at=UINT32_MAX;assert(wbmp::inspect(source.reader(),info)==wbmp::Status::OK);
     source.fail_at=4;assert(!wbmp::dark_pixel(source.reader(),info,0,0));
+    u8 viewport[8]{};
+    assert(wbmp::decode_viewport(source.reader(),info,0,0,8,8,wbmp::Layout::PAGE_MAJOR_LSB,viewport,sizeof(viewport))==wbmp::Status::IO_ERROR);
     std::puts("WBMP indirect reader: pixel/status parity, malformed corpus, boundaries and I/O failure PASS");
 }

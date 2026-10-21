@@ -78,3 +78,11 @@ CACM paper plus the reference implementation's comprehensive DOCTOR coverage
 transcript. Development was also checked differentially against that reference
 on deterministic mixed-keyword conversations, a 510-character input and a
 256-memory FIFO stress session.
+
+На PicoCalc 0.8.15 воспоминания DOCTOR хранятся в необязательном буфере PSRAM
+256 КиБ. Это очередь фраз для последующего воспроизведения по правилам
+оригинальной ELIZA, а не запись всей беседы. При отсутствии буферного сервиса
+или PSRAM сохраняется прежняя аренда SRAM 8192 байт. Буфер освобождается
+при выходе. Кольцевая очередь не сдвигает весь массив при извлечении фразы;
+ошибка внешнего чтения/записи возвращается как ошибка APP. Сборка Classic
+сохраняет прежний размер памяти и диалог.

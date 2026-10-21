@@ -48,6 +48,7 @@ def main():
     parser.add_argument('--build-id',required=True);parser.add_argument('--app',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--require-fast',action='store_true')
+    parser.add_argument('--require-chain',action='store_true')
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=False)
     directory='/MK61S-DISPLAY-'+datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     font_path=ROOT/'programs/games/Turochamp/Turochamp320.FMK'
@@ -96,6 +97,11 @@ def main():
                 if stage in (0,1,6):assert record['bytes']==204800,record
                 if stage==5:assert 202496<=record['bytes']<=204800,record  # Dense windows may cost more than a full frame.
                 if stage==7:assert record['frames']==report['stages'][-1]['frames'],record
+            if args.require_chain:
+                assert 'LCD_CHAIN=1 ' in status and 'DMA_TIMEOUTS=0' in status and 'LCD_ERRORS=0' in status,status
+                if stage in (0,1,5,6):assert 'LCD_STRIPS=107 ' in status,status
+                record['physical_keys']=int(re.search(r'\bPHYSICAL_KEYS=(\d+)',status)[1])
+                assert record['physical_keys']==int(re.search(r'\bPHYSICAL_KEYS=(\d+)',initial)[1]),'Physical input during LCD qualification'
             report['stages'].append(record)
             print(f'LCD stage {stage}: host {record["host_settle_seconds"]:.3f}s, bytes={record.get("bytes","full")}, us={record.get("microseconds","unavailable")}',flush=True)
             if stage<7:

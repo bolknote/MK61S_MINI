@@ -124,6 +124,10 @@ void report(unsigned math_failures) {
     std::printf("%.*s",(int)firmware_size,diagnostic_status);
     std::printf("UI_FONT_FAMILY=%u UI_FONT_SIZE=%u UI_FONT_KEY=%08lX\n",
         ui.settings().ui_font_family,ui.settings().ui_font_size,(unsigned long)ui.settings().ui_font_key);
+    const auto settings_storage=picocalc::settings_storage_statistics();
+    std::printf("SETTINGS_WRITES=%lu SETTINGS_ERASES=%lu SETTINGS_SEQUENCE=%lu\n",
+        (unsigned long)settings_storage.writes,(unsigned long)settings_storage.erases,
+        (unsigned long)settings_storage.sequence);
     const auto cache=picocalc::language_cache::statistics();
     std::printf("VM_CACHE=RAM+SD BYTES=%u USED=%u RAM_HIT=%lu RAM_MISS=%lu SD_HIT=%lu SD_MISS=%lu COMPILES=%lu STORES=%lu REJECTED=%lu PACKS=%lu THAWS=%lu PACKED=%u\n",
         cache.allocated,cache.used,(unsigned long)cache.ram_hits,(unsigned long)cache.ram_misses,
@@ -144,6 +148,10 @@ void report(unsigned math_failures) {
         (unsigned long)external.rejected,(unsigned long)external.stores,(unsigned long)external.module_bytes,
         (unsigned long)external.sector_bytes,(unsigned long)external.evictions);
     const auto buffers=shared_memory::buffer_statistics();
+    const auto app_buffers=services.native_buffer_statistics();
+    std::printf("APP_BUFFERS=%lu APP_BUFFER_BYTES=%lu APP_EXTERNAL_BYTES=%lu APP_WINDOWS=%lu\n",
+        (unsigned long)app_buffers.count,(unsigned long)app_buffers.bytes,
+        (unsigned long)app_buffers.external_bytes,(unsigned long)app_buffers.windows);
     std::printf("BUFFERS=shared SRAM_USED=%lu PSRAM_USED=%lu PSRAM_CAPACITY=%lu LARGEST=%lu ACTIVE=%lu EXTERNAL=%lu PINNED=%lu RECLAIMS=%lu IO_ERRORS=%lu VALID=%u\n",
         (unsigned long)buffers.internal_used,(unsigned long)buffers.external_used,(unsigned long)buffers.external_capacity,
         (unsigned long)buffers.external_largest,(unsigned long)buffers.active,(unsigned long)buffers.external_active,
@@ -170,9 +178,9 @@ void report(unsigned math_failures) {
     std::printf("LCD_BKL=%d KBD_BKL=%d\n", keyboard.lcd_backlight(), keyboard.key_backlight());
     std::printf("LCD=ST7365P RGB565 SPI_HZ=%lu FRAMES=%lu\n",
                 (unsigned long)panel.spi_hz(), (unsigned long)panel.frames());
-    std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu\n",
+    std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu LCD_CHAIN=%u LCD_STRIPS=%lu LCD_CHAIN_PAUSES=%lu\n",
         panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
-        (unsigned long)panel.last_us(),(unsigned long)panel.full_frames());
+        (unsigned long)panel.last_us(),(unsigned long)panel.full_frames(),panel.chained_dma(),(unsigned long)panel.strips(),(unsigned long)panel.chain_pauses());
     const auto dma=picocalc::dma_support::statistics();
     const auto sd=picocalc::sd::statistics();
     const auto idle=picocalc::idle_statistics();

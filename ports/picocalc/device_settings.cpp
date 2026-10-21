@@ -1,4 +1,5 @@
 #include "settings.hpp"
+#include "io_worker.hpp"
 #include "hardware/flash.h"
 #include "pico/flash.h"
 #include "pico/stdlib.h"
@@ -8,6 +9,7 @@ namespace picocalc {
 namespace {
 constexpr u32 START = 2 * 1024 * 1024 - 2 * FLASH_SECTOR_SIZE;
 constexpr unsigned PAGES = 2 * FLASH_SECTOR_SIZE / FLASH_PAGE_SIZE;
+SettingsStorageStatistics statistics{};
 static_assert(SETTINGS_PAGE_BYTES == FLASH_PAGE_SIZE, "settings record is one flash page");
 const u8* page(unsigned index) { return (const u8*)(XIP_BASE + START + index * FLASH_PAGE_SIZE); }
 bool erased(unsigned index) {
@@ -40,8 +42,10 @@ void write(void* arg) {
 }
 bool load_device_settings(Settings& value) {
     u32 sequence = 0;
-    return latest(value, sequence) >= 0;
+    const bool valid=latest(value, sequence)>=0;
+    statistics.sequence=sequence;return valid;
 }
+SettingsStorageStatistics settings_storage_statistics() { return statistics; }
 bool save_device_settings(const Settings& value) {
     if(!valid_settings(value)) return false;
     Settings previous;
@@ -60,7 +64,14 @@ bool save_device_settings(const Settings& value) {
         operation.erase = true;
     }
     encode_settings(value, sequence + 1, operation.data);
+    // flash_safe_execute parks core 1. Never suspend its blocking I2C in
+    // the middle of a transaction: a sector erase outlasts that timeout.
+    // Core 0 is the sole producer of keyboard/LCD requests, so no new one
+    // can be queued between this drain and the flash operation.
+    io_worker::drain();
     if(flash_safe_execute(write, &operation, 1000) != PICO_OK) return false;
-    return std::memcmp(page(operation.index), operation.data, FLASH_PAGE_SIZE) == 0;
+    if(std::memcmp(page(operation.index), operation.data, FLASH_PAGE_SIZE)) return false;
+    ++statistics.writes;if(operation.erase) ++statistics.erases;
+    statistics.sequence=sequence+1;return true;
 }
 } // namespace picocalc

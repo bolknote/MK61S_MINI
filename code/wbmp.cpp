@@ -150,6 +150,38 @@ bool dark_pixel(const Reader& reader, const Info& info, u32 x, u32 y) {
     !(value&(u8)(0x80U>>(x&7U)));
 }
 
+Status decode_viewport(const Reader& reader,const Info& info,u32 view_x,u32 view_y,
+                       u16 width,u16 height,Layout layout,u8* output,usize capacity) {
+  if(!reader.read || !output || !width || !height) return Status::INVALID_ARGUMENT;
+  if(!info_matches(info,reader.size)) return Status::INVALID_HEADER;
+  const usize required=viewport_bytes(width,height,layout);
+  if(!required) return Status::INVALID_ARGUMENT;
+  if(capacity<required) return Status::OUTPUT_TOO_SMALL;
+  memset(output,0,required);
+  if(view_x>=info.width || view_y>=info.height) return Status::OK;
+  const u32 cols=info.width-view_x<width?info.width-view_x:width;
+  const u32 rows=info.height-view_y<height?info.height-view_y:height;
+  const unsigned shift=view_x&7U;
+  const u32 bytes=(shift+cols+7)/8;
+  u8 block[64];
+  for(u32 y=0;y<rows;++y) {
+    for(u32 at=0;at<bytes;) {
+      const u32 n=bytes-at<sizeof(block)?bytes-at:sizeof(block);
+      const usize offset=info.pixel_offset+(view_y+y)*info.row_bytes+view_x/8+at;
+      if(!reader.read(reader.context,offset,block,n)) return Status::IO_ERROR;
+      for(u32 i=0;i<n;++i) for(unsigned bit=0;bit<8;++bit) {
+        const u32 source=(at+i)*8+bit;
+        if(source<shift || source-shift>=cols || (block[i]&(0x80U>>bit))) continue;
+        const u32 x=source-shift;
+        if(layout==Layout::PAGE_MAJOR_LSB) output[(y/8)*width+x]|=(u8)(1U<<(y%8));
+        else output[y*((width+7)/8)+x/8]|=(u8)(0x80U>>(x%8));
+      }
+      at+=n;
+    }
+  }
+  return Status::OK;
+}
+
 bool dark_pixel(const u8* data, usize size, const Info& info, u32 x, u32 y) {
   return data != NULL && info_matches(info, size) &&
          x < info.width && y < info.height &&

@@ -18,6 +18,8 @@ enum class Document : u8 { BASIC, FOCAL, MK61, TEXT };
 // STM32. Only the device loop, QWERTY input and FAT paths are board adapters.
 class Services {
 public:
+    struct NativeBufferStatistics { u32 count,bytes,external_bytes,windows; };
+    NativeBufferStatistics native_buffer_statistics() const;
     static constexpr unsigned COLS = 38, ROWS = 14, SOURCE_CAPACITY = 65535;
     using Pump = bool (*)(void*, u8&);
     Services();

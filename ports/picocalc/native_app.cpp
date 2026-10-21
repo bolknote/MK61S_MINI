@@ -357,6 +357,11 @@ void Services::test_native_contract(void (*test)(void*,const mk61_app_api&,const
 }
 #endif
 NativeHost *NativeHost::current = nullptr;
+Services::NativeBufferStatistics Services::native_buffer_statistics() const {
+  if(!NativeHost::current) return {};
+  const auto s=NativeHost::current->buffers.statistics();
+  return {s.count,s.bytes,s.external_bytes,s.windows};
+}
 const mk61_service_keyboard NativeHost::mapping = [] {
   mk61_service_keyboard m{};
   static_assert(sizeof(m) == sizeof(keyboard_layout::MINI), "mapping ABI");

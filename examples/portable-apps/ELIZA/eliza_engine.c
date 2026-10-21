@@ -644,6 +644,32 @@ static size_t capture_text_length(const ElizaToken* words,
   return length;
 }
 
+/* Logical offsets address a FIFO. Split wrapped accesses at its boundary;
+ * this avoids shifting the whole conversation after every recalled memory. */
+static int memory_io(eliza_state* state,size_t offset,uint8_t* bytes,size_t count,int writing) {
+  size_t position,first,index;
+  if(state->memory_failed || offset>state->memory_capacity || count>state->memory_capacity-offset)
+    return 0;
+  if(!count) return 1;
+  position=offset>=state->memory_capacity-state->memory_head?
+      offset-(state->memory_capacity-state->memory_head):state->memory_head+offset;
+  first=count<state->memory_capacity-position?count:state->memory_capacity-position;
+  if(state->memory) {
+    for(index=0;index<count;++index) {
+      const size_t at=index<first?position+index:index-first;
+      if(writing) state->memory[at]=bytes[index]; else bytes[index]=state->memory[at];
+    }
+    return 1;
+  }
+  if(!state->memory_read || !state->memory_write ||
+     !(writing?state->memory_write(state->memory_context,position,bytes,first):
+                state->memory_read(state->memory_context,position,bytes,first)) ||
+     (count>first && !(writing?state->memory_write(state->memory_context,0,bytes+first,count-first):
+                               state->memory_read(state->memory_context,0,bytes+first,count-first)))) {
+    state->memory_failed=1;return 0;
+  }
+  return 1;
+}
 static void create_memory(eliza_state* state, const ElizaToken* words,
                           uint16_t word_count, const char* normalized) {
   const uint8_t kind = word_count == 0 ? ELIZA_NO_ID :
@@ -652,70 +678,49 @@ static void create_memory(eliza_state* state, const ElizaToken* words,
       eliza_script_memory_transforms[kind];
   const ElizaTransformData* transform;
   ElizaCapture captures[ELIZA_MAX_PATTERN_TERMS] = {{0, 0}};
-  size_t capture_length;
-  size_t record_size;
-  uint8_t* record;
-
-  if(transform_id == ELIZA_NO_ID || state->memory == NULL ||
-     state->memory_used > state->memory_capacity) return;
-  transform = &eliza_script_transforms[transform_id];
-  if(!match_transform(transform, words, word_count, captures)) return;
-  capture_length = capture_text_length(words, normalized, &captures[2]);
-  record_size = ELIZA_MEMORY_HEADER_BYTES + capture_length + 1U;
-  if(record_size > state->memory_capacity - state->memory_used) return;
-  record = state->memory + state->memory_used;
-  record[0] = kind;
-  record[1] = (uint8_t) capture_length;
-  record[2] = (uint8_t) (capture_length >> 8U);
-  copy_capture(words, normalized, &captures[2],
-               (char*) record + ELIZA_MEMORY_HEADER_BYTES,
-               capture_length + 1U);
-  state->memory_used += record_size;
+  size_t capture_length,record_size;
+  uint8_t record[ELIZA_MEMORY_HEADER_BYTES+ELIZA_INPUT_BYTES];
+  if(transform_id==ELIZA_NO_ID || state->memory_failed ||
+     state->memory_used>state->memory_capacity) return;
+  transform=&eliza_script_transforms[transform_id];
+  if(!match_transform(transform,words,word_count,captures)) return;
+  capture_length=capture_text_length(words,normalized,&captures[2]);
+  record_size=ELIZA_MEMORY_HEADER_BYTES+capture_length+1U;
+  if(record_size>sizeof(record) || record_size>state->memory_capacity-state->memory_used) return;
+  record[0]=kind;record[1]=(uint8_t)capture_length;record[2]=(uint8_t)(capture_length>>8U);
+  copy_capture(words,normalized,&captures[2],(char*)record+ELIZA_MEMORY_HEADER_BYTES,capture_length+1U);
+  if(memory_io(state,state->memory_used,record,record_size,1)) state->memory_used+=record_size;
 }
-
-static void recall_memory(eliza_state* state, char* output,
-                          size_t output_size) {
-  size_t index;
-  size_t capture_length;
-  size_t record_size;
-  uint8_t transform_id;
+static void recall_memory(eliza_state* state,char* output,size_t output_size) {
+  uint8_t header[ELIZA_MEMORY_HEADER_BYTES],transform_id;
+  char capture[ELIZA_INPUT_BYTES];
+  size_t capture_length,record_size;
   const ElizaTransformData* transform;
-  uint16_t offset;
   const unsigned char* data;
-  if(state->memory == NULL || state->memory_used > state->memory_capacity ||
-     state->memory_used < ELIZA_MEMORY_HEADER_BYTES + 1U ||
-     state->memory[0] >= sizeof(eliza_script_memory_transforms)) {
-    state->memory_used = 0;
-    output[0] = 0;
-    return;
+  uint16_t offset;
+  output[0]=0;
+  if(state->memory_failed || state->memory_used>state->memory_capacity ||
+     state->memory_used<ELIZA_MEMORY_HEADER_BYTES+1U ||
+     !memory_io(state,0,header,sizeof(header),0) ||
+     header[0]>=sizeof(eliza_script_memory_transforms)) {
+    state->memory_used=0;return;
   }
-  capture_length =
-      (size_t) state->memory[1] | ((size_t) state->memory[2] << 8U);
-  record_size = ELIZA_MEMORY_HEADER_BYTES + capture_length + 1U;
-  if(record_size > state->memory_used) {
-    state->memory_used = 0;
-    output[0] = 0;
-    return;
+  capture_length=(size_t)header[1]|((size_t)header[2]<<8U);
+  record_size=ELIZA_MEMORY_HEADER_BYTES+capture_length+1U;
+  if(capture_length>=sizeof(capture) || record_size>state->memory_used ||
+     !memory_io(state,ELIZA_MEMORY_HEADER_BYTES,(uint8_t*)capture,capture_length+1U,0) ||
+     capture[capture_length]!=0) { state->memory_used=0;return; }
+  transform_id=eliza_script_memory_transforms[header[0]];
+  if(transform_id==ELIZA_NO_ID || transform_id>=ELIZA_SCRIPT_TRANSFORM_COUNT) {
+    state->memory_used=0;return;
   }
-  transform_id = eliza_script_memory_transforms[state->memory[0]];
-  if(transform_id == ELIZA_NO_ID ||
-     transform_id >= ELIZA_SCRIPT_TRANSFORM_COUNT) {
-    state->memory_used = 0;
-    output[0] = 0;
-    return;
-  }
-  transform = &eliza_script_transforms[transform_id];
-  offset = eliza_script_reassembly_offsets[transform->first_reassembly];
-  data = eliza_script_reassemblies + offset;
-  if(*data++ == REASSEMBLY_TEXT)
-    assemble_memory(data,
-                    (const char*) state->memory + ELIZA_MEMORY_HEADER_BYTES,
-                    capture_length, output, output_size);
-  else
-    output[0] = 0;
-  for(index = record_size; index < state->memory_used; ++index)
-    state->memory[index - record_size] = state->memory[index];
-  state->memory_used -= record_size;
+  transform=&eliza_script_transforms[transform_id];
+  offset=eliza_script_reassembly_offsets[transform->first_reassembly];
+  data=eliza_script_reassemblies+offset;
+  if(*data++==REASSEMBLY_TEXT) assemble_memory(data,capture,capture_length,output,output_size);
+  state->memory_head=record_size>=state->memory_capacity-state->memory_head?
+      record_size-(state->memory_capacity-state->memory_head):state->memory_head+record_size;
+  state->memory_used-=record_size;
 }
 
 static const char* nomatch_message(uint8_t limit) {
@@ -736,6 +741,15 @@ void eliza_init(eliza_state* state, uint8_t* memory,
   state->limit = 1;
   state->memory = memory;
   state->memory_capacity = memory != NULL ? memory_capacity : 0;
+}
+
+void eliza_init_storage(eliza_state* state,void* context,size_t capacity,
+                        eliza_memory_read read,eliza_memory_write write) {
+  eliza_init(state,NULL,0);
+  if(state && read && write) {
+    state->memory_context=context;state->memory_capacity=capacity;
+    state->memory_read=read;state->memory_write=write;
+  }
 }
 
 int eliza_is_goodbye(const char* input) {

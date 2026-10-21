@@ -212,8 +212,9 @@ bool submit_frame(void* context,void (*transfer)(void*)) {
     frame_context=context;frame_transfer=transfer;
     frame.store(true,std::memory_order_release);__sev();return true;
 }
-void service() {
+void service(bool allow_i2c) {
     drain_uart();
+    if(!allow_i2c) return;
     if(i2c.stage.load(std::memory_order_acquire)!=QUEUED) return;
     i2c.stage.store(WORKING,std::memory_order_release);
     i2c.result=i2c.read?

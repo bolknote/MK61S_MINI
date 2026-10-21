@@ -23,7 +23,9 @@ class MK61DisplayUpdate { public: explicit MK61DisplayUpdate(MK61Display&){} };
 #include "../examples/portable-apps/SHEET/main.cpp"
 #undef main
 extern "C" { const mk61_app_api* mk61_api; }
+#include "app_buffer_mock.hpp"
 namespace {
+AppBufferMock external;
 mk61_app_api api;
 mk61_app_services services;
 std::vector<int32_t> inputs;
@@ -67,9 +69,10 @@ uint32_t call(uint32_t operation,uint32_t a,uint32_t b,uint32_t c,void* payload)
   if(operation==MK61_SERVICE_CAPABILITIES)return MK61_SERVICE_CAP_UI|MK61_SERVICE_CAP_FILES|MK61_SERVICE_CAP_DIALOGS|
       MK61_SERVICE_CAP_EDITOR|MK61_SERVICE_CAP_FONT|MK61_SERVICE_CAP_MATH|MK61_SERVICE_CAP_NUMBER_IO|MK61_SERVICE_CAP_MEMORY
 #if defined(MK61_TARGET_PICOCALC)
-      |(expose_ui_font?MK61_SERVICE_CAP_UI_FONT:0U)
+      |(expose_ui_font?MK61_SERVICE_CAP_UI_FONT:0U)|external.capabilities()
 #endif
       ;
+  if(operation==MK61_SERVICE_BUFFER)return external.call(a,b,c,payload);
 #if defined(MK61_TARGET_PICOCALC)
   if(operation==MK61_SERVICE_DISPLAY){
     assert(a==MK61_SERVICE_DISPLAY_FRAMEBUFFER && b==sizeof(mk61_service_framebuffer));
@@ -165,6 +168,31 @@ void dump(const char* path,const std::vector<uint8_t>& frame){
 }
 #if defined(MK61_TARGET_PICOCALC)
 void native_checks(){
+  reset();external.enabled=true;
+  memset(&app,0,sizeof(app));app.api=&api;app.services=&services;
+  sheet::number_io(parse_number,format_number);
+  {
+    UndoLease lease;
+    for(unsigned i=0;i<140;++i) {
+      remember();char value[12];snprintf(value,sizeof(value),"%u",i);
+      assert(sheet::set(app.book,0,Kind::NUMBER,value,(uint16_t)strlen(value))==Error::OK);
+      app.modified=true;recalc();
+    }
+    assert(app.undo_count==128 && external.active && external.writes==280);
+    for(int value=138;value>=11;--value) { undo();assert(result(0)==value); }
+    assert(!app.undo_count);undo();assert(result(0)==11);
+    sheet::clear(app.book);app.modified=false;forget_undo();remember();
+    assert(sheet::set(app.book,0,Kind::NUMBER,"42",2)==Error::OK);app.modified=true;
+    undo();assert(sheet::find(app.book,0)<0 && !app.modified);
+    remember();assert(sheet::set(app.book,0,Kind::NUMBER,"7",1)==Error::OK);recalc();
+    external.fail_read=true;undo();assert(app.io_error && result(0)==7 && !app.undo_count);
+    external.fail_read=false;app.io_error=false;external.fail_write=true;
+    remember();assert(app.io_error && !app.undo_count);external.fail_write=false;
+  }
+  assert(!external.active && external.acquires==external.releases);
+  reset();inputs={ESC};assert(mk61_app_open_file(42)==MK61_APP_OK);done();
+  assert(!external.active && external.acquires==external.releases);
+  external.enabled=false;
   reset();inputs={MK61_APP_KEY_FORWARD,7,OK,MK61_APP_KEY_BACKWARD,
       MK61_APP_KEY_RAW_BASE+'\t',ESC,ESC,RIGHT,OK};
   assert(sheet_app_entry()==MK61_APP_OK);done();assert(result(16)==7 && app.selected==0);

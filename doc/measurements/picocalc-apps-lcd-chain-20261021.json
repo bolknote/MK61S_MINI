@@ -1,0 +1,488 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-21T14:31:03.593406+00:00",
+  "profile": "picocalc-pico-h",
+  "version": "0.8.15",
+  "uid": "E6657CD423721C35",
+  "build_id": "A7483AE6",
+  "uf2_sha256": "860258ec7bc59b0e74727a03d58cfd98b5ea8826ad53325d42129b37c0f7ca60",
+  "source_sha256": "90a4871c91e7f35b6061c5421b18c9c91d57645c1c8d2cff96d3dd6dd4c2dc34",
+  "baseline_commit": "90274222b68072cf4dfbedfb3e95a5e819419de7",
+  "math_changes_excluded": true,
+  "memcpy_memmove_changes_excluded": true,
+  "cpu_hz": 125000000,
+  "lcd_spi_hz": 12500000,
+  "display": {
+    "previous_build": "D26E5DE0",
+    "previous_stages": [
+      {
+        "stage": 0,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 148655
+      },
+      {
+        "stage": 1,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 156857
+      },
+      {
+        "stage": 2,
+        "bytes": 2304,
+        "rectangles": 2,
+        "microseconds": 6859
+      },
+      {
+        "stage": 3,
+        "bytes": 768,
+        "rectangles": 2,
+        "microseconds": 3762
+      },
+      {
+        "stage": 4,
+        "bytes": 256,
+        "rectangles": 2,
+        "microseconds": 2505
+      },
+      {
+        "stage": 5,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 159320
+      },
+      {
+        "stage": 6,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 156875
+      },
+      {
+        "stage": 7,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 156875
+      }
+    ],
+    "stages": [
+      {
+        "stage": 0,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 146656,
+        "physical_keys": 0
+      },
+      {
+        "stage": 1,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 145834,
+        "physical_keys": 0
+      },
+      {
+        "stage": 2,
+        "bytes": 2304,
+        "rectangles": 2,
+        "microseconds": 1911,
+        "physical_keys": 0
+      },
+      {
+        "stage": 3,
+        "bytes": 768,
+        "rectangles": 2,
+        "microseconds": 834,
+        "physical_keys": 0
+      },
+      {
+        "stage": 4,
+        "bytes": 256,
+        "rectangles": 2,
+        "microseconds": 508,
+        "physical_keys": 0
+      },
+      {
+        "stage": 5,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 145847,
+        "physical_keys": 0
+      },
+      {
+        "stage": 6,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 146484,
+        "physical_keys": 0
+      },
+      {
+        "stage": 7,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 146484,
+        "physical_keys": 0
+      }
+    ],
+    "previous_full_frame_median_us": 156866.0,
+    "full_frame_median_us": 146165.5,
+    "speedup": 1.0732081099849144,
+    "strip_rows": 3,
+    "strip_buffers_bytes": 3840,
+    "control_descriptors": 108,
+    "full_frame_strips": 107,
+    "basic": {
+      "frames": 29,
+      "incomplete_frames": 0,
+      "retained_frames": 28
+    },
+    "optical_confirmation": {
+      "build": "B8F365A5",
+      "user_confirmed": true,
+      "message": "Да, изображение нормальное",
+      "lcd_spi_hz": 12500000,
+      "pixel_format": "RGB565"
+    },
+    "physical_keys_during_both_display_runs": 0
+  },
+  "native_apps": {
+    "wbmp": {
+      "maximum_file_bytes": 4194304,
+      "device_image_bytes": 32774,
+      "host_image_bytes": 131078,
+      "device_dimensions": [
+        512,
+        512
+      ],
+      "host_dimensions": [
+        1024,
+        1024
+      ],
+      "fallback": "512-byte SD cache",
+      "previous_loaded_bytes": 17748,
+      "loaded_bytes": 2132
+    },
+    "sheet": {
+      "psram_bytes": 262144,
+      "undo_steps": 128,
+      "fallback_undo_steps": 1,
+      "host_history_edits": 140
+    },
+    "eliza": {
+      "psram_bytes": 262144,
+      "fallback_bytes": 8192,
+      "queue": "FIFO ring for DOCTOR phrase memories",
+      "host_large_fifo_records": 7000,
+      "host_crosses_64_kib": true
+    },
+    "device_cases": 10,
+    "device_pixel_frames": 14,
+    "loaded_apps": [
+      {
+        "name": "HELLO",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 5,
+        "relocation_bytes": 6,
+        "entry_offset": 0,
+        "image_bytes": 300,
+        "bss_bytes": 16,
+        "memory_bytes": 316,
+        "app_bytes": 365,
+        "compression": "ZX0",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/portable-apps/HELLO/main.c"
+        ],
+        "app_sha256": "a61d923580afddd549cc77122365fb35d55546ca001a29aeed76213af4863813"
+      },
+      {
+        "name": "HELLO_CPP",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 4,
+        "relocation_bytes": 5,
+        "entry_offset": 0,
+        "image_bytes": 294,
+        "bss_bytes": 10,
+        "memory_bytes": 304,
+        "app_bytes": 354,
+        "compression": "ZX0",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/loadable-apps/HELLO/hello_app.cpp"
+        ],
+        "app_sha256": "c7573de5f5822a8badb3bafcf33d55d9a7eb09d5ba3b626660af1b61b8b2a29d"
+      },
+      {
+        "name": "HELLO_RS",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 8,
+        "relocation_bytes": 9,
+        "entry_offset": 0,
+        "image_bytes": 500,
+        "bss_bytes": 20,
+        "memory_bytes": 520,
+        "app_bytes": 551,
+        "compression": "ZX0",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "rust_compiler": "rustc 1.94.1 (e408947bf 2026-03-25)",
+        "sources": [
+          "examples/portable-apps/HELLO-RUST/main.rs"
+        ],
+        "app_sha256": "cdc6f3469e43368a6299708b894325bf2a917b84149287c25878f802098d59de"
+      },
+      {
+        "name": "SERVICES",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 9,
+        "relocation_bytes": 11,
+        "entry_offset": 0,
+        "image_bytes": 528,
+        "bss_bytes": 8,
+        "memory_bytes": 536,
+        "app_bytes": 542,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/portable-apps/SERVICES/main.c"
+        ],
+        "app_sha256": "217535e75d47aa00f46eb6b2d5b91cdb0a7ae5abb10d89044de71e1668767e74"
+      },
+      {
+        "name": "ELIZA",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 108,
+        "relocation_bytes": 124,
+        "entry_offset": 0,
+        "image_bytes": 17667,
+        "bss_bytes": 21,
+        "memory_bytes": 17688,
+        "app_bytes": 12893,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/portable-apps/ELIZA/main.c",
+          "examples/portable-apps/ELIZA/eliza_engine.c"
+        ],
+        "app_sha256": "b97ec7cb0a3a53a810b9a617d13b4b097a93073ee867942d4ce7224be5737f45"
+      },
+      {
+        "name": "SHEET",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 275,
+        "relocation_bytes": 309,
+        "entry_offset": 0,
+        "image_bytes": 18004,
+        "bss_bytes": 4780,
+        "memory_bytes": 22784,
+        "app_bytes": 15400,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/portable-apps/SHEET/main.cpp",
+          "examples/portable-apps/SHEET/sheet_engine.cpp"
+        ],
+        "app_sha256": "7da9d78f501b16743dafd67c6322fdaab3cdbd6e2f7db28faf626404ec42f9e0"
+      },
+      {
+        "name": "WBMP",
+        "target": "picocalc-pico-h",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": true,
+        "graphics_width": 320,
+        "graphics_height": 320,
+        "relocations": 6,
+        "relocation_bytes": 9,
+        "entry_offset": 0,
+        "image_bytes": 2113,
+        "bss_bytes": 19,
+        "memory_bytes": 2132,
+        "app_bytes": 2053,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "greedy",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119",
+        "sources": [
+          "examples/portable-apps/WBMP/main.c",
+          "examples/portable-apps/WBMP/viewer.cpp",
+          "code/wbmp.cpp"
+        ],
+        "app_sha256": "306c25ea129b6b39d91bec8eda5b643ae8817cf7949a5803e9eb624e1d4d5e5e"
+      }
+    ],
+    "collection_installed": "/MK61S-PicoCalc-0.8.15",
+    "previous_collection_updated": "/MK61S-PicoCalc-0.8",
+    "existing_collection_backup": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/installed-apps-before"
+  },
+  "settings_flash": {
+    "verified_writes": 32,
+    "verified_sector_erases": 2,
+    "keyboard_errors": 0,
+    "fix": "Drain core-1 LCD/I2C/UART before flash_safe_execute can park core 1 during sector erase"
+  },
+  "resources": {
+    "flash_bytes": {
+      "previous": 750264,
+      "current": 754344,
+      "delta": 4080
+    },
+    "static_ram_bytes": {
+      "previous": 195804,
+      "current": 198616,
+      "delta": 2812
+    }
+  },
+  "validation": {
+    "native_ui_cases": 11,
+    "native_ui_frames": 20,
+    "full_psram_write_read_bytes": 8388608,
+    "short_psram_writes": 4096,
+    "stm32_resident_profiles": [
+      "F411 Classic V3 USB Screen",
+      "F401 A00 MINI"
+    ],
+    "stm32_system_apps": {
+      "classic": 9,
+      "mini": 11
+    },
+    "stm32_portable_apps": [
+      {
+        "name": "ELIZA",
+        "target": "stm32",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": false,
+        "graphics_width": 192,
+        "graphics_height": 64,
+        "relocations": 86,
+        "relocation_bytes": 98,
+        "entry_offset": 0,
+        "image_bytes": 15335,
+        "bss_bytes": 1545,
+        "memory_bytes": 16880,
+        "app_bytes": 9377,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      {
+        "name": "SHEET",
+        "target": "stm32",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": false,
+        "graphics_width": 192,
+        "graphics_height": 64,
+        "relocations": 278,
+        "relocation_bytes": 311,
+        "entry_offset": 0,
+        "image_bytes": 15452,
+        "bss_bytes": 4748,
+        "memory_bytes": 20200,
+        "app_bytes": 12066,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      },
+      {
+        "name": "WBMP",
+        "target": "stm32",
+        "abi": 6,
+        "load_address": 536870912,
+        "native_display": false,
+        "graphics_width": 192,
+        "graphics_height": 64,
+        "relocations": 7,
+        "relocation_bytes": 9,
+        "entry_offset": 0,
+        "image_bytes": 1053,
+        "bss_bytes": 3147,
+        "memory_bytes": 4200,
+        "app_bytes": 1047,
+        "compression": "ZX0+BCJ",
+        "zx0_parser": "optimal",
+        "resident_imports": 0,
+        "compiler": "arm-none-eabi-gcc (xPack GNU Arm Embedded GCC arm64) 14.2.1 20241119"
+      }
+    ],
+    "calculator_registers_stack_program_cwd_ip_restored": true,
+    "rtc_restored_with_elapsed_time": true,
+    "hardware_error_counters_zero": true,
+    "settings_restored": true
+  },
+  "limitations": [
+    "SPI 12.5 MHz remains the full-frame transfer limit; no direct PSRAM-to-LCD DMA or TE synchronization",
+    "Optical confirmation was on an intermediate chain build; final build checked with exact pixel frames and DMA source CRC",
+    "WBMP supports files up to 4 MiB; this stage tested 32 KiB on device and 128 KiB on host, not a full 4 MiB image",
+    "SHEET book/file capacity is unchanged; PSRAM extends undo history",
+    "ELIZA external storage holds DOCTOR memories, not a full conversation transcript",
+    "No battery consumption measurement, new chess benchmark, or mathematical changes in this stage"
+  ],
+  "evidence_sha256": {
+    ".build/picocalc-apps-lcd-chain-20261021/settings-accepted/result.json": "55dada22b1d463309d9323588481bfa09f79a904c60ab9cb25b4286c15d3f01b",
+    ".build/picocalc-apps-lcd-chain-20261021/display-accepted/result.json": "bf7770924206e7651a21b750dff037145f9d48cc45b3f111c4d78bd8fd99028b",
+    ".build/picocalc-apps-lcd-chain-20261021/apps-psram-accepted/result.json": "6858769b903d118bd7d3f6f8b6626657e9f125578bd27a4ad390bf2c216514b7",
+    ".build/picocalc-apps-lcd-chain-20261021/native-accepted/result.json": "c55bee29207692ab8444edef6458b1eb19b4d3b15dca58faf0379b51bfae8db0",
+    ".build/picocalc-apps-lcd-chain-20261021/hardware-accepted/result.json": "fab11a954f2453890ec0f392c29c192994131ea2a91d1c585312f7f409c84224",
+    ".build/picocalc-apps-lcd-chain-20261021/app-buffers-accepted/result.json": "fb9dc82c537af71185f7dd35af1502a9f3cc4ed9840bae5f927a54c3e4fb7800",
+    ".build/picocalc-apps-lcd-chain-20261021/apps-installed/result.json": "e21d2586e460259b1d2f02c0b974fea82a13598f0ccd007cdd20e26e7c74ceca",
+    ".build/picocalc-apps-lcd-chain-20261021/installed-apps-before/result.json": "d9ce0361f962dbd23ff8e40a53fdfb3951ea215e492868ab9699dc5ee21e1fff",
+    ".build/picocalc-apps-lcd-chain-20261021/installed-apps-ui/result.json": "682200949d3999e3fa7f138a54fb44a22649d79dcb5f52716d49e3e2a62dcc7e",
+    ".build/picocalc-apps-lcd-chain-20261021/display-before/result.json": "6e6475bfdfce564cb88998e3c1f9ed2f66f6fa8225692ebaae504a45396f51fb",
+    ".build/picocalc-apps-lcd-chain-20261021/source-isolation.json": "cea573ed310eb5418e8b0cdaa8bf1d01e7d9ce94b68167244cea4643e7ccd075",
+    ".build/picocalc-apps-lcd-chain-20261021/final-status.txt": "8d9fffbf7585054fd4983ca6c7f282093a349cea6f06bf6f1b526981de6791be",
+    ".build/picocalc-apps-lcd-chain-20261021/hardware-accepted-host.log": "e25bc6089582474b9e6dedee27cd155a09227c987a7f66ea1cdfbecb805fdecf",
+    ".build/picocalc-apps-lcd-chain-20261021/pico-accepted-host.log": "e7f9eb0cce7344dc6356a32a79315fba8e6e1f0e25c3c1369d357101f5daebe6",
+    ".build/picocalc-apps-lcd-chain-20261021/eliza-final-host.log": "7352b8fe49a42f3900c6cad65181024db75e10db52cbcbc54831cbb0080d6869",
+    ".build/picocalc-apps-lcd-chain-20261021/sheet-final-host.log": "186685511472466e931875abbdecdf8a106c26335b2cc24c55834a4a85e278bf",
+    ".build/picocalc-apps-lcd-chain-20261021/wbmp-host.log": "b306be0f838dd9ac5e14e23ba580459bd930a1d7c42738810b42f4acc4f7d081",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-classic.log": "ff4cd74c317e717e4abd20d7a784bd3ee08d09287969b04c69fc9231ca630155",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-mini.log": "ca115c1c948bc5286fe0ce2f7368f8d345ca68334137778b375d5820579f8d38",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-classic-accepted.log": "c2ed93ffd93c840755c0e91392ae593b1b52de9b7aaf6c208123feaceb1dde2e",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-mini-accepted.log": "c2ed93ffd93c840755c0e91392ae593b1b52de9b7aaf6c208123feaceb1dde2e",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-classic-system.log": "0af919ce756734b8db7c80ee91981dd8c9a317515564d835ccdf5e4a7db5b9ac",
+    ".build/picocalc-apps-lcd-chain-20261021/stm32-mini-system.log": "46dd83153c6f2558ee3a8aab0e68799cb49b805b5be441ac07138e344c59c534"
+  }
+}

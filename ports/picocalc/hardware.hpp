@@ -3,6 +3,7 @@
 
 #include "screen.hpp"
 #include "lcd_update.hpp"
+#include "lcd_chain.hpp"
 #include <atomic>
 
 namespace picocalc {
@@ -42,6 +43,9 @@ public:
     u32 full_frames() const { return full_frames_.load(std::memory_order_relaxed); }
     u32 errors() const { return errors_.load(std::memory_order_relaxed); }
     bool dma() const { return dma_tx_>=0 && dma_rx_>=0; }
+    bool chained_dma() const { return dma() && dma_control_>=0; }
+    u32 strips() const { return last_strips_.load(std::memory_order_relaxed); }
+    u32 chain_pauses() const { return last_pauses_.load(std::memory_order_relaxed); }
 private:
     u8 previous_[Screen::BYTES] = {};
     bool valid_ = false;
@@ -53,7 +57,12 @@ private:
     bool dma_irq_ready_=false;
     lcd::Update update_;
     u16 discard_=0;
-    int dma_tx_=-1,dma_rx_=-1;
+    int dma_tx_=-1,dma_rx_=-1,dma_control_=-1;
+    std::atomic<u32> last_strips_{0},last_pauses_{0};
+    void configure_dma();
+    lcd::Stream stream_;
+    bool transfer_chain(const lcd::Rect& rect,u32& pauses,u64& next_i2c);
+    void abort_dma();
     void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline();
     void transfer();

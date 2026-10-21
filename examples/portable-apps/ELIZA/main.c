@@ -474,6 +474,22 @@ static int read_sms_line(const mk61_app_services* services,
   }
 }
 
+#if defined(MK61_TARGET_PICOCALC)
+struct conversation_storage {
+  const mk61_app_services* services;
+  mk61_service_buffer buffer;
+};
+static int conversation_read(void* raw,size_t offset,uint8_t* bytes,size_t count) {
+  struct conversation_storage* s=(struct conversation_storage*)raw;
+  return offset<=UINT32_MAX && count<=MK61_BUFFER_IO_BYTES &&
+      mk61_app_buffer_read(s->services,s->buffer.handle,(uint32_t)offset,bytes,(uint32_t)count);
+}
+static int conversation_write(void* raw,size_t offset,const uint8_t* bytes,size_t count) {
+  struct conversation_storage* s=(struct conversation_storage*)raw;
+  return offset<=UINT32_MAX && count<=MK61_BUFFER_IO_BYTES &&
+      mk61_app_buffer_write(s->services,s->buffer.handle,(uint32_t)offset,bytes,(uint32_t)count);
+}
+#endif
 int main(void) {
   const uint32_t required = MK61_APP_CAP_TIME | MK61_APP_CAP_TEXT_DISPLAY |
                             MK61_APP_CAP_KEYBOARD;
@@ -485,6 +501,10 @@ int main(void) {
   char input[ELIZA_INPUT_BYTES];
   char reply[ELIZA_REPLY_BYTES];
   int intro;
+  int result=MK61_APP_OK;
+#if defined(MK61_TARGET_PICOCALC)
+  struct conversation_storage external={0};
+#endif
 
   if(!mk61_app_api_compatible(mk61_api, sizeof(*mk61_api), required))
     return MK61_APP_RUNTIME_ERROR;
@@ -511,6 +531,12 @@ int main(void) {
 #if defined(MK61_TARGET_PICOCALC)
   (void)pico_view_begin(services);
 #endif
+#if defined(MK61_TARGET_PICOCALC)
+  external.services=services;
+  if(mk61_app_buffer_acquire(services,256U*1024,MK61_BUFFER_EXTERNAL,&external.buffer)) {
+    eliza_init_storage(&state,&external,external.buffer.size,conversation_read,conversation_write);
+  } else {
+#endif
   if(!services->call(MK61_SERVICE_MEMORY_ACQUIRE, MK61_SERVICE_WORKSPACE,
                      MK61_SERVICE_OWNER_APP, ELIZA_MEMORY_WORKSPACE_BYTES,
                      &memory)) {
@@ -521,18 +547,23 @@ int main(void) {
     return MK61_APP_BUSY;
   }
   eliza_init(&state, memory.data, memory.size);
+#if defined(MK61_TARGET_PICOCALC)
+  }
+#endif
   while(read_sms_line(services, input, sizeof(input))) {
     if(eliza_is_goodbye(input)) {
       show_pages(goodbye, columns, rows);
       break;
     }
     eliza_reply(&state, input, reply, sizeof(reply));
+    if(state.memory_failed) { show_pages(memory_error,columns,rows);result=MK61_APP_IO_ERROR;break; }
     if(!show_pages(reply, columns, rows)) break;
   }
-  services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_WORKSPACE,
-                 0, 0, &memory);
+  if(memory.data) services->call(MK61_SERVICE_MEMORY_RELEASE, MK61_SERVICE_WORKSPACE,
+                                0, 0, &memory);
 #if defined(MK61_TARGET_PICOCALC)
+  if(external.buffer.handle) mk61_app_buffer_release(services,external.buffer.handle);
   pico_view_end();
 #endif
-  return MK61_APP_OK;
+  return result;
 }

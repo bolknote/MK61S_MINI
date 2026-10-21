@@ -28,5 +28,7 @@ void encode_settings(const Settings& value, u32 sequence, u8 out[SETTINGS_PAGE_B
 bool decode_settings(const u8 page[SETTINGS_PAGE_BYTES], Settings& value, u32& sequence);
 bool load_device_settings(Settings& value);
 bool save_device_settings(const Settings& value);
+struct SettingsStorageStatistics { u32 writes=0,erases=0,sequence=0; };
+SettingsStorageStatistics settings_storage_statistics();
 } // namespace picocalc
 #endif

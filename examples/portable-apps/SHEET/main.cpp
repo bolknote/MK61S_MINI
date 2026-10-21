@@ -18,6 +18,10 @@ struct App {
   uint8_t archive[20U+4U*sheet::MAX_CELLS+sheet::POOL_BYTES];
   uint8_t* frame;
   mk61_service_lease frame_lease;
+#if defined(MK61_TARGET_PICOCALC)
+  mk61_service_buffer undo_buffer;
+  uint16_t undo_count,undo_next;
+#endif
   const mk61_app_api* api;
   const mk61_app_services* services;
   phone_input::State phone;
@@ -228,13 +232,61 @@ double math(void*,Op op,double x,double y) {
 bool service(void*) { app.api->service(); return true; }
 const sheet::Host HOST={nullptr,math,service};
 void recalc() { if(!sheet::recalculate(app.book,HOST)) app.message=Error::LIMIT; }
+void forget_undo() {
+  app.undo_size=0;
+#if defined(MK61_TARGET_PICOCALC)
+  app.undo_count=app.undo_next=0;
+#endif
+}
+#if defined(MK61_TARGET_PICOCALC)
+constexpr unsigned UNDO_SLOTS=128,UNDO_SLOT_BYTES=2048;
+struct UndoLease {
+  UndoLease() {
+    // EXTERNAL never takes a large SRAM lease on older firmware or a Pico
+    // without working PSRAM. The existing single undo remains the fallback.
+    mk61_app_buffer_acquire(app.services,UNDO_SLOTS*UNDO_SLOT_BYTES,
+        MK61_BUFFER_EXTERNAL,&app.undo_buffer);
+  }
+  ~UndoLease() { if(app.undo_buffer.handle) mk61_app_buffer_release(app.services,app.undo_buffer.handle); }
+};
+#endif
 void remember() {
   app.undo_size=sheet::encode(app.book,app.archive,sizeof(app.archive));
   app.undo_modified=app.modified;
+#if defined(MK61_TARGET_PICOCALC)
+  if(app.undo_buffer.handle && app.undo_size) {
+    const uint32_t offset=app.undo_next*UNDO_SLOT_BYTES;
+    const uint8_t header[]={(uint8_t)app.undo_size,(uint8_t)(app.undo_size>>8),(uint8_t)app.modified};
+    if(!mk61_app_buffer_write(app.services,app.undo_buffer.handle,offset+3,app.archive,app.undo_size) ||
+       !mk61_app_buffer_write(app.services,app.undo_buffer.handle,offset,header,sizeof(header))) {
+      app.io_error=true;forget_undo();return;
+    }
+    app.undo_next=(app.undo_next+1)%UNDO_SLOTS;
+    if(app.undo_count<UNDO_SLOTS) ++app.undo_count;
+  }
+#endif
 }
 void undo() {
+#if defined(MK61_TARGET_PICOCALC)
+  if(app.undo_buffer.handle) {
+    if(!app.undo_count) return;
+    const uint16_t slot=(app.undo_next+UNDO_SLOTS-1)%UNDO_SLOTS;
+    uint8_t header[3];
+    if(!mk61_app_buffer_read(app.services,app.undo_buffer.handle,slot*UNDO_SLOT_BYTES,header,3)) {
+      app.io_error=true;forget_undo();return;
+    }
+    const uint16_t size=(uint16_t)(header[0]|header[1]<<8);
+    if(size<20 || size>sizeof(app.archive) || header[2]>1 ||
+       !mk61_app_buffer_read(app.services,app.undo_buffer.handle,slot*UNDO_SLOT_BYTES+3,app.archive,size) ||
+       !sheet::decode(app.book,app.archive,size)) {
+      app.io_error=true;forget_undo();return;
+    }
+    app.modified=header[2]!=0;app.undo_next=slot;--app.undo_count;
+    app.undo_size=app.undo_count?size:0;recalc();return;
+  }
+#endif
   if(app.undo_size && sheet::decode(app.book,app.archive,app.undo_size)) {
-    app.modified=app.undo_modified; app.undo_size=0; recalc();
+    app.modified=app.undo_modified; forget_undo(); recalc();
   }
 }
 void begin_edit(Kind kind,bool replace=false) {
@@ -274,7 +326,7 @@ void commit() {
   const Error valid=sheet::validate(kind,app.edit+start,(uint16_t)(end-start));
   if(valid!=Error::OK) { app.message=valid; return; }
   remember(); app.message=sheet::set(app.book,app.selected,kind,app.edit+start,(uint16_t)(end-start));
-  if(app.message!=Error::OK) { app.undo_size=0; return; }
+  if(app.message!=Error::OK) { forget_undo(); return; }
   app.modified=true; recalc(); app.mode=Mode::TABLE;
 }
 #if !defined(MK61_TARGET_PICOCALC)
@@ -383,7 +435,7 @@ bool save(bool choose) {
          file.parent==parent && strcmp(file.name,name)==0) { preferred=file.id; break; }
     }
   }
-  app.undo_size=0;
+  forget_undo();
   const uint16_t size=sheet::encode(app.book,app.archive,sizeof(app.archive));
   mk61_service_write write={name,app.archive,size,MK61_SERVICE_INVALID_ID};
   if(!size || !app.services->call(MK61_SERVICE_FILE_WRITE,parent,preferred,MK61_SERVICE_FILE_SHEET,&write)) {
@@ -398,7 +450,7 @@ bool load(uint32_t id) {
      file.kind!=0 || file.type!=MK61_SERVICE_FILE_SHEET) return false;
   const uint32_t size=app.api->file_size(id);
   if(size<20 || size>sizeof(app.archive)) return false;
-  app.undo_size=0;
+  forget_undo();
   if(app.api->file_read(id,0,app.archive,size)!=size || !sheet::decode(app.book,app.archive,(uint16_t)size)) return false;
   app.parent=file.parent; copy_text(app.file_name,file.name,sizeof(app.file_name));
   app.file_id=id; app.modified=false; app.io_error=false; app.selected=app.top_row=app.left_column=0;
@@ -409,7 +461,7 @@ void execute_pending() {
   if(pending==Pending::EXIT) { app.exit=true; return; }
   if(pending==Pending::NEW) {
     sheet::clear(app.book); app.file_id=MK61_SERVICE_INVALID_ID; app.parent=MK61_SERVICE_ROOT_ID;
-    copy_text(app.file_name,"SHEET",sizeof(app.file_name)); app.modified=false; app.undo_size=0;
+    copy_text(app.file_name,"SHEET",sizeof(app.file_name)); app.modified=false; forget_undo();
     app.selected=app.top_row=app.left_column=0; return;
   }
   if(pending==Pending::OPEN) {
@@ -660,6 +712,9 @@ uint32_t run(uint32_t file_id) {
     return MK61_APP_UNSUPPORTED_DISPLAY;
 #endif
   sheet::number_io(parse_number,format_number);
+#if defined(MK61_TARGET_PICOCALC)
+  UndoLease undo_lease;
+#endif
   app.file_id=MK61_SERVICE_INVALID_ID; app.parent=MK61_SERVICE_ROOT_ID;
   copy_text(app.file_name,"SHEET",sizeof(app.file_name));
   if(file_id!=MK61_SERVICE_INVALID_ID && !load(file_id)) return MK61_APP_INVALID_FILE;

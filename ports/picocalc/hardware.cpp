@@ -6,6 +6,7 @@
 #include "hardware/i2c.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
 #include <cstring>
 
@@ -17,7 +18,10 @@ constexpr unsigned CS = PICO_DEFAULT_SPI_CSN_PIN;
 // The core 1 stack uses the upper 2 KiB of scratch X. Its otherwise unused
 // lower half holds both DMA rows, preserving the main heap for viewers/APPs.
 // NOLOAD scratch storage: every byte handed to DMA is filled by scanline().
-alignas(4) u16 scanlines[2][Screen::WIDTH] __attribute__((section(".lcd_dma.scanlines")));
+alignas(4) u16 scanlines[lcd::STRIP_ROWS*Screen::WIDTH] __attribute__((section(".lcd_dma.scanlines")));
+// Three rows fit below the core 1 stack in scratch X; the other strip
+// occupies 1920 bytes of ordinary SRAM. No RGB565 frame is allocated.
+alignas(4) u16 chained_scanlines[lcd::STRIP_ROWS*Screen::WIDTH];
 
 void command(u8 op, const u8* data = nullptr, unsigned size = 0) {
     gpio_put(DC, 0);
@@ -116,6 +120,7 @@ void Panel::init() {
             dma_tx_=dma_rx_=-1;
         }
     }
+    if(dma() && dma_control_<0) dma_control_=dma_claim_unused_channel(false);
     // ST7365P specifies >=66 ns per write clock (<=15.15 MHz).
     // 12.5 MHz has an 80 ns cycle at the stock 125 MHz system clock.
     spi_hz_ = spi_init(spi1, MK61_PICOCALC_LCD_SPI_HZ);
@@ -161,8 +166,7 @@ void Panel::flush(const Screen& screen) {
     std::memcpy(previous_,screen.data(),Screen::BYTES);
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
 }
-void Panel::start_scanline(const u16* pixels,unsigned count) {
-    if(!dma()) { spi_write16_blocking(spi1,pixels,count);return; }
+void Panel::configure_dma() {
     if(!dma_irq_ready_) {
         // Transfer runs on core 1, independently of the core which claimed
         // the channels during panel initialization.
@@ -172,6 +176,10 @@ void Panel::start_scanline(const u16* pixels,unsigned count) {
         channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
         channel_config_set_read_increment(&tx,true);
         channel_config_set_write_increment(&tx,false);
+        if(chained_dma()) {
+            channel_config_set_chain_to(&tx,(unsigned)dma_control_);
+            channel_config_set_irq_quiet(&tx,true);
+        }
         auto rx=dma_channel_get_default_config((unsigned)dma_rx_);
         channel_config_set_transfer_data_size(&rx,DMA_SIZE_16);
         channel_config_set_dreq(&rx,spi_get_dreq(spi1,false));
@@ -183,10 +191,94 @@ void Panel::start_scanline(const u16* pixels,unsigned count) {
         dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,nullptr,0,false);
         dma_irq_ready_=true;
     }
+}
+void Panel::start_scanline(const u16* pixels,unsigned count) {
+    if(!dma()) { spi_write16_blocking(spi1,pixels,count);return; }
+    configure_dma();
     dma_channel_set_read_addr((unsigned)dma_tx_,pixels,false);
     dma_channel_set_trans_count((unsigned)dma_rx_,count,false);
     dma_channel_set_trans_count((unsigned)dma_tx_,count,false);
     dma_start_channel_mask((1U<<dma_tx_) | (1U<<dma_rx_));
+}
+void Panel::abort_dma() {
+    // Stop the control channel first: an in-flight chain must not restart a
+    // data channel after its abort. Disable both before draining transactions.
+    if(dma_control_>=0) {
+        hw_clear_bits(&dma_hw->ch[dma_control_].ctrl_trig,DMA_CH0_CTRL_TRIG_EN_BITS);
+        hw_clear_bits(&dma_hw->ch[dma_tx_].ctrl_trig,DMA_CH0_CTRL_TRIG_EN_BITS);
+        dma_channel_abort((unsigned)dma_control_);
+    }
+    dma_channel_abort((unsigned)dma_tx_);dma_channel_abort((unsigned)dma_rx_);
+    dma_irq_ready_=false;
+}
+bool Panel::transfer_chain(const lcd::Rect& rect,u32& pauses,u64& next_i2c) {
+    static_assert(sizeof(lcd::Segment)==2*sizeof(u32));
+    configure_dma();stream_.reset(rect);
+    const auto descriptor=[&](unsigned index) {
+        const auto next=lcd::Stream::prepare(previous_,rect,index,
+            index&1?chained_scanlines:scanlines);
+        // Count first, trigger address last; a DMA race can only cause a
+        // harmless null/zero-count stop, subsequently resumed at the wire cursor.
+        stream_.segments[index].count=next.count;__dmb();
+        stream_.segments[index].source=next.source;__dmb();
+    };
+    unsigned prepared=stream_.count<2?stream_.count:2;
+    for(unsigned i=0;i<prepared;++i) descriptor(i);
+    auto control=dma_channel_get_default_config((unsigned)dma_control_);
+    channel_config_set_transfer_data_size(&control,DMA_SIZE_32);
+    channel_config_set_read_increment(&control,true);
+    channel_config_set_write_increment(&control,true);
+    channel_config_set_ring(&control,true,3); // AL3 count, then read-address trigger.
+    dma_support::enable_irq((unsigned)dma_control_);
+    // Control completion signals that the previous strip is free. Pixel DMA
+    // uses quiet IRQs: its null trigger still wakes a producer after a stall.
+    dma_channel_configure((unsigned)dma_control_,&control,
+        &dma_hw->ch[dma_tx_].al3_transfer_count,stream_.segments,2,false);
+    const unsigned total=rect.width*rect.height;
+    dma_channel_set_trans_count((unsigned)dma_rx_,total,false);__dmb();
+    dma_start_channel_mask((1U<<dma_rx_) | (1U<<dma_control_));
+    const u64 limit=time_us_64()+1000000;
+    const auto service=[&] {
+        const bool i2c=time_us_64()>=next_i2c;
+        io_worker::service(i2c);
+        if(i2c) next_i2c=time_us_64()+2000;
+    };
+    const auto loaded=[&] {
+        return (dma_hw->ch[dma_control_].read_addr-(uintptr_t)stream_.segments)/sizeof(lcd::Segment);
+    };
+    const auto resume=[&] {
+        if(dma_channel_is_busy((unsigned)dma_control_) || dma_channel_is_busy((unsigned)dma_tx_) ||
+           spi_is_busy(spi1) || spi_is_readable(spi1)) return;
+        __dmb();
+        const unsigned pixels=total-dma_hw->ch[dma_rx_].transfer_count;
+        const unsigned next=lcd::Stream::next(pixels,rect.width);
+        if(next<prepared && loaded()>=next+1) {
+            // A null trigger has stopped this descriptor. Rewind only after
+            // the previous SPI/RX data is drained, so no strip is duplicated.
+            dma_channel_set_read_addr((unsigned)dma_control_,stream_.segments+next,true);++pauses;
+        }
+    };
+    while(prepared<stream_.count) {
+        // Loading descriptor N means N-1 finished: strip N-2 is now reusable.
+        if(loaded()>=prepared) {
+            descriptor(prepared++);resume();
+        } else {
+            resume();
+            if(time_us_64()>=limit) { abort_dma();return false; }
+            best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+        }
+        // Convert future pixels while the chain shifts the prepared strips;
+        // I2C/UART likewise overlap the transfer. A late producer pauses safely.
+        service();
+    }
+    while(dma_channel_is_busy((unsigned)dma_rx_) || dma_channel_is_busy((unsigned)dma_tx_) ||
+          dma_channel_is_busy((unsigned)dma_control_) || loaded()!=stream_.count+1) {
+        resume();
+        if(time_us_64()>=limit) { abort_dma();return false; }
+        service();best_effort_wfe_or_timeout(make_timeout_time_us(1000));
+    }
+    while(spi_is_busy(spi1)) tight_loop_contents();
+    return true;
 }
 bool Panel::finish_scanline() {
     if(!dma()) return true;
@@ -196,6 +288,8 @@ bool Panel::finish_scanline() {
 }
 void Panel::transfer() {
     const u64 start=time_us_64();
+    u64 next_i2c=start+2000;
+    u32 strips=0,pauses=0;
     for(unsigned index=0;index<update_.count;++index) {
         const auto& rect=update_.rectangles[index];
         const unsigned right=rect.x+rect.width-1,bottom=rect.y+rect.height-1;
@@ -212,24 +306,32 @@ void Panel::transfer() {
         // Controller commands remain 8-bit; pixels are native RGB565 words.
         // This halves DMA bus transactions without an extra SRAM buffer.
         spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
-        lcd::scanline(previous_,rect,0,(u8*)scanlines[0]);
-        start_scanline(scanlines[0],rect.width);
-        for(unsigned row=1;row<=rect.height;++row) {
+        bool ok=true;
+        if(chained_dma()) {
+            ok=transfer_chain(rect,pauses,next_i2c);strips+=stream_.count;
+        } else {
+          lcd::scanline(previous_,rect,0,(u8*)scanlines);
+          start_scanline(scanlines,rect.width);
+          for(unsigned row=1;row<=rect.height;++row) {
             // Convert the next row while DMA sends the other buffer. Neither
             // the snapshot nor an in-flight scanline is modified by core 0.
-            if(row<rect.height) lcd::scanline(previous_,rect,row,(u8*)scanlines[row&1]);
-            if(!finish_scanline()) {
-                gpio_put(CS,1);errors_.fetch_add(1);
-                spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
-                failed_.store(true,std::memory_order_release);return;
-            }
-            if(row<rect.height) start_scanline(scanlines[row&1],rect.width);
+            if(row<rect.height) lcd::scanline(previous_,rect,row,(u8*)(scanlines+(row&1)*Screen::WIDTH));
+            if(!finish_scanline()) { ok=false;break; }
+            if(row<rect.height) start_scanline(scanlines+(row&1)*Screen::WIDTH,rect.width);
             io_worker::service();
+          }
+        }
+        if(!ok) {
+            gpio_put(CS,1);errors_.fetch_add(1);
+            spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+            failed_.store(true,std::memory_order_release);return;
         }
         busy_wait_us(1);gpio_put(CS,1);busy_wait_us(1);
         spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     }
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
+    last_strips_.store(strips,std::memory_order_relaxed);
+    last_pauses_.store(pauses,std::memory_order_relaxed);
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);
     last_rectangles_.store(update_.count,std::memory_order_relaxed);
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);

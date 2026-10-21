@@ -33,6 +33,8 @@ static uint8_t borrowed_frame[320*320/8];
 #define main eliza_app_entry
 #include "../examples/portable-apps/ELIZA/main.c"
 #undef main
+#include "app_buffer_mock.hpp"
+static AppBufferMock external;
 
 extern "C" {
 const mk61_app_api* mk61_api;
@@ -98,8 +100,9 @@ static uint32_t mock_call(uint32_t operation, uint32_t a, uint32_t b,
   if(operation == MK61_SERVICE_CAPABILITIES) {
     return MK61_SERVICE_CAP_UI | MK61_SERVICE_CAP_EDITOR |
         MK61_SERVICE_CAP_MEMORY |
-        (expose_ui_font ? MK61_SERVICE_CAP_UI_FONT : 0U);
+        (expose_ui_font ? MK61_SERVICE_CAP_UI_FONT : 0U) | external.capabilities();
   }
+  if(operation == MK61_SERVICE_BUFFER) return external.call(a,b,c,payload);
   if(operation == MK61_SERVICE_MEMORY_ACQUIRE) {
     mk61_service_lease* lease = static_cast<mk61_service_lease*>(payload);
     assert(a == MK61_SERVICE_WORKSPACE);
@@ -472,6 +475,13 @@ int main(void) {
   test_app_memory_lifecycle();
 #if defined(MK61_TARGET_PICOCALC)
   test_native_pages_and_editor();
+  reset_mocks();external.enabled=true;
+  input_keys={MK61_APP_KEY_OK,MK61_APP_KEY_OK,app_keys.esc};
+  assert(eliza_app_entry()==MK61_APP_OK);
+  assert(!memory_acquires && !memory_releases && !memory_active);
+  assert(external.acquires==1 && external.releases==1 && !external.active);
+  assert(external.bytes.size()==256U*1024);
+  external.enabled=false;
 #endif
   puts("eliza APP UI tests passed");
   return 0;

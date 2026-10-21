@@ -13,7 +13,8 @@ bool input_ready();
 bool submit_frame(void* context,void (*transfer)(void*));
 // Core 1 calls this between LCD scanlines; keyboard and UART do not wait
 // for a complete 320x320 RGB565 transfer.
-void service();
+// UART remains serviced when short LCD windows defer blocking I2C briefly.
+void service(bool allow_i2c=true);
 // Core 0 drains outstanding peripheral work before reset/sleep/clock changes.
 void drain();
 Statistics statistics();

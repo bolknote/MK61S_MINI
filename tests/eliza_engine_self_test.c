@@ -330,7 +330,68 @@ static void test_goodbye_and_bounds(void) {
   assert(bounded.guard == 0xA5);
 }
 
+typedef struct external_store {
+  uint8_t bytes[256U*1024];
+  size_t capacity,reads,writes;
+  int fail_read,fail_write;
+} external_store;
+static int external_read(void* raw,size_t offset,uint8_t* bytes,size_t count) {
+  external_store* store=(external_store*)raw;
+  assert(offset<=store->capacity && count<=store->capacity-offset);
+  ++store->reads;
+  if(store->fail_read) return 0;
+  memcpy(bytes,store->bytes+offset,count);return 1;
+}
+static int external_write(void* raw,size_t offset,const uint8_t* bytes,size_t count) {
+  external_store* store=(external_store*)raw;
+  assert(offset<=store->capacity && count<=store->capacity-offset);
+  ++store->writes;
+  if(store->fail_write) return 0;
+  memcpy(store->bytes+offset,bytes,count);return 1;
+}
+static void test_indirect_memory(void) {
+  static external_store store;
+  eliza_state direct,indirect;
+  uint8_t small[127];char input[128],a[ELIZA_REPLY_BYTES],b[ELIZA_REPLY_BYTES];
+  unsigned i;
+  store.capacity=sizeof(small);
+  eliza_init(&direct,small,sizeof(small));
+  eliza_init_storage(&indirect,&store,store.capacity,external_read,external_write);
+  for(i=0;i<1000;++i) {
+    if(i%5<2) snprintf(input,sizeof(input),"MY MEMORY NUMBER %u ENDS HERE",i);
+    else strcpy(input,"ZQXV");
+    eliza_reply(&direct,input,a,sizeof(a));eliza_reply(&indirect,input,b,sizeof(b));
+    assert(!strcmp(a,b) && direct.memory_used==indirect.memory_used);
+    assert(direct.memory_head==indirect.memory_head && !indirect.memory_failed);
+  }
+  assert(store.reads && store.writes);
+  store.capacity=sizeof(store.bytes);
+  eliza_init_storage(&indirect,&store,store.capacity,external_read,external_write);
+  for(i=0;i<7000;++i) {
+    snprintf(input,sizeof(input),"MY MEMORY NUMBER %u ENDS HERE",i);
+    eliza_reply(&indirect,input,b,sizeof(b));
+  }
+  assert(indirect.memory_used>65535U);
+  for(i=0;i<7000;++i) {
+    size_t before=indirect.memory_used;unsigned attempts=0;
+    do { eliza_reply(&indirect,"ZQXV",b,sizeof(b));++attempts; }
+    while(indirect.memory_used==before && attempts<4);
+    snprintf(a,sizeof(a),"DOES THAT HAVE ANYTHING TO DO WITH THE FACT THAT YOUR MEMORY NUMBER %u ENDS HERE",i);
+    assert(indirect.memory_used<before && !strcmp(a,b));
+  }
+  assert(!indirect.memory_used && !indirect.memory_failed);
+  eliza_init_storage(&indirect,&store,store.capacity,external_read,external_write);
+  store.fail_write=1;eliza_reply(&indirect,"MY MEMORY ENDS HERE",b,sizeof(b));
+  assert(indirect.memory_failed && !indirect.memory_used);store.fail_write=0;
+  eliza_init_storage(&indirect,&store,store.capacity,external_read,external_write);
+  eliza_reply(&indirect,"MY MEMORY ENDS HERE",b,sizeof(b));assert(indirect.memory_used);
+  store.fail_read=1;
+  for(i=0;i<4 && !indirect.memory_failed;++i) eliza_reply(&indirect,"ZQXV",b,sizeof(b));
+  assert(indirect.memory_failed);store.fail_read=0;
+}
+
 int main(void) {
+  test_indirect_memory();
   run_transcript(CACM_CONVERSATION,
                  sizeof(CACM_CONVERSATION) / sizeof(CACM_CONVERSATION[0]));
   run_transcript(REFERENCE_COVERAGE,

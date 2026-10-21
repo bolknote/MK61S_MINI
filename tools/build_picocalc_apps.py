@@ -25,9 +25,9 @@ HELLO.APP       C example; checks fresh data/BSS and prints HELLO C APP.
 HELLO_CPP.APP   C++ manifest example; text, LED, sound; any key exits.
 HELLO_RS.APP    no_std Rust example; prints HELLO, MK61S!; any key exits.
 SERVICES.APP    Math/formatting example; sqrt(3^2+4^2)=5; any key exits.
-ELIZA.APP       DOCTOR 1966 conversation program; Enter advances the intro.
-SHEET.APP       Spreadsheet; open .mks files or start an empty book.
-WBMP.APP        Monochrome image handler; open a .wbmp file in Explorer.
+ELIZA.APP       DOCTOR 1966; optional 256-KiB PSRAM memory, SRAM fallback.
+SHEET.APP       Spreadsheet; up to 128 undo steps with PSRAM, single undo otherwise.
+WBMP.APP        Image handler up to 4 MiB; PSRAM storage or a small SD read cache.
 ECHO8.ch8       CHIP-8 example; this is a ROM, not a native APP.
 PATTERN.wbmp    Native 320x320 WBMP pixel-check example.
 BUDGET.mks   Spreadsheet with formulas and Russian headings.

@@ -19,6 +19,17 @@ class Session {
         return nullptr;
     }
 public:
+    struct Statistics { u32 count=0,bytes=0,external_bytes=0,windows=0; };
+    Statistics statistics() const {
+        Statistics r;
+        for(const auto& s:slots_) if(s.handle) {
+            ++r.count;r.bytes+=s.buffer.size();
+            // Indirect external buffers intentionally have no SRAM pointer.
+            if(!s.buffer.data()) r.external_bytes+=s.buffer.size();
+        }
+        for(const auto& w:windows_) if(w.handle) ++r.windows;
+        return r;
+    }
     Session()=default;
     Session(const Session&)=delete;
     Session& operator=(const Session&)=delete;
