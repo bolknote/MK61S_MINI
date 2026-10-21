@@ -7,7 +7,7 @@ import tempfile
 import time
 from unittest.mock import patch
 from hil_portable_apps import cobs_encode,ScreenPort
-from hil_vm_cache_latency import checked_packet,parse_gaps,PingPort,FocalAcknowledger,fast_control,graphics_page,graphics,state_without_prompt_padding
+from hil_vm_cache_latency import checked_packet,parse_gaps,PingPort,FocalAcknowledger,fast_control,graphics_page,graphics,state_without_prompt_padding,require_launch_count
 
 
 def packet(payload):
@@ -16,6 +16,21 @@ def packet(payload):
 
 
 names=['keyboard.poll','keyboard.sample',*[f'keyboard.row{i}' for i in range(5)],'usb.service']
+flash='VMFLASH budget=32768 payload=32000 used=20000 lookups=110 hits=100 misses=10\n'
+flash_data=dict(vm_cache_dropped=0,vm_cache=[],points={'vm.invoke':{'calls':32}})
+assert require_launch_count(flash,flash_data,32)['engine']=='flash'
+ram_data=dict(vm_cache_dropped=0,vm_cache=[dict(hits=16,misses=16)],points={})
+assert require_launch_count('',ram_data,32)==dict(engine='ram',launches=32)
+for raw,data,count in ((flash,flash_data,31),('',flash_data,32),
+        (flash+flash,flash_data,32),(flash.replace('hits=100','hits=99'),flash_data,32),
+        (flash.replace('used=20000','used=32001'),flash_data,32),
+        (flash.replace('budget=32768','budget=65536'),flash_data,32),
+        ('VMFLASH budget=32768 payload=32000 used=0 lookups=0 hits=0 misses=0\n',flash_data,32),
+        (flash,{**flash_data,'points':{}},32),
+        (flash,{**flash_data,'vm_cache_dropped':1},32),('',ram_data,31)):
+    try:require_launch_count(raw,data,count)
+    except AssertionError:pass
+    else:raise AssertionError('invalid VM launch accounting accepted')
 state='reg\r\nX = 0.000000 +00\r\n/>'
 assert state_without_prompt_padding(state)==state_without_prompt_padding(state+' ')
 for changed in (state.replace('0.000000','1.000000'),state.replace('+00','+01'),
@@ -212,4 +227,4 @@ with tempfile.TemporaryDirectory(prefix='mk61-graphics-hil-offline-') as tempora
     assert len(list(Path(temporary).rglob('*.bin')))==2
     for index,name in enumerate(('primitives','graph')):
         assert (Path(temporary)/'pages'/(name+'.bin')).read_bytes()==port.page(index)
-print('Cache latency HIL: gaps, CRC/nonce, single-slot race, 1s deadline, complete graphics after disk overlay PASS')
+print('Cache latency HIL: RAM/Flash launch accounting, gaps, CRC/nonce, single-slot race, 1s deadline, complete graphics after disk overlay PASS')

@@ -184,6 +184,27 @@ def parse_gaps(text):
     return rows
 
 
+def require_launch_count(text,data,expected):
+    """Keep exact launch accounting for both the RAM and Flash VM engines."""
+    assert expected>0 and data['vm_cache_dropped']==0
+    if data['vm_cache']:
+        actual=sum(row['hits']+row['misses'] for row in data['vm_cache'])
+        assert actual==expected,data['vm_cache']
+        return dict(engine='ram',launches=actual)
+    # Flash page hits are not program launches. The resident's outer invoke
+    # scope records exactly one launch, including a first compilation.
+    matches=re.findall(r'^VMFLASH (.*)$',text,re.M)
+    assert len(matches)==1,'missing Flash VM diagnostics; empty RAM rows are not sufficient'
+    cache={key:int(value) for key,value in re.findall(r'(\w+)=(\d+)',matches[0])}
+    assert cache['budget']==32768 and 0<cache['payload']<cache['budget'],cache
+    assert 0<=cache['used']<=cache['payload'],cache
+    assert cache['lookups']==cache['hits']+cache['misses'],cache
+    assert cache['lookups'] or cache.get('loan_hits',0),cache
+    actual=data['points'].get('vm.invoke',{}).get('calls')
+    assert actual==expected,('Flash VM launch mismatch',actual,expected)
+    return dict(engine='flash',launches=actual,page_cache=cache)
+
+
 def batch(port,filename,out,expected_requests):
     assert 'PROF started' in port.command('prof start')
     start=len(port.text);frames=len(port.frames);packets=port.packets_crc_verified
@@ -213,10 +234,9 @@ def batch(port,filename,out,expected_requests):
     (out/'terminal.txt').write_bytes(port.text[start:])
     assert 'KBD overflow=0' in counters,counters
     data=profile(counters);assert data['clock_hz']==96000000 and data['vm_cache_dropped']==0
-    if expected_requests is not None:
-        assert sum(r['hits']+r['misses'] for r in data['vm_cache'])==expected_requests,data['vm_cache']
+    launches=require_launch_count(counters,data,expected_requests) if expected_requests is not None else None
     points=data['points'];gaps=parse_gaps(counters)
-    row=dict(filename=filename,wall_seconds=finished-started,gaps=gaps,profile=data,focal_acknowledgements=acknowledger.seen,
+    row=dict(filename=filename,wall_seconds=finished-started,gaps=gaps,profile=data,launch_accounting=launches,focal_acknowledgements=acknowledger.seen,
         maximum_host_poll_gap_seconds=port.maximum_host_poll_gap,
         keyboard_overflow=0,frames_crc_verified=len(port.frames)-frames,
         packets_crc_verified=port.packets_crc_verified-packets,

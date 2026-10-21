@@ -1,0 +1,1584 @@
+{
+  "schema": 1,
+  "date": "2026-10-21",
+  "performance_date": "2026-10-20",
+  "matched_chess_latency_date": "2026-10-21",
+  "status": "PASS_MEASUREMENTS_WITH_COLD_KEYBOARD_STALL_EXACTLY_RESTORED",
+  "source_commit": "176d9323248b7ba79867cc9772c68438cfea5c08",
+  "source_capture": "Pinned git archive; candidate adds only code/m61_text.cpp and its regression tests; unrelated dirty-tree experiments excluded",
+  "change": "Prepared IF/OPEN cache first borrows unused label slots, then the existing unused source tail; full 64-label capacity and source read window preserved",
+  "source_files": {
+    "code/m61_text.cpp": {
+      "bytes": 75921,
+      "sha256": "515b4cc1a6f70445395bdf9f4257a8bca9aa46c83f2e182b0d3173dd83a6fdeb"
+    },
+    "tests/m61_text_self_test.cpp": {
+      "bytes": 76224,
+      "sha256": "f147affdbc9554bc1c03629c90d60ab8466ac2134cf27fb063556f1913ebf23c"
+    }
+  },
+  "device": {
+    "public": "AEB505B6E0067623",
+    "usb": "2068336B4731",
+    "profile": "classic-v3-uc1609",
+    "clock_hz": 96000000
+  },
+  "limits_weakened": false,
+  "builds": {
+    "control": {
+      "firmware": {
+        "bytes": 377968,
+        "sha256": "d6581d78fbb81212b9ab6905187e50dc175fd2e98c9791c8b979dd30fce8c3ed"
+      },
+      "image_bytes": 377968,
+      "free_flash": 146320,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 21784,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1;MK61_KEY_WAIT_BENCHMARK=1",
+      "math_backend": 0
+    },
+    "fixed": {
+      "firmware": {
+        "bytes": 378096,
+        "sha256": "dd9684b7437d728ad0f6ee86eb2e41e2389d5602cfe4b8048f29c1ed56ccca4b"
+      },
+      "image_bytes": 378096,
+      "free_flash": 146192,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 21784,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1;MK61_KEY_WAIT_BENCHMARK=1",
+      "math_backend": 0
+    },
+    "diag-control": {
+      "firmware": {
+        "bytes": 381008,
+        "sha256": "7736b7d0cd9007677935d6d3d8fb74816f080e888421b063d5e820255dba4f02"
+      },
+      "image_bytes": 381008,
+      "free_flash": 143280,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 23728,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1;MK61_KEY_WAIT_BENCHMARK=1;MK61_DWT_SERVICE_GAPS=1;MK61_DWT_RUNTIME_DETAIL=1",
+      "math_backend": 0
+    },
+    "diag-fixed": {
+      "firmware": {
+        "bytes": 381072,
+        "sha256": "0f86353cc42c2ba0e4aaa53099cef0d5320af50917ca0da3ea1650d2b88a8db3"
+      },
+      "image_bytes": 381072,
+      "free_flash": 143216,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 23728,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1;MK61_KEY_WAIT_BENCHMARK=1;MK61_DWT_SERVICE_GAPS=1;MK61_DWT_RUNTIME_DETAIL=1",
+      "math_backend": 0
+    },
+    "fixed-core": {
+      "firmware": {
+        "bytes": 368428,
+        "sha256": "0c7afb09014d26928a46b0696fb2567e858c3b4607bece1a0120d54799d579d3"
+      },
+      "image_bytes": 368428,
+      "free_flash": 155860,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 21784,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1;MK61_KEY_WAIT_BENCHMARK=1",
+      "math_backend": 1
+    },
+    "fixed-f401": {
+      "firmware": {
+        "bytes": 229140,
+        "sha256": "d8b84199198cea320e1404b8bed6be54230ad10ad84e13c8c39a6e2030b9ea09"
+      },
+      "image_bytes": 229140,
+      "free_flash": 33004,
+      "min_flash_headroom": 8192,
+      "globals_bytes": 26164,
+      "globals_limit": 52428,
+      "maximum_static_frame": 1304,
+      "static_frame_limit": 2048,
+      "compile_flags": "",
+      "math_backend": 1
+    },
+    "shipping-control": {
+      "firmware": {
+        "bytes": 377656,
+        "sha256": "651ab489dfcee0bd937b591210722a9ddfc4eaa65995e6fe0138583fa4b90344"
+      },
+      "image_bytes": 377656,
+      "free_flash": 146632,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 21752,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1",
+      "math_backend": 0
+    },
+    "shipping-fixed": {
+      "firmware": {
+        "bytes": 377768,
+        "sha256": "0d18b8aee8137745c04c450ddaf368d68c18f489a2c8e78a4f56a119ad1ab007"
+      },
+      "image_bytes": 377768,
+      "free_flash": 146520,
+      "min_flash_headroom": 131072,
+      "globals_bytes": 21752,
+      "globals_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "compile_flags": "MK61_ENABLE_USB_SCREEN=1;MK61_SETUP_AS_APP=1",
+      "math_backend": 0
+    }
+  },
+  "measured_resident_delta": {
+    "flash_bytes": 128,
+    "globals_bytes": 0,
+    "maximum_static_frame_bytes": 0
+  },
+  "shipping_resident_delta": {
+    "flash_bytes": 112,
+    "globals_bytes": 0,
+    "maximum_static_frame_bytes": 0,
+    "diagnostic_timer_disabled": true,
+    "measured_on_hardware": false
+  },
+  "observed_stack": {
+    "performance": {
+      "A": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005518 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=8680 observed_remaining=8680 sram_xn=1\r\n/> ",
+      "B": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005518 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=8648 observed_remaining=8648 sram_xn=1\r\n/> ",
+      "A-control": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005518 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC50 observed_low=0x2001FC50 sampled_remaining=15440 watermark=1 watermark_remaining=8680 observed_remaining=8680 sram_xn=1\r\n/> "
+    },
+    "matched_responsiveness": {
+      "A": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005CB8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC30 observed_low=0x2001FC30 sampled_remaining=15408 watermark=1 watermark_remaining=8024 observed_remaining=8024 sram_xn=1\r\n/> ",
+      "B": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005CB8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC30 observed_low=0x2001FC30 sampled_remaining=15408 watermark=1 watermark_remaining=8336 observed_remaining=8336 sram_xn=1\r\n/> ",
+      "A-control": "mpu status\r\nMPU backend=ARMv7-M enabled=1 layout=ok regions=8/8 ram=0x20000000..0x20020000 static_end=0x20005CB8 guard=0x2001BF00+256 stack_budget=16384 msp=0x2001FC30 observed_low=0x2001FC30 sampled_remaining=15408 watermark=1 watermark_remaining=8312 observed_remaining=8312 sram_xn=1\r\n/> "
+    },
+    "caveat": "Observed watermark after these scenarios, not a proven worst case or a claim of unchanged aggregate peak; static frame gates and the 16-KiB guarded stack budget are unchanged."
+  },
+  "scenario": {
+    "entry": "Unmodified ordinary autoexec.m61 / M61 OPEN",
+    "level": 2,
+    "maximum_depth": 8,
+    "opening_book": false,
+    "playing": "Black",
+    "expected_move": "e2e3",
+    "expected_nodes": 420,
+    "arithmetic": "BINARY64 / owned M4 math",
+    "complete_golden_board_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+    "performance_searches": 18,
+    "separate_profiled_searches": 6,
+    "additional_initial_diagnostic_searches": 7
+  },
+  "method": {
+    "stages": "A baseline, B borrowed-label cache, A baseline control",
+    "searches_per_stage": 6,
+    "sequence": [
+      "Screen on compile warmup",
+      "Screen on warmup",
+      "Screen on sample",
+      "Screen off sample",
+      "Screen off sample",
+      "Screen on sample"
+    ],
+    "statistics": "Exclude first two searches; separate two-sample medians per mode. Reference=(A+control)/2; drift=control/A-1. No formal confidence interval.",
+    "timer": "MCU accepted OK on Black selection -> entry into next blocking APP key wait. Profiler stopped for every performance search.",
+    "detached": "USB cable connected, physical LCD active, no USB Screen frames during 45-second observation. Timer frozen before validation reattachment.",
+    "cache_reset": "Only session-owned derived Pages and VMC sidecars cleared/restored; reset RAM between stages; same current game and byte-identical five APPs throughout.",
+    "diagnostic": "Separate residents with DWT service gaps/runtime detail, plus correlated single-outstanding USB PING/PONG. Not mixed with ordinary performance samples.",
+    "diagnostic_layout": "Final chess responsiveness series preloads both game and generic corpus before first A, byte-checks every fixture in each stage, then resets RAM/owned derived pages. Preliminary chess profiles from the generic series are excluded because first A preceded corpus installation. Generic PRIME/STRESS/INPUT/ESC already had the same complete file set in every stage.",
+    "keyboard_caveat": "Matrix gaps are actual device-side start-to-start polling intervals. INPUT/ESC key-to-prompt uses injected virtual keys and includes 120 ms host helper per key plus FOCAL completion acknowledgement; not physical switch-edge latency.",
+    "usb_deadline_seconds": 1.0,
+    "diagnostic_screen_mode": "attached under load"
+  },
+  "comparison": {
+    "stages": [
+      {
+        "name": "A",
+        "samples": {
+          "continuous": [
+            26.980285,
+            26.872281
+          ],
+          "headless": [
+            25.868174,
+            25.822728
+          ]
+        },
+        "continuous_seconds": 26.926282999999998,
+        "headless_seconds": 25.845451,
+        "saved_seconds": 1.0808319999999974,
+        "elapsed_reduction_percent": 4.014040853689305
+      },
+      {
+        "name": "B",
+        "samples": {
+          "continuous": [
+            25.742418,
+            25.621716
+          ],
+          "headless": [
+            24.652165,
+            24.606943
+          ]
+        },
+        "continuous_seconds": 25.682067,
+        "headless_seconds": 24.629554,
+        "saved_seconds": 1.0525130000000011,
+        "elapsed_reduction_percent": 4.098241002174785
+      },
+      {
+        "name": "A-control",
+        "samples": {
+          "continuous": [
+            26.960528,
+            26.849125
+          ],
+          "headless": [
+            25.868667,
+            25.823292
+          ]
+        },
+        "continuous_seconds": 26.9048265,
+        "headless_seconds": 25.8459795,
+        "saved_seconds": 1.058847,
+        "elapsed_reduction_percent": 3.9355280733737508
+      }
+    ],
+    "modes": {
+      "continuous": {
+        "reference_seconds": 26.91555475,
+        "candidate_seconds": 25.682067,
+        "saved_seconds": 1.2334877499999983,
+        "elapsed_reduction_percent": 4.582806341749279,
+        "speedup": 1.0480291461742546,
+        "control_drift_percent": -0.07968608218222872
+      },
+      "headless": {
+        "reference_seconds": 25.845715249999998,
+        "candidate_seconds": 24.629554,
+        "saved_seconds": 1.216161249999999,
+        "elapsed_reduction_percent": 4.705465638061613,
+        "speedup": 1.049378127188174,
+        "control_drift_percent": 0.0020448472731082745
+      }
+    }
+  },
+  "runs": [
+    {
+      "name": "A",
+      "build": "40B6DA52",
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "seconds": 44.95169,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 8,
+            "us": 44951690,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "seconds": 26.922661,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 17,
+            "us": 26922661,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 26.980285,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 26,
+            "us": 26980285,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "seconds": 25.868174,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 35,
+            "us": 25868174,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "seconds": 25.822728,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 44,
+            "us": 25822728,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "seconds": 26.872281,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 53,
+            "us": 26872281,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "B",
+      "build": "C5DF768E",
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "seconds": 43.010314,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 8,
+            "us": 43010314,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "seconds": 25.702328,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 17,
+            "us": 25702328,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 25.742418,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 26,
+            "us": 25742418,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "seconds": 24.652165,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 35,
+            "us": 24652165,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "seconds": 24.606943,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 44,
+            "us": 24606943,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "seconds": 25.621716,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 53,
+            "us": 25621716,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A-control",
+      "build": "40B6DA52",
+      "runs": [
+        {
+          "repeat": 0,
+          "temperature": "warmup",
+          "seconds": 44.649167,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 8,
+            "us": 44649167,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "temperature": "warmup",
+          "seconds": 26.92215,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 17,
+            "us": 26922150,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "temperature": "repeat",
+          "seconds": 26.960528,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 26,
+            "us": 26960528,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "temperature": "repeat",
+          "seconds": 25.868667,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 35,
+            "us": 25868667,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "temperature": "repeat",
+          "seconds": 25.823292,
+          "screen_mode": "headless",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 44,
+            "us": 25823292,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "temperature": "repeat",
+          "seconds": 26.849125,
+          "screen_mode": "continuous",
+          "nodes": 420,
+          "move": "e2e3",
+          "complete_eight_rank_board": true,
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "keywait": {
+            "sequence": 53,
+            "us": 26849125,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ]
+    }
+  ],
+  "responsiveness": [
+    {
+      "name": "latency-A",
+      "chess": {
+        "keyboard_poll_max_us": 3649238.0520833335,
+        "keyboard_sample_max_us": 3649839.0104166665,
+        "matrix_row_max_us": 3680132.0208333335,
+        "usb_service_max_us": 667699.8958333334,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1516,
+          "p50_seconds": 0.00048791700100991875,
+          "p95_seconds": 0.0683786669978872,
+          "p99_seconds": 0.3084430839953711,
+          "max_seconds": 0.6464574169949628
+        },
+        "max_host_poll_gap_seconds": 0.03288470800180221,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 42,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15455
+        }
+      },
+      "batches": [
+        {
+          "name": "prime",
+          "seconds": 30.65948883300007,
+          "keyboard_poll_max_us": 3166120.2604166665,
+          "keyboard_sample_max_us": 3166120.2708333335,
+          "matrix_row_max_us": 3256055.5625,
+          "usb_service_max_us": 854328.3541666666,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 343,
+            "p50_seconds": 0.011636541999905603,
+            "p95_seconds": 0.2927251249998335,
+            "p99_seconds": 0.5142284170001403,
+            "max_seconds": 0.829204290999769
+          },
+          "max_host_poll_gap_seconds": 0.006593832999897131,
+          "crc_frames": 119,
+          "crc_packets": 1533,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 32,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 6231,
+              "hits": 5897,
+              "misses": 334,
+              "invalidations": 190,
+              "loan_hits": 0,
+              "loan_misses": 12
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 32,
+            "app.entry.basic": 30,
+            "app.entry.focal": 30,
+            "app.entry.vm": 90
+          }
+        },
+        {
+          "name": "warm-0",
+          "seconds": 10.745977292000134,
+          "keyboard_poll_max_us": 111802.54166666667,
+          "keyboard_sample_max_us": 112708.63541666667,
+          "matrix_row_max_us": 193446.60416666666,
+          "usb_service_max_us": 112168.1875,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 322,
+            "p50_seconds": 0.0003548340000634198,
+            "p95_seconds": 0.05798445800019181,
+            "p99_seconds": 0.06741279100015163,
+            "max_seconds": 0.09058658300000388
+          },
+          "max_host_poll_gap_seconds": 0.006292208999639115,
+          "crc_frames": 119,
+          "crc_packets": 1513,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 6402,
+              "hits": 5900,
+              "misses": 502,
+              "invalidations": 190,
+              "loan_hits": 1,
+              "loan_misses": 75
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        },
+        {
+          "name": "warm-1",
+          "seconds": 10.775112291999903,
+          "keyboard_poll_max_us": 111456.82291666667,
+          "keyboard_sample_max_us": 112280.40625,
+          "matrix_row_max_us": 191225.21875,
+          "usb_service_max_us": 111836.45833333333,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 323,
+            "p50_seconds": 0.00033233300018764567,
+            "p95_seconds": 0.059687749999739026,
+            "p99_seconds": 0.0678284169998733,
+            "max_seconds": 0.09019054199961829
+          },
+          "max_host_poll_gap_seconds": 0.00646566699970208,
+          "crc_frames": 122,
+          "crc_packets": 1543,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 6570,
+              "hits": 5900,
+              "misses": 670,
+              "invalidations": 190,
+              "loan_hits": 1,
+              "loan_misses": 139
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        }
+      ],
+      "keys": [
+        {
+          "filename": "INPUTB.tbi",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.3342689999999493,
+          "ping_max_seconds": 0.7036212079997313,
+          "pings": 32,
+          "keyboard_poll_max_us": 3270799.21875,
+          "keyboard_sample_max_us": 3271799.2395833335,
+          "matrix_row_max_us": 3279799.2395833335,
+          "usb_service_max_us": 713481.1041666666,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCB.tbi",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.12178637500028344,
+          "ping_max_seconds": 0.5230294170000889,
+          "pings": 16,
+          "keyboard_poll_max_us": 2845102.2916666665,
+          "keyboard_sample_max_us": 2845904.4895833335,
+          "matrix_row_max_us": 2855579.8020833335,
+          "usb_service_max_us": 545246.125,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "INPUTF.foc",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.41597108299993124,
+          "ping_max_seconds": 0.5923436670000228,
+          "pings": 22,
+          "keyboard_poll_max_us": 1746316.1875,
+          "keyboard_sample_max_us": 1746627.5104166667,
+          "matrix_row_max_us": 1754627.5104166667,
+          "usb_service_max_us": 613905.6875,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCF.foc",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.42379308400040827,
+          "ping_max_seconds": 0.8358863329999622,
+          "pings": 26,
+          "keyboard_poll_max_us": 2522093.5208333335,
+          "keyboard_sample_max_us": 2522496.2604166665,
+          "matrix_row_max_us": 2532196.7604166665,
+          "usb_service_max_us": 852035.7916666666,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        }
+      ],
+      "chess_warm": {
+        "keyboard_poll_max_us": 16758.354166666668,
+        "keyboard_sample_max_us": 16758.364583333332,
+        "matrix_row_max_us": 42952.895833333336,
+        "usb_service_max_us": 15540.083333333334,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1336,
+          "p50_seconds": 0.0005173340032342821,
+          "p95_seconds": 0.0013516249964595772,
+          "p99_seconds": 0.0036247919997549616,
+          "max_seconds": 0.014538333998643793
+        },
+        "max_host_poll_gap_seconds": 0.021151291999558453,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 0,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15441
+        }
+      }
+    },
+    {
+      "name": "latency-B",
+      "chess": {
+        "keyboard_poll_max_us": 3194487.0416666665,
+        "keyboard_sample_max_us": 3195016.0729166665,
+        "matrix_row_max_us": 3214126.3541666665,
+        "usb_service_max_us": 665956.8958333334,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1427,
+          "p50_seconds": 0.0005566660038311966,
+          "p95_seconds": 0.06943637500080513,
+          "p99_seconds": 0.3220002919988474,
+          "max_seconds": 0.6430817090003984
+        },
+        "max_host_poll_gap_seconds": 0.01772299999720417,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 42,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15455
+        }
+      },
+      "batches": [
+        {
+          "name": "prime",
+          "seconds": 25.264523625000038,
+          "keyboard_poll_max_us": 2554296.1458333335,
+          "keyboard_sample_max_us": 2554296.1666666665,
+          "matrix_row_max_us": 2643957.6145833335,
+          "usb_service_max_us": 695454.7916666666,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 307,
+            "p50_seconds": 0.008855459000187693,
+            "p95_seconds": 0.2835521250003694,
+            "p99_seconds": 0.3526522910001404,
+            "max_seconds": 0.6710059580000234
+          },
+          "max_host_poll_gap_seconds": 0.022826291999990644,
+          "crc_frames": 107,
+          "crc_packets": 1378,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 32,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5570,
+              "hits": 5273,
+              "misses": 297,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 15
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 32,
+            "app.entry.basic": 24,
+            "app.entry.focal": 24,
+            "app.entry.vm": 88
+          }
+        },
+        {
+          "name": "warm-0",
+          "seconds": 10.776268874999914,
+          "keyboard_poll_max_us": 111933.41666666667,
+          "keyboard_sample_max_us": 111918.65625,
+          "matrix_row_max_us": 188644.11458333334,
+          "usb_service_max_us": 112394.33333333333,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 310,
+            "p50_seconds": 0.00041095899996435037,
+            "p95_seconds": 0.06057737499986615,
+            "p99_seconds": 0.06681729100000666,
+            "max_seconds": 0.0887562920001983
+          },
+          "max_host_poll_gap_seconds": 0.01534300000002986,
+          "crc_frames": 122,
+          "crc_packets": 1531,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5738,
+              "hits": 5273,
+              "misses": 465,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 79
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        },
+        {
+          "name": "warm-1",
+          "seconds": 10.710374582999975,
+          "keyboard_poll_max_us": 111599.42708333333,
+          "keyboard_sample_max_us": 111599.44791666667,
+          "matrix_row_max_us": 188006.25,
+          "usb_service_max_us": 112078.6875,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 311,
+            "p50_seconds": 0.0004648750000342261,
+            "p95_seconds": 0.06003512500001307,
+            "p99_seconds": 0.0677160840000397,
+            "max_seconds": 0.09062420899999779
+          },
+          "max_host_poll_gap_seconds": 0.012008874999992258,
+          "crc_frames": 115,
+          "crc_packets": 1462,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5906,
+              "hits": 5273,
+              "misses": 633,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 143
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        }
+      ],
+      "keys": [
+        {
+          "filename": "INPUTB.tbi",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.333536458999788,
+          "ping_max_seconds": 0.37988520899989453,
+          "pings": 31,
+          "keyboard_poll_max_us": 2476711.8020833335,
+          "keyboard_sample_max_us": 2476697.0625,
+          "matrix_row_max_us": 2483805.6875,
+          "usb_service_max_us": 402146.5833333333,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCB.tbi",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.12202249999972992,
+          "ping_max_seconds": 0.448986832999708,
+          "pings": 16,
+          "keyboard_poll_max_us": 3170274.1875,
+          "keyboard_sample_max_us": 3170274.1979166665,
+          "matrix_row_max_us": 3179424.03125,
+          "usb_service_max_us": 471280.9375,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "INPUTF.foc",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.42176212499998655,
+          "ping_max_seconds": 0.8746562920000542,
+          "pings": 24,
+          "keyboard_poll_max_us": 2671516.8854166665,
+          "keyboard_sample_max_us": 2671516.90625,
+          "matrix_row_max_us": 2679516.90625,
+          "usb_service_max_us": 896161.4375,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCF.foc",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.4271504170001208,
+          "ping_max_seconds": 0.7386299579998195,
+          "pings": 28,
+          "keyboard_poll_max_us": 3996363.8854166665,
+          "keyboard_sample_max_us": 3996458.6979166665,
+          "matrix_row_max_us": 4006152.7708333335,
+          "usb_service_max_us": 765297.7916666666,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        }
+      ],
+      "chess_warm": {
+        "keyboard_poll_max_us": 16656.125,
+        "keyboard_sample_max_us": 17188.5,
+        "matrix_row_max_us": 42740.5,
+        "usb_service_max_us": 15447.229166666666,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1266,
+          "p50_seconds": 0.0004450000051292591,
+          "p95_seconds": 0.0012230829961481504,
+          "p99_seconds": 0.004026415997941513,
+          "max_seconds": 0.022915665998880286
+        },
+        "max_host_poll_gap_seconds": 0.023404540996125434,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 0,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15441
+        }
+      }
+    },
+    {
+      "name": "latency-A-control",
+      "chess": {
+        "keyboard_poll_max_us": 3201832.875,
+        "keyboard_sample_max_us": 3201838.34375,
+        "matrix_row_max_us": 3226609.2708333335,
+        "usb_service_max_us": 670492.875,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1525,
+          "p50_seconds": 0.0004138750009587966,
+          "p95_seconds": 0.08377425000071526,
+          "p99_seconds": 0.3129742500022985,
+          "max_seconds": 0.6484302089957055
+        },
+        "max_host_poll_gap_seconds": 0.014272499996877741,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 42,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15455
+        }
+      },
+      "batches": [
+        {
+          "name": "prime",
+          "seconds": 24.260593541000162,
+          "keyboard_poll_max_us": 2338226.3645833335,
+          "keyboard_sample_max_us": 2338226.3854166665,
+          "matrix_row_max_us": 2428357.25,
+          "usb_service_max_us": 548492.3958333334,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 311,
+            "p50_seconds": 0.008332667000104266,
+            "p95_seconds": 0.20969287500020073,
+            "p99_seconds": 0.32368741600021167,
+            "max_seconds": 0.5283334169998852
+          },
+          "max_host_poll_gap_seconds": 0.011212583000087761,
+          "crc_frames": 110,
+          "crc_packets": 1412,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 32,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5570,
+              "hits": 5273,
+              "misses": 297,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 15
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 32,
+            "app.entry.basic": 24,
+            "app.entry.focal": 24,
+            "app.entry.vm": 88
+          }
+        },
+        {
+          "name": "warm-0",
+          "seconds": 10.676688542000193,
+          "keyboard_poll_max_us": 110114.36458333333,
+          "keyboard_sample_max_us": 110406.21875,
+          "matrix_row_max_us": 188439.375,
+          "usb_service_max_us": 110488.4375,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 313,
+            "p50_seconds": 0.00041679199966893066,
+            "p95_seconds": 0.05783729199993104,
+            "p99_seconds": 0.06522733300016625,
+            "max_seconds": 0.08821004200035532
+          },
+          "max_host_poll_gap_seconds": 0.007564708000245446,
+          "crc_frames": 117,
+          "crc_packets": 1483,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5738,
+              "hits": 5273,
+              "misses": 465,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 79
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        },
+        {
+          "name": "warm-1",
+          "seconds": 10.621384584000225,
+          "keyboard_poll_max_us": 109796.60416666667,
+          "keyboard_sample_max_us": 109796.60416666667,
+          "matrix_row_max_us": 186698.4375,
+          "usb_service_max_us": 110161.875,
+          "keyboard_overflow": 0,
+          "ping": {
+            "count": 315,
+            "p50_seconds": 0.0003481249996184488,
+            "p95_seconds": 0.0561969999998837,
+            "p99_seconds": 0.06679704199996195,
+            "max_seconds": 0.08787683300033677
+          },
+          "max_host_poll_gap_seconds": 0.0076886249999006395,
+          "crc_frames": 121,
+          "crc_packets": 1525,
+          "launch_accounting": {
+            "engine": "flash",
+            "launches": 64,
+            "page_cache": {
+              "budget": 32768,
+              "payload": 29696,
+              "used": 27648,
+              "lookups": 5906,
+              "hits": 5273,
+              "misses": 633,
+              "invalidations": 158,
+              "loan_hits": 1,
+              "loan_misses": 143
+            }
+          },
+          "frontend_calls": {
+            "vm.invoke": 64,
+            "app.entry.basic": 0,
+            "app.entry.focal": 0,
+            "app.entry.vm": 160
+          }
+        }
+      ],
+      "keys": [
+        {
+          "filename": "INPUTB.tbi",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.33710516700011794,
+          "ping_max_seconds": 0.5818989170002169,
+          "pings": 32,
+          "keyboard_poll_max_us": 2798399.2604166665,
+          "keyboard_sample_max_us": 2799343.4791666665,
+          "matrix_row_max_us": 2807343.4791666665,
+          "usb_service_max_us": 604200.8333333334,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCB.tbi",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.12162712500003181,
+          "ping_max_seconds": 0.610031374999835,
+          "pings": 17,
+          "keyboard_poll_max_us": 3307709.8854166665,
+          "keyboard_sample_max_us": 3307799.84375,
+          "matrix_row_max_us": 3317481.0416666665,
+          "usb_service_max_us": 632341.5625,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "INPUTF.foc",
+          "kind": "INPUT",
+          "key_to_prompt_seconds": 0.41945974999998725,
+          "ping_max_seconds": 0.6819392920001519,
+          "pings": 25,
+          "keyboard_poll_max_us": 2509609.2708333335,
+          "keyboard_sample_max_us": 2509609.28125,
+          "matrix_row_max_us": 2517376.78125,
+          "usb_service_max_us": 694605.8125,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        },
+        {
+          "filename": "ESCF.foc",
+          "kind": "ESC",
+          "key_to_prompt_seconds": 0.4248777920001885,
+          "ping_max_seconds": 0.4101412499999242,
+          "pings": 25,
+          "keyboard_poll_max_us": 2045753.1770833333,
+          "keyboard_sample_max_us": 2045753.1979166667,
+          "matrix_row_max_us": 2054523.6041666667,
+          "usb_service_max_us": 432087.4791666667,
+          "keyboard_overflow": 0,
+          "screen_stayed_attached": true
+        }
+      ],
+      "chess_warm": {
+        "keyboard_poll_max_us": 16795.677083333332,
+        "keyboard_sample_max_us": 16795.697916666668,
+        "matrix_row_max_us": 40450.520833333336,
+        "usb_service_max_us": 15574.8125,
+        "keyboard_overflow": 0,
+        "ping": {
+          "count": 1325,
+          "p50_seconds": 0.0004120840021641925,
+          "p95_seconds": 0.0011394579996704124,
+          "p99_seconds": 0.004207792000670452,
+          "max_seconds": 0.01504462500452064
+        },
+        "max_host_poll_gap_seconds": 0.0235868749950896,
+        "nodes": 420,
+        "golden_board": true,
+        "frontend_calls": {
+          "vm.invoke": 7720,
+          "app.entry.basic": 0,
+          "app.entry.focal": 0,
+          "app.entry.vm": 15441
+        }
+      }
+    }
+  ],
+  "existing_cold_latency": {
+    "chess_cold_matrix_row_max_us": {
+      "latency-A": 3680132.0208333335,
+      "latency-B": 3214126.3541666665,
+      "latency-A-control": 3226609.2708333335
+    },
+    "chess_warm_matrix_row_max_us": {
+      "latency-A": 42952.895833333336,
+      "latency-B": 42740.5,
+      "latency-A-control": 40450.520833333336
+    },
+    "generic_prime_matrix_row_max_us": {
+      "latency-A": 3256055.5625,
+      "latency-B": 2643957.6145833335,
+      "latency-A-control": 2428357.25
+    },
+    "cold_frontends": "Cold chess enters the BASIC compiler frontend; warm chess does not. Large matrix gaps are already present in A.",
+    "source_evidence": [
+      "code/language_vm_resident.cpp: Flash Store callback calls idle_main_process() only",
+      "code/mk61s-M.ino: idle_main_process() does not guarantee a physical keyboard scan",
+      "code/language_vm_module_entry.cpp: execution background calls both idle_main_process() and kbd::scan()"
+    ],
+    "interpretation": "A separate cold-compile responsiveness defect remains; do not interpret PONG/CRC/INPUT/ESC PASS as a claim that all keyboard latency is acceptable.",
+    "fixed_in_this_change": false
+  },
+  "generic_workload": {
+    "basic_programs": 8,
+    "focal_programs": 8,
+    "maximum_BASIC_source_bytes": 3366,
+    "maximum_FOCAL_source_bytes": 1435,
+    "prime_launches": 32,
+    "warm_launches_per_batch": 64,
+    "warm_batches": 2,
+    "stages": 3,
+    "interactive": [
+      "BASIC INPUT",
+      "BASIC ESC",
+      "FOCAL INPUT",
+      "FOCAL ESC"
+    ],
+    "pressure": {
+      "round_source_bytes": 1000,
+      "labels": 1,
+      "live_OPEN_commands": 16,
+      "false_IF_commands": 20,
+      "original_source_tail_slots": 1,
+      "purpose": "Exercise generic prepared-command capacity and the unchanged eight-line service budget"
+    },
+    "manifest": {
+      "bytes": 15363,
+      "sha256": "ecdcdd6c75616d64d01040c6c391ef8f665221badd9052c4ed68d63d3329b23b"
+    }
+  },
+  "system_apps": {
+    "BASIC.APP": {
+      "bytes": 14066,
+      "sha256": "26c0597490589b911d200bcbc4c254aeed3b16d51723b6061c179983c6d61650"
+    },
+    "FOCAL.APP": {
+      "bytes": 12652,
+      "sha256": "9ccd348442e62a08536cc87bcac4cf0916e914b3c266267440ae6b3e1c0cfaf8"
+    },
+    "LANGVM.APP": {
+      "bytes": 13843,
+      "sha256": "382ccf3e62693ee6806e5023494fa63fefc763231867cc7bfaa22ef0e58ff8a9"
+    },
+    "LANGIN.APP": {
+      "bytes": 14189,
+      "sha256": "f27a9dd5fb3a9d35306c313aa8a7a1fa9804ecfbb44250838d33849604786c45"
+    },
+    "SRCEDIT.APP": {
+      "bytes": 13483,
+      "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+    }
+  },
+  "game_files": {
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "display.tbi": {
+      "bytes": 36,
+      "sha256": "d2c1cb1407fae06309e6099bf732ec126d070cfb52ab46fb84decaa12f953bbe"
+    },
+    "board.tbi": {
+      "bytes": 4224,
+      "sha256": "84b3ba1cbe74bf1bd7540367a3e268506887ef1d915f42ff06da397c6a55c704"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    },
+    "autoexec.m61": {
+      "bytes": 795,
+      "sha256": "e892f43ed9ad8ae4cdec6b87d5c55cc3867069030ad7a0d7aeff21126764fca8"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "manual.md": {
+      "bytes": 877,
+      "sha256": "ff9bb8a3b2b49bb3bee690d89e9e552fabb1f7f41432bbb5ea7bdfde3edf6695"
+    },
+    "Turochamp320.FMK": {
+      "bytes": 7466,
+      "sha256": "bd12288a8c293155abe9047a87d77695655f12507423ec0cbb176dcf1c07f371"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "__bench.tbi": {
+      "bytes": 18,
+      "sha256": "03fcfe777a2a14f7cb87fcc7393358dc4c2f3a60060657c3fb6cb5573ccb2052"
+    },
+    "__bench.m61": {
+      "bytes": 17,
+      "sha256": "4aa0b548df4dd9b1fddc1a4c5d123c5e25f6d70b4a38fa945b57cb8c34b47ed8"
+    }
+  },
+  "local_checks": {
+    "M61_ASan_UBSan_10_configurations": "PASS",
+    "terminal_IF_differential_712056_cases_per_variant": "PASS",
+    "BASIC_FOCAL_VM_both_arithmetic_ASan_UBSan": "PASS",
+    "finite_corpus_executions_both_arithmetics": 36,
+    "APP_20KiB_simultaneous_live_buffers_gate": "PASS",
+    "foreground_stack_and_USB_RX_ELF": "PASS",
+    "native_runtime_no_system_archive_members": "PASS",
+    "CORE_and_F401": "Build/host checks only; hardware A/B/A uses BINARY64"
+  },
+  "qualification_driver_change": {
+    "reason": "Legacy RAM-cache hit/miss rows are empty for Flash VM. Keep exact launch accounting using the existing outer vm.invoke point plus checked VMFLASH page counters.",
+    "files": {
+      "tests/hil_vm_cache_latency.py": {
+        "bytes": 33768,
+        "sha256": "5ebd6ce4cd053e5f37970ca1271e4d324c7dd21268ef57b443442cc72ee071bd"
+      },
+      "tests/hil_vm_cache_latency_self_test.py": {
+        "bytes": 11924,
+        "sha256": "cd8f9cfd291e023ca440ef59e257d6f30648565aee7428902c749bdba96baea0"
+      }
+    },
+    "deadlines_or_firmware_limits_changed": false,
+    "initial_harness_error": "AssertionError([])",
+    "initial_prime_independent_recheck": {
+      "engine": "flash",
+      "launches": 32,
+      "page_cache": {
+        "budget": 32768,
+        "payload": 29696,
+        "used": 27648,
+        "lookups": 5570,
+        "hits": 5273,
+        "misses": 297,
+        "invalidations": 158,
+        "loan_hits": 1,
+        "loan_misses": 15
+      }
+    },
+    "initial_attempt_exactly_restored": true,
+    "repeated_complete_latency_ABA": true,
+    "matched_setup_first_attempt": {
+      "status": "Failed before any timed sample; exactly restored",
+      "reason": "Case-sensitive fixture-name comparison rejected C9 canonical lowercase .fmk for package .FMK. Corrected to filesystem-compatible case folding; duplicate aliases and hash/size mismatches remain rejected.",
+      "raw_report": {
+        "bytes": 12006,
+        "sha256": "b3d7a73fb99d57c1089cea7d72d632bbe0ac0408c8813e5a64cd46a3e66087e6"
+      }
+    }
+  },
+  "recovery": {
+    "firmware": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/m61-cache-aba-20261020.E7ou2Z/recovery/original.bin",
+      "bytes": 370064,
+      "footer": 368416,
+      "build": "3AB3DD45",
+      "sha256": "0acbf033ecf553eed89f33220c5ba04c052394f98577090efbc4b90932c2e635"
+    },
+    "files": 24,
+    "directories": 2,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "firmware_crc": "valid",
+    "crash": "none",
+    "mpu_layout": "ok",
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "transport_note": "One checked file-read retry of owned /VMLAT/B07.tbi during final cleanup, outside all measured windows. Final complete original filesystem hash comparison passed.",
+  "raw": {
+    "directory": "/Users/bolk/Projects/MK61S_MINI/tmp/m61-cache-aba-20261020.E7ou2Z/hil",
+    "report": {
+      "bytes": 149057,
+      "sha256": "e32f17bad28f8e60858c85b2ced4c7ed6b14b4d0b8427aa7fab97391b325dfbc"
+    },
+    "driver_sha256": "491e92f64ba05a1ba6f53aee9d6f10f4f94cbe4850427b3052d1df09e365a38c",
+    "current_latency_directory": "/Users/bolk/Projects/MK61S_MINI/tmp/m61-cache-aba-20261020.E7ou2Z/hil-latency-current",
+    "current_latency_report": {
+      "bytes": 2343906,
+      "sha256": "7c7262a05cc0a908ad78a521db6c476c38a74a6884e6d64218687ff289e122a4"
+    },
+    "current_latency_driver_sha256": "b9b2b1b56c3e487ff995306c3ccbde4440e8ab7871f29794252a463ab759a0af",
+    "current_latency_helper_sha256": "5ebd6ce4cd053e5f37970ca1271e4d324c7dd21268ef57b443442cc72ee071bd",
+    "matched_chess_directory": "/Users/bolk/Projects/MK61S_MINI/tmp/m61-cache-aba-20261020.E7ou2Z/hil-chess-latency-matched-v2",
+    "matched_chess_report": {
+      "bytes": 468066,
+      "sha256": "83270798e5ba186834bd76e465f5aee59152f615889371b57de465d87062c631"
+    },
+    "matched_chess_driver_sha256": "6f5538996c14ba97716bb0c1715b0c2c26125a9bb16d1f074405c12962e433a7"
+  }
+}

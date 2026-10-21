@@ -920,6 +920,84 @@ static void test_prepared_line_endings_capacity_and_nested_runtime(void) {
   m61_text::cancel();
 }
 
+static void test_prepared_table_borrows_only_unused_label_slots(void) {
+  struct Scenario { int labels, false_conditions; bool cached; };
+  for(const auto& scenario : {Scenario{1, 30, true}, Scenario{16, 30, true},
+       Scenario{63, 1, true}, Scenario{63, 30, false},
+       Scenario{64, 0, true}, Scenario{64, 30, false}}) {
+    const int label_slots = scenario.labels;
+    reset_host();
+    std::string source = ":loop\n";
+    for(int i = 1; i < label_slots; ++i)
+      source += ":L" + std::to_string(i) + "\n";
+    for(int i = 1; i <= scenario.false_conditions; ++i)
+      source += "if re==" + std::to_string(i) + " bad\n";
+    source += "if re==99 open piece.tbi\nrun :loop\n";
+    // Occupy almost all of the source window without adding executed work.
+    assert(source.size() <= 1000);
+    source.append(1000 - source.size(), '\n');
+    add_script("DENSE", source);
+    scripts.push_back({"piece.tbi", "", program_store::ROOT_ID,
+                       program_store::ProgramType::TINYBASIC});
+    condition_value = 99;
+    assert(m61_text::load_program("DENSE"));
+    for(int i = 0; i < 128; ++i) {
+      const int conditions_before = condition_reads;
+      m61_text::service();
+      assert(condition_reads - conditions_before <= 8);
+    }
+    const int resolves_before = open_resolutions, metadata_before = entry_reads;
+    const usize calls_before = basic_targets.size();
+    for(int i = 0; i < 64; ++i) m61_text::service();
+    assert(basic_targets.size() > calls_before);
+#if MK61_M61_PREPARED_CACHE && MK61_M61_READ_CACHE_BYTES >= 1023
+    if(scenario.cached) {
+      assert(open_resolutions == resolves_before && entry_reads == metadata_before);
+    } else {
+      // A genuinely full table falls back; it must never overwrite a label.
+      assert(open_resolutions > resolves_before);
+    }
+#else
+    assert(open_resolutions > resolves_before);
+    (void)metadata_before;
+#endif
+    const usize live_calls = basic_targets.size();
+    condition_value = 98;
+    for(int i = 0; i < 64; ++i) m61_text::service();
+    assert(basic_targets.size() == live_calls);
+    const auto position = scripts[0].source.find("if re==99 open");
+    assert(position != std::string::npos);
+    scripts[0].source.replace(position, 9, "if re==98");
+    ++media_revision_value;
+    for(int i = 0; i < 64; ++i) m61_text::service();
+    assert(basic_targets.size() > live_calls);
+    m61_text::Error error = {};
+    assert(m61_text::active() && !m61_text::last_error(error));
+    m61_text::cancel();
+  }
+}
+
+static void test_prepared_label_storage_survives_nested_rebuilds(void) {
+  reset_host();
+  std::string parent = ":loop\nif re==1 open CHILD\nrun :loop\n";
+  parent.append(1000 - parent.size(), '\n');
+  std::string child = "run :child63\n";
+  for(int i = 0; i < 64; ++i)
+    child += ":child" + std::to_string(i) + "\n";
+  child += "wait 500\nret\n";
+  add_script("PARENT", parent);
+  add_script("CHILD", child);
+  condition_value = 1;
+  assert(m61_text::load_program("PARENT"));
+  for(int i = 0; i < 128; ++i) {
+    fake_millis += 500;
+    m61_text::service();
+  }
+  m61_text::Error error = {};
+  assert(m61_text::active() && !m61_text::last_error(error));
+  m61_text::cancel();
+}
+
 static void cancel_during_open(u16) { m61_text::cancel(); }
 
 static void rewrite_during_open(u16) {
@@ -2003,6 +2081,8 @@ int main(void) {
   test_prepared_if_is_live_budgeted_and_lazy();
   test_prepared_open_observes_rename_id_reuse_parent_and_source();
   test_prepared_line_endings_capacity_and_nested_runtime();
+  test_prepared_table_borrows_only_unused_label_slots();
+  test_prepared_label_storage_survives_nested_rebuilds();
   test_prepared_open_does_not_reuse_runtime_after_call();
   test_prepared_open_does_not_cache_failed_directory_or_lookup();
   test_prepared_open_keeps_complex_relative_paths_uncached();

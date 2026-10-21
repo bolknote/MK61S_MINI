@@ -141,7 +141,9 @@ struct BindEntry {
 };
 
 struct RuntimeBuffers {
-  LabelEntry label_entries[MAX_LABELS];
+  // Label count is fixed after indexing. Unused slots can hold prepared
+  // commands without reducing the source window or the 64-label limit.
+  alignas(LabelEntry) u8 label_bytes[sizeof(LabelEntry) * MAX_LABELS];
   u8 cache_bytes[READ_CACHE_SIZE];
   ReturnFrame frames[RETURN_STACK_DEPTH];
 };
@@ -182,7 +184,12 @@ static bool prepare_runtime() { return true; }
 static void release_runtime() {}
 #endif
 static auto& read_cache() { return runtime_buffers().cache_bytes; }
-static auto& labels() { return runtime_buffers().label_entries; }
+static u8* label_storage(u8 index) {
+  return runtime_buffers().label_bytes + sizeof(LabelEntry) * index;
+}
+static LabelEntry& label(u8 index) {
+  return *std::launder(reinterpret_cast<LabelEntry*>(label_storage(index)));
+}
 static auto& return_stack() { return runtime_buffers().frames; }
 
 struct PreparedLine {
@@ -191,6 +198,8 @@ struct PreparedLine {
   u8 tail_offset, flags;
 };
 static_assert(sizeof(PreparedLine) == 12, "M61 prepared cache entry changed");
+static_assert(sizeof(PreparedLine) == sizeof(LabelEntry),
+              "prepared commands must fit an unused label slot");
 #if MK61_M61_PREPARED_CACHE
 struct PreparedHeader { u16 count, directory; };
 static constexpr u16 PREPARED_END = READ_CACHE_SIZE & ~1U;
@@ -698,6 +707,9 @@ static PreparedHeader* prepared_header() {
 }
 
 static u8* prepared_slot_storage(u16 index) {
+  const u16 spare_labels = MAX_LABELS - label_count;
+  if(index < spare_labels) return label_storage((u8)(MAX_LABELS - index - 1U));
+  index -= spare_labels;
   return read_cache() + PREPARED_END - sizeof(PreparedHeader) -
       (index + 1U) * sizeof(PreparedLine);
 }
@@ -791,7 +803,9 @@ static PreparedLine* remember_prepared_line(const char* line, u16 start,
   PreparedHeader* header = prepared_header();
   if(!header) return nullptr;
   const u16 count = header->count & ~DIRECTORY_READY;
-  if(sizeof(PreparedHeader) + (count + 1U) * sizeof(PreparedLine) >
+  const u16 spare_labels = MAX_LABELS - label_count;
+  const u16 source_slots = count < spare_labels ? 0 : count - spare_labels + 1U;
+  if(sizeof(PreparedHeader) + source_slots * sizeof(PreparedLine) >
      (usize)(PREPARED_END - read_cache_len)) return nullptr;
   PreparedLine prepared = {};
   const char* command = skip_spaces(line);
@@ -861,7 +875,7 @@ static bool stored_label_equals(const LabelEntry& entry, const char* name, usize
 static i16 find_label_index(const char* name, usize len) {
   const u32 hash = label_hash(name, len);
   for(u8 i = 0; i < label_count; i++) {
-    if(labels()[i].hash == hash && stored_label_equals(labels()[i], name, len)) {
+    if(label(i).hash == hash && stored_label_equals(label(i), name, len)) {
       return (i16) i;
     }
   }
@@ -1015,14 +1029,16 @@ static bool build_label_index(const char*& error_message, u16& error_line) {
       return false;
     }
     for(u8 i = 0; i < label_count; i++) {
-      if(stored_label_equals(labels()[i], name, len)) {
+      if(stored_label_equals(label(i), name, len)) {
         error_message = "duplicate label";
         error_line = line_number;
         return false;
       }
     }
 
-    LabelEntry& entry = labels()[label_count++];
+    // A previous frame may have used this slot for a prepared command.
+    // Explicitly restart the label lifetime before writing its fields.
+    LabelEntry& entry = *new(label_storage(label_count++)) LabelEntry;
     entry.hash = label_hash(name, len);
     entry.name_pos = (u16) (line_start + (u16) (name - line));
     entry.target_pos = script_pos;
@@ -1374,7 +1390,7 @@ static bool goto_label(const char* args) {
     line_error_message = "label return stack is full";
     return false;
   }
-  const LabelEntry& entry = labels()[target];
+  const LabelEntry& entry = label(target);
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   // A same-script jump can reuse its verified read window. read_next_line
@@ -1430,7 +1446,7 @@ static bool enter_pending_bind(void) {
   pending_bind_sequence = 0;
   bind_handler_active = true;
 
-  const LabelEntry& entry = labels()[target];
+  const LabelEntry& entry = label(target);
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   invalidate_read_cache();
@@ -1492,7 +1508,7 @@ static bool enter_pending_trap(void) {
   pending_trap_target = INVALID_TRAP_TARGET;
   suspended_trap_address = address;
 
-  const LabelEntry& entry = labels()[target];
+  const LabelEntry& entry = label(target);
   script_pos = entry.target_pos;
   script_line = entry.target_line;
   invalidate_read_cache();
