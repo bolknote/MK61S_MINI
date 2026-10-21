@@ -48,6 +48,7 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "language_flash_store.hpp"
 #include "resident_firmware.hpp"
 #include "loadable_module_system_app.hpp"
+#include "language_vm_repeat.hpp"
 #include "development.hpp"
 #include "keyboard.h"
 extern void idle_main_process(void);
@@ -456,6 +457,56 @@ uint32_t flash_fingerprint(Language language,flash::ReadCache* cache) {
 }
 }
 #endif
+#if MK61_FLASH_LANGUAGE_VM && MK61_FLASH_VM_PAGE_CACHE_BYTES
+#ifndef MK61_VM_REPEAT_CALLS
+#define MK61_VM_REPEAT_CALLS 1
+#endif
+#if MK61_VM_REPEAT_CALLS != 0 && MK61_VM_REPEAT_CALLS != 1
+#error "MK61_VM_REPEAT_CALLS must be 0 or 1"
+#endif
+#if MK61_VM_REPEAT_CALLS
+namespace {
+bool repeat_cached_call(Language language,loadable_module::Command command,uint32_t a,uint32_t b,
+                        shared_memory::WorkspacePartition& partition,PersistentValues& values,CompilerContext& context,
+                        uint32_t& stamp,uint32_t& result,loadable_module::RuntimeStatus& status) {
+  using namespace loadable_module;
+  auto* cache=flash_page_cache(false);
+  if(!cache)return false;
+  const uint16_t source=flash_source(language,command,a,values);
+  const uint32_t revision=program_store::media_revision();uint32_t fingerprint;
+  if(source==0xFFFF || !cache->fingerprint(revision,language,fingerprint))return false;
+  flash::RepeatImage image(*cache,revision,source,fingerprint,language);
+  if(!image || ((image.validated().flags&2) && language==Language::FOCAL &&
+       !core_61::expanded_program_is_on()))return false;
+  // This path builds a fresh continuation itself and never reads dead
+  // prefix bytes. Avoid clearing the entire 4176-byte prefix once more;
+  // the partition still scrubs it before publishing the full snapshot.
+  (void)partition.reuse_prefix(); // Otherwise acquire retains its usual zeroing policy.
+  shared_memory::Lease state;
+  if(!workspace(state)){status=RuntimeStatus::BUSY;return true;}
+  // Acquiring a workspace may evict another owner. Do not start a stale
+  // descriptor if that operation changed C9; the loan itself stays pinned.
+  if(program_store::media_revision()!=revision)return false;
+  auto* execution=state.as<ExecutionState>();
+  auto lookup=image.io();
+  if(!prepare_repeat_call(context,image,values,*execution,command,b,lookup)) {
+    status=RuntimeStatus::CORRUPT_MODULE;return true;
+  }
+  stamp=image.source_stamp();
+  (void)program_store_text_font_activate();
+  // The ordinary flow retains INPUT/resume, finish/error/editor semantics
+  // and reloads an evicted executor. No callback into a cached APP survives.
+  const auto first=mk61_app_flow_to(MK61_APP_KIND_LANGUAGE_VM,MK61_APP_FLOW_SYSTEM_FILE,FLOW_RUN_PROGRAM);
+#if defined(LANGUAGE_VM_HOST_TEST)
+  status=(RuntimeStatus)app_flow::run(first,&context,sizeof(context),result,flow_invoke,nullptr);
+#else
+  status=loadable_module::run_flow(first,&context,sizeof(context),result);
+#endif
+  return true;
+}
+}
+#endif
+#endif
 static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     loadable_module::Command command, uint32_t a, uint32_t b, uint32_t& result,
     uint16_t* edit_id = nullptr, uint32_t* edit_position = nullptr) {
@@ -506,12 +557,21 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   // enters the compiler stage; clearing both stages repeats 184 bytes per RUN.
   CompilerContext context;
   context.storage=nullptr;
-  context.execution={}; context.source_id=0; context.language=language;
+  context.source_id=0; context.language=language;
   context.clear_requested=0; context.prepared=false; context.cache_target=false;
   context.cache_driver=0xFFFF;
 #if MK61_VM_FILE_CACHE && MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
   context.source_id=source_id;
 #endif
+  RuntimeStatus status=RuntimeStatus::OK;
+#if MK61_FLASH_LANGUAGE_VM
+  uint32_t execution_stamp=0;
+#if MK61_FLASH_VM_PAGE_CACHE_BYTES && MK61_VM_REPEAT_CALLS
+  if(!repeat_cached_call(language,command,a,b,partition,*values,context,execution_stamp,result,status))
+#endif
+#endif
+  {
+  context.execution={};
 #if MK61_FLASH_LANGUAGE_VM
   auto* page_cache=flash_page_cache();
   flash::Store store(&context.compile.request.source_id,flash_fingerprint(language,page_cache),
@@ -633,19 +693,23 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   if(driver!=0xFFFF)first=mk61_app_flow_to(MK61_APP_KIND_APPLICATION,driver,file_cache::TRY_LOAD);
 #endif
 #if defined(LANGUAGE_VM_HOST_TEST)
-  const auto status=(RuntimeStatus)app_flow::run(first,&context,sizeof(context),result,
+  status=(RuntimeStatus)app_flow::run(first,&context,sizeof(context),result,
                                                compiler_flow_invoke,&services);
 #else
-  const auto status=loadable_module::run_flow_service(first,&context,sizeof(context),result,
+  status=loadable_module::run_flow_service(first,&context,sizeof(context),result,
                                                      compiler_memory,&services);
 #endif
+#if MK61_FLASH_LANGUAGE_VM
+  execution_stamp=store.source_stamp();
+#endif
+  }
   if(status != RuntimeStatus::OK || !context.prepared) return status;
   auto& execution=context.execution;
   if(language==Language::BASIC) {
     error_id=execution.result.error==Error::NONE?0xFFFF:context.source_id;
     error_line=(uint16_t)execution.result.line; error_column=execution.error_column;
 #if MK61_FLASH_LANGUAGE_VM
-    error_stamp=store.source_stamp();
+    error_stamp=execution_stamp;
 #endif
 #if MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
     error_revision=revision;
@@ -656,7 +720,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
     *edit_id=context.source_id;
     *edit_position=
 #if MK61_FLASH_LANGUAGE_VM
-        [&](){uint32_t stamp;return program_store::content_stamp(context.source_id,stamp) && stamp==store.source_stamp()
+        [&](){uint32_t stamp;return program_store::content_stamp(context.source_id,stamp) && stamp==execution_stamp
           ? (execution.result.line<<16)|execution.error_column : STALE_SOURCE_POSITION;}();
 #elif MK61_LANGUAGE_VM_IMAGE_CACHE_BYTES
         revision==image_revision() ? (execution.result.line<<16)|execution.error_column : STALE_SOURCE_POSITION;

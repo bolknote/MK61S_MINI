@@ -13,6 +13,10 @@
 
 #include <string.h>
 
+// Only transport control packets and enqueue keys here: no terminal commands,
+// filesystem mutation, display callbacks or nested APP execution during load.
+extern void storage_io_process(void) __attribute__((weak));
+
 namespace loadable_module {
 namespace {
 
@@ -99,7 +103,11 @@ static bool read_app_payload(void* context, u32 offset,
   AppPayloadContext& app = *(AppPayloadContext*) context;
   if(app.container_size < HEADER_SIZE ||
      offset > (u32) app.container_size - (u32) HEADER_SIZE) return false;
-  return read_app_container(&app, HEADER_SIZE + offset, output, size);
+  if(!read_app_container(&app, HEADER_SIZE + offset, output, size)) return false;
+  // BufferedInput refills are bounded. Service after the C9/SPI read released
+  // its temporaries, including between relocation chunks, not only NOR WFI.
+  if(storage_io_process) storage_io_process();
+  return true;
 }
 
 static StoreStatus read_app_header(const program_store::Entry& entry,

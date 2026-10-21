@@ -1101,6 +1101,18 @@ bool WorkspacePartition::open(Owner retained_owner, usize tail_size) {
   return false;
 #endif
 }
+bool WorkspacePartition::reuse_prefix() {
+#if MK61_OVERLAY_LANGUAGE_VM
+  ArenaState& arena=*state(Arena::WORKSPACE);
+  if(!ok() || workspace_partition!=this || interrupt_context() || transition_in_progress() ||
+     arena.depth || arena.eviction_prepare || arena.discard_pending ||
+     arena.resident!=Owner::NONE || arena.resident_size || arena.capacity>=WORKSPACE_SIZE)return false;
+  arena.resident=owner_;arena.resident_size=arena.capacity;
+  advance_resident_epoch(arena);return true;
+#else
+  return false;
+#endif
+}
 bool WorkspacePartition::close() {
   if(!ok()) return true;
 #if MK61_OVERLAY_LANGUAGE_VM

@@ -100,7 +100,8 @@ public:
   // Optional whole-image fast lane, backed by the very same page frames.
   // True with a null result means ineligible/busy: use the paged VM. False
   // is a backing I/O/service failure, not a reason to silently retry it.
-  bool borrow(uint32_t revision,uint16_t directory,uint32_t size,const IO& io,const uint8_t*& image) {
+  bool borrow(uint32_t revision,uint16_t directory,uint32_t size,const IO& io,const uint8_t*& image,
+              bool cached_only=false) {
     image=nullptr;synchronize(revision);
     const unsigned n=(size+WRITE_BYTES-1)/WRITE_BYTES;
     if(!size || size>8192 || n>count_ || directory==UINT16_MAX || pinned_count_)return true;
@@ -121,6 +122,9 @@ public:
       }
       if(newest<oldest){oldest=newest;selected=i;}
     }
+    // A prepared repeat may only use an already contiguous immutable image.
+    // On a miss leave every frame/key intact for the ordinary paged loader.
+    if(cached_only)return true;
     ++statistics_.loan_misses;
     pinned_start_=uint16_t(selected);pinned_count_=uint16_t(n);
     for(unsigned j=0;j<n;++j) {

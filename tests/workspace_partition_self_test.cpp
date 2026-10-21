@@ -80,6 +80,37 @@ int main() {
     assert(!memcmp(next.tail(),expected,sizeof(expected)));
   }
   assert(!workspace_partitioned() && validate_invariants());
+  {
+    Lease lease;whole(lease);memset(lease.data(),0xD3,language_vm::COMPILER_WORKSPACE_SIZE);
+  }
+  WorkspacePartition reused;assert(!reused.reuse_prefix());
+  assert(reused.open(Owner::LANGUAGE_VM,sizeof(expected)) && reused.reuse_prefix());
+  assert(!reused.reuse_prefix());
+  {
+    Lease prefix;assert(acquire(Owner::LANGUAGE_VM,language_vm::COMPILER_WORKSPACE_SIZE,AcquireMode::REQUIRED,prefix));
+    assert(!prefix.fresh());
+    for(unsigned i=0;i<prefix.size();++i)assert(prefix.data()[i]==0xD3);
+    assert(!reused.reuse_prefix() && !reused.close());
+    assert(!memcmp(reused.tail(),expected,sizeof(expected)));
+  }
+  assert(reused.close());
+  {
+    Lease lease;whole(lease);
+    for(unsigned i=0;i<language_vm::COMPILER_WORKSPACE_SIZE;++i)assert(lease.data()[i]==0);
+    assert(!memcmp(lease.data()+language_vm::COMPILER_WORKSPACE_SIZE,expected,sizeof(expected)));
+  }
+  assert(reused.open(Owner::LANGUAGE_VM,sizeof(expected)) && reused.reuse_prefix());
+  {
+    Lease compiler;assert(acquire(Owner::FOCAL,4096,AcquireMode::REQUIRED,compiler) && compiler.fresh());
+    for(unsigned i=0;i<compiler.size();++i)assert(compiler.data()[i]==0);
+    memset(compiler.data(),0xCC,compiler.size());
+  }
+  assert(!reused.reuse_prefix());
+  {
+    Lease prefix;assert(acquire(Owner::LANGUAGE_VM,language_vm::COMPILER_WORKSPACE_SIZE,AcquireMode::REQUIRED,prefix) && prefix.fresh());
+    for(unsigned i=0;i<prefix.size();++i)assert(prefix.data()[i]==0);
+  }
+  assert(reused.close() && validate_invariants());
   discard();
   puts("workspace partition: protected tail, owners/epochs, full snapshots, no partial restore PASS");
 }

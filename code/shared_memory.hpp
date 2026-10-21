@@ -171,6 +171,10 @@ class [[nodiscard]] WorkspacePartition {
   WorkspacePartition(const WorkspacePartition&) = delete;
   WorkspacePartition& operator=(const WorkspacePartition&) = delete;
   bool open(Owner retained_owner, usize tail_size);
+  // Optional transient scratch for the retained owner. The caller must
+  // initialise every byte it reads; other owners still get fresh zeroed
+  // storage. close() always scrubs the prefix before publishing a snapshot.
+  bool reuse_prefix();
   bool close();
   bool ok() const { return tail_ != nullptr; }
   Owner owner() const { return owner_; }

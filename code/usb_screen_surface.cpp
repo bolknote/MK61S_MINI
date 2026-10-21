@@ -11,6 +11,10 @@
 
 #include <string.h>
 
+// Bounded transport/key sampling only. This hook must never reenter the
+// display: copyTextBitmap temporarily borrows framebuffer_ for its canvas.
+extern void storage_io_process(void) __attribute__((weak));
+
 namespace usb_screen {
 
 namespace {
@@ -742,6 +746,7 @@ bool Surface::copyTextBitmap(u8 *bitmap, usize size, u8 first, u8 count) {
         auto &value = bitmap[(usize)page * WIDTH + x];
         value = (u8)((value & ~mask) | (pixels[x] & mask));
       }
+      if(storage_io_process) storage_io_process();
     }
     framebuffer_ = saved;
     return true;
@@ -764,6 +769,7 @@ bool Surface::copyTextBitmap(u8 *bitmap, usize size, u8 first, u8 count) {
         drawGlyph((u8)left, cell_width, row, raster);
       }
     }
+    if(storage_io_process) storage_io_process();
   }
   framebuffer_ = saved;
   return true;
@@ -870,6 +876,7 @@ void Surface::render(void) {
                    cursor_blink_ && cursor_blink_phase_);
       }
     }
+    if(storage_io_process) storage_io_process();
   }
   drawOverlay();
 }
@@ -888,6 +895,7 @@ void Surface::renderUi(bool full) {
     ui_text_renderer::renderPage(
         grid_, style, page, 0, 16,
         framebuffer_ + (usize) page * WIDTH);
+    if(storage_io_process) storage_io_process();
   }
   drawOverlay();
 }

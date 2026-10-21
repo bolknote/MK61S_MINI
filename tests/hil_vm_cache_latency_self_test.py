@@ -199,7 +199,7 @@ class GraphicsPort:
     def command(self,command,timeout=5):
         if command=='prof start':return 'PROF started'
         assert command=='prof stop' and not self.measuring
-        return 'KBD overflow=0\n'+text
+        return 'KBD overflow=0\n'+text+flash
     def write_line(self,line):assert line=='open "/VMLAT/GFXDEMO.tbi"'
     def begin_measurement(self):self.measuring=True
     def end_measurement(self):self.measuring=False
@@ -227,4 +227,11 @@ with tempfile.TemporaryDirectory(prefix='mk61-graphics-hil-offline-') as tempora
     assert len(list(Path(temporary).rglob('*.bin')))==2
     for index,name in enumerate(('primitives','graph')):
         assert (Path(temporary)/'pages'/(name+'.bin')).read_bytes()==port.page(index)
+    graphics_clock.now=0
+    port=GraphicsPort()
+    with patch('hil_vm_cache_latency.time.monotonic',graphics_clock), \
+         patch('hil_vm_cache_latency.png'), \
+         patch('hil_vm_cache_latency.profile',return_value=dict(vm_cache_dropped=0,vm_cache=[],points={'vm.invoke':{'calls':1}})):
+        result=graphics(port,Path(temporary)/'flash-pages')
+    assert result['launch_accounting']['engine']=='flash' and result['launch_accounting']['launches']==1
 print('Cache latency HIL: RAM/Flash launch accounting, gaps, CRC/nonce, single-slot race, 1s deadline, complete graphics after disk overlay PASS')

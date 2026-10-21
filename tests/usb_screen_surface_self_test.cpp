@@ -12,6 +12,9 @@
 #include <string.h>
 #include <initializer_list>
 
+static unsigned input_service_calls;
+void storage_io_process() { ++input_service_calls; }
+
 namespace {
 
 static bool pixel(const usb_screen::Surface& surface, u16 x, u8 y) {
@@ -515,7 +518,23 @@ static void test_shared_grid_identity_and_alias_seed() {
 }
 #endif
 
+static void test_cooperative_capture_keeps_surface_binding() {
+  u8 framebuffer[usb_screen::FRAME_BYTES]={};TEST_SURFACE(surface,framebuffer);
+  surface.begin();surface.writeCodepoint('A');
+  input_service_calls=0;surface.flush(1000);
+  assert(input_service_calls);
+  u8 before[usb_screen::FRAME_BYTES],canvas[usb_screen::FRAME_BYTES];
+  memcpy(before,framebuffer,sizeof(before));memset(canvas,0xA5,sizeof(canvas));
+  input_service_calls=0;
+  assert(surface.copyTextBitmap(canvas,sizeof(canvas),0,1));
+  assert(input_service_calls && surface.framebuffer()==framebuffer);
+  assert(!memcmp(before,framebuffer,sizeof(before)));
+  input_service_calls=0;
+  assert(!surface.copyTextBitmap(canvas,sizeof(canvas)-1,0,1) && !input_service_calls);
+}
+
 int main(void) {
+  test_cooperative_capture_keeps_surface_binding();
 #if MK61_SHARED_SCREEN_GRID
   test_shared_grid_identity_and_alias_seed();
 #endif

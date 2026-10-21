@@ -347,9 +347,9 @@ def graphics(port,out):
     port.end_measurement();text=port.command('prof stop',timeout=20)
     assert 'KBD overflow=0' in text
     data=profile(text);assert data['vm_cache_dropped']==0
-    assert sum(r['hits']+r['misses'] for r in data['vm_cache'])==1
+    launches=require_launch_count(text,data,1)
     (out/'prof.txt').write_text(text);(out/'terminal.txt').write_bytes(port.text[start:])
-    row=dict(status='PASS',pages=pages,gaps=parse_gaps(text),profile=data,
+    row=dict(status='PASS',pages=pages,gaps=parse_gaps(text),profile=data,launch_accounting=launches,keyboard_overflow=0,
         ping_max_seconds=max(port.pings),pings=len(port.pings),
         frames_crc_verified=len(port.frames)-frames_start,transport=port.diagnostics())
     save(out/'report.json',row);print('Graphics two pages PASS',out.name,flush=True)
