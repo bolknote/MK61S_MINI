@@ -1,0 +1,751 @@
+{
+  "status": "PASS_CURRENT_MAIN_EXACT_FULL_FLASH_FILES_STATE_RESTORED",
+  "date": "2026-10-21",
+  "timezone": "Europe/Moscow",
+  "source_base": "171866abfbd8df757141b66926f6a9819930428a",
+  "device": {
+    "public": "AEB505B6E0067623",
+    "short": "E0067623",
+    "usb": "2068336B4731",
+    "volume": "AED647EB",
+    "build": "3AB3DD45",
+    "profile": "classic-v3-uc1609"
+  },
+  "clock_hz": 96000000,
+  "arithmetic": "owned BINARY64",
+  "limits_weakened": false,
+  "matched_aba": false,
+  "method": "Six initial runs: first compilation, second warmup, two continuous and two headless samples; then one reboot with already prepared file cache. Historical results are not an isolated matched A/B/A comparison.",
+  "timing": "MCU accepted OK -> next blocking key wait; profiler stopped; level 2/depth 8, Black, book off, 420 nodes, e2e3 and complete golden eight-rank board.",
+  "results": {
+    "first_search_with_compilation_seconds": 43.151602,
+    "warm_with_usb_screen_seconds": 25.614566000000003,
+    "warm_without_usb_screen_seconds": 24.5667795,
+    "warm_samples": {
+      "continuous": [
+        25.680866,
+        25.548266
+      ],
+      "headless": [
+        24.588326,
+        24.545233
+      ]
+    },
+    "first_search_after_reboot_with_prepared_file_cache_seconds": 25.687672,
+    "published_manifest_banks_unchanged_after_reboot": true
+  },
+  "notes": [
+    "First two runs are not part of warm medians; each warm mode has two samples.",
+    "Headless means protocol-detached screen, cable connected and physical LCD active. Fixed 45-second observation has no frames; MCU timer freezes before reattachment.",
+    "First compilation and reboot-cold each have one observation, not a statistical estimate of cold-start speedup.",
+    "Manifest/bank equality is a consistency check, not an instrumented compiler-call count."
+  ],
+  "runs": [
+    {
+      "stage": "current-main",
+      "runs": [
+        {
+          "repeat": 0,
+          "screen_mode": "continuous",
+          "seconds": 43.151602,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 8,
+            "us": 43151602,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 1,
+          "screen_mode": "continuous",
+          "seconds": 25.625289,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 17,
+            "us": 25625289,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 2,
+          "screen_mode": "continuous",
+          "seconds": 25.680866,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 26,
+            "us": 25680866,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        },
+        {
+          "repeat": 3,
+          "screen_mode": "headless",
+          "seconds": 24.588326,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 35,
+            "us": 24588326,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 4,
+          "screen_mode": "headless",
+          "seconds": 24.545233,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 44,
+            "us": 24545233,
+            "key": 37,
+            "screen_begin": 0,
+            "screen_end": 0
+          }
+        },
+        {
+          "repeat": 5,
+          "screen_mode": "continuous",
+          "seconds": 25.548266,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 53,
+            "us": 25548266,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ],
+      "manifests": [
+        {
+          "path": "/System/VMCache/Pages/003A/Manifest.bin",
+          "language": 1,
+          "lines": 1,
+          "bytecode_bytes": 59,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0010/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2463,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0020/Manifest.bin",
+          "language": 1,
+          "lines": 12,
+          "bytecode_bytes": 667,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0023/Manifest.bin",
+          "language": 1,
+          "lines": 18,
+          "bytecode_bytes": 940,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/000F/Manifest.bin",
+          "language": 1,
+          "lines": 77,
+          "bytecode_bytes": 3321,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002D/Manifest.bin",
+          "language": 1,
+          "lines": 44,
+          "bytecode_bytes": 1779,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002F/Manifest.bin",
+          "language": 1,
+          "lines": 34,
+          "bytecode_bytes": 1514,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0029/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2688,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002A/Manifest.bin",
+          "language": 1,
+          "lines": 9,
+          "bytecode_bytes": 469,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0032/Manifest.bin",
+          "language": 1,
+          "lines": 51,
+          "bytecode_bytes": 2125,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0039/Manifest.bin",
+          "language": 1,
+          "lines": 47,
+          "bytecode_bytes": 2433,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0017/Manifest.bin",
+          "language": 1,
+          "lines": 192,
+          "bytecode_bytes": 6645,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0021/Manifest.bin",
+          "language": 1,
+          "lines": 158,
+          "bytecode_bytes": 6589,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0013/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2377,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0030/Manifest.bin",
+          "language": 1,
+          "lines": 57,
+          "bytecode_bytes": 2447,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0012/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2283,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002B/Manifest.bin",
+          "language": 1,
+          "lines": 19,
+          "bytecode_bytes": 885,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0016/Manifest.bin",
+          "language": 1,
+          "lines": 2,
+          "bytecode_bytes": 75,
+          "bank": 0
+        }
+      ],
+      "frames_crc_checked": 1760
+    },
+    {
+      "stage": "reboot-ready-file-cache",
+      "runs": [
+        {
+          "repeat": 0,
+          "screen_mode": "continuous",
+          "seconds": 25.687672,
+          "nodes": 420,
+          "move": "e2e3",
+          "board_frame_sha256": "ef261082a0230600d21d7c4ae116e7cfc226f0fb9ce43a22fbbc26bcbe580460",
+          "complete_eight_rank_board": true,
+          "keywait": {
+            "sequence": 8,
+            "us": 25687672,
+            "key": 37,
+            "screen_begin": 1,
+            "screen_end": 1
+          }
+        }
+      ],
+      "manifests": [
+        {
+          "path": "/System/VMCache/Pages/003A/Manifest.bin",
+          "language": 1,
+          "lines": 1,
+          "bytecode_bytes": 59,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0010/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2463,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0020/Manifest.bin",
+          "language": 1,
+          "lines": 12,
+          "bytecode_bytes": 667,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0023/Manifest.bin",
+          "language": 1,
+          "lines": 18,
+          "bytecode_bytes": 940,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/000F/Manifest.bin",
+          "language": 1,
+          "lines": 77,
+          "bytecode_bytes": 3321,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002D/Manifest.bin",
+          "language": 1,
+          "lines": 44,
+          "bytecode_bytes": 1779,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002F/Manifest.bin",
+          "language": 1,
+          "lines": 34,
+          "bytecode_bytes": 1514,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0029/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2688,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002A/Manifest.bin",
+          "language": 1,
+          "lines": 9,
+          "bytecode_bytes": 469,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0032/Manifest.bin",
+          "language": 1,
+          "lines": 51,
+          "bytecode_bytes": 2125,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0039/Manifest.bin",
+          "language": 1,
+          "lines": 47,
+          "bytecode_bytes": 2433,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0017/Manifest.bin",
+          "language": 1,
+          "lines": 192,
+          "bytecode_bytes": 6645,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0021/Manifest.bin",
+          "language": 1,
+          "lines": 158,
+          "bytecode_bytes": 6589,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0013/Manifest.bin",
+          "language": 1,
+          "lines": 61,
+          "bytecode_bytes": 2377,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0030/Manifest.bin",
+          "language": 1,
+          "lines": 57,
+          "bytecode_bytes": 2447,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0012/Manifest.bin",
+          "language": 1,
+          "lines": 53,
+          "bytecode_bytes": 2283,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/002B/Manifest.bin",
+          "language": 1,
+          "lines": 19,
+          "bytecode_bytes": 885,
+          "bank": 0
+        },
+        {
+          "path": "/System/VMCache/Pages/0016/Manifest.bin",
+          "language": 1,
+          "lines": 2,
+          "bytecode_bytes": 75,
+          "bank": 0
+        }
+      ],
+      "frames_crc_checked": 404
+    }
+  ],
+  "historical_reference": {
+    "report": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/doc/measurements/compiler-input-classic-aba-20261021.json",
+      "bytes": 46285,
+      "sha256": "0f7a01b3f5b71ecfe469b956bb48f29a73de76d6300d20cba831d770b2019635"
+    },
+    "same_game_and_probe_bytes": true,
+    "comparison": {
+      "continuous": {
+        "previous_seconds": 25.980968,
+        "current_seconds": 25.614566000000003,
+        "elapsed_reduction_percent": 1.410270779749223,
+        "speedup": 1.014304439122646
+      },
+      "headless": {
+        "previous_seconds": 24.891934,
+        "current_seconds": 24.5667795,
+        "elapsed_reduction_percent": 1.3062645112268068,
+        "speedup": 1.0132355362248437
+      }
+    },
+    "previous_first_compile_seconds": 47.953275,
+    "caveat": "Historical comparison only, not matched A/B/A; do not attribute the whole difference to memcpy, memset or any single commit."
+  },
+  "builds": {
+    "shipping": {
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/resident-shipping/sealed.bin",
+        "bytes": 378696,
+        "sha256": "7e4e1f8f8e0df6d96b132e8ebd7a6ded2448781306a9843d71e2ad0a68aace10"
+      },
+      "image_bytes": 378696,
+      "flash_free_bytes": 145592,
+      "flash_min_headroom": 131072,
+      "globals_bytes": 21768,
+      "global_ram_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "dynamic_bounded_frames": 0
+    },
+    "timing": {
+      "firmware": {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/resident-timing/sealed.bin",
+        "bytes": 378984,
+        "sha256": "c08546d9f2eb7a51b8afe0a9637563049afd30c473820a3419fa85d5b6574e5f"
+      },
+      "image_bytes": 378984,
+      "flash_free_bytes": 145304,
+      "flash_min_headroom": 131072,
+      "globals_bytes": 21792,
+      "global_ram_limit": 49152,
+      "maximum_static_frame": 1928,
+      "static_frame_limit": 3072,
+      "dynamic_bounded_frames": 0
+    }
+  },
+  "apps": {
+    "BASIC.APP": {
+      "bytes": 14103,
+      "memory_bytes": 20028,
+      "sha256": "9ded1abcb12b9e33b032cb9b2ee1bc6f5a52cd97d7175993f4ee528d8dff1903"
+    },
+    "FOCAL.APP": {
+      "bytes": 12695,
+      "memory_bytes": 17576,
+      "sha256": "0bd83f9f1dff973d0bc415efd89e9ed9681c4ba9d9dc72e3989f3f6eda286092"
+    },
+    "LANGVM.APP": {
+      "bytes": 13843,
+      "memory_bytes": 20372,
+      "sha256": "382ccf3e62693ee6806e5023494fa63fefc763231867cc7bfaa22ef0e58ff8a9"
+    },
+    "LANGIN.APP": {
+      "bytes": 14207,
+      "memory_bytes": 19404,
+      "sha256": "0052ce7f97d7353e91d99e8a8ed1dc023cd38af5f32a05bc87be9ca3982184da"
+    },
+    "SRCEDIT.APP": {
+      "bytes": 13483,
+      "memory_bytes": 18180,
+      "sha256": "5b9e56bba4485e3dbe47da5e39d646c94af1a34e25d449025df7f70bf13519dc"
+    }
+  },
+  "package": {
+    "node.tbi": {
+      "bytes": 2262,
+      "sha256": "cf83cd025e8cdf4f0d3cf12ee05320dfc96e8ed251a37b6cc129b25f38547801"
+    },
+    "history.tbi": {
+      "bytes": 2195,
+      "sha256": "4a0627bbe3fa208037bdc42ee2363c21f2559d3c51baf34d8fe5b783b41d5a44"
+    },
+    "ep.tbi": {
+      "bytes": 1023,
+      "sha256": "a7ba7bb9113af1829ee80e1b6663f430b67c838aad8ff6d24c02425d784677c1"
+    },
+    "menu.tbi": {
+      "bytes": 1634,
+      "sha256": "d6cbe15388ee127dcaace02b5a85856a2ec6ef7b85c77d92203113176f64cc74"
+    },
+    "status.tbi": {
+      "bytes": 1619,
+      "sha256": "d3b989f349ffad62a8f8d1954e15378c589f9e9c48559ec91c8b4d6eae5531b9"
+    },
+    "help.tbi": {
+      "bytes": 701,
+      "sha256": "3eddc5b1ea1f62584154f5db8dec220eacae57f50ea57b416dabba1f5ea78333"
+    },
+    "Turochamp.FMK": {
+      "bytes": 985,
+      "sha256": "d14360acf5352a1750102c911f24d2528373fae613ff84898a79588ea38a6916"
+    },
+    "display.tbi": {
+      "bytes": 36,
+      "sha256": "d2c1cb1407fae06309e6099bf732ec126d070cfb52ab46fb84decaa12f953bbe"
+    },
+    "board.tbi": {
+      "bytes": 4224,
+      "sha256": "84b3ba1cbe74bf1bd7540367a3e268506887ef1d915f42ff06da397c6a55c704"
+    },
+    "claims.tbi": {
+      "bytes": 734,
+      "sha256": "21c87ee4b2f6de0ffbc10df7bf26321a0ffe758852da46b8d9713837a47753dc"
+    },
+    "turn.tbi": {
+      "bytes": 455,
+      "sha256": "d83a558adad6accc6c570e6a8e4f7145a1a305af19e662dd31220552f1f39740"
+    },
+    "legal.tbi": {
+      "bytes": 4647,
+      "sha256": "5f30aaf9cb07f80e4b673f9144643df00c3c6c4ac3e0ee51527ab16ffe91f7f6"
+    },
+    "unmake.tbi": {
+      "bytes": 653,
+      "sha256": "7bdb65e4c7524948702c01f3024a17eec81cbeb727c4c733587742cd34e6b362"
+    },
+    "autoexec.m61": {
+      "bytes": 795,
+      "sha256": "e892f43ed9ad8ae4cdec6b87d5c55cc3867069030ad7a0d7aeff21126764fca8"
+    },
+    "threat.tbi": {
+      "bytes": 1862,
+      "sha256": "8fe97c01d107c265a971896c1c7106a3becbe6c95fee14a0f6a0f5dbde7eff2f"
+    },
+    "mobility.tbi": {
+      "bytes": 310,
+      "sha256": "58e782d4359fcec10c88a9bd3c0f8c4eb31f647310d3ffd969755c3c1041240b"
+    },
+    "init.tbi": {
+      "bytes": 707,
+      "sha256": "6e762e5997340d1a0d9048eb30a3bf0efa00c500cea05aaa08909a00f89ee932"
+    },
+    "rstep.tbi": {
+      "bytes": 416,
+      "sha256": "20e61e508f378124e465d5eb068d96aed760fa0240c369b3dd82e4daa61c61a4"
+    },
+    "castle.tbi": {
+      "bytes": 1184,
+      "sha256": "7df377af2ce7036a8a6d37068b692b99db0d1f5c511f7626a09f9ebe331a53ac"
+    },
+    "algorithm.md": {
+      "bytes": 746,
+      "sha256": "1f336161764f14824f318c921f5239e2ca74c1e9e574f5b684778fef2b9b3026"
+    },
+    "make.tbi": {
+      "bytes": 1030,
+      "sha256": "d9215bfcfedfe6329c18df6bbd147b7d479ffcd441f067a5ac48147605783769"
+    },
+    "game.tbi": {
+      "bytes": 1668,
+      "sha256": "1266fa7729cc0281cfcf88a93098937c2e9fd90eed8e332d665f20f9d58ee74c"
+    },
+    "rkey.tbi": {
+      "bytes": 575,
+      "sha256": "ebf80cb7f6b7a1e61b4637641d0fd0b4c72b97e15dfe7451a85d79a625b7abaa"
+    },
+    "eval.tbi": {
+      "bytes": 1478,
+      "sha256": "d2376a0fbcda14d0a30263cb007c3294af82fbdd31acfc31da4ceb86537aa378"
+    },
+    "claim.tbi": {
+      "bytes": 663,
+      "sha256": "19a1eb3eca81422f5d23560e90739f889a73a9ce610cd2e4e81d1c2761fadafe"
+    },
+    "rules.md": {
+      "bytes": 830,
+      "sha256": "af11d32f93808e26391a0c97a012e73a3b90105694e68ed6849ae6deec56e965"
+    },
+    "manual.md": {
+      "bytes": 877,
+      "sha256": "ff9bb8a3b2b49bb3bee690d89e9e552fabb1f7f41432bbb5ea7bdfde3edf6695"
+    },
+    "Turochamp320.FMK": {
+      "bytes": 7466,
+      "sha256": "bd12288a8c293155abe9047a87d77695655f12507423ec0cbb176dcf1c07f371"
+    },
+    "repeat.tbi": {
+      "bytes": 1096,
+      "sha256": "ea7dce8c659e27efdca41e6b8042343131223f0c3b0ea71c024008ff5ec58850"
+    },
+    "promote.tbi": {
+      "bytes": 408,
+      "sha256": "d5d4c795077669c2bd71a729c8c90aa760a16fd2aec8bfb02a011a91501b8a15"
+    },
+    "search.tbi": {
+      "bytes": 1775,
+      "sha256": "2c9767231dfdea5ab42b036fd46221eb1efc10b9c72279454c812a1b24eeea2a"
+    },
+    "__bench.tbi": {
+      "bytes": 18,
+      "sha256": "03fcfe777a2a14f7cb87fcc7393358dc4c2f3a60060657c3fb6cb5573ccb2052"
+    },
+    "__bench.m61": {
+      "bytes": 17,
+      "sha256": "4aa0b548df4dd9b1fddc1a4c5d123c5e25f6d70b4a38fa945b57cb8c34b47ed8"
+    }
+  },
+  "unchanged_limits": {
+    "f411_flash_headroom": 131072,
+    "global_ram": 49152,
+    "static_frame": 3072,
+    "guarded_stack": 16384,
+    "app_memory": 20480,
+    "flash_vm_page_cache": 32768
+  },
+  "verification": {
+    "logs": [
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/build-shipping-current.log",
+        "bytes": 28030,
+        "sha256": "1f48524367b7133e02fafc9c70445b1e86346433bd2b0ee67b7df2f15389b376"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/build-timing-current.log",
+        "bytes": 28026,
+        "sha256": "68091531b96c8fa49f803c8322a38a6ddcefc53c475878dabdbfd73ef9b117c5"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/build-apps-current.log",
+        "bytes": 7821,
+        "sha256": "bc459947d91933af6312abcd94e753847eba93b2ed53fa20d151567837042562"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/app-pool-current.log",
+        "bytes": 492,
+        "sha256": "28b2e3fa7a050c393b50d01b8ff1ab456ce785dd5a2e8d6798cf82c1004bb782"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/storage-input-arm-current.log",
+        "bytes": 122,
+        "sha256": "3598a1f2f6df67bbe2384aaa01c12e2a70ee7b1d935b54548ecf8dd7c104c09c"
+      },
+      {
+        "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/memcpy-arm-current.log",
+        "bytes": 66,
+        "sha256": "8cb0cfade0341cdc2426e5616522b586ed96c58ae59e4a137a0bd290146dfe32"
+      }
+    ],
+    "actual_memcpy_elf_checks": [
+      {
+        "cpu": "m4",
+        "elf_sha256": "96b92be61b1730343e4a96d1eb6d45dfa82508a42a649158f2a4f8b933260a31",
+        "results": [
+          {
+            "name": "memcpy",
+            "cases": 4837,
+            "bytes": 292,
+            "status": "PASS"
+          }
+        ]
+      }
+    ],
+    "all_seven_searches_420_nodes_e2e3_complete_board": true,
+    "profiler_stopped": true
+  },
+  "restoration": {
+    "exact": true,
+    "full_flash_bytes": 524288,
+    "full_flash_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+    "full_flash_crc32": "61CCEBFC",
+    "restored_build": "3AB3DD45",
+    "independent_before": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/hil-v2/recovery/independent-before.bin",
+      "bytes": 524288,
+      "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+    },
+    "independent_after": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/hil-v2/recovery/independent-restored.bin",
+      "bytes": 524288,
+      "sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1"
+    },
+    "original_files": 24,
+    "original_directories": 2,
+    "files_preserved": true,
+    "calculator_preserved": true,
+    "mini_touched": false,
+    "pico_touched": false
+  },
+  "rejected_attempt": {
+    "report": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/hil/report.json",
+      "bytes": 16807,
+      "sha256": "7b76659cea071595c835ac169cc8effb39376345e8c7af2f6181ee66bd013b9b"
+    },
+    "restored": true,
+    "not_used_for_statistics": true,
+    "reason": "Post-search node probe received an unsolicited M61 prompt instead of its reg reply. The full attempt was rejected and fully restored. Final harness requires the matching command echo and following prompt; firmware, game, timer boundaries and correctness gates unchanged."
+  },
+  "evidence": {
+    "report": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/hil-v2/report.json",
+      "bytes": 46993,
+      "sha256": "515bcf90486a08474e62d77d19b8896d31dc6643bd3887071042bd311d61caac"
+    },
+    "driver": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/hil-v2/driver-source.py",
+      "bytes": 14586,
+      "sha256": "50049e0cb79e05e2001eca2541ff9031017cba68bacad05a62c75bac74d1c976"
+    },
+    "build_driver": {
+      "path": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB/build.py",
+      "bytes": 1595,
+      "sha256": "63c264d18a3f7bb75176e4813f6912edabb0e2ab65cad2e450840887f7878f2b"
+    },
+    "ignored_workspace": "/Users/bolk/Projects/MK61S_MINI/tmp/chess-current-main-20261021.xLyBmB"
+  }
+}
