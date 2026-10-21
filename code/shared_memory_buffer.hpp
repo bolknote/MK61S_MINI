@@ -4,9 +4,9 @@
 
 namespace shared_memory {
 // DIRECT preserves the ordinary SRAM pointer contract. BLOCK may use an
-// indirect external device, falling back to SRAM. EXTERNAL never uses heap.
-enum class BufferAccess : u8 { DIRECT, BLOCK, EXTERNAL };
-enum class BufferStorage : u8 { NONE, INTERNAL, EXTERNAL };
+// indirect external device, falling back to SRAM. EXTERNAL_ONLY never uses heap.
+enum class BufferAccess : u8 { DIRECT, BLOCK, EXTERNAL_ONLY };
+enum class BufferStorage : u8 { NONE, INTERNAL, EXTERNAL_DEVICE };
 struct BufferBackend {
   usize capacity = 0;
   bool (*available)() = nullptr;

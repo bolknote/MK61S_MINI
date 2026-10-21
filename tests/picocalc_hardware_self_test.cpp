@@ -83,7 +83,7 @@ int main() {
     {
         shared_memory::Buffer large;
         assert(large.acquire(shared_memory::Owner::APPLICATION,6U*1024*1024,
-                             shared_memory::BufferAccess::EXTERNAL));
+                             shared_memory::BufferAccess::EXTERNAL_ONLY));
         assert(large.fill(0x79));
         external_cache::store_module(777,image.data(),image.size());
         external_cache::store_sector(77,sector.data());

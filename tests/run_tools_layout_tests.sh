@@ -24,16 +24,36 @@ expected="$(
     build_vm_program.cpp \
     build_vm_program.py \
     build-gcc.cmd \
+    certify_m0_asin_fast.py \
+    certify_m0_asin_nearest_root.py \
+    certify_m0_atan_fast.py \
+    certify_m0_cos70.py \
+    certify_m0_exp_fast.py \
+    certify_m0_ln_refine.py \
+    certify_m0_log10_fast.py \
+    certify_m0_pow_boundary.py \
+    certify_m0_pow_exact_small.py \
+    certify_m0_pow_fast.py \
+    certify_m0_pow_interval.py \
+    certify_m0_small_sine.py \
+    certify_m0_trig_inverse.py \
     font_preview_study.py \
     generate_compact_math_tables.py \
     generate_compact_math_vectors.py \
     generate_eliza_doctor.py \
     generate_highnoon_font.py \
     generate_m0_exp_table.py \
+    generate_m0_log10_constants.py \
+    generate_m0_log10_table.py \
+    generate_m0_log70_table.py \
     generate_m0_log_table.py \
+    generate_m0_pow_interval_table.py \
+    generate_m0_refine_tables.py \
+    generate_m0_rsqrt_table.py \
     generate_m0_sqrt64_table.py \
     generate_m0_sqrt_table.py \
     generate_m0_trig_table.py \
+    generate_m0_trig_checked_table.py \
     generate_picocalc_game_assets.py \
     generate_ui_fonts.py \
     install_arduino_dependencies.ps1 \
@@ -55,6 +75,7 @@ expected="$(
     mkc.cmd \
     model_vm_cache_packing.py \
     package_picocalc.py \
+    profile_qfplib_ln_checked.py \
     program_pack.py \
     qualify_vm_cache_trace.py \
     release-contract.json \
@@ -69,6 +90,7 @@ expected="$(
     seal-firmware.sh \
     seal_picocalc.py \
     sync_picocalc_clock.py \
+    vendor_m0_core_math.py \
     vm_program_builder.hpp |
     LC_ALL=C sort
 )"

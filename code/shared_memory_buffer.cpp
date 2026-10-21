@@ -59,17 +59,17 @@ bool Buffer::acquire(Owner owner, usize size, BufferAccess access) {
 }
 bool Buffer::acquire_cache(Owner owner, usize size, EvictionPrepare prepare) {
   if(!prepare) return false;
-  return acquire_impl(owner, size, BufferAccess::EXTERNAL, prepare);
+  return acquire_impl(owner, size, BufferAccess::EXTERNAL_ONLY, prepare);
 }
 bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, EvictionPrepare prepare) {
   if(!foreground() || transitioning || !size || owner == Owner::NONE || owner >= Owner::COUNT ||
-     access > BufferAccess::EXTERNAL || size > std::numeric_limits<usize>::max() - (ALIGNMENT - 1)) {
+     access > BufferAccess::EXTERNAL_ONLY || size > std::numeric_limits<usize>::max() - (ALIGNMENT - 1)) {
     increment(counters.failures); return false;
   }
   if(storage_ != BufferStorage::NONE)
     return ok() && owner_ == owner && size <= size_ && eviction_ == prepare &&
       (access != BufferAccess::DIRECT || data()) &&
-      (access != BufferAccess::EXTERNAL || storage_ == BufferStorage::EXTERNAL);
+      (access != BufferAccess::EXTERNAL_ONLY || storage_ == BufferStorage::EXTERNAL_DEVICE);
   const usize reserved = (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
   u32 at = UINT32_MAX;
   if(access != BufferAccess::DIRECT && available() && reserved <= backend.capacity) {
@@ -77,14 +77,14 @@ bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, Eviction
     while(at == UINT32_MAX && !prepare && reclaim_one()) at = gap(reserved);
   }
   if(at != UINT32_MAX) {
-    address_ = at; storage_ = BufferStorage::EXTERNAL;
+    address_ = at; storage_ = BufferStorage::EXTERNAL_DEVICE;
     Buffer** link = &external;
     while(*link && (*link)->address_ < at) link = &(*link)->next_;
     next_ = *link; *link = this;
     counters.external_used += reserved; ++counters.external_active;
     if(counters.external_used > counters.external_high_water) counters.external_high_water = counters.external_used;
   } else {
-    if(access == BufferAccess::EXTERNAL || prepare || !(memory_ = (u8*)std::malloc(size))) {
+    if(access == BufferAccess::EXTERNAL_ONLY || prepare || !(memory_ = (u8*)std::malloc(size))) {
       increment(counters.failures); return false;
     }
     storage_ = BufferStorage::INTERNAL; next_ = internal; internal = this;
@@ -98,15 +98,15 @@ bool Buffer::acquire_impl(Owner owner, usize size, BufferAccess access, Eviction
   return true;
 }
 bool Buffer::ok() const {
-  return storage_ == BufferStorage::INTERNAL || (storage_ == BufferStorage::EXTERNAL && available());
+  return storage_ == BufferStorage::INTERNAL || (storage_ == BufferStorage::EXTERNAL_DEVICE && available());
 }
 void Buffer::release_impl() {
   if(storage_ == BufferStorage::NONE) return;
-  Buffer** link = storage_ == BufferStorage::EXTERNAL ? &external : &internal;
+  Buffer** link = storage_ == BufferStorage::EXTERNAL_DEVICE ? &external : &internal;
   while(*link && *link != this) link = &(*link)->next_;
   if(*link != this) __builtin_trap();
   *link = next_;
-  if(storage_ == BufferStorage::EXTERNAL) {
+  if(storage_ == BufferStorage::EXTERNAL_DEVICE) {
     counters.external_used -= reserved_; --counters.external_active;
   } else {
     counters.internal_used -= size_; std::free(memory_);
@@ -196,7 +196,7 @@ bool validate_buffer_invariants() {
   }
   for(Buffer* p = external; p; p = p->next_) {
     if(++active > counters.active || p->memory_ || !p->size_ || !p->generation_ ||
-       p->storage_ != BufferStorage::EXTERNAL || p->owner_ == Owner::NONE || p->owner_ >= Owner::COUNT ||
+       p->storage_ != BufferStorage::EXTERNAL_DEVICE || p->owner_ == Owner::NONE || p->owner_ >= Owner::COUNT ||
        p->address_ < at || (p->address_ & (ALIGNMENT-1)) || p->size_ > p->reserved_ ||
        p->reserved_ > backend.capacity || p->address_ > backend.capacity - p->reserved_) return false;
     at = p->address_ + p->reserved_; external_used += p->reserved_; pinned += p->pins_; ++external_active;

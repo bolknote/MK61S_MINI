@@ -1,4 +1,7 @@
+// STM32duino exposes this analog-reference macro before firmware headers.
+#define EXTERNAL 0
 #include "../code/shared_memory.hpp"
+static_assert(EXTERNAL == 0, "Shared buffers must preserve Arduino's EXTERNAL macro");
 #include <array>
 #include <cassert>
 #include <cstdio>
@@ -43,7 +46,7 @@ int main() {
     assert(direct.data() && direct.storage() == BufferStorage::INTERNAL);
     assert(fallback.acquire(Owner::IMAGE_VIEWER, 321, BufferAccess::BLOCK));
     assert(fallback.data());
-    assert(!missing.acquire(Owner::APPLICATION, 32, BufferAccess::EXTERNAL));
+    assert(!missing.acquire(Owner::APPLICATION, 32, BufferAccess::EXTERNAL_ONLY));
     assert(direct.fill(0x73));
     std::array<u8, 8> out{};
     assert(direct.read(8, out.data(), out.size())); for(u8 b:out) assert(b==0x73);
@@ -63,9 +66,9 @@ int main() {
     assert(!a.acquire(Owner::NONE, 1)); assert(!a.acquire(Owner::APPLICATION, 0));
     assert(!a.acquire(Owner::APPLICATION, std::numeric_limits<usize>::max()));
     assert(a.acquire(Owner::APPLICATION, 3001, BufferAccess::BLOCK));
-    assert(!a.data() && a.storage()==BufferStorage::EXTERNAL);
-    assert(b.acquire(Owner::IMAGE_VIEWER, 70001, BufferAccess::EXTERNAL));
-    assert(c.acquire(Owner::MARKDOWN_VIEWER, 32777, BufferAccess::EXTERNAL));
+    assert(!a.data() && a.storage()==BufferStorage::EXTERNAL_DEVICE);
+    assert(b.acquire(Owner::IMAGE_VIEWER, 70001, BufferAccess::EXTERNAL_ONLY));
+    assert(c.acquire(Owner::MARKDOWN_VIEWER, 32777, BufferAccess::EXTERNAL_ONLY));
     assert(a.fill(0x11) && b.fill(0x22) && c.fill(0x33));
     const auto before=buffer_statistics();
     assert(b.reset()); assert(buffer_statistics().external_largest==before.external_largest);
@@ -99,13 +102,13 @@ int main() {
     Buffer optional, user; cache=&optional;
     assert(optional.acquire_cache(Owner::LOADABLE_MODULE, memory.size(), evict));
     reject_eviction=true;
-    assert(!user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL));
+    assert(!user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL_ONLY));
     reject_eviction=false;
     {
       BufferWindow window; assert(window.acquire(optional, 0, 32));
-      assert(!user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL));
+      assert(!user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL_ONLY));
     }
-    assert(user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL));
+    assert(user.acquire(Owner::APPLICATION, 1024, BufferAccess::EXTERNAL_ONLY));
     assert(evicted==1 && !optional.ok() && optional.size()==0 && user.ok());
     assert(optional.acquire_cache(Owner::LOADABLE_MODULE, memory.size()-1024, evict));
     assert(buffer_statistics().external_used==memory.size());

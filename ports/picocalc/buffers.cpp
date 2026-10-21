@@ -33,7 +33,7 @@ TestResult self_test(void (*service)()) {
     Buffer direct,large;
     constexpr u32 size=1024U*1024,allocation=6U*1024*1024;
     if(!direct.acquire(Owner::APPLICATION,512) || !direct.data() ||
-       !large.acquire(Owner::APPLICATION,allocation,BufferAccess::EXTERNAL) || large.data()) return result;
+       !large.acquire(Owner::APPLICATION,allocation,BufferAccess::EXTERNAL_ONLY) || large.data()) return result;
     u8 expected[1024],actual[1024];
     const u64 start=diagnostics::timestamp();
     for(u32 at=0;at<size;at+=sizeof(expected)) {
