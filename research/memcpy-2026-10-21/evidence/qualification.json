@@ -1,0 +1,48 @@
+{
+  "compiler": "GNU Arm GCC 14.2.1",
+  "hardware_timing": true,
+  "emulator_used_only_for_correctness": true,
+  "host_memory_tests": {
+    "command": "bash tests/run_system_memory_tests.sh",
+    "status": "PASS",
+    "backends": 3,
+    "asan_ubsan": true
+  },
+  "builds": {
+    "f411-stop-classic-v3-uc1609": {
+      "status": "PASS",
+      "image_bytes": 374448,
+      "flash_capacity": 524288,
+      "flash_free": 149840,
+      "required_free": 131072,
+      "max_stack_frame": 1928,
+      "stack_frame_limit": 5120
+    },
+    "f401-capability-ws-usb": {
+      "status": "PASS",
+      "image_bytes": 245980,
+      "flash_capacity": 262144,
+      "flash_free": 16164,
+      "required_free": 512,
+      "max_stack_frame": 1304,
+      "stack_frame_limit": 2048
+    },
+    "picocalc-pico-h": {
+      "status": "PASS",
+      "notes": "Built current shared working tree, including unrelated changes. Not installed on device. Final memcpy/runtime/memset link checked in the separate qualification report."
+    }
+  },
+  "source_sha256": {
+    "code/memory_copy_arm.h": "c4a3493c80755735016414062d4dd342b672838d7ad6f58c5d040f88c061e167",
+    "code/memcpy_m0.inc": "bb062c308799908bb20b2fd7a954c19e53818691e88c16c90e28f3674910e175",
+    "code/memcpy_m4.inc": "4dc278442328680058e7c6103ca31e5e30eb5c0d0868706461cc9ae466247c60",
+    "code/system_memory.c": "de8e71705c8582bf1526723cba3443aa5f932a9678186c05cd3eff5fc9709961",
+    "sdk/portable/memory.c": "bc3f2cdd630ba405905489ed00e3d953ce92d4ec4ea5ec56131c30eed408577a",
+    "ports/picocalc/memory.c": "abe8f570d563ab7f0e645c354d106ea141e19f2cd66963a677ab64b690c25c97",
+    "ports/picocalc/memory_fill.S": "6d10acf56b1180dd45e33139c08024e92e4a0e2fd92ed16056729e7ffbf94cf3",
+    "tests/system_memcpy_arm_self_test.py": "34fe1ee554bdf54984031266ad7e09f06588a48fcfb440861bad708ba1855525",
+    "tests/picocalc_memory_arm_self_test.py": "730f4719e3835ee7ce42c68bfc6c2c1a670898b82f4b34b763818ed578a4bc5b",
+    "research/memcpy-2026-10-21/candidates.S": "0f54dd486b3ab1447689d7986bd3294d9ac7ee05289df7f44b6648551bc64a2d",
+    "research/memcpy-2026-10-21/benchmark.c": "cb4ad7463a803fdc970f0c557bcad1b4d5826d97193e456023c6b93f7590a745"
+  }
+}

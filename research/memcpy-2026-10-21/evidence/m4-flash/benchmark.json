@@ -1,0 +1,6 @@
+{
+  "target": "stm32",
+  "shared": false,
+  "directory": "/MCPY-FL",
+  "app_sha256": "17f7dda9289e8e542284636ca31876bb3c4739c30006e01f470147f7e35f5ddc"
+}

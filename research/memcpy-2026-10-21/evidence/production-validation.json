@@ -1,0 +1,116 @@
+[
+  {
+    "cpu": "m0",
+    "elf_sha256": "23f5f63e4e7159882cad295328faa7bd51117401a048680fa069830e6e9dbab9",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 568,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "02e683cb21f1489ccb6e5659e3d312d30b5196da4e58a1816449194d1dc4ec16",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 568,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "6f4e5e60e1615efe6b12b13fc03caa08a8e741ca09faab5594a5a8533b5e1f45",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 292,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "e994741f31a87757f2ac1a1692cd8b8c282eee33ca3f31bfd5b2ffb60a5f5948",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 292,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "51f11c24c872aeaae3216fe70816a6fd6b2acb0fcb6ef7b506491249824dd667",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 292,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "e994741f31a87757f2ac1a1692cd8b8c282eee33ca3f31bfd5b2ffb60a5f5948",
+    "results": [
+      {
+        "name": "memcpy",
+        "cases": 4837,
+        "bytes": 292,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "2a0647a63945b100bb00c225d267d4f5b78ad06755e8404b757301d30849c25a",
+    "results": [
+      {
+        "name": "__wrap_memcpy",
+        "cases": 4837,
+        "bytes": 568,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": false,
+    "eabi_aliases": "PASS"
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "5edbac5432f06b479ff431c13e3200f62ebc25518ef9215f7547ca5d4ddf4085",
+    "results": [
+      {
+        "name": "__wrap_memcpy",
+        "cases": 4837,
+        "bytes": 568,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": true,
+    "eabi_aliases": "PASS"
+  }
+]

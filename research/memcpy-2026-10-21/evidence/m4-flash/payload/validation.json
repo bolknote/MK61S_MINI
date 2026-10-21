@@ -1,0 +1,30 @@
+{
+  "cpu": "m4",
+  "elf_sha256": "80e3397430e955cac3ca37bf95ff9406f6f8013ca0d31c68feff4886b487b45c",
+  "results": [
+    {
+      "name": "baseline",
+      "cases": 4837,
+      "bytes": 204,
+      "status": "PASS"
+    },
+    {
+      "name": "own16",
+      "cases": 4837,
+      "bytes": 292,
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "cases": 4837,
+      "bytes": 292,
+      "status": "PASS"
+    },
+    {
+      "name": "memcpy",
+      "cases": 4837,
+      "bytes": 292,
+      "status": "PASS"
+    }
+  ]
+}

@@ -5,9 +5,12 @@
 #include "memory_word_ops.h"
 
 #ifndef MK61_APP_SHARED_RUNTIME
+#include "memory_copy_arm.h"
+#ifndef MK61_ARM_MEMCPY
 void* memcpy(void* dst, const void* src, size_t size) {
   return mk61_memory_copy(dst, src, size);
 }
+#endif
 
 #if defined(__ARM_ARCH_6M__) && defined(__GNUC__) && !defined(__clang__)
 /* Keep the measured M0+ function at the public entry: a C forwarding wrapper

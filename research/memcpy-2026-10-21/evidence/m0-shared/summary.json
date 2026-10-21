@@ -1,0 +1,6755 @@
+{
+  "cpu": "m0",
+  "cases": 256,
+  "runs": 3,
+  "correctness_checks": 108816,
+  "rows": [
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.7001953125,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 11.04736328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 15.0146484375,
+        "own64": 6.9580078125,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 11.04736328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 6.9580078125,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 11.04736328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 11.04736328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 20.952257394914376,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 13.038401660612351,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 29.060716139076284,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.919564089257914
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 20.952257394914376,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 42.032967032967036,
+        "resident": 48.07692307692308,
+        "runtime": 56.043956043956044,
+        "selected_runtime": 46.97802197802198,
+        "own64": 39.010989010989015,
+        "sdk": 46.97802197802198,
+        "rom_sram": 42.032967032967036
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 68.95604395604396,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 62.91208791208791,
+        "resident": 69.04761904761905,
+        "runtime": 77.10622710622711,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 88.91941391941391,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 54.94505494505494,
+        "resident": 60.989010989010985,
+        "runtime": 69.04761904761905,
+        "selected_runtime": 65.01831501831502,
+        "own64": 56.959706959706956,
+        "sdk": 65.01831501831502,
+        "rom_sram": 55.03663003663004
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 68.95604395604396,
+        "runtime": 76.92307692307692,
+        "selected_runtime": 75.0915750915751,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 66.94139194139194,
+        "sdk": 74.9084249084249,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 50.91575091575091,
+        "resident": 56.959706959706956,
+        "runtime": 65.01831501831502,
+        "selected_runtime": 59.98168498168498,
+        "own64": 51.92307692307692,
+        "sdk": 59.98168498168498,
+        "rom_sram": 51.00732600732601
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.1025641025641,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.095238095238095
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 0,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 56.959706959706956,
+        "resident": 63.00366300366301,
+        "runtime": 71.06227106227107,
+        "selected_runtime": 63.095238095238095,
+        "own64": 55.03663003663004,
+        "sdk": 63.00366300366301,
+        "rom_sram": 57.05128205128205
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 47.9736328125,
+        "resident": 53.955078125,
+        "runtime": 62.01171875,
+        "selected_runtime": 56.0302734375,
+        "own64": 47.9736328125,
+        "sdk": 56.0302734375,
+        "rom_sram": 47.9736328125
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 60.05859375,
+        "resident": 66.0400390625,
+        "runtime": 73.974609375,
+        "selected_runtime": 69.9462890625,
+        "own64": 62.01171875,
+        "sdk": 70.068359375,
+        "rom_sram": 60.05859375
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 132.9345703125,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 118.896484375
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 118.896484375
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 56.0302734375,
+        "resident": 62.01171875,
+        "runtime": 70.068359375,
+        "selected_runtime": 65.0634765625,
+        "own64": 57.0068359375,
+        "sdk": 65.0634765625,
+        "rom_sram": 56.0302734375
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 132.9345703125,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 132.9345703125,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.1220703125,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 0,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 62.01171875,
+        "resident": 67.9931640625,
+        "runtime": 76.0498046875,
+        "selected_runtime": 67.9931640625,
+        "own64": 60.05859375,
+        "sdk": 67.9931640625,
+        "rom_sram": 62.01171875
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 87.10268948655256,
+        "resident": 92.90953545232274,
+        "runtime": 101.16136919315403,
+        "selected_runtime": 88.9364303178484,
+        "own64": 80.99022004889976,
+        "sdk": 88.9364303178484,
+        "rom_sram": 87.10268948655256
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 216.0757946210269,
+        "own64": 208.12958435207824,
+        "sdk": 216.0757946210269,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 454.7677261613692,
+        "resident": 461.18581907090464,
+        "runtime": 468.82640586797066,
+        "selected_runtime": 212.10268948655258,
+        "own64": 204.1564792176039,
+        "sdk": 212.10268948655258,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 205.07334963325184,
+        "own64": 197.1271393643032,
+        "sdk": 205.07334963325184,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 201.1002444987775,
+        "own64": 193.15403422982885,
+        "sdk": 201.1002444987775,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 96.88264058679707,
+        "resident": 102.99511002444987,
+        "runtime": 110.94132029339853,
+        "selected_runtime": 110.02444987775061,
+        "own64": 102.07823960880195,
+        "sdk": 110.02444987775061,
+        "rom_sram": 97.1882640586797
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 212.10268948655258,
+        "own64": 203.85085574572128,
+        "sdk": 212.10268948655258,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 208.12958435207824,
+        "own64": 200.1833740831296,
+        "sdk": 208.12958435207824,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 205.99022004889974,
+        "own64": 198.0440097799511,
+        "sdk": 205.99022004889974,
+        "rom_sram": 455.3789731051345
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 454.7677261613692,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 233.19070904645477,
+        "own64": 224.93887530562347,
+        "sdk": 232.88508557457212,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 93.21515892420538,
+        "resident": 99.32762836185819,
+        "runtime": 106.96821515892421,
+        "selected_runtime": 105.13447432762837,
+        "own64": 97.1882640586797,
+        "sdk": 105.13447432762837,
+        "rom_sram": 93.21515892420538
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 210.26894865525674,
+        "own64": 202.01711491442543,
+        "sdk": 209.96332518337408,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.74327628361857,
+        "selected_runtime": 207.82396088019559,
+        "own64": 199.87775061124694,
+        "sdk": 208.12958435207824,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 468.82640586797066,
+        "selected_runtime": 238.08068459657702,
+        "own64": 230.13447432762837,
+        "sdk": 238.08068459657702,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 231.05134474327627,
+        "own64": 223.10513447432763,
+        "sdk": 231.05134474327627,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 0,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 99.02200488997555,
+        "resident": 105.13447432762837,
+        "runtime": 113.08068459657702,
+        "selected_runtime": 108.19070904645477,
+        "own64": 100.24449877750611,
+        "sdk": 108.19070904645477,
+        "rom_sram": 99.02200488997555
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 243.75,
+        "resident": 248.95833333333334,
+        "runtime": 257.2916666666667,
+        "selected_runtime": 217.70833333333334,
+        "own64": 210.41666666666666,
+        "sdk": 218.75,
+        "rom_sram": 243.75
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 588.5416666666666,
+        "own64": 580.2083333333334,
+        "sdk": 588.5416666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 584.375,
+        "own64": 576.0416666666666,
+        "sdk": 584.375,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1800.0,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 577.0833333333334,
+        "own64": 569.7916666666666,
+        "sdk": 577.0833333333334,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 572.9166666666666,
+        "own64": 564.5833333333334,
+        "sdk": 573.9583333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 253.125,
+        "resident": 259.375,
+        "runtime": 266.6666666666667,
+        "selected_runtime": 240.625,
+        "own64": 232.29166666666666,
+        "sdk": 240.625,
+        "rom_sram": 253.125
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 584.375,
+        "own64": 576.0416666666666,
+        "sdk": 584.375,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 580.2083333333334,
+        "own64": 572.9166666666666,
+        "sdk": 580.2083333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 578.125,
+        "own64": 570.8333333333334,
+        "sdk": 578.125,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 605.2083333333334,
+        "own64": 596.875,
+        "sdk": 605.2083333333334,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 250.0,
+        "resident": 255.20833333333334,
+        "runtime": 262.5,
+        "selected_runtime": 235.41666666666666,
+        "own64": 227.08333333333334,
+        "sdk": 235.41666666666666,
+        "rom_sram": 250.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1812.5,
+        "selected_runtime": 582.2916666666666,
+        "own64": 573.9583333333334,
+        "sdk": 582.2916666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 580.2083333333334,
+        "own64": 572.9166666666666,
+        "sdk": 580.2083333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1812.5,
+        "selected_runtime": 610.4166666666666,
+        "own64": 602.0833333333334,
+        "sdk": 609.375,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 603.125,
+        "own64": 594.7916666666666,
+        "sdk": 603.125,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 0,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 255.20833333333334,
+        "resident": 261.4583333333333,
+        "runtime": 268.75,
+        "selected_runtime": 238.54166666666666,
+        "own64": 230.20833333333334,
+        "sdk": 238.54166666666666,
+        "rom_sram": 255.20833333333334
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 3367.1875,
+        "resident": 3375.0,
+        "runtime": 3382.8125,
+        "selected_runtime": 2804.6875,
+        "own64": 2796.875,
+        "sdk": 2804.6875,
+        "rom_sram": 3367.1875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8031.25,
+        "own64": 8039.0625,
+        "sdk": 8031.25,
+        "rom_sram": 28671.875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8039.0625,
+        "own64": 8039.0625,
+        "sdk": 8031.25,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28687.5,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8023.4375,
+        "own64": 8023.4375,
+        "sdk": 8015.625,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8015.625,
+        "own64": 8007.8125,
+        "sdk": 8015.625,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 3375.0,
+        "resident": 3382.8125,
+        "runtime": 3390.625,
+        "selected_runtime": 2820.3125,
+        "own64": 2820.3125,
+        "sdk": 2828.125,
+        "rom_sram": 3375.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 40976.5625,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8031.25,
+        "own64": 8039.0625,
+        "sdk": 8031.25,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8023.4375,
+        "own64": 8015.625,
+        "sdk": 8046.875,
+        "rom_sram": 28687.5
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8039.0625,
+        "own64": 8031.25,
+        "sdk": 8015.625,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 40976.5625,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8046.875,
+        "own64": 8062.5,
+        "sdk": 8046.875,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 40976.5625,
+        "rom": 3367.1875,
+        "resident": 3375.0,
+        "runtime": 3382.8125,
+        "selected_runtime": 2820.3125,
+        "own64": 2812.5,
+        "sdk": 2820.3125,
+        "rom_sram": 3375.0
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28679.6875,
+        "runtime": 28695.3125,
+        "selected_runtime": 8023.4375,
+        "own64": 8015.625,
+        "sdk": 8039.0625,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8039.0625,
+        "own64": 8039.0625,
+        "sdk": 8023.4375,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 40976.5625,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8070.3125,
+        "own64": 8070.3125,
+        "sdk": 8054.6875,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 40968.75,
+        "rom": 28679.6875,
+        "resident": 28687.5,
+        "runtime": 28695.3125,
+        "selected_runtime": 8046.875,
+        "own64": 8054.6875,
+        "sdk": 8046.875,
+        "rom_sram": 28679.6875
+      }
+    },
+    {
+      "source": 0,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 40976.5625,
+        "rom": 3375.0,
+        "resident": 3382.8125,
+        "runtime": 3390.625,
+        "selected_runtime": 2820.3125,
+        "own64": 2812.5,
+        "sdk": 2820.3125,
+        "rom_sram": 3375.0
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 9.09423828125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.63916015625,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 6.9580078125,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 16.9677734375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 6.9580078125,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 11.04736328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 9.09423828125,
+        "rom": 11.04736328125,
+        "resident": 17.08984375,
+        "runtime": 25.08544921875,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 11.04736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.63916015625,
+        "runtime": 25.0244140625,
+        "selected_runtime": 14.95361328125,
+        "own64": 7.01904296875,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 9.033203125,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 24.96337890625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 15.0146484375,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 0,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 8.97216796875,
+        "rom": 10.986328125,
+        "resident": 17.02880859375,
+        "runtime": 25.0244140625,
+        "selected_runtime": 15.0146484375,
+        "own64": 7.01904296875,
+        "sdk": 14.95361328125,
+        "rom_sram": 10.986328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 29.060716139076284,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.081992734820965,
+        "runtime": 29.060716139076284,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 20.952257394914376,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 18.94135962636222,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 15.049299429164504,
+        "resident": 21.01712506486767,
+        "runtime": 29.060716139076284,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 15.049299429164504
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 19.071094966268813,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 15.049299429164504,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 21.01712506486767,
+        "own64": 13.038401660612351,
+        "sdk": 21.01712506486767,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 1,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 19.006227296315515,
+        "rom": 14.984431759211208,
+        "resident": 21.01712506486767,
+        "runtime": 28.99584846912299,
+        "selected_runtime": 20.952257394914376,
+        "own64": 12.973533990659055,
+        "sdk": 20.952257394914376,
+        "rom_sram": 14.984431759211208
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 23.056844547563806,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 38.935614849187935,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 37.05046403712297,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 23.056844547563806,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 30.959976798143853,
+        "rom_sram": 23.056844547563806
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 22.984338747099766,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 31.03248259860789,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 22.984338747099766
+      }
+    },
+    {
+      "source": 1,
+      "size": 3,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 39.00812064965197,
+        "rom": 23.056844547563806,
+        "resident": 29.00232018561485,
+        "runtime": 36.977958236658935,
+        "selected_runtime": 30.959976798143853,
+        "own64": 22.984338747099766,
+        "sdk": 31.03248259860789,
+        "rom_sram": 23.056844547563806
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.1025641025641,
+        "rom": 42.032967032967036,
+        "resident": 47.985347985347985,
+        "runtime": 55.95238095238095,
+        "selected_runtime": 46.97802197802198,
+        "own64": 39.010989010989015,
+        "sdk": 46.97802197802198,
+        "rom_sram": 42.582417582417584
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 68.95604395604396,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.10622710622711,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 88.91941391941391,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 55.03663003663004,
+        "resident": 61.08058608058608,
+        "runtime": 69.04761904761905,
+        "selected_runtime": 65.01831501831502,
+        "own64": 57.05128205128205,
+        "sdk": 65.01831501831502,
+        "rom_sram": 55.03663003663004
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.10622710622711,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.1025641025641,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 66.94139194139194,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0915750915751,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0915750915751,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 51.00732600732601,
+        "resident": 57.05128205128205,
+        "runtime": 65.01831501831502,
+        "selected_runtime": 59.98168498168498,
+        "own64": 52.014652014652015,
+        "sdk": 59.98168498168498,
+        "rom_sram": 51.00732600732601
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.095238095238095,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.01465201465201,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 63.00366300366301
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 63.00366300366301,
+        "resident": 69.04761904761905,
+        "runtime": 77.10622710622711,
+        "selected_runtime": 75.0,
+        "own64": 67.03296703296704,
+        "sdk": 75.0,
+        "rom_sram": 62.91208791208791
+      }
+    },
+    {
+      "source": 1,
+      "size": 8,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 89.01098901098901,
+        "rom": 56.959706959706956,
+        "resident": 63.00366300366301,
+        "runtime": 70.97069597069597,
+        "selected_runtime": 63.00366300366301,
+        "own64": 54.94505494505494,
+        "sdk": 63.00366300366301,
+        "rom_sram": 56.959706959706956
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 47.9736328125,
+        "resident": 53.955078125,
+        "runtime": 62.01171875,
+        "selected_runtime": 56.0302734375,
+        "own64": 47.9736328125,
+        "sdk": 56.0302734375,
+        "rom_sram": 47.9736328125
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 131.103515625,
+        "own64": 122.9248046875,
+        "sdk": 131.103515625,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 169.189453125,
+        "rom": 60.05859375,
+        "resident": 66.0400390625,
+        "runtime": 73.974609375,
+        "selected_runtime": 70.068359375,
+        "own64": 62.01171875,
+        "sdk": 70.068359375,
+        "rom_sram": 60.05859375
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 118.896484375,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 55.908203125,
+        "resident": 62.01171875,
+        "runtime": 70.068359375,
+        "selected_runtime": 64.94140625,
+        "own64": 57.0068359375,
+        "sdk": 65.0634765625,
+        "rom_sram": 56.0302734375
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 122.9248046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 169.0673828125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 119.0185546875,
+        "resident": 125.0,
+        "runtime": 133.056640625,
+        "selected_runtime": 130.9814453125,
+        "own64": 123.046875,
+        "sdk": 130.9814453125,
+        "rom_sram": 119.0185546875
+      }
+    },
+    {
+      "source": 1,
+      "size": 16,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 168.9453125,
+        "rom": 62.01171875,
+        "resident": 67.9931640625,
+        "runtime": 76.0498046875,
+        "selected_runtime": 67.9931640625,
+        "own64": 60.05859375,
+        "sdk": 67.9931640625,
+        "rom_sram": 62.01171875
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 86.79706601466992,
+        "resident": 92.90953545232274,
+        "runtime": 100.85574572127139,
+        "selected_runtime": 89.24205378973105,
+        "own64": 80.99022004889976,
+        "sdk": 88.9364303178484,
+        "rom_sram": 87.10268948655256
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 216.0757946210269,
+        "own64": 208.12958435207824,
+        "sdk": 216.0757946210269,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 212.10268948655258,
+        "own64": 203.85085574572128,
+        "sdk": 212.10268948655258,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 205.07334963325184,
+        "own64": 197.1271393643032,
+        "sdk": 205.37897310513446,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 201.1002444987775,
+        "own64": 192.8484107579462,
+        "sdk": 201.1002444987775,
+        "rom_sram": 454.7677261613692
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 97.1882640586797,
+        "resident": 102.99511002444987,
+        "runtime": 110.94132029339853,
+        "selected_runtime": 110.02444987775061,
+        "own64": 102.07823960880195,
+        "sdk": 110.02444987775061,
+        "rom_sram": 96.88264058679707
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 212.10268948655258,
+        "own64": 203.85085574572128,
+        "sdk": 212.10268948655258,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 468.82640586797066,
+        "selected_runtime": 207.82396088019559,
+        "own64": 199.87775061124694,
+        "sdk": 208.12958435207824,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 455.07334963325184,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 205.99022004889974,
+        "own64": 198.0440097799511,
+        "sdk": 205.99022004889974,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 648.8386308068459,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 232.88508557457212,
+        "own64": 225.24449877750612,
+        "sdk": 232.88508557457212,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 92.90953545232274,
+        "resident": 99.02200488997555,
+        "runtime": 106.96821515892421,
+        "selected_runtime": 105.13447432762837,
+        "own64": 97.1882640586797,
+        "sdk": 105.13447432762837,
+        "rom_sram": 93.21515892420538
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.4376528117359,
+        "selected_runtime": 210.26894865525674,
+        "own64": 202.01711491442543,
+        "sdk": 209.96332518337408,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 208.12958435207824,
+        "own64": 200.1833740831296,
+        "sdk": 208.12958435207824,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 461.18581907090464,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 238.08068459657702,
+        "own64": 230.13447432762837,
+        "sdk": 238.08068459657702,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 455.07334963325184,
+        "resident": 460.880195599022,
+        "runtime": 469.1320293398533,
+        "selected_runtime": 231.05134474327627,
+        "own64": 223.10513447432763,
+        "sdk": 231.05134474327627,
+        "rom_sram": 455.07334963325184
+      }
+    },
+    {
+      "source": 1,
+      "size": 64,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 649.1442542787286,
+        "rom": 99.02200488997555,
+        "resident": 105.13447432762837,
+        "runtime": 113.08068459657702,
+        "selected_runtime": 108.19070904645477,
+        "own64": 105.13447432762837,
+        "sdk": 113.08068459657702,
+        "rom_sram": 99.32762836185819
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 242.70833333333334,
+        "resident": 248.95833333333334,
+        "runtime": 257.2916666666667,
+        "selected_runtime": 217.70833333333334,
+        "own64": 210.41666666666666,
+        "sdk": 218.75,
+        "rom_sram": 243.75
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 588.5416666666666,
+        "own64": 580.2083333333334,
+        "sdk": 588.5416666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 584.375,
+        "own64": 576.0416666666666,
+        "sdk": 584.375,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 577.0833333333334,
+        "own64": 568.75,
+        "sdk": 577.0833333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 573.9583333333334,
+        "own64": 564.5833333333334,
+        "sdk": 572.9166666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 253.125,
+        "resident": 259.375,
+        "runtime": 267.7083333333333,
+        "selected_runtime": 240.625,
+        "own64": 232.29166666666666,
+        "sdk": 240.625,
+        "rom_sram": 253.125
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 584.375,
+        "own64": 576.0416666666666,
+        "sdk": 584.375,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 580.2083333333334,
+        "own64": 571.875,
+        "sdk": 580.2083333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 578.125,
+        "own64": 569.7916666666666,
+        "sdk": 578.125,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 605.2083333333334,
+        "own64": 596.875,
+        "sdk": 605.2083333333334,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 250.0,
+        "resident": 255.20833333333334,
+        "runtime": 263.5416666666667,
+        "selected_runtime": 235.41666666666666,
+        "own64": 227.08333333333334,
+        "sdk": 235.41666666666666,
+        "rom_sram": 272.9166666666667
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 582.2916666666666,
+        "own64": 573.9583333333334,
+        "sdk": 582.2916666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 580.2083333333334,
+        "own64": 571.875,
+        "sdk": 580.2083333333334,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 610.4166666666666,
+        "own64": 602.0833333333334,
+        "sdk": 610.4166666666666,
+        "rom_sram": 1798.9583333333333
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 2569.7916666666665,
+        "rom": 1798.9583333333333,
+        "resident": 1805.2083333333333,
+        "runtime": 1813.5416666666667,
+        "selected_runtime": 603.125,
+        "own64": 594.7916666666666,
+        "sdk": 603.125,
+        "rom_sram": 1800.0
+      }
+    },
+    {
+      "source": 1,
+      "size": 256,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 2568.75,
+        "rom": 255.20833333333334,
+        "resident": 260.4166666666667,
+        "runtime": 268.75,
+        "selected_runtime": 238.54166666666666,
+        "own64": 230.20833333333334,
+        "sdk": 238.54166666666666,
+        "rom_sram": 255.20833333333334
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 41046.875,
+        "rom": 3531.25,
+        "resident": 3445.3125,
+        "runtime": 3468.75,
+        "selected_runtime": 2882.8125,
+        "own64": 2859.375,
+        "sdk": 2875.0,
+        "rom_sram": 3453.125
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 41078.125,
+        "rom": 28828.125,
+        "resident": 28789.0625,
+        "runtime": 28945.3125,
+        "selected_runtime": 8140.625,
+        "own64": 8125.0,
+        "sdk": 8132.8125,
+        "rom_sram": 28773.4375
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 41070.3125,
+        "rom": 28789.0625,
+        "resident": 28781.25,
+        "runtime": 28789.0625,
+        "selected_runtime": 8203.125,
+        "own64": 8140.625,
+        "sdk": 8164.0625,
+        "rom_sram": 28773.4375
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 0,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 41054.6875,
+        "rom": 28859.375,
+        "resident": 28804.6875,
+        "runtime": 28804.6875,
+        "selected_runtime": 8140.625,
+        "own64": 8164.0625,
+        "sdk": 8140.625,
+        "rom_sram": 28781.25
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 41054.6875,
+        "rom": 28781.25,
+        "resident": 28781.25,
+        "runtime": 28812.5,
+        "selected_runtime": 8187.5,
+        "own64": 8156.25,
+        "sdk": 8140.625,
+        "rom_sram": 28843.75
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 41023.4375,
+        "rom": 3476.5625,
+        "resident": 3437.5,
+        "runtime": 3546.875,
+        "selected_runtime": 2898.4375,
+        "own64": 2945.3125,
+        "sdk": 2906.25,
+        "rom_sram": 3414.0625
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 41062.5,
+        "rom": 28828.125,
+        "resident": 28796.875,
+        "runtime": 28789.0625,
+        "selected_runtime": 8195.3125,
+        "own64": 8125.0,
+        "sdk": 8148.4375,
+        "rom_sram": 28781.25
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 1,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 41062.5,
+        "rom": 28789.0625,
+        "resident": 28781.25,
+        "runtime": 28789.0625,
+        "selected_runtime": 8187.5,
+        "own64": 8148.4375,
+        "sdk": 8117.1875,
+        "rom_sram": 28820.3125
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 41140.625,
+        "rom": 28789.0625,
+        "resident": 28781.25,
+        "runtime": 28820.3125,
+        "selected_runtime": 8140.625,
+        "own64": 8187.5,
+        "sdk": 8117.1875,
+        "rom_sram": 28757.8125
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 41101.5625,
+        "rom": 28773.4375,
+        "resident": 28804.6875,
+        "runtime": 28820.3125,
+        "selected_runtime": 8203.125,
+        "own64": 8210.9375,
+        "sdk": 8148.4375,
+        "rom_sram": 28773.4375
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 41031.25,
+        "rom": 3476.5625,
+        "resident": 3437.5,
+        "runtime": 3429.6875,
+        "selected_runtime": 2906.25,
+        "own64": 3210.9375,
+        "sdk": 3179.6875,
+        "rom_sram": 3445.3125
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 2,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 41054.6875,
+        "rom": 28781.25,
+        "resident": 28781.25,
+        "runtime": 28945.3125,
+        "selected_runtime": 8156.25,
+        "own64": 8132.8125,
+        "sdk": 8140.625,
+        "rom_sram": 28789.0625
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 0,
+      "cycles": {
+        "baseline": 41132.8125,
+        "rom": 28835.9375,
+        "resident": 28804.6875,
+        "runtime": 28796.875,
+        "selected_runtime": 8148.4375,
+        "own64": 8156.25,
+        "sdk": 8132.8125,
+        "rom_sram": 28781.25
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 1,
+      "cycles": {
+        "baseline": 41054.6875,
+        "rom": 28765.625,
+        "resident": 28789.0625,
+        "runtime": 28875.0,
+        "selected_runtime": 8234.375,
+        "own64": 8218.75,
+        "sdk": 8156.25,
+        "rom_sram": 28773.4375
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 2,
+      "cycles": {
+        "baseline": 41070.3125,
+        "rom": 28843.75,
+        "resident": 28789.0625,
+        "runtime": 28820.3125,
+        "selected_runtime": 8179.6875,
+        "own64": 8171.875,
+        "sdk": 8156.25,
+        "rom_sram": 28765.625
+      }
+    },
+    {
+      "source": 1,
+      "size": 4096,
+      "src_offset": 3,
+      "dst_offset": 3,
+      "cycles": {
+        "baseline": 41039.0625,
+        "rom": 3453.125,
+        "resident": 3429.6875,
+        "runtime": 3437.5,
+        "selected_runtime": 2914.0625,
+        "own64": 2882.8125,
+        "sdk": 2875.0,
+        "rom_sram": 3460.9375
+      }
+    }
+  ],
+  "baseline": {
+    "median_ratio": 0.7525909583871879,
+    "worst_ratio": 1.106164383561644,
+    "best_ratio": 0.06845919145690313,
+    "slower_by_over_one_cycle": [
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 1,
+        "old": 8.97216796875,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 1,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 3,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 1,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 1,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 2,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 1,
+        "old": 19.006227296315515,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 1,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 3,
+        "old": 19.071094966268813,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 1,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 2,
+        "old": 19.071094966268813,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 1,
+        "old": 19.071094966268813,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 0,
+        "old": 8.97216796875,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 1,
+        "old": 9.09423828125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 1,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 3,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 0,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 1,
+        "old": 9.09423828125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 0,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 1,
+        "old": 8.97216796875,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 2,
+        "old": 9.033203125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 3,
+        "old": 8.97216796875,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 1,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 1,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 1,
+        "old": 19.071094966268813,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 2,
+        "old": 18.94135962636222,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 3,
+        "old": 19.071094966268813,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 0,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 1,
+        "old": 19.071094966268813,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 2,
+        "old": 19.006227296315515,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 3,
+        "old": 19.006227296315515,
+        "new": 20.952257394914376
+      }
+    ]
+  },
+  "rom": {
+    "median_ratio": 1.1005128205128205,
+    "worst_ratio": 1.4025974025974026,
+    "best_ratio": 0.27941176470588236,
+    "slower_by_over_one_cycle": [
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 2,
+        "old": 11.04736328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 0,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 2,
+        "old": 11.04736328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 1,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 0,
+        "old": 11.04736328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 2,
+        "old": 11.04736328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 2,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 2,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 0,
+        "src": 3,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 0,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 1,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 2,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 0,
+        "size": 1,
+        "src": 3,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 0,
+        "old": 42.032967032967036,
+        "new": 46.97802197802198
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 2,
+        "old": 62.91208791208791,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 0,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 1,
+        "old": 54.94505494505494,
+        "new": 65.01831501831502
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 2,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 0,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 74.9084249084249
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 2,
+        "old": 50.91575091575091,
+        "new": 59.98168498168498
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 0,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 2,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 3,
+        "old": 56.959706959706956,
+        "new": 63.00366300366301
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 0,
+        "old": 47.9736328125,
+        "new": 56.0302734375
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 0,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 1,
+        "old": 60.05859375,
+        "new": 70.068359375
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 0,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 2,
+        "old": 56.0302734375,
+        "new": 65.0634765625
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 0,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 3,
+        "old": 62.01171875,
+        "new": 67.9931640625
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 0,
+        "dst": 0,
+        "old": 87.10268948655256,
+        "new": 88.9364303178484
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 1,
+        "dst": 1,
+        "old": 96.88264058679707,
+        "new": 110.02444987775061
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 2,
+        "dst": 2,
+        "old": 93.21515892420538,
+        "new": 105.13447432762837
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 3,
+        "dst": 3,
+        "old": 99.02200488997555,
+        "new": 108.19070904645477
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 2,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 0,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 2,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 1,
+        "dst": 3,
+        "old": 11.04736328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 1,
+        "old": 11.04736328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 2,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 2,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 0,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 1,
+        "old": 10.986328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 2,
+        "old": 10.986328125,
+        "new": 15.0146484375
+      },
+      {
+        "source": 1,
+        "size": 0,
+        "src": 3,
+        "dst": 3,
+        "old": 10.986328125,
+        "new": 14.95361328125
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 0,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 1,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 2,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 2,
+        "dst": 3,
+        "old": 15.049299429164504,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 0,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 1,
+        "old": 14.984431759211208,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 2,
+        "old": 15.049299429164504,
+        "new": 21.01712506486767
+      },
+      {
+        "source": 1,
+        "size": 1,
+        "src": 3,
+        "dst": 3,
+        "old": 14.984431759211208,
+        "new": 20.952257394914376
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 1,
+        "old": 23.056844547563806,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 0,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 3,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 0,
+        "old": 23.056844547563806,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 1,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 2,
+        "old": 22.984338747099766,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 3,
+        "old": 23.056844547563806,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 0,
+        "old": 42.032967032967036,
+        "new": 46.97802197802198
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 2,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 0,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 1,
+        "old": 55.03663003663004,
+        "new": 65.01831501831502
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 2,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 0,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 2,
+        "old": 51.00732600732601,
+        "new": 59.98168498168498
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 3,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 0,
+        "old": 63.095238095238095,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 1,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 2,
+        "old": 63.00366300366301,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 3,
+        "old": 56.959706959706956,
+        "new": 63.00366300366301
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 0,
+        "old": 47.9736328125,
+        "new": 56.0302734375
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 131.103515625
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 0,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 1,
+        "old": 60.05859375,
+        "new": 70.068359375
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 0,
+        "old": 118.896484375,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 2,
+        "old": 55.908203125,
+        "new": 65.0634765625
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 3,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 0,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 1,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 2,
+        "old": 119.0185546875,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 3,
+        "old": 62.01171875,
+        "new": 67.9931640625
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 0,
+        "dst": 0,
+        "old": 86.79706601466992,
+        "new": 88.9364303178484
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 1,
+        "dst": 1,
+        "old": 97.1882640586797,
+        "new": 110.02444987775061
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 2,
+        "dst": 2,
+        "old": 92.90953545232274,
+        "new": 105.13447432762837
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 3,
+        "dst": 3,
+        "old": 99.02200488997555,
+        "new": 113.08068459657702
+      }
+    ]
+  },
+  "resident": {
+    "median_ratio": 1.0,
+    "worst_ratio": 1.0876494023904382,
+    "best_ratio": 0.27941176470588236,
+    "slower_by_over_one_cycle": [
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 0,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 1,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 2,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 3,
+        "src": 3,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 1,
+        "old": 68.95604395604396,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 0,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 0,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 1,
+        "old": 60.989010989010985,
+        "new": 65.01831501831502
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 1,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 0,
+        "old": 68.95604395604396,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 1,
+        "old": 69.04761904761905,
+        "new": 74.9084249084249
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 2,
+        "old": 56.959706959706956,
+        "new": 59.98168498168498
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 2,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 0,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 1,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 8,
+        "src": 3,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 0,
+        "old": 53.955078125,
+        "new": 56.0302734375
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 1,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 2,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 0,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 1,
+        "old": 66.0400390625,
+        "new": 70.068359375
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 2,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 1,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 1,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 2,
+        "old": 62.01171875,
+        "new": 65.0634765625
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 2,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 1,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 16,
+        "src": 3,
+        "dst": 2,
+        "old": 125.1220703125,
+        "new": 130.9814453125
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 1,
+        "dst": 1,
+        "old": 102.99511002444987,
+        "new": 110.02444987775061
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 2,
+        "dst": 2,
+        "old": 99.32762836185819,
+        "new": 105.13447432762837
+      },
+      {
+        "source": 0,
+        "size": 64,
+        "src": 3,
+        "dst": 3,
+        "old": 105.13447432762837,
+        "new": 108.19070904645477
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 0,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 1,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 2,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 0,
+        "old": 29.00232018561485,
+        "new": 30.959976798143853
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 1,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 2,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 3,
+        "src": 3,
+        "dst": 3,
+        "old": 29.00232018561485,
+        "new": 31.03248259860789
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 1,
+        "old": 68.95604395604396,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 0,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 0,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 1,
+        "old": 61.08058608058608,
+        "new": 65.01831501831502
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 1,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 0,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 1,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 2,
+        "old": 57.05128205128205,
+        "new": 59.98168498168498
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 2,
+        "dst": 3,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 0,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 1,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 8,
+        "src": 3,
+        "dst": 2,
+        "old": 69.04761904761905,
+        "new": 75.0
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 0,
+        "old": 53.955078125,
+        "new": 56.0302734375
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 1,
+        "old": 125.0,
+        "new": 131.103515625
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 2,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 0,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 1,
+        "old": 66.0400390625,
+        "new": 70.068359375
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 2,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 1,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 1,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 2,
+        "old": 62.01171875,
+        "new": 65.0634765625
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 2,
+        "dst": 3,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 0,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 1,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 16,
+        "src": 3,
+        "dst": 2,
+        "old": 125.0,
+        "new": 130.9814453125
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 1,
+        "dst": 1,
+        "old": 102.99511002444987,
+        "new": 110.02444987775061
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 2,
+        "dst": 2,
+        "old": 99.02200488997555,
+        "new": 105.13447432762837
+      },
+      {
+        "source": 1,
+        "size": 64,
+        "src": 3,
+        "dst": 3,
+        "old": 105.13447432762837,
+        "new": 113.08068459657702
+      }
+    ]
+  },
+  "runtime": {
+    "median_ratio": 0.8368092691622103,
+    "worst_ratio": 1.0,
+    "best_ratio": 0.27933569289409205,
+    "slower_by_over_one_cycle": []
+  }
+}

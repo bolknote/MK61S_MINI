@@ -1,0 +1,14 @@
+[
+  {
+    "cpu": "cortex-m0plus",
+    "slots": 26,
+    "status": "PASS",
+    "memset_trampoline_bytes": 12
+  },
+  {
+    "cpu": "cortex-m4",
+    "slots": 26,
+    "status": "PASS",
+    "memset_trampoline_bytes": 12
+  }
+]

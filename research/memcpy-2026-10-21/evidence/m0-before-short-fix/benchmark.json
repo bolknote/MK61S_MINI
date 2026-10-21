@@ -1,0 +1,6 @@
+{
+  "target": "picocalc-pico-h",
+  "shared": false,
+  "directory": "/MCPY-M0",
+  "app_sha256": "e3765a18183b190512bb31eaddce3287619bc5fc2463a1e3092afc03c1363a59"
+}

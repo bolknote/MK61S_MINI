@@ -9,9 +9,12 @@
 #endif
 #include "memory_word_ops.h"
 
+#include "memory_copy_arm.h"
+#ifndef MK61_ARM_MEMCPY
 void* memcpy(void* destination, const void* source, size_t size) {
   return mk61_memory_copy(destination, source, size);
 }
+#endif
 
 int memcmp(const void* left, const void* right, size_t size) {
   return mk61_memory_compare(left, right, size);

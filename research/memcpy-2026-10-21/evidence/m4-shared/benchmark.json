@@ -1,0 +1,7 @@
+{
+  "target": "stm32",
+  "shared": true,
+  "selected_runtime": true,
+  "directory": "/MCPY-FL",
+  "app_sha256": "9bb8d68aaac0325aba9604d26d56233b3f61a89e1fc04801e21c987b23eec169"
+}

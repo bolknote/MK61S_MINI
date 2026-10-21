@@ -114,6 +114,18 @@ pico_enable_stdio_usb(mk61s-picocalc-pico-h 1)
 # implements IEEE gradual underflow; keep SDK's interrupt-safe SIO divider.
 pico_set_float_implementation(mk61s-picocalc-pico-h compiler)
 pico_set_double_implementation(mk61s-picocalc-pico-h compiler)
+# SRAM memcpy is shared with standalone APPs; retain the measured ROM memset.
+# Use the SDK's supported implementation switch rather than overriding symbols
+# supplied by pico_mem_ops_pico.
+pico_add_library(pico_mem_ops_mk61)
+target_sources(pico_mem_ops_mk61 INTERFACE
+    "${CMAKE_CURRENT_LIST_DIR}/memory.c" "${CMAKE_CURRENT_LIST_DIR}/memory_fill.S")
+target_link_libraries(pico_mem_ops_mk61 INTERFACE pico_base pico_bootrom)
+foreach(MK61_MEM_OP memcpy memset __aeabi_memcpy __aeabi_memcpy4 __aeabi_memcpy8
+        __aeabi_memset __aeabi_memset4 __aeabi_memset8)
+    pico_wrap_function(pico_mem_ops_mk61 ${MK61_MEM_OP})
+endforeach()
+pico_set_mem_ops_implementation(mk61s-picocalc-pico-h mk61)
 pico_set_program_name(mk61s-picocalc-pico-h "MK61S PicoCalc Pico H")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/version.hpp")
 file(READ "${CMAKE_CURRENT_LIST_DIR}/version.hpp" MK61_VERSION_HEADER)
