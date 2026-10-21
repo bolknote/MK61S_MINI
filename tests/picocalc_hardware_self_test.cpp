@@ -22,6 +22,7 @@ int main() {
         assert(psram::read(offset,output.data(),output.size()) && output==input);
     }
     assert(psram::read(psram::CAPACITY,nullptr,0));
+    assert(psram::write(psram::CAPACITY,nullptr,0));
     assert(!psram::read(psram::CAPACITY,output.data(),1));
     assert(!psram::write(0xFFFFFFFF,input.data(),2));
     assert(!psram::write(0,nullptr,1));
@@ -96,6 +97,12 @@ int main() {
         }
         assert(shared_memory::validate_buffer_invariants());
     }
+    external_cache::invalidate_modules();external_cache::invalidate_sectors();
+    external_cache::store_module(778,image.data(),image.size());external_cache::store_sector(78,sector.data());
+    assert(external_cache::statistics().module_bytes==4U*1024*1024);
+    assert(external_cache::statistics().sector_bytes==4U*1024*1024);
+    assert(external_cache::module(778,decoded.data(),decoded.size(),used) && decoded==image);
+    assert(external_cache::sector(78,read.data()) && read==sector);
     assert(buffers::self_test().passed);
     assert(external_cache::init()); // MCU reset with retained powered PSRAM.
     assert(!external_cache::module(19,decoded.data(),decoded.size(),used));

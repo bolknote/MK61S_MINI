@@ -41,6 +41,7 @@ def main():
             assert marker in initial,(marker,initial)
         report['initial']=initial
         before={c:p.command(c) for c in ('reg','stk','hout','dump','pwd')}
+        assert abs(field(initial,'UART_BAUD')-115200)<500,initial
         (args.output/'snapshot.json').write_text(json.dumps(before,indent=2)+'\n')
         full=p.command('display test',timeout=120);report['full_psram']=full
         assert 'HARDWARE_TEST=PASS PSRAM_BYTES=8388608' in full and 'CRC32=CBF43926' in full,full
@@ -73,13 +74,27 @@ def main():
         before_irq=field(p.status(),'RTC_IRQS')
         for slot,*_ in alarm_backup:assert 'ALARM OK' in p.command('alarm '+slot+' in 4')
         start=len(p.text);assert 'ERROR' not in p.command('display off')
-        p.expect('SLEEP=1',timeout=3)
+        began=time.monotonic();sleeping=p.expect('SLEEP=1',timeout=3)
+        diagnostic_seconds=time.monotonic()-began
+        healthy(sleeping,report['build'])
+        assert 'POWER_MODE=SLEEP_USB SYS_HZ=48000000' in sleeping,sleeping
+        assert field(sleeping,'UART_SLEEP_HOLDS')>0,sleeping
+        assert abs(field(sleeping,'UART_BAUD')-115200)<500,sleeping
+        # A status reply must finish while the device is still asleep. Its
+        # temporary UART/DMA/SRAM clock lease must already be released.
+        mask=lambda text,name:int(re.search(r'\b'+name+r'=([0-9A-F]{8})',text)[1],16)
+        assert not mask(sleeping,'SLEEP_CLOCK0')&0xF0000030,sleeping
+        assert not mask(sleeping,'SLEEP_CLOCK1')&0x3C0,sleeping
+        report['sleep_uart']=dict(status_seconds=diagnostic_seconds,status=sleeping,
+            temporary_clock_lease_restored=True)
+        passed('UART diagnostics finish in 48 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask')
         end=time.monotonic()+10
         while time.monotonic()<end:
             p.pump(.1)
             if all(('RTC_ALARM='+a[0]).encode() in p.text[start:] for a in alarm_backup):break
         else:raise AssertionError(('RTC alarm IRQ did not wake',bytes(p.text[start:])))
         awake=p.expect('SLEEP=0','LCD_BKL=240',timeout=5)
+        assert abs(field(awake,'UART_BAUD')-115200)<500,awake
         assert field(awake,'RTC_IRQS')>before_irq,awake
         assert field(awake,'RTC_IRQS')-before_irq<=len(alarm_backup)+1,awake
         report['rtc']={'original':alarms,'after':awake}

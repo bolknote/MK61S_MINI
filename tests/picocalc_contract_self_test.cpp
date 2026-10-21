@@ -11,6 +11,7 @@
 #include "fonts.hpp"
 #include "input.hpp"
 #include "keyboard_core.hpp"
+#include "shared_memory_buffer.hpp"
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -37,6 +38,31 @@ u32 edit_hook(u32 op,mk61_service_edit_hook* e) {
     if(op==MK61_EDIT_MOVE) { CHECK(e->delta==-1);e->cursor=0;return 1; }
     if(op==MK61_EDIT_BACKSPACE) { e->source[0]=0;e->length=e->cursor=0;return 1; }
     return 0;
+}
+void buffers_contract(void* context,const mk61_app_api& api,const mk61_app_services& s) {
+    auto& stale=*(u32*)context;
+    CHECK(s.call(MK61_SERVICE_CAPABILITIES,0,0,0,nullptr)&MK61_SERVICE_CAP_BUFFERS);
+    mk61_service_buffer r{};
+    const auto call=[&](u32 operation){return s.call(MK61_SERVICE_BUFFER,operation,0,sizeof(r),&r);};
+    r.handle=stale;if(stale) CHECK(!call(MK61_BUFFER_INFO));
+    r={};r.size=12800;r.access=MK61_BUFFER_BLOCK;CHECK(call(MK61_BUFFER_ACQUIRE));stale=r.handle;
+    CHECK(!s.call(MK61_SERVICE_BUFFER,MK61_BUFFER_INFO,1,sizeof(r),&r));
+    CHECK(!s.call(MK61_SERVICE_BUFFER,MK61_BUFFER_INFO,0,sizeof(r)-1,&r));
+    u8 bytes[512];
+    for(u32 at=0;at<12800;at+=sizeof(bytes)) {
+        for(unsigned i=0;i<sizeof(bytes);++i) bytes[i]=(u8)((at+i)*73);
+        r.offset=at;r.size=sizeof(bytes);r.data=bytes;CHECK(call(MK61_BUFFER_WRITE));
+    }
+    CHECK(api.graphics_begin());r.offset=0;r.size=12800;CHECK(call(MK61_BUFFER_PRESENT));
+    for(unsigned i=0;i<12800;++i) CHECK(canvas::frame()[i]==(u8)(i*73));
+    r.size=12799;CHECK(!call(MK61_BUFFER_PRESENT));
+    api.graphics_end();
+    r.offset=1021;r.size=513;r.window=0;r.flags=MK61_BUFFER_WINDOW_WRITABLE;
+    CHECK(call(MK61_BUFFER_WINDOW_OPEN));CHECK(!call(MK61_BUFFER_RELEASE));
+    std::memset(r.data,0x5A,513);CHECK(call(MK61_BUFFER_WINDOW_COMMIT));
+    CHECK(call(MK61_BUFFER_WINDOW_CLOSE));
+    // Deliberately return with a pinned window: host cleanup must release it.
+    r.window=0;CHECK(call(MK61_BUFFER_WINDOW_OPEN));
 }
 void native_contract(void* context,const mk61_app_api& api,const mk61_app_services& s) {
     auto& ui=*(Ui*)context;
@@ -349,6 +375,9 @@ void picocalc_contract_test() {
         x+=g.advance;
     }
     CHECK(script::text_profile({8,5,8,0}));s.test_native_contract(native_contract,&ui);
+    const auto active_buffers=shared_memory::buffer_statistics().active;u32 stale_buffer=0;
+    s.test_native_contract(buffers_contract,&stale_buffer,true);s.test_native_contract(buffers_contract,&stale_buffer,true);
+    CHECK(shared_memory::buffer_statistics().active==active_buffers && !shared_memory::buffer_statistics().pinned);
     const char* keys="\x08\x08\x88Ghbdtn\x88.txt\r";
     s.set_pump([](void* context,u8& code) { auto& next=*(const char**)context;if(!*next) return false;code=(u8)*next++;return true; },&keys);
     s.test_native_contract(filename_contract,nullptr);CHECK(!*keys);

@@ -11,5 +11,6 @@ for unit in ff ffunicode; do
 done
 clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" -I"$root/code" -I"$root/ports/picocalc" -I"$root/third_party/fatfs" \
     "$root/tests/picocalc_recovery_self_test.cpp" "$root/ports/picocalc/storage.cpp" \
-    "$root/ports/picocalc/storage_journal.cpp" "$work/ff.o" "$work/ffunicode.o" -o "$work/recovery"
+    "$root/ports/picocalc/storage_journal.cpp" "$root/code/shared_memory_buffer.cpp" \
+    "$work/ff.o" "$work/ffunicode.o" -o "$work/recovery"
 "$work/recovery"

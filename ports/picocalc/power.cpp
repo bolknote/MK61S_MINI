@@ -18,7 +18,7 @@ int idle_alarm=-1;
 void idle_alarm_irq(unsigned) { __sev(); }
 bool usb_power() { return gpio_get(PICO_VBUS_PIN); }
 void uart_clock_changed() {
-#if PICO_STDIO_UART && defined(PICO_DEFAULT_UART_BAUD_RATE)
+#if LIB_PICO_STDIO_UART && defined(PICO_DEFAULT_UART_BAUD_RATE)
   uart_set_baudrate(uart_default, PICO_DEFAULT_UART_BAUD_RATE);
 #endif
 }

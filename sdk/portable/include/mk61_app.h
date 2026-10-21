@@ -24,6 +24,38 @@ static inline int mk61_app_snprintf(const mk61_app_services* services,
   return result;
 }
 
+/* Optional indirect buffers. Query CAP_BUFFERS before use. These helpers
+ * preserve ABI 6 and return 0 when a firmware lacks the capability. */
+static inline uint32_t mk61_app_buffer_call(const mk61_app_services* services,
+    uint32_t operation, mk61_service_buffer* request) {
+  if(!services || !services->call || !request ||
+      !(services->call(MK61_SERVICE_CAPABILITIES,0,0,0,NULL)&MK61_SERVICE_CAP_BUFFERS)) return 0;
+  return services->call(MK61_SERVICE_BUFFER,operation,0,sizeof(*request),request);
+}
+static inline mk61_service_buffer mk61_app_buffer_request(void) {
+  mk61_service_buffer request={0,0,0,NULL,0,0,0,0};return request;
+}
+static inline uint32_t mk61_app_buffer_acquire(const mk61_app_services* services,
+    uint32_t bytes,uint32_t access,mk61_service_buffer* out) {
+  if(!out) return 0;
+  *out=mk61_app_buffer_request();out->size=bytes;out->access=access;
+  return mk61_app_buffer_call(services,MK61_BUFFER_ACQUIRE,out);
+}
+static inline uint32_t mk61_app_buffer_read(const mk61_app_services* services,
+    uint32_t handle,uint32_t offset,void* target,uint32_t bytes) {
+  mk61_service_buffer r=mk61_app_buffer_request();r.handle=handle;r.offset=offset;r.size=bytes;r.data=(uint8_t*)target;
+  return mk61_app_buffer_call(services,MK61_BUFFER_READ,&r);
+}
+static inline uint32_t mk61_app_buffer_write(const mk61_app_services* services,
+    uint32_t handle,uint32_t offset,const void* source,uint32_t bytes) {
+  mk61_service_buffer r=mk61_app_buffer_request();r.handle=handle;r.offset=offset;r.size=bytes;r.data=(uint8_t*)source;
+  return mk61_app_buffer_call(services,MK61_BUFFER_WRITE,&r);
+}
+static inline uint32_t mk61_app_buffer_release(const mk61_app_services* services,uint32_t handle) {
+  mk61_service_buffer r=mk61_app_buffer_request();r.handle=handle;
+  return mk61_app_buffer_call(services,MK61_BUFFER_RELEASE,&r);
+}
+
 enum mk61_app_command {
   MK61_APP_INITIALIZE = 0,
   MK61_APP_RUN = 1,

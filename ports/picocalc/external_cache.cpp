@@ -122,11 +122,21 @@ void invalidate_modules() {
         if(modules.ok() && !clear(modules,module_slots,MODULE_STRIDE)) modules.reset();
         module_generation=1;
     }
+    // A large APP may have temporarily shrunk the cache. Once its contents
+    // are invalid anyway, allow the next request to use the released space.
+    if(!module_busy && modules.ok() && modules.size()<4U*1024*1024 &&
+       shared_memory::buffer_statistics().external_largest>=modules.size()) {
+        modules.reset();module_slots=0;
+    }
 }
 void invalidate_sectors() {
     if(++sector_generation==0) {
         if(sectors.ok() && !clear(sectors,sector_slots,SECTOR_STRIDE)) sectors.reset();
         sector_generation=1;
+    }
+    if(!sector_busy && sectors.ok() && sectors.size()<4U*1024*1024 &&
+       shared_memory::buffer_statistics().external_largest>=sectors.size()) {
+        sectors.reset();sector_slots=0;
     }
 }
 bool module(u64 key,void* bytes,unsigned capacity,unsigned& count,const char* owner) {

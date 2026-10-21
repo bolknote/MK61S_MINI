@@ -3,7 +3,7 @@
 #include "rust_types.h"
 
 namespace picocalc::io_worker {
-struct Statistics { bool running;u32 transactions,uart_bytes,uart_wait_us,uart_flush_us,uart_flushes,idle_us;bool uart_dma; };
+struct Statistics { bool running;u32 transactions,uart_bytes,uart_wait_us,uart_flush_us,uart_flushes,idle_us;bool uart_dma;u32 uart_event_waits,uart_sleep_holds,uart_baud; };
 void start();
 bool request_i2c(bool read,const u8* bytes,unsigned length);
 bool take_i2c(int& result,u8* bytes=nullptr);

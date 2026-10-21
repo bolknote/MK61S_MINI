@@ -58,6 +58,38 @@ pub const SERVICE_CAP_UI_FONT: u32 = 1 << 11;
 pub const SERVICE_CAP_NUMBER_IO: u32 = 1 << 12;
 pub const SERVICE_CAP_TEXT_FONT: u32 = 1 << 13;
 pub const SERVICE_CAP_FLOAT_CONVERT: u32 = 1 << 14;
+pub const SERVICE_CAP_BUFFERS: u32 = 1 << 21;
+pub const SERVICE_CAP_EXTERNAL_BUFFERS: u32 = 1 << 22;
+pub const SERVICE_BUFFER: u32 = 43;
+pub const BUFFER_ACQUIRE: u32 = 0;
+pub const BUFFER_RELEASE: u32 = 1;
+pub const BUFFER_INFO: u32 = 2;
+pub const BUFFER_READ: u32 = 3;
+pub const BUFFER_WRITE: u32 = 4;
+pub const BUFFER_FILL: u32 = 5;
+pub const BUFFER_WINDOW_OPEN: u32 = 6;
+pub const BUFFER_WINDOW_COMMIT: u32 = 7;
+pub const BUFFER_WINDOW_CLOSE: u32 = 8;
+pub const BUFFER_PRESENT: u32 = 9;
+pub const BUFFER_DIRECT: u32 = 0;
+pub const BUFFER_BLOCK: u32 = 1;
+pub const BUFFER_EXTERNAL: u32 = 2;
+pub const BUFFER_NONE: u32 = 0;
+pub const BUFFER_SRAM: u32 = 1;
+pub const BUFFER_PSRAM: u32 = 2;
+pub const BUFFER_IO_BYTES: u32 = 4096;
+pub const BUFFER_WINDOW_WRITABLE: u32 = 1;
+#[repr(C)]
+pub struct ServiceBuffer {
+    pub handle: u32,
+    pub offset: u32,
+    pub size: u32,
+    pub data: *mut u8,
+    pub access: u32,
+    pub storage: u32,
+    pub window: u32,
+    pub flags: u32,
+}
 
 pub const SERVICE_DISPLAY: u32 = 1;
 pub const SERVICE_KEYBOARD: u32 = 2;

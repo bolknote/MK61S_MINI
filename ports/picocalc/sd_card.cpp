@@ -4,6 +4,7 @@
 #include "diagnostics.hpp"
 #include "dma_support.hpp"
 #include "external_cache.hpp"
+#include "sd_multi_write.hpp"
 #include "hardware/dma.h"
 #include "hardware/spi.h"
 #include "hardware/watchdog.h"
@@ -177,15 +178,46 @@ bool write(u32 sector, const u8 data[512]) {
     // completed writes. Journal replay and raw MSC writes use this same path.
     external_cache::invalidate_sector(sector);
     ++counters.writes;
+    ++counters.write_single_commands;
     bool ok = command(24, block_address ? sector : sector * 512) == 0;
     if(ok) {
         transfer(); transfer(0xFE);
         u16 crc=0;
         if(!data_transfer(data,nullptr,512,crc)) { deselect();return false; }
         transfer((u8)(crc >> 8)); transfer((u8)crc);
-        ok = (transfer() & 0x1F) == 5 && wait_ready(1000);
+        ok = (transfer() & 0x1F) == 5;
+        transfer();
+        ok = wait_ready(1000) && ok;
     }
     deselect(); return ok;
+}
+bool write_sectors(u32 sector,const u8* data,u32 count) {
+    if(!initialized || !data || !count || sector>=sector_count || count>sector_count-sector || count>UINT32_MAX/512) return false;
+    if(count==1) return write(sector,data);
+    // Invalidate the entire request before even sending CMD25. A partial
+    // transfer must never leave a previously cached sector looking valid.
+    for(u32 i=0;i<count;++i) external_cache::invalidate_sector(sector+i);
+    struct Bus {
+        u8 command(u8 op,u32 address) { return sd::command(op,address); }
+        void deselect() { sd::deselect(); }
+        u8 byte(u8 b) { return transfer(b); }
+        bool wait() { diagnostics::feed_watchdog();return wait_ready(1000); }
+        bool data(const u8* bytes,u16& crc) {
+            ++counters.writes;diagnostics::feed_watchdog();return data_transfer(bytes,nullptr,512,crc);
+        }
+    } bus;
+    ++counters.write_multi_commands;
+    const auto result=multi_write(bus,block_address?sector:sector*512,data,count);
+    if(result==MultiWriteResult::OK) { counters.write_multi_sectors+=count;return true; }
+    if(result==MultiWriteResult::UNSUPPORTED) {
+        // Only an explicit illegal-command response, before any data, is
+        // eligible for fallback. Never retry a partly written stream.
+        ++counters.write_fallbacks;
+        for(u32 i=0;i<count;++i) if(!write(sector+i,data+i*512)) return false;
+        return true;
+    }
+    if(result==MultiWriteResult::INCOMPLETE) initialized=false;
+    return false;
 }
 bool sync() { if(!initialized || !select()) return false; const bool ok = wait_ready(1000); deselect(); return ok; }
 Statistics statistics() { return counters; }
@@ -200,8 +232,7 @@ DRESULT disk_read(BYTE drive, BYTE* out, LBA_t sector, UINT count) {
 }
 DRESULT disk_write(BYTE drive, const BYTE* in, LBA_t sector, UINT count) {
     if(drive || !count || sector > UINT32_MAX || sector + count > picocalc::sd::sectors()) return RES_PARERR;
-    for(UINT i = 0; i < count; ++i) { picocalc::diagnostics::feed_watchdog(); if(!picocalc::storage_journal::write((u32)sector + i, in + i * 512)) return RES_ERROR; }
-    return RES_OK;
+    return picocalc::storage_journal::write_sectors((u32)sector,in,count)?RES_OK:RES_ERROR;
 }
 DRESULT disk_ioctl(BYTE drive, BYTE op, void* out) {
     if(drive || !picocalc::sd::ready()) return RES_NOTRDY;

@@ -132,10 +132,12 @@ void report(unsigned math_failures) {
         (unsigned long)cache.packs,(unsigned long)cache.thaws,cache.packed);
     const auto psram=picocalc::psram::statistics();
     const auto external=picocalc::external_cache::statistics();
-    std::printf("PSRAM=%s BYTES=%lu ID=%06lX SPI_HZ=%lu READ_BYTES=%lu WRITE_BYTES=%lu ERRORS=%lu MODE=%s QPI_FALLBACKS=%lu\n",
+    std::printf("PSRAM=%s BYTES=%lu ID=%06lX SPI_HZ=%lu READ_BYTES=%lu WRITE_BYTES=%lu ERRORS=%lu MODE=%s QPI_FALLBACKS=%lu READ_BATCHES=%lu WRITE_BATCHES=%lu TAIL_TIMEOUTS=%lu TAIL_STATE=%08lX\n",
         psram.ready?"OK":"UNAVAILABLE",(unsigned long)(psram.ready?picocalc::psram::CAPACITY:0),
         (unsigned long)psram.id,(unsigned long)psram.hz,(unsigned long)psram.read_bytes,
-        (unsigned long)psram.write_bytes,(unsigned long)psram.errors,psram.qpi?"QPI":"SPI",(unsigned long)psram.qpi_fallbacks);
+        (unsigned long)psram.write_bytes,(unsigned long)psram.errors,psram.qpi?"QPI":"SPI",(unsigned long)psram.qpi_fallbacks,
+        (unsigned long)psram.read_batches,(unsigned long)psram.write_batches,
+        (unsigned long)psram.tail_timeouts,(unsigned long)psram.tail_state);
     std::printf("EXT_CACHE=%s VM_HIT=%lu VM_MISS=%lu SD_HIT=%lu SD_MISS=%lu REJECTED=%lu STORES=%lu VM_BYTES=%lu SD_BYTES=%lu EVICTIONS=%lu\n",
         external.ready?"PSRAM":"OFF",(unsigned long)cache.psram_hits,(unsigned long)cache.psram_misses,
         (unsigned long)external.sector_hits,(unsigned long)external.sector_misses,
@@ -181,6 +183,9 @@ void report(unsigned math_failures) {
         (unsigned long)dma.waits[0],(unsigned long)dma.waits[1],(unsigned long)dma.sleep_us[0],
         (unsigned long)dma.sleep_us[1],(unsigned long)dma.timeouts,(unsigned long)dma.crc32_calls,
         (unsigned long)dma.crc_fallbacks,(unsigned long)panel.errors());
+    std::printf("SD_SINGLE_CMDS=%lu SD_MULTI_CMDS=%lu SD_MULTI_SECTORS=%lu SD_WRITE_FALLBACKS=%lu\n",
+        (unsigned long)sd.write_single_commands,(unsigned long)sd.write_multi_commands,
+        (unsigned long)sd.write_multi_sectors,(unsigned long)sd.write_fallbacks);
     std::printf("IDLE_WAITS=%lu IDLE_MS=%lu RTC_IRQS=%lu\n",(unsigned long)idle.waits,
         (unsigned long)(idle.wait_us/1000),(unsigned long)picocalc::clock::alarm_interrupts());
     std::printf("CORE_PARKED=%u\n",calculator.parked());
@@ -190,7 +195,8 @@ void report(unsigned math_failures) {
         picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
     std::printf("UART_WAIT_US=%lu UART_FLUSH_US=%lu UART_FLUSHES=%lu\n",
         (unsigned long)io.uart_wait_us,(unsigned long)io.uart_flush_us,(unsigned long)io.uart_flushes);
-    std::printf("UART_DMA=%u IO_IDLE_US=%lu\n",io.uart_dma,(unsigned long)io.idle_us);
+    std::printf("UART_DMA=%u IO_IDLE_US=%lu UART_EVENT_WAITS=%lu UART_SLEEP_HOLDS=%lu UART_BAUD=%lu\n",io.uart_dma,(unsigned long)io.idle_us,
+        (unsigned long)io.uart_event_waits,(unsigned long)io.uart_sleep_holds,(unsigned long)io.uart_baud);
     std::printf("SD=%s SECTORS=%lu USB_DISK=%u FS_ERROR=[%s]\n", picocalc::files::ready() ? "OK" : "WAIT",
         (unsigned long)picocalc::sd::sectors(), picocalc::files::usb_active(), picocalc::files::error());
     const auto& settings = ui.settings();
@@ -207,10 +213,11 @@ void report(unsigned math_failures) {
         (unsigned long)usb.writes, (unsigned long)usb.read_errors, (unsigned long)usb.write_errors,
         (unsigned long)usb.last_lba, usb.last_scsi);
     std::printf("USB_MAX_GAP_US=%lu\n",(unsigned long)max_usb_gap);
-    std::printf("POWER_MODE=%s SYS_HZ=%lu PERI_HZ=%lu PLL_MASK=%u SLEEP_ENTRIES=%lu BATTERY_SLEEPS=%lu\n",
+    std::printf("POWER_MODE=%s SYS_HZ=%lu PERI_HZ=%lu PLL_MASK=%u SLEEP_ENTRIES=%lu BATTERY_SLEEPS=%lu SLEEP_CLOCK0=%08lX SLEEP_CLOCK1=%08lX\n",
         sleep_clocks.active() ? sleep_clocks.usb_available() ? "SLEEP_USB" : "SLEEP_BATTERY" : "RUN",
         (unsigned long)clock_get_hz(clk_sys), (unsigned long)clock_get_hz(clk_peri), sleep_clocks.pll_mask(),
-        (unsigned long)sleep_clocks.entries(), (unsigned long)sleep_clocks.battery_entries());
+        (unsigned long)sleep_clocks.entries(), (unsigned long)sleep_clocks.battery_entries(),
+        (unsigned long)clocks_hw->sleep_en0,(unsigned long)clocks_hw->sleep_en1);
     const auto date=picocalc::clock::get();
     std::printf("RUNTIME=%s USB_SCREEN=%s SCREEN_FRAMES=%lu SCREEN_ERRORS=%lu SLEEP=%u RTC=%04d-%02d-%02dT%02d:%02d:%02d RTC_SET=%u RTC_PPM=%d\n",
         services.runtime_name(),remote_screen.attached()?"ATTACHED":remote_screen.enabled()?"OFFER":"OFF",

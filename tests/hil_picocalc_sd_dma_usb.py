@@ -21,10 +21,14 @@ def main():
     parser.add_argument('--port',required=True);parser.add_argument('--uid',required=True)
     parser.add_argument('--firmware-directory',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
-    args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=False)
+    parser.add_argument('--transfer-bytes',type=int,default=4096)
+    parser.add_argument('--samples',type=int,default=1,choices=range(1,6))
+    args=parser.parse_args()
+    if not 4096<=args.transfer_bytes<=65535:parser.error('--transfer-bytes must be 4096..65535')
+    args.output.mkdir(parents=True,exist_ok=False)
     build=json.loads((args.firmware_directory/'manifest.json').read_text())
     directory='/MK61S-DMAUSB-'+datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
-    path=directory+'/cached.bin';payload=bytes((i*71+i//13)&255 for i in range(4096))
+    path=directory+'/cached.bin';payload=bytes((i*71+i//13)&255 for i in range(args.transfer_bytes))
     changed=bytes(b^0xA5 for b in payload)
     report=dict(passed=False,uid=args.uid,build=build['build_id'].upper(),uf2_sha256=build['uf2_sha256'],directory=directory)
     p=connect(args.port,args.uid);before=None;created=False;whole=None;usb=False
@@ -42,7 +46,7 @@ def main():
         before={c:p.command(c) for c in ('reg','stk','hout','dump','pwd')}
         p.command('uscreen off')
         assert 'ERROR' not in p.command('mkdir '+directory,timeout=60);created=True
-        write_file(p,path,payload);assert read_file(p,path)==payload
+        write_file(p,path,payload[:4096]);assert read_file(p,path)==payload[:4096]
         report['warm_before']=p.status()
         report['existing_disks']=disk('list','-plist','external','physical')['WholeDisks']
         assert 'ERROR' not in p.command('usbdisk');usb=True
@@ -65,9 +69,19 @@ def main():
         report['mount_wait_seconds']=time.monotonic()-started
         assert mount is not None,'PicoCalc SD did not mount'
         print('PicoCalc SD mounted after %.1f s'%report['mount_wait_seconds'],flush=True)
-        target=mount/path.lstrip('/');assert target.read_bytes()==payload
+        target=mount/path.lstrip('/');assert target.read_bytes()==payload[:4096]
+        # Allocate the test file before timing. Each sample overwrites the
+        # same extents with different bytes and waits for fsync completion.
         with target.open('r+b') as stream:
-            stream.write(changed);stream.flush();os.fsync(stream.fileno())
+            stream.write(payload);stream.flush();os.fsync(stream.fileno())
+        samples=[]
+        for sample in range(args.samples):
+            changed=bytes(b^(0xA5^(sample*0x33)) for b in payload)
+            started=time.monotonic()
+            with target.open('r+b') as stream:
+                stream.write(changed);stream.flush();os.fsync(stream.fileno())
+            samples.append(time.monotonic()-started)
+        report.update(transfer_bytes=len(payload),host_fsync_write_seconds=samples)
         assert target.read_bytes()==changed
         streamed=p.status();report['usb_streamed']=streamed
         # Local firmware reads are suspended. Host bulk reads must bypass

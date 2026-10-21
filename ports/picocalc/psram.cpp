@@ -1,4 +1,5 @@
 #include "psram.hpp"
+#include "psram_stream.hpp"
 #include "dma_support.hpp"
 #include "diagnostics.hpp"
 #include <cstring>
@@ -21,13 +22,7 @@ PIO bus=pio1;
 int sm=-1,tx=-1,rx=-1;
 unsigned program_offset=UINT32_MAX;
 unsigned qpi_write_offset=UINT32_MAX,qpi_read_offset=UINT32_MAX;
-volatile bool qpi_write_done=false;
 auto_init_mutex(bus_mutex);
-void qpi_irq() {
-    if(sm>=0 && pio_interrupt_get(bus,(unsigned)sm)) {
-        pio_interrupt_clear(bus,(unsigned)sm);qpi_write_done=true;__sev();
-    }
-}
 void park_spi() {
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,1,true);
@@ -40,59 +35,102 @@ void park_spi() {
     sm_config_set_out_shift(&config,false,true,32);sm_config_set_in_shift(&config,false,true,32);
     pio_sm_init(bus,(unsigned)sm,program_offset,&config);
     pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
+    auto receive=dma_channel_get_default_config((unsigned)rx);
+    channel_config_set_transfer_data_size(&receive,DMA_SIZE_32);
+    channel_config_set_dreq(&receive,pio_get_dreq(bus,(unsigned)sm,false));
+    channel_config_set_read_increment(&receive,false);channel_config_set_write_increment(&receive,true);
+    dma_channel_configure((unsigned)rx,&receive,nullptr,&bus->rxf[sm],0,false);
 }
-bool quad_write(const u8* bytes,unsigned count) {
-    if(!count || count>32 || clock_get_hz(clk_sys)<100000000) return false;
-    u32 sent[8]{};
-    for(unsigned i=0;i<count;++i) sent[i/4]|=u32(bytes[i])<<(24-8*(i%4));
+bool finish_stream(unsigned ready_offset,bool writing=false) {
+    // DMA completion may precede the final CE# hold by a few clocks.
+    // Wait for the idle high-CE# instruction, never deassert CE# in the CPU.
+    const u64 limit=time_us_64()+1000;
+    const auto idle=[&] {
+        return stream_idle(ready_offset,pio_sm_get_pc(bus,(unsigned)sm),writing,
+            pio_sm_is_tx_fifo_empty(bus,(unsigned)sm),gpio_get(CS));
+    };
+    while(!idle()) {
+        if(time_us_64()>=limit) {
+            // An interrupt can span the deadline after the first snapshot.
+            if(idle()) break;
+            ++state.tail_timeouts;
+            state.tail_state=(ready_offset<<24)|(pio_sm_get_pc(bus,(unsigned)sm)<<16)|
+                (pio_sm_get_tx_fifo_level(bus,(unsigned)sm)<<8)|
+                (pio_sm_get_rx_fifo_level(bus,(unsigned)sm)<<4)|gpio_get(CS);
+            pio_sm_set_enabled(bus,(unsigned)sm,false);
+            dma_channel_abort((unsigned)tx);dma_channel_abort((unsigned)rx);
+            pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false;
+        }
+        tight_loop_contents();
+    }
+    pio_sm_set_enabled(bus,(unsigned)sm,false);__dmb();return true;
+}
+bool quad_packets(const u32* sent,unsigned packet_bytes,unsigned packets) {
+    if(!packet_bytes || packet_bytes>32 || !packets || clock_get_hz(clk_sys)<100000000) return false;
+    const unsigned words=(packet_bytes+3)/4;
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     auto config=mk61_psram_qpi_write_program_get_default_config(qpi_write_offset);
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
-    sm_config_set_out_shift(&config,false,true,32);sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_TX);
+    sm_config_set_out_shift(&config,false,false,32);sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_TX);
+    sm_config_set_mov_status(&config,STATUS_TX_LESSTHAN,words);
     pio_sm_init(bus,(unsigned)sm,qpi_write_offset,&config);
     pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,4,true);
     pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
-    pio_sm_put(bus,(unsigned)sm,count*2-1);
+    pio_sm_put(bus,(unsigned)sm,packet_bytes*2-1);
     pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
+    pio_sm_exec(bus,(unsigned)sm,pio_encode_out(pio_isr,32)|pio_encode_sideset(2,1));
     dma_channel_set_read_addr((unsigned)tx,sent,false);
-    dma_channel_set_trans_count((unsigned)tx,(count+3)/4,true);
-    if(!dma_support::wait((unsigned)tx)) return false;
-    pio_sm_exec(bus,(unsigned)sm,pio_encode_out(pio_x,32)|pio_encode_sideset(2,1));
-    qpi_write_done=false;pio_interrupt_clear(bus,(unsigned)sm);
+    dma_channel_set_trans_count((unsigned)tx,words*packets,true);
     pio_sm_set_enabled(bus,(unsigned)sm,true);
-    const u64 limit=time_us_64()+1000000;
-    while(!qpi_write_done && time_us_64()<limit) best_effort_wfe_or_timeout(make_timeout_time_us(1000));
-    pio_sm_set_enabled(bus,(unsigned)sm,false);
-    if(!qpi_write_done) pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
-    return qpi_write_done;
+    ++state.write_batches;
+    if(!dma_support::wait((unsigned)tx)) {
+        pio_sm_set_enabled(bus,(unsigned)sm,false);
+        pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false;
+    }
+    return finish_stream(qpi_write_offset,true);
+}
+bool quad_write(const u8* bytes,unsigned count) {
+    if(!count || count>32) return false;
+    u32 sent[8]{};
+    for(unsigned i=0;i<count;++i) sent[i/4]|=u32(bytes[i])<<(24-8*(i%4));
+    return quad_packets(sent,count,1);
 }
 bool quad_read(u32 address,u8* bytes,unsigned count) {
-    if(!count || count>32 || clock_get_hz(clk_sys)<100000000) return false;
-    u32 received[9]{};
+    if(!count || clock_get_hz(clk_sys)<100000000) return false;
+    constexpr unsigned BLOCK=16,BATCH=64;
+    u32 commands[BATCH],received[BATCH*BLOCK/4];
     pio_sm_set_enabled(bus,(unsigned)sm,false);
     auto config=mk61_psram_qpi_read_program_get_default_config(qpi_read_offset);
     sm_config_set_out_pins(&config,MOSI,4);sm_config_set_in_pins(&config,MOSI);
     sm_config_set_set_pins(&config,MOSI,4);sm_config_set_sideset_pins(&config,CS);
     sm_config_set_out_shift(&config,false,false,32);sm_config_set_in_shift(&config,false,true,32);
+    sm_config_set_mov_status(&config,STATUS_RX_LESSTHAN,1);
     pio_sm_init(bus,(unsigned)sm,qpi_read_offset,&config);
     pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));
-    pio_sm_put(bus,(unsigned)sm,count*2-1);
-    pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
-    pio_sm_exec(bus,(unsigned)sm,pio_encode_out(pio_x,32)|pio_encode_sideset(2,1));
-    pio_sm_put(bus,(unsigned)sm,0xEB000000U|address);
-    pio_sm_exec(bus,(unsigned)sm,pio_encode_pull(false,true)|pio_encode_sideset(2,1));
-    // Joining RX clears the FIFOs, but preserves the preloaded OSR/header.
-    sm_config_set_fifo_join(&config,PIO_FIFO_JOIN_RX);
-    pio_sm_set_config(bus,(unsigned)sm,&config);
-    dma_channel_set_write_addr((unsigned)rx,received,false);
-    dma_channel_set_trans_count((unsigned)rx,count/4+1,true);
-    pio_sm_set_enabled(bus,(unsigned)sm,true);
-    const bool ok=dma_support::wait((unsigned)rx);
-    pio_sm_set_enabled(bus,(unsigned)sm,false);
-    if(!ok) { pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false; }
-    for(unsigned i=0;i<count;++i) {
-        const unsigned bits=i/4<count/4?32:(count%4)*8;
-        bytes[i]=(u8)(received[i/4]>>(bits-8-8*(i%4)));
+    pio_sm_set_consecutive_pindirs(bus,(unsigned)sm,MOSI,4,true);
+    auto receive=dma_channel_get_default_config((unsigned)rx);
+    channel_config_set_transfer_data_size(&receive,DMA_SIZE_32);
+    channel_config_set_dreq(&receive,pio_get_dreq(bus,(unsigned)sm,false));
+    channel_config_set_read_increment(&receive,false);channel_config_set_write_increment(&receive,true);
+    channel_config_set_bswap(&receive,true);
+    dma_channel_configure((unsigned)rx,&receive,received,&bus->rxf[sm],0,false);
+    while(count) {
+        const unsigned skip=address&(BLOCK-1);
+        const unsigned n=count<BLOCK*BATCH-skip?count:BLOCK*BATCH-skip;
+        const unsigned packets=(skip+n+BLOCK-1)/BLOCK;
+        for(unsigned i=0;i<packets;++i) commands[i]=0xEB000000U|((address&~u32(BLOCK-1))+i*BLOCK);
+        dma_channel_set_read_addr((unsigned)tx,commands,false);
+        dma_channel_set_write_addr((unsigned)rx,received,false);
+        dma_channel_set_trans_count((unsigned)tx,packets,false);
+        dma_channel_set_trans_count((unsigned)rx,packets*BLOCK/4,false);
+        dma_start_channel_mask((1U<<tx)|(1U<<rx));
+        pio_sm_set_enabled(bus,(unsigned)sm,true);++state.read_batches;
+        if(!dma_support::wait((unsigned)rx,tx) || !finish_stream(qpi_read_offset)) {
+            pio_sm_set_enabled(bus,(unsigned)sm,false);
+            pio_sm_exec(bus,(unsigned)sm,pio_encode_nop()|pio_encode_sideset(2,1));return false;
+        }
+        std::memcpy(bytes,((u8*)received)+skip,n);
+        bytes+=n;address+=n;count-=n;diagnostics::feed_watchdog();
     }
     return true;
 }
@@ -140,6 +178,7 @@ bool access(u32 address,void* data,unsigned count,bool writing) {
     // Page boundaries and the 8 us CE# limit both apply. Complete packets
     // fit the preloaded PIO FIFO; CE# is released by PIO, never by the CPU.
     u8* bytes=(u8*)data;
+    if(state.qpi && !writing) return quad_read(address,bytes,count);
     while(count) {
         const unsigned maximum=state.qpi?(writing?28:32):(writing?12:11);
         unsigned n=count<maximum?count:maximum;
@@ -147,12 +186,31 @@ bool access(u32 address,void* data,unsigned count,bool writing) {
         u8 header[]={(u8)(writing?0x02:0x0B),(u8)(address>>16),(u8)(address>>8),(u8)address,0};
         bool ok;
         if(state.qpi && writing) {
-            u8 packet[32];std::memcpy(packet,header,4);std::memcpy(packet+4,bytes,n);
-            ok=quad_write(packet,n+4);
-        } else if(state.qpi) ok=quad_read(address,bytes,n);
+            constexpr unsigned BATCH=32;
+            u32 sent[BATCH*8];const unsigned words=(n+7)/4;
+            unsigned packets=0;
+            while(packets<BATCH && count>=n && n<=1024-(address&1023)) {
+                auto* packet=sent+packets*words;
+                packet[0]=0x02000000U|address;
+                for(unsigned i=0;i<n/4;++i) {
+                    u32 word;std::memcpy(&word,bytes+i*4,4);
+                    packet[1+i]=__builtin_bswap32(word);
+                }
+                if(n&3) {
+                    u32 tail=0;
+                    for(unsigned i=0;i<(n&3);++i) tail|=u32(bytes[(n&~3U)+i])<<(24-8*i);
+                    packet[1+n/4]=tail;
+                }
+                bytes+=n;address+=n;count-=n;++packets;
+            }
+            ok=quad_packets(sent,n+4,packets);
+            if(!ok) return false;
+            diagnostics::feed_watchdog();continue;
+        }
         else ok=exchange(header,writing?4:5,writing?bytes:nullptr,writing?nullptr:bytes,n);
         if(!ok) return false;
         bytes+=n;address+=n;count-=n;
+        if(!(address&1023)) diagnostics::feed_watchdog();
     }
     return true;
 }
@@ -202,9 +260,6 @@ bool init() {
         qpi_write_offset=pio_add_program(bus,&mk61_psram_qpi_write_program);
         if(!pio_can_add_program(bus,&mk61_psram_qpi_read_program)) return abandon();
         qpi_read_offset=pio_add_program(bus,&mk61_psram_qpi_read_program);
-        irq_add_shared_handler(PIO1_IRQ_0,qpi_irq,PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
-        pio_set_irq0_source_enabled(bus,(pio_interrupt_source)(pis_interrupt0+sm),true);
-        irq_set_enabled(PIO1_IRQ_0,true);
         auto config=mk61_psram_spi_program_get_default_config(program_offset);
         sm_config_set_out_pins(&config,MOSI,1);sm_config_set_in_pins(&config,MISO);
         sm_config_set_sideset_pins(&config,CS);
@@ -281,6 +336,7 @@ bool init() {
 }
 bool read(u32 address,void* bytes,unsigned count) {
     if(!bounds(address,bytes,count)) return false;
+    if(!count) return true;
 #if defined(PICO_ON_DEVICE)
     mutex_enter_blocking(&bus_mutex);
     const bool ok=access(address,bytes,count,false);
@@ -293,6 +349,7 @@ bool read(u32 address,void* bytes,unsigned count) {
 }
 bool write(u32 address,const void* bytes,unsigned count) {
     if(!bounds(address,bytes,count)) return false;
+    if(!count) return true;
 #if defined(PICO_ON_DEVICE)
     mutex_enter_blocking(&bus_mutex);
     const bool ok=access(address,const_cast<void*>(bytes),count,true);

@@ -14,3 +14,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
     "$root/ports/picocalc/external_cache.cpp" "$root/ports/picocalc/dma_support.cpp" \
     "$root/ports/picocalc/buffers.cpp" "$root/code/shared_memory_buffer.cpp" -o "$build/test"
 "$build/test"
+clang++ -std=c++17 -O2 -Wall -Wextra -Werror "${flags[@]}" \
+    -I"$root/ports/picocalc" -I"$root/code" \
+    "$root/tests/picocalc_transfer_self_test.cpp" -o "$build/transfers"
+"$build/transfers"

@@ -17,7 +17,7 @@ constexpr unsigned CS = PICO_DEFAULT_SPI_CSN_PIN;
 // The core 1 stack uses the upper 2 KiB of scratch X. Its otherwise unused
 // lower half holds both DMA rows, preserving the main heap for viewers/APPs.
 // NOLOAD scratch storage: every byte handed to DMA is filled by scanline().
-alignas(4) u8 scanlines[2][Screen::WIDTH*2] __attribute__((section(".lcd_dma.scanlines")));
+alignas(4) u16 scanlines[2][Screen::WIDTH] __attribute__((section(".lcd_dma.scanlines")));
 
 void command(u8 op, const u8* data = nullptr, unsigned size = 0) {
     gpio_put(DC, 0);
@@ -161,28 +161,31 @@ void Panel::flush(const Screen& screen) {
     std::memcpy(previous_,screen.data(),Screen::BYTES);
     valid_=io_worker::submit_frame(this,[](void* context) { ((Panel*)context)->transfer(); });
 }
-void Panel::start_scanline(const u8* bytes,unsigned count) {
-    if(!dma()) { spi_write_blocking(spi1,bytes,count);return; }
+void Panel::start_scanline(const u16* pixels,unsigned count) {
+    if(!dma()) { spi_write16_blocking(spi1,pixels,count);return; }
     if(!dma_irq_ready_) {
         // Transfer runs on core 1, independently of the core which claimed
         // the channels during panel initialization.
         dma_support::enable_irq((unsigned)dma_tx_);dma_support::enable_irq((unsigned)dma_rx_);
+        auto tx=dma_channel_get_default_config((unsigned)dma_tx_);
+        channel_config_set_transfer_data_size(&tx,DMA_SIZE_16);
+        channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
+        channel_config_set_read_increment(&tx,true);
+        channel_config_set_write_increment(&tx,false);
+        auto rx=dma_channel_get_default_config((unsigned)dma_rx_);
+        channel_config_set_transfer_data_size(&rx,DMA_SIZE_16);
+        channel_config_set_dreq(&rx,spi_get_dreq(spi1,false));
+        channel_config_set_read_increment(&rx,false);
+        channel_config_set_write_increment(&rx,false);
+        // SPI is full duplex. Drain every received word too, so RX cannot
+        // retain data between DMA windows and ordinary controller commands.
+        dma_channel_configure((unsigned)dma_rx_,&rx,&discard_,&spi_get_hw(spi1)->dr,0,false);
+        dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,nullptr,0,false);
         dma_irq_ready_=true;
     }
-    auto tx=dma_channel_get_default_config((unsigned)dma_tx_);
-    channel_config_set_transfer_data_size(&tx,DMA_SIZE_8);
-    channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
-    channel_config_set_read_increment(&tx,true);
-    channel_config_set_write_increment(&tx,false);
-    auto rx=dma_channel_get_default_config((unsigned)dma_rx_);
-    channel_config_set_transfer_data_size(&rx,DMA_SIZE_8);
-    channel_config_set_dreq(&rx,spi_get_dreq(spi1,false));
-    channel_config_set_read_increment(&rx,false);
-    channel_config_set_write_increment(&rx,false);
-    // SPI is full duplex. Drain every received byte too, so RX cannot retain
-    // data or overflow between DMA windows and ordinary controller commands.
-    dma_channel_configure((unsigned)dma_rx_,&rx,&discard_,&spi_get_hw(spi1)->dr,count,false);
-    dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,bytes,count,false);
+    dma_channel_set_read_addr((unsigned)dma_tx_,pixels,false);
+    dma_channel_set_trans_count((unsigned)dma_rx_,count,false);
+    dma_channel_set_trans_count((unsigned)dma_tx_,count,false);
     dma_start_channel_mask((1U<<dma_tx_) | (1U<<dma_rx_));
 }
 bool Panel::finish_scanline() {
@@ -206,20 +209,25 @@ void Panel::transfer() {
         const u8 ram_write=0x2C;
         spi_write_blocking(spi1,&ram_write,1);
         busy_wait_us(1);gpio_put(DC,1);busy_wait_us(1);
-        lcd::scanline(previous_,rect,0,scanlines[0]);
-        start_scanline(scanlines[0],rect.width*2);
+        // Controller commands remain 8-bit; pixels are native RGB565 words.
+        // This halves DMA bus transactions without an extra SRAM buffer.
+        spi_set_format(spi1,16,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
+        lcd::scanline(previous_,rect,0,(u8*)scanlines[0]);
+        start_scanline(scanlines[0],rect.width);
         for(unsigned row=1;row<=rect.height;++row) {
             // Convert the next row while DMA sends the other buffer. Neither
             // the snapshot nor an in-flight scanline is modified by core 0.
-            if(row<rect.height) lcd::scanline(previous_,rect,row,scanlines[row&1]);
+            if(row<rect.height) lcd::scanline(previous_,rect,row,(u8*)scanlines[row&1]);
             if(!finish_scanline()) {
                 gpio_put(CS,1);errors_.fetch_add(1);
+                spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
                 failed_.store(true,std::memory_order_release);return;
             }
-            if(row<rect.height) start_scanline(scanlines[row&1],rect.width*2);
+            if(row<rect.height) start_scanline(scanlines[row&1],rect.width);
             io_worker::service();
         }
         busy_wait_us(1);gpio_put(CS,1);busy_wait_us(1);
+        spi_set_format(spi1,8,SPI_CPOL_0,SPI_CPHA_0,SPI_MSB_FIRST);
     }
     last_us_.store((u32)(time_us_64()-start),std::memory_order_relaxed);
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);

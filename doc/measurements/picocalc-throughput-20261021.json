@@ -1,0 +1,416 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-21T12:02:36.878420+00:00",
+  "profile": "picocalc-pico-h",
+  "version": "0.8.14",
+  "uid": "E6657CD423721C35",
+  "build_id": "D26E5DE0",
+  "uf2_sha256": "cd3a71e4ab970484a926f50dfc0760184e4109c01db68ebe66328cd069f644ba",
+  "source_sha256": "dabe91ffa5ac6ae2be386248246a13e71ed7310ae692472794092c7450df40d6",
+  "baseline_commit": "8bf81b184d2ceb7c8fd5f5bb7dd4241cfbdbf74b",
+  "math_changes_excluded": true,
+  "stock_cpu_hz": 125000000,
+  "psram_clock_hz": 20833333,
+  "lcd_spi_hz": 12500000,
+  "resources": {
+    "flash_bytes": 750264,
+    "static_ram_bytes": 195804,
+    "heap_bytes": 33572,
+    "stack_reserved_bytes": 32768,
+    "flash_delta": 3720,
+    "static_ram_delta": 124
+  },
+  "qpi": {
+    "bytes": 1048576,
+    "required_allocation_bytes": 6291456,
+    "write_payload_bytes": 28,
+    "read_payload_bytes": 16,
+    "write_batch_packets": 32,
+    "read_batch_packets": 64,
+    "pio_instructions": 32,
+    "maximum_ce_low_us_at_125mhz": 3.072,
+    "maximum_ce_low_us_at_100mhz": 3.84,
+    "previous_qpi_build": "5F1E85DF",
+    "previous_qpi_samples": [
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 722962,
+        "READ_US": 624933
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 723374,
+        "READ_US": 624813
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 723207,
+        "READ_US": 624687
+      }
+    ],
+    "qpi_samples": [
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 374320,
+        "READ_US": 337643
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 374193,
+        "READ_US": 337882
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 374297,
+        "READ_US": 337852
+      }
+    ],
+    "spi_build": "0DF7901A",
+    "spi_samples": [
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 1403536,
+        "READ_US": 1709842
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 1403815,
+        "READ_US": 1709581
+      },
+      {
+        "BYTES": 1048576,
+        "ALLOCATED": 6291456,
+        "WRITE_US": 1403479,
+        "READ_US": 1709726
+      }
+    ],
+    "medians": {
+      "write": {
+        "previous_qpi_us": 723207,
+        "qpi_us": 374297,
+        "previous_qpi_speedup": 1.9321741825341907,
+        "spi_us": 1403536,
+        "spi_speedup": 3.749792277255762
+      },
+      "read": {
+        "previous_qpi_us": 624813,
+        "qpi_us": 337852,
+        "previous_qpi_speedup": 1.8493689544534293,
+        "spi_us": 1709726,
+        "spi_speedup": 5.06057682061968
+      }
+    },
+    "full_8_mib_write_then_read": true
+  },
+  "qpi_idle_completion_regression": {
+    "reproduced_build": "5B2ED3B1",
+    "tail_state": "12130001",
+    "decoded": {
+      "expected_idle_pc": 18,
+      "observed_pc": 19,
+      "tx_fifo": 0,
+      "rx_fifo": 0,
+      "ce_high": true
+    },
+    "effect": "False completion timeout disabled PSRAM although PIO was idle; short-write APP returned 15",
+    "fix": "Accept both writer idle instructions with TX empty and CE high; recheck after an interrupted deadline",
+    "phase_regression_test": true,
+    "real_short_writes_verified": 4096,
+    "final_tail_timeouts": 0,
+    "final_errors": 0
+  },
+  "sd": {
+    "transfer_bytes": 32768,
+    "samples": 3,
+    "previous_build": "5F1E85DF",
+    "previous_fsync_seconds": [
+      0.12101929099299014,
+      0.15177420799591346,
+      0.15391333300067345
+    ],
+    "fsync_seconds": [
+      0.14065041699359426,
+      0.10982083300041268,
+      0.0945660420038621
+    ],
+    "previous_median_seconds": 0.15177420799591346,
+    "median_seconds": 0.10982083300041268,
+    "speedup": 1.3820165432121894,
+    "scope": "Overwrite preallocated test file, flush and fsync on macOS, same PicoCalc microSD; includes host/filesystem/card timing",
+    "multi_commands": 273,
+    "multi_sectors": 2184,
+    "write_fallbacks": 0,
+    "coherence_and_safe_eject_passed": true,
+    "journal_before_images_durable_before_cmd25": true,
+    "recovery_host_injection": {
+      "filesystems": [
+        "FAT16",
+        "FAT32",
+        "exFAT"
+      ],
+      "power_cut_prefixes": 3870,
+      "replay_cut_prefixes": 176
+    },
+    "mount_wait_seconds": 16.5113796250007
+  },
+  "display": {
+    "width": 320,
+    "height": 320,
+    "rgb565_dma_bits": 16,
+    "sram_scanline_bytes": 1280,
+    "lookup_table_bytes": 128,
+    "previous_full_frame_us": [
+      161340,
+      172022,
+      173682,
+      171195
+    ],
+    "full_frame_us": [
+      146965,
+      156864,
+      159372,
+      159431
+    ],
+    "previous_full_frame_median_us": 171608.5,
+    "full_frame_median_us": 158118.0,
+    "speedup": 1.0853191919958511,
+    "stages": [
+      {
+        "stage": 0,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 146965,
+        "frames": 28
+      },
+      {
+        "stage": 1,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 156864,
+        "frames": 29
+      },
+      {
+        "stage": 2,
+        "bytes": 2304,
+        "rectangles": 2,
+        "microseconds": 6840,
+        "frames": 30
+      },
+      {
+        "stage": 3,
+        "bytes": 768,
+        "rectangles": 2,
+        "microseconds": 3757,
+        "frames": 31
+      },
+      {
+        "stage": 4,
+        "bytes": 256,
+        "rectangles": 2,
+        "microseconds": 3315,
+        "frames": 32
+      },
+      {
+        "stage": 5,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 159372,
+        "frames": 33
+      },
+      {
+        "stage": 6,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 159431,
+        "frames": 34
+      },
+      {
+        "stage": 7,
+        "bytes": 204800,
+        "rectangles": 1,
+        "microseconds": 159431,
+        "frames": 34
+      }
+    ],
+    "basic_ready": {
+      "frames": 23,
+      "incomplete_frames": 0,
+      "retained_frames": 22
+    },
+    "user_confirmed_even_image": true,
+    "verification": "Independent USB frame oracles and CRC of LCD DMA source; user confirmed normal physical image on the same 16-bit LCD path"
+  },
+  "app_buffers": {
+    "service_operation": 43,
+    "app_abi": 6,
+    "common_service_version": 2,
+    "buffer_slots": 4,
+    "window_slots": 2,
+    "maximum_io_bytes": 4096,
+    "required_bytes": 6291456,
+    "frames_bytes": 25600,
+    "short_writes_verified": 4096,
+    "frames": [
+      {
+        "stage": 0,
+        "sha256": "5576a00e4d01851b2b57bbecaa8a5067f4bef19b6e7236d2d1b087ab01618a88",
+        "lcd_crc": "0A355BAB",
+        "status": "RESET_REASON=00010001 BOOTS=44 CRASH=NONE BUILD=D26E5DE0\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=10909 MAX_GAP_MS=670 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=47705 PREVIOUS_GAP_MS=686\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=750264 FOOTER=622376 EXPECTED=A0C1EBCD ACTUAL=A0C1EBCD CHECK_US=415199\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=19335867 WRITE_BYTES=8621922 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=53314 WRITE_BATCHES=39330 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=20346 SD_MISS=266 REJECTED=0 STORES=266 VM_BYTES=0 SD_BYTES=0 EVICTIONS=2\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=6317056 PSRAM_CAPACITY=8388608 LARGEST=2071552 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=2 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.14 RP2040 125 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=24 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=16\r\nLCD_DMA=1 LCD_BYTES=204800 LCD_RECTS=1 LCD_US=166896 LCD_FULL_FRAMES=3\r\nSD_DMA=1 READS=283 WRITES=667 TRANSFERS=952 HW_CRC=952 CRC_ERRORS=0\r\nDMA_WAIT0=114242 DMA_WAIT1=1592 DMA_US0=4545678 DMA_US1=414000 DMA_TIMEOUTS=0 CRC32_HW=20654 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=667 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nIDLE_WAITS=80572 IDLE_MS=75307 RTC_IRQS=1\r\nCORE_PARKED=0\r\nIO_CORE=1 I2C_TRANSACTIONS=8449 UART_BYTES=378892 LCD_PENDING=0 LCD_FRAME_CRC=0A355BAB\r\nUART_WAIT_US=12955170 UART_FLUSH_US=9118236 UART_FLUSHES=1309\r\nUART_DMA=1 IO_IDLE_US=134526901 UART_EVENT_WAITS=83497 UART_SLEEP_HOLDS=70 UART_BAUD=115207\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CONSOLE SOURCE=0 DIRTY=0 PATH=[/MK61S-APPBUF-20261021-114214/PSRAMP.APP] RESULT=[]\r\nSTACK_USED=14796 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=661400\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=APP USB_SCREEN=ATTACHED SCREEN_FRAMES=14 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-21T14:42:16 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n"
+      },
+      {
+        "stage": 1,
+        "sha256": "4353d12f08fa72bfbb6ba2c3278a184406987c70773bb4ce4863403a7d5b2484",
+        "lcd_crc": "CAEE6EF8",
+        "status": "RESET_REASON=00010001 BOOTS=44 CRASH=NONE BUILD=D26E5DE0\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=10942 MAX_GAP_MS=670 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=47705 PREVIOUS_GAP_MS=686\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=750264 FOOTER=622376 EXPECTED=A0C1EBCD ACTUAL=A0C1EBCD CHECK_US=415199\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=19348667 WRITE_BYTES=8621922 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=53327 WRITE_BATCHES=39330 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=20346 SD_MISS=266 REJECTED=0 STORES=266 VM_BYTES=0 SD_BYTES=0 EVICTIONS=2\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=6317056 PSRAM_CAPACITY=8388608 LARGEST=2071552 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=2 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.14 RP2040 125 MHz\r\nTERMINAL=RAW\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=24 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=17\r\nLCD_DMA=1 LCD_BYTES=204800 LCD_RECTS=1 LCD_US=169343 LCD_FULL_FRAMES=4\r\nSD_DMA=1 READS=283 WRITES=667 TRANSFERS=952 HW_CRC=952 CRC_ERRORS=0\r\nDMA_WAIT0=114255 DMA_WAIT1=1913 DMA_US0=4547664 DMA_US1=537213 DMA_TIMEOUTS=0 CRC32_HW=20655 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=667 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nIDLE_WAITS=80572 IDLE_MS=75307 RTC_IRQS=1\r\nCORE_PARKED=0\r\nIO_CORE=1 I2C_TRANSACTIONS=8477 UART_BYTES=381726 LCD_PENDING=0 LCD_FRAME_CRC=CAEE6EF8\r\nUART_WAIT_US=12955170 UART_FLUSH_US=9379511 UART_FLUSHES=1344\r\nUART_DMA=1 IO_IDLE_US=134956929 UART_EVENT_WAITS=84571 UART_SLEEP_HOLDS=70 UART_BAUD=115207\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CONSOLE SOURCE=0 DIRTY=0 PATH=[/MK61S-APPBUF-20261021-114214/PSRAMP.APP] RESULT=[]\r\nSTACK_USED=14796 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=661400\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=APP USB_SCREEN=ATTACHED SCREEN_FRAMES=19 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-21T14:42:16 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n"
+      },
+      {
+        "stage": 2,
+        "sha256": "5576a00e4d01851b2b57bbecaa8a5067f4bef19b6e7236d2d1b087ab01618a88",
+        "lcd_crc": "0A355BAB",
+        "status": "RESET_REASON=00010001 BOOTS=44 CRASH=NONE BUILD=D26E5DE0\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=10975 MAX_GAP_MS=670 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=47705 PREVIOUS_GAP_MS=686\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=750264 FOOTER=622376 EXPECTED=A0C1EBCD ACTUAL=A0C1EBCD CHECK_US=415199\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=19361467 WRITE_BYTES=8621922 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=53340 WRITE_BATCHES=39330 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=20346 SD_MISS=266 REJECTED=0 STORES=266 VM_BYTES=0 SD_BYTES=0 EVICTIONS=2\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=6317056 PSRAM_CAPACITY=8388608 LARGEST=2071552 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=2 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.14 RP2040 125 MHz\r\nTERMINAL=RAW\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=24 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=240 KBD_BKL=40\r\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=18\r\nLCD_DMA=1 LCD_BYTES=204800 LCD_RECTS=1 LCD_US=169363 LCD_FULL_FRAMES=5\r\nSD_DMA=1 READS=283 WRITES=667 TRANSFERS=952 HW_CRC=952 CRC_ERRORS=0\r\nDMA_WAIT0=114268 DMA_WAIT1=2234 DMA_US0=4549654 DMA_US1=660468 DMA_TIMEOUTS=0 CRC32_HW=20656 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=667 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nIDLE_WAITS=80572 IDLE_MS=75307 RTC_IRQS=1\r\nCORE_PARKED=0\r\nIO_CORE=1 I2C_TRANSACTIONS=8505 UART_BYTES=384560 LCD_PENDING=0 LCD_FRAME_CRC=0A355BAB\r\nUART_WAIT_US=12955170 UART_FLUSH_US=9640958 UART_FLUSHES=1379\r\nUART_DMA=1 IO_IDLE_US=135388001 UART_EVENT_WAITS=85633 UART_SLEEP_HOLDS=70 UART_BAUD=115207\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CONSOLE SOURCE=0 DIRTY=0 PATH=[/MK61S-APPBUF-20261021-114214/PSRAMP.APP] RESULT=[]\r\nSTACK_USED=14796 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=661400\r\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\r\nRUNTIME=APP USB_SCREEN=ATTACHED SCREEN_FRAMES=24 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-21T14:42:17 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n"
+      }
+    ],
+    "probe_sha256": "2847b84f95167154f2f0504f870f88e9b109e8d6ee9f2fc8dbad0ed6e0e585d5",
+    "automatic_cleanup_passed": true,
+    "stale_handles_rejected": true,
+    "sram_fallback_host_test": true
+  },
+  "uart": {
+    "wait": "WFE with persistent predicate, DMA/queue notifications and bounded timer",
+    "event_waits": 33874,
+    "bytes": 102055,
+    "flushes": 1123,
+    "final_stop_bit_busy_wait": true,
+    "lost_wakeup_tests": true,
+    "wire_capture": false,
+    "sleep_clock_lease": {
+      "status_seconds": 0.3906136659934418,
+      "status": "RESET_REASON=00010001 BOOTS=44 CRASH=NONE BUILD=D26E5DE0\r\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=9948 MAX_GAP_MS=670 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=47705 PREVIOUS_GAP_MS=686\r\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=750264 FOOTER=622376 EXPECTED=A0C1EBCD ACTUAL=A0C1EBCD CHECK_US=415199\r\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\r\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\r\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=18697320 WRITE_BYTES=8541856 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=46873 WRITE_BATCHES=34641 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\r\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=19215 SD_MISS=199 REJECTED=0 STORES=199 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\r\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=0 IO_ERRORS=0 VALID=1\r\nMK61S PICOCALC PICO-H 0.8.14 RP2040 48 MHz\r\nTERMINAL=COMMAND\r\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\r\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=24 RUN=0 BUSY=0\r\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\r\nLCD_BKL=0 KBD_BKL=0\r\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=8\r\nLCD_DMA=1 LCD_BYTES=512 LCD_RECTS=1 LCD_US=5773 LCD_FULL_FRAMES=1\r\nSD_DMA=1 READS=216 WRITES=448 TRANSFERS=666 HW_CRC=666 CRC_ERRORS=0\r\nDMA_WAIT0=101628 DMA_WAIT1=440 DMA_US0=4298131 DMA_US1=130199 DMA_TIMEOUTS=0 CRC32_HW=19448 CRC_FALLBACK=0 LCD_ERRORS=0\r\nSD_SINGLE_CMDS=448 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\r\nIDLE_WAITS=73664 IDLE_MS=68998 RTC_IRQS=0\r\nCORE_PARKED=1\r\nIO_CORE=1 I2C_TRANSACTIONS=7868 UART_BYTES=320666 LCD_PENDING=0 LCD_FRAME_CRC=80D9E2C7\r\nUART_WAIT_US=12627305 UART_FLUSH_US=5262926 UART_FLUSHES=756\r\nUART_DMA=1 IO_IDLE_US=119568823 UART_EVENT_WAITS=65453 UART_SLEEP_HOLDS=41 UART_BAUD=115176\r\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\r\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=SAVED\r\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\r\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\r\nSTACK_USED=6348 STACK_BYTES=32768\r\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\r\nUSB_MAX_GAP_US=661400\r\nPOWER_MODE=SLEEP_USB SYS_HZ=48000000 PERI_HZ=48000000 PLL_MASK=2 SLEEP_ENTRIES=1 BATTERY_SLEEPS=0 SLEEP_CLOCK0=00200000 SLEEP_CLOCK1=00001C20\r\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=1 RTC=2026-10-21T14:41:58 RTC_SET=1 RTC_PPM=0\r\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\r\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\r\n",
+      "temporary_clock_lease_restored": true
+    },
+    "sleep_baud": 115176,
+    "awake_baud": 115207
+  },
+  "reset": {
+    "passed": true,
+    "uid": "E6657CD423721C35",
+    "recorded_at_utc": "2026-10-21T11:50:51.975301+00:00",
+    "builds": {
+      "qpi": "D26E5DE0",
+      "spi": "0DF7901A",
+      "reject": "835AE4C9"
+    },
+    "steps": [
+      "install-spi-control",
+      "spi-buffers",
+      "install-forced-fallback",
+      "forced-fallback-buffers",
+      "restore-qpi",
+      "sdk-1200-retained-qpi-reset",
+      "buffers-after-reset"
+    ]
+  },
+  "hardware": {
+    "native_cases": [
+      "idle clock uses the exact native Ark strike, right aligned in the title row",
+      "real legacy M0 APP: 192x64, four 16px rows, 10x16 glyph/12px advance and public font service agree pixel-for-pixel",
+      "alternate calculator digits and Ark Mono interface use native strikes; selected indicator font restored",
+      "native APP: wide Cyrillic/arrows, 19-column fixed cells, editor horizontal scroll/cursor, proportional row 12; exact pixels and DMA CRC",
+      "M61 default native 20x10 geometry, centred Ark strike and intact wide glyphs",
+      "BASIC and FOCAL PRINT AT: identical full native glyphs at pixel coordinates, independent Ark oracle",
+      "built-in editor and UTF-8 filename prompt: full wide glyphs, pixel-based horizontal scrolling and visible insertion cursor",
+      "Markdown and Explorer automatically select native WBMP sibling, all 320 columns preserved pixel-for-pixel",
+      "real WBMP.APP FILE_OPEN: Pico Down/Up page scrolling, bottom clamp and byte-exact return to first page",
+      "Bumblebee native 16x32 FMK, sprite at middle row with exact glyph pixels",
+      "actual Bumblebee autoexec: manual, optional BASIC geometry bootstrap, native trap handlers and live ROM-driven animation"
+    ],
+    "native_screens": 20,
+    "cache_pressure_programs": 48,
+    "hardware_cases": [
+      "full 8 MiB PSRAM write-then-read/address pattern on real PIO/DMA; hardware CRC32 known vector",
+      "settled foreground waits for events while USB/status and keypad remain responsive",
+      "SD DMA+CRC16 read/write; warm PSRAM sector hits avoid physical reads; overwrite invalidates cached sectors",
+      "UART diagnostics finish in 48 MHz sleep; temporary DMA/UART/SRAM clock lease restores the sleep mask",
+      "hardware RTC alarm IRQ wakes clock-gated sleep and delivers all due slots"
+    ],
+    "app_cases": [
+      "ELIZA: existing matching APP, native editor and exact HELLO reply, clean return",
+      "SHEET: existing matching APP, exact native empty grid, navigation and clean return"
+    ],
+    "temporary_test_files_removed": true,
+    "original_calculator_state_ip_rtc_restored": true,
+    "final_status": "RESET_REASON=00010001 BOOTS=48 CRASH=NONE BUILD=D26E5DE0\nWATCHDOG=ON TIMEOUT_MS=8000 RELOADS=11276 MAX_GAP_MS=669 BOOT_WATCHDOG=0 PREVIOUS_VALID=1 PREVIOUS_RELOADS=388 PREVIOUS_GAP_MS=669\nFIRMWARE_CRC=valid REQUIRED=1 IMAGE=750264 FOOTER=622376 EXPECTED=A0C1EBCD ACTUAL=A0C1EBCD CHECK_US=415221\nUI_FONT_FAMILY=1 UI_FONT_SIZE=16 UI_FONT_KEY=00000000\nVM_CACHE=RAM+SD BYTES=0 USED=0 RAM_HIT=0 RAM_MISS=0 SD_HIT=0 SD_MISS=0 COMPILES=0 STORES=0 REJECTED=0 PACKS=0 THAWS=0 PACKED=0\nPSRAM=OK BYTES=8388608 ID=0D5D53 SPI_HZ=20833333 READ_BYTES=11550230 WRITE_BYTES=11592128 ERRORS=0 MODE=QPI QPI_FALLBACKS=0 READ_BATCHES=11354 WRITE_BATCHES=43752 TAIL_TIMEOUTS=0 TAIL_STATE=00000000\nEXT_CACHE=PSRAM VM_HIT=0 VM_MISS=0 SD_HIT=0 SD_MISS=0 REJECTED=0 STORES=0 VM_BYTES=4194304 SD_BYTES=4194304 EVICTIONS=0\nBUFFERS=shared SRAM_USED=0 PSRAM_USED=8388608 PSRAM_CAPACITY=8388608 LARGEST=0 ACTIVE=2 EXTERNAL=2 PINNED=0 RECLAIMS=2 IO_ERRORS=0 VALID=1\nMK61S PICOCALC PICO-H 0.8.14 RP2040 125 MHz\nTERMINAL=COMMAND\nCORE=shared MATH=compact-binary64/owned-M0-IEEE MATH_TEST=OK failures=0\nKBD=OK errors=0 dropped=0 X=[ 0,           ] IP=24 RUN=0 BUSY=0\nX_RAW=[ 0.0000000  00] PANEL_INIT=1 PHYSICAL_KEYS=0 LAST_PHYSICAL=0x00\nLCD_BKL=240 KBD_BKL=40\nLCD=ST7365P RGB565 SPI_HZ=12500000 FRAMES=14\nLCD_DMA=1 LCD_BYTES=1280 LCD_RECTS=1 LCD_US=3496 LCD_FULL_FRAMES=1\nSD_DMA=1 READS=17 WRITES=0 TRANSFERS=19 HW_CRC=19 CRC_ERRORS=0\nDMA_WAIT0=55171 DMA_WAIT1=574 DMA_US0=3061111 DMA_US1=132646 DMA_TIMEOUTS=0 CRC32_HW=52 CRC_FALLBACK=0 LCD_ERRORS=0\nSD_SINGLE_CMDS=0 SD_MULTI_CMDS=0 SD_MULTI_SECTORS=0 SD_WRITE_FALLBACKS=0\nIDLE_WAITS=96886 IDLE_MS=91857 RTC_IRQS=0\nCORE_PARKED=1\nIO_CORE=1 I2C_TRANSACTIONS=10157 UART_BYTES=102055 LCD_PENDING=0 LCD_FRAME_CRC=4D5D7421\nUART_WAIT_US=0 UART_FLUSH_US=8241766 UART_FLUSHES=1123\nUART_DMA=1 IO_IDLE_US=132817435 UART_EVENT_WAITS=33874 UART_SLEEP_HOLDS=0 UART_BAUD=115207\nSD=OK SECTORS=62333952 USB_DISK=0 FS_ERROR=[]\nUI=CALCULATOR SELECT=0 VIEW=0 LANG=RU MEMORY=2 STEPS=105 SPEED=MAXIMUM RANDOM=MK61 FONT=0/16 SETTINGS=LOADED\nKeys: ? status; m math test; ! USB BOOTSEL; calculator keys per screen.\nSERVICE=CLOSED SOURCE=0 DIRTY=0 PATH=[] RESULT=[]\nSTACK_USED=6328 STACK_BYTES=32768\nMSC_READ=0 WRITE=0 READ_ERROR=0 WRITE_ERROR=0 LBA=0 SCSI=00\nUSB_MAX_GAP_US=661307\nPOWER_MODE=RUN SYS_HZ=125000000 PERI_HZ=125000000 PLL_MASK=3 SLEEP_ENTRIES=0 BATTERY_SLEEPS=0 SLEEP_CLOCK0=FFFFFFFF SLEEP_CLOCK1=00007FFF\nRUNTIME=NONE USB_SCREEN=OFF SCREEN_FRAMES=0 SCREEN_ERRORS=0 SLEEP=0 RTC=2026-10-21T14:56:24 RTC_SET=1 RTC_PPM=0\nM61_ACTIVE=0 SUSPENDED=0 DISPLAY=0 COLS=20 ROWS=10 FONT=0 TEXT=[                    ]\nMSC_SD_READ_US=0 COMMANDS=0 MAX_READ_US=0 MAX_READ_BYTES=0 MAX_READ_LBA=0 ACTIVE_BYTES=0 ACTIVE_LBA=0\n"
+  },
+  "stm32": [
+    {
+      "profile": "f411-classic-v3-usb-screen",
+      "resident_passed": true,
+      "system_apps": 9,
+      "flash_bytes": 378440,
+      "flash_limit": 524288,
+      "globals_bytes": 21768,
+      "ram_limit": 131072
+    },
+    {
+      "profile": "f401-product-a00",
+      "resident_passed": true,
+      "system_apps": 11,
+      "flash_bytes": 221464,
+      "flash_limit": 262144,
+      "globals_bytes": 26172,
+      "ram_limit": 65536
+    }
+  ],
+  "host_tests": [
+    "Pico shared core, files, M61/BASIC/FOCAL, Markdown, native APP contract and frame publication with ASan/UBSan",
+    "QPI PIO simulator: streamed TX/RX stalls, headers/dummy clocks/data, page bounds, CE limit and 32-instruction budget",
+    "Production QPI completion helper: every idle-loop phase and polling interval 1..64",
+    "Shared and APP buffers: 6 MiB, bounds, pins, windows/commit/errors, stale handles, return cleanup and SRAM fallback",
+    "CMD25 framing, CRC, command/block rejection, partial DMA, busy/stop timeout; UART event races and final stop bit",
+    "All 256 monochrome byte patterns, aligned/unaligned RGB565 scanlines and canaries",
+    "FAT16/FAT32/exFAT recovery with power-cut and interrupted-replay injection",
+    "Version, reviewed native resources and clean-package/CPU/CRC guards"
+  ],
+  "limitations": [
+    "PSRAM is indirect: native code, stacks and malloc pointers remain in SRAM; APP opts into block buffers",
+    "No new hardware scrolling, TE/Get Scanline synchronization or direct PSRAM-to-LCD DMA",
+    "No independent electrical UART TX capture: case USB-C UART was not connected; queue/DMA/BUSY/event behavior exercised",
+    "Battery consumption and operation without USB not measured; no batteries installed",
+    "Digital frame oracles do not optically read the panel; physical appearance confirmed by user",
+    "No new chess-move benchmark or mathematical changes"
+  ],
+  "evidence_sha256": {
+    ".build/picocalc-throughput-20261021/app-buffers-final/result.json": "785c2c0ae9673c551956331a7cf4e6aca3f271561bbabf1132d33e2b5431ea84",
+    ".build/picocalc-throughput-20261021/buffers-final/result.json": "916449e6cc09f1cc412311869faed728874c6a59c1b633a23b8f77d258be3645",
+    ".build/picocalc-throughput-20261021/display-final/result.json": "ee27fe03121cd788b5b095692e3f3278ad8c0ddf21c61a41e947a413fda86dd0",
+    ".build/picocalc-throughput-20261021/sd-final/result.json": "d221333183122f1bc2a3630768ccdc6caf6bb4a5da8e86d337681d34c1f63874",
+    ".build/picocalc-throughput-20261021/native-final/result.json": "e05e1c9e0b90f5af4ff4b67ea82712906ce6c0a6967c0b28988a10f3828af6eb",
+    ".build/picocalc-throughput-20261021/cache-final/result.json": "7df23cc0d31320fc7dd986b83548afa64adee838a9728b2585568f2d98809710",
+    ".build/picocalc-throughput-20261021/hardware-final/result.json": "36c6828ab4b9a34c2b20458e8254eda5d4aa5350390f1017223a47c2b2e380a4",
+    ".build/picocalc-throughput-20261021/apps-final/result.json": "6f9029c482a520cecb6db4f7b471271641238348573d2a7eeff11c55bc8f8789",
+    ".build/picocalc-throughput-20261021/spi-buffers/result.json": "a0f4d2446fbd2c8e358f76d448410358afc9e856a51ce6b086d4608b1eb164b7",
+    ".build/picocalc-throughput-20261021/forced-fallback-buffers/result.json": "1930048a55e5f9c15ec389bfb05ae7f9f1be60ba6f53dab62e2aa5f1ced72c12",
+    ".build/picocalc-throughput-20261021/buffers-after-reset/result.json": "b55328b5bae101a185f4fe80b87878abecbc36c98f679e4a3f8646b28e7d3bfe",
+    ".build/picocalc-throughput-20261021/reset-results.json": "427e97c25c60f6535658472ebef08f3f49f961f44e228251414253efda2a2df1",
+    ".build/picocalc-throughput-20261021/sd-before/result.json": "318e2fbc77210be01320f45a28ed02b8a008781f58d38afa008577a02fd37370",
+    ".build/picocalc-throughput-20261021/display-before/result.json": "2048d291569ab0a65815f673c31bb18ae3e90630f31238899e61a5f1ec1f6fbe",
+    ".build/picocalc-throughput-20261021/source-isolation.json": "b7006f0a100441be0b0078b6c1dea1fe6492dde6560552486336039816bedde3",
+    ".build/picocalc-throughput-20261021/final-status.txt": "56428e8bd5d4485d58e1af4214075e93e469e4b6cf91c0e4d492490d1a5ace39",
+    ".build/picocalc-throughput-20261021/recovery-host.log": "bc61b80448b20cf4964589806f7fd9441ea735b76f5b4317793b06e58534a62f",
+    ".build/picocalc-throughput-20261021/hardware-host-clock-fix.log": "eb312c3291d0b5ca3a6baa55d5591b2db2ec8e3038746f3f8a08abed9f349c3d",
+    ".build/picocalc-throughput-20261021/pico-host-qualified.log": "6870e8f7fe2453b35bd96790fe4c75f3a79029b9e57e8247ccd628939c33ce31",
+    ".build/picocalc-throughput-20261021/stm32-classic.log": "85b189534d7b887ec00fbaf6c9ef96b7d40faf1c419f605c83d966ac6289b2c3",
+    ".build/picocalc-throughput-20261021/stm32-mini.log": "1770aabb7b846a06b7b9f9e46d0b5c8432e4bbbb5f5c6d2b786a2455ace7ebb2",
+    ".build/picocalc-throughput-20261021/stm32-classic-system.log": "1ffb350bfc7953efe4eb9a97f7c1aad3ac7b300c3bba60090589d394c61e9648",
+    ".build/picocalc-throughput-20261021/stm32-mini-system.log": "fd68d9a1a9661d95154c5fbbe4c42e22089c465c8d4cce13eb9c2915f9b5f203",
+    ".build/picocalc-throughput-20261021/app-diagnostic/result.json": "ab8b730fa69593c00071be8029924249c2624fe7ab0578b8388cee2dd2dd9f7f"
+  }
+}

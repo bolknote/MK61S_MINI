@@ -37,7 +37,9 @@ enum mk61_service_capability {
   MK61_SERVICE_CAP_APP_FLOW = 1U << 17,
   MK61_SERVICE_CAP_RESOURCES = 1U << 18,
   MK61_SERVICE_CAP_DEBUG_IO = 1U << 19,
-  MK61_SERVICE_CAP_BASIC_GRAPHICS = 1U << 20
+  MK61_SERVICE_CAP_BASIC_GRAPHICS = 1U << 20,
+  MK61_SERVICE_CAP_BUFFERS = 1U << 21,
+  MK61_SERVICE_CAP_EXTERNAL_BUFFERS = 1U << 22
 };
 enum mk61_service_memory_arena {
   MK61_SERVICE_WORKSPACE = 0, MK61_SERVICE_SCRATCH = 1
@@ -99,8 +101,38 @@ enum mk61_service_operation {
   /* Synchronous native BASIC source processor with APP-local callbacks. */
   MK61_SERVICE_BASIC_FRONTEND,
   /* a=language_vm::Error, b=Russian flag; resident ROM text pointer, or 0. */
-  MK61_SERVICE_LANGUAGE_ERROR_TEXT
+  MK61_SERVICE_LANGUAGE_ERROR_TEXT,
+  /* Optional block buffers: a=mk61_buffer_operation, b=0,
+   * c=sizeof(mk61_service_buffer), payload=request. Returns 1/0.
+   * Existing pointer-based MEMORY operations retain their original ABI. */
+  MK61_SERVICE_BUFFER
 };
+enum mk61_buffer_operation {
+  MK61_BUFFER_ACQUIRE, MK61_BUFFER_RELEASE, MK61_BUFFER_INFO,
+  MK61_BUFFER_READ, MK61_BUFFER_WRITE, MK61_BUFFER_FILL,
+  MK61_BUFFER_WINDOW_OPEN, MK61_BUFFER_WINDOW_COMMIT, MK61_BUFFER_WINDOW_CLOSE,
+  MK61_BUFFER_PRESENT
+};
+enum mk61_buffer_access { MK61_BUFFER_DIRECT, MK61_BUFFER_BLOCK, MK61_BUFFER_EXTERNAL };
+enum mk61_buffer_storage { MK61_BUFFER_NONE, MK61_BUFFER_SRAM, MK61_BUFFER_PSRAM };
+#define MK61_BUFFER_WINDOW_WRITABLE 1U
+#define MK61_BUFFER_IO_BYTES 4096U
+/* ACQUIRE: size/access in; handle/storage out. Allocated bytes are uninitialized.
+ * INFO: handle in; size/storage/data out (data is NULL for PSRAM).
+ * READ/WRITE/FILL: handle/offset/size in, at most IO_BYTES. data is the SRAM
+ * source/target; FILL uses flags as a byte value. No implicit UI service.
+ * WINDOW_OPEN: handle/offset/size/flags in; window/data out. The parent is
+ * pinned. COMMIT/CLOSE identify window; CLOSE discards uncommitted edits.
+ * PRESENT: handle/offset/size identifies a native monochrome frame; graphics
+ * must be active. The host stages it in its existing display buffer.
+ * All handles/pointers/windows expire on APP return and cannot be reused by
+ * a subsequent invocation. RELEASE refuses a live window. Callers must query
+ * CAP_BUFFERS; CAP_EXTERNAL_BUFFERS additionally promises an external backend. */
+typedef struct mk61_service_buffer {
+  uint32_t handle, offset, size;
+  uint8_t* data;
+  uint32_t access, storage, window, flags;
+} mk61_service_buffer;
 #define MK61_VM_PROFILE_RAW_OPCODE UINT32_C(0x80000000)
 /* RAW_OPCODE only: payload low word = elapsed cycles, high word = calibrated
  * read overhead. b>1 identifies one fused integer block, not a scalar batch.

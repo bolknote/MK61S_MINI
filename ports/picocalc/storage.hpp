@@ -5,7 +5,8 @@ namespace shared_memory { class Buffer; }
 
 namespace picocalc {
 namespace sd {
-struct Statistics { bool dma;u32 reads,writes,dma_transfers,hardware_crc,crc_errors; };
+struct Statistics { bool dma;u32 reads,writes,dma_transfers,hardware_crc,crc_errors;
+    u32 write_single_commands,write_multi_commands,write_multi_sectors,write_fallbacks; };
 Statistics statistics();
 bool init();
 bool ready();
@@ -13,6 +14,7 @@ u32 sectors();
 bool read(u32 sector, u8 out[512]);
 bool read_sectors(u32 sector, u8* out, u32 count);
 bool write(u32 sector, const u8 data[512]);
+bool write_sectors(u32 sector,const u8* data,u32 count);
 bool read_bytes(u32 sector, u32 offset, u8* out, u32 count);
 bool write_bytes(u32 sector, u32 offset, const u8* data, u32 count);
 bool sync();

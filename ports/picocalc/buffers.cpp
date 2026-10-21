@@ -29,6 +29,7 @@ TestResult self_test(void (*service)()) {
     using namespace shared_memory;
     TestResult result{};
     if(!init() || !psram::ready() || !validate_buffer_invariants()) return result;
+    if(!psram::read(psram::CAPACITY,nullptr,0) || !psram::write(psram::CAPACITY,nullptr,0)) return result;
     Buffer direct,large;
     constexpr u32 size=1024U*1024,allocation=6U*1024*1024;
     if(!direct.acquire(Owner::APPLICATION,512) || !direct.data() ||

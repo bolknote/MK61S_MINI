@@ -192,8 +192,8 @@ bool begin() {
     if(!store_header({next,RECORDING,state->binding,1-state->header.slot,next,0})) { state.reset();return false; }
     state->recording=true;return true;
 }
-bool write(u32 sector,const u8 data[512]) {
-    if(!active()) return sd::write(sector,data);
+namespace {
+bool prepare_sector(u32 sector) {
     if(state->failed || journal_sector(sector)) { state->failed=true;return reject("Recovery journal write rejected"); }
     bool known=false;for(unsigned i=0;i<state->count;++i) if(state->logged[i]==sector) known=true;
     if(!known) {
@@ -211,8 +211,18 @@ bool write(u32 sector,const u8 data[512]) {
         if(!store_header(next)) { state->failed=true;return false; }
         state->logged[state->count++]=sector;
     }
-    diagnostics::feed_watchdog();
-    if(sd::write(sector,data)) return true;
+    diagnostics::feed_watchdog();return true;
+}
+}
+bool write(u32 sector,const u8 data[512]) { return write_sectors(sector,data,1); }
+bool write_sectors(u32 sector,const u8* data,u32 count) {
+    if(!data || !count || sector>=sd::sectors() || count>sd::sectors()-sector || count>UINT32_MAX/512) return false;
+    if(!active()) return sd::write_sectors(sector,data,count);
+    // Every before-image and descriptor is durable before the first block
+    // of CMD25 can reach the filesystem. Replaying untouched tail sectors
+    // after a partial stream is harmless and preserves the existing format.
+    for(u32 i=0;i<count;++i) if(!prepare_sector(sector+i)) return false;
+    if(sd::write_sectors(sector,data,count)) return true;
     state->failed=true;return reject("microSD transaction I/O error");
 }
 bool sync() {

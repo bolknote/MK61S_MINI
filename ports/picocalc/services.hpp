@@ -72,7 +72,7 @@ public:
     u8 run_native(const char* path, u16 file = 0xFFFF);
     u8 run_handled(const char* path, u16 magic);
 #if !defined(PICO_ON_DEVICE)
-    void test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context);
+    void test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context,bool native=false);
 #endif
     const char* runtime_name() const { return runtime_; }
     void show_script_error(const char* text) { message(text, ServicePage::CLOSED); }

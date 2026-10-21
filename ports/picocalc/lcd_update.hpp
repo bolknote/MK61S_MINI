@@ -2,6 +2,8 @@
 #define MK61_PICOCALC_LCD_UPDATE_HPP
 
 #include <cstdint>
+#include <array>
+#include <cstring>
 
 namespace picocalc::lcd {
 constexpr unsigned WIDTH=320, HEIGHT=320, STRIDE=WIDTH/8, BYTES=STRIDE*HEIGHT;
@@ -70,6 +72,24 @@ struct Update {
 };
 
 inline void scanline(const uint8_t* frame,const Rect& rect,unsigned row,uint8_t* output) {
+    // Dirty rectangles are tile-aligned. Four pixels at once remove the
+    // per-pixel branch, mask and pair of byte stores; the small table remains
+    // in flash and both SRAM scanline buffers retain their original size.
+    static constexpr auto expanded=[] {
+        std::array<std::array<uint8_t,8>,16> table{};
+        for(unsigned n=0;n<16;++n)
+            for(unsigned x=0;x<4;++x)
+                table[n][x*2]=table[n][x*2+1]=(n&(8U>>x))?0xFF:0;
+        return table;
+    }();
+    if(!((rect.x|rect.width)&7)) {
+        const auto* source=frame+(rect.y+row)*STRIDE+rect.x/8;
+        for(unsigned x=0;x<rect.width/8;++x) {
+            std::memcpy(output+x*16,expanded[source[x]>>4].data(),8);
+            std::memcpy(output+x*16+8,expanded[source[x]&15].data(),8);
+        }
+        return;
+    }
     for(unsigned x=0;x<rect.width;++x) {
         const unsigned source_x=rect.x+x;
         const uint8_t value=frame[(rect.y+row)*STRIDE+source_x/8] & (0x80U>>(source_x%8)) ? 0xFF : 0;

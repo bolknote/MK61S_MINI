@@ -31,6 +31,11 @@ bool write(u32 sector, const u8 data[512]) {
     std::memcpy(disk.data() + sector * 512, data, 512); return true;
 }
 bool sync() { return initialized; }
+bool write_sectors(u32 sector,const u8* data,u32 count) {
+    if(!data || !count || sector>=sectors() || count>sectors()-sector) return false;
+    for(u32 i=0;i<count;++i) if(!write(sector+i,data+i*512)) return false;
+    return true;
+}
 } }
 void picocalc_host_fail_write(int after) { fail_after = after; }
 bool picocalc_host_make_exfat() {
@@ -49,8 +54,7 @@ DRESULT disk_read(BYTE drive, BYTE* out, LBA_t sector, UINT count) {
 }
 DRESULT disk_write(BYTE drive, const BYTE* data, LBA_t sector, UINT count) {
     if(drive || !count || sector + count > picocalc::sd::sectors()) return RES_PARERR;
-    for(UINT i = 0; i < count; ++i) if(!picocalc::storage_journal::write((u32)sector + i, data + i * 512)) return RES_ERROR;
-    return RES_OK;
+    return picocalc::storage_journal::write_sectors((u32)sector,data,count)?RES_OK:RES_ERROR;
 }
 DRESULT disk_ioctl(BYTE drive, BYTE op, void* out) {
     if(drive || !picocalc::sd::ready()) return RES_NOTRDY;

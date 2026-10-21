@@ -32,6 +32,7 @@
 #include "diagnostics.hpp"
 #include "native_display.hpp"
 #include "native_keyboard.hpp"
+#include "loadable_buffer_services.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -100,6 +101,7 @@ public:
     u8 *data = nullptr;
     unsigned size = 0;
   } leases[2];
+  loadable_buffers::Session buffers;
   bool graphics = false;
   unsigned font_sessions = 0;
   bool preview = false;
@@ -349,9 +351,9 @@ public:
   static u32 call(u32 op, u32 a, u32 b, u32 c, void *payload);
 };
 #if !defined(PICO_ON_DEVICE)
-void Services::test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context) {
+void Services::test_native_contract(void (*test)(void*,const mk61_app_api&,const mk61_app_services&),void* context,bool native) {
   if(NativeHost::current || !test) return;
-  NativeHost host(*this);test(context,NativeHost::api,NativeHost::common);
+  NativeHost host(*this,native);test(context,NativeHost::api,NativeHost::common);
 }
 #endif
 NativeHost *NativeHost::current = nullptr;
@@ -419,7 +421,8 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
            MK61_SERVICE_CAP_FLOAT_CONVERT | MK61_SERVICE_CAP_DEBUG_IO |
            MK61_SERVICE_CAP_SETUP | MK61_SERVICE_CAP_UI_FONT |
            MK61_SERVICE_CAP_TEXT_FONT | MK61_SERVICE_CAP_RESOURCES |
-           MK61_SERVICE_CAP_EXPLORER | MK61_SERVICE_CAP_BASIC_GRAPHICS |
+           MK61_SERVICE_CAP_EXPLORER | MK61_SERVICE_CAP_BASIC_GRAPHICS | MK61_SERVICE_CAP_BUFFERS |
+           (shared_memory::buffer_statistics().external_capacity?MK61_SERVICE_CAP_EXTERNAL_BUFFERS:0) |
            MK61_SERVICE_CAP_APP_FLOW
 #if defined(PICO_ON_DEVICE)
            | MK61_SERVICE_CAP_RUNTIME
@@ -618,6 +621,27 @@ u32 NativeHost::call(u32 op, u32 a, u32 b, u32 c, void *payload) {
         if(!items[selected].action || items[selected].action()) return 1;
       }
     }
+  }
+  case MK61_SERVICE_BUFFER: {
+    if(!payload || b || c!=sizeof(mk61_service_buffer)) return 0;
+    auto& request=*(mk61_service_buffer*)payload;
+    if(a!=MK61_BUFFER_PRESENT) return host.buffers.call(a,request);
+    const u32 bytes=host.display.width()*host.display.height()/8;
+    if(!host.graphics || request.size!=bytes) return 0;
+    auto info=request;
+    if(!host.buffers.call(MK61_BUFFER_INFO,info) || request.offset>info.size || bytes>info.size-request.offset) return 0;
+    mk61_service_framebuffer frame{};
+    if(!host.display.call(MK61_SERVICE_DISPLAY_FRAMEBUFFER,sizeof(frame),0,&frame) || frame.bytes!=bytes) return 0;
+    // Fill the existing borrowed frame without pumping the UI mid-copy.
+    // A backend failure publishes a blank frame rather than partial data.
+    for(u32 at=0;at<bytes;) {
+      auto part=request;part.offset+=at;part.size=bytes-at<1024?bytes-at:1024;part.data=frame.pixels+at;
+      if(!host.buffers.call(MK61_BUFFER_READ,part)) {
+        std::memset(frame.pixels,0,bytes);host.display.bitmap_present(frame.pixels,bytes);return 0;
+      }
+      at+=part.size;
+    }
+    return host.display.bitmap_present(frame.pixels,bytes);
   }
   case MK61_SERVICE_MEMORY_ACQUIRE: {
     if (!payload || a > 1 || !c || c > 65535 || host.leases[a].data)

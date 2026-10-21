@@ -52,9 +52,9 @@ private:
     std::atomic<bool> failed_{false};
     bool dma_irq_ready_=false;
     lcd::Update update_;
-    u8 discard_=0;
+    u16 discard_=0;
     int dma_tx_=-1,dma_rx_=-1;
-    void start_scanline(const u8* bytes,unsigned count);
+    void start_scanline(const u16* pixels,unsigned count);
     bool finish_scanline();
     void transfer();
 };

@@ -5,6 +5,7 @@ namespace picocalc { namespace storage_journal {
 // Only FatFs disk_write goes through this adapter; USB MSC owns the card
 // exclusively and uses the raw SD driver instead.
 bool write(u32 sector,const u8 data[512]);
+bool write_sectors(u32 sector,const u8* data,u32 count);
 bool sync();
 bool recover();
 bool begin();

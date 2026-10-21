@@ -185,6 +185,11 @@ bool write(u32 sector,const u8 data[512]) {
     if(tracing) { Write entry;entry.sector=sector;std::memcpy(entry.bytes.data(),data,512);trace.push_back(entry); }
     save_sector(sector,data);return true;
 }
+bool write_sectors(u32 sector,const u8* data,u32 count) {
+    if(!data || !count || sector>=sectors() || count>sectors()-sector) return false;
+    for(u32 i=0;i<count;++i) if(!write(sector+i,data+i*512)) return false;
+    return true;
+}
 bool sync() {
     ++sync_calls;
     if(fail_sync_after==0) { fail_sync_after=-1;return false; }
@@ -198,7 +203,7 @@ DSTATUS disk_status(BYTE drive) { return drive || !sd::ready()?STA_NOINIT:0; }
 DRESULT disk_read(BYTE drive,BYTE* data,LBA_t sector,UINT count) { return !drive && sector+count<=sd::sectors() && sd::read_sectors(sector,data,count)?RES_OK:RES_ERROR; }
 DRESULT disk_write(BYTE drive,const BYTE* data,LBA_t sector,UINT count) {
     if(drive || sector+count>sd::sectors()) return RES_PARERR;
-    for(unsigned i=0;i<count;++i) if(!storage_journal::write(sector+i,data+i*512)) return RES_ERROR;return RES_OK;
+    return storage_journal::write_sectors(sector,data,count)?RES_OK:RES_ERROR;
 }
 DRESULT disk_ioctl(BYTE drive,BYTE op,void* out) {
     if(drive) return RES_PARERR;

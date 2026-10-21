@@ -24,6 +24,11 @@ bool read_bytes(u32 lba, u32 offset, u8* out, u32 count) {
 bool write_bytes(u32 lba, u32 offset, const u8* data, u32 count) {
     if(!valid(lba, offset, count)) return false;
     while(count) {
+        if(offset==0 && count>=512) {
+            const u32 blocks=count/512;
+            if(!write_sectors(lba,data,blocks)) return false;
+            data+=blocks*512;count-=blocks*512;lba+=blocks;continue;
+        }
         const unsigned n = count < 512 - offset ? count : 512 - offset;
         if(offset == 0 && n == 512) { if(!write(lba, data)) return false; }
         else {
