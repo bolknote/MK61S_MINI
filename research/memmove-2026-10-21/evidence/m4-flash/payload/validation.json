@@ -1,0 +1,30 @@
+{
+  "cpu": "m4",
+  "elf_sha256": "e4c67a44beeb2d95a6b8eea0ef3728060614193d4d5c856c9a3aa508a895c591",
+  "results": [
+    {
+      "name": "baseline",
+      "cases": 24281,
+      "bytes": 32,
+      "status": "PASS"
+    },
+    {
+      "name": "own16",
+      "cases": 24281,
+      "bytes": 352,
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "cases": 24281,
+      "bytes": 472,
+      "status": "PASS"
+    },
+    {
+      "name": "memmove",
+      "cases": 24281,
+      "bytes": 472,
+      "status": "PASS"
+    }
+  ]
+}

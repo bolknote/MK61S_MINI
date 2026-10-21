@@ -1,4 +1,4 @@
-/* Speed-selected memcpy lives in SRAM, like the standalone APP implementation.
+/* Speed-selected memcpy/memmove live in SRAM, like the standalone APP implementation.
  * No BootROM lookup or Flash trampoline is needed on each call. */
 #if defined(PICO_ON_DEVICE)
 #define MK61_MEMCPY_NAME __wrap_memcpy
@@ -9,4 +9,10 @@
 void* __wrap___aeabi_memcpy(void*,const void*,size_t) __attribute__((alias("__wrap_memcpy")));
 void* __wrap___aeabi_memcpy4(void*,const void*,size_t) __attribute__((alias("__wrap_memcpy")));
 void* __wrap___aeabi_memcpy8(void*,const void*,size_t) __attribute__((alias("__wrap_memcpy")));
+#define MK61_MEMMOVE_NAME __wrap_memmove
+#define MK61_MEMMOVE_ATTRIBUTES __attribute__((section(".time_critical.memmove")))
+#include "memory_move_arm.h"
+void* __wrap___aeabi_memmove(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
+void* __wrap___aeabi_memmove4(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
+void* __wrap___aeabi_memmove8(void*,const void*,size_t) __attribute__((alias("__wrap_memmove")));
 #endif

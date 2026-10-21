@@ -1,0 +1,202 @@
+{
+  "status": "PASS",
+  "tests": {
+    "production-validation": {
+      "sha256": "640122b8560a29f3db8fbb4c7f2d3bccbcf9e262ff0cdd4408a69988167208d6",
+      "status": "PASS"
+    },
+    "m0-final-validation": {
+      "sha256": "071856070536efc5f5188aa1cc9bad891e43e3376451b920c363a00be9e0d543",
+      "status": "PASS"
+    },
+    "pico-full-validation": {
+      "sha256": "159c1bc87bb5ca950e0559b7e619c6f7bf682baa0487bdd957740132e6aa381b",
+      "status": "PASS"
+    },
+    "pico-link-validation": {
+      "sha256": "7bcc7106cb2d15d6c02c69d25d230499dc958e284eb74a8e864f33358da3fb61",
+      "status": "PASS"
+    },
+    "trampoline-validation": {
+      "sha256": "7b0176aa805e253a68f1e201b2ba940f854c219a356c12a221d2b58f77c0bc7e",
+      "status": "PASS"
+    },
+    "host_memory": {
+      "sanitizers": "ASan/UBSan",
+      "status": "PASS"
+    },
+    "frozen_baseline_entry": {
+      "status": "PASS",
+      "architectures": 2,
+      "method": "Original C entry and noipa benchmark entry have identical instructions with APP LTO flags"
+    }
+  },
+  "builds": {
+    "classic": {
+      "status": "PASS",
+      "flash_bytes": 374472,
+      "capacity": 524288,
+      "free": 149816,
+      "minimum_free": 131072
+    },
+    "f401": {
+      "status": "PASS",
+      "flash_bytes": 245996,
+      "capacity": 262144,
+      "free": 16148,
+      "minimum_free": 512
+    },
+    "pico": {
+      "status": "PASS",
+      "flash_bytes": 1537008,
+      "capacity": 2097152,
+      "static_ram": 200360
+    },
+    "pico_apps": {
+      "status": "PASS",
+      "count": 7
+    }
+  },
+  "hardware": {
+    "m4_flash": {
+      "status": "PASS",
+      "runs": 3,
+      "cases": 1020,
+      "checks": 115224,
+      "app_sha256": "5bfad2ff746b77f3ea984b6ffbea3abdaf70c9e3af1d19e644d8922e8837ee89",
+      "state_and_files_preserved": true,
+      "performance": {
+        "resident": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.796563342610591
+        }
+      }
+    },
+    "m4_shared": {
+      "status": "PASS",
+      "runs": 3,
+      "cases": 476,
+      "checks": 101088,
+      "app_sha256": "a14af8c182cdc6724d3a1fd74407eafddbdea8fcffd534ea05ebff90c8c7cd2a",
+      "state_and_files_preserved": true,
+      "short_runtime_overhead_cycles": 9.0,
+      "performance": {
+        "runtime": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.8758809680379513
+        }
+      }
+    },
+    "m4_app": {
+      "status": "PASS",
+      "runs": 3,
+      "cases": 1020,
+      "checks": 115224,
+      "app_sha256": "a41f4ff2bac4b4498422e5839d0e30e72b83775b7bceac417e6221d0c494f913",
+      "state_and_files_preserved": true,
+      "performance": {
+        "baseline": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.9010459046066486
+        }
+      }
+    },
+    "m0_app": {
+      "status": "PASS",
+      "runs": 1,
+      "cases": 1224,
+      "checks": 40176,
+      "app_sha256": "3fc196d6e33c46e5291e807833f162c8dde6695c0d9bb1e3a832a7dfc0809eec",
+      "state_and_files_preserved": true,
+      "build": "A7483AE6",
+      "no_reset": true,
+      "instruction_pointer_preserved": true,
+      "rtc_advanced_seconds": 255.0,
+      "performance": {
+        "baseline": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 2.16465183201322
+        },
+        "resident": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 2.18013856812933
+        }
+      }
+    },
+    "m0_shared": {
+      "status": "PASS",
+      "runs": 3,
+      "cases": 340,
+      "checks": 97560,
+      "app_sha256": "d97d40cceca045aced5233aaaec80b1a0a6bc68f80c03d404566e060f460f221",
+      "state_and_files_preserved": true,
+      "build": "A7483AE6",
+      "no_reset": true,
+      "instruction_pointer_preserved": true,
+      "rtc_advanced_seconds": 250.0,
+      "short_runtime_overhead_cycles": 8.012820512820511,
+      "performance": {
+        "runtime": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 2.274336283185841
+        }
+      }
+    },
+    "m4_short_boundary": {
+      "status": "PASS",
+      "runs": 1,
+      "cases": 320,
+      "checks": 2776,
+      "app_sha256": "a41f4ff2bac4b4498422e5839d0e30e72b83775b7bceac417e6221d0c494f913",
+      "state_and_files_preserved": true,
+      "performance": {
+        "baseline": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.4642249712526056
+        }
+      }
+    },
+    "m0_back_boundary": {
+      "status": "PASS",
+      "runs": 3,
+      "cases": 176,
+      "checks": 4584,
+      "app_sha256": "3fc196d6e33c46e5291e807833f162c8dde6695c0d9bb1e3a832a7dfc0809eec",
+      "state_and_files_preserved": true,
+      "build": "A7483AE6",
+      "no_reset": true,
+      "instruction_pointer_preserved": true,
+      "rtc_advanced_seconds": 106.0,
+      "performance": {
+        "baseline": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.1305637982195846
+        },
+        "resident": {
+          "regressions_over_one_cycle": 0,
+          "median_speedup_nonempty_distinct": 1.1470967741935485
+        }
+      }
+    },
+    "m4_full_flash_restored": {
+      "bytes": 524288,
+      "crc32": "61CCEBFC",
+      "status": "PASS"
+    },
+    "pico_final_handoff": {
+      "status": "PASS",
+      "build": "A7483AE6",
+      "calculator_state_preserved": true,
+      "root_listing_preserved": true,
+      "temporary_directories_removed": true,
+      "no_reset_or_flash": true,
+      "firmware_crc_valid": true,
+      "peripherals_ready": true,
+      "serial_closed": true,
+      "rtc_set": true,
+      "error_seconds": 0.226631,
+      "rtc_restore_method": "Original RTC trajectory plus UTC wall-clock elapsed, including laptop sleep"
+    }
+  },
+  "hardware_correctness_checks": 476632
+}

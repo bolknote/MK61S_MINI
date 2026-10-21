@@ -1,0 +1,7 @@
+{
+  "target": "stm32",
+  "shared": false,
+  "selected_runtime": false,
+  "directory": "/MMOV-M4F",
+  "app_sha256": "d776b5a043de26bac49b1f568484182ff29cf4011b99969c6363f63b10517513"
+}

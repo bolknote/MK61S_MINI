@@ -12,7 +12,10 @@ void* memset(void* destination, int value, size_t size) {
   return mk61_memory_fill(destination, value, size);
 }
 
+#include "memory_move_arm.h"
+#ifndef MK61_ARM_MEMMOVE
 void* memmove(void* destination, const void* source, size_t size) {
   return mk61_memory_move(destination, source, size);
 }
+#endif
 #endif

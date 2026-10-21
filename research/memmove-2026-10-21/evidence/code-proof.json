@@ -1,0 +1,55 @@
+{
+  "m4_flash": {
+    "address": "0x80624e5",
+    "bytes": 472,
+    "code_sha256": "9fab52ef997e7d3a965326ef451b71328b210032f21ff8518df3960fad06e9bb",
+    "elf_sha256": "e4c67a44beeb2d95a6b8eea0ef3728060614193d4d5c856c9a3aa508a895c591"
+  },
+  "m4_app": {
+    "address": "0x20000ea1",
+    "bytes": 472,
+    "code_sha256": "9fab52ef997e7d3a965326ef451b71328b210032f21ff8518df3960fad06e9bb",
+    "elf_sha256": "b7634d45fcf3725860bf83f2904532e431ab848cd95b47a605f906bf13722d94"
+  },
+  "f411": {
+    "address": "0x8003695",
+    "bytes": 472,
+    "code_sha256": "9fab52ef997e7d3a965326ef451b71328b210032f21ff8518df3960fad06e9bb",
+    "elf_sha256": "e355b71f5b227c2aac0476c096e5cac3b2b106892b47ea47c74b8ee8930674e0",
+    "runtime_slot_24": "0x8003695"
+  },
+  "f401": {
+    "address": "0x800265d",
+    "bytes": 472,
+    "code_sha256": "9fab52ef997e7d3a965326ef451b71328b210032f21ff8518df3960fad06e9bb",
+    "elf_sha256": "54c905c7cf28e1ffd0279c0a9202cb1922452bc1df67a15ac18ade065768c943",
+    "runtime_slot_24": "0x800265d"
+  },
+  "pico": {
+    "address": "0x2000517d",
+    "bytes": 1192,
+    "code_sha256": "93ea2b6052413bfd1123ec1a4f7bc1c9c10af12ecab44b7fa6b89de6f142812f",
+    "elf_sha256": "6d82545844415e49181624f5c208bd83c309dab74e263cf64612a64541895138",
+    "runtime_slot_24": "0x2000517d"
+  },
+  "m0_app": {
+    "address": "0x200011e1",
+    "bytes": 1192,
+    "code_sha256": "93ea2b6052413bfd1123ec1a4f7bc1c9c10af12ecab44b7fa6b89de6f142812f",
+    "elf_sha256": "34521898365a6c424b5cb10ebc575abe05b04c701f80c659c63f7441273cc69a"
+  },
+  "m0_shared_target": {
+    "address": "0x20000931",
+    "bytes": 1192,
+    "code_sha256": "93ea2b6052413bfd1123ec1a4f7bc1c9c10af12ecab44b7fa6b89de6f142812f",
+    "elf_sha256": "2974bb5b1970489dc57aea3ac57e2e42bf1dcc051bdf35e6efc52dbde4f753f3"
+  },
+  "sources": {
+    "code/memory_move_arm.h": "f55dc6ad283a489fcf2731267ef1765eb0b74dcf81f3102fd5ca9c51ba799f90",
+    "code/memmove_m0.inc": "8f1dc4564d3b56b6e5b403f0382bfd8afb1deafd04661d39c74d37f81129fc45",
+    "code/memmove_m4.inc": "264ad693a4088e64ad4645e1e6a953d29d64fa7a59ad4b539f676c332f079f3b",
+    "sdk/portable/memory.c": "39cffc92c0a502a60e4fecbb30be20edbb7f769660b7c61bcbb8754485412754",
+    "code/system_memory_fill_move.c": "4744a62d291883b25bd13cb97a91c8545d8a1a6859f38895de4799c722a0538a",
+    "ports/picocalc/memory.c": "afce367e603a6e021b0e5e60b085618b3b1c564eb95a9d3450262d5052d22a4c"
+  }
+}

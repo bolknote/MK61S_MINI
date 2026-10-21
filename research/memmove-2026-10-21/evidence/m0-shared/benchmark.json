@@ -1,0 +1,7 @@
+{
+  "target": "picocalc-pico-h",
+  "shared": true,
+  "selected_runtime": true,
+  "directory": "/MMOV-M0S",
+  "app_sha256": "d97d40cceca045aced5233aaaec80b1a0a6bc68f80c03d404566e060f460f221"
+}

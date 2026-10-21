@@ -1,0 +1,16 @@
+[
+  {
+    "cpu": "cortex-m0plus",
+    "status": "PASS",
+    "method": "Separate single-entry LTO builds: entire linked machine code is byte-identical",
+    "bytes": 54,
+    "code_sha256": "ea1a3749327a4fbe69b2eab663bb1c72071b1f681bfc099a78e5ce3c6ad2fe8b"
+  },
+  {
+    "cpu": "cortex-m4",
+    "status": "PASS",
+    "method": "Separate single-entry LTO builds: entire linked machine code is byte-identical",
+    "bytes": 426,
+    "code_sha256": "d9f74409d6010118b760bb0d821ac95e72ca5925ddf6e3bfc2df35c401b14292"
+  }
+]

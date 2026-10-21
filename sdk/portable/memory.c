@@ -28,9 +28,12 @@ void* memset(void* dst, int value, size_t size) {
 }
 #endif
 
+#include "memory_move_arm.h"
+#ifndef MK61_ARM_MEMMOVE
 void* memmove(void* dst, const void* src, size_t size) {
   return mk61_memory_move(dst, src, size);
 }
+#endif
 
 int memcmp(const void* left, const void* right, size_t size) {
   return mk61_memory_compare(left, right, size);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check linked Pico memcpy routing and execute the retained ROM memset bridge."""
+"""Check linked Pico memcpy/memmove routing and execute the retained ROM memset bridge."""
 import argparse
 import hashlib
 import json
@@ -50,6 +50,12 @@ def verify(elf, rom):
     assert struct.unpack('<I', machine.mem_read(runtime + 22 * 4, 4))[0] == copy
     assert struct.unpack('<I', machine.mem_read(runtime + 23 * 4, 4))[0] == image.symbols['__wrap_memset']
 
+    move = image.symbols['__wrap_memmove']
+    assert 0x20000000 <= move < 0x20042000, ('memmove must execute in SRAM', hex(move))
+    for alias in ('__wrap___aeabi_memmove', '__wrap___aeabi_memmove4', '__wrap___aeabi_memmove8'):
+        assert image.symbols[alias] == move, alias
+    assert struct.unpack('<I', machine.mem_read(runtime + 24 * 4, 4))[0] == move
+
     table = image.symbols['aeabi_mem_funcs']
     assert image.symbols['aeabi_mem_funcs_end'] - table == 16
     assert struct.unpack('<4I', machine.mem_read(table, 16)) == (0x534d, 0x434d, 0x3453, 0x3443)
@@ -76,7 +82,8 @@ def verify(elf, rom):
     return dict(status='PASS', elf_sha256=hashlib.sha256(elf.read_bytes()).hexdigest(),
                 bootrom_sha256=hashlib.sha256(rom.read_bytes()).hexdigest(),
                 memcpy_address=hex(copy), memcpy_bytes=image.sizes['__wrap_memcpy'],
-                runtime_slots='memcpy=22, memset=23', rom_mem_funcs=[hex(value) for value in expected],
+                memmove_address=hex(move), memmove_bytes=image.sizes['__wrap_memmove'],
+                runtime_slots='memcpy=22, memset=23, memmove=24', rom_mem_funcs=[hex(value) for value in expected],
                 results=results)
 
 

@@ -1,0 +1,24 @@
+{
+  "cpu": "m0",
+  "elf_sha256": "34521898365a6c424b5cb10ebc575abe05b04c701f80c659c63f7441273cc69a",
+  "results": [
+    {
+      "name": "own16",
+      "cases": 24281,
+      "bytes": 992,
+      "status": "PASS"
+    },
+    {
+      "name": "own64",
+      "cases": 24281,
+      "bytes": 1192,
+      "status": "PASS"
+    },
+    {
+      "name": "memmove",
+      "cases": 24281,
+      "bytes": 1192,
+      "status": "PASS"
+    }
+  ]
+}

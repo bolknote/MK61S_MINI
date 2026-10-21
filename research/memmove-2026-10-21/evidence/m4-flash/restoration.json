@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "backup_sha256": "412f036e278a75beb63c96d95f4ca72798b59d66d6549e43e420261cafa602d1",
+  "installed_crc": {
+    "bytes": 524288,
+    "crc32": "09A16A4C",
+    "status": "PASS"
+  },
+  "restored_crc": {
+    "bytes": 524288,
+    "crc32": "61CCEBFC",
+    "status": "PASS"
+  },
+  "files_preserved": true,
+  "state_preserved": true,
+  "identity_preserved": true
+}

@@ -1,0 +1,116 @@
+[
+  {
+    "cpu": "m0",
+    "elf_sha256": "a98455ae1024223319aa0d6d3ee3cb4f920be8c46beb589bf92c38ce60cd86ef",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 1192,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "e72076d39ae0440d6dda4fa2864acfaa0d23cf0c72a02a236072b862de52318f",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 1192,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "7b5c50b00207b6ccecdc95e7275fc34690f546c5eb9d14cd55bc8f727ae100c8",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 472,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "d4d843474dc0063da685df837c94fd231015c738dd3f3140391501ce639c3386",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 472,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "63b66e9278576cfe3b11b708bd2a7243be9e606ab77c92aff729666f676c4c02",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 472,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory_fill_move.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "d4d843474dc0063da685df837c94fd231015c738dd3f3140391501ce639c3386",
+    "results": [
+      {
+        "name": "memmove",
+        "cases": 24281,
+        "bytes": 472,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory_fill_move.c",
+    "lto": true
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "4b888e3a2dd7748c146a777e6c2f422f32787c4ceb281fcb5b1d09774d42836b",
+    "results": [
+      {
+        "name": "__wrap_memmove",
+        "cases": 24281,
+        "bytes": 1192,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": false,
+    "eabi_aliases": "PASS"
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "00c2391cb1b80f0a8ae2102ca58cfa0fb2bce78309552fedb35904ef19388135",
+    "results": [
+      {
+        "name": "__wrap_memmove",
+        "cases": 24281,
+        "bytes": 1192,
+        "status": "PASS"
+      }
+    ],
+    "source": "ports/picocalc/memory.c",
+    "lto": true,
+    "eabi_aliases": "PASS"
+  }
+]

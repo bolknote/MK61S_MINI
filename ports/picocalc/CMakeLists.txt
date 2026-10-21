@@ -125,7 +125,8 @@ pico_add_library(pico_mem_ops_mk61)
 target_sources(pico_mem_ops_mk61 INTERFACE
     "${CMAKE_CURRENT_LIST_DIR}/memory.c" "${CMAKE_CURRENT_LIST_DIR}/memory_fill.S")
 target_link_libraries(pico_mem_ops_mk61 INTERFACE pico_base pico_bootrom)
-foreach(MK61_MEM_OP memcpy memset __aeabi_memcpy __aeabi_memcpy4 __aeabi_memcpy8
+foreach(MK61_MEM_OP memcpy memset memmove __aeabi_memmove __aeabi_memmove4 __aeabi_memmove8
+        __aeabi_memcpy __aeabi_memcpy4 __aeabi_memcpy8
         __aeabi_memset __aeabi_memset4 __aeabi_memset8)
     pico_wrap_function(pico_mem_ops_mk61 ${MK61_MEM_OP})
 endforeach()

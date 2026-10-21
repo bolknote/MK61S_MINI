@@ -1,0 +1,28 @@
+{
+  "base": 134619136,
+  "bytes": 1724,
+  "crc32": 235573264,
+  "sha256": "fe5cd7755ead7445baafa9f857c1b5a3b8176a83eddd6a41839e4f7e5b9e4842",
+  "entries": {
+    "BASELINE": {
+      "symbol": "baseline",
+      "address": 134619531,
+      "bytes": 32
+    },
+    "OWN16": {
+      "symbol": "own16",
+      "address": 134619565,
+      "bytes": 352
+    },
+    "OWN64": {
+      "symbol": "own64",
+      "address": 134619917,
+      "bytes": 472
+    },
+    "SDK": {
+      "symbol": "memmove",
+      "address": 134620389,
+      "bytes": 472
+    }
+  }
+}

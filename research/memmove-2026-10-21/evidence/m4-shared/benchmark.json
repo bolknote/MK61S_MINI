@@ -1,0 +1,7 @@
+{
+  "target": "stm32",
+  "shared": true,
+  "selected_runtime": true,
+  "directory": "/MMOV-FL",
+  "app_sha256": "a14af8c182cdc6724d3a1fd74407eafddbdea8fcffd534ea05ebff90c8c7cd2a"
+}

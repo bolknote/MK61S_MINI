@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "elf_sha256": "6d82545844415e49181624f5c208bd83c309dab74e263cf64612a64541895138",
+  "bootrom_sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+  "memcpy_address": "0x20004f45",
+  "memcpy_bytes": 568,
+  "memmove_address": "0x2000517d",
+  "memmove_bytes": 1192,
+  "runtime_slots": "memcpy=22, memset=23, memmove=24",
+  "rom_mem_funcs": [
+    "0x26b9",
+    "0x261d",
+    "0x26ad",
+    "0x2605"
+  ],
+  "results": [
+    {
+      "name": "__wrap_memset",
+      "cases": 8416,
+      "status": "PASS"
+    },
+    {
+      "name": "__wrap___aeabi_memset",
+      "cases": 8416,
+      "status": "PASS"
+    },
+    {
+      "name": "__wrap___aeabi_memset4",
+      "cases": 2104,
+      "status": "PASS"
+    },
+    {
+      "name": "__wrap___aeabi_memset8",
+      "cases": 1052,
+      "status": "PASS"
+    }
+  ]
+}
