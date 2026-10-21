@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "recorded_at": "2026-10-21T15:53:56.075485+00:00",
-  "status": "PARTIAL_EXTERNAL_INTERRUPTION_RESTORED",
+  "recorded_at": "2026-10-21T16:19:15.941897+00:00",
+  "status": "PASS_OFFLINE_PLACEMENT_EXPERIMENT_HIL_PENDING",
   "objective": "M0+ speed at least Qfplib with correctly rounded binary64 results; M4 code unchanged.",
   "physical_v7": {
     "artifact": {
@@ -1577,10 +1577,10 @@
     ]
   },
   "remaining": [
-    "Finish and verify the wall-clock RTC correction after laptop sleep; the current port owner has the validated offset and will apply it during cleanup.",
-    "Remove the three measured speed gaps: small/medium tangent, normal float-to-double conversion, and simple-exponent power; qualify any changed candidate against the complete114-group matrix.",
-    "29 chunks of the V72 baseline remain unmeasured after the user-confirmed external interruption.",
-    "General binary64 pow totality remains unproved outside the224 exponents handled by the exact integer stage; the final undecided trap remains for that domain."
+    "Rebase the five placement changes onto the next accepted frozen platform and measure the complete 114-group matrix; the current V73 prototype still uses accepted A7483AE6.",
+    "The three physical V72 speed gaps are not yet proven fixed. The prior V72 physical run completed only 87/116 chunks after an external interruption.",
+    "Use the tested UTC wall-clock helper in the next hardware transaction so host sleep is included in RTC restoration.",
+    "General binary64 pow totality remains unproved outside the 224 exact-stage exponent values; the final undecided trap remains for that domain."
   ],
   "semantics": "RNE return values. errno and floating-point exception flags are not implemented.",
   "physical_v7_fixed_layout_probe": {
@@ -3574,7 +3574,7 @@
     "instruction_scope": "Executed Thumb-1 instructions, not hardware cycles. Mean small-range count falls from 619.8125 to 613.3359375. Legacy and normal-exponent means are unchanged.",
     "rejected_variants": "The separate ASM high-product call added 59 executed instructions on average; compiling exp at O2 also increased instruction counts. Neither is selected."
   },
-  "current_candidate": {
+  "tan_products_v2_candidate_20261020": {
     "status": "PERFORMANCE_CORPUS_PASSED_POW_TOTALITY_OPEN",
     "production_manifest": {
       "profile": "picocalc-pico-h",
@@ -10490,14 +10490,14 @@
     "serial_closed": true
   },
   "device": {
-    "owner": "memmove",
+    "owner": "picocalc-render-i2c-sd",
     "state": "reserved",
     "build": "A7483AE6",
     "uid": "E6657CD423721C35",
     "port": "/dev/cu.usbmodem11301",
-    "updated_at": "2026-10-21T15:49:25.834609+00:00",
+    "updated_at": "2026-10-21T16:15:24.091068+00:00",
     "calculator_state_restored": true,
-    "serial_port_open": true,
+    "serial_port_open": false,
     "firmware_crc_verified": true,
     "peripherals_ready": true,
     "peripheral_state": "KBD=OK errors=0 SD=OK PANEL_INIT=1 PSRAM=OK MODE=QPI QPI_FALLBACKS=0 TAIL_TIMEOUTS=0 DMA_TIMEOUTS=0 CRC_ERRORS=0 LCD_ERRORS=0 APP_BUFFERS=0 VALID=1",
@@ -10510,7 +10510,7 @@
     "hardware_result": "/Users/bolk/Projects/MK61S_MINI/doc/measurements/picocalc-apps-lcd-chain-20261021.json",
     "sd_result": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/sd-final/result.json",
     "session": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/session.json",
-    "purpose": "Final corrected memmove matrix/boundaries/shared APP-only; no flash/reset",
+    "purpose": "Event-driven rendering, interrupt I2C, safe qualified SD acceleration",
     "math_transaction": ".build/m0-balanced-timing-v72-20261021/hil-01/transaction.json",
     "usb_present": true,
     "math_usb_open": false,
@@ -10540,8 +10540,36 @@
     "previous_accepted_restore": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/verified-restore-0.8.14-d26e5de0-r1",
     "version": "0.8.15",
     "restore_manifest_sha256": "75d0c8b2dfc950e3f57da6f6e81408eb29dd066a4a77d883b77ced489726e209",
-    "owner_thread": "01a15d77-6fe3-74d3-a025-dbf484687484",
+    "owner_thread": "01a1497b-7c0c-7e41-ad22-793babfc1623",
     "last_memmove_window": {
+      "status": "PASS",
+      "series": {
+        "m0-app-hil": {
+          "report": ".build/memmove-20261021/m0-app-hil/result.json",
+          "cases": 1224,
+          "runs": 1,
+          "checks": 40176
+        },
+        "m0-back-boundary-hil": {
+          "report": ".build/memmove-20261021/m0-back-boundary-hil/result.json",
+          "cases": 176,
+          "runs": 3,
+          "checks": 4584
+        },
+        "m0-shared-hil": {
+          "report": ".build/memmove-20261021/m0-shared-hil/result.json",
+          "cases": 340,
+          "runs": 3,
+          "checks": 97560
+        }
+      },
+      "state_and_files_preserved": true,
+      "ip_preserved": true,
+      "reset_or_flash": false,
+      "serial_closed": true,
+      "hardware_correctness_checks": 142320
+    },
+    "previous_memmove_window": {
       "status": "PASS",
       "report": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
       "cases": 1224,
@@ -10549,7 +10577,9 @@
       "state_and_files_preserved": true,
       "ip_preserved": true,
       "reset_or_flash": false
-    }
+    },
+    "rtc_restored": true,
+    "rtc_restore_receipt": ".build/memmove-20261021/pico-finish.json"
   },
   "active_processes": [],
   "compact_pow_v45_20261020": {
@@ -10738,7 +10768,7 @@
       ]
     }
   },
-  "previous_goal_turn_assessment": "PROGRESS_COMMITTED_INTERNAL_LAYOUT_REGRESSION_TEST",
+  "previous_goal_turn_assessment": "PROGRESS_COMMITTED_V72_PHYSICAL_PARTIAL_EVIDENCE",
   "compact_log_v53_20261020": {
     "status": "PRODUCTION_NUMERIC_AND_RESOURCE_GATES_PASS_READY_FOR_HIL_NOT_PROMOTED",
     "source": ".build/m0-log-compact-v53-20261020/source",
@@ -12048,7 +12078,7 @@
       }
     ]
   },
-  "next_action": "Prepare local fixes for the three observed timing gaps and coordinate a later hardware window on the then-current accepted frozen platform. The V72 baseline is partial, not a full114-group result.",
+  "next_action": "After the platform peer finishes render/I2C/SD, rebase V73 onto its accepted frozen source, qualify and run the agreed math window; then pass the device for memcmp.",
   "trig_word_normalization_v61_20261021": {
     "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
     "work": ".build/m0-trig-word-normalization-v61-20261021",
@@ -12128,7 +12158,7 @@
     "gates": ".build/m0-cos70-v65-20261021/gates.json",
     "reason": "Correct cosine kernel resolves other smallcos cases, but the three targeted slowcos inputs select sine after reduction. V66 moves secondary refinement into a packed small-trig callee, adds sine kernels and removes the broader dispatcher liveness penalty."
   },
-  "hardware_constraint": "The user externally interrupted USB. A7483AE6, calculator data and RTC were restored; the new11301 port was closed and explicitly returned to memmove, followed by the platform peer.",
+  "hardware_constraint": "The platform peer owns PicoCalc for render/I2C/SD. Math is queued next, followed by memcmp; no math USB access during this window.",
   "small_trig_v66_20261021": {
     "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
     "report": "doc/measurements/m0-small-trig-20261021.json",
@@ -12604,29 +12634,55 @@
     "complete_matrix": false,
     "physical_partial_summary": {
       "path": ".build/m0-throughput-integration-v72-20261021/physical-partial-summary.json",
-      "sha256": "f5f86b4aef9fb77fa936bf5f58edd50fb65ec93e5de804158eaefa2cc8bf0c92"
+      "sha256": "8aa2da5888c4fd8913944800bf5671d5df9eb0f9766f8bcd368328a12dabd510"
     },
     "chunks_completed": 87,
     "complete_groups": 85,
     "strict_slower_groups": 3
   },
   "rtc_sleep_correction": {
-    "status": "CORRECTION_PENDING_CURRENT_OWNER",
-    "recorded_at": "2026-10-21T15:55:03.748175+00:00",
-    "reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
-    "rtc_minus_host_utc_seconds": 10797.475989,
-    "rtc_at_preflight": "2026-10-21T17:58:47",
-    "host_utc_at_preflight": "2026-10-21T14:58:49.524011+00:00",
-    "preflight_timestamp_note": "The transaction-start wall time is within about one second of the RTC sample.",
-    "peer_cross_check": {
-      "path": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
-      "sha256": "1a5051db24f57bb597664458f62c7a7191b36f180a4990ac8248a4ea60b6a9e5",
-      "recorded_at": "2026-10-21T14:44:32.707319+00:00",
-      "rtc": "2026-10-21T17:44:30",
-      "rtc_minus_host_utc_seconds": 10797.292681
+    "status": "CORRECTED_WALL_CLOCK_VERIFIED",
+    "request_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+    "correction_artifact": {
+      "path": ".build/memmove-20261021/pico-finish.json",
+      "sha256": "0fbc6b5dadbd0accf8a5edd1fe266eba1f0b6bb280a0ce9434fe818a01cf3048"
     },
-    "formula": "wanted=(datetime.now(timezone.utc)+timedelta(seconds=rtc_minus_host_utc_seconds)).replace(tzinfo=None); command: date wanted.strftime(\"%Y-%m-%d %H:%M:%S\")",
-    "port_owner": "memmove",
-    "math_will_not_open_usb": true
-  }
+    "error_seconds": 0.226631,
+    "result": {
+      "status": "PASS",
+      "clock_correction_reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
+      "rtc_minus_host_utc_seconds": 10797.475989,
+      "source_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+      "utc_set": "2026-10-21T16:02:24.864941+00:00",
+      "wanted": "2026-10-21T19:02:22",
+      "actual": "2026-10-21T19:02:23",
+      "utc_read": "2026-10-21T16:02:25.297380+00:00",
+      "error_seconds": 0.226631,
+      "rtc_set": true,
+      "build": "A7483AE6",
+      "boots": "61",
+      "ip": "24",
+      "calculator_state_preserved": true,
+      "root_listing_preserved": true,
+      "temporary_directories_removed": true,
+      "no_reset_or_flash": true,
+      "firmware_crc_valid": true,
+      "peripherals_ready": true,
+      "serial_closed": true
+    }
+  },
+  "fixed_tails_v73_20261021": {
+    "report": "doc/measurements/m0-fixed-tails-v73-20261021.json",
+    "root_promoted": false,
+    "rounding_cases": 265409,
+    "instruction_groups": 114,
+    "instruction_count_changes_vs_v72": 0,
+    "allocated_flash_delta_bytes": 12,
+    "additional_main_ram_bytes": 0,
+    "new_tables": 0,
+    "physical_timing_available": false,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY"
+  },
+  "current_candidate": ".build/m0-fixed-tails-v73-20261021"
 }

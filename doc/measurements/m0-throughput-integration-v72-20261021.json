@@ -841,7 +841,6 @@
     "new_build": "2e4c4371"
   },
   "remains": [
-    "Finish and verify the wall-clock RTC correction after laptop sleep; the current port owner has the validated offset and will apply it during cleanup.",
     "Remove the three measured speed gaps: small/medium tangent, normal float-to-double conversion, and simple-exponent power; qualify any changed candidate against the complete114-group matrix.",
     "29 chunks of the V72 baseline remain unmeasured after the user-confirmed external interruption.",
     "General binary64 pow totality remains unproved outside the224 exponents handled by the exact integer stage; the final undecided trap remains for that domain."
@@ -2946,33 +2945,76 @@
     "calculator_data_restored": true,
     "temporary_directory_removed": true,
     "clock_restored": {
-      "expected": "2026-10-21T18:16:07.920044",
-      "actual": "2026-10-21T18:16:08",
-      "validation": "The monotonic elapsed calculation excluded laptop sleep; this timestamp needs the documented wall-clock correction."
+      "status": "CORRECTED_WALL_CLOCK_VERIFIED",
+      "request_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+      "correction_artifact": {
+        "path": ".build/memmove-20261021/pico-finish.json",
+        "sha256": "0fbc6b5dadbd0accf8a5edd1fe266eba1f0b6bb280a0ce9434fe818a01cf3048"
+      },
+      "error_seconds": 0.226631,
+      "result": {
+        "status": "PASS",
+        "clock_correction_reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
+        "rtc_minus_host_utc_seconds": 10797.475989,
+        "source_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+        "utc_set": "2026-10-21T16:02:24.864941+00:00",
+        "wanted": "2026-10-21T19:02:22",
+        "actual": "2026-10-21T19:02:23",
+        "utc_read": "2026-10-21T16:02:25.297380+00:00",
+        "error_seconds": 0.226631,
+        "rtc_set": true,
+        "build": "A7483AE6",
+        "boots": "61",
+        "ip": "24",
+        "calculator_state_preserved": true,
+        "root_listing_preserved": true,
+        "temporary_directories_removed": true,
+        "no_reset_or_flash": true,
+        "firmware_crc_valid": true,
+        "peripherals_ready": true,
+        "serial_closed": true
+      }
     },
     "serial_closed": true,
     "scope": "87 verified raw chunks from the physical125MHz RP2040; exact prepared input/result bits. The externally interrupted run is not a completed114-group comparison.",
     "goal_complete": false,
-    "clock_restoration_verified": false,
-    "clock_correction_pending": true
+    "clock_restoration_verified": true,
+    "clock_correction_pending": false,
+    "historical_monotonic_clock_restore": {
+      "expected": "2026-10-21T18:16:07.920044",
+      "actual": "2026-10-21T18:16:08",
+      "validation": "The monotonic elapsed calculation excluded laptop sleep; this timestamp needs the documented wall-clock correction."
+    }
   },
   "rtc_sleep_correction": {
-    "status": "CORRECTION_PENDING_CURRENT_OWNER",
-    "recorded_at": "2026-10-21T15:55:03.748175+00:00",
-    "reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
-    "rtc_minus_host_utc_seconds": 10797.475989,
-    "rtc_at_preflight": "2026-10-21T17:58:47",
-    "host_utc_at_preflight": "2026-10-21T14:58:49.524011+00:00",
-    "preflight_timestamp_note": "The transaction-start wall time is within about one second of the RTC sample.",
-    "peer_cross_check": {
-      "path": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
-      "sha256": "1a5051db24f57bb597664458f62c7a7191b36f180a4990ac8248a4ea60b6a9e5",
-      "recorded_at": "2026-10-21T14:44:32.707319+00:00",
-      "rtc": "2026-10-21T17:44:30",
-      "rtc_minus_host_utc_seconds": 10797.292681
+    "status": "CORRECTED_WALL_CLOCK_VERIFIED",
+    "request_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+    "correction_artifact": {
+      "path": ".build/memmove-20261021/pico-finish.json",
+      "sha256": "0fbc6b5dadbd0accf8a5edd1fe266eba1f0b6bb280a0ce9434fe818a01cf3048"
     },
-    "formula": "wanted=(datetime.now(timezone.utc)+timedelta(seconds=rtc_minus_host_utc_seconds)).replace(tzinfo=None); command: date wanted.strftime(\"%Y-%m-%d %H:%M:%S\")",
-    "port_owner": "memmove",
-    "math_will_not_open_usb": true
+    "error_seconds": 0.226631,
+    "result": {
+      "status": "PASS",
+      "clock_correction_reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
+      "rtc_minus_host_utc_seconds": 10797.475989,
+      "source_sha256": "ab975f49ef37f1313b4e48e20e5604d603cc1e3535c273ed3f585a0f2c007a1f",
+      "utc_set": "2026-10-21T16:02:24.864941+00:00",
+      "wanted": "2026-10-21T19:02:22",
+      "actual": "2026-10-21T19:02:23",
+      "utc_read": "2026-10-21T16:02:25.297380+00:00",
+      "error_seconds": 0.226631,
+      "rtc_set": true,
+      "build": "A7483AE6",
+      "boots": "61",
+      "ip": "24",
+      "calculator_state_preserved": true,
+      "root_listing_preserved": true,
+      "temporary_directories_removed": true,
+      "no_reset_or_flash": true,
+      "firmware_crc_valid": true,
+      "peripherals_ready": true,
+      "serial_closed": true
+    }
   }
 }

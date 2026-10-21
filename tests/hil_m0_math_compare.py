@@ -44,6 +44,48 @@ class MathPort(AppsPort):
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def rtc_after_wall_elapsed(rtc_before, sampled_at_utc, now_utc=None):
+    """Preserve the RTC trajectory across host sleep using UTC wall time."""
+    rtc=datetime.fromisoformat(rtc_before)
+    sampled=datetime.fromisoformat(sampled_at_utc)
+    now=now_utc or datetime.now(timezone.utc)
+    if rtc.tzinfo is not None or sampled.utcoffset() is None or now.utcoffset() is None:
+        raise ValueError('RTC must be local naive time; host samples must include a timezone')
+    elapsed=now-sampled
+    if elapsed.total_seconds()<0:
+        raise ValueError('Host wall clock precedes the saved RTC sample')
+    return rtc+elapsed
+
+
+def cleanup_session(port,output,before,directory,created,identity,initial,failure):
+    """Save the received transcript even when disconnect also breaks cleanup."""
+    after=final=None
+    removed=preserved=False
+    cleanup_error=None
+    try:
+        port.command('fsput cancel')
+        os.write(port.fd,b'\x1e\x1b\x1b\x1f');port.pump(.3)
+        if created:
+            answer=port.command('rm -r '+directory,timeout=30)
+            assert 'ERROR' not in answer,answer
+            removed=True
+        after={command:port.command(command) for command in before}
+        final=port.status()
+        assert before==after,('Calculator data changed',before,after)
+        preserved=True
+    except BaseException as error:
+        cleanup_error=error
+    result=dict(status='FAIL' if failure or cleanup_error else 'PASS',failure=failure,
+        cleanup_failure=repr(cleanup_error) if cleanup_error else None,
+        identity=identity,initial=initial,final=final,before=before,after=after,
+        temporary_directory_removed=removed,calculator_data_preserved=preserved)
+    (output/'transcript.bin').write_bytes(port.text)
+    (output/'session.json').write_text(json.dumps(result,indent=2)+'\n')
+    if cleanup_error is not None and failure is None:
+        raise cleanup_error
+    return result
+
+
 def ordered(x,width):
     sign=1<<(width-1);mask=(1<<width)-1
     return (~x&mask) if x&sign else x|sign
@@ -174,16 +216,7 @@ def main():
         except BaseException as error:
             failure=repr(error);raise
         finally:
-            port.command('fsput cancel')
-            os.write(port.fd,b'\x1e\x1b\x1b\x1f');port.pump(.3)
-            if created:
-                answer=port.command('rm -r '+directory,timeout=30);assert 'ERROR' not in answer,answer
-            after={c:port.command(c) for c in before};final=port.status()
-            assert before==after,('Calculator data changed',before,after)
-            (a.output/'transcript.bin').write_bytes(port.text)
-            (a.output/'session.json').write_text(json.dumps(dict(status='FAIL' if failure else 'PASS',failure=failure,
-                identity=identity,initial=initial,final=final,before=before,after=after,
-                temporary_directory_removed=created,calculator_data_preserved=True),indent=2)+'\n')
+            cleanup_session(port,a.output,before,directory,created,identity,initial,failure)
     groups=[]
     for index in sorted({r['stream_index'] for r in rows}):
         parts=[r for r in rows if r['stream_index']==index];cases=sum(r['cases'] for r in parts)
