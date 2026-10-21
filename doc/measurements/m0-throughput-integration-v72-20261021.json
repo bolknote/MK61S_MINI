@@ -1,0 +1,2978 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T15:53:56.075485+00:00",
+  "status": "PARTIAL_EXTERNAL_INTERRUPTION_RESTORED",
+  "objective": "Our required M0+ math at least as fast as Qfplib, with correctly rounded RNE results; M4 math unchanged.",
+  "previous_goal_turn": "PROGRESS_COMMITTED_INTERNAL_LAYOUT_REGRESSION_TEST",
+  "current_goal_turn": "PROGRESS_REBASED_COMMITTED_MATH_ON_NEW_ACCEPTED_PLATFORM_AND_QUALIFIED_ACTUAL_ARM",
+  "accepted_platform": {
+    "build": "a7483ae6",
+    "version": "0.8.15",
+    "restore": {
+      "path": ".build/picocalc-apps-lcd-chain-20261021/verified-restore-0.8.15-a7483ae6/RESTORE.json",
+      "sha256": "75d0c8b2dfc950e3f57da6f6e81408eb29dd066a4a77d883b77ced489726e209"
+    },
+    "source_sha256": "90a4871c91e7f35b6061c5421b18c9c91d57645c1c8d2cff96d3dd6dd4c2dc34",
+    "unchanged_platform_files": 552
+  },
+  "production_elf": {
+    "path": ".build/m0-throughput-integration-v72-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e"
+  },
+  "manifest": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.15",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537008,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 198616,
+    "static_ram_data_bss_bytes": 157936,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074048,
+    "bin_sha256": "f8df062888cd85a454c842d27b5a186761376649a3248591ec3ac17e860fa7b1",
+    "uf2_sha256": "4e44268b9874493eac280bf296c51992069610b13bf2c462749c2a4e84f76093",
+    "hardware_verified": false,
+    "source_sha256": "814b71a71d1524828afa765b510804e5170e35beb44e5bc8aa783b70393c7f13",
+    "build_id": "2e4c4371",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537008,
+      "footer_offset": 677224,
+      "profile_id": "50434831",
+      "crc32": "d3f5fb14"
+    }
+  },
+  "committed_math": {
+    "commit": "45d320db78b63a7703c5154662613a64c61e6af9",
+    "files_sha256": {
+      "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+      "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+      "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+      "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+      "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+      "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+      "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+      "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+      "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+      "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+      "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+      "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+      "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+      "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+      "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+      "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+      "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+      "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+      "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+      "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+      "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+      "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+      "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+      "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+      "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+      "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+      "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+      "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+      "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+      "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+      "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+      "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+      "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+      "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+      "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+      "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+      "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+      "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+      "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+      "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+      "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+      "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+      "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+      "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+      "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+      "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+    },
+    "files": 50,
+    "source_integration": {
+      "path": ".build/m0-throughput-integration-v72-20261021/source-integration.json",
+      "sha256": "6390d9d84ce2948b6546d0d329372a758596e588c67dfd4b418e6036bc4c0551"
+    },
+    "unchanged_since_V71": true
+  },
+  "qualification": {
+    "rounding": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/all12.json",
+        "sha256": "ae3ed957d64885190ceba223f41e763de316c98f644856877d30f94da6a74412"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "mpfr": "4.2.2",
+        "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+        "operations": {
+          "sqrt": {
+            "status": "PASS",
+            "cases": 10018,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+          },
+          "sin": {
+            "status": "PASS",
+            "cases": 26304,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+          },
+          "cos": {
+            "status": "PASS",
+            "cases": 26304,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+          },
+          "tan": {
+            "status": "PASS",
+            "cases": 26304,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+          },
+          "atan": {
+            "status": "PASS",
+            "cases": 20401,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+          },
+          "asin": {
+            "status": "PASS",
+            "cases": 20070,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+          },
+          "acos": {
+            "status": "PASS",
+            "cases": 20070,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+          },
+          "ln": {
+            "status": "PASS",
+            "cases": 25397,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+          },
+          "log10": {
+            "status": "PASS",
+            "cases": 25397,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+          },
+          "exp": {
+            "status": "PASS",
+            "cases": 20196,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "f070a86d557b1be82f622d73f11c5f501851b5045a723ca94937ff574eceb664"
+          },
+          "pow": {
+            "status": "PASS",
+            "cases": 20395,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "e933dd37f4102e4fd3a3cf9531d04d2888f53bda81cd9daf8df287497e63ed77"
+          },
+          "fma": {
+            "status": "PASS",
+            "cases": 24553,
+            "wrong_rounding": 0,
+            "examples": [],
+            "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+          }
+        },
+        "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+        "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+        "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+        "known_limitations": [
+          "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+        ],
+        "scope": "Finite corpus, not an exhaustive proof over every binary64 input."
+      }
+    },
+    "exact_pow_arm": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/exact-arm.json",
+        "sha256": "7ad1d7f90fd6480f9479a57b43e8bf63650f7aefc05c77749d42f70f5713f2f6"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "cases": 24,
+        "actual_arm_calls": 70,
+        "wrong_rounding": 0,
+        "dirty_sio_checks": 4,
+        "unsupported_checks": 4,
+        "maximum_stack_bytes": 1972,
+        "maximum_bounded_write_depth": 15000,
+        "result_sha256": "d5ba4e23cb10666b73c2721cab77d54a9b68bfd67cc37da1a69e39e7d507d172",
+        "checked_hint_calls": 38,
+        "maximum_hint_comparisons": 2,
+        "mpfr": "4.2.2",
+        "scope": "Direct exact-stage ARM calls including all saved registers, SP, stack writes, signed exponents, subnormal/overflow output and a pending SIO divider. Finite implementation qualification; domain argument is separate."
+      }
+    },
+    "resources": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/resources.json",
+        "sha256": "bc0a4460ca170a1cd5e7968846c42c64851045a73098de9cf9c6c9fa9c0b2095"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "static_ram_bytes": 198616,
+        "additional_main_ram_bytes": 0,
+        "ram_boundaries_unchanged": [
+          "__data_start__",
+          "__data_end__",
+          "__bss_start__",
+          "__bss_end__",
+          "__end__",
+          "__HeapLimit",
+          "__StackBottom",
+          "__StackTop",
+          "__StackOneBottom",
+          "__StackOneTop",
+          "__lcd_dma_end__"
+        ],
+        "scratch_y_bytes": 4096,
+        "new_tables": 0,
+        "accepted_build": "a7483ae6",
+        "new_build": "2e4c4371"
+      }
+    },
+    "internal_layout_negative_test": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/layout-self-test.json",
+        "sha256": "0a8c4af69e916cb2837d7abafe67dca8bdc40ffdb1d58ea196cd36230b69d8e8"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "checked_symbols": 388,
+        "internal_exact_helpers": 9,
+        "altered_symbol": "_ZN12m0_pow_exactL8multiplyERNS_1BEy",
+        "altered_byte_rejected": true,
+        "scope": "The production layout passes unchanged; changing one instruction byte inside an internal exact-pow helper is rejected. No firmware execution or hardware access."
+      }
+    },
+    "M4": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/m4-check/m4-isolation.json",
+        "sha256": "b7aefc59af4a2733e552722a7425a8e961e2b63bf97eea75299ccfe28c374440"
+      },
+      "result": {
+        "status": "PASS",
+        "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+        "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-throughput-integration-v72-20261021/source",
+        "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "soft",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "soft",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+            "allocated_bytes": 19852,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "soft",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          },
+          {
+            "source": "native_eabi_m0.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.hpp",
+            "abi": "hard",
+            "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "abi": "hard",
+            "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+            "allocated_bytes": 0,
+            "new_translation_unit": false
+          },
+          {
+            "source": "compact_math.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+            "allocated_bytes": 20524,
+            "new_translation_unit": false
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "abi": "hard",
+            "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "allocated_bytes": 0,
+            "new_translation_unit": true
+          }
+        ]
+      }
+    },
+    "generic_M0": {
+      "artifact": {
+        "path": ".build/m0-throughput-integration-v72-20261021/generic-m0-isolation.json",
+        "sha256": "32ba1451bd7ea6b0ba6a13db3452f53cf6560f24b22eff7954b6bbecbce710af"
+      },
+      "result": {
+        "status": "PASS",
+        "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+        "results": [
+          {
+            "source": "native_eabi_m0.cpp",
+            "allocated_bytes": 247584,
+            "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+          },
+          {
+            "source": "native_eabi_m0.S",
+            "allocated_bytes": 14468,
+            "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+          },
+          {
+            "source": "native_eabi_m0_rp2040.S",
+            "allocated_bytes": 0,
+            "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+          },
+          {
+            "source": "compact_math.cpp",
+            "allocated_bytes": 94,
+            "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+          },
+          {
+            "source": "native_eabi_m0_cr.cpp",
+            "allocated_bytes": 191042,
+            "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+          }
+        ]
+      }
+    },
+    "diagnostic_boot_crc": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v72-20261021/firmware-self-test.json",
+        "sha256": "b67d5cd8cb06479ff113603f7db56689dbf06c800398e6c2798dd82da31545d2"
+      },
+      "result": {
+        "status": "PASS",
+        "elf_sha256": "0b0aa7b320ce93e793352815473222d1ccd774a76ea518ba433efef9c57e6125",
+        "manifest_sha256": "8c166ed946b11527a9d8349f06b3105b1c06b0efb8b680e57a884a67215d5cf2",
+        "image_bytes": 1579228,
+        "valid_boot_crc": "0x774f8067",
+        "explicit_recheck_status": "valid",
+        "rejected": [
+          {
+            "case": "extent",
+            "status": 5
+          },
+          {
+            "case": "reference_crc",
+            "status": 9
+          }
+        ],
+        "scope": "Actual ARM enforce/report CRC code and compiled image bounds; valid full image accepted; excess range and damaged reference rejected. Timer and text formatting mocked."
+      }
+    },
+    "production_layout": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v72-20261021/layout-proof.json",
+        "sha256": "637ea4816e97f9b812d9b693b7a0cdcdc352c479e7f90f27aeedd24ca70722eb"
+      },
+      "result": {
+        "status": "PASS",
+        "production_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-throughput-integration-v72-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "comparison_elf": "/Users/bolk/Projects/MK61S_MINI/.build/m0-balanced-timing-v72-20261021/firmware/mk61s-picocalc-pico-h.elf",
+        "production_elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "comparison_elf_sha256": "0b0aa7b320ce93e793352815473222d1ccd774a76ea518ba433efef9c57e6125",
+        "checked_symbols": 392,
+        "checked_bytes": 432250,
+        "sha256": "1847a0d9c9b24d5f84d31bcac37a136b1946248cf591f60b6a2480dacd8f8778"
+      }
+    },
+    "reference_link": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v72-20261021/reference-link-proof.json",
+        "sha256": "e68d74eee065ef63ccf0df48e3c594f07657d5da3abdb63f5702ec7164f280a5"
+      },
+      "result": {
+        "status": "PASS",
+        "mode": "independent_reference_joined_after_production_link",
+        "production_elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+        "reference_elf_sha256": "ea4d4e39b055ddd76a84873301ca9453f5a437037f22f39a510e0634d6b0e91d",
+        "reference_flash_address": 270008320,
+        "reference_bytes": 6364,
+        "reference_sha256": "8a71ababc3538394b49590350fb0b4602b1253736543dd80391514c84bf235f3",
+        "original_flash_bytes": 1537008,
+        "preserved_production_flash_bytes": 1536960,
+        "production_patches": [
+          {
+            "symbol": "_ZN8picocalc8firmware7enforceEv",
+            "offset": 84532,
+            "size": 4,
+            "before": "0x101773f0",
+            "after": "0x101818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "symbol": "_ZN8picocalc8firmware6reportEPcjb",
+            "offset": 86288,
+            "size": 4,
+            "before": "0x1773f0",
+            "after": "0x1818dc",
+            "reason": "Diagnostic image extent; no mathematical code changed"
+          },
+          {
+            "offset": 677224,
+            "size": 40,
+            "reason": "Integrity footer covers the diagnostic reference"
+          }
+        ],
+        "ram_initializers_preserved": true,
+        "production_program_headers_preserved": true,
+        "preserved_ram_sections": 11,
+        "reference_ram_bytes": 0,
+        "reference_entry_points": 81
+      }
+    },
+    "timing_APP_13_ABI": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v72-20261021/app-self-test/result.json",
+        "sha256": "8992d89140e64547a50a5f88532ac8b306d534ff8f35c2dcf76fa29363bc5ccc"
+      },
+      "result": {
+        "status": "PASS",
+        "cases": [
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 0,
+            "operation": "dmul",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 1,
+            "operation": "sin",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 2,
+            "operation": "i2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 3,
+            "operation": "ui2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 4,
+            "operation": "l2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 5,
+            "operation": "ul2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 6,
+            "operation": "d2iz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 7,
+            "operation": "d2uiz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 8,
+            "operation": "d2lz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 9,
+            "operation": "d2ulz",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 10,
+            "operation": "f2d",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 11,
+            "operation": "d2f",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": false,
+            "calls": [
+              44,
+              44
+            ]
+          },
+          {
+            "kind": 12,
+            "operation": "dcmpeq",
+            "negative": true,
+            "calls": [
+              44,
+              44
+            ]
+          }
+        ],
+        "cache_counters": true,
+        "warmup_tested": true,
+        "rounds": 12,
+        "wire_version": 4,
+        "tested_kinds": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "all_abi_kinds_tested": true,
+        "scope": "Real ARM math and timing APP source. Timer/storage/UI/XIP counters mocked; this is a protocol and ABI test, not a cycle benchmark."
+      }
+    },
+    "payload_identity_and_uf2_bounds": {
+      "artifact": {
+        "path": ".build/m0-balanced-timing-v72-20261021/uf2-bounds.json",
+        "sha256": "ce4fe32ec0f84d9cc2d90384cf2098c7b98a05d1fe5b2a2e151958d29dc0c43a"
+      },
+      "result": {
+        "status": "PASS",
+        "blocks": 6169,
+        "start": "0x10000000",
+        "end": "0x10181900",
+        "uf2_sha256": "d31611cf4735e2f625b7dd231d94c930ac77ba4bea9c31041576bbcda33cb611",
+        "groups": 114,
+        "chunks": 116,
+        "cases": 23091,
+        "payloads_identical_to": ".build/m0-balanced-timing-v69-20261021",
+        "exact_pow_internal_helpers_preserved": 9
+      }
+    }
+  },
+  "prepared_physical_comparison": {
+    "build": {
+      "path": ".build/m0-balanced-timing-v72-20261021/benchmark.json",
+      "sha256": "343276349607484794f1131bd601939430c65e0e85af0ee1fca0fd79de49cfd1"
+    },
+    "groups": 114,
+    "chunks": 116,
+    "cases": 23091,
+    "rounds": 12,
+    "primary_estimator": "order_balanced_median",
+    "corpus": "Same input/result bits as the prior full matrix; 98 direct groups and 16 explicitly composed Qfplib baselines.",
+    "transaction": {
+      "path": ".build/m0-balanced-timing-v72-20261021/run-transaction.py",
+      "sha256": "445f639d15f99c39d0e84b01fd77b823de63e192baa97aae9bd249673588a633"
+    },
+    "restore_build": "A7483AE6",
+    "usb_opened": true,
+    "physical_timing_available": true,
+    "complete_matrix": false
+  },
+  "resources": {
+    "status": "PASS",
+    "elf_sha256": "4c15c0c4d76778e17e74d789c1ddadbde73514c326d683b525239e2c47c9c49e",
+    "static_ram_bytes": 198616,
+    "additional_main_ram_bytes": 0,
+    "ram_boundaries_unchanged": [
+      "__data_start__",
+      "__data_end__",
+      "__bss_start__",
+      "__bss_end__",
+      "__end__",
+      "__HeapLimit",
+      "__StackBottom",
+      "__StackTop",
+      "__StackOneBottom",
+      "__StackOneTop",
+      "__lcd_dma_end__"
+    ],
+    "scratch_y_bytes": 4096,
+    "new_tables": 0,
+    "accepted_build": "a7483ae6",
+    "new_build": "2e4c4371"
+  },
+  "remains": [
+    "Finish and verify the wall-clock RTC correction after laptop sleep; the current port owner has the validated offset and will apply it during cleanup.",
+    "Remove the three measured speed gaps: small/medium tangent, normal float-to-double conversion, and simple-exponent power; qualify any changed candidate against the complete114-group matrix.",
+    "29 chunks of the V72 baseline remain unmeasured after the user-confirmed external interruption.",
+    "General binary64 pow totality remains unproved outside the224 exponents handled by the exact integer stage; the final undecided trap remains for that domain."
+  ],
+  "goal_complete": false,
+  "instruction_profile": {
+    "artifact": {
+      "path": ".build/m0-throughput-integration-v72-20261021/instruction-matrix.json",
+      "sha256": "d8da0382921fd27eb0ee389d4e75075f2d3b2dab8f60bcd490c6c070bf1b77e5"
+    },
+    "groups": 114,
+    "cases": 23091,
+    "faster": 112,
+    "equal": 2,
+    "slower": 0,
+    "physical_timing_available": false
+  },
+  "physical_partial": {
+    "status": "PARTIAL_EXTERNAL_INTERRUPTION_RESTORED",
+    "recorded_at": "2026-10-21T15:53:56.075485+00:00",
+    "full_matrix_completed": false,
+    "chunks_completed": 87,
+    "chunks_expected": 116,
+    "missing_chunks": [
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      107,
+      111,
+      112,
+      113,
+      114
+    ],
+    "complete_groups": 85,
+    "groups_expected": 114,
+    "cases": 21090,
+    "owned_wrong_rounding": 0,
+    "strict_faster_groups": 82,
+    "exact_equal_groups": 0,
+    "strict_slower_groups": 3,
+    "slower_groups": [
+      {
+        "stream_index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 19.475341796875,
+          "qfplib": 15.38916015625
+        },
+        "own_over_qfplib": 1.2655233683408953
+      },
+      {
+        "stream_index": 45,
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.0909423828125,
+          "qfplib": 0.0887451171875
+        },
+        "own_over_qfplib": 1.0247592847317744
+      },
+      {
+        "stream_index": 113,
+        "operation": "pow",
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.648193359375,
+          "qfplib": 1.542724609375
+        },
+        "own_over_qfplib": 1.06836524766577
+      }
+    ],
+    "groups": [
+      {
+        "stream_index": 0,
+        "operation": "sin",
+        "stream": "legacy",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.8876953125,
+          "qfplib": 13.074951171875
+        },
+        "own_over_qfplib": 0.7562319111194099
+      },
+      {
+        "stream_index": 1,
+        "operation": "cos",
+        "stream": "legacy",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.8209228515625,
+          "qfplib": 13.06201171875
+        },
+        "own_over_qfplib": 0.7518690890060185
+      },
+      {
+        "stream_index": 2,
+        "operation": "tan",
+        "stream": "legacy",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.2520751953125,
+          "qfplib": 15.299072265625
+        },
+        "own_over_qfplib": 0.7354743477220139
+      },
+      {
+        "stream_index": 3,
+        "operation": "i2d",
+        "stream": "legacy",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2257080078125,
+          "qfplib": 0.4527587890625
+        },
+        "own_over_qfplib": 0.49851712051765973
+      },
+      {
+        "stream_index": 4,
+        "operation": "sin",
+        "stream": "reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.7225341796875,
+          "qfplib": 12.990966796875
+        },
+        "own_over_qfplib": 0.7484072842081525
+      },
+      {
+        "stream_index": 5,
+        "operation": "cos",
+        "stream": "reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 8.849853515625,
+          "qfplib": 12.949462890625
+        },
+        "own_over_qfplib": 0.6834147169171019
+      },
+      {
+        "stream_index": 6,
+        "operation": "tan",
+        "stream": "reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 10.7158203125,
+          "qfplib": 15.177734375
+        },
+        "own_over_qfplib": 0.7060223909406769
+      },
+      {
+        "stream_index": 7,
+        "operation": "sin",
+        "stream": "ordinary",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.848388671875,
+          "qfplib": 13.0059814453125
+        },
+        "own_over_qfplib": 0.9109953540757426
+      },
+      {
+        "stream_index": 8,
+        "operation": "cos",
+        "stream": "ordinary",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.2447509765625,
+          "qfplib": 13.0172119140625
+        },
+        "own_over_qfplib": 0.8638371297016982
+      },
+      {
+        "stream_index": 9,
+        "operation": "tan",
+        "stream": "ordinary",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 14.15234375,
+          "qfplib": 15.2305908203125
+        },
+        "own_over_qfplib": 0.9292051711562969
+      },
+      {
+        "stream_index": 10,
+        "operation": "sin",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.4735107421875,
+          "qfplib": 13.02099609375
+        },
+        "own_over_qfplib": 0.8811546105673679
+      },
+      {
+        "stream_index": 11,
+        "operation": "cos",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.574462890625,
+          "qfplib": 13.029052734375
+        },
+        "own_over_qfplib": 0.8883579740288943
+      },
+      {
+        "stream_index": 12,
+        "operation": "tan",
+        "stream": "qfplib_range",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 14.3809814453125,
+          "qfplib": 15.271240234375
+        },
+        "own_over_qfplib": 0.9417035698869722
+      },
+      {
+        "stream_index": 13,
+        "operation": "sin",
+        "stream": "small_reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.322021484375,
+          "qfplib": 13.0687255859375
+        },
+        "own_over_qfplib": 0.7133076154270075
+      },
+      {
+        "stream_index": 14,
+        "operation": "cos",
+        "stream": "small_reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 7.7911376953125,
+          "qfplib": 12.8272705078125
+        },
+        "own_over_qfplib": 0.607388585947983
+      },
+      {
+        "stream_index": 15,
+        "operation": "tan",
+        "stream": "small_reduced",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 10.488525390625,
+          "qfplib": 15.273681640625
+        },
+        "own_over_qfplib": 0.6867057751634404
+      },
+      {
+        "stream_index": 16,
+        "operation": "sin",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.5228271484375,
+          "qfplib": 13.08740234375
+        },
+        "own_over_qfplib": 0.7276331007723016
+      },
+      {
+        "stream_index": 17,
+        "operation": "cos",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 10.2933349609375,
+          "qfplib": 13.109375
+        },
+        "own_over_qfplib": 0.7851888408820024
+      },
+      {
+        "stream_index": 18,
+        "operation": "tan",
+        "stream": "small_medium_remainder",
+        "cases": 128,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 19.475341796875,
+          "qfplib": 15.38916015625
+        },
+        "own_over_qfplib": 1.2655233683408953
+      },
+      {
+        "stream_index": 19,
+        "operation": "sin",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.642473118279568,
+          "qfplib": 13.179618768328446
+        },
+        "own_over_qfplib": 0.8833694906454542
+      },
+      {
+        "stream_index": 20,
+        "operation": "cos",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 9.9613880742913,
+          "qfplib": 12.939149560117302
+        },
+        "own_over_qfplib": 0.7698642038264679
+      },
+      {
+        "stream_index": 21,
+        "operation": "tan",
+        "stream": "previous_slow_cases",
+        "cases": 3,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 11.801319648093843,
+          "qfplib": 15.31512707722385
+        },
+        "own_over_qfplib": 0.7705662243994289
+      },
+      {
+        "stream_index": 22,
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2242431640625,
+          "qfplib": 0.453125
+        },
+        "own_over_qfplib": 0.4948814655172414
+      },
+      {
+        "stream_index": 23,
+        "operation": "i2d",
+        "stream": "small",
+        "cases": 257,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2677876598110061,
+          "qfplib": 1.004030016675931
+        },
+        "own_over_qfplib": 0.2667128027681661
+      },
+      {
+        "stream_index": 24,
+        "operation": "sqrt",
+        "stream": "legacy",
+        "cases": 12,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2503676470588236,
+          "qfplib": 1.3810049019607842
+        },
+        "own_over_qfplib": 0.9054042062294793
+      },
+      {
+        "stream_index": 25,
+        "operation": "exp",
+        "stream": "legacy",
+        "cases": 19,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 5.738809640924742,
+          "qfplib": 6.597884899163797
+        },
+        "own_over_qfplib": 0.8697953554255042
+      },
+      {
+        "stream_index": 26,
+        "operation": "sqrt",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2490234375,
+          "qfplib": 1.376220703125
+        },
+        "own_over_qfplib": 0.9075749512151854
+      },
+      {
+        "stream_index": 27,
+        "operation": "sqrt",
+        "stream": "normalized",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2640380859375,
+          "qfplib": 1.35498046875
+        },
+        "own_over_qfplib": 0.9328828828828829
+      },
+      {
+        "stream_index": 28,
+        "operation": "exp",
+        "stream": "small_range",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 6.1351318359375,
+          "qfplib": 6.4951171875
+        },
+        "own_over_qfplib": 0.9445760036084799
+      },
+      {
+        "stream_index": 29,
+        "operation": "exp",
+        "stream": "normal_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 5.728271484375,
+          "qfplib": 6.578369140625
+        },
+        "own_over_qfplib": 0.8707737984783819
+      },
+      {
+        "stream_index": 30,
+        "operation": "sqrt",
+        "stream": "segment_edges",
+        "cases": 1536,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2459716796875,
+          "qfplib": 1.3668619791666667
+        },
+        "own_over_qfplib": 0.9115563229340319
+      },
+      {
+        "stream_index": 31,
+        "operation": "i2d",
+        "stream": "random",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2254638671875,
+          "qfplib": 0.4566650390625
+        },
+        "own_over_qfplib": 0.4937182571504945
+      },
+      {
+        "stream_index": 32,
+        "operation": "ui2d",
+        "stream": "random",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.1890869140625,
+          "qfplib": 0.4232177734375
+        },
+        "own_over_qfplib": 0.446783963080473
+      },
+      {
+        "stream_index": 33,
+        "operation": "l2d",
+        "stream": "random",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2825927734375,
+          "qfplib": 0.4305419921875
+        },
+        "own_over_qfplib": 0.6563651828749646
+      },
+      {
+        "stream_index": 34,
+        "operation": "ul2d",
+        "stream": "random",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2215576171875,
+          "qfplib": 0.385986328125
+        },
+        "own_over_qfplib": 0.5740037950664136
+      },
+      {
+        "stream_index": 35,
+        "operation": "l2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2911376953125,
+          "qfplib": 0.4512939453125
+        },
+        "own_over_qfplib": 0.6451176629699756
+      },
+      {
+        "stream_index": 36,
+        "operation": "l2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.3385009765625,
+          "qfplib": 0.6744384765625
+        },
+        "own_over_qfplib": 0.5019004524886878
+      },
+      {
+        "stream_index": 37,
+        "operation": "ul2d",
+        "stream": "small_magnitudes",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.23681640625,
+          "qfplib": 0.3944091796875
+        },
+        "own_over_qfplib": 0.6004333023831631
+      },
+      {
+        "stream_index": 38,
+        "operation": "ul2d",
+        "stream": "all_bit_lengths",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2957763671875,
+          "qfplib": 0.6568603515625
+        },
+        "own_over_qfplib": 0.45028805054822524
+      },
+      {
+        "stream_index": 39,
+        "operation": "d2iz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.1409912109375,
+          "qfplib": 0.5699462890625
+        },
+        "own_over_qfplib": 0.24737631184407796
+      },
+      {
+        "stream_index": 40,
+        "operation": "d2iz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.224609375,
+          "qfplib": 0.5726318359375
+        },
+        "own_over_qfplib": 0.3922404604561927
+      },
+      {
+        "stream_index": 41,
+        "operation": "d2uiz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.4671630859375,
+          "qfplib": 0.4893798828125
+        },
+        "own_over_qfplib": 0.95460214517336
+      },
+      {
+        "stream_index": 42,
+        "operation": "d2lz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.214111328125,
+          "qfplib": 0.48388671875
+        },
+        "own_over_qfplib": 0.44248234106962664
+      },
+      {
+        "stream_index": 43,
+        "operation": "d2lz",
+        "stream": "signed_integral",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.267333984375,
+          "qfplib": 0.496337890625
+        },
+        "own_over_qfplib": 0.5386128873585834
+      },
+      {
+        "stream_index": 44,
+        "operation": "d2ulz",
+        "stream": "nonnegative_valid",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.168212890625,
+          "qfplib": 0.404052734375
+        },
+        "own_over_qfplib": 0.4163141993957704
+      },
+      {
+        "stream_index": 45,
+        "operation": "f2d",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.0909423828125,
+          "qfplib": 0.0887451171875
+        },
+        "own_over_qfplib": 1.0247592847317744
+      },
+      {
+        "stream_index": 46,
+        "operation": "d2f",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.171142578125,
+          "qfplib": 0.172119140625
+        },
+        "own_over_qfplib": 0.9943262411347518
+      },
+      {
+        "stream_index": 47,
+        "operation": "dcmpeq",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.0673828125,
+          "qfplib": 0.416015625
+        },
+        "own_over_qfplib": 0.1619718309859155
+      },
+      {
+        "stream_index": 48,
+        "operation": "dcmplt",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.260498046875,
+          "qfplib": 0.425537109375
+        },
+        "own_over_qfplib": 0.6121629374641423
+      },
+      {
+        "stream_index": 49,
+        "operation": "dcmple",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.259765625,
+          "qfplib": 0.427978515625
+        },
+        "own_over_qfplib": 0.6069594980034227
+      },
+      {
+        "stream_index": 50,
+        "operation": "dcmpge",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2596435546875,
+          "qfplib": 0.42724609375
+        },
+        "own_over_qfplib": 0.6077142857142858
+      },
+      {
+        "stream_index": 51,
+        "operation": "dcmpgt",
+        "stream": "normal",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.2598876953125,
+          "qfplib": 0.42578125
+        },
+        "own_over_qfplib": 0.6103784403669725
+      },
+      {
+        "stream_index": 52,
+        "operation": "ln",
+        "stream": "normal_exponents",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 6.3175048828125,
+          "qfplib": 7.375732421875
+        },
+        "own_over_qfplib": 0.8565257687597233
+      },
+      {
+        "stream_index": 53,
+        "operation": "ln",
+        "stream": "normalized",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 6.3663330078125,
+          "qfplib": 7.2032470703125
+        },
+        "own_over_qfplib": 0.8838143334067684
+      },
+      {
+        "stream_index": 54,
+        "operation": "ln",
+        "stream": "near_one",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 4.8468017578125,
+          "qfplib": 6.4681396484375
+        },
+        "own_over_qfplib": 0.7493347424840056
+      },
+      {
+        "stream_index": 55,
+        "operation": "ln",
+        "stream": "near_one_interval",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 6.44775390625,
+          "qfplib": 7.3883056640625
+        },
+        "own_over_qfplib": 0.8726972325485337
+      },
+      {
+        "stream_index": 56,
+        "operation": "atan",
+        "stream": "ordinary",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 15.5836181640625,
+          "qfplib": 17.5478515625
+        },
+        "own_over_qfplib": 0.8880641660637765
+      },
+      {
+        "stream_index": 57,
+        "operation": "atan",
+        "stream": "reduced",
+        "cases": 512,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 16.007568359375,
+          "qfplib": 17.4068603515625
+        },
+        "own_over_qfplib": 0.9196126145711341
+      },
+      {
+        "stream_index": 58,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:full_random",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.200439453125,
+          "qfplib": 1.2386474609375
+        },
+        "own_over_qfplib": 0.9691534443677934
+      },
+      {
+        "stream_index": 59,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:mantissa_product_below_two",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.236328125,
+          "qfplib": 1.2830810546875
+        },
+        "own_over_qfplib": 0.9635619826848064
+      },
+      {
+        "stream_index": 60,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:mantissa_product_above_two",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2135009765625,
+          "qfplib": 1.24365234375
+        },
+        "own_over_qfplib": 0.9757557911268159
+      },
+      {
+        "stream_index": 61,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:low_word_boundaries",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.212158203125,
+          "qfplib": 1.243896484375
+        },
+        "own_over_qfplib": 0.9744847890088322
+      },
+      {
+        "stream_index": 62,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:normal_exponent_range",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2210693359375,
+          "qfplib": 1.230224609375
+        },
+        "own_over_qfplib": 0.9925580472315936
+      },
+      {
+        "stream_index": 63,
+        "operation": "dmul",
+        "stream": "dmul_full_streams:near_rounding_midpoints",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.2078857421875,
+          "qfplib": 1.238525390625
+        },
+        "own_over_qfplib": 0.9752611866745515
+      },
+      {
+        "stream_index": 64,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:full_random",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.50146484375,
+          "qfplib": 1.5736083984375
+        },
+        "own_over_qfplib": 0.9541540609727717
+      },
+      {
+        "stream_index": 65,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:mantissa_ratio_below_one",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.49609375,
+          "qfplib": 1.5701904296875
+        },
+        "own_over_qfplib": 0.9528103863795382
+      },
+      {
+        "stream_index": 66,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:mantissa_ratio_above_one",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.4752197265625,
+          "qfplib": 1.4998779296875
+        },
+        "own_over_qfplib": 0.9835598600146497
+      },
+      {
+        "stream_index": 67,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:low_word_boundaries",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.45458984375,
+          "qfplib": 1.510498046875
+        },
+        "own_over_qfplib": 0.9629869080329724
+      },
+      {
+        "stream_index": 68,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:normal_exponent_range",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.4815673828125,
+          "qfplib": 1.552490234375
+        },
+        "own_over_qfplib": 0.9543167164648529
+      },
+      {
+        "stream_index": 69,
+        "operation": "ddiv",
+        "stream": "ddiv_full_streams:near_rounding_midpoints",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.6204833984375,
+          "qfplib": 1.693359375
+        },
+        "own_over_qfplib": 0.9569636678200693
+      },
+      {
+        "stream_index": 70,
+        "operation": "dmul",
+        "stream": "dmul_streams:full_precision",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.1922607421875,
+          "qfplib": 1.2320556640625
+        },
+        "own_over_qfplib": 0.9677003864064203
+      },
+      {
+        "stream_index": 71,
+        "operation": "dmul",
+        "stream": "dmul_streams:short_operand",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.028564453125,
+          "qfplib": 1.268798828125
+        },
+        "own_over_qfplib": 0.810659996151626
+      },
+      {
+        "stream_index": 72,
+        "operation": "dmul",
+        "stream": "dmul_streams:both_short",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.9044189453125,
+          "qfplib": 1.2105712890625
+        },
+        "own_over_qfplib": 0.7471009377836039
+      },
+      {
+        "stream_index": 73,
+        "operation": "dmul",
+        "stream": "dmul_streams:powers_of_two",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 0.3465576171875,
+          "qfplib": 1.2357177734375
+        },
+        "own_over_qfplib": 0.2804504593499951
+      },
+      {
+        "stream_index": 74,
+        "operation": "dmul",
+        "stream": "dmul_streams:rounding_ties",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.077880859375,
+          "qfplib": 1.2833251953125
+        },
+        "own_over_qfplib": 0.8399124892989632
+      },
+      {
+        "stream_index": 75,
+        "operation": "dmul",
+        "stream": "dmul_streams:normal_exponent_range",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.19775390625,
+          "qfplib": 1.2349853515625
+        },
+        "own_over_qfplib": 0.9698527231392705
+      },
+      {
+        "stream_index": 76,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:full_precision",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.483642578125,
+          "qfplib": 1.5401611328125
+        },
+        "own_over_qfplib": 0.9633034794325117
+      },
+      {
+        "stream_index": 77,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:short_operand",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.4720458984375,
+          "qfplib": 1.5111083984375
+        },
+        "own_over_qfplib": 0.974149769771387
+      },
+      {
+        "stream_index": 78,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:both_short",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.4964599609375,
+          "qfplib": 1.54443359375
+        },
+        "own_over_qfplib": 0.9689377173569396
+      },
+      {
+        "stream_index": 79,
+        "operation": "ddiv",
+        "stream": "ddiv_streams:dyadic_seeds",
+        "cases": 32,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.18994140625,
+          "qfplib": 1.5140380859375
+        },
+        "own_over_qfplib": 0.7859388857534467
+      },
+      {
+        "stream_index": 104,
+        "operation": "log10",
+        "stream": "composed_normal_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 8.0408935546875,
+          "qfplib": 8.781982421875
+        },
+        "own_over_qfplib": 0.9156125767979761
+      },
+      {
+        "stream_index": 106,
+        "operation": "log10",
+        "stream": "composed_powers_of_ten",
+        "cases": 121,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 8.038352272727273,
+          "qfplib": 8.772210743801654
+        },
+        "own_over_qfplib": 0.9163428134016368
+      },
+      {
+        "stream_index": 107,
+        "operation": "pow",
+        "stream": "composed_ordinary",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 13.756591796875,
+          "qfplib": 15.2001953125
+        },
+        "own_over_qfplib": 0.9050273048506264
+      },
+      {
+        "stream_index": 108,
+        "operation": "pow",
+        "stream": "composed_wide_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 14.768310546875,
+          "qfplib": 15.340576171875
+        },
+        "own_over_qfplib": 0.9626959497095567
+      },
+      {
+        "stream_index": 113,
+        "operation": "pow",
+        "stream": "composed_exact_exponents",
+        "cases": 256,
+        "all_group_parts_completed": true,
+        "us_per_call": {
+          "own": 1.648193359375,
+          "qfplib": 1.542724609375
+        },
+        "own_over_qfplib": 1.06836524766577
+      }
+    ],
+    "artifacts": [
+      {
+        "index": 0,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/000.bin",
+          "sha256": "6555607912fa72fb7dd5d3100c01ec375cd883656a21e6c84e17282590ca129a"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/000.json",
+          "sha256": "2cb85a3c5cd530c4b959e5793d9f31f501ec86f26f7ce7e353ccbcca0e56fbaa"
+        }
+      },
+      {
+        "index": 1,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/001.bin",
+          "sha256": "61017738207352d043fa158ff03057f4b303a245fedf9d2b3cba5dd39b2c97a2"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/001.json",
+          "sha256": "0bd803b0311b7213868a6633fc923f85080d3419fab9f74e24a25d7b0a00c82b"
+        }
+      },
+      {
+        "index": 2,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/002.bin",
+          "sha256": "6e4d99b950f831fd71f4db34101cf0ab9c87e0d566e11987a06ddfcbde60228f"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/002.json",
+          "sha256": "af1c9f8ca93e7671483cc2dcf9e1dd5db5fe9b43137ed4971fcb441c05c854ee"
+        }
+      },
+      {
+        "index": 3,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/003.bin",
+          "sha256": "17a0df4d00d6cb3494e662e268619dfa535f834f6b88f1cd17fd475e542c64fc"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/003.json",
+          "sha256": "216979893513ae488c4758e86b4c9d65ce2056e39ea3da290ddbae71fe4e73ab"
+        }
+      },
+      {
+        "index": 4,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/004.bin",
+          "sha256": "4410300f144f325f5fa62a03d6e17cc1f740e09a57817b40cd8516737e667a30"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/004.json",
+          "sha256": "aeee9f3a30e9457d01de3bf77d01e36abd11dd6e4b8250068c66a37928e7d73a"
+        }
+      },
+      {
+        "index": 5,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/005.bin",
+          "sha256": "4a865bba2c5474e3b180731ce92c5b83976d7d7497476da1839a22c25507e63b"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/005.json",
+          "sha256": "0747ff3deaa09e3deaae1c7e5269bf636237c680990639eb155bbf22f449c429"
+        }
+      },
+      {
+        "index": 6,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/006.bin",
+          "sha256": "46d63538cf99cedf8ceac9d6d823dc320f8321a37389e69d150c5f19cae1af55"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/006.json",
+          "sha256": "5fb88ae03a64243f23d88c22c17c8e7ffad6a3a6e317f76054a204105564247f"
+        }
+      },
+      {
+        "index": 7,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/007.bin",
+          "sha256": "af8a451ca296ac9c7219e51ec370806dc8475a89932b2f0e2387baf93f8830af"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/007.json",
+          "sha256": "ed4cc3f3dc764e6841f651944a19ed5cf3d1d2e573e6927416fcdcf4546be0ed"
+        }
+      },
+      {
+        "index": 8,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/008.bin",
+          "sha256": "0b4f92e5ce068d9ee9f33ad5b2a318b4e860aa1229c82cd621b1ac58672b37d9"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/008.json",
+          "sha256": "f1109f6a3c1a1ada85ce074ea8c09c497c16afa63e0cdeeeccc49e4410929060"
+        }
+      },
+      {
+        "index": 9,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/009.bin",
+          "sha256": "50914d611bb44905aa9fd8f8c14752ab3cd973873281911acd1adad9bb72a03a"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/009.json",
+          "sha256": "1e5a30d6cf9b8a4a8f917db63f9e24033bad545c72f2301ce669182aa3ed0927"
+        }
+      },
+      {
+        "index": 10,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/010.bin",
+          "sha256": "0886e1caecaad9547a103c4c1ebf4a09363a7f8849365bef3289a6b0006b13c9"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/010.json",
+          "sha256": "58b61b034e01662afc63a4f9819f7c57af779dc8dfd82154c8d8f4e322a073fd"
+        }
+      },
+      {
+        "index": 11,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/011.bin",
+          "sha256": "a781365dae31b4d45214bcad17b18acb1bca90645b1b8d424944acd753143edb"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/011.json",
+          "sha256": "d97a17ed1097651d7ac5bbaeae3cc71fc33967bc73e64503b5daf7b16fc3e5da"
+        }
+      },
+      {
+        "index": 12,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/012.bin",
+          "sha256": "af550254400f27c6ec9423c23ef92eafc21566ce74eef462edd0a9ee6b5bc611"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/012.json",
+          "sha256": "793935f03896f024575dc41208bfc4b04ddd0926d3415d1adb39660d82421d3d"
+        }
+      },
+      {
+        "index": 13,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/013.bin",
+          "sha256": "8a2722ea5d66779c3f88a56e4f5a45689fa3cd537e92086132b100db33150453"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/013.json",
+          "sha256": "47dfb401b4aa0024d3201c08f380777bb9ab1fa4216cdbb61650765a0224759f"
+        }
+      },
+      {
+        "index": 14,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/014.bin",
+          "sha256": "dfbdb56cdb34e5829eddd1628136ecc3696efba33cdcc6ee866a6642969f2e75"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/014.json",
+          "sha256": "8d19c08cce41c38e0e2cab673dd6d255b7d5433d1a16f14561d9f14949fd2252"
+        }
+      },
+      {
+        "index": 15,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/015.bin",
+          "sha256": "0d52e6e4e36b6c87d49116dbcc7da35b6d41827fd44b0c834881c8190a798882"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/015.json",
+          "sha256": "b7732f3448894a7cad6474a260f14edbe03f0548386423f638391c8ed6b5844d"
+        }
+      },
+      {
+        "index": 16,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/016.bin",
+          "sha256": "a4068e4f5f7b0c69f7495787743e354a1fd8579a68e9cef05bc086f6f679e3fb"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/016.json",
+          "sha256": "f0b6c294c2e6f51eaaa2f848d76a4e7c7215189484b1a85e0ad1d7b9eb9767ae"
+        }
+      },
+      {
+        "index": 17,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/017.bin",
+          "sha256": "55e30cebda5d8efef8a76418a7ffff74a8ef49364e6d378188d69aec0169bf65"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/017.json",
+          "sha256": "591e01175d7b98aec3640327018dee11ae2f6fdc02466dc8069bbe987b680ce1"
+        }
+      },
+      {
+        "index": 18,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/018.bin",
+          "sha256": "346a02f07426c5f03f0e83c6a747e92820c42af750765650e7284a746b6cad91"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/018.json",
+          "sha256": "6bab8ae7edf86354f7f02169e4293779156ee2417017af0c02e4b06a18075903"
+        }
+      },
+      {
+        "index": 19,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/019.bin",
+          "sha256": "824f242d6f0c70646b5d1dd8a63d6ce25af2f6878da5a2976b25cffd09df958e"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/019.json",
+          "sha256": "d2173daa7fb787aca6d6c2aed50dc558ddd3aa2a15c067647ec523ee15a38a08"
+        }
+      },
+      {
+        "index": 20,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/020.bin",
+          "sha256": "158340963377f2f4aee6d612e30feafae34fdc8be275eff3849da2ec9e11ae9c"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/020.json",
+          "sha256": "f604ea2cac7c125eb1773af61339e9747742642aca5d6e492b667a9f96f50661"
+        }
+      },
+      {
+        "index": 21,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/021.bin",
+          "sha256": "fa7c8b57602c973a44b0c2ab25026fa8f3269808bce2d7f7bf62e64199d33d5d"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/021.json",
+          "sha256": "0bd7ff1d67637df1e2942a073bdcac9205092a161539dfea0cfcb78213f5e567"
+        }
+      },
+      {
+        "index": 22,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/022.bin",
+          "sha256": "ae135d6967eecd68892892a44608504ce7deff23fc0c13fe7a22c16611882517"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/022.json",
+          "sha256": "068eaf530e1c3a9b4124a5602256363bee384db1c9751cc0166f69ebd820349a"
+        }
+      },
+      {
+        "index": 23,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/023.bin",
+          "sha256": "b50e1908a0ba125006d0a31aba4bbbd7440d3d8f79c0e7468bce753af6711634"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/023.json",
+          "sha256": "e7433b462473099c438d44382e15fa8001535aa8884058e42851be15f126e205"
+        }
+      },
+      {
+        "index": 24,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/024.bin",
+          "sha256": "faa5a4e532851c8623c50f85abddd2226c450f34095be14562d218f840956730"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/024.json",
+          "sha256": "7103e4e0dddccacac7e9da250470203a7e94fb4841d3930b4959f40aed933fb5"
+        }
+      },
+      {
+        "index": 25,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/025.bin",
+          "sha256": "a852226eaf9ab613b19d42d6be54135376b4ec3f4bd7376fe60ddfe1cade2c92"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/025.json",
+          "sha256": "42e6586c202e8b3195d4a420c92317a5c6ef81cef892fb0775ba905d078d6788"
+        }
+      },
+      {
+        "index": 26,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/026.bin",
+          "sha256": "2649cafbf6d2d8f127b31634fba340e2f8e29420e031da8d220b31af29812a88"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/026.json",
+          "sha256": "de7defa5c4f82d7444b14703b268dd154d2c9dcce1af643c3246c0ff2f379130"
+        }
+      },
+      {
+        "index": 27,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/027.bin",
+          "sha256": "782823894d2cbd36c961e10273ecee88dca7b0115960a40254c78f44b2e57f99"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/027.json",
+          "sha256": "1de37aa6e4584151e7cc1b325ff3e6b4cc3744ed3f0365c28f5f3194b59393fd"
+        }
+      },
+      {
+        "index": 28,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/028.bin",
+          "sha256": "1525f2ae7d14e7d1d8e847a775b031de07b8c3aff43d29734a34b378ca0c0488"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/028.json",
+          "sha256": "0dc98f4230f7f365fbe8395998b248bcc1a6bf1c235a5ffdfdac619bbdde2614"
+        }
+      },
+      {
+        "index": 29,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/029.bin",
+          "sha256": "80cc32b75e343b4f3afaee03a1ae9a7154f50ade2a258ad86d8a70287ece0c98"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/029.json",
+          "sha256": "ccdea8eac5811512679d5618c97bdd6bc3acc47bfa63c0dcca4b8717a82083be"
+        }
+      },
+      {
+        "index": 30,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/030.bin",
+          "sha256": "07f8a74d321751cc19a0454daf4b3fd2d7c4fa53718bda7907df73d3b22fef2e"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/030.json",
+          "sha256": "95c302adb41e148b1642f08ca99f1c83dae3b0080f3ff8d9e2583e24b0d06045"
+        }
+      },
+      {
+        "index": 31,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/031.bin",
+          "sha256": "1f9e138de895a9c0890f41fb4a3191cdd2d2ef8a3b82c14c8afeba8693d9f612"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/031.json",
+          "sha256": "0d535fc25abec7264eeab0a4e57d4a2285cda071cda254d2124de355ccff6023"
+        }
+      },
+      {
+        "index": 32,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/032.bin",
+          "sha256": "0203d71633cdea6c444318059545f6ef4ef0337d230cecda75e1eb22d208b3ef"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/032.json",
+          "sha256": "e80186f9324f2c2de508eac90eda51090bca8a4ff55c2ae2a8d0c689e51ab439"
+        }
+      },
+      {
+        "index": 33,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/033.bin",
+          "sha256": "131878a66fa04cfd9894b89aec911bedffb2a521144c0f493cb71a4da5ce72f6"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/033.json",
+          "sha256": "a78587d2356afbe5f8de85f0cb272792940fb06b6f5d16523399c13f88b69468"
+        }
+      },
+      {
+        "index": 34,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/034.bin",
+          "sha256": "3838b5944dbcb276862097a25dcd6fa7a8f081bf9cb5196a0ff0a9bcf6bb3168"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/034.json",
+          "sha256": "b920d8b7a25cbd5353d5480e3f99e371a0ada26dcea87fcf8e71c3b54e4e3456"
+        }
+      },
+      {
+        "index": 35,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/035.bin",
+          "sha256": "c41f4d2860fdcdeb7bb7bfb56bbbcf1bd3265c7ef67cf3ddd940310a2048cddd"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/035.json",
+          "sha256": "41c5c34a42d46af6d7958e820cfb5b6621dfcd2da20e8ee36fd2ecd4e8ec2f85"
+        }
+      },
+      {
+        "index": 36,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/036.bin",
+          "sha256": "dbb31d26dbb95460000532cf6c33455196ddf32031584018778eccbc34c5b44e"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/036.json",
+          "sha256": "4b39ffe9dfcaa13664a38fd0fb4ac1950f7dcbcbb789eb9b3234d7fa15a80d0e"
+        }
+      },
+      {
+        "index": 37,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/037.bin",
+          "sha256": "9e9c4ce6b9b2c38b939d4e62f9674df44ade418d1e229abf739c584ee0488d72"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/037.json",
+          "sha256": "739cb19c2177056053dc1c7b79ffd0fbb053dce139fdd6d2c69e8b937356b4c3"
+        }
+      },
+      {
+        "index": 38,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/038.bin",
+          "sha256": "5991a34e6fcc3ad02fcbe756c40d4cebf9afe46369899daff9453ba85b5f56a6"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/038.json",
+          "sha256": "8ad0d2673d57014dad5ca4b626ad45bdfc3d8868c22be8da3ad3f2467465d4ab"
+        }
+      },
+      {
+        "index": 39,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/039.bin",
+          "sha256": "9e20b396b81a00c1d30499a8f775cf12bc4197ffe15ba19406376f54280c11ca"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/039.json",
+          "sha256": "1b12825d9411dc71753ed26850752db844788bb3b517cb5d5370f3f927360040"
+        }
+      },
+      {
+        "index": 40,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/040.bin",
+          "sha256": "01ef794de7df9826cd0c8d17338e2972641aeed95c5f0fed7df9b82304051399"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/040.json",
+          "sha256": "b203c21c334587f78fc4278c34d6260e19243b939e03eeebb6196cc68faae70a"
+        }
+      },
+      {
+        "index": 41,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/041.bin",
+          "sha256": "76c777a9f2b955f3e537ad2e23bccb604dfb0b4e7d50e05a18403b8b0a4cf11c"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/041.json",
+          "sha256": "4d22135bddcfdb8d3a7e01299c86ab252e6ee8e1f2749ce30e0145f15f6be3d6"
+        }
+      },
+      {
+        "index": 42,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/042.bin",
+          "sha256": "2016c2cc61afef29d7b3d0b25250db4d2cd58446e30d28e7782ecffbff045219"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/042.json",
+          "sha256": "a409f14f8ad40f09bcbbfc4363b8b084d5de493540f5a3022f0e63e59720108d"
+        }
+      },
+      {
+        "index": 43,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/043.bin",
+          "sha256": "b3cb113ae66be668baccdd4bdd862cdfc40ec1f994bf3094a447341d688a6b82"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/043.json",
+          "sha256": "2cc50ba8eab2f86140d5f42936ce34e1d33b2035426aa2d14cb5db9617cec49a"
+        }
+      },
+      {
+        "index": 44,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/044.bin",
+          "sha256": "6d20be033f5f4111f57940cb556f6a332ae59e6855037e097f26a98c72b0e1fe"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/044.json",
+          "sha256": "7be9076786f82e16198ea1dcead1ae7ac8d422e33711a1514de15104aaaf4720"
+        }
+      },
+      {
+        "index": 45,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/045.bin",
+          "sha256": "d5218b0bd9b7b34811ee3b28ab6af39dbe14928ee855e474aeafef79b70cb843"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/045.json",
+          "sha256": "e838eab3e687586f07ae75433b89adaa323e0b3e2059a3f05349a919b036d0e7"
+        }
+      },
+      {
+        "index": 46,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/046.bin",
+          "sha256": "73233ac2c7cf524c596bc0f913ed6d8327f7e4ff02814facaa4b99486f9ce0b4"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/046.json",
+          "sha256": "df8636f035beafda0c5e66a89a4d1a1bb84c82002d117829da0b050556b48c91"
+        }
+      },
+      {
+        "index": 47,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/047.bin",
+          "sha256": "8a9c6907cf4f02641256dff4e6155653fd9b2258ebecb9335495afa9a9fbf8c1"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/047.json",
+          "sha256": "707ae0c9991478668f9ce3248472d2eb839319d5e846af13d4263b60c40aa34f"
+        }
+      },
+      {
+        "index": 48,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/048.bin",
+          "sha256": "6cec6c1ab683bdd89f3bf179338df3ac7265f3107361d10cc7d6e15d6403e46c"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/048.json",
+          "sha256": "af11823753cdbc92f71e147da85ef2884cf086bbdc93aea8deb3fe39480d53d4"
+        }
+      },
+      {
+        "index": 49,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/049.bin",
+          "sha256": "0ce5a27ab05264c11cb555223c6125740acd8d71857a42a574be7b8c1a7f0cfd"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/049.json",
+          "sha256": "ffb83c13053a5ae7ff724bcff2e2adbdc0b4c79e3c77b94f6253d3604bd8d2f3"
+        }
+      },
+      {
+        "index": 50,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/050.bin",
+          "sha256": "dbaa8d48b06743ce41609825e7f3583201cdd8f85495192e2a0ad33499f9e3f4"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/050.json",
+          "sha256": "db5e24fe555afb3dac85d66f8dd0cdd40ccf5ff174c74d21be92e0c316eae527"
+        }
+      },
+      {
+        "index": 51,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/051.bin",
+          "sha256": "ecc77f87f0d6d8b9c483577d228953d656f1cbc26350dc431b9637761b5a4c86"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/051.json",
+          "sha256": "71229f26b36c5e314eb25c7d5c672e483d5ed1b8acbe647e57e4d78066cb768f"
+        }
+      },
+      {
+        "index": 52,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/052.bin",
+          "sha256": "812a620e1f6eeab93aa6ef00b046e28a19a36a5a99bc5be610060141cd88d083"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/052.json",
+          "sha256": "5ac7728f864027083b32826340dc09fe41a829699ddc394d74a69ec1fddc61e5"
+        }
+      },
+      {
+        "index": 53,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/053.bin",
+          "sha256": "da53eda3f765f7bf56fcb38bd3ebbe7726ed538286141f70b3c811db066a6082"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/053.json",
+          "sha256": "c590237951479df9be666cc4b15ec1070983dc63f82515a257c5ff36e9ebc3a9"
+        }
+      },
+      {
+        "index": 54,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/054.bin",
+          "sha256": "9f1d0bb8e521db431afb51eb32aba4c827bc782c5249df973c252763e3a4dd0a"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/054.json",
+          "sha256": "6cc1eb6eae64a843a775588443a9b7626a0e722561befeaef169cf113db1e449"
+        }
+      },
+      {
+        "index": 55,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/055.bin",
+          "sha256": "6b2036a31fe133847524ec9a3f4b66394f4bac885bacef50337b90f6695aa60f"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/055.json",
+          "sha256": "e246db2107d0b2f36df2a690f28e7b2c59ed2f709c85d04d117ad4e7cdf90792"
+        }
+      },
+      {
+        "index": 56,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/056.bin",
+          "sha256": "413f2d7671878003520bf299e196d5ae6763e7e736088bb6f98eead45851048b"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/056.json",
+          "sha256": "b58f3ed90f663bd646d08273416af50fe4cf6b9f7ee422d2042b971092d8367f"
+        }
+      },
+      {
+        "index": 57,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/057.bin",
+          "sha256": "b5e3a45c59cf34f4aca4689ebeb6e1f2670f84373bb0c135843a26389b48023b"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/057.json",
+          "sha256": "2543fc1a99510669c8e11bbb582fce64eab72d9a47ba689c659c11488bdcaa3a"
+        }
+      },
+      {
+        "index": 58,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/058.bin",
+          "sha256": "41ece84b80b673c7f5436248f32e438dc63b262844ba3cc6f33742daaff8ead4"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/058.json",
+          "sha256": "99e9b1b93d62f1e1a8aa99da3c294a9c58bec644e25c1506c20a3db7bdb127b9"
+        }
+      },
+      {
+        "index": 59,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/059.bin",
+          "sha256": "3405c8e5ae8f68347787837d444a33b4cfc06f1f14622a6b02c7c9f5c38bd1a0"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/059.json",
+          "sha256": "961ca788ad2502be0f24804f4a9753440646765f8a48f62a650baae77fe66e7d"
+        }
+      },
+      {
+        "index": 60,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/060.bin",
+          "sha256": "5feabc43d8b64af9b968d911904c9ac325f51f74d8f136bc31ce3df8db3924c6"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/060.json",
+          "sha256": "99d206d84596f55208964525640934376913f9b32d642733e1e3be65a3416de0"
+        }
+      },
+      {
+        "index": 61,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/061.bin",
+          "sha256": "4a6575b8b6f1f9c37c6781e6402284d3f03b13fd03ecae0138d0e02641d11f50"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/061.json",
+          "sha256": "3f9096f32ff93b62c9bb344e73e4851bac94dcf8673dd4d10ea5fcc65b93c88f"
+        }
+      },
+      {
+        "index": 62,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/062.bin",
+          "sha256": "1b8cb99abeff312c0fc689e20c402eab200a23faf6a40e1f3dc258fcdff21686"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/062.json",
+          "sha256": "8c927227d43df411226b56a6942e0a09261b53630dfe241942cf4bcf51218d85"
+        }
+      },
+      {
+        "index": 63,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/063.bin",
+          "sha256": "f94a5d27de7d5b9bc40873b584ad899c94680081c31597544912157e7fab5569"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/063.json",
+          "sha256": "39dd8cec0f401ea87a253887cc39691c6b3d655d257d973405dc28dbebe35ba7"
+        }
+      },
+      {
+        "index": 64,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/064.bin",
+          "sha256": "4767e145028b2c628ea65bdf5ac230cdc3e44b3d92935366fa63c922a1df30eb"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/064.json",
+          "sha256": "1d2e0183897fe19bc9964fba594771219a055da5865a1985502eff1b0701efd8"
+        }
+      },
+      {
+        "index": 65,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/065.bin",
+          "sha256": "1d0509f90aece99c4235e1d2fcb0ec47bceed5d478ee93780b33f92aa8747e10"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/065.json",
+          "sha256": "2ae9bacf03aa38909c8f3c5258013228c0bf4e101309f9cced2e53519a08df66"
+        }
+      },
+      {
+        "index": 66,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/066.bin",
+          "sha256": "54d7e762249c2f7f8cbe47154d64a389b63fad442b9a895f02df4fe92b516650"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/066.json",
+          "sha256": "cc3077d708c14bfe9caf25de928c615a05b77d2f10540470ca1aa0954b7d148f"
+        }
+      },
+      {
+        "index": 67,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/067.bin",
+          "sha256": "f7cc704985633294c5ecb70cda2cbc887fa00b6abc3db31665cdb586119e14d6"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/067.json",
+          "sha256": "a84d83a8974cdf63bc5fcf15b7585d7c6ec2b55b2f4ded6efa057753344053a3"
+        }
+      },
+      {
+        "index": 68,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/068.bin",
+          "sha256": "e74d6a3b66037f96a88afe5090e9ba11e0c484717dc31f4e1ea06b8d5b05d544"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/068.json",
+          "sha256": "6b70f0df086940405a5c25677f7f78817ea0730e78b7e34f3510c31743efa174"
+        }
+      },
+      {
+        "index": 69,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/069.bin",
+          "sha256": "73f2bc3e32d45a54942096d0ec4d2dfbe36ae28c993e24af2eb88038bf3a315b"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/069.json",
+          "sha256": "3b39325b4f88daa2c5a24256d566cb47dcdcbc13858cccc7947163cfb19e23c3"
+        }
+      },
+      {
+        "index": 70,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/070.bin",
+          "sha256": "a1962971850dbb9842e9d5179accd5adc4e7cf8cb3cb57e3598ff731a9a07e75"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/070.json",
+          "sha256": "af1c0f8768f5889ac7f075d2028081fdf0148a177ad80f87a0e5ab361290f0b5"
+        }
+      },
+      {
+        "index": 71,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/071.bin",
+          "sha256": "95984feb6b7ea5229f159947275c01a0d8a50bd4d3a3301d53971d85a4f7791e"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/071.json",
+          "sha256": "72831a0bfe01ac40621efe5b30f98caafc9351844cf062636406417356558ddf"
+        }
+      },
+      {
+        "index": 72,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/072.bin",
+          "sha256": "8446756b0ae55e690ace68e6c151ac679dbb43cd338f5649b7fdf3fd3feaee63"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/072.json",
+          "sha256": "bee0ef25a7578ae7851ae947cf785943db3254435fab99c522f8b24355836166"
+        }
+      },
+      {
+        "index": 73,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/073.bin",
+          "sha256": "800153ab24244ce29a498eb03c7a2e3bfdf406e21963fcf879c17c6b1a7b78a3"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/073.json",
+          "sha256": "2f559b67b9d595f696d1742739dffe2f6952e6355160f6ff83516669798cc6b8"
+        }
+      },
+      {
+        "index": 74,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/074.bin",
+          "sha256": "58a8a45b430850ca3cced8257e77e063b9bc1e33198d0238a0fe80675a2b1931"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/074.json",
+          "sha256": "28a6bbad819a9b686e24674884c81e0305c3653162a030be5ffbb6652a3937c9"
+        }
+      },
+      {
+        "index": 75,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/075.bin",
+          "sha256": "abb6af50da561ac5819f7cd9b17fa753321be75e1c3af900e8129bd860235607"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/075.json",
+          "sha256": "989bc60033a136ce321b607a9f479eb39d5ae2946bc18465650885fa04db2ce4"
+        }
+      },
+      {
+        "index": 76,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/076.bin",
+          "sha256": "a698edaca1777a806a9485a24a82d14804db26a913ad1bb112999b8bb7a9695d"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/076.json",
+          "sha256": "392ec37669607809967af2eed376fb04cf6257436ab9d7ace36345e26f5f370b"
+        }
+      },
+      {
+        "index": 77,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/077.bin",
+          "sha256": "dac0453db1d2d70ddc4526307091ba567911c32d40468de0aad2be6acb80c4fa"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/077.json",
+          "sha256": "0d5ef876d31de3ac8e114864a68b3bd9a22401fcc01edd6377bed2333b362020"
+        }
+      },
+      {
+        "index": 78,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/078.bin",
+          "sha256": "9895a3c4db6c454642cb717f72a9fe854d5fc12389eb9a37ae72b214d6211b7c"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/078.json",
+          "sha256": "c83a0bc5e60ceabb98547672892b656a75bc23ff148020651cf134a6dd97e95a"
+        }
+      },
+      {
+        "index": 79,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/079.bin",
+          "sha256": "187c916bfff888d9d7df0f05b6acaeecb3d6aa41966359e4e67c71714c6dfde6"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/079.json",
+          "sha256": "83c86bf63a36cfb3f539c033f3046c3ce0091eccbab0ea38a6c70c2c0cfa4c39"
+        }
+      },
+      {
+        "index": 80,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/080.bin",
+          "sha256": "89c6478f88c1a14baea18abc6504a4d0751f9d94f009ba853fef9e90005fdf64"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/080.json",
+          "sha256": "2e58e96828d076fe49a8868e9b922987d5cb4bad176aae2173e9be337a13acbe"
+        }
+      },
+      {
+        "index": 81,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/081.bin",
+          "sha256": "5835dcdce56344b92714a81e2292d62e9e755972834832eed5f91016dea67053"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/081.json",
+          "sha256": "345226732fc6d359b59a95886d1a6eeaad2480ceccb648f884b21739b97a94dd"
+        }
+      },
+      {
+        "index": 106,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/106.bin",
+          "sha256": "0dc58319db007e3ecc1b9236cad553a5da6a7cea65c96ec3243fe77ba5258ec3"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/106.json",
+          "sha256": "163d887c599b76c0a9374c58c40100533ecb440b67cc8d72c5e451043cf3f6a6"
+        }
+      },
+      {
+        "index": 108,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/108.bin",
+          "sha256": "cd3c84d0ec0de6947bf361dc318a19c2a6c1d7aebcf4df9141428385cb8eb750"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/108.json",
+          "sha256": "84c9a4a9492d86c4103687737b88c20ba22d22eff7d3f7ecd2904de36cb069af"
+        }
+      },
+      {
+        "index": 109,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/109.bin",
+          "sha256": "1d2f8b7b524f9d377a411ffe45ff1d91ac74e236170a92b531665beff21adfb3"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/109.json",
+          "sha256": "72ab6f7e19871a525ace8bdbfd74e565edf38c39a838f98d1ddad7a31de5a84a"
+        }
+      },
+      {
+        "index": 110,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/110.bin",
+          "sha256": "b9b0a03496fd0df829253e780dd592ec83cf6b42cad407c43ac83fe0dcc5b145"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/110.json",
+          "sha256": "8a1b9ad385f65041343a23af7b5bc919881140c49692c590bf1f588049d991e3"
+        }
+      },
+      {
+        "index": 115,
+        "raw": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/115.bin",
+          "sha256": "7b79ea9b052f48a7aacdfc4a757b59a6903a8c9cc72f896e6881121e69543622"
+        },
+        "decoded": {
+          "path": ".build/m0-balanced-timing-v72-20261021/hil-01/timings/115.json",
+          "sha256": "1b2cbeabdbd12dbf775ee4601b812396d1253422d26f2db08e82166fdb6d2638"
+        }
+      }
+    ],
+    "transaction": {
+      "path": ".build/m0-balanced-timing-v72-20261021/hil-01/transaction.json",
+      "sha256": "ac9292f872de417710e76401a0c419353df071cc62fed037c5edc0fbb4f3f4c1"
+    },
+    "recovery": {
+      "path": ".build/m0-balanced-timing-v72-20261021/hil-01/recovery-transcript.bin",
+      "sha256": "073d49d038778f55d4ffce1c0a7558e38d90db1b371c20400c71373f3f589b30"
+    },
+    "observed_crash": {
+      "path": ".build/m0-balanced-timing-v72-20261021/hil-01/reconnected-crash.txt",
+      "sha256": "6dac133470baeb5a7859bd8cfad9560f5e177cdf045117eb35354b83d9afff77"
+    },
+    "interruption": {
+      "user_confirmed": "The user closed the laptop and disconnected PicoCalc during the run.",
+      "old_port": "/dev/cu.usbmodem21301",
+      "new_port": "/dev/cu.usbmodem11301",
+      "uid": "E6657CD423721C35",
+      "SDK_panic_observed": true,
+      "SDK_panic_mechanism": "Not localized; the interruption is not evidence of an internal numerical defect."
+    },
+    "restored_build": "A7483AE6",
+    "calculator_data_restored": true,
+    "temporary_directory_removed": true,
+    "clock_restored": {
+      "expected": "2026-10-21T18:16:07.920044",
+      "actual": "2026-10-21T18:16:08",
+      "validation": "The monotonic elapsed calculation excluded laptop sleep; this timestamp needs the documented wall-clock correction."
+    },
+    "serial_closed": true,
+    "scope": "87 verified raw chunks from the physical125MHz RP2040; exact prepared input/result bits. The externally interrupted run is not a completed114-group comparison.",
+    "goal_complete": false,
+    "clock_restoration_verified": false,
+    "clock_correction_pending": true
+  },
+  "rtc_sleep_correction": {
+    "status": "CORRECTION_PENDING_CURRENT_OWNER",
+    "recorded_at": "2026-10-21T15:55:03.748175+00:00",
+    "reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
+    "rtc_minus_host_utc_seconds": 10797.475989,
+    "rtc_at_preflight": "2026-10-21T17:58:47",
+    "host_utc_at_preflight": "2026-10-21T14:58:49.524011+00:00",
+    "preflight_timestamp_note": "The transaction-start wall time is within about one second of the RTC sample.",
+    "peer_cross_check": {
+      "path": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
+      "sha256": "1a5051db24f57bb597664458f62c7a7191b36f180a4990ac8248a4ea60b6a9e5",
+      "recorded_at": "2026-10-21T14:44:32.707319+00:00",
+      "rtc": "2026-10-21T17:44:30",
+      "rtc_minus_host_utc_seconds": 10797.292681
+    },
+    "formula": "wanted=(datetime.now(timezone.utc)+timedelta(seconds=rtc_minus_host_utc_seconds)).replace(tzinfo=None); command: date wanted.strftime(\"%Y-%m-%d %H:%M:%S\")",
+    "port_owner": "memmove",
+    "math_will_not_open_usb": true
+  }
+}

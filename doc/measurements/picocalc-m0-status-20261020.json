@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "recorded_at": "2026-10-21T14:17:42.292518+00:00",
-  "status": "PROMOTED_V71_OFFLINE_PHYSICAL_PENDING",
+  "recorded_at": "2026-10-21T15:53:56.075485+00:00",
+  "status": "PARTIAL_EXTERNAL_INTERRUPTION_RESTORED",
   "objective": "M0+ speed at least Qfplib with correctly rounded binary64 results; M4 code unchanged.",
   "physical_v7": {
     "artifact": {
@@ -1577,9 +1577,10 @@
     ]
   },
   "remaining": [
-    "General binary64 pow totality remains unproved outside the224 supported exponent values; the final undecided trap remains for that domain.",
-    "Full114-group physical comparison is pending on the next coordinated accepted frozen source. V69 selected12 timings are not V71 hardware evidence.",
-    "The integer argument is source-pinned but is not machine-checked C++ verification."
+    "Finish and verify the wall-clock RTC correction after laptop sleep; the current port owner has the validated offset and will apply it during cleanup.",
+    "Remove the three measured speed gaps: small/medium tangent, normal float-to-double conversion, and simple-exponent power; qualify any changed candidate against the complete114-group matrix.",
+    "29 chunks of the V72 baseline remain unmeasured after the user-confirmed external interruption.",
+    "General binary64 pow totality remains unproved outside the224 exponents handled by the exact integer stage; the final undecided trap remains for that domain."
   ],
   "semantics": "RNE return values. errno and floating-point exception flags are not implemented.",
   "physical_v7_fixed_layout_probe": {
@@ -10203,18 +10204,8 @@
     },
     "report": "doc/measurements/m0-pow-exact-hint-20261021.json"
   },
-  "current_production": ".build/m0-pow-exact-hint-v71-20261021",
-  "current_measurement": {
-    "variant": "V69",
-    "status": "PASS_RESTORED",
-    "result": ".build/m0-balanced-timing-v69-20261021/hil-01/timings/result.json",
-    "groups": 12,
-    "cases": 3193,
-    "strict_faster_groups": 12,
-    "strict_slower_groups": 0,
-    "full114_completed": false,
-    "same_accepted_platform": "0.8.14/D26E5DE0"
-  },
+  "current_production": ".build/m0-throughput-integration-v72-20261021",
+  "current_measurement": ".build/m0-balanced-timing-v72-20261021",
   "compact_pow_v38_20261020": {
     "math": "Compact V38: checked positive integer3..8 powers and tighter final exp-product carry; original512-cell4KiB exp table",
     "production": ".build/m0-root-v38-integration-20261020/firmware/mk61s-picocalc-pico-h.elf",
@@ -10499,28 +10490,28 @@
     "serial_closed": true
   },
   "device": {
-    "owner": "picocalc-apps-lcd-chain",
-    "state": "display-accepted",
-    "build": "D26E5DE0",
+    "owner": "memmove",
+    "state": "reserved",
+    "build": "A7483AE6",
     "uid": "E6657CD423721C35",
-    "port": "/dev/cu.usbmodem21301",
-    "updated_at": "2026-10-21T14:17:20.842088+00:00",
+    "port": "/dev/cu.usbmodem11301",
+    "updated_at": "2026-10-21T15:49:25.834609+00:00",
     "calculator_state_restored": true,
     "serial_port_open": true,
     "firmware_crc_verified": true,
     "peripherals_ready": true,
-    "peripheral_state": "KBD=OK errors=0 SD=OK PANEL_INIT=1 PSRAM=OK MODE=QPI QPI_FALLBACKS=0 TAIL_TIMEOUTS=0 BUFFERS VALID=1 UART_BAUD=115207",
-    "restore_build": "D26E5DE0",
-    "uf2_sha256": "cd3a71e4ab970484a926f50dfc0760184e4109c01db68ebe66328cd069f644ba",
-    "restore_package": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/verified-restore-0.8.14-d26e5de0-r1",
-    "restore_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/verified-restore-0.8.14-d26e5de0-r1/RESTORE.json",
-    "verified_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/source",
-    "source_sha256": "dabe91ffa5ac6ae2be386248246a13e71ed7310ae692472794092c7450df40d6",
-    "hardware_result": "/Users/bolk/Projects/MK61S_MINI/doc/measurements/picocalc-throughput-20261021.json",
+    "peripheral_state": "KBD=OK errors=0 SD=OK PANEL_INIT=1 PSRAM=OK MODE=QPI QPI_FALLBACKS=0 TAIL_TIMEOUTS=0 DMA_TIMEOUTS=0 CRC_ERRORS=0 LCD_ERRORS=0 APP_BUFFERS=0 VALID=1",
+    "restore_build": "A7483AE6",
+    "uf2_sha256": "860258ec7bc59b0e74727a03d58cfd98b5ea8826ad53325d42129b37c0f7ca60",
+    "restore_package": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/verified-restore-0.8.15-a7483ae6",
+    "restore_manifest": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/verified-restore-0.8.15-a7483ae6/RESTORE.json",
+    "verified_source": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/source",
+    "source_sha256": "90a4871c91e7f35b6061c5421b18c9c91d57645c1c8d2cff96d3dd6dd4c2dc34",
+    "hardware_result": "/Users/bolk/Projects/MK61S_MINI/doc/measurements/picocalc-apps-lcd-chain-20261021.json",
     "sd_result": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/sd-final/result.json",
-    "session": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/session.json",
-    "purpose": "PSRAM native APP and chained LCD DMA qualification; isolated source 90274222b, mandatory data/RTC preservation",
-    "math_transaction": ".build/m0-balanced-timing-v69-20261021/hil-01/transaction.json",
+    "session": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-apps-lcd-chain-20261021/session.json",
+    "purpose": "Final corrected memmove matrix/boundaries/shared APP-only; no flash/reset",
+    "math_transaction": ".build/m0-balanced-timing-v72-20261021/hil-01/transaction.json",
     "usb_present": true,
     "math_usb_open": false,
     "previous_port_owner_completed": {
@@ -10530,7 +10521,7 @@
       "serial_closed": true,
       "build": "D26E5DE0"
     },
-    "next_owner": null,
+    "next_owner": "picocalc-render-i2c-sd",
     "next_owner_thread": "01a1497b-7c0c-7e41-ad22-793babfc1623",
     "last_math_result": "PASS_RESTORED",
     "last_math_case_count": 23091,
@@ -10544,6 +10535,19 @@
       "runs": 3,
       "hardware_correctness_checks": 235104,
       "serial_closed": true,
+      "reset_or_flash": false
+    },
+    "previous_accepted_restore": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-throughput-20261021/verified-restore-0.8.14-d26e5de0-r1",
+    "version": "0.8.15",
+    "restore_manifest_sha256": "75d0c8b2dfc950e3f57da6f6e81408eb29dd066a4a77d883b77ced489726e209",
+    "owner_thread": "01a15d77-6fe3-74d3-a025-dbf484687484",
+    "last_memmove_window": {
+      "status": "PASS",
+      "report": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
+      "cases": 1224,
+      "runs": 3,
+      "state_and_files_preserved": true,
+      "ip_preserved": true,
       "reset_or_flash": false
     }
   },
@@ -10734,7 +10738,7 @@
       ]
     }
   },
-  "previous_goal_turn_assessment": "PROGRESS: V67 full114hardware/23091finiteRNE cases PASS_RESTORED,111faster/3strict gaps; V68 exp-only placement passed all12/M4/generic and reduced modeled misses. Current turn adds mathematically certified nearest-root asin geometry,179467actualARM rootcases+64DIRTY,89250asin+84076acos edgecases,all12265409,M4/generic byteidentityPASS. V69 selected12HIL live session48602 in explicitly granted short window. No new tables/mainRAM. Universal pow totality remains open; ROOT44math remainsV51.",
+  "previous_goal_turn_assessment": "PROGRESS_COMMITTED_INTERNAL_LAYOUT_REGRESSION_TEST",
   "compact_log_v53_20261020": {
     "status": "PRODUCTION_NUMERIC_AND_RESOURCE_GATES_PASS_READY_FOR_HIL_NOT_PROMOTED",
     "source": ".build/m0-log-compact-v53-20261020/source",
@@ -12044,7 +12048,7 @@
       }
     ]
   },
-  "next_action": "Rebase the current50 math files onto the next accepted frozen platform and run full114 HIL after the hardware and memmove windows. Continue work on general pow totality without returning approximate answers.",
+  "next_action": "Prepare local fixes for the three observed timing gaps and coordinate a later hardware window on the then-current accepted frozen platform. The V72 baseline is partial, not a full114-group result.",
   "trig_word_normalization_v61_20261021": {
     "status": "PASS_OFFLINE_GATES_PHYSICAL_PENDING",
     "work": ".build/m0-trig-word-normalization-v61-20261021",
@@ -12124,7 +12128,7 @@
     "gates": ".build/m0-cos70-v65-20261021/gates.json",
     "reason": "Correct cosine kernel resolves other smallcos cases, but the three targeted slowcos inputs select sine after reduction. V66 moves secondary refinement into a packed small-trig callee, adds sine kernels and removes the broader dispatcher liveness penalty."
   },
-  "hardware_constraint": "Hardware peer final acceptance, then the Memset M0+ short APP-only memmove window, then the math114-group run; math has not opened USB.",
+  "hardware_constraint": "The user externally interrupted USB. A7483AE6, calculator data and RTC were restored; the new11301 port was closed and explicitly returned to memmove, followed by the platform peer.",
   "small_trig_v66_20261021": {
     "status": "V66_FULL_OFFLINE_QUALIFICATION_PASS_PHYSICAL_PENDING_NOT_PROMOTED",
     "report": "doc/measurements/m0-small-trig-20261021.json",
@@ -12529,5 +12533,100 @@
     "new_tables": 0,
     "physical_timing_available": false,
     "root_promoted": true
+  },
+  "throughput_integration_v72_20261021": {
+    "report": "doc/measurements/m0-throughput-integration-v72-20261021.json",
+    "accepted_build": "A7483AE6",
+    "production_build": "2e4c4371",
+    "source_math_sha256": {
+      "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+      "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+      "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+      "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+      "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+      "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+      "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+      "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+      "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+      "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+      "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+      "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+      "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+      "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+      "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+      "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+      "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+      "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+      "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+      "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+      "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+      "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+      "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+      "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+      "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+      "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+      "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+      "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+      "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+      "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+      "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+      "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+      "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+      "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+      "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+      "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+      "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+      "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+      "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+      "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+      "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+      "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+      "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+      "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+      "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+      "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+      "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+      "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+      "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+      "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+    },
+    "all12_cases": 265409,
+    "additional_main_ram_bytes": 0,
+    "new_tables": 0,
+    "physical_timing_available": true,
+    "comparison_groups": 114,
+    "comparison_chunks": 116,
+    "comparison_cases": 23091,
+    "M4": "PASS_BYTE_IDENTITY",
+    "generic_M0": "PASS_BYTE_IDENTITY",
+    "physical_run_started": true,
+    "physical_transaction": ".build/m0-balanced-timing-v72-20261021/hil-01/transaction.json",
+    "complete_matrix": false,
+    "physical_partial_summary": {
+      "path": ".build/m0-throughput-integration-v72-20261021/physical-partial-summary.json",
+      "sha256": "f5f86b4aef9fb77fa936bf5f58edd50fb65ec93e5de804158eaefa2cc8bf0c92"
+    },
+    "chunks_completed": 87,
+    "complete_groups": 85,
+    "strict_slower_groups": 3
+  },
+  "rtc_sleep_correction": {
+    "status": "CORRECTION_PENDING_CURRENT_OWNER",
+    "recorded_at": "2026-10-21T15:55:03.748175+00:00",
+    "reason": "The laptop slept; the macOS monotonic elapsed time excluded sleep. Use UTC wall-clock elapsed to preserve the original displayed RTC trajectory.",
+    "rtc_minus_host_utc_seconds": 10797.475989,
+    "rtc_at_preflight": "2026-10-21T17:58:47",
+    "host_utc_at_preflight": "2026-10-21T14:58:49.524011+00:00",
+    "preflight_timestamp_note": "The transaction-start wall time is within about one second of the RTC sample.",
+    "peer_cross_check": {
+      "path": ".build/memmove-20261021/m0-before-back-fix-hil/result.json",
+      "sha256": "1a5051db24f57bb597664458f62c7a7191b36f180a4990ac8248a4ea60b6a9e5",
+      "recorded_at": "2026-10-21T14:44:32.707319+00:00",
+      "rtc": "2026-10-21T17:44:30",
+      "rtc_minus_host_utc_seconds": 10797.292681
+    },
+    "formula": "wanted=(datetime.now(timezone.utc)+timedelta(seconds=rtc_minus_host_utc_seconds)).replace(tzinfo=None); command: date wanted.strftime(\"%Y-%m-%d %H:%M:%S\")",
+    "port_owner": "memmove",
+    "math_will_not_open_usb": true
   }
 }
