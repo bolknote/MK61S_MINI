@@ -1,0 +1,323 @@
+{
+  "passed": true,
+  "recorded_at_utc": "2026-10-21T04:55:53.639250+00:00",
+  "uid": "E6657CD423721C35",
+  "version": "0.8.11",
+  "build_id": "bbfc9129",
+  "uf2_sha256": "dd0e58bf62498f3ac7c83cb7e1171af989df77bb7fd6acbdd946edd3a2779621",
+  "source_sha256": "fce47745990901ee9a10bfed1414d8a670743d7bf7bc07a6917b5d1dae5dbb7b",
+  "base_commit": "176d9323248b7ba79867cc9772c68438cfea5c08",
+  "parallel_math_edits_included": false,
+  "memory": {
+    "psram_bytes": 8388608,
+    "spi_hz": 20833333,
+    "maximum_ce_low_ns": 6144,
+    "full_memory_test_us": 27526693,
+    "module_slots": 256,
+    "module_partition_bytes": 4194304,
+    "sector_slots": 4096,
+    "sector_partition_bytes": 4194304,
+    "static_ram_bytes": 195496,
+    "flash_bytes": 734816
+  },
+  "idle": {
+    "interval_seconds": 1.2,
+    "wait_milliseconds": 842,
+    "rtc_alarm_interrupts": 1
+  },
+  "display": {
+    "spi_hz": 12500000,
+    "stages": [
+      {
+        "transferred": true,
+        "stage": 0,
+        "baseline_us": 230061,
+        "current_us": 165434,
+        "bytes": 204800,
+        "rectangles": 1
+      },
+      {
+        "transferred": true,
+        "stage": 1,
+        "baseline_us": 230000,
+        "current_us": 169657,
+        "bytes": 204800,
+        "rectangles": 1
+      },
+      {
+        "transferred": true,
+        "stage": 2,
+        "baseline_us": 7602,
+        "current_us": 4227,
+        "bytes": 2304,
+        "rectangles": 2
+      },
+      {
+        "transferred": true,
+        "stage": 3,
+        "baseline_us": 3923,
+        "current_us": 3109,
+        "bytes": 768,
+        "rectangles": 2
+      },
+      {
+        "transferred": true,
+        "stage": 4,
+        "baseline_us": 3350,
+        "current_us": 2582,
+        "bytes": 256,
+        "rectangles": 2
+      },
+      {
+        "transferred": true,
+        "stage": 5,
+        "baseline_us": 230654,
+        "current_us": 171279,
+        "bytes": 204800,
+        "rectangles": 1
+      },
+      {
+        "transferred": true,
+        "stage": 6,
+        "baseline_us": 233827,
+        "current_us": 173812,
+        "bytes": 204800,
+        "rectangles": 1
+      },
+      {
+        "transferred": false,
+        "stage": 7,
+        "baseline_us": 233827,
+        "current_us": 173812,
+        "bytes": 204800,
+        "rectangles": 1
+      }
+    ],
+    "basic": {
+      "frames": 25,
+      "incomplete_frames": 0,
+      "retained_frames": 24
+    },
+    "optical_confirmation": "User confirmed uniform image at 12.5 MHz on earlier candidate with identical LCD settings; final frame path checked by pixel oracle and source CRC, not optical readback."
+  },
+  "sd": {
+    "hardware_dma": true,
+    "hardware_crc_transfers": 713,
+    "crc_errors": 0,
+    "warm_cache_avoids_card_reads": true,
+    "overwrite_readback": true
+  },
+  "usb": {
+    "passed": true,
+    "mount_wait_seconds": 17.1842852080008,
+    "msc": "MSC_READ=17208 WRITE=2007 READ_ERROR=0 WRITE_ERROR=0 LBA=62267488 SCSI=00",
+    "psram_bypassed_for_host_reads": true,
+    "safe_eject": true,
+    "temporary_files_removed": true
+  },
+  "power": {
+    "cases": [
+      "CRC-framed RTC read/set; automatic sync preserves an already configured RTC and X=42",
+      "framed PicoCalc USB Screen activation, advertised clock capability and atomic keyframe",
+      "three real sleep/wake cycles: PLL_SYS off, USB alive at 48 MHz, full 125 MHz restoration, RAM/backlight/keypad preserved",
+      "RTC continuity from XOSC through repeated PLL changes"
+    ],
+    "cycles": 3,
+    "rtc_elapsed_seconds": 13.0,
+    "wall_elapsed_seconds": 13.444666666000558,
+    "battery_current_measured": false
+  },
+  "chess": {
+    "move": "e2e3",
+    "nodes": 420,
+    "level": 2,
+    "maximum_depth": 8,
+    "opening_book": false,
+    "screen_mode": "completion",
+    "baseline_seconds": [
+      31.707881625000027,
+      22.66617866699994
+    ],
+    "current_seconds": [
+      34.34226233300433,
+      22.729823250003392
+    ],
+    "board_frame_sha256": "68422785b7412cbeb898ef656094c08823c04726c370f6f9ef0fad08872776ff",
+    "game_files_unchanged": true
+  },
+  "vm_cache": {
+    "programs": 48,
+    "cold": "VM_CACHE=RAM+SD BYTES=32768 USED=29600 RAM_HIT=15428 RAM_MISS=69 SD_HIT=0 SD_MISS=66 COMPILES=66 STORES=66 REJECTED=16 PACKS=49 THAWS=15 PACKED=11",
+    "warm": "VM_CACHE=RAM+SD BYTES=32768 USED=29512 RAM_HIT=15446 RAM_MISS=99 SD_HIT=0 SD_MISS=66 COMPILES=66 STORES=66 REJECTED=16 PACKS=58 THAWS=26 PACKED=9",
+    "external_cold": "EXT_CACHE=PSRAM VM_HIT=3 VM_MISS=66 SD_HIT=182172 SD_MISS=2759 REJECTED=0 STORES=2885",
+    "external_warm": "EXT_CACHE=PSRAM VM_HIT=33 VM_MISS=66 SD_HIT=183266 SD_MISS=2759 REJECTED=0 STORES=2885"
+  },
+  "native_display": {
+    "cases": [
+      "idle clock uses the exact native Ark strike, right aligned in the title row",
+      "real legacy M0 APP: 192x64, four 16px rows, 10x16 glyph/12px advance and public font service agree pixel-for-pixel",
+      "alternate calculator digits and Ark Mono interface use native strikes; selected indicator font restored",
+      "native APP: wide Cyrillic/arrows, 19-column fixed cells, editor horizontal scroll/cursor, proportional row 12; exact pixels and DMA CRC",
+      "M61 default native 20x10 geometry, centred Ark strike and intact wide glyphs",
+      "BASIC and FOCAL PRINT AT: identical full native glyphs at pixel coordinates, independent Ark oracle",
+      "built-in editor and UTF-8 filename prompt: full wide glyphs, pixel-based horizontal scrolling and visible insertion cursor",
+      "Markdown and Explorer automatically select native WBMP sibling, all 320 columns preserved pixel-for-pixel",
+      "real WBMP.APP FILE_OPEN: Pico Down/Up page scrolling, bottom clamp and byte-exact return to first page",
+      "Bumblebee native 16x32 FMK, sprite at middle row with exact glyph pixels",
+      "actual Bumblebee autoexec: manual, optional BASIC geometry bootstrap, native trap handlers and live ROM-driven animation"
+    ],
+    "screens": {
+      "clock-native": {
+        "frame_sha256": "6e3bb688797a0835f4da72c384f2bb78df070885095ec4d78442070cb400791a",
+        "lcd_crc": "794E3BFB"
+      },
+      "indicator-native-font": {
+        "frame_sha256": "4016ea6b46b93f9e5f035c568114cd025087d5c8d3c79452040d0ed417717807",
+        "lcd_crc": "0A300239"
+      },
+      "interface-native-mono": {
+        "frame_sha256": "99270802a859d6c0db10c4151800ca18af91e145092f2c65363f952fbfb2e658",
+        "lcd_crc": "95E41CD9"
+      },
+      "legacy-font-and-geometry": {
+        "frame_sha256": "00cebbc1cd3d03b843395a0c66fb7d9a2cc7b9719929c9b558dec95d553a31eb",
+        "lcd_crc": "12E2802B"
+      },
+      "app-mono-wide": {
+        "frame_sha256": "4497e3ba2b56dcdbdbaaa1f2c15a81f29e78a90d031df44c0bdeccd14add28c8",
+        "lcd_crc": "AB3C17A1"
+      },
+      "app-editor-cursor": {
+        "frame_sha256": "c99139fa758fb7c60142181dee95985d96f9afe443b4cb7d2d1c114b3e92a615",
+        "lcd_crc": "126E109A"
+      },
+      "app-ui-row-12": {
+        "frame_sha256": "c3935d361755a2612819ee6c886f864a35fe3c7a8f727c720f489f726f5464ad",
+        "lcd_crc": "8FA1A090"
+      },
+      "m61-wide": {
+        "frame_sha256": "fbf401e7a8faf7eea8ce2093e3656c918b3c0d390e87e4e042c7b385d770bab0",
+        "lcd_crc": "1639C121"
+      },
+      "bas-print-at": {
+        "frame_sha256": "6e4a55668623d9685129a8d5aa5a82f69f85286a52a4f105eacc8ddfbbc19278",
+        "lcd_crc": "3FE4851C"
+      },
+      "foc-print-at": {
+        "frame_sha256": "6e4a55668623d9685129a8d5aa5a82f69f85286a52a4f105eacc8ddfbbc19278",
+        "lcd_crc": "3FE4851C"
+      },
+      "source-editor-wide": {
+        "frame_sha256": "6a256038910b7d8553ba2c84a8be04a20032a99003dcd83eefa80ecfb181460c",
+        "lcd_crc": "CE0972E5"
+      },
+      "source-editor-scroll": {
+        "frame_sha256": "9f4e31ece8aa4b5e484ba3a3aefa883d38dbdba644b5b33c8be111767d08786b",
+        "lcd_crc": "8803B0E7"
+      },
+      "save-name-prompt": {
+        "frame_sha256": "194c8198da20cb08f835077e644f0fff95c5ee72ff0d46159969b1ebb6926721",
+        "lcd_crc": "9D2A42BC"
+      },
+      "markdown-native-art": {
+        "frame_sha256": "6c5e09cb3f0baef54efcd6b16cd9736edda8db55132a6e6423bebffc1a96988f",
+        "lcd_crc": "6BE4566A"
+      },
+      "explorer-native-art": {
+        "frame_sha256": "f37cdc676c43e6ef92decbf8216f31fd2445784bdcd5bbdbaaaa3b4d30f50977",
+        "lcd_crc": "E1A26D23"
+      },
+      "wbmp-top": {
+        "frame_sha256": "040a61ecc0223ca55775ad766c9cd6d250f8a2a3db173ce55cf4326955317cdb",
+        "lcd_crc": "7F882203"
+      },
+      "wbmp-bottom": {
+        "frame_sha256": "c2eb552a0ed1e36a5d9d1cc7488067c34a450471d9dc267e6419ae17a2bc35ec",
+        "lcd_crc": "7605359A"
+      },
+      "wbmp-bottom-clamped": {
+        "frame_sha256": "c2eb552a0ed1e36a5d9d1cc7488067c34a450471d9dc267e6419ae17a2bc35ec",
+        "lcd_crc": "7605359A"
+      },
+      "wbmp-top-restored": {
+        "frame_sha256": "040a61ecc0223ca55775ad766c9cd6d250f8a2a3db173ce55cf4326955317cdb",
+        "lcd_crc": "7F882203"
+      },
+      "bumblebee-native-sprite": {
+        "frame_sha256": "42b601fbab233a28b7baead316beb43c65cdef0468a7b2998b83717b83c31eec",
+        "lcd_crc": "1D78F83F"
+      }
+    },
+    "apps": [
+      "ELIZA: existing matching APP, native editor and exact HELLO reply, clean return",
+      "SHEET: existing matching APP, exact native empty grid, navigation and clean return"
+    ],
+    "app_files": {
+      "ELIZA.APP": "b034e451dc0b499de4c5dd78f783c4b875f8f7736cbf9963c2c05568bc0a20ab",
+      "SHEET.APP": "e923612e86123dd68dba8a99f7893e570e9ad8163d69ba9951d43d40c263bb41"
+    }
+  },
+  "stm32": {
+    "f411-classic-v3-usb-screen": {
+      "flash_bytes": 377656,
+      "flash_limit": 524288,
+      "globals_bytes": 21752,
+      "ram_limit": 131072,
+      "maximum_stack_frame": 1928,
+      "stack_frame_limit": 5120,
+      "system_apps": [
+        "BASIC.APP",
+        "CHIP8.APP",
+        "FOCAL.APP",
+        "LANGIN.APP",
+        "LANGVM.APP",
+        "MARKDOWN.APP",
+        "SETUP.APP",
+        "SRCEDIT.APP",
+        "USBDISK.APP"
+      ]
+    },
+    "f401-product-a00": {
+      "flash_bytes": 221104,
+      "flash_limit": 262144,
+      "globals_bytes": 26164,
+      "ram_limit": 65536,
+      "maximum_stack_frame": 1304,
+      "stack_frame_limit": 2048,
+      "system_apps": [
+        "BASIC.APP",
+        "CHIP8.APP",
+        "CLOCK.APP",
+        "FOCAL.APP",
+        "LANGIN.APP",
+        "LANGVM.APP",
+        "MARKDOWN.APP",
+        "SETUP.APP",
+        "SRCEDIT.APP",
+        "TERMINAL.APP",
+        "USBDISK.APP"
+      ]
+    }
+  },
+  "checks_sha256": {
+    "host-tests-final.log": "63fe55b31c2602d98b454b137a31bf5efe92bd1c0b85c7e961c2563445444a29",
+    "hardware-host-final.log": "bda3f311247061e2fe135fec36403e7e43bd77f08e4f79609a2559e4ddd645c0",
+    "recovery-tests.log": "bc61b80448b20cf4964589806f7fd9441ea735b76f5b4317793b06e58534a62f",
+    "native-assets-final.log": "acfbdf9cd0ed868b5272ee4b266f1b3f38488291750281273dd88023ad466e9f",
+    "version-final.log": "e4e546ca7b81002d7c075340176048edded67482ed6cfb9c74f3b7c0e8b43862",
+    "ci-final.log": "019205823a1a58401658f3ae095f0f5342430816edf9c3d61dfa7e0fa9826370",
+    "package-test.log": "81fd420ddef9412f5225af140b603ed2b1ff684fe67405f92d04db8ef69dc323",
+    "stm32-classic.log": "51dd9ab5d70fed3e761c3bf55bf97726941e72aa4ac10c5118d119070b29eb0f",
+    "stm32-mini.log": "b968e98f979b4b9ac29e0d685f80106c79b02821367d00da79c066f8a93bb091",
+    "stm32-classic-system.log": "770ffac871b46be73e0f92408afb821e933215cb20ebbe9a9aa5fb18d8865fe0",
+    "stm32-mini-system.log": "be0a85403727774560294fe20da4f855d0fb9ec3ec7d19901eb45c5a9e21a9d4"
+  },
+  "limitations": [
+    "No battery fitted: battery current and real battery sleep remain unmeasured.",
+    "TE is not wired on PicoCalc V2.0; no atomic hardware page flip, Get Scanline sync or controller scrolling.",
+    "PSRAM is a checked optional cache, not an enlarged executable heap or native APP ABI change.",
+    "Physical power loss of this exact microSD controller was not injected; journal fault model and normal DMA file writes were checked."
+  ],
+  "final_status_sha256": "150a1c080c05de7c25d79adba26633212ef67c03a99f3430ddc17f32cfb9b95e",
+  "calculator_state_restored": true
+}

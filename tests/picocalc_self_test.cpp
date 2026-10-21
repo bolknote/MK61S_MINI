@@ -178,9 +178,26 @@ int main(int argc, char** argv) {
     // A burst of FIFO key presses must neither repeat nor lose a digit.
     feed(calc, "12\n34+",true);
     equal_x(46);
+    for(unsigned i=0;i<1024 && !calc.parked();++i) calc.tick(false,true);
+    require(calc.parked(),"settled manual calculator can park its ROM scanner");
+    const auto parked_calls=picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls;
+    for(unsigned i=0;i<128;++i) calc.tick(false,true);
+    require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls==parked_calls,
+        "parked calculator does not burn cycles rescanning a stable ROM display");
+    calc.wake_core();calc.tick(false,true);
+    require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls==parked_calls+1,
+        "direct terminal/VM mutation wakes the ROM scanner");
     require(picocalc::diagnostics::sample(picocalc::diagnostics::Point::CORE).calls>1,
         "M61 foreground must service queued keys and their release");
     picocalc::diagnostics::profile_stop();
+    require(write_stack_register(X,'+',"12345000",4),"direct register update");
+    calc.wake_core();
+    for(unsigned i=0;i<1024 && !calc.parked();++i) calc.tick(false,true);
+    require(calc.parked(),"direct update settles before parking");
+    char parked_indicator[32];std::strcpy(parked_indicator,calc.snapshot().indicator);
+    for(unsigned i=0;i<128;++i) calc.tick(false,false);
+    require(!std::strcmp(parked_indicator,calc.snapshot().indicator),
+        "parking preserves the same display latch as continued legacy scans after direct writes");
     feed(calc, "\x08" "9f-"); // F minus = the original MK-61 square root.
     equal_x(3);
     feed(calc, "\x08" "90f7"); // DEG sin(90).

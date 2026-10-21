@@ -15,6 +15,7 @@ public:
     void idle(bool enabled) { idle_ = enabled; }
     void clock_changed();
     bool transaction_pending() const { return pending_ || io_phase_; }
+    u64 next_poll() const { return due_; }
     bool online() const { return online_; }
     u32 errors() const { return errors_; }
     int lcd_backlight() const { return lcd_backlight_; }
@@ -39,6 +40,7 @@ public:
     u32 last_rectangles() const { return last_rectangles_.load(std::memory_order_relaxed); }
     u32 last_us() const { return last_us_.load(std::memory_order_relaxed); }
     u32 full_frames() const { return full_frames_.load(std::memory_order_relaxed); }
+    u32 errors() const { return errors_.load(std::memory_order_relaxed); }
     bool dma() const { return dma_tx_>=0 && dma_rx_>=0; }
 private:
     u8 previous_[Screen::BYTES] = {};
@@ -46,11 +48,14 @@ private:
     u32 spi_hz_ = 0;
     std::atomic<u32> frames_{0},frame_crc_{0};
     std::atomic<u32> last_bytes_{0},last_rectangles_{0},last_us_{0},full_frames_{0};
+    std::atomic<u32> errors_{0};
+    std::atomic<bool> failed_{false};
+    bool dma_irq_ready_=false;
     lcd::Update update_;
     u8 discard_=0;
     int dma_tx_=-1,dma_rx_=-1;
     void start_scanline(const u8* bytes,unsigned count);
-    void finish_scanline();
+    bool finish_scanline();
     void transfer();
 };
 

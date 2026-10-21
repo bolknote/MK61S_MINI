@@ -4,6 +4,8 @@
 #include "mk61_ref.hpp"
 #include "crc32.hpp"
 #include "mk8_codec.hpp"
+#include "psram.hpp"
+#include "external_cache.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -226,5 +228,30 @@ void picocalc_language_cache_test() {
     assert(cache::statistics().allocated<=32768 && cache::statistics().evictions>0);
     assert(files::read(colliding.c_str(),bytes.data(),bytes.size(),used) && used==4 && !std::memcmp(bytes.data(),"KEEP",4));
     cache::discard();script::reset_files();
+    // With the optional chip present, programs evicted from the 32 KiB hot
+    // cache are copied back into the existing compiler image. No PSRAM
+    // pointer is executed, and the fallback still owns an ordinary SRAM VM.
+    std::vector<u8> external_memory(psram::CAPACITY);
+    psram::test_memory(external_memory.data(),external_memory.size());
+    assert(psram::init() && external_cache::init());
+    assert(files::mkdir("/Cache Tests/External"));
+    for(unsigned i=0;i<48;++i)
+        source(("/Cache Tests/External/"+std::to_string(i)+".bas").c_str(),"10 .R3=.R3+1\n20 END\n");
+    for(unsigned i=0;i<48;++i)
+        assert(services.run_external(("/Cache Tests/External/"+std::to_string(i)+".bas").c_str())==0);
+    cache::discard();
+    script::reset_files(); // Recycle IDs; persistent PSRAM owners must still match paths.
+    start=cache::statistics();
+    for(unsigned i=48;i--;) assert(services.run_external(("/Cache Tests/External/"+std::to_string(i)+".bas").c_str())==0);
+    current=cache::statistics();
+    assert(current.psram_hits>=start.psram_hits+30 && current.compiles==start.compiles);
+    // Source mutation changes the media revision before any external lookup.
+    source("/Cache Tests/External/0.bas","10 .R3=733\n20 END\n");
+    assert(services.run_external("/Cache Tests/External/0.bas")==0 && reg(3)==733);
+    cache::discard();script::reset_files();external_cache::invalidate_modules();
+    psram::test_memory(nullptr,0);
+    assert(!psram::init());
+    std::printf("PicoCalc PSRAM VM reuse: %lu hits across 48 programs, SRAM VM and edit invalidation PASS\n",
+        (unsigned long)(current.psram_hits-start.psram_hits));
     std::puts("PicoCalc VM cache: RAM/SD reuse, DATA/state, edits/rename/delete, corrupt/foreign files, INPUT pins/cancel, RF and bounded eviction PASS");
 }

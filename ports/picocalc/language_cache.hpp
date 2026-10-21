@@ -14,6 +14,7 @@ struct Statistics {
     u32 ram_hits=0,ram_misses=0,disk_hits=0,disk_misses=0;
     u32 compiles=0,stores=0,rejected=0,evictions=0;
     u32 packs=0,thaws=0;
+    u32 psram_hits=0,psram_misses=0;
     unsigned allocated=0,used=0,packed=0;
 };
 Prepared find(const char* path,language_vm::Language,bool rf_available,

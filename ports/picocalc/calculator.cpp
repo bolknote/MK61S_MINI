@@ -38,6 +38,7 @@ Key map_key(u8 code) {
 }
 
 void Calculator::init(bool expanded) {
+    settled_=false;
     read_ = count_ = press_steps_ = 0;
     release_steps_ = 0;
     dropped_keys_ = 0;
@@ -62,6 +63,7 @@ void Calculator::set_memory_mode(u8 mode) {
 bool Calculator::input(u8 code) {
     const Key key = map_key(code);
     if(!key.valid()) return false;
+    settled_=false;
     if(count_ == QUEUE_SIZE) {
         ++dropped_keys_;
         return false;
@@ -71,7 +73,8 @@ bool Calculator::input(u8 code) {
     return true;
 }
 
-void Calculator::tick(bool script_owns_display) {
+void Calculator::tick(bool script_owns_display,bool park_idle) {
+    if(park_idle && parked()) return;
     // An M61 screen needs no idle ROM scan between its commands. Pending
     // presses/releases and a running MK61 program still advance normally.
     if(script_owns_display && idle() && !core_61::is_RUN()) return;
@@ -107,6 +110,7 @@ void Calculator::tick(bool script_owns_display) {
         if(releasing_ && (core_61::is_RUN() || core_61::is_displayed() ||
                           ++release_steps_ >= 512)) releasing_ = false;
     }
+    settled_=idle() && !core_61::is_RUN() && core_61::is_displayed();
 }
 
 Snapshot Calculator::snapshot() const {

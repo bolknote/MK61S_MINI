@@ -96,6 +96,12 @@ def main():
         recorded_at_utc=datetime.now(timezone.utc).isoformat(),directory=directory,cases=[],screens={})
     p=connect(args.port,args.uid);p.native_display=True;before=None;created=False;initial=None;prompt_ru_toggled=False
     def passed(label):report['cases'].append(label);print('PASS '+label,flush=True)
+    def heap_snapshot(name):
+        p.commands()
+        response=p.command('prof heap')
+        if 'HEAP_BYTES=' in response:
+            report.setdefault('heap',{})[name]=response
+            print(name+': '+response.strip(),flush=True)
     def picture(name,expected=None):
         p.pump(.25);start=len(p.frames);p.send(0x16);deadline=time.monotonic()+20
         while time.monotonic()<deadline:
@@ -125,6 +131,7 @@ def main():
         for marker in ('BUILD='+build['build_id'].upper(),'CRASH=NONE','FIRMWARE_CRC=valid','SD=OK','KBD=OK','SERVICE=CLOSED','DIRTY=0','RUN=0 BUSY=0'):
             assert marker in initial,(marker,initial)
         before={c:p.command(c) for c in ('reg','stk','hout','dump','pwd')}
+        heap_snapshot('initial')
         (args.output/'snapshot.json').write_text(json.dumps(before,indent=2)+'\n')
         selected=re.search(r'UI_FONT_FAMILY=(\d+) UI_FONT_SIZE=(\d+) UI_FONT_KEY=([0-9A-F]+)',initial).groups()
         report['font_before']=selected
@@ -191,6 +198,7 @@ def main():
             expected=bytearray(12800);ark.text(expected,'ЖЩЮ←',8,100);picture(suffix+'-print-at',bytes(expected))
             raw(p,b'\r');p.wait_text(b'VM_RESULT=OK',start);calculator(p)
         passed('BASIC and FOCAL PRINT AT: identical full native glyphs at pixel coordinates, independent Ark oracle')
+        heap_snapshot('after-basic-focal')
         # Real built-in source editor and save-name prompt, through BIOS codes.
         raw(p,b'\t'+b'\xb5'*20+b'\xb6'*3+b'\r');p.expect('SERVICE=BROWSER')
         raw(p,b'/'+directory.encode()+b'/wide.txt\r');p.expect('SERVICE=EDITOR')
@@ -209,6 +217,7 @@ def main():
         for x in range(8+ark.width('Щ'*visible),15+ark.width('Щ'*visible)):ark.pixel(expected,x,91)
         band(frame,expected,76,93);raw(p,b'\x88\x1b');prompt_ru_toggled=False;calculator(p)
         passed('built-in editor and UTF-8 filename prompt: full wide glyphs, pixel-based horizontal scrolling and visible insertion cursor')
+        heap_snapshot('after-editor')
         # Native artwork remains 1:1 even when a Markdown paragraph has margins.
         start=len(p.text);p.open(directory+'/image.md');p.expect('SERVICE=VIEWER')
         frame=picture('markdown-native-art');source=image_frame(probes['image-320.wbmp']);expected=bytearray(12800)

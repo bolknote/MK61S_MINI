@@ -25,6 +25,7 @@ clang++ -std=c++17 -O2 -Wall -Wextra -Werror -Wno-unused-variable -Wno-unused-pa
     "$root/ports/picocalc/storage.cpp" "$root/ports/picocalc/storage_journal.cpp" "$root/ports/picocalc/block_transfer.cpp" "$root/ports/picocalc/services.cpp" "$root/ports/picocalc/service_runtime.cpp" \
     "$root/tests/picocalc_host_disk.cpp" "$root/tests/picocalc_services_self_test.cpp" "$root/tests/picocalc_io_self_test.cpp" \
     "$root/ports/picocalc/script_files.cpp" "$root/ports/picocalc/script_runtime.cpp" "$root/ports/picocalc/language_cache.cpp" \
+    "$root/ports/picocalc/psram.cpp" "$root/ports/picocalc/external_cache.cpp" "$root/ports/picocalc/dma_support.cpp" \
     "$root/code/m61_text.cpp" "$root/code/m61_ansi.cpp" "$root/code/m61_print.cpp" \
     "$root/code/terminal_script_runtime.cpp" "$root/code/terminal_catalog.cpp" \
     "$root/code/terminal_key_sequence.cpp" "$root/code/calculator_control.cpp" \

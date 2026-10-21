@@ -15,6 +15,9 @@ pico_board_cmake_set(PICO_PLATFORM, rp2040)
 #define PICO_DEFAULT_SPI_CSN_PIN 13
 #define MK61_PICOCALC_LCD_DC_PIN 14
 #define MK61_PICOCALC_LCD_RESET_PIN 15
+#ifndef MK61_PICOCALC_LCD_SPI_HZ
+#define MK61_PICOCALC_LCD_SPI_HZ 12500000
+#endif
 #include "boards/pico.h"
 
 #endif

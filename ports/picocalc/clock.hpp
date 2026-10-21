@@ -25,6 +25,8 @@ bool set(const DateTime &date);
 DateTime get();
 bool configured();
 void service();
+bool alarm_pending();
+u32 alarm_interrupts();
 void calibrate(int ppm);
 int calibration();
 u32 fat_time();

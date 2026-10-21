@@ -26,6 +26,7 @@ option(MK61_PICOCALC_SAMPLE_PROFILE "Diagnostic-only 1 kHz PC sampling on core 0
 add_executable(mk61s-picocalc-pico-h
     main.cpp hardware.cpp io_worker.cpp calculator.cpp screen.cpp math_probe.cpp ui.cpp markdown.cpp terminal.cpp fonts.cpp diagnostics.cpp firmware.cpp native_display.cpp canvas.cpp
     settings.cpp device_settings.cpp sd_card.cpp block_transfer.cpp storage.cpp storage_journal.cpp usb_device.cpp services.cpp service_runtime.cpp
+    dma_support.cpp psram.cpp external_cache.cpp
     script_files.cpp script_runtime.cpp language_cache.cpp input.cpp clock.cpp power.cpp chip8_runtime.cpp native_app.cpp native_runtime.cpp usb_screen.cpp
     "${MK61_ROOT}/third_party/fatfs/ff.c"
     "${MK61_ROOT}/third_party/fatfs/ffunicode.c"
@@ -98,7 +99,8 @@ set_source_files_properties("${MK61_ROOT}/code/native_eabi_m0.cpp"
     PROPERTIES COMPILE_OPTIONS "-fno-lto")
 target_link_libraries(mk61s-picocalc-pico-h PRIVATE
     pico_stdlib pico_multicore hardware_rtc hardware_spi hardware_i2c hardware_watchdog hardware_pwm hardware_pll
-    hardware_flash hardware_dma pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
+    hardware_flash hardware_dma hardware_pio pico_flash pico_rand tinyusb_device tinyusb_board pico_unique_id)
+pico_generate_pio_header(mk61s-picocalc-pico-h "${CMAKE_CURRENT_LIST_DIR}/psram_spi.pio")
 if(MK61_PICOCALC_SAMPLE_PROFILE)
     target_link_libraries(mk61s-picocalc-pico-h PRIVATE hardware_exception)
 endif()

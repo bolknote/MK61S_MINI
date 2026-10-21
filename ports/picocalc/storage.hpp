@@ -4,6 +4,8 @@
 
 namespace picocalc {
 namespace sd {
+struct Statistics { bool dma;u32 reads,writes,dma_transfers,hardware_crc,crc_errors; };
+Statistics statistics();
 bool init();
 bool ready();
 u32 sectors();

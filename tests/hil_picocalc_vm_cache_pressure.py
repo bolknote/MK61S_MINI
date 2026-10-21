@@ -18,10 +18,11 @@ def main():
     parser.add_argument('--port',required=True);parser.add_argument('--uid',required=True)
     parser.add_argument('--firmware-directory',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--programs',type=int,default=16,choices=range(16,49))
     args=parser.parse_args();args.output.mkdir(parents=True,exist_ok=False)
     build=json.loads((args.firmware_directory/'manifest.json').read_text())
     directory='/MK61S-PACK-'+datetime.now().strftime('%Y%m%d-%H%M%S')
-    paths=[directory+f'/part{i:02d}.bas' for i in range(16)]
+    paths=[directory+f'/part{i:02d}.bas' for i in range(args.programs)]
     report=dict(passed=False,uid=args.uid,build=build['build_id'].upper(),uf2_sha256=build['uf2_sha256'],
         driver_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     before=None;created=False
@@ -37,7 +38,7 @@ def main():
             # All writes precede execution: later sources must not invalidate
             # earlier images. The long owned PRINT resource is skipped at run.
             for i,path in enumerate(paths):
-                text='PICO PACKED RESOURCE '*(83+i*5)
+                text='PICO PACKED RESOURCE '*(83+(i%16)*5)
                 data=(f'10 GOTO 30\n20 PRINT "{text}"\n30 .R0={101+i}\n40 END\n').encode()
                 write_file(p,path,data);assert read_file(p,path)==data
                 print(f"Uploaded and checked {i+1}/{len(paths)} cache-pressure sources",flush=True)
@@ -51,6 +52,10 @@ def main():
                 assert 'VM_RESULT=OK' in p.command('open "'+path+'"',timeout=30)
             warm=p.status();w=counters(warm)
             assert w['COMPILES']==c['COMPILES'] and w['THAWS']>c['THAWS'],warm
+            if args.programs>32:
+                ext=lambda text:re.search(r'(?m)^EXT_CACHE=[^\r\n]*',text)[0]
+                hits=lambda text:int(re.search(r'\bVM_HIT=(\d+)',ext(text))[1])
+                assert hits(warm)>hits(cold),(cold,warm)
             assert re.search(r'(?m)^R0 =  1\.0100000  02\r?$',p.command('reg'))
             report.update(passed=True,programs=len(paths),cold=cold,warm=warm)
         finally:

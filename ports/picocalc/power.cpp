@@ -1,15 +1,21 @@
 #include "power.hpp"
 #include "io_worker.hpp"
+#include "clock.hpp"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
 #include "hardware/pll.h"
 #include "hardware/structs/scb.h"
 #include "hardware/uart.h"
+#include "hardware/timer.h"
+#include "hardware/sync.h"
 #include "pico/stdlib.h"
 #include "tusb.h"
 
 namespace picocalc {
 namespace {
+IdleStatistics idle_stats{};
+int idle_alarm=-1;
+void idle_alarm_irq(unsigned) { __sev(); }
 bool usb_power() { return gpio_get(PICO_VBUS_PIN); }
 void uart_clock_changed() {
 #if PICO_STDIO_UART && defined(PICO_DEFAULT_UART_BAUD_RATE)
@@ -17,6 +23,35 @@ void uart_clock_changed() {
 #endif
 }
 }
+void idle_until(u64 deadline) {
+  const u64 started=time_us_64();
+  if(deadline<=started) return;
+  ++idle_stats.waits;
+  if(idle_alarm<0) {
+    idle_alarm=hardware_alarm_claim_unused(false);
+    if(idle_alarm>=0) hardware_alarm_set_callback((unsigned)idle_alarm,idle_alarm_irq);
+  }
+  if(idle_alarm>=0) {
+    (void)hardware_alarm_set_target((unsigned)idle_alarm,from_us_since_boot(deadline));
+    // Alarm-pool add/cancel sends SEV in SDK 2.2. Recreating its timeout on
+    // each UI poll would repeatedly consume our own event without sleeping.
+    // Use one hardware comparator and clear stale events before checking
+    // persistent work predicates. An IRQ after this check remains latched.
+    __sev();__wfe();
+    const bool usb_pending=gpio_get(PICO_VBUS_PIN) &&
+        (tud_task_event_ready() || tud_cdc_available());
+#if LIB_PICO_STDIO_UART
+    const bool serial_pending=uart_is_readable(uart_default);
+#else
+    const bool serial_pending=false;
+#endif
+    if(!io_worker::input_ready() && !clock::alarm_pending() && !usb_pending &&
+       !serial_pending && time_us_64()<deadline) __wfe();
+    hardware_alarm_cancel((unsigned)idle_alarm);
+  } else best_effort_wfe_or_timeout(from_us_since_boot(deadline));
+  idle_stats.wait_us+=time_us_64()-started;
+}
+IdleStatistics idle_statistics() { return idle_stats; }
 void SleepClocks::init() {
   gpio_init(PICO_VBUS_PIN);
   gpio_set_dir(PICO_VBUS_PIN, GPIO_IN);

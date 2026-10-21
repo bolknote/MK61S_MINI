@@ -45,7 +45,9 @@ public:
     void init(bool expanded = false);
     void set_memory_mode(u8 mode);
     bool input(u8 code);
-    void tick(bool script_owns_display = false);
+    void tick(bool script_owns_display = false,bool park_idle=false);
+    void wake_core() { settled_=false; }
+    bool parked() const { return settled_ && idle() && !core_61::is_RUN(); }
     bool idle() const { return count_ == 0 && press_steps_ == 0 && !releasing_; }
     Snapshot snapshot() const;
 
@@ -57,7 +59,7 @@ private:
     u8 read_ = 0, count_ = 0, press_steps_ = 0;
     u16 release_steps_ = 0;
     u32 dropped_keys_ = 0;
-    bool releasing_ = false, f_pending_ = false;
+    bool releasing_ = false, f_pending_ = false, settled_=false;
 };
 
 } // namespace picocalc

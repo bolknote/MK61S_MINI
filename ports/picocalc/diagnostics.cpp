@@ -10,11 +10,13 @@
 #include <cstring>
 #include <cstdint>
 #if defined(PICO_ON_DEVICE)
+#include <malloc.h>
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 #include "hardware/watchdog.h"
 #include "hardware/structs/watchdog.h"
 #include "hardware/structs/vreg_and_chip_reset.h"
+extern "C" { extern char __end__,__HeapLimit; }
 #if defined(MK61_PICOCALC_SAMPLE_PROFILE) && MK61_PICOCALC_SAMPLE_PROFILE
 #include "hardware/clocks.h"
 #include "hardware/exception.h"
@@ -283,6 +285,19 @@ bool command(u8 id,const char* arguments,const char* cwd,Writer write,void* raw)
       size=crash_report(report,sizeof(report));
     } else return false;
   } else if(id==CMD_PROFILE) {
+#if defined(PICO_ON_DEVICE)
+    if(!std::strcmp(args,"heap")) {
+      const auto heap=mallinfo();
+      const auto capacity=(uintptr_t)&__HeapLimit-(uintptr_t)&__end__;
+      size=std::snprintf(report,sizeof(report),
+          "HEAP_BYTES=%lu HEAP_USED=%lu HEAP_FREE=%lu HEAP_ARENA=%lu HEAP_FREE_BLOCKS=%lu HEAP_TOP=%lu\r\n",
+          (unsigned long)capacity,(unsigned long)heap.uordblks,
+          (unsigned long)(capacity-heap.uordblks),(unsigned long)heap.arena,
+          (unsigned long)heap.ordblks,(unsigned long)heap.keepcost);
+      if(write) write(raw,report,size);
+      return write!=nullptr;
+    }
+#endif
 #if defined(PICO_ON_DEVICE) && defined(MK61_PICOCALC_SAMPLE_PROFILE) && MK61_PICOCALC_SAMPLE_PROFILE
     if(!std::strcmp(args,"samples")) {
       if(enabled || !write) return false;

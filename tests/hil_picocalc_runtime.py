@@ -33,8 +33,15 @@ class Pico(ScreenPort):
     def raw(self,keys):
         os.write(self.fd,keys)
     def status(self):
-        start=len(self.text);self.raw(b'\x05');self.pump(.25)
-        return self.text[start:].decode('utf-8','replace')
+        start=len(self.text);self.raw(b'\x05')
+        deadline=time.monotonic()+5
+        # Status grew with PSRAM/DMA diagnostics. At the UART baud rate the
+        # complete response may take longer than the original 250 ms delay.
+        while time.monotonic()<deadline:
+            self.pump(.05)
+            report=self.text[start:].decode('utf-8','replace')
+            if re.search(r'(?m)^MSC_SD_READ_US=[^\r\n]*ACTIVE_LBA=\d+\r?\n',report):return report
+        raise TimeoutError('Incomplete PicoCalc status: '+report)
     def expect(self,*expected,timeout=20):
         deadline=time.monotonic()+timeout;status=''
         while time.monotonic()<deadline:

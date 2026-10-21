@@ -419,6 +419,14 @@ bool Terminal::script_command(const char *line) {
   }
 }
 bool Terminal::execute(const char *line) {
+  struct CoreWake {
+    Calculator& calculator;
+    bool active;
+    explicit CoreWake(Calculator& c,bool enabled=true):calculator(c),active(enabled) {
+      if(active) calculator.wake_core();
+    }
+    ~CoreWake() { if(active) calculator.wake_core(); }
+  };
   line = terminal_core::skip_spaces(line);
   if (!line || !*line)
     return true;
@@ -430,6 +438,7 @@ bool Terminal::execute(const char *line) {
     if (command == CMD_CLEAR) {
       if (!calculator_.idle() || core_61::is_RUN() || m61_text::active())
         return false;
+      CoreWake wake(calculator_);
       MK61Emu_ClearCodePage();
       return true;
     }
@@ -599,8 +608,18 @@ bool Terminal::execute(const char *line) {
                                                  : "Restart");
     return true;
   }
-  if (terminal_command_allowed_in_script(id))
+  if (terminal_command_allowed_in_script(id)) {
+    // File transfer, diagnostics and metadata commands above never change
+    // calculator state. Nor do these shared read-only core inspections.
+    // Keep the settled ROM parked across them; mutating/nested commands
+    // still wake both before execution and after their final state change.
+    const bool observing=id==CMD_VERSION || id==CMD_LIST || id==CMD_ISA ||
+        id==CMD_LASM || id==CMD_REG_DUMP || id==CMD_1302 || id==CMD_HOUT ||
+        id==CMD_DUMP || id==CMD_PUB || id==CMD_STACK || id==CMD_RING ||
+        id==CMD_DATE || id==CMD_ALARM;
+    CoreWake wake(calculator_,!observing);
     return script_command(line);
+  }
   if (backend_.board_command &&
       backend_.board_command(backend_.context, id, args))
     return true;

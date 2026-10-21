@@ -53,6 +53,13 @@ void lcd_updates_test() {
     // Exhaust the rectangle budget with sparse changes, then qualify arbitrary
     // sparse/dense frames against an independent pixel reconstruction oracle.
     for(unsigned y=0;y<HEIGHT;y+=16) for(unsigned x=0;x<STRIDE;x+=2) next[y*STRIDE+x]^=1;
+    verify();assert(update.bytes<204800);
+    // Many dense windows save a few pixels but lose to one full SPI window
+    // on hardware. Keep that transfer-cost regression distinct from sparse
+    // fragmentation, which must still retain partial updates.
+    previous.fill(0);next.fill(0);
+    for(unsigned y=0;y<HEIGHT;++y) for(unsigned x=0;x<WIDTH;++x)
+        if((x/16+y/16)&1) next[y*STRIDE+x/8]|=0x80U>>(x%8);
     verify();assert(update.count==1 && update.bytes==204800);
     uint32_t random=0x691C53AD;
     auto word=[&] { random^=random<<13;random^=random>>17;return random^=random<<5; };

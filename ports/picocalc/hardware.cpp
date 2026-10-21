@@ -2,6 +2,7 @@
 #include "diagnostics.hpp"
 #include "io_worker.hpp"
 #include "crc32.hpp"
+#include "dma_support.hpp"
 #include "hardware/i2c.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
@@ -115,9 +116,9 @@ void Panel::init() {
             dma_tx_=dma_rx_=-1;
         }
     }
-    // ST7365P specifies >=66 ns per write clock (<=15.15 MHz). Request
-    // 10 MHz, leaving margin for the board/ribbon; retain the actual divider.
-    spi_hz_ = spi_init(spi1, 10000000);
+    // ST7365P specifies >=66 ns per write clock (<=15.15 MHz).
+    // 12.5 MHz has an 80 ns cycle at the stock 125 MHz system clock.
+    spi_hz_ = spi_init(spi1, MK61_PICOCALC_LCD_SPI_HZ);
     gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
     gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
@@ -150,6 +151,7 @@ void Panel::sleep(bool enabled) {
 }
 void Panel::flush(const Screen& screen) {
     if(io_worker::frame_pending()) return;
+    if(failed_.exchange(false,std::memory_order_acquire)) valid_=false;
     // The retained BASIC/APP image is usually identical. Avoid walking all
     // dirty tiles at every UI poll while a chess search is computing.
     if(valid_ && std::memcmp(previous_,screen.data(),Screen::BYTES)==0) return;
@@ -161,6 +163,12 @@ void Panel::flush(const Screen& screen) {
 }
 void Panel::start_scanline(const u8* bytes,unsigned count) {
     if(!dma()) { spi_write_blocking(spi1,bytes,count);return; }
+    if(!dma_irq_ready_) {
+        // Transfer runs on core 1, independently of the core which claimed
+        // the channels during panel initialization.
+        dma_support::enable_irq((unsigned)dma_tx_);dma_support::enable_irq((unsigned)dma_rx_);
+        dma_irq_ready_=true;
+    }
     auto tx=dma_channel_get_default_config((unsigned)dma_tx_);
     channel_config_set_transfer_data_size(&tx,DMA_SIZE_8);
     channel_config_set_dreq(&tx,spi_get_dreq(spi1,true));
@@ -177,11 +185,11 @@ void Panel::start_scanline(const u8* bytes,unsigned count) {
     dma_channel_configure((unsigned)dma_tx_,&tx,&spi_get_hw(spi1)->dr,bytes,count,false);
     dma_start_channel_mask((1U<<dma_tx_) | (1U<<dma_rx_));
 }
-void Panel::finish_scanline() {
-    if(!dma()) return;
-    dma_channel_wait_for_finish_blocking((unsigned)dma_tx_);
-    dma_channel_wait_for_finish_blocking((unsigned)dma_rx_);
+bool Panel::finish_scanline() {
+    if(!dma()) return true;
+    if(!dma_support::wait((unsigned)dma_tx_,dma_rx_)) return false;
     while(spi_is_busy(spi1)) tight_loop_contents();
+    return true;
 }
 void Panel::transfer() {
     const u64 start=time_us_64();
@@ -204,7 +212,10 @@ void Panel::transfer() {
             // Convert the next row while DMA sends the other buffer. Neither
             // the snapshot nor an in-flight scanline is modified by core 0.
             if(row<rect.height) lcd::scanline(previous_,rect,row,scanlines[row&1]);
-            finish_scanline();
+            if(!finish_scanline()) {
+                gpio_put(CS,1);errors_.fetch_add(1);
+                failed_.store(true,std::memory_order_release);return;
+            }
             if(row<rect.height) start_scanline(scanlines[row&1],rect.width*2);
             io_worker::service();
         }
@@ -214,7 +225,7 @@ void Panel::transfer() {
     last_bytes_.store(update_.bytes,std::memory_order_relaxed);
     last_rectangles_.store(update_.count,std::memory_order_relaxed);
     if(update_.bytes==Screen::WIDTH*Screen::HEIGHT*2) full_frames_.fetch_add(1,std::memory_order_relaxed);
-    frame_crc_.store(mk61_crc32::calculate(previous_,sizeof(previous_)),std::memory_order_relaxed);
+    frame_crc_.store(dma_support::crc32(previous_,sizeof(previous_)),std::memory_order_relaxed);
     frames_.fetch_add(1,std::memory_order_relaxed);
 }
 

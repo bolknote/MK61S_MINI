@@ -4,6 +4,7 @@
 #include "script.hpp"
 #include "storage.hpp"
 #include "crc32.hpp"
+#include "external_cache.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -176,6 +177,13 @@ vm::ValidatedImage certificate(const vm::View& v) {
     return {vm::VALIDATED_MAGIC,v.size,v.code,v.source_size,v.end,v.lines,v.stack,
         v.bytes[7],v.language,v.wide};
 }
+u64 external_key(u32 revision,const char* path,vm::Language language,bool rf) {
+    // Registry indices can be recycled when its bounded path table resets.
+    // PSRAM outlives that table. Keep media revision exact and disambiguate
+    // path-hash collisions with the full owner string stored beside the VM.
+    const u32 hash=mk61_crc32::calculate((const u8*)path,std::strlen(path));
+    return (u64(revision)<<32) | (hash ^ ((unsigned)language<<1) ^ (rf?1U:0U));
+}
 }
 void bind(void* owner,void* bytes,unsigned capacity) {
     if(owner!=storage_owner || bytes!=storage) {
@@ -195,13 +203,22 @@ void detach(void* owner) {
 }
 Prepared find(const char* path,vm::Language language,bool rf,u8* scratch,unsigned scratch_size) {
     Prepared result;
-    if(!memory || !files::ready()) { ++counts.ram_misses;return result; }
+    if(!files::ready()) { ++counts.ram_misses;return result; }
     char normalized[files::PATH_SIZE];u16 id;
     if(!identity(path,normalized,id)) { ++counts.ram_misses;return result; }
     // The caller lends its inactive compiler image only for this lookup.
     // No source, numeric state or scratch pointer is retained by the cache.
-    auto handle=memory->find({files::revision(),id,language,0},{scratch,scratch_size});
-    if(!handle) { ++counts.ram_misses;return result; }
+    auto handle=memory?memory->find({files::revision(),id,language,0},{scratch,scratch_size}):Cache::Handle{};
+    if(!handle) {
+        ++counts.ram_misses;
+        unsigned size=0;vm::View view{};
+        if(scratch && external_cache::module(external_key(files::revision(),normalized,language,rf),scratch,scratch_size,size,normalized) &&
+           vm::inspect(scratch,size,view)==vm::Error::NONE && view.language==language && cacheable(view) &&
+           (!(view.bytes[7]&2) || rf)) {
+            result.view=view;result.generation=1;result.slot=0xFFFE;++counts.psram_hits;return result;
+        }
+        ++counts.psram_misses;return result;
+    }
     const auto* c=memory->certificate(handle);const auto* image=memory->image(handle);
     if(!c || !image || ((c->flags&2) && !rf)) {
         (void)memory->release(handle);++counts.ram_misses;return result;
@@ -213,6 +230,7 @@ Prepared find(const char* path,vm::Language language,bool rf,u8* scratch,unsigne
 }
 void release(Prepared& prepared) {
     if(!prepared) return;
+    if(prepared.slot==0xFFFE) { prepared={};return; }
     if(memory) (void)memory->release({prepared.generation,prepared.slot});
     prepared={};if(pins) --pins;if(!pins && discard_pending) discard();
 }
@@ -239,6 +257,7 @@ void remember(const char* path,bool rf,u32 revision,const char* source,u16 lengt
     if(!cacheable(v) || revision!=files::revision() || !files::ready()) return;
     char normalized[files::PATH_SIZE];u16 id;
     if(!identity(path,normalized,id) || revision!=files::revision()) return;
+    external_cache::store_module(external_key(revision,normalized,v.language,rf),v.bytes,v.size,normalized);
     if(!memory && storage && storage_capacity>=sizeof(Cache)) memory=new(storage) Cache;
     if(memory) {
         const auto existing=memory->find({revision,id,v.language,0});

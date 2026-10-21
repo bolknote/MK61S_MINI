@@ -1,0 +1,18 @@
+; PicoCalc's PSRAM is wired to ordinary GPIOs, not the XIP flash bus.
+; SPI mode 0, MSB first, 20.833 MHz at the stock 125 MHz system clock.
+; Both CE# (side bit 0, GPIO20) and SCK (side bit 1, GPIO21) belong to
+; PIO. X holds bits-1; at most 16 bytes are preloaded before enabling SM.
+; Thus CE# stays low <=6.144 us even if the CPU is interrupted (chip max
+; 8 us). The final RX push occurs with CE# high, so RX backpressure is safe.
+.program mk61_psram_spi
+.side_set 2
+.wrap_target
+bitloop:
+    out pins, 1 side 0 [1]
+    nop side 2 [1]
+    in pins, 1 side 2
+    jmp x-- bitloop side 0
+    push block side 1 [7]
+halt:
+    jmp halt side 1
+.wrap

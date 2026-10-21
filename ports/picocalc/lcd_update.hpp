@@ -7,8 +7,9 @@ namespace picocalc::lcd {
 constexpr unsigned WIDTH=320, HEIGHT=320, STRIDE=WIDTH/8, BYTES=STRIDE*HEIGHT;
 struct Rect { uint16_t x,y,width,height; };
 
-// Bound both RAM and command overhead. Fragmented updates fall back to one
-// full window. The input is the immutable, horizontal MSB-first LCD bitmap.
+// Bound RAM while retaining sparse updates. When the rectangle budget is
+// full, expand the cheapest existing window instead of sending the screen.
+// The input is the immutable, horizontal MSB-first LCD bitmap.
 struct Update {
     static constexpr unsigned CAPACITY=32;
     Rect rectangles[CAPACITY]{};
@@ -38,12 +39,33 @@ struct Update {
                       rectangles[index].y+rectangles[index].height==y)) ++index;
                 if(index<count) rectangles[index].height+=8;
                 else {
-                    if(count==CAPACITY) { full();return; }
-                    rectangles[count++]={(uint16_t)left,(uint16_t)y,(uint16_t)width,8};
+                    if(count<CAPACITY) rectangles[count++]={(uint16_t)left,(uint16_t)y,(uint16_t)width,8};
+                    else {
+                        unsigned best=0,best_extra=WIDTH*HEIGHT;
+                        Rect expanded{};
+                        for(unsigned i=0;i<count;++i) {
+                            const auto& r=rectangles[i];
+                            const unsigned x0=r.x<left?r.x:left,y0=r.y<y?r.y:y;
+                            const unsigned x1=r.x+r.width>left+width?r.x+r.width:left+width;
+                            const unsigned y1=r.y+r.height>y+8?r.y+r.height:y+8;
+                            const unsigned extra=(x1-x0)*(y1-y0)-r.width*r.height;
+                            if(extra<best_extra) {
+                                best=i;best_extra=extra;
+                                expanded={(uint16_t)x0,(uint16_t)y0,(uint16_t)(x1-x0),(uint16_t)(y1-y0)};
+                            }
+                        }
+                        rectangles[best]=expanded;
+                    }
                 }
-                bytes+=width*8*2;
             }
         }
+        for(unsigned i=0;i<count;++i) bytes+=rectangles[i].width*rectangles[i].height*2;
+        // Windows also cost commands, DMA setup and I/O service between
+        // short rows. On Pico H a near-full checkerboard split into 32
+        // windows takes longer than one full window despite fewer pixels.
+        // Charge about 1.3 ms/window at 12.5 MHz, while sparse cursors remain
+        // comfortably below a full transfer even at the rectangle limit.
+        if(bytes+count*2048>=WIDTH*HEIGHT*2) full();
     }
 };
 

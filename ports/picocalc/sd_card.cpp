@@ -2,6 +2,9 @@
 #include "storage_journal.hpp"
 #include "sd_crc.hpp"
 #include "diagnostics.hpp"
+#include "dma_support.hpp"
+#include "external_cache.hpp"
+#include "hardware/dma.h"
 #include "hardware/spi.h"
 #include "hardware/watchdog.h"
 #include "pico/stdlib.h"
@@ -15,6 +18,38 @@ namespace {
 constexpr unsigned CS = 17;
 bool initialized = false, block_address = false;
 u32 sector_count = 0;
+int dma_tx=-1,dma_rx=-1;
+Statistics counters{};
+bool data_transfer(const u8* source,u8* target,unsigned count,u16& crc) {
+    const bool reading=target!=nullptr;
+    if(dma_tx<0 || dma_rx<0) {
+        if(reading) spi_read_blocking(spi0,0xFF,target,count);
+        else spi_write_blocking(spi0,source,count);
+        crc=crc16(reading?target:source,count);return true;
+    }
+    u8 filler=0xFF,discard=0;
+    auto tx=dma_channel_get_default_config((unsigned)dma_tx);
+    channel_config_set_transfer_data_size(&tx,DMA_SIZE_8);
+    channel_config_set_dreq(&tx,spi_get_dreq(spi0,true));
+    channel_config_set_read_increment(&tx,source!=nullptr);
+    channel_config_set_write_increment(&tx,false);
+    auto rx=dma_channel_get_default_config((unsigned)dma_rx);
+    channel_config_set_transfer_data_size(&rx,DMA_SIZE_8);
+    channel_config_set_dreq(&rx,spi_get_dreq(spi0,false));
+    channel_config_set_read_increment(&rx,false);
+    channel_config_set_write_increment(&rx,target!=nullptr);
+    const bool sniff=dma_support::begin_crc((unsigned)(reading?dma_rx:dma_tx),false);
+    channel_config_set_sniff_enable(reading?&rx:&tx,sniff);
+    dma_channel_configure((unsigned)dma_rx,&rx,target?target:&discard,&spi_get_hw(spi0)->dr,count,false);
+    dma_channel_configure((unsigned)dma_tx,&tx,&spi_get_hw(spi0)->dr,source?source:&filler,count,false);
+    dma_start_channel_mask((1U<<dma_tx)|(1U<<dma_rx));
+    const bool ok=dma_support::wait((unsigned)dma_tx,dma_rx);
+    if(sniff) { crc=(u16)dma_support::end_crc();++counters.hardware_crc; }
+    else crc=crc16(reading?target:source,count);
+    ++counters.dma_transfers;
+    while(spi_is_busy(spi0)) tight_loop_contents();
+    return ok;
+}
 u8 transfer(u8 byte = 0xFF) { u8 in; spi_write_read_blocking(spi0, &byte, &in, 1); return in; }
 void deselect() { gpio_put(CS, 1); transfer(); }
 bool wait_ready(u32 ms = 500) {
@@ -39,14 +74,28 @@ bool receive(u8* data, unsigned size) {
     u8 token;
     do { token = transfer(); } while(token == 0xFF && time_us_64() < end);
     if(token != 0xFE) return false;
-    spi_read_blocking(spi0, 0xFF, data, size);
+    u16 actual=0;
+    if(!data_transfer(nullptr,data,size,actual)) return false;
     const u8 high = transfer(), low = transfer();
     const u16 expected = (u16)high << 8 | low;
-    return crc16(data, size) == expected;
+    if(actual!=expected) { ++counters.crc_errors;return false; }
+    return true;
 }
 }
 bool init() {
     initialized = false; sector_count = 0;
+    external_cache::invalidate_sectors();
+    if(dma_tx<0) {
+        dma_tx=dma_claim_unused_channel(false);dma_rx=dma_claim_unused_channel(false);
+        if(dma_tx<0 || dma_rx<0) {
+            if(dma_tx>=0) dma_channel_unclaim((unsigned)dma_tx);
+            if(dma_rx>=0) dma_channel_unclaim((unsigned)dma_rx);
+            dma_tx=dma_rx=-1;
+        } else {
+            dma_support::enable_irq((unsigned)dma_tx);dma_support::enable_irq((unsigned)dma_rx);
+        }
+    }
+    counters.dma=dma_tx>=0 && dma_rx>=0;
     spi_init(spi0, 400000);
     gpio_set_function(18, GPIO_FUNC_SPI);
     gpio_set_function(19, GPIO_FUNC_SPI);
@@ -93,17 +142,30 @@ bool ready() { return initialized; }
 u32 sectors() { return sector_count; }
 bool read(u32 sector, u8 out[512]) {
     if(!initialized || sector >= sector_count) return false;
+    // The USB host already caches its filesystem. Do not copy a bulk MSC
+    // scan through narrow SPI PSRAM as well; reserve that cache for local
+    // repeated file/VM reads. All writes still invalidate cached sectors.
+    const bool cached=!files::usb_active();
+    if(cached && external_cache::sector(sector,out)) return true;
+    ++counters.reads;
     const bool ok = command(17, block_address ? sector : sector * 512) == 0 && receive(out, 512);
-    deselect(); return ok;
+    deselect();if(ok && cached) external_cache::store_sector(sector,out);return ok;
 }
 bool read_sectors(u32 sector, u8* out, u32 count) {
     if(!initialized || !count || sector >= sector_count || count > sector_count - sector) return false;
     if(count == 1) return read(sector, out);
+    // Consume a cached prefix, then retain the existing CMD18 stream for the
+    // remaining physical reads. A warm contiguous request needs no SD command.
+    const bool cached=!files::usb_active();
+    while(cached && count && external_cache::sector(sector,out)) { ++sector;out+=512;--count; }
+    if(!count) return true;
+    if(count==1) return read(sector,out);
     if(command(18, block_address ? sector : sector * 512) != 0) { deselect(); return false; }
     bool ok = true;
     for(u32 i = 0; i < count; ++i) {
         picocalc::diagnostics::feed_watchdog();
         if(!receive(out + i * 512, 512)) { ok = false; break; }
+        ++counters.reads;if(cached) external_cache::store_sector(sector+i,out+i*512);
     }
     // Stop even after CRC/token failure, so the next request starts cleanly.
     const bool stopped = command(12, 0) == 0 && wait_ready();
@@ -111,17 +173,22 @@ bool read_sectors(u32 sector, u8* out, u32 count) {
 }
 bool write(u32 sector, const u8 data[512]) {
     if(!initialized || sector >= sector_count) return false;
+    // Invalidate before issuing the command, including rejected/partially
+    // completed writes. Journal replay and raw MSC writes use this same path.
+    external_cache::invalidate_sector(sector);
+    ++counters.writes;
     bool ok = command(24, block_address ? sector : sector * 512) == 0;
     if(ok) {
         transfer(); transfer(0xFE);
-        spi_write_blocking(spi0, data, 512);
-        const u16 crc = crc16(data, 512);
+        u16 crc=0;
+        if(!data_transfer(data,nullptr,512,crc)) { deselect();return false; }
         transfer((u8)(crc >> 8)); transfer((u8)crc);
         ok = (transfer() & 0x1F) == 5 && wait_ready(1000);
     }
     deselect(); return ok;
 }
 bool sync() { if(!initialized || !select()) return false; const bool ok = wait_ready(1000); deselect(); return ok; }
+Statistics statistics() { return counters; }
 } } // namespace picocalc::sd
 
 extern "C" {

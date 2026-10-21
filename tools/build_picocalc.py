@@ -97,7 +97,7 @@ def main():
         for source in sorted([ROOT / 'tools/build_picocalc.py', ROOT / 'tools/seal_picocalc.py',
                               *(p for folder in ('code', 'ports/picocalc', 'third_party/fatfs')
                                 for p in (ROOT / folder).rglob('*')
-                                if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld')
+                                if p.is_file() and (p.suffix in ('.c', '.cpp', '.h', '.hpp', '.S', '.inc', '.ld', '.pio')
                                                     or p.name == 'CMakeLists.txt'))]):
             source_hash.update(str(source.relative_to(ROOT)).encode() + b'\0')
             source_hash.update(source.read_bytes())

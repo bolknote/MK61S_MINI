@@ -1,5 +1,7 @@
 #include "io_worker.hpp"
 #include "io_queue.hpp"
+#include "dma_support.hpp"
+#include "hardware/dma.h"
 #include "hardware/i2c.h"
 #include "hardware/uart.h"
 #include "pico/flash.h"
@@ -23,12 +25,45 @@ std::atomic<bool> ready{false},frame{false};
 std::atomic<bool> uart_active{false};
 std::atomic<u32> transactions{0},uart_bytes{0};
 std::atomic<u32> uart_wait_us{0},uart_flush_us{0},uart_flushes{0};
+std::atomic<u32> idle_us{0};
+std::atomic<int> uart_dma_channel{-1};
+u8 uart_buffer[64]{};
+unsigned uart_inflight=0;
 void* frame_context=nullptr;
 void (*frame_transfer)(void*)=nullptr;
 IoQueue<char,1024> uart_queue;
 
 void drain_uart() {
 #if LIB_PICO_STDIO_UART
+    static bool attempted=false;
+    if(!attempted) {
+        attempted=true;
+        const int channel=dma_claim_unused_channel(false);
+        if(channel>=0) dma_support::enable_irq((unsigned)channel);
+        uart_dma_channel.store(channel,std::memory_order_release);
+    }
+    const int channel=uart_dma_channel.load(std::memory_order_relaxed);
+    if(channel>=0) {
+        if(dma_channel_is_busy((unsigned)channel)) return;
+        if(uart_inflight) {
+            uart_bytes.fetch_add(uart_inflight,std::memory_order_relaxed);
+            uart_inflight=0;
+        }
+        uart_active.store(true,std::memory_order_release);
+        char byte;
+        while(uart_inflight<sizeof(uart_buffer) && uart_queue.pop(byte))
+            uart_buffer[uart_inflight++]=(u8)byte;
+        uart_active.store(uart_inflight!=0,std::memory_order_release);
+        if(!uart_inflight) return;
+        auto config=dma_channel_get_default_config((unsigned)channel);
+        channel_config_set_transfer_data_size(&config,DMA_SIZE_8);
+        channel_config_set_read_increment(&config,true);
+        channel_config_set_write_increment(&config,false);
+        channel_config_set_dreq(&config,uart_get_dreq(uart_default,true));
+        dma_channel_configure((unsigned)channel,&config,&uart_get_hw(uart_default)->dr,
+            uart_buffer,uart_inflight,true);
+        return;
+    }
     uart_active.store(true,std::memory_order_relaxed);
     char byte;
     while(uart_is_writable(uart_default) && uart_queue.pop(byte)) {
@@ -66,8 +101,12 @@ void worker() {
             frame_transfer(frame_context);
             frame.store(false,std::memory_order_release);__sev();
         }
-        if(!frame.load(std::memory_order_acquire) && uart_queue.empty() &&
-           i2c.stage.load(std::memory_order_acquire)!=QUEUED) __wfe();
+        if(!frame.load(std::memory_order_acquire) &&
+           (uart_queue.empty() || uart_active.load(std::memory_order_acquire)) &&
+           i2c.stage.load(std::memory_order_acquire)!=QUEUED) {
+            const u64 started=time_us_64();__wfe();
+            idle_us.fetch_add((u32)(time_us_64()-started),std::memory_order_relaxed);
+        }
     }
 }
 }
@@ -103,6 +142,7 @@ int blocking_i2c(bool read,u8* bytes,unsigned length) {
     return result;
 }
 bool frame_pending() { return frame.load(std::memory_order_acquire); }
+bool input_ready() { return i2c.stage.load(std::memory_order_acquire)==DONE; }
 bool submit_frame(void* context,void (*transfer)(void*)) {
     if(!ready.load(std::memory_order_acquire) || frame_pending()) return false;
     frame_context=context;frame_transfer=transfer;
@@ -128,6 +168,7 @@ void drain() {
 Statistics statistics() {
     return {ready.load(std::memory_order_acquire),transactions.load(std::memory_order_relaxed),
         uart_bytes.load(std::memory_order_relaxed),uart_wait_us.load(std::memory_order_relaxed),
-        uart_flush_us.load(std::memory_order_relaxed),uart_flushes.load(std::memory_order_relaxed)};
+        uart_flush_us.load(std::memory_order_relaxed),uart_flushes.load(std::memory_order_relaxed),
+        idle_us.load(std::memory_order_relaxed),uart_dma_channel.load(std::memory_order_relaxed)>=0};
 }
 }

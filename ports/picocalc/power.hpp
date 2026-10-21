@@ -2,6 +2,9 @@
 #define MK61_PICOCALC_POWER_HPP
 #include "rust_types.h"
 namespace picocalc {
+struct IdleStatistics { u32 waits;u64 wait_us; };
+void idle_until(u64 deadline);
+IdleStatistics idle_statistics();
 // RP2040 SLEEP keeps the XOSC/RTC and polls the stock I2C keyboard. The
 // main PLL is off; USB's PLL is retained only while VBUS is present.
 class SleepClocks {

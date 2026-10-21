@@ -21,6 +21,10 @@
 #include "diagnostics.hpp"
 #include "firmware.hpp"
 #include "language_cache.hpp"
+#include "psram.hpp"
+#include "external_cache.hpp"
+#include "dma_support.hpp"
+#include "native_runtime.hpp"
 #include "m61_text.hpp"
 #include "tusb.h"
 #include "hardware/clocks.h"
@@ -90,6 +94,7 @@ void wake(u64 now) {
     power.wake(now);
 }
 void input(u8 code, bool physical) {
+    calculator.wake_core();
     power.activity(time_us_64());
     if(power.asleep()) { wake(time_us_64());return; }
     const bool accepted = services.active() ? services.input(code) :
@@ -100,6 +105,7 @@ void input(u8 code, bool physical) {
         tone(ui.settings().volume);
         if(physical) { ++physical_keys; last_physical_key = code; }
     }
+    calculator.wake_core();
 }
 void save_settings() {
     if(!settings_dirty) return;
@@ -123,6 +129,16 @@ void report(unsigned math_failures) {
         (unsigned long)cache.disk_hits,(unsigned long)cache.disk_misses,(unsigned long)cache.compiles,
         (unsigned long)cache.stores,(unsigned long)cache.rejected,
         (unsigned long)cache.packs,(unsigned long)cache.thaws,cache.packed);
+    const auto psram=picocalc::psram::statistics();
+    const auto external=picocalc::external_cache::statistics();
+    std::printf("PSRAM=%s BYTES=%lu ID=%06lX SPI_HZ=%lu READ_BYTES=%lu WRITE_BYTES=%lu ERRORS=%lu\n",
+        psram.ready?"OK":"UNAVAILABLE",(unsigned long)(psram.ready?picocalc::psram::CAPACITY:0),
+        (unsigned long)psram.id,(unsigned long)psram.hz,(unsigned long)psram.read_bytes,
+        (unsigned long)psram.write_bytes,(unsigned long)psram.errors);
+    std::printf("EXT_CACHE=%s VM_HIT=%lu VM_MISS=%lu SD_HIT=%lu SD_MISS=%lu REJECTED=%lu STORES=%lu\n",
+        external.ready?"PSRAM":"OFF",(unsigned long)cache.psram_hits,(unsigned long)cache.psram_misses,
+        (unsigned long)external.sector_hits,(unsigned long)external.sector_misses,
+        (unsigned long)external.rejected,(unsigned long)external.stores);
     const auto model = calculator.snapshot();
     std::printf("MK61S PICOCALC PICO-H %s RP2040 %lu MHz\n",
                 picocalc::VERSION,(unsigned long)(clock_get_hz(clk_sys) / 1000000));
@@ -147,12 +163,26 @@ void report(unsigned math_failures) {
     std::printf("LCD_DMA=%u LCD_BYTES=%lu LCD_RECTS=%lu LCD_US=%lu LCD_FULL_FRAMES=%lu\n",
         panel.dma(),(unsigned long)panel.last_bytes(),(unsigned long)panel.last_rectangles(),
         (unsigned long)panel.last_us(),(unsigned long)panel.full_frames());
+    const auto dma=picocalc::dma_support::statistics();
+    const auto sd=picocalc::sd::statistics();
+    const auto idle=picocalc::idle_statistics();
+    std::printf("SD_DMA=%u READS=%lu WRITES=%lu TRANSFERS=%lu HW_CRC=%lu CRC_ERRORS=%lu\n",
+        sd.dma,(unsigned long)sd.reads,(unsigned long)sd.writes,(unsigned long)sd.dma_transfers,
+        (unsigned long)sd.hardware_crc,(unsigned long)sd.crc_errors);
+    std::printf("DMA_WAIT0=%lu DMA_WAIT1=%lu DMA_US0=%lu DMA_US1=%lu DMA_TIMEOUTS=%lu CRC32_HW=%lu CRC_FALLBACK=%lu LCD_ERRORS=%lu\n",
+        (unsigned long)dma.waits[0],(unsigned long)dma.waits[1],(unsigned long)dma.sleep_us[0],
+        (unsigned long)dma.sleep_us[1],(unsigned long)dma.timeouts,(unsigned long)dma.crc32_calls,
+        (unsigned long)dma.crc_fallbacks,(unsigned long)panel.errors());
+    std::printf("IDLE_WAITS=%lu IDLE_MS=%lu RTC_IRQS=%lu\n",(unsigned long)idle.waits,
+        (unsigned long)(idle.wait_us/1000),(unsigned long)picocalc::clock::alarm_interrupts());
+    std::printf("CORE_PARKED=%u\n",calculator.parked());
     const auto io=picocalc::io_worker::statistics();
     std::printf("IO_CORE=%u I2C_TRANSACTIONS=%lu UART_BYTES=%lu LCD_PENDING=%u LCD_FRAME_CRC=%08lX\n",
         io.running?1:0,(unsigned long)io.transactions,(unsigned long)io.uart_bytes,
         picocalc::io_worker::frame_pending(),(unsigned long)panel.frame_crc());
     std::printf("UART_WAIT_US=%lu UART_FLUSH_US=%lu UART_FLUSHES=%lu\n",
         (unsigned long)io.uart_wait_us,(unsigned long)io.uart_flush_us,(unsigned long)io.uart_flushes);
+    std::printf("UART_DMA=%u IO_IDLE_US=%lu\n",io.uart_dma,(unsigned long)io.idle_us);
     std::printf("SD=%s SECTORS=%lu USB_DISK=%u FS_ERROR=[%s]\n", picocalc::files::ready() ? "OK" : "WAIT",
         (unsigned long)picocalc::sd::sectors(), picocalc::files::usb_active(), picocalc::files::error());
     const auto& settings = ui.settings();
@@ -202,10 +232,10 @@ void usb_service() {
         if(sleep_clocks.usb_available()) tud_task_ext(0,false);
     }
     static u64 next_rtc=0;
-    if(now>=next_rtc) {
-        picocalc::clock::service();next_rtc=now+100000;
+    if(now>=next_rtc || picocalc::clock::alarm_pending()) {
+        picocalc::clock::service();next_rtc=now+1000000;
         unsigned alarm;
-        if(picocalc::clock::take_alarm(alarm)) { wake(now);tone(ui.settings().volume,1000);std::printf("RTC_ALARM=%c\n",'A'+alarm); }
+        while(picocalc::clock::take_alarm(alarm)) { wake(now);tone(ui.settings().volume,1000);std::printf("RTC_ALARM=%c\n",'A'+alarm); }
     }
 }
 bool key_event(picocalc::KeyEvent& event) {
@@ -252,6 +282,7 @@ bool service_pump(void*, u8& key) {
 } // namespace
 
 int main() {
+    picocalc::initialize_heap();
     picocalc::firmware::enforce();
     picocalc::diagnostics::initialize();
     mark_stack();
@@ -281,6 +312,7 @@ int main() {
     const u64 enumerate_until = time_us_64() + 500000;
     while(time_us_64() < enumerate_until) { tud_task_ext(0, false); picocalc::diagnostics::feed_watchdog(); }
     keyboard.init();
+    if(picocalc::psram::init()) picocalc::external_cache::init();
     calculator.init();
     picocalc::Settings settings;
     if(picocalc::load_device_settings(settings)) settings_status = "LOADED";
@@ -291,7 +323,7 @@ int main() {
     services.set_pump(service_pump, nullptr);
     terminal.init({nullptr,
         [](void*,const char* text,unsigned n) { picocalc::console::write(text,n); },
-        [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(m61_text::active() && m61_text::display_owned()); },
+        [](void*) { usb_service();picocalc::script::service_effects();if(!m61_text::calculator_suspended()) calculator.tick(m61_text::active() && m61_text::display_owned(),true); },
         [](void*,u8 id,const char* args) {
             if(id==CMD_IDENTITY) {
                 char uid[2*PICO_UNIQUE_BOARD_ID_SIZE_BYTES+1];pico_get_unique_board_id_string(uid,sizeof(uid));
@@ -312,6 +344,21 @@ int main() {
                 for(;;) tight_loop_contents();
             }
             if(id==CMD_DISPLAY) {
+                if(!std::strcmp(args,"test")) {
+                    if(services.active() || m61_text::active() || picocalc::files::usb_active() ||
+                       remote_screen.attached() || !calculator.idle() || core_61::is_RUN()) return false;
+                    picocalc::io_worker::drain();
+                    picocalc::external_cache::suspend();picocalc::language_cache::discard();
+                    const u64 started=time_us_64();
+                    const bool memory=picocalc::psram::self_test(usb_service);
+                    const u32 crc=picocalc::dma_support::crc32((const u8*)"123456789",9);
+                    const bool cached=picocalc::external_cache::init();
+                    std::printf("HARDWARE_TEST=%s PSRAM_BYTES=%lu PSRAM_US=%lu CRC32=%08lX CACHE=%u\n",
+                        memory && crc==0xCBF43926U && cached?"PASS":"FAIL",
+                        (unsigned long)picocalc::psram::CAPACITY,(unsigned long)(time_us_64()-started),
+                        (unsigned long)crc,cached);
+                    return memory && crc==0xCBF43926U && cached;
+                }
                 if(!std::strcmp(args,"reinit")) { panel_ready=false;return true; }
                 if(!std::strcmp(args,"on")) { wake(time_us_64());return true; }
                 if(!std::strcmp(args,"off") && !services.active() && !m61_text::active() && calculator.idle() && !core_61::is_RUN()) { power.sleep();return true; }
@@ -333,6 +380,7 @@ int main() {
     (void)picocalc::diagnostics::persist_crash();
     u64 next_frame = 0;
     u64 next_classic_step = 0;
+    bool foreground_was_active=false;
     u64 usb_retry = time_us_64() + 3000000;
     last_activity = time_us_64();
     power.activity(last_activity);
@@ -363,6 +411,7 @@ int main() {
         }
         if(!keyboard.online()) panel_ready = false;
         if(keyboard.online() && !panel_ready) {
+            if(!picocalc::psram::ready() && picocalc::psram::init()) picocalc::external_cache::init();
             keyboard.backlight(ui.settings().lcd_backlight, ui.settings().key_backlight);
             applied_lcd = ui.settings().lcd_backlight;
             applied_keys = ui.settings().key_backlight;
@@ -409,7 +458,11 @@ int main() {
                 panel.sleep(false);keyboard.backlight(ui.settings().lcd_backlight,ui.settings().key_backlight);next_frame=0;
             }
         }
-        if(power.asleep()) { sleep_ms(sleep_clocks.usb_available() ? 4 : 16);continue; }
+        if(power.asleep()) {
+            u64 deadline=time_us_64()+(sleep_clocks.usb_available()?1000:80000);
+            if(keyboard.next_poll()>time_us_64() && keyboard.next_poll()<deadline) deadline=keyboard.next_poll();
+            picocalc::idle_until(deadline);continue;
+        }
         ui.sync_alarms();
         if(ui.settings_revision() != settings_revision) {
             settings_revision = ui.settings_revision();
@@ -441,6 +494,8 @@ int main() {
             applied_keys = current.key_backlight;
         }
         picocalc::script::service_effects();
+        const bool foreground_active=services.active() || m61_text::active();
+        if(foreground_active!=foreground_was_active) { calculator.wake_core();foreground_was_active=foreground_active; }
         if(picocalc::files::usb_active() || m61_text::calculator_suspended()) {
             // A single host READ can span thousands of sectors. Running one
             // whole MK61 microcode step between each 512-byte USB packet
@@ -449,7 +504,7 @@ int main() {
         } else if(current.classic_speed && core_61::is_RUN() && calculator.idle()) {
             if(!next_classic_step) next_classic_step = now + 1153846; // Shared CLASSIC cadence: 15/13 s.
             if(now >= next_classic_step) { calculator.tick(); next_classic_step = now + 1153846; }
-        } else { next_classic_step = 0; calculator.tick(m61_text::active() && m61_text::display_owned()); }
+        } else { next_classic_step = 0; calculator.tick(m61_text::active() && m61_text::display_owned(),true); }
         if(current.idle_signal && now - last_activity >= 300000000ULL) {
             tone(current.volume, 150);
             last_activity = now;
@@ -507,6 +562,16 @@ int main() {
             }
             next_frame = time_us_64() + FRAME_INTERVAL_US;
         }
-        tight_loop_contents();
+        // Running programs, held emulated keys and foreground services retain
+        // their execution cadence. A settled calculator/menu can wait for the
+        // nearest keyboard/UI deadline; USB remains serviced at least each ms.
+        if(calculator.idle() && !core_61::is_RUN() &&
+           !services.running() && !m61_text::active() && !picocalc::files::usb_active() && !remote_screen.attached()) {
+            const u64 at=time_us_64();
+            u64 deadline=at+(sleep_clocks.usb_available()?1000:16000);
+            if(next_frame>at && next_frame<deadline) deadline=next_frame;
+            if(keyboard.next_poll()>at && keyboard.next_poll()<deadline) deadline=keyboard.next_poll();
+            picocalc::idle_until(deadline);
+        } else tight_loop_contents();
     }
 }

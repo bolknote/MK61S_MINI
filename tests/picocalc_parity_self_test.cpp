@@ -5,6 +5,7 @@
 #include "mk8_literal.hpp"
 #include "script.hpp"
 #include "terminal_file_transfer.hpp"
+#include "diagnostics.hpp"
 #include <cassert>
 #include <cstdio>
 #include <cstring>
@@ -103,6 +104,34 @@ void picocalc_parity_test() {
                  },
                  nullptr, nullptr});
   assert(!terminal.raw());
+  auto settle=[&] {
+    for(unsigned i=0;i<1024 && !calculator.parked();++i) calculator.tick(false,true);
+    assert(calculator.parked());
+  };
+  settle();
+  diagnostics::profile_reset();diagnostics::profile_start();
+  auto inspect=[&](const char* text) {
+    assert(terminal.execute(text));calculator.tick(false,true);
+    assert(calculator.parked());
+    assert(diagnostics::sample(diagnostics::Point::CORE).calls==0);
+  };
+  for(const char* text : {"pwd","prof core","wdog","history","help","ver",
+      "reg","stk","hout","dump","list","pub","lasm","ring","1302"}) inspect(text);
+  inspect("fsput begin /Parity/parked.bin 0 4294967295");
+  inspect("fsput cancel");
+  const u8 quiet_data[]={0,255,61,42,13,10};
+  char quiet_request[192];
+  std::snprintf(quiet_request,sizeof(quiet_request),"fsput begin /Parity/parked.bin 6 %lu",
+      (unsigned long)terminal_file_transfer::checksum(quiet_data,sizeof(quiet_data)));
+  inspect(quiet_request);inspect("fsput data 0 00FF3D2A0D0A");inspect("fsput end");
+  inspect("fsget /Parity/parked.bin");inspect("rm /Parity/parked.bin");
+  inspect("mkdir /Parity/parked");inspect("ls /Parity/parked");
+  inspect("rmdir /Parity/parked");
+  assert(terminal.execute("poke X 123") && !calculator.parked());settle();
+  assert(terminal.execute("R1= 7") && !calculator.parked());settle();
+  assert(terminal.execute("clr") && calculator.parked());
+  assert(terminal.execute("y") && !calculator.parked());settle();
+  diagnostics::profile_stop();output.clear();
   command(terminal, "mkdir -p /Parity/a/b");
   assert(files::exists("/Parity/a/b"));
   command(terminal, "cd /Parity/a/./b/..");
