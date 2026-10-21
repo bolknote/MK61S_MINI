@@ -223,6 +223,17 @@ void test_stop_wake_physical_columns_match_legacy_bus_order(void) {
 } // безымянное пространство имён
 
 int main(void) {
+  for(i32 key=0;key<(i32)keyboard_core::KEY_COUNT;++key) {
+    keyboard_core::DeferredHoldRelease release;
+    i32 saved=-1,quant=-1;
+    assert(!release.take(saved,quant));
+    assert(!release.defer(-1,0) && !release.defer(40,0) && !release.defer(key,-1));
+    assert(release.defer(key,1234));
+    assert(!release.defer((key+1)%40,0)); // Never overwrite a queued UI action.
+    assert(release.take(saved,quant) && saved==key && quant==1234);
+    assert(!release.take(saved,quant));
+    assert(release.defer(key,0) && release.take(saved,quant) && quant==0);
+  }
   test_scan_code_validation();
   test_fifo_bounds_and_wrap();
   test_sized_fifo_handles_a_full_virtual_keyboard_cycle();

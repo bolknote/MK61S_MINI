@@ -102,6 +102,8 @@ static  t_time_ms      press_time;            // время в ms последн
 static  u32            scan_line_started_us;
 static  keyboard_core::ExternalKeyState external_keys;
 static  keyboard_core::PressEdgeLatch immediate_presses;
+static keyboard_core::DeferredHoldRelease deferred_hold_release;
+static u8 scan_state; // 0 before init, 1 ready, 2 inside a scan/UI callback.
 
 #if MK61_KEYBOARD_STOP_WAKE_SUPPORTED
 static volatile bool stop_wake_armed;
@@ -501,7 +503,8 @@ void  init(void) {
   clear_hold_key();
   cir_buff::Init();
   reset_stop_wake_statistics();
-
+  deferred_hold_release={};
+  scan_state=1;
 }
 
 void  test(void) {
@@ -531,10 +534,21 @@ void  test(void) {
 */
 }
 
-isize scan(void) {
+#if defined(__GNUC__) && !defined(__clang__)
+__attribute__((noinline,noclone))
+#else
+__attribute__((noinline))
+#endif
+static isize scan_impl(bool dispatch_actions) {
+  if(scan_state!=1)return -1;
+  struct ScanScope {ScanScope(){scan_state=2;}~ScanScope(){scan_state=1;}} scope;
   MK61_SERVICE_GAP(KEYBOARD_POLL);
+  if(dispatch_actions) {
+    i32 key,quant;
+    if(deferred_hold_release.take(key,quant))event_unhold_key(key,quant);
+  }
   if((u32) (micros() - scan_line_started_us) < TIME_SCAN_SETTLE_US) {
-    check_hold_key();
+    if(dispatch_actions)check_hold_key();
     return -1;
   }
 
@@ -560,7 +574,7 @@ isize scan(void) {
           key_fifo.released(key);
       }
     }
-    check_hold_key();       // Проверка врремени удержания
+    if(dispatch_actions)check_hold_key();
     return -1;
   }
 
@@ -593,7 +607,8 @@ isize scan(void) {
       dbg(KBD, "scan_code #", scan_code, ", ms ", millis());
       if(hold_quant_counter >= 0) {
         dbgln(KBD, " <<UNHOLD>>");
-        event_unhold_key(holded_scan_code, hold_quant_counter);
+        if(dispatch_actions)event_unhold_key(holded_scan_code, hold_quant_counter);
+        else (void)deferred_hold_release.defer(holded_scan_code,hold_quant_counter);
         hold_quant_counter  = -1;   // снимаем счетчик квантов удержания
       }
       holded_scan_code    = -1;   // снимаем удержание
@@ -602,6 +617,9 @@ isize scan(void) {
 
   return (isize) scan_code;
 }
+
+isize scan(void) {return scan_impl(true);}
+isize scan_during_storage(void) {return scan_impl(false);}
 
 isize scan_m61_controls(void) {
   // Angle keys and ESC share the top matrix row. OK is on that row on mini,

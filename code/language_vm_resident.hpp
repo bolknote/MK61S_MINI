@@ -21,6 +21,13 @@ bool cache_diagnostics(CacheDiagnostics&);
 // No source compilation or language-state initialization; OOM keeps the usual
 // uncached execution fallback available.
 bool prepare_image_cache();
+#if MK61_FLASH_LANGUAGE_VM && (MK61_RESIDENT_LANGUAGE_VM || MK61_OVERLAY_LANGUAGE_VM)
+// Input-only NOR progress is scoped to a language invocation. Ordinary
+// imports and filesystem maintenance outside it keep their existing path.
+bool storage_input_active();
+#else
+inline bool storage_input_active() {return false;}
+#endif
 #if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
 namespace flash {class ReadCache;}
 flash::ReadCache* linked_page_cache();

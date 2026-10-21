@@ -18,6 +18,10 @@
 
 #include <string.h>
 
+// Optional foreground hook. It must not touch a display, filesystem or APP
+// arena: a NOR transaction can still own all of those temporary resources.
+extern void storage_io_process(void) __attribute__((weak));
+
 namespace {
 
 static constexpr u8 CMD_READ = 0x03;
@@ -167,9 +171,17 @@ bool SpiNorFlash::diagnostics(Diagnostics& out) {
 
 bool SpiNorFlash::waitReady(u32 timeout_ms) {
   const u32 started = millis();
+  static u32 last_service_ms=~u32(0);
   u8 status = 0;
   while(true) {
     if(!readStatus(status)) return false;
+    // readStatus has released chip select and the SPI bus. Poll at most once
+    // per millisecond, including long erase waits and sequences of reads.
+    const u32 now=millis();
+    if(storage_io_process && now!=last_service_ms) {
+      last_service_ms=now;
+      storage_io_process();
+    }
     if((status & STATUS_BUSY) == 0) return true;
     if((u32) (millis() - started) >= timeout_ms) return false;
     disk_activity::storageIO();

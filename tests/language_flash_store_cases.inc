@@ -1,4 +1,35 @@
 // Runs against the real C9 implementation and its NOR fault-injection model.
+static void test_language_flash_store_background_boundaries() {
+  using namespace language_vm;
+  fresh(512U*1024U);
+  const u8 source[]="10 END\n";u16 id=program_store::INVALID_ID;
+  assert(program_store::write_file(program_store::ROOT_ID,id,ProgramType::TINYBASIC,
+      "source",source,sizeof(source)-1,&id));
+  static unsigned calls;
+  static u16 source_id;
+  calls=0;source_id=id;
+  auto background=[]() {
+    ++calls;
+    // Service callbacks run only after a complete C9 operation. Ordinary
+    // reads and a fresh filesystem-temporary lease must remain safe here.
+    program_store::Entry entry;
+    assert(program_store::entry_by_id(source_id,entry));
+#if MK61_STORAGE_SHARED_TEMP
+    assert(storage_workspace::with_buffer(storage_workspace::Owner::SIDECAR_SCAN,
+        storage_workspace::SIZE,[](u8*) {return true;}));
+#endif
+    return true;
+  };
+  {
+    flash::Store store(&id,12345,background);auto io=store.io();
+    // Previously the initial root/owner/index/image-directory chain did not
+    // service the host at all; a page-flush-only check missed this gap.
+    assert(io.truncate(io.context,flash::IMAGE,0) && calls>=7);
+  }
+  expect_text(id,source,sizeof(source)-1);
+  puts("C9 Flash setup: background between committed metadata operations, free temporaries and intact source PASS");
+}
+
 static void test_language_flash_store() {
   namespace lf=language_vm::flash;
   using namespace language_vm;

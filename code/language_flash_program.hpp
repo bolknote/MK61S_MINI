@@ -19,6 +19,11 @@ public:
   Program(const source::Reader& source,IO io):io_(io),source_(source),index_(io,INDEX_A),writer_(io,INDEX_A) {}
   Error error() const {return error_;}
   void fail(Error e=Error::IO) {if(error_==Error::NONE)error_=e;}
+  bool poll() {
+    if(error_!=Error::NONE)return false;
+    if(!io_.poll()){fail(Error::STOPPED);return false;}
+    return true;
+  }
   uint16_t count() const {return index_.size();}
   uint32_t code() const {return HEADER_BYTES+uint32_t(count())*MAP_BYTES;}
   uint32_t size() const {return writer_.size();}
@@ -59,6 +64,7 @@ public:
         if(!index_.set(writer_,count(),{number,0,uint16_t(p-source::Cursor(source_)),uint16_t(line_end-source::Cursor(source_))})) {fail();return false;}
       }
       p=physical+(physical<end);
+      if(!poll())return false;
     }
     if(!count()) {fail(Error::LINE);return false;}
     if(!writer_.flush() || !index_.sort(ordered,writer_)) {fail();return false;}
@@ -73,6 +79,9 @@ public:
     return true;
   }
   Line line(uint16_t n) {
+    // Both language frontends revisit this bounded record in sizing and
+    // emission passes, including when no output page needs flushing yet.
+    if(!poll())return {};
     uint8_t bytes[LINE_BYTES];
     const bool read=n<count() && (writing_
         ? io_.read(io_.context,index_.space(),uint32_t(n)*LINE_BYTES,bytes,sizeof(bytes))
@@ -111,10 +120,11 @@ public:
   bool optimize() {
     Reader reader({this,[](void* raw,uint32_t at,uint8_t* out,uint16_t n){return static_cast<Program*>(raw)->writer_.read(at,out,n);},code_end_});
     View view={nullptr,code_end_,code(),count(),source_.size(),1,Language::BASIC,false,false,code_end_,&reader,true};
+    unsigned budget=0;
     detail::integer_spans(code(),code_end_,[&](uint32_t pc){return view.byte(pc);},
-        [&](uint32_t pc){return reader.good()?instruction_end(view,pc):0;},
+        [&](uint32_t pc){return reader.good() && ((budget++&31U)!=0 || poll())?instruction_end(view,pc):0;},
         [&](uint32_t pc,Op op){byte(pc,uint8_t(op));reader.invalidate();});
-    return reader.good() && writer_.good();
+    return error_==Error::NONE && reader.good() && writer_.good();
   }
   bool finish(Language language,uint32_t size,uint8_t stack,bool rf) {
     code_end_=size;

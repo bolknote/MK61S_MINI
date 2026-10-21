@@ -4693,6 +4693,7 @@ int main(int argc, char** argv) {
   if(argc==2 && !strcmp(argv[1],"--catalog-lookup")){test_catalog_only_child_lookup();return 0;}
 #if defined(LANGUAGE_FLASH_FS_COMPILER_TEST)
   if(argc==2 && strcmp(argv[1],"--language-flash")==0){test_language_flash_store();test_language_flash_repeated_run_io();
+    test_language_flash_store_background_boundaries();
     test_language_flash_compiler_on_c9();
     return 0;}
 #endif

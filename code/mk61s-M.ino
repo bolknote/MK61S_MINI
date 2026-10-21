@@ -7,6 +7,7 @@ class_calc_config config;
 #include "rust_types.h"
 #include "keyboard.h"
 #include "m61_text.hpp"
+#include "language_vm_resident.hpp"
 #include "calculator_control.hpp"
 
 using namespace kbd;
@@ -1313,6 +1314,15 @@ void  loop() {
       kbd::last_key() < 0 &&
       !kbd::any_key_pressed();
   rtc_idle_clock::poll(main_lcd(), calculator_context, calculator_idle);
+}
+
+// May run inside an unpublished C9 transaction with pinned temporaries.
+// Only sample/enqueue input and transport USB control packets here.
+void storage_io_process(void) {
+  if(__get_IPSR()!=0 ||
+     (!language_vm::storage_input_active() && !m61_text::loading_program()))return;
+  kbd::scan_during_storage();
+  usb_screen::service_during_storage();
 }
 
 void idle_main_process(void) {

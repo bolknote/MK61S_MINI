@@ -66,6 +66,8 @@ namespace kbd {
   extern  u8      resume_from_stop(void);
   extern  void    cancel_stop_wake(void);
   extern  isize   scan(void);
+  // Preserve matrix/FIFO edges without entering UI hold/release handlers.
+  extern  isize   scan_during_storage(void);
   extern  isize   scan_m61_controls(void);
 }
 

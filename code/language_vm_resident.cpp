@@ -49,6 +49,7 @@ __asm__(".global mk61_vm_file_cache_enabled\n.set mk61_vm_file_cache_enabled, 0"
 #include "resident_firmware.hpp"
 #include "loadable_module_system_app.hpp"
 #include "development.hpp"
+#include "keyboard.h"
 extern void idle_main_process(void);
 #endif
 #if defined(LANGUAGE_VM_HOST_TEST)
@@ -72,6 +73,15 @@ uint16_t file_cache_driver();
 
 namespace language_vm {
 namespace {
+#if MK61_FLASH_LANGUAGE_VM
+bool compiler_background() {
+  idle_main_process();
+  // Compilation owns the foreground just like execution. Leave queued key
+  // events for their normal owner; idle alone does not scan the matrix.
+  kbd::scan();
+  return true;
+}
+#endif
 #if MK61_OVERLAY_LANGUAGE_VM
 constexpr uint32_t SESSION_MAGIC = 0x37564D4CUL;
 #else
@@ -261,6 +271,9 @@ app_flow::Status flow_invoke(void*, const app_flow::Target& target, app_flow::St
 #endif
 #endif
 }  // namespace
+#if MK61_FLASH_LANGUAGE_VM
+bool storage_input_active() {return busy;}
+#endif
 #if defined(MK61_LINKED_VM_POC) && MK61_LINKED_VM_POC
 flash::ReadCache* linked_page_cache(){return flash_page_cache();}
 bool linked_poc_run(uint16_t,uint8_t*,PersistentValues&,flash::ReadCache&);
@@ -502,7 +515,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
 #if MK61_FLASH_LANGUAGE_VM
   auto* page_cache=flash_page_cache();
   flash::Store store(&context.compile.request.source_id,flash_fingerprint(language,page_cache),
-      [](){idle_main_process();return true;},partition.tail()-FLASH_CACHE_BYTES,page_cache);
+      compiler_background,partition.tail()-FLASH_CACHE_BYTES,page_cache);
   auto flash_io=store.io();context.storage=&flash_io;
 #endif
   app_flow::Transfer memory(shared_memory::Owner::LANGUAGE_VM);
@@ -709,7 +722,7 @@ static loadable_module::RuntimeStatus invoke_resident_impl(Language language,
   request.size = sizeof(request);
   request.version = REQUEST_VERSION;
 #if MK61_FLASH_LANGUAGE_VM
-  flash::Store store(&request.source_id,COMPILER_MAGIC,[](){idle_main_process();return true;},transfer.data()+sizeof(Persistent));
+  flash::Store store(&request.source_id,COMPILER_MAGIC,compiler_background,transfer.data()+sizeof(Persistent));
   auto flash_io=store.io();request.storage=&flash_io;request.capacity=UINT32_MAX;
 #else
   request.output = transfer.data() + sizeof(Persistent);

@@ -23,6 +23,8 @@ enum class Event : u8 {
 bool start(void);
 void cancel(void);
 void service(void);
+// CDC control/key transport only: no display, allocation or filesystem I/O.
+void service_during_storage(void);
 State state(void);
 bool active(void);
 bool attached(void);
@@ -37,6 +39,7 @@ Event takeEvent(void);
 inline bool start(void) { return false; }
 inline void cancel(void) {}
 inline void service(void) {}
+inline void service_during_storage(void) {}
 inline State state(void) { return State::IDLE; }
 inline bool active(void) { return false; }
 inline bool attached(void) { return false; }

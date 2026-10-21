@@ -34,6 +34,22 @@ public:
 };
 static_assert(sizeof(Event) == 1, "keyboard event is one FIFO byte");
 
+// A storage-only scan may queue edges, but cannot invoke UI hold handlers.
+// Only a hold begun by an ordinary scan can need this deferred release;
+// storage scans never start another hold action before it is drained.
+class DeferredHoldRelease {
+  i32 key_=-1,quant_=-1;
+public:
+  bool defer(i32 key,i32 quant) {
+    if(key_>=0 || key<0 || key>=(i32)KEY_COUNT || quant<0)return false;
+    key_=key;quant_=quant;return true;
+  }
+  bool take(i32& key,i32& quant) {
+    if(key_<0)return false;
+    key=key_;quant=quant_;key_=quant_=-1;return true;
+  }
+};
+
 template<usize CapacityValue>
 class FixedFifo {
   public:

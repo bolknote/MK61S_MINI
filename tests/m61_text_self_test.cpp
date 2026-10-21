@@ -83,12 +83,14 @@ static int failed_entry_reads = 0, failed_relative_lookups = 0;
 static int coerced_directory_reads = 0;
 struct HostPath { u16 directory; std::string path; u16 target; };
 static std::vector<HostPath> host_paths;
+static unsigned loading_entry_reads = 0, loading_source_reads = 0, loading_font_calls = 0;
 
 namespace program_store {
 
 u32 media_revision() { return media_revision_value; }
 
 bool entry_by_id(u16 id, Entry& out) {
+  if(m61_text::loading_program()) ++loading_entry_reads;
   ++entry_reads;
   if(id == failed_entry && failed_entry_reads) { --failed_entry_reads; return false; }
   if(id>=scripts.size()) return false;
@@ -141,6 +143,7 @@ bool read_range(ProgramType type, const char* name, u16 offset, u8* data, u16 le
 }
 
 bool read_range_id(u16 id, u16 offset, u8* data, u16 len, u16* out_len) {
+  if(m61_text::loading_program()) ++loading_source_reads;
   range_reads++;
   if(out_len != nullptr) *out_len = 0;
   if(id >= scripts.size()) return false;
@@ -291,6 +294,7 @@ i32 program_store_text_font_begin(void) {
 
 i32 program_store_text_font_load_from(const char* name,
                                       u16 preferred_directory) {
+  if(m61_text::loading_program()) ++loading_font_calls;
   if(!font_session_active || name == nullptr || name[0] == 0) return -3;
   font_attempts.push_back({name, preferred_directory});
   for(const HostFontRule& rule : font_rules) {
@@ -586,6 +590,27 @@ static void test_optional_open_skips_missing_content_but_keeps_strict_open(void)
 static void add_script(const char* name, const std::string& source,
                        u16 parent_id) {
   scripts.push_back({name, source, parent_id});
+}
+
+static void test_loading_scope_covers_source_and_initial_font_but_not_idle(void) {
+  reset_host();
+  assert(!m61_text::loading_program());
+  loading_entry_reads = loading_source_reads = loading_font_calls = 0;
+  font_rules.push_back({"TEST", program_store::ROOT_ID, 1});
+  add_script("START", "loadfont TEST\nwait 500\nret\n");
+  assert(m61_text::load_program("START"));
+  assert(loading_entry_reads && loading_source_reads && loading_font_calls == 1);
+  assert(!m61_text::loading_program());
+  m61_text::service();
+  assert(!m61_text::loading_program());
+  m61_text::cancel();
+  assert(!m61_text::load_program((u16)0xffff));
+  assert(!m61_text::loading_program());
+  add_script("BAD", ":same\n:same\nret\n");
+  assert(!m61_text::load_program((u16)1));
+  assert(!m61_text::loading_program());
+  assert(!m61_text::load_program("ABSENT"));
+  assert(!m61_text::loading_program());
 }
 
 static m61_text::Error require_error(void) {
@@ -2064,6 +2089,7 @@ static void test_scoped_runtime_lifetime_and_oom() {
 #endif
 
 int main(void) {
+  test_loading_scope_covers_source_and_initial_font_but_not_idle();
   test_binary_load_uses_script_directory_and_reports_failure();
   test_nested_open_preserves_program_and_root_still_clears();
   test_nested_interpreter_esc_cancels_scenario_silently();

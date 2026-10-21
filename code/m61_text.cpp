@@ -257,6 +257,15 @@ static u32 wait_until_ms = 0;
 static bool has_error = false;
 static Error last_error_info = {};
 static const char* line_error_message = NULL;
+static bool loading = false;
+
+struct LoadScope {
+  const bool previous = loading;
+  LoadScope() { loading = true; }
+  ~LoadScope() { loading = previous; }
+};
+
+bool loading_program(void) { return loading; }
 
 static void bind_command_hook(
     core_61::Mk61CommandHookContext& context, void* user_data);
@@ -2128,6 +2137,7 @@ static bool load_frame(const ScriptFrame& frame) {
 
 bool load_program(const char* name) {
   if(name == NULL || name[0] == 0) return false;
+  LoadScope loading_scope;
   ScriptFrame frame;
   if(!make_store_frame(name, frame)) {
     copy_script_name(script_name, name);
@@ -2138,6 +2148,7 @@ bool load_program(const char* name) {
 }
 
 bool load_program(u16 id) {
+  LoadScope loading_scope;
   ScriptFrame frame;
   if(!make_store_frame(id, frame)) return false;
   return load_frame(frame);

@@ -38,6 +38,7 @@ class Store {
 #endif
   uint32_t cached_=UINT32_MAX,cache_revision_=0;
   Space cached_space_=IMAGE;
+  bool service() const {return !service_ || service_();}
   static bool find(uint16_t parent,bool directory,Type type,const char* name,uint16_t& id) {
     id=INVALID;
     // A native cache lookup must not rebuild the writable USB/FAT index
@@ -89,8 +90,10 @@ class Store {
     if(!source_ || (*source_!=INVALID && !program_store::content_stamp(*source_,stamp_)))return false;
     source_id_=*source_;
     if(storage_path::create_directory(program_store::ROOT_ID,"/System/VMCache/Pages",true,parent_)!=storage_path::Status::OK)return false;
+    if(!service())return false;
     char source_name[16];snprintf(source_name,sizeof(source_name),"%04X",unsigned(*source_));
     if(!directory(parent_,source_name,root_))return false;
+    if(!service())return false;
     opened_=true;return true;
   }
   bool begin() {
@@ -100,6 +103,7 @@ class Store {
     memcpy(marker,"LFW1",4);word(marker+4,source_id_);dword(marker+12,mk61_crc32::calculate(marker,12));
     if(!find(root_,false,Type::MK61_BINARY,"Owner",owner) &&
        !program_store::write_file(root_,INVALID,Type::MK61_BINARY,"Owner",marker,sizeof(marker)))return false;
+    if(!service())return false;
     // An invalid/stale manifest still identifies which bank must survive a
     // failed recompile. Never overwrite that bank before publication.
     uint16_t manifest;uint8_t old[64];uint16_t n=0;
@@ -123,6 +127,9 @@ class Store {
       if(i==INDEX_B || i==BOUNDARIES) {
         if(find(root_,true,Type::TEXT,names[i],dirs_[i]) && !erase(dirs_[i]))return false;
       } else if(!directory(root_,names[i],dirs_[i]) || !erase(dirs_[i]))return false;
+      // C9 has committed this operation and released its temporary buffers.
+      // Do not chain every directory/owner write into one unpolled epoch.
+      if(!service())return false;
     }
     building_=true;cached_=UINT32_MAX;return true;
   }

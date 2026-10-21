@@ -89,6 +89,7 @@ struct Session {
   u32 frame_revision;
   u32 sent_revision;
   bool resend_requested;
+  u8 deferred_surface;
   u8 snapshot[usb_screen_protocol::FRAME_BYTES];
   u8 rect_payload[usb_screen_protocol::MAX_PAYLOAD_SIZE];
   PendingResponse response;
@@ -109,6 +110,7 @@ static shared_memory::Lease session_lease;
 #endif
 static Session* session = nullptr;
 static Event pending_event = Event::NONE;
+static bool servicing;
 
 static inline void writeU16(u8* output, u16 value) {
   output[0] = (u8) value;
@@ -271,7 +273,16 @@ static void handleKeyEvent(const usb_screen_protocol::PacketView& packet) {
 }
 
 static void handlePacket(const usb_screen_protocol::PacketView& packet,
-                         t_time_ms now) {
+                         t_time_ms now,bool transport_only) {
+  if(transport_only && (packet.type==MessageType::ATTACH || packet.type==MessageType::DETACH)) {
+    // Surface changes can load a font or release arenas. Preserve their
+    // order, but execute them only outside the storage critical section.
+    if(packet.type==MessageType::DETACH)session->deferred_surface=2;
+    else if(packet.payload_size==0 &&
+        (session->state==State::WAITING_FOR_HOST || session->deferred_surface==2))
+      session->deferred_surface=1;
+    return;
+  }
   if(session->state == State::WAITING_FOR_HOST) {
     if(packet.type == MessageType::ATTACH && packet.payload_size == 0) {
       attach(now);
@@ -310,7 +321,7 @@ static void handlePacket(const usb_screen_protocol::PacketView& packet,
   }
 }
 
-static void readRx(t_time_ms now) {
+static void readRx(t_time_ms now,bool transport_only=false) {
   usize budget = RX_BUDGET_PER_SERVICE;
   while(budget-- != 0 && Serial.available() > 0) {
     const int value = Serial.read();
@@ -318,7 +329,7 @@ static void readRx(t_time_ms now) {
     const usb_screen_protocol::MultiplexPushResult result =
       session->parser.push((u8) value);
     if(result == usb_screen_protocol::MultiplexPushResult::PACKET) {
-      handlePacket(session->parser.packet(), now);
+      handlePacket(session->parser.packet(), now,transport_only);
     } else if(result ==
               usb_screen_protocol::MultiplexPushResult::TERMINAL_BYTE) {
       (void) session->terminal_rx.push(session->parser.terminalByte());
@@ -519,9 +530,17 @@ void cancel(void) {
 }
 
 void service(void) {
-  if(session == nullptr) return;
+  if(session == nullptr || servicing) return;
+  struct ServiceScope {ServiceScope(){servicing=true;}~ServiceScope(){servicing=false;}} scope;
   MK61_SERVICE_GAP(USB_SCREEN);
   const t_time_ms now = millis();
+  const u8 surface=session->deferred_surface;
+  session->deferred_surface=0;
+  if(surface==1) {
+    if(session->state==State::ATTACHED)restorePhysicalAndWait(Event::CONNECTION_LOST);
+    if(session->state==State::WAITING_FOR_HOST)attach(now);
+  }
+  else if(surface==2 && session->state==State::ATTACHED)restorePhysicalAndWait(Event::CONNECTION_LOST);
   serviceVirtualKeys();
   MK61_PROFILE_SCOPE(dwt_profiler::Point::USB_SCREEN_SERVICE);
   readRx(now);
@@ -534,6 +553,22 @@ void service(void) {
   if(session == nullptr) return;
   pumpTx();
   scheduleTx(now);
+  pumpTx();
+}
+
+void service_during_storage(void) {
+  if(session==nullptr || servicing)return;
+  MK61_SERVICE_GAP(USB_SCREEN);
+  const t_time_ms now=millis();
+  // Delivery can invoke an external-key hold-release UI handler. Only queue
+  // received edges here; ordinary service delivers them after the transaction.
+  readRx(now,true);
+  // Finish an already encoded packet before sending a control response.
+  // Never flush/capture the display or start a new frame from this path.
+  pumpTx();
+  if(!txPending() && session->response.valid &&
+      queuePacket(session->response.type,session->response.payload,session->response.size))
+    session->response.valid=false;
   pumpTx();
 }
 

@@ -644,9 +644,12 @@ public:
     return (bits&(1U<<(pc&7)))!=0;
   }
   bool good() const {return good_;}
+  bool poll() const {return io_.poll();}
 };
 Error verify(const View& v, Boundaries& boundaries) {
   const uint32_t length=v.size;
+  unsigned service_budget=0;
+  auto poll=[&]() {return (++service_budget&31U)!=0 || boundaries.poll();};
   if(!boundaries.prepare(v.end))return Error::IO;
   // Only code needs a bitmap. Resource boundaries are scanned once here and
   // looked up in the bounded directory, keeping the verifier stack unchanged.
@@ -676,6 +679,7 @@ Error verify(const View& v, Boundaries& boundaries) {
     return false;
   };
   for (uint32_t pc = v.code; pc < v.end;) {
+    if(!poll())return Error::IO;
     if(!boundaries.mark(pc))return Error::IO;
     const uint32_t following = next(v, pc);
     if (!following) return Error::INVALID_IMAGE;
@@ -740,6 +744,7 @@ Error verify(const View& v, Boundaries& boundaries) {
     if (op == Op::DATA) {
       const uint32_t end = following;
       for (uint32_t at = (pc + (v.wide_code()?5:3)); at < end;) {
+        if(!poll())return Error::IO;
         uint32_t following=0;
         Value value=0;
         if(!data_value(v,at,end,value,following)) return Error::INVALID_IMAGE;
@@ -750,6 +755,7 @@ Error verify(const View& v, Boundaries& boundaries) {
       return Error::INVALID_IMAGE;
     if (op == Op::ON_GOTO || op == Op::ON_GOSUB)
       for (uint16_t i = 0; i < word(v.at(pc + 1)); ++i) {
+        if(!poll())return Error::IO;
         const uint16_t line = word(v.at(pc + 3 + i * 2));
         if (!line || line > 32767) return Error::INVALID_IMAGE;
       }
@@ -760,6 +766,7 @@ Error verify(const View& v, Boundaries& boundaries) {
     return pc == v.missing() || (pc >= v.code && pc < v.end && boundaries.test(pc));
   };
   for (uint16_t i = 0; i < v.lines; ++i) {
+    if(!poll())return Error::IO;
     const uint32_t number = record_number(v, i);
     if (!number || number > (v.language == Language::BASIC ? 32767U : 999999U) ||
         (i && number <= record_number(v, (uint16_t)(i - 1))) ||
@@ -769,6 +776,7 @@ Error verify(const View& v, Boundaries& boundaries) {
       return Error::INVALID_IMAGE;
   }
   for (uint32_t pc = v.code; pc < v.end; pc = next(v, pc)) {
+    if(!poll())return Error::IO;
     const Op op = (Op)v.byte(pc);
     if ((op == Op::JUMP || op == Op::JUMP_FALSE || op==Op::GOTO_DIRECT || op==Op::GOSUB_DIRECT ||
          op==Op::GRAPH_BEGIN || op==Op::GRAPH_NEXT) &&
@@ -779,6 +787,7 @@ Error verify(const View& v, Boundaries& boundaries) {
       if(finish<=pc+1+v.address_bytes() || (Op)v.byte(finish)!=Op::GRAPH_NEXT || v.address(v.at(finish+1))!=pc+1+v.address_bytes())
         return Error::INVALID_IMAGE;
       for(uint32_t at=(pc+1+v.address_bytes());at<finish;at=next(v,at)) {
+        if(!poll())return Error::IO;
         const auto inner=(Op)v.byte(at);
         const bool allowed=(inner>=Op::CONST_I8 && inner<=Op::LOAD_REF) ||
             inner==Op::LOAD_ARRAY || (inner>=Op::NEG && inner<=Op::FUNCTION) ||

@@ -300,6 +300,7 @@ public:
           else {line=b;++right;}
           uint8_t record[LINE_BYTES];encode(record,line);
           if(!output.write(uint32_t(written++)*LINE_BYTES,record,sizeof(record)))return good_=false;
+          if((written&7U)==0 && !io_.poll())return good_=false;
         }
       }
       if(!output.flush())return good_=false;

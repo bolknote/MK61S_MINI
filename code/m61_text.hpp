@@ -15,6 +15,9 @@ bool load_program(const char* name);
 bool load_program(u16 id);
 bool open_program(const char* name);
 bool open_program(u16 id);
+// Synchronous lookup/indexing and the initial service slice. Allows only
+// memory-only input progress while source/font reads own C9 temporaries.
+bool loading_program(void);
 bool active(void);
 bool calculator_suspended(void);
 // Called only for a physical OK press in the calculator foreground, outside
