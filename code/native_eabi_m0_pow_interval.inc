@@ -281,7 +281,14 @@ template<unsigned P> struct Fixed {
     const I lo=exp_endpoint(low),hi=exp_endpoint(high);
     const int scale=negative?-int(k):int(k);
     const U lower=rounded(lo.lo,scale),upper=rounded(hi.hi,scale);
-    if(lower!=upper) return false;
+    if(lower!=upper) {
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+      // A failed final pass may still provide a cheap search hint. The
+      // exact stage independently checks the surrounding rounding cells.
+      if constexpr(P==1024) result=lower;
+#endif
+      return false;
+    }
     result=lower;return true;
   }
 };

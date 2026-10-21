@@ -1,0 +1,803 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T14:17:42.292518+00:00",
+  "status": "PROMOTED_V71_OFFLINE_PHYSICAL_PENDING",
+  "previous_goal_turn": "PROGRESS_EXACT_BOUNDED_POW_STAGE",
+  "current_goal_turn": "PROGRESS_CHECKED_HINT_SPEEDUP",
+  "base_commit": "fcb06045ea879c50c41c3c3e2a9f9b924f9d653e",
+  "production_elf": {
+    "path": ".build/m0-pow-exact-hint-v71-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "495f828b597efeb71981215177a6a5756f54e3fb67fd507163be9fb2cf2444ee"
+  },
+  "manifest": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.14",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537008,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 196364,
+    "static_ram_data_bss_bytes": 155364,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074048,
+    "bin_sha256": "3e1011e6ebb91af41893d390111e0a8d86e2d1cdfb3bee361942b62bbbea09c9",
+    "uf2_sha256": "b9e1412afff1065fcac4a994e95a7baf683dd22ae219bee032b0c77f9263e378",
+    "hardware_verified": false,
+    "source_sha256": "1e773a62ba70269b5c9472ab15d1cede84b2876e53d8edee786d3a04be82a9da",
+    "build_id": "9338cd08",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537008,
+      "footer_offset": 674240,
+      "profile_id": "50434831",
+      "crc32": "6d2ae37b"
+    }
+  },
+  "math_files_sha256": {
+    "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+    "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+    "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+    "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+    "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+    "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+    "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+    "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+    "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+    "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+    "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+    "code/native_eabi_m0_cr.cpp": "9108c5ae5c229e198a8db5429aec6ef732f1defbb9a6b49df5d4f963e7630873",
+    "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+    "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+    "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+    "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+    "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+    "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+    "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+    "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+    "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+    "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+    "code/native_eabi_m0_pow_interval.inc": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+    "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+    "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+    "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+    "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+    "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+    "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+    "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+    "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+    "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+    "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+    "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+    "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+    "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+    "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+    "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+    "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+    "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+    "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+    "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+  },
+  "domain": "Positive finite binary64 x; finite nonzero y=p/q in lowest terms, |p|<=32 and q in {1,2,4,8,16,32}.",
+  "exponent_values": 224,
+  "algorithm": "The1024-bit undecided pass supplies a search hint. Exact integer midpoint comparisons verify it; a distant or invalid hint retains a bounded full search. No result is accepted from the approximation alone.",
+  "range_and_algebra_certificate": {
+    "status": "PASS_RANGE_AND_ALGEBRA_LEMMAS",
+    "source_sha256": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8",
+    "supported_domain": "Positive finite binary64 x; finite nonzero y=p/q in lowest terms, |p|<=32 and q in {1,2,4,8,16,32}.",
+    "exponent_count": 224,
+    "maximum_midpoint_comparisons": 65,
+    "checked_hint": true,
+    "maximum_near_hint_comparisons": 2,
+    "limb_bits": 16,
+    "coefficient_words": 216,
+    "maximum_coefficient_bits": 3424,
+    "scale_range": [
+      -68768,
+      62112
+    ],
+    "tables_bytes": 0,
+    "global_ram_bytes": 0,
+    "argument": [
+      "Decode x=A*2^e exactly with 1<=A<2^53. Every adjacent positive binary64 pair, including zero/minimum-subnormal and maximum-finite/infinity, has RNE boundary M*2^t with 1<=M<2^54.",
+      "For p>0, x^(p/q) and the midpoint have the same ordering as A^p*2^(e*p) and M^q*2^(t*q), since raising positive real numbers to integer q preserves order.",
+      "For p<0, x^(-|p|/q)<M*2^t exactly when A^|p|*M^q*2^(e*|p|+t*q)>1. Equality is tested by the same exact integer comparison.",
+      "The largest coefficient product is below2^((53+54)*32), so3456 bits suffice for all intermediates. Each16bit schoolbook multiply-accumulate fits32bits, including both carries. All temporary indices are within N+4 words.",
+      "Comparing the coefficient bit lengths plus their scales first orders unequal leading powers of2. Equal leading powers are ordered by their coefficient bits with implicit trailing zeros. No approximate logarithm, exponential, or root is used.",
+      "The positive encoding order is monotone. At a midpoint tie, the lower encoding is selected exactly when its low bit is even. This includes both subnormal and overflow ties.",
+      "Binary search preserves the encoding interval containing the RNE result. Each step reduces its endpoint distance D to at most floor(D/2); initial D<2^63. Thus at most63 exact comparisons suffice.",
+      "All nonzero eligible y values reduce exactly to the supported p,q by stripping powers of2 from their binary64 significand. No supported input can hit a coefficient overflow, invalid midpoint, or unsupported-parameter return.",
+      "The initial hint is never trusted as an enclosure. Exact midpoint comparisons either isolate the hinted encoding or its successor, or leave an interval that still contains the RNE encoding. The remaining binary search has distance no larger than the original infinity encoding, so it needs at most63 more comparisons. At most two hint comparisons plus63 search comparisons give the bound65, for every initialized unsigned hint word.",
+      "If the RNE encoding is the hint or its immediate successor, the exact hint tests close the encoding interval after at most two comparisons. This is a search optimization and does not require an approximation error assumption."
+    ],
+    "limitations": [
+      "The algebra establishes the exact algorithm on its stated domain; this is not machine-checked verification of all C++ instructions.",
+      "Source-pinned ARM qualification, ABI checks and a bounded stack measurement are separate evidence.",
+      "This stage does not prove totality for binary64 exponents outside the supported set. The general undecided pow trap is retained."
+    ]
+  },
+  "qualification": {
+    "all12": {
+      "status": "PASS",
+      "elf_sha256": "495f828b597efeb71981215177a6a5756f54e3fb67fd507163be9fb2cf2444ee",
+      "mpfr": "4.2.2",
+      "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+      "operations": {
+        "sqrt": {
+          "status": "PASS",
+          "cases": 10018,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+        },
+        "sin": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+        },
+        "cos": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+        },
+        "tan": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+        },
+        "atan": {
+          "status": "PASS",
+          "cases": 20401,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+        },
+        "asin": {
+          "status": "PASS",
+          "cases": 20070,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+        },
+        "acos": {
+          "status": "PASS",
+          "cases": 20070,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+        },
+        "ln": {
+          "status": "PASS",
+          "cases": 25397,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+        },
+        "log10": {
+          "status": "PASS",
+          "cases": 25397,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+        },
+        "exp": {
+          "status": "PASS",
+          "cases": 20196,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "f070a86d557b1be82f622d73f11c5f501851b5045a723ca94937ff574eceb664"
+        },
+        "pow": {
+          "status": "PASS",
+          "cases": 20395,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "e933dd37f4102e4fd3a3cf9531d04d2888f53bda81cd9daf8df287497e63ed77"
+        },
+        "fma": {
+          "status": "PASS",
+          "cases": 24553,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+        }
+      },
+      "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+      "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+      "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+      "known_limitations": [
+        "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+      ],
+      "scope": "Finite corpus, not an exhaustive proof over every binary64 input."
+    },
+    "direct_arm": {
+      "status": "PASS",
+      "elf_sha256": "495f828b597efeb71981215177a6a5756f54e3fb67fd507163be9fb2cf2444ee",
+      "cases": 24,
+      "actual_arm_calls": 70,
+      "wrong_rounding": 0,
+      "dirty_sio_checks": 4,
+      "unsupported_checks": 4,
+      "maximum_stack_bytes": 1972,
+      "maximum_bounded_write_depth": 15000,
+      "result_sha256": "d5ba4e23cb10666b73c2721cab77d54a9b68bfd67cc37da1a69e39e7d507d172",
+      "checked_hint_calls": 38,
+      "maximum_hint_comparisons": 2,
+      "mpfr": "4.2.2",
+      "scope": "Direct exact-stage ARM calls including all saved registers, SP, stack writes, signed exponents, subnormal/overflow output and a pending SIO divider. Finite implementation qualification; domain argument is separate."
+    },
+    "host": {
+      "status": "PASS",
+      "cases": 3446,
+      "hinted_calls": 19197,
+      "exponents": 224,
+      "rejected_exponents": 7,
+      "wrong_rounding": 0,
+      "source_sha256": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8",
+      "mpfr": "4.2.2",
+      "result_sha256": "bcfbb183e99198316d3f05cb1de7d118f1f52c5dc291f1ac3449db5623cdd890",
+      "scope": "Native implementation versus directed MPFR across every supported exponent and positive/negative powers, subnormal/overflow neighborhoods, exact roots, ties and random binary64 bases. Each result is also checked with near, distant and invalid input hints. Complete domain correctness rests on the exact integer argument, not this finite corpus."
+    },
+    "m4": {
+      "status": "PASS",
+      "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+      "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exact-hint-v71-20261021/source",
+      "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+      "results": [
+        {
+          "source": "native_eabi_m0.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.hpp",
+          "abi": "soft",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "abi": "soft",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "abi": "soft",
+          "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "compact_math.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+          "allocated_bytes": 19852,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": true
+        },
+        {
+          "source": "native_eabi_m0.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.hpp",
+          "abi": "hard",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "abi": "hard",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "abi": "hard",
+          "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "compact_math.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+          "allocated_bytes": 20524,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": true
+        }
+      ]
+    },
+    "generic_m0": {
+      "status": "PASS",
+      "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+      "results": [
+        {
+          "source": "native_eabi_m0.cpp",
+          "allocated_bytes": 247584,
+          "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "allocated_bytes": 14468,
+          "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "allocated_bytes": 0,
+          "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "source": "compact_math.cpp",
+          "allocated_bytes": 94,
+          "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "allocated_bytes": 191042,
+          "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+        }
+      ]
+    },
+    "instructions": {
+      "status": "PASS",
+      "groups": [
+        {
+          "index": 25,
+          "operation": "exp",
+          "stream": "legacy",
+          "cases": 19,
+          "mean_instructions": {
+            "before": 553.0526315789474,
+            "new": 553.0526315789474
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 28,
+          "operation": "exp",
+          "stream": "small_range",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 579.7265625,
+            "new": 579.7265625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 29,
+          "operation": "exp",
+          "stream": "normal_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 553.765625,
+            "new": 553.765625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 100,
+          "operation": "asin",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1895.5625,
+            "new": 1895.5625
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251,
+              "asin_refine": 1,
+              "asin_root_normalized": 1
+            },
+            "new": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251,
+              "asin_refine": 1,
+              "asin_root_normalized": 1
+            }
+          }
+        },
+        {
+          "index": 101,
+          "operation": "asin",
+          "stream": "composed_boundaries",
+          "cases": 40,
+          "mean_instructions": {
+            "before": 1697.35,
+            "new": 1697.35
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            },
+            "new": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            }
+          }
+        },
+        {
+          "index": 102,
+          "operation": "asin",
+          "stream": "composed_tiny_normal",
+          "cases": 16,
+          "mean_instructions": {
+            "before": 261.0,
+            "new": 261.0
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 103,
+          "operation": "acos",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1910.42578125,
+            "new": 1910.42578125
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251
+            },
+            "new": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251
+            }
+          }
+        },
+        {
+          "index": 104,
+          "operation": "acos",
+          "stream": "composed_boundaries",
+          "cases": 40,
+          "mean_instructions": {
+            "before": 1697.45,
+            "new": 1697.45
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            },
+            "new": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            }
+          }
+        },
+        {
+          "index": 105,
+          "operation": "acos",
+          "stream": "composed_tiny_normal",
+          "cases": 16,
+          "mean_instructions": {
+            "before": 435.1875,
+            "new": 435.1875
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 109,
+          "operation": "pow",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1254.25390625,
+            "new": 1254.25390625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 110,
+          "operation": "pow",
+          "stream": "composed_wide_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1270.8515625,
+            "new": 1270.8515625
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 111,
+          "operation": "pow",
+          "stream": "composed_near_one",
+          "cases": 48,
+          "mean_instructions": {
+            "before": 581.125,
+            "new": 581.125
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 112,
+          "operation": "pow",
+          "stream": "composed_negative_integer",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 869.05078125,
+            "new": 869.05078125
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 113,
+          "operation": "pow",
+          "stream": "composed_negative_wide",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 864.87109375,
+            "new": 864.87109375
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 114,
+          "operation": "pow",
+          "stream": "composed_negative_near_one",
+          "cases": 64,
+          "mean_instructions": {
+            "before": 959.5,
+            "new": 959.5
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 115,
+          "operation": "pow",
+          "stream": "composed_exact_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 151.8671875,
+            "new": 151.8671875
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        }
+      ],
+      "elf_sha256": {
+        "before": "d14120da13f39e3159d1a49da4073d9cb3f1087e127c7420dbcfc5feaa93349e",
+        "new": "495f828b597efeb71981215177a6a5756f54e3fb67fd507163be9fb2cf2444ee"
+      },
+      "scope": "Actual ARM public entries on all prepared exp/asin/acos/pow vectors. Instructions and refinement entries; no hardware speed claim."
+    },
+    "direct_cost": {
+      "status": "PASS",
+      "actual_arm_instructions": 775439,
+      "previous_full_search_instructions": 20102976,
+      "speedup_by_instructions": 25.924638817495637,
+      "elf_sha256": "495f828b597efeb71981215177a6a5756f54e3fb67fd507163be9fb2cf2444ee",
+      "input": [
+        "3FF0000000000001",
+        "BFEF000000000000"
+      ],
+      "hint": "3FEFFFFFFFFFFFFD",
+      "scope": "Direct exact-stage ARM count with a near hint, compared to the same V70 input without a hint. The normal public pow for this input does not reach the forced last stage; this is not a physical timing claim."
+    },
+    "interval_certificate": {
+      "status": "PASS",
+      "header_sha256": "bf7b776af71fd3c50708c8955651487fee468351e1e63b835a42bdf3572c56e6",
+      "rows": [
+        {
+          "bits": 512,
+          "log_width_units": 7414,
+          "q_width": "68382080281241307840513/6703903964971298549787012499102923063739682910296196688861780721860882015036773488400937149083451713845015929093243025426876941405973284973216824503042048",
+          "residual_bound": "332898623824139454300207288222068312129414282118377949972792815988781683663740650650469886596264351525864567485703253556146285931406918760800220891182430449379337060911452398828357065508473502785669793434493012997077821683451204186950028402087725255292061231860560073613218205683817038655063872069477184322015060617425248965120224970054660686515417910796211270740377918537642114522273268945424512429572906716177721765119118702126734052428102291212776353376334879414998930108505413882959118396212492209591857314225993614140270062774786518352033404914456258074011345758104289582142013362146185848309627640492941497582839576343646539713147022849794038596242166090239221514548487485327260435407005833289305785439173300426420663332139331208604643445974152232937419388342640217797716644264544870446787266055148480634883880378983378122175435893043908625573417165603407363632342989619903309683317973237496331203398511406466096005983889541377110300390912054526636946608095124226208714410807123321763159575703175998157464535549918299721718363721937315359127059382279271093523197532918173939741303408767344262784396089773080265008658888084232312047499018714387042664462601410319308360839657158630943421515995108177960472639612599112793206261592617455508990099253391928185320467622740896295166150181384498228582962736621249775055610007990430420917482494228465146269840340265436888367149096703049982049299235148971514435942243085843480169818641018080603949925176919045300269755924753742376256462041337809863229104755214199502136837261372284593782081911960743720428280003463696365185304264289716141024887865528494104831466832703408575655743798584336742702721353247601889545172443108283047997644508090671388511764791620046838188605655292738837673772399048695898130976937141924246713864509653466730972151221974372629846183135780723172547730311822075692776937490324443857748344210477291248141517608284913847144130953986939945979309198493564571159262437720976073197906220191921706211/959960870272754333023245420930849889356825814555961230028546814821615685923100409158678848625607941575908202995335338158488601331678644221427144876365955657043320841779779226716377379674985595257863379293828179421880558655927158865486289055893763719212401782570930469091473680288765511785939205580413680041952710952159541921516956493780528695700005107053300356917797616762099470333038608383638680142728255071511993562866262927179898616334344394038876259292604342242033600171844161109154319427656664642059795817400683572112575606070554892834115133538457609336078069100996385255664139441234487648479747836211053350713072972134340656910056309110416417640607392096209783021348586946842029515433889718667640471184287450441016848402366883542983688846973450631032319249331978046178552082645366126007892418815599961322235757897311828461654071576790191842697990214323536871259703467182262478159418038738630121344029461458448776201255914371392536454053704441057124554801130829067243360928137864600611394778563589572157355907827451828942517954325812396952779692138893887174894691401504330224917048797838877897352999507088886277571603311965592611024456848137615185826638368582312368821189130690206111092326307166835649798532830907983119537829558126893374272430863677460968971126452772250778559728885013583070871833661237052519894874902699018977463667492981818865630341947765722289102381461565538212340393361920663994437777283234116543578296619025016013062069291742039435790451606756354237099063752411323099780293415967545416351965439842857360785820338204732109201738665408453732082967368111286643365924944499196435819943174700582242081807405635598786411135429392083143300383846315627787844498588074901226691488996907954502764512299986906678895974835695457151839551707653600623514973361324793046762499992883351608246795124197999390664490578505755384488601684744852584402071827827358537075363319116437762704573851986916958457301827965665583780738398726301898867153881142394880000",
+          "residual_bound_float": 0.34678353475965407,
+          "relative_final_width_bound": "136764160562482615684295/3351951982485649274893506249551461531869841455148098344430890360930441007518386744200468574541725856922507964546621512713438470702986642486608412251521024",
+          "conservative_relative_bits": 433
+        },
+        {
+          "bits": 1024,
+          "log_width_units": 13558,
+          "q_width": "125050478075677050404865/89884656743115795386465259539451236680898848947115328636715040578866337902750481566354238661203768010560056939935696678829394884407208311246423715319737062188883946712432742638151109800623047059726541476042502884419075341171231440736956555270413618581675255342293149119973622969239858152417678164812112068608",
+          "residual_bound": "4463440808376274554236870693105634588288992982486029646673241996941554921738423178594227040636867775021919351753907456714235684056170707919091992886020034638770499442573202336589818755340937861540470082185691980377656244722844482370399759207330499309078187778375701892633191561691872238395970381073003276607104513524860903402629722158184495924012834039533786009311017805856062910345252083586819917170219296640471568073750643050877266518799258369105622831744896301817299021721038622177140677640833360774622720364273471687085820351130175310112716405109483334007462087305824519868977800746616726458754211705893784146158144016310975353552876457207160360906581262506511473893635858817225489274496443879454979466563316219488177180563902524911966049418045954197191422390381262392708117118540572200088909836446747139899375693112202361150760724531771555299710519543233647248276969484263924240960142536020973849387841462193629288652717464729586270403029697308866917212973617036437715120962801610569509116362345143015487480294619671046559832445591390877629046458806430823279203662066915187500337756524788048660132486781027772812999033398616597949019456761921237686251611401791594803495847728228834108313699179303754491044653919582495211608046195974939523155951515846595598748570495871895744498030920130620610704655392924870273591704522258255283279246612941587488376123480114511732199275192487298019923525433079069724820600524187604286857996413207373268150284575069005016011157558268517035541057124493785810341340075220150613837845911100720019299441915810439066072280535456685674474285191815298223361640397866812892542656722700744847546920633132457423552729571482582275404784040211135621978577131926585581960777614416360386046104408176898919980391237793621361215559738403089444431438652058995926168966639780683056346433511234893327795308984803031034238288390235337713698077774692061900685383767567358785989523061880006074675459896552601860655184791729147115788940061024509233721869570043964985353883092791127488624415086382167284100661145321418601642075134331992521835670738877002371957354733427484912720997418827623835550084732131/12870970968877632271001831605952983033707202982081046086519123896631388710183474791908602710822040489256465380049883851511672799101828529071377385558315267798852300635976180221140610584331843265022648700448495553348581606067415911408030979220003899438665533304029146018677903462260032946058575276265745418832752026443462244339478390787023242629720312516891853807242485012037589771407804053550358586414050988060677387651890503891604974879791684818194841245614461952208151188223933720481330001711793947913850190095517671132759547564341913507125839666313105306134998841449952859647912788029056933067681538077719246544032644834197684675500475475263090600941913373289446012454600665931520672525338806885566972784381773251203996083442396782629202188838674072029200223274554944515022730983659106243887644983591042447459528623956733732565495695318302868158830233761618705466220268007231855538213229549114909933163215932763424849850346183926319927717116150475846658098432622696904262424760914975780502269907846239430005708594743326409666823646442111892902203862537463661019972599132705500668215695898155735812979683534619826969396606814732884984272805858976815398488656254594246575402404915959515537736067119622730489586224215809462180925246043054976621536070936959825166916655363487908206565266429464052626837312460766412094753710400026566030507097881060418210154189484337816421402074777132653110247338371890236481272975199038308025079674670774555096573277054326704714329540651554828710559154017041923677536848369751039953689509585900871441530721505655057267744087074282503279730646210472817365960115209933586696341374749140250991078872440596130072016576047061241159117270591880832218173310007291113222517152559262416983060753839770067616599082972413181060251047100675321068018712958706758542161423270209361242585915548297848776572544458430702672723793765869488267689091744904359933905867613977472746324942801018211042679830575361987761945230356592195855429394346262662575886222848985097272024342246844172887991098772834065580102390328819619503134708987031889819009480717840318626608049717954731995710965850336960040119828480000",
+          "residual_bound_float": 0.34678353475965407,
+          "relative_final_width_bound": "250100956151354100815047/44942328371557897693232629769725618340449424473557664318357520289433168951375240783177119330601884005280028469967848339414697442203604155623211857659868531094441973356216371319075554900311523529863270738021251442209537670585615720368478277635206809290837627671146574559986811484619929076208839082406056034304",
+          "conservative_relative_bits": 944
+        }
+      ],
+      "conditional_rounding": "Directed integer endpoints enclose the positive magnitude. A result is returned only when both endpoints round to the same binary64; a false return is preserved when undecided.",
+      "boundary_argument": "For x=a*2^e with a odd and y=b/2^k with b odd, a dyadic result requires a perfect 2^k-th root and e divisible by 2^k. Nontrivial a has k<=5; an exact/midpoint odd significand has <=54 bits. Negative y requires a=1. The prototype tests these conditions with exact integer roots and capped products.",
+      "scope": "Elementary rational bounds for the experimental fixed-point algorithm, not a machine-checked proof of the C++ implementation and not an all-input totality proof. A fixed maximum precision still does not establish all-input totality."
+    }
+  },
+  "forced_interval_integration": {
+    "status": "PASS_TEST_ONLY",
+    "cases": 20,
+    "wrong_rounding": 0,
+    "rescue_calls": 20,
+    "force1024": false,
+    "force_exact_small": true,
+    "exact_stage_calls": 20,
+    "interval_hint": true,
+    "checked_hint_calls": 20,
+    "maximum_hint_distance": 1,
+    "maximum_hint_comparisons": 2,
+    "maximum_stack_bytes": 5936,
+    "allowed_stack_bytes": 16384,
+    "instruction_budget_per_call": 200000000,
+    "elf_sha256": "2aa847930ce98ac327cd771369596f7afd6ccff501167b91b39c652ab5be9c2a",
+    "sha256": "b559e10f79f5cf0f237c44d9cdf5c86a3e974ec992b2fd25b761f8e4d6c7c9dd",
+    "source_patch": {},
+    "mpfr": "4.2.2",
+    "scope": "Private copy forces all three rounding tests to fail and bypasses exact_pow. Hint mode computes the real1024-bit endpoints and forces their undecided branch; the test-only exact-boundary shortcut is bypassed. Exact-small modes enter the CORE-MATH wrapper directly. Checks real ARM call/return, result sign, exact midpoints, subnormals and bounded caller stack. Not an all-input totality proof.",
+    "compiled_source_patch": {
+      "patches": {
+        "if (__builtin_expect (res_min == res_max, 1)) {": "if (false && __builtin_expect (res_min == res_max, 1)) {",
+        "if (rd)\n    // dint_tod": "if (rd && R.ex > 1023)\n    // dint_tod",
+        "if (exact_pow (&e, x0, y, &R, exact))": "if (false && exact_pow (&e, x0, y, &R, exact))",
+        "  if (rd)\n  {\n    qZ.sgn": "  if (false && rd)\n  {\n    qZ.sgn"
+      },
+      "force1024": false,
+      "force_exact_small": true,
+      "interval_hint": true
+    },
+    "compiled_test_source_sha256": {
+      "code/native_eabi_m0_cr.cpp": "79659c44ed83c173be47ff34a2e253565c18947c721f95242eaa140c85bc2a08",
+      "code/native_eabi_m0_pow_interval.inc": "9e23ed2e9dff1b17c7f5de84eb196118aae168b07e87a40a419e4d37141ba225",
+      "code/native_eabi_m0_pow_exact.inc": "f98ac5a71383764eae7738dbf8b0d217d70cd6579ccc08a1dc45617b68db7ff8"
+    },
+    "numerical_replay_artifact": {
+      "path": ".build/m0-pow-exact-hint-v71-20261021/forced-interval-hint-replay/result.json",
+      "sha256": "1124fe4fbda36ac870a22074f5547e0aca3502d6c1faf8905c83bbe53c94f94e"
+    }
+  },
+  "resources": {
+    "allocated_flash_delta_vs_v70_bytes": 208,
+    "total_allocated_flash_delta_vs_v69_bytes": 1456,
+    "new_section_bytes": 1424,
+    "flash_image_extent_delta_bytes": 0,
+    "static_ram_delta_bytes": 0,
+    "main_bss_delta_bytes": 0,
+    "new_table_bytes": 0,
+    "scratch_y_bytes": 4096,
+    "direct_stage_stack_bytes": 1972,
+    "forced_core_interval_exact_stack_bytes": 5936
+  },
+  "performance": {
+    "prepared_groups_with_identical_instruction_counts": 16,
+    "physical_timing_available": false,
+    "representative_direct_instructions_before": 20102976,
+    "representative_direct_instructions_after": 775439,
+    "representative_speedup_by_instructions": 25.924638817495637,
+    "interpretation": "The26x reduction is for a forced final-stage call on one identical input. It is not a normal public pow speedup or a physical timing. All16 checked ordinary exp/asin/acos/pow groups retain identical instruction counts."
+  },
+  "promotion": {
+    "status": "PROMOTED_OFFLINE_PHYSICAL_PENDING",
+    "files": [
+      "code/native_eabi_m0_cr.cpp",
+      "code/native_eabi_m0_pow_interval.inc",
+      "code/native_eabi_m0_pow_exact.inc"
+    ],
+    "peer_files_changed": false,
+    "new_hardware_image_flashed": false
+  },
+  "hardware_queue": "Hardware peer final acceptance, then the Memset M0+ short APP-only memmove window, then the math114-group run; math has not opened USB.",
+  "remaining": [
+    "General binary64 pow totality remains unproved outside the224 supported exponent values; the final undecided trap remains for that domain.",
+    "Full114-group physical comparison is pending on the next coordinated accepted frozen source. V69 selected12 timings are not V71 hardware evidence.",
+    "The integer argument is source-pinned but is not machine-checked C++ verification."
+  ],
+  "goal_complete": false
+}

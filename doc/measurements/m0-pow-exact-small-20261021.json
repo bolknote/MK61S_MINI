@@ -1,0 +1,748 @@
+{
+  "schema": 1,
+  "recorded_at": "2026-10-21T13:58:16.855393+00:00",
+  "status": "PROMOTED_V70_OFFLINE_PHYSICAL_PENDING",
+  "previous_goal_turn": "PROGRESS_COMMIT_171866abf",
+  "current_goal_turn": "PROGRESS_EXACT_BOUNDED_POW_STAGE",
+  "base_commit": "171866abfbd8df757141b66926f6a9819930428a",
+  "production_elf": {
+    "path": ".build/m0-pow-exact-small-v70-20261021/firmware/mk61s-picocalc-pico-h.elf",
+    "sha256": "825194b58f14181451d9124e26e6a814a2bab5d108c53b10a78e84d724c4fa99"
+  },
+  "manifest": {
+    "profile": "picocalc-pico-h",
+    "prototype_version": "0.8.14",
+    "mcu": "RP2040",
+    "sampling_profile": false,
+    "psram_bus": "qpi-with-spi-fallback",
+    "board": "ClockworkPi PicoCalc + Raspberry Pi Pico H",
+    "cpu": "cortex-m0plus",
+    "float_abi": "soft",
+    "math": "compact_math + owned ARMv6-M IEEE runtime",
+    "arithmetic_runtime": "owned-m0",
+    "pico_sdk": "2.2.0",
+    "pico_sdk_commit": "a1438dff1d38bd9c65dbd693f0e5db4b9ae91779",
+    "compiler": "14.2.1",
+    "flash_bytes": 1537008,
+    "flash_limit": 2097152,
+    "static_ram_bytes": 196364,
+    "static_ram_data_bss_bytes": 155364,
+    "main_ram_region_bytes": 229376,
+    "stack_reserved_bytes": 32768,
+    "source_editor_capacity_bytes": 65534,
+    "settings_flash_offset": 2088960,
+    "settings_flash_bytes": 8192,
+    "uf2_bytes": 3074048,
+    "bin_sha256": "ac7063387920b3791c22ced6b93095532579afebecffb2a4ffc9043b9ffbe609",
+    "uf2_sha256": "577004e1929ec975e9860ebb4ad9bebce8e94918a6a882a70cfb08747e9369a3",
+    "hardware_verified": false,
+    "source_sha256": "a3429bac32df21aee518bc81724a8bb4a6b86fce85062841e2c3b033b513ec19",
+    "build_id": "31c39d70",
+    "firmware_integrity": {
+      "required": true,
+      "format_version": 1,
+      "image_start": 268435456,
+      "image_size": 1537008,
+      "footer_offset": 674240,
+      "profile_id": "50434831",
+      "crc32": "e6743f01"
+    }
+  },
+  "math_files_sha256": {
+    "code/compact_math.cpp": "e83782e89a951efaad0dbbe3b9c99eb198f9375f88fbbef041f29f17d166c857",
+    "code/compact_math.hpp": "79cc88f6a8c67642b7f035e8157f3064fa518d39c853e30cfb4b350caa4f19ab",
+    "code/compact_math_tables.hpp": "871fccfe4eac39b4b286e088b46c0a3ef8d5709b71aa7da211627a23639024e9",
+    "code/native_eabi_m0.S": "2d79cfd971ec0072986f6bf0ccddad6f2e8f1e89662ad2f7b58405644b36cecb",
+    "code/native_eabi_m0.cpp": "42214335d061c486a4a918c3dca4179954b756fda9d3899f773e8f9f50461760",
+    "code/native_eabi_m0.hpp": "bf7607738125c122c509ce552f3d5f29ae40cc0d9ae481cd4e6c0c2d021a21f2",
+    "code/native_eabi_m0_asin.inc": "793f4c563cc1857c18ffe1bc1aacc55a296215470b1369fa7e2a8de9024ed17a",
+    "code/native_eabi_m0_atan.inc": "a37424b43e002565fcc7a1ef9a56a1bbc3afce86babde855f3c2b0aedadbd8e5",
+    "code/native_eabi_m0_atan_fast.inc": "617b2371f2ad63ab756358ea81859b691e9762c1f45c8dd6ca07cacd5414b036",
+    "code/native_eabi_m0_atan_refine.inc": "33313dafb0722684cc331fdf22c5254f0f5e7d941614348121a83c295c3c5dcd",
+    "code/native_eabi_m0_convert.inc": "1210b33d2d7a7002c70254834faaea82dccc6c5c394ec8635abf87a91a551550",
+    "code/native_eabi_m0_cr.cpp": "fb8a5eff2394a99289e61ebc18ed5ec6c41577976cc8e13c7d9952ebcfdc3cbd",
+    "code/native_eabi_m0_cr_shim.inc": "6b9cc79cecdc4fb2df5ee203228b114b1da25401ed7072d24dd0db84647a7c79",
+    "code/native_eabi_m0_exp_table.inc": "99f1390645c86f34959269dcfcf63ce2bfcfbcb544d2bceb884aa0fbe9c6b337",
+    "code/native_eabi_m0_fma.inc": "2404eee35c3d2ed60b95464519eabf627bc58eafec4a4f5e366d38408c129c5c",
+    "code/native_eabi_m0_kernels.inc": "dc9e0f57cf747675e2a71df049300307f8368e0f2e869f50bf1d69cd52b5d8ed",
+    "code/native_eabi_m0_log10.inc": "3d48da78c07991b1bc8987850f33715c10f3d74737abdfa8418e197838139747",
+    "code/native_eabi_m0_log10_constants.inc": "cbf172880d44eaa44ff191114f39e9a71f6e363ecb8e78d0e0a530246015f8d8",
+    "code/native_eabi_m0_log10_table.inc": "d784ed53d47bc25cc17ac67d63c2031fa3e893aeabd4cd9c8599ee60331fcb99",
+    "code/native_eabi_m0_log70.inc": "2d4f5a95669b05442cba2dc4f1fb4fa9c4ba013751c46f2e198be46230fd8aef",
+    "code/native_eabi_m0_log70_table.inc": "6e79e5b6e0b1fc0be5546a874f0e81cfb90358a82dbd433595f1d70f301306eb",
+    "code/native_eabi_m0_log_table.inc": "2498ffa9158cbd157ec0efa136511429d665a62b1e258d98625ff35967d313db",
+    "code/native_eabi_m0_pow_argument.inc": "33d26fae891145e4ac9a638a9f18ca8ebcb8491816806c78c49fcf2020f8eee3",
+    "code/native_eabi_m0_pow_exp_product.inc": "a80afaa2ab4f2a146a0433478cdda0990c5cce3e1e688394f37ffa4bf2f3e7fc",
+    "code/native_eabi_m0_pow_fast.inc": "6cba047dd01b44d72d3975c1a53b70620e88ea46b3c784d380387e109d24be1e",
+    "code/native_eabi_m0_pow_integer.inc": "7016e18c10c3994256279930c0324c9976280e88c8553511747afed2d95d0f5a",
+    "code/native_eabi_m0_pow_interval.inc": "bf360fe3ecfaf7cced686eb1bd58dd7bc7d392cb55c355abbf2e421173d8ef25",
+    "code/native_eabi_m0_pow_interval_table.inc": "e78e02c26ee64c2b9fdd883c26b31315e0cded2ca02ea4177c2f7576b239a414",
+    "code/native_eabi_m0_pow_ln2.inc": "3aba7e9d4efb1ff819af04ef6578de2eb0b42e0ba1bfe245ad8cf22dd1f4bdb8",
+    "code/native_eabi_m0_pow_tail.inc": "c4b406ce7f01d96c3f62cb97e60d69565f4d01fe1203109571b8343660953048",
+    "code/native_eabi_m0_pow_third.inc": "92e6b5ed3c21a37098a32836fc31aefb4d9ef790e0ca045b2e13c58ab1d4dd50",
+    "code/native_eabi_m0_product.inc": "79c75bb63eadaa41485906eecbd734e83f882d5e8d305fd288e55c025f510a1b",
+    "code/native_eabi_m0_refine.inc": "1800428641ddf489fdce847ee0d7df4acef844902b9604fb3d2156a32eced0ce",
+    "code/native_eabi_m0_refine_table.inc": "30cc5352fbe6270e122246fa683dda807b9609158fc60b24c565b3eec70e6883",
+    "code/native_eabi_m0_rp2040.S": "e351fe2956fb2753674fe94c36465836cd983837f65f87e5797bd602c7d123b6",
+    "code/native_eabi_m0_rsqrt_table.inc": "52c3eae1c6226efab643387d4ab9611ae366363180fd026151cd4558483ffba6",
+    "code/native_eabi_m0_sqrt64_table.inc": "b0a46fa3d7e482e30fa389d7aaac1900ce0e86488e962986e270b9a79d8af2d3",
+    "code/native_eabi_m0_sqrt_table.inc": "e72b7cbe8d959a2cedb7320d0a3cb76ad81d7419fb8ea6aebf734d8c9eade921",
+    "code/native_eabi_m0_trig_checked.inc": "2421fa930fff21ff59652a899937b4c7ba500b77e8566eb8e971a3ffa8efa53a",
+    "code/native_eabi_m0_trig_checked_table.inc": "e52b2bc4e8d8c3d91bb0abda3c48a7bf58c03dff3c07d389a4d05e4b05c11dad",
+    "code/native_eabi_m0_trig_refine.inc": "0cf476331b0590948aaa6aeebb035949954738af9b61c79b2599aaca36481a28",
+    "code/native_eabi_m0_trig_table.inc": "d7b383e977fdfd366febc9e9b6b14eb091f046087f68677901d6d8015801e551",
+    "code/native_eabi_m0_trig_tan.inc": "4c5f7e6113a4f3577c6feeca84e707f64c58bb20d90a030ae194ee81c9ff3217",
+    "code/native_eabi_m0_uint128.hpp": "1c0e8daa031fb084d7d5a542cf40b8bf0590217897720a8a6d4c31f6da4ddbf7",
+    "code/native_eabi_m0_cr_types.hpp": "55056af4c32208c1208ac54070c9853088d66a2450c081ceac141c237ac90df9",
+    "code/native_eabi_m0_log70_center.inc": "7401693a5fad7463ad463b37f0d7afe713836d08ecd25a881161357c5791b064",
+    "code/native_eabi_m0_log70_ratio.inc": "5451f32a046b9f69006dede642b190b3bd9403a8e7a7e54989a7d81c972153fa",
+    "code/native_eabi_m0_trig_small_refine.inc": "cf50c17c713e7a0f5d6b15c6644540455be1cf15b501c5c621af7ad61d75355b",
+    "code/native_eabi_m0_trig_cos70.inc": "54771228e6d411181859c37c5dc43e411e68385f5802418bc4732ed13b65cdc5",
+    "code/native_eabi_m0_pow_exact.inc": "0b378b2a419e87cae1a3897adea03e59b3880a5d9e24e201f000070b99d7021b"
+  },
+  "domain": "Positive finite binary64 x; finite nonzero y=p/q in lowest terms, |p|<=32 and q in {1,2,4,8,16,32}.",
+  "exponent_values": 224,
+  "algorithm": "Exact integer powers and midpoint comparisons, binary search over monotone positive binary64 encodings, ties to even. Used only when the earlier512/1024-bit interval passes both fail.",
+  "range_and_algebra_certificate": {
+    "status": "PASS_RANGE_AND_ALGEBRA_LEMMAS",
+    "source_sha256": "0b378b2a419e87cae1a3897adea03e59b3880a5d9e24e201f000070b99d7021b",
+    "supported_domain": "Positive finite binary64 x; finite nonzero y=p/q in lowest terms, |p|<=32 and q in {1,2,4,8,16,32}.",
+    "exponent_count": 224,
+    "maximum_midpoint_comparisons": 63,
+    "limb_bits": 16,
+    "coefficient_words": 216,
+    "maximum_coefficient_bits": 3424,
+    "scale_range": [
+      -68768,
+      62112
+    ],
+    "tables_bytes": 0,
+    "global_ram_bytes": 0,
+    "argument": [
+      "Decode x=A*2^e exactly with 1<=A<2^53. Every adjacent positive binary64 pair, including zero/minimum-subnormal and maximum-finite/infinity, has RNE boundary M*2^t with 1<=M<2^54.",
+      "For p>0, x^(p/q) and the midpoint have the same ordering as A^p*2^(e*p) and M^q*2^(t*q), since raising positive real numbers to integer q preserves order.",
+      "For p<0, x^(-|p|/q)<M*2^t exactly when A^|p|*M^q*2^(e*|p|+t*q)>1. Equality is tested by the same exact integer comparison.",
+      "The largest coefficient product is below2^((53+54)*32), so3456 bits suffice for all intermediates. Each16bit schoolbook multiply-accumulate fits32bits, including both carries. All temporary indices are within N+4 words.",
+      "Comparing the coefficient bit lengths plus their scales first orders unequal leading powers of2. Equal leading powers are ordered by their coefficient bits with implicit trailing zeros. No approximate logarithm, exponential, or root is used.",
+      "The positive encoding order is monotone. At a midpoint tie, the lower encoding is selected exactly when its low bit is even. This includes both subnormal and overflow ties.",
+      "Binary search preserves the encoding interval containing the RNE result. Each step reduces its endpoint distance D to at most floor(D/2); initial D<2^63. Thus at most63 exact comparisons suffice.",
+      "All nonzero eligible y values reduce exactly to the supported p,q by stripping powers of2 from their binary64 significand. No supported input can hit a coefficient overflow, invalid midpoint, or unsupported-parameter return."
+    ],
+    "limitations": [
+      "The algebra establishes the exact algorithm on its stated domain; this is not machine-checked verification of all C++ instructions.",
+      "Source-pinned ARM qualification, ABI checks and a bounded stack measurement are separate evidence.",
+      "This stage does not prove totality for binary64 exponents outside the supported set. The general undecided pow trap is retained."
+    ]
+  },
+  "qualification": {
+    "all12": {
+      "status": "PASS",
+      "elf_sha256": "825194b58f14181451d9124e26e6a814a2bab5d108c53b10a78e84d724c4fa99",
+      "mpfr": "4.2.2",
+      "oracle": "Directed MPFR bounds; both endpoints round to the same binary64 (RNE).",
+      "operations": {
+        "sqrt": {
+          "status": "PASS",
+          "cases": 10018,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "a7efda524e9e3d616350e1bb0732c35aee57a92796bf93418280376b458cdba6"
+        },
+        "sin": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "843f34ada5f7515d4bec22b4dc7017a9facec45d109146bedf8e7550190b8887"
+        },
+        "cos": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "f3eb61ea3bc73deec2acc33dcc7626f6b0d79efb3193bd9403f234e71882175c"
+        },
+        "tan": {
+          "status": "PASS",
+          "cases": 26304,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "5262666940513cdc75c0e4a9629b93e220decb9de84a2f0fda64473ae9bc721c"
+        },
+        "atan": {
+          "status": "PASS",
+          "cases": 20401,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "833dadc19bf017e289a6c0c1b6a2d4b0ba087ba89ada3e15aac3534986f82ffc"
+        },
+        "asin": {
+          "status": "PASS",
+          "cases": 20070,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "55ca2e56f1585015c29fdde3e8b2957425abfe80dd632fab1fa90c72b3aab202"
+        },
+        "acos": {
+          "status": "PASS",
+          "cases": 20070,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "b6d74eae0e2c8cd72db69cea7cb1a81802cf07ea1ffbff4f97f2750ff40148d0"
+        },
+        "ln": {
+          "status": "PASS",
+          "cases": 25397,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "0925c3ffdb5d0c90b32e85b0b6678d37692f8bc3bde84fcb50637213d8933a88"
+        },
+        "log10": {
+          "status": "PASS",
+          "cases": 25397,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "cbfe41d62bf1214445115b4957784b567e5580bfade99140ef019390c86f5320"
+        },
+        "exp": {
+          "status": "PASS",
+          "cases": 20196,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "f070a86d557b1be82f622d73f11c5f501851b5045a723ca94937ff574eceb664"
+        },
+        "pow": {
+          "status": "PASS",
+          "cases": 20395,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "e933dd37f4102e4fd3a3cf9531d04d2888f53bda81cd9daf8df287497e63ed77"
+        },
+        "fma": {
+          "status": "PASS",
+          "cases": 24553,
+          "wrong_rounding": 0,
+          "examples": [],
+          "sha256": "8b0231136a915cefa09145aba9a2580b2b8516f9f8d6e67e25dd7da79ea1fa20"
+        }
+      },
+      "abi": "Every call verifies R4-R11, SP, bounded stack writes.",
+      "semantics": "RNE return values; errno and floating exception flags are not implemented.",
+      "nan_result_policy": "NaN results must be quiet; payload and sign are unspecified.",
+      "known_limitations": [
+        "An undecided owned 1024-bit pow refinement still traps; all-input totality is unproved."
+      ],
+      "scope": "Finite corpus, not an exhaustive proof over every binary64 input."
+    },
+    "direct_arm": {
+      "status": "PASS",
+      "elf_sha256": "825194b58f14181451d9124e26e6a814a2bab5d108c53b10a78e84d724c4fa99",
+      "cases": 24,
+      "actual_arm_calls": 32,
+      "wrong_rounding": 0,
+      "dirty_sio_checks": 4,
+      "unsupported_checks": 4,
+      "maximum_stack_bytes": 1932,
+      "maximum_bounded_write_depth": 15000,
+      "result_sha256": "6fdd34f5d8a43fee662d261d5cb11c68ae824afa3e7c058a0bd3e427e1210ac9",
+      "mpfr": "4.2.2",
+      "scope": "Direct exact-stage ARM calls including all saved registers, SP, stack writes, signed exponents, subnormal/overflow output and a pending SIO divider. Finite implementation qualification; domain argument is separate."
+    },
+    "host": {
+      "status": "PASS",
+      "cases": 3446,
+      "exponents": 224,
+      "rejected_exponents": 7,
+      "wrong_rounding": 0,
+      "source_sha256": "0b378b2a419e87cae1a3897adea03e59b3880a5d9e24e201f000070b99d7021b",
+      "mpfr": "4.2.2",
+      "result_sha256": "14c89da97759b1ce02008bf77221724d41d9b0709c6b98721aa06dedbd552620",
+      "scope": "Native implementation versus directed MPFR across every supported exponent and positive/negative powers, subnormal/overflow neighborhoods, exact roots, ties and random binary64 bases. Complete domain correctness rests on the exact integer argument, not this finite corpus."
+    },
+    "m4": {
+      "status": "PASS",
+      "baseline": "/Users/bolk/Projects/MK61S_MINI/.build/picocalc-native-complete-20261020/source",
+      "current": "/Users/bolk/Projects/MK61S_MINI/.build/m0-pow-exact-small-v70-20261021/source",
+      "scope": "Cortex-M4 O3 release, both soft and hard float ABIs: normalized preprocessing and every allocated code/data section identical; existing M4 runtime sources byte-identical",
+      "results": [
+        {
+          "source": "native_eabi_m0.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.hpp",
+          "abi": "soft",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "abi": "soft",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "abi": "soft",
+          "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "compact_math.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "67bb5906336b8543d7175aecd3a09a003d272debee54bb0e7966eef1cc091a16",
+          "allocated_bytes": 19852,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "abi": "soft",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": true
+        },
+        {
+          "source": "native_eabi_m0.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.hpp",
+          "abi": "hard",
+          "preprocessed_sha256": "3ee91a45db040268caa87cf2d5bece5ff9c431dfa17b7c57dc61a5bf2bd07d4a",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "abi": "hard",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "abi": "hard",
+          "preprocessed_sha256": "b5f8e2c0cbe3708e4536427e610303ea27bb0c95dc2567422a676cb8a5fa9ded",
+          "allocated_bytes": 0,
+          "new_translation_unit": false
+        },
+        {
+          "source": "compact_math.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "e164a204e3ba86594e27e773fa68a55c1b1cb4cbfe9abd7591eaeabc55521d9b",
+          "allocated_bytes": 20524,
+          "new_translation_unit": false
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "abi": "hard",
+          "preprocessed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "allocated_bytes": 0,
+          "new_translation_unit": true
+        }
+      ]
+    },
+    "generic_m0": {
+      "status": "PASS",
+      "scope": "Non-RP2040 generic ARMv6-M: every allocated code/data section remains byte-identical to V60. The generic spelling has an extra expression macro; normalized preprocessing identity is not claimed.",
+      "results": [
+        {
+          "source": "native_eabi_m0.cpp",
+          "allocated_bytes": 247584,
+          "sha256": "d2b13c6198b02d3215dcd11e552f8f4784edb30abdebfead313a73923a9864f3"
+        },
+        {
+          "source": "native_eabi_m0.S",
+          "allocated_bytes": 14468,
+          "sha256": "23c0ecbd9b47d6b197d7738936cc51f1579322d4716dd1c92b2e003f3191b146"
+        },
+        {
+          "source": "native_eabi_m0_rp2040.S",
+          "allocated_bytes": 0,
+          "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+        },
+        {
+          "source": "compact_math.cpp",
+          "allocated_bytes": 94,
+          "sha256": "05b6f5aafe2d0f194cff66c0096dfee52e94ba9e3c2d06c2681ee161de690127"
+        },
+        {
+          "source": "native_eabi_m0_cr.cpp",
+          "allocated_bytes": 191042,
+          "sha256": "569c8a18a36b6437238439c115a8550744be13597f3b55b7e14bd998e72328b5"
+        }
+      ]
+    },
+    "instructions": {
+      "status": "PASS",
+      "groups": [
+        {
+          "index": 25,
+          "operation": "exp",
+          "stream": "legacy",
+          "cases": 19,
+          "mean_instructions": {
+            "before": 553.0526315789474,
+            "new": 553.0526315789474
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 28,
+          "operation": "exp",
+          "stream": "small_range",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 579.7265625,
+            "new": 579.7265625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 29,
+          "operation": "exp",
+          "stream": "normal_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 553.765625,
+            "new": 553.765625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 100,
+          "operation": "asin",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1895.5625,
+            "new": 1895.5625
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251,
+              "asin_refine": 1,
+              "asin_root_normalized": 1
+            },
+            "new": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251,
+              "asin_refine": 1,
+              "asin_root_normalized": 1
+            }
+          }
+        },
+        {
+          "index": 101,
+          "operation": "asin",
+          "stream": "composed_boundaries",
+          "cases": 40,
+          "mean_instructions": {
+            "before": 1697.35,
+            "new": 1697.35
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            },
+            "new": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            }
+          }
+        },
+        {
+          "index": 102,
+          "operation": "asin",
+          "stream": "composed_tiny_normal",
+          "cases": 16,
+          "mean_instructions": {
+            "before": 261.0,
+            "new": 261.0
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 103,
+          "operation": "acos",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1910.42578125,
+            "new": 1910.42578125
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251
+            },
+            "new": {
+              "asin_root_estimate": 251,
+              "asin_geometry": 251
+            }
+          }
+        },
+        {
+          "index": 104,
+          "operation": "acos",
+          "stream": "composed_boundaries",
+          "cases": 40,
+          "mean_instructions": {
+            "before": 1697.45,
+            "new": 1697.45
+          },
+          "entries": {
+            "before": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            },
+            "new": {
+              "asin_root_estimate": 34,
+              "asin_geometry": 24
+            }
+          }
+        },
+        {
+          "index": 105,
+          "operation": "acos",
+          "stream": "composed_tiny_normal",
+          "cases": 16,
+          "mean_instructions": {
+            "before": 435.1875,
+            "new": 435.1875
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 109,
+          "operation": "pow",
+          "stream": "composed_ordinary",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1254.25390625,
+            "new": 1254.25390625
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        },
+        {
+          "index": 110,
+          "operation": "pow",
+          "stream": "composed_wide_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 1270.8515625,
+            "new": 1270.8515625
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 111,
+          "operation": "pow",
+          "stream": "composed_near_one",
+          "cases": 48,
+          "mean_instructions": {
+            "before": 581.125,
+            "new": 581.125
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 112,
+          "operation": "pow",
+          "stream": "composed_negative_integer",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 869.05078125,
+            "new": 869.05078125
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 113,
+          "operation": "pow",
+          "stream": "composed_negative_wide",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 864.87109375,
+            "new": 864.87109375
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 114,
+          "operation": "pow",
+          "stream": "composed_negative_near_one",
+          "cases": 64,
+          "mean_instructions": {
+            "before": 959.5,
+            "new": 959.5
+          },
+          "entries": {
+            "before": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            },
+            "new": {
+              "pow_refine_checked": 1,
+              "pow_refined_log": 1
+            }
+          }
+        },
+        {
+          "index": 115,
+          "operation": "pow",
+          "stream": "composed_exact_exponents",
+          "cases": 256,
+          "mean_instructions": {
+            "before": 151.8671875,
+            "new": 151.8671875
+          },
+          "entries": {
+            "before": {},
+            "new": {}
+          }
+        }
+      ],
+      "elf_sha256": {
+        "before": "d14120da13f39e3159d1a49da4073d9cb3f1087e127c7420dbcfc5feaa93349e",
+        "new": "825194b58f14181451d9124e26e6a814a2bab5d108c53b10a78e84d724c4fa99"
+      },
+      "scope": "Actual ARM public entries on all prepared exp/asin/acos/pow vectors. Instructions and refinement entries; no hardware speed claim."
+    },
+    "direct_cost": {
+      "status": "PASS",
+      "actual_arm_instructions": 20102976,
+      "elf_sha256": "825194b58f14181451d9124e26e6a814a2bab5d108c53b10a78e84d724c4fa99",
+      "input": [
+        "3FF0000000000001",
+        "BFEF000000000000"
+      ],
+      "scope": "Cost of a forced direct exact-stage call only; no claim this path is reached for this input through the normal public pow entry."
+    }
+  },
+  "forced_integration": {
+    "status": "PASS_TEST_ONLY",
+    "cases": 19,
+    "wrong_rounding": 0,
+    "rescue_calls": 19,
+    "force1024": false,
+    "force_exact_small": true,
+    "exact_stage_calls": 19,
+    "maximum_stack_bytes": 2900,
+    "allowed_stack_bytes": 16384,
+    "instruction_budget_per_call": 200000000,
+    "elf_sha256": "3c4f80b3229d35e37bd926ae111ca5cb26b74cd650134346b84e2c17f39235ce",
+    "sha256": "2442daf69fae54db3b1c0cf29d4db9dfc173e4f8ce48902cd9a885a53d39c2ff",
+    "source_patch": {
+      "patches": {
+        "if (__builtin_expect (res_min == res_max, 1)) {": "if (false && __builtin_expect (res_min == res_max, 1)) {",
+        "if (rd)\n    // dint_tod": "if (rd && R.ex > 1023)\n    // dint_tod",
+        "if (exact_pow (&e, x0, y, &R, exact))": "if (false && exact_pow (&e, x0, y, &R, exact))",
+        "  if (rd)\n  {\n    qZ.sgn": "  if (false && rd)\n  {\n    qZ.sgn"
+      },
+      "force1024": false,
+      "force_exact_small": true
+    },
+    "mpfr": "4.2.2",
+    "scope": "Private copy forces all three rounding tests to fail and bypasses exact_pow. Exact-small mode also disables both interval passes and enters the CORE-MATH wrapper directly. Checks real ARM call/return, result sign, exact midpoints, subnormals and bounded caller stack. Not an all-input totality proof."
+  },
+  "resources": {
+    "allocated_flash_delta_bytes": 1248,
+    "new_section_bytes": 1216,
+    "flash_image_extent_delta_bytes": 0,
+    "static_ram_delta_bytes": 0,
+    "main_bss_delta_bytes": 0,
+    "new_table_bytes": 0,
+    "scratch_y_bytes": 4096,
+    "direct_stage_stack_bytes": 1932,
+    "forced_core_rescue_stack_bytes": 2900
+  },
+  "performance": {
+    "prepared_groups_with_identical_instruction_counts": 16,
+    "physical_timing_available": false,
+    "representative_forced_direct_stage_instructions": 20102976,
+    "interpretation": "The20.1M-instruction direct call is a forced final-stage cost. It is not the normal public pow cost. All16 checked ordinary exp/asin/acos/pow groups retain identical instruction counts. Existing cold code growth can still change XIP cache behavior; hardware qualification is pending."
+  },
+  "promotion": {
+    "status": "PROMOTED_OFFLINE_PHYSICAL_PENDING",
+    "files": [
+      "code/native_eabi_m0_cr.cpp",
+      "ports/picocalc/m0_math_extension.ld",
+      "code/native_eabi_m0_pow_exact.inc"
+    ],
+    "peer_files_changed": false,
+    "new_hardware_image_flashed": false
+  },
+  "remaining": [
+    "General binary64 pow totality remains unproved outside the224 supported exponent values; the final undecided trap remains for that domain.",
+    "Full114-group physical comparison is pending on the hardware peer next accepted frozen source. V69 selected12 timings are not V70 hardware evidence.",
+    "The exact final-stage search can be accelerated with a checked hint from the preceding interval; every accepted result must retain exact midpoint comparison.",
+    "The integer argument is source-pinned but is not machine-checked C++ verification."
+  ],
+  "goal_complete": false
+}

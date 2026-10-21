@@ -87,14 +87,24 @@ extern "C" double mk61_m0_cr_exp(double x) { return core_exp::cr_exp(x); }
 #undef roundeven_finite
 
 #include "native_eabi_m0_pow_interval.inc"
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+#include "native_eabi_m0_pow_exact.inc"
+#endif
 // Reached only after CORE-MATH's final 256-bit rounding test failed. The
 // directed integer passes do not change any successful earlier result.
 extern "C" __attribute__((optimize("Os"),noinline,cold))
 double mk61_m0_pow_rescue(double x,double y,double sign) {
   uint64_t a,b,s,result;
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+  result=UINT64_C(0x7FF0000000000000); // Unknown initial rounding hint.
+#endif
   __builtin_memcpy(&a,&x,8);__builtin_memcpy(&b,&y,8);__builtin_memcpy(&s,&sign,8);
   if(m0_pow_interval::Fixed<512>::evaluate(a,b,result) ||
-     m0_pow_interval::Fixed<1024>::evaluate(a,b,result)) {
+     m0_pow_interval::Fixed<1024>::evaluate(a,b,result)
+#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+     || mk61_m0_pow_exact_small(a&UINT64_C(0x7FFFFFFFFFFFFFFF),b,&result)
+#endif
+     ) {
     result|=s&UINT64_C(0x8000000000000000);
     double rounded;__builtin_memcpy(&rounded,&result,8);return rounded;
   }

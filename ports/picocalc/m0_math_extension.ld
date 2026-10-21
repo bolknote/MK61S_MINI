@@ -20,6 +20,14 @@ SECTIONS {
            "M0 tables overlap relocated log product helpers")
     ASSERT(SIZEOF(.m0_log_product_extension) <= 0x200,
            "M0 log product helper group exceeds512bytes")
+    .m0_pow_exact_extension 0x1014e000 : {
+        *(.m0_pow_exact_extension)
+        __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
+    } > FLASH
+    ASSERT(SIZEOF(.m0_pow_exact_extension) <= 0x2000,
+           "Exact pow endpoint comparison exceeds its8KiB slot")
+    ASSERT(ADDR(.m0_log_product_extension) + SIZEOF(.m0_log_product_extension) <= ADDR(.m0_pow_exact_extension),
+           "Log product helpers overlap exact pow endpoint comparison")
     .m0_asin_extension 0x10150d00 : {
         *(.m0_asin_extension)
         __flash_binary_end = MAX(ABSOLUTE(__flash_binary_end), ABSOLUTE(.));
