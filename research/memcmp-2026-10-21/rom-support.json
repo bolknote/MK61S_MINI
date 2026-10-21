@@ -1,0 +1,90 @@
+{
+  "rp2040": {
+    "rom_version": 3,
+    "bytes": 16384,
+    "sha256": "ef07d54bdd259c7858483606118a3c704976801823c38ac5a2fcdffacd2d83fe",
+    "function_table": [
+      {
+        "code": "P3",
+        "address": "0x309"
+      },
+      {
+        "code": "R3",
+        "address": "0x32d"
+      },
+      {
+        "code": "L3",
+        "address": "0x357"
+      },
+      {
+        "code": "T3",
+        "address": "0x38f"
+      },
+      {
+        "code": "MS",
+        "address": "0x26b9"
+      },
+      {
+        "code": "S4",
+        "address": "0x26ad"
+      },
+      {
+        "code": "MC",
+        "address": "0x261d"
+      },
+      {
+        "code": "C4",
+        "address": "0x2605"
+      },
+      {
+        "code": "UB",
+        "address": "0x2591"
+      },
+      {
+        "code": "DT",
+        "address": "0x1a9"
+      },
+      {
+        "code": "DE",
+        "address": "0x1af"
+      },
+      {
+        "code": "WV",
+        "address": "0x145"
+      },
+      {
+        "code": "IF",
+        "address": "0x2491"
+      },
+      {
+        "code": "EX",
+        "address": "0x23e5"
+      },
+      {
+        "code": "RE",
+        "address": "0x236d"
+      },
+      {
+        "code": "RP",
+        "address": "0x23b5"
+      },
+      {
+        "code": "FC",
+        "address": "0x2351"
+      },
+      {
+        "code": "CX",
+        "address": "0x2321"
+      }
+    ],
+    "memcmp_exported": false
+  },
+  "stm32f411": {
+    "bytes": 30720,
+    "sha256": "1796e27fcebdbd19307669a496efd704e18095a253e857716ce45450f3f599f0",
+    "inventory": "../stm32f411-rom-2026-10-21/inventory.json",
+    "validated_memcmp_entry": null,
+    "limitation": "No qualified ISO C memcmp entry found in the prior conservative inventory; indirect coverage is incomplete. This does not prove that no related internal comparison code exists."
+  },
+  "measurement": "No ROM comparator is invoked or simulated by a local fallback."
+}

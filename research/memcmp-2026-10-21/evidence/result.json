@@ -1,0 +1,16 @@
+[
+  {
+    "cpu": "cortex-m0plus",
+    "status": "PASS",
+    "bytes": 44,
+    "code_sha256": "4cfa5e8274e7c962ef4ee1dfed67e574d9bd84a75e7375de42a347fbfd7445e9",
+    "method": "Separate single-entry LTO builds; old public C entry and frozen noipa baseline are byte-identical"
+  },
+  {
+    "cpu": "cortex-m4",
+    "status": "PASS",
+    "bytes": 106,
+    "code_sha256": "118db551dbe2187ac02141b8c199c17a99b75991e35dadde3a32ff11a95521ac",
+    "method": "Separate single-entry LTO builds; old public C entry and frozen noipa baseline are byte-identical"
+  }
+]

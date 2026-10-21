@@ -1,0 +1,86 @@
+[
+  {
+    "cpu": "m0",
+    "elf_sha256": "c9de5e7e2df67448d2eb75420fb8ecc4dc580327bba9e37b29b85d779b4d3b38",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 44,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m0",
+    "elf_sha256": "68ba50e919ef42a4a38717dbc59c2a47f90d4b259b1536827a6d6185d39f3f8e",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 44,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "c53f657131702a923f867513fc0d22da0da2c963262c3a1f11f527bf268c760a",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 502,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "5126b7cda67a79b67e065c8fe8d4d4a3817fef27b95ab67eba96508ddeacfe8f",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 502,
+        "status": "PASS"
+      }
+    ],
+    "source": "sdk/portable/memory.c",
+    "lto": true
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "dc26f7bab575c6cddb160b9cfeecd4678918bcef1abefa377e9b70677aa8d06b",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 560,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": false
+  },
+  {
+    "cpu": "m4",
+    "elf_sha256": "293b24f5044ee41b0030e9752a51cfa0ca10f7c918b3862bbca12e48a42ddb77",
+    "results": [
+      {
+        "name": "memcmp",
+        "cases": 53357,
+        "bytes": 560,
+        "status": "PASS"
+      }
+    ],
+    "source": "code/system_memory.c",
+    "lto": true
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "target": "stm32",
+  "shared": true,
+  "selected_runtime": true,
+  "selected_body": "own64",
+  "directory": "/MCMP-FL",
+  "app_sha256": "61cbbd741fb01fb559e53c5e79e19c5970bfdbe93838292aa03d1b5950e11970",
+  "sources": {
+    "benchmark.c": "df0fa1f1bc161d2c511ee420eb6fc3221fb2e3ed9d707a26b9cab833bbf7c206",
+    "candidates.S": "c3abc1bcf1ec418e1bd1478ff32080c25c44b9d7a06c4d479f4690abe9f14536",
+    "baseline-memory.h": "62053fb50449bac6cc503de51c3861cd73985bd2ac440f04c1dc2e81c6b2ca61"
+  }
+}

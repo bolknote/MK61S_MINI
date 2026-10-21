@@ -1,0 +1,39 @@
+{
+  "cpu": "m4",
+  "base": 134619136,
+  "bytes": 2376,
+  "crc32": 1734380951,
+  "sha256": "78c21a7409b5bbeeae63c8b1c6e4bf782a97ab4d7885a5d1fa86061b3a123d07",
+  "entries": {
+    "BASELINE": {
+      "symbol": "baseline",
+      "address": 134619137,
+      "bytes": 106
+    },
+    "OWN4": {
+      "symbol": "own4",
+      "address": 134619245,
+      "bytes": 314
+    },
+    "OWN16": {
+      "symbol": "own16",
+      "address": 134619561,
+      "bytes": 382
+    },
+    "OWN64": {
+      "symbol": "own64",
+      "address": 134619945,
+      "bytes": 560
+    },
+    "SDK": {
+      "symbol": "memcmp",
+      "address": 134621009,
+      "bytes": 502
+    },
+    "LOW64": {
+      "symbol": "own_low64",
+      "address": 134620505,
+      "bytes": 502
+    }
+  }
+}

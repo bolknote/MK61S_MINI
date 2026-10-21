@@ -1,0 +1,13 @@
+{
+  "target": "stm32",
+  "shared": false,
+  "selected_runtime": false,
+  "selected_body": "own64",
+  "directory": "/MCMP-M4",
+  "app_sha256": "710b2b096f0ce24f735ade5b75d8043ace4ff0f10fe1b70bfc275856a12a012f",
+  "sources": {
+    "benchmark.c": "518f548a45f42105b4d07db053a7b335cf2b5e836450770cc9dd6f7951897de0",
+    "candidates.S": "15a83e5805be79ee911a74afb1cf97e01ac63e92115c0510a5aca9959628ffc2",
+    "baseline-memory.h": "62053fb50449bac6cc503de51c3861cd73985bd2ac440f04c1dc2e81c6b2ca61"
+  }
+}

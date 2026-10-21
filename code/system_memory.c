@@ -16,7 +16,11 @@ void* memcpy(void* destination, const void* source, size_t size) {
 }
 #endif
 
+#define MK61_MEMCMP_M4_FLASH 1
+#include "memory_compare_arm.h"
+#ifndef MK61_ARM_MEMCMP
 int memcmp(const void* left, const void* right, size_t size) {
   return mk61_memory_compare(left, right, size);
 }
+#endif
 #endif

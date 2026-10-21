@@ -35,9 +35,12 @@ void* memmove(void* dst, const void* src, size_t size) {
 }
 #endif
 
+#include "memory_compare_arm.h"
+#ifndef MK61_ARM_MEMCMP
 int memcmp(const void* left, const void* right, size_t size) {
   return mk61_memory_compare(left, right, size);
 }
+#endif
 
 /* Newlib's Cortex-M string routines are optimized for throughput and pull
  * substantially more code into the 20-KiB system APPs. Keep the few string

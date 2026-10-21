@@ -1,0 +1,60 @@
+{
+  "status": "M4_COMPLETE_M0_PHYSICAL_PENDING",
+  "m4": {
+    "cpu": "STM32F411 Cortex-M4",
+    "mhz": 96,
+    "firmware": {
+      "candidate": "own64",
+      "bytes": 560,
+      "stack_bytes": 0
+    },
+    "standalone": {
+      "candidate": "own_low64",
+      "bytes": 502,
+      "stack_bytes": 4
+    },
+    "runtime_slot": 25,
+    "hardware_checks_including_iterations": 435080,
+    "sessions": {
+      "m4-flash-sweep": {
+        "runs": 1,
+        "hardware_checks": 87624
+      },
+      "m4-runtime": {
+        "runs": 3,
+        "hardware_checks": 84024
+      },
+      "m4-scout-v1": {
+        "runs": 1,
+        "hardware_checks": 68832
+      },
+      "m4-shared-low-comparison": {
+        "runs": 3,
+        "hardware_checks": 78504
+      },
+      "m4-standalone": {
+        "runs": 3,
+        "hardware_checks": 13632
+      },
+      "m4-sweep-v2": {
+        "runs": 1,
+        "hardware_checks": 84712
+      },
+      "m4-sweep-v3": {
+        "runs": 1,
+        "hardware_checks": 17752
+      }
+    },
+    "full_flash_restored": true,
+    "restored_crc32": "61CCEBFC",
+    "device_released": true
+  },
+  "m0": {
+    "physical_measurements": "PENDING",
+    "candidate_bytes": 834,
+    "placement": "UNSELECTED",
+    "heap_gate": "SRAM combined build fails 30000-byte APP; experimental Flash build passes, timing pending"
+  },
+  "rom_memcmp": "No verified ISO C entry; no ROM timing reported",
+  "f401": "Build, code identity and ARM correctness only; no physical timing"
+}
