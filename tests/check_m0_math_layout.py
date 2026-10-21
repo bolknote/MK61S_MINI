@@ -27,7 +27,7 @@ def verify(production,comparison,required=()):
     before_types,after_types=symbol_types(before),symbol_types(after)
     def numerical(name):
         return (name.startswith(('mk61_m0_','__aeabi_','checked_trig_','atan_','asin_','ln_','log10_','exp_','pow_','r96_')) or
-                'm0_eabi' in name or 'm0_pow_interval' in name or
+                'm0_eabi' in name or 'm0_pow_interval' in name or 'm0_pow_exact' in name or
                 'compact_math' in name or re.match(r'_ZN\d+core_',name))
     names=sorted({n for n in before.symbols if before.sizes.get(n,0) and numerical(n)}|set(required))
     assert names,'No production math symbols'
