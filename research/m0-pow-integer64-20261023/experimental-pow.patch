@@ -1,0 +1,63 @@
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -576,7 +576,12 @@
+     U result;if(pow_tiny_integer(xb,yb,result)) return real(result);
+     if(pow_near_one_argument(xb,yb,argument,input_error,negative_argument)) goto pow_exp_argument;
+   }
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++  if(!uint32_t(yb) && (uint32_t(yb>>32)-0x40080000U<=0x00180000U ||
++                        uint32_t(yb>>32)-0xC0080000U<=0x00380000U)) {
++#else
+   if(!uint32_t(yb) && uint32_t(yb>>32)-0x40080000U<=0x00180000U) {
++#endif
+     const U result=pow_small_integer(xb,uint32_t(yb>>32));
+     if(result!=(D::Infinity|D::Quiet)) return real(result);
+   }
+--- a/code/native_eabi_m0_pow_integer.inc
++++ b/code/native_eabi_m0_pow_integer.inc
+@@ -1,3 +1,6 @@
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++#include "native_eabi_m0_pow_integer64.inc"
++#endif
+ // Exact RNE acceptance for positive integer powers3..8. A bounded
+ // Q62 product keeps guard bits instead of rounding intermediate doubles.
+ __attribute__((always_inline)) inline bool pow_integer_product(U &a,int &ea,unsigned &error,U b,int eb,unsigned other_error) {
+@@ -41,7 +44,12 @@
+   case 0x40180000U:n=6;break;
+   case 0x401C0000U:n=7;break;
+   case 0x40200000U:n=8;break;
+-  default:return D::Infinity|D::Quiet;
++  default:
++#if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
++    return pow_integer64_negative(xb,yh);
++#else
++    return D::Infinity|D::Quiet;
++#endif
+   }
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+   // A supported odd coefficient has <=21bits, hence >=32 trailing zeros
+--- /dev/null
++++ b/code/native_eabi_m0_pow_integer64.inc
+@@ -0,0 +1,22 @@
++asm(".global pow_dyadic128\n.global pow_dyadic128_checked\n");
++// Experimental checked negative integer powers. Normalized Q63 centers
++// carry explicit radii; ambiguous midpoint decisions retain the existing
++// arbitrary-hint128-bit backend. No hint has rounding authority.
++struct PowInteger64 {U high;int exponent;unsigned error;};
++
++extern "C" void pow_integer64_square(PowInteger64 &a);
++
++extern "C" void pow_integer64_base(PowInteger64 &a,const PowInteger64 &base);
++
++// Sign of the complete power interval times an exact normal midpoint -1.
++extern "C" U pow_integer64_distance(const PowInteger64 &a,U cell);
++
++__attribute__((always_inline)) inline int pow_integer64_side(int32_t distance,unsigned error) {
++  if(distance>int32_t(error)) return 1;
++  if(distance < -int32_t(error)) return -1;
++  return 0;
++}
++
++extern "C" int pow_integer64_boundary(const PowInteger64 &a,U cell);
++
++extern "C" U pow_integer64_negative(U xb,uint32_t yh);
