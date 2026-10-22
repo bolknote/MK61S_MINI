@@ -1,0 +1,92 @@
+--- a/code/native_eabi_m0_pow_dyadic128.inc
++++ b/code/native_eabi_m0_pow_dyadic128.inc
+@@ -49,7 +49,7 @@
+ }
+
+ __attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
+-static U pow_dyadic128(U xb,U yb,U hint) {
++static U pow_dyadic128_checked(U xb,U yb,U hint,bool first_cell) {
+   const U undecided=D::Infinity|D::Quiet,ym=yb&D::Magnitude;
+   if(uint32_t(yb) || !ym || ym>=D::Infinity || xb<UINT64_C(0x0010000000000000) || xb>=D::Infinity ||
+      hint<=UINT64_C(0x0010000000000001) || hint>=UINT64_C(0x7FEFFFFFFFFFFFFE)) return undecided;
+@@ -80,6 +80,7 @@
+   const bool inverse=bool(yb&D::Sign);
+   const int side=pow_dyadic128_boundary(power,denominator,inverse,hint);
+   if(!side) return undecided;
++  if(first_cell) return side>0?hint+1:hint;
+   if(side>0) {
+     return pow_dyadic128_boundary(power,denominator,inverse,hint+1)<0?hint+1:undecided;
+   }
+@@ -88,3 +89,10 @@
+   if(previous<0 && pow_dyadic128_boundary(power,denominator,inverse,hint-2)>0) return hint-1;
+   return undecided;
+ }
++
++// This entry retains its original untrusted-hint contract. Only the separate
++// first-cell caller may use the first-tier two-cell enclosure.
++__attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
++static U pow_dyadic128(U xb,U yb,U hint) {
++  return pow_dyadic128_checked(xb,yb,hint,false);
++}
+--- a/code/native_eabi_m0_pow_exp_body.inc
++++ b/code/native_eabi_m0_pow_exp_body.inc
+@@ -73,12 +73,14 @@
+     M0_POW_EXP_REJECT();
+   }
+   const uint32_t rounding_tail=uint32_t(q)&1023U;
+-#ifdef M0_POW_EXP_CANDIDATE
+-  const U rounded=(q+511+((q>>10)&1))>>10;
+-  if(uint32_t(rounding_tail-(512U-error))<=2*error)
+-    M0_POW_EXP_CANDIDATE((U(k+1022)<<52)+rounded);
++#ifdef M0_POW_EXP_FIRST_CELL
++  const U cell=(U(k+1022)<<52)+(q>>10);
++  if(uint32_t(rounding_tail-(512U-error))<=2*error) M0_POW_EXP_FIRST_CELL(cell);
++  // A tie is inside the rejected enclosure (error>=3). Outside it,
++  // the exact same RNE decision only needs this32-bit tail comparison.
++  M0_POW_EXP_RESULT(cell+U(rounding_tail>512U));
+ #else
+   if(uint32_t(rounding_tail-(512U-error))<=2*error) M0_POW_EXP_REJECT();
+   const U rounded=(q+511+((q>>10)&1))>>10;
++  M0_POW_EXP_RESULT((U(k+1022)<<52)+rounded);
+ #endif
+-  M0_POW_EXP_RESULT((U(k+1022)<<52)+rounded);
+--- a/code/native_eabi_m0_pow_fast.inc
++++ b/code/native_eabi_m0_pow_fast.inc
+@@ -437,12 +437,14 @@
+ }
+
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-// A first-tier approximation is only a hint. Independent integer
+-// midpoint checks retain sole authority to accept the rounding cell.
++// The ambiguous normal Q62 enclosure certifies that RNE is cell or
++// cell+1. At a binade start retain the original two-boundary checks, since
++// the lower neighboring float has a smaller spacing. Midpoint overlap
++// still declines to the identical full refinement.
+ __attribute__((optimize("Os"),noinline,noipa,section(".m0_pow_near_one_refine")))
+-static double pow_first_candidate(const double *px,const double *py,U hint) {
++static double pow_first_cell(const double *px,const double *py,U cell) {
+   const double x=*px,y=*py;
+-  const U checked=pow_dyadic128(bits(x),bits(y),hint);
++  const U checked=pow_dyadic128_checked(bits(x),bits(y),cell,bool(cell&D::Fraction));
+   return checked!=(D::Infinity|D::Quiet)?real(checked):pow_refine_checked(x,y);
+ }
+ #endif
+@@ -601,7 +603,7 @@
+   }
+ pow_exp_argument:
+ #if defined(MK61_M0_RP2040_EABI) && MK61_M0_RP2040_EABI
+-#define M0_POW_EXP_CANDIDATE(value) return pow_first_candidate(&x,&y,value)
++#define M0_POW_EXP_FIRST_CELL(value) return pow_first_cell(&x,&y,value)
+ #endif
+ #define M0_POW_EXP_REJECT() return pow_refine_checked(x,y)
+ #define M0_POW_EXP_RESULT(value) return real(value)
+@@ -610,7 +612,7 @@
+ #undef M0_POW_EXP_REJECT
+ #undef M0_POW_EXP_RESULT
+ #undef M0_POW_EXP_ZERO
+-#ifdef M0_POW_EXP_CANDIDATE
+-#undef M0_POW_EXP_CANDIDATE
++#ifdef M0_POW_EXP_FIRST_CELL
++#undef M0_POW_EXP_FIRST_CELL
+ #endif
+ }
